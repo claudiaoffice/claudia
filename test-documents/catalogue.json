@@ -799,6 +799,34 @@
         "duration_s": 0.081,
         "detail": null
       }
+    },
+    {
+      "id": "docx-paragraphs-added-and-removed",
+      "format": "docx",
+      "feature": "paragraphs-added-and-removed",
+      "source": "docx/paragraphs-added-and-removed/source.docx",
+      "spec": "docx/paragraphs-added-and-removed/spec.py",
+      "summary": "A paragraph is split and one is joined into another in a file with a table and a picture: the new paragraph lands after the one before it, and the table, the picture and the untouched paragraphs stay.",
+      "backlog": "E9.21",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "paragraphs"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-15T09:48:04Z",
+        "commit": "ab78f7b",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.086,
+        "detail": null
+      }
     }
   ]
 }

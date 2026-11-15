@@ -5,7 +5,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
-Lists, the page, the language, the styles and the palette reach odt and docx (D453–D455).
+## [0.4.0] - 2026-11-15
+
+Lists, the page, the language, the styles and the palette reach odt and docx, and a kept docx can have paragraphs added
+and removed (D453–D456).
 
 ### Added
 - Lists in odt and docx: items are written as list items (`text:list`, `w:numPr`) with the scheme, start and name of
@@ -18,7 +21,18 @@ Lists, the page, the language, the styles and the palette reach odt and docx (D4
   parent; a kept file gets the styles that changed, and a style a paragraph now has (D455). `"styles"` and
   `"palette"` are no longer `not-written` losses. A property a file cannot say is a `style-property` loss.
 
+- `apply_edits_to_docx` adds and removes paragraphs in a kept file: a new block is a new paragraph after the paragraph
+  of the block before it, a removed block takes its paragraph with it (a paragraph that ends a section of the file is
+  only emptied), and what the file loses with it is named in the new `losses` argument (`removed-frame`,
+  `removed-footnote`, `removed-endnote`, `removed-comment`, `removed-link`, `removed-tracked-change`; `style` for a
+  block whose style the text lacks), as for `apply_edits_to_odt` (D456). Tables, pictures and the rest of the file stay.
+
 ### Changed
+- `apply_edits_to_docx` keeps the runs of a paragraph that hold a picture, the mark of a note or a field when the words
+  of the paragraph are written again; it used to take them out with the words (D456).
+- `apply_edits_to_docx` no longer raises `UnsupportedEdit` for an added or removed paragraph: it raises it for blocks
+  moved relative to each other and for a baseline that is not what the file holds. The server's docx download of an
+  imported file stays a patch of that file (`patched: true`) instead of becoming a new file with a `not-patched` loss.
 - `odt_export_losses` and `docx_export_losses` no longer report a style of the model as `style`: only a style id the
   model does not have.
 - `odt_import_losses` and `docx_import_losses` report `list-look` (a list drawn otherwise than the model draws it)

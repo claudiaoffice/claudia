@@ -8,9 +8,7 @@ import re
 import zipfile
 from io import BytesIO
 
-import pytest
 from claudia_composes_io import (
-    UnsupportedEdit,
     apply_edits_to_docx,
     docx_import_losses,
     docx_to_text,
@@ -251,12 +249,13 @@ def test_a_list_made_in_a_file_that_had_none_is_in_the_package():
     assert numbering_of(edited)[0] == (None, None)
 
 
-def test_adding_a_paragraph_is_still_for_a_fresh_file():
+def test_a_paragraph_added_to_a_list_is_an_item_of_it():
     original = text_to_docx(text_of(("one", "l1", 0)))
     baseline, current = docx_to_text(original), docx_to_text(original)
     current.blocks.append(Block("n1", "body", "new", (), ListItem(baseline.blocks[0].item.list, 0)))
-    with pytest.raises(UnsupportedEdit):
-        apply_edits_to_docx(original, baseline, current)
+    again = docx_to_text(apply_edits_to_docx(original, baseline, current))
+    assert [b.text for b in again.blocks] == ["one", "new"]
+    assert again.blocks[0].item.list == again.blocks[1].item.list
 
 
 def test_whatever_is_done_to_the_lists_of_a_file_it_says_the_same_lists_as_the_model():

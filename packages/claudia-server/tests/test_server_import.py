@@ -232,6 +232,34 @@ def test_every_format_becomes_a_document_of_its_app_and_comes_back_patched(fmt):
     assert answer.get("patched") is True, answer.get("losses")
 
 
+def test_a_docx_comes_back_patched_with_the_paragraphs_split_and_joined_and_its_table_kept():
+    import docx
+
+    from claudia_composes import JoinBlocks, SplitBlock, TextModel
+
+    document = docx.Document()
+    document.add_paragraph("Hello world")
+    document.add_paragraph("Second")
+    document.add_table(rows=1, cols=1).cell(0, 0).text = "kept cell"
+    document.add_paragraph("Third")
+    out = io.BytesIO()
+    document.save(out)
+    suite = Suite([Module(app_hub(MemoryProvider(TextModel), TextModel), _directory())])
+    with TestClient(create_app(suite)) as client:
+        token = upload(client, out.getvalue(), name="file.docx").json()["upload"]
+        with client.websocket_connect("/api/composes/docs/file/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            doc = hosted(client, "composes", "file").document
+            doc.execute(SplitBlock("b1", 5, "n1", "body"), author="ann")
+            doc.execute(JoinBlocks("b3", "b2", 6), author="ann")
+            answer = request(ws, "export_office", {"format": "docx"})["result"]
+    assert answer["patched"] is True and not any(loss["kind"] == "not-patched" for loss in answer["losses"])
+    back = docx.Document(io.BytesIO(base64.b64decode(answer["data"])))
+    assert [p.text for p in back.paragraphs] == ["Hello", " world", "SecondThird"]
+    assert back.tables[0].cell(0, 0).text == "kept cell"
+
+
 # --------------------------------------------------------------------------------- sealed: kept across a restart
 def test_the_kept_file_survives_packing_and_a_restart(tmp_path):
     def server():

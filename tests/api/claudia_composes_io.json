@@ -1,5 +1,5 @@
 {
- "version": "0.3.0",
+ "version": "0.4.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -9,7 +9,7 @@
   "properties": []
  },
  "apply_edits_to_docx": {
-  "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None) -> 'bytes'"
+  "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None, losses: 'LossLog | None' = None) -> 'bytes'"
  },
  "apply_edits_to_odt": {
   "function": "(original_bytes: 'bytes', baseline: 'TextModel', current: 'TextModel', *, track_suggestions: 'bool' = True, losses: 'LossLog | None' = None, info: 'DocumentInfo | None' = None, change_times: 'Mapping[str, str] | None' = None) -> 'bytes'"

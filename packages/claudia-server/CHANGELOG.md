@@ -78,6 +78,9 @@ The uid of a document: found by its exact value, kept when a file is placed, nev
 - The hyphenation patterns fetched into the Docker image were readable by root only (`mkstemp` makes 0600 files), so
   the container, which runs as another user, stopped at start with "Permission denied"; fetched files are 0644 now.
   A start-up error from reading a file or folder is no longer worded as a problem with the redirect port.
+- A docx imported and kept stays a patch of that file when paragraphs were added or removed (D456); before, the download
+  was a new file without the file's tables and pictures, with a `not-patched` loss. It also says `removed-...` for what
+  went with a removed paragraph.
 - The patch of a kept odt gets the document's `info` and the times of its suggestions, as a new file does (D411, D454).
 
 ### Changed

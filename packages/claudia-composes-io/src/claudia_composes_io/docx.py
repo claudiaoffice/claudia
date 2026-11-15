@@ -13,7 +13,7 @@ like any other tracked change, even though Claudia's own UI shows it as a sugges
 back. ``apply_edits_to_docx`` closes the loop D217 set out to fix: re-exporting an *edited* imported document by
 patching only the changed paragraphs onto the original bytes (through ``claudia_opc_io.reconcile``), instead of
 rebuilding the file from the model alone and losing everything claudia never modeled -- a table, an image, a
-custom style. See the implementation note for what it does not cover yet (adding or removing a paragraph).
+custom style. Paragraphs can be changed, added and removed; blocks cannot be moved (D456).
 """
 
 from __future__ import annotations
@@ -33,6 +33,7 @@ from claudia_composes import DEFAULT_STYLE, Block, Run, Suggestion, TextModel
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
+from ._docx_blocks import hidden_content, place, remove
 from ._docx_lists import ListWriter, numbering_in, read_lists
 from ._docx_setup import read_setup, write_language, write_page
 from ._docx_styles import WORD_NAMES, WordNames, unsaid_of, write_styles
@@ -54,9 +55,9 @@ _CLAUDIA_STYLE = {word_name: claudia_id for claudia_id, word_name in _WORD_STYLE
 
 
 class UnsupportedEdit(Exception):
-    """Raised by :func:`apply_edits_to_docx` for an edit it cannot patch onto the original file yet: adding or
-    removing a paragraph. Changing an existing paragraph's text or style is supported; see the implementation
-    note for what is still missing."""
+    """Raised by :func:`apply_edits_to_docx` for an edit it cannot patch onto the original file: blocks moved
+    relative to each other, and a baseline that is not what the file holds. Changing, adding and removing paragraphs
+    is supported (D456)."""
 
 
 def text_to_docx(
@@ -83,6 +84,89 @@ def text_to_docx(
     out = BytesIO()
     document.save(out)
     return out.getvalue()
+
+
+def _patch_setup(document: Any, baseline: TextModel, current: TextModel) -> tuple[WordNames, set[str]]:
+    """Write the page, the language and the styles that changed; the Word names of the styles, and the parts of the
+    package that changed with them."""
+    owned: set[str] = set()
+    if baseline.page != current.page:
+        owned |= write_page(document, baseline.page, current.page)
+    if baseline.language != current.language:
+        write_language(document, current.language)
+        owned.add("word/styles.xml")
+    names = _word_names(document, current)
+    if _write_changed_styles(document, baseline, current, names):
+        owned |= {"word/styles.xml", "word/settings.xml"}
+    return names, owned
+
+
+class _BlockWriter:
+    """Writes the paragraphs of the blocks that were added or changed into a kept document."""
+
+    def __init__(
+        self,
+        document: Any,
+        names: WordNames,
+        lists: ListWriter,
+        replacements: dict[str, list[Suggestion]],
+        when: WhenMade,
+        losses: LossLog | None,
+    ) -> None:
+        self.document, self.names, self.lists = document, names, lists
+        self.replacements, self.when, self.losses = replacements, when, losses
+        self.change_ids = count(1)
+
+    def add(self, block: Block, after: Any, before: Any) -> Any:
+        """A new paragraph for ``block`` after the element ``after`` or else before ``before``; its element."""
+        paragraph = self.document.add_paragraph(style=self.names.of(block.style))
+        place(paragraph._p, after, before)
+        if block.style not in self.names and self.losses is not None:
+            self.losses.add("style", block.style)
+        if block.item is not None:
+            self.lists.write(paragraph, block.item)
+        self._fill(paragraph, block)
+        return paragraph._p
+
+    def edit(self, paragraph: Paragraph, before: Block, after: Block) -> Any:
+        """``paragraph`` as the changes from ``before`` to ``after`` have it (as it is when there are none); its
+        element."""
+        if before == after and after.id not in self.replacements:
+            return paragraph._p  # neither the text/style nor its suggestions changed: leave it exactly as it is
+        if before.style != after.style:  # a style the model does not know stays as the file has it
+            paragraph.style = self.names.of(after.style)
+        if before.item != after.item:
+            self.lists.write(paragraph, after.item)
+        _clear_runs(paragraph)
+        self._fill(paragraph, after)
+        return paragraph._p
+
+    def _fill(self, paragraph: Paragraph, block: Block) -> None:
+        _fill_paragraph(paragraph, block.text, self.replacements.get(block.id, []), self.change_ids, self.when)
+
+
+#: What a run of text holds: the words and the marks between them. A run that holds anything else (a picture, a note's
+#: mark, a field) is not text and stays when the words of its paragraph are written again.
+_TEXT_ONLY = tuple(qn(tag) for tag in ("w:rPr", "w:t", "w:tab", "w:br", "w:cr", "w:noBreakHyphen", "w:softHyphen"))
+
+
+def _clear_runs(paragraph: Paragraph) -> None:
+    """Take the runs of words out of ``paragraph``: the new text is written after what stays."""
+    for run in list(paragraph.runs):
+        if any(child.tag not in _TEXT_ONLY for child in run._element):
+            continue
+        # python-docx's own documented way to clear a paragraph; a run's ``w:r`` always has the paragraph's
+        # ``w:p`` as its parent, so this is never actually None -- lxml-stubs just cannot know that.
+        parent = run._element.getparent()
+        assert parent is not None
+        parent.remove(run._element)
+
+
+def _remove_block(element: Any, losses: LossLog | None) -> None:
+    if losses is not None:
+        for kind in hidden_content(element):
+            losses.add(f"removed-{kind}")
+    remove(element)
 
 
 def _word_names(document: Any, model: TextModel) -> WordNames:
@@ -233,9 +317,7 @@ def _write_changed_styles(document: Any, baseline: TextModel, current: TextModel
     restyled paragraph now has that the file lacks; ``True`` when the file's styles changed."""
     colours, before_colours = current.palette.colours(), baseline.palette.colours()
     known = {block.id: block.style for block in baseline.blocks}
-    wanted = {
-        block.style for block in current.blocks if block.id in known and known[block.id] != block.style
-    } - WORD_NAMES.keys()
+    wanted = {block.style for block in current.blocks if known.get(block.id) != block.style} - WORD_NAMES.keys()
     changed = set()
     for style in current.styles:
         if style.kind != "paragraph":
@@ -301,6 +383,7 @@ def apply_edits_to_docx(
     *,
     track_suggestions: bool = True,
     change_times: Mapping[str, str] | None = None,
+    losses: LossLog | None = None,
 ) -> bytes:
     """Re-export ``current`` to docx by patching only what changed since ``baseline`` (the model as it stood
     right after :func:`docx_to_text` imported ``original_bytes``) onto those same bytes, instead of rebuilding
@@ -310,48 +393,44 @@ def apply_edits_to_docx(
     ``text_to_docx``), then calls :func:`claudia_opc_io.reconcile` so every other part of the package -- and
     every paragraph this call did not touch -- comes back exactly as it was.
 
-    Raises :class:`UnsupportedEdit` if a block was added or removed since ``baseline``: patching a paragraph's
-    own content onto the original is covered; inserting or deleting a paragraph in it is not, yet."""
-    baseline_by_id = {b.id: b for b in baseline.blocks}
-    current_by_id = {b.id: b for b in current.blocks}
-    added = current_by_id.keys() - baseline_by_id.keys()
-    removed = baseline_by_id.keys() - current_by_id.keys()
-    if added or removed:
-        raise UnsupportedEdit("adding or removing a paragraph cannot be patched onto the original file yet")
-    position_of = {block.id: index for index, block in enumerate(baseline.blocks)}
-    by_block = open_replacements(current, track=track_suggestions)
+    A block that was added is a new paragraph right after the paragraph of the block before it (or right before that
+    of the one after it, when it comes first); a block that was removed takes its paragraph with it, and ``losses`` gets
+    a ``removed-...`` entry for each picture, note, comment, link or tracked change that went with it. A paragraph that
+    ends a section of the file is only emptied, so that the section stays. ``losses`` also gets a ``style`` entry for
+    a block whose style the text does not have.
+
+    Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, and blocks
+    moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know)."""
+    held = baseline.blocks
     document = Document(BytesIO(original_bytes))
     paragraphs = document.paragraphs
-    change_ids, when = count(1), when_made(change_times)
+    if len(paragraphs) != len(held):
+        raise UnsupportedEdit("the text the edits are measured from is not what the file holds")
+    baseline_by_id = {b.id: b for b in held}
+    current_ids = {b.id for b in current.blocks}
+    kept = [block.id for block in current.blocks if block.id in baseline_by_id]
+    if kept != [block.id for block in held if block.id in current_ids]:
+        raise UnsupportedEdit("blocks cannot be moved relative to each other in the file")
+    paragraph_of = {block.id: paragraph for block, paragraph in zip(held, paragraphs, strict=True)}
     lists = ListWriter(document, current.lists, read_lists(paragraphs, numbering_in(document)).num_of)
-    owned = set()
-    if baseline.page != current.page:
-        owned |= write_page(document, baseline.page, current.page)
-    if baseline.language != current.language:
-        write_language(document, current.language)
-        owned.add("word/styles.xml")
-    names = _word_names(document, current)
-    if _write_changed_styles(document, baseline, current, names):
-        owned |= {"word/styles.xml", "word/settings.xml"}
+    names, owned = _patch_setup(document, baseline, current)
     for list_id in baseline.lists.ids():
         if list_id in current.lists and current.lists.get(list_id) != baseline.lists.get(list_id):
             lists.restyle(list_id)
-    for block_id, after in current_by_id.items():
-        before = baseline_by_id[block_id]
-        if before == after and block_id not in by_block:
-            continue  # neither the text/style nor its suggestions changed: leave the paragraph exactly as is
-        paragraph = paragraphs[position_of[block_id]]
-        if before.style != after.style:  # a style the model does not know stays as the file has it
-            paragraph.style = names.of(after.style)
-        if before.item != after.item:
-            lists.write(paragraph, after.item)
-        for run in list(paragraph.runs):
-            # python-docx's own documented way to clear a paragraph; a run's ``w:r`` always has the paragraph's
-            # ``w:p`` as its parent, so this is never actually None -- lxml-stubs just cannot know that.
-            parent = run._element.getparent()
-            assert parent is not None
-            parent.remove(run._element)
-        _fill_paragraph(paragraph, after.text, by_block.get(block_id, []), change_ids, when)
+    for block in held:
+        if block.id not in current_ids:
+            _remove_block(paragraph_of[block.id]._p, losses)
+    writer = _BlockWriter(
+        document, names, lists, open_replacements(current, track=track_suggestions), when_made(change_times), losses
+    )
+    last: Any = None  # the element of the block before the one at hand, in the text
+    for index, after in enumerate(current.blocks):
+        before = baseline_by_id.get(after.id)
+        if before is None:
+            following = next((paragraph_of[b.id]._p for b in current.blocks[index + 1 :] if b.id in paragraph_of), None)
+            last = writer.add(after, last, following)
+        else:
+            last = writer.edit(paragraph_of[after.id], before, after)
     patched = BytesIO()
     document.save(patched)
     return reconcile(original_bytes, patched.getvalue(), owns(["word/document.xml", *lists.owned(), *owned]))

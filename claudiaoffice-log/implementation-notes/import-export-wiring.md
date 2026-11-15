@@ -30,3 +30,15 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
   paragraph needs it. Palette roles are not in the files, so a changed colour rewrites the styles that name it.
 * Found on the way: the server's odt patch lacked `info` and `change_times` (fixed); a default model exports without
   a loss, so docx hyphenation is the document setting and padding is only a loss for a style with no border at all.
+
+## Slice 4 — docx patch: paragraphs added and removed (D456)
+* `_docx_blocks.py` has the three small facts about the body of a docx: `place` (after the paragraph before, else before
+  the paragraph after), `remove` (a paragraph that ends a section is only emptied) and `hidden_content` (what goes with
+  a removed paragraph). `docx.py` has `_BlockWriter` (new and changed paragraphs, as `text_to_docx` writes them) and
+  `_patch_setup` (page, language, styles); `apply_edits_to_docx` is now their order of work.
+* The model-based test (`test_docx_blocks.py`, eight seeds) adds and removes blocks at random in a file with a table and
+  asks for the blocks back in order, and the table once.
+* Not done: moving blocks (odt has the same limit); a new paragraph is never put on the far side of a table.
+* Found on the way: editing the words of a docx paragraph removed every run, pictures included (fixed: only runs of
+  words go). Still open: a paragraph with a hyperlink gets the link's words twice when its text is edited, because
+  `paragraph.text` counts them and the `w:hyperlink` stays; this needs the hyperlink to be edited in place.

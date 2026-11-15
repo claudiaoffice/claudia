@@ -202,8 +202,8 @@ def _export_office(ctx, *, format, tracked_changes):
             ctx,
             format,
             TextModel,
-            lambda original, baseline, current, _: apply_edits_to_docx(
-                original, baseline, current, track_suggestions=tracked_changes, change_times=times
+            lambda original, baseline, current, losses: apply_edits_to_docx(
+                original, baseline, current, track_suggestions=tracked_changes, change_times=times, losses=losses
             ),
             lambda: office_export(
                 format,

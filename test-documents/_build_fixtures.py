@@ -58,6 +58,20 @@ def build_docx_lists() -> bytes:
     return _bytes(document)
 
 
+def build_docx_paragraphs_added_and_removed() -> bytes:
+    """A report as Word has it: a heading, a paragraph, a table, a paragraph with a picture, and a closing paragraph."""
+    document = docx.Document()
+    document.add_paragraph("Quarterly report", style="Heading 1")
+    document.add_paragraph("Sales rose. Costs fell.")
+    table = document.add_table(rows=2, cols=2)
+    table.rows[0].cells[0].text, table.rows[0].cells[1].text = "Region", "Amount"
+    table.rows[1].cells[0].text, table.rows[1].cells[1].text = "North", "120"
+    document.add_paragraph("The chart:")
+    document.add_picture(_red_square_png(), width=Inches(1))
+    document.add_paragraph("Thank you.")
+    return _bytes(document)
+
+
 def build_docx_page_and_styles() -> bytes:
     """A Word file as Word writes the setup of a text: an A4 page lying on its side with narrow margins, the language
     in the document defaults, Normal set in another face and size, and a style of its own that claudia does not know."""
@@ -552,6 +566,7 @@ FIXTURES = {
     "docx/lists/source.docx": build_docx_lists,
     "odt/page-and-styles/source.odt": build_odt_page_and_styles,
     "docx/page-and-styles/source.docx": build_docx_page_and_styles,
+    "docx/paragraphs-added-and-removed/source.docx": build_docx_paragraphs_added_and_removed,
     "odp/groups-notes-transitions/source.odp": build_odp_groups_notes_transitions,
     "ods/repeated-and-styled/source.ods": build_ods_repeated_and_styled,
     "xlsx/cells-and-formulas/source.xlsx": build_cells_and_formulas,

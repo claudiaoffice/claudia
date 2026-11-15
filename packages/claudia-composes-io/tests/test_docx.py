@@ -190,29 +190,17 @@ def test_apply_edits_renders_a_new_open_suggestion_as_a_tracked_change():
     assert "<w:ins" in xml and "approved" in xml
 
 
-def test_apply_edits_raises_unsupported_edit_when_a_block_is_added():
-    document = docx.Document()
-    document.add_paragraph("Only paragraph.")
-    original_bytes = _docx_bytes(document)
-
-    baseline = docx_to_text(original_bytes)
-    current = TextModel([*baseline.blocks, Block("b2", DEFAULT_STYLE, "A new paragraph.")])
-
-    with pytest.raises(UnsupportedEdit):
-        apply_edits_to_docx(original_bytes, baseline, current)
-
-
-def test_apply_edits_raises_unsupported_edit_when_a_block_is_removed():
+def test_apply_edits_raises_unsupported_edit_when_the_baseline_is_not_the_file():
     document = docx.Document()
     document.add_paragraph("First.")
     document.add_paragraph("Second.")
     original_bytes = _docx_bytes(document)
 
     baseline = docx_to_text(original_bytes)
-    current = TextModel([baseline.blocks[0]])
+    elsewhere = TextModel([baseline.blocks[0]])
 
     with pytest.raises(UnsupportedEdit):
-        apply_edits_to_docx(original_bytes, baseline, current)
+        apply_edits_to_docx(original_bytes, elsewhere, elsewhere)
 
 
 # -- when a tracked change was made (D411) ---------------------------------------------------------------------------
