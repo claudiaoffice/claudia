@@ -71,3 +71,14 @@ Work plan for Nov 14/15th 2026
 
 
 explore QNAP docker server
+
+
+Linux: still random port
+File > Open doesn't give feedback
+File > New marks the "create new" on front page => good!
+File > Open a file allows import => good!
+![[Pasted image 20261115105251.png]]Missing font problem gone
+Download PDF in print view => perfect
+Export now opens file location picker => perfect
+Dragging an external file into the window when the start page is visible => does not import, is that possible?
+
