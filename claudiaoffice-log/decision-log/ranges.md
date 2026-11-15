@@ -32,6 +32,7 @@ Unused numbers in a closed block stay unused.
 | D560–D569 | rendered text containers, the screens: Insert menu, editing in place, fences, composes floating (branch `containers`; D560–D564 used; first given D520–D529, which `search-ui` and `file-handling` had too, renumbered at the merge) | 2026-11-15 | open |
 | D901–D920 | pages, print preview and PDF: the layout library, fonts for clients, page setup (branch `layouting`; D901–D918 used) | 2026-11-12 | open |
 | D600–D619 | names, tables and SQL(): named ranges, structured references, spilling, SQL(), chart source (branch `named-ranges-sql`) | 2026-11-11 | open |
+| D620–D639 | pivot tables: a pivot is a named definition that compiles to SQL, its grid, its interface, its files (E6.30; branch `pivot`; D620–D627 used) | 2026-11-15 | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D318 used) | 2026-11-10 | open |
 | D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D414 used) | 2026-11-11 | open |
 | D430–D449 | one server for all three apps: app modules, addresses, limits, idle exit, folder lock, isolation (branch `one-server`; D430–D448 used) | 2026-11-14 | open |

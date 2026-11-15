@@ -1014,13 +1014,13 @@ def computes() -> Manifest:
                     "tools.pivot-value",
                     "Value Field Settings…",
                     "How the values of a pivot table field are put together",
-                    accelerators=("<Primary><Alt>z",),
+                    accelerators=("<Primary><Shift><Alt>u",),
                 ),
                 _page(
                     "tools.pivot-sql",
                     "Show Pivot Table as SQL…",
                     "The query the pivot table asks of its source",
-                    accelerators=("<Primary><Alt>x",),
+                    accelerators=("<Primary><Shift><Alt>q",),
                 ),
                 _page(
                     "tools.pivot-delete",

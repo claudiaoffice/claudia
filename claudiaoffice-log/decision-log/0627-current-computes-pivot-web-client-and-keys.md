@@ -11,14 +11,14 @@ superseded-by: []
 
 # D627 · The pivot table in the web client: what was built from the approved mocks, and the keys that replace the proposed ones
 
-**The four mocks of D624 are built in the web client, and the keys of D624 are replaced, because three of them cannot work.** The manifest's own test (`test_no_key_is_one_a_browser_keeps_or_alt_gr_types`) refuses Ctrl+Alt+T (the terminal on Ubuntu) and Ctrl+Alt+E, M and Q (AltGr+E, M, Q type €, µ and @ on a German keyboard, and on Windows Ctrl+Alt is AltGr). Every free Ctrl+Alt letter is taken or refused, so the keys are:
+**The four mocks of D624 are built in the web client, and the keys of D624 are replaced, because three of them cannot work.** The manifest's own test (`test_no_key_is_one_a_browser_keeps_or_alt_gr_types`) refuses Ctrl+Alt+T (the terminal on Ubuntu) and Ctrl+Alt+E, M and Q (AltGr+E, M, Q type €, µ and @ on a German keyboard, and on Windows Ctrl+Alt is AltGr). Every free Ctrl+Alt letter is taken or refused, so the keys are (two moved again when the branch was merged after `dock`, 2026-11-15):
 
 | Entry in Tools | Key (proposed in D624) |
 |---|---|
 | Pivot Table… | Ctrl+Alt+V (was Ctrl+Alt+T) |
 | Pivot Fields (show or hide the panel) | Ctrl+Shift+Alt+F (was Ctrl+Alt+M) |
-| Value Field Settings… | Ctrl+Alt+Z (was Ctrl+Alt+E) |
-| Show Pivot Table as SQL… | Ctrl+Alt+X (was Ctrl+Alt+Q) |
+| Value Field Settings… | Ctrl+Shift+Alt+U (was Ctrl+Alt+E; Ctrl+Alt+Z, chosen first, is View ▸ Replay of the dock, D551) |
+| Show Pivot Table as SQL… | Ctrl+Shift+Alt+Q (was Ctrl+Alt+Q; Ctrl+Alt+X, chosen first, is Edit ▸ Reference of the dock, D551) |
 | Delete Pivot Table… | Ctrl+Shift+Alt+V (was Ctrl+Shift+Alt+E) |
 
 The five entries are in the one menu manifest (`clients/linux/src/claudia_shell_gtk/manifest.py`), so the web page, the GTK client and the generated menus of the macOS and Windows clients show the same key (`notes/keyboard-shortcuts.md`). The last four are off while the cursor is not in a pivot table (Pivot Fields stays on while its panel is open, so it can be closed).

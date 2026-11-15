@@ -760,8 +760,8 @@ def test_computes_tools_menu_has_the_pivot_table_entries_each_with_a_key(compute
     keys = {
         "tools.pivot": ("<Primary><Alt>v",),
         "tools.pivot-fields": ("<Primary><Shift><Alt>f",),
-        "tools.pivot-value": ("<Primary><Alt>z",),
-        "tools.pivot-sql": ("<Primary><Alt>x",),
+        "tools.pivot-value": ("<Primary><Shift><Alt>u",),
+        "tools.pivot-sql": ("<Primary><Shift><Alt>q",),
         "tools.pivot-delete": ("<Primary><Shift><Alt>v",),
     }
     for action_id, accelerators in keys.items():

@@ -155,9 +155,9 @@ const tick = (page, field) => page.locator(`[data-testid=pivot-panel] .fields li
     await page.waitForSelector('[data-testid=pivot-panel]', { state: 'detached' })
     log('ok Esc closes the panel')
 
-    // 5. a cell of the pivot table, Ctrl+Alt+Z: the value field's settings
+    // 5. a cell of the pivot table, Ctrl+Shift+Alt+U: the value field's settings
     await click(page, 2, 1)
-    await page.keyboard.press('Control+Alt+z')
+    await page.keyboard.press('Control+Shift+Alt+u')
     await page.waitForSelector('[data-testid=pivot-value]')
     await page.locator('[data-testid=pivot-value] input[type=radio][value=average]').check()
     await page.screenshot({ path: path.join(SHOTS, 'pivot-value.png') })
