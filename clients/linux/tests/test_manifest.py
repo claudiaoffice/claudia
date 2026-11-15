@@ -424,13 +424,26 @@ def test_ids_do_not_depend_on_the_menu_an_action_sits_in(composes: manifest.Mani
     assert {"format.look", "format.all-styles"} <= {a.id for a in composes.menu("Format").all_actions()}
 
 
+def _chord(accel: str) -> tuple[frozenset[str], str]:
+    """The keys an accelerator stands for: its modifiers in any order (``<Primary><Alt><Shift>f`` is
+    ``<Primary><Shift><Alt>f``) and its key, a letter in either case."""
+    *modifiers, key = re.findall(r"<(\w+)>|(\w+)$", accel)
+    return frozenset(m for m, _ in modifiers), key[1].lower()
+
+
 def test_accelerators_are_well_formed_and_not_shared(app: manifest.Manifest) -> None:
-    seen: dict[str, str] = {}
+    seen: dict[tuple[frozenset[str], str], str] = {}
     for action in app.actions:
         for accel in action.accelerators:
             assert re.fullmatch(r"(<(Primary|Shift|Alt)>)*[A-Za-z0-9_]+", accel), accel
-            assert accel not in seen, f"{accel} is on {seen[accel]} and {action.id}"
-            seen[accel] = action.id
+            chord = _chord(accel)
+            assert chord not in seen, f"{accel} is on {seen[chord]} and {action.id}"
+            seen[chord] = action.id
+
+
+def test_the_same_chord_written_in_another_order_is_the_same_key() -> None:
+    assert _chord("<Primary><Alt><Shift>f") == _chord("<Primary><Shift><Alt>F")
+    assert _chord("<Primary><Alt>f") != _chord("<Primary><Shift><Alt>f")
 
 
 def test_every_menu_entry_has_a_key_but_the_language_names(app: manifest.Manifest) -> None:
