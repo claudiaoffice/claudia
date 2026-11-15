@@ -759,7 +759,7 @@ def test_computes_tools_menu_has_the_pivot_table_entries_each_with_a_key(compute
     The mock proposed Ctrl+Alt+T/E/M/Q, which the terminal and AltGr take (D627)."""
     keys = {
         "tools.pivot": ("<Primary><Alt>v",),
-        "tools.pivot-fields": ("<Primary><Shift><Alt>f",),
+        "tools.pivot-fields": ("<Primary><Shift><Alt>m",),
         "tools.pivot-value": ("<Primary><Shift><Alt>u",),
         "tools.pivot-sql": ("<Primary><Shift><Alt>q",),
         "tools.pivot-delete": ("<Primary><Shift><Alt>v",),

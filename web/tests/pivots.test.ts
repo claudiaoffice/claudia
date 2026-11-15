@@ -276,9 +276,11 @@ describe('the source and the place', () => {
     expect(pivotNameProblem('sales', ['Sales'])).toMatch(/already/)
   })
 
-  it('calls the sheet of a new pivot after it, and numbers it when that name is taken', () => {
-    expect(newSheetName('SalesPivot', [{ name: 'Data' }])).toBe('SalesPivot')
-    expect(newSheetName('SalesPivot', [{ name: 'salespivot' }, { name: 'SalesPivot 2' }])).toBe('SalesPivot 3')
+  it('calls the sheet of a new pivot "Pivot", numbered while a sheet or a name has that name', () => {
+    expect(newSheetName('Pivot', ['Data', 'SalesPivot'])).toBe('Pivot')
+    expect(newSheetName('Pivot', ['pivot', 'Pivot 2', 'SalesPivot'])).toBe('Pivot 3')
+    // a sheet may not be named like a range (D552), and the pivot's own name is one
+    expect(newSheetName('SalesPivot', ['Data', 'SalesPivot'])).toBe('SalesPivot 2')
   })
 
   it('reads the cell it starts in, with or without the sheet', () => {

@@ -129,7 +129,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Tools | Names… | Ctrl+F3 |  |
 | Tools | SQL Query… | Ctrl+Alt+Y |  |
 | Tools | Pivot Table… | Ctrl+Alt+V |  |
-| Tools | Pivot Fields | Ctrl+Shift+Alt+F |  |
+| Tools | Pivot Fields | Ctrl+Shift+Alt+M |  |
 | Tools | Value Field Settings… | Ctrl+Shift+Alt+U |  |
 | Tools | Show Pivot Table as SQL… | Ctrl+Shift+Alt+Q |  |
 | Tools | Delete Pivot Table… | Ctrl+Shift+Alt+V |  |

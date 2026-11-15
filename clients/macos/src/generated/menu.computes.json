@@ -845,7 +845,7 @@
           },
           {
             "accelerators": [
-              "<Primary><Shift><Alt>f"
+              "<Primary><Shift><Alt>m"
             ],
             "checkable": false,
             "id": "tools.pivot-fields",

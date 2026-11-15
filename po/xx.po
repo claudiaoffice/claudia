@@ -737,7 +737,7 @@ msgstr "[Càlcûlàtîôn~~~~]"
 msgid "Calculation step"
 msgstr "[Càlcûlàtîôn stép~~~~~~]"
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:106 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
 msgid "Cancel"
 msgstr "[Càncél~~]"
 
@@ -1137,7 +1137,7 @@ msgstr "[Côûnt ôf {field}~~~~~~]"
 msgid "Count {value}"
 msgstr "[Côûnt {value}~~~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:107
+#: web/app/components/PivotCreateDialog.vue:109
 msgid "Create"
 msgstr "[Créàté~~]"
 
@@ -1621,7 +1621,7 @@ msgstr "[Fîll în yôûr nàmé ànd à pàsswôrd.~~~~~~~~~~~~~]"
 msgid "Fill in your name and password."
 msgstr "[Fîll în yôûr nàmé ànd pàsswôrd.~~~~~~~~~~~~]"
 
-#: web/app/lib/pivots.ts:425
+#: web/app/lib/pivots.ts:427
 msgid "Fills {range}. Its cells can’t be typed over."
 msgstr "[Fîlls {range}. Îts célls càn’t bé typéd ôvér.~~~~~~~~~~~~~~~~~~]"
 
@@ -2213,7 +2213,7 @@ msgstr "[Înstàllàtîôn~~~~~]"
 msgid "Iris"
 msgstr "[Îrîs~~]"
 
-#: web/app/lib/pivots.ts:425
+#: web/app/lib/pivots.ts:427
 msgid "It fills nothing yet."
 msgstr "[Ît fîlls nôthîng yét.~~~~~~~~]"
 
@@ -2221,7 +2221,7 @@ msgstr "[Ît fîlls nôthîng yét.~~~~~~~~]"
 msgid "It is not run, so nothing is found or replaced."
 msgstr "[Ît îs nôt rûn, sô nôthîng îs fôûnd ôr réplàcéd.~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/pivots.ts:423
+#: web/app/lib/pivots.ts:425
 msgid "It shows {code}: {detail}"
 msgstr "[Ît shôws {code}: {detail}~~~~~~~~~~]"
 
@@ -2233,7 +2233,7 @@ msgstr "[Ît stôps by îtsélf tén mînûtés àftér îts làst wîndôw hàs
 msgid "Italic"
 msgstr "[Îtàlîc~~]"
 
-#: web/app/lib/pivots.ts:424
+#: web/app/lib/pivots.ts:426
 msgid "Its cell was written over, so it shows nothing. Delete it and make it again."
 msgstr "[Îts céll wàs wrîttén ôvér, sô ît shôws nôthîng. Délété ît ànd màké ît àgàîn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -2609,7 +2609,7 @@ msgstr "[My plàcés~~~~]"
 msgid "My places and collections"
 msgstr "[My plàcés ànd côlléctîôns~~~~~~~~~~]"
 
-#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/PivotCreateDialog.vue:77 web/app/components/ShareDialog.vue:44 web/app/components/SlideWorkspace.vue:412 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1268 web/app/components/Workspace.vue:1269
+#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:44 web/app/components/SlideWorkspace.vue:412 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1268 web/app/components/Workspace.vue:1269
 msgid "Name"
 msgstr "[Nàmé~~]"
 
@@ -2693,7 +2693,7 @@ msgstr "[Néw pàsswôrd~~~~~]"
 msgid "New password (at least 8 characters)"
 msgstr "[Néw pàsswôrd (àt léàst 8 chàràctérs)~~~~~~~~~~~~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:70
+#: web/app/components/PivotCreateDialog.vue:72
 msgid "New pivot table"
 msgstr "[Néw pîvôt tàblé~~~~~~]"
 
@@ -2917,7 +2917,7 @@ msgstr "[Ôff thé pàlétté…~~~~~~]"
 msgid "Offline"
 msgstr "[Ôfflîné~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:96
+#: web/app/components/PivotCreateDialog.vue:98
 msgid "On a new sheet"
 msgstr "[Ôn à néw shéét~~~~~~]"
 
@@ -2925,7 +2925,7 @@ msgstr "[Ôn à néw shéét~~~~~~]"
 msgid "On this server"
 msgstr "[Ôn thîs sérvér~~~~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:98
+#: web/app/components/PivotCreateDialog.vue:100
 msgid "On this sheet at"
 msgstr "[Ôn thîs shéét àt~~~~~~]"
 
@@ -3197,7 +3197,7 @@ msgstr "[Pîck célls înstéàd…~~~~~~~~]"
 msgid "Picture"
 msgstr "[Pîctûré~~~]"
 
-#: web/app/lib/pivots.ts:290 web/app/lib/pivots.ts:290
+#: web/app/components/PivotCreateDialog.vue:60 web/app/lib/pivots.ts:290 web/app/lib/pivots.ts:290
 msgid "Pivot"
 msgstr "[Pîvôt~~]"
 
@@ -3217,7 +3217,7 @@ msgstr "[Pîvôt tàblé~~~~]"
 msgid "Pivot table as SQL"
 msgstr "[Pîvôt tàblé às SQL~~~~~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:95
+#: web/app/components/PivotCreateDialog.vue:97
 msgid "Place it"
 msgstr "[Plàcé ît~~~]"
 
@@ -4317,7 +4317,7 @@ msgstr "[Tàb / Shîft + Tàb~~~~~~~]"
 msgid "Table"
 msgstr "[Tàblé~~]"
 
-#: web/app/components/PivotCreateDialog.vue:85
+#: web/app/components/PivotCreateDialog.vue:87
 msgid "Table or range to analyse"
 msgstr "[Tàblé ôr ràngé tô ànàlysé~~~~~~~~~~]"
 
@@ -4325,7 +4325,7 @@ msgstr "[Tàblé ôr ràngé tô ànàlysé~~~~~~~~~~]"
 msgid "Tables"
 msgstr "[Tàblés~~]"
 
-#: web/app/components/PivotCreateDialog.vue:91
+#: web/app/components/PivotCreateDialog.vue:93
 msgid "Tables, named ranges and query results are offered; the pivot follows them when rows are added."
 msgstr "[Tàblés, nàméd ràngés ànd qûéry résûlts àré ôfféréd; thé pîvôt fôllôws thém whén rôws àré àddéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4597,7 +4597,7 @@ msgstr "[Thé côvàrîàncé ôf twô ràngés fôr à whôlé pôpûlàtîôn 
 msgid "The covariance of two ranges for a whole population."
 msgstr "[Thé côvàrîàncé ôf twô ràngés fôr à whôlé pôpûlàtîôn.~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:90
+#: web/app/components/PivotCreateDialog.vue:92
 msgid "The cursor is inside the table {name}, so it is preselected."
 msgstr "[Thé cûrsôr îs însîdé thé tàblé {name}, sô ît îs préséléctéd.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5129,11 +5129,11 @@ msgstr "[Thé répéàt àt chàràctér {position} hàs nôthîng béfôré ît
 msgid "The replacement uses a kept part that the pattern does not have."
 msgstr "[Thé réplàcémént ûsés à képt pàrt thàt thé pàttérn dôés nôt hàvé.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:102
+#: web/app/components/PivotCreateDialog.vue:104
 msgid "The result can’t land on cells that hold something."
 msgstr "[Thé résûlt càn’t lànd ôn célls thàt hôld sôméthîng.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:80
+#: web/app/components/PivotCreateDialog.vue:82
 msgid "The result is a name too."
 msgstr "[Thé résûlt îs à nàmé tôô.~~~~~~~~~~]"
 
@@ -5493,7 +5493,7 @@ msgstr "[Théré îs nô sûch dôcûmént.~~~~~~~~~~]"
 msgid "There is no table called {name} (any more)."
 msgstr "[Théré îs nô tàblé càlléd {name} (àny môré).~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:73
+#: web/app/components/PivotCreateDialog.vue:75
 msgid "There is no table to analyse yet. Select cells with a header row, type a word in the box left of the formula bar and press Enter — then it can be a pivot table’s source."
 msgstr "[Théré îs nô tàblé tô ànàlysé yét. Séléct célls wîth à héàdér rôw, typé à wôrd în thé bôx léft ôf thé fôrmûlà bàr ànd préss Éntér — thén ît càn bé à pîvôt tàblé’s sôûrcé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6749,7 +6749,7 @@ msgstr "[fînd à fîéld~~~~~]"
 msgid "find a name"
 msgstr "[fînd à nàmé~~~~]"
 
-#: web/app/components/PivotCreateDialog.vue:99
+#: web/app/components/PivotCreateDialog.vue:101
 msgid "first cell of the pivot table"
 msgstr "[fîrst céll ôf thé pîvôt tàblé~~~~~~~~~~~~]"
 

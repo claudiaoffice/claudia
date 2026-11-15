@@ -167,8 +167,8 @@ const tick = (page, field) => page.locator(`[data-testid=pivot-panel] .fields li
     await waitCell(page, 2, 3, '150')
     log('ok Value Field Settings: Average')
 
-    // 6. Pivot Fields (Ctrl+Shift+Alt+F) shows the panel again; a chip's ▾ menu moves a field
-    await page.keyboard.press('Control+Shift+Alt+f')
+    // 6. Pivot Fields (Ctrl+Shift+Alt+M) shows the panel again; a chip's ▾ menu moves a field
+    await page.keyboard.press('Control+Shift+Alt+m')
     await page.waitForSelector('[data-testid=pivot-panel]')
     await page.locator('[data-testid=pivot-panel] button[aria-label^="Quarter: move"]').click()
     await page.click('[role=menuitem]:has-text("Move to Filters")')

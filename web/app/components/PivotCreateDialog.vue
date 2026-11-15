@@ -56,7 +56,9 @@ async function create() {
     text,
     emptyDefinition(chosen.value.name),
     pivotLabels(),
-    where.value === 'sheet' ? { newSheet: newSheetName(text, state.sheets) } : { sheet: state.activeSheet, row: place.value!.row, col: place.value!.col },
+    where.value === 'sheet'
+      ? { newSheet: newSheetName(t('Pivot'), [...state.sheets.map((s) => s.name), ...taken.value, text]) }
+      : { sheet: state.activeSheet, row: place.value!.row, col: place.value!.col },
   )
   busy.value = false
   if (done !== null) {

@@ -409,12 +409,14 @@ export function valueIndexFor(pivot: Pick<PivotInfo, 'definition' | 'labels'>, t
   return found >= 0 ? found : 0
 }
 
-/** What a new sheet for a pivot is called: the pivot's name, with a number after it while a sheet has that name. */
-export function newSheetName(name: string, sheets: { name: string }[]): string {
-  const taken = new Set(sheets.map((s) => s.name.toLowerCase()))
+/** What a new sheet for a pivot is called: `base` ("Pivot" in the person's language, as in mock 1), with a number
+ * after it while that is `taken`. Give it the sheets, the names and the new pivot's own name: a sheet may not be named
+ * like a range since D552, and a pivot's name is the name of its result, so the sheet cannot be called like the pivot. */
+export function newSheetName(base: string, taken: string[]): string {
+  const used = new Set(taken.map((name) => name.toLowerCase()))
   for (let n = 1; ; n++) {
-    const candidate = n === 1 ? name : `${name} ${n}`
-    if (!taken.has(candidate.toLowerCase())) return candidate
+    const candidate = n === 1 ? base : `${base} ${n}`
+    if (!used.has(candidate.toLowerCase())) return candidate
   }
 }
 

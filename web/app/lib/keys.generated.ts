@@ -86,7 +86,7 @@ export const KEYS: Readonly<Record<string, ActionKey>> = {
   'tools.outcomes': { chord: { key: 'o', code: 'KeyO', ctrl: true, alt: true }, owner: 'page' },
   'tools.pivot': { chord: { key: 'v', code: 'KeyV', ctrl: true, alt: true }, owner: 'page' },
   'tools.pivot-delete': { chord: { key: 'v', code: 'KeyV', ctrl: true, shift: true, alt: true }, owner: 'page' },
-  'tools.pivot-fields': { chord: { key: 'f', code: 'KeyF', ctrl: true, shift: true, alt: true }, owner: 'page' },
+  'tools.pivot-fields': { chord: { key: 'm', code: 'KeyM', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'tools.pivot-sql': { chord: { key: 'q', code: 'KeyQ', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'tools.pivot-value': { chord: { key: 'u', code: 'KeyU', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'tools.random': { chord: { key: 'r', code: 'KeyR', ctrl: true, alt: true }, owner: 'page' },

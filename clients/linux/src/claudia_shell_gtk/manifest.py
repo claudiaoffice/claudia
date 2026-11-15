@@ -1008,7 +1008,7 @@ def computes() -> Manifest:
                     "tools.pivot-fields",
                     "Pivot Fields",
                     "Show or hide the panel with the fields of the pivot table",
-                    accelerators=("<Primary><Shift><Alt>f",),
+                    accelerators=("<Primary><Shift><Alt>m",),
                 ),
                 _page(
                     "tools.pivot-value",
