@@ -74,9 +74,11 @@ def test_calculating_a_long_chain_is_linear():
         doc = workbook()
         fill_column(doc, ["=1", *[f"=B{i}+1" for i in range(1, n)]])
         edit = SetCells(S1, ((0, 1, parse_input("=2")),))
-        return best_of(3, lambda: doc.execute(edit, author="ana"))
+        return best_of(5, lambda: doc.execute(edit, author="ana"))
 
     ratio = chain(10_000) / chain(1_000)
+    if ratio >= 25:  # a shared CI runner can stall one of the two runs: a real slope shows again, noise does not
+        ratio = min(ratio, chain(10_000) / chain(1_000))
     assert ratio < 25, f"a chain 10x as long took {ratio:.0f}x as long to calculate (linear is about 10)"
 
 

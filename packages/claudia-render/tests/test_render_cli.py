@@ -3,6 +3,8 @@
 The fake tool stands in for any renderer: it answers ``--version``, reads the file it is given and writes an SVG."""
 
 import json
+import uuid
+from pathlib import Path
 
 import pytest
 from conftest import BOXER, fake_tool, posix_only, runs_in_a_loop
@@ -285,3 +287,19 @@ def test_a_long_system_temporary_folder_is_left_for_a_short_one(monkeypatch):
     assert _short_temp_dir() in ("/tmp", None)  # None only where this machine has no usable /tmp
     monkeypatch.setattr("tempfile.gettempdir", lambda: "/short")
     assert _short_temp_dir() == "/short"
+
+
+def test_a_short_link_to_a_long_temporary_folder_counts_as_long(monkeypatch, tmp_path):
+    """macOS' ``/var/folders/…`` looks short but resolves to ``/private/var/folders/…``, which the job folder gets."""
+    from claudia_render.cli import MAX_JOB_PATH, _short_temp_dir
+
+    real = tmp_path / ("a-rather-long-folder-name-" * 3) / "T"
+    real.mkdir(parents=True)
+    link = Path("/tmp") / f"cl-{uuid.uuid4().hex[:8]}"
+    link.symlink_to(real)
+    try:
+        assert len(str(link)) + 12 <= MAX_JOB_PATH < len(str(link.resolve())) + 12
+        monkeypatch.setattr("tempfile.gettempdir", lambda: str(link))
+        assert _short_temp_dir() in ("/tmp", None)
+    finally:
+        link.unlink()

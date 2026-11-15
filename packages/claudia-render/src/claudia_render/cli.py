@@ -106,9 +106,10 @@ def _line(text: str) -> str:
 
 def _short_temp_dir() -> str | None:
     """The system's temporary folder, or ``/tmp`` where that one is too long (macOS: ``/var/folders/…/T``), so that a
-    job folder stays short enough for a socket path in it. ``None`` leaves the choice to `tempfile`."""
+    job folder stays short enough for a socket path in it. The length that counts is the resolved one, the job folder
+    being resolved: macOS' ``/var`` is a link to ``/private/var``. ``None`` leaves the choice to `tempfile`."""
     system = tempfile.gettempdir()
-    if len(system) + 12 <= MAX_JOB_PATH:
+    if len(str(Path(system).resolve())) + 12 <= MAX_JOB_PATH:
         return system
     fallback = Path("/tmp")
     if fallback.is_dir() and os.access(fallback, os.W_OK) and len(str(fallback.resolve())) + 12 <= MAX_JOB_PATH:

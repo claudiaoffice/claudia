@@ -54,7 +54,7 @@ def _open_new_document(page, port: int) -> None:
 
 
 def test_the_grid_is_on_the_screen_and_alternatives_and_following_work(port: int) -> None:
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import expect, sync_playwright
 
     with sync_playwright() as play:
         browser = _launch(play)
@@ -70,9 +70,9 @@ def test_the_grid_is_on_the_screen_and_alternatives_and_following_work(port: int
             for text in ("{10,20,30}", "=A1*2", "=A2+1", "5"):
                 page.keyboard.type(text)
                 page.keyboard.press("Enter")
-            page.wait_for_selector(".cell .alt")
-            assert page.locator(".cell .alt").count() == 3
-            assert page.locator(".cell .strip").count() == 2
+            # the cells are drawn as the server's answers arrive, so these wait for their number
+            expect(page.locator(".cell .alt")).to_have_count(3)
+            expect(page.locator(".cell .strip")).to_have_count(2)
 
             grid.click(position={"x": 120, "y": 39})  # A1
             page.keyboard.press("Control+Alt+KeyF")
