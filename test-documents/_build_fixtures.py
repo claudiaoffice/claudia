@@ -615,6 +615,73 @@ def build_ods_names_and_tables() -> bytes:
     return new_package("spreadsheet", content.encode(), styles.encode())
 
 
+def build_xlsx_widths_and_heights() -> bytes:
+    """An xlsx with sizes somebody set (two widths, two heights), a column with a look of its own, a column nobody sized
+    (D) and a data validation, which the model does not show."""
+    from openpyxl.styles import PatternFill
+    from openpyxl.worksheet.datavalidation import DataValidation
+
+    wb = openpyxl.Workbook()
+    plan = wb.active
+    plan.title = "Plan"
+    for row in (("Task", "Owner", "Days", "Notes"), ("Design", "Ann", 3, "first"), ("Build", "Bo", 8, "second")):
+        plan.append(row)
+    plan.column_dimensions["B"].width = 20
+    plan.column_dimensions["C"].width = 12
+    plan.column_dimensions["C"].fill = PatternFill("solid", fgColor="FFF2CC")
+    plan.row_dimensions[1].height = 30
+    plan.row_dimensions[3].height = 45
+    rule = DataValidation(type="whole", operator="between", formula1="0", formula2="100")
+    rule.add("C2:C3")
+    plan.add_data_validation(rule)
+    return _xlsx_bytes(wb)
+
+
+def build_ods_widths_and_heights() -> bytes:
+    """An ods the way LibreOffice lays sizes out: a width and a height set, a row sized by its content (the one
+    LibreOffice writes for every row nobody sized), columns left at its own width, and a validation."""
+
+    def words(text: str) -> str:
+        return f'<table:table-cell office:value-type="string"><text:p>{text}</text:p></table:table-cell>'
+
+    automatic = (
+        '<style:style style:name="co1" style:family="table-column">'
+        '<style:table-column-properties fo:break-before="auto" style:column-width="2.258cm"/></style:style>'
+        '<style:style style:name="co2" style:family="table-column">'
+        '<style:table-column-properties fo:break-before="auto" style:column-width="4.5cm"/></style:style>'
+        '<style:style style:name="ro1" style:family="table-row">'
+        '<style:table-row-properties fo:break-before="auto" style:row-height="0.452cm" '
+        'style:use-optimal-row-height="true"/></style:style>'
+        '<style:style style:name="ro2" style:family="table-row">'
+        '<style:table-row-properties fo:break-before="auto" style:row-height="1.4cm" '
+        'style:use-optimal-row-height="false"/></style:style>'
+    )
+    rows = (
+        f'<table:table-row table:style-name="ro2">{words("Task")}{words("Owner")}</table:table-row>'
+        f'<table:table-row table:style-name="ro1">{words("Design")}{words("Ann")}</table:table-row>'
+        f'<table:table-row table:style-name="ro1">{words("Build")}{words("Bo")}</table:table-row>'
+        '<table:table-row table:style-name="ro1" table:number-rows-repeated="1048573">'
+        '<table:table-cell table:number-columns-repeated="1024"/></table:table-row>'
+    )
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-content {_ODT_DECLS} office:version="1.3"><office:scripts/><office:font-face-decls/>'
+        f"<office:automatic-styles>{automatic}</office:automatic-styles><office:body><office:spreadsheet>"
+        '<table:content-validations><table:content-validation table:name="val1" '
+        'table:condition="of:cell-content-is-whole-number()" table:allow-empty-cell="true"/>'
+        "</table:content-validations>"
+        '<table:table table:name="Plan">'
+        '<table:table-column table:style-name="co2"/>'
+        '<table:table-column table:style-name="co1" table:number-columns-repeated="1023"/>'
+        f"{rows}</table:table></office:spreadsheet></office:body></office:document-content>"
+    )
+    styles = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:styles/></office:document-styles>'
+    )
+    return new_package("spreadsheet", content.encode(), styles.encode())
+
+
 FIXTURES = {
     "docx/heading-styles/source.docx": build_heading_styles,
     "docx/tracked-change-suggestion/source.docx": build_tracked_change_suggestion,
@@ -639,6 +706,8 @@ FIXTURES = {
     "xlsx/beyond-claudia/excel-today/source.xlsx": build_xlsx_beyond_claudia_excel_today,
     "xlsx/names-and-tables/source.xlsx": build_xlsx_names_and_tables,
     "ods/names-and-tables/source.ods": build_ods_names_and_tables,
+    "xlsx/widths-and-heights/source.xlsx": build_xlsx_widths_and_heights,
+    "ods/widths-and-heights/source.ods": build_ods_widths_and_heights,
 }
 
 

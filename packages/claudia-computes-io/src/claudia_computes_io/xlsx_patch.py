@@ -21,6 +21,7 @@ from __future__ import annotations
 import copy
 import posixpath
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from lxml import etree
@@ -32,6 +33,7 @@ from claudia_computes.values import ErrorValue, Value
 from .excel_names import with_marks
 from .extensions import NOTE_MARKER, to_excel, with_note
 from .openformula import Untranslatable
+from .xlsx_layout import written_height, written_width
 from .xlsx_read import NS, area, child, moved, parse_xml, position, q, related, relationships, rels_part
 
 _REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/"
@@ -267,14 +269,9 @@ class SheetPatch:
     def restyle_columns(self, first: int, last: int, look: int | None) -> None:
         """Give the columns ``first`` to ``last`` the look ``look`` (``None``: no look); a ``col`` element that
         reaches beyond them is cut, so its other columns keep their width and look."""
-        cols = self.root.find("x:cols", NS)
+        cols = self._cols(create=look is not None)
         if cols is None:
-            if look is None:
-                return
-            cols = _el("cols")
-            before = self.root.find("x:sheetData", NS)
-            assert before is not None  # (__init__ made sure)
-            before.addprevious(cols)
+            return
         lo, hi = first + 1, last + 1
         _cut_columns(cols, lo, hi)
         _fill_columns(cols, lo, hi)
@@ -285,6 +282,41 @@ class SheetPatch:
                 else:
                     _unset(col, "style")
         _sort_columns(cols)
+
+    def _cols(self, *, create: bool) -> etree._Element | None:
+        """The sheet's ``cols`` element (made, before the data, if ``create``)."""
+        cols = self.root.find("x:cols", NS)
+        if cols is None and create:
+            cols = _el("cols")
+            before = self.root.find("x:sheetData", NS)
+            assert before is not None  # (__init__ made sure)
+            before.addprevious(cols)
+        return cols
+
+    def resize_columns(self, widths: Mapping[int, float | None]) -> None:
+        """Give each column of ``widths`` (counted from 0) the width in pixels it maps to (``None``: the model's
+        default, written outright: the file's own default may be another). A ``col`` element that reaches beyond a
+        column is cut, so its other columns keep their width and look."""
+        cols = self._cols(create=bool(widths))
+        for column, width in widths.items():
+            assert cols is not None
+            _cut_columns(cols, column + 1, column + 1)
+            _fill_columns(cols, column + 1, column + 1)
+            element = next(c for c in cols.iterfind("x:col", NS) if int(c.get("min", "0")) == column + 1)
+            element.set("width", str(written_width(width)))
+            element.set("customWidth", "1")
+        if cols is not None:
+            _sort_columns(cols)
+
+    def resize_rows(self, heights: Mapping[int, float | None]) -> None:
+        """Give each row of ``heights`` (counted from 0) the height in pixels it maps to (``None``: the model's
+        default, written outright)."""
+        for row, height in heights.items():
+            element = self.rows.get(row + 1)
+            if element is None:
+                element = self._new_row(row + 1)
+            element.set("ht", str(written_height(height)))
+            element.set("customHeight", "1")
 
     def _styled_columns(self) -> bool:
         return any(col.get("style") not in (None, "0") for col in self.root.iterfind("x:cols/x:col", NS))

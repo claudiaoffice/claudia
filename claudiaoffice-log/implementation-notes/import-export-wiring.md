@@ -58,5 +58,21 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
   table columns. Excel was not available.
 * Found on the way: `localSheetId` was read against the worksheets only (IEW-06); a header edit in a kept xlsx left
   Excel a table to repair (IEW-07).
-* Next in slice 5: widths and heights, then charts (ods, then xlsx).
 
+
+## Slice 5b — computes widths and heights (D458)
+* `layout_sizes.py` is what both formats share (`fit_width`, `fit_height`, `changed_sizes`, the read caps);
+  `xlsx_layout.py` the xlsx units, `column_runs` and the Excel-limit loss; `ods_layout.py` the lengths, `read_sizes`
+  (the sizes the automatic styles give) and the two style builders. `OdsLookWriter.column_style` / `row_style` hand out
+  the style names, the same way `cell_style` does.
+* xlsx: `XlsxLookWriter.sheet` writes the `col` runs and the `row` heights; `xlsx_read._row_and_column_looks` reads
+  them; `SheetPatch.resize_columns` / `resize_rows` patch them. ods: `_Looks.row_sizes` / `column_sizes` into
+  `_rows_of` / `_columns_of`; `_scan_table` reads; `_Patch._patch_lines` is what was the tail of `_patch_table`, with
+  the heights next to the cells and the default cell styles of the rows.
+* `"layout"` is now in both `*_WRITTEN` sets of `_unwritten.py`; the old tests that used a resize as their example of
+  "an edit the file cannot hold" use a name with a purpose instead.
+* Found on the way: an empty `row` element is falsy in lxml, so `rows.get(n) or new_row(n)` would have written a row
+  twice (a warning of lxml; fixed before it shipped); openpyxl writes 13 characters for a column that has only a look,
+  which this slice would have read back as a width (IEW-10).
+* Checked against LibreOffice 24.2.7 (`soffice --convert-to`): sizes survive xlsx to ods, ods to xlsx and each format
+  to itself; a LibreOffice file from a csv comes in with its narrow columns, patches, and opens again.

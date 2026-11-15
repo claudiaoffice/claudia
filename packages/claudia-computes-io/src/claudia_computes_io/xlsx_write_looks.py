@@ -4,7 +4,8 @@ Body text is the file's *Normal*: its font is the workbook's default font. A sty
 becomes a named cell style of the file, so Excel shows it under *Cell Styles* with that name. A cell's look is that
 named style (or Normal) with the cell's own look on top, as direct formats -- which is how a provisional style goes
 out: the direct formats it came from. The style ranges of rows and columns become row and column formats; those of
-cells are written into each cell (:func:`~claudia_computes_io.cell_looks.sheet_styling`).
+cells are written into each cell (:func:`~claudia_computes_io.cell_looks.sheet_styling`). The widths of columns and the
+heights of rows go into the same ``col`` and ``row`` elements (:mod:`claudia_computes_io.xlsx_layout`, D458).
 """
 
 from __future__ import annotations
@@ -16,11 +17,14 @@ from typing import Any
 import openpyxl
 from openpyxl.styles import Alignment, Border, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.dimensions import SheetFormatProperties
 
 from claudia_computes import Sheet, WorkbookModel
 from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
+from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT
 
 from .cell_looks import GENERAL, CellLook, LookExport, first_family, points, sheet_styling, solid
+from .xlsx_layout import column_runs, height_of, width_of, written_height, written_width
 
 _SIDES = {
     ("1", "solid"): "thin",
@@ -156,11 +160,19 @@ class XlsxLookWriter:
         """Write the looks of ``sheet`` into ``ws``."""
         styling = sheet_styling(sheet)
         self.dropped += styling.dropped
-        for first, last, (box, words) in styling.columns:
-            letter = get_column_letter(first + 1)
-            dimension = ws.column_dimensions[letter]
+        for first, last, key, width in column_runs(styling.columns, sheet.col_widths):
+            dimension = ws.column_dimensions[get_column_letter(first + 1)]
             dimension.min, dimension.max = first + 1, last + 1
-            self.dress(dimension, self.looks.look(box, words))
+            if key is not None:
+                self.dress(dimension, self.looks.look(*key))
+            dimension.width = written_width(width)  # (openpyxl's own default of 13 would be read back as a width)
+        for row, height in sheet.row_heights.items():
+            ws.row_dimensions[row + 1].height = written_height(height)
+        ws.sheet_format = SheetFormatProperties(
+            defaultColWidth=width_of(DEFAULT_COL_WIDTH),
+            defaultRowHeight=height_of(DEFAULT_ROW_HEIGHT),
+            customHeight=True,
+        )
         for first, last, (box, words) in styling.rows:
             end = min(last, first + MAX_STYLED_ROWS - 1)
             self.dropped += last - end

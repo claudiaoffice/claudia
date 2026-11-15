@@ -138,10 +138,30 @@ def test_a_patched_download_says_what_the_edits_it_could_not_write_were():
             doc = hosted(client, "computes", "budget").document
             doc.execute(SetCells("s1", ((0, 0, parse_input("7")),)), author="ann")
             assert request(ws, "export_office", {"format": "xlsx"})["result"]["losses"] == []
-            doc.execute(ResizeLines("s1", "col", ((0, 120.0),)), author="ann")
+            rate = NamedRange("Rate", None, RangeRef(CellRef(0, 0, "s1"), CellRef(0, 0, "s1")), purpose="input")
+            doc.execute(DefineName(rate), author="ann")
             answer = request(ws, "export_office", {"format": "xlsx"})["result"]
         assert answer["patched"] is True
-        assert answer["losses"] == [{"kind": "layout", "detail": "", "count": 1}]
+        assert answer["losses"] == [{"kind": "name", "detail": "purpose", "count": 1}]
+
+
+@pytest.mark.parametrize("fmt", ["xlsx", "ods"])
+def test_a_resized_column_is_in_the_patched_download_and_no_loss(fmt):
+    with workbook_server() as client:
+        token = upload(client, made(fmt), name=f"Budget 2026.{fmt}").json()["upload"]
+        with client.websocket_connect("/api/computes/docs/budget/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            doc = hosted(client, "computes", "budget").document
+            doc.execute(ResizeLines("s1", "col", ((0, 120.0),)), author="ann")
+            doc.execute(ResizeLines("s1", "row", ((2, 40.0),)), author="ann")
+            answer = request(ws, "export_office", {"format": fmt})["result"]
+        assert answer["patched"] is True and answer["losses"] == []
+        from claudia_computes_io import ods_to_workbook, xlsx_to_workbook
+
+        back = (xlsx_to_workbook if fmt == "xlsx" else ods_to_workbook)(base64.b64decode(answer["data"]))
+        sheet = back.sheets["s1"]
+        assert (sheet.col_widths.get(0), sheet.row_heights.get(2)) == (120, 40)
 
 
 @pytest.mark.parametrize("fmt", ["xlsx", "ods"])

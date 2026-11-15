@@ -882,6 +882,61 @@
         "duration_s": 0.014,
         "detail": null
       }
+    },
+    {
+      "id": "xlsx-widths-and-heights",
+      "format": "xlsx",
+      "feature": "widths-and-heights",
+      "source": "xlsx/widths-and-heights/source.xlsx",
+      "spec": "xlsx/widths-and-heights/spec.py",
+      "summary": "Two widths and two heights somebody set, a column with a fill, a column nobody sized and a validation: the sizes come in; a width and a height changed in Claudia are patched in and the other column keeps its width and fill and the validation stays.",
+      "backlog": "E6.13",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "layout"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-15T10:57:39Z",
+        "commit": "721d0da",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.012,
+        "detail": null
+      }
+    },
+    {
+      "id": "ods-widths-and-heights",
+      "format": "ods",
+      "feature": "widths-and-heights",
+      "source": "ods/widths-and-heights/source.ods",
+      "spec": "ods/widths-and-heights/spec.py",
+      "summary": "A width and a height somebody set, rows sized by their content, columns at LibreOffice's own width and a validation: the sizes come in; a changed width and height are patched in (runs of rows and columns are cut) and the validation stays.",
+      "backlog": "E6.13",
+      "tags": [
+        "tier2",
+        "layout"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-15T10:57:39Z",
+        "commit": "721d0da",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.009,
+        "detail": null
+      }
     }
   ]
 }

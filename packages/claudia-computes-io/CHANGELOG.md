@@ -3,6 +3,27 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.8.0] - 2026-11-15
+
+Column widths and row heights go to and from ods and xlsx (D458).
+
+### Added
+- `workbook_to_ods` and `workbook_to_xlsx` write the widths of columns and the heights of rows that were set
+  (`table-column` / `table-row` styles; `col` and `row` with `customWidth` / `customHeight`). A fresh xlsx also says the
+  default size of a column and a row (`sheetFormatPr`), which is what the model shows.
+- `ods_to_workbook` and `xlsx_to_workbook` read them: only sizes somebody set (not those a file leaves to the
+  application, not a size equal to the default), for the first 256 columns and 10,000 rows.
+- `apply_edits_to_ods` and `apply_edits_to_xlsx` patch a changed size into the kept file: the columns around it keep
+  their width and look; a size that was given up is written as the default.
+
+### Changed
+- `ods_unwritten_changes`, `xlsx_unwritten_changes` and the export-loss lists no longer report `layout` for sizes. The
+  one `layout` loss left is `beyond-excel-limits` (xlsx: a width over 255 characters or a height over 409.5 points,
+  written at the limit).
+- `ods_import_losses` no longer counts a sheet with sized rows or columns as `layout`.
+- An xlsx column that has a look but no width of its own is written at the default width, not at openpyxl's 13
+  characters.
+
 ## [0.7.0] - 2026-11-15
 
 Named ranges and tables go to and from ods and xlsx (D457).

@@ -32,6 +32,7 @@ from claudia_computes import Content, function_catalog
 from claudia_computes.formula import Call, Name, parse_formula
 from claudia_computes.formula.nodes import TableRef, walk
 from claudia_computes.limits import MAX_COLS, MAX_ROWS
+from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT
 from claudia_computes.names import NamedRange, name_problem
 from claudia_computes.refs import CellRef, RangeRef, RefParseError, SheetId, column_index, column_name, parse_range_ref
 from claudia_odf_io import Loss, LossLog
@@ -39,7 +40,9 @@ from claudia_opc_io import read_parts
 
 from .excel_names import without_marks
 from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives
+from .layout_sizes import MAX_SIZED_COLUMNS, MAX_SIZED_ROWS
 from .openformula import Untranslatable
+from .xlsx_layout import size_of_height, size_of_width
 
 NS = {
     "x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
@@ -293,6 +296,9 @@ class SheetRead:
     looks: dict[tuple[int, int], int] = field(default_factory=dict)
     row_looks: dict[int, int] = field(default_factory=dict)
     column_looks: list[tuple[int, int, int]] = field(default_factory=list)
+    #: The widths and heights somebody set (in pixels), by column and row counted from 0.
+    col_widths: dict[int, int] = field(default_factory=dict)
+    row_heights: dict[int, int] = field(default_factory=dict)
 
 
 def _number(text: str) -> int | float:
@@ -412,16 +418,30 @@ def read_sheet(package: Package, sheet: WorksheetPart, names: frozenset[str]) ->
     return reading.read
 
 
+def _set(element: etree._Element, attribute: str) -> bool:
+    return element.get(attribute) in ("1", "true")
+
+
 def _row_and_column_looks(root: etree._Element, read: SheetRead) -> None:
+    """The looks of columns and rows, and the widths and heights somebody set: one the file left to the application
+    (no ``customWidth``, no ``customHeight``) is not a size, and one equal to the model's default is not one either."""
     for column in root.iterfind("x:cols/x:col", NS):
         style = int(column.get("style", "0") or 0)
         first, last = int(column.get("min", "1")) - 1, min(int(column.get("max", "1")), MAX_COLS) - 1
         if style and 0 <= first <= last:
             read.column_looks.append((first, last, style))
+        if _set(column, "customWidth") and column.get("width") and 0 <= first <= last:
+            size = size_of_width(float(column.get("width", "0")))
+            if size != DEFAULT_COL_WIDTH:
+                read.col_widths.update(dict.fromkeys(range(first, min(last, MAX_SIZED_COLUMNS - 1) + 1), size))
     for number, row in enumerate(root.iterfind("x:sheetData/x:row", NS), start=1):
         index = int(row.get("r", str(number))) - 1
-        if row.get("customFormat") in ("1", "true") and index < MAX_ROWS:
+        if _set(row, "customFormat") and index < MAX_ROWS:
             read.row_looks[index] = int(row.get("s", "0") or 0)
+        if _set(row, "customHeight") and row.get("ht") and 0 <= index < MAX_SIZED_ROWS:
+            height = size_of_height(float(row.get("ht", "0")))
+            if height != DEFAULT_ROW_HEIGHT:
+                read.row_heights[index] = height
 
 
 def notes_of(package: Package, sheet: WorksheetPart) -> dict[str, str]:

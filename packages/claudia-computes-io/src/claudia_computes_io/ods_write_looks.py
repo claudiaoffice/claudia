@@ -4,6 +4,8 @@ Body text is the file's *Default* cell style. A style with a name a person gave 
 (``office:styles`` in ``styles.xml``) with that name; every look a cell has is an automatic style (``ce1``,
 ``ce2``... in ``content.xml``) based on its named style, as LibreOffice writes direct formats. Number formats become
 number styles (:mod:`.odf_numbers`). Row and column style ranges become the rows' and columns' default cell styles.
+The widths of columns and heights of rows are automatic styles of their own (``co1``, ``ro1``...:
+:mod:`.ods_layout`).
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from claudia_odf_io import NS
 
 from .cell_looks import GENERAL, CellLook, LookExport, first_family, points, solid
 from .odf_numbers import number_style
+from .ods_layout import column_style, row_style
 
 _ALIGN = {"left": "start", "start": "start", "center": "center", "right": "end", "end": "end", "justify": "justify"}
 _DEFAULT = "Default"
@@ -109,6 +112,22 @@ class OdsLookWriter:
         self._numbers: dict[tuple[str, bool], str] = {}
         self._number_elements: dict[bool, list[etree._Element]] = {True: [], False: []}
         self._style_elements: list[etree._Element] = []
+        self._columns: dict[float, str] = {}
+        self._rows: dict[float, str] = {}
+
+    def column_style(self, pixels: float) -> str:
+        """The name of the automatic style for a column of this width, made the first time (D458)."""
+        if pixels not in self._columns:
+            self._columns[pixels] = f"{self.prefix}co{len(self._columns) + 1}"
+            self._style_elements.append(column_style(self._columns[pixels], pixels))
+        return self._columns[pixels]
+
+    def row_style(self, pixels: float) -> str:
+        """The name of the automatic style for a row of this height, made the first time (D458)."""
+        if pixels not in self._rows:
+            self._rows[pixels] = f"{self.prefix}ro{len(self._rows) + 1}"
+            self._style_elements.append(row_style(self._rows[pixels], pixels))
+        return self._rows[pixels]
 
     def cell_style(self, box: str, words: str) -> str:
         """The name of the automatic style for a cell with these two styles, made the first time."""

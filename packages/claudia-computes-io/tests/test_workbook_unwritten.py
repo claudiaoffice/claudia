@@ -40,10 +40,11 @@ def test_edited_cells_are_written_so_they_are_no_loss(unwritten):
 
 
 @BOTH
-def test_column_widths_and_row_heights_are_not_written(unwritten):
+def test_column_widths_and_row_heights_are_written_so_they_are_no_loss(unwritten):
     after = a_workbook()
     after.sheets[SheetId("s1")].col_widths[0] = 120.0
-    assert unwritten(after, a_workbook()) == (Loss("layout", "", 1),)
+    after.sheets[SheetId("s1")].row_heights[1] = 40.0
+    assert unwritten(after, a_workbook()) == ()
 
 
 @BOTH
@@ -66,7 +67,7 @@ def test_a_fresh_export_compares_with_an_empty_workbook(unwritten):
     model = a_workbook()
     model.sheets[SheetId("s1")].row_heights[2] = 40.0
     model.charts["c1"] = Chart("c1", "Chart", "spec")
-    assert unwritten(model) == (Loss("layout", "", 1), Loss("chart", "", 1))
+    assert unwritten(model) == (Loss("chart", "", 1),)
 
 
 def test_the_export_loss_lists_say_what_the_converters_do_not_write():

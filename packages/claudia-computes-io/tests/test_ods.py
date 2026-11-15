@@ -303,7 +303,6 @@ def test_what_the_model_does_not_show_is_counted_and_the_cells_still_come_in():
         "conditional-format": 1,
         "protection": 1,
         "hidden-row": 1,
-        "layout": 1,
         "named-range": 2,
         "validation": 1,
         "filter": 1,
@@ -445,11 +444,11 @@ def test_what_the_file_cannot_hold_is_listed_as_losses():
     model = a_workbook()
     assert ods_export_losses(model) == ()
     model.sheets[SheetId("s1")].cells[(1, 1)] = {"t": "formula", "v": "=SUM((A1:A3,C1:C3))"}
-    model.sheets[SheetId("s1")].col_widths[0] = 200.0
+    model.sheets[SheetId("s1")].col_widths[0] = 200.0  # (written: no loss)
     model.charts["c1"] = Chart("c1", "Chart", "spec")
     box = ObjectBody("o1", "text", 100, 100, "plain-box", Paragraph("p1", "note"))
     model.insert_object(VisualObject(box, CellAnchor(SheetId("s1"), 0, 0)))
-    assert kinds(ods_export_losses(model)) == {"formula:operator": 1, "layout": 1, "chart": 1, "object": 1}
+    assert kinds(ods_export_losses(model)) == {"formula:operator": 1, "chart": 1, "object": 1}
     data = workbook_to_ods(model)  # the cell is written as its value
     assert 'table:formula="of:=SUM(([.A1:.A3]~' not in content_of(data)
 

@@ -51,7 +51,9 @@ from .cell_looks import (
 )
 from .excel_names import with_marks
 from .extensions import to_excel, with_note
+from .layout_sizes import changed_sizes
 from .openformula import Untranslatable
+from .xlsx_layout import layout_losses
 from .xlsx_looks import XlsxLooks, read_looks
 from .xlsx_names import XlsxNamesPatch, header_losses, write_names
 from .xlsx_patch import PackagePatch, SheetNotes, SheetPatch, UnsupportedEdit, written
@@ -147,11 +149,12 @@ def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
 def xlsx_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None = None) -> tuple[Loss, ...]:
     """What changed in ``model`` that the xlsx converters do not write, each as a code with how many entries differ from
     ``baseline`` -- the model the original file was read as, for an edit-and-reexport -- or from an empty workbook, for
-    a fresh file (``None``): ``"layout"`` (sheets with other column widths or row heights), ``"name"`` (what a file
+    a fresh file (``None``): ``"layout"`` (``beyond-excel-limits``: a width or height Excel cannot hold, written at its
+    limit), ``"name"`` (what a file
     cannot hold of a named range or table: ``result``, ``purpose``, ``table-scope``, ``table-header``), ``"chart"``
     and ``"object"`` (with the pictures and shapes they use)."""
     found = workbook_unwritten_changes(model, baseline, written=XLSX_WRITTEN)
-    return in_order((*found, *header_losses(model, baseline).result()))
+    return in_order((*found, *header_losses(model, baseline).result(), *layout_losses(model, baseline).result()))
 
 
 def workbook_to_xlsx(model: WorkbookModel) -> bytes:
@@ -237,6 +240,8 @@ def _dress(dressing: Dressing, sheet: Sheet, read: SheetRead) -> None:
     columns = [(first, last, dressing.style(index)) for first, last, index in read.column_looks]
     rows = {row: dressing.style(index) for row, index in read.row_looks.items()}
     by_column = Lines(columns)
+    sheet.col_widths.update(read.col_widths)
+    sheet.row_heights.update(read.row_heights)
     cells = {}
     for (row, col), index in read.looks.items():
         dressing.count(index)
@@ -260,6 +265,7 @@ _ORDER = (
     "comment",
     "merge",
     "look",
+    "layout",
     "conditional-format",
     "validation",
     "filter",
@@ -300,7 +306,7 @@ def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current:
     for part in package.sheets:
         before, after = baseline.sheets[part.sheet_id], current.sheets[part.sheet_id]
         looks = restyling((old_looks, before), (styles.looks, after), restyled)
-        if before.cells == after.cells and not looks:
+        if before.cells == after.cells and not looks and not _resized(before, after):
             continue  # nothing about this sheet changed: its part stays exactly as it is
         changed = True
         formulas |= _write_sheet(patch, part.part, before, after, (styles, looks))
@@ -312,6 +318,10 @@ def apply_edits_to_xlsx(original_bytes: bytes, baseline: WorkbookModel, current:
         patch.drop_calculation_chain()
     patch.ask_for_calculation()
     return write_parts(patch.finish())
+
+
+def _resized(before: Sheet, after: Sheet) -> bool:
+    return before.col_widths != after.col_widths or before.row_heights != after.row_heights
 
 
 def _write_sheet(
@@ -331,6 +341,8 @@ def _write_sheet(
         notes.set(row, col, None if cell is None else cell.note)
     notes.finish()
     restyle_sheet(sheet, *looks)
+    sheet.resize_columns(changed_sizes(before.col_widths, after.col_widths))
+    sheet.resize_rows(changed_sizes(before.row_heights, after.row_heights))
     patch.parts[part] = sheet.to_bytes()
     return formulas
 

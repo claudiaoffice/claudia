@@ -23,6 +23,8 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-07 | computes, xlsx patch | Editing a header cell of a table in an imported xlsx left the table's column name unchanged; Excel repairs such a file ("removed table"). The column is renamed now. | slice 5a | `test_xlsx_names.py::test_a_header_cell_that_is_edited_changes_the_name_of_its_column_in_the_table` |
 | IEW-08 | computes, ods import | A formula that used a named range of an ods came in as its value (the names were not read), so it stopped being live; a readable named range was also counted as lost (`named-range`). | slice 5a | `test_ods_names.py::test_a_formula_that_uses_a_name_of_the_file_is_a_formula_in_the_model` |
 | IEW-09 | computes, ods/xlsx export | Names and tables defined in Claudia were silently missing from every export (no loss listed in xlsx). | slice 5a | `test_ods_names.py`, `test_xlsx_names.py`, server tests |
+| IEW-10 | computes, xlsx export | A column that had only a look (a style on the whole column) was written 13 characters wide, not at the sheet's default: it looked wider in Excel and LibreOffice than in Claudia. | slice 5b | `test_xlsx_layout.py::test_a_look_only_column_does_not_get_a_width_of_its_own` |
+| IEW-11 | computes, ods/xlsx | A column width or row height set in Claudia was missing from every export (xlsx did not even list it as a loss) and was dropped by an edit-and-reexport of an imported file; the ods import counted any file with sized columns as `layout`. | slice 5b | `test_xlsx_layout.py`, `test_ods_layout.py`, `test_server_import.py::test_a_resized_column_is_in_the_patched_download_and_no_loss` |
 
 ## Limits (by design, for now)
 
@@ -39,6 +41,10 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-L9 | A table's colours by purpose and whether it grows are not in any file (loss `name:purpose`); a `SQL()` result name is not either (`name:result`); a table of one sheet is a plain name of that sheet (`name:table-scope`). | Files have no such thing. |
 | IEW-L10 | An xlsx table whose header cell is not text, or two of whose columns have one name, is written as a plain range (`name:table-header`). | Excel would repair the file. |
 | IEW-L11 | A table of a kept xlsx whose columns change is matched by place: a column inserted in the middle keeps the table-column settings of the column that was there. | The model has no column identity. |
+| IEW-L13 | A line a file does not size comes in at Claudia's default (96 × 26 px), not at the file's (Excel 64 × 20). | The model has no default per sheet. |
+| IEW-L14 | An xlsx width is in characters of the file's Normal font (7 px each is Calibri 11). Our own files have Body text as Normal, so Excel and LibreOffice show a width 10–25 % wider than Claudia (LibreOffice: 150 px as 184). | Font metrics are not known to the converter. |
+| IEW-L15 | Only the first 256 columns and 10,000 rows have their sizes read from a file; none of the rest is reported. A patch keeps them. | A file sizes every column, nobody sees past the used ones. |
+| IEW-L16 | A resized ods column or row gets a new style, so a page break set on its old style is lost. A size beyond Excel's limit (255 characters, 409.5 points) is written at the limit (`layout:beyond-excel-limits`). | ods styles are not merged; Excel has the limits. |
 | IEW-L12 | The ods names of one sheet are written at the end of the `table:table`; the standard's schema was not checked for this place (LibreOffice reads it). | See D457. |
 
 ## What to try (QA)
@@ -49,3 +55,9 @@ names are in the Name Box / Name Manager, the formula calculates, an xlsx table 
 an existing xlsx with a styled table, add a row and a name in Claudia, export again: the table keeps its style and
 grows by the row, the file's other names (print area, names that are formulas) are still there. The download dialog
 lists `name` losses for purposes, `SQL()` results and tables of one sheet.
+
+*Slice 5b, widths and heights.* In the spreadsheet drag a column wider and a row taller (or Format ▸ Column width…);
+File ▸ Download as .xlsx and as .ods: both open in LibreOffice (and Excel) with the same columns and rows, and no
+`layout` loss is listed. Open an imported file with sized columns, widen one, download again: the other columns, the
+cells' looks and the rest of the file are as they were. Give a size up (reset it): the line is at the default size in
+the next download. A column over 255 characters wide (about 1,785 px) is written at 255 and listed.
