@@ -7,6 +7,7 @@ import { lookOnly } from '~/lib/replay'
 // dialogs and popovers). The menus themselves are the app's, built mostly from `lib/document-menus.ts`.
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
+import type { Thing } from '~/lib/tags'
 import type { FrameDialog } from '~/lib/document-menus'
 import { applyAction, collectStates } from '~/lib/menu-dispatch'
 import { cycleRegions, windowRegions } from '~/lib/regions'
@@ -38,7 +39,7 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }]; saved: [] }
 const state = props.session.state
 const panelOpen = ref(true)
 const dialog = ref<FrameDialog | null>(null)
-const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs', topic?: string) => void; replay: () => void } | null>(null)
+const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs', topic?: string) => void; replay: () => void; reference: (thing: Thing) => void } | null>(null)
 const readonly = computed(() => lookOnly(state))
 const frame = ref<HTMLElement | null>(null)
 
@@ -80,6 +81,14 @@ function replayHistory() {
   setTimeout(() => panel.value?.replay(), 0)
 }
 
+/** Edit ▸ Reference in Chat: a tag for this thing goes into the message being written (E5.20, D551). */
+async function referenceThing(id: string) {
+  const thing = await props.session.thingToReference(id)
+  if (!thing) return props.session.notice(t('That cannot be pointed at yet.'), 'warning')
+  panelOpen.value = true
+  setTimeout(() => panel.value?.reference(thing), 0)
+}
+
 /** Help ▸ "How do I…?" / "Documentation" (D125's stubs, real now: E13.5), and a link to one `topic` from the app. The
  * dock opens if it was closed, so the help is on the screen where the person asked for it. */
 function openHelp(mode?: 'how-to' | 'docs', topic?: string) {
@@ -111,6 +120,7 @@ defineExpose({
   ask,
   openHelp,
   replayHistory,
+  referenceThing,
   openDialog,
   /** View ▸ History and chat (D120's shared block) toggles the one `panelOpen` this frame owns — exposed as a
    * getter/setter pair, not the ref itself, so the parent's own `computed` menus still track it correctly. */

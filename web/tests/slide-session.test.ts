@@ -499,3 +499,49 @@ describe('speaker notes and planned times (D342, D343)', () => {
     expect(session.plan()).toEqual({ seconds: 0, planned: 0, unplanned: 1 })
   })
 })
+
+describe('tags to things on slides (E5.20, D551)', () => {
+  const named = (id: string, name: string, slide = 's1') => text(id, { name, anchor: { kind: 'slide', container: slide, x: 100, y: 100 } })
+
+  it('offers the named things on the slide in sight, and the slide itself', async () => {
+    const { link, session } = await opened([named('t1', 'Title'), text('t2')])
+    link.handlers.slides = () => [{ id: 's1', objects: 2, name: 'Intro' }]
+    await session.open()
+    const offered = await session.taggableThings()
+    expect(offered.map((t) => [t.name, t.kind])).toEqual([
+      ['Intro', 'slide'],
+      ['Title', 'text'],
+    ])
+    expect(await session.unnamedInView()).toBe(1)
+  })
+  it('takes a tag to a thing on another slide by showing that slide, and back', async () => {
+    const link = new FakeLink()
+    server(link, [named('t1', 'Title'), named('t9', 'Chart on two', 's2')])
+    link.handlers.slides = () => [
+      { id: 's1', objects: 1, name: 'One' },
+      { id: 's2', objects: 1, name: 'Two' },
+    ]
+    link.handlers.slide = ({ slide }: any) => ({
+      revision: 'main:0',
+      slide,
+      objects: slide === 's1' ? [named('t1', 'Title')] : [named('t9', 'Chart on two', 's2')],
+    })
+    const session = new SlideSession(() => link)
+    await session.open()
+    expect(session.state.activeSlide).toBe('s1')
+    await session.goToThing('t9')
+    expect(session.state.activeSlide).toBe('s2')
+    expect(session.state.pointed).toEqual({ id: 't9', container: 's2', from: 's1' })
+    session.goBack()
+    expect(session.state.activeSlide).toBe('s1')
+  })
+  it('shows the name a thing has now, and knows a thing that is gone', async () => {
+    const { link, session } = await opened([named('t1', 'Title')])
+    link.handlers.slides = () => [{ id: 's1', objects: 1, name: 'Intro' }]
+    await session.open()
+    link.push('thing_renamed', { type: 'thing_renamed', id: 't1', name: 'Headline' })
+    expect(session.nameOf('t1')).toBe('Headline')
+    expect(session.isGone('t1')).toBe(false)
+    expect(session.isGone('long-gone')).toBe(true)
+  })
+})

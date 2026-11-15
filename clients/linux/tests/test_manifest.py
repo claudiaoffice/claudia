@@ -286,6 +286,7 @@ def test_computes_edit_has_search_then_new_sheet_then_row_and_column_submenus_th
     tail = entries(edit)[6:]  # past the shared Undo…Paste-as block
     assert [e.label for e in tail] == [
         "Search & Replace…",
+        "Reference in Chat",  # E5.20: the same entry in every app
         "New Sheet…",
         "Image…",  # UX-36: Image… and Chart… were on the web only
         "Chart…",
@@ -293,7 +294,7 @@ def test_computes_edit_has_search_then_new_sheet_then_row_and_column_submenus_th
         "Column",
         "Clear Cells",
     ]
-    row, column = tail[4], tail[5]
+    row, column = tail[5], tail[6]
     assert isinstance(row, Submenu)
     assert [a.id for a in row.items] == ["edit.row-insert-above", "edit.row-insert-below", "edit.row-delete"]
     assert isinstance(column, Submenu) and [a.id for a in column.items] == [
@@ -322,6 +323,7 @@ def test_creates_edit_has_search_new_slide_edit_text_text_box_then_delete(create
     tail = [e.label for e in entries(edit)[6:]]
     assert tail == [
         "Search & Replace…",  # E10.19, as in composes and computes
+        "Reference in Chat",
         "New Slide",
         "Plan the Time of This Slide…",
         "Edit Text",

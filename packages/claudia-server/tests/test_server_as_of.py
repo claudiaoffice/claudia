@@ -99,3 +99,36 @@ def test_a_table_answers_its_cells_as_they_were():
 
     assert str(then) != str(now)
     assert "1" in str(then)
+
+
+# -- thing_last_seen: where a deleted thing was last there (D551) --------------------------------------------------
+def test_a_thing_that_is_there_is_present_at_the_head(deck):
+    thing = add_text(deck)  # main:1
+    seen = call(deck, "thing_last_seen", {"id": thing})
+    assert seen == {"present": True, "revision": "main:1"}
+
+
+def test_a_removed_object_was_last_seen_before_it_went(deck):
+    keep = add_text(deck)  # main:1
+    gone = add_shape(deck)  # main:2
+    call(deck, "add_slide")  # main:3
+    call(deck, "remove_object", {"id": gone})  # main:4
+    assert call(deck, "thing_last_seen", {"id": gone}) == {"present": False, "revision": "main:3"}
+    assert call(deck, "thing_last_seen", {"id": keep})["present"] is True
+
+
+def test_a_removed_unnamed_object_is_found_too(deck):
+    gone = add_text(deck)
+    call(deck, "remove_object", {"id": gone})
+    assert call(deck, "thing_last_seen", {"id": gone}) == {"present": False, "revision": "main:1"}
+
+
+def test_an_id_that_never_existed_has_no_revision(deck):
+    add_text(deck)
+    assert call(deck, "thing_last_seen", {"id": "nothing-like-this"}) == {"present": False, "revision": None}
+
+
+def test_the_last_look_is_one_of_the_reads_a_replay_may_ask_live(deck):
+    from claudia_server.replay import VIEW_READS
+
+    assert "thing_last_seen" not in VIEW_READS  # it looks at the whole history, so it is never "as of" a step

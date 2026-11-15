@@ -527,6 +527,12 @@ class ObjectModel[A: Anchor]:
             if not obj.body.name:
                 yield obj.body.kind, obj.id
 
+    def has_thing(self, thing_id: str) -> bool:
+        """Is there an object, slide, sheet or chart tab with this id, named or not?"""
+        return any(i == thing_id for _kind, i, _name in self.named_things()) or any(
+            i == thing_id for _kind, i in self.unnamed_things()
+        )
+
     def thing_name(self, thing_id: str) -> str:
         """The name of the thing with this id, ``""`` if it has none; ``ValueError`` if there is no such thing."""
         return self.get_object(thing_id).body.name

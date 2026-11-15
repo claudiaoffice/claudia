@@ -33,6 +33,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Paste | Ctrl+V | the document view or the browser |
 | Edit | Paste As ▸ Plain Text | Ctrl+Shift+V | the document view or the browser |
 | Edit | Search & Replace… | Ctrl+F |  |
+| Edit | Reference in Chat | Ctrl+Alt+X |  |
 | Edit | Insert ▸ Soft Hyphen | Ctrl+- |  |
 | Edit | Insert ▸ Non-breaking Hyphen | Ctrl+_ |  |
 | Format | Apply Style… | Ctrl+Alt+A |  |
@@ -86,6 +87,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Paste | Ctrl+V | the document view or the browser |
 | Edit | Paste As ▸ Plain Text | Ctrl+Shift+V | the document view or the browser |
 | Edit | Search & Replace… | Ctrl+F |  |
+| Edit | Reference in Chat | Ctrl+Alt+X |  |
 | Edit | New Sheet… | Shift+F11 |  |
 | Edit | Image… | Ctrl+Alt+I |  |
 | Edit | Chart… | Ctrl+Alt+C |  |
@@ -154,6 +156,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Paste | Ctrl+V | the document view or the browser |
 | Edit | Paste As ▸ Plain Text | Ctrl+Shift+V | the document view or the browser |
 | Edit | Search & Replace… | Ctrl+F |  |
+| Edit | Reference in Chat | Ctrl+Alt+X |  |
 | Edit | New Slide | Ctrl+M |  |
 | Edit | Plan the Time of This Slide… | Ctrl+Shift+Alt+T |  |
 | Edit | Edit Text | Enter | the document view or the browser |

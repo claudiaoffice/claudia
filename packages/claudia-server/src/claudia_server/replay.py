@@ -18,7 +18,7 @@ from dataclasses import replace
 from typing import Any
 from weakref import WeakKeyDictionary
 
-from claudia_core import Document, DocumentModel, KernelError, Revision
+from claudia_core import Document, DocumentModel, KernelError, ObjectModel, Revision
 
 from .i18n import msg
 from .protocol import Context, MethodTable, RequestError
@@ -123,3 +123,20 @@ def add_replay_methods(table: MethodTable) -> None:
             raise RequestError("command_error", str(exc)) from exc
         past = replace(ctx, document=PastDocument(ctx.document, revision, model))  # type: ignore[arg-type]
         return table.dispatch(past, method, params)
+
+    add_thing_history_method(table)
+
+
+def add_thing_history_method(table: MethodTable) -> None:
+    """Add ``thing_last_seen`` to an app's method table."""
+
+    @table.method("thing_last_seen", "id:str")
+    def thing_last_seen(ctx: Context, *, id: str) -> dict:  # noqa: A002 - the wire name
+        """Where a thing (an object, slide, sheet or chart tab, by id) is in the history of the line the document is on
+        (D551): `{present, revision}`. `present` is whether it is there now; `revision` is the last step after which it
+        was, `null` if it never was. A tag in the chat to something deleted since takes a replay there."""
+        model = ctx.document.model
+        if not isinstance(model, ObjectModel):
+            raise RequestError("command_error", msg("this document has nothing that can be named"))
+        seen = ctx.document.last_seen(lambda m: isinstance(m, ObjectModel) and m.has_thing(id))
+        return {"present": model.has_thing(id), "revision": None if seen is None else seen.to_data()}

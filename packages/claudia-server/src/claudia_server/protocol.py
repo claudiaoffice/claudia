@@ -120,6 +120,7 @@ EVENTS = {
     "fork_point}. Everything you hold is stale: call snapshot",
     "rebuilt": "the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot",
     "redacted": "the content of these revisions was removed: {revisions}",
+    "thing_renamed": "an object, slide, sheet or chart tab got another name: {id, name} (D550)",
     "stale": "functions the document uses changed: {functions}; results computed by them are out of date",
     "joined": "somebody connected: {id, user, color}",
     "left": "somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection",

@@ -6,6 +6,7 @@ import type { BaseSession } from '~/lib/base-session'
 import type { AiMode } from '~/lib/ai-mode'
 import { rowKey } from '~/lib/base-session'
 import { keyStep, WheelStepper, wheelDelta, type Filter } from '~/lib/replay'
+import { encodeTag, hashAt, matches, splitTags, withTag, type Thing, type ThingKind } from '~/lib/tags'
 
 const props = defineProps<{ session: BaseSession }>()
 const state = props.session.state
@@ -121,6 +122,9 @@ function onWheel(event: WheelEvent) {
   })
 }
 function onKey(event: KeyboardEvent) {
+  // Escape and End belong to the text box while somebody is typing in it
+  const typing = (event.target as HTMLElement | null)?.closest('input, textarea') !== null
+  if (typing && !event.altKey) return
   const move = keyStep(event)
   if (!move || (!state.replay && !('by' in move && canReplay.value))) return
   event.preventDefault()
@@ -147,7 +151,106 @@ function startReplay() {
   tab.value = 'history'
   void props.session.startReplay()
 }
-defineExpose({ ask, openHelp, replay: startReplay })
+defineExpose({ ask, openHelp, replay: startReplay, reference: referenceThing })
+
+// ------------------------------------------------------------------------------ tags: `#` in the chat (E5.20, D551)
+const caret = ref(0)
+const hash = computed(() => hashAt(draft.value, caret.value))
+/** What `#` offers, read from the document when it opens. */
+const offered = ref<Thing[]>([])
+const unnamed = ref(0)
+const dismissed = ref<number | null>(null)
+const active = ref(0)
+const suggestions = computed(() => (hash.value && dismissed.value !== hash.value.start ? matches(offered.value, hash.value.query) : []))
+/** The last row of the list: name what has no name yet, so that it can be pointed at. */
+const offerNaming = computed(() => hash.value !== null && dismissed.value !== hash.value.start && unnamed.value > 0)
+const optionCount = computed(() => suggestions.value.length + (offerNaming.value ? 1 : 0))
+const listOpen = computed(() => optionCount.value > 0)
+const kindLabels: Record<ThingKind, string> = {
+  text: t('Text box'),
+  shape: t('Shape'),
+  image: t('Picture'),
+  diagram: t('Chart'),
+  rendered: t('Diagram'),
+  slide: t('Slide'),
+  sheet: t('Sheet'),
+  chart: t('Chart'),
+}
+const optionId = (i: number) => `tag-option-${i}`
+
+async function readThings() {
+  offered.value = await props.session.taggableThings()
+  unnamed.value = await props.session.unnamedInView()
+}
+watch(
+  () => hash.value?.start ?? null,
+  (start) => {
+    active.value = 0
+    if (start === null) dismissed.value = null
+    else void readThings()
+  },
+)
+watch(() => hash.value?.query, () => (active.value = 0))
+
+function noteCaret(event: Event) {
+  caret.value = (event.target as HTMLInputElement).selectionStart ?? draft.value.length
+}
+function pickThing(thing: Thing) {
+  const h = hash.value
+  if (!h) return
+  const done = withTag(draft.value, h, caret.value, thing)
+  draft.value = done.text
+  caret.value = done.caret
+  void nextTick(() => {
+    input.value?.focus()
+    input.value?.setSelectionRange(done.caret, done.caret)
+  })
+}
+async function nameThem() {
+  await props.session.nameUnnamed()
+  await readThings()
+}
+function pickOption(i: number) {
+  const thing = suggestions.value[i]
+  if (thing) pickThing(thing)
+  else if (offerNaming.value) void nameThem()
+}
+/** The keys of a combobox: arrows move, Enter and Tab pick, Escape closes the list and the `#…` stays plain text. */
+function onChatKey(event: KeyboardEvent) {
+  if (!listOpen.value || event.isComposing) return
+  const n = optionCount.value
+  if (event.key === 'ArrowDown') active.value = (active.value + 1) % n
+  else if (event.key === 'ArrowUp') active.value = (active.value + n - 1) % n
+  else if (event.key === 'Enter' || event.key === 'Tab') pickOption(active.value)
+  else if (event.key === 'Escape') dismissed.value = hash.value?.start ?? null
+  else return
+  event.preventDefault()
+  event.stopPropagation()
+}
+const announceList = computed(() =>
+  listOpen.value ? t('{n} things to point at. Use the arrow keys, then Enter.', { n: suggestions.value.length }) : '',
+)
+function segmentsOf(text: string) {
+  return splitTags(text)
+}
+function tagName(id: string, written: string): string {
+  return props.session.nameOf(id) ?? written
+}
+function goTo(id: string) {
+  void props.session.goToThing(id)
+}
+/** Edit ▸ Reference Selection in Chat: write a tag for the thing selected in the view. */
+function referenceThing(thing: Thing) {
+  tab.value = 'history'
+  const tag = `${draft.value && !draft.value.endsWith(' ') ? ' ' : ''}${splitTagText(thing)} `
+  draft.value += tag
+  void nextTick(() => {
+    input.value?.focus()
+    input.value?.setSelectionRange(draft.value.length, draft.value.length)
+    caret.value = draft.value.length
+  })
+}
+const splitTagText = (thing: Thing) => encodeTag(thing.id, thing.name)
 
 const others = computed(() => state.typing.filter((u) => u !== state.me.user))
 
@@ -347,7 +450,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
             <time>{{ clock(m.time) }}</time>
             <button v-if="replay" type="button" class="visit" :aria-current="isCurrent('m:' + m.number) ? 'step' : undefined" :aria-label="t('Show the document as it was at this message')" @click="visit('m:' + m.number)">{{ isCurrent('m:' + m.number) ? t('▶ here') : t('▷ go here') }}</button>
           </header>
-          <p>{{ m.text }}</p>
+          <p><template v-for="(seg, k) in segmentsOf(m.text)" :key="k"><template v-if="seg.type === 'text'">{{ seg.text }}</template><button v-else type="button" class="tag" :class="{ gone: session.isGone(seg.id) }" :title="session.isGone(seg.id) ? t('Deleted. Show the last moment it was there.') : t('Go to this')" @click="goTo(seg.id)">#{{ tagName(seg.id, seg.name) }}</button></template></p>
         </li>
         <li v-if="others.length" class="typing">
           <span class="author" :style="{ background: colorOf(state, others[0]!), color: inkOn(colorOf(state, others[0]!)) }">{{ others[0] }}</span>
@@ -355,13 +458,47 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
         </li>
       </ol>
       <form class="write" @submit.prevent="send">
+        <div v-if="session.state.pointed?.from" class="backChip">
+          <button type="button" @click="session.goBack()">{{ t('← Back where I was') }}</button>
+        </div>
+        <ul v-if="listOpen" id="tag-list" class="tagList" role="listbox" :aria-label="t('Things to point at')">
+          <li
+            v-for="(thing, i) in suggestions"
+            :id="optionId(i)"
+            :key="thing.id"
+            role="option"
+            :aria-selected="i === active"
+            :class="{ on: i === active }"
+            @mousedown.prevent="pickOption(i)"
+          ><span class="kind">{{ kindLabels[thing.kind] }}</span><span class="nm">{{ thing.name }}</span></li>
+          <li
+            v-if="offerNaming"
+            :id="optionId(suggestions.length)"
+            role="option"
+            class="naming"
+            :aria-selected="suggestions.length === active"
+            :class="{ on: suggestions.length === active }"
+            @mousedown.prevent="nameThem"
+          >{{ t('Give names to {n} things without one', { n: unnamed }) }}</li>
+        </ul>
+        <p class="sr-only" role="status" aria-live="polite">{{ announceList }}</p>
         <input
           ref="input"
           v-model="draft"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          aria-controls="tag-list"
+          :aria-expanded="listOpen"
+          :aria-activedescendant="listOpen ? optionId(active) : undefined"
           :aria-label="t('chat message')"
           :placeholder="t('Message everyone, or @ai …')"
           autocomplete="off"
           maxlength="2000"
+          @keydown="onChatKey"
+          @input="noteCaret"
+          @keyup="noteCaret"
+          @click="noteCaret"
         >
         <button class="send" type="submit" :aria-label="t('send')" :disabled="!draft.trim()">
           <svg viewBox="0 0 20 20" width="16" height="16"><path d="M4 10h11m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -856,9 +993,92 @@ time {
   outline-offset: -3px;
 }
 .write {
+  position: relative;
   display: flex;
   gap: 6px;
   margin-top: 8px;
+}
+.tagList {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  max-height: 220px;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid rgb(231 225 244 / 28%);
+  border-radius: 10px;
+  background: #2a2342;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  overflow: auto;
+  font-size: 12.5px;
+}
+.tagList li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: #e6e0f5;
+  cursor: pointer;
+}
+.tagList li.on {
+  background: var(--iris);
+  color: #fff;
+  box-shadow: inset 3px 0 0 var(--apricot); /* not only a colour (BITV) */
+}
+.tagList .kind {
+  flex: 0 0 4.5em;
+  color: rgb(230 224 245 / 70%);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tagList li.on .kind {
+  color: rgb(255 255 255 / 85%);
+}
+.tagList .naming {
+  margin-top: 2px;
+  border-top: 1px dashed rgb(231 225 244 / 25%);
+  border-radius: 0 0 6px 6px;
+  color: var(--apricot);
+}
+.backChip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+}
+.backChip button {
+  border: 1px solid rgb(242 160 87 / 55%);
+  border-radius: 999px;
+  background: #2a2342;
+  color: var(--apricot);
+  font: 500 11px var(--font-ui);
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.tag {
+  display: inline;
+  margin: 0 1px;
+  padding: 0 6px;
+  border: 1px solid rgb(231 225 244 / 40%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.tag:hover {
+  background: rgb(255 255 255 / 18%);
+}
+.tag:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.tag.gone {
+  text-decoration: line-through;
+  border-style: dashed;
 }
 .write input {
   flex: 1;

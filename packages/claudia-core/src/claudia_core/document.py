@@ -488,6 +488,21 @@ class Document:
                     focus.append(region)
         return Look(rev, after, entry, tuple(focus))
 
+    def last_seen(self, present: Callable[[DocumentModel], bool]) -> Revision | None:
+        """The last step of the line the document is on after which ``present(model)`` was true, or ``None`` if it never
+        was (D551). What a tag to something that has since been deleted needs: the replay goes to the last moment it was
+        there. The history is replayed once, forwards, on a scratch model; nothing live is touched."""
+        model = type(self.model).empty()
+        seen: Revision | None = None
+
+        def look(entry: Entry, _inverse: Command) -> None:
+            nonlocal seen
+            if present(model):
+                seen = entry.rev
+
+        replay(model, self.log.path(self.revision), look)
+        return seen
+
     def switch_to(self, line: str, author: str | None = None) -> Applied | None:
         """Make an existing line the one the document continues on (the way back after a restore).
 

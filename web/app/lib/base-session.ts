@@ -7,6 +7,7 @@ import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQue
 import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
+import type { Thing } from './tags'
 import { nearest, PastLink, step as stepRow, timeline, type Filter, type Item } from './replay'
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
@@ -92,6 +93,15 @@ export interface ReplayState {
   focus: Region[]
 }
 
+/** What a tag has just taken the view to (E5.20, D551): the thing, the slide, sheet or paragraph it is on, and where to
+ * go back to (`null` when the view did not move). The view marks the thing for a moment. */
+export interface Pointed {
+  id: string
+  container: string | null
+  from: string | null
+}
+export const POINT_MS = 3000
+
 export const rowKey = (item: Item): string => (item.kind === 'change' ? `c:${item.revision}` : `m:${item.number}`)
 
 export interface BaseState {
@@ -129,6 +139,10 @@ export interface BaseState {
   restorePolicy: 'consensus' | 'veto'
   /** The playhead, while the person looks at the document as it was; `null` in the present. */
   replay: ReplayState | null
+  /** The names things were given since the document was loaded (`thing_renamed`), by id: a tag shows the name now. */
+  renamed: Record<string, string>
+  /** The thing a tag in the chat just took the view to, for the view to mark. */
+  pointed: Pointed | null
 }
 
 export interface SessionOptions {
@@ -168,6 +182,8 @@ function initialState(): BaseState {
     proposal: null,
     restorePolicy: 'consensus',
     replay: null,
+    renamed: {},
+    pointed: null,
   }
 }
 
@@ -338,6 +354,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Everything the screen shows: the common parts and the app's. */
   protected async reload() {
     await this.stopReplay() // the present is what a reload is for
+    this.state.renamed = {}
     const link = this.need()
     const s = this.state
     const [entries, chat, checkpoints, history, lines, restorePolicy] = await Promise.all([
@@ -374,6 +391,9 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
           s.entries.push(data)
           if (s.entries.length > LOG_LIMIT) s.entries.shift()
         }
+        break
+      case 'thing_renamed':
+        s.renamed[data.id] = data.name
         break
       case 'history':
         s.canUndo = data.can_undo
@@ -516,7 +536,111 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   async endReplay(): Promise<void> {
     if (!this.state.replay) return
     await this.stopReplay()
+    this.state.renamed = {}
     await this.track(this.loadApp())
+  }
+
+  // ------------------------------------------------------------------------------ tags (E5.20, D551)
+  /** Everything with a name that this view knows of, from its own replica. An app that has none returns nothing and
+   * answers `locate` and `inView` from the server. */
+  protected things(): Thing[] {
+    return []
+  }
+  /** The named things in sight: what `#` in the chat offers. */
+  protected async inView(): Promise<Thing[]> {
+    return this.things()
+  }
+  /** How many things in sight have no name yet (a document from before names): `#` offers to name them. */
+  async unnamedInView(): Promise<number> {
+    return 0
+  }
+  /** The slide, sheet or paragraph a thing is on (itself, for a slide or sheet); `null` where there is none. */
+  protected containerOf(_id: string): string | null {
+    return null
+  }
+  /** Where the view is now, in the same terms as `containerOf`. */
+  protected currentContainer(): string | null {
+    return null
+  }
+  /** Take the view to a slide, sheet or paragraph. */
+  protected showContainer(_id: string): void {}
+  /** Where a thing is, if it is in this view's document as it is shown. */
+  protected async locate(id: string): Promise<{ container: string | null } | null> {
+    return this.things().some((t) => t.id === id) ? { container: this.containerOf(id) } : null
+  }
+
+  /** The things a `#` in the chat may offer: those with a name, in sight. */
+  taggableThings(): Promise<Thing[]> {
+    return this.inView()
+  }
+
+  /** The current name of a thing: what it was renamed to, else what it has, `undefined` for one this view does not know. */
+  nameOf(id: string): string | undefined {
+    return this.things().find((t) => t.id === id)?.name ?? this.state.renamed[id]
+  }
+
+  /** The thing to write a tag for: named already, or named now if it had no name (the first tag to it names it). */
+  async thingToReference(id: string): Promise<Thing | null> {
+    const find = () => this.things().find((t) => t.id === id) ?? null
+    const known = find()
+    if (known) return known
+    await this.nameUnnamed()
+    return find()
+  }
+
+  /** Does this view keep a replica of the document's things, so that one it does not hold is gone? */
+  protected tracksThings(): boolean {
+    return false
+  }
+  /** Is this thing known to be gone from the document as shown (a tag to it then says so)? */
+  isGone(id: string): boolean {
+    return this.tracksThings() && this.nameOf(id) === undefined
+  }
+
+  /** Name everything that has no name (a document from before names) in one step of the history; how many were named. */
+  async nameUnnamed(): Promise<number> {
+    const done = await this.attempt('name_unnamed', { base: this.state.revision })
+    return done === false ? 0 : done.named
+  }
+
+  /** What a click on a tag does: take the view to the thing and mark it. For a thing that is gone, a replay at the last
+   * moment it was there. */
+  async goToThing(id: string, retry = true): Promise<void> {
+    const s = this.state
+    const found = await this.locate(id)
+    if (!found) return this.goToMissing(id, retry)
+    const from = this.currentContainer()
+    const moved = found.container !== null && found.container !== from
+    if (moved) this.showContainer(found.container!)
+    const pointed: Pointed = { id, container: found.container, from: moved ? from : null }
+    s.pointed = pointed
+    setTimeout(() => {
+      if (s.pointed === pointed) s.pointed = null
+    }, POINT_MS)
+  }
+
+  /** The way back after a tag took the view elsewhere. */
+  goBack(): void {
+    const p = this.state.pointed
+    if (p?.from) this.showContainer(p.from)
+    this.state.pointed = null
+  }
+
+  private async goToMissing(id: string, retry: boolean): Promise<void> {
+    const seen = await this.attempt('thing_last_seen', { id })
+    if (seen === false) return
+    if (seen.present) {
+      // it is there now, but not in the past that is being shown: leave the replay and go
+      if (this.state.replay && retry) {
+        await this.endReplay()
+        return this.goToThing(id, false)
+      }
+      return
+    }
+    if (!seen.revision) return this.notice(t('There is nothing like that in this document.'), 'warning')
+    if (this.state.replay) await this.replayGo(nearest(this.replayItems(), seen.revision))
+    else await this.startReplay(seen.revision)
+    this.notice(t('That was deleted. This is the last moment it was there.'))
   }
 
   /** The views' own part of following a step: go to what it touched. */

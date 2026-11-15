@@ -381,6 +381,14 @@ function scrollToBlock(id: string) {
   blockEl(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
+// A tag in the chat that points at something hanging from a paragraph: the paragraph comes into view.
+watch(
+  () => props.session.state.pointed,
+  (pointed) => {
+    if (pointed?.container) scrollToBlock(pointed.container)
+  },
+)
+
 // The match being looked at comes into view; the caret stays where it was, so that a person can go on typing.
 watch(
   () => props.marks?.findIndex((m) => m.current) ?? -1,

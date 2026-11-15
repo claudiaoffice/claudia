@@ -211,3 +211,4 @@ used.left_indent  # python-docx: assigning it writes the ``w:ind`` of a style (c
 used.right_indent  # python-docx: the same, for the right side
 used.line_spacing_rule  # python-docx: assigning it writes the ``w:spacing`` rule of a style
 used._peek_revision  # registered as a protocol method by a decorator (server test_server_peek_revision.py)
+used.thing_last_seen  # registered as a protocol method by a decorator (server test_server_as_of.py)

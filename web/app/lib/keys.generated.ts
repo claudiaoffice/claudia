@@ -31,6 +31,7 @@ export const KEYS: Readonly<Record<string, ActionKey>> = {
   'edit.paste': { chord: { key: 'v', code: 'KeyV', ctrl: true }, owner: 'view' },
   'edit.paste-as-plain': { chord: { key: 'v', code: 'KeyV', ctrl: true, shift: true }, owner: 'view' },
   'edit.redo': { chord: { key: 'z', code: 'KeyZ', ctrl: true, shift: true }, owner: 'page' },
+  'edit.reference': { chord: { key: 'x', code: 'KeyX', ctrl: true, alt: true }, owner: 'page' },
   'edit.row-delete': { chord: { key: '-', ctrl: true, alt: true }, owner: 'page' },
   'edit.row-insert-above': { chord: { key: 'ArrowUp', shift: true, alt: true }, owner: 'page' },
   'edit.row-insert-below': { chord: { key: 'ArrowDown', shift: true, alt: true }, owner: 'page' },

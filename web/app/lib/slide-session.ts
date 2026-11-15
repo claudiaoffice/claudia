@@ -2,6 +2,7 @@
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
 import type { LinkLike, Region, WireData } from './protocol'
 import { containerOf, firstFocus, lookOnly } from './replay'
+import type { Thing } from './tags'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { describeParams } from './descriptions'
 import type { Frame } from './geometry'
@@ -31,6 +32,8 @@ export interface ShapeDef {
 export interface SlideInfo {
   id: string
   objects: number
+  /** The slide's name in the document's one namespace (D550); `''` for one that has none yet. */
+  name?: string
 }
 export interface SlideState extends BaseState {
   slides: SlideInfo[]
@@ -126,6 +129,38 @@ export class SlideSession extends BaseSession<SlideState> {
     s.styleModel = styleModel
     if (!slides.some((x) => x.id === s.activeSlide)) s.activeSlide = slides[0]?.id ?? ''
     if (s.selected && !s.objects[s.selected]) s.selected = null
+  }
+
+  // -- tags (E5.20, D551)
+  protected override things(): Thing[] {
+    const s = this.state
+    const out: Thing[] = []
+    for (const slide of s.slides) if (slide.name) out.push({ id: slide.id, name: s.renamed[slide.id] ?? slide.name, kind: 'slide' })
+    for (const o of Object.values(s.objects)) if (o.name) out.push({ id: o.id, name: s.renamed[o.id] ?? o.name, kind: o.kind })
+    return out
+  }
+  protected override async inView(): Promise<Thing[]> {
+    const here = this.state.activeSlide
+    return this.things().filter((t) => this.containerOf(t.id) === here)
+  }
+  override async unnamedInView(): Promise<number> {
+    const s = this.state
+    const slide = s.slides.find((x) => x.id === s.activeSlide)
+    return this.objectsOn(s.activeSlide).filter((o) => !o.name).length + (slide && !slide.name ? 1 : 0)
+  }
+  protected override tracksThings(): boolean {
+    return true
+  }
+  protected override containerOf(id: string): string | null {
+    const s = this.state
+    if (s.slides.some((x) => x.id === id)) return id
+    return s.objects[id]?.anchor.container ?? null
+  }
+  protected override currentContainer(): string | null {
+    return this.state.activeSlide || null
+  }
+  protected override showContainer(id: string): void {
+    if (this.state.slides.some((x) => x.id === id)) this.state.activeSlide = id
   }
 
   /** A step of the replay is shown on the slide it touched (D551). */

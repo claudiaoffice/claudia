@@ -137,6 +137,7 @@ export const LIVE_REQUESTS: ReadonlySet<string> = new Set([
   'language',
   'ping',
   'peek_revision',
+  'thing_last_seen',
 ])
 
 /** What a view reads the document with; asked "as of" a step while replaying. The same list the server answers (`VIEW_READS`). */

@@ -16,7 +16,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
-  panelItem, replayItem,
+  panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
   type DocumentMenuContext,
@@ -241,6 +241,8 @@ const menus = computed<Menu[]>(() => {
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
         searchItem(c, { open: () => openSearch() }),
+        { label: '', separator: true },
+        referenceItem(c, { run: () => {}, possible: () => false }), // text has no object to select in the web yet
         { label: '', separator: true },
         // The two characters that had keys and no menu entry (UX-35/UX-36): where a word may break, and where never.
         {

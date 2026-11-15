@@ -16,6 +16,8 @@ Names of things (D550): every object, slide, sheet and chart tab has one name, u
   `name_holder` and `names_in_use`: an app that names more than its objects overrides the first four.
 - `Document.peek_revision(rev)` and `Look` (D551): the state after one step of the history on any line, the step, and the
   regions it touched (read against the state before and after it), for replaying the history. Touches nothing live.
+- `Document.last_seen(present)` and `ObjectModel.has_thing(id)` (D551): the last step of the line after which a state
+  satisfied a test (one forward pass on a scratch model), e.g. the last moment a deleted thing was still there.
 
 ### Changed
 - `AddObject` is schema 4: bodies carry `name`. The upcaster reads older bodies as unnamed.

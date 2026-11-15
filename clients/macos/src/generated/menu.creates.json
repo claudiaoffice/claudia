@@ -313,6 +313,20 @@
         [
           {
             "accelerators": [
+              "<Primary><Alt>x"
+            ],
+            "checkable": false,
+            "id": "edit.reference",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Reference in Chat",
+            "role": null,
+            "start": false
+          }
+        ],
+        [
+          {
+            "accelerators": [
               "<Primary>m"
             ],
             "checkable": false,

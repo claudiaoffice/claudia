@@ -4,6 +4,7 @@ import { BaseSession, type BaseState, type SessionOptions } from './base-session
 import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
 import { containerOf, firstFocus, lookOnly } from './replay'
+import type { Thing } from './tags'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
 import type { NumberFormatDef } from './number-format'
@@ -615,6 +616,38 @@ export class Session extends BaseSession<State> {
   async outcomeTable(sheet: string, row: number, col: number, combine: 'all' | 'pair' = 'all'): Promise<OutcomeTable | null | false> {
     const done = await this.attempt('outcome_table', { sheet, row, col, combine })
     return done === false ? false : (done.table as OutcomeTable | null)
+  }
+
+  // -- tags (E5.20, D551)
+  protected override things(): Thing[] {
+    const s = this.state
+    const out: Thing[] = []
+    for (const sheet of s.sheets) out.push({ id: sheet.id, name: s.renamed[sheet.id] ?? sheet.name, kind: 'sheet' })
+    for (const chart of s.charts) out.push({ id: chart.id, name: s.renamed[chart.id] ?? chart.name, kind: 'chart' })
+    for (const o of Object.values(s.objects)) if (o.name) out.push({ id: o.id, name: s.renamed[o.id] ?? o.name, kind: o.kind })
+    return out
+  }
+  /** The sheet being looked at, the chart tabs beside it and what floats on the sheet. */
+  protected override async inView(): Promise<Thing[]> {
+    const here = this.state.activeSheet
+    return this.things().filter((t) => t.kind === 'chart' || this.containerOf(t.id) === here)
+  }
+  override async unnamedInView(): Promise<number> {
+    return this.objectsOn(this.state.activeSheet).filter((o) => !o.name).length
+  }
+  protected override tracksThings(): boolean {
+    return true
+  }
+  protected override containerOf(id: string): string | null {
+    const s = this.state
+    if (s.sheets.some((x) => x.id === id)) return id
+    return s.objects[id]?.anchor.container ?? null
+  }
+  protected override currentContainer(): string | null {
+    return this.state.activeSheet || null
+  }
+  protected override showContainer(id: string): void {
+    if (this.state.sheets.some((x) => x.id === id)) this.state.activeSheet = id
   }
 
   /** A step of the replay is shown on the sheet it touched (D551); the grid scrolls to it from `state.replay.focus`. */

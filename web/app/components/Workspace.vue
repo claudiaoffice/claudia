@@ -34,7 +34,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
-  panelItem, replayItem,
+  panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
   type DocumentMenuContext,
@@ -493,6 +493,15 @@ async function pickTab(id: string, kind: 'sheet' | 'chart') {
   await pickSheet(id)
 }
 
+/** A tag in the chat took the view to a thing (E5.20): to a chart's tab, or from a chart's tab to the sheet it is on. */
+watch(
+  () => state.pointed,
+  (pointed) => {
+    if (!pointed) return
+    activeChart.value = state.charts.some((c) => c.id === pointed.id) ? pointed.id : null
+  },
+)
+
 async function addSheet(name: string) {
   dialog.value = null
   await session.addSheet(name)
@@ -929,6 +938,8 @@ const menus = computed<Menu[]>(() => {
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
         searchItem(c, { open: () => openSearch() }),
+        { label: '', separator: true },
+        referenceItem(c, { run: () => void frame.value?.referenceThing(grid.value?.selectedObject() ?? activeChart.value ?? state.activeSheet), possible: () => !!(grid.value?.selectedObject() ?? activeChart.value ?? state.activeSheet) }),
         { label: '', separator: true },
         { id: 'edit.new-sheet', label: t('New Sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
         { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value },

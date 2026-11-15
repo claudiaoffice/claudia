@@ -13,7 +13,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
-  panelItem, replayItem,
+  panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
   type DocumentMenuContext,
@@ -237,6 +237,8 @@ const menus = computed<Menu[]>(() => {
         ...clipboardItems(c, () => pasteFromClipboard()),
         { label: '', separator: true },
         searchItem(c, { open: () => openSearch() }),
+        { label: '', separator: true },
+        referenceItem(c, { run: () => void frame.value?.referenceThing(state.selected ?? state.activeSlide), possible: () => !!(state.selected ?? state.activeSlide) }),
         { label: '', separator: true },
         { id: 'edit.new-slide', label: t('New Slide'), action: () => session.addSlide(), disabled: readonly.value },
         {

@@ -26,6 +26,7 @@ import {
 import type { PaletteEvent, StyleModel } from './objects'
 import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
+import type { Thing } from './tags'
 import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
 import { translate as t } from './i18n'
@@ -546,6 +547,25 @@ export class TextSession extends BaseSession<TextState> {
   setLanguage(language: string | null): Promise<boolean> | undefined {
     if (this.denied()) return undefined
     return this.act(async () => (await this.attempt('set_language', { language, base: this.state.revision })) !== false)
+  }
+
+  // -- tags (E5.20, D551). This replica keeps no objects: they are asked for when a tag needs them.
+  private async floating(): Promise<(TextObject & { name?: string })[]> {
+    return this.need()
+      .request<{ objects: (TextObject & { name?: string })[] }>('objects')
+      .then((a) => a.objects)
+      .catch(() => [])
+  }
+  protected override async inView(): Promise<Thing[]> {
+    const s = this.state
+    return (await this.floating()).filter((o) => o.name).map((o) => ({ id: o.id, name: s.renamed[o.id] ?? o.name!, kind: o.kind }))
+  }
+  override async unnamedInView(): Promise<number> {
+    return (await this.floating()).filter((o) => !o.name).length
+  }
+  protected override async locate(id: string): Promise<{ container: string | null } | null> {
+    const found = (await this.floating()).find((o) => o.id === id)
+    return found ? { container: found.anchor.container } : null
   }
 
   /** The floating objects, their outlines and their images, for printing (D907). Read when the preview opens. */

@@ -406,6 +406,19 @@ def _shared_edit_block() -> tuple[Action, ...]:
     )
 
 
+def _reference_block() -> tuple[MenuEntry, ...]:
+    """Reference in chat (E5.20, D551): write a tag for the selected thing into the chat message, as ``#`` does. Where
+    nothing can be selected as a thing (composes has no objects to select yet) the page keeps it disabled."""
+    return (
+        _page(
+            "edit.reference",
+            "Reference in Chat",
+            "Write a tag for the selected object into the chat, so that everybody can go to it",
+            accelerators=("<Primary><Alt>x",),
+        ),
+    )
+
+
 def _shared_clipboard_block(*, native: bool) -> tuple[MenuEntry, ...]:
     """Copy, Cut, Paste, Paste as ▸ Plain text — identical in every app (D120). The keys are the browser's own in
     every client (:attr:`KeyOwner.VIEW`): the clipboard events reach the page from there.
@@ -736,6 +749,7 @@ def composes() -> Manifest:
             _shared_edit_block(),
             _shared_clipboard_block(native=True),
             _search_block("Find words, headings, remarks and what is said in objects, and replace them"),
+            _reference_block(),
             (
                 Submenu(
                     "Insert",
@@ -792,6 +806,7 @@ def computes() -> Manifest:
             _shared_edit_block(),
             _shared_clipboard_block(native=False),
             _search_block(),
+            _reference_block(),
             (
                 _page("edit.new-sheet", "New Sheet…", "Add a new sheet to the document", accelerators=("<Shift>F11",)),
                 _page("edit.image", "Image…", "Put a picture on the sheet", accelerators=("<Primary><Alt>i",)),
@@ -932,6 +947,7 @@ def creates() -> Manifest:
             _shared_edit_block(),
             _shared_clipboard_block(native=False),
             _search_block("Find words, labels, speaker notes and descriptions, and replace them"),
+            _reference_block(),
             (
                 _page(
                     "edit.new-slide", "New Slide", "Add a new slide to the presentation", accelerators=("<Primary>m",)

@@ -1327,3 +1327,28 @@ describe('the language of the server’s own messages (D323)', () => {
     await useI18n().choose('en')
   })
 })
+
+describe('tags to things in a workbook (E5.20, D551)', () => {
+  it('offers the sheet in sight, the chart tabs and the named things floating on the sheet', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.sheets = () => [
+      { id: 's1', name: 'Budget', rows: 2, cols: 2 },
+      { id: 's2', name: 'Plan', rows: 2, cols: 2 },
+    ]
+    link.handlers.charts = () => [{ id: 'c1', name: 'Revenue', spec_id: 'd1' }]
+    link.handlers.objects = (p: any) => ({
+      revision: 'main:3',
+      sheet: p.sheet,
+      objects: [
+        { id: `${p.sheet}-pic`, name: `Logo ${p.sheet}`, kind: 'image', anchor: { kind: 'cell', container: p.sheet, row: 0, col: 0, dx: 0, dy: 0 }, w: 10, h: 10 },
+      ],
+    })
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    expect((await session.taggableThings()).map((t) => t.name).sort()).toEqual(['Budget', 'Logo s1', 'Revenue'])
+    await session.goToThing('s2-pic')
+    expect(session.state.activeSheet).toBe('s2')
+    expect(session.state.pointed).toMatchObject({ id: 's2-pic', container: 's2', from: 's1' })
+  })
+})

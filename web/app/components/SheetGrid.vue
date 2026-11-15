@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePointed } from '~/lib/pointed'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { cellLabel, columnName, inputOf, showFormatted, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
 import { cellLook, styleAt, within, type CellLook } from '~/lib/cell-styles'
@@ -90,6 +91,7 @@ const HH = 26 // height of the column letters
 const BORDER = 4 // px on either side of a header's line between two lines that still counts as "on" it, for dragging
 
 const viewport = ref<HTMLElement | null>(null)
+usePointed(props.session.state, viewport, (id) => `[data-object="${CSS.escape(id)}"]`)
 const editor = ref<HTMLInputElement | null>(null)
 const scroll = ref({ left: 0, top: 0 })
 const size = ref({ w: 800, h: 600 })

@@ -33,6 +33,8 @@ export type Anchor = SlideAnchor | CellAnchor | BlockAnchor
 /** What an object is and how it looks: the same fields in all three apps. */
 export interface ObjectBody {
   id: string
+  /** The name the object goes by in the whole document (D550), `''` for one that has none yet. */
+  name?: string
   kind: 'text' | 'shape' | 'image' | 'diagram' | 'rendered'
   w: number
   h: number

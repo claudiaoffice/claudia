@@ -110,3 +110,10 @@ button {
   white-space: nowrap;
   border: 0;
 }
+
+/* The thing a tag in the chat just took the view to (E5.20): an outline and a tint, so it is not only a colour. */
+.pointed {
+  outline: 3px solid var(--apricot);
+  outline-offset: 3px;
+  background-color: color-mix(in srgb, var(--apricot) 18%, transparent);
+}

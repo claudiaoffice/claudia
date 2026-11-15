@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePointed } from '~/lib/pointed'
 import { lookOnly } from '~/lib/replay'
 // The slide on screen: its objects, and what people do to them. A click selects (and holds) an object, dragging moves
 // it, the handles resize it, a double click or Enter edits its text, Delete removes it, and a right click offers the
@@ -40,6 +41,7 @@ const editor = ref<HTMLTextAreaElement | null>(null)
 const size = ref({ w: 1200, h: 700 })
 const scale = computed(() => fitScale(size.value, MARGIN))
 const readonly = computed(() => lookOnly(state))
+usePointed(state, area, (id) => `[data-id="${CSS.escape(id)}"]`)
 
 const objects = computed(() => session.objectsOn(state.activeSlide))
 /** What a search found in the words of an object (E10.19), to draw there. */

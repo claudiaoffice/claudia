@@ -157,6 +157,12 @@ export function panelItem(c: DocumentMenuContext, panel: { open: () => boolean; 
   return { id: 'view.panel', label: t('History and Chat'), checked: panel.open(), action: toggling(panel.open, panel.toggle) }
 }
 
+/** Edit ▸ Reference in Chat: a tag for the selected thing goes into the chat message (E5.20, D551). */
+export function referenceItem(c: DocumentMenuContext, reference: { run: () => void; possible: () => boolean }): MenuItem {
+  const { t } = c
+  return { id: 'edit.reference', label: t('Reference in Chat'), action: () => reference.run(), disabled: !reference.possible() }
+}
+
 /** View ▸ Replay history…: show the document as it was, step by step (E5.19, D551). */
 export function replayItem(c: DocumentMenuContext, replay: { start: () => void; possible: () => boolean }): MenuItem {
   const { t } = c

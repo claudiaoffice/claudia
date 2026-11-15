@@ -55,6 +55,22 @@ Ink-dark, which the built screens will follow.
   the web keys and the Windows and macOS menus are generated.
 * Tests: `replay.test.ts`, `replay-session.test.ts`.
 
+## The tags (E5.20)
+
+* `lib/tags.ts` (pure): `encodeTag`/`splitTags` (`[#name](thing:id)`, `[ ] \` escaped), `hashAt` (an open `#…` before
+  the caret that starts a word), `matches` (starts-with before contains, by name key), `withTag`.
+* `BaseSession`: `taggableThings()`, `nameUnnamed()`, `nameOf(id)` (current name: `renamed` from `thing_renamed`, else
+  the replica), `isGone(id)`, `goToThing(id)` (`state.pointed {id, container, from}`; marks for 3 s), `goBack()`,
+  `thingToReference(id)`. Each app says what it knows by overriding `things()`, `inView()`, `containerOf()`,
+  `currentContainer()`, `showContainer()` (creates: slides and objects; computes: sheets, chart tabs, objects;
+  composes keeps no replica of objects, so it asks `objects` when a tag needs them).
+* A tag to something gone: `thing_last_seen` (server, `replay.py`) asks `Document.last_seen`, one forward replay of the
+  line on a scratch model; the session then starts or moves a replay there.
+* Views: `lib/pointed.ts` (`usePointed`) outlines the thing (class `pointed`, an outline plus a tint, not only a colour;
+  the view jumps instead of gliding when the system asks for reduced motion). `Workspace.vue` also switches to a chart's
+  tab; `TextEditor.vue` scrolls to the paragraph.
+* Shortcuts: Ctrl+Alt+Z replay, Ctrl+Alt+X reference (D551 as first written had H and R, which were taken).
+
 ## Why
 
 * One namespace, because "figure 1" in the chat has to mean one thing; ids stay unrelated to names, so a rename never
@@ -74,4 +90,4 @@ tests: `test_core_thing_names.py`, `test_creates_thing_names.py`, `test_computes
 The rename field in the clients (properties, F2 on a tab or slide); names read from and written to pptx, odp, docx and
 xlsx files (take them from the file, suffix duplicates, write them back); names in the assistant's view of a document;
 renaming a sheet (E6.24); composes' own object list in the dock. Both dock interfaces (E5.19, E5.20) are next; the
-the panel's replay UI and the tags are next.
+the rename field in the clients and file import/export of names are next.
