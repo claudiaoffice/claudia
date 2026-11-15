@@ -5,6 +5,14 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-15
+
+Turning objects (D1021): `rotation-ui` and `import-export-wiring` had both given `set_attributes` a `remove`.
+
+### Changed
+- **Breaking**: `XmlPart.set_attributes(element, values, *, remove=())` takes `remove` by keyword only. A name in it
+  whose namespace the file does not declare is nothing to take off, as is one the tag lacks; it raised `OdfError`.
+
 ## [0.5.0] - 2026-11-15
 
 Pictures in paragraphs, for the text and the slides alike (D464).
@@ -36,9 +44,6 @@ Charts: embedded objects in a package (D462).
   default paragraph style. The package depends on claudia-core for the tag check.
 - `XmlPart.set_attributes(element, values, remove=())` takes attributes off an element too (an object that is turned
   has no `svg:x`/`svg:y`, one that is not has no `draw:transform`; D459).
-- `XmlPart.set_attributes(element, values, remove=…)` takes attributes off a start tag (with the space before each) as
-  it puts others on, in one edit; one the tag lacks is nothing to take off. A turned shape swaps `svg:x`/`svg:y` for
-  `draw:transform` (D1021).
 
 ### Changed
 - `XmlPart` makes the bytes of an inserted or replacing element when the result is made, so that what is done to the

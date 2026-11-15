@@ -75,7 +75,7 @@ def transform_of(degrees: int, box: tuple[float, float, float, float]) -> str | 
     # the corner goes where the centre's own turn leaves it: centre - R(angle) * (half the size)
     corner_x = x + half_w - (cos * half_w - sin * half_h)
     corner_y = y + half_h - (sin * half_w + cos * half_h)
-    return f"rotate ({-angle:.10g}) translate ({_text(corner_x)}cm {_text(corner_y)}cm)"
+    return f"rotate ({-angle:.15g}) translate ({_text(corner_x)}cm {_text(corner_y)}cm)"
 
 
 def turned_box(transform: str, w: float, h: float) -> tuple[float, float, float] | None:

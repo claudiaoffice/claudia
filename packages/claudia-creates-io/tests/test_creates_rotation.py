@@ -60,7 +60,7 @@ def test_an_angle_in_degrees_clockwise_is_radians_counter_clockwise_as_the_stand
     assert transform_of(0, (0, 0, 10, 10)) is None
     assert angle_of("rotate (0.5235987755982988) translate (1cm 1cm)") == pytest.approx(330)
     assert angle_of("rotate (-0.5235987755982988) translate (1cm 1cm)") == pytest.approx(30)
-    assert transform_of(30, (0, 0, 0, 0)) == "rotate (-0.5235987756) translate (0cm 0cm)"
+    assert transform_of(30, (0, 0, 0, 0)) == "rotate (-0.523598775598299) translate (0cm 0cm)"  # as LibreOffice writes it
 
 
 @pytest.mark.parametrize("degrees", [0, 1, 30, 90, 180, 270, 359])
@@ -174,10 +174,11 @@ def test_a_turned_object_that_is_moved_keeps_its_rotation_and_goes_where_it_was_
     original = slides_to_odp(a_deck(60))
     baseline, current = odp_to_slides(original), odp_to_slides(original)
     obj = only(current)
-    current.objects[obj.body.id] = VisualObject(obj.body, replace(obj.anchor, x=700, y=100))
+    # turned by 60 degrees the 400 by 200 frame is 374 by 447 units: at y=150 its outline is on the slide (D1022)
+    current.objects[obj.body.id] = VisualObject(obj.body, replace(obj.anchor, x=700, y=150))
     back = only(odp_to_slides(apply_edits_to_odp(original, baseline, current)))
     assert back.body.rotation == 60
-    assert (back.anchor.x, back.anchor.y) == (700, 100)
+    assert (back.anchor.x, back.anchor.y) == (700, 150)
 
 
 def test_a_turned_object_in_a_pptx_is_patched_too():

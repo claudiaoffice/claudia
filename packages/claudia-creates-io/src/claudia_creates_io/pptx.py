@@ -232,8 +232,9 @@ def pptx_unwritten_changes(model: SlideModel, baseline: SlideModel | None = None
 def pptx_import_losses(pptx_bytes: bytes) -> tuple[Loss, ...]:
     """What :func:`pptx_to_slides` does not show of the file, each as a code (``"picture"``, ``"table"``, ``"chart"``,
     ``"group"``, ``"object"`` for any other shape, ``"transition"``, ``"animation"``, ``"notes"`` too long for the
-    model, and on the objects it models ``"look"``, ``"formatting"`` and ``"link"``: what the model, which gives every
-    object the default look, does not show) with how many there are, in the order they come. None of it is lost from
+    model, ``"turn"`` an object turned so far that it cannot lie on the slide, which is read upright, and on the objects
+    it models ``"look"``, ``"formatting"`` and ``"link"``: what the model, which gives every object the default look,
+    does not show) with how many there are, in the order they come. None of it is lost from
     the *file*: an edit exported with :func:`apply_edits_to_pptx` keeps all of it."""
     prs = Presentation(BytesIO(pptx_bytes))
     losses = LossLog()
@@ -244,6 +245,9 @@ def pptx_import_losses(pptx_bytes: bytes) -> tuple[Loss, ...]:
                 losses.add(_UNMODELED.get(shape.shape_type, "object"))
             elif _cannot_turn(shape, scale_x, scale_y):
                 losses.add("turn")
+        for shape in pptx_slide.shapes:
+            if (kind := _classify(shape)) is not None:
+                _note_words_and_look(shape, kind, losses)
         for code, tag in (("transition", "transition"), ("animation", "timing")):
             if pptx_slide._element.find(_qn(tag)) is not None:
                 losses.add(code)

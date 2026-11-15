@@ -1354,28 +1354,13 @@ class _Patch:
     def _moved(
         before: VisualObject, after: VisualObject, per_cm: tuple[float, float]
     ) -> tuple[dict[str, str], tuple[str, ...]]:
-        """The attributes to set and those to take off for the new place, size and turn of an object (D459)."""
-        if before.body.rotation or after.body.rotation:
-            # a turned object has its place in its transform: write all of it again when anything of it changed
-            if (before.anchor, before.body.w, before.body.h, before.body.rotation) == (
-                after.anchor,
-                after.body.w,
-                after.body.h,
-                after.body.rotation,
-            ):
-                return {}, ()
-            placing = _placing(after.anchor, after.body, per_cm)
-            return placing, tuple(name for name in ("svg:x", "svg:y", "draw:transform") if name not in placing)
-        attributes: dict[str, str] = {}
-        for name, then, now, per in (
-            ("svg:x", before.anchor.x, after.anchor.x, per_cm[0]),
-            ("svg:y", before.anchor.y, after.anchor.y, per_cm[1]),
-            ("svg:width", before.body.w, after.body.w, per_cm[0]),
-            ("svg:height", before.body.h, after.body.h, per_cm[1]),
-        ):
-            if then != now:
-                attributes[name] = _length(now, per)
-        return attributes, ()
+        """The attributes to set and those to take off for the new place, size and turn of an object (D459): only what
+        differs between where the object was and where it is, so a turn alone leaves the file's own size as it is
+        (D1021). Turning an object takes ``svg:x`` and ``svg:y`` off, turning it back upright the transform."""
+        then, now = _placing(before.anchor, before.body, per_cm), _placing(after.anchor, after.body, per_cm)
+        return {name: value for name, value in now.items() if then.get(name) != value}, tuple(
+            name for name in then if name not in now
+        )
 
     def _retext(self, found: _Object, text: str, style_name: str | None | bool) -> None:
         lines = text.split("\n")
