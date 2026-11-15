@@ -5881,7 +5881,7 @@ msgstr ""
 msgid "a recovery key, a name and a new password are needed"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:452
+#: packages/claudia-server/src/claudia_server/composes.py:465
 msgid "a remark suggests no change; dismiss it instead"
 msgstr ""
 
@@ -6081,7 +6081,7 @@ msgstr ""
 msgid "blocks must be a list of 1 to {limit} paragraph ids"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:375
+#: packages/claudia-server/src/claudia_server/composes.py:388
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr ""
 
@@ -6669,7 +6669,7 @@ msgstr ""
 msgid "objects must be a list of at most {limit} object ids"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:483
+#: packages/claudia-server/src/claudia_server/composes.py:496
 msgid "offset is outside the paragraph"
 msgstr ""
 
@@ -6709,7 +6709,7 @@ msgstr ""
 msgid "only look"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:437
+#: packages/claudia-server/src/claudia_server/composes.py:450
 msgid "only the assistant makes suggestions"
 msgstr ""
 
@@ -7049,7 +7049,7 @@ msgstr ""
 msgid "that is not your current password"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:244
+#: packages/claudia-server/src/claudia_server/composes.py:257
 msgid "that would make too many paragraphs"
 msgstr ""
 
@@ -7161,7 +7161,7 @@ msgstr ""
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:391 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
+#: packages/claudia-server/src/claudia_server/composes.py:404 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
 msgid "the new style would look just like “{name}”"
 msgstr ""
 
@@ -7177,7 +7177,7 @@ msgstr ""
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:239
+#: packages/claudia-server/src/claudia_server/composes.py:252
 msgid "the range ends before it starts"
 msgstr ""
 
@@ -7281,7 +7281,7 @@ msgstr ""
 msgid "there is no list scheme {scheme!r}; there are {schemes}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:481
+#: packages/claudia-server/src/claudia_server/composes.py:494
 msgid "there is no paragraph {block!r}"
 msgstr ""
 
@@ -7381,7 +7381,7 @@ msgstr ""
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:465
+#: packages/claudia-server/src/claudia_server/composes.py:478
 msgid "this suggestion is not open any more"
 msgstr ""
 
@@ -7481,7 +7481,7 @@ msgstr ""
 msgid "words"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:405
+#: packages/claudia-server/src/claudia_server/composes.py:418
 msgid "words must be from 0 to {limit}"
 msgstr ""
 

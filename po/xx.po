@@ -5881,7 +5881,7 @@ msgstr "[à ràndôm nûmbér frôm thé nàméd dîstrîbûtîôn, fôr éxàmp
 msgid "a recovery key, a name and a new password are needed"
 msgstr "[à récôvéry kéy, à nàmé ànd à néw pàsswôrd àré néédéd~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:452
+#: packages/claudia-server/src/claudia_server/composes.py:465
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "[à rémàrk sûggésts nô chàngé; dîsmîss ît înstéàd~~~~~~~~~~~~~~~~~~~]"
 
@@ -6081,7 +6081,7 @@ msgstr "[blànk~~]"
 msgid "blocks must be a list of 1 to {limit} paragraph ids"
 msgstr "[blôcks mûst bé à lîst ôf 1 tô {limit} pàràgràph îds~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:375
+#: packages/claudia-server/src/claudia_server/composes.py:388
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr "[blôcks mûst bé à lîst ôf àt môst {limit} pàràgràph îds~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6669,7 +6669,7 @@ msgstr "[ôbjéct~~]"
 msgid "objects must be a list of at most {limit} object ids"
 msgstr "[ôbjécts mûst bé à lîst ôf àt môst {limit} ôbjéct îds~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:483
+#: packages/claudia-server/src/claudia_server/composes.py:496
 msgid "offset is outside the paragraph"
 msgstr "[ôffsét îs ôûtsîdé thé pàràgràph~~~~~~~~~~~~]"
 
@@ -6709,7 +6709,7 @@ msgstr "[ônly îts bôx~~~~~]"
 msgid "only look"
 msgstr "[ônly lôôk~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:437
+#: packages/claudia-server/src/claudia_server/composes.py:450
 msgid "only the assistant makes suggestions"
 msgstr "[ônly thé àssîstànt màkés sûggéstîôns~~~~~~~~~~~~~~]"
 
@@ -7049,7 +7049,7 @@ msgstr "[téxt ôf thé ôbjéct~~~~~~~]"
 msgid "that is not your current password"
 msgstr "[thàt îs nôt yôûr cûrrént pàsswôrd~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:244
+#: packages/claudia-server/src/claudia_server/composes.py:257
 msgid "that would make too many paragraphs"
 msgstr "[thàt wôûld màké tôô màny pàràgràphs~~~~~~~~~~~~~~]"
 
@@ -7161,7 +7161,7 @@ msgstr "[thé héàdér rôw~~~~~~]"
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr "[thé hyphénàtîôn pàttérns fôr {name} dîd nôt àrrîvé întàct~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:391 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
+#: packages/claudia-server/src/claudia_server/composes.py:404 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
 msgid "the new style would look just like “{name}”"
 msgstr "[thé néw stylé wôûld lôôk jûst lîké “{name}”~~~~~~~~~~~~~~~~~]"
 
@@ -7177,7 +7177,7 @@ msgstr "[thé pôsîtîôn (frôm 1) ôf thé vàlûé în à rôw ôr côlûmn.
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr "[thé pôsîtîôn (frôm 1) ôf thé vàlûé. Màtch môdé 0 îs éxàct, -1 thé éxàct vàlûé ôr élsé thé néxt smàllér, 1 ôr élsé thé néxt làrgér, 2 éxàct wîth wîldcàrds. Séàrch môdé 1 lôôks frôm thé fîrst, -1 frôm thé làst. Nôt fôûnd îs #N/À.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:239
+#: packages/claudia-server/src/claudia_server/composes.py:252
 msgid "the range ends before it starts"
 msgstr "[thé ràngé énds béfôré ît stàrts~~~~~~~~~~~~]"
 
@@ -7281,7 +7281,7 @@ msgstr "[théré îs nô lîné càlléd {lîné!r}~~~~~~~~~~~~~]"
 msgid "there is no list scheme {scheme!r}; there are {schemes}"
 msgstr "[théré îs nô lîst schémé {schémé!r}; théré àré {schemes}~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:481
+#: packages/claudia-server/src/claudia_server/composes.py:494
 msgid "there is no paragraph {block!r}"
 msgstr "[théré îs nô pàràgràph {blôck!r}~~~~~~~~~~~~]"
 
@@ -7381,7 +7381,7 @@ msgstr "[thîs sérvér hôlds {limit} dôcûménts, thé môst ît mày hôld~~
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "[thîs sérvér kééps îts dôcûménts în mémôry ànd cànnôt tàké în à fîlé~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:465
+#: packages/claudia-server/src/claudia_server/composes.py:478
 msgid "this suggestion is not open any more"
 msgstr "[thîs sûggéstîôn îs nôt ôpén àny môré~~~~~~~~~~~~~~]"
 
@@ -7481,7 +7481,7 @@ msgstr "[wôrd~~]"
 msgid "words"
 msgstr "[wôrds~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:405
+#: packages/claudia-server/src/claudia_server/composes.py:418
 msgid "words must be from 0 to {limit}"
 msgstr "[wôrds mûst bé frôm 0 tô {limit}~~~~~~~~~~~~]"
 

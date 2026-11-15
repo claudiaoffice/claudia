@@ -1,5 +1,5 @@
 {
- "version": "0.25.0",
+ "version": "0.26.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -585,6 +585,12 @@
  "FACET_PROPERTIES": {
   "value": "<frozenset>"
  },
+ "FALLBACK_SIDE": {
+  "value": "32"
+ },
+ "FILE_IMPORTER": {
+  "value": "'file'"
+ },
  "FORMAT": {
   "value": "1"
  },
@@ -728,6 +734,9 @@
   "init": "(owner: 'str', regions: 'tuple[Region, ...]', expires: 'float | None') -> None",
   "methods": {},
   "properties": []
+ },
+ "IMAGE_STYLE": {
+  "value": "'plain-image'"
  },
  "ImageAsset": {
   "class": [
@@ -1176,6 +1185,9 @@
    "show": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Hold'"
   },
   "properties": []
+ },
+ "Rasterise": {
+  "function": "(*args, **kwargs)"
  },
  "Reading": {
   "class": [
@@ -1839,6 +1851,9 @@
  "UI_FLOOR": {
   "value": "3.0"
  },
+ "UNKNOWN_TIME": {
+  "value": "'1970-01-01T00:00:00.000Z'"
+ },
  "UndoConflict": {
   "class": [
    "KernelError"
@@ -1913,6 +1928,12 @@
    "id"
   ]
  },
+ "asset_of": {
+  "function": "(data: 'bytes | None') -> 'ImageAsset | None'"
+ },
+ "blank_png": {
+  "function": "(width: int, height: int) -> bytes"
+ },
  "builtin_palette": {
   "function": "() -> 'Palette'"
  },
@@ -1958,6 +1979,9 @@
  "insert_runs": {
   "function": "(runs: 'Iterable[Run]', offset: 'int', new: 'Iterable[Run]') -> 'list[Run]'"
  },
+ "keeps_proportions": {
+  "function": "(asset: 'ImageAsset', w: 'int', h: 'int') -> 'bool'"
+ },
  "luminance": {
   "function": "(colour: 'str') -> 'float'"
  },
@@ -1993,6 +2017,9 @@
  },
  "parse_shape": {
   "function": "(text: 'str') -> 'ShapeDefinition'"
+ },
+ "picture_body": {
+  "function": "(object_id: 'str', asset: 'ImageAsset', size: 'tuple[int, int]', *, name: 'str' = '', description: 'str' = '', decorative: 'bool' = False, rotation: 'int' = 0) -> 'ObjectBody'"
  },
  "replace_spans": {
   "function": "(paragraph: 'Paragraph', edits: 'Iterable[tuple[int, int, str]]', author: 'str | None') -> 'Paragraph'"
