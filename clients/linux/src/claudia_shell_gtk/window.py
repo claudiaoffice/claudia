@@ -186,6 +186,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
     starting_page = Gtk.Template.Child()
     menu_file = Gtk.Template.Child()
     menu_edit = Gtk.Template.Child()
+    menu_insert = Gtk.Template.Child()
     menu_format = Gtk.Template.Child()
     menu_view = Gtk.Template.Child()
     menu_tools = Gtk.Template.Child()

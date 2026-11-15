@@ -663,6 +663,42 @@ def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
     )
 
 
+def _insert_menu() -> Menu:
+    """Insert ▸ Container ▸ LaTeX, Mermaid, Typst (D560): the same in every app. A container is a rendered text: the
+    person writes the text and the server draws it (D390). The keys are the weighty ones, Ctrl+Alt+Shift+F (formula),
+    G (graph) and Y (Typst), because the plain Ctrl+Alt letters are used up or belong to the desktop (see above)."""
+    return Menu(
+        "Insert",
+        (
+            (
+                Submenu(
+                    "Container",
+                    (
+                        _page(
+                            "insert.container.latex",
+                            "LaTeX",
+                            "Put a formula or text written in LaTeX here",
+                            accelerators=("<Primary><Alt><Shift>f",),
+                        ),
+                        _page(
+                            "insert.container.mermaid",
+                            "Mermaid",
+                            "Put a diagram written in Mermaid here",
+                            accelerators=("<Primary><Alt><Shift>g",),
+                        ),
+                        _page(
+                            "insert.container.typst",
+                            "Typst",
+                            "Put a page of text written in Typst here",
+                            accelerators=("<Primary><Alt><Shift>y",),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    )
+
+
 def _tools_ask() -> Action:
     return _page(
         "tools.ask", "Ask the Assistant…", "Write to the assistant in the chat", accelerators=("<Primary><Alt>j",)
@@ -729,6 +765,7 @@ def _manifest(
         (
             _file_menu(title=title, prints=prints),
             edit,
+            _insert_menu(),
             format_menu,
             view,
             tools,

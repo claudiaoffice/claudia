@@ -7,6 +7,7 @@ import { cycleObject, objectName } from '~/lib/descriptions'
 import { ariaColCount, ariaRowCount, cellDomId, cellName, colIndexOf, rowIndexOf } from '~/lib/grid-a11y'
 import { imageDataUrl } from '~/lib/images'
 import { besideRect, centredScroll } from '~/lib/geometry'
+import { renderedView } from '~/lib/rendering'
 import {
   buildSizeTable,
   DEFAULT_COL_WIDTH,
@@ -426,6 +427,24 @@ function stepObject(step: 1 | -1) {
   selectedObject.value = id
   if (id !== null) void nextTick(() => viewport.value?.querySelector(`[data-object="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' }))
 }
+/** What a rendered container shows (D560), and the one whose text is being written, which has an editor of its own. */
+const faceOf = (o: SheetObject) => renderedView(state, o, imageDataUrl)
+const containerEditing = ref<string | null>(null)
+function beginContainerEdit(o: SheetObject | undefined) {
+  if (!o || o.kind !== 'rendered' || containerEditing.value) return
+  if (state.me.role === 'viewer') return props.session.notice(t('You can only look at this document.'), 'warning')
+  selectedObject.value = o.id
+  containerEditing.value = o.id
+}
+async function commitContainer(o: SheetObject, text: string) {
+  containerEditing.value = null
+  viewport.value?.focus()
+  if (o.rendered) await props.session.setRenderingSource(o.rendered, text)
+}
+function cancelContainer() {
+  containerEditing.value = null
+  viewport.value?.focus()
+}
 function pictureSrc(o: SheetObject): string | null {
   const asset = o.image ? state.images[o.image] : null
   return asset ? imageDataUrl(asset) : null
@@ -809,7 +828,11 @@ function onHeaderContext(event: MouseEvent) {
 const ARROWS: Record<string, [number, number]> = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }
 
 function onKey(event: KeyboardEvent) {
-  if (props.edit) return
+  if (props.edit || containerEditing.value) return
+  if ((event.key === 'Enter' || event.key === 'F2') && selectedObject.value && state.objects[selectedObject.value]?.kind === 'rendered') {
+    event.preventDefault()
+    return beginContainerEdit(state.objects[selectedObject.value])
+  }
   const mod = event.ctrlKey || event.metaKey
   const arrow = ARROWS[event.key]
   if (arrow) {
@@ -959,6 +982,7 @@ defineExpose({
   centre,
   focus: () => viewport.value?.focus(),
   selectObject: (id: string) => (selectedObject.value = id),
+  beginContainerEdit: () => beginContainerEdit(selectedObject.value ? state.objects[selectedObject.value] : undefined),
   stepObject,
   openStyleMenu,
   /** What the Format menu ticks and disables itself by. */
@@ -1091,9 +1115,19 @@ defineExpose({
           :aria-label="o.decorative ? undefined : nameOf(o)"
           :aria-hidden="o.decorative ? 'true' : undefined"
           @mousedown.stop="onObjectDown($event, o)"
-          @dblclick.stop
+          @dblclick.stop="beginContainerEdit(o)"
         >
-          <ChartView v-if="o.kind === 'diagram' && o.diagram" :session="session" :diagram-id="o.diagram" :width="o.w" :height="o.h" />
+          <template v-if="o.kind === 'rendered' && faceOf(o)">
+            <RenderedEditor
+              v-if="containerEditing === o.id"
+              :text="faceOf(o)!.definition.source"
+              :label="faceOf(o)!.label"
+              @commit="commitContainer(o, $event)"
+              @cancel="cancelContainer"
+            />
+            <RenderedFace v-else :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
+          </template>
+          <ChartView v-else-if="o.kind === 'diagram' && o.diagram" :session="session" :diagram-id="o.diagram" :width="o.w" :height="o.h" />
           <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="''" draggable="false" >
         </div>
 

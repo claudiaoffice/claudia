@@ -4,6 +4,7 @@
 // Typing is the one thing that is not shown only after the answer: the characters of the word being typed wait in
 // `pending` (drawn at the caret, marked as not yet written) and go out as one request when the word ends, after a pause,
 // or before anything else the person does. So a word is one step in the history, and typing does not wait for the network.
+import { parseFence } from './rendering'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import {
   applyEvent,
@@ -23,7 +24,8 @@ import {
   type Pos,
   type TextEvent,
 } from './blocks'
-import type { PaletteEvent, StyleModel } from './objects'
+import type { ImageAsset } from './images'
+import type { BlockAnchor, ObjectsEvent, PaletteEvent, StyleModel, VisualObject } from './objects'
 import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
 import type { Thing } from './tags'
@@ -90,6 +92,12 @@ export interface TextState extends BaseState {
   /** The language the text is written in (D915), a BCP 47 tag; `null` when it is not set. `undefined` for a server
    *  that does not know languages. */
   language: string | null | undefined
+  /** The floating objects, by id (a rendered container is one): each hangs from a character of a paragraph (D179). */
+  objects: Record<string, VisualObject<BlockAnchor>>
+  /** The decoded pictures the document holds, by id: what its containers are drawn with. */
+  images: Record<string, ImageAsset>
+  /** The object a person has selected here; this is not shared with colleagues. */
+  selectedObject: string | null
 }
 
 /** An image of the text as the server sends it (`images`): base64 data. */
@@ -124,23 +132,75 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, images: {}, selectedObject: null })
   }
 
   get readOnly(): boolean {
     return lookOnly(this.state)
   }
 
+  // ------------------------------------------------------------------------------ floating objects (D560)
+  /** The objects that hang from the paragraph `block`, in the order the server sent them. */
+  objectsIn(block: string): VisualObject<BlockAnchor>[] {
+    return Object.values(this.state.objects).filter((o) => o.anchor.container === block)
+  }
+
+  /** The server counts a place in a paragraph in characters, the screen in UTF-16 units. */
+  private placeOnWire(place: { block: string; offset: number }): { block: string; offset: number } {
+    const block = this.state.blocks.find((b) => b.id === place.block)
+    return { block: place.block, offset: block ? pointOf(block.text, place.offset) : place.offset }
+  }
+
+  selectObject(id: string | null): void {
+    this.state.selectedObject = id
+  }
+
+  /** Hang a container of `type` from `place` (a paragraph and a place in it, in screen units); its id, or `null` after
+   * telling the person why not. It is selected, ready to be written in. */
+  async addContainer(type: string, place: { block: string; offset: number }, size: { w: number; h: number }): Promise<string | null> {
+    await this.flush()
+    const id = await this.addRendering(type, this.placeOnWire(place), size)
+    if (id) this.state.selectedObject = id
+    return id
+  }
+
+  /** Pasted text that is one fenced block (```latex … ```) of a type the server makes becomes a container at `place`
+   * (D560); its id, or `null` if it is not such a block (the caller pastes it as text then). */
+  async pasteFence(text: string, place: { block: string; offset: number }): Promise<string | null> {
+    const fenced = parseFence(text.trim(), this.state.renderTypes.map((k) => k.type))
+    if (!fenced) return null
+    await this.flush()
+    const id = await this.addRendering(fenced.type, this.placeOnWire(place), { w: 420, h: 240 }, fenced.source)
+    if (id) this.state.selectedObject = id
+    return id
+  }
+
+  /** Hang an object from another place of the text. */
+  async moveObject(id: string, place: { block: string; offset: number }): Promise<boolean> {
+    return (await this.attempt('move_object', { id, ...this.placeOnWire(place), base: this.state.revision })) !== false
+  }
+
+  async resizeObject(id: string, w: number, h: number): Promise<boolean> {
+    return (await this.attempt('resize_object', { id, w, h, base: this.state.revision })) !== false
+  }
+
+  async removeObject(id: string): Promise<boolean> {
+    return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
+  }
+
   // ------------------------------------------------------------------------------ loading
   protected async loadApp() {
     const link = this.need()
-    const [answer, suggestions, palette, styleModel, page] = await Promise.all([
+    const [answer, suggestions, palette, styleModel, page, objects, images] = await Promise.all([
       link.request<{ styles: StyleView[]; blocks: Block[]; lists: ListInfo[]; schemes: SchemeInfo[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
       link.request<PaletteEvent>('palette'),
       link.request<StyleModel>('style_model'),
       // an older server has no pages: the preview then starts from A4 and cannot store a change
       link.request<PageSetupData>('page').catch(() => null),
+      // an older server shows no floating objects
+      link.request<{ objects: VisualObject<BlockAnchor>[] }>('objects').then((a) => a.objects).catch(() => []),
+      link.request<ImageAsset[]>('images').catch(() => []),
     ])
     // an older server has no language either; the preview then hyphenates nothing and offers no choice
     const language = await link
@@ -150,6 +210,9 @@ export class TextSession extends BaseSession<TextState> {
     const s = this.state
     s.page = page
     s.language = language
+    s.objects = Object.fromEntries(objects.map((o) => [o.id, o]))
+    s.images = Object.fromEntries(images.map((x) => [x.id, x]))
+    if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
     s.styles = answer.styles
     s.lists = answer.lists
     s.schemes = answer.schemes
@@ -224,6 +287,17 @@ export class TextSession extends BaseSession<TextState> {
         return true
       case 'language':
         s.language = (data.language as string | null) ?? null
+        return true
+      case 'objects': {
+        const e = data as unknown as ObjectsEvent
+        for (const o of e.changed as VisualObject<BlockAnchor>[]) s.objects[o.id] = o
+        for (const id of e.removed) delete s.objects[id]
+        if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
+        return true
+      }
+      case 'image':
+        if (data.asset) s.images[data.id] = data.asset as ImageAsset
+        else delete s.images[data.id]
         return true
       case 'lists':
         s.lists = data.lists as ListInfo[]

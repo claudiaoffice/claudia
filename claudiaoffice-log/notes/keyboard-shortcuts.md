@@ -36,6 +36,9 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Reference in Chat | Ctrl+Alt+X |  |
 | Edit | Insert ▸ Soft Hyphen | Ctrl+- |  |
 | Edit | Insert ▸ Non-breaking Hyphen | Ctrl+_ |  |
+| Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
+| Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
+| Insert | Container ▸ Typst | Ctrl+Shift+Alt+Y |  |
 | Format | Apply Style… | Ctrl+Alt+A |  |
 | Format | Edit This Style… | Shift+F10 | the shell |
 | Format | All Styles… | Ctrl+Shift+Alt+A |  |
@@ -99,6 +102,9 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Column ▸ Insert Right | Shift+Alt+→ |  |
 | Edit | Column ▸ Delete | Ctrl+Alt+_ |  |
 | Edit | Clear Cells | Del | the document view or the browser |
+| Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
+| Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
+| Insert | Container ▸ Typst | Ctrl+Shift+Alt+Y |  |
 | Format | Apply Style… | Ctrl+Alt+A |  |
 | Format | Clear Cell Style | Ctrl+Shift+Alt+K |  |
 | Format | Edit This Style… | Shift+F10 | the shell |
@@ -165,6 +171,9 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Text Box | Ctrl+Alt+B |  |
 | Edit | Image… | Ctrl+Alt+I |  |
 | Edit | Delete | Del | the document view or the browser |
+| Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
+| Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
+| Insert | Container ▸ Typst | Ctrl+Shift+Alt+Y |  |
 | Format | Apply Style… | Ctrl+Alt+A |  |
 | Format | Edit This Style… | Shift+F10 | the shell |
 | Format | All Styles… | Ctrl+Shift+Alt+A |  |

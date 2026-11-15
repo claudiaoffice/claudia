@@ -134,6 +134,74 @@ def test_the_text_app_can_read_containers_and_the_types(desk):
     assert call(text, composes_methods, "rendering_types", desk=desk)["types"][0]["type"] == "boxer"
 
 
+# -- the text app places them too: a container hangs from a character of a paragraph (D560) ----------------------------
+@pytest.fixture
+def text():
+    document = Document(TextModel(), store=MemoryStore())
+    call(
+        document,
+        composes_methods,
+        "replace_text",
+        {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "Hello world"},
+    )
+    return document
+
+
+def put_in_text(text, desk, **changes):
+    given = {"block": "b1", "offset": 5, "w": 400, "h": 200, "type": "boxer", "source": "hello", **changes}
+    return call(text, composes_methods, "add_rendering", given, desk=desk)
+
+
+def test_a_container_in_a_text_hangs_from_a_character_of_its_paragraph(text, desk):
+    added = put_in_text(text, desk)
+    anchor = text.model.get_object(added["object"]).anchor
+    assert (anchor.block, anchor.offset) == ("b1", 5)
+    assert text.model.renderings[added["rendering"]].source == "hello"
+    text.undo("ann")
+    assert text.model.objects == {} and text.model.renderings == {}
+
+
+def test_a_container_cannot_hang_from_nowhere(text, desk):
+    for changes in ({"block": "nope"}, {"offset": 99}, {"offset": -1}):
+        with pytest.raises(RequestError):
+            put_in_text(text, desk, **changes)
+    assert text.model.objects == {}
+
+
+def test_a_container_in_a_text_is_moved_sized_and_taken_away(text, desk):
+    object_id = put_in_text(text, desk)["object"]
+    call(text, composes_methods, "move_object", {"id": object_id, "block": "b1", "offset": 2})
+    assert text.model.get_object(object_id).anchor.offset == 2
+    call(text, composes_methods, "resize_object", {"id": object_id, "w": 320, "h": 120})
+    body = text.model.get_object(object_id).body
+    assert (body.w, body.h) == (320, 120)
+    call(text, composes_methods, "remove_object", {"id": object_id})
+    assert text.model.objects == {}
+    text.undo("ann")
+    assert object_id in text.model.objects
+
+
+def test_a_container_is_not_moved_out_of_the_text(text, desk):
+    object_id = put_in_text(text, desk)["object"]
+    with pytest.raises(RequestError):
+        call(text, composes_methods, "move_object", {"id": object_id, "block": "b1", "offset": 99})
+    with pytest.raises(RequestError):
+        call(text, composes_methods, "move_object", {"id": object_id, "block": "nope", "offset": 0})
+
+
+def test_in_the_text_the_assistant_does_not_place_containers(text, desk):
+    with pytest.raises(RequestError) as refused:
+        call(
+            text,
+            composes_methods,
+            "add_rendering",
+            {"block": "b1", "offset": 0, "w": 9, "h": 9, "type": "boxer", "source": "x"},
+            account=Account("ai", "editor", system=True),
+            desk=desk,
+        )
+    assert refused.value.code == "forbidden"
+
+
 def test_an_unknown_type_a_wrong_setting_and_too_long_a_text_are_refused_and_nothing_changes(deck, desk):
     for changes, words in (
         ({"type": "graphviz"}, "boxer"),

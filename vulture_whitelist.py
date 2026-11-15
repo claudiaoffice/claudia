@@ -194,6 +194,7 @@ used.optionxform  # configparser reads this attribute to keep the case of keys (
 used.protocol_version  # http.server reads it to answer HTTP/1.1 (stub server, clients/linux/tests/test_connection.py)
 used.menu_file  # Gtk.Template children of window.ui: GTK fills them by id; window.py's _attach_menus reads them by name
 used.menu_edit  # (same)
+used.menu_insert  # (same)
 used.menu_format  # (same)
 used.menu_view  # (same)
 used.menu_tools  # (same)

@@ -734,6 +734,12 @@ export class Session extends BaseSession<State> {
     return done === false ? null : done.object
   }
 
+  /** Put a rendered container of `type` on the sheet that is shown, anchored to a cell (D560); its id, or `null` after
+   * telling the person why not. */
+  addContainer(type: string, anchor: { row: number; col: number; w: number; h: number }): Promise<string | null> {
+    return this.addRendering(type, { sheet: this.state.activeSheet, row: anchor.row, col: anchor.col }, { w: anchor.w, h: anchor.h })
+  }
+
   /** Take a new chart definition into the document (E6.6); its id, or `null` after telling the person why not.
    * Show it with `addDiagramObject`, `addChart`, or both — neither is bundled into this call, since (unlike
    * `addImage`) a definition may be placed more than once from the very start. */

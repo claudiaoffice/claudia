@@ -76,8 +76,33 @@ def action_ids(menu: manifest.Menu) -> list[str]:
 # ------------------------------------------------------------------------------------------------------ the schema
 
 
-def test_every_app_has_the_same_seven_menus_in_the_same_order(app: manifest.Manifest) -> None:
-    assert [menu.label for menu in app.menus] == ["File", "Edit", "Format", "View", "Tools", "Config", "Help"]
+def test_every_app_has_the_same_eight_menus_in_the_same_order(app: manifest.Manifest) -> None:
+    """D120's seven, and Insert between Edit and Format (D560)."""
+    assert [menu.label for menu in app.menus] == ["File", "Edit", "Insert", "Format", "View", "Tools", "Config", "Help"]
+
+
+def test_insert_offers_the_container_types_with_a_key_each(app: manifest.Manifest) -> None:
+    """Insert ▸ Container ▸ LaTeX, Mermaid, Typst (D560): the same three in every app, each with its own key, listened
+    for by the page like every other app command."""
+    (section,) = app.menu("Insert").sections
+    (container,) = section
+    assert isinstance(container, manifest.Submenu)
+    assert container.label == "Container"
+    assert [(a.id, a.label) for a in container.items] == [
+        ("insert.container.latex", "LaTeX"),
+        ("insert.container.mermaid", "Mermaid"),
+        ("insert.container.typst", "Typst"),
+    ]
+    assert [a.accelerators for a in container.items] == [
+        ("<Primary><Alt><Shift>f",),
+        ("<Primary><Alt><Shift>g",),
+        ("<Primary><Alt><Shift>y",),
+    ]
+    assert {a.key_owner for a in container.items} == {manifest.KeyOwner.PAGE}
+
+
+def test_the_front_page_has_no_insert_menu(app: manifest.Manifest) -> None:
+    assert "Insert" not in [menu.label for menu in manifest.for_start(app).menus]
 
 
 def test_file_is_grouped_new_open_save_group_manage_close_quit(app: manifest.Manifest) -> None:

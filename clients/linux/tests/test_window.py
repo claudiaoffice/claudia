@@ -118,7 +118,7 @@ def test_the_front_page_gets_the_short_menu_and_a_document_the_whole_one(window)
     assert not window.lookup_action("file.save").get_enabled()  # nor by its key
     assert window.menu_file.get_menu_model().get_n_items() == 2  # New, Open…, Open a File… · Quit
     page.says({**hello(), "view": "document"})
-    assert visible_menus(window) == ["File", "Edit", "Format", "View", "Tools", "Config", "Help"]
+    assert visible_menus(window) == ["File", "Edit", "Insert", "Format", "View", "Tools", "Config", "Help"]
     assert window.lookup_action("file.save").get_enabled()
     page.says({**hello(), "view": "start"})  # File ▸ Close Document: the front page again
     assert visible_menus(window) == ["File", "View", "Config", "Help"]
@@ -128,7 +128,7 @@ def test_the_front_page_gets_the_short_menu_and_a_document_the_whole_one(window)
 def test_a_page_that_does_not_say_what_it_is_gets_the_whole_menu(window) -> None:
     window.show_page("http://127.0.0.1:1")
     window.fake_pages[0].says(hello())
-    assert visible_menus(window) == ["File", "Edit", "Format", "View", "Tools", "Config", "Help"]
+    assert visible_menus(window) == ["File", "Edit", "Insert", "Format", "View", "Tools", "Config", "Help"]
 
 
 def test_the_shell_actions_work_without_a_page(window) -> None:

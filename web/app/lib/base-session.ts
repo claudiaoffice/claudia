@@ -4,6 +4,7 @@
 import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
+import type { RenderingDef, RenderOutcome, RenderType } from './rendering'
 import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
@@ -149,6 +150,12 @@ export interface BaseState {
   renamed: Record<string, string>
   /** The thing a tag in the chat just took the view to, for the view to mark. */
   pointed: Pointed | null
+  /** What the server can make as a rendered container (`rendering_types`); empty for a server that makes none (D560). */
+  renderTypes: RenderType[]
+  /** The definitions of the rendered containers the document holds, by id; the text is the truth (D390). */
+  renderings: Record<string, RenderingDef>
+  /** What the server last said of making a container's picture, by id; gone when its text changes. */
+  renderOutcomes: Record<string, RenderOutcome>
 }
 
 export interface SessionOptions {
@@ -190,6 +197,9 @@ function initialState(): BaseState {
     replay: null,
     renamed: {},
     pointed: null,
+    renderTypes: [],
+    renderings: {},
+    renderOutcomes: {},
   }
 }
 
@@ -363,15 +373,17 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     this.state.renamed = {}
     const link = this.need()
     const s = this.state
-    const [entries, chat, checkpoints, history, lines, restorePolicy] = await Promise.all([
+    const [entries, chat, checkpoints, history, lines, restorePolicy, renderTypes, renderings] = await Promise.all([
       link.request<Entry[]>('log', { limit: LOG_LIMIT }),
       link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }),
       link.request<CheckpointInfo[]>('checkpoints'),
       link.request<{ can_undo: boolean; can_redo: boolean; undo_label: string; redo_label: string }>('history'),
       link.request<LineInfo[]>('lines'),
       link.request<{ policy: 'consensus' | 'veto' }>('restore_policy'),
+      this.optional<{ types: RenderType[] }>('rendering_types'),
+      this.optional<RenderingDef[]>('renderings'),
       this.loadApp(),
-    ]).then(([e, c, k, h, l, p]) => [e, c, k, h, l, p] as const)
+    ]).then(([e, c, k, h, l, p, rt, rd]) => [e, c, k, h, l, p, rt, rd] as const)
     s.entries = entries
     s.chat = chat
     s.checkpoints = checkpoints
@@ -381,8 +393,21 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.redoLabel = history.redo_label
     s.lines = lines
     s.restorePolicy = restorePolicy.policy
+    s.renderTypes = renderTypes?.types ?? []
+    s.renderings = Object.fromEntries((renderings ?? []).map((d) => [d.id, d]))
+    s.renderOutcomes = {}
     const last = entries.at(-1)
     if (last) s.revision = last.revision
+  }
+
+  /** What a request answers, or `null` where this server does not know it (an older server, an app without it). */
+  private async optional<T>(method: string): Promise<T | null> {
+    try {
+      return await this.need().request<T>(method)
+    } catch (error) {
+      if (error instanceof ProtocolError && error.code !== 'closed') return null
+      throw error
+    }
   }
 
   // ------------------------------------------------------------------------------ events
@@ -400,6 +425,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         break
       case 'thing_renamed':
         s.renamed[data.id] = data.name
+        break
+      case 'rendering':
+        this.onRendering(data.id, data.definition)
+        break
+      case 'render_result':
+        s.renderOutcomes[data.id] = { ok: data.ok, diagnostics: data.diagnostics ?? [], message: data.message ?? '', unavailable: data.unavailable ?? null }
         break
       case 'history':
         s.canUndo = data.can_undo
@@ -438,6 +469,18 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         this.track(this.reload())
         break
     }
+  }
+
+  private onRendering(id: string, definition: RenderingDef | null) {
+    const s = this.state
+    if (!definition) {
+      delete s.renderings[id]
+      delete s.renderOutcomes[id]
+      return
+    }
+    const before = s.renderings[id]
+    if (before && (before.source !== definition.source || JSON.stringify(before.params) !== JSON.stringify(definition.params))) delete s.renderOutcomes[id]
+    s.renderings[id] = definition
   }
 
   private onEphemeral(message: { kind: string; sender: string | null; data: WireData }) {
@@ -781,6 +824,22 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   async searchReplace(query: SearchQuery, kinds: string[], scope: object, leave: SearchLeave[]): Promise<ReplaceAnswer | false> {
     const done = await this.attempt('search_replace', { query, kinds, scope, leave, base: this.state.revision })
     return done === false ? false : (done as unknown as ReplaceAnswer)
+  }
+
+  // ------------------------------------------------------------------------------ rendered containers (D560)
+  /** Puts a container of `type` at `where` (the app's own place: `{slide, x, y}`, …), its first text the type's example.
+   *  Returns the new object's id, or `null` — after telling why — if it was not made. */
+  async addRendering(type: string, where: Record<string, unknown>, size = { w: 480, h: 270 }, source?: string): Promise<string | null> {
+    const kind = this.state.renderTypes.find((k) => k.type === type)
+    if (!kind) return null
+    const done = await this.attempt('add_rendering', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, base: this.state.revision })
+    return done === false ? null : (done.object as string)
+  }
+
+  /** Changes the text of a container; a text that is the same as it is is not sent. `false` after saying why not. */
+  async setRenderingSource(id: string, source: string, params: Record<string, unknown> | null = null): Promise<boolean> {
+    if (this.state.renderings[id]?.source === source && !params) return true
+    return (await this.attempt('set_rendering_source', { id, source, params, base: this.state.revision })) !== false
   }
 
   async undo(): Promise<boolean> {

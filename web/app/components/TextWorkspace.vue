@@ -16,6 +16,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
+  insertMenu,
   panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
@@ -138,6 +139,16 @@ function closeStyleMenu() {
 
 // composes has one way to bring text in, however it arrives (typed, "Paste", or "Paste as plain text") — there is no
 // separate rich-paste path yet, so the two Edit items below are, honestly, the same operation.
+const CONTAINER_WIDTH = 420
+const CONTAINER_HEIGHT = 240
+
+/** Insert ▸ Container ▸ …: a container of the chosen type, hanging from the paragraph the caret is in (D560). */
+async function addContainer(type: string) {
+  const at = state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
+  if (!at) return
+  await session.addContainer(type, at, { w: CONTAINER_WIDTH, h: CONTAINER_HEIGHT })
+}
+
 async function pasteFromClipboard() {
   let text: string
   try {
@@ -255,6 +266,7 @@ const menus = computed<Menu[]>(() => {
         },
       ],
     },
+    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }),
     {
       label: t('Format'),
       items:

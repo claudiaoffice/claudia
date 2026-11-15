@@ -13,6 +13,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
+  insertMenu,
   panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
@@ -202,6 +203,9 @@ async function addShape(id: string) {
   const outline = state.library.find((s) => s.id === id) ?? state.shapes[id]
   if (await session.addShape(id, insertFrame('shape', outline?.aspect ?? null, count.value))) canvas.value?.focus()
 }
+async function addContainer(type: string) {
+  if (await session.addContainer(type, insertFrame('image', 16 / 9, count.value))) canvas.value?.focus()
+}
 function imageFrame(aspect: number): Frame {
   return insertFrame('image', aspect, count.value)
 }
@@ -273,6 +277,7 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
       ],
     },
+    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }),
     {
       label: t('Format'),
       items: [

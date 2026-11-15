@@ -136,12 +136,18 @@ def _renderings(model_of: Callable[[Context], ObjectModel]):
     return renderings
 
 
-def _add(model_of: Callable[[Context], ObjectModel], anchor_of: Callable[..., dict], ensure: Callable[..., None]):
+def _add(
+    model_of: Callable[[Context], ObjectModel],
+    anchor_of: Callable[..., dict],
+    ensure: Callable[..., None],
+    guard: Callable[[Context], None],
+):
     def add_rendering(ctx: Context, *, w, h, type, source, params, alt, base, **where):  # noqa: A002 - the wire name
         """Put a rendered container where the person points: `type` is one of `rendering_types`, `source` the text
         (the truth the picture is made from), `params` its settings (defaults fill the rest), `alt` a short description
         for whoever cannot see the picture (one is made from the text if left out). Returns the new `object`, its
         `rendering` and the revision. The text is not drawn yet: the picture arrives as a later edit."""
+        guard(ctx)
         desk, model = _desk(ctx), model_of(ctx)
         ensure(model, **where)
         settings = desk.check(type, source, params or {})
@@ -168,10 +174,11 @@ def _add(model_of: Callable[[Context], ObjectModel], anchor_of: Callable[..., di
     return add_rendering
 
 
-def _set_source(model_of: Callable[[Context], ObjectModel]):
+def _set_source(model_of: Callable[[Context], ObjectModel], guard: Callable[[Context], None]):
     def set_rendering_source(ctx: Context, *, id, source, params, base):  # noqa: A002
         """Change the text of a rendered container (and, if `params` is given, its settings; the others keep their
         value). The picture stays as it is until the new one is made."""
+        guard(ctx)
         desk, model = _desk(ctx), model_of(ctx)
         if id not in model.renderings:
             raise RequestError("command_error", msg("this document has nothing rendered with the id {id!r}", id=id))
@@ -189,10 +196,12 @@ def add_rendering_methods(
     *,
     model_of: Callable[[Context], ObjectModel],
     anchor: tuple[str, Callable[..., dict], Callable[..., None]] | None,
+    guard: Callable[[Context], None] = lambda ctx: None,
 ) -> None:
     """Register ``rendering_types`` and ``renderings`` on ``table``, and unless ``anchor`` is ``None`` the methods that
-    change containers too. ``anchor`` is how an app places an object: its parameters as a wire spec (``"slide:str x:int
-    y:int"``), a function from them to the anchor's plain data, and a check that they name a real place."""
+    change containers too. ``guard`` may refuse who is not to change them (the text app: people only). ``anchor`` is how
+    an app places an object: its parameters as a wire spec (``"slide:str x:int y:int"``), a function from them to the
+    anchor's plain data, and a check that they name a real place."""
     table.method("rendering_types")(_types)
     table.method("renderings")(_renderings(model_of))
     if anchor is None:
@@ -202,9 +211,9 @@ def add_rendering_methods(
         "add_rendering",
         f"{spec} w:int h:int type:str source:text params:dict? alt:text? base:revision?",
         write=True,
-    )(_add(model_of, anchor_of, ensure))
+    )(_add(model_of, anchor_of, ensure, guard))
     table.method("set_rendering_source", "id:str source:text params:dict? base:revision?", write=True)(
-        _set_source(model_of)
+        _set_source(model_of, guard)
     )
 
 

@@ -24,6 +24,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - `thing_last_seen` (D551): `{present, revision}` for an object, slide, sheet or chart tab by id: whether it is there
   now and the last step after which it was, so that a tag in the chat to something deleted can take a replay there.
 - The event `thing_renamed` `{id, name}` is documented (it was sent since D550): clients update the names tags show.
+- The text app (composes) places rendered containers (D563): `add_rendering` (`block`, `offset`), `move_object`,
+  `resize_object` and `remove_object` hang an object from a character of a paragraph, size it and take it away. The
+  assistant is refused, as it is for the words. `add_rendering_methods` takes a `guard` that says who may change
+  containers. No change to `PROTOCOL_VERSION`: the methods are new.
 
 ### Fixed
 - A web app built again while the server runs is no longer blocked: the Content-Security-Policy's hashes of the inline

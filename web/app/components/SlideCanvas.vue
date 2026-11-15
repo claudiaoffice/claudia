@@ -21,6 +21,7 @@ import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
 import { piecesOf, type SlideMark } from '~/lib/slide-search-host'
+import { renderedView } from '~/lib/rendering'
 
 const { t } = useI18n()
 
@@ -133,6 +134,19 @@ function pictureSrc(o: SlideObject): string {
   const asset = pictureOf(o)
   return asset ? imageDataUrl(asset) : ''
 }
+/** What a rendered container shows: its picture or why there is none yet (D560). */
+const faceOf = (o: SlideObject) => renderedView(state, o, imageDataUrl)
+/** The container whose text is being written, if any: it has an editor of its own (`RenderedEditor.vue`). */
+const containerEditing = ref<string | null>(null)
+async function commitContainer(o: SlideObject, text: string) {
+  containerEditing.value = null
+  area.value?.focus({ preventScroll: true })
+  if (o.rendered) await session.setRenderingSource(o.rendered, text)
+}
+function cancelContainer() {
+  containerEditing.value = null
+  area.value?.focus({ preventScroll: true })
+}
 /** What a screen reader says for an object: its kind and its description (or its words), or that it is decoration. */
 const label = (o: SlideObject) => objectName(o, { shape: outline(o)?.name, words: wordsOf(o) })
 
@@ -153,7 +167,7 @@ function aspectOf(o: SlideObject): number | null {
 }
 const handles = computed<Handle[]>(() => {
   const o = selected.value
-  if (!o || readonly.value || editing.value) return []
+  if (!o || readonly.value || editing.value || containerEditing.value) return []
   return aspectOf(o) !== null ? CORNERS : HANDLES
 })
 
@@ -338,10 +352,14 @@ const setEditor = (el: unknown) => {
 
 async function beginEdit(id: string | null = state.selected) {
   const o = id ? state.objects[id] : null
-  if (!o || editing.value || o.kind === 'image') return // a picture has no text to write
+  if (!o || editing.value || containerEditing.value || o.kind === 'image') return // a picture has no text to write
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
+  if (o.kind === 'rendered') {
+    containerEditing.value = o.id // its text is the definition's, in an editor of its own
+    return
+  }
   editing.value = { id: o.id, text: wordsOf(o) }
   await nextTick()
   editor.value?.focus()
@@ -355,6 +373,8 @@ async function commitEdit() {
   editing.value = null
   area.value?.focus({ preventScroll: true })
   const current = state.objects[e.id]
+  // Words that are one fenced block (```latex … ```) of a type the server makes become a container (D560)
+  if (current && current.kind === 'text' && (await session.fenceToContainer(e.id, e.text))) return
   if (current && e.text !== wordsOf(current)) await session.setText(e.id, e.text)
 }
 
@@ -380,7 +400,7 @@ const STEP = 10
 
 async function onKey(event: KeyboardEvent) {
   const o = selected.value
-  if (editing.value) return
+  if (editing.value || containerEditing.value) return
   if (event.key === 'Escape') return void session.select(null)
   if (!o) return
   if (event.key === 'Enter' || event.key === 'F2') {
@@ -444,6 +464,16 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         @contextmenu="onObjectContext($event, o)"
       >
         <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" >
+        <template v-else-if="o.kind === 'rendered'">
+          <RenderedEditor
+            v-if="containerEditing === o.id && faceOf(o)"
+            :text="faceOf(o)!.definition.source"
+            :label="faceOf(o)!.label"
+            @commit="commitContainer(o, $event)"
+            @cancel="cancelContainer"
+          />
+          <RenderedFace v-else-if="faceOf(o)" :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
+        </template>
         <template v-else>
           <svg v-if="outline(o)" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="paintCss(o)" />

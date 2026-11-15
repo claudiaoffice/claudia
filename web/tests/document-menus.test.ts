@@ -9,6 +9,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
+  insertMenu,
   panelItem,
   searchItem,
   undoRedoItems,
@@ -180,5 +181,26 @@ describe('searchItem: Edit ▸ Search & Replace… (D281, E5.15)', () => {
 
   it('shows the shortcut the window really listens for', () => {
     expect(searchItem(context().c, { open: () => {} }).hint).toBe(chordLabel(SEARCH_CHORD))
+  })
+})
+
+describe('insertMenu: Insert ▸ Container in every app (D560)', () => {
+  const types = [{ type: 'latex', title: 'LaTeX' }, { type: 'mermaid', title: 'Mermaid' }]
+  it('offers the three kinds with their keys, the ones the server cannot make off', () => {
+    const { c } = context('editor')
+    const added: string[] = []
+    const menu = insertMenu(c, { types, add: (k) => added.push(k) })
+    expect(menu.label).toBe('Insert')
+    const sub = menu.items[0]!.items!
+    expect(ids(sub)).toEqual(['insert.container.latex', 'insert.container.mermaid', 'insert.container.typst'])
+    expect(sub.map((i) => i.disabled)).toEqual([false, false, true])
+    expect(sub.map((i) => i.hint)).toEqual(['Ctrl+Shift+Alt+F', 'Ctrl+Shift+Alt+G', 'Ctrl+Shift+Alt+Y'])
+    sub[1]!.action!()
+    expect(added).toEqual(['mermaid'])
+  })
+  it('is off for somebody who can only look', () => {
+    const { c } = context('viewer')
+    const sub = insertMenu(c, { types, add: () => {} }).items[0]!.items!
+    expect(sub.every((i) => i.disabled)).toBe(true)
   })
 })

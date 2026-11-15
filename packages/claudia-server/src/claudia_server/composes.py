@@ -42,6 +42,7 @@ from claudia_composes_io import (
 
 from claudia_composes import (
     AcceptSuggestion,
+    BlockAnchor,
     DeleteText,
     InsertText,
     JoinBlocks,
@@ -62,6 +63,9 @@ from claudia_core import (
     Batch,
     Command,
     CreateStyle,
+    MoveObject,
+    RemoveObject,
+    ResizeObject,
     StyleDef,
     validate_css,
 )
@@ -454,6 +458,52 @@ def _reject(ctx, *, id, base):
     return {"revision": applied.revision.to_data()}
 
 
-# Rendered text containers: the text app reads them (its objects are drawn from them) but places none yet: like
-# `images`, there is no way in on the wire for it until the text app places objects (D395).
-add_rendering_methods(composes_methods, model_of=_text, anchor=None)
+# Rendered text containers (D390, D395, D560): the text app places them too. A container hangs from a character of a
+# paragraph, floats over it and does not push the words aside (D179); only people write them, like the text itself.
+def _hang(block: str, offset: int) -> dict:
+    return BlockAnchor(block, offset).to_data()
+
+
+def _paragraph_has(model: TextModel, *, block: str, offset: int) -> None:
+    try:
+        text = model.block(block).text
+    except KeyError:
+        raise RequestError("command_error", msg("there is no paragraph {block!r}", block=block)) from None
+    if not 0 <= offset <= len(text):
+        raise RequestError("command_error", msg("offset is outside the paragraph"))
+
+
+add_rendering_methods(
+    composes_methods,
+    model_of=_text,
+    anchor=("block:str offset:int", _hang, _paragraph_has),
+    guard=_people_only,
+)
+
+
+@composes_methods.method("move_object", "id:str block:str offset:int base:revision?", write=True)
+def _move_object(ctx, *, id, block, offset, base):
+    """Hang an object from another character: `offset` of the paragraph `block`. Its size stays."""
+    _people_only(ctx)
+    model = _text(ctx)
+    model.get_object(id)
+    _paragraph_has(model, block=block, offset=offset)
+    applied = ctx.document.execute(MoveObject(id, _hang(block, offset)), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@composes_methods.method("resize_object", "id:str w:int h:int base:revision?", write=True)
+def _resize_object(ctx, *, id, w, h, base):
+    """Give an object a new size in CSS pixels; it keeps hanging from where it hangs."""
+    _people_only(ctx)
+    anchor = _text(ctx).get_object(id).anchor
+    applied = ctx.document.execute(ResizeObject(id, anchor.to_data(), w, h), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}
+
+
+@composes_methods.method("remove_object", "id:str base:revision?", write=True)
+def _remove_object(ctx, *, id, base):
+    """Take an object off the text. Undo brings it back where it was."""
+    _people_only(ctx)
+    applied = ctx.document.execute(RemoveObject(id), author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data()}

@@ -9,7 +9,8 @@
 import type { Menu, MenuItem } from '../components/MenuBar.vue'
 import { copySelection, cutSelection } from './clipboard'
 import { LANGUAGES } from './i18n'
-import { chordLabel, chordOf, sharedShortcuts } from './shortcuts'
+import type { RenderType } from './rendering'
+import { chordLabel, chordOf, hintOf, sharedShortcuts } from './shortcuts'
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
 type Toggle = (target?: 'on' | 'off') => void
@@ -149,6 +150,30 @@ export function clipboardItems(c: DocumentMenuContext, paste: () => void): MenuI
 export function searchItem(c: DocumentMenuContext, search: { open: () => void }): MenuItem {
   const { t } = c
   return { id: 'edit.search-replace', label: t('Search & Replace…'), hint: chordLabel(SEARCH_CHORD), action: () => search.open() }
+}
+
+/** Insert ▸ Container ▸ LaTeX, Mermaid, Typst: the same in every app (D560). An entry is there for every kind, and
+ * off for somebody who may only look, or while the server cannot make that kind (its tool is not set up). The ids are
+ * written out, one by one: they are what the shells' manifest (`insert.container.*`, with its key) is checked against. */
+export function insertMenu(
+  c: DocumentMenuContext,
+  container: { types: readonly RenderType[]; add: (type: string) => void },
+): Menu {
+  const { t } = c
+  const off = (type: string) => c.role === 'viewer' || !container.types.some((k) => k.type === type)
+  return {
+    label: t('Insert'),
+    items: [
+      {
+        label: t('Container'),
+        items: [
+          { id: 'insert.container.latex', label: 'LaTeX', hint: hintOf('insert.container.latex'), action: () => container.add('latex'), disabled: off('latex') },
+          { id: 'insert.container.mermaid', label: 'Mermaid', hint: hintOf('insert.container.mermaid'), action: () => container.add('mermaid'), disabled: off('mermaid') },
+          { id: 'insert.container.typst', label: 'Typst', hint: hintOf('insert.container.typst'), action: () => container.add('typst'), disabled: off('typst') },
+        ],
+      },
+    ],
+  }
 }
 
 /** View ▸ History and chat. */

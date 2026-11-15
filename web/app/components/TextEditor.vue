@@ -265,8 +265,29 @@ onUpdated(() => {
   before = null
   placeSelection()
 })
-onMounted(() => document.addEventListener('selectionchange', onSelectionChange))
-onBeforeUnmount(() => document.removeEventListener('selectionchange', onSelectionChange))
+// Where the paragraphs are on the page changes when the text wraps differently, so the containers hanging from them
+// (D560) are placed again whenever the text's box changes size, and after a pause when the paragraphs change.
+const layoutTick = ref(0)
+let watcher: ResizeObserver | null = null
+onMounted(() => {
+  document.addEventListener('selectionchange', onSelectionChange)
+  if (typeof ResizeObserver === 'undefined') return
+  watcher = new ResizeObserver(() => layoutTick.value++)
+  if (root.value) watcher.observe(root.value)
+  if (scroller.value) watcher.observe(scroller.value)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('selectionchange', onSelectionChange)
+  watcher?.disconnect()
+})
+watch(
+  () => Object.keys(state.objects).length + state.blocks.length,
+  () => nextTick(() => layoutTick.value++),
+)
+watch(renderKey, () => nextTick(() => {
+  if (root.value) watcher?.observe(root.value)
+  layoutTick.value++
+}))
 
 // ------------------------------------------------------------------------------ input
 function onBeforeInput(event: InputEvent) {
@@ -336,7 +357,14 @@ function onPaste(event: ClipboardEvent) {
   event.preventDefault()
   adoptSelection()
   const text = event.clipboardData?.getData('text/plain')
-  if (text) props.session.paste(text)
+  if (!text) return
+  const at = props.session.state.selection?.focus
+  // a whole fenced block (```latex … ```) is a container, not words (D560)
+  if (at && text.trimStart().startsWith('`')) {
+    void props.session.pasteFence(text, at).then((made) => made ?? props.session.paste(text))
+    return
+  }
+  props.session.paste(text)
 }
 
 function onCut(event: ClipboardEvent) {
@@ -471,6 +499,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
           <br v-if="!block.text && !hasOverlay(block)" data-skip >
         </component>
       </div>
+      <TextContainers :session="session" :host="root" :tick="layoutTick" @leave="focus()" />
     </div>
   </div>
 </template>
@@ -482,6 +511,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
   background: var(--page);
 }
 .sheet {
+  position: relative; /* the containers float over it (D560) */
   margin: 0 auto;
   padding: 36px 40px 160px;
   max-width: 820px;

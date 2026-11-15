@@ -34,6 +34,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
+  insertMenu,
   panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
@@ -898,6 +899,17 @@ function anchorForImage(aspect: number) {
   return { row: b.value.r0, col: b.value.c0, w: Math.round(IMAGE_HEIGHT * aspect), h: IMAGE_HEIGHT }
 }
 
+const CONTAINER_WIDTH = 480
+const CONTAINER_HEIGHT = 270
+
+/** Insert ▸ Container ▸ …: a container of the chosen type where the selection starts (D560), ready to be written in. */
+async function addContainer(type: string) {
+  const id = await session.addContainer(type, { row: b.value.r0, col: b.value.c0, w: CONTAINER_WIDTH, h: CONTAINER_HEIGHT })
+  if (!id) return
+  grid.value?.selectObject(id)
+  grid.value?.focus()
+}
+
 function imageInserted(id: string) {
   dialog.value = null
   grid.value?.selectObject(id)
@@ -1003,6 +1015,7 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.clear', label: t('Clear Cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
       ],
     },
+    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }),
     {
       label: t('Format'),
       items: [

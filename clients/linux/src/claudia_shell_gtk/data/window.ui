@@ -26,6 +26,11 @@
                   </object>
                 </child>
                 <child type="start">
+                  <object class="GtkMenuButton" id="menu_insert">
+                    <property name="label" translatable="yes">Insert</property>
+                  </object>
+                </child>
+                <child type="start">
                   <object class="GtkMenuButton" id="menu_format">
                     <property name="label" translatable="yes">Format</property>
                   </object>
