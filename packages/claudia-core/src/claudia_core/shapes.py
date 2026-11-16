@@ -38,6 +38,8 @@ from dataclasses import dataclass
 from typing import Any
 
 FORMAT = 1
+#: The ids of the three outlines that every app has and every office format draws by name (D465).
+PRIMITIVES = ("circle", "rectangle", "triangle")
 BOX = 100  # the shape's own coordinate box is BOX by BOX units
 MAX_PATH_CHARS = 4_000
 MAX_NAME_CHARS = 60
@@ -207,3 +209,30 @@ def parse_shape(text: str) -> ShapeDefinition:
     except (ValueError, RecursionError) as error:
         raise ShapeError(f"not valid JSON: {error}") from None
     return ShapeDefinition.from_data(data)
+
+
+# -- the outlines every office format draws by name -------------------------------------------------------------------
+_PRIMITIVE_DATA = {
+    "circle": {
+        "format": FORMAT,
+        "id": "circle",
+        "name": "Circle",
+        "aspect": 1,
+        "path": "M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z",
+        "text_area": {"x": 14.6, "y": 14.6, "w": 70.8, "h": 70.8},
+    },
+    "rectangle": {"format": FORMAT, "id": "rectangle", "name": "Rectangle", "path": "M0 0 L100 0 L100 100 L0 100 Z"},
+    "triangle": {
+        "format": FORMAT,
+        "id": "triangle",
+        "name": "Triangle",
+        "path": "M50 0 L100 100 L0 100 Z",
+        "text_area": {"x": 25, "y": 50, "w": 50, "h": 50},
+    },
+}
+
+
+def primitive(shape_id: str) -> ShapeDefinition:
+    """The outline of one of the :data:`PRIMITIVES`: what a document needs to hold a circle, a rectangle or a triangle
+    that an office file drew (D465). The same three outlines as the built-in shapes of ``claudia_creates``."""
+    return ShapeDefinition.from_data(_PRIMITIVE_DATA[shape_id])

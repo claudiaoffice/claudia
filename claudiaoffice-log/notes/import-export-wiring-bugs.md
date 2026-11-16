@@ -11,6 +11,7 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 |---|---|---|---|
 | IEW-01 | composes, docx patch | In a Word file, a paragraph that contains a hyperlink: edit its text and the link's words are written twice (`see [the link]` becomes `the linkSEE the link!`). Needs the hyperlink to be edited in place. Existed before this branch. | slice 4 |
 | IEW-02 | composes, docx export | The file's metadata is python-docx's: author "python-docx", created 2013. odt has its metadata from the log (D411); docx has none. | audit |
+| IEW-20 | creates, odp/pptx export | A deck opened from a file and downloaded as a *fresh* .odp or .pptx loses its looks (colours, fonts) and its placement on the layouts of the file's template: the model does not read looks (D407) and a fresh file has a bare default master. A download **patched** onto the kept file keeps everything. The download dialog lists `look`. Reading looks in is the next step for creates. | reported by QA 2026-11-15 |
 
 ## Fixed
 
@@ -29,6 +30,9 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-17 | composes, odt patch | Editing the words of any paragraph of a text Claudia had written to odt (and imported again) added a copy of each style of the text to the file's `styles.xml` under a second name (`Remark_2`, `Definition_2`...): bloat and, in LibreOffice, a long list of unused styles. | slice 6a | `test_odt.py::test_a_text_of_this_app_edited_in_its_words_gets_no_style_added_to_its_file` |
 | IEW-18 | composes, docx/odt export | Pictures of a text (images, rendered text containers) were missing from every .docx and .odt download, and a picture of an imported file was not shown; nothing said so. Their alt text (BITV 1.1.1) was lost with them. | slice 6a | `test_composes_pictures.py`, `test_server_import.py::test_a_picture_of_a_file_is_an_object_…` |
 | IEW-16 | computes, xlsx export/import | Charts of a spreadsheet were missing from every .xlsx download and nothing said so; a chart of an imported xlsx was a plain loss and never shown. | slice 5d | `test_xlsx_charts.py`, `test_server_import.py::test_a_workbook_with_charts_comes_back_patched_…[xlsx]` |
+| IEW-19 | creates, odp import | The words of a text box or shape that hung over the edge of the slide were dropped as `off-slide-object` - typically the body (outline) placeholder of a deck converted from a taller layout (e.g. by LibreOffice from PowerPoint): the slide showed its title and no content. An unturned box is now cut back to the slide and listed as `overhanging-object`. | slice 6b | `test_odp.py::test_a_box_that_hangs_over_the_slide_is_cut_back_…` |
+| IEW-21 | composes, docx import | A text box written by Word or LibreOffice (a drawing and the picture kept for old readers, `mc:AlternateContent`) was counted twice as a frame, so the `frame` loss count was one too high and a box could not be told from its fallback. | slice 6b | `test_composes_boxes.py` (LibreOffice-built `docx-boxes`) |
+| IEW-22 | composes, docx/odt patch | Restyling an object's words to a style the file already had (`Shape label`, `Remark`) wrote the style again under a second name (`Shape label 2`) and the words kept the old one. | slice 6b | `test_composes_boxes.py` (restyled words) |
 
 | IEW-12 | creates, pptx/odp export | A turned object came out of Claudia upright: pptx fresh export wrote no rotation (the patch did), odp wrote none and left an object that somebody turned in a file out of the model (`rotated-object`). | slice 7 | `test_creates_rotation.py` |
 | IEW-13 | creates, pptx patch | Giving a text box, shape or picture of an imported pptx another description (alt text) changed nothing in the file. | slice 7 | `test_creates_pictures.py::test_a_text_box_is_given_a_description_in_a_kept_pptx_too` |
@@ -65,6 +69,9 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-L25 | A picture is written without wrapping: the words do not flow around it (the model has none), so in Word and LibreOffice it lies over the text at its character; an imported picture that wrapped the words stays in the file but comes in as one that does not. | No wrapping in the model. |
 | IEW-L26 | odt has no mark for a decorative picture (ODF 1.3): it is written without description and `decorative` is listed; it comes back as a picture with no description. docx has the mark. | The format. |
 | IEW-L27 | An SVG in a docx is written with a PNG fallback that is empty unless the server has a rasteriser (`rsvg-convert`); `svg-fallback` is listed. Word before 2016 shows the empty picture. | A PNG fallback must be a raster. |
+| IEW-L28 | A text box or shape of a docx or odt comes in only when it holds one paragraph of plain words (or none), is anchored in a paragraph, is one of the three outlines (circle, rectangle, triangle; an ellipse is a circle only when round), is not mirrored and has no line, wrap or effect the model lacks; any other stays in the file and is listed as `frame`/`shape`. Groups, boxes in tables, headers and footers, multi-paragraph boxes and custom outlines are not held. | The model has one paragraph per box and three outlines. |
+| IEW-L29 | The look of a box (fill, outline) is written from its style but not read: a box of a file always comes in as `plain-box` / `plain-shape`, and `look` is listed when the file's differs. A patch that restyles a box draws it anew and the file's look is lost. The formatting of the words (bold, colour, size) is not held either (`formatting`). | D407 (looks are read in a later step). |
+| IEW-L30 | Word 2007 shows nothing of a box written without the legacy fallback Word 2010+ keeps (`mc:Fallback`): our docx has none. Boxes of every kind share one stacking order only within their kind (pictures below boxes). | Kept small; Word 2010+ and LibreOffice draw them. |
 
 ## What to try (QA)
 
@@ -109,3 +116,10 @@ turned as in Claudia, and its alt text is there (Word: Picture format ▸ Alt te
 show in the text (inline ones too); move one, resize it, give it another description and download again: the other
 pictures and the rest of the file are as they were. Remove a picture and download: it is gone from the file (odt: from the
 package as well). A cropped or stretched picture stays in the file and is listed as `picture`.
+
+*Slice 6b, text boxes and shapes in composes.* Insert a text box and a circle, a rectangle and a triangle into a paragraph
+(Insert ▸ Text box / Shape), type words in each, turn one, give one a description; download as .docx and .odt and open both
+in Word/LibreOffice: they are at their place in the paragraph, as large and as turned as in Claudia, with their words,
+fill and outline. Open a Word or LibreOffice file with such boxes: they show in the text; move, resize and reword one and
+download again: the other boxes, the pictures and the rest are as they were. Delete a box: it is gone from the file. Open an
+odp whose body text is in a placeholder: the body text shows on its slide (IEW-19).

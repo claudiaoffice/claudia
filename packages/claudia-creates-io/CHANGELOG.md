@@ -19,6 +19,13 @@ A turned object lies on the slide by its outline (D1021, D1022).
 - The picture code the converters of the text app needed too moved out: `Rasterise` and how a picture of a file
   becomes an image object are in `claudia-core`, the transform and frame helpers of odp in `claudia-odf-io` (D464).
   `claudia_creates_io.Rasterise` is still there.
+- `points_of`, `colour_of` and `parse_colour` moved to `claudia-core` (D465); `claudia_creates_io` keeps its names.
+
+### Fixed
+- `odp_to_slides` dropped a text box or shape that hung over an edge of the slide, such as the body placeholder of a
+  deck whose layout was made for a taller slide, with its words (IEW-19). An unturned box is now cut back to the slide
+  and `odp_import_losses` reports it as `overhanging-object`; a box with next to nothing on the slide or a turned one
+  over the edge is still `off-slide-object`.
 
 ## [0.5.0] - 2026-11-15
 

@@ -46,7 +46,7 @@ Status: ✅ wired · ◐ partly · ❌ not wired and **nothing says so** (silent
 | Remarks (suggestion without replacement) | odt 🔔 `remark`; docx ❌ | n/a | | |
 | Authorship of text (`Run.author`) | odt 🔔 `authorship`; docx ❌ | n/a | | By design (format cannot hold it) |
 | **Floating objects**: text boxes, shapes, images (`AddObject`, `RemoveObject`, `MoveObject`, `ResizeObject`, `RotateObject`, `SetText`, `SetObjectStyle`, `SetParagraphStyle`, `DefineShape`, `DefineImage`, `ForgetImage`) | ❌ both, silent | docx ❌ silent; odt 🔔 `frame` (not imported) | ✅ the file's own objects stay; objects made in Claudia are not written | |
-|  | *Update 2026-11-15 (D464, slice 6a): pictures (images and rendered containers) and their alt text are wired both ways in docx and odt, read, patched and listed; text boxes and shapes follow in 6b.* | | | | |
+|  | *Update 2026-11-15 (D464, slice 6a): pictures (images and rendered containers) and their alt text are wired both ways in docx and odt, read, patched and listed; text boxes and shapes follow in 6b.* *Update 2026-11-15 (D465, slice 6b): text boxes and shapes (circle, rectangle, triangle) are wired the same way; their looks are written, not read (`look`).* | | | | |
 | Alt text / decorative (`DescribeObject`; BITV 1.1.1) | ❌ (follows objects) | ❌ | ❌ | creates writes it (pptx `descr`, odp `svg:desc`); composes cannot because it writes no objects |
 | LaTeX / Mermaid rendered containers (`DefineRendering`, `UpdateRendering`, `ForgetRendering`; D66, D390–D395) | ❌ same as objects (they are pictures) | ❌ | ❌ | |
 | Document metadata (title, author, dates from the log; D411) | odt ✅ docx ❌ (python-docx defaults) | n/a | odt ◐ (see suggestions row) | |

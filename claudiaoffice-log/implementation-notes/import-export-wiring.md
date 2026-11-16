@@ -150,3 +150,18 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
   Word was not available: its pictures are tested by hand-built XML (inline pictures, crops, tables).
 * Found on the way: IEW-17 (the odt patch wrote every style of the app's own file again under a second name after any
   edit).
+
+## Slice 6b — composes: text boxes and shapes to docx and odt (D465)
+* composes-io: `_boxes.py` (what is a box, `BoxLook`, losses), `_docx_boxes.py` (reader, `BoxWriter`, `BoxEdits`),
+  `_odt_boxes.py` (reader, `BoxWriter`, `BoxStyles`, `BoxPlan`), glue in `docx.py` / `odt.py`; `_unwritten.py`: `objects`
+  and `shapes` are in `_WRITTEN_BY_BOTH`.
+* core: `looks.py` (moved from creates-io `_styling`), `shapes.primitive`, `file_boxes.box_body`; odf-io: `shapes_of`.
+* Checked against LibreOffice 24.2.7 (fresh docx/odt rendered, round-tripped, patched LibreOffice-written files): all four
+  boxes come back with size, turn, description and place. LibreOffice writes docx text boxes in `mc:AlternateContent` without
+  `txBox`, writes odt circles as `draw:circle` and shrinks custom shapes with words unless auto-grow is off - all handled.
+  Word was not available: its drawings are tested by hand-built XML.
+* Library cases `docx-boxes`, `odt-boxes` (built by LibreOffice from our file; `_build_fixtures`).
+* Found on the way: IEW-19 (odp: body placeholder hanging over the slide dropped), IEW-21 (docx text boxes counted
+  twice), IEW-22 (restyling to a style the file has wrote it twice). Open: IEW-20 (fresh export of an imported deck loses
+  its looks and layouts - the next creates step is to read looks).
+

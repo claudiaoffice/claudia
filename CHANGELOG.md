@@ -4,6 +4,19 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.28.0] - 2026-11-16
+
+The looks helpers and the box of a file, shared by composes and creates (D465).
+
+### Added
+- `points_of`, `colour_of`, `parse_colour`: how a style's length and colour become points and RGB, moved here from
+  `claudia-creates-io` so that composes writes the look of a box the same way creates does (`claudia_creates_io` still
+  has them).
+- `PRIMITIVES`, `primitive(shape_id)`: the three shapes a file has an outline for (circle, rectangle, triangle) and
+  their definition in the model.
+- `TEXT_BOX_STYLE`, `SHAPE_STYLE`, `SHAPE_LABEL_STYLE`, `box_body(...)`: the object and paragraph styles a text box
+  or shape read from a file gets, and the object body built from it.
+
 ## [0.27.0] - 2026-11-15
 
 Turning objects (D1021–D1024).

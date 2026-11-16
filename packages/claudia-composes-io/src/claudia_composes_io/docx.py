@@ -30,13 +30,16 @@ from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.text.paragraph import Paragraph
 
 from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
-from claudia_core import Rasterise, VisualObject
+from claudia_core import Rasterise, VisualObject, primitive
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
+from ._boxes import box_losses, is_written, look_of
 from ._docx_blocks import hidden_content, place, remove
+from ._docx_boxes import BoxEdits, BoxWriter, FileBox, file_boxes, restyled_words
 from ._docx_lists import ListWriter, numbering_in, read_lists
 from ._docx_pictures import (
+    FilePicture,
     PictureEdits,
     PictureWriter,
     file_pictures,
@@ -91,15 +94,30 @@ def text_to_docx(
     change_ids, when = count(1), when_made(change_times)
     lists = ListWriter(document, model.lists)
     pictures = PictureWriter(document, rasterise)
+    boxes = BoxWriter(document, names, model, pictures)
     for block in model.blocks:
         paragraph = document.add_paragraph(style=names.of(block.style))
         if block.item is not None:
             lists.write(paragraph, block.item)
-        marks = [(obj.anchor.offset, pictures.run(obj, asset)) for obj, asset in pictures_of(model, block.id)]
+        marks = _floating_runs(model, block.id, pictures, boxes)
         _fill_paragraph(paragraph, block.text, by_block.get(block.id, []), change_ids, when, marks)
     out = BytesIO()
     document.save(out)
     return out.getvalue()
+
+
+def _floating_runs(model: TextModel, block_id: str, pictures: PictureWriter, boxes: BoxWriter) -> list[tuple[int, Any]]:
+    """The runs of what floats over the paragraph ``block_id`` (pictures and boxes, the one in front last), each with
+    the character it stands at."""
+    assets = {obj.id: asset for obj, asset in pictures_of(model, block_id)}
+    runs = []
+    for object_id in model.stack_of(block_id):
+        obj = model.get_object(object_id)
+        if object_id in assets:
+            runs.append((obj.anchor.offset, pictures.run(obj, assets[object_id])))
+        elif is_written(obj):
+            runs.append((obj.anchor.offset, boxes.run(obj)))
+    return runs
 
 
 def _patch_setup(document: Any, baseline: TextModel, current: TextModel) -> tuple[WordNames, set[str]]:
@@ -111,7 +129,7 @@ def _patch_setup(document: Any, baseline: TextModel, current: TextModel) -> tupl
     if baseline.language != current.language:
         write_language(document, current.language)
         owned.add("word/styles.xml")
-    names = _word_names(document, current)
+    names = _word_names(document, current, baseline)
     if _write_changed_styles(document, baseline, current, names):
         owned |= {"word/styles.xml", "word/settings.xml"}
     return names, owned
@@ -194,9 +212,11 @@ def _remove_block(element: Any, losses: LossLog | None) -> None:
     remove(element)
 
 
-def _word_names(document: Any, model: TextModel) -> WordNames:
-    """The Word name of each style of ``model``, none of them one that ``document`` has for another style."""
-    return WordNames(model.styles, taken={style.name for style in document.styles})
+def _word_names(document: Any, model: TextModel, baseline: TextModel | None = None) -> WordNames:  # noqa: ANN401
+    """The Word name of each style of ``model``, none of them one that ``document`` has for another style: a style the
+    file has under the name ``baseline`` (the model it was read as) gives the style of that id is that style."""
+    own = set() if baseline is None else {WordNames(baseline.styles).of(style.id) for style in baseline.styles}
+    return WordNames(model.styles, taken={style.name for style in document.styles} - own)
 
 
 def _fill_paragraph(
@@ -288,10 +308,17 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
         runs = (Run(len(text), None),) if text else ()
         blocks.append(Block(f"b{index}", style_id, text, runs, reading.items.get(paragraph._p)))
     model = TextModel(blocks or None, page=setup.page, language=setup.language, lists=reading.book if blocks else None)
-    for picture in file_pictures(document):
-        if picture.asset.id not in model.images:
-            model.define_image(picture.asset)
-        model.insert_object(VisualObject(picture.body, BlockAnchor(f"b{picture.block + 1}", picture.offset)))
+    floating: list[tuple[int, int, int, FilePicture | FileBox]] = [
+        (each.block, each.offset, 0, each) for each in file_pictures(document)
+    ]
+    floating += [(each.block, each.offset, 1, each) for each in file_boxes(document)]
+    for _, _, _, each in sorted(floating, key=lambda found: found[:3]):
+        if isinstance(each, FileBox):
+            if each.body.shape is not None and each.body.shape not in model.shapes:
+                model.define_shape(primitive(each.body.shape))
+        elif each.asset.id not in model.images:
+            model.define_image(each.asset)
+        model.insert_object(VisualObject(each.body, BlockAnchor(f"b{each.block + 1}", each.offset)))
     return model
 
 
@@ -311,12 +338,15 @@ def docx_import_losses(docx_bytes: bytes) -> tuple[Loss, ...]:
             losses.add("style", style.name)
     reading = read_lists(document.paragraphs, numbering_in(document))
     held = file_pictures(document)
+    boxes = file_boxes(document)
+    plain = TextModel(None)
     counts = {
         "list-look": reading.odd_looks,
         "list-depth": reading.too_deep,
         "page": int(read_setup(document).odd_page),
         "picture": unheld_pictures(document, held),
-        "frame": _frames(body),
+        "frame": _frames(body, boxes),
+        "look": sum(1 for box in boxes if not box.look.matches(look_of(plain, box.body))),
     }
     for code, tags in _IMPORT_LOSSES:
         number = counts[code] if code in counts else sum(1 for tag in tags for _ in body.iter(qn(tag)))
@@ -325,10 +355,19 @@ def docx_import_losses(docx_bytes: bytes) -> tuple[Loss, ...]:
     return losses.result()
 
 
-def _frames(body: Any) -> int:  # noqa: ANN401
-    """How many drawings and legacy pictures of ``body`` are not pictures (a text box, a shape, a chart, a diagram)."""
-    drawings = sum(1 for drawing in body.iter(qn("w:drawing")) if not drawing.xpath(".//pic:pic"))
-    return drawings + sum(1 for _ in body.iter(qn("w:pict")))
+_FALLBACK = "{http://schemas.openxmlformats.org/markup-compatibility/2006}Fallback"
+
+
+def _frames(body: Any, held: list[FileBox]) -> int:  # noqa: ANN401
+    """How many drawings and legacy pictures of ``body`` are neither pictures nor the text boxes and shapes the model
+    holds (a text box it cannot show, a chart, a diagram). What Word writes for the programs that do not know a drawing
+    (a legacy picture in the ``mc:Fallback`` next to it) is the same box, not another."""
+    kept = {id(each.drawing) for each in held}
+    drawings = sum(
+        1 for drawing in body.iter(qn("w:drawing")) if id(drawing) not in kept and not drawing.xpath(".//pic:pic")
+    )
+    legacy = sum(1 for pict in body.iter(qn("w:pict")) if pict.getparent().tag != _FALLBACK)
+    return drawings + legacy
 
 
 #: What a docx has that the model does not show, by code in the order it is reported: the elements to count (a
@@ -340,6 +379,7 @@ _IMPORT_LOSSES = (
     ("page", ()),
     ("frame", ()),
     ("picture", ()),
+    ("look", ()),
     ("footnote", ("w:footnoteReference", "w:endnoteReference")),
     ("comment", ("w:commentReference",)),
     ("formatting", ("w:rPr",)),
@@ -380,6 +420,7 @@ def docx_export_losses(
         if skipped:
             losses.add("suggestion-anchor", count=skipped)
     picture_losses(model, losses, vector_loss=None if rasterised else "svg-fallback")
+    box_losses(model, losses)
     return (*losses.result(), *docx_unwritten_changes(model))
 
 
@@ -388,7 +429,8 @@ def _write_changed_styles(document: Any, baseline: TextModel, current: TextModel
     restyled paragraph now has that the file lacks; ``True`` when the file's styles changed."""
     colours, before_colours = current.palette.colours(), baseline.palette.colours()
     known = {block.id: block.style for block in baseline.blocks}
-    wanted = {block.style for block in current.blocks if known.get(block.id) != block.style} - WORD_NAMES.keys()
+    wanted = {block.style for block in current.blocks if known.get(block.id) != block.style}
+    wanted = (wanted | restyled_words(baseline, current)) - WORD_NAMES.keys()
     changed = set()
     for style in current.styles:
         if style.kind != "paragraph":
@@ -502,6 +544,9 @@ def apply_edits_to_docx(
     if losses is not None:  # (what a rendered container is that nothing has been drawn for)
         picture_losses(current, losses)
     pictures = PictureEdits(document, baseline, current, rewritten, rasterise, losses)
+    boxes = BoxEdits(document, names, baseline, current, rewritten, pictures.writer, losses)
+    for block_id, runs in boxes.marks.items():
+        pictures.marks.setdefault(block_id, []).extend(runs)
     for block in held:
         if block.id not in current_ids:
             _remove_block(paragraph_of[block.id]._p, losses)
@@ -514,7 +559,9 @@ def apply_edits_to_docx(
             last = writer.add(after, last, following)
         else:
             last = writer.edit(paragraph_of[after.id], before, after)
-    pictures.settle({block_id: paragraph._p for block_id, paragraph in paragraph_of.items()})
+    elements = {block_id: paragraph._p for block_id, paragraph in paragraph_of.items()}
+    pictures.settle(elements)
+    boxes.settle(elements)
     patched = BytesIO()
     document.save(patched)
     if pictures.changed:

@@ -5,6 +5,25 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-15
+
+Text boxes and shapes floating over a text reach docx and odt (D465).
+
+### Added
+- `text_to_docx` and `text_to_odt` write the text boxes and the shapes (circle, rectangle, triangle) of a text as
+  drawings in the paragraph they hang from, with their words, size, turn, description, fill and outline.
+- `docx_to_text` and `odt_to_text` read them back as text box and shape objects (`x1`, `x2`... in the order of the
+  file); the look of a box is written but not read, and `docx_import_losses` / `odt_import_losses` report `look` when
+  the file's differs from the model's.
+- `apply_edits_to_docx` and `apply_edits_to_odt` add, remove, move, resize, turn, reword and describe the boxes of a
+  kept file; a box whose kind, shape or style changes is drawn anew (and its foreign look lost); the ones nobody
+  touched stay byte for byte. The unwritten-change facets of boxes follow what the writers hold.
+
+### Fixed
+- `docx_to_text` counted a Word text box twice (its drawing and the picture Word keeps for old readers) (IEW-21).
+- The patch of a docx or odt wrote a style the file already had under a second name (`Shape label 2`) when an object
+  was restyled to it (IEW-22).
+
 ## [0.5.0] - 2026-11-15
 
 Pictures floating over a text reach docx and odt (D464).

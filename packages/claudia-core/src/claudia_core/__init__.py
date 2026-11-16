@@ -22,9 +22,11 @@
     lists        ListDef, ListBook, the schemes and the counting of list items (E9.21)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
     object_texts the words and descriptions of objects as texts a search can look in and replace, for any app
+    looks        colours and lengths of a resolved style as values a file format holds (D465)
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
                  (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
+    file_boxes   the text boxes and shapes of an office file as the model holds them (D465)
     file_pictures  the pictures of an office file as image objects: what an app needs to hold one (D464)
     raster       Rasterise and the empty picture that stands in for an SVG nobody can draw (D394)
     page         PageSetup: the paper, orientation, margins and page numbers a document prints on (D904, D917)
@@ -112,6 +114,7 @@ from .facets import (
     facet_of,
     fits,
 )
+from .file_boxes import SHAPE_LABEL_STYLE, SHAPE_STYLE, TEXT_BOX_STYLE, box_body
 from .file_pictures import FILE_IMPORTER, IMAGE_STYLE, UNKNOWN_TIME, asset_of, keeps_proportions, picture_body
 from .history import History, Step
 from .language import LanguageChanged, LanguageError, SetLanguage, normalize_language
@@ -128,6 +131,7 @@ from .lists import (
     numbering_labels,
 )
 from .log import CommandLog, Entry
+from .looks import colour_of, parse_colour, points_of
 from .manifest import (
     Environment,
     FontRequirement,
@@ -222,7 +226,7 @@ from .region import Region, transform
 from .renderings import MAX_RENDERING_SOURCE, RenderedDefinition
 from .replay import replay
 from .revision import MAIN, Branch, Revision
-from .shapes import BOX, FORMAT, ShapeDefinition, ShapeError, parse_shape
+from .shapes import BOX, FORMAT, PRIMITIVES, ShapeDefinition, ShapeError, parse_shape, primitive
 from .store import DocumentStore, MemoryStore
 from .styles import ChangeStyle, CreateStyle, RemoveStyle, RenameStyle, StyleBook, StyleDef, StylesChanged
 from .turning import SINE_MILLIONTHS, nudge_into, turned_extent
@@ -372,7 +376,16 @@ __all__ = [
     "paragraph_for",
     "parse_chat",
     "parse_css",
+    "PRIMITIVES",
+    "SHAPE_LABEL_STYLE",
+    "SHAPE_STYLE",
+    "TEXT_BOX_STYLE",
+    "box_body",
+    "primitive",
+    "colour_of",
+    "parse_colour",
     "parse_shape",
+    "points_of",
     "Presence",
     "Reading",
     "Rebuilt",

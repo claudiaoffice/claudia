@@ -23,7 +23,7 @@ same name; every other style is body text -- and named in the losses, so that no
 from __future__ import annotations
 
 import copy
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from itertools import count
 from typing import cast
@@ -31,8 +31,8 @@ from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
-from claudia_core import Rasterise, VisualObject
+from claudia_composes import BUILTIN_STYLES, DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
+from claudia_core import SHAPE_LABEL_STYLE, Rasterise, VisualObject, primitive
 from claudia_odf_io import (
     MIME,
     NS,
@@ -57,10 +57,13 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from ._boxes import box_losses, boxes_of, is_written, look_of
+from ._odt_boxes import BoxPlan, BoxStyles, BoxWriter, FileBox, file_boxes, graphic_style_names
 from ._odt_lists import LIST, ListFlow, ListNames, can_rebuild, read_lists
 from ._odt_pictures import (
     PICTURE_STYLE,
     PICTURE_STYLE_XML,
+    FilePicture,
     PicturePlan,
     PictureWriter,
     file_pictures,
@@ -244,6 +247,24 @@ def _style_of(paragraph: etree._Element, parents: dict[str, str | None], losses:
     return found
 
 
+#: The model's styles of words by the name an odt shows for them, for a text box or a shape of a file.
+_WORDS_STYLE = {style.name: style.id for style in BUILTIN_STYLES if style.kind == "paragraph"}
+
+
+def _words_style(parents: dict[str, str | None]) -> Callable[[etree._Element, str | None], str]:
+    """The style of the model the paragraph in a text box or a shape (``shape``: the one it is, else ``None``) has: the
+    one its style is based on, else the one of that name, else the style of the words of the kind of box."""
+
+    def of(paragraph: etree._Element, shape: str | None) -> str:
+        found = _style_of(paragraph, parents, None)
+        named = _WORDS_STYLE.get(decode_style_name(paragraph.get(_STYLE_NAME) or ""))
+        if found != DEFAULT_STYLE:
+            return found
+        return named or (DEFAULT_STYLE if shape is None else SHAPE_LABEL_STYLE)
+
+    return of
+
+
 def _open_styles(parts: dict[str, bytes], content: etree._Element) -> dict[str, str | None]:
     styles = etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else content
     return _paragraph_styles(styles, content)
@@ -286,10 +307,19 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     model = TextModel(blocks or None, page=setup.page, language=setup.language, lists=lists.book if blocks else None)
     root = body.getroottree().getroot()
     graphics = graphic_styles(root, etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
-    for picture in file_pictures(scan.paragraphs, graphics, parts):
-        if picture.asset.id not in model.images:
-            model.define_image(picture.asset)
-        model.insert_object(VisualObject(picture.body, BlockAnchor(f"b{picture.block + 1}", picture.offset)))
+    floating: list[tuple[int, int, int, FilePicture | FileBox]] = [
+        (each.block, each.offset, 0, each) for each in file_pictures(scan.paragraphs, graphics, parts)
+    ]
+    floating += [
+        (each.block, each.offset, 1, each) for each in file_boxes(scan.paragraphs, graphics, _words_style(parents))
+    ]
+    for _, _, _, each in sorted(floating, key=lambda found: found[:3]):
+        if isinstance(each, FileBox):
+            if each.body.shape is not None and each.body.shape not in model.shapes:
+                model.define_shape(primitive(each.body.shape))
+        elif each.asset.id not in model.images:
+            model.define_image(each.asset)
+        model.insert_object(VisualObject(each.body, BlockAnchor(f"b{each.block + 1}", each.offset)))
     return model
 
 
@@ -317,7 +347,9 @@ def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
     held = file_pictures(scan.paragraphs, graphics, parts)
     unheld = unheld_pictures(scan.paragraphs, held, graphics)
     shown_as_frames = sum(1 for paragraph in scan.paragraphs for frame in frames_of(paragraph))
+    boxes = file_boxes(scan.paragraphs, graphics, _words_style(parents))
     plain = shown_as_frames - sum(frames_not_pictures(paragraph) for paragraph in scan.paragraphs)
+    plain += len(boxes)  # (the boxes are shown as they are, they are no frame of their own)
     if "frame" in hidden:  # (the pictures are shown or are a picture of their own, not a frame)
         hidden["frame"] -= plain
         if hidden["frame"] <= 0:
@@ -331,6 +363,7 @@ def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
         ("page", int(setup.odd_page)),
         ("index", scan.indexes),
         ("frame", scan.frames),
+        ("look", sum(1 for box in boxes if not box.look.matches(look_of(TextModel(None), box.body)))),
         ("formatting", formatting),
         ("link", links),
         ("tracked-change", sum(1 for _ in body.iter(_q("text", "changed-region")))),
@@ -526,14 +559,20 @@ def text_to_odt(
     flow = ListFlow(text, lambda list_id, element: names.start(list_id, element))
     regions: list[etree._Element] = []
     pictures = PictureWriter(rasterise)
+    box_styles = BoxStyles()
+    boxes = BoxWriter(
+        model, box_styles, lambda style_id, words: _new_paragraph(style_id, words, [], ids, when, styles)[0]
+    )
     for block in model.blocks:
         paragraph, found = _new_paragraph(block.style, block.text, by_block.get(block.id, []), ids, when, styles)
         _add_pictures(paragraph, model, block, by_block.get(block.id, []), pictures)
+        _add_boxes(paragraph, model, block, by_block.get(block.id, []), boxes)
         flow.add(paragraph, block.item)
         regions += found
     automatic = root.find("office:automatic-styles", NS)
     if automatic is not None:
         automatic.extend(etree.fromstring(style) for style in names.new_styles)
+        automatic.extend(etree.fromstring(style) for style in box_styles.new)
         if pictures.parts:
             automatic.append(etree.fromstring(PICTURE_STYLE_XML))
     if regions:
@@ -559,6 +598,19 @@ def _add_pictures(
         for obj, asset in pictures_of(model, block.id)
     ]
     insert_elements(paragraph, marks)
+
+
+def _add_boxes(
+    paragraph: etree._Element, model: TextModel, block: Block, suggestions: list[Suggestion], writer: BoxWriter
+) -> None:
+    """Put the text boxes and shapes that hang from ``block`` into its ``paragraph``, each at its character."""
+    insert_elements(
+        paragraph,
+        [
+            (_moved(obj.anchor.offset, block.text, suggestions), writer.element(obj))
+            for obj in boxes_of(model, block.id)
+        ],
+    )
 
 
 def odt_export_losses(
@@ -587,11 +639,14 @@ def odt_export_losses(
     if remarks:
         losses.add("remark", count=remarks)
     decorative = sum(
-        1 for obj in model.objects.values() if obj.body.kind in ("image", "rendered") and obj.body.decorative
+        1
+        for obj in model.objects.values()
+        if (obj.body.kind in ("image", "rendered") or is_written(obj)) and obj.body.decorative
     )
     if decorative:
         losses.add("decorative", count=decorative)
     picture_losses(model, losses, vector_loss=None if rasterised else "svg-picture", only_rendered=True)
+    box_losses(model, losses)
     if not track_suggestions:
         if len(open_ones) > remarks:
             losses.add("suggestion", count=len(open_ones) - remarks)
@@ -643,7 +698,8 @@ class _Patch:
         self.ids = _ids({r.get(_q("text", "id")) or "" for r in self.part.root.iter(_q("text", "changed-region"))})
         roots = [self.part.root, *([self.styles.root] if self.styles else [])]
         self.defined = set(_paragraph_styles(*roots))
-        self.style_names = StyleNames(current.styles, self.defined)
+        own = {StyleNames(baseline.styles).of(style.id) for style in baseline.styles if style.kind == "paragraph"}
+        self.style_names = StyleNames(current.styles, self.defined - own)  # (a style the file has by our name is ours)
         self.missing: dict[str, bytes] = {}  # styles the file lacks, that the edits need, by name
         self.regions: list[etree._Element] = []  # tracked changes to add
         self.appended: list[etree._Element] = []  # paragraphs that go at the end of the text
@@ -668,6 +724,15 @@ class _Patch:
             current,
             rasterise,
             set(self.parts),
+            losses,
+        )
+        self.box_styles = BoxStyles(graphic_style_names(*roots))
+        self.boxes = BoxPlan(
+            file_boxes(paragraphs, graphics, _words_style(_paragraph_styles(*roots))),
+            [block.id for block in held],
+            baseline,
+            current,
+            BoxWriter(current, self.box_styles, self._words_paragraph),
             losses,
         )
         self.before = {block.id: block for block in held}
@@ -705,6 +770,11 @@ class _Patch:
         if self.info is not None:
             update_package_meta(self.parts, self.info)
         return write_parts(self.parts)
+
+    def _words_paragraph(self, style_id: str, words: str) -> etree._Element:
+        """The paragraph of the words of a box, in the style of the model (noting the style the file must be given)."""
+        self._style_name(style_id)
+        return _new_paragraph(style_id, words, [], self.ids, self.when, self.style_names)[0]
 
     def _settle_pictures_in_package(self) -> None:
         """The images of the new frames into the package and its manifest; those of frames that went out of it, when no
@@ -918,13 +988,15 @@ class _Patch:
             and old.style == block.style
             and not suggestions
             and block.id not in self.pictures.touched
+            and block.id not in self.boxes.touched
         ):
             return None
         edited = copy.deepcopy(element)
         text, changes, _ = _plan(block.text, suggestions, self.when)
-        framed = self.pictures.has_any(block.id)
-        if framed:  # (the frames of the pictures are put back at the end, where the text says they hang)
+        framed = self.pictures.has_any(block.id) or self.boxes.has_any(block.id)
+        if framed:  # (the frames of the pictures and boxes are put back at the end, where the text says they hang)
             self.pictures.take_out(edited, element, block.id)
+            self.boxes.take_out(edited, element, block.id)
         set_text(edited, text)
         name = edited.get(_STYLE_NAME) or _STANDARD
         if old.style != block.style:
@@ -936,7 +1008,9 @@ class _Patch:
 
     def _hang_pictures(self, paragraph: etree._Element, block: Block, suggestions: list[Suggestion]) -> None:
         """The frames of the pictures that hang from ``block``, each at its character of ``paragraph``, as written."""
-        self.pictures.hang(paragraph, block.id, lambda offset: _moved(offset, block.text, suggestions))
+        where = lambda offset: _moved(offset, block.text, suggestions)  # noqa: E731
+        self.pictures.hang(paragraph, block.id, where)
+        self.boxes.hang(paragraph, block.id, where)
 
     def _edit(self, block: Block, element: etree._Element, suggestions: list[Suggestion]) -> None:
         edited = self._edited(block, element, suggestions)
@@ -946,7 +1020,7 @@ class _Patch:
 
     def _finish_lists(self) -> None:
         """The list styles the text needs and the ``xml:id`` that the lists after a list of the file continue."""
-        styles = list(self.names.new_styles)
+        styles = [*self.names.new_styles, *self.box_styles.new]
         if self.pictures.written and not self.has_picture_style:
             styles.append(PICTURE_STYLE_XML.encode())
         if styles:

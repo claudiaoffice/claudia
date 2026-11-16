@@ -38,7 +38,16 @@ from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_core import ImageAsset, ObjectBody, Rasterise, VisualObject, nudge_into, paragraph_for, picture_body
+from claudia_core import (
+    MIN_OBJECT_SIZE,
+    ImageAsset,
+    ObjectBody,
+    Rasterise,
+    VisualObject,
+    nudge_into,
+    paragraph_for,
+    picture_body,
+)
 from claudia_creates import MAX_NOTES_LENGTH, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
 from claudia_odf_io import (
     MIME,
@@ -361,10 +370,12 @@ def _own_words(paragraph: etree._Element, owner: etree._Element) -> bool:
     return True
 
 
-def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, int, int, int] | str:
-    """Where an element is, in slide units, and how far it is turned (whole degrees clockwise), or why it has no
-    place (``"rotated"``: a transform that is more than a rotation, ``"unplaced"``, ``"off-slide"``). A turned element
-    is placed by its outline, as the model asks (D1022): one whose outline sticks out of the slide is off it."""
+def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, int, int, int, bool] | str:
+    """Where an element is, in slide units, how far it is turned (whole degrees clockwise) and whether it was cut
+    back to the slide (an unturned box that hangs over an edge, as a placeholder sized for another slide shape does),
+    or why it has no place (``"rotated"``: a transform that is more than a rotation, ``"unplaced"``, ``"off-slide"``:
+    nothing of it, or too little, is on the slide). A turned element is placed by its outline, as the model asks
+    (D1022): one whose outline sticks out of the slide is off it."""
     transform = element.get(_q("draw", "transform"))
     values = [inches(element.get(_q("svg", name))) for name in ("x", "y", "width", "height")]
     turn = 0
@@ -382,9 +393,15 @@ def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, 
     x, y, w, h = (value for value in values if value is not None)
     per_x, per_y = size[0] / SLIDE_WIDTH, size[1] / SLIDE_HEIGHT
     box = (round(x / per_x), round(y / per_y), round(w / per_x), round(h / per_y))
-    if nudge_into(*box, turn, SLIDE_WIDTH, SLIDE_HEIGHT) != box[:2]:
+    if nudge_into(*box, turn, SLIDE_WIDTH, SLIDE_HEIGHT) == box[:2]:
+        return (*box, turn, False)
+    if turn:
         return "off-slide"
-    return (*box, turn)
+    left, top = max(box[0], 0), max(box[1], 0)
+    cut = (left, top, min(box[0] + box[2], SLIDE_WIDTH) - left, min(box[1] + box[3], SLIDE_HEIGHT) - top)
+    if min(cut[2], cut[3]) < MIN_OBJECT_SIZE:
+        return "off-slide"
+    return (*cut, 0, True)
 
 
 class _TextLooks:
@@ -557,9 +574,11 @@ def _scan_child(
     asset = picture_of(child, graphics, parts) if kind == "image" else None
     if isinstance(box, str):
         slide.left_out.append((f"{box}-object", kind))
-    elif len(slide.objects) >= _MAX_OBJECTS or not probe.holds(kind, shape, box, text, asset):
+    elif len(slide.objects) >= _MAX_OBJECTS or not probe.holds(kind, shape, box[:5], text, asset):
         slide.left_out.append(("unfit-object", kind))
     else:
+        if box[5]:
+            slide.left_out.append(("overhanging-object", kind))
         description = description_of(child) if kind == "image" else ""
         slide.objects.append(
             _Object(f"o{next(numbers)}", child, kind, shape, *box[:4], text, paragraphs, box[4], asset, description)
@@ -640,8 +659,9 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
 
 def odp_import_losses(odp_bytes: bytes) -> tuple[Loss, ...]:
     """What :func:`odp_to_slides` does not show of the file, each as a code (``"picture"``, ``"table"``, ``"group"``,
-    ``"notes"``, ``"transition"``, ``"rotated-object"``...) with how many there are, in the order they come. None of it
-    is lost from the *file*: an edit exported with :func:`apply_edits_to_odp` keeps all of it."""
+    ``"notes"``, ``"transition"``, ``"rotated-object"``, ``"overhanging-object"`` (cut back to the slide)...) with how
+    many there are, in the order they come. None of it is lost from the *file*: an edit exported with
+    :func:`apply_edits_to_odp` keeps all of it."""
     _, _, _, slides = _document(odp_bytes)
     losses = LossLog()
     looks = formatting = links = 0

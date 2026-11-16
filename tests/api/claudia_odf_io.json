@@ -1,5 +1,5 @@
 {
- "version": "0.6.0",
+ "version": "0.7.0",
  "DocumentInfo": {
   "class": [
    "object"
@@ -163,6 +163,9 @@
  },
  "set_text": {
   "function": "(paragraph: 'etree._Element', text: 'str') -> 'None'"
+ },
+ "shapes_of": {
+  "function": "(paragraph: 'etree._Element') -> 'list[etree._Element]'"
  },
  "transform_of": {
   "function": "(degrees: 'int', box: 'tuple[float, float, float, float]') -> 'str | None'"

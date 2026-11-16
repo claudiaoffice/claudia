@@ -833,6 +833,62 @@ def build_odt_pictures() -> bytes:
     return _library_pictures_through_libreoffice("odt")
 
 
+def _library_boxes_through_libreoffice(to: str) -> bytes:
+    """A text with a text box and three shapes (a circle, a triangle, a turned rectangle) saved by LibreOffice."""
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    from claudia_composes_io import text_to_docx, text_to_odt
+
+    from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, TextModel
+    from claudia_core import ObjectBody, VisualObject, paragraph_for, primitive
+
+    model = TextModel(
+        [
+            Block("b1", "heading-1", "Boxes"),
+            Block("b2", DEFAULT_STYLE, "A paragraph with a text box in the middle of it."),
+            Block("b3", DEFAULT_STYLE, "Nothing here changes."),
+        ]
+    )
+    for shape in ("circle", "rectangle", "triangle"):
+        model.define_shape(primitive(shape))
+    boxes = (
+        ("text", None, "b2", 22, (240, 60), 0, "A note in a box", "A note about the boxes"),
+        ("shape", "circle", "b3", 0, (90, 90), 0, "Dot", "A dot"),
+        ("shape", "triangle", "b3", 7, (120, 100), 0, "Up", ""),
+        ("shape", "rectangle", "b3", 9, (120, 60), 20, "Turned", ""),
+    )
+    for number, (kind, shape, block, offset, size, turn, words, description) in enumerate(boxes, start=1):
+        paragraph = paragraph_for(f"o{number}", "body" if kind == "text" else "shape-label", words)
+        style = "plain-box" if kind == "text" else "plain-shape"
+        body = ObjectBody(
+            f"o{number}", kind, *size, style, paragraph, shape=shape, rotation=turn, description=description
+        )
+        model.insert_object(VisualObject(body, BlockAnchor(block, offset)))
+    with tempfile.TemporaryDirectory() as folder:
+        source = Path(folder) / "in" / f"boxes.{to}"
+        source.parent.mkdir()
+        source.write_bytes((text_to_docx if to == "docx" else text_to_odt)(model))
+        subprocess.run(
+            ["soffice", "--headless", "--convert-to", to, "--outdir", str(Path(folder) / "out"), str(source)],
+            check=True,
+            capture_output=True,
+            timeout=180,
+        )
+        return (Path(folder) / "out" / f"boxes.{to}").read_bytes()
+
+
+def build_docx_boxes() -> bytes:
+    """A docx the way LibreOffice saves a text box and shapes (D465)."""
+    return _library_boxes_through_libreoffice("docx")
+
+
+def build_odt_boxes() -> bytes:
+    """An odt the way LibreOffice saves a text box and shapes (D465)."""
+    return _library_boxes_through_libreoffice("odt")
+
+
 FIXTURES = {
     "docx/heading-styles/source.docx": build_heading_styles,
     "docx/tracked-change-suggestion/source.docx": build_tracked_change_suggestion,
@@ -864,6 +920,8 @@ FIXTURES = {
     "xlsx/charts/source.xlsx": build_xlsx_charts,
     "docx/pictures/source.docx": build_docx_pictures,
     "odt/pictures/source.odt": build_odt_pictures,
+    "docx/boxes/source.docx": build_docx_boxes,
+    "odt/boxes/source.odt": build_odt_boxes,
 }
 
 

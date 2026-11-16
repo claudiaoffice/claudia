@@ -439,7 +439,7 @@ class PictureEdits:
         self.marks: dict[str, list[tuple[int, Any]]] = {}
         self.loose: dict[str, list[tuple[int, Any]]] = {}
         self.changed = False
-        self._writer = PictureWriter(document, rasterise)
+        self.writer = PictureWriter(document, rasterise)
         wanted = all_pictures(current)
         in_file = file_pictures(document)
         new = dict(wanted)
@@ -447,7 +447,7 @@ class PictureEdits:
             new.pop(picture.object_id, None)
             self._edit(picture, wanted.get(picture.object_id), baseline, new)
         for obj, asset in new.values():
-            self._route(obj, self._writer.run(obj, asset))
+            self._route(obj, self.writer.run(obj, asset))
             if self.losses is not None and asset.format == "svg" and not self.rasterised:
                 self.losses.add("svg-fallback")  # (the picture every program draws is an empty one)
             self.changed = True

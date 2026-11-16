@@ -405,6 +405,21 @@ def test_an_object_that_cannot_be_placed_is_not_in_the_model_and_is_reported(mar
     assert odp_import_losses(data)
 
 
+def test_a_box_that_hangs_over_the_slide_is_cut_back_to_it_with_its_words_and_reported():
+    # a placeholder sized for a taller slide: 4.4 cm + 12.6 cm on a slide that is 15.75 cm high
+    data = an_odp(page(textbox(x="1cm", y="4.4cm", w="22cm", h="12.6cm", words="<text:p>Body</text:p>")))
+    body = odp_to_slides(data).objects["o1"]
+    assert body.body.paragraph.text == "Body"
+    assert (body.anchor.y + body.body.h, body.anchor.x) == (900, round(1 / CM_PER_UNIT))
+    assert {loss.kind for loss in odp_import_losses(data)} >= {"overhanging-object"}
+
+
+def test_a_box_with_next_to_nothing_on_the_slide_is_left_out():
+    sliver = an_odp(page(textbox(x="27.9cm", w="10cm")))
+    assert odp_to_slides(sliver).objects == {}
+    assert {loss.kind for loss in odp_import_losses(sliver)} == {"off-slide-object"}
+
+
 def test_what_the_model_does_not_show_is_reported():
     kinds = {loss.kind: loss.count for loss in odp_import_losses(RICH)}
     assert kinds == {"picture": 1, "table": 1, "look": 3}

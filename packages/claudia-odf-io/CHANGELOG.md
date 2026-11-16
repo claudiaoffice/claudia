@@ -5,6 +5,14 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-16
+
+Shapes in paragraphs (D465).
+
+### Added
+- `shapes_of(paragraph)`: the drawn shapes (`draw:rect`, `draw:ellipse`, `draw:circle`, `draw:custom-shape`) hanging
+  in a paragraph, as `draw:frames_of` finds the frames.
+
 ## [0.6.0] - 2026-11-15
 
 Turning objects (D1021): `rotation-ui` and `import-export-wiring` had both given `set_attributes` a `remove`.
