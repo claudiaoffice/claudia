@@ -10,6 +10,7 @@ the number formats). Search on claudia-search (SEC-18, CODE-18). Named ranges ar
 state schema 12 → 13.
 
 ### Added
+- The help topic `computes.pivot-tables` (English and German): how to make, change and read a pivot table, and what a file keeps of one (D628).
 - `NamedRange.id` (D552): a stable id, `r` + 8 hex digits from the scope and the name for ranges that were defined
   before ids (they get the same one every replay), a fresh one for a new range. A rename keeps it, so a tag in the chat
   to a range survives it. `WorkbookModel.named_things` also yields `("range", id, name)`; `thing_name` reads them.
