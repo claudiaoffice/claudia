@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import hashlib
 import io
-import os
-import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
 from fontTools.ttLib import TTFont
+
+from claudia_file_writer import write_once
 
 from .catalogue import Catalogue
 from .font import FontFile
@@ -58,14 +58,9 @@ class WebFontCache:
         if hashlib.sha256(data).hexdigest() != font.sha256:
             raise NotServable(f"{font.path.name} changed since the catalogue was made; load the catalogue again")
         self._directory.mkdir(parents=True, exist_ok=True)
-        handle, temporary = tempfile.mkstemp(dir=self._directory, suffix=".tmp")
-        try:
-            with os.fdopen(handle, "wb") as out:
-                out.write(_woff2(data))
-            os.replace(temporary, target)
-        except BaseException:
-            Path(temporary).unlink(missing_ok=True)
-            raise
+        # Another request may make the same file at once, and on Windows the first one's may be being sent: the name is
+        # the hash, so whichever is there is right (CODE-34).
+        write_once(target, _woff2(data))
         return target
 
 

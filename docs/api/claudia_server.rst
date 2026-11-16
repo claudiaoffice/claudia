@@ -131,7 +131,6 @@ Hyphenation patterns for the clients' layout, the same way (D913): ``GET /api/hy
 .. autofunction:: claudia_server.hyphenation.hyphenation_router
 .. autofunction:: claudia_server.hyphenation.read_lock
 .. autofunction:: claudia_server.hyphenation.fetch
-.. autoexception:: claudia_server.hyphenation.FetchError
 .. autodata:: claudia_server.hyphenation.HYPHENATION_FORMAT
 
 Rendered text containers

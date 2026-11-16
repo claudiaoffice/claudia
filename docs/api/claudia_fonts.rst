@@ -53,11 +53,11 @@ The starter set
 ---------------
 
 A pinned set of open fonts an operator fetches once (``python -m claudia_fonts fetch DIR``), each file checked by its
-SHA-256 against ``starter.lock.json`` (D905).
+SHA-256 against ``starter.lock.json`` (D905). ``LockedFile`` and ``FetchError`` are
+:class:`claudia_file_writer.PinnedFile` and :class:`claudia_file_writer.FetchError` (D701), which fetch the
+hyphenation patterns as well.
 
 .. autofunction:: claudia_fonts.fetch
 .. autofunction:: claudia_fonts.read_lock
 .. autofunction:: claudia_fonts.collection_folders
 .. autoclass:: claudia_fonts.LockedCollection
-.. autoclass:: claudia_fonts.LockedFile
-.. autoexception:: claudia_fonts.FetchError

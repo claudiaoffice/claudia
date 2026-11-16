@@ -99,7 +99,10 @@
    "object"
   ],
   "init": "(name: 'str', url: 'str', sha256: 'str', size: 'int') -> None",
-  "methods": {},
+  "methods": {
+   "from_lock": "(entry: 'Mapping') -> 'Self'",
+   "is_at": "(self, path: 'Path') -> 'bool'"
+  },
   "properties": []
  },
  "NotServable": {

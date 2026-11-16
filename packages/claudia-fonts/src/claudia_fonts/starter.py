@@ -10,15 +10,14 @@ the only part of this package that uses the network, and it runs only when an op
 
 from __future__ import annotations
 
-import hashlib
 import json
-import os
-import tempfile
-import urllib.request
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
+
+from claudia_file_writer import PinnedFile, fetch_pinned, write_atomically
+from claudia_file_writer import download as https_download
 
 from .collection import COLLECTION_FILE, RECORD_FORMAT
 
@@ -27,18 +26,10 @@ LOCK_FORMAT = 1
 MAX_FILE_BYTES = 16 * 1024 * 1024
 
 
-class FetchError(Exception):
-    """A pinned file could not be fetched, or its bytes are not the pinned ones."""
-
-
-@dataclass(frozen=True)
-class LockedFile:
-    """One file of the lock: its name in the collection folder, where it comes from and its SHA-256."""
-
-    name: str
-    url: str
-    sha256: str
-    size: int
+#: One file of the lock: its name in the collection folder, where it comes from and its SHA-256 (D701: the pinned files
+#: of fonts and hyphenation patterns are one kind of thing).
+LockedFile = PinnedFile
+_PUBLIC = 0o644
 
 
 @dataclass(frozen=True)
@@ -66,14 +57,7 @@ def read_lock(text: str | None = None) -> tuple[LockedCollection, ...]:
         folder = str(c["folder"])
         if not folder or "/" in folder or "\\" in folder or folder.startswith("."):
             raise ValueError(f"lock: bad folder name {folder!r}")
-        files = []
-        for f in c["files"]:
-            name = str(f["name"])
-            if not name or "/" in name or "\\" in name or name.startswith("."):
-                raise ValueError(f"lock: bad file name {name!r}")
-            if not str(f["url"]).startswith("https://"):
-                raise ValueError(f"lock: {name} is not fetched over https")
-            files.append(LockedFile(name, str(f["url"]), str(f["sha256"]).lower(), int(f["size"])))
+        files = [LockedFile.from_lock(f) for f in c["files"]]
         out.append(
             LockedCollection(
                 str(c["name"]),
@@ -89,29 +73,7 @@ def read_lock(text: str | None = None) -> tuple[LockedCollection, ...]:
 
 
 def _download(url: str) -> bytes:
-    with urllib.request.urlopen(url, timeout=60) as answer:  # noqa: S310 - https only, checked in read_lock
-        data = answer.read(MAX_FILE_BYTES + 1)
-    if len(data) > MAX_FILE_BYTES:
-        raise FetchError(f"{url} is larger than {MAX_FILE_BYTES} bytes")
-    return data
-
-
-def _write(target: Path, data: bytes) -> None:
-    handle, temporary = tempfile.mkstemp(dir=target.parent, suffix=".tmp")
-    try:
-        with os.fdopen(handle, "wb") as out:
-            out.write(data)
-        # mkstemp makes a 0600 file; these are public files, and the Docker image fetches them as root for a server
-        # that runs as another user, so they must stay readable by everyone.
-        os.chmod(temporary, 0o644)
-        os.replace(temporary, target)
-    except BaseException:
-        Path(temporary).unlink(missing_ok=True)
-        raise
-
-
-def _matches(path: Path, sha256: str) -> bool:
-    return path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == sha256
+    return https_download(url, max_bytes=MAX_FILE_BYTES)
 
 
 def fetch(
@@ -125,26 +87,13 @@ def fetch(
     its ``collection.json``; files already there with the right bytes are kept. The collection folders, in order.
     ``download`` gives the bytes of a URL (default: an HTTPS request).
 
-    :class:`FetchError` names the first file that could not be fetched or whose bytes differ from the lock."""
+    ``FetchError`` (:class:`claudia_file_writer.FetchError`) names the first file that could not be fetched or whose
+    bytes differ from the lock."""
     root = Path(target)
-    get = download or _download
     folders: list[Path] = []
     for collection in read_lock() if collections is None else collections:
         folder = root / collection.folder
-        folder.mkdir(parents=True, exist_ok=True)
-        for f in collection.files:
-            path = folder / f.name
-            if _matches(path, f.sha256):
-                continue
-            report(f"fetching {collection.name}: {f.name}")
-            try:
-                data = get(f.url)
-            except OSError as error:
-                raise FetchError(f"{f.url}: {error}") from error
-            got = hashlib.sha256(data).hexdigest()
-            if got != f.sha256:
-                raise FetchError(f"{f.name}: SHA-256 {got}, the lock says {f.sha256}")
-            _write(path, data)
+        fetch_pinned(collection.files, folder, download=download or _download, report=report, label=collection.name)
         record = {
             "format": RECORD_FORMAT,
             "name": collection.name,
@@ -153,7 +102,7 @@ def fetch(
             "source": collection.source,
             "version": collection.version,
         }
-        _write(folder / COLLECTION_FILE, (json.dumps(record, indent=2) + "\n").encode("utf-8"))
+        write_atomically(folder / COLLECTION_FILE, (json.dumps(record, indent=2) + "\n").encode("utf-8"), mode=_PUBLIC)
         folders.append(folder)
     return folders
 

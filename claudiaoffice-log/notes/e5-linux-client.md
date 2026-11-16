@@ -77,7 +77,8 @@ restart.
    (pyenv, uv, conda) usually cannot import `gi`.
 2. libadwaita 1.5 is the floor (`Adw.AboutDialog`; Ubuntu 24.04 has 1.5.0). The spike machine had 1.10 and PyGObject
    3.58; the sandbox has 1.5.0 and 3.48.2. 1.6 widgets such as `Adw.Spinner` are avoided.
-3. `claudia-client` needs Python 3.14 and depends on `claudia-core`, so the 3.12 shell cannot import it. TLS trust for
+3. `claudia-client` needs Python 3.14 and depends on `claudia-core`, so the 3.12 shell cannot import it (the package was
+   removed since, D700). TLS trust for
    remote servers is therefore not available to the shell; decide when remote servers come — a small 3.12-compatible
    trust module, or let the page do it.
 4. The root ruff and mypy configurations target 3.14; the client has its own targeting 3.12 so that 3.14-only syntax

@@ -182,9 +182,9 @@ sentence naming the one that is here, D535), and a server that keeps documents i
 
 ## Safety
 
-* TLS by default. The server's own certificate is self-signed; its fingerprint is printed at start-up. The desktop
-  client trusts it like an SSH host (`claudia_client.TlsPolicy`): shown once, remembered, a changed certificate refused
-  loudly. `--redirect-port` answers plain HTTP with a redirect to https and nothing else.
+* TLS by default. The server's own certificate is self-signed; its fingerprint is printed at start-up. The Linux
+  client trusts it like an SSH host (`claudia_shell_gtk.trust`, its "Trust this server?" dialog): shown once,
+  remembered, a changed certificate asked about again. The macOS and Windows clients do not ask yet and refuse it. `--redirect-port` answers plain HTTP with a redirect to https and nothing else.
 * Every HTTP answer says what a browser may do with the page (`claudia_server.security_headers`, SEC-13): a
   `Content-Security-Policy` with scripts from this server only (the start page's two inline scripts by their hash,
   read from the build at start), connections only to this server and its WebSocket, no plugins, and framing only by

@@ -158,10 +158,11 @@ Things that differ between the interpreters and libraries, found while building 
    Another `python3` first in `PATH` (pyenv, uv, conda) usually cannot import it.
 2. **libadwaita 1.5 is the floor** (`Adw.AboutDialog`; Ubuntu 24.04 has 1.5.0). Nothing newer is used. `Adw.Spinner` and
    other 1.6 widgets are avoided; a `GtkSpinner` does the same.
-3. **`claudia-client` cannot be imported by the shell**: it needs Python 3.14 and depends on `claudia-core`. That is why
-   the shell does not talk to a server itself; the page does. For remote servers the shell only *checks* them, with
-   what the standard library has (`ssl`, `http.client`), and reads certificates with its own small DER reader
-   (`x509.py`) instead of the client's `TlsPolicy`.
+3. **The shell imports no Claudia package**: they need Python 3.14 (D116). That is why the shell does not talk to a
+   server itself; the page does. For remote servers the shell only *checks* them, with what the standard library has
+   (`ssl`, `http.client`), remembers the certificates a person trusted (`trust.py`) and reads them with its own small
+   DER reader (`x509.py`). (`claudia-client`, a 3.14 package with the same idea, was used by no client and was removed,
+   D700.)
 4. **The root configuration is 3.14.** Ruff and mypy at the repository root target 3.14, so this directory has its own
    targets; `uv run mypy` is run from `clients/linux` with `--project` so that uv does not create an environment here.
 5. **Sphinx** documents the shell's GTK-free modules only; autodoc of the GTK modules would need `gi` mocked.

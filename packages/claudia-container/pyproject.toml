@@ -3,7 +3,7 @@ name = "claudia-container"
 dynamic = ["version"]
 description = "claudia-container: the encrypted document file of Claudia (E2): passwords, key slots, blocks, journal"
 requires-python = ">=3.14"
-dependencies = ["cryptography>=44"]
+dependencies = ["cryptography>=44", "claudia-file-writer"]
 
 [build-system]
 requires = ["hatchling"]
@@ -14,3 +14,6 @@ path = "src/claudia_container/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/claudia_container"]
+
+[tool.uv.sources]
+claudia-file-writer = { workspace = true }

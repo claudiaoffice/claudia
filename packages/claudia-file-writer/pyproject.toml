@@ -1,0 +1,17 @@
+[project]
+name = "claudia-file-writer"
+dynamic = ["version"]
+description = "claudia-file-writer: how a Claudia server writes a file (D701): all at once, retried where Windows holds it, and pinned downloads"
+requires-python = ">=3.14"
+# The standard library only: every package that writes files may depend on it, the kernel's purity aside.
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_file_writer/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_file_writer"]

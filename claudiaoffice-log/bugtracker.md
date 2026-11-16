@@ -160,8 +160,8 @@ statement in the docs or on the website).
 | CODE-30 | P3 | Code / server | Parameters are validated twice, and a handler's bug answers `command_error` | **new, open** |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |
 | CODE-32 | P3 | Code / clients | The menu's one source lives inside the Linux shell, and the web menus are a second copy | **new, open** |
-| CODE-33 | P3 | Code | `claudia-client` is a package no client uses | **needs decision** |
-| CODE-34 | P3 | Code / Windows | Atomic writes are written seven times; five lack the Windows retry | **new, open** |
+| CODE-33 | P3 | Code | `claudia-client` is a package no client uses | **fixed** 2026-11-16 (D700) |
+| CODE-34 | P3 | Code / Windows | Atomic writes are written seven times; five lack the Windows retry | **fixed** 2026-11-16 (D701) |
 | CODE-35 | P3 | Code / web | The web sessions repeat their write call 57 times and three shared methods | **new, open** |
 | CODE-36 | P3 | Code / web | `localStorage` is guarded six times over | **new, open** |
 | CODE-37 | P3 | Code / web | Two image dialogs that differ in one prop | **new, open** |
@@ -212,7 +212,8 @@ backups made earlier keep the content.
 `key_cert_sign=True`. The private key sits on the server's disk.
 **Why it matters.** If a person installs it into the system trust store (which "trust this certificate" instructions
 invite), whoever steals the key file can sign certificates for *any* site for that person.
-**Fix.** Prefer `ca=False` plus partial-chain verification in `claudia_client/trust.py`, or add a critical
+**Fix.** Prefer `ca=False` plus partial-chain verification in the clients that pin a certificate (since D700 the Linux
+shell's `trust.py`; `claudia_client` is gone), or add a critical
 `NameConstraints` extension limited to the certificate's own names.
 **Acceptance.** The client still connects with fingerprint pinning; `openssl verify` of a certificate for another name
 signed by the same key fails.
@@ -1567,15 +1568,17 @@ written again by hand (`web/app/lib/document-menus.ts` and the three workspaces)
 XML writer staying in the Linux shell; the web's menu structure generated from it like `keys.generated.ts`, each
 client binding handlers by action id; one generator writing the Neutralino JSON once (with CODE-14).
 
-### CODE-33 · `claudia-client` is a package no client uses · P3 · needs decision
+### CODE-33 · `claudia-client` is a package no client uses · P3 · fixed 2026-11-16
 "What every client of a Claudia server shares": `TlsPolicy`. Only its own tests import it. The Linux shell cannot
 (`clients/linux/README.md`, point 3: it needs Python 3.14 and `claudia-core`) and has its own `trust.py` and
 `x509.py`; the other clients are TypeScript. But `claudia_client/trust.py` imports only the standard library: the
 `claudia-core` dependency in its `pyproject.toml` is unused, and it is exactly what keeps the shell from using it.
 **Decision needed:** delete the package, or drop the dependency, target 3.12 and let the Linux shell use it instead of
 its own copy.
+**Fixed (2026-11-16, D700):** deleted. Each client trusts a server with its own platform's TLS; the Linux shell keeps
+its `trust.py` and stays without dependencies.
 
-### CODE-34 · Atomic writes are written seven times; five lack the Windows retry · P3 · new, open
+### CODE-34 · Atomic writes are written seven times; five lack the Windows retry · P3 · fixed 2026-11-16
 `state._replace` (`claudia_server/state.py` 65) and `journal._replace` (`claudia_container/journal.py` 171) retry
 `os.replace` on Windows, where antivirus and indexing hold just-written files. The plain `os.replace` in
 `claudia_fonts/starter.py` (107), `claudia_fonts/webfonts.py` (65), `claudia_server/hyphenation.py` (206) and
@@ -1584,6 +1587,12 @@ the way the other two did. Separately, `starter.py` and `hyphenation.py` share `
 `_write` and `fetch` nearly verbatim (pinned downloads checked against a lock file).
 **Recommendation:** `write_atomically(path, data)` with the retry in one shared place (`claudia_core` or a small
 utility module) used by all seven; one pinned-download helper for fonts and hyphenation patterns.
+**Fixed (2026-11-16, D701):** a new package, `claudia-file-writer` (not `claudia_core`: the kernel does no I/O). Every
+writer of the server uses it, the container's document file (an eighth copy) included; `trust.py` went with
+`claudia-client` (D700). The retry runs in the Linux tests too (a fake `replace`). Two things the count missed: the
+fetches run only when an operator asks, so the real Windows exposure was the web font cache and the typeset cache; and
+a web font file being sent is held open on Windows longer than any retry, so it is written once (`write_once`),
+finding it there being success. `starter.py` and `hyphenation.py` share `fetch_pinned`.
 
 ### CODE-35 · The web sessions repeat their write call 57 times and three shared methods · P3 · new, open
 `(await this.attempt('<method>', { …, base: this.state.revision })) !== false` appears 24 times in `lib/session.ts`,

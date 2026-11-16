@@ -3,6 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Changed
+- The document file and the journal are written with `claudia_file_writer.atomic_file` (CODE-34, D701); the retry on
+  Windows and the message naming a handle of our own that still holds the file moved there with it.
+
 ## [0.7.0] - 2026-11-15
 
 The random id of a document, and the document's name called by its name (D533, D534). Breaking: files of 0.6 are not read

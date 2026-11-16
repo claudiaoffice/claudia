@@ -10,6 +10,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   `starter.lock.json`, `builtin_folder()` names it. A test checks the files against the lock.
 
 ### Changed
+- `LockedFile` is `claudia_file_writer.PinnedFile` and `FetchError` is `claudia_file_writer.FetchError` (CODE-34,
+  D701): the fetch of the starter set and that of the hyphenation patterns were the same code twice. `LockedFile`
+  gains `from_lock` and `is_at`; a lock's file name may no longer hold a colon or other characters a font file name
+  does not need, and its SHA-256 is checked to be one.
+- `WebFontCache.get` writes a WOFF2 file once (`claudia_file_writer.write_once`): two requests making the same file at
+  once, or one making it while another sends it on Windows, no longer fail.
 - The same font file found twice (the shipped set and a fetched copy) is not reported as "replaced".
 
 ### Fixed

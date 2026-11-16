@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .starter import FetchError, fetch
+from claudia_file_writer import FetchError
+
+from .starter import fetch
 
 
 def main(argv: list[str] | None = None) -> int:

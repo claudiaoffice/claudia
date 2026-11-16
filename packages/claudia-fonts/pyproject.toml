@@ -3,7 +3,7 @@ name = "claudia-fonts"
 dynamic = ["version"]
 description = "claudia-fonts: the font collection of a Claudia server (E3.3): catalogue, licences, web fonts, engine setup"
 requires-python = ">=3.14"
-dependencies = ["fonttools>=4.50", "brotli>=1.1"]
+dependencies = ["fonttools>=4.50", "brotli>=1.1", "claudia-file-writer"]
 
 [build-system]
 requires = ["hatchling"]
@@ -14,3 +14,6 @@ path = "src/claudia_fonts/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/claudia_fonts"]
+
+[tool.uv.sources]
+claudia-file-writer = { workspace = true }

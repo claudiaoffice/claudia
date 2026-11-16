@@ -20,7 +20,6 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKAGES = (
     "claudia_core",
     "claudia_server",
-    "claudia_client",
     "claudia_container",
     "claudia_creates",
     "claudia_fonts",
@@ -37,6 +36,8 @@ PACKAGES = (
     "claudia_creates_io",
     "claudia_test_documents",
     "claudia_search",
+    # since 2026-11-16 (D701)
+    "claudia_file_writer",
 )
 
 

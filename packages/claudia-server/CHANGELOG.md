@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- The server's state files (certificate, key, settings, the file store's list) and the fetched hyphenation patterns are
+  written with `claudia_file_writer` (CODE-34, D701): ten attempts with waits up to a second on Windows instead of
+  five, a temporary file name that two threads cannot share, and the pattern fetch is the one the fonts use.
+
 ### Added
 - `add_image` and `describe_object` in composes (CODE-27): a picture comes into a text from disk, hanging from a
   character (`block`, `offset`), and any object of a text can be described or marked decorative, as in the other two

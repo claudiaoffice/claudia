@@ -19,11 +19,9 @@ from __future__ import annotations
 import contextlib
 import os
 import sys
-import time
 from pathlib import Path
 
-_REPLACE_RETRIES = 5
-_REPLACE_DELAY = 0.05  # seconds, doubled each retry
+from claudia_file_writer import write_atomically
 
 
 def default_state_dir() -> Path:
@@ -48,33 +46,6 @@ def private_dir(path: Path) -> Path:
 
 
 def write_private(path: Path, data: bytes) -> None:
-    """Write a secret: readable by its owner only from the first byte on, and replaced atomically."""
-    temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    try:
-        with os.fdopen(fd, "wb") as handle:
-            handle.write(data)
-            handle.flush()
-            os.fsync(handle.fileno())
-        _replace(temp, path)
-    except BaseException:
-        temp.unlink(missing_ok=True)
-        raise
-
-
-def _replace(temp: Path, path: Path) -> None:
-    """``os.replace(temp, path)``, retried briefly on Windows: real-time antivirus scanning or indexing can hold a
-    transient lock on a just-written file there in a way POSIX never does."""
-    if sys.platform != "win32":
-        os.replace(temp, path)
-        return
-    delay = _REPLACE_DELAY
-    for attempt in range(_REPLACE_RETRIES):
-        try:
-            os.replace(temp, path)
-            return
-        except PermissionError:
-            if attempt == _REPLACE_RETRIES - 1:
-                raise
-            time.sleep(delay)
-            delay *= 2
+    """Write a secret: readable by its owner only from the first byte on, replaced atomically and on disk before this
+    returns (:func:`claudia_file_writer.write_atomically`)."""
+    write_atomically(path, data, durable=True)

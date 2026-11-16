@@ -18,7 +18,6 @@ compression ratios (:class:`ReaderLimitExceeded`), and the cost of the password 
 
 import base64
 import binascii
-import contextlib
 import json
 import os
 import re
@@ -32,10 +31,12 @@ from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+from claudia_file_writer import atomic_file
+
 from . import blocks
 from .blocks import GENESIS, BlockError, Chain, Head, Place, block_hash, open_block, open_head, seal_block, seal_head
 from .crypto import DecryptionError, KdfParams, derive_login_material, derive_recovery_material, open_sealed, seal
-from .journal import JournalWriter, _fsync_directory, _replace, journal_generation, read_journal
+from .journal import JournalWriter, journal_generation, read_journal
 from .passwords import require_strong_password
 from .slots import Domain, KeySlot, Role, Unlocked, make_slot, new_domain_keys, open_slot
 
@@ -409,29 +410,17 @@ def _write_zip(
     four that every document has: the head, the blocks and the snapshot."""
     if exclusive and path.exists():
         raise FileExistsError(path)
-    temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    try:
-        with os.fdopen(fd, "wb") as handle:
-            with zipfile.ZipFile(handle, "w") as archive:
-                archive.writestr("format", FORMAT_TEXT, compress_type=zipfile.ZIP_STORED)
-                archive.writestr("manifest.json", json.dumps(manifest.to_dict()), compress_type=zipfile.ZIP_DEFLATED)
-                archive.writestr(
-                    "slots.json",
-                    json.dumps({"slots": [slot.to_dict() for slot in slots]}),
-                    compress_type=zipfile.ZIP_DEFLATED,
-                )
-                archive.writestr("people.bin", people_blob, compress_type=zipfile.ZIP_STORED)
-                for name in sorted(others):
-                    archive.writestr(name, others[name], compress_type=zipfile.ZIP_STORED)
-            handle.flush()
-            os.fsync(handle.fileno())
-        _replace(temp, path)
-        _fsync_directory(path.parent)
-    except BaseException:
-        with contextlib.suppress(OSError):
-            temp.unlink()
-        raise
+    with atomic_file(path, durable=True) as handle, zipfile.ZipFile(handle, "w") as archive:
+        archive.writestr("format", FORMAT_TEXT, compress_type=zipfile.ZIP_STORED)
+        archive.writestr("manifest.json", json.dumps(manifest.to_dict()), compress_type=zipfile.ZIP_DEFLATED)
+        archive.writestr(
+            "slots.json",
+            json.dumps({"slots": [slot.to_dict() for slot in slots]}),
+            compress_type=zipfile.ZIP_DEFLATED,
+        )
+        archive.writestr("people.bin", people_blob, compress_type=zipfile.ZIP_STORED)
+        for name in sorted(others):
+            archive.writestr(name, others[name], compress_type=zipfile.ZIP_STORED)
 
 
 def create_document(

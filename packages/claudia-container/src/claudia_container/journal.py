@@ -17,18 +17,15 @@ writer repairs the file). Damage anywhere else is an error, never a guess. Not d
 who cuts records off the end of the file; that needs the head record of the packed file (design, section 3).
 """
 
-import contextlib
-import gc
-import io
 import os
 import struct
-import sys
-import time
 import zlib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Self
+
+from claudia_file_writer import fsync_directory, write_atomically
 
 from .crypto import NONCE_SIZE, TAG_SIZE, DecryptionError, open_sealed, seal
 from .slots import Domain
@@ -127,83 +124,6 @@ def _aad(doc_id: str, generation: int, domain_byte: int, seq: int) -> bytes:
     return b"claudia/journal/1" + struct.pack(">H", len(name)) + name + fixed
 
 
-def _fsync_directory(directory: Path) -> None:
-    with contextlib.suppress(OSError):  # (some systems cannot open a directory)
-        fd = os.open(directory, os.O_RDONLY)
-        try:
-            os.fsync(fd)
-        finally:
-            os.close(fd)
-
-
-_REPLACE_RETRIES = 10
-_REPLACE_DELAY = 0.05  # seconds, doubled each retry up to _REPLACE_MAX_DELAY
-_REPLACE_MAX_DELAY = 1.0
-
-
-def _open_in_this_process(path: Path) -> list[str]:
-    """Every file object this process still has open against ``path`` (best effort; for the diagnostic below).
-
-    Retrying and excluding the directory from Windows Defender have both failed to explain a replace that keeps
-    being refused, every attempt, every time -- behaviour more consistent with a handle of our own we never
-    closed than with an outside program's transient lock. This answers that directly instead of guessing again:
-    if nothing of ours shows up here, the lock really is somebody else's."""
-    found = []
-    for obj in gc.get_objects():
-        if not isinstance(obj, (io.RawIOBase, io.BufferedIOBase)):
-            continue
-        name = getattr(obj, "name", None)
-        # A file opened from a bare descriptor (as every writer here is, via `os.fdopen`) reports that
-        # descriptor's *number* as `.name`, not a path, until something re-opens it by path instead -- that
-        # int is not a path and must be skipped before it ever reaches `Path(...)`, rather than caught after.
-        if not isinstance(name, (str, os.PathLike)) or obj.closed:
-            continue
-        try:
-            same = Path(name).resolve() == path.resolve()
-        except OSError:
-            continue
-        if same:
-            found.append(repr(obj))
-    return found
-
-
-def _replace(temp: Path, path: Path) -> None:
-    """``os.replace(temp, path)``, retried briefly on Windows.
-
-    Windows refuses to replace a file that still has an open handle anywhere, including a transient one held
-    for a moment by real-time antivirus scanning or file-system indexing right after the file is written --
-    something POSIX simply does not have. A handle of our own must still be closed before calling this (that
-    failure is deterministic and retrying it would only waste time); this is for the transient kind.
-
-    ``pack_journal`` can land here twice in a row for the same file -- once to rotate the journal, and again
-    (via ``begin``'s own recovery) if that rotation's replace is what failed -- so the lock this is waiting out
-    may already have been outstanding for a while by the second attempt. The backoff is capped rather than left
-    to double forever, so repeated contention still clears within a bounded total wait (worst case, with 10
-    retries capped at 1s: a bit under 10s) instead of either giving up too soon or stalling indefinitely.
-    """
-    if sys.platform != "win32":
-        os.replace(temp, path)
-        return
-    delay = _REPLACE_DELAY
-    for attempt in range(_REPLACE_RETRIES):
-        try:
-            os.replace(temp, path)
-            return
-        except PermissionError as error:
-            if attempt == _REPLACE_RETRIES - 1:
-                # Best-effort diagnostic only: whatever goes wrong while looking must never stand in for the
-                # real failure above, so a second bug here cannot hide the first one the way it just did.
-                try:
-                    ours = _open_in_this_process(path) + _open_in_this_process(temp)
-                except Exception:
-                    ours = []
-                if ours:
-                    raise PermissionError(f"{error}; still open in this process: {ours}") from error
-                raise
-            time.sleep(delay)
-            delay = min(delay * 2, _REPLACE_MAX_DELAY)
-
-
 class JournalWriter:
     """Appends sealed records to a journal. One writer per open document."""
 
@@ -230,26 +150,17 @@ class JournalWriter:
         handle.write(_header(doc_id, generation))
         handle.flush()
         os.fsync(handle.fileno())
-        _fsync_directory(path.parent)
+        fsync_directory(path.parent)
         return cls(handle, doc_id, keys, generation, 0)
 
     @classmethod
     def replace(cls, path: Path, doc_id: str, keys: Mapping[Domain, bytes], generation: int) -> Self:
         """Put an empty journal of ``generation`` in place of the one at ``path``, all at once: a crash leaves the old
         journal or the new one, never a mixture. Returns a writer on the new journal."""
-        temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-        fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        try:
-            with os.fdopen(fd, "wb") as handle:
-                handle.write(_header(doc_id, generation))
-                handle.flush()
-                os.fsync(handle.fileno())
-            _replace(temp, path)
-            _fsync_directory(path.parent)
-        except BaseException:
-            with contextlib.suppress(OSError):
-                temp.unlink()
-            raise
+        # ``pack_journal`` can land here twice in a row for the same file -- to rotate the journal, and again through
+        # ``begin``'s recovery if that rotation's move is what Windows refused -- so the retry (claudia_file_writer)
+        # may be waiting out a lock that has been held for a while already.
+        write_atomically(path, _header(doc_id, generation), durable=True)
         return cls(path.open("ab"), doc_id, keys, generation, 0)
 
     @classmethod
