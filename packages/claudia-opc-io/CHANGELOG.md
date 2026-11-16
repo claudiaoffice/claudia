@@ -3,6 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.0] - 2026-11-16
+
+### Added
+- `ThemeFonts`: the heading and body fonts of an Office theme, and the font a reference to one names in Word's
+  notation (`minorHAnsi`) and PowerPoint's (`+mn-lt`), for the docx and pptx importers (E3.13).
+
 ## [0.2.0] - 2026-11-11
 
 ### Changed

@@ -1,0 +1,94 @@
+<svg viewBox="0 0 1400 896" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="896" fill="#f3f1ea"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6e6880"/></marker></defs>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">E3.13 bugs 1 + 2 — where an importer finds a file&#x27;s font, and where it goes</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Each importer looks where the program that wrote the file looks; the model keeps the name the file says (css_family), never a stand-in; exporters write that name back (file_font).</text>
+<text x="40" y="108" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">THE FILE</text>
+<text x="400" y="108" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">READERS (new modules)</text>
+<text x="860" y="108" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">THE MODEL</text>
+<text x="1150" y="108" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">SHOWN WITH</text>
+<rect x="40" y="124" width="320" height="100" rx="10" fill="#e8e4f5" stroke="#cfc9dc"/>
+<text x="54" y="148" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">docx</text>
+<text x="54" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">w:rFonts of a style → basedOn → docDefaults</text>
+<text x="54" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">theme font (minorHAnsi) via ThemeFonts</text>
+<rect x="400" y="124" width="400" height="100" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="414" y="148" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_composes_io._docx_fonts</text>
+<text x="414" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">style_fonts(document, word names)</text>
+<text x="414" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">libraries: claudia_opc_io.ThemeFonts</text>
+<path d="M360 174L400 174" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<path d="M800 174L860 174" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<rect x="40" y="244" width="320" height="100" rx="10" fill="#e8e4f5" stroke="#cfc9dc"/>
+<text x="54" y="268" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">odt</text>
+<text x="54" y="290" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">style:font-name (font face) or fo:font-family</text>
+<text x="54" y="308" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">parent styles → default paragraph style</text>
+<rect x="400" y="244" width="400" height="100" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="414" y="268" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_composes_io._odt_fonts</text>
+<text x="414" y="290" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">style_fonts(roots, odf names)</text>
+<text x="414" y="308" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">libraries: claudia_odf_io.font_faces, font_of</text>
+<path d="M360 294L400 294" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<path d="M800 294L860 294" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<rect x="40" y="364" width="320" height="100" rx="10" fill="#e8e4f5" stroke="#cfc9dc"/>
+<text x="54" y="388" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">pptx</text>
+<text x="54" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">run a:latin → title: theme major, else minor</text>
+<text x="54" y="428" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">+mj-lt / +mn-lt via ThemeFonts</text>
+<rect x="400" y="364" width="400" height="100" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="414" y="388" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_creates_io._pptx_fonts</text>
+<text x="414" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">deck_theme, shape_font, mixes_fonts</text>
+<text x="414" y="428" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">libraries: claudia_opc_io.ThemeFonts</text>
+<path d="M360 414L400 414" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<path d="M800 414L860 414" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<rect x="40" y="484" width="320" height="100" rx="10" fill="#e8e4f5" stroke="#cfc9dc"/>
+<text x="54" y="508" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">odp</text>
+<text x="54" y="530" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">span text style → paragraph style → box style</text>
+<text x="54" y="548" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">→ default style of drawn things</text>
+<rect x="400" y="484" width="400" height="100" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="414" y="508" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_creates_io._odp_fonts</text>
+<text x="414" y="530" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">DeckFonts.body, of_object, mixes</text>
+<text x="414" y="548" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">libraries: claudia_odf_io.font_faces, font_of</text>
+<path d="M360 534L400 534" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<path d="M800 534L860 534" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<rect x="860" y="124" width="250" height="220" rx="10" fill="#e3f3ef" stroke="#cfc9dc"/>
+<text x="874" y="148" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Text app (composes)</text>
+<text x="874" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Body text, Title,</text>
+<text x="874" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Heading 1 and 2, Quote:</text>
+<text x="874" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">css font-family set by</text>
+<text x="874" y="224" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">take_fonts →</text>
+<text x="874" y="242" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">css_family(&quot;Arial&quot;)</text>
+<text x="874" y="260" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">= &quot;Arial, sans-serif&quot;</text>
+<rect x="860" y="364" width="250" height="220" rx="10" fill="#e3f3ef" stroke="#cfc9dc"/>
+<text x="874" y="388" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Slides app (creates)</text>
+<text x="874" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Body text ← body font</text>
+<text x="874" y="428" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">(take_body_font)</text>
+<text x="874" y="446" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">a box in another font →</text>
+<text x="874" y="464" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">style_for_font: a style</text>
+<text x="874" y="482" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">based on Body text,</text>
+<text x="874" y="500" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">&quot;Body text · Georgia&quot;,</text>
+<text x="874" y="518" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">to_name until named</text>
+<rect x="1150" y="124" width="210" height="460" rx="10" fill="#fdf1e2" stroke="#cfc9dc"/>
+<text x="1164" y="148" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Print and PDF</text>
+<text x="1164" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">the layout library</text>
+<text x="1164" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">resolves the name</text>
+<text x="1164" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">(stand-ins.generated.ts):</text>
+<text x="1164" y="224" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Arial → Arimo (same</text>
+<text x="1164" y="242" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">widths), shown, never</text>
+<text x="1164" y="260" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">written</text>
+<text x="1164" y="278" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start"></text>
+<text x="1164" y="296" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Screen: gap → E3.3</text>
+<text x="1164" y="314" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Note &quot;represented by&quot;:</text>
+<text x="1164" y="332" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">slice c (UI)</text>
+<path d="M1110 234L1150 234" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<path d="M1110 474L1150 474" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<rect x="40" y="620" width="1320" height="146" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="54" y="644" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Back out: the exporters (file_font → the name the file said)</text>
+<text x="54" y="666" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">docx / odt: the styles&#x27; fonts as before (CODE-42: a generic family as the font it is shown with)</text>
+<text x="54" y="684" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">pptx: the theme&#x27;s minor font is Body text&#x27;s font; run.font.name per box</text>
+<text x="54" y="702" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">odp: style:default-style (graphic) names the body font; a box&#x27;s paragraph style names its font only where it differs</text>
+<text x="54" y="720" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">apply_edits_to_odp: a box whose words get another style gets its font</text>
+<text x="54" y="738" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Losses: a font is no loss; words in two fonts in one box are &quot;formatting&quot; (one font per box is modelled); a docx run with its own font stays &quot;formatting&quot;</text>
+<path d="M985 584L985 620" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<text x="985.0" y="596.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">export</text>
+<rect x="40" y="786" width="1320" height="80" rx="10" fill="#e8e4f5" stroke="#cfc9dc"/>
+<text x="54" y="810" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">One sample, five formats: test-documents/stand-in-fonts.json</text>
+<text x="54" y="832" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">xlsx, docx, odt, pptx, odp files built from it by _build_fixtures.py; library cases (import, edit, round trip, no stand-in written) + test_composes_file_fonts.py, test_creates_file_fonts.py</text>
+<text x="54" y="850" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Gap reported: pptx placeholders (titles, body placeholders) are not imported at all, so the sample&#x27;s title is a text box</text>
+</svg>

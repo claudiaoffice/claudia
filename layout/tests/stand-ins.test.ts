@@ -1,5 +1,5 @@
 // Stand-ins (E3.13): every font of the shared sample document (test-documents/xlsx/stand-in-fonts) is laid out with
-// the font its stand-ins.json names, and the resolution says how close that is, in the words claudia_fonts uses.
+// the font test-documents/stand-in-fonts.json names, and the resolution says how close that is, in the words claudia_fonts uses.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -14,8 +14,11 @@ interface SampleFont {
   stand_in: string | null
   closeness: string
 }
-const SAMPLE = join(here, '..', '..', 'test-documents', 'xlsx', 'stand-in-fonts', 'stand-ins.json')
-const fonts: SampleFont[] = JSON.parse(readFileSync(SAMPLE, 'utf8')).fonts
+const SAMPLE = join(here, '..', '..', 'test-documents', 'stand-in-fonts.json')
+const sample = JSON.parse(readFileSync(SAMPLE, 'utf8'))
+const fonts: SampleFont[] = sample.fonts
+/** font-family values that start with a generic family, and the font they are shown with: what an export names. */
+const genericFamilies: { css: string; font: string }[] = sample.generic_families
 /** The `font-family` a sheet holds for a font of the file once imported: its name, then its generic family. */
 const stackOf = (f: SampleFont) => `${/\s/.test(f.family) ? `'${f.family}'` : f.family}, ${f.generic}`
 
@@ -31,6 +34,13 @@ describe('stand-ins of the shared sample', () => {
   })
   it('a stack the importer wrote before E3.13 (with the old twin second) still gets the same stand-in', () => {
     expect(resolver.resolve("Arial, 'Liberation Sans', sans-serif", 400, false, 11000)!).toMatchObject({ family: 'Arimo', how: 'substitute', closeness: 'same-widths' })
+  })
+})
+
+describe('generic families of the shared sample', () => {
+  it.each(genericFamilies.map((g) => [g.css, g] as const))('%s', (_css, g) => {
+    // the font an export names for the same value (claudia_core.stand_ins.file_font, CODE-42)
+    expect(resolver.resolve(g.css, 400, false, 11000)!).toMatchObject({ family: g.font, how: 'exact', closeness: 'same' })
   })
 })
 

@@ -10,9 +10,11 @@ package    new_package, update_manifest, problems -- a package from its parts, i
 language   default_style_xml, read_language, patch_language -- the language of a file, in its default style
 report     Loss, LossLog, unwritten_changes -- what could not be kept, as a list, and what a writer left out
 transform  inches, transform_of, turned_box, angle_of -- lengths of the format and how a drawing object is turned
+fonts      font_faces, font_of -- the font faces of a file and the font a style's text properties name (E3.13)
 """
 
 from ._version import __version__
+from .fonts import font_faces, font_of
 from .language import (
     NO_LANGUAGE,
     default_style_xml,
@@ -49,6 +51,8 @@ __all__ = [
     "default_style_xml",
     "description_element",
     "detach",
+    "font_faces",
+    "font_of",
     "description_of",
     "encode_style_name",
     "frames_of",

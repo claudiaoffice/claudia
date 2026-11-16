@@ -1,5 +1,5 @@
 """One cell per font that office files ask for most (E3.13), the shared sample of every test of the font stand-ins
-(``stand-ins.json`` says which fonts and what a server shows them with).
+(``test-documents/stand-in-fonts.json`` says which fonts and what a server shows them with).
 
 A cell keeps the name of its font as the file says it, followed only by its generic family: the stand-in is chosen
 where the document is shown (the catalogue, the layout library), never written into the document. The edit changes
@@ -16,7 +16,7 @@ from claudia_opc_io import read_parts
 from claudia_test_documents.case import Case
 
 FONTS = SheetId("s1")
-EXPECTED = json.loads((Path(__file__).parent / "stand-ins.json").read_text(encoding="utf-8"))["fonts"]
+EXPECTED = json.loads((Path(__file__).parents[2] / "stand-in-fonts.json").read_text(encoding="utf-8"))["fonts"]
 
 
 def _quoted(family: str) -> str:

@@ -6,7 +6,7 @@
  */
 import type { FaceRef } from './fontset'
 import type { Axis } from './sfnt'
-import { type Closeness, STAND_IN_GENERICS } from './stand-ins.generated'
+import { type Closeness, GENERIC_ALIASES, STAND_IN_GENERICS } from './stand-ins.generated'
 
 /** A font as the server's catalogue lists it (`GET /api/fonts`). */
 export interface CatalogueFont {
@@ -37,21 +37,10 @@ export interface Generics {
   fallback: string
 }
 
-/** The suite's own fonts (D905), generated from claudia_fonts' `stand_ins.json` (E3.13): what a catalogue that
+/** The suite's own fonts (D905), generated from `claudia_core.stand_ins` (E3.13): what a catalogue that
  *  names no generic families gets. */
 export const DEFAULT_GENERICS: Generics = { ...STAND_IN_GENERICS }
 
-const GENERIC_ALIASES: Record<string, keyof Generics> = {
-  serif: 'serif',
-  'sans-serif': 'sans-serif',
-  monospace: 'monospace',
-  'system-ui': 'sans-serif',
-  'ui-sans-serif': 'sans-serif',
-  'ui-serif': 'serif',
-  'ui-monospace': 'monospace',
-  cursive: 'serif',
-  fantasy: 'serif',
-}
 
 /** What a request got. */
 export interface Resolution {

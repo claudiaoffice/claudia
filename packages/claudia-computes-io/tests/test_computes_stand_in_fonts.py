@@ -9,8 +9,9 @@ from claudia_computes_io import ods_to_workbook, workbook_to_ods, xlsx_to_workbo
 from claudia_computes import SheetId
 from claudia_opc_io import read_parts
 
-SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "xlsx" / "stand-in-fonts"
-FONTS = json.loads((SAMPLE / "stand-ins.json").read_text(encoding="utf-8"))["fonts"]
+LIBRARY = Path(__file__).resolve().parents[3] / "test-documents"
+SAMPLE = LIBRARY / "xlsx" / "stand-in-fonts"
+FONTS = json.loads((LIBRARY / "stand-in-fonts.json").read_text(encoding="utf-8"))["fonts"]
 
 
 def stacks(model) -> list[str]:

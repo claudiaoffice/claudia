@@ -169,6 +169,9 @@ statement in the docs or on the website).
 | CODE-39 | P3 | Code / web | `OpenDialog.vue` does five jobs in 1,615 lines | **new, open** |
 | CODE-40 | P3 | Code / macOS client | An orphaned build file in the macOS creates app | **fixed** 2026-11-15 (with D660) |
 | CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |
+| CODE-42 | P3 | Code / Export | Exports named a generic font family by a font Claudia does not show | **fixed** 2026-11-16 (E3.13) |
+| CODE-43 | P2 | Code / Import | docx and odt import ignored the file's fonts and reported no loss | **fixed** 2026-11-16 (E3.13) |
+| CODE-44 | P2 | Code / Import | pptx and odp import did not read fonts | **fixed** 2026-11-16 (E3.13) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1637,6 +1640,37 @@ means editing the region; `WorkbookModel` imports its own commands (`model.py` 4
 to rename a sheet as commands.
 **Recommendation:** let a command say how it moves a region (a method, or a table keyed by command kind) and move
 command construction out of the model; then turn PLC0415 on per package with named exceptions.
+
+### CODE-42 · Exports named a generic font family by a font Claudia does not show · P3 · fixed 2026-11-16
+**Measured** (found while building E3.13 a and b): a third copy of the generic families,
+`claudia_composes_io._style_look._GENERIC`, wrote a style whose font is `serif`, `sans-serif` or `monospace` into
+docx and odt as Liberation Serif, Sans and Mono; `system-ui` was skipped for the next family and `ui-monospace` was
+written as a font name. computes wrote the first family as it was, so `serif` or `system-ui` became a font name in xlsx
+and ods. Claudia shows and prints those styles in Fraunces, Inter and JetBrains Mono (D905), so the exported file
+looked different from what the person saw. Small in practice: only styles whose list starts with a generic family.
+**Fixed (2026-11-16, branch `font-server-ui`):** the table moved into the kernel (`claudia_core.stand_ins`: generic
+fonts, CSS names for a generic family, same-width stand-ins); both exporters call `file_font`; `claudia-fonts` and the
+layout library's generated copy read the same table. Tests on the shared sample `test-documents/xlsx/stand-in-fonts`
+(`generic_families`) for docx, odt, xlsx, ods and print (`implementation-notes/e3-13-font-stand-ins.md`).
+
+### CODE-43 · docx and odt import ignored the file's fonts and reported no loss · P2 · fixed 2026-11-16
+**Measured** (found while building E3.13 a and b, reported as bug 1): `docx_to_text` and `odt_to_text` read no font,
+so every imported text showed in the app's own fonts, and `docx_import_losses` / `odt_import_losses` said nothing
+about it. Exactly the case E3.13 is about: a Word file in Arial came in as Inter.
+**Fixed (2026-11-16, branch `font-server-ui`):** both importers give Body text, Title, the headings and Quote the font
+their style has in the file (docx: own or theme font along `basedOn` and the document defaults; odt: font face or
+`fo:font-family` along the parents and the default style), as `css_family` makes it; the exporters write it back. New
+in the libraries: `claudia_opc_io.ThemeFonts`, `claudia_odf_io.font_faces` and `font_of`. Tests on
+`test-documents/docx/` and `odt/stand-in-fonts`.
+
+### CODE-44 · pptx and odp import did not read fonts · P2 · fixed 2026-11-16
+**Measured** (reported as bug 2): `pptx_to_slides` and `odp_to_slides` read no font, and a run or span naming one was
+reported as `formatting`. A deck in Arial and Georgia came in as Inter.
+**Fixed (2026-11-16, branch `font-server-ui`):** Body text takes the deck's body font (theme minor font; odp: default
+style of drawn things); a box in another font gets a style of its own based on Body text, named by the font until
+somebody names it. `slides_to_pptx`, `slides_to_odp` and `apply_edits_to_odp` write the fonts. A font is no loss;
+words in two fonts in one box are `formatting`. Tests on `test-documents/pptx/` and `odp/stand-in-fonts`. **Left:**
+placeholders of a pptx are not imported at all (reported separately).
 
 ## Website
 

@@ -1,21 +1,21 @@
 <svg viewBox="0 0 1400 930" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
 <rect x="0" y="0" width="1400" height="930" fill="#f3f1ea"/>
 <text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">E3.13 slices a + b — where the stand-in facts live, and who reads them</text>
-<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">One source per fact. Python owns it; TypeScript gets it generated or as data from the server; one sample document tests every place it reaches.</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">One source per fact: the kernel owns it (Python data, the kernel does no I/O); TypeScript gets it generated or from the server; one sample tests every place.</text>
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6e6880"/></marker></defs>
-<text x="40" y="112" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">ONE SOURCE (claudia-fonts)</text>
+<text x="40" y="112" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">ONE SOURCE (claudia-core, then claudia-fonts)</text>
 <text x="500" y="112" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">PYTHON: SERVER, IMPORT, TYPESETTING</text>
 <text x="960" y="112" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">TYPESCRIPT: LAYOUT, PRINT, PDF</text>
-<rect x="40" y="128" width="400" height="150" rx="10" fill="#fcefdf" stroke="#d8d2e6" stroke-width="1"/>
-<text x="54" y="152" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">stand_ins.json</text>
-<text x="54" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">generics: serif → Fraunces, sans-serif → Inter,</text>
+<rect x="40" y="128" width="400" height="150" rx="10" fill="#e3f3ef" stroke="#d8d2e6" stroke-width="1"/>
+<text x="54" y="152" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_core.stand_ins</text>
+<text x="54" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">GENERIC_FONTS: serif → Fraunces, sans-serif → Inter,</text>
 <text x="54" y="189" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">  monospace → JetBrains Mono, fallback → Inter</text>
-<text x="54" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">same_widths: Arial, Helvetica, Liberation Sans → Arimo</text>
-<text x="54" y="223" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">  Times New Roman, Times, Liberation Serif → Tinos</text>
-<text x="54" y="240" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">  Courier New, Courier, Liberation Mono → Cousine</text>
-<text x="54" y="257" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">  Calibri → Carlito · Cambria → Caladea · Georgia → Gelasio</text>
-<rect x="367.853125" y="137" width="60.1" height="18" rx="9.0" fill="#fcefdf"/>
-<text x="397.9" y="149.78" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#8a4a12" text-anchor="middle">changed</text>
+<text x="54" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">GENERIC_ALIASES: system-ui, ui-monospace, cursive …</text>
+<text x="54" y="223" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">SAME_WIDTHS: Arial, Helvetica, Liberation Sans → Arimo,</text>
+<text x="54" y="240" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">  Times New Roman → Tinos, Courier New → Cousine, Calibri →</text>
+<text x="54" y="257" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">  Carlito, Cambria → Caladea, Georgia → Gelasio · file_font()</text>
+<rect x="390.8509375" y="137" width="37.1" height="18" rx="9.0" fill="#e3f3ef"/>
+<text x="409.4" y="149.78" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#0f6e60" text-anchor="middle">new</text>
 <rect x="40" y="300" width="400" height="110" rx="10" fill="#fcefdf" stroke="#d8d2e6" stroke-width="1"/>
 <text x="54" y="324" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">starter.lock.json + builtin/</text>
 <text x="54" y="344" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">pinned at google/fonts@35e77c38, SHA-256 per file</text>
@@ -45,10 +45,10 @@
 <text x="514" y="284" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">\setmainfont from Catalogue.resolve:</text>
 <text x="514" y="301" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Arial → Arimo now, not FontUnavailable</text>
 <rect x="500" y="352" width="400" height="110" rx="10" fill="#fcefdf" stroke="#d8d2e6" stroke-width="1"/>
-<text x="514" y="376" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_computes_io.cell_looks</text>
-<text x="514" y="396" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">font_family(): the file&#x27;s name + generic only:</text>
-<text x="514" y="413" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">&quot;Arial, sans-serif&quot; — no copy of the twin table</text>
-<text x="514" y="430" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">(_TWINS removed; ODS/XLSX export unchanged)</text>
+<text x="514" y="376" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">computes-io · composes-io</text>
+<text x="514" y="396" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">import: &quot;Arial, sans-serif&quot; (no twin written in)</text>
+<text x="514" y="413" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">export (xlsx, ods, docx, odt): file_font() — a generic</text>
+<text x="514" y="430" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">family is the font it is shown with (CODE-42)</text>
 <rect x="827.853125" y="361" width="60.1" height="18" rx="9.0" fill="#fcefdf"/>
 <text x="857.9" y="373.78" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#8a4a12" text-anchor="middle">changed</text>
 <rect x="500" y="482" width="400" height="78" rx="10" fill="#e3f3ef" stroke="#d8d2e6" stroke-width="1"/>
@@ -57,13 +57,15 @@
 <text x="514" y="543" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">tests/test_font_stand_ins_generated.py</text>
 <rect x="850.8509375" y="491" width="37.1" height="18" rx="9.0" fill="#e3f3ef"/>
 <text x="869.4" y="503.78" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#0f6e60" text-anchor="middle">new</text>
+<line x1="440" y1="210" x2="500" y2="400" stroke="#6e6880" stroke-width="1.3" marker-end="url(#a)"/>
+<text x="470" y="262" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">file_font</text>
 <line x1="440" y1="496" x2="500" y2="174" stroke="#6e6880" stroke-width="1.3" marker-end="url(#a)"/>
 <line x1="440" y1="496" x2="500" y2="286" stroke="#6e6880" stroke-width="1.3" marker-end="url(#a)"/>
 <line x1="440" y1="520" x2="500" y2="520" stroke="#6e6880" stroke-width="1.3" marker-end="url(#a)"/>
 <rect x="960" y="482" width="400" height="78" rx="10" fill="#e3f3ef" stroke="#d8d2e6" stroke-width="1"/>
 <text x="974" y="506" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">layout/src/fonts/stand-ins.generated.ts</text>
-<text x="974" y="526" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">DEFAULT_GENERICS, METRIC_STAND_INS, CLOSENESS</text>
-<text x="974" y="543" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">never edited by hand</text>
+<text x="974" y="526" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">STAND_IN_GENERICS, GENERIC_ALIASES, SAME_WIDTHS,</text>
+<text x="974" y="543" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">CLOSENESS — never edited by hand</text>
 <rect x="1310.8509375" y="491" width="37.1" height="18" rx="9.0" fill="#e3f3ef"/>
 <text x="1329.4" y="503.78" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#0f6e60" text-anchor="middle">new</text>
 <rect x="960" y="352" width="400" height="110" rx="10" fill="#fcefdf" stroke="#d8d2e6" stroke-width="1"/>
@@ -93,11 +95,11 @@
 <rect x="40" y="600" width="1320" height="200" rx="12" fill="#faf8fd" stroke="#5b4bc4" stroke-width="1" stroke-dasharray="5 4"/>
 <text x="60" y="628" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">One sample document: test-documents/xlsx/stand-in-fonts/</text>
 <text x="60" y="650" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">source.xlsx — one cell per font: Arial, Helvetica, Liberation Sans, Times New Roman, Courier New, Calibri, Cambria, Georgia, Century Gothic</text>
-<text x="60" y="668" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">stand-ins.json — for each font: the family the shipped catalogue provides and how close (same / same-widths / other)</text>
+<text x="60" y="668" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">stand-ins.json — each font: what the shipped catalogue provides and how close; generic_families: the font each is shown with</text>
 <rect x="60" y="690" width="204" height="90" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
-<text x="72" y="714" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">import + round trip</text>
-<text x="72" y="734" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">spec.py: names kept, export</text>
-<text x="72" y="749" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">writes them back</text>
+<text x="72" y="714" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">import + export</text>
+<text x="72" y="734" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">spec.py, ods; generic families in</text>
+<text x="72" y="749" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">docx, odt, xlsx, ods</text>
 <rect x="276" y="690" width="204" height="90" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
 <text x="288" y="714" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">catalogue</text>
 <text x="288" y="734" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">claudia-fonts: shipped set</text>

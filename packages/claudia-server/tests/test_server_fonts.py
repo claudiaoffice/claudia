@@ -126,7 +126,7 @@ def _shipped() -> tuple[int, int]:
     return sum(1 for c in lock for f in c.files if f.name.endswith(".ttf")), len(lock)
 
 
-SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "xlsx" / "stand-in-fonts" / "stand-ins.json"
+SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "stand-in-fonts.json"
 
 
 def test_a_server_nobody_gave_fonts_lists_every_stand_in_of_the_sample_and_the_table_that_names_it(tmp_path):

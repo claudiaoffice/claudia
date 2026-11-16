@@ -7,8 +7,8 @@ hash. A file's address never changes its meaning, so browsers may keep it for go
 
 * ``GET /api/fonts`` - the catalogue: each font that may be handed out (family, style, weight, slant, axes, outlines,
   hash and licence), the metric-compatible substitutions, the font of each generic family (``generics``: serif,
-  sans-serif, monospace and the fallback, E3.13), and the catalogue's digest. All from ``claudia_fonts``'s
-  ``stand_ins.json``, so a client never keeps a table of its own.
+  sans-serif, monospace and the fallback, E3.13), and the catalogue's digest. All from
+  :mod:`claudia_core.stand_ins`, so a client never keeps a table of its own.
 * ``GET /api/fonts/{sha256}`` - the file itself (TrueType or OpenType), for layout and for embedding in a PDF.
 * ``GET /api/fonts/{sha256}.woff2`` - the same font as WOFF2, for showing text in a page.
 

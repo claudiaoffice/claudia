@@ -1114,6 +1114,58 @@
         "tier1"
       ],
       "enabled": true
+    },
+    {
+      "id": "docx-stand-in-fonts",
+      "format": "docx",
+      "feature": "stand-in-fonts",
+      "source": "docx/stand-in-fonts/source.docx",
+      "spec": "docx/stand-in-fonts/spec.py",
+      "summary": "Word's ways of setting a font (the theme's body and heading fonts through the document defaults, a style's own font) reach the styles of the text, and an edit keeps them; no stand-in is written (E3.13, bug 1).",
+      "backlog": "E3.13",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "odt-stand-in-fonts",
+      "format": "odt",
+      "feature": "stand-in-fonts",
+      "source": "odt/stand-in-fonts/source.odt",
+      "spec": "odt/stand-in-fonts/spec.py",
+      "summary": "LibreOffice's ways of setting a font (the default style, a font face, fo:font-family) reach the styles of the text, and an edit keeps them; no stand-in is written (E3.13, bug 1).",
+      "backlog": "E3.13",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "pptx-stand-in-fonts",
+      "format": "pptx",
+      "feature": "stand-in-fonts",
+      "source": "pptx/stand-in-fonts/source.pptx",
+      "spec": "pptx/stand-in-fonts/spec.py",
+      "summary": "The theme's body font becomes Body text and a box in another font (the title, a font somebody picked) a style of its own named by its font; an edit keeps it (E3.13, bug 2).",
+      "backlog": "E3.13",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "odp-stand-in-fonts",
+      "format": "odp",
+      "feature": "stand-in-fonts",
+      "source": "odp/stand-in-fonts/source.odp",
+      "spec": "odp/stand-in-fonts/spec.py",
+      "summary": "The default style's font becomes Body text and a box in another font (the title's presentation style, a text style) a style of its own named by its font; an edit keeps it (E3.13, bug 2).",
+      "backlog": "E3.13",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true
     }
   ]
 }

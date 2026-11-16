@@ -17,7 +17,9 @@ Fonts that take exactly the room of the common office fonts, and the words for h
   `starter.lock.json`, `builtin_folder()` names it. A test checks the files against the lock.
 
 ### Changed
-- `substitutions.json` is `stand_ins.json`, which holds the generic families too; `DEFAULT_SUBSTITUTIONS` now names
+- `substitutions.json` is gone: the table, with the generic families, is `claudia_core.stand_ins`, and
+  `DEFAULT_SUBSTITUTIONS` and `DEFAULT_GENERICS` are its `SAME_WIDTHS` and `GENERIC_FONTS` (claudia-core is now a
+  dependency). `DEFAULT_SUBSTITUTIONS` now names
   Arimo, Tinos, Cousine and Gelasio (before: Liberation Sans, Serif and Mono, which no server had unless an operator
   added them), and Liberation Sans, Serif and Mono get the same stand-ins. The layout library's copy is generated
   from it (`scripts/generate_font_stand_ins.py`).

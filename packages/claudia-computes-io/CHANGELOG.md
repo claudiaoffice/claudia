@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- A cell style whose font is a generic family is written into xlsx and ods as the font Claudia shows it with (`serif`
+  as Fraunces, `system-ui` as Inter), not as a font called `serif` or `system-ui` (CODE-42;
+  `claudia_core.stand_ins.file_font`).
+
 ### Changed
 - A cell's font is imported as the file names it and its generic family only (`Arial, sans-serif`), without the
   metric twin that was written after it (`'Liberation Sans'`): the server's catalogue chooses the stand-in where the

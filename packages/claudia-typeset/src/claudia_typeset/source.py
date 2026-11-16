@@ -1,7 +1,7 @@
 """The TeX source built around a formula or a page, and reading the engine's log afterwards (E3.4).
 
 Fonts are chosen here, from the catalogue, by name: fontconfig aliases are not honoured by
-XeTeX, so a substitution such as Times New Roman to Liberation Serif is applied in the source
+XeTeX, so a substitution such as Times New Roman to Tinos is applied in the source
 (``Catalogue.resolve``) and the job's ``fonts.conf`` only decides where fonts are found.
 """
 

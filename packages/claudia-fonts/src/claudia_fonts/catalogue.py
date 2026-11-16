@@ -8,26 +8,24 @@ the typesetting engine (:mod:`claudia_fonts.fontconfig`). A font that the catalo
 from __future__ import annotations
 
 import hashlib
-import json
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from importlib import resources
 from pathlib import Path
-from types import MappingProxyType
 from typing import Literal, get_args
+
+from claudia_core.stand_ins import GENERIC_FONTS, SAME_WIDTHS
 
 from .collection import Collection, RecordError
 from .font import FONT_SUFFIXES, FontFile, FontProblem, read_font
 
-_STAND_INS = json.loads(resources.files("claudia_fonts").joinpath("stand_ins.json").read_text(encoding="utf-8"))
+DEFAULT_SUBSTITUTIONS: Mapping[str, str] = SAME_WIDTHS
+"""Open fonts that take exactly the room of a common office font, by the office font (Arial → Arimo):
+:data:`claudia_core.stand_ins.SAME_WIDTHS` (E3.13). Every one of them is shipped (D500)."""
 
-DEFAULT_SUBSTITUTIONS: Mapping[str, str] = MappingProxyType(dict(_STAND_INS["same_widths"]))
-"""Open fonts that take exactly the room of a common office font, by the office font (Arial → Arimo): the
-``same_widths`` of ``stand_ins.json`` (E3.13). Every one of them is shipped (D500)."""
-
-DEFAULT_GENERICS: Mapping[str, str] = MappingProxyType(dict(_STAND_INS["generics"]))
+DEFAULT_GENERICS: Mapping[str, str] = GENERIC_FONTS
 """The font each CSS generic family stands for (``serif``, ``sans-serif``, ``monospace``) and the last resort
-(``fallback``), from ``stand_ins.json``: the suite's own fonts (D905). Clients get them with ``GET /api/fonts``."""
+(``fallback``): :data:`claudia_core.stand_ins.GENERIC_FONTS`, the suite's own fonts (D905). Clients get them with
+``GET /api/fonts``."""
 
 Closeness = Literal["same", "same-widths", "other"]
 CLOSENESS: tuple[Closeness, ...] = get_args(Closeness)

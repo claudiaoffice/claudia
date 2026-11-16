@@ -3,7 +3,7 @@
 A *collection* is a folder of font files with a ``collection.json`` that states the licence
 (:mod:`claudia_fonts.collection`). The :class:`Catalogue` reads collections and knows the fonts a server has, what it
 refused and why, and which family stands in for a missing one and how close it is (:mod:`claudia_fonts.catalogue`,
-``stand_ins.json``). Two consumers use it
+on the table of :mod:`claudia_core.stand_ins`). Two consumers use it
 with the same files: clients get WOFF2 web fonts and the CSS for them (:mod:`claudia_fonts.webfonts`), and a
 typesetting engine gets a fontconfig setup that shows it exactly these fonts (:mod:`claudia_fonts.fontconfig`).
 

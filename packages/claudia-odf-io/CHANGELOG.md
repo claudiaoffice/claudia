@@ -3,7 +3,11 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [Unreleased]
+## [0.7.0] - 2026-11-16
+
+### Added
+- `font_faces` and `font_of`: the font faces a file declares, and the font a style's text properties name (by a font
+  face or `fo:font-family`), for the odt and odp importers (E3.13).
 
 ## [0.6.0] - 2026-11-15
 

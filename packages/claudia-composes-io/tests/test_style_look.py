@@ -53,11 +53,12 @@ def look(**css: str):
     return look_of({key.replace("_", "-"): value for key, value in css.items()}, font_size=12, parent_size=12)
 
 
-def test_a_font_family_is_the_first_one_a_file_can_name():
-    assert look(font_family="system-ui, 'Segoe UI', sans-serif").family == "Segoe UI"
+def test_a_font_family_is_its_first_font_and_a_generic_one_the_font_it_is_shown_with():
+    """CODE-42: a file names the font Claudia shows, so ``serif`` is Fraunces, as in print (claudia_core.stand_ins)."""
     assert look(font_family="Georgia, serif").family == "Georgia"
-    assert look(font_family="serif").family == "Liberation Serif"
-    assert look(font_family="system-ui").unsaid == ["font-family"]
+    assert look(font_family="serif").family == "Fraunces"
+    assert look(font_family="system-ui, 'Segoe UI', sans-serif").family == "Inter"
+    assert look(font_family=" , ").unsaid == ["font-family"]
 
 
 def test_a_weight_is_a_number_or_a_keyword_and_nothing_else_is_said():

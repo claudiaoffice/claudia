@@ -4,6 +4,17 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [Unreleased]
+
+### Added
+- `claudia_core.stand_ins` (E3.13, CODE-42): `GENERIC_FONTS` (the font of each CSS generic family and the fallback),
+  `GENERIC_ALIASES` (every CSS name for a generic family), `SAME_WIDTHS` (open fonts that take exactly the room of a
+  common office font), `generic_font` and `file_font` (the font an office file names for a `font-family` list). The
+  one source of these facts: `claudia_fonts` builds on it, and the layout library's copy is generated from it.
+- `claudia_core.stand_ins.css_family` (E3.13, bugs 1 and 2): the CSS `font-family` list for a font an office file
+  names, with the generic family it falls back to (`'Times New Roman', serif`). The importers of all three apps use
+  it; the serif and monospace lists of `claudia_computes_io` moved here.
+
 ## [0.27.0] - 2026-11-15
 
 Turning objects (D1021–D1024).

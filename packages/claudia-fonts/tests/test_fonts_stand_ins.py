@@ -1,5 +1,5 @@
 """Stand-ins (E3.13): what a server with only the shipped fonts shows each font of the shared sample with, and the
-one table that says it (``stand_ins.json``)."""
+one table that says it (:mod:`claudia_core.stand_ins`)."""
 
 import json
 from pathlib import Path
@@ -18,7 +18,7 @@ from claudia_fonts import (
 )
 from claudia_fonts.testing import make_font
 
-SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "xlsx" / "stand-in-fonts" / "stand-ins.json"
+SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "stand-in-fonts.json"
 EXPECTED = json.loads(SAMPLE.read_text(encoding="utf-8"))["fonts"]
 
 

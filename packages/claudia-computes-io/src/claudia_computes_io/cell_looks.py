@@ -38,12 +38,11 @@ from claudia_computes.numformats import SHORT_DATE, check_code, describe, kind_o
 from claudia_core import StyleDef
 from claudia_core.css import CssError, validate_css
 from claudia_core.facets import BOX_FACET, PARAGRAPH_FACET, TEXT_FACET
+from claudia_core.stand_ins import css_family
 from claudia_core.styles import palette_colours
 
 #: The code of a number format that shows a number as it comes (Excel's *General*, LibreOffice's *Standard*).
 GENERAL = "General"
-_SERIF = {"cambria", "times new roman", "georgia", "garamond", "liberation serif", "caladea", "book antiqua"}
-_MONO = {"courier new", "consolas", "courier", "liberation mono", "dejavu sans mono", "lucida console"}
 #: What a property of a cell's look is when the file does not set it: a deviation that takes a parent's property
 #: away writes this (a cell that is *not* bold under a bold heading).
 _PLAIN = {
@@ -106,18 +105,15 @@ def checked(prop: str, value: str) -> str | None:
 
 
 def font_family(name: str) -> str | None:
-    """A font name as the file says it, followed by its generic family: ``Calibri, sans-serif``. ``None`` for a name
-    no style may hold.
+    """A font name as the file says it, followed by its generic family: ``Calibri, sans-serif``
+    (:func:`claudia_core.stand_ins.css_family`). ``None`` for a name no style may hold.
 
     The font that stands in for a missing one is not written here: the server's catalogue chooses it where the sheet
-    is shown or printed (``claudia_fonts``' ``stand_ins.json``, E3.13), so the workbook keeps asking for the font
-    the file asked for, and an export writes that name back."""
-    low = name.strip().lower()
-    if not low:
+    is shown or printed (E3.13), so the workbook keeps asking for the font the file asked for, and an export writes
+    that name back."""
+    if not name.strip():
         return None
-    named = name.strip() if re.fullmatch(r"[A-Za-z][A-Za-z0-9-]*", name.strip()) else f"'{name.strip()}'"
-    generic = "serif" if low in _SERIF else "monospace" if low in _MONO else "sans-serif"
-    return checked("font-family", f"{named}, {generic}")
+    return checked("font-family", css_family(name))
 
 
 def first_family(css_family: str) -> str:

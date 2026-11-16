@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "note": "The starter set of fonts a Claudia server can fetch (python -m claudia_fonts fetch DIR): open fonts at a pinned commit of github.com/google/fonts, each file checked by SHA-256. Variable fonts are used as they are; layout instances them per weight. Arimo, Tinos and Cousine take exactly the room of Arial, Times New Roman and Courier New (and of Liberation Sans, Serif and Mono), Gelasio that of Georgia: the stand-ins of stand_ins.json (E3.13). Tinos has no OFL.txt at this commit; its licence is in each file's name table.",
+  "note": "The starter set of fonts a Claudia server can fetch (python -m claudia_fonts fetch DIR): open fonts at a pinned commit of github.com/google/fonts, each file checked by SHA-256. Variable fonts are used as they are; layout instances them per weight. Arimo, Tinos and Cousine take exactly the room of Arial, Times New Roman and Courier New (and of Liberation Sans, Serif and Mono), Gelasio that of Georgia: the stand-ins of claudia_core.stand_ins (E3.13). Tinos has no OFL.txt at this commit; its licence is in each file's name table.",
   "collections": [
     {
       "name": "Inter",

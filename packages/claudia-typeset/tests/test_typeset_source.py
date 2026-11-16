@@ -47,7 +47,7 @@ def test_a_chosen_font_replaces_the_text_font_only(catalogue):
     assert r"\setmathfont{Latin Modern Math}" in built.text
 
 
-SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "xlsx" / "stand-in-fonts" / "stand-ins.json"
+SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "stand-in-fonts.json"
 
 
 @pytest.mark.parametrize(
