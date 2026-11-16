@@ -16,6 +16,7 @@ from claudia_core import (
     MemoryStore,
     RemoveStyle,
     RenameStyle,
+    SetHeadingLevel,
     StyleBook,
     StyleDef,
     StylesChanged,
@@ -372,3 +373,69 @@ def test_a_style_can_be_given_a_number_format_and_have_it_taken_away():
     assert book.get("amount").css == {"color": "red"}
     book.set_number_format("amount", None)
     assert book.number_format("amount") is None
+
+
+# ----------------------------------------------------------------------------- heading levels (E9.22)
+TITLE = StyleDef("title", "Title", "names the document", "body", {}, heading_level=0)
+CHAPTER = StyleDef("chapter", "Chapter", "a section", "body", {}, heading_level=1)
+SECTION = StyleDef("section", "Section", "a subsection", "chapter", {}, heading_level=2)
+
+
+def test_a_heading_level_is_inherited_like_css_and_written_only_when_set():
+    changed = StyleDef("chapter-changed", "Chapter (changed)", "", "chapter", {"color": "red"}, to_name=True)
+    aside = StyleDef("aside", "Aside", "not a section", "chapter", {}, heading_level="body")
+    styles = StyleBook([BODY, TITLE, CHAPTER, SECTION, changed, aside])
+    assert [styles.heading_level(s) for s in ("body", "title", "chapter", "section")] == [None, 0, 1, 2]
+    assert styles.heading_level("chapter-changed") == 1, "a deviation from a heading is still a heading"
+    assert styles.heading_level("aside") is None, "“body” says outright that the style is no heading"
+    assert "heading_level" not in BODY.to_data()
+    for style in (TITLE, CHAPTER, aside):
+        assert StyleDef.from_data(style.to_data()) == style
+
+
+def test_the_views_carry_the_level_worked_out_so_that_no_client_walks_the_parents():
+    views = {view["id"]: view for view in StyleBook([BODY, CHAPTER, SECTION]).views()}
+    assert views["section"]["heading"] == 2 and views["body"]["heading"] is None
+    assert "heading_level" not in views["chapter"] or views["chapter"]["heading_level"] == 1
+
+
+@pytest.mark.parametrize("level", [-1, 10, True, "2", 1.5])
+def test_a_heading_level_is_0_to_9_or_body(level):
+    with pytest.raises(ValueError, match="heading level"):
+        StyleBook([BODY, StyleDef("odd", "Odd", "", "body", {}, heading_level=level)])
+
+
+def test_only_a_paragraph_style_can_be_a_heading():
+    with pytest.raises(ValueError, match="paragraph style"):
+        StyleBook([StyleDef("frame", "Frame", "", None, {}, kind="box", heading_level=1)])
+
+
+def test_a_heading_level_is_set_by_a_command_that_undo_takes_back_exactly(paper):
+    events = seen(paper)
+    paper.execute(SetHeadingLevel("heading", 3), author="ann")
+    assert paper.model.styles.heading_level("heading") == 3
+    assert events[-1].to_data()["styles"][1]["heading"] == 3
+    paper.undo("ann")
+    assert paper.model.styles.get("heading").heading_level is None
+    paper.execute(SetHeadingLevel("heading", "body"), author="ben")
+    assert paper.model.styles.heading_level("heading") is None
+    assert SetHeadingLevel("heading", 3).summary == "made the style heading a heading of level 3"
+    assert SetHeadingLevel("heading", None).summary == "made the style heading a heading as its parent is"
+
+
+def test_a_heading_level_command_survives_the_log_and_refuses_what_the_book_refuses(paper):
+    command = SetHeadingLevel("heading", 0)
+    assert SetHeadingLevel.from_data(command.to_data(), new_registry()) == command
+    before = paper.model.serialize()
+    with pytest.raises(ValueError, match="heading level"):
+        paper.execute(SetHeadingLevel("heading", 12), author="ann")
+    with pytest.raises(ValueError, match="no style"):
+        paper.execute(SetHeadingLevel("nope", 1), author="ann")
+    assert paper.model.serialize() == before
+
+
+def test_undo_of_a_heading_level_is_refused_when_a_colleague_set_it_since(paper):
+    paper.execute(SetHeadingLevel("heading", 1), author="ann")
+    paper.execute(SetHeadingLevel("heading", 2), author="ben")
+    with pytest.raises(UndoConflict):
+        paper.undo("ann")

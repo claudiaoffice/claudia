@@ -68,6 +68,9 @@ flagged for update** (the server has no layout); the work happens on `lists-and-
 
 ## 3. Outline level (E9.22, slice S1)
 
+*Built on 2026-11-16 as `StyleDef.heading_level`, with the title at level 0; see `text-structure-across-apps.md`,
+section 8, for what differs from this section.*
+
 `StyleDef` gets one field, `outline: int | None` (1–9), inherited along `based_on` like `number_format`. A paragraph is
 a heading of level *n* when its computed style has `outline = n`. That single fact feeds `block_kind`, the layout's
 keep-with-next, the table of contents, numbered headings, the outline view (E9.12), the editor's `role="heading"` /

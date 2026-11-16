@@ -136,9 +136,9 @@ sentence naming the one that is here, D535), and a server that keeps documents i
   same `at` back (`{at, match}`). One request searches for two seconds at most, inside a pattern too (`regex` with a
   timeout, SEC-18): `timed_out` says it stopped, and `search_replace` then refuses rather than replace part of it. Texts (`--model claudia_composes:TextModel`) add `blocks`, `suggestions`,
   `replace_text` (a range replaced by text; line breaks start paragraphs; one request is one history step),
-  `set_style`, the style methods `styles`, `change_style`, `deviate_style`, `rename_style` and `check_css` (a style is
-  CSS from the kernel's allow-list; a change either alters the style for all its uses or deviates into a new style
-  that waits for its name), `look` and `hold` (where my cursor is, and locking the ± n words around it), `suggest` (assistant only)
+  `set_style`, the style methods `styles`, `change_style`, `deviate_style`, `rename_style`, `set_heading_level` and
+  `check_css` (a style is CSS from the kernel's allow-list; a change either alters the style for all its uses or deviates
+  into a new style that waits for its name; a paragraph style may give a heading level, E9.22), `look` and `hold` (where my cursor is, and locking the ± n words around it), `suggest` (assistant only)
   and `accept_suggestion` / `reject_suggestion`. The assistant writes a text as it writes a sheet or a slide (D640):
   for a person in *act* mode through `replace_text` and `set_style`, in *suggest* mode through `suggest`, and people
   accept (D262).

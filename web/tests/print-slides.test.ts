@@ -290,7 +290,7 @@ describe('printing a presentation: its print source', () => {
 
 describe('printing a text: its print source', () => {
   function textSession(over: Partial<Record<string, unknown>> = {}) {
-    const state = reactive({ doc: 'essay', blocks: [{ id: 'b1', style: 'body', text: 'Hi', runs: [] }], styles: [], page: DEFAULT_PAGE, language: null as string | null | undefined, ...over })
+    const state = reactive({ doc: 'essay', blocks: [{ id: 'b1', style: 'body', text: 'Hi', runs: [] }], styles: [], lists: [], schemes: [], page: DEFAULT_PAGE, language: null as string | null | undefined, ...over })
     const session = {
       state,
       readOnly: false,

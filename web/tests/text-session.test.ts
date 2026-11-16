@@ -78,6 +78,7 @@ function server(link: FakeLink, text = 'hello world') {
     change_style: () => ({ revision: 'main:9' }),
     deviate_style: () => ({ style: 'body-changed', name: 'Body text (changed)', revision: 'main:9' }),
     rename_style: () => ({ revision: 'main:9' }),
+    set_heading_level: () => ({ revision: 'main:9' }),
     check_css: (p: any) => ({ css: {}, text: p.text, problems: [] }),
     accept_suggestion: () => ({ revision: 'main:9' }),
     reject_suggestion: () => ({ revision: 'main:9' }),
@@ -421,6 +422,14 @@ describe('styles', () => {
     const { link, session } = await opened()
     expect(await session.renameStyle('body-changed', 'Accent')).toBe(true)
     expect(link.sent('rename_style')).toEqual([{ style: 'body-changed', name: 'Accent', base: 'main:2' }])
+  })
+
+  it('giving a style a heading level asks the server, and so does making it no heading or as its parent (E9.22)', async () => {
+    const { link, session } = await opened()
+    expect(await session.setHeadingLevel('quote', 2)).toBe(true)
+    expect(await session.setHeadingLevel('quote', 'body')).toBe(true)
+    expect(await session.setHeadingLevel('quote', null)).toBe(true)
+    expect(link.sent('set_heading_level').map((p: any) => p.level)).toEqual([2, 'body', null])
   })
 
   it('checking CSS is a read that does not wait for the queue', async () => {

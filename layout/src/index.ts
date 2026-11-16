@@ -41,6 +41,8 @@ export { BASE_FONT_SIZE, boxDecorationFromCss, isPlain, NO_DECORATION, paragraph
 export type { BorderSide, BoxDecoration, Css, StyleFromCss } from './text/css'
 export { boxItems, layoutBox } from './text/box'
 export type { BoxLayout } from './text/box'
+export { DEFAULT_GAP, DEFAULT_STEP, itemGeometry, MARKER_GAP_EM, markerCss } from './text/list-geometry'
+export type { ItemGeometry, ListItemRef, ListRef, SchemeGeometry } from './text/list-geometry'
 
 export { contentBox, MIN_CONTENT, MIN_PAGE, PAPER_SIZES, pageGeometry, paperById } from './flow/paper'
 export type { Margins, Orientation, PageGeometry, PaperSize } from './flow/paper'

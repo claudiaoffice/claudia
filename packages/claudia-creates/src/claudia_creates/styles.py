@@ -23,6 +23,8 @@ A shape has two slots (D304, D310): its outline, under an ``outline`` style (``p
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from claudia_core import ALLOWED_CSS, StyleBook, StyleDef  # noqa: F401  (ALLOWED_CSS re-exported, as always)
 
 #: The id of the style everything else is based on.
@@ -64,6 +66,20 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "line-height": "1.3",
             "text-align": "left",
         },
+    ),
+    # the slide title gives its words heading level 1 (E9.22, E10.21): the sections of the talk
+    replace(
+        _style(
+            "slide-title",
+            "Slide title",
+            "names the slide: what the audience should take from it, in a few words",
+            **{
+                "font-size": "64px",
+                "font-weight": "600",
+                "line-height": "1.15",
+            },
+        ),
+        heading_level=1,
     ),
     _style(
         "shape-label",

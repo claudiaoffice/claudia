@@ -1,5 +1,5 @@
 {
- "version": "0.27.0",
+ "version": "0.28.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -698,6 +698,9 @@
   },
   "properties": []
  },
+ "HeadingLevel": {
+  "value": "<TypeAliasType>"
+ },
  "History": {
   "class": [
    "object"
@@ -905,6 +908,9 @@
  },
  "MAIN": {
   "value": "'main'"
+ },
+ "MAX_HEADING_LEVEL": {
+  "value": "9"
  },
  "MAX_IMAGE_BYTES": {
   "value": "8388608"
@@ -1559,6 +1565,22 @@
    "counts"
   ]
  },
+ "SetHeadingLevel": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'str', level: 'HeadingLevel') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetHeadingLevel'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetLanguage": {
   "class": [
    "Command"
@@ -1787,6 +1809,7 @@
    "computed": "(self, style_id: 'str') -> 'dict[str, str]'",
    "from_data": "(items: 'Iterable[dict]') -> 'StyleBook'",
    "get": "(self, style_id: 'str') -> 'StyleDef'",
+   "heading_level": "(self, style_id: 'str') -> 'int | None'",
    "ids": "(self) -> 'list[str]'",
    "name_taken": "(self, name: 'str', *, besides: 'str | None' = None) -> 'bool'",
    "number_format": "(self, style_id: 'str') -> 'str | None'",
@@ -1795,6 +1818,7 @@
    "rename": "(self, style_id: 'str', name: 'str', *, to_name: 'bool' = False) -> 'None'",
    "resolved": "(self, style_id: 'str', colours: 'Mapping[str, str] | None' = None) -> 'dict[str, str]'",
    "set_css": "(self, style_id: 'str', css: 'dict[str, str]') -> 'None'",
+   "set_heading_level": "(self, style_id: 'str', level: 'HeadingLevel') -> 'None'",
    "set_number_format": "(self, style_id: 'str', format_id: 'str | None') -> 'None'",
    "to_data": "(self) -> 'list[dict]'",
    "unique_id": "(self, base: 'str') -> 'str'",
@@ -1806,7 +1830,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph', number_format: 'str | None' = None) -> None",
+  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph', number_format: 'str | None' = None, heading_level: 'HeadingLevel' = None) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'StyleDef'",
    "to_data": "(self) -> 'dict'"

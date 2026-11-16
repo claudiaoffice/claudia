@@ -49,6 +49,7 @@ nitpick_ignore_regex = [
     # `type` aliases (PEP 695) for the per-app object types and a rendering's setting values: an alias is not a class
     (r"py:class", r"claudia_(creates|computes|composes)\.model\.(Slide|Sheet|Text)Object"),
     (r"py:class", r"claudia_core\.renderings\.Scalar"),
+    (r"py:(class|data)", r"(claudia_core\.styles\.)?HeadingLevel"),
 ]
 html_theme = "alabaster"
 myst_heading_anchors = 3

@@ -17,7 +17,7 @@ import re
 import unicodedata
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 from .commands import Command, CommandRegistry, core_commands
 from .css import resolve_css, validate_css
@@ -31,6 +31,24 @@ _MAX_NAME = 60
 _MAX_PURPOSE = 200
 _CHANGED = re.compile(r" \(changed(?: \d+)?\)$")
 
+#: The deepest heading level (E9.22): 0 is the document's title, 1 to 9 its sections, subsections and so on.
+MAX_HEADING_LEVEL = 9
+
+#: A style's own heading level: ``None`` is "as my parent", ``"body"`` is "no heading, whatever my parent is", and
+#: 0 to :data:`MAX_HEADING_LEVEL` is a level (0: the title, which names the document and is never numbered or listed
+#: in a table of contents).
+type HeadingLevel = int | Literal["body"] | None
+
+
+def _check_heading_level(style: StyleDef) -> None:
+    level = style.heading_level
+    if level is None or level == "body":
+        pass
+    elif not isinstance(level, int) or isinstance(level, bool) or not 0 <= level <= MAX_HEADING_LEVEL:
+        raise ValueError(f"A heading level is 0 to {MAX_HEADING_LEVEL} or “body”, got {level!r}")
+    if level is not None and style.kind != "paragraph":
+        raise ValueError(f"Only a paragraph style can be a heading; “{style.name}” is a {style.kind} style")
+
 
 @dataclass(frozen=True)
 class StyleDef:
@@ -38,7 +56,10 @@ class StyleDef:
     deviating and still has the provisional name it was given (E9.7). ``kind`` says which facets ``css`` may hold
     (:data:`claudia_core.facets.KINDS`); a style written without one is a ``paragraph`` style, which is what text
     has. ``number_format`` names one of the app's number formats (computes, D378): not CSS, but inherited the same
-    way -- a style without one shows numbers as its parent does."""
+    way -- a style without one shows numbers as its parent does. ``heading_level`` makes the paragraphs that have the
+    style headings of a level (E9.22, :data:`HeadingLevel`); it is inherited the same way, so a deviation from a
+    heading stays one. It is the one place that decides what a heading is: no app, layout or client keeps a list of
+    heading styles."""
 
     id: str
     name: str
@@ -48,11 +69,12 @@ class StyleDef:
     to_name: bool = False
     kind: str = "paragraph"
     number_format: str | None = None
+    heading_level: HeadingLevel = None
 
     def to_data(self) -> dict:
-        """The plain-data form that goes into snapshots and commands; ``number_format`` only when it is set, so a
-        style of composes or creates writes exactly what it wrote before."""
-        data = {
+        """The plain-data form that goes into snapshots and commands; ``number_format`` and ``heading_level`` only
+        when they are set, so a style that has neither writes exactly what it wrote before."""
+        data: dict[str, object] = {
             "id": self.id,
             "name": self.name,
             "purpose": self.purpose,
@@ -63,6 +85,8 @@ class StyleDef:
         }
         if self.number_format is not None:
             data["number_format"] = self.number_format
+        if self.heading_level is not None:
+            data["heading_level"] = self.heading_level
         return data
 
     @classmethod
@@ -78,6 +102,7 @@ class StyleDef:
             data["to_name"],
             data["kind"],
             data.get("number_format"),
+            data.get("heading_level"),
         )
 
 
@@ -143,6 +168,16 @@ class StyleBook:
                 return style.number_format
         return None
 
+    def heading_level(self, style_id: str) -> int | None:
+        """The heading level a style gives a paragraph: its own, else the nearest parent's; ``None`` for no heading
+        (no level anywhere in the chain, or ``"body"`` before one is found)."""
+        for style in reversed(self.chain(style_id)):
+            if style.heading_level == "body":
+                return None
+            if style.heading_level is not None:
+                return style.heading_level
+        return None
+
     def children(self, style_id: str) -> list[str]:
         """The ids of the styles that are based directly on this one."""
         return [s.id for s in self._styles.values() if s.based_on == style_id]
@@ -190,12 +225,16 @@ class StyleBook:
 
         ``colours`` is the document's palette, as :meth:`claudia_core.Palette.colours` gives it. Without one, a
         declaration that names a role is left out of ``resolved``: a book is not the place to invent a colour.
+
+        ``heading`` is :meth:`heading_level` worked out, so that no client, layout or exporter walks the parents to
+        find out whether a paragraph is a heading (E9.22).
         """
         return [
             {
                 **style.to_data(),
                 "computed": self.computed(style.id),
                 "resolved": self.resolved(style.id, colours),
+                "heading": self.heading_level(style.id),
             }
             for style in self._styles.values()
         ]
@@ -223,6 +262,7 @@ class StyleBook:
         if style.based_on is not None and style.based_on not in self._styles:
             raise ValueError(f"The style {style.id!r} is based on {style.based_on!r}: no style {style.based_on!r}")
         check_kind(style.kind, style.css)
+        _check_heading_level(style)
         if style.based_on is not None and (parent := self._styles[style.based_on]).kind != style.kind:
             raise ValueError(
                 f"The {style.kind} style {style.id!r} cannot be based on “{parent.name}”, a {parent.kind} style: "
@@ -242,6 +282,12 @@ class StyleBook:
         """Make a style show numbers through the number format ``format_id`` (``None``: as its parent does). The
         book does not know the formats; the app that has them checks the id (D378)."""
         self._styles[style_id] = replace(self.get(style_id), number_format=format_id)
+
+    def set_heading_level(self, style_id: str, level: HeadingLevel) -> None:
+        """Give a style its own heading level (``None``: as its parent; ``"body"``: no heading)."""
+        changed = replace(self.get(style_id), heading_level=level)
+        _check_heading_level(changed)
+        self._styles[style_id] = changed
 
     def rename(self, style_id: str, name: str, *, to_name: bool = False) -> None:
         """Give a style another name that no other style has; ``to_name`` says whether it is still provisional."""
@@ -301,7 +347,7 @@ def _known(book: StyleBook, style_id: str) -> StyleDef:
 
 def _same_style_touched(other: Command, style_id: str) -> bool:
     """Did ``other`` change, name or build on the style ``style_id``?"""
-    if isinstance(other, ChangeStyle | RenameStyle):
+    if isinstance(other, ChangeStyle | RenameStyle | SetHeadingLevel):
         return other.style == style_id
     return isinstance(other, CreateStyle) and other.style.based_on == style_id
 
@@ -453,3 +499,43 @@ class RenameStyle(Command):
 
     def shifted_by(self, other: Command) -> Command | None:
         return None if isinstance(other, RenameStyle) and other.style == self.style else self
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class SetHeadingLevel(Command):
+    """Make a style give its paragraphs a heading level (E9.22): ``None`` as its parent does, ``"body"`` none at all,
+    0 the title, 1 to 9 a level. Every paragraph with the style, or a style based on it, changes with it."""
+
+    kind: ClassVar[str] = "core.SetHeadingLevel"
+    style: str
+    level: HeadingLevel
+
+    @property
+    def label(self) -> str:
+        return "Heading level"
+
+    @property
+    def summary(self) -> str:
+        if self.level is None:
+            return f"made the style {self.style} a heading as its parent is"
+        if self.level == "body":
+            return f"made the style {self.style} no heading"
+        return f"made the style {self.style} a heading of level {self.level}"
+
+    def apply(self, ctx: Context) -> Command:
+        book = _book(ctx)
+        known = _known(book, self.style)
+        book.set_heading_level(self.style, self.level)
+        _tell(ctx, book)
+        return SetHeadingLevel(self.style, known.heading_level)
+
+    def to_data(self) -> dict:
+        return {"style": self.style, "level": self.level}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> SetHeadingLevel:
+        return cls(data["style"], data["level"])
+
+    def shifted_by(self, other: Command) -> Command | None:
+        return None if isinstance(other, SetHeadingLevel) and other.style == self.style else self

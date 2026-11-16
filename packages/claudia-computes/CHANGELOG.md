@@ -10,6 +10,8 @@ the number formats). Search on claudia-search (SEC-18, CODE-18). Named ranges ar
 state schema 12 → 13.
 
 ### Added
+- The cell styles are `StyleDef`s of `claudia-core` 0.28, which have a `heading_level` (always `None` here: a cell is
+  no heading); the built-in styles' repr shows it.
 - `NamedRange.id` (D552): a stable id, `r` + 8 hex digits from the scope and the name for ranges that were defined
   before ids (they get the same one every replay), a fresh one for a new range. A rename keeps it, so a tag in the chat
   to a range survives it. `WorkbookModel.named_things` also yields `("range", id, name)`; `thing_name` reads them.

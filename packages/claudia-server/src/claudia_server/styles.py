@@ -23,6 +23,7 @@ from claudia_core import (
     Palette,
     RenameStyle,
     ReplacePalette,
+    SetHeadingLevel,
     SetObjectStyle,
     SetParagraphStyle,
     SetRole,
@@ -252,7 +253,8 @@ def add_style_methods(
         always literal. `to_name` is true for a style that was made by deviating and still has the provisional
         name it was given (E9.7). A shape's background and border are `fill`/`stroke`/`stroke-width` (D178).
         `kind` is `paragraph`, `box` or `outline`: which facets the style may hold, and so which slots it can be
-        put into (D305, D312)."""
+        put into (D305, D312). `heading` is the heading level the style gives a paragraph, its parents taken in
+        (0 the title, 1 to 9 a section, null none), and `heading_level` its own setting when it has one (E9.22)."""
         return _book(ctx).views(_palette_colours(ctx))
 
     @table.method("change_style", "style:str set:dict? unset:list? text:text? base:revision?", write=True)
@@ -289,6 +291,21 @@ def add_style_methods(
         """Give a style the name its maker chose. That ends the invitation to name it. `command_error` if another
         style has that name (in any letters) or the name is empty, long, or more than one line."""
         return _changed(ctx, RenameStyle(style, name, False), base)
+
+    @table.method("set_heading_level", "style:str level:any? base:revision?", write=True)
+    def _set_heading_level(ctx, *, style, level, base):
+        """Make a paragraph style give its paragraphs a heading level (E9.22): `level` 0 is the title, 1 to 9 a
+        section, subsection and so on, `"body"` no heading at all, and null (or leaving it out) as its parent does.
+        Every paragraph with the style, or a style based on it, changes with it; `styles` then says the level each
+        style gives as `heading`. `command_error` for another level, a style that is not a paragraph style, or no
+        such style. A level the style has already is not an edit (`revision` is then null)."""
+        try:
+            own = _book(ctx).get(style).heading_level
+        except KeyError as exc:
+            raise RequestError("command_error", exc.args[0]) from None
+        if own == level and type(own) is type(level):
+            return {"revision": _rev(ctx)}
+        return _changed(ctx, SetHeadingLevel(style, level), base)
 
     @table.method("check_css", "text:text")
     def _check_css(ctx, *, text):

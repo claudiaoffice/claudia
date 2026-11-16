@@ -9,6 +9,7 @@
  * @module
  */
 import { layoutParagraph } from '../text/paragraph'
+import { itemGeometry, type ListItemRef, type ListRef, MARKER_GAP_EM, markerCss, type SchemeGeometry } from '../text/list-geometry'
 import type { Hyphenator } from '../text/hyphenate'
 import type { ParagraphStyle } from '../text/style'
 import { insets } from '../display/text'
@@ -36,11 +37,14 @@ import {
 
 export type { ImageInfo, Note, PageSetupData, ShapeOutline, TextStyle } from './objects'
 
-/** A paragraph: `{id, style, text}` (runs are authorship only and do not change how it looks). */
+/** A paragraph: `{id, style, text}` (runs are authorship only and do not change how it looks), and, for a list item,
+ *  its place in its list and the marker the server counted for it (E9.21). */
 export interface TextBlock {
   id: string
   style: string
   text: string
+  item?: ListItemRef | null
+  label?: { marker: string } | null
 }
 /** A floating object as the server sends it (the shape all three apps share), anchored to a character. */
 export interface TextObject extends VisualObject {
@@ -56,6 +60,9 @@ export interface TextDocument {
   images?: readonly ImageInfo[]
   /** BCP 47 language of the text (D915), for shaping and hyphenation */
   language?: string | null
+  /** the lists and their schemes, for where the items sit (E9.21); a text without lists needs neither */
+  lists?: readonly ListRef[]
+  schemes?: readonly SchemeGeometry[]
 }
 
 /** What laying out a text needs besides its fonts: the hyphenation patterns of its language, if the caller has them. */
@@ -73,14 +80,20 @@ export interface TextPages {
   embedded: Map<string, Uint8Array>
 }
 
-/** Styles that keep their last line on the page of the next paragraph's first: titles and headings. */
-const KEEP = new Set(['title', 'heading-1', 'heading-2', 'heading-3', 'subtitle'])
+/** A heading keeps its last line on the page of the next paragraph's first: the title and every heading, by the level
+ *  the server says its style gives (E9.22). No list of style names: any style can be a heading. */
+function keepsWithNext(style: string, styles: ReadonlyMap<string, TextStyle>): boolean {
+  const level = styles.get(style)?.heading
+  return level !== null && level !== undefined
+}
 
-function headingLike(style: string, styles: ReadonlyMap<string, TextStyle>): boolean {
-  for (let s = styles.get(style), seen = 0; s && seen < 20; s = s.based_on ? styles.get(s.based_on) : undefined, seen++) {
-    if (KEEP.has(s.id)) return true
-  }
-  return false
+/** A list item's marker as its own one-line paragraph, right-aligned in its box (from `left`, `step` wide less the gap
+ *  to the text), upright and in the regular weight of the item's font; `x` is where the box starts in the paragraph. */
+function markerOf(sheet: Styles, style: string, marker: string, indent: number, left: number, step: number, em: number): FlowBlock['marker'] {
+  const own = sheet.marker(style)
+  const plain: ParagraphStyle = { ...own, align: 'right', indentLeft: 0, indentRight: 0, firstLine: 0, spaceBefore: 0, spaceAfter: 0, whiteSpace: 'nowrap', underline: false, strike: false, hyphens: 'manual' }
+  const width = Math.max(1, Math.round((step - MARKER_GAP_EM) * em))
+  return { layout: layoutParagraph(sheet.fonts, plain, marker, width), x: indent + Math.round(left * em) }
 }
 
 /** composes' default style: what a paragraph with a style the text does not have is drawn in. */
@@ -95,6 +108,10 @@ export function fontsNeeded(doc: TextDocument, resolver: FontResolver): string[]
   const out = new Set<string>()
   for (const id of new Set(doc.blocks.map((b) => b.style))) {
     const face = styleFont(cssOf(styles, id, BODY), resolver)
+    if (face) out.add(face)
+  }
+  for (const id of new Set(doc.blocks.filter((b) => b.item && b.label?.marker).map((b) => b.style))) {
+    const face = styleFont(markerCss(cssOf(styles, id, BODY)), resolver)
     if (face) out.add(face)
   }
   for (const face of objectFonts(doc.objects ?? [], styles, doc.images ?? [], resolver, BODY)) out.add(face)
@@ -116,12 +133,24 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   const hyphenator = options.hyphenator ?? null
   const paragraphOptions = { hyphenator }
   let wantsHyphens = false
-  const blocks: FlowBlock[] = doc.blocks.map((b) => {
+  const lists = doc.lists ?? []
+  const schemes = doc.schemes ?? []
+  const blocks: FlowBlock[] = doc.blocks.map((b, index) => {
     const r = sheet.paragraph(b.style)
-    const style: ParagraphStyle = { ...r.style, keepWithNext: headingLike(b.style, styles) }
+    const item = itemGeometry(doc.blocks, index, lists, schemes)
+    const em = r.style.size
+    const style: ParagraphStyle = {
+      ...r.style,
+      keepWithNext: keepsWithNext(b.style, styles),
+      // a list item's text starts after its marker's box; the gap to the next item of its list replaces its space after
+      ...(item ? { indentLeft: r.style.indentLeft + Math.round(item.pad * em) } : {}),
+      ...(item && item.gap !== null ? { spaceAfter: Math.round(item.gap * em) } : {}),
+    }
     if (style.hyphens === 'auto' && b.text) wantsHyphens = true
     const inset = insets(r.decoration)
-    return { id: b.id, layout: layoutParagraph(fonts, style, b.text, box.w - inset.left - inset.right, paragraphOptions), decoration: r.decoration }
+    const width = box.w - inset.left - inset.right
+    const marker = item && b.label?.marker ? markerOf(sheet, b.style, b.label.marker, r.style.indentLeft, item.left, item.step, em) : undefined
+    return { id: b.id, layout: layoutParagraph(fonts, style, b.text, width, paragraphOptions), decoration: r.decoration, ...(marker ? { marker } : {}) }
   })
   if (wantsHyphens && !hyphenator) {
     notes.push({

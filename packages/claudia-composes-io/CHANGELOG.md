@@ -5,6 +5,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- Headings by their level (E9.22): every paragraph style with a heading level of 1 or deeper is a heading in the file
+  (`text:h` with its `text:outline-level`, the style's `default-outline-level`; Word's `w:outlineLvl`, from 0), and keeps
+  with the next paragraph; Heading 3 to 6 come and go as the files' own Heading 3 to 6. A heading deeper than the text
+  has a style for (an `outline-level` of 7 and more) is body text and reported as before. Word's names of the built-in
+  styles are kept in one table (`WORD_NAMES`), not two.
+
 ## [0.5.0] - 2026-11-15
 
 Pictures floating over a text reach docx and odt (D464).

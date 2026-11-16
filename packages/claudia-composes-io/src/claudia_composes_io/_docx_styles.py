@@ -30,9 +30,12 @@ WORD_NAMES = {
     "title": "Title",
     "heading-1": "Heading 1",
     "heading-2": "Heading 2",
+    "heading-3": "Heading 3",
+    "heading-4": "Heading 4",
+    "heading-5": "Heading 5",
+    "heading-6": "Heading 6",
     "quote": "Quote",
 }
-_KEEP_WITH_NEXT = ("heading-1", "heading-2")
 #: What Word keeps of a style that it replaces: where the style stands in the document, not how it looks.
 _KEPT = ("w:keepNext", "w:keepLines", "w:outlineLvl", "w:numPr")
 _ALIGN = {
@@ -48,6 +51,7 @@ _PARAGRAPH_LATER = {
     "w:pBdr": _PARAGRAPH_ORDER[1:],
     "w:shd": _PARAGRAPH_ORDER[2:],
     "w:suppressAutoHyphens": _PARAGRAPH_ORDER[3:],
+    "w:outlineLvl": ("w:divId", "w:cnfStyle", "w:rPr", "w:sectPr", "w:pPrChange"),
 }
 _TEXT_LATER = ("w:w", "w:kern", "w:position", "w:sz", "w:szCs", "w:highlight", "w:u", "w:effect", "w:bdr", "w:shd")
 _SIDES = ("top", "left", "bottom", "right")
@@ -120,7 +124,9 @@ def write_styles(
         elif found is None:
             word.base_style = None
         look = look_for(book, style.id, colours)
-        _write_look(word, look, keep_with_next=style.id in _KEEP_WITH_NEXT)
+        level = book.heading_level(style.id)
+        _write_look(word, look, keep_with_next=level is not None)
+        _write_outline_level(word.element, level)
         unsaid += [(style.id, prop) for prop in _unsaid(look, body_hyphenates=hyphenates)]
     return unsaid
 
@@ -177,6 +183,16 @@ def _write_look(word: Any, look: Look, *, keep_with_next: bool) -> None:
         _paragraph_property(word.element, "w:shd", {"w:val": "clear", "w:color": "auto", "w:fill": look.background[1:]})
     if look.borders:
         _write_borders(word.element, look)
+
+
+def _write_outline_level(element: Any, level: int | None) -> None:
+    """Give a Word style the outline level of a section heading (Word counts from 0: Heading 1 is 0), or take away the
+    one Word's own style had when the style is no section heading (the title, body text) (E9.22)."""
+    properties = element.find(qn("w:pPr"))
+    if properties is not None and (old := properties.find(qn("w:outlineLvl"))) is not None:
+        properties.remove(old)
+    if level:
+        _paragraph_property(element, "w:outlineLvl", {"w:val": str(level - 1)})
 
 
 def _write_text(word: Any, look: Look) -> None:

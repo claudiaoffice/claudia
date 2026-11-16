@@ -3,6 +3,13 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.14.0] - 2026-11-16
+
+A slide title (E9.22, E10.21). State schema 11 → 12 (a snapshot of 11 is rebuilt from the log, D15).
+
+### Added
+- The built-in paragraph style `slide-title` ("Slide title"), heading level 1: what names a slide.
+
 ## [0.13.0] - 2026-11-15
 
 Turning objects (rotation-ui).

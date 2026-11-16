@@ -58,6 +58,8 @@ export interface StyleHost {
   check(text: string): Promise<CssCheck | null>
   /** Give a colour role another colour: everything in the document that meant it follows (D200). */
   setRole(role: string, colour: string): Promise<boolean>
+  /** Make a paragraph style give a heading level (E9.22); only a host whose paragraphs can be headings has it. */
+  setHeadingLevel?(style: string, level: number | 'body' | null): Promise<boolean>
 
   // -- what only some hosts have (cells, today: `computes-cell-style-popover.svg`)
   /** The popover's heading, when the noun alone says too little: “Cells B2:D3”. */

@@ -17,6 +17,7 @@ from claudia_composes_io import (
 from lxml import etree
 
 from claudia_composes import DEFAULT_STYLE, Block, Suggestion, TextModel, TextRange
+from claudia_core import StyleDef
 from claudia_odf_io import (
     MIME,
     NS,
@@ -94,6 +95,8 @@ def test_paragraphs_keep_their_text_and_order():
         ("title", '<text:p text:style-name="Title">x</text:p>'),
         ("heading-1", '<text:h text:style-name="Heading_20_1" text:outline-level="1">x</text:h>'),
         ("heading-2", '<text:h text:style-name="Heading_20_2" text:outline-level="2">x</text:h>'),
+        ("heading-3", '<text:h text:style-name="Heading_20_3" text:outline-level="3">x</text:h>'),
+        ("heading-6", '<text:h text:style-name="Heading_20_6" text:outline-level="6">x</text:h>'),
         ("quote", '<text:p text:style-name="Quotations">x</text:p>'),
         ("body", '<text:p text:style-name="Standard">x</text:p>'),
     ],
@@ -239,6 +242,8 @@ def test_an_empty_text_imports_as_an_empty_model():
         ('<text:p text:style-name="Text_20_body">x</text:p>', "body"),
         ('<text:h text:outline-level="1">x</text:h>', "heading-1"),
         ('<text:h text:outline-level="2">x</text:h>', "heading-2"),
+        ('<text:h text:style-name="Heading_20_4" text:outline-level="4">x</text:h>', "heading-4"),
+        ('<text:h text:outline-level="5">x</text:h>', "heading-5"),
         ('<text:p text:style-name="Fancy">x</text:p>', "body"),
     ],
 )
@@ -254,10 +259,19 @@ def test_a_style_made_by_formatting_is_the_style_it_is_based_on():
     )
 
 
-def test_a_deeper_heading_is_body_text_and_says_so():
-    data = an_odt('<text:h text:outline-level="3">x</text:h>')
+def test_a_heading_deeper_than_the_text_has_styles_for_is_body_text_and_says_so():
+    data = an_odt('<text:h text:outline-level="7">x</text:h>')
     assert odt_to_text(data).blocks[0].style == "body"
-    assert Loss("heading-level", "3") in odt_import_losses(data)
+    assert Loss("heading-level", "7") in odt_import_losses(data)
+
+
+def test_a_style_of_the_writers_own_is_a_heading_in_the_file_when_it_has_a_heading_level():
+    model = model_of(("chapter", "One"), ("title", "Doc"))
+    model.styles.add(StyleDef("chapter", "Chapter", "a chapter", "body", {}, heading_level=1))
+    assert paragraph_markup(text_to_odt(model)) == [
+        '<text:h text:style-name="Chapter" text:outline-level="1">One</text:h>',
+        '<text:p text:style-name="Title">Doc</text:p>',
+    ]
 
 
 def test_paragraphs_in_lists_and_sections_are_blocks_too():

@@ -224,7 +224,18 @@ from .replay import replay
 from .revision import MAIN, Branch, Revision
 from .shapes import BOX, FORMAT, ShapeDefinition, ShapeError, parse_shape
 from .store import DocumentStore, MemoryStore
-from .styles import ChangeStyle, CreateStyle, RemoveStyle, RenameStyle, StyleBook, StyleDef, StylesChanged
+from .styles import (
+    MAX_HEADING_LEVEL,
+    ChangeStyle,
+    CreateStyle,
+    HeadingLevel,
+    RemoveStyle,
+    RenameStyle,
+    SetHeadingLevel,
+    StyleBook,
+    StyleDef,
+    StylesChanged,
+)
 from .turning import SINE_MILLIONTHS, nudge_into, turned_extent
 
 __all__ = [
@@ -280,6 +291,8 @@ __all__ = [
     "clean_name",
     "contrast",
     "CreateStyle",
+    "HeadingLevel",
+    "MAX_HEADING_LEVEL",
     "CSS_VERSION",
     "CssError",
     "CssProblem",
@@ -428,6 +441,7 @@ __all__ = [
     "StaleEdit",
     "Step",
     "StyleBook",
+    "SetHeadingLevel",
     "StyleDef",
     "StylesChanged",
     "SUPPORTED_IMAGE_FORMATS",

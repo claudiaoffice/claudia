@@ -77,10 +77,10 @@ def test_a_style_is_based_on_the_style_the_model_bases_it_on():
 
 
 def test_a_block_has_the_style_of_its_name_and_a_custom_one_never_takes_the_name_of_another():
-    data = text_to_docx(with_style({}, name="Heading 3"))
+    data = text_to_docx(with_style({}, name="Heading 7"))
     document = Document(BytesIO(data))
-    assert document.paragraphs[0].style.name == "Heading 3 2"
-    assert document.styles["Heading 3"].name == "Heading 3"
+    assert document.paragraphs[0].style.name == "Heading 7 2"
+    assert document.styles["Heading 7"].name == "Heading 7"
 
 
 def test_hyphenation_is_the_documents_and_a_style_that_says_none_switches_it_off_for_itself():
@@ -161,3 +161,27 @@ def test_hyphenation_is_off_in_a_document_whose_body_is_not_hyphenated_and_a_sty
         Loss("style-property", "callout: hyphens"),
         Loss("style-property", "callout: padding"),
     )
+
+
+def test_every_heading_has_its_outline_level_in_word_counting_from_nought():
+    model = model_of(("heading-4", "h"), ("chapter", "c"), ("body", "b"))
+    model.styles.add(StyleDef("chapter", "Chapter", "a chapter", "body", {}, heading_level=1))
+    data = text_to_docx(model)
+    for name, level in (("Heading 4", "3"), ("Chapter", "0")):
+        style = word_style(data, name)
+        assert style.element.pPr.find(qn("w:outlineLvl")).get(qn("w:val")) == level, name
+        assert style.paragraph_format.keep_with_next is True, name
+    assert word_style(data, "Normal").element.pPr is None or (
+        word_style(data, "Normal").element.pPr.find(qn("w:outlineLvl")) is None
+    )
+
+
+def test_a_heading_that_is_made_body_text_loses_the_outline_level_word_gave_its_style():
+    model = model_of(("heading-2", "h"))
+    model.styles.set_heading_level("heading-2", "body")
+    assert word_style(text_to_docx(model), "Heading 2").element.pPr.find(qn("w:outlineLvl")) is None
+
+
+def test_word_headings_come_back_as_the_headings_of_the_text():
+    model = docx_to_text(text_to_docx(model_of(("heading-3", "c"), ("heading-6", "f"))))
+    assert [b.style for b in model.blocks] == ["heading-3", "heading-6"]

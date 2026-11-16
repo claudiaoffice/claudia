@@ -21,8 +21,8 @@ describe('where a list item sits', () => {
   })
 
   it('an item is moved in one step per level, the marker hanging in the step before the text', () => {
-    expect(layout([item('a', 'l1', 0)], 0)).toEqual({ '--item-left': '0em', '--item-step': '1.6em', '--item-pad': '1.6em' })
-    expect(layout([item('a', 'l2', 2)], 0)).toEqual({ '--item-left': '4em', '--item-step': '2em', '--item-pad': '6em' })
+    expect(layout([item('a', 'l1', 0)], 0)).toEqual({ '--item-left': '0em', '--item-step': '1.6em', '--item-pad': '1.6em', '--marker-gap': '0.45em' })
+    expect(layout([item('a', 'l2', 2)], 0)).toEqual({ '--item-left': '4em', '--item-step': '2em', '--item-pad': '6em', '--marker-gap': '0.45em' })
   })
 
   it('between two items of one list the gap is the scheme’s, whatever their levels', () => {

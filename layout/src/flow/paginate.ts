@@ -25,6 +25,9 @@ export interface FlowBlock {
   id: string
   layout: ParagraphLayout
   decoration?: BoxDecoration
+  /** a list item's marker (E9.21): a one-line paragraph drawn on the baseline of the block's first line, its box
+   *  starting `x` from the left of the block's content box */
+  marker?: { layout: ParagraphLayout; x: number }
 }
 
 /** A line of a block on a page: where its box starts (left of the paragraph's content box, top of the line box). */
@@ -205,7 +208,11 @@ export function flowItems(fonts: FontSet, pages: readonly FlowPage[], blocks: re
     }
     for (const l of p.lines) {
       const b = blocks[l.block]!
-      items.push(...lineItems(fonts, b.layout, b.layout.lines[l.line]!, l.x, l.top))
+      const line = b.layout.lines[l.line]!
+      items.push(...lineItems(fonts, b.layout, line, l.x, l.top))
+      const marker = l.line === 0 ? b.marker : undefined
+      const mark = marker?.layout.lines[0]
+      if (marker && mark) items.push(...lineItems(fonts, marker.layout, mark, l.x + marker.x, l.top + line.baseline - mark.baseline))
     }
     return { width: geometry.width, height: geometry.height, items }
   })

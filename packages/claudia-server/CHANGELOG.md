@@ -11,6 +11,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   five, a temporary file name that two threads cannot share, and the pattern fetch is the one the fonts use.
 
 ### Added
+- `set_heading_level` (E9.22), in the three apps: make a paragraph style give its paragraphs a heading level (0 the title,
+  1 to 9 a section, `"body"` none, null as its parent). `styles` says the level each style gives as `heading`.
+  `PROTOCOL_VERSION` stays: a method was added.
 - `add_image` and `describe_object` in composes (CODE-27): a picture comes into a text from disk, hanging from a
   character (`block`, `offset`), and any object of a text can be described or marked decorative, as in the other two
   apps. `PROTOCOL_VERSION` stays 1: methods were added.

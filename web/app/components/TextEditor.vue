@@ -7,7 +7,7 @@ import { replayTints } from '~/lib/replay-tint'
 import { colorOf } from '~/lib/people'
 import type { Block, Pos } from '~/lib/blocks'
 import { itemLayout } from '~/lib/list-layout'
-import { paragraphCss, semanticTag } from '~/lib/style-css'
+import { headingAttrs, paragraphCss, semanticTag } from '~/lib/style-css'
 import type { TextSession } from '~/lib/text-session'
 import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
@@ -31,6 +31,7 @@ const renderKey = ref(0)
 let composing = false
 // A paragraph is drawn from the CSS of its style (D73); the element only says what it is (a heading, a quote).
 const tagOf = (style: string) => semanticTag(state.styles, style)
+const headingOf = (style: string) => headingAttrs(state.styles, style)
 // `resolved`, not `computed`: a palette role is a colour by the time it reaches the page (D200).
 const cssOf = (style: string) => paragraphCss(state.styles.find((s) => s.id === style)?.resolved ?? {})
 
@@ -479,6 +480,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
           class="para"
           :class="[`st-${block.style}`, { item: block.item, tight: layoutOf(at)['--item-gap'] }, replayClass(block.id)]"
           :style="{ ...cssOf(block.style), ...layoutOf(at) }"
+          v-bind="headingOf(block.style)"
           :data-block="block.id"
           :data-marker="block.label?.marker"
         >
@@ -559,7 +561,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
   left: var(--item-left);
   width: var(--item-step);
   box-sizing: border-box;
-  padding-right: 0.45em;
+  padding-right: var(--marker-gap); /* MARKER_GAP_EM of the layout library: the printed pages use the same */
   text-align: right;
   white-space: nowrap;
   font-weight: 400;

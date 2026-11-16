@@ -3,6 +3,19 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.12.0] - 2026-11-16
+
+Headings by their level (E9.22). State schema 11 → 12 (a snapshot of 11 is rebuilt from the log, D15).
+
+### Added
+- Heading 3 to Heading 6 are built-in styles. The title has heading level 0 and Heading 1 to 6 levels 1 to 6.
+- `TextModel.heading_level(block)`: a paragraph's heading level, from its style.
+### Changed
+- A paragraph is a heading because its style gives a heading level, not because its style is (or is based on) the title
+  or Heading 1 or 2; the module constant `HEADING_STYLES` is gone. `block_kind` and the sections of a search follow the
+  level, so a style of the writer's own becomes a heading by `SetHeadingLevel`, and a section starts at any heading of
+  level 1 or deeper.
+
 ## [0.11.0] - 2026-11-15
 
 Objects float (D1023).

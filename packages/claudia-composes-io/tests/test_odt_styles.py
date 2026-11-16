@@ -138,3 +138,14 @@ def test_a_style_has_its_underline_and_its_strike_through():
     assert look["text-underline-style"] == "solid" and look["text-line-through-style"] == "solid"
     plain = text_of(style_in(text_to_odt(with_style({"text-decoration": "none"})), "Call_20_out"))
     assert plain["text-underline-style"] == "none" and plain["text-line-through-style"] == "none"
+
+
+def test_every_heading_style_says_its_outline_level_and_keeps_with_the_next_paragraph():
+    model = model_of(("heading-3", "h"), ("chapter", "c"), ("title", "t"))
+    model.styles.add(StyleDef("chapter", "Chapter", "a chapter", "body", {}, heading_level=2))
+    data = text_to_odt(model)
+    assert style_in(data, "Heading_20_3").get(f"{{{NS['style']}}}default-outline-level") == "3"
+    assert style_in(data, "Chapter").get(f"{{{NS['style']}}}default-outline-level") == "2"
+    assert style_in(data, "Title").get(f"{{{NS['style']}}}default-outline-level") is None
+    assert paragraph_of(style_in(data, "Chapter"))["keep-with-next"] == "always"
+    assert "keep-with-next" not in paragraph_of(style_in(data, "Standard"))

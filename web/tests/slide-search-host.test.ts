@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { marksFor, piecesOf, slideOf, slideSearchHost } from '~/lib/slide-search-host'
+import { marksFor, slideOf, slideSearchHost } from '~/lib/slide-search-host'
+import { piecesOf } from '~/lib/paragraph-pieces'
 import type { SearchMatch } from '~/lib/search'
 import { createTranslator } from '~/lib/i18n'
 

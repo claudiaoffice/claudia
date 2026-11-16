@@ -119,6 +119,7 @@ used._SetLanguageAsFirstWritten  # registered by its decorator: replays logs tha
 used._change_style  # composes_methods.method("change_style")
 used._deviate_style  # composes_methods.method("deviate_style")
 used._rename_style  # composes_methods.method("rename_style")
+used._set_heading_level  # composes_methods.method("set_heading_level")
 used._check_css  # composes_methods.method("check_css")
 used._look  # composes_methods.method("look")
 used._hold  # composes_methods.method("hold")

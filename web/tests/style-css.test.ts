@@ -18,6 +18,8 @@ import {
   withDisplayInk,
   withFontSize,
   type StyleView,
+  headingAttrs,
+  headingLevel,
 } from '~/lib/style-css'
 
 const view = (id: string, based_on: string | null, css: Record<string, string>, extra: Partial<StyleView> = {}): StyleView => ({
@@ -35,9 +37,12 @@ const view = (id: string, based_on: string | null, css: Record<string, string>, 
 })
 
 const body = view('body', null, { 'font-size': '12pt', color: '#1F1A33', 'font-family': 'Inter, sans-serif' })
-const h1 = view('heading-1', 'body', { 'font-size': '19pt', 'font-weight': '500' }, { computed: { ...body.css, 'font-size': '19pt', 'font-weight': '500' } })
-const h1x = view('h1-x', 'heading-1', { color: 'red' }, { computed: { ...h1.computed, color: 'red' }, to_name: true })
-const styles = [body, h1, h1x]
+const h1 = view('heading-1', 'body', { 'font-size': '19pt', 'font-weight': '500' }, { computed: { ...body.css, 'font-size': '19pt', 'font-weight': '500' }, heading: 1 })
+const h1x = view('h1-x', 'heading-1', { color: 'red' }, { computed: { ...h1.computed, color: 'red' }, to_name: true, heading: 1 })
+const title = view('title', 'body', {}, { heading: 0 })
+const deep = view('deep', 'body', {}, { heading: 7 })
+const quote = view('quote', 'body', {})
+const styles = [body, h1, h1x, title, deep, quote]
 
 describe('formatCss', () => {
   it('writes one declaration per line in the order the server uses', () => {
@@ -159,12 +164,22 @@ describe('what the page draws', () => {
     expect(previewCss({ 'font-family': 'serif', color: '#1F1A33' })).toEqual({ 'font-family': 'serif', color: 'var(--text)' })
     expect(previewCss({ color: 'red' })).toEqual({ color: 'red' })
   })
-  it('chooses the tag by the built-in style a style comes from', () => {
+  it('chooses the tag by the heading level the server says a style gives, and a quote by the style it comes from', () => {
     expect(semanticTag(styles, 'body')).toBe('p')
     expect(semanticTag(styles, 'heading-1')).toBe('h2')
     expect(semanticTag(styles, 'h1-x')).toBe('h2')
     expect(semanticTag(styles, 'title')).toBe('h1')
+    expect(semanticTag(styles, 'quote')).toBe('blockquote')
     expect(semanticTag(styles, 'unknown')).toBe('p')
+  })
+  it('makes a heading deeper than HTML has tags a heading by its role and level', () => {
+    expect(semanticTag(styles, 'deep')).toBe('div')
+    expect(headingAttrs(styles, 'deep')).toEqual({ role: 'heading', 'aria-level': '8' })
+    expect(headingAttrs(styles, 'heading-1')).toEqual({})
+    expect(headingAttrs(styles, 'body')).toEqual({})
+  })
+  it('reads the heading level of a style from the style, and none for one it does not know', () => {
+    expect([headingLevel(styles, 'title'), headingLevel(styles, 'h1-x'), headingLevel(styles, 'body'), headingLevel(styles, 'nope')]).toEqual([0, 1, null, null])
   })
   it('counts the paragraphs of each style', () => {
     const blocks = [{ style: 'body' }, { style: 'heading-1' }, { style: 'body' }] as any

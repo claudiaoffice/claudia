@@ -10,11 +10,14 @@ import { canonicalJson } from '../src/canonical'
 import { here, sha256 } from './helpers'
 import { readPdf } from './pdf'
 import { sampleParagraphs } from './sample'
+import { hyphenatorFor } from './fonts'
 import { world } from './world'
 
 let fonts: FontSet
 let resolver: FontResolver
 beforeAll(async () => ({ fonts, resolver } = await world()))
+// body text asks for hyphenation (`hyphens: auto`), as a server's styles do; a server gives the patterns with them
+const GERMAN = { hyphenator: hyphenatorFor('de') }
 
 // composes' built-in styles exactly as a server sends them (TextModel().styles.views(palette.colours()))
 const STYLES: TextStyle[] = JSON.parse(readFileSync(join(here, 'composes-styles.json'), 'utf8'))
@@ -39,7 +42,7 @@ describe('a composes text on pages', () => {
   })
 
   it('lays out the built-in styles on numbered A4 pages, headings kept with their text', () => {
-    const out = layoutText(doc(), fonts, resolver)
+    const out = layoutText(doc(), fonts, resolver, GERMAN)
     expect(out.list.pages.length).toBeGreaterThan(3)
     expect(out.notes).toEqual([])
     out.list.pages.forEach((page, i) => {
@@ -50,15 +53,37 @@ describe('a composes text on pages', () => {
     })
   })
 
+  it('keeps a heading with the paragraph after it by the level its style gives, whatever the style is called (E9.22)', () => {
+    // "chapter" is a style of the writer's own; the server says whether it gives a heading level
+    const chapter = (heading: number | null) => STYLES.concat([{ ...STYLES.find((s) => s.id === 'heading-2')!, id: 'chapter', heading }])
+    const body = 'Ein Satz, der eine Zeile füllt, und noch einer, der sie umbricht und dann noch etwas weitergeht.'
+    const text = (n: number) => [
+      ...Array.from({ length: n }, (_, i) => ({ id: `b${i + 1}`, style: 'body', text: body })),
+      { id: 'h', style: 'chapter', text: 'KAPITEL' },
+      { id: 'after', style: 'body', text: body },
+    ]
+    const lastLineOfPageOne = (n: number, heading: number | null) => {
+      const out = layoutText({ blocks: text(n), styles: chapter(heading), page: A4, language: 'de' }, fonts, resolver, GERMAN)
+      const runs = [...walk(out.list.pages[0]!.items)].filter((r): r is GlyphRun => r.kind === 'glyphs')
+      const numberLine = runs.at(-1)!.y
+      return runs.filter((r) => r.y !== numberLine).at(-1)!.text // the line above the page number
+    }
+    // somewhere the heading falls on the last line of page one when it is no heading...
+    const n = Array.from({ length: 40 }, (_, i) => i + 5).find((k) => lastLineOfPageOne(k, null) === 'KAPITEL')
+    expect(n).toBeDefined()
+    // ...and the level alone moves it over to the next page with its paragraph
+    expect(lastLineOfPageOne(n!, 1)).not.toBe('KAPITEL')
+  })
+
   it('follows any paper: the same text on Letter landscape gives more, wider lines per page', () => {
-    const letter = layoutText(doc(30, { page: { ...A4, paper: 'letter', width: 612000, height: 792000, orientation: 'landscape' } }), fonts, resolver)
+    const letter = layoutText(doc(30, { page: { ...A4, paper: 'letter', width: 612000, height: 792000, orientation: 'landscape' } }), fonts, resolver, GERMAN)
     expect(letter.geometry.width).toBe(792000)
     expect(letter.list.pages[0]!.width).toBe(792000)
   })
 
   it('says when a style asks for a font the server does not have', () => {
     const georgia = STYLES.map((s) => (s.id === 'body' ? { ...s, resolved: { ...s.resolved, 'font-family': 'Georgia, serif' } } : s))
-    expect(layoutText(doc(3, { styles: georgia }), fonts, resolver).notes).toEqual([{ kind: 'font', requested: 'Georgia', used: 'Fraunces' }])
+    expect(layoutText(doc(3, { styles: georgia }), fonts, resolver, GERMAN).notes).toEqual([{ kind: 'font', requested: 'Georgia', used: 'Fraunces' }])
   })
 
   it('draws floating objects where they hang, clipped, and says what it cannot print', () => {
@@ -75,7 +100,7 @@ describe('a composes text on pages', () => {
         { id: 'svg1', format: 'svg', svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 50"><rect width="70" height="50" fill="#D6477A"/><filter id="f"/></svg>' },
       ],
     })
-    const out = layoutText(d, fonts, resolver)
+    const out = layoutText(d, fonts, resolver, GERMAN)
     expect(out.images).toEqual(['img1'])
     expect(out.notes).toEqual([])
     const svgGroup = out.list.pages.flatMap((p) => p.items).find((i) => i.kind === 'group' && i.items[0]?.kind === 'group' && i.items[0].items[0]?.kind === 'path')
@@ -87,8 +112,8 @@ describe('a composes text on pages', () => {
   })
 
   it('gives the same display list and the same PDF every time, read back by pdf.js', async () => {
-    const a = layoutText(doc(12), fonts, resolver)
-    const b = layoutText(doc(12), fonts, resolver)
+    const a = layoutText(doc(12), fonts, resolver, GERMAN)
+    const b = layoutText(doc(12), fonts, resolver, GERMAN)
     expect(sha256(canonicalJson(a.list))).toBe(sha256(canonicalJson(b.list)))
     const pdfA = writePdf(a.list.pages, fonts, () => undefined, { title: 'Bericht', lang: 'de', created: '2026-11-12T09:00:00Z' })
     const pdfB = writePdf(b.list.pages, fonts, () => undefined, { title: 'Bericht', lang: 'de', created: '2026-11-12T09:00:00Z' })

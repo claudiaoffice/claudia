@@ -123,7 +123,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 9: speaker notes (Markdown, D342) and planned times (D343) of the slides
     # 10: rendered text containers (D390)
     # 11: slides have names, in one namespace with the objects (D550)
-    state_schema: ClassVar[int] = 11
+    # 12: styles carry heading levels; a new presentation has a slide title style (E9.22, E10.21)
+    state_schema: ClassVar[int] = 12
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(

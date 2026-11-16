@@ -1,6 +1,6 @@
 # Text structure across the three apps — the entities, where they live, what moves (plan)
 
-**Status: plan of 2026-11-16, nothing built.** It widens `e9-composes-outline-references-toc.md` (the composes design
+**Status: plan of 2026-11-16; steps A and B built the same day (section 8). Steps C–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
 of the same day) to creates, and replaces that note's section 11 ("Where the code goes"). The class diagram is
 `mockups/text-structure-architecture.svg`; it replaces `composes-toc-architecture.svg`. No decision numbers are taken.
 
@@ -128,7 +128,7 @@ client hears them the same way from every app.
 | `SCHEMES` constant in `claudia_core/lists.py` | `SchemeBook` in the document (`schemes.py`) | Editable in the numbering manager; the same look on every server (D200's reasoning) |
 | `TextModel.labels()`, `_labels`, `_told`, the diff in `settle` (composes) | `TextStructure` in core; `TextModel` keeps one and implements `ParagraphHost` | creates needs exactly the same logic; written twice, it would drift |
 | `LabelsChanged`, `ItemChanged` in `claudia_composes/events.py` | `claudia_core/events.py`, same wire form | Every app emits them |
-| `composes.SetListItem` | `core.SetListItem` on any paragraph; the old kind stays readable as an alias so stored histories replay | Lists across text boxes in creates. Pre-release, but the demo's documents still replay |
+| `composes.SetListItem` | `core.SetListItem` on any paragraph; the old kind is dropped (owner, 2026-11-16: old histories need not replay) | Lists across text boxes in creates |
 | My earlier `claudia_composes/references.py` and `contents.py` | `claudia_core/fields.py`, `generated.py`, `structure.py` | creates' references and agenda |
 | Server: `composes_lists.py` (`make_list`, `indent_item`, …) | `structure_methods.py` (shared: lists, schemes, Number Headings, outline, references, contents) plus a thin host adapter per app, as `search_methods.py` is | One set of wire methods for all apps; the one-server pivot (D620–D639) makes a shared module natural anyway |
 | creates: object words edited in a `<textarea>`, saved whole by `set_text` (`SlideCanvas.vue`, `slide-session.ts`) | `ParagraphEditor.vue`, saving characters through the core text commands (3.1) | A textarea cannot hold a reference atom, and whole-text saving attributes every word to the last person to save |
@@ -147,7 +147,7 @@ too. Plan:
 
 - Move the paragraph-level part of `InsertText`/`DeleteText` into `claudia_core` as `core.InsertText` /
   `core.DeleteText` on any paragraph id, with `fields` (schema 3). Composes keeps its follow-up behaviour (anchors,
-  suggestions) through a hook the host implements; its old kinds stay readable as aliases.
+  suggestions) through a hook the host implements; its old kinds are dropped (section 7, point 3).
 - `core.SetText` / `SetParagraph` keep the fields of the U+FFFC they do not touch (`replace_spans` already keeps
   authorship that way); a replacement that would cut a U+FFFC removes its field, and the inverse puts it back.
 
@@ -208,13 +208,72 @@ Written first, as part of the steps above:
 
 ## 7. Open points (with the default taken here)
 
-1. **Reading order in creates:** stacking order (default, as PowerPoint), or a stored order apart from stacking
-   (later, with a Reading order panel, if users need to layer and read in different orders).
+1. **Reading order in creates: decided by the owner on 2026-11-16: stacking order** (bottom first, as PowerPoint reads a
+   slide to a screen reader). A stored order apart from stacking is not planned.
 2. **Floating objects in composes:** their paragraphs count in lists (default) but not in the outline or the contents.
-3. **Old command kinds** (`composes.SetListItem`, `composes.InsertText`, `composes.DeleteText`): read as aliases
-   (default) or dropped, given the pre-release stance.
+3. **Old command kinds: decided by the owner on 2026-11-16: old command histories need not replay.** When
+   `composes.SetListItem`, `composes.InsertText` and `composes.DeleteText` move to core (steps C and G), the old kinds are
+   dropped, not kept as aliases (section 3's table says "aliases"; that is withdrawn).
 4. **Agenda content:** the titles of all slides (default), or only titles of a chosen outline level (sections).
 5. **computes:** references in its text boxes come with step H at no extra cost; lists in text boxes on a sheet
    too. The List menu stays off for cells ("Cells hold no lists").
 6. **Several paragraphs per text box:** a separate decision, mainly for bullets and PPTX/ODP import. With the host
    design it changes only creates' `reading_order()` and the object's body; nothing in `TextStructure`.
+
+## 8. Done: steps A and B (2026-11-16, branch `lists-and-anchors-in-compose`)
+
+### What was built
+
+**Step B, heading levels.**
+
+- `claudia_core.StyleDef.heading_level`: `None` (as the parent), `"body"` (no heading, whatever the parent gives),
+  0 (the title) or 1 to `MAX_HEADING_LEVEL` (9). Inherited along `based_on`, so a deviation from a heading stays one.
+  Only a paragraph style can have one. `StyleBook.heading_level(id)` works it out; `StyleBook.views` sends it to every
+  client as `heading`. `SetHeadingLevel` is the command; `set_heading_level` the wire method, in all three apps.
+- composes: Heading 3 to Heading 6 are built in; the title has level 0, Heading n level n. `TextModel.heading_level`;
+  `block_kind` and the sections of a search read the level. State schema 12.
+- creates: the built-in style `slide-title` ("Slide title"), level 1. State schema 12.
+- odt and docx: every style with a level of 1 or more is a heading in the file (outline level, keep with next); Heading
+  3 to 6 map to the files' own; Word's names of the built-in styles are one table, not two.
+- Layout: keep-with-next comes from `heading`; `KEEP` and `headingLike` are gone.
+- Web: `semanticTag` gives `h1` (title) to `h6`, then a `div` with `role="heading"` and `aria-level`; `blockKind`,
+  Markdown export and the structure group of the Format menu read `heading`. The style editor has a Heading row in its
+  Paragraph section (a style's own setting; "as its parent" says what the parent gives).
+
+**Step A, drawing.**
+
+- `layout/src/text/list-geometry.ts` (`itemGeometry`, `MARKER_GAP_EM`, `markerCss`): where a list item sits. The web
+  editor's CSS is made from it (`list-layout.ts`, `--marker-gap`), and the print layout lays out with it. Markers are now
+  drawn in print preview and PDF: right-aligned in their box, on the first line, upright and in the regular weight.
+- `ParagraphWords.vue` and `lib/paragraph-pieces.ts`: one component and one function draw the words of a text box in
+  the slide canvas and the slide view (the presenter's slide is a `SlideView`). `PresentShow.vue` only reads the words
+  to name the slide, so it draws none.
+
+**Guards.**
+
+- `tests/test_one_source_of_headings.py` refuses a built-in heading style id written into a client, the layout or
+  another server module (outside the apps' style modules and the exporters' name tables).
+- `tests/test_layout_fixtures.py` with `scripts/generate_layout_fixtures.py`: the layout tests' composes styles are what
+  the server sends. The copy made by hand had already drifted: it lacked `hyphens`, and the layout tests passed only
+  because of that. They now lay out with the German hyphenation patterns, as a server gives them.
+
+### Where the build differs from the plan, and why
+
+- **`heading_level`, not `outline`:** "outline" is already a style kind (a shape's outline, D305) and the name of a
+  facet section in the style editor. The concept is the same.
+- **The title has level 0** instead of no level: everything that treated the title as a heading (thing kinds, search,
+  keep-with-next, Markdown `#`) keeps doing so from the level alone. Level 0 is never numbered and never listed in a
+  table of contents (steps D and E).
+- **No shared `outline_styles()`:** once the level is data, the apps need not agree on style ids. creates has only
+  Slide title for now; it gets more heading styles when it needs them.
+- **The editor's row is called "Heading", in the Paragraph section,** not an "Outline" section as in the mock-up
+  (`composes-numbered-headings.svg`, C): "Outline" is the shape facet's section. The Numbering choice of that mock-up
+  comes with step D.
+- **creates' style editor does not offer the heading level yet** (only composes' does). Number All Slide Titles (step D)
+  is where creates needs it.
+
+### Left for later steps
+
+- Markers in text boxes on slides and pages (step C or D: until then no object's paragraph can be a list item).
+- PPTX/ODP title placeholders imported as Slide title (E10.21).
+- The presenter could name a slide by its Slide title instead of its first words (E10.21).

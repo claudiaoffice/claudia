@@ -139,7 +139,7 @@ export function textSource(session: TextSession): PrintSource {
     },
     images: () => extras?.images ?? [],
     async layOut(assets) {
-      const doc = textDocument(state.blocks, state.styles, state.page ?? DEFAULT_PAGE, extras, state.language)
+      const doc = textDocument(state.blocks, state.styles, state.page ?? DEFAULT_PAGE, extras, state.language, { lists: state.lists, schemes: state.schemes })
       const [hyphenator] = await Promise.all([assets.hyphenator(doc.language), assets.ensure(fontsNeeded(doc, assets.resolver))])
       return layoutText(doc, assets.fonts, assets.resolver, { hyphenator })
     },

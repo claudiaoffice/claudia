@@ -71,7 +71,7 @@ function pictureSrc(o: SlideObject): string {
             <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="paintStyle(o)" />
           </svg>
           <div class="words" :style="wordsStyle(o)">
-            <span v-if="wordsOf(o)" class="text">{{ wordsOf(o) }}</span>
+            <ParagraphWords v-if="wordsOf(o)" :text="wordsOf(o)" />
           </div>
         </template>
       </div>

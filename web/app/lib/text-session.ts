@@ -29,14 +29,11 @@ import type { BlockAnchor, ObjectsEvent, PaletteEvent, StyleModel, VisualObject 
 import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
-import { styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
+import { headingLevel, styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
 import { translate as t } from './i18n'
 import { lookOnly } from './replay'
 
-/** The built-in styles that make a paragraph a heading (D554), and every style based on one (`HEADING_STYLES` on the
- * server). */
-const HEADING_STYLES: ReadonlySet<string> = new Set(['title', 'heading-1', 'heading-2'])
 export interface SuggestionInfo {
   id: string
   author: string | null
@@ -643,15 +640,10 @@ export class TextSession extends BaseSession<TextState> {
   override nameOf(id: string): string | undefined {
     return this.state.renamed[id] ?? this.state.blocks.find((b) => b.id === id)?.name ?? this.objectNames.get(id)
   }
-  /** What a paragraph is, as a thing (D554): a heading (its style is the title or a heading, or based on one), an item
-   * of a list, or a paragraph. The same rule as the server's `TextModel.block_kind`. */
+  /** What a paragraph is, as a thing (D554): a heading (its style gives a heading level, E9.22), an item of a list, or
+   * a paragraph. The level comes worked out from the server with the styles, so this is no second rule. */
   blockKind(block: Block): ThingKind {
-    const styles = this.state.styles
-    let style: string | null = block.style
-    for (let hops = 0; style && hops < 32; hops++) {
-      if (HEADING_STYLES.has(style)) return 'heading'
-      style = styles.find((s) => s.id === style)?.based_on ?? null
-    }
+    if (headingLevel(this.state.styles, block.style) !== null) return 'heading'
     return block.item ? 'item' : 'paragraph'
   }
   /** The named paragraphs: from the replica, which `blocks` and `thing_renamed` keep current. */
@@ -854,6 +846,12 @@ export class TextSession extends BaseSession<TextState> {
   renameStyle(style: string, name: string): Promise<boolean> {
     if (this.denied()) return Promise.resolve(false)
     return this.act(async () => (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false)
+  }
+
+  /** Make a style give its paragraphs a heading level (E9.22): a level, `'body'` for none, `null` as its parent. */
+  setHeadingLevel(style: string, level: number | 'body' | null): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('set_heading_level', { style, level, base: this.state.revision })) !== false)
   }
 
   /** What the server makes of this CSS text, line by line. A read: it does not wait for typing or other changes. */

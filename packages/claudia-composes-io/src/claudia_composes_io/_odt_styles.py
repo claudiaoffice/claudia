@@ -23,18 +23,16 @@ BUILTIN_NAMES = {
     "title": "Title",
     "heading-1": "Heading_20_1",
     "heading-2": "Heading_20_2",
+    "heading-3": "Heading_20_3",
+    "heading-4": "Heading_20_4",
+    "heading-5": "Heading_20_5",
+    "heading-6": "Heading_20_6",
     "quote": "Quotations",
 }
-#: What a style of those is for a program: its class, the style the next paragraph has, and whether it is a heading.
-_STRUCTURE = {
-    "Standard": ' style:class="text"',
-    "Title": ' style:next-style-name="Standard" style:class="chapter"',
-    "Heading_20_1": ' style:next-style-name="Standard" style:default-outline-level="1" style:class="text"',
-    "Heading_20_2": ' style:next-style-name="Standard" style:default-outline-level="2" style:class="text"',
-    "Quotations": ' style:class="html"',
-}
+#: The class a program files the well-known styles under; a heading's class and outline level come from its heading
+#: level (E9.22), not from here.
+_CLASS = {"Standard": "text", "Quotations": "html"}
 _SIDES = ("top", "right", "bottom", "left")
-_KEEP_WITH_NEXT = ("Heading_20_1", "Heading_20_2")
 _DECLARED = " ".join(f'xmlns:{prefix}="{NS[prefix]}"' for prefix in ("style", "fo", "text"))
 
 
@@ -73,6 +71,15 @@ class StyleNames:
         """The name of the style, or ``Standard`` for one the book does not have."""
         return self._names.get(style_id, BUILTIN_NAMES["body"])
 
+    def outline_level(self, style_id: str) -> int | None:
+        """The outline level a paragraph of ``style_id`` has in a file: its heading level from 1 on; ``None`` for the
+        title, body text and a style the book does not have (E9.22)."""
+        try:
+            level = self.book.heading_level(style_id)
+        except (KeyError, ValueError):
+            return None
+        return level or None
+
 
 def style_xml(book: StyleBook, style: StyleDef, names: StyleNames, colours: dict[str, str]) -> tuple[bytes, list[str]]:
     """The ``style:style`` of ``style`` and the properties it sets that a file cannot say."""
@@ -80,15 +87,26 @@ def style_xml(book: StyleBook, style: StyleDef, names: StyleNames, colours: dict
     name = names.of(style.id)
     parent = f" style:parent-style-name={quoteattr(names.of(style.based_on))}" if style.based_on else ""
     display = f" style:display-name={quoteattr(style.name)}" if encode_style_name(style.name) != name else ""
-    head = f'style:name={quoteattr(name)}{display} style:family="paragraph"{parent}{_STRUCTURE.get(name, "")}'
-    paragraph, text = _paragraph_properties(look, name), _text_properties(look)
+    level = book.heading_level(style.id)
+    head = f'style:name={quoteattr(name)}{display} style:family="paragraph"{parent}{_structure(name, level)}'
+    paragraph, text = _paragraph_properties(look, keep_with_next=level is not None), _text_properties(look)
     body = (f"<style:paragraph-properties{paragraph}/>" if paragraph else "") + (
         f"<style:text-properties{text}/>" if text else ""
     )
     return f"<style:style {_DECLARED} {head}>{body}</style:style>".encode(), look.unsaid
 
 
-def _paragraph_properties(look: Look, name: str) -> str:
+def _structure(name: str, level: int | None) -> str:
+    """What a style is for a program: the style the next paragraph has after a heading, the outline level of a
+    section heading (the title has none: it is a paragraph of class ``chapter``), and the class it is filed under."""
+    if level == 0:
+        return ' style:next-style-name="Standard" style:class="chapter"'
+    if level is not None:
+        return f' style:next-style-name="Standard" style:default-outline-level="{level}" style:class="text"'
+    return f' style:class="{_CLASS[name]}"' if name in _CLASS else ""
+
+
+def _paragraph_properties(look: Look, *, keep_with_next: bool) -> str:
     said: list[tuple[str, str]] = []
     said += [(f"fo:margin-{side}", _pt(look.margins[side])) for side in _SIDES if side in look.margins]
     if look.align is not None:
@@ -105,7 +123,7 @@ def _paragraph_properties(look: Look, name: str) -> str:
         )
     for side, value in look.padding.items():
         said.append((f"fo:padding-{side}", _pt(value)))
-    if name in _KEEP_WITH_NEXT:
+    if keep_with_next:
         said.append(("fo:keep-with-next", "always"))
     return "".join(f" {key}={quoteattr(value)}" for key, value in said)
 

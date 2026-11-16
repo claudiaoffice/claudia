@@ -43,8 +43,6 @@ EXTRA_PARTS: Mapping[str, str] = {
     "word": r"(?<!\w)\w+(?!\w)",
 }
 
-_HEADING_LEVELS = {"heading-1": 1, "heading-2": 2}
-_HEADINGS = frozenset({"title", *_HEADING_LEVELS})
 _REMARK = "remark"
 _OBJECT_KIND = {"box": "object", "label": "object", "description": "description"}
 
@@ -86,10 +84,9 @@ def _natural(value: object) -> bool:
 # --------------------------------------------------------------------------------------------------------- looking
 def kind_of(model: TextModel, block: Block) -> str:
     """``heading``, ``remark`` or ``text``: what a paragraph is by its style and the styles that style is based on."""
-    ids = _chain(model, block.style)
-    if _HEADINGS.intersection(ids):
+    if model.heading_level(block) is not None:
         return "heading"
-    return "remark" if _REMARK in ids else "text"
+    return "remark" if _REMARK in _chain(model, block.style) else "text"
 
 
 def _chain(model: TextModel, style: str) -> list[str]:
@@ -100,11 +97,10 @@ def _chain(model: TextModel, style: str) -> list[str]:
 
 
 def _level(model: TextModel, block: Block) -> int | None:
-    """The level of a section heading (1, 2), or ``None`` for a paragraph that starts no section."""
-    for style_id in reversed(_chain(model, block.style)):  # the style itself first, then what it is based on
-        if style_id in _HEADING_LEVELS:
-            return _HEADING_LEVELS[style_id]
-    return None
+    """The level of a section heading (1 to 9), or ``None`` for a paragraph that starts no section (the title, which
+    names the whole text, starts none)."""
+    level = model.heading_level(block)
+    return level if level else None
 
 
 def _check_kinds(kinds: Sequence[str]) -> None:

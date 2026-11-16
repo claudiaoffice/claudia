@@ -15,6 +15,7 @@ import { flatten, readable } from '~/lib/roles'
 import { SIDES, facetsOfSlot, type Side, type StyleEditor, type StyleHost } from '~/lib/style-host'
 import { useI18n } from '~/lib/i18n'
 import { goToThis, thisOnly } from '~/lib/noun-phrases'
+import { headingChoices, headingSetting, settingValue } from '~/lib/heading-level'
 
 const { t } = useI18n()
 
@@ -85,6 +86,12 @@ const unreadable = computed(() => {
   if (!ink || !behind || readable(ink, behind)) return null
   return own ? t('The words will be hard to read on this background.') : t('These words will be hard to read.')
 })
+
+/** The heading level (E9.22), for a host whose paragraphs can be headings and a paragraph style. */
+const headings = computed(() => (current.value && props.host.setHeadingLevel && current.value.kind === 'paragraph' ? headingChoices(current.value, props.host.styles) : null))
+async function setHeading(value: string) {
+  if (current.value && props.host.setHeadingLevel) await run(props.host.setHeadingLevel(current.value.id, headingSetting(value)))
+}
 
 const KEY = 'claudia.style-view'
 function remembered(): 'controls' | 'css' {
@@ -186,6 +193,12 @@ const ALIGN = computed(
         <label class="row check" :title="t('Break long words at the end of a line where the text\'s language allows (in the pages and the PDF)')">
           <input type="checkbox" :checked="editor.hyphenates" :disabled="off" data-testid="hyphenate" @change="run(editor.setHyphens(($event.target as HTMLInputElement).checked))" >
           <span>{{ t('Hyphenate') }}</span>
+        </label>
+        <label v-if="headings" class="row" :title="t('A heading starts a part of the text at its level: the title above all, then level 1, level 2 and so on')">
+          <span class="label">{{ t('Heading') }}</span>
+          <select :value="settingValue(current!)" :disabled="off" data-testid="heading-level" @change="setHeading(($event.target as HTMLSelectElement).value)">
+            <option v-for="choice in headings" :key="choice.value" :value="choice.value">{{ choice.label }}</option>
+          </select>
         </label>
       </section>
 

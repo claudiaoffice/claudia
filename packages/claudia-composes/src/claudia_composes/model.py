@@ -68,6 +68,26 @@ def _style(style_id: str, name: str, purpose: str, *, kind: str = "paragraph", *
     return StyleDef(style_id, name, purpose, parent, css, kind=kind)
 
 
+def _at_level(level: int, style: StyleDef) -> StyleDef:
+    """``style`` giving the heading level ``level`` (E9.22): 0 the title, 1 to 6 the sections."""
+    return replace(style, heading_level=level)
+
+
+def _heading(level: int, purpose: str, size: str, line_height: str, top: str, bottom: str, **extra: str) -> StyleDef:
+    """Heading ``level``: the serif of the headings, a size that falls with the level, space above and below."""
+    css = {
+        "font-family": _SERIF,
+        "font-size": size,
+        "font-weight": "500",
+        "line-height": line_height,
+        "margin-top": top,
+        "margin-bottom": bottom,
+        "hyphens": "manual",
+        **extra,
+    }
+    return _at_level(level, _style(f"heading-{level}", f"Heading {level}", purpose, **css))
+
+
 #: The styles every text starts with. The paragraph styles are all based on Body text (D73): a change to Body text
 #: reaches the others where they have not set the property themselves. The outline and the picture's box are styles
 #: of their own kinds (D305). They are made by the model, not by commands, so they are in every log's past.
@@ -87,48 +107,29 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "hyphens": "auto",
         },
     ),
-    _style(
-        "title",
-        "Title",
-        "names the document",
-        **{
-            "font-family": _SERIF,
-            "font-size": "30pt",
-            "font-weight": "500",
-            "line-height": "1.15",
-            "letter-spacing": "-0.01em",
-            "margin-bottom": "0.5em",
-            "hyphens": "manual",
-        },
+    _at_level(
+        0,
+        _style(
+            "title",
+            "Title",
+            "names the document",
+            **{
+                "font-family": _SERIF,
+                "font-size": "30pt",
+                "font-weight": "500",
+                "line-height": "1.15",
+                "letter-spacing": "-0.01em",
+                "margin-bottom": "0.5em",
+                "hyphens": "manual",
+            },
+        ),
     ),
-    _style(
-        "heading-1",
-        "Heading 1",
-        "a section",
-        **{
-            "font-family": _SERIF,
-            "font-size": "19pt",
-            "font-weight": "500",
-            "line-height": "1.25",
-            "margin-top": "1.6em",
-            "margin-bottom": "0.5em",
-            "hyphens": "manual",
-        },
-    ),
-    _style(
-        "heading-2",
-        "Heading 2",
-        "a subsection",
-        **{
-            "font-family": _SERIF,
-            "font-size": "14.5pt",
-            "font-weight": "500",
-            "line-height": "1.3",
-            "margin-top": "1.3em",
-            "margin-bottom": "0.4em",
-            "hyphens": "manual",
-        },
-    ),
+    _heading(1, "a section", "19pt", "1.25", "1.6em", "0.5em"),
+    _heading(2, "a subsection", "14.5pt", "1.3", "1.3em", "0.4em"),
+    _heading(3, "a part of a subsection", "13pt", "1.35", "1.2em", "0.35em"),
+    _heading(4, "a heading at the fourth level", "12.5pt", "1.4", "1.1em", "0.3em", **{"font-weight": "600"}),
+    _heading(5, "a heading at the fifth level", "12pt", "1.45", "1em", "0.3em", **{"font-weight": "600"}),
+    _heading(6, "a heading at the sixth level", "12pt", "1.45", "1em", "0.3em", **{"font-style": "italic"}),
     _style(
         "quote",
         "Quote",
@@ -254,9 +255,6 @@ class Suggestion:
 #: One floating thing in a text: a text box, a shape or an image, hanging from a place in a paragraph.
 type TextObject = VisualObject[BlockAnchor]
 
-#: The built-in styles that make a paragraph a heading (and every style based on one of them).
-HEADING_STYLES = frozenset({"title", "heading-1", "heading-2"})
-
 
 class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     """The paragraphs of a document, its suggestions and the objects floating over it."""
@@ -268,7 +266,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 7: the text says which language it is written in (D915)
     # 8: paragraphs may be items of lists, which the text holds in a book of its own (E9.21)
     # 11: paragraphs may have names, by their id (D554)
-    state_schema: ClassVar[int] = 11  # 8: object bodies without a description; 9: no rendered containers
+    # 8: object bodies without a description; 9: no rendered containers; 12: styles carry heading levels (E9.22)
+    state_schema: ClassVar[int] = 12
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -409,14 +408,18 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         return moved
 
     # -- names (D550, D554) ---------------------------------------------------------
-    def block_kind(self, block: Block) -> str:
-        """What a paragraph is, as a thing: ``heading`` (its style is the title or a heading, or based on one),
-        ``item`` (of a list), or ``paragraph``."""
+    def heading_level(self, block: Block) -> int | None:
+        """The heading level of a paragraph (E9.22): 0 the title, 1 to 9 a section, ``None`` no heading. Its style
+        decides, through :meth:`~claudia_core.StyleBook.heading_level`; a style the text lacks gives none."""
         try:
-            chain = {style.id for style in self.styles.chain(block.style)}
+            return self.styles.heading_level(block.style)
         except (KeyError, ValueError):
-            chain = {block.style}
-        if chain & HEADING_STYLES:
+            return None
+
+    def block_kind(self, block: Block) -> str:
+        """What a paragraph is, as a thing: ``heading`` (its style has a heading level), ``item`` (of a list), or
+        ``paragraph``."""
+        if self.heading_level(block) is not None:
             return "heading"
         return "item" if block.item is not None else "paragraph"
 

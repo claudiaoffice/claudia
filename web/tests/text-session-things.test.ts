@@ -47,8 +47,9 @@ class FakeLink implements LinkLike {
   }
 }
 
-const view = (id: string, based_on: string | null = null) => ({ id, name: id, purpose: '', based_on, css: {}, computed: {}, to_name: false })
-const STYLES = [view('body'), view('heading-1', 'body'), view('chapter', 'heading-1')]
+// `heading` is the level the server worked out for each style (E9.22): the client never walks the parents itself.
+const view = (id: string, based_on: string | null = null, heading: number | null = null) => ({ id, name: id, purpose: '', based_on, css: {}, computed: {}, to_name: false, heading })
+const STYLES = [view('body'), view('heading-1', 'body', 1), view('chapter', 'heading-1', 1), view('aside', 'body', 3)]
 const block = (id: string, style: string, text: string, extra: object = {}) => ({ id, style, text, runs: [[[...text].length, 'ann', null]], ...extra })
 
 async function opened() {
@@ -65,6 +66,7 @@ async function opened() {
         block('b3', 'body', 'a point', { item: { list: 'l1', level: 0 } }),
         block('b4', 'chapter', 'Results'),
         block('b5', 'body', 'Plain text here.'),
+        block('b6', 'aside', 'A heading by its level, not its name'),
       ],
     }),
     suggestions: () => [],
@@ -89,7 +91,7 @@ async function opened() {
 describe('paragraphs as things (D554)', () => {
   it('knows what kind of paragraph each is, a style based on a heading included', async () => {
     const { session } = await opened()
-    expect(session.state.blocks.map((b) => session.blockKind(b))).toEqual(['heading', 'paragraph', 'item', 'heading', 'paragraph'])
+    expect(session.state.blocks.map((b) => session.blockKind(b))).toEqual(['heading', 'paragraph', 'item', 'heading', 'paragraph', 'heading'])
   })
 
   it('offers the named paragraphs, the headings, and the paragraph with the caret', async () => {
@@ -101,6 +103,7 @@ describe('paragraphs as things (D554)', () => {
       { id: 'b1', name: 'Introduction', kind: 'heading', unnamed: true },
       { id: 'b4', name: 'Results', kind: 'heading', unnamed: true },
       { id: 'b5', name: 'Plain text here.', kind: 'paragraph', unnamed: true },
+      { id: 'b6', name: 'A heading by its level, not its name', kind: 'heading', unnamed: true },
     ])
   })
 

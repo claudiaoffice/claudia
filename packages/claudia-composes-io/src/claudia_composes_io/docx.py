@@ -49,17 +49,9 @@ from ._style_look import look_for
 from ._suggestions import WhenMade, open_replacements, when_made
 from ._unwritten import DOCX_WRITTEN, text_unwritten_changes
 
-#: The built-in styles (model.py's BUILTIN_STYLES) mapped to Word's own built-in style names; anything else
-#: (a deviated or custom style) falls back to Normal -- styling fidelity beyond this is E9.5's job, not this slice's.
-_WORD_STYLE = {
-    "title": "Title",
-    "heading-1": "Heading 1",
-    "heading-2": "Heading 2",
-    "quote": "Quote",
-}
-#: The reverse of ``_WORD_STYLE``, for import: anything not one of these four names (including "Normal", a custom
-#: style, or no style at all) becomes body text -- the same fallback ``text_to_docx`` uses on the way out.
-_CLAUDIA_STYLE = {word_name: claudia_id for claudia_id, word_name in _WORD_STYLE.items()}
+#: Word's names of the built-in styles mapped back to them, for import: any other name (a custom style, or no style at
+#: all) becomes body text and is reported -- the same fallback ``text_to_docx`` uses on the way out.
+_CLAUDIA_STYLE = {word_name: claudia_id for claudia_id, word_name in WORD_NAMES.items()}
 
 
 class UnsupportedEdit(Exception):

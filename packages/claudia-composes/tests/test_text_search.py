@@ -318,3 +318,12 @@ def test_a_result_that_is_too_long_is_skipped():
     d = document(("body", "red"))
     made = plan_replacement(d.model, search("red", "x" * 30), kinds=KINDS, conflicts=no_conflicts, max_length=10)
     assert [s.reason for s in made.skipped] == ["too_long"]
+
+
+def test_a_section_starts_at_any_heading_by_its_level_and_the_title_starts_none():
+    d = document(("title", "red title"), ("heading-3", "red three"), ("body", "red body"), ("heading-4", "red four"))
+    found = scan_text(d.model, search("red"), kinds=KINDS, scope={"section": "b4"})
+    assert [m.at["block"] for m in found.matches] == ["b4"]
+    found = scan_text(d.model, search("red"), kinds=KINDS, scope={"section": "b3"})
+    assert [m.at["block"] for m in found.matches] == ["b2", "b3", "b4"]
+    assert [t.kind for t in text_texts(d.model, KINDS)][:2] == ["heading", "heading"]

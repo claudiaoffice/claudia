@@ -13,7 +13,7 @@ import pytest
 from claudia_core import ALLOWED_CSS, ChangeStyle, Document, MemoryStore
 from claudia_creates import BUILTIN_STYLES, DEFAULT_STYLE, SlideModel, builtin_styles
 
-STYLE_IDS = {"body-text", "shape-label", "plain-shape", "plain-box", "plain-image"}
+STYLE_IDS = {"body-text", "slide-title", "shape-label", "plain-shape", "plain-box", "plain-image"}
 
 
 @pytest.fixture
@@ -63,6 +63,7 @@ def test_a_shape_has_an_outline_style_and_its_words_a_paragraph_style():
     kinds = {style.id: style.kind for style in book}
     assert kinds == {
         "body-text": "paragraph",
+        "slide-title": "paragraph",
         "shape-label": "paragraph",
         "plain-shape": "outline",
         "plain-box": "box",
@@ -117,3 +118,13 @@ def test_the_style_book_survives_a_snapshot(doc):
     doc.execute(ChangeStyle("plain-shape", {"stroke-width": "9px"}), author="ana")
     rebuilt = SlideModel.restore(doc.model.serialize())
     assert rebuilt.styles.computed("plain-shape")["stroke-width"] == "9px"
+
+
+def test_the_slide_title_is_the_one_heading_a_new_presentation_has_and_its_level_is_1():
+    styles = builtin_styles()
+    headings = {s.id: styles.heading_level(s.id) for s in styles if styles.heading_level(s.id) is not None}
+    assert headings == {"slide-title": 1}
+    title = styles.computed("slide-title")
+    assert float(title["font-size"].removesuffix("px")) > float(
+        styles.computed("body-text")["font-size"].removesuffix("px")
+    )

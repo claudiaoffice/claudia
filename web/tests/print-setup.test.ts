@@ -34,6 +34,30 @@ describe('from a session to the layout library', () => {
     expect(doc).toMatchObject({ blocks: [{ id: 'b1', style: 'body', text: 'Hallo' }], styles: [{ id: 'body', resolved: { 'font-size': '12pt' } }], images: [{ id: 'i1', format: 'png' }], language: 'de' })
     expect([...fromBase64('aGk=')]).toEqual([104, 105])
   })
+  it('passes the list items with the markers the server counted, and the lists and schemes they are drawn by (E9.21)', () => {
+    const doc = textDocument(
+      [
+        { id: 'b1', style: 'body', text: 'eins', runs: [], item: { list: 'l1', level: 0 }, label: { marker: '1.', path: [1] } },
+        { id: 'b2', style: 'body', text: 'kein Punkt', runs: [] },
+      ],
+      [],
+      DEFAULT_PAGE,
+      null,
+      'de',
+      { lists: [{ id: 'l1', scheme: 'numbers', start: 1, name: null }], schemes: [{ id: 'numbers', name: 'Numbers', kind: 'number', indent: 2, gap: 0.5 }] },
+    )
+    expect(doc.blocks).toEqual([
+      { id: 'b1', style: 'body', text: 'eins', item: { list: 'l1', level: 0 }, label: { marker: '1.' } },
+      { id: 'b2', style: 'body', text: 'kein Punkt', item: null, label: null },
+    ])
+    expect(doc.lists).toEqual([{ id: 'l1', scheme: 'numbers' }])
+    expect(doc.schemes).toEqual([{ id: 'numbers', indent: 2, gap: 0.5 }])
+  })
+  it('passes the heading level the server gave each style, so the layout keeps headings with their text (E9.22)', () => {
+    const style = (id: string, heading?: number | null) => ({ id, name: id, purpose: '', based_on: null, css: {}, computed: {}, resolved: {}, to_name: false, kind: 'paragraph', heading })
+    const doc = textDocument([], [style('chapter', 1), style('body', null), style('old')], DEFAULT_PAGE, null)
+    expect(doc.styles.map((s) => s.heading)).toEqual([1, null, null])
+  })
 })
 
 describe('painting a page', () => {

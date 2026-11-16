@@ -16,7 +16,7 @@ ones in lists and sections (their structure stays in the file), but not the ones
 text of the flow. The id of a block is its place in that order (``b1``, ``b2``...), so a baseline and the file it was
 read from agree without the file having to carry ids.
 
-Styles are mapped by name only (D401): Title, Heading 1, Heading 2 and Quotations go to and from the styles of the
+Styles are mapped by name only (D401): Title, Heading 1 to Heading 6 and Quotations go to and from the styles of the
 same name; every other style is body text -- and named in the losses, so that nobody believes it was kept.
 """
 
@@ -31,7 +31,7 @@ from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
+from claudia_composes import BUILTIN_STYLES, DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
 from claudia_core import Rasterise, VisualObject
 from claudia_odf_io import (
     MIME,
@@ -77,7 +77,7 @@ from ._odt_setup import (
     patch_page,
     read_setup,
 )
-from ._odt_styles import StyleNames, style_xml
+from ._odt_styles import BUILTIN_NAMES, StyleNames, style_xml
 from ._pictures import picture_losses, pictures_of
 from ._suggestions import WhenMade, open_replacements, when_made
 from ._unwritten import ODT_WRITTEN, text_unwritten_changes
@@ -98,17 +98,20 @@ def _q(prefix: str, local: str) -> str:
 _P, _H = _q("text", "p"), _q("text", "h")
 _STYLE_NAME, _OUTLINE = _q("text", "style-name"), _q("text", "outline-level")
 
-_LEVEL = {"heading-1": 1, "heading-2": 2}
 _STANDARD = "Standard"
 #: Names of styles of body text, which become body text without a word about it.
 _BODY_NAMES = ("Standard", "Text_20_body", "Text_20_Body", "Body_20_Text", "Default_20_Paragraph_Style")
 _KNOWN = {
-    "Title": "title",
-    "Heading_20_1": "heading-1",
-    "Heading_20_2": "heading-2",
-    "Quotations": "quote",
+    **{name: style_id for style_id, name in BUILTIN_NAMES.items()},
     "Quote": "quote",
     **dict.fromkeys(_BODY_NAMES, DEFAULT_STYLE),
+}
+#: The built-in style a heading of an outline level becomes when its own style says nothing: the text's own headings,
+#: by the level they have (E9.22).
+_HEADING_OF_LEVEL = {
+    level: style.id
+    for style in BUILTIN_STYLES
+    if isinstance(level := style.heading_level, int) and not isinstance(level, bool) and level >= 1
 }
 _INDEXES = {
     _q("text", name)
@@ -231,9 +234,8 @@ def _style_of(paragraph: etree._Element, parents: dict[str, str | None], losses:
     found = _resolved(name, parents)
     if paragraph.tag == _H and found in (None, DEFAULT_STYLE):
         level = _level(paragraph)
-        for style_id, wanted in _LEVEL.items():
-            if wanted == level:
-                return style_id
+        if level in _HEADING_OF_LEVEL:
+            return _HEADING_OF_LEVEL[level]
         if losses is not None:
             losses.add("heading-level", str(level))
         return DEFAULT_STYLE
@@ -268,7 +270,7 @@ def _lists_of(parts: dict[str, bytes], body: etree._Element, scan: _Scan):  # no
 
 def odt_to_text(odt_bytes: bytes) -> TextModel:
     """``odt_bytes`` as a :class:`~claudia_composes.TextModel`: one block per paragraph of the flow, in order,
-    called ``b1``, ``b2``... by its place. Title, Heading 1, Heading 2 and Quotations (or a style based on one) map to
+    called ``b1``, ``b2``... by its place. Title, Heading 1 to 6 and Quotations (or a style based on one) map to
     the styles of the text app and anything else is body text. The first paragraph of every item of a list is an item
     of that list (the scheme, start and name of the list from its list style, ``_odt_lists``), at the level of its
     place in the nest. A picture (a ``draw:frame`` with an image in it) that the model shows as it is -- an image the
@@ -449,7 +451,7 @@ def _new_paragraph(
 ) -> tuple[etree._Element, list[etree._Element]]:
     """A paragraph element for a block, and the tracked-change regions of its suggestions."""
     name = names.of(style_id)
-    level = _LEVEL.get(style_id)
+    level = names.outline_level(style_id)
     paragraph = etree.Element(_H if level else _P, nsmap={"text": NS["text"]})
     paragraph.set(_STYLE_NAME, name)
     if level:
@@ -962,7 +964,7 @@ class _Patch:
     def _restyle(self, paragraph: etree._Element, style_id: str) -> str:
         """Make ``paragraph`` (a copy) a paragraph or a heading of the style ``style_id``; its name."""
         name = self._style_name(style_id)
-        level = _LEVEL.get(style_id)
+        level = self.style_names.outline_level(style_id)
         paragraph.tag = _H if level else _P
         paragraph.set(_STYLE_NAME, name)
         if level:

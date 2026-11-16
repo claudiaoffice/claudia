@@ -11,6 +11,7 @@ from claudia_core import (
     MemoryStore,
     ObjectBody,
     RenameStyle,
+    SetHeadingLevel,
     StyleDef,
     UndoConflict,
     VisualObject,
@@ -192,3 +193,38 @@ def test_replaying_the_log_gives_the_same_styles():
     d.execute(ChangeStyle("body", {"line-height": "1.5"}, ()), author="ben")
     d.undo("ben")
     assert d.materialize(d.revision).serialize() == d.model.serialize()
+
+
+# ----------------------------------------------------------------------------- heading levels (E9.22)
+def test_the_title_and_six_headings_carry_their_level_and_nothing_else_is_a_heading():
+    styles = TextModel().styles
+    levels = {s.id: styles.heading_level(s.id) for s in styles if s.kind == "paragraph"}
+    assert {k: v for k, v in levels.items() if v is not None} == {
+        "title": 0,
+        "heading-1": 1,
+        "heading-2": 2,
+        "heading-3": 3,
+        "heading-4": 4,
+        "heading-5": 5,
+        "heading-6": 6,
+    }
+
+
+def test_the_headings_get_smaller_with_their_level_and_none_is_smaller_than_body_text():
+    styles = TextModel().styles
+    sizes = [float(styles.computed(f"heading-{n}")["font-size"].removesuffix("pt")) for n in range(1, 7)]
+    assert sizes == sorted(sizes, reverse=True)
+    assert sizes[-1] >= float(styles.computed("body")["font-size"].removesuffix("pt"))
+    assert all(next_style(styles, f"heading-{n}") == "body" for n in range(1, 7))
+
+
+def test_any_paragraph_style_becomes_a_heading_by_its_level_not_by_its_name():
+    d = Document(TextModel(), store=MemoryStore())
+    d.execute(CreateStyle(StyleDef("chapter", "Chapter", "a chapter", "body", {"font-size": "20pt"})), author="ann")
+    d.execute(SetStyle("b1", "chapter"), author="ann")
+    assert d.model.block_kind(d.model.block("b1")) == "paragraph"
+    d.execute(SetHeadingLevel("chapter", 1), author="ann")
+    assert d.model.block_kind(d.model.block("b1")) == "heading"
+    d.execute(SetHeadingLevel("heading-2", "body"), author="ann")
+    d.execute(SetStyle("b1", "heading-2"), author="ann")
+    assert d.model.block_kind(d.model.block("b1")) == "paragraph"

@@ -20,6 +20,12 @@ export interface StyleView {
   to_name: boolean
   /** Which facets the style may hold, and so which slots it fits: `paragraph`, `box` or `outline` (D305, D312). */
   kind: string
+  /** The heading level the style gives a paragraph, its parents taken in: 0 the title, 1 to 9 a section, `null` none
+   * (E9.22). Worked out by the server: no client walks the parents to find out what a heading is. */
+  heading?: number | null
+  /** Its own setting, when it has one: a level, `'body'` (no heading, whatever its parent is), or absent (as its
+   * parent). For the style editor; everything that draws or exports reads `heading`. */
+  heading_level?: number | 'body' | null
 }
 
 export interface CssProblem {
@@ -222,17 +228,32 @@ export function menuCss(resolved: Css): Css {
   return out
 }
 
-const TAGS: Record<string, string> = { title: 'h1', 'heading-1': 'h2', 'heading-2': 'h3', quote: 'blockquote' }
+/** HTML has six heading elements; the title is the first, so a heading of level 5 is the last that has its own. */
+const DEEPEST_TAG = 6
 
-/** The element a paragraph is: a heading or a quote if its style comes from one, a plain paragraph otherwise. */
+/** The heading level a style gives (E9.22): 0 the title, 1 to 9 a section, `null` none or a style that is not known. */
+export function headingLevel(styles: readonly StyleView[], id: string): number | null {
+  return styles.find((s) => s.id === id)?.heading ?? null
+}
+
+/** The element a paragraph is: a heading by the level its style gives (the title `h1`, a section of level n `h(n+1)`,
+ * and a `div` that says it is a heading below that), a quote if its style comes from the quote, a paragraph otherwise. */
 export function semanticTag(styles: StyleView[], id: string): string {
+  const level = headingLevel(styles, id)
+  if (level !== null) return level + 1 <= DEEPEST_TAG ? `h${level + 1}` : 'div'
   const seen = new Set<string>()
   for (let at: string | null | undefined = id; at && !seen.has(at); ) {
-    if (TAGS[at]) return TAGS[at]!
+    if (at === 'quote') return 'blockquote'
     seen.add(at)
     at = styles.find((s) => s.id === at)?.based_on
   }
   return 'p'
+}
+
+/** What a heading deeper than HTML has tags for adds to its `div`: its role and level, for screen readers (BITV). */
+export function headingAttrs(styles: StyleView[], id: string): Record<string, string> {
+  const level = headingLevel(styles, id)
+  return level !== null && level + 1 > DEEPEST_TAG ? { role: 'heading', 'aria-level': String(level + 1) } : {}
 }
 
 export function styleUses(blocks: { style: string }[]): Record<string, number> {

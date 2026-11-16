@@ -115,7 +115,7 @@ function closeSuggestion() {
 /** File ▸ Export… (D212, D401): Markdown is built here from `state.blocks`, Word and OpenDocument text by the server. The window sends what is
  * still being typed before it opens the dialog (`DocumentFrame.openDialog`), so both see the text as it stands. */
 const exportFormats = [
-  { value: 'md', get label() { return t('Markdown (.md)') }, mimeType: 'text/markdown', local: () => toMarkdown(state.blocks) },
+  { value: 'md', get label() { return t('Markdown (.md)') }, mimeType: 'text/markdown', local: () => toMarkdown(state.blocks, state.styles) },
   { value: 'docx', get label() { return t('Word document (.docx)') } },
   { value: 'odt', get label() { return t('OpenDocument text (.odt)') } },
 ]
@@ -275,7 +275,9 @@ const menus = computed<Menu[]>(() => {
           ? [{ label: t('No styles yet'), disabled: true }]
           : formatItems(t, {
               // D127's groups — structure · running text · called-out blocks — and then any style of the text's own.
-              groups: [builtins(['title', 'heading-1', 'heading-2']), builtins(['body']), builtins(['quote', 'remark', 'definition']), customStyles()],
+              // Structure is every style that gives a heading level (E9.22), by its level: the title and the
+              // headings, and any style somebody made a heading.
+              groups: [headingStyles(), builtins(['body']), builtins(['quote', 'remark', 'definition']), customStyles()],
               current: session.currentStyle(),
               canApply: !readonly.value,
               apply: (id) => {
@@ -332,7 +334,13 @@ const menus = computed<Menu[]>(() => {
 function builtins(ids: string[]): StyleView[] {
   return ids.map((id) => state.styles.find((s) => s.id === id)).filter((s): s is StyleView => !!s)
 }
-const BUILTIN_STYLE_IDS = new Set(['body', 'title', 'heading-1', 'heading-2', 'quote', 'remark', 'definition'])
+/** The styles that make a paragraph a heading, by their level: the title first. */
+function headingStyles(): StyleView[] {
+  return state.styles
+    .filter((s) => s.heading !== null && s.heading !== undefined && forParagraphs(s))
+    .sort((a, b) => a.heading! - b.heading!)
+}
+const BUILTIN_STYLE_IDS = new Set(['body', 'quote', 'remark', 'definition'])
 /**
  * A text's style book holds the floating objects' styles too, since one object layer serves all three apps
  * (E10.16). The *Format* menu marks a paragraph, so it lists only the styles that fit a paragraph: a paragraph is
@@ -346,10 +354,10 @@ const BUILTIN_STYLE_IDS = new Set(['body', 'title', 'heading-1', 'heading-2', 'q
 const OBJECT_WORDS_STYLE_IDS = new Set(['shape-label'])
 const forParagraphs = (s: StyleView) => s.kind === 'paragraph' && !OBJECT_WORDS_STYLE_IDS.has(s.id)
 /** A style made by deviating from a built-in (`next_style` in `model.py`) is not one of the three fixed groups above
- * — D127 only grouped the seven built-ins, so anything else gets its own trailing group rather than being folded
- * silently into one of them. */
+ * — D127 only grouped the built-ins, so anything else gets its own trailing group rather than being folded silently
+ * into one of them. A style that gives a heading level is in the structure group instead, whoever made it (E9.22). */
 function customStyles(): StyleView[] {
-  return state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && forParagraphs(s))
+  return state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && (s.heading === null || s.heading === undefined) && forParagraphs(s))
 }
 
 // Config ▸ Shortcuts (D122/D126): the things that are not a `keydown` shortcut at all — typing itself, and native

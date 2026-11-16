@@ -44,5 +44,6 @@ export function textStyleHost(session: TextSession): StyleHost {
     rename: (style, name) => session.renameStyle(style, name),
     check: (text) => session.checkCss(text),
     setRole: (role, colour) => session.setRole(role, colour),
+    setHeadingLevel: (style, level) => session.setHeadingLevel(style, level),
   }
 }

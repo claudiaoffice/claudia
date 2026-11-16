@@ -4,6 +4,20 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.28.0] - 2026-11-16
+
+Heading levels (E9.22, step B of `claudiaoffice-log/notes/text-structure-across-apps.md`).
+
+### Added
+- `StyleDef.heading_level` (default `None`): the heading level a paragraph style gives its paragraphs: 0 the title, 1 to
+  `MAX_HEADING_LEVEL` (9) a section, `"body"` none whatever the parent gives, `None` as the parent does. Written only when
+  set, so a style without one writes what it wrote before. Only a paragraph style can have one. `HeadingLevel`.
+- `StyleBook.heading_level(style_id)`: the level a style gives, its parents taken in; `StyleBook.set_heading_level`.
+- `StyleBook.views` carries `heading`, that level worked out, so that no client, layout or exporter walks the parents
+  or keeps a list of heading styles by name.
+- `SetHeadingLevel(style, level)`: the command, with its exact inverse; refused for another level or a style that is not
+  a paragraph style.
+
 ## [0.27.0] - 2026-11-15
 
 Turning objects (D1021–D1024).

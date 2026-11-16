@@ -173,7 +173,7 @@ msgstr ""
 msgid "9 per page"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:364
+#: web/app/components/TextWorkspace.vue:372
 msgid "@ai review this text"
 msgstr ""
 
@@ -193,7 +193,7 @@ msgstr ""
 msgid "A bracket is never closed."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:154
+#: web/app/components/StyleSpec.vue:161
 msgid "A change here changes every use of “{name}”"
 msgstr ""
 
@@ -223,6 +223,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A grid of numbers that count up from a start by a step: rows, columns, start (1), step (1)."
+msgstr ""
+
+#: web/app/components/StyleSpec.vue:197
+msgid "A heading starts a part of the text at its level: the title above all, then level 1, level 2 and so on"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -441,7 +445,7 @@ msgstr ""
 msgid "Agree"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:177
+#: web/app/components/StyleSpec.vue:184
 msgid "Alignment"
 msgstr ""
 
@@ -469,7 +473,7 @@ msgstr ""
 msgid "All files"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:45
+#: web/app/components/StyleSpec.vue:46
 msgid "All four sides"
 msgstr ""
 
@@ -549,6 +553,10 @@ msgstr ""
 msgid "Arrows, Tab, Enter"
 msgstr ""
 
+#: web/app/lib/heading-level.ts:28
+msgid "As “{name}”: {level}"
+msgstr ""
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:244
 msgid "Ask ai"
 msgstr ""
@@ -589,7 +597,7 @@ msgstr ""
 msgid "Authors"
 msgstr ""
 
-#: web/app/components/AdminAiModel.vue:83 web/app/components/StyleSpec.vue:178
+#: web/app/components/AdminAiModel.vue:83 web/app/components/StyleSpec.vue:185
 msgid "Auto"
 msgstr ""
 
@@ -637,11 +645,11 @@ msgstr ""
 msgid "Back to {place} (Esc)"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:195
+#: web/app/components/StyleSpec.vue:208
 msgid "Background"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:361
+#: web/app/components/TextWorkspace.vue:369
 msgid "Backspace / Delete"
 msgstr ""
 
@@ -673,15 +681,15 @@ msgstr ""
 msgid "Blue"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:165
+#: web/app/components/StyleSpec.vue:172
 msgid "Bold"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:208
+#: web/app/components/StyleSpec.vue:221
 msgid "Border"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:192 web/app/components/StyleSpec.vue:193 web/app/lib/object-style-host.ts:39
+#: web/app/components/StyleSpec.vue:205 web/app/components/StyleSpec.vue:206 web/app/lib/object-style-host.ts:39
 msgid "Box"
 msgstr ""
 
@@ -689,7 +697,7 @@ msgstr ""
 msgid "Box {box} · Words {words} — the two slots now differ"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:186
+#: web/app/components/StyleSpec.vue:193
 msgid "Break long words at the end of a line where the text's language allows (in the pages and the PDF)"
 msgstr ""
 
@@ -709,7 +717,7 @@ msgstr ""
 msgid "Bulleted list (Ctrl+Shift+8)"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:178
+#: web/app/components/StyleSpec.vue:185
 msgid "By content: numbers right, text left"
 msgstr ""
 
@@ -717,7 +725,7 @@ msgstr ""
 msgid "CLAUDIA_WEB_DIR is set to {wrong}, but there is no built frontend (index.html) in it."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:136
+#: web/app/components/StyleSpec.vue:143
 msgid "CSS"
 msgstr ""
 
@@ -773,7 +781,7 @@ msgstr ""
 msgid "Cells {range}"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:123
+#: web/app/components/StyleSpec.vue:130
 msgid "Centre"
 msgstr ""
 
@@ -1053,7 +1061,7 @@ msgstr ""
 msgid "Continue Previous List"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:135
+#: web/app/components/StyleSpec.vue:142
 msgid "Controls"
 msgstr ""
 
@@ -1153,11 +1161,11 @@ msgstr ""
 msgid "Ctrl"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:362
+#: web/app/components/TextWorkspace.vue:370
 msgid "Ctrl + Backspace / Delete"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:351 web/app/components/TextWorkspace.vue:363 web/app/components/Workspace.vue:1137
+#: web/app/components/SlideWorkspace.vue:351 web/app/components/TextWorkspace.vue:371 web/app/components/Workspace.vue:1137
 msgid "Ctrl + C / X / V"
 msgstr ""
 
@@ -1509,7 +1517,7 @@ msgstr ""
 msgid "End the show (Esc)"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:359 web/app/lib/object-menu.ts:50
+#: web/app/components/TextWorkspace.vue:367 web/app/lib/object-menu.ts:50
 msgid "Enter"
 msgstr ""
 
@@ -1533,7 +1541,7 @@ msgstr ""
 msgid "Every outcome of the alternatives this cell depends on"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:151
+#: web/app/components/StyleSpec.vue:158
 msgid "Every use of “{name}”"
 msgstr ""
 
@@ -1601,7 +1609,7 @@ msgstr ""
 msgid "File size"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:237
+#: web/app/components/StyleSpec.vue:250
 msgid "Fill"
 msgstr ""
 
@@ -1685,7 +1693,7 @@ msgstr ""
 msgid "Finds {parts}."
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:408
+#: web/app/components/TextWorkspace.vue:416
 msgid "First number"
 msgstr ""
 
@@ -1709,7 +1717,7 @@ msgstr ""
 msgid "Fit width"
 msgstr ""
 
-#: web/app/components/StyleBar.vue:112 web/app/components/TextWorkspace.vue:313
+#: web/app/components/StyleBar.vue:112 web/app/components/TextWorkspace.vue:315
 msgid "Flow"
 msgstr ""
 
@@ -1741,7 +1749,7 @@ msgstr ""
 msgid "Font"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:164
+#: web/app/components/StyleSpec.vue:171
 msgid "Font properties"
 msgstr ""
 
@@ -1921,7 +1929,7 @@ msgstr ""
 msgid "Hard to read"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:25 web/app/components/SidePanel.vue:181
+#: packages/claudia-server/src/claudia_server/thing_names.py:25 web/app/components/SidePanel.vue:181 web/app/components/StyleSpec.vue:198
 msgid "Heading"
 msgstr ""
 
@@ -2045,7 +2053,7 @@ msgstr ""
 msgid "How this style looks: font, size, colour, CSS (right-click in the text does the same)"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:188
+#: web/app/components/StyleSpec.vue:195
 msgid "Hyphenate"
 msgstr ""
 
@@ -2229,7 +2237,7 @@ msgstr ""
 msgid "It stops by itself ten minutes after its last window has closed. Or end its python process (System Monitor). Then start again."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:166
+#: web/app/components/StyleSpec.vue:173
 msgid "Italic"
 msgstr ""
 
@@ -2249,7 +2257,7 @@ msgstr ""
 msgid "Joins values and ranges with a delimiter between them; empty ones are left out if the second argument is TRUE."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:125
+#: web/app/components/StyleSpec.vue:132
 msgid "Justify"
 msgstr ""
 
@@ -2337,7 +2345,7 @@ msgstr ""
 msgid "Leave this document"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:122
+#: web/app/components/StyleSpec.vue:129
 msgid "Left"
 msgstr ""
 
@@ -2353,7 +2361,7 @@ msgstr ""
 msgid "Legend"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:224
+#: web/app/components/StyleSpec.vue:237
 msgid "Less padding"
 msgstr ""
 
@@ -2363,6 +2371,10 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Let other people into the document"
+msgstr ""
+
+#: web/app/lib/heading-level.ts:21
+msgid "Level {level}"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -2397,7 +2409,7 @@ msgstr ""
 msgid "Log-normal"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:131 web/app/components/StyleSpec.vue:133
+#: web/app/components/StyleSpec.vue:138 web/app/components/StyleSpec.vue:140
 msgid "Look"
 msgstr ""
 
@@ -2561,7 +2573,7 @@ msgstr ""
 msgid "More"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:226
+#: web/app/components/StyleSpec.vue:239
 msgid "More padding"
 msgstr ""
 
@@ -2609,7 +2621,7 @@ msgstr ""
 msgid "My places and collections"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:44 web/app/components/SlideWorkspace.vue:412 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1268 web/app/components/Workspace.vue:1269
+#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:44 web/app/components/SlideWorkspace.vue:412 web/app/components/StyleSpec.vue:273 web/app/components/Workspace.vue:1268 web/app/components/Workspace.vue:1269
 msgid "Name"
 msgstr ""
 
@@ -2621,7 +2633,7 @@ msgstr ""
 msgid "Name in the pivot table"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:263 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
+#: web/app/components/StyleSpec.vue:276 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
 msgid "Name it"
 msgstr ""
 
@@ -2629,7 +2641,7 @@ msgstr ""
 msgid "Name of the collection"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:260
+#: web/app/components/StyleSpec.vue:273
 msgid "Name of the style"
 msgstr ""
 
@@ -2733,6 +2745,14 @@ msgstr ""
 msgid "No guide matches \"{query}\"."
 msgstr ""
 
+#: web/app/lib/heading-level.ts:20 web/app/lib/heading-level.ts:32
+msgid "No heading"
+msgstr ""
+
+#: web/app/lib/heading-level.ts:29
+msgid "No heading (no parent)"
+msgstr ""
+
 #: web/app/lib/search.ts:548
 msgid "No matches"
 msgstr ""
@@ -2805,7 +2825,7 @@ msgstr ""
 msgid "Not hyphenated: {reason}."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:264
+#: web/app/components/StyleSpec.vue:277
 msgid "Not now"
 msgstr ""
 
@@ -3037,7 +3057,7 @@ msgstr ""
 msgid "Open the chat with an empty prompt"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:390
+#: web/app/components/TextWorkspace.vue:398
 msgid "Open the first suggestion"
 msgstr ""
 
@@ -3101,7 +3121,7 @@ msgstr ""
 msgid "Outdent (Shift+Tab)"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:234 web/app/components/StyleSpec.vue:235 web/app/lib/object-style-host.ts:45
+#: web/app/components/StyleSpec.vue:247 web/app/components/StyleSpec.vue:248 web/app/lib/object-style-host.ts:45
 msgid "Outline"
 msgstr ""
 
@@ -3125,11 +3145,11 @@ msgstr ""
 msgid "Pace"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:222
+#: web/app/components/StyleSpec.vue:235
 msgid "Padding"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:113 web/app/components/TextWorkspace.vue:315
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:113 web/app/components/TextWorkspace.vue:317
 msgid "Page"
 msgstr ""
 
@@ -3149,7 +3169,7 @@ msgstr ""
 msgid "Paper"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:183 web/app/components/StyleSpec.vue:174 web/app/components/StyleSpec.vue:175 web/app/lib/object-style-host.ts:51 web/app/lib/text-style-host.ts:10
+#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:183 web/app/components/StyleSpec.vue:181 web/app/components/StyleSpec.vue:182 web/app/lib/object-style-host.ts:51 web/app/lib/text-style-host.ts:10
 msgid "Paragraph"
 msgstr ""
 
@@ -3641,7 +3661,7 @@ msgstr ""
 msgid "Reveal"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:124
+#: web/app/components/StyleSpec.vue:131
 msgid "Right"
 msgstr ""
 
@@ -4001,7 +4021,7 @@ msgstr ""
 msgid "Show Pivot Table as SQL…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:110 web/app/components/TextWorkspace.vue:308 web/app/lib/document-menus.ts:206
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:110 web/app/components/TextWorkspace.vue:310 web/app/lib/document-menus.ts:206
 msgid "Show Who Wrote What"
 msgstr ""
 
@@ -4165,7 +4185,7 @@ msgstr ""
 msgid "Splits a text into columns at the column delimiters and into rows at the row delimiters (each may be several in a range). ignore_empty TRUE drops empty pieces, match_mode 1 ignores case; shorter rows are filled with pad_with (#N/A)."
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:408
+#: web/app/components/TextWorkspace.vue:416
 msgid "Start"
 msgstr ""
 
@@ -4177,7 +4197,7 @@ msgstr ""
 msgid "Start a new document"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:408
+#: web/app/components/TextWorkspace.vue:416
 msgid "Start numbering at"
 msgstr ""
 
@@ -4205,11 +4225,11 @@ msgstr ""
 msgid "Stop following (Esc)"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:168
+#: web/app/components/StyleSpec.vue:175
 msgid "Strike through"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:238
+#: web/app/components/StyleSpec.vue:251
 msgid "Stroke"
 msgstr ""
 
@@ -4309,7 +4329,7 @@ msgstr ""
 msgid "TRUE when the whole part of the number is odd."
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:360
+#: web/app/components/TextWorkspace.vue:368
 msgid "Tab / Shift + Tab"
 msgstr ""
 
@@ -4373,7 +4393,7 @@ msgstr ""
 msgid "Teal"
 msgstr ""
 
-#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:101 web/app/components/SearchPanel.vue:332 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:157 web/app/components/StyleSpec.vue:158 web/app/components/StyleSpec.vue:170
+#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:101 web/app/components/SearchPanel.vue:332 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:164 web/app/components/StyleSpec.vue:165 web/app/components/StyleSpec.vue:177
 msgid "Text"
 msgstr ""
 
@@ -4505,7 +4525,7 @@ msgstr ""
 msgid "The base 10 logarithm of a positive number."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:51
+#: web/app/components/StyleSpec.vue:52
 msgid "The bottom side"
 msgstr ""
 
@@ -4841,7 +4861,7 @@ msgstr ""
 msgid "The least common multiple of whole numbers (the decimals are cut off)."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:53
+#: web/app/components/StyleSpec.vue:54
 msgid "The left side"
 msgstr ""
 
@@ -5133,7 +5153,7 @@ msgstr ""
 msgid "The result is a name too."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:49
+#: web/app/components/StyleSpec.vue:50
 msgid "The right side"
 msgstr ""
 
@@ -5381,7 +5401,7 @@ msgstr ""
 msgid "The time of day a text names, as a fraction of a day. Read: 14:30, 14:30:15, 2:30 PM; a date before the time is ignored."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:47
+#: web/app/components/StyleSpec.vue:48
 msgid "The top side"
 msgstr ""
 
@@ -5441,7 +5461,7 @@ msgstr ""
 msgid "The whole text"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:86
+#: web/app/components/StyleSpec.vue:87
 msgid "The words will be hard to read on this background."
 msgstr ""
 
@@ -5509,7 +5529,7 @@ msgstr ""
 msgid "These settings are for administrators only. Sign in with your name and password to continue."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:86
+#: web/app/components/StyleSpec.vue:87
 msgid "These words will be hard to read."
 msgstr ""
 
@@ -5521,11 +5541,11 @@ msgstr ""
 msgid "They come with the file and cannot be changed here — use Details… after it is in."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:246
+#: web/app/components/StyleSpec.vue:259
 msgid "Thicker"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:206
+#: web/app/components/StyleSpec.vue:219
 msgid "Thicker border"
 msgstr ""
 
@@ -5537,11 +5557,11 @@ msgstr ""
 msgid "Think with your data."
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:244
+#: web/app/components/StyleSpec.vue:257
 msgid "Thinner"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:204
+#: web/app/components/StyleSpec.vue:217
 msgid "Thinner border"
 msgstr ""
 
@@ -5629,7 +5649,7 @@ msgstr ""
 msgid "This page is not allowed to use that server."
 msgstr ""
 
-#: web/app/lib/text-session.ts:678
+#: web/app/lib/text-session.ts:670
 msgid "This paragraph"
 msgstr ""
 
@@ -5701,7 +5721,7 @@ msgstr ""
 msgid "This slide"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:259
+#: web/app/components/StyleSpec.vue:272
 msgid "This style is called “{name}”. Give it a name that says what it is for?"
 msgstr ""
 
@@ -5721,6 +5741,10 @@ msgstr ""
 msgid "Timeout (seconds)"
 msgstr ""
 
+#: web/app/lib/heading-level.ts:21
+msgid "Title"
+msgstr ""
+
 #: web/app/components/SheetChartInsertDialog.vue:179
 msgid "Title (optional)"
 msgstr ""
@@ -5729,7 +5753,7 @@ msgstr ""
 msgid "Too faint"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:339 web/app/components/TextWorkspace.vue:319 web/app/components/Workspace.vue:1106
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:339 web/app/components/TextWorkspace.vue:321 web/app/components/Workspace.vue:1106
 msgid "Tools"
 msgstr ""
 
@@ -5785,7 +5809,7 @@ msgstr ""
 msgid "Two pages side by side"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:358
+#: web/app/components/TextWorkspace.vue:366
 msgid "Type"
 msgstr ""
 
@@ -5817,7 +5841,7 @@ msgstr ""
 msgid "Under it: {list}"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:167
+#: web/app/components/StyleSpec.vue:174
 msgid "Underline"
 msgstr ""
 
@@ -5893,19 +5917,19 @@ msgstr ""
 msgid "Version, authors and licence"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:211
+#: web/app/components/StyleSpec.vue:224
 msgid "Vertical"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:212
+#: web/app/components/StyleSpec.vue:225
 msgid "Vertical alignment"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:309 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:306 web/app/components/Workspace.vue:1097
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:309 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:308 web/app/components/Workspace.vue:1097
 msgid "View"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:134
+#: web/app/components/StyleSpec.vue:141
 msgid "View of the style"
 msgstr ""
 
@@ -5981,7 +6005,7 @@ msgstr ""
 msgid "When I ask the AI, in this document:"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:140
+#: web/app/components/StyleSpec.vue:147
 msgid "Where a change goes"
 msgstr ""
 
@@ -6013,7 +6037,7 @@ msgstr ""
 msgid "Which part is styled"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:198
+#: web/app/components/StyleSpec.vue:211
 msgid "Which side the border is on"
 msgstr ""
 
@@ -6061,7 +6085,7 @@ msgstr ""
 msgid "Whole workbook"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:242
+#: web/app/components/StyleSpec.vue:255
 msgid "Width"
 msgstr ""
 
@@ -6101,7 +6125,7 @@ msgstr ""
 msgid "Works on"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:218
+#: web/app/components/StyleSpec.vue:231
 msgid "Wrap long text"
 msgstr ""
 
@@ -6161,7 +6185,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:444 web/app/components/SlideCanvas.vue:320 web/app/components/SlideCanvas.vue:329 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:493 web/app/components/TextContainers.vue:63 web/app/components/Workspace.vue:271 web/app/components/Workspace.vue:328 web/app/components/Workspace.vue:379 web/app/components/Workspace.vue:461 web/app/components/Workspace.vue:521 web/app/components/Workspace.vue:527 web/app/components/Workspace.vue:608 web/app/components/Workspace.vue:776 web/app/components/Workspace.vue:835 web/app/components/Workspace.vue:955 web/app/lib/base-session.ts:794 web/app/lib/text-session.ts:463
+#: web/app/components/SheetGrid.vue:444 web/app/components/SlideCanvas.vue:320 web/app/components/SlideCanvas.vue:329 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:493 web/app/components/TextContainers.vue:63 web/app/components/Workspace.vue:271 web/app/components/Workspace.vue:328 web/app/components/Workspace.vue:379 web/app/components/Workspace.vue:461 web/app/components/Workspace.vue:521 web/app/components/Workspace.vue:527 web/app/components/Workspace.vue:608 web/app/components/Workspace.vue:776 web/app/components/Workspace.vue:835 web/app/components/Workspace.vue:955 web/app/lib/base-session.ts:794 web/app/lib/text-session.ts:460
 msgid "You can only look at this document."
 msgstr ""
 
@@ -6257,7 +6281,7 @@ msgstr ""
 msgid "a number from 0 up to, not including, 1. Fresh numbers come with Tools > Resample (F9)."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:93
+#: packages/claudia-server/src/claudia_server/styles.py:94
 msgid "a palette holds at most {limit} colour roles"
 msgstr ""
 
@@ -6277,11 +6301,11 @@ msgstr ""
 msgid "a request must be a JSON object"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:89
+#: packages/claudia-server/src/claudia_server/styles.py:90
 msgid "a role is missing {key!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:91
+#: packages/claudia-server/src/claudia_server/styles.py:92
 msgid "a role's id, name and colour are text"
 msgstr ""
 
@@ -6585,7 +6609,7 @@ msgstr ""
 msgid "contain “{text}”"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:351 web/app/components/TextWorkspace.vue:363 web/app/components/Workspace.vue:1137
+#: web/app/components/SlideWorkspace.vue:351 web/app/components/TextWorkspace.vue:371 web/app/components/Workspace.vue:1137
 msgid "copy, cut and paste, also from and to other programs"
 msgstr ""
 
@@ -6621,11 +6645,11 @@ msgstr ""
 msgid "delete"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:362
+#: web/app/components/TextWorkspace.vue:370
 msgid "delete a word"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:361
+#: web/app/components/TextWorkspace.vue:369
 msgid "delete; at the edge of a paragraph it joins the one next to it"
 msgstr ""
 
@@ -6689,7 +6713,7 @@ msgstr ""
 msgid "editing cell"
 msgstr ""
 
-#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:440 web/app/components/TextWorkspace.vue:392 web/app/lib/grid-a11y.ts:49
+#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:440 web/app/components/TextWorkspace.vue:400 web/app/lib/grid-a11y.ts:49
 msgid "empty"
 msgstr ""
 
@@ -6697,7 +6721,7 @@ msgstr ""
 msgid "end"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:359
+#: web/app/components/TextWorkspace.vue:367
 msgid "end the paragraph (after a heading the next one is body text); in a list, the next item; on an empty item, out of the list"
 msgstr ""
 
@@ -6717,7 +6741,7 @@ msgstr ""
 msgid "error {value}: {why}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:85
+#: packages/claudia-server/src/claudia_server/styles.py:86
 msgid "every role is an object with id, name, purpose and colour"
 msgstr ""
 
@@ -6785,7 +6809,7 @@ msgstr ""
 msgid "give names to values (later ones may use earlier ones) and calculate with them."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:71
+#: packages/claudia-server/src/claudia_server/styles.py:72
 msgid "give the CSS as set properties or as text, not both"
 msgstr ""
 
@@ -6841,7 +6865,7 @@ msgstr ""
 msgid "image"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:360
+#: web/app/components/TextWorkspace.vue:368
 msgid "in a list, one level in or out"
 msgstr ""
 
@@ -6925,7 +6949,7 @@ msgstr ""
 msgid "like SUBTOTAL with more functions (1-13 as SUBTOTAL but with 12 MEDIAN and 13 MODE.SNGL; 14 LARGE, 15 SMALL, 16 PERCENTILE.INC, 17 QUARTILE.INC, 18 PERCENTILE.EXC, 19 QUARTILE.EXC take a range and k) and a choice what to skip: options 2, 3, 6 and 7 skip errors, 4 skips nothing but the other subtotals."
 msgstr ""
 
-#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:440 web/app/components/TextWorkspace.vue:392
+#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:440 web/app/components/TextWorkspace.vue:400
 msgid "line {line}"
 msgstr ""
 
@@ -7097,7 +7121,7 @@ msgstr ""
 msgid "object"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:205
+#: packages/claudia-server/src/claudia_server/styles.py:206
 msgid "objects must be a list of at most {limit} object ids"
 msgstr ""
 
@@ -7193,11 +7217,11 @@ msgstr ""
 msgid "page {n}"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:389 web/app/lib/noun-phrases.ts:15
+#: web/app/components/TextWorkspace.vue:397 web/app/lib/noun-phrases.ts:15
 msgid "paragraph"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:389
+#: web/app/components/TextWorkspace.vue:397
 msgid "paragraphs"
 msgstr ""
 
@@ -7273,7 +7297,7 @@ msgstr ""
 msgid "purpose of {name} column {n}"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:228 web/app/components/StyleSpec.vue:248
+#: web/app/components/StyleSpec.vue:241 web/app/components/StyleSpec.vue:261
 msgid "px"
 msgstr ""
 
@@ -7437,7 +7461,7 @@ msgstr ""
 msgid "slides"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:145
+#: web/app/components/TextEditor.vue:146
 msgid "someone"
 msgstr ""
 
@@ -7477,11 +7501,11 @@ msgstr ""
 msgid "suggest switching here"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:390
+#: web/app/components/TextWorkspace.vue:398
 msgid "suggestion"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:390
+#: web/app/components/TextWorkspace.vue:398
 msgid "suggestions"
 msgstr ""
 
@@ -7545,7 +7569,7 @@ msgstr ""
 msgid "the assistant does not withdraw suggestions"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:364
+#: web/app/components/TextWorkspace.vue:372
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr ""
 
@@ -7629,7 +7653,7 @@ msgstr ""
 msgid "the mean of the values"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:388 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:220
+#: packages/claudia-server/src/claudia_server/composes.py:388 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:221
 msgid "the new style would look just like “{name}”"
 msgstr ""
 
@@ -7713,7 +7737,7 @@ msgstr ""
 msgid "the start of the text"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:191 web/app/components/TextEditor.vue:459 web/app/lib/print/source.ts:121
+#: web/app/components/SearchPanel.vue:191 web/app/components/TextEditor.vue:460 web/app/lib/print/source.ts:121
 msgid "the text"
 msgstr ""
 
@@ -7789,11 +7813,11 @@ msgstr ""
 msgid "these cells’ own style"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:61
+#: packages/claudia-server/src/claudia_server/styles.py:62
 msgid "this document has no palette"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:54
+#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:55
 msgid "this document has no styles"
 msgstr ""
 
@@ -7933,7 +7957,7 @@ msgstr ""
 msgid "unknown slide {slide!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:279
+#: packages/claudia-server/src/claudia_server/styles.py:281
 msgid "unset must be a list of property names"
 msgstr ""
 
@@ -7965,11 +7989,11 @@ msgstr ""
 msgid "width in millimetres"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:388
+#: web/app/components/TextWorkspace.vue:396
 msgid "word"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:388
+#: web/app/components/TextWorkspace.vue:396
 msgid "words"
 msgstr ""
 
@@ -7989,11 +8013,11 @@ msgstr ""
 msgid "write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:358
+#: web/app/components/TextWorkspace.vue:366
 msgid "write; a word is sent when it ends, and the others see where you are"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:146
+#: web/app/components/TextEditor.vue:147
 msgid "written by {author}"
 msgstr ""
 
@@ -8021,7 +8045,7 @@ msgstr ""
 msgid "{app} for the Linux desktop"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:147
+#: web/app/components/TextEditor.vue:148
 msgid "{author} is writing here"
 msgstr ""
 
@@ -8029,7 +8053,7 @@ msgstr ""
 msgid "{author} suggests"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:145
+#: web/app/components/TextEditor.vue:146
 msgid "{author}, from a suggestion of {via}"
 msgstr ""
 

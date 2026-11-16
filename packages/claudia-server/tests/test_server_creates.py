@@ -113,6 +113,7 @@ def test_the_library_lists_the_shapes_to_insert_and_the_styles(deck):
     assert shapes["library"][0]["aspect"] == 1
     assert [s["id"] for s in call(deck, "styles")] == [
         "body-text",
+        "slide-title",
         "shape-label",
         "plain-shape",
         "plain-box",

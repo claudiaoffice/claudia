@@ -86,25 +86,3 @@ export function slideSearchHost(from: {
   }
 }
 
-/** A piece of the words of an object, and how a search marks it. */
-export interface Piece {
-  text: string
-  found: 'match' | 'current' | null
-}
-
-/** The words cut where the marks begin and end: the pieces joined are the words again. Marks that overlap or lie outside
- *  the words are fitted to them (a stale mark must not break the slide). */
-export function piecesOf(words: string, marks: readonly Pick<SlideMark, 'start' | 'end' | 'current'>[]): Piece[] {
-  const pieces: Piece[] = []
-  let at = 0
-  for (const m of [...marks].sort((a, b) => a.start - b.start)) {
-    const start = Math.max(at, Math.min(m.start, words.length))
-    const end = Math.max(start, Math.min(m.end, words.length))
-    if (end === start) continue
-    if (start > at) pieces.push({ text: words.slice(at, start), found: null })
-    pieces.push({ text: words.slice(start, end), found: m.current ? 'current' : 'match' })
-    at = end
-  }
-  if (at < words.length || pieces.length === 0) pieces.push({ text: words.slice(at), found: null })
-  return pieces
-}

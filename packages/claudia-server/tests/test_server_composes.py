@@ -465,11 +465,33 @@ def test_naming_a_style_ends_the_invitation(paper):
     assert caught.value.code == "command_error" and "already a style named" in caught.value.message
 
 
+def test_a_style_is_given_a_heading_level_and_every_style_says_the_level_it_gives(paper):
+    assert style(paper, "heading-3")["heading"] == 3 and style(paper, "quote")["heading"] is None
+    call(paper, "set_heading_level", {"style": "quote", "level": 2})
+    assert style(paper, "quote")["heading"] == 2
+    call(paper, "set_heading_level", {"style": "heading-1", "level": "body"})
+    assert style(paper, "heading-1")["heading"] is None
+    call(paper, "set_heading_level", {"style": "heading-1", "level": None})
+    assert style(paper, "heading-1")["heading"] is None, "as its parent, body text"
+    for level in (12, "two", 1.5):
+        with pytest.raises(RequestError) as caught:
+            call(paper, "set_heading_level", {"style": "quote", "level": level})
+        assert caught.value.code == "command_error" and "heading level" in caught.value.message
+
+
+def test_a_heading_level_that_does_not_change_is_no_edit(paper):
+    before = paper.revision
+    assert call(paper, "set_heading_level", {"style": "heading-2", "level": 2})["revision"] == (
+        before.to_data() if before else None
+    )
+
+
 def test_viewers_and_the_assistant_as_deployed_do_not_change_styles(paper):
     calls = (
         ("change_style", {"style": "quote", "set": {"color": "red"}}),
         ("deviate_style", {"parent": "quote", "blocks": [], "set": {"color": "red"}}),
         ("rename_style", {"style": "quote", "name": "Cite"}),
+        ("set_heading_level", {"style": "quote", "level": 1}),
     )
     for name, params in calls:
         with pytest.raises(RequestError) as caught:

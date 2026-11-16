@@ -22,7 +22,7 @@ import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
-import { piecesOf, type SlideMark } from '~/lib/slide-search-host'
+import type { SlideMark } from '~/lib/slide-search-host'
 import { renderedView } from '~/lib/rendering'
 
 const { t } = useI18n()
@@ -620,7 +620,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
           </svg>
           <div class="words" :style="textStyle(o)">
             <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">{{ t('Double-click to type') }}</span>
-            <span v-else-if="editing?.id !== o.id" class="text"><template v-for="(piece, i) in piecesOf(wordsOf(o), marksOf(o.id))" :key="i"><span v-if="piece.found" class="found" :class="{ now: piece.found === 'current' }" :data-found="piece.found">{{ piece.text }}</span><template v-else>{{ piece.text }}</template></template></span>
+            <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" />
           </div>
           <textarea
             v-if="editing?.id === o.id"
@@ -719,16 +719,6 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
 }
 .obj.selected {
   cursor: move;
-}
-/* what a search found (E10.19): a band and an underline, never colour alone; the one being looked at has an outline too */
-.found {
-  background: color-mix(in srgb, var(--purpose-input) 55%, transparent);
-  border-bottom: 3px solid var(--app);
-}
-.found.now {
-  outline: 2px solid var(--ink);
-  outline-offset: 1px;
-  background: color-mix(in srgb, var(--purpose-input) 80%, transparent);
 }
 .obj.text.empty:not(.selected) {
   outline: 1px dashed var(--line);

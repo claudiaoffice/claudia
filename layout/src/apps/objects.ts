@@ -19,6 +19,7 @@ import { type FontResolver, parseFamilies, type Resolution } from '../fonts/reso
 import { drawSvg, parseSvg, type SvgDocument, SvgError, svgFonts } from '../svg/render'
 import { boxItems, layoutBox } from '../text/box'
 import { type BoxDecoration, boxDecorationFromCss, type Css, paragraphStyleFromCss, parseColor, type StyleFromCss } from '../text/css'
+import { markerCss } from '../text/list-geometry'
 import { layoutParagraph, type ParagraphOptions } from '../text/paragraph'
 import { paragraphStyle, type ParagraphStyle, type Rgba } from '../text/style'
 
@@ -27,6 +28,9 @@ export interface TextStyle {
   id: string
   based_on: string | null
   resolved: Css
+  /** The heading level the style gives a paragraph, its parents taken in: 0 the title, 1 to 9 a section, null or
+   *  absent none (E9.22). The server works it out; nothing here walks the parents to guess it from a name. */
+  heading?: number | null
 }
 
 /** The page a document prints on, as the server sends it (D904, D917): lengths in mpt, `margins` top, right,
@@ -127,9 +131,11 @@ export class Styles {
   private readonly noted = new Set<string>()
   readonly byId: ReadonlyMap<string, TextStyle>
 
+  private readonly markers = new Map<string, ParagraphStyle>()
+
   constructor(
     styles: readonly TextStyle[],
-    private readonly fonts: FontSet,
+    readonly fonts: FontSet,
     private readonly resolver: FontResolver,
     private readonly language: string | null | undefined,
     readonly fallback: string,
@@ -153,6 +159,18 @@ export class Styles {
       if (parseFamilies(css['font-family'] ?? '').length) this.note(got.font)
       r = got
       this.resolved.set(id, r)
+    }
+    return r
+  }
+
+  /** The paragraph style a list marker of a paragraph in style `id` is drawn in: upright, in the regular weight. */
+  marker(id: string): ParagraphStyle {
+    let r = this.markers.get(id)
+    if (!r) {
+      const got = paragraphStyleFromCss(markerCss(this.css(id)), this.resolver, this.fonts, this.language ? { language: this.language } : {})
+      if (!got) throw new Error('the server has no fonts that can be used for layout')
+      r = got.style
+      this.markers.set(id, r)
     }
     return r
   }
