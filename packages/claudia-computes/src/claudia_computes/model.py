@@ -47,7 +47,7 @@ from .numformats import NumberFormatBook
 from .outcomes import InputCell, OutcomeTable, Summary
 from .pivots import PivotEntry, Pivots
 from .printing import DEFAULT_SHEET_PRINT, SheetPrintSetup, sheet_print_to_data
-from .refs import CellRef, Position, RangeRef, SheetId, StructuralEdit, column_name
+from .refs import CellRef, Position, RangeRef, SheetId, StructuralEdit, column_name, parse_range_ref
 from .spill import Table
 from .sql import column_names, column_type, run_query
 from .styles import builtin_styles
@@ -538,6 +538,50 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         model.language = state.get("language")
         model._calculate_loaded()
         return model
+
+    # -- redaction (D720, D723) -----------------------------------------------------
+    @classmethod
+    def blank_diagram(cls, definition: dict) -> dict:
+        """A chart's definition without its titles: what it reads and how stay, so the chart still draws (D720)."""
+        spec = ChartSpec.from_data(definition)
+        return replace(spec, title="", x_title="", y_title="").to_data()
+
+    def blank(self, parts: frozenset[str] | None) -> None:
+        """Blank what ``parts`` names, for redacting an import (D723), or everything for ``None``: a sheet id empties
+        all its cells, ``<sheet id>!A1:B5`` the cells of that range, a chart tab's id takes its titles, an object's id
+        blanks the object. Sheets, their names, sizes and styles, names of ranges and charts stay, so later steps
+        still find what they refer to. ``ValueError`` for a part the workbook does not have."""
+        if parts is None:
+            for sheet in self.sheets.values():
+                sheet.cells.clear()
+            for chart in self.charts.values():
+                self._blank_chart(chart)
+            self.blank_objects(None)
+            return
+        for part in sorted(parts):
+            self._blank_part(part)
+        self.blank_objects(parts & set(self.objects))
+
+    def _blank_part(self, part: str) -> None:
+        if part in self.sheets:
+            self.sheets[SheetId(part)].cells.clear()
+        elif part in self.charts:
+            self._blank_chart(self.charts[part])
+        elif "!" in part:
+            sheet_id, text = part.split("!", 1)
+            if sheet_id not in self.sheets:
+                raise ValueError(f"the workbook has no sheet {sheet_id!r}")
+            sheet = self.sheets[SheetId(sheet_id)]
+            for position in parse_range_ref(text).cells():
+                sheet.cells.pop(position, None)
+        elif part not in self.objects:
+            raise ValueError(f"the workbook has no sheet, range, chart or object {part!r}")
+
+    def _blank_chart(self, chart: Chart) -> None:
+        if chart.spec_id in self.diagrams:
+            self.diagrams[chart.spec_id] = ChartSpec.from_data(
+                self.blank_diagram(self.diagrams[chart.spec_id].to_data())
+            )
 
     def load_state(self, state: dict) -> None:
         """As :meth:`~claudia_core.DocumentModel.load_state`, and the calculator then works for this workbook."""

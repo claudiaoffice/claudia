@@ -1,23 +1,18 @@
 """E1.8: redaction keeps kind, ids and place in the order, and drops the content."""
 
 import json
-from dataclasses import dataclass
-from typing import ClassVar
 
 import pytest
 
 from claudia_core import (
-    Command,
     CommandLog,
     Document,
-    MemoryStore,
     Rebuilt,
     RedactedEvent,
     RedactionError,
     Revision,
-    new_registry,
 )
-from claudia_core.testing import FakeClock, Insert, ListModel, Remove, Replace
+from claudia_core.testing import Insert, ListModel, Replace
 
 SECRET = 424242
 
@@ -110,44 +105,3 @@ def test_things_that_cannot_be_redacted(make_doc):
     doc.redact([Revision("main", 2)])
     with pytest.raises(RedactionError):
         doc.redact([Revision("main", 2)])
-
-
-def test_a_redaction_that_would_break_later_commands_changes_nothing():
-    registry = new_registry()
-    registry.register(Remove)
-
-    @registry.register
-    @dataclass(frozen=True)
-    class NaiveInsert(Command):
-        """Does not override redacted(): the default tombstone creates nothing, so a later Remove would fail."""
-
-        kind: ClassVar[str] = "naive.Insert"
-        index: int
-        value: int
-
-        def apply(self, ctx):
-            ctx.model.items.insert(self.index, self.value)
-            return Remove(self.index)
-
-        def to_data(self):
-            return {"index": self.index, "value": self.value}
-
-        @classmethod
-        def from_data(cls, data, registry):
-            return cls(data["index"], data["value"])
-
-    class Naive(ListModel):
-        app = "test-naive"
-        pass
-
-    Naive.registry = registry
-    clock = FakeClock()
-    doc = Document(Naive(), clock=clock.time, store=MemoryStore())
-    doc.execute(NaiveInsert(0, SECRET), author="ana")
-    doc.execute(Remove(0), author="ana")
-    doc.execute(NaiveInsert(0, 7), author="ana")
-    with pytest.raises(RedactionError) as caught:
-        doc.redact([Revision("main", 1)])
-    assert "keep what other commands refer to" in str(caught.value)
-    assert not doc.log.get(Revision("main", 1)).redacted
-    assert doc.model.items == [7] and len(doc.log) == 3

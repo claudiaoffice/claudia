@@ -199,6 +199,21 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         )
         return model
 
+    def blank(self, parts: frozenset[str] | None) -> None:
+        """Blank what ``parts`` names, for redacting an import (D723), or everything for ``None``: a slide's id takes
+        its speaker notes and blanks every object on it, an object's id blanks that object. Slides, their names,
+        planned times and every place and size stay. ``ValueError`` for a part the presentation does not have."""
+        slides = set(self.slides)
+        if parts is not None and (unknown := sorted(parts - slides - set(self.objects))):
+            raise ValueError(f"the presentation has no slide or object {unknown[0]!r}")
+        chosen = slides if parts is None else slides & parts
+        self.notes = {slide: text for slide, text in self.notes.items() if slide not in chosen}
+        if parts is None:
+            self.blank_objects(None)
+            return
+        on_slides = {obj.id for slide in chosen for obj in self.objects_on(slide)}
+        self.blank_objects(frozenset(on_slides | (parts & set(self.objects))))
+
     def region_from_data(self, data: dict) -> Region:
         return ObjectSet.from_data(data)
 

@@ -41,6 +41,7 @@ from .shapes import ShapeDefinition
 
 if TYPE_CHECKING:
     from .context import Context
+    from .model import DocumentModel
 
 #: Kinds of object every app understands. A text box carries only words; a shape carries an outline and may carry
 #: words; an image carries an asset; a diagram carries a :class:`DiagramDefinition` (E6.6) — what it draws is
@@ -650,6 +651,35 @@ class ObjectModel[A: Anchor]:
         they take a style back.)"""
         return any(style_id in object_styles(obj.body) for obj in self.objects.values())
 
+    # -- redaction (D720, D723) ---------------------------------------------------
+    @classmethod
+    def blank_diagram(cls, definition: dict) -> dict:
+        """A diagram's definition with what people wrote in it gone and its shape kept (its id, what it reads), for
+        redaction. Only an app that has diagrams knows their content; the default refuses."""
+        from .errors import RedactionError
+
+        raise RedactionError(f"{cls.app} documents cannot blank a diagram")
+
+    def blank_objects(self, parts: frozenset[str] | None) -> None:
+        """Blank the objects whose id is in ``parts`` (all of them for ``None``), in place, for redacting an import
+        (D723): their words become filler of the same length, their description and import record lose what a
+        person wrote, and the pictures, rendered sources and diagrams they show are blanked with them. Ids, places,
+        sizes and styles stay."""
+        chosen = [obj for obj in self.objects.values() if parts is None or obj.id in parts]
+        for obj in chosen:
+            body = obj.body
+            if body.image is not None and body.image in self.images:
+                self.images[body.image] = self.images[body.image].blanked()
+            if body.rendered is not None and body.rendered in self.renderings:
+                rendering = self.renderings[body.rendered]
+                if rendering.image is not None and rendering.image in self.images:
+                    self.images[rendering.image] = self.images[rendering.image].blanked()
+                self.renderings[body.rendered] = rendering.redacted()
+            if body.diagram is not None and body.diagram in self.diagrams:
+                blank = self.blank_diagram(self.diagrams[body.diagram].to_data())
+                self.diagrams[body.diagram] = self.diagram_from_data(blank)
+            self.objects[obj.id] = replace(obj, body=blank_body(body, keep_length=True))
+
     # -- shapes ------------------------------------------------------------------
     def define_shape(self, shape: ShapeDefinition) -> None:
         """Take a shape's outline into the document, so that it opens the same on any server."""
@@ -963,6 +993,33 @@ class ObjectModel[A: Anchor]:
             self._stack.setdefault(obj.container, []).append(obj.id)
 
 
+# --------------------------------------------------------------------------- redaction
+FILLER = "█"
+"""What a redacted character becomes (D720): one block per character, so that every later place in the text holds."""
+
+
+def blank_body(body: ObjectBody, *, keep_length: bool = False) -> ObjectBody:
+    """An object's body with everything a person wrote gone (D720): its words, its description and the words of its
+    import record. A paragraph that exists keeps existing, or the body would no longer be a valid object of its kind;
+    with ``keep_length`` its words become as many :data:`FILLER` characters (what blanking an import needs, since
+    later steps may edit them by place), otherwise it is emptied (what a redacted step that made the object needs)."""
+    paragraph = body.paragraph
+    if paragraph is not None:
+        paragraph = (
+            paragraph.with_text(FILLER * len(paragraph.text), paragraph.runs)
+            if keep_length
+            else (paragraph.with_text("", ()))
+        )
+    imported = None if body.imported is None else body.imported.blanked()
+    return replace(body, paragraph=paragraph, description="", imported=imported)
+
+
+def _object_model(model: type) -> type[ObjectModel]:
+    if not issubclass(model, ObjectModel):
+        raise TypeError(f"The {model.app} model holds no objects")
+    return model
+
+
 # --------------------------------------------------------------------------- the shared commands
 def _host(ctx: Context) -> ObjectModel:
     model = ctx.model
@@ -1114,7 +1171,7 @@ class DefineImage(Command):
         return None if isinstance(other, DefineImage) and other.image.id == self.image.id else self
 
     def redacted(self) -> Command:
-        return self
+        return DefineImage(self.image.blanked())
 
 
 @core_commands.register
@@ -1195,7 +1252,11 @@ class DefineDiagram(Command):
         return None if isinstance(other, DefineDiagram) and other.definition.get("id") == definition_id else self
 
     def redacted(self) -> Command:
+        """Only the app knows what in a diagram is content: see :meth:`redacted_in`."""
         return self
+
+    def redacted_in(self, model: type[DocumentModel]) -> Command:
+        return DefineDiagram(_object_model(model).blank_diagram(self.definition))
 
 
 @core_commands.register
@@ -1240,7 +1301,11 @@ class UpdateDiagram(Command):
         return None if isinstance(other, ForgetDiagram) and other.id == self.id else self
 
     def redacted(self) -> Command:
+        """Only the app knows what in a diagram is content: see :meth:`redacted_in`."""
         return self
+
+    def redacted_in(self, model: type[DocumentModel]) -> Command:
+        return UpdateDiagram(self.id, _object_model(model).blank_diagram(self.definition))
 
 
 @core_commands.register
@@ -1493,10 +1558,7 @@ class AddObject(Command):
         return None if isinstance(other, ForgetImage) and other.id == self.body.image else self
 
     def redacted(self) -> Command:
-        # The object stays, its words go — but a paragraph that exists must keep existing (an empty one), or the
-        # body would no longer be a valid object of its kind.
-        emptied = None if self.body.paragraph is None else self.body.paragraph.with_text("", ())
-        return AddObject(replace(self.body, paragraph=emptied), self.anchor, self.at, self.legacy_names)
+        return AddObject(blank_body(self.body), self.anchor, self.at, self.legacy_names)
 
     def stub(self) -> dict:
         return {"id": self.object_id}

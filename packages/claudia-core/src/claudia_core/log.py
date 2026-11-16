@@ -96,6 +96,10 @@ class CommandLog:
         line = self._lines[branch]
         return line[-1].rev if line else self._branches[branch].fork_point
 
+    def line(self, name: str) -> tuple[Entry, ...]:
+        """The entries that belong to the line ``name`` itself, without those it shares with the line it forked from."""
+        return tuple(self._lines[name])
+
     def has(self, rev: Revision) -> bool:
         """Is there an entry with this revision?"""
         line = self._lines.get(rev.branch)

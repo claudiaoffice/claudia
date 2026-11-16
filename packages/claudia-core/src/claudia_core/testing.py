@@ -108,6 +108,10 @@ class ListModel(DocumentModel):
     def settle(self, ctx: Context) -> None:
         self.settled += 1
 
+    def blank(self, parts: frozenset[str] | None) -> None:
+        """Every item (or the items at the positions in ``parts``, written as numbers) becomes 0."""
+        self.items = [0 if parts is None or str(i) in parts else item for i, item in enumerate(self.items)]
+
     def region_from_data(self, data: dict) -> Region:
         return Interval(data["start"], data["end"])
 
