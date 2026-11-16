@@ -119,7 +119,7 @@ EVENTS = {
     "branch": "the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, "
     "fork_point}. Everything you hold is stale: call snapshot",
     "rebuilt": "the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot",
-    "redacted": "the content of these revisions was removed: {revisions}",
+    "redacted": "the content of these revisions and chat messages was removed: {revisions, chat}; reload the chat with chat_log",
     "thing_renamed": "an object, slide, sheet or chart tab got another name: {id, name} (D550)",
     "stale": "functions the document uses changed: {functions}; results computed by them are out of date",
     "joined": "somebody connected: {id, user, color}",
@@ -702,6 +702,85 @@ def _discard_side_history(ctx):
     if ctx.restore.open_proposal is not None:
         raise RequestError("command_error", msg("there is an open suggestion; answer or withdraw it first"))
     return {"discarded": [rev.to_data() for rev in ctx.document.discard_side_history()]}
+
+
+# ------------------------------------------------------------------------------------------ redaction (E1.8, D726)
+_REDACTION_PARAMS = "revisions:list? chat:list? parts:dict?"
+
+
+def _redaction_request(ctx, revisions, chat, parts) -> dict:
+    """The keyword arguments of ``plan_redaction`` from wire parameters, for an owner; ``forbidden`` for anybody else
+    and ``bad_request`` for parameters of the wrong shape. An owner redacts only chat messages she can read."""
+    if ctx.account.role != "owner" or ctx.account.system:
+        raise RequestError("forbidden", msg("only the owner of a document redacts its history"))
+    try:
+        steps = [Revision.parse(text) for text in revisions or ()]
+        wanted = {Revision.parse(rev): [str(thing) for thing in things] for rev, things in (parts or {}).items()}
+        numbers = [int(number) for number in chat or ()]
+    except (ValueError, TypeError, AttributeError):
+        raise RequestError(
+            "bad_request", msg('redaction: revisions like "main:12", chat numbers, parts by revision')
+        ) from None
+    me = ctx.user.casefold()
+    readable = {r.number for r in ctx.document.chat if not r.to or me in (r.author.casefold(), r.to.casefold())}
+    if not set(numbers) <= readable:
+        raise RequestError("command_error", msg("there is no chat message of that number for you"))
+    return {"revisions": steps, "chat": numbers, "parts": wanted}
+
+
+def _planned(ctx, revisions, chat, parts):
+    try:
+        return ctx.document.plan_redaction(**_redaction_request(ctx, revisions, chat, parts))
+    except KernelError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+
+
+@core_methods.method("redaction_plan", _REDACTION_PARAMS + " state:bool=true")
+def _redaction_plan(ctx, revisions, chat, parts, state):
+    """Owners only: what redacting these steps (`revisions`, on any line) and chat messages (`chat`, by number) would
+    do, without doing it (D721). `parts` blanks only some things of an imported document:
+    `{"main:1": ["b4", "s1!A1:B9", "t2"]}` (paragraph, sheet or range, slide, object).
+
+    Returns `{targets, dependents, chat, imports, changes_now, steps, app, state_schema, state}`: `dependents` are later
+    steps that stop working without the content and are blanked with it (D722), `imports` the targets whose kept
+    original goes too, `steps` every step that is blanked as `log` gives it, `state` the document as it will look (left
+    out when `state` is false). Nothing changes. `command_error` for something the document does not have, or that
+    cannot be redacted."""
+    plan = _planned(ctx, revisions, chat, parts)
+    out = {
+        "targets": [rev.to_data() for rev in plan.targets],
+        "dependents": [rev.to_data() for rev in plan.dependents],
+        "chat": list(plan.chat),
+        "imports": [rev.to_data() for rev in plan.imports],
+        "changes_now": plan.changes_now,
+        "steps": [_entry_view(ctx.document.log.get(rev)) for rev in plan.revisions],
+        "app": plan.after.app,
+    }
+    if state:
+        out["state_schema"] = plan.after.state_schema
+        out["state"] = plan.after.serialize()
+    return out
+
+
+@core_methods.method("redact", _REDACTION_PARAMS + " dependents:list", write=True)
+def _redact(ctx, revisions, chat, parts, dependents):
+    """Owners only: carry out the redaction `redaction_plan` showed (D229). `dependents` repeats the dependents the plan
+    named, as the confirmation that they were shown: if the plan now names others (somebody worked in between),
+    nothing happens and the error is `command_error`. The content goes from the document, its history and its file
+    (D725); everybody gets `redacted` (and `rebuilt` when steps were blanked). Returns `{revision}` of the record.
+    `command_error` while a suggestion to restore is open."""
+    if ctx.restore.open_proposal is not None and ctx.account.role == "owner":
+        raise RequestError("command_error", msg("there is an open suggestion; answer or withdraw it first"))
+    plan = _planned(ctx, revisions, chat, parts)
+    if [rev.to_data() for rev in plan.dependents] != list(dependents):
+        raise RequestError(
+            "command_error", msg("the redaction would now blank other steps than you were shown; look at it again")
+        )
+    try:
+        applied = ctx.document.redact(plan, author=ctx.user)
+    except KernelError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+    return {"revision": applied.revision.to_data()}
 
 
 @core_methods.method("withdraw_restore", write=True)
