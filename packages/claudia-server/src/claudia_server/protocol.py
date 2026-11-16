@@ -119,7 +119,7 @@ EVENTS = {
     "branch": "the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, "
     "fork_point}. Everything you hold is stale: call snapshot",
     "rebuilt": "the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot",
-    "redacted": "the content of these revisions and chat messages was removed: {revisions, chat}; reload the chat with chat_log",
+    "redacted": "the content of these revisions and chat messages was removed: {revisions, chat}; reload chat_log",
     "thing_renamed": "an object, slide, sheet or chart tab got another name: {id, name} (D550)",
     "stale": "functions the document uses changed: {functions}; results computed by them are out of date",
     "joined": "somebody connected: {id, user, color}",

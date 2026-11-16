@@ -658,7 +658,7 @@ class ObjectModel[A: Anchor]:
         redaction. Only an app that has diagrams knows their content; the default refuses."""
         from .errors import RedactionError
 
-        raise RedactionError(f"{cls.app} documents cannot blank a diagram")
+        raise RedactionError(f"{getattr(cls, 'app', cls.__name__)} documents cannot blank a diagram")
 
     def blank_objects(self, parts: frozenset[str] | None) -> None:
         """Blank the objects whose id is in ``parts`` (all of them for ``None``), in place, for redacting an import
@@ -1014,7 +1014,7 @@ def blank_body(body: ObjectBody, *, keep_length: bool = False) -> ObjectBody:
     return replace(body, paragraph=paragraph, description="", imported=imported)
 
 
-def _object_model(model: type) -> type[ObjectModel]:
+def _object_model(model: type[DocumentModel]) -> type[ObjectModel]:
     if not issubclass(model, ObjectModel):
         raise TypeError(f"The {model.app} model holds no objects")
     return model

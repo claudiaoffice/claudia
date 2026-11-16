@@ -43,3 +43,17 @@ def test_a_part_the_text_does_not_have_is_named():
     with pytest.raises(RedactionError) as caught:
         doc.plan_redaction([Revision("main", 1)], parts={Revision("main", 1): ["b9"]})
     assert "b9" in str(caught.value)
+
+
+def test_a_suggestion_on_a_blanked_paragraph_loses_its_words_and_its_reason():
+    from claudia_composes.model import Suggestion
+    from claudia_composes.region import TextRange
+
+    model = TextModel.empty()
+    model.blocks = [model.blocks[0].with_text("Our pin is 4711", model.blocks[0].runs)]
+    model.suggestions["s1"] = Suggestion("s1", "ben", TextRange("b1", 11, 15), "4711", "0815", "the new one")
+    model.suggestions["s2"] = Suggestion("s2", "ben", TextRange("b1", 0, 3), "Our", None, "a remark")
+    model.blank(None)
+    first, second = model.suggestions["s1"], model.suggestions["s2"]
+    assert (first.original, first.replacement, first.reason) == (FILLER * 4, FILLER * 4, "")
+    assert (second.original, second.replacement) == (FILLER * 3, None)

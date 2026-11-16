@@ -34,7 +34,7 @@ statement in the docs or on the website).
 | SEC-02 | P2 | Security | Anyone who reaches the server can create unlimited documents | fixed (verified at `54d1245`) |
 | SEC-03 | P2 | Security / Perf | Password hashing runs on the event loop | fixed (verified at `54d1245`) |
 | SEC-04 | P2 | Security | Answer time reveals whether a document exists | fixed (verified at `54d1245`) |
-| SEC-05 | P2 | Security | Redaction leaves the content in the journal and in packed blocks | verified open |
+| SEC-05 | P2 | Security | Redaction leaves the content in the journal and in packed blocks | **fixed** 2026-11-16 (D725) |
 | SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |
 | SEC-07 | P2 | Security | Plain-text passwords allowed on non-loopback addresses | fixed (verified at `54d1245`) |
 | SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` open (run by hand 2026-11-13: clean) |
@@ -195,7 +195,7 @@ limit (2.5–5 logins per second), not a correctness problem, and it is the reas
 Verified at `54d1245`: `Gateway._admit` runs the same `_verify` on the not-found path before refusing. The guarding
 test is a timing comparison and is known to be flaky on a loaded machine; see PROC note in CODE-01.
 
-### SEC-05 · Redaction leaves the content in the journal and in packed blocks · P2 · verified open
+### SEC-05 · Redaction leaves the content in the journal and in packed blocks · P2 · fixed 2026-11-16
 **Evidence (read, `54d1245`).** `claudia_container.container` has no `redact`. The journal is append-only and packing
 writes blocks; neither rewrites history to remove a redacted command. The kernel's `Document.redact` changes the live
 state and the log it replays, but the bytes stay in the file.
@@ -206,6 +206,14 @@ becomes P1 the day redaction is exposed or the website's privacy claim (WEB-01) 
 file, fsync, rename, directory fsync), drop the snapshot, rebuild. Also state plainly in the help text that copies and
 backups made earlier keep the content.
 **Acceptance.** After `redact`, a byte scan of every file under the document folder finds none of the redacted text.
+**Fixed (2026-11-16, branch `redaction`, D725).** `Document.redact` calls `DocumentStore.rewrite(log, chat)` instead of
+appending a `replace` record. The sealed store seals the blocks anew from the redacted history and chat alone, drops the
+snapshot and replaces the journal (`claudia_container.rewrite_journal`, same crash order as packing); a redacted import
+also loses its kept original (`forget_original`). The plain journal store writes its journal anew, all at once. Tests
+open every block, the snapshot and every journal record with the keys and find nothing of the redacted content, also
+after a crash between the file and the journal (`packages/claudia-container/tests/test_rewriting.py`,
+`packages/claudia-server/tests/test_server_redaction_stores.py`). Still true and now said in D725: copies and backups
+made earlier keep the content, and what a disk keeps of overwritten sectors is outside Claudia's reach.
 
 ### SEC-06 · The server's self-signed certificate is a CA with no name constraints · P2 · verified open
 **Evidence (read, `54d1245`).** `certs.py` line 100: `BasicConstraints(ca=True, path_length=0)`, critical, with

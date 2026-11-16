@@ -1,5 +1,5 @@
 {
- "version": "0.7.0",
+ "version": "0.8.0",
  "ContainerError": {
   "class": [
    "Exception"
@@ -219,6 +219,9 @@
  "derive_recovery_material": {
   "function": "(recovery_key: bytes) -> claudia_container.crypto.LoginMaterial"
  },
+ "forget_original": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> None"
+ },
  "format_recovery_key": {
   "function": "(key: bytes) -> str"
  },
@@ -293,6 +296,9 @@
  },
  "require_strong_password": {
   "function": "(password: str) -> None"
+ },
+ "rewrite_journal": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], writer: claudia_container.journal.JournalWriter, *, history: collections.abc.Sequence[bytes], chat: collections.abc.Sequence[bytes], snapshot: bytes | None = None) -> claudia_container.journal.JournalWriter"
  },
  "seal": {
   "function": "(key: bytes, plaintext: bytes, aad: bytes) -> bytes"

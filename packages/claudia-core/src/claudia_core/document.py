@@ -124,7 +124,7 @@ class RedactionPlan:
 
     @property
     def revisions(self) -> tuple[Revision, ...]:
-        """Every step that is blanked: the targets and their dependents, in order."""
+        """The steps that are blanked, the targets and their dependents together, in order."""
         return tuple(sorted({*self.targets, *self.dependents}, key=lambda r: (r.branch, r.seq)))
 
 

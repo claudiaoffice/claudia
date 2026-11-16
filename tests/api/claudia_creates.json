@@ -1,5 +1,5 @@
 {
- "version": "0.13.0",
+ "version": "0.14.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -531,6 +531,7 @@
   "init": "(styles: 'StyleBook | None' = None, palette: 'Palette | None' = None, print_setup: 'PrintSetup | None' = None, language: 'str | None' = None) -> 'None'",
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'SlideAnchor'",
+   "blank": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "check_anchor": "(self, anchor: 'SlideAnchor', body: 'ObjectBody') -> 'None'",
    "containers": "(self) -> 'list[str]'",
    "delete_slide": "(self, slide: 'str') -> 'int'",

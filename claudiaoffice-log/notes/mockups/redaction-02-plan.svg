@@ -1,0 +1,309 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-label="Redaction 2: the dialog shows what goes, what goes with it, and the document as it will be"><title>Redaction 2: the dialog shows what goes, what goes with it, and the document as it will be</title><desc>Dialog over a computes window; the window behind shows the preview with D8 blanked.</desc><defs><filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#1F1A33" flood-opacity="0.25"/></filter><filter id="sh2" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#1F1A33" flood-opacity="0.16"/></filter><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#B8B2C6" stroke-width="2"/></pattern></defs>
+<rect x="0" y="0" width="1280" height="48" rx="0" fill="#F7F3EC" />
+<line x1="0" y1="48" x2="1280" y2="48" stroke="#DAD4C8" stroke-width="1"/>
+<text x="18" y="29" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">File</text>
+<path d="M51.6,26.25 L55.1,29.75 L58.6,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="73.6" y="29" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Edit</text>
+<path d="M107.19999999999999,26.25 L110.69999999999999,29.75 L114.19999999999999,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="129.2" y="29" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">View</text>
+<path d="M162.79999999999998,26.25 L166.29999999999998,29.75 L169.79999999999998,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="184.79999999999998" y="29" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Format</text>
+<path d="M233.2,26.25 L236.7,29.75 L240.2,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="255.2" y="29" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Tools</text>
+<path d="M296.2,26.25 L299.7,29.75 L303.2,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="318.2" y="29" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#1F1A33" text-anchor="start">Help</text>
+<path d="M351.8,26.25 L355.3,29.75 L358.8,26.25" fill="none" stroke="#6B6580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="560" cy="24" r="11" fill="#1F8A83"/>
+<text x="560" y="28.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">c</text>
+<text x="580" y="22" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F1A33" text-anchor="start">Payments 2027</text>
+<text x="580" y="36" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="400" fill="#6B6580" text-anchor="start">computes · demo.claudia-office.de</text>
+<rect x="790" y="13" width="120" height="22" rx="11" fill="#5B4BC4" />
+<text x="850" y="28" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="600" fill="#FFFFFF" text-anchor="middle">Preview</text>
+<circle cx="1008" cy="24" r="11" fill="#2F6FD6"/>
+<text x="1008" y="28" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">A</text>
+<circle cx="1030" cy="24" r="11" fill="#C2483A"/>
+<text x="1030" y="28" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">B</text>
+<circle cx="1052" cy="24" r="11" fill="#5B4BC4"/>
+<text x="1052" y="28" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">ai</text>
+<circle cx="1120" cy="24" r="4" fill="#2F9E6B"/>
+<text x="1131" y="28" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#6B6580" text-anchor="start">Connected</text>
+<text x="1262" y="29" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="400" fill="#6B6580" text-anchor="middle">×</text>
+<rect x="0" y="49" width="900" height="46" rx="0" fill="#F7F3EC" />
+<rect x="16" y="57" width="126" height="28" rx="6" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="28" y="75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#6B6580" text-anchor="start">Style: Body</text>
+<rect x="152" y="57" width="126" height="28" rx="6" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="164" y="75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#6B6580" text-anchor="start">Number: #,##0.00</text>
+<rect x="288" y="57" width="126" height="28" rx="6" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="300" y="75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#6B6580" text-anchor="start">Σ Sum</text>
+<rect x="424" y="57" width="126" height="28" rx="6" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="436" y="75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#6B6580" text-anchor="start">Insert chart</text>
+<rect x="0" y="96" width="900" height="28" rx="0" fill="#FFFFFF" />
+<rect x="12" y="100" width="92" height="22" rx="5" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="22" y="115" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="start">D8</text>
+<text x="120" y="115" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#6B6580" text-anchor="start" font-style="italic">fx</text>
+<rect x="144" y="100" width="746" height="22" rx="5" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="154" y="115" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#9A93AE" text-anchor="start">█████████████</text>
+<rect x="0" y="128" width="900" height="24" rx="0" fill="#F3F0EA" />
+<text x="125.0" y="144" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle">A</text>
+<text x="270.0" y="144" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle">B</text>
+<text x="385.0" y="144" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle">C</text>
+<text x="540.0" y="144" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle">D</text>
+<text x="705.0" y="144" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle">E</text>
+<text x="835.0" y="144" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="middle">F</text>
+<rect x="0" y="152" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="170" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">1</text>
+<line x1="0" y1="180" x2="900" y2="180" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="180" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="198" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">2</text>
+<line x1="0" y1="208" x2="900" y2="208" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="208" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="226" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">3</text>
+<line x1="0" y1="236" x2="900" y2="236" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="236" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="254" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">4</text>
+<line x1="0" y1="264" x2="900" y2="264" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="264" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="282" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">5</text>
+<line x1="0" y1="292" x2="900" y2="292" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="292" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="310" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">6</text>
+<line x1="0" y1="320" x2="900" y2="320" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="320" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="338" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">7</text>
+<line x1="0" y1="348" x2="900" y2="348" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="348" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="366" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">8</text>
+<line x1="0" y1="376" x2="900" y2="376" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="376" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="394" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">9</text>
+<line x1="0" y1="404" x2="900" y2="404" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="404" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="422" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">10</text>
+<line x1="0" y1="432" x2="900" y2="432" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="432" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="450" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">11</text>
+<line x1="0" y1="460" x2="900" y2="460" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="460" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="478" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">12</text>
+<line x1="0" y1="488" x2="900" y2="488" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="488" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="506" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">13</text>
+<line x1="0" y1="516" x2="900" y2="516" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="516" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="534" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">14</text>
+<line x1="0" y1="544" x2="900" y2="544" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="544" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="562" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">15</text>
+<line x1="0" y1="572" x2="900" y2="572" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="572" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="590" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">16</text>
+<line x1="0" y1="600" x2="900" y2="600" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="600" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="618" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">17</text>
+<line x1="0" y1="628" x2="900" y2="628" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="628" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="646" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">18</text>
+<line x1="0" y1="656" x2="900" y2="656" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="0" y="656" width="40" height="28" rx="0" fill="#F3F0EA" />
+<text x="20.0" y="674" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="middle">19</text>
+<line x1="0" y1="684" x2="900" y2="684" stroke="#ECE8E0" stroke-width="1"/>
+<line x1="40" y1="128" x2="40" y2="684" stroke="#ECE8E0" stroke-width="1"/>
+<line x1="210" y1="128" x2="210" y2="684" stroke="#ECE8E0" stroke-width="1"/>
+<line x1="330" y1="128" x2="330" y2="684" stroke="#ECE8E0" stroke-width="1"/>
+<line x1="440" y1="128" x2="440" y2="684" stroke="#ECE8E0" stroke-width="1"/>
+<line x1="640" y1="128" x2="640" y2="684" stroke="#ECE8E0" stroke-width="1"/>
+<line x1="770" y1="128" x2="770" y2="684" stroke="#ECE8E0" stroke-width="1"/>
+<line x1="900" y1="128" x2="900" y2="684" stroke="#ECE8E0" stroke-width="1"/>
+<rect x="440" y="348" width="200" height="28" rx="0" fill="#FBE7C6" />
+<text x="48" y="170" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start">Payee</text>
+<text x="322" y="170" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="end">Amount</text>
+<text x="338" y="170" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start">Due</text>
+<text x="448" y="170" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start">Notes</text>
+<text x="648" y="170" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start">Status</text>
+<text x="48" y="198" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Stadtwerke</text>
+<text x="322" y="198" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="end">1,240.00</text>
+<text x="338" y="198" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">02 Dec</text>
+<text x="648" y="198" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">paid</text>
+<text x="48" y="226" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Hosting GmbH</text>
+<text x="322" y="226" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="end">310.00</text>
+<text x="338" y="226" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">05 Dec</text>
+<text x="648" y="226" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">paid</text>
+<text x="48" y="254" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Print &amp; Co</text>
+<text x="322" y="254" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="end">880.50</text>
+<text x="338" y="254" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">09 Dec</text>
+<text x="648" y="254" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">open</text>
+<text x="48" y="282" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Insurance</text>
+<text x="322" y="282" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="end">2,115.00</text>
+<text x="338" y="282" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">15 Dec</text>
+<text x="448" y="282" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">yearly</text>
+<text x="648" y="282" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">open</text>
+<text x="48" y="310" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Office rent</text>
+<text x="322" y="310" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="end">3,400.00</text>
+<text x="338" y="310" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">01 Dec</text>
+<text x="648" y="310" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">paid</text>
+<text x="48" y="338" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Travel</text>
+<text x="322" y="338" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="end">455.20</text>
+<text x="338" y="338" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">12 Dec</text>
+<text x="648" y="338" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">open</text>
+<text x="48" y="366" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Bank transfer</text>
+<text x="322" y="366" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="end">12,000.00</text>
+<text x="338" y="366" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">18 Dec</text>
+<text x="448" y="366" font-family="'JetBrains Mono', Menlo, monospace" font-size="12.5" font-weight="400" fill="#9A93AE" text-anchor="start">█████████████</text>
+<text x="648" y="366" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">open</text>
+<text x="48" y="394" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="start">Total</text>
+<text x="322" y="394" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="end">20,400.70</text>
+<rect x="440" y="348" width="200" height="28" rx="0" fill="none" stroke="#2F6FD6" stroke-width="2" />
+<rect x="0" y="740" width="900" height="34" rx="0" fill="#F7F3EC" />
+<line x1="0" y1="740" x2="900" y2="740" stroke="#DAD4C8" stroke-width="1"/>
+<rect x="12" y="744" width="100" height="28" rx="4" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="62" y="763" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1F1A33" text-anchor="middle">Payments</text>
+<rect x="0" y="774" width="900" height="26" rx="0" fill="#F3F0EA" />
+<rect x="1" y="49" width="898" height="690" rx="0" fill="none" stroke="#5B4BC4" stroke-width="3" />
+<rect x="900" y="48" width="380" height="752" rx="0" fill="#F7F3EC" />
+<line x1="900" y1="48" x2="900" y2="800" stroke="#DAD4C8" stroke-width="1"/>
+<circle cx="924" cy="70" r="11" fill="#5B4BC4"/>
+<text x="924" y="74" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">ai</text>
+<text x="942" y="75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="start">AI</text>
+<rect x="1100" y="56" width="165" height="28" rx="7" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<rect x="1103" y="59" width="78" height="22" rx="5" fill="#E7E1F4" />
+<text x="1142" y="74" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="600" fill="#5B4BC4" text-anchor="middle">Suggest</text>
+<text x="1223" y="74" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#6B6580" text-anchor="middle">Act</text>
+<text x="916" y="116" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F1A33" text-anchor="start">History &amp; Chat</text>
+<line x1="916" y1="124" x2="1022" y2="124" stroke="#5B4BC4" stroke-width="2"/>
+<text x="1068" y="116" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="500" fill="#6B6580" text-anchor="start">Help</text>
+<line x1="900" y1="126" x2="1280" y2="126" stroke="#DAD4C8" stroke-width="1"/>
+<rect x="916" y="138" width="36" height="24" rx="12" fill="#5B4BC4" />
+<text x="934.0" y="154" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="600" fill="#FFFFFF" text-anchor="middle">All</text>
+<rect x="958" y="138" width="96" height="24" rx="12" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="1006.0" y="154" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="middle">Conversation</text>
+<rect x="1060" y="138" width="72" height="24" rx="12" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="1096.0" y="154" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="500" fill="#1F1A33" text-anchor="middle">Changes</text>
+<line x1="921" y1="180" x2="921" y2="700" stroke="#CFC8E2" stroke-width="2" stroke-dasharray="2 4"/>
+<circle cx="938" cy="194" r="4" fill="#2F6FD6"/>
+<text x="950" y="198" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="600" fill="#2F6FD6" text-anchor="start">ana</text>
+<text x="982" y="198" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start">6 changes in A2:E7</text>
+<text x="1254" y="198" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end">15:58</text>
+<text x="932" y="230" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#C2483A" text-anchor="start">bob</text>
+<text x="1254" y="230" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end">16:12</text>
+<rect x="932" y="237" width="322" height="33" rx="9" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="945" y="256" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Q3 payments are in, see row 8.</text>
+<rect x="924" y="278" width="338" height="26" rx="6" fill="#E7E1F4" />
+<line x1="924" y1="278" x2="924" y2="304" stroke="#5B4BC4" stroke-width="3"/>
+<circle cx="938" cy="291" r="4" fill="#C2483A"/>
+<text x="950" y="295" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="600" fill="#C2483A" text-anchor="start">bob</text>
+<text x="982" y="295" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start">D8 = PIN 4711-0815</text>
+<text x="1254" y="295" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end">16:40</text>
+<rect x="924" y="308" width="338" height="26" rx="6" fill="#E7E1F4" />
+<line x1="924" y1="308" x2="924" y2="334" stroke="#5B4BC4" stroke-width="3"/>
+<circle cx="938" cy="321" r="4" fill="#C2483A"/>
+<text x="950" y="325" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="600" fill="#C2483A" text-anchor="start">bob</text>
+<text x="982" y="325" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start">name PIN_4711_0815 = D8</text>
+<text x="1254" y="325" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end">16:41</text>
+<rect x="924" y="339" width="338" height="78" rx="8" fill="#E7E1F4" />
+<line x1="924" y1="339" x2="924" y2="417" stroke="#5B4BC4" stroke-width="3"/>
+<text x="932" y="353" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#C2483A" text-anchor="start">bob</text>
+<text x="1254" y="353" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end">16:42</text>
+<rect x="932" y="360" width="322" height="52" rx="9" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="945" y="379" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">@ana bank PIN for the transfer:</text>
+<text x="945" y="398" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">4711-0815</text>
+<circle cx="938" cy="433" r="4" fill="#2F6FD6"/>
+<text x="950" y="437" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="600" fill="#2F6FD6" text-anchor="start">ana</text>
+<text x="982" y="437" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start">rename PIN_4711_0815 → BankPIN</text>
+<text x="1254" y="437" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end">16:47</text>
+<text x="932" y="465" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#2F6FD6" text-anchor="start">ana</text>
+<text x="1254" y="465" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end">16:48</text>
+<rect x="932" y="472" width="322" height="33" rx="9" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="945" y="491" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">@bob please never put the PIN here.</text>
+<circle cx="938" cy="526" r="4" fill="#5B4BC4"/>
+<text x="950" y="530" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="600" fill="#5B4BC4" text-anchor="start">ai</text>
+<text x="974" y="530" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#6B6580" text-anchor="start">C10 = SUM(C2:C8)</text>
+<text x="1254" y="530" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="end">16:50</text>
+<circle cx="921" cy="556" r="4" fill="#2F9E6B"/>
+<text x="936" y="560" font-family="'JetBrains Mono', Menlo, monospace" font-size="11.5" font-weight="600" fill="#2F9E6B" text-anchor="start">now</text>
+<rect x="914" y="700" width="352" height="88" rx="10" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="930" y="726" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9A93AE" text-anchor="start">Message — @name to mention, # to reference</text>
+<circle cx="1240" cy="764" r="13" fill="#5B4BC4"/>
+<path d="M1234,764 L1246,764 M1241,759 L1246,764 L1241,769" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="900" y="49" width="380" height="751" rx="0" fill="#1F1A3366" />
+<rect x="0" y="742" width="900" height="58" rx="0" fill="#E7E1F4" />
+<text x="18" y="766" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#5B4BC4" text-anchor="start">Preview of the document after the redaction · nothing has changed yet</text>
+<text x="18" y="786" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start">D8 turns into ████ · the name BankPIN goes · everything else stays as it is</text>
+<rect x="652" y="62" width="612" height="676" rx="14" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" filter="url(#sh)"/>
+<text x="680" y="104" font-family="Fraunces, Georgia, serif" font-size="20" font-weight="600" fill="#1F1A33" text-anchor="start">Redact 4 items for good</text>
+<rect x="680" y="118" width="330" height="24" rx="12" fill="#1F1A33" />
+<circle cx="696" cy="130" r="4" fill="#2F9E6B"/>
+<text x="708" y="134" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#F7F3EC" text-anchor="start">Payments 2027 · demo.claudia-office.de</text>
+<text x="1238" y="100" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#6B6580" text-anchor="end">×</text>
+<text x="680" y="174" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F1A33" text-anchor="start">What you picked</text>
+<text x="1236" y="174" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="500" fill="#6B6580" text-anchor="end">becomes</text>
+<rect x="680" y="192" width="16" height="16" rx="4" fill="#5B4BC4" />
+<path d="M684,200.5 L687,203.5 L692.5,197" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="714" cy="200" r="9" fill="#C2483A"/>
+<text x="714" y="204" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">B</text>
+<text x="730" y="204" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start">D8 = PIN 4711-0815</text>
+<text x="1012" y="204" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="start">16:40</text>
+<text x="1236" y="204" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#9A93AE" text-anchor="end">D8 = █████████</text>
+<rect x="680" y="222" width="16" height="16" rx="4" fill="#5B4BC4" />
+<path d="M684,230.5 L687,233.5 L692.5,227" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="714" cy="230" r="9" fill="#C2483A"/>
+<text x="714" y="234" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">B</text>
+<text x="730" y="234" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start">name PIN_4711_0815 = D8</text>
+<text x="1012" y="234" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="start">16:41</text>
+<text x="1236" y="234" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#9A93AE" text-anchor="end">name █████████</text>
+<rect x="680" y="252" width="16" height="16" rx="4" fill="#5B4BC4" />
+<path d="M684,260.5 L687,263.5 L692.5,257" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="714" cy="260" r="9" fill="#C2483A"/>
+<text x="714" y="264" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">B</text>
+<text x="730" y="264" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start">chat: @ana bank PIN for th…</text>
+<text x="1012" y="264" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="start">16:42</text>
+<text x="1236" y="264" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#9A93AE" text-anchor="end">(no words)</text>
+<rect x="672" y="306" width="572" height="92" rx="10" fill="#FFF4E3" stroke="#F2C98F" stroke-width="1" />
+<text x="688" y="330" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#8A4B00" text-anchor="start">Goes with it, because it needs what you picked</text>
+<rect x="688" y="342" width="16" height="16" rx="4" fill="#F2C98F" />
+<path d="M692,350.5 L695,353.5 L700.5,347" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="722" cy="350" r="9" fill="#2F6FD6"/>
+<text x="722" y="354" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">A</text>
+<text x="738" y="354" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#1F1A33" text-anchor="start">rename PIN_4711_0815 → BankPIN</text>
+<text x="1012" y="354" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B6580" text-anchor="start">16:47</text>
+<text x="1228" y="354" font-family="'JetBrains Mono', Menlo, monospace" font-size="12" font-weight="400" fill="#9A93AE" text-anchor="end">rename ████████</text>
+<text x="688" y="382" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#5C3A0C" text-anchor="start">Without the name it renames, ana&#x27;s step no longer works. Her other work stays.</text>
+<text x="680" y="428" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" font-weight="600" fill="#1F1A33" text-anchor="start">What this means</text>
+<circle cx="686" cy="452" r="3" fill="#C01C28"/>
+<text x="698" y="456" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#C01C28" text-anchor="start">Nobody can bring it back: not you, not the server, not undo.</text>
+<circle cx="686" cy="476" r="3" fill="#1F1A33"/>
+<text x="698" y="480" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">The document changes now: D8 shows ████, the name BankPIN goes.</text>
+<circle cx="686" cy="500" r="3" fill="#1F1A33"/>
+<text x="698" y="504" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Everybody sees that you redacted 4 items and when, never what</text>
+<text x="698" y="528" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">they held. How long each was stays visible.</text>
+<circle cx="686" cy="548" r="3" fill="#1F1A33"/>
+<text x="698" y="552" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Copies, downloads, exports and backups made before keep it.</text>
+<rect x="680" y="576" width="16" height="16" rx="4" fill="#FFFFFF" stroke="#B8B2C6" stroke-width="1" />
+<text x="706" y="589" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Also tell bob and ana in the chat, and why:</text>
+<rect x="706" y="600" width="530" height="30" rx="6" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="716" y="620" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9A93AE" text-anchor="start">A bank PIN was in the sheet. It is gone now.</text>
+<line x1="652" y1="668" x2="1264" y2="668" stroke="#DAD4C8" stroke-width="1"/>
+<rect x="876" y="686" width="116" height="36" rx="8" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
+<text x="914.75" y="708.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="middle">Cancel</text>
+<rect x="953.5" y="694.0" width="28.5" height="20" rx="4" fill="#E7E1F4" />
+<text x="967.75" y="708.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#1F1A33" text-anchor="middle">Esc</text>
+<rect x="1002" y="686" width="234" height="36" rx="8" fill="#C01C28" />
+<text x="1077.0" y="708.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">Redact 4 items</text>
+<rect x="1152.0" y="694.0" width="74.0" height="20" rx="4" fill="#FFFFFF33" />
+<text x="1189.0" y="708.0" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#FFFFFF" text-anchor="middle">Ctrl+Enter</text>
+<text x="680" y="709" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6B6580" text-anchor="start">You are an owner.</text>
+<circle cx="640" cy="218" r="10" fill="#5B4BC4"/>
+<text x="640" y="222" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+<circle cx="640" cy="352" r="10" fill="#F2A057"/>
+<text x="640" y="356" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+<circle cx="640" cy="482" r="10" fill="#5B4BC4"/>
+<text x="640" y="486" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+<rect x="16" y="470" width="560" height="146" rx="8" fill="#FFFDF7" stroke="#5B4BC4" stroke-width="1.5" stroke-dasharray="5 3"/>
+<text x="28" y="492" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#5B4BC4" text-anchor="start">1  Unticking an item takes it out and works the plan out again;</text>
+<text x="28" y="508" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">     the list, the amber box and the preview follow at once.</text>
+<text x="28" y="524" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">2  The later steps that would break are named before anything happens</text>
+<text x="28" y="540" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">     (D722). They cannot be unticked: leave out what they need instead.</text>
+<text x="28" y="556" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">3  The facts in words, in the danger-zone way of the server pages:</text>
+<text x="28" y="572" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">     the button names the scope, there is no &quot;OK&quot;.</text>
+<text x="28" y="588" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">If somebody works on the document while the dialog is open and the</text>
+<text x="28" y="604" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">plan changes, the dialog says so and shows the new plan (D726).</text>
+</svg>
