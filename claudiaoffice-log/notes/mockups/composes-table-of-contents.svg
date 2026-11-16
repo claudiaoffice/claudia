@@ -1,0 +1,278 @@
+<svg viewBox="0 0 1464 1740" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+<rect x="0" y="0" width="1464" height="1740" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia composes — the table of contents</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Proposal for review — nothing is built (E9.31). A generated paragraph that stores only its options; its entries are derived from the headings, so there is nothing to update.</text>
+<rect x="40" y="96" width="1384" height="552" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">A · In Flow view</text>
+<text x="62" y="144" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Insert ▸ Table of Contents (Ctrl+Shift+Alt+I) put a “Contents” paragraph and the table at the caret, as one step. The pointer is over the table.</text>
+<rect x="62" y="150" width="870" height="478" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<circle cx="80" cy="167" r="6" fill="#d6477a"/>
+<text x="106" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">File</text>
+<text x="155.6" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Edit</text>
+<text x="205.2" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Insert</text>
+<text x="269.6" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Format</text>
+<text x="334.0" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">View</text>
+<text x="383.6" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Tools</text>
+<text x="440.6" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Config</text>
+<text x="505.0" y="172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Help</text>
+<line x1="62" y1="186" x2="932" y2="186" stroke="#e3dfee" stroke-width="1"/>
+<rect x="78" y="194" width="170" height="30" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="88" y="213.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Body text</text>
+<text x="236" y="213.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end">▾</text>
+<text x="266" y="214" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Look…</text>
+<rect x="800" y="196" width="120.24000000000001" height="28" rx="8" fill="#efecf6"/>
+<rect x="803" y="199" width="57.120000000000005" height="22" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="831.56" y="214.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="middle">Flow</text>
+<text x="888.6800000000001" y="214.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#6e6880" text-anchor="middle">Page</text>
+<rect x="63" y="230" width="868" height="397" rx="0" fill="#f7f4ee"/>
+<rect x="122" y="230" width="740" height="397" rx="0" fill="#ffffff"/>
+<text x="214" y="274" font-family="Fraunces, Georgia, serif" font-size="26" font-weight="500" fill="#1f1a33" text-anchor="start">School gardens: a pilot</text>
+<text x="214" y="316" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="500" fill="#1f1a33" text-anchor="start">Contents</text>
+<rect x="200" y="330" width="556" height="238" rx="8" fill="none" stroke="#c9c2dc" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="214" y="356" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#4f4a62" text-anchor="start">1</text>
+<text x="240" y="356" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start">Why we did it</text>
+<text x="242" y="383" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#4f4a62" text-anchor="start">1.1</text>
+<text x="276" y="383" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">What schools asked for</text>
+<text x="242" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#4f4a62" text-anchor="start">1.2</text>
+<text x="276" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Who took part</text>
+<text x="214" y="437" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#4f4a62" text-anchor="start">2</text>
+<text x="240" y="437" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start">How we measured</text>
+<text x="242" y="464" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#4f4a62" text-anchor="start">2.1</text>
+<text x="276" y="464" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Two sites, twelve weeks</text>
+<text x="242" y="491" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#4f4a62" text-anchor="start">2.2</text>
+<text x="276" y="491" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">The survey</text>
+<text x="214" y="518" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#4f4a62" text-anchor="start">3</text>
+<text x="240" y="518" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start">Results</text>
+<text x="214" y="545" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#4f4a62" text-anchor="start">4</text>
+<text x="240" y="545" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="500" fill="#1f1a33" text-anchor="start">What schools can do next</text>
+<rect x="514" y="318" width="248" height="26" rx="13" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="528" y="335" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Table of contents · levels 1–2 ·</text>
+<text x="702" y="335" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start">Options…</text>
+<text x="170" y="598" font-family="Fraunces, Georgia, serif" font-size="19" font-weight="500" fill="#4f4a62" text-anchor="start">1</text>
+<text x="214" y="598" font-family="Fraunces, Georgia, serif" font-size="19" font-weight="500" fill="#1f1a33" text-anchor="start">Why we did it</text>
+<circle cx="967" cy="308" r="9" fill="#5b4bc4"/>
+<text x="967" y="312" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="984" y="312" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">“Contents” is an ordinary paragraph in the style Contents Title:</text>
+<text x="984" y="329" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">its words are the author’s, and it has no outline level, so</text>
+<text x="984" y="346" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">the table does not list itself.</text>
+<circle cx="967" cy="376" r="9" fill="#5b4bc4"/>
+<text x="967" y="380" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="984" y="380" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Each entry is a link to its heading (Enter or click). No page</text>
+<text x="984" y="397" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">numbers here: Flow view has no pages.</text>
+<circle cx="967" cy="428" r="9" fill="#5b4bc4"/>
+<text x="967" y="432" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="984" y="432" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The entries are not text. Typing into the table is refused; the</text>
+<text x="984" y="449" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">caret steps over it; Enter before or after makes a paragraph;</text>
+<text x="984" y="466" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Backspace selects it, a second Backspace deletes it.</text>
+<circle cx="967" cy="496" r="9" fill="#5b4bc4"/>
+<text x="967" y="500" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="984" y="500" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">A new heading, a retyped heading, a moved section: the entry</text>
+<text x="984" y="517" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">changes for everybody at once, without “Update”.</text>
+<circle cx="967" cy="548" r="9" fill="#5b4bc4"/>
+<text x="967" y="552" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="984" y="552" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The look is styles: Contents 1 … Contents 9 (D306). The table</text>
+<text x="984" y="569" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">stores only its options (C).</text>
+<circle cx="762" cy="331" r="2.5" fill="#5b4bc4"/>
+<path d="M762,331 H860.0 V308 H958" stroke="#5b4bc4" stroke-width="1" fill="none" stroke-dasharray="2 3"/>
+<circle cx="756" cy="383" r="2.5" fill="#5b4bc4"/>
+<path d="M756,383 H857.0 V376 H958" stroke="#5b4bc4" stroke-width="1" fill="none" stroke-dasharray="2 3"/>
+<circle cx="756" cy="450" r="2.5" fill="#5b4bc4"/>
+<path d="M756,450 H857.0 V428 H958" stroke="#5b4bc4" stroke-width="1" fill="none" stroke-dasharray="2 3"/>
+<circle cx="756" cy="518" r="2.5" fill="#5b4bc4"/>
+<path d="M756,518 H857.0 V496 H958" stroke="#5b4bc4" stroke-width="1" fill="none" stroke-dasharray="2 3"/>
+<circle cx="756" cy="556" r="2.5" fill="#5b4bc4"/>
+<path d="M756,556 H857.0 V548 H958" stroke="#5b4bc4" stroke-width="1" fill="none" stroke-dasharray="2 3"/>
+<rect x="40" y="668" width="680" height="588" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="698" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">B · On the page: Page view, print preview, PDF</text>
+<text x="62" y="716" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The same table with page numbers, a dot leader and the Contents styles’ tab position.</text>
+<rect x="73" y="729" width="360" height="510" rx="2" fill="#1f1a33" opacity="0.12"/>
+<rect x="70" y="724" width="360" height="510" rx="2" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="110" y="788" font-family="Fraunces, Georgia, serif" font-size="18" font-weight="500" fill="#1f1a33" text-anchor="start">School gardens: a pilot</text>
+<text x="110" y="824" font-family="Fraunces, Georgia, serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Contents</text>
+<text x="110" y="848" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#4f4a62" text-anchor="start">1</text>
+<text x="126" y="848" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#1f1a33" text-anchor="start">Why we did it</text>
+<line x1="195.0" y1="847" x2="376" y2="847" stroke="#a9a3ba" stroke-width="1" stroke-dasharray="1 3"/>
+<text x="390" y="848" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#1f1a33" text-anchor="end">2</text>
+<text x="126" y="867" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#4f4a62" text-anchor="start">1.1</text>
+<text x="148" y="867" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#1f1a33" text-anchor="start">What schools asked for</text>
+<line x1="262.0" y1="866" x2="376" y2="866" stroke="#a9a3ba" stroke-width="1" stroke-dasharray="1 3"/>
+<text x="390" y="867" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#1f1a33" text-anchor="end">2</text>
+<text x="126" y="886" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#4f4a62" text-anchor="start">1.2</text>
+<text x="148" y="886" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#1f1a33" text-anchor="start">Who took part</text>
+<line x1="217.0" y1="885" x2="376" y2="885" stroke="#a9a3ba" stroke-width="1" stroke-dasharray="1 3"/>
+<text x="390" y="886" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#1f1a33" text-anchor="end">3</text>
+<text x="110" y="905" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#4f4a62" text-anchor="start">2</text>
+<text x="126" y="905" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#1f1a33" text-anchor="start">How we measured</text>
+<line x1="205.0" y1="904" x2="376" y2="904" stroke="#a9a3ba" stroke-width="1" stroke-dasharray="1 3"/>
+<text x="390" y="905" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#1f1a33" text-anchor="end">3</text>
+<text x="126" y="924" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#4f4a62" text-anchor="start">2.1</text>
+<text x="148" y="924" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#1f1a33" text-anchor="start">Two sites, twelve weeks</text>
+<line x1="267.0" y1="923" x2="376" y2="923" stroke="#a9a3ba" stroke-width="1" stroke-dasharray="1 3"/>
+<text x="390" y="924" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#1f1a33" text-anchor="end">3</text>
+<text x="126" y="943" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#4f4a62" text-anchor="start">2.2</text>
+<text x="148" y="943" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#1f1a33" text-anchor="start">The survey</text>
+<line x1="202.0" y1="942" x2="376" y2="942" stroke="#a9a3ba" stroke-width="1" stroke-dasharray="1 3"/>
+<text x="390" y="943" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="400" fill="#1f1a33" text-anchor="end">4</text>
+<text x="110" y="962" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#4f4a62" text-anchor="start">3</text>
+<text x="126" y="962" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#1f1a33" text-anchor="start">Results</text>
+<line x1="165.0" y1="961" x2="376" y2="961" stroke="#a9a3ba" stroke-width="1" stroke-dasharray="1 3"/>
+<text x="390" y="962" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#1f1a33" text-anchor="end">5</text>
+<text x="110" y="981" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#4f4a62" text-anchor="start">4</text>
+<text x="126" y="981" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#1f1a33" text-anchor="start">What schools can do next</text>
+<line x1="250.0" y1="980" x2="376" y2="980" stroke="#a9a3ba" stroke-width="1" stroke-dasharray="1 3"/>
+<text x="390" y="981" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.5" font-weight="600" fill="#1f1a33" text-anchor="end">6</text>
+<text x="110" y="1024" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="500" fill="#4f4a62" text-anchor="start">1</text>
+<text x="132" y="1024" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Why we did it</text>
+<rect x="110" y="1040" width="280" height="5" rx="2" fill="#ece8f3"/>
+<rect x="110" y="1053" width="280" height="5" rx="2" fill="#ece8f3"/>
+<rect x="110" y="1066" width="280" height="5" rx="2" fill="#ece8f3"/>
+<rect x="110" y="1079" width="280" height="5" rx="2" fill="#ece8f3"/>
+<rect x="110" y="1092" width="160" height="5" rx="2" fill="#ece8f3"/>
+<text x="250.0" y="1212" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="8.5" font-weight="400" fill="#6e6880" text-anchor="middle">1 / 6</text>
+<circle cx="461" cy="740" r="9" fill="#5b4bc4"/>
+<text x="461" y="744" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="478" y="744" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Page numbers come from the layout</text>
+<text x="478" y="761" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">in the client (D901). The column</text>
+<text x="478" y="778" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">has a fixed width, so filling it in</text>
+<text x="478" y="795" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">never moves a line (D).</text>
+<circle cx="461" cy="846" r="9" fill="#5b4bc4"/>
+<text x="461" y="850" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="478" y="850" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Indents and the right edge are</text>
+<text x="478" y="867" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">part of Contents 1–9, edited like</text>
+<text x="478" y="884" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">any style; the leader is an option (C).</text>
+<circle cx="461" cy="926" r="9" fill="#5b4bc4"/>
+<text x="461" y="930" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="478" y="930" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">In the PDF each entry is a link,</text>
+<text x="478" y="947" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">and the headings become the PDF’s</text>
+<text x="478" y="964" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">bookmarks (helps BITV and PDF/UA).</text>
+<circle cx="461" cy="1016" r="9" fill="#5b4bc4"/>
+<text x="461" y="1020" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="478" y="1020" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">A heading on page 3 is page 3:</text>
+<text x="478" y="1037" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">the page on which the heading’s</text>
+<text x="478" y="1054" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">paragraph starts.</text>
+<circle cx="461" cy="1096" r="9" fill="#5b4bc4"/>
+<text x="461" y="1100" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="478" y="1100" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Exports carry the entries without</text>
+<text x="478" y="1117" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">page numbers (agreed): docx asks</text>
+<text x="478" y="1134" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Word to update on opening; ODT</text>
+<text x="478" y="1151" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">lists the loss “toc-pages” in the</text>
+<text x="478" y="1168" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">export dialog (D452).</text>
+<rect x="740" y="668" width="684" height="588" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="762" y="698" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">C · Its options</text>
+<text x="762" y="716" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">From the chip, from its context menu, or Insert ▸ Table of Contents again with the caret on it.</text>
+<rect x="764" y="726" width="380" height="400" rx="12" fill="#1f1a33" opacity="0.1"/>
+<rect x="762" y="722" width="380" height="400" rx="12" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="778" y="750" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start" letter-spacing="0.1em">TABLE OF CONTENTS</text>
+<text x="778" y="788" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Levels</text>
+<text x="862" y="788" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">from</text>
+<rect x="898" y="770" width="64" height="28" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="908" y="788.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">1</text>
+<text x="950" y="788.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end">▾</text>
+<text x="974" y="788" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">to</text>
+<rect x="996" y="770" width="64" height="28" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1006" y="788.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">2</text>
+<text x="1048" y="788.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end">▾</text>
+<rect x="862" y="812" width="15" height="15" rx="4" fill="#5b4bc4"/>
+<path d="M865.5,820 l3,3 l5,-6.5" stroke="#ffffff" stroke-width="1.8" fill="none"/>
+<text x="885" y="824" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Numbers</text>
+<rect x="862" y="838" width="15" height="15" rx="4" fill="#5b4bc4"/>
+<path d="M865.5,846 l3,3 l5,-6.5" stroke="#ffffff" stroke-width="1.8" fill="none"/>
+<text x="885" y="850" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Page numbers</text>
+<text x="886" y="872" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">in Page view, print and PDF</text>
+<text x="778" y="904" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Leader</text>
+<circle cx="869" cy="899" r="6.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.3"/>
+<circle cx="869" cy="899" r="3.5" fill="#5b4bc4"/>
+<text x="883" y="903.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">· · · dots</text>
+<circle cx="969" cy="899" r="6.5" fill="#ffffff" stroke="#d8d2e6" stroke-width="1.3"/>
+<text x="983" y="903.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">none</text>
+<line x1="776" y1="926" x2="1128" y2="926" stroke="#e3dfee" stroke-width="1"/>
+<text x="778" y="952" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start" letter-spacing="0.1em">LOOKS</text>
+<text x="778" y="976" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#5b4bc4" text-anchor="start">Contents Title · Contents 1 · Contents 2</text>
+<text x="778" y="996" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Edit these styles in All Styles…</text>
+<line x1="776" y1="1018" x2="1128" y2="1018" stroke="#e3dfee" stroke-width="1"/>
+<text x="778" y="1044" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start" letter-spacing="0.1em">SHOWS</text>
+<text x="778" y="1068" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">8 headings of levels 1–2 · the Title is never listed</text>
+<text x="778" y="1102" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#b8386a" text-anchor="start">Remove Table of Contents</text>
+<text x="1126" y="1102" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Delete</text>
+<circle cx="1173" cy="740" r="9" fill="#5b4bc4"/>
+<text x="1173" y="744" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="1190" y="744" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Each change is one step,</text>
+<text x="1190" y="761" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">undoable, seen by everybody.</text>
+<circle cx="1173" cy="796" r="9" fill="#5b4bc4"/>
+<text x="1173" y="800" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="1190" y="800" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Levels follow the outline levels</text>
+<text x="1190" y="817" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">of the styles (E9.22): any style</text>
+<text x="1190" y="834" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">with level 1–2 is listed.</text>
+<circle cx="1173" cy="872" r="9" fill="#5b4bc4"/>
+<text x="1173" y="876" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="1190" y="876" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Numbers off lists the words only,</text>
+<text x="1190" y="893" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">even when headings are numbered.</text>
+<circle cx="1173" cy="930" r="9" fill="#5b4bc4"/>
+<text x="1173" y="934" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="1190" y="934" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">No look is stored here: the</text>
+<text x="1190" y="951" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">styles are the look, so a house</text>
+<text x="1190" y="968" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">style changes every table of</text>
+<text x="1190" y="985" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">contents of a template at once.</text>
+<circle cx="1173" cy="1022" r="9" fill="#5b4bc4"/>
+<text x="1173" y="1026" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="1190" y="1026" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Remove takes the table away (one</text>
+<text x="1190" y="1043" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">step, undoable); the “Contents”</text>
+<text x="1190" y="1060" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">paragraph stays, as the author’s.</text>
+<circle cx="1173" cy="1096" r="9" fill="#5b4bc4"/>
+<text x="1173" y="1100" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">6</text>
+<text x="1190" y="1100" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Labels for screen readers on every</text>
+<text x="1190" y="1117" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">field; the dialog follows the focus</text>
+<text x="1190" y="1134" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">rules of the other popovers.</text>
+<rect x="40" y="1276" width="1384" height="240" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="1306" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">D · How the page numbers are found (in the layout, in the client)</text>
+<text x="62" y="1324" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Deterministic, at most three passes (D901). The same for page references in the text (E9.30).</text>
+<rect x="62" y="1332" width="300" height="110" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="78" y="1356" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Pass 1: lay out</text>
+<text x="78" y="1378" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Page column of the table at a fixed</text>
+<text x="78" y="1395" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">width; a page reference as wide as</text>
+<text x="78" y="1412" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">“000” in its font.</text>
+<line x1="366" y1="1386" x2="398" y2="1386" stroke="#5b4bc4" stroke-width="1.4"/>
+<path d="M398,1386 L391.7,1389.0 L391.7,1383.0 Z" fill="#5b4bc4"/>
+<rect x="402" y="1332" width="300" height="110" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="418" y="1356" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Pages of the targets</text>
+<text x="418" y="1378" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Each heading’s paragraph: the page</text>
+<text x="418" y="1395" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">it starts on, from paginate().</text>
+<line x1="706" y1="1386" x2="738" y2="1386" stroke="#5b4bc4" stroke-width="1.4"/>
+<path d="M738,1386 L731.7,1389.0 L731.7,1383.0 Z" fill="#5b4bc4"/>
+<rect x="742" y="1332" width="300" height="110" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="758" y="1356" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Pass 2: fill in</text>
+<text x="758" y="1378" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">The table never reflows (fixed column);</text>
+<text x="758" y="1395" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">only paragraphs with page references</text>
+<text x="758" y="1412" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">are laid out again.</text>
+<line x1="1046" y1="1386" x2="1078" y2="1386" stroke="#5b4bc4" stroke-width="1.4"/>
+<path d="M1078,1386 L1071.7,1389.0 L1071.7,1383.0 Z" fill="#5b4bc4"/>
+<rect x="1082" y="1332" width="300" height="110" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="1098" y="1356" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Pass 3, if a page break moved</text>
+<text x="1098" y="1378" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Then stop. A result that did not</text>
+<text x="1098" y="1395" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">settle is reported as a note, as</text>
+<text x="1098" y="1412" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">missing hyphenation patterns are.</text>
+<text x="62" y="1470" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The server never paginates. The entries (number, text, level, target) come from the kernel; only the page is the layout’s.</text>
+<text x="62" y="1490" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Flow view needs no pages, so it costs nothing there.</text>
+<rect x="40" y="1536" width="1384" height="184" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="1566" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">E · The rules it follows</text>
+<text x="62" y="1600" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Keyboard</text>
+<text x="62" y="1622" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Ctrl+Shift+Alt+I puts one in; on a</text>
+<text x="62" y="1639" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">table it opens the options.</text>
+<text x="62" y="1656" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Tab reaches the chip; Enter on an</text>
+<text x="62" y="1673" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">entry goes to its heading.</text>
+<text x="402" y="1600" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Screen readers / BITV</text>
+<text x="402" y="1622" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">The table is a navigation landmark</text>
+<text x="402" y="1639" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">named “Table of contents”; entries</text>
+<text x="402" y="1656" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">are links with the full heading text;</text>
+<text x="402" y="1673" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">headings get aria-level.</text>
+<text x="742" y="1600" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Collaboration</text>
+<text x="742" y="1622" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Changing the options is refused in a</text>
+<text x="742" y="1639" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">colleague’s zone, like any edit of</text>
+<text x="742" y="1656" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">that paragraph; the entries follow</text>
+<text x="742" y="1673" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">everybody’s headings at once.</text>
+<text x="1082" y="1600" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Files</text>
+<text x="1082" y="1622" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">docx: TOC field in a content control,</text>
+<text x="1082" y="1639" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">updateFields; ODT: text:table-of-</text>
+<text x="1082" y="1656" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">content; LaTeX: \tableofcontents;</text>
+<text x="1082" y="1673" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Markdown: a list of links.</text>
+</svg>

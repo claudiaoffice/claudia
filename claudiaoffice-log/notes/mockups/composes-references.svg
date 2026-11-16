@@ -1,0 +1,239 @@
+<svg viewBox="0 0 1464 1440" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+<rect x="0" y="0" width="1464" height="1440" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia composes — references in the text (cross-references)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Proposal for review — nothing is built (E9.30). A reference stores the id of what it points at and what to show; the number, text or page is derived, so it never goes stale.</text>
+<rect x="40" y="96" width="560" height="430" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">A · Insert ▸ Cross-Reference…</text>
+<text x="62" y="144" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Two entries join the Insert menu (D560); in creates and computes the first is off.</text>
+<text x="68" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">File</text>
+<text x="117.6" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Edit</text>
+<rect x="159.2" y="161" width="60.400000000000006" height="24" rx="6" fill="#e7e1f4"/>
+<text x="167.2" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Insert</text>
+<text x="231.6" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Format</text>
+<text x="296.0" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">View</text>
+<text x="345.6" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Tools</text>
+<text x="402.6" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Config</text>
+<text x="467.0" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Help</text>
+<rect x="161.2" y="196" width="300" height="111" rx="10" fill="#1f1a33" opacity="0.1"/>
+<rect x="159.2" y="192" width="300" height="111" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<rect x="164.2" y="198" width="290" height="28" rx="6" fill="#e7e1f4"/>
+<text x="173.2" y="217.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Cross-Reference…</text>
+<text x="445.2" y="217.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+F2</text>
+<text x="173.2" y="247.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Table of Contents</text>
+<text x="445.2" y="247.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+I</text>
+<line x1="169.2" y1="262" x2="449.2" y2="262" stroke="#e3dfee" stroke-width="1"/>
+<text x="173.2" y="286.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Container</text>
+<text x="445.2" y="286.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">▸</text>
+<text x="62" y="340" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">In creates and computes:</text>
+<rect x="64" y="356" width="330" height="105" rx="10" fill="#1f1a33" opacity="0.1"/>
+<rect x="62" y="352" width="330" height="105" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="76" y="376.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#a9a3ba" text-anchor="start">Cross-Reference…</text>
+<text x="378" y="376.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#a9a3ba" text-anchor="end">Ctrl+F2</text>
+<text x="76" y="404.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#a9a3ba" text-anchor="start">References go into texts; text boxes get them later</text>
+<line x1="72" y1="418" x2="382" y2="418" stroke="#e3dfee" stroke-width="1"/>
+<text x="76" y="441.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Container</text>
+<text x="378" y="441.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">▸</text>
+<text x="62" y="478" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Cross-Reference… puts a reference at the caret and opens the picker (B).</text>
+<text x="62" y="494" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Table of Contents: see the sheet composes-table-of-contents.svg.</text>
+<text x="62" y="510" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Viewers: both off. A locked zone (± n words of a colleague) refuses as typing does.</text>
+<rect x="620" y="96" width="804" height="700" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="642" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">B · The picker: what to point at, and what to show</text>
+<text x="642" y="144" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">It opens at the caret. It lists the whole document, not only what is in view (the chat’s # list does that).</text>
+<rect x="642" y="150" width="520" height="46" rx="8" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="660" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">… the numbers depend on how we measured, see section</text>
+<rect x="1031" y="164" width="2" height="19" rx="0" fill="#d6477a"/>
+<rect x="662" y="210" width="500" height="552" rx="12" fill="#1f1a33" opacity="0.1"/>
+<rect x="660" y="206" width="500" height="552" rx="12" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<rect x="674" y="220" width="472" height="34" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="690" y="242" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="400" fill="#6e6880" text-anchor="start">⌕</text>
+<text x="710" y="242" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#a9a3ba" text-anchor="start">Search headings, items and named things</text>
+<text x="678" y="280" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start" letter-spacing="0.1em">HEADINGS</text>
+<text x="682" y="308" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#4f4a62" text-anchor="start">1</text>
+<text x="716" y="308" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Why we did it</text>
+<text x="704" y="336" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#4f4a62" text-anchor="start">1.1</text>
+<text x="738" y="336" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">What schools asked for</text>
+<text x="682" y="364" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#4f4a62" text-anchor="start">2</text>
+<text x="716" y="364" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">How we measured</text>
+<rect x="668" y="374" width="484" height="27" rx="6" fill="#e7e1f4"/>
+<rect x="668" y="374" width="3" height="27" rx="1" fill="#5b4bc4"/>
+<text x="1142" y="392" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Heading 2</text>
+<text x="704" y="392" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#4f4a62" text-anchor="start">2.1</text>
+<text x="738" y="392" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Two sites, twelve weeks</text>
+<text x="704" y="420" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#4f4a62" text-anchor="start">2.2</text>
+<text x="738" y="420" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">The survey</text>
+<text x="682" y="448" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#4f4a62" text-anchor="start">3</text>
+<text x="716" y="448" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Results</text>
+<text x="678" y="480" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start" letter-spacing="0.1em">NUMBERED ITEMS</text>
+<text x="682" y="508" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#4f4a62" text-anchor="start">2.b</text>
+<text x="716" y="508" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Explain the goal</text>
+<text x="1142" y="508" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Preparing the workshop</text>
+<text x="682" y="536" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#4f4a62" text-anchor="start">4</text>
+<text x="716" y="536" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Collect the results</text>
+<text x="1142" y="536" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Preparing the workshop</text>
+<text x="678" y="568" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start" letter-spacing="0.1em">NAMED THINGS</text>
+<text x="682" y="596" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#5b4bc4" text-anchor="start">▣</text>
+<text x="702" y="596" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">figure 1</text>
+<text x="1142" y="596" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Picture</text>
+<text x="682" y="624" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#5b4bc4" text-anchor="start">T</text>
+<text x="702" y="624" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Budget table</text>
+<text x="1142" y="624" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Text box</text>
+<line x1="672" y1="644" x2="1148" y2="644" stroke="#e3dfee" stroke-width="1"/>
+<text x="678" y="670" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Show as</text>
+<rect x="740" y="653" width="318.52000000000004" height="26" rx="8" fill="#efecf6"/>
+<rect x="743" y="656" width="58.64" height="20" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="772.32" y="670.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="middle">Number</text>
+<text x="824.52" y="670.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">Text</text>
+<text x="905.6999999999999" y="670.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">Number and text</text>
+<text x="986.88" y="670.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">Page</text>
+<text x="1032.64" y="670.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">Name</text>
+<text x="678" y="706" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" text-anchor="start" xml:space="preserve"><tspan fill="#6e6880" font-weight="400">Reads:  </tspan><tspan fill="#1f1a33" font-weight="400">… see section </tspan><tspan fill="#5b4bc4" font-weight="400" text-decoration="underline">2.1</tspan><tspan fill="#1f1a33" font-weight="400">.</tspan></text>
+<text x="678" y="736" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">↑↓ choose · Tab to “Show as” · Enter puts it in · Esc closes</text>
+<circle cx="1193" cy="232" r="9" fill="#5b4bc4"/>
+<text x="1193" y="236" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="1210" y="236" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Headings come as an outline</text>
+<text x="1210" y="253" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">with their numbers; numbered</text>
+<text x="1210" y="270" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">items with their list; named</text>
+<text x="1210" y="287" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">paragraphs and objects (D550,</text>
+<text x="1210" y="304" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">D554) last.</text>
+<circle cx="1193" cy="336" r="9" fill="#5b4bc4"/>
+<text x="1193" y="340" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="1210" y="340" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The reference holds the id.</text>
+<text x="1210" y="357" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Picking an unnamed heading</text>
+<text x="1210" y="374" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">names nothing: a reference,</text>
+<text x="1210" y="391" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">unlike a chat tag, needs no</text>
+<text x="1210" y="408" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">name.</text>
+<circle cx="1193" cy="466" r="9" fill="#5b4bc4"/>
+<text x="1193" y="470" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="1210" y="470" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Show as defaults by target: a</text>
+<text x="1210" y="487" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">numbered heading or item →</text>
+<text x="1210" y="504" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Number; an unnumbered heading</text>
+<text x="1210" y="521" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">→ Text; an object → Name.</text>
+<text x="1210" y="538" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">“Page” is filled in on pages.</text>
+<circle cx="1193" cy="596" r="9" fill="#5b4bc4"/>
+<text x="1193" y="600" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="1210" y="600" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">A combobox like the chat’s #</text>
+<text x="1210" y="617" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">list, shared code: arrows,</text>
+<text x="1210" y="634" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Enter, Esc; every row is an</text>
+<text x="1210" y="651" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">option with its full text for</text>
+<text x="1210" y="668" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">screen readers.</text>
+<circle cx="1193" cy="708" r="9" fill="#5b4bc4"/>
+<text x="1193" y="712" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="1210" y="712" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The words around it (“see</text>
+<text x="1210" y="729" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">section”) are the author’s.</text>
+<text x="1210" y="746" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The reference shows only the</text>
+<text x="1210" y="763" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">number, text, name or page.</text>
+<circle cx="1156" cy="316" r="2.5" fill="#5b4bc4"/>
+<path d="M1156,316 H1170.0 V232 H1184" stroke="#5b4bc4" stroke-width="1" fill="none" stroke-dasharray="2 3"/>
+<circle cx="1156" cy="402" r="2.5" fill="#5b4bc4"/>
+<path d="M1156,402 H1170.0 V336 H1184" stroke="#5b4bc4" stroke-width="1" fill="none" stroke-dasharray="2 3"/>
+<circle cx="1156" cy="676" r="2.5" fill="#5b4bc4"/>
+<path d="M1156,676 H1170.0 V466 H1184" stroke="#5b4bc4" stroke-width="1" fill="none" stroke-dasharray="2 3"/>
+<rect x="40" y="546" width="560" height="250" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="576" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">C · On a reference: its menu</text>
+<text x="62" y="594" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Right-click, the context-menu key or Shift+F10.</text>
+<rect x="62" y="600" width="250" height="40" rx="8" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="76" y="625" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" text-anchor="start" xml:space="preserve"><tspan fill="#1f1a33" font-weight="400">see section </tspan><tspan fill="#5b4bc4" font-weight="400">2.1</tspan></text>
+<rect x="152" y="609" width="26" height="22" rx="4" fill="#e7e1f4"/>
+<text x="76" y="625" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" text-anchor="start" xml:space="preserve"><tspan fill="none" font-weight="400">see section </tspan><tspan fill="#5b4bc4" font-weight="600">2.1</tspan></text>
+<rect x="178" y="636" width="236" height="125" rx="10" fill="#1f1a33" opacity="0.1"/>
+<rect x="176" y="632" width="236" height="125" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<rect x="181" y="638" width="226" height="24" rx="6" fill="#e7e1f4"/>
+<text x="190" y="655.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Show As</text>
+<text x="398" y="655.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">▸</text>
+<text x="190" y="681.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Go to Target</text>
+<text x="398" y="681.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+Enter</text>
+<line x1="186" y1="694" x2="402" y2="694" stroke="#e3dfee" stroke-width="1"/>
+<text x="190" y="716.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Copy</text>
+<text x="398" y="716.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+C</text>
+<text x="190" y="742.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Remove Reference</text>
+<text x="398" y="742.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Delete</text>
+<rect x="418" y="604" width="170" height="142" rx="10" fill="#1f1a33" opacity="0.1"/>
+<rect x="416" y="600" width="170" height="142" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="428" y="624.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#5b4bc4" text-anchor="start">✓</text>
+<text x="444" y="623.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Number</text>
+<text x="444" y="649.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Text</text>
+<text x="444" y="675.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Number and Text</text>
+<text x="444" y="701.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Page</text>
+<text x="444" y="727.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#a9a3ba" text-anchor="start">Name</text>
+<text x="416" y="762" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start" font-style="italic">Name is off: the heading has none.</text>
+<text x="62" y="662" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Each entry is</text>
+<text x="62" y="678" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">one step.</text>
+<rect x="40" y="816" width="1384" height="250" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="846" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">D · A reference in the text, and its states</text>
+<text x="62" y="864" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">It is one character to the caret, cursors, locks and authorship (a U+FFFC with its field). It is drawn as an atom that cannot be typed into.</text>
+<rect x="62" y="870" width="258" height="180" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="76" y="892" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">1 · As it is</text>
+<text x="76" y="922" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" text-anchor="start" xml:space="preserve"><tspan fill="#1f1a33" font-weight="400">see section </tspan><tspan fill="#5b4bc4" font-weight="400" text-decoration="underline">2.1</tspan></text>
+<text x="76" y="1000" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A quiet iris underline; the colour</text>
+<text x="76" y="1016" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">of the text otherwise. The caret</text>
+<text x="76" y="1032" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">steps over it in one move.</text>
+<rect x="332" y="870" width="258" height="180" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="346" y="892" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">2 · Hovered or focused</text>
+<text x="346" y="922" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" text-anchor="start" xml:space="preserve"><tspan fill="#1f1a33" font-weight="400">see section </tspan><tspan fill="#5b4bc4" font-weight="400" text-decoration="underline">2.1</tspan></text>
+<rect x="372" y="934" width="210" height="44" rx="6" fill="#1f1a33"/>
+<text x="382" y="952" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#ffffff" text-anchor="start">Heading 2.1 · Two sites, twelve weeks</text>
+<text x="382" y="968" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#c9c2dc" text-anchor="start">Ctrl+click to go there</text>
+<text x="346" y="1000" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Ctrl+click or Ctrl+Alt+Enter goes</text>
+<text x="346" y="1016" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">there (centred, tinted, with the</text>
+<text x="346" y="1032" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Back chip of D551).</text>
+<rect x="602" y="870" width="258" height="180" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="616" y="892" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">3 · Backspace once</text>
+<rect x="697" y="906" width="26" height="22" rx="4" fill="#e7e1f4"/>
+<text x="616" y="922" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" text-anchor="start" xml:space="preserve"><tspan fill="#1f1a33" font-weight="400">see section </tspan><tspan fill="#5b4bc4" font-weight="600">2.1</tspan></text>
+<text x="616" y="1000" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">The first Backspace selects it;</text>
+<text x="616" y="1016" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">the second deletes it, so it is</text>
+<text x="616" y="1032" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">not lost by a slip of the finger.</text>
+<rect x="872" y="870" width="258" height="180" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="886" y="892" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">4 · Broken</text>
+<line x1="966" y1="926" x2="1098" y2="926" stroke="#d6477a" stroke-width="1.2" stroke-dasharray="3 2"/>
+<text x="886" y="922" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" text-anchor="start" xml:space="preserve"><tspan fill="#1f1a33" font-weight="400">see section </tspan><tspan fill="#b8386a" font-weight="400">⚠ missing reference</tspan></text>
+<rect x="886" y="934" width="230" height="30" rx="6" fill="#fbe9ef"/>
+<text x="894" y="953" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#b8386a" text-anchor="start">The heading was deleted by ann at 14:02</text>
+<text x="886" y="1000" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Its heading was deleted. Undo</text>
+<text x="886" y="1016" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">mends it; going there replays the</text>
+<text x="886" y="1032" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">history to the heading’s last moment.</text>
+<rect x="1142" y="870" width="258" height="180" rx="10" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="1156" y="892" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">5 · Page, in Flow view</text>
+<text x="1156" y="922" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" text-anchor="start" xml:space="preserve"><tspan fill="#1f1a33" font-weight="400">see page </tspan><tspan fill="#6e6880" font-weight="400" text-decoration="underline">#</tspan></text>
+<rect x="1182" y="934" width="210" height="30" rx="6" fill="#1f1a33"/>
+<text x="1192" y="953" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#ffffff" text-anchor="start">The page is known on the page</text>
+<text x="1156" y="1000" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Flow view has no pages: a muted #.</text>
+<text x="1156" y="1016" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Page view and print show the</text>
+<text x="1156" y="1032" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">number (laid out in two passes).</text>
+<rect x="40" y="1086" width="1384" height="334" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="1116" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">E · What a reference follows</text>
+<text x="62" y="1134" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Nothing is refreshed by hand. Every change below is somebody else’s ordinary step; the reference is worked out again in the kernel and every reader sees the new text at once.</text>
+<text x="62" y="1172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">A chapter is put in before 2</text>
+<rect x="330" y="1154" width="280" height="28" rx="6" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="342" y="1172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">see section 2.1</text>
+<line x1="620" y1="1168" x2="660" y2="1168" stroke="#5b4bc4" stroke-width="1.4"/>
+<path d="M660,1168 L653.7,1171.0 L653.7,1165.0 Z" fill="#5b4bc4"/>
+<rect x="670" y="1154" width="280" height="28" rx="6" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="682" y="1172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">see section 3.1</text>
+<text x="62" y="1216" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Its heading is retyped (Show as: Text)</text>
+<rect x="330" y="1198" width="280" height="28" rx="6" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="342" y="1216" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">see “Two sites, twelve weeks”</text>
+<line x1="620" y1="1212" x2="660" y2="1212" stroke="#5b4bc4" stroke-width="1.4"/>
+<path d="M660,1212 L653.7,1215.0 L653.7,1209.0 Z" fill="#5b4bc4"/>
+<rect x="670" y="1198" width="280" height="28" rx="6" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="682" y="1216" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">see “Two sites, ten weeks”</text>
+<text x="62" y="1260" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Its heading is deleted, then undone</text>
+<rect x="330" y="1242" width="280" height="28" rx="6" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="342" y="1260" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#b8386a" text-anchor="start">see section ⚠ missing reference</text>
+<line x1="620" y1="1256" x2="660" y2="1256" stroke="#5b4bc4" stroke-width="1.4"/>
+<path d="M660,1256 L653.7,1259.0 L653.7,1253.0 Z" fill="#5b4bc4"/>
+<rect x="670" y="1242" width="280" height="28" rx="6" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="682" y="1260" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">see section 2.1</text>
+<text x="62" y="1322" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Collaboration: putting in, changing and removing a reference are steps in the history, undoable, refused in a</text>
+<text x="62" y="1338" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">colleague’s zone like typing. A reference to a paragraph in somebody’s zone is fine: it only reads it.</text>
+<text x="62" y="1354" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Keys: Ctrl+F2 puts one in; Ctrl+Alt+Enter goes to the target; Shift+F10 opens its menu (C).</text>
+<text x="62" y="1370" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Screen readers: “Reference to heading 2.1, Two sites, twelve weeks”; a broken one says “missing reference”.</text>
+<text x="62" y="1386" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Files: ODT bookmark-ref, docx REF/PAGEREF fields, \ref in LaTeX, a link in Markdown; the shown text is the</text>
+<text x="62" y="1402" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">cached result, so other programs show it before they update.</text>
+<text x="990" y="1172" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">Not in this round:</text>
+<text x="990" y="1190" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">· a bookmark inside a paragraph (a word as target)</text>
+<text x="990" y="1208" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">· numbered captions (“Figure 4”)</text>
+<text x="990" y="1226" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">· “above / below” as a way to show</text>
+<text x="990" y="1244" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">· the AI putting references in (as with lists)</text>
+<text x="990" y="1262" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">The field keeps a thing id, so these slot in later.</text>
+</svg>

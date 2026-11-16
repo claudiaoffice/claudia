@@ -157,6 +157,8 @@ losses (`list`, D405). Until then the importers keep flattening and reporting `l
 
 ## 4. The seam: anchors, numbered headings, references (E9.22, not built)
 
+*Continued and worked out on 2026-11-16 in `e9-composes-outline-references-toc.md` (E9.22, E9.30, E9.31).*
+
 What lists add is a *label derived from structure*. The three things the owner named need the same mechanism:
 
 - **Anchor.** Anything with a stable id that a reference can point at. Every paragraph already is one (`b17`, never
