@@ -200,15 +200,16 @@ jobs:
           npm run e2e:pivots
           npm run e2e:passwords
           npm run e2e:details # description and tags on the front page (D530-D532), against a sealed server of its own
-      # The Windows client's window, minus Neutralino itself: its built shell page and core, the real web app in the
-      # frame. Starts servers of its own (8791 for --server), on ports the steps above have freed.
+      # The Neutralino client's window (D660), minus Neutralino itself: its built shell page and core, the real web app
+      # in the frame, once built for Windows and once for macOS (a build behaves like its platform wherever it runs).
+      # Starts servers of its own (8791 for --server), on ports the steps above have freed.
       - name: The Windows client's window (shell page, core, server and web app, Neutralino faked)
         run: |
-          (cd clients/windows && npm ci && npm run build)
+          (cd clients/neutralino && npm ci && npm run build:windows)
           cd web && npm run e2e:windows-shell
-      - name: The macOS client's window (the same, for the macOS shell)
+      - name: The macOS client's window (the same, built for macOS)
         run: |
-          (cd clients/macos && npm ci && npm run build)
+          (cd clients/neutralino && npm run build:macos)
           cd web && npm run e2e:macos-shell
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -240,60 +241,54 @@ jobs:
       - run: uv sync --locked
       - run: uv run python scripts/odf_libreoffice_check.py
 
-  # The Windows client is TypeScript around Neutralino; its unit tests, its build (the shell page and the core of each
-  # app) and its generated menu (made from the Linux client's manifest) are checked on Windows itself. Its window is
-  # run in Chromium by the `e2e` job above.
-  windows-client:
-    name: Windows client
+  # The macOS and Windows client is one TypeScript package around Neutralino (D660). Its unit tests, which test both
+  # platforms' code wherever they run, its types, its builds and its generated menu (made from the Linux client's
+  # manifest) are checked on Windows itself and on Linux; its windows run in Chromium in the `e2e` job. Signing,
+  # notarising, a real WKWebView and a real WebView2 still need the machines and are not covered.
+  neutralino-windows:
+    name: Neutralino client on Windows
     runs-on: windows-latest
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: clients/windows
+        working-directory: clients/neutralino
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: clients/windows/package-lock.json
+          cache-dependency-path: clients/neutralino/package-lock.json
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.14"
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
-      - run: npm run build
+      - run: npm run build:windows
       - name: The generated menu matches the shared manifest
         run: uv run --no-project python tools/generate_menu.py --all --check
       - run: uv run --no-project --with pytest python -m pytest tools/tests
-      # The macOS client's menu is generated the same way, and went stale unnoticed (CODE-16): the check is Python
-      # and needs no Mac, so it runs here.
-      - name: The macOS client's generated menu matches the shared manifest
-        working-directory: clients/macos
-        run: uv run --no-project python tools/generate_menu.py --all --check
 
-  # The macOS client is TypeScript around Neutralino like the Windows one; its unit tests, types and build need no Mac
-  # (its window runs in Chromium in the `e2e` job, its generated menu is checked in `windows-client`). Until this job
-  # it was tested nowhere (PROC-19). Signing, notarising and a real WKWebView still need a Mac and are not covered.
-  macos-client:
-    name: macOS client (tests and build)
+  neutralino-linux:
+    name: Neutralino client (tests and both builds)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: clients/macos
+        working-directory: clients/neutralino
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: clients/macos/package-lock.json
+          cache-dependency-path: clients/neutralino/package-lock.json
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
-      - run: npm run build
+      - run: npm run build:macos
+      - run: npm run build:windows
 
   # The Linux client runs on the distribution's Python (3.12 on Ubuntu 24.04) with GTK from the distribution, while the
   # server it starts runs on 3.14 (clients/linux/README.md, "Two interpreters"). Its end-to-end test starts the real

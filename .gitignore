@@ -21,30 +21,17 @@ web/coverage
 # the HarfBuzz WebAssembly the build copies from harfbuzzjs (npm run build/dev, D903)
 web/public/wasm
 
-# Windows client: dependencies, build output, what `npm run build` generates per app, Neutralino's downloads and logs.
-# (`clients/windows/bin/` -- the `claudia-<app>` command shims -- is source and is tracked.)
-clients/windows/node_modules/
-clients/windows/dist/
-clients/windows/apps/*/bin/
-clients/windows/apps/*/js/
-clients/windows/apps/*/index.html
-clients/windows/apps/*/shell/
-clients/windows/apps/*/ext/
-clients/windows/apps/*/.tmp/
-clients/windows/apps/*/neutralinojs.log
-
-# macOS client: dependencies, build output, what `npm run build` generates per app, Neutralino's downloads and logs
-clients/macos/node_modules/
-clients/macos/dist/
-clients/macos/apps/*/bin/
-clients/macos/apps/*/js/
-clients/macos/apps/*/index.html
-clients/macos/apps/*/shell/
-clients/macos/apps/*/ext/
-clients/macos/apps/*/neutralinojs.log
-
-clients/macos/apps/creates/neutralino-mac_arm64
-clients/macos/bin/
+# The macOS and Windows client (D660): dependencies, build output, what `npm run build` generates per app, Neutralino's
+# downloads, the .app bundle and the logs. (`clients/neutralino/bin/` -- the `claudia-<app>` commands -- is source.)
+clients/neutralino/node_modules/
+clients/neutralino/dist/
+clients/neutralino/apps/*/bin/
+clients/neutralino/apps/*/js/
+clients/neutralino/apps/*/index.html
+clients/neutralino/apps/*/shell/
+clients/neutralino/apps/*/ext/
+clients/neutralino/apps/*/.tmp/
+clients/neutralino/apps/*/neutralinojs.log
 
 # The test-document library's run output
 test-documents/_artifacts

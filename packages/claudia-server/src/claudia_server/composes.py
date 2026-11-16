@@ -20,11 +20,13 @@
 * ``look`` and ``hold``: where my cursor is. ``hold`` also locks the ± n words around it for everybody else (D11);
 * ``move_object``, ``resize_object``, ``rotate_object`` and ``remove_object``: the floating objects. An object hangs
   from a character, floats at an offset from it and turns about its centre (rotation-ui);
-* ``suggest`` (the assistant only), ``accept_suggestion`` and ``reject_suggestion``: composes' suggest mode (D262).
+* ``suggest`` (the assistant only), ``accept_suggestion`` and ``reject_suggestion``: composes' suggest mode (D262);
+* ``paragraphs``, ``outline``, ``replace_words``, ``add_paragraphs`` and ``suggest_words``: the text by what it says
+  rather than by offsets, which is how a language model can work in it (:mod:`claudia_server.composes_words`, D681).
 
 The assistant writes a text as it writes a sheet or a slide (D640): in *act* through the methods its allow-list names
-(``apps.MODEL_METHODS``, SEC-10), in *suggest* only through ``suggest``, and people accept. How the page is set up is
-people's, as in the other apps (:func:`claudia_server.printing.people_only`).
+(``apps.MODEL_METHODS``, SEC-10), in *suggest* only through ``suggest`` or ``suggest_words``, and people accept. How
+the page is set up is people's, as in the other apps (:func:`claudia_server.printing.people_only`).
 """
 
 from __future__ import annotations
@@ -72,6 +74,7 @@ from claudia_core import (
 
 from .composes_lists import add_list_methods
 from .composes_search import add_search_methods
+from .composes_words import add_word_methods
 from .i18n import msg
 from .object_methods import Placement, add_object_methods
 from .office_export import export_with_original, office_export
@@ -275,6 +278,9 @@ def edit_plan(
             commands.append(InsertText(cursor, offset, line))
             offset += len(line)
     return commands, (cursor, offset)
+
+
+add_word_methods(composes_methods, edit=edit_plan)
 
 
 def _named(text: str, lines: int) -> str:

@@ -152,8 +152,9 @@ def test_in_a_text_act_mode_writes_and_suggest_mode_suggests():
 
 
 def test_in_a_text_the_ai_writes_through_its_allow_list_like_in_the_other_apps():
-    assert SUGGEST_METHODS["composes"] == ("suggest",)
-    assert {"suggest", "replace_text", "set_style"} == set(MODEL_METHODS["composes"])
+    assert set(SUGGEST_METHODS["composes"]) == {"suggest", "suggest_words"}
+    direct = set(MODEL_METHODS["composes"]) - set(SUGGEST_METHODS["composes"])
+    assert direct == {"replace_text", "set_style", "replace_words", "add_paragraphs"}, "D640, and D681 for a model"
 
 
 # -- the effective account

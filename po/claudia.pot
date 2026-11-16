@@ -6269,7 +6269,7 @@ msgstr ""
 msgid "a recovery key, a name and a new password are needed"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:442
+#: packages/claudia-server/src/claudia_server/composes.py:448
 msgid "a remark suggests no change; dismiss it instead"
 msgstr ""
 
@@ -6287,6 +6287,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:196 web/app/lib/search.ts:221
 msgid "a space"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/composes_words.py:198
+msgid "a suggestion stays inside its paragraph; remark on new paragraphs instead"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -6473,7 +6477,7 @@ msgstr ""
 msgid "blocks must be a list of 1 to {limit} paragraph ids"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:366
+#: packages/claudia-server/src/claudia_server/composes.py:372
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr ""
 
@@ -6583,6 +6587,10 @@ msgstr ""
 
 #: web/app/components/SlideWorkspace.vue:351 web/app/components/TextWorkspace.vue:363 web/app/components/Workspace.vue:1137
 msgid "copy, cut and paste, also from and to other programs"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/composes_words.py:108
+msgid "count must be from 1 to {limit}"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py:670
@@ -6725,7 +6733,7 @@ msgstr ""
 msgid "example.com:8420"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:188
+#: packages/claudia-server/src/claudia_server/composes.py:191
 msgid "export_office: format must be \"docx\" or \"odt\""
 msgstr ""
 
@@ -7093,7 +7101,11 @@ msgstr ""
 msgid "objects must be a list of at most {limit} object ids"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:466
+#: packages/claudia-server/src/claudia_server/composes_words.py:58
+msgid "occurrence counts from 1"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/composes.py:472
 msgid "offset is outside the paragraph"
 msgstr ""
 
@@ -7133,7 +7145,7 @@ msgstr ""
 msgid "only look"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:428
+#: packages/claudia-server/src/claudia_server/composes.py:434 packages/claudia-server/src/claudia_server/composes_words.py:195
 msgid "only the assistant makes suggestions"
 msgstr ""
 
@@ -7505,7 +7517,7 @@ msgstr ""
 msgid "that is not your current password"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:248
+#: packages/claudia-server/src/claudia_server/composes.py:251
 msgid "that would make too many paragraphs"
 msgstr ""
 
@@ -7617,7 +7629,7 @@ msgstr ""
 msgid "the mean of the values"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:382 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:220
+#: packages/claudia-server/src/claudia_server/composes.py:388 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:220
 msgid "the new style would look just like “{name}”"
 msgstr ""
 
@@ -7641,7 +7653,7 @@ msgstr ""
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:243
+#: packages/claudia-server/src/claudia_server/composes.py:246
 msgid "the range ends before it starts"
 msgstr ""
 
@@ -7733,6 +7745,10 @@ msgstr ""
 msgid "the whole table, header included"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/composes_words.py:67
+msgid "the words {find!r} are not in paragraph {block}; read it again and quote it exactly"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/protocol.py:703
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr ""
@@ -7749,7 +7765,7 @@ msgstr ""
 msgid "there is no list scheme {scheme!r}; there are {schemes}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:464
+#: packages/claudia-server/src/claudia_server/composes.py:470 packages/claudia-server/src/claudia_server/composes_words.py:112 packages/claudia-server/src/claudia_server/composes_words.py:49
 msgid "there is no paragraph {block!r}"
 msgstr ""
 
@@ -7759,6 +7775,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:639
 msgid "there is no step {revision} on this line"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/composes_words.py:165
+msgid "there is no text to add"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/thing_names.py:121
@@ -7789,7 +7809,7 @@ msgstr ""
 msgid "this document is not a presentation"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:100 packages/claudia-server/src/claudia_server/composes_search.py:81
+#: packages/claudia-server/src/claudia_server/composes.py:103 packages/claudia-server/src/claudia_server/composes_search.py:81 packages/claudia-server/src/claudia_server/composes_words.py:41
 msgid "this document is not a text"
 msgstr ""
 
@@ -7853,7 +7873,7 @@ msgstr ""
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:453
+#: packages/claudia-server/src/claudia_server/composes.py:459
 msgid "this suggestion is not open any more"
 msgstr ""
 
@@ -7953,7 +7973,7 @@ msgstr ""
 msgid "words"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:396
+#: packages/claudia-server/src/claudia_server/composes.py:402
 msgid "words must be from 0 to {limit}"
 msgstr ""
 
@@ -8139,6 +8159,10 @@ msgstr ""
 
 #: web/app/components/PivotPanel.vue:223
 msgid "{field}: move, settings or remove"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/composes_words.py:76
+msgid "{find!r} is {count} times in paragraph {block}, not {occurrence}"
 msgstr ""
 
 #: web/app/lib/search.ts:283
@@ -8533,7 +8557,7 @@ msgstr ""
 msgid "{what} (kept as “{name}”)"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:135
+#: packages/claudia-server/src/claudia_server/composes.py:138
 msgid "{what} is outside the paragraph"
 msgstr ""
 

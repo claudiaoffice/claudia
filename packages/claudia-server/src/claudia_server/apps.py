@@ -12,6 +12,7 @@ from .assistant import Assistant, Engine, Say, Step, Task
 from .composes import composes_methods
 from .computes import computes_methods
 from .creates import creates_methods, creates_methods_with
+from .document_lens import DocumentLens
 from .lens import Lens
 from .model_engine import Budget, ModelEngine, tools_of
 from .protocol import MethodTable, core_methods
@@ -54,8 +55,10 @@ _ENGINES: dict[str, Callable[[], Engine]] = {
 # none, so an assistant for it can write nothing until somebody decides what it may do.
 MODEL_METHODS = {
     "computes": ("set_cells", "add_sheet", "structure", "resize_lines", "search_replace"),
-    # D640: as in the other apps, the words and the paragraph styles; ``suggest`` for what it can only remark on.
-    "composes": ("suggest", "replace_text", "set_style"),
+    # D640: as in the other apps, the words and the paragraph styles; ``suggest`` for what it can only remark on. D681:
+    # a model quotes words instead (``replace_words``, ``suggest_words``) and adds paragraphs; ``replace_text`` and
+    # ``suggest`` (offsets) are the stand-in's and never described to a model (``NOT_FOR_A_MODEL``).
+    "composes": ("suggest", "replace_text", "set_style", "suggest_words", "replace_words", "add_paragraphs"),
     # D265: slides and the objects that need no binary data, their words and their words' style; D342: the speaker
     # notes. Not images, export, snapping or rotation to begin with, and not the planned times (people plan).
     "creates": (
@@ -69,12 +72,14 @@ MODEL_METHODS = {
         "remove_object",
     ),
 }
-# What it may write for a person who chose *suggest* (D262). Composes' ``suggest`` *is* its suggest mode; computes and
+# What it may write for a person who chose *suggest* (D262). Composes' suggestions *are* its suggest mode; computes and
 # creates have no way to propose yet (E7.8), so there it may write nothing until a person switches to *act*.
-SUGGEST_METHODS = {"computes": (), "composes": ("suggest",), "creates": ()}
+SUGGEST_METHODS = {"computes": (), "composes": ("suggest", "suggest_words"), "creates": ()}
+# Methods of the allow-list a model is not told about: they take character offsets, which a model cannot count (D681).
+NOT_FOR_A_MODEL = {"composes": ("suggest", "replace_text")}
 # The apps whose documents the model can be shown and its changes reported on (E7.5): without a lens there is no
 # model-driven AI for an app, and its stand-in (if it has one) answers instead.
-_LENSES: dict[str, Lens] = {"computes": WorkbookLens(), "creates": SlideLens()}
+_LENSES: dict[str, Lens] = {"computes": WorkbookLens(), "composes": DocumentLens(), "creates": SlideLens()}
 
 
 def methods_for(model_cls: type[DocumentModel], *, shapes: ShapeLibrary | None = None) -> MethodTable:
@@ -105,8 +110,8 @@ def stand_in_assistant_for(model_cls: type[DocumentModel]) -> Callable[[], Assis
 def model_assistant_for(
     model_cls: type[DocumentModel], runner: ModelRunner, *, max_waiting: int = 4, budget: Budget | None = None
 ) -> Callable[[], Assistant] | None:
-    """Makes assistants that ask a language model, for the apps that have a lens (workbooks, presentations); ``None``
-    for the others.
+    """Makes assistants that ask a language model, for the apps that have a lens (workbooks, texts, presentations);
+    ``None`` for the others.
 
     All assistants share the one ``runner``: one model for the server. ``max_waiting`` questions of a document may
     wait behind the one being answered; ``budget`` is what one question may cost (rounds, requests)."""
@@ -115,7 +120,8 @@ def model_assistant_for(
     if lens is None or names is None:
         return None
     table = methods_for(model_cls)
-    tools = (*tools_of(table, lens.look_methods, kind="look"), *tools_of(table, names))
+    hidden = NOT_FOR_A_MODEL.get(model_cls.app, ())
+    tools = (*tools_of(table, lens.look_methods, kind="look"), *tools_of(table, [n for n in names if n not in hidden]))
     proposes = SUGGEST_METHODS.get(model_cls.app, ())
     return lambda: Assistant(
         ModelEngine(runner, tools, lens, budget=budget or Budget()),

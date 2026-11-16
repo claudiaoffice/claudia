@@ -14,7 +14,16 @@ each document. In *suggest* mode it only suggests: each suggestion is shown inli
 the change, or leave it and it stays open for later. In *act* mode it makes the fixes itself, and every one is a step
 in the history that undo takes back.
 
-## What it understands
+## With a language model
+
+When the server runs a language model, ask in your own words: `@ai tighten the second paragraph`, `@ai add a heading
+for the results`, `@ai check the spelling of this paragraph`. It sees the paragraph your cursor is in. In act mode it
+rewrites words, adds paragraphs and gives paragraphs a style, then reads what it changed and corrects itself; in
+suggest mode it proposes the same changes as suggestions.
+
+## What it understands without one
+
+Without a language model a simple stand-in answers, which understands only a few phrases:
 
 - `@ai review this text` (or `check`, `proofread`, `edit`, `improve`, `polish`, `tighten`, `fix`, `look`) reads the
   whole document and suggests fixes for spelling, wordy phrases, "very", doubled spaces, and flags sentences that

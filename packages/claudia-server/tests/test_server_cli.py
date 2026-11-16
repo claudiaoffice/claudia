@@ -540,7 +540,7 @@ def test_one_language_model_answers_in_every_app_that_has_a_lens(tmp_path, model
             found[module.app] = type(hosted.assistant.engine).__name__
         return found
 
-    assert asyncio.run(engines()) == {"computes": "ModelEngine", "composes": "TextEngine", "creates": "ModelEngine"}
+    assert asyncio.run(engines()) == {"computes": "ModelEngine", "composes": "ModelEngine", "creates": "ModelEngine"}
     result.close()
 
 

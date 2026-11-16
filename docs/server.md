@@ -169,7 +169,10 @@ sentence naming the one that is here, D535), and a server that keeps documents i
   ("I could not answer: ..."), never silently. In a workbook the model may ask for `set_cells`, `add_sheet`,
   `structure`, `resize_lines` and `search_replace`; in a presentation (E7.9, D265) for `add_slide`, `add_object` (text boxes and
   shapes), `set_text`, `set_paragraph_style`, `move_object`, `resize_object` and `remove_object`, and it reads
-  `slides`, `slide`, `shapes` and `styles` (`claudia_server.slide_lens`); it is told how in its prompt, built from
+  `slides`, `slide`, `shapes` and `styles` (`claudia_server.slide_lens`); in a text (E7.10, D680) for `replace_words`,
+  `add_paragraphs` and `set_style` when the asker chose *act* and `suggest_words` when she chose *suggest*, naming
+  paragraphs by id and words by quoting them (D681), and it reads `paragraphs`, `outline`, `styles` and `suggestions`
+  (`claudia_server.document_lens`); it is told how in its prompt, built from
   the method table, and may ask for nothing else (`apps.MODEL_METHODS`). Each request that fails is reported to the
   asker with the reason. A presentation server without a model answers `@ai` that it has none. It remembers the last six exchanges with each person while the document is loaded.
   What is provisional: the prompt names the sheets but does not show cell contents yet (E7.5), and the answer is

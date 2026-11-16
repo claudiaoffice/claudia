@@ -69,7 +69,14 @@ class WorkbookLens:
     look_methods: tuple[str, ...] = ("sheets", "cells", "functions", "function_help")
 
     # -- where the model starts
-    def orient(self, document: Document, *, can_write: bool) -> str:
+    def orient(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
         """How cells are counted, the sheets with what they hold, and the top left corner of the first few."""
         model = document.model
         assert isinstance(model, WorkbookModel)

@@ -9,6 +9,14 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - `add_image` and `describe_object` in composes (CODE-27): a picture comes into a text from disk, hanging from a
   character (`block`, `offset`), and any object of a text can be described or marked decorative, as in the other two
   apps. `PROTOCOL_VERSION` stays 1: methods were added.
+- The AI in composes (E7.10, D680, D681): a document lens (`DocumentLens`), so a server with a language model answers
+  `@ai` in a text with the model-driven loop as in computes and creates; the stand-in answers without one. For a
+  person who chose *act* the assistant may also call `replace_words` and `add_paragraphs`; for *suggest*,
+  `suggest_words`. A model is never offered `replace_text` or `suggest`, which take offsets. New methods for the text
+  by what it says, open to everyone except `suggest_words` (the assistant's): `paragraphs(first?, count=20,
+  containing?)`, `outline`, `replace_words(block, find, text, occurrence=1)`, `add_paragraphs(text, after?, style?)`
+  and `suggest_words(block, find, reason, replacement?, occurrence=1)`. `Lens.orient` takes `asker` and `writes`.
+  `PROTOCOL_VERSION` stays 1: methods were added.
 - `name_thing` (D554), in the three apps: give a thing that has no name the one it gets when first pointed at (a
   heading of a text its own words, anything else "Paragraph 1", "Text box 3" ... in the asker's language); a named
   thing keeps its name and nothing is written. `blocks` in composes says a named paragraph's `name`.

@@ -80,7 +80,14 @@ class SlideLens:
     look_methods: tuple[str, ...] = ("slides", "slide", "shapes", "styles")
 
     # -- where the model starts
-    def orient(self, document: Document, *, can_write: bool) -> str:
+    def orient(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
         """How a slide is measured, the slides with how many objects, and what is on the first few."""
         model = document.model
         assert isinstance(model, SlideModel)

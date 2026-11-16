@@ -3,7 +3,7 @@ id: composes.asking-ai-to-review
 title: Wie bitte ich die KI, meinen Text zu prüfen?
 apps: composes
 language: de
-source-hash: 796226351faf
+source-hash: e65949173ce8
 tags: KI, Assistent, Prüfen, Vorschläge, Chat
 explains: "@ai, Vorschläge"
 ---
@@ -15,7 +15,17 @@ für sich selbst setzen. Im Modus *Vorschlagen* schlägt er nur vor: Jeder Vorsc
 übernehmen Sie ihn, um die Änderung vorzunehmen, oder lassen Sie ihn, dann bleibt er für später offen. Im Modus
 *Handeln* nimmt er die Korrekturen selbst vor, und jede ist ein Schritt im Verlauf, den Rückgängig zurücknimmt.
 
-## Was er versteht
+## Mit einem Sprachmodell
+
+Hat der Server ein Sprachmodell, bitten Sie in Ihren eigenen Worten: `@ai straffe den zweiten Absatz`, `@ai füge eine
+Überschrift für die Ergebnisse hinzu`, `@ai prüfe die Rechtschreibung dieses Absatzes`. Er sieht den Absatz, in dem Ihr
+Cursor steht. Im Modus *Handeln* formuliert er Wörter um, fügt Absätze hinzu und gibt Absätzen eine Formatvorlage,
+liest dann, was er geändert hat, und korrigiert sich; im Modus *Vorschlagen* bietet er dieselben Änderungen als
+Vorschläge an.
+
+## Was er ohne Sprachmodell versteht
+
+Ohne Sprachmodell antwortet ein einfacher Platzhalter, der nur wenige englische Wendungen versteht:
 
 - `@ai review this text` (oder `check`, `proofread`, `edit`, `improve`, `polish`, `tighten`, `fix`, `look`) liest das
   ganze Dokument und schlägt Korrekturen für Rechtschreibung, umständliche Formulierungen, „very“ und doppelte

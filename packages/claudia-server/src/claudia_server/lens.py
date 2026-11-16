@@ -64,8 +64,18 @@ class Lens(Protocol):
     #: The read requests the model may make (they never change the document).
     look_methods: tuple[str, ...]
 
-    def orient(self, document: Document, *, can_write: bool) -> str:
-        """Where the model starts: how things are counted and named, and what is in the document, briefly."""
+    def orient(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
+        """Where the model starts: how things are counted and named, and what is in the document, briefly.
+
+        ``asker`` is who asked (a lens may say where she is working); ``writes`` the write methods the model is
+        offered for her (``None``: no limit), so an example names one it may use."""
         ...
 
     def show(self, method: str, params: dict, result: Any) -> str:
