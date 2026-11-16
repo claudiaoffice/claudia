@@ -3,6 +3,17 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.15.0] - 2026-11-16
+
+Lists in a presentation, counted with the structure every app shares (step C, E10.21). State schema 12 → 13 (a
+snapshot of 12 is rebuilt from the log, D15; restoring one without lists gives none).
+
+### Added
+- `SlideModel.lists` (a `ListBook`, in the state as `lists`), `list_in_use`, `labels()`, `reading_order()`,
+  `structure_version`, `structure` and `settle`: the presentation is a `ParagraphHost`. The words of the objects are read
+  slide by slide, on each slide in stacking order (bottom first), with the slide's number as their place, so a list
+  continues from one text box to the next, across slides.
+
 ## [0.14.0] - 2026-11-16
 
 A slide title (E9.22, E10.21). State schema 11 → 12 (a snapshot of 11 is rebuilt from the log, D15).

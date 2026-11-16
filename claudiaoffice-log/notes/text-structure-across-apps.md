@@ -1,6 +1,6 @@
 # Text structure across the three apps — the entities, where they live, what moves (plan)
 
-**Status: plan of 2026-11-16; steps A and B built the same day (section 8). Steps C–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
+**Status: plan of 2026-11-16; steps A, B and C built the same day (sections 8 and 9). Steps D–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
 of the same day) to creates, and replaces that note's section 11 ("Where the code goes"). The class diagram is
 `mockups/text-structure-architecture.svg`; it replaces `composes-toc-architecture.svg`. No decision numbers are taken.
 
@@ -289,3 +289,19 @@ Written first, as part of the steps above:
   `layout/tests/lists.test.ts`).
 - **The server's object-id generator in three copies** was already one function (`claudia_server.wire.fresh_id`,
   CODE-27) on main by the time it was looked at; nothing to do.
+
+## 9. Done: step C (2026-11-16, patch 5)
+
+- `claudia_core.structure`: `ParagraphHost`, `Placed`, `TextStructure` and `LabelsChanged` (moved from composes; same
+  wire form, `{"type": "labels", "labels": {paragraph id: label or null}}`). `TextStructure.labels()` counts the items
+  in reading order with `numbering_labels`, cached on (`structure_version`, `lists.version`); `settle` tells what
+  changed, and never a paragraph that is gone.
+- `ObjectModel.paragraph_order` counts what changes the order or the items of the objects' words (an object added,
+  removed or moved to another container; its paragraph's item or style changed). Typing in an object does not.
+- composes: `TextModel` is the host: each paragraph, then the words of its objects in stacking order (`main` false: they
+  count in lists, not in the outline or a table of contents, open point 2). `labels()` and `settle` delegate.
+  Nothing a person sees changed.
+- creates: `SlideModel` is the host: slides in order, objects in stacking order, the slide's number as `place`. It has
+  a `ListBook` now (state schema 13), so the core list commands work on it, and it tells clients `labels` events. No
+  client shows them yet: that, and a way to make a text box an item, are step D.
+- Not moved in step C, as planned: `SetListItem` (step D) and the text commands (step G).

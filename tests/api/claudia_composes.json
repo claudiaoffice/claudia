@@ -1,5 +1,5 @@
 {
- "version": "0.12.0",
+ "version": "0.13.0",
  "AcceptSuggestion": {
   "class": [
    "TextCommand"
@@ -624,6 +624,7 @@
    "move_suggestions": "(self, command: 'TextCommand') -> 'list[dict]'",
    "named_things": "(self)",
    "put_suggestion": "(self, suggestion: 'Suggestion') -> 'None'",
+   "reading_order": "(self) -> 'Iterator[Placed]'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "remove": "(self, block_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run]]'",
    "restore": "(state: 'dict') -> 'Self'",
@@ -641,7 +642,9 @@
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "visible_suggestions": "(self) -> 'list[dict]'"
   },
-  "properties": []
+  "properties": [
+   "structure_version"
+  ]
  },
  "TextObject": {
   "value": "<TypeAliasType>"

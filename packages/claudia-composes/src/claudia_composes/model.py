@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
+from collections.abc import Iterator
 from dataclasses import dataclass, replace
 from typing import ClassVar, Self
 
@@ -26,24 +27,24 @@ from claudia_core import (
     ObjectSet,
     Palette,
     Paragraph,
+    Placed,
     Region,
     Run,
     SetLanguage,
     StyleBook,
     StyleDef,
+    TextStructure,
     VisualObject,
     builtin_palette,
     delete_runs,
     fits,
     insert_runs,
     new_registry,
-    numbering_labels,
     slice_runs,
     total,
 )
 
 from .anchors import BlockAnchor
-from .events import LabelsChanged
 from .page import PageSetup
 from .region import TextRange
 from .spans import TextCommand
@@ -302,10 +303,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         #: Changes of the structure that numbering depends on (an item set, a paragraph split or joined). Typing
         #: does not count, so it never makes the labels be worked out again.
         self._structure = 0
-        self._labelled: tuple[int, int] | None = None
-        self._labels: dict[str, Label] = {}
-        #: The labels the clients have been told about; what :meth:`settle` compares the labels to.
-        self._told: dict[str, Label] = self.labels()
+        #: What is derived from the paragraphs' structure, the same in every app (step C). The text is its host.
+        self.structure = TextStructure(self)
 
     # -- lifecycle ---------------------------------------------------------------
     @classmethod
@@ -358,6 +357,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         )
         model.block_names = dict(state.get("names", {}))  # schema 10 and earlier: no paragraph had a name
         model._last = dict(state.get("last", model._last))
+        model.structure = TextStructure(model)  # with the objects in: the clients learn the labels with the document
         return model
 
     def region_from_data(self, data: dict) -> Region:
@@ -404,6 +404,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
                 self._stack.setdefault(now, []).append(obj.id)
                 if obj.id in self._stack.get(was, []):
                     self._stack[was].remove(obj.id)
+                self.paragraph_order += 1
             moved.append(self.objects[obj.id].to_data())
         return moved
 
@@ -488,31 +489,30 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """Is any paragraph an item of this list? (Asked by the list commands before they take a list back.)"""
         return any(b.item is not None and b.item.list == list_id for b in self.blocks)
 
-    def labels(self) -> dict[str, Label]:
-        """The marker of every list item, by paragraph id (:func:`claudia_core.numbering_labels`).
+    # -- the shared text structure (step C): the text as a ParagraphHost ---------------------
+    def reading_order(self) -> Iterator[Placed]:
+        """The paragraphs in the order they are read: each paragraph of the text, then the words of the objects that
+        hang from it, in stacking order. Only the text's own paragraphs are its main text."""
+        for block in self.blocks:
+            yield Placed(block, block.id, True, None)
+            for obj in self.objects_on(block.id):
+                if obj.body.paragraph is not None:
+                    yield Placed(obj.body.paragraph, block.id, False, None)
 
-        Worked out again only when the structure or the lists changed since last time; the answer is the model's
-        own, so callers must not change it."""
-        key = (self._structure, self.lists.version)
-        if self._labelled != key:
-            self._labels = numbering_labels(((b.id, b.item) for b in self.blocks), self.lists)
-            self._labelled = key
-        return self._labels
+    @property
+    def structure_version(self) -> tuple[int, int]:
+        """Changes when a paragraph was split, joined or made an item, or an object came, went or moved."""
+        return (self._structure, self.paragraph_order)
+
+    def labels(self) -> dict[str, Label]:
+        """The marker of every list item, by paragraph id: the text's own paragraphs and the words of its objects
+        (:class:`claudia_core.TextStructure`). Shared with the structure, so callers must not change it."""
+        return self.structure.labels()
 
     def settle(self, ctx: Context) -> None:
         """Tell the clients which labels changed: the numbering of a list is derived, so a command that only set
         one item may have renumbered a hundred others."""
-        now = self.labels()
-        if now is self._told or now == self._told:
-            return
-        present = {b.id for b in self.blocks}
-        changed: list[tuple[str, Label | None]] = [
-            (block, label) for block, label in now.items() if self._told.get(block) != label
-        ]
-        changed += [(block, None) for block in self._told if block not in now and block in present]
-        self._told = now
-        if changed:
-            ctx.emit(LabelsChanged(tuple(changed)))
+        self.structure.settle(ctx)
 
     def style_uses(self) -> dict[str, int]:
         """How many paragraphs have each style that is in use."""
@@ -644,6 +644,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             self.objects[object_id] = replace(obj, anchor=obj.anchor.carried_to(target, shift))
             self._stack.setdefault(target, []).append(object_id)
             self._stack[source].remove(object_id)
+            self.paragraph_order += 1
 
     def check_style(self, style: str) -> None:
         """``ValueError`` unless the document has a style with this id that fits a paragraph: a composes paragraph

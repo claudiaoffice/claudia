@@ -1,5 +1,5 @@
 {
- "version": "0.14.0",
+ "version": "0.15.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -537,14 +537,18 @@
    "empty": "() -> 'Self'",
    "get": "(self, object_id: 'str') -> 'SlideObject'",
    "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '') -> 'None'",
+   "labels": "(self) -> 'dict[str, Label]'",
+   "list_in_use": "(self, list_id: 'str') -> 'bool'",
    "named_things": "(self)",
    "notes_of": "(self, slide: 'str') -> 'str'",
+   "reading_order": "(self) -> 'Iterator[Placed]'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "restore": "(state: 'dict') -> 'Self'",
    "serialize": "(self) -> 'dict'",
    "set_notes": "(self, slide: 'str', text: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "set_time": "(self, slide: 'str', seconds: 'int | None') -> 'int | None'",
+   "settle": "(self, ctx) -> 'None'",
    "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "time_of": "(self, slide: 'str') -> 'int | None'",
@@ -552,7 +556,9 @@
    "turned_anchor": "(self, obj: 'SlideObject', rotation: 'int') -> 'SlideAnchor'",
    "unnamed_things": "(self)"
   },
-  "properties": []
+  "properties": [
+   "structure_version"
+  ]
  },
  "SlideNotesChanged": {
   "class": [

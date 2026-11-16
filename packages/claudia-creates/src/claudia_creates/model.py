@@ -15,6 +15,7 @@ What is not here yet: templates and layouts (E10.4), groups, free colours.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import ClassVar, Self, TypeIs
 
@@ -22,13 +23,17 @@ from claudia_core import (
     Command,
     CommandRegistry,
     DocumentModel,
+    Label,
+    ListBook,
     ObjectBody,
     ObjectModel,
     ObjectSet,
     Palette,
+    Placed,
     Region,
     SetLanguage,
     StyleBook,
+    TextStructure,
     VisualObject,
     builtin_palette,
     new_registry,
@@ -124,7 +129,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 10: rendered text containers (D390)
     # 11: slides have names, in one namespace with the objects (D550)
     # 12: styles carry heading levels; a new presentation has a slide title style (E9.22, E10.21)
-    state_schema: ClassVar[int] = 12
+    # 13: the presentation holds lists, whose items are the words of text boxes and shapes (step C, E10.21)
+    state_schema: ClassVar[int] = 13
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -150,6 +156,13 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         #: The colours of this presentation, by what they mean. Part of the document, so it looks the same on
         #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
         self.palette: Palette = palette if palette is not None else builtin_palette()
+        #: The lists the words of the objects may be items of (E10.21). What a list is, not which words are in it.
+        self.lists: ListBook = ListBook()
+        #: Changes when a slide comes or goes, and so the order the words are read in (step C).
+        #: Objects keep their own count.
+        self._slide_order = 0
+        #: What is derived from the structure of the words, the same in every app. The presentation is its host.
+        self.structure = TextStructure(self)
 
     @classmethod
     def empty(cls) -> Self:
@@ -178,6 +191,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "renderings": self.renderings_to_data(),
             "print_setup": self.print_setup.to_data(),
             "language": self.language,
+            "lists": self.lists.to_data(),
         }
 
     @classmethod
@@ -198,6 +212,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model.restore_objects(
             state["objects"], state["images"], state["shapes"], renderings=state.get("renderings", ())
         )
+        model.lists = ListBook.from_data(state.get("lists", ()))  # schema 12 and earlier: no lists
+        model.structure = TextStructure(model)  # the clients learn the labels with the document
         return model
 
     def region_from_data(self, data: dict) -> Region:
@@ -258,6 +274,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.check_thing_name(slide, name)
         self.slides.insert(len(self.slides) if at is None else at, slide)
         self.open_container(slide)
+        self._slide_order += 1
         if notes:
             self.notes[slide] = notes
         if seconds is not None:
@@ -274,10 +291,44 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         place = self.slides.index(slide)
         del self.slides[place]
         self.close_container(slide)
+        self._slide_order += 1
         self.notes.pop(slide, None)
         self.times.pop(slide, None)
         self.slide_names.pop(slide, None)
         return place
+
+    # -- the shared text structure (step C): the presentation as a ParagraphHost ---------
+    def reading_order(self) -> Iterator[Placed]:
+        """The words of the objects in the order they are read: slide by slide, on each slide in stacking order,
+        bottom first (as PowerPoint reads a slide to a screen reader; the owner's decision of 2026-11-16). The place a
+        reader finds them at is the slide's number."""
+        for number, slide in enumerate(self.slides, start=1):
+            for obj in self.objects_on(slide):
+                if obj.body.paragraph is not None:
+                    yield Placed(obj.body.paragraph, slide, True, str(number))
+
+    @property
+    def structure_version(self) -> tuple[int, int]:
+        """Changes when a slide or an object came or went, or the words of an object became another list item."""
+        return (self._slide_order, self.paragraph_order)
+
+    def labels(self) -> dict[str, Label]:
+        """The marker of every list item among the objects' words, by object id (:class:`claudia_core.TextStructure`).
+        Shared with the structure, so callers must not change it."""
+        return self.structure.labels()
+
+    def list_in_use(self, list_id: str) -> bool:
+        """Are the words of any object an item of this list? (Asked by the list commands before they take one back.)"""
+        return any(
+            obj.body.paragraph is not None
+            and obj.body.paragraph.item is not None
+            and obj.body.paragraph.item.list == list_id
+            for obj in self.objects.values()
+        )
+
+    def settle(self, ctx) -> None:
+        """Tell the clients which labels changed: a text box taken away may renumber every one after it."""
+        self.structure.settle(ctx)
 
     # -- names (D550) ------------------------------------------------------------
     def named_things(self):

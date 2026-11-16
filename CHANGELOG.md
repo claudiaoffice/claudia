@@ -4,6 +4,21 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.29.0] - 2026-11-16
+
+The text structure every app shares (step C of `claudiaoffice-log/notes/text-structure-across-apps.md`).
+
+### Added
+- `ParagraphHost` and `Placed`: what an app gives the shared structure: its paragraphs in reading order (each with its
+  container, whether it is part of the main text, and the place a reader finds it at when the app knows it), its style
+  and list books, and a `structure_version`.
+- `TextStructure` (and `Emitter`, what its `settle` tells clients through): the label of every list item, counted in reading order across containers, kept until the structure
+  or the lists change, and `settle`, which tells the clients what changed.
+- `LabelsChanged` (moved here from `claudia-composes`, the same wire form): the labels of paragraphs of a text and of the
+  words of objects, by paragraph id.
+- `ObjectModel.paragraph_order`: changes when an object comes, goes, moves to another container, or its words become
+  another list item or take another style; typing does not change it.
+
 ## [0.28.0] - 2026-11-16
 
 Heading levels (E9.22, step B of `claudiaoffice-log/notes/text-structure-across-apps.md`).

@@ -459,6 +459,10 @@ class ObjectModel[A: Anchor]:
         self.diagrams: dict[str, DiagramDefinition] = {}
         self.renderings: dict[str, RenderedDefinition] = {}
         self._stack: dict[str, list[str]] = {}  # container id -> object ids, bottom first
+        #: Changes whenever the objects' paragraphs may be read in another order or be another list item. An object
+        #: came, went or moved to another container, or its paragraph's item or style changed; typing in an object
+        #: does not count. Part of what a ``ParagraphHost`` reports as its ``structure_version``.
+        self.paragraph_order = 0
 
     # -- what the app brings -----------------------------------------------------
     def containers(self) -> Iterable[str]:
@@ -883,6 +887,7 @@ class ObjectModel[A: Anchor]:
             raise ValueError(f"there is no stacking place {at} among {len(stack)} objects")
         stack.insert(len(stack) if at is None else at, obj.id)
         self.objects[obj.id] = obj
+        self.paragraph_order += 1
 
     def delete_object(self, object_id: str) -> tuple[VisualObject[A], int]:
         """Take an object away; returns it and the stacking place it had."""
@@ -891,6 +896,7 @@ class ObjectModel[A: Anchor]:
         place = stack.index(object_id)
         del stack[place]
         del self.objects[object_id]
+        self.paragraph_order += 1
         return obj, place
 
     def replace_object(self, obj: VisualObject[A]) -> VisualObject[A]:
@@ -903,6 +909,11 @@ class ObjectModel[A: Anchor]:
             raise ValueError("an object cannot change its container")
         self.check_object(obj)
         self.objects[obj.id] = obj
+        before, after = old.body.paragraph, obj.body.paragraph
+        if (before is None) != (after is None) or (
+            before is not None and after is not None and (before.item, before.style) != (after.item, after.style)
+        ):
+            self.paragraph_order += 1
         return old
 
     def objects_changed(
@@ -961,6 +972,7 @@ class ObjectModel[A: Anchor]:
             obj = VisualObject.from_data(data, self.anchor_from_data)
             self.objects[obj.id] = obj
             self._stack.setdefault(obj.container, []).append(obj.id)
+        self.paragraph_order += 1
 
 
 # --------------------------------------------------------------------------- the shared commands

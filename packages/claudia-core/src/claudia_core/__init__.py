@@ -224,6 +224,7 @@ from .replay import replay
 from .revision import MAIN, Branch, Revision
 from .shapes import BOX, FORMAT, ShapeDefinition, ShapeError, parse_shape
 from .store import DocumentStore, MemoryStore
+from .structure import Emitter, LabelsChanged, ParagraphHost, Placed, TextStructure
 from .styles import (
     MAX_HEADING_LEVEL,
     ChangeStyle,
@@ -442,6 +443,11 @@ __all__ = [
     "Step",
     "StyleBook",
     "SetHeadingLevel",
+    "Emitter",
+    "LabelsChanged",
+    "ParagraphHost",
+    "Placed",
+    "TextStructure",
     "StyleDef",
     "StylesChanged",
     "SUPPORTED_IMAGE_FORMATS",

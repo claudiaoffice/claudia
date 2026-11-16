@@ -87,6 +87,20 @@ class docstring says what it holds.) ``claudia_core.SCHEMES`` maps the id of eac
 .. autoclass:: claudia_core.RemoveList
    :exclude-members: list
 
+Text structure
+--------------
+
+.. automodule:: claudia_core.structure
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+.. autoclass:: claudia_core.ParagraphHost
+.. autoclass:: claudia_core.Placed
+.. autoclass:: claudia_core.TextStructure
+.. autoclass:: claudia_core.LabelsChanged
+.. autoclass:: claudia_core.Emitter
+
 Page setup and language
 -----------------------
 
@@ -282,6 +296,8 @@ reaches a browser is always literal.
 .. autoclass:: claudia_core.ChangeStyle
 .. autoclass:: claudia_core.RenameStyle
 .. autoclass:: claudia_core.RemoveStyle
+.. autoclass:: claudia_core.SetHeadingLevel
+.. autodata:: claudia_core.MAX_HEADING_LEVEL
 
 Facets, kinds and slots
 -----------------------

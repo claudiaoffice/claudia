@@ -1,5 +1,5 @@
 {
- "version": "0.28.0",
+ "version": "0.29.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -527,6 +527,16 @@
   },
   "properties": []
  },
+ "Emitter": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "emit": "(self, event: 'object') -> 'None'"
+  },
+  "properties": []
+ },
  "Entry": {
   "class": [
    "object"
@@ -816,6 +826,16 @@
    "object"
   ],
   "init": "(marker: 'str', path: 'tuple[int, ...] | None' = None) -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "LabelsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(labels: 'tuple[tuple[str, Label | None], ...]') -> None",
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
@@ -1176,6 +1196,26 @@
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
    "written_by": "(self, author: 'str | None', via: 'str | None' = None) -> 'Paragraph'"
   },
+  "properties": []
+ },
+ "ParagraphHost": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "reading_order": "(self) -> 'Iterable[Placed]'"
+  },
+  "properties": [
+   "structure_version"
+  ]
+ },
+ "Placed": {
+  "class": [
+   "tuple"
+  ],
+  "init": "(paragraph: Paragraph, container: str, main: bool, place: str | None)",
+  "methods": {},
   "properties": []
  },
  "Presence": {
@@ -1867,6 +1907,19 @@
  },
  "TEXT_FLOOR": {
   "value": "4.5"
+ },
+ "TextStructure": {
+  "class": [
+   "object"
+  ],
+  "init": "(host: 'ParagraphHost') -> 'None'",
+  "methods": {
+   "effective_item": "(self, paragraph: 'Paragraph') -> 'ListItem | None'",
+   "labels": "(self) -> 'dict[str, Label]'",
+   "reading_order": "(self) -> 'Iterator[Placed]'",
+   "settle": "(self, ctx: 'Emitter') -> 'None'"
+  },
+  "properties": []
  },
  "ThingRenamed": {
   "class": [

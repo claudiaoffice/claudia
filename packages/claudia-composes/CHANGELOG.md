@@ -3,6 +3,19 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.13.0] - 2026-11-16
+
+The text counts with the structure every app shares (step C).
+
+### Added
+- `TextModel.reading_order()`, `TextModel.structure_version` and `TextModel.structure` (a `claudia_core.TextStructure`):
+  the text is a `ParagraphHost`. Its paragraphs are read in order, each followed by the words of the objects that hang
+  from it, in stacking order; only its own paragraphs are its main text.
+### Changed
+- `TextModel.labels()` comes from the shared structure and also counts the words of the objects: an object's words that
+  are an item of a list count between the paragraph they hang from and the next one.
+- `LabelsChanged` is `claudia_core.LabelsChanged`; the name stays importable from here.
+
 ## [0.12.0] - 2026-11-16
 
 Headings by their level (E9.22). State schema 11 → 12 (a snapshot of 11 is rebuilt from the log, D15).

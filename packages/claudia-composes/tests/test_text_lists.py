@@ -232,3 +232,29 @@ def test_the_clients_hear_of_the_lists_too(listed):
     events = collect(listed, ListsChanged)
     listed.execute(CreateList(ListDef("l3", "numbers", 1, "Steps")), author="ann")
     assert events[-1].to_data()["lists"][-1] == {"id": "l3", "scheme": "numbers", "start": 1, "name": "Steps"}
+
+
+# ----------------------------------------------------------------------------- the shared structure (step C)
+def test_the_words_of_an_object_hanging_from_the_text_are_read_after_their_paragraph_and_count_in_a_list(listed):
+    """The text is a ParagraphHost: its paragraphs in order, each followed by the objects hanging from it."""
+    from dataclasses import replace
+
+    from claudia_composes import BlockAnchor
+    from claudia_core import ObjectBody, VisualObject, paragraph_for
+
+    listed.execute(SetListItem("b1", ListItem("l1", 0)), author="ann")
+    listed.execute(SetListItem("b2", ListItem("l1", 0)), author="ann")
+    words = replace(paragraph_for("o1", "body", "a note"), item=ListItem("l1", 0))
+    listed.model.insert_object(
+        VisualObject(ObjectBody("o1", "text", 200, 80, "plain-box", words), BlockAnchor("b1", 1))
+    )
+    order = [(placed.paragraph.id, placed.container, placed.main) for placed in listed.model.reading_order()]
+    assert order[:3] == [("b1", "b1", True), ("o1", "b1", False), ("b2", "b2", True)]
+    assert markers(listed) == {"b1": "1.", "o1": "2.", "b2": "3."}
+
+
+def test_the_text_counts_with_the_structure_every_app_shares(listed):
+    from claudia_core import TextStructure
+
+    assert isinstance(listed.model.structure, TextStructure)
+    assert listed.model.labels() is listed.model.structure.labels()

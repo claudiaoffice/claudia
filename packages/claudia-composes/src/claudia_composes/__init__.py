@@ -19,6 +19,7 @@ from claudia_core import (  # noqa: F401
     DescribeObject,
     ForgetImage,
     ForgetShape,
+    LabelsChanged,  # told by the structure every app shares (step C)
     MoveObject,
     ObjectBody,
     ObjectSet,
@@ -50,7 +51,7 @@ from .commands import (
     SetStyle,
     SplitBlock,
 )
-from .events import ItemChanged, LabelsChanged
+from .events import ItemChanged
 from .language import LanguageError, normalize_language
 from .model import (
     BUILTIN_STYLES,
