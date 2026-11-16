@@ -36,7 +36,7 @@ const headingOf = (style: string) => headingAttrs(state.styles, style)
 const cssOf = (style: string) => paragraphCss(state.styles.find((s) => s.id === style)?.resolved ?? {})
 
 /** A list item's indent and gap, from the scheme of its list (E9.21); the marker itself is drawn by CSS. */
-const layoutOf = (at: number) => itemLayout(state.blocks, at, state.lists, state.schemes) ?? {}
+const layoutOf = (at: number) => itemLayout(state.blocks, at, state.lists, state.schemes, cssOf(state.blocks[at]?.style ?? '')) ?? {}
 
 // ------------------------------------------------------------------------------ what is drawn
 interface TextSeg {
@@ -478,7 +478,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
           v-for="(block, at) in state.blocks"
           :key="`${block.id}:${tagOf(block.style)}`"
           class="para"
-          :class="[`st-${block.style}`, { item: block.item, tight: layoutOf(at)['--item-gap'] }, replayClass(block.id)]"
+          :class="[`st-${block.style}`, { item: block.item }, replayClass(block.id)]"
           :style="{ ...cssOf(block.style), ...layoutOf(at) }"
           v-bind="headingOf(block.style)"
           :data-block="block.id"
@@ -548,12 +548,9 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
 
 /* a list item: the marker is drawn, not typed, in the gutter before the text (E9.21). It is not part of the text, so
    selection, copy, find and the caret never see it. */
+/* its padding and the gap to the next item come inline from `itemLayout`, after the style's own CSS */
 .doc :deep(.para.item) {
   position: relative;
-  padding-left: var(--item-pad);
-}
-.doc :deep(.para.item.tight) {
-  margin-bottom: var(--item-gap); /* the scheme's gap between neighbours; the last item keeps the paragraph's margin */
 }
 .doc :deep(.para.item[data-marker]::before) {
   content: attr(data-marker);

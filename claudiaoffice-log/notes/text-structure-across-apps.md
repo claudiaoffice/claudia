@@ -277,3 +277,15 @@ Written first, as part of the steps above:
 - Markers in text boxes on slides and pages (step C or D: until then no object's paragraph can be a list item).
 - PPTX/ODP title placeholders imported as Slide title (E10.21).
 - The presenter could name a slide by its Slide title instead of its first words (E10.21).
+
+### Bugs found while building A and B, fixed the same day (patch 4)
+
+- **A list item in a padded style** (quote, remark, definition) lost its indent in the editor: the style's own
+  `padding-left` sat on the paragraph inline and won over the item's class rule, so the marker was drawn into the
+  padding. The same happened to the **gap between items** in every style with a space after (body text has one): the
+  class rule never won, so the editor showed the paragraph's own space, not the scheme's gap. `itemLayout` now writes
+  `padding-left` (after the style's own) and `margin-bottom` (the gap) into the paragraph itself, and the marker starts
+  after the style's padding, as the printed page has always done (tests on both sides: `web/tests/list-layout.test.ts`,
+  `layout/tests/lists.test.ts`).
+- **The server's object-id generator in three copies** was already one function (`claudia_server.wire.fresh_id`,
+  CODE-27) on main by the time it was looked at; nothing to do.

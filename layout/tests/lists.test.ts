@@ -83,6 +83,21 @@ describe('a list on the page', () => {
     expect(marker.face).not.toEqual(text.face)
   })
 
+  it('puts the marker and the text of an item after its style’s own padding and border, as the editor does', () => {
+    const all = runs(doc({
+      blocks: [
+        { id: 'q0', style: 'quote', text: 'Zitat.' },
+        { id: 'q1', style: 'quote', text: 'Gezählt.', item: { list: 'l1', level: 0 }, label: { marker: '1.' } },
+      ],
+    }))
+    const plain = all.find((r) => r.text === 'Zitat.')!.x // where a quote's text starts: after its border and padding
+    const marker = all.find((r) => r.text === '1.')!
+    const text = all.find((r) => r.text === 'Gezählt.')!
+    const em = 14000 // the quote is 14pt
+    expect(marker.x).toBeGreaterThanOrEqual(plain)
+    expect(text.x).toBeCloseTo(plain + 1.6 * em, -1)
+  })
+
   it('leaves a paragraph without an item where it was, and an item without a label counted yet without a marker', () => {
     const all = runs(doc({ blocks: [{ id: 'b1', style: 'body', text: 'Davor.' }, { id: 'b2', style: 'body', text: 'Noch nicht gezählt.', item: { list: 'l1', level: 0 } }] }))
     expect(all.map((r) => r.text)).toEqual(['Davor.', 'Noch', 'nicht', 'gezählt.'])

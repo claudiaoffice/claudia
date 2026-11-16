@@ -21,8 +21,8 @@ describe('where a list item sits', () => {
   })
 
   it('an item is moved in one step per level, the marker hanging in the step before the text', () => {
-    expect(layout([item('a', 'l1', 0)], 0)).toEqual({ '--item-left': '0em', '--item-step': '1.6em', '--item-pad': '1.6em', '--marker-gap': '0.45em' })
-    expect(layout([item('a', 'l2', 2)], 0)).toEqual({ '--item-left': '4em', '--item-step': '2em', '--item-pad': '6em', '--marker-gap': '0.45em' })
+    expect(layout([item('a', 'l1', 0)], 0)).toEqual({ '--item-left': '0em', '--item-step': '1.6em', '--item-pad': '1.6em', '--marker-gap': '0.45em', 'padding-left': '1.6em' })
+    expect(layout([item('a', 'l2', 2)], 0)).toEqual({ '--item-left': '4em', '--item-step': '2em', '--item-pad': '6em', '--marker-gap': '0.45em', 'padding-left': '6em' })
   })
 
   it('between two items of one list the gap is the scheme’s, whatever their levels', () => {
@@ -35,6 +35,19 @@ describe('where a list item sits', () => {
   it('a note or another list after an item ends the tight run', () => {
     expect(layout([item('a', 'l1'), plain('n')], 0)!['--item-gap']).toBeUndefined()
     expect(layout([item('a', 'l1'), item('b', 'l2')], 0)!['--item-gap']).toBeUndefined()
+  })
+
+  it('keeps a style’s own left padding and puts the marker and the text after it, as the printed page does', () => {
+    const quote = { 'padding-left': '1.1em', 'border-left': '3px solid red', 'margin-bottom': '0.9em' }
+    const css = itemLayout([item('a', 'l1', 1), item('b', 'l1')], 0, lists, schemes, quote)!
+    expect(css['padding-left']).toBe('calc(1.1em + 3.2em)')
+    expect(css['--item-left']).toBe('calc(1.1em + 1.6em)')
+  })
+
+  it('writes the gap to the next item into the paragraph itself, so the style’s own space after cannot win over it', () => {
+    const css = itemLayout([item('a', 'l1'), item('b', 'l1')], 0, lists, schemes, { 'margin-bottom': '0.9em' })!
+    expect(css['margin-bottom']).toBe('0.25em')
+    expect(itemLayout([item('a', 'l1')], 0, lists, schemes, { 'margin-bottom': '0.9em' })!['margin-bottom']).toBeUndefined()
   })
 
   it('knows a sensible default for a list or scheme it has not been told about yet', () => {
