@@ -33,6 +33,7 @@ Unused numbers in a closed block stay unused.
 | D901–D920 | pages, print preview and PDF: the layout library, fonts for clients, page setup (branch `layouting`; D901–D918 used) | 2026-11-12 | open |
 | D600–D619 | names, tables and SQL(): named ranges, structured references, spilling, SQL(), chart source (branch `named-ranges-sql`) | 2026-11-11 | open |
 | D620–D639 | pivot tables: a pivot is a named definition that compiles to SQL, its grid, its interface, its files (E6.30; branch `pivot`; D620–D627 used) | 2026-11-15 | open |
+| D640–D659 | code review follow-up: the text app's AI acts or suggests like the others (CODE-27 follow-up; D640 used) | 2026-11-15 | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D318 used) | 2026-11-10 | open |
 | D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D414 used) | 2026-11-11 | open |
 | D430–D449 | one server for all three apps: app modules, addresses, limits, idle exit, folder lock, isolation (branch `one-server`; D430–D448 used) | 2026-11-14 | open |
@@ -45,6 +46,7 @@ Unused numbers in a closed block stay unused.
 | D550–D559 | the dock: names of things, replaying the history by scrubbing, tags in the chat (branch `dock`; D550–D554 used, D554 by the QA of 2026-11-15; first given D520–D539, which `search-ui` and `file-handling` had too, renumbered at the merge) | 2026-11-15 | open |
 | D470–D479 | search & replace in composes and creates: what is searched, shortcuts in a text, locks (E9.28, E10.19; branch `search`; D470–D472 used) | 2026-11-14 | open |
 | D530–D549 | document description and tags, the front page's way back from a collection, moving and copying documents between places (branch `file-handling`; D530–D536 used, D536 by the QA of 2026-11-15) | 2026-11-15 | open |
+| D660–D679 | code review follow-up: one Neutralino package for macOS and Windows (CODE-14; D660 used) | 2026-11-15 | open |
 
 ## Never to be used
 

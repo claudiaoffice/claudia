@@ -7,13 +7,11 @@
 * ``continue_list(block)``: let the list of ``block`` go on where the nearest earlier list of its kind ends;
 * ``list_start(list, start)``: the number a list's first level starts at.
 
-Each is one request and so one step in the history, and none is open to the assistant (D63): the structure of a text
-is written by people, like its words. Which Enter, Tab or Backspace does is the session's rule, built from these.
+Each is one request and so one step in the history; what the assistant may call is its allow-list (SEC-10, D640).
+Which Enter, Tab or Backspace does is the session's rule, built from these.
 """
 
 from __future__ import annotations
-
-from collections.abc import Callable
 
 from claudia_composes import SetListItem, TextModel
 from claudia_core import (
@@ -120,8 +118,8 @@ def _plan_continue(model: TextModel, block_id: str) -> list[Command]:
     return [*moved, RemoveList(item.list)]
 
 
-def add_list_methods(table: MethodTable, *, guard: Callable[[Context], None]) -> None:
-    """Add the list methods to the text app's method table; ``guard`` refuses the assistant."""
+def add_list_methods(table: MethodTable) -> None:
+    """Add the list methods to the text app's method table."""
 
     @table.method("make_list", "blocks:list scheme:str? base:revision?", write=True)
     def _make_list(ctx, *, blocks, scheme, base):
@@ -129,7 +127,6 @@ def add_list_methods(table: MethodTable, *, guard: Callable[[Context], None]) ->
         (`scheme` null). Paragraphs that already are that kind leave their list; a whole list asked for in the other
         kind changes its scheme; otherwise the paragraphs become a new list, at the levels they had. One step.
         Returns `{revision}`."""
-        guard(ctx)
         model = ctx.document.model
         assert isinstance(model, TextModel)
         commands, name = _plan_make_list(model, _blocks(model, blocks), scheme)
@@ -142,7 +139,6 @@ def add_list_methods(table: MethodTable, *, guard: Callable[[Context], None]) ->
         """Move the list items among `blocks` one level in (`by` 1) or out (`by` -1). An item goes no deeper than
         one below the paragraph above it, and a list's first item cannot go in. Paragraphs that are no items, and
         items that cannot move, stay. Returns `{revision, changed}`: how many items moved (none: no step is made)."""
-        guard(ctx)
         if by not in (1, -1):
             raise RequestError("bad_request", msg("by is 1 (in) or -1 (out)"))
         model = ctx.document.model
@@ -156,7 +152,6 @@ def add_list_methods(table: MethodTable, *, guard: Callable[[Context], None]) ->
     def _continue_list(ctx, *, block, base):
         """Let the list that `block` is an item of go on where the nearest earlier list of the same kind ends: its
         items join that list and keep their levels. `command_error` if `block` is no item or there is no such list."""
-        guard(ctx)
         model = ctx.document.model
         assert isinstance(model, TextModel)
         return _run(ctx, _plan_continue(model, block), "Continue list", base)
@@ -164,7 +159,6 @@ def add_list_methods(table: MethodTable, *, guard: Callable[[Context], None]) ->
     @table.method("list_start", "list:str start:int base:revision?", write=True)
     def _list_start(ctx, *, list, start, base):  # noqa: A002  (the parameter is named as it is on the wire)
         """Number the first level of the list `list` from `start` on (1 to 999999)."""
-        guard(ctx)
         model = ctx.document.model
         assert isinstance(model, TextModel)
         try:

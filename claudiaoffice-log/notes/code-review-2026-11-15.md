@@ -41,7 +41,7 @@ one copy (CODE-32).
 ## Questions for the owner
 
 * **CODE-14:** D113 says one package per OS. Merging the macOS and Windows sources into one `clients/neutralino/`
-  package needs that decision amended. Go ahead?
+  package needs that decision amended. Go ahead? *Answered 2026-11-15: yes, and the name is good. Done as D660.*
 * **CODE-33:** `claudia-client` is used by no client. Delete it, or make it importable by the Linux shell (drop its
   unused `claudia-core` dependency, target Python 3.12) and replace the shell's own `trust.py`?
 * **CODE-31:** translate history entries on the server (in the connection's locale, as other server messages are) or

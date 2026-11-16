@@ -660,8 +660,8 @@ def test_the_manifest_can_be_listed_for_the_page_and_the_docs(app: manifest.Mani
 def test_role_is_in_the_listing_so_the_macos_client_can_read_it_without_importing_this_module(
     app: manifest.Manifest,
 ) -> None:
-    """The macOS client (``clients/macos``) has no PyGObject and no reason to import this GTK-adjacent package at
-    run time; it reads ``describe()``'s JSON instead (``clients/macos/tools/generate_menu.py``). ``role`` has to
+    """The macOS client (``clients/neutralino``) has no PyGObject and no reason to import this GTK-adjacent package
+    at run time; it reads ``describe()``'s JSON instead (``clients/neutralino/tools/generate_menu.py``). ``role`` has to
     survive that trip or D158's Cocoa mapping cannot be built on the other side."""
     listing = app.describe()
     by_id = {a["id"]: a for menu in listing["menus"] for a in _flatten(menu)}

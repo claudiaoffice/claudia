@@ -11,8 +11,6 @@ import importlib.util
 import sys
 from pathlib import Path
 
-import pytest
-
 SPEC = importlib.util.spec_from_file_location("check_debt", Path(__file__).parent.parent / "scripts" / "check_debt.py")
 check_debt = importlib.util.module_from_spec(SPEC)
 sys.modules["check_debt"] = check_debt
@@ -115,13 +113,13 @@ def test_the_servers_catalog_is_checked_like_the_shells():
     assert check.command[-3:] == ("--locale-dir", check_debt.SERVER_LOCALE_DIR, "--check")
 
 
-@pytest.mark.parametrize("shell", ["windows", "macos"])
-def test_the_generated_menus_of_the_neutralino_shells_are_checked(shell):
-    """The Windows and macOS menus are JSON generated from the Linux client's manifest. Only a CI job compared them,
+def test_the_generated_menus_of_the_neutralino_client_are_checked():
+    """The macOS and Windows menus are JSON generated from the Linux client's manifest. Only a CI job compared them,
     so the containers merge of 2026-11-15 added Insert ▸ Container to the manifest and left both shells without it
-    (CODE-16 again): the gate on a laptop now says so too."""
-    check = next(c for c in check_debt.checks() if c.name == f"menus {shell}")
-    assert check.cwd == check_debt.ROOT / "clients" / shell
+    (CODE-16 again): the gate on a laptop now says so too. Since D660 the two are one package, with one menu per
+    app."""
+    check = next(c for c in check_debt.checks() if c.name == "menus neutralino")
+    assert check.cwd == check_debt.ROOT / "clients" / "neutralino"
     assert check.command[-3:] == ("tools/generate_menu.py", "--all", "--check")
 
 

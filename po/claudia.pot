@@ -437,7 +437,7 @@ msgstr ""
 msgid "Administrators"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:406
+#: web/app/components/SidePanel.vue:404
 msgid "Agree"
 msgstr ""
 
@@ -445,7 +445,7 @@ msgstr ""
 msgid "Alignment"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:485 web/app/components/SidePanel.vue:76
+#: web/app/components/SearchPanel.vue:485 web/app/components/SidePanel.vue:75
 msgid "All"
 msgstr ""
 
@@ -609,7 +609,7 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:415
+#: web/app/components/SidePanel.vue:413
 msgid "Back to now"
 msgstr ""
 
@@ -809,7 +809,7 @@ msgstr ""
 msgid "Change your password"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:77
+#: web/app/components/SidePanel.vue:76
 msgid "Changes"
 msgstr ""
 
@@ -825,7 +825,7 @@ msgstr ""
 msgid "Characters from the middle of the text: where to start (from 1) and how many."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:23 web/app/components/SheetChartInsertDialog.vue:124 web/app/components/SheetChartInsertDialog.vue:30 web/app/components/SidePanel.vue:176 web/app/components/SidePanel.vue:180 web/app/lib/descriptions.ts:40
+#: packages/claudia-server/src/claudia_server/thing_names.py:21 web/app/components/SheetChartInsertDialog.vue:124 web/app/components/SheetChartInsertDialog.vue:30 web/app/components/SidePanel.vue:175 web/app/components/SidePanel.vue:179 web/app/lib/descriptions.ts:40
 msgid "Chart"
 msgstr ""
 
@@ -837,7 +837,7 @@ msgstr ""
 msgid "Chart…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:484 web/app/components/SidePanel.vue:78
+#: web/app/components/SidePanel.vue:482 web/app/components/SidePanel.vue:77
 msgid "Chat"
 msgstr ""
 
@@ -913,7 +913,7 @@ msgstr ""
 msgid "Click"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:555 web/app/components/SidePanel.vue:556
+#: web/app/components/SidePanel.vue:553 web/app/components/SidePanel.vue:554
 msgid "Click something in the document to write a tag for it."
 msgstr ""
 
@@ -1221,7 +1221,7 @@ msgstr ""
 msgid "Data from"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:407
+#: web/app/components/SidePanel.vue:405
 msgid "Decline"
 msgstr ""
 
@@ -1289,7 +1289,7 @@ msgstr ""
 msgid "Delete this document"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:500
+#: web/app/components/SidePanel.vue:498
 msgid "Deleted. Show the last moment it was there."
 msgstr ""
 
@@ -1349,7 +1349,7 @@ msgstr ""
 msgid "Device"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:24 web/app/components/SidePanel.vue:177
+#: packages/claudia-server/src/claudia_server/thing_names.py:22 web/app/components/SidePanel.vue:176
 msgid "Diagram"
 msgstr ""
 
@@ -1721,7 +1721,7 @@ msgstr ""
 msgid "Follow Computation"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:428
+#: web/app/components/SidePanel.vue:426
 msgid "Follow changes"
 msgstr ""
 
@@ -1777,7 +1777,7 @@ msgstr ""
 msgid "Forecast"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:480
+#: web/app/components/SidePanel.vue:478
 msgid "Forget every hidden line"
 msgstr ""
 
@@ -1817,7 +1817,7 @@ msgstr ""
 msgid "Give a colleague a name and a password for {doc}. They open the document with them, like you did. Tell them the password yourself: the server never shows it again."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:529
+#: web/app/components/SidePanel.vue:527
 msgid "Give names to {n} things without one"
 msgstr ""
 
@@ -1873,7 +1873,7 @@ msgstr ""
 msgid "Go to the text box where your cursor is to change this text box only"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:500
+#: web/app/components/SidePanel.vue:498
 msgid "Go to this"
 msgstr ""
 
@@ -1921,7 +1921,7 @@ msgstr ""
 msgid "Hard to read"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:182
+#: packages/claudia-server/src/claudia_server/thing_names.py:25 web/app/components/SidePanel.vue:181
 msgid "Heading"
 msgstr ""
 
@@ -1929,7 +1929,7 @@ msgstr ""
 msgid "Headings"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:396 web/app/lib/document-menus.ts:242
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:394 web/app/lib/document-menus.ts:242
 msgid "Help"
 msgstr ""
 
@@ -1945,11 +1945,11 @@ msgstr ""
 msgid "Hide password"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:414
+#: web/app/components/SidePanel.vue:412
 msgid "History"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:395
+#: web/app/components/SidePanel.vue:393
 msgid "History & Chat"
 msgstr ""
 
@@ -2373,7 +2373,7 @@ msgstr ""
 msgid "Line · soon"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:464
+#: web/app/components/SidePanel.vue:462
 msgid "Lines"
 msgstr ""
 
@@ -2381,7 +2381,7 @@ msgstr ""
 msgid "List"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:28 web/app/components/SidePanel.vue:183
+#: packages/claudia-server/src/claudia_server/thing_names.py:26 web/app/components/SidePanel.vue:182
 msgid "List item"
 msgstr ""
 
@@ -2477,7 +2477,7 @@ msgstr ""
 msgid "Margins"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:429
+#: web/app/components/SidePanel.vue:427
 msgid "Mark where the document changed after this step: solid outlines are what this step changed, dashed ones what changed later"
 msgstr ""
 
@@ -2529,7 +2529,7 @@ msgstr ""
 msgid "Mermaid"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:537
+#: web/app/components/SidePanel.vue:535
 msgid "Message everyone, or @ai …"
 msgstr ""
 
@@ -2565,7 +2565,7 @@ msgstr ""
 msgid "More padding"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:323
+#: web/app/components/SidePanel.vue:322
 msgid "More than {n} places differ from now"
 msgstr ""
 
@@ -2821,7 +2821,7 @@ msgstr ""
 msgid "Nothing"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:322
+#: web/app/components/SidePanel.vue:321
 msgid "Nothing differs from now"
 msgstr ""
 
@@ -2865,15 +2865,15 @@ msgstr ""
 msgid "Nothing yet. Create the first document."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:437
+#: web/app/components/SidePanel.vue:435
 msgid "Nothing yet. Put a text box on the slide."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:437
+#: web/app/components/SidePanel.vue:435
 msgid "Nothing yet. Start writing."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:437
+#: web/app/components/SidePanel.vue:435
 msgid "Nothing yet. Type into a cell."
 msgstr ""
 
@@ -3149,7 +3149,7 @@ msgstr ""
 msgid "Paper"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:29 web/app/components/SidePanel.vue:184 web/app/components/StyleSpec.vue:174 web/app/components/StyleSpec.vue:175 web/app/lib/object-style-host.ts:51 web/app/lib/text-style-host.ts:10
+#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:183 web/app/components/StyleSpec.vue:174 web/app/components/StyleSpec.vue:175 web/app/lib/object-style-host.ts:51 web/app/lib/text-style-host.ts:10
 msgid "Paragraph"
 msgstr ""
 
@@ -3193,7 +3193,7 @@ msgstr ""
 msgid "Pick cells instead…"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:22 web/app/components/SidePanel.vue:175 web/app/lib/descriptions.ts:40
+#: packages/claudia-server/src/claudia_server/thing_names.py:20 web/app/components/SidePanel.vue:174 web/app/lib/descriptions.ts:40
 msgid "Picture"
 msgstr ""
 
@@ -3221,7 +3221,7 @@ msgstr ""
 msgid "Place it"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:323
+#: web/app/components/SidePanel.vue:322
 msgid "Places that differ from now: {n}"
 msgstr ""
 
@@ -3413,7 +3413,7 @@ msgstr ""
 msgid "Random generator"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:181
+#: web/app/components/SidePanel.vue:180
 msgid "Range"
 msgstr ""
 
@@ -3597,7 +3597,7 @@ msgstr ""
 msgid "Replaces old text by new text (all of it, or only the n-th occurrence)."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:415
+#: web/app/components/SidePanel.vue:413
 msgid "Replay"
 msgstr ""
 
@@ -3605,7 +3605,7 @@ msgstr ""
 msgid "Replay History…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:415
+#: web/app/components/SidePanel.vue:413
 msgid "Replay the history: wheel over this panel, or Alt+Page Up"
 msgstr ""
 
@@ -3949,7 +3949,7 @@ msgstr ""
 msgid "Set width"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:21 web/app/components/SidePanel.vue:174 web/app/lib/descriptions.ts:40
+#: packages/claudia-server/src/claudia_server/thing_names.py:19 web/app/components/SidePanel.vue:173 web/app/lib/descriptions.ts:40
 msgid "Shape"
 msgstr ""
 
@@ -3965,7 +3965,7 @@ msgstr ""
 msgid "Share…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:179 web/app/components/Workspace.vue:268
+#: web/app/components/SidePanel.vue:178 web/app/components/Workspace.vue:268
 msgid "Sheet"
 msgstr ""
 
@@ -4013,7 +4013,7 @@ msgstr ""
 msgid "Show as SQL…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:429
+#: web/app/components/SidePanel.vue:427
 msgid "Show differences from now"
 msgstr ""
 
@@ -4037,7 +4037,7 @@ msgstr ""
 msgid "Show password"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:498
+#: web/app/components/SidePanel.vue:496
 msgid "Show the document as it was at this message"
 msgstr ""
 
@@ -4089,7 +4089,7 @@ msgstr ""
 msgid "Skipped {where}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:25 web/app/components/SidePanel.vue:178
+#: packages/claudia-server/src/claudia_server/thing_names.py:23 web/app/components/SidePanel.vue:177
 msgid "Slide"
 msgstr ""
 
@@ -4189,7 +4189,7 @@ msgstr ""
 msgid "Starting {app}…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:88
+#: web/app/components/SidePanel.vue:87
 msgid "Step {at} of {total}"
 msgstr ""
 
@@ -4233,11 +4233,11 @@ msgstr ""
 msgid "Suggest first"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:431
+#: web/app/components/SidePanel.vue:429
 msgid "Suggest going back to the document as it was after this step"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:456
+#: web/app/components/SidePanel.vue:454
 msgid "Suggest going back to this checkpoint"
 msgstr ""
 
@@ -4381,16 +4381,12 @@ msgstr ""
 msgid "Text Box"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:20 web/app/components/SidePanel.vue:173 web/app/lib/descriptions.ts:40
+#: packages/claudia-server/src/claudia_server/thing_names.py:18 web/app/components/SidePanel.vue:172 web/app/lib/descriptions.ts:40
 msgid "Text box"
 msgstr ""
 
 #: web/app/components/SlideWorkspace.vue:204
 msgid "Text boxes hold no lists yet"
-msgstr ""
-
-#: web/app/components/SidePanel.vue:391
-msgid "Text documents: the AI suggests either way."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -5533,7 +5529,7 @@ msgstr ""
 msgid "Thicker border"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:511
+#: web/app/components/SidePanel.vue:509
 msgid "Things to point at"
 msgstr ""
 
@@ -5917,7 +5913,7 @@ msgstr ""
 msgid "Waiting for a name"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:403
+#: web/app/components/SidePanel.vue:401
 msgid "Waiting on {names}."
 msgstr ""
 
@@ -5961,7 +5957,7 @@ msgstr ""
 msgid "What regular payments (and a sum at the end) are worth today at a fixed rate."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:465
+#: web/app/components/SidePanel.vue:463
 msgid "What silence at a suggestion's deadline means"
 msgstr ""
 
@@ -5981,7 +5977,7 @@ msgstr ""
 msgid "What “{name}” sets itself. The rest comes from its parent."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:378
+#: web/app/components/SidePanel.vue:377
 msgid "When I ask the AI, in this document:"
 msgstr ""
 
@@ -6021,7 +6017,7 @@ msgstr ""
 msgid "Which side the border is on"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:418
+#: web/app/components/SidePanel.vue:416
 msgid "Which steps the wheel visits"
 msgstr ""
 
@@ -6069,7 +6065,7 @@ msgstr ""
 msgid "Width"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:408
+#: web/app/components/SidePanel.vue:406
 msgid "Withdraw"
 msgstr ""
 
@@ -6129,7 +6125,7 @@ msgstr ""
 msgid "Write the pattern yourself…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:486
+#: web/app/components/SidePanel.vue:484
 msgid "Write to everybody, or {ask} to ask the assistant. Say {help} to see what it can do."
 msgstr ""
 
@@ -6233,7 +6229,7 @@ msgstr ""
 msgid "a letter"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:57
+#: packages/claudia-server/src/claudia_server/thing_names.py:55
 msgid "a name has at most {limit} characters"
 msgstr ""
 
@@ -6241,7 +6237,7 @@ msgstr ""
 msgid "a name has at most {max} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:55 web/app/lib/names.ts:82
+#: packages/claudia-server/src/claudia_server/thing_names.py:53 web/app/lib/names.ts:82
 msgid "a name needs some text"
 msgstr ""
 
@@ -6261,7 +6257,7 @@ msgstr ""
 msgid "a number from 0 up to, not including, 1. Fresh numbers come with Tools > Resample (F9)."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:94
+#: packages/claudia-server/src/claudia_server/styles.py:93
 msgid "a palette holds at most {limit} colour roles"
 msgstr ""
 
@@ -6273,7 +6269,7 @@ msgstr ""
 msgid "a recovery key, a name and a new password are needed"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:467
+#: packages/claudia-server/src/claudia_server/composes.py:442
 msgid "a remark suggests no change; dismiss it instead"
 msgstr ""
 
@@ -6281,11 +6277,11 @@ msgstr ""
 msgid "a request must be a JSON object"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:90
+#: packages/claudia-server/src/claudia_server/styles.py:89
 msgid "a role is missing {key!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:92
+#: packages/claudia-server/src/claudia_server/styles.py:91
 msgid "a role's id, name and colour are text"
 msgstr ""
 
@@ -6329,39 +6325,39 @@ msgstr ""
 msgid "about this cell"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:783
+#: packages/claudia-server/src/claudia_server/computes.py:718
 msgid "add_chart: the name must have 1 to {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:93
+#: packages/claudia-server/src/claudia_server/creates.py:84
 msgid "add_object: a chart is made in computes, not on a slide"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:99
+#: packages/claudia-server/src/claudia_server/creates.py:90
 msgid "add_object: a shape needs the id of its outline"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:96
+#: packages/claudia-server/src/claudia_server/creates.py:87
 msgid "add_object: kind must be one of {kinds}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:417
+#: packages/claudia-server/src/claudia_server/creates.py:308
 msgid "add_object: this server has no shape {shape!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:89
+#: packages/claudia-server/src/claudia_server/creates.py:80
 msgid "add_object: use add_image to put a picture on a slide"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:91
+#: packages/claudia-server/src/claudia_server/creates.py:82
 msgid "add_object: use add_rendering to put a container on a slide"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:607
+#: packages/claudia-server/src/claudia_server/computes.py:558
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:894
+#: packages/claudia-server/src/claudia_server/protocol.py:895
 msgid "add_user: role must be editor or viewer"
 msgstr ""
 
@@ -6473,11 +6469,11 @@ msgstr ""
 msgid "blank"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes_lists.py:40
+#: packages/claudia-server/src/claudia_server/composes_lists.py:38
 msgid "blocks must be a list of 1 to {limit} paragraph ids"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:390
+#: packages/claudia-server/src/claudia_server/composes.py:366
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr ""
 
@@ -6485,7 +6481,7 @@ msgstr ""
 msgid "budget-2027"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes_lists.py:147
+#: packages/claudia-server/src/claudia_server/composes_lists.py:143
 msgid "by is 1 (in) or -1 (out)"
 msgstr ""
 
@@ -6497,7 +6493,7 @@ msgstr ""
 msgid "cell content"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:549
+#: packages/claudia-server/src/claudia_server/computes.py:501
 msgid "cell_styles: the window must not end before it starts"
 msgstr ""
 
@@ -6505,11 +6501,11 @@ msgstr ""
 msgid "cells"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:506
+#: packages/claudia-server/src/claudia_server/computes.py:463
 msgid "cells: the window must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:510
+#: packages/claudia-server/src/claudia_server/computes.py:467
 msgid "cells: window too large (at most {limit} positions)"
 msgstr ""
 
@@ -6525,11 +6521,11 @@ msgstr ""
 msgid "chart type"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:538
+#: web/app/components/SidePanel.vue:536
 msgid "chat message"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1050
+#: packages/claudia-server/src/claudia_server/protocol.py:1051
 msgid "chat: {reason}"
 msgstr ""
 
@@ -6537,7 +6533,7 @@ msgstr ""
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:474
+#: web/app/components/SidePanel.vue:472
 msgid "close"
 msgstr ""
 
@@ -6589,23 +6585,23 @@ msgstr ""
 msgid "copy, cut and paste, also from and to other programs"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:731
+#: packages/claudia-server/src/claudia_server/computes.py:670
 msgid "define_diagram: id and format are assigned by the server"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1215
+#: packages/claudia-server/src/claudia_server/computes.py:1058
 msgid "define_pivot: give the sheet it starts on or new_sheet, not both"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1225
+#: packages/claudia-server/src/claudia_server/computes.py:1068
 msgid "define_pivot: the name of the new sheet must have 1 to {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1108
+#: packages/claudia-server/src/claudia_server/computes.py:949
 msgid "define_sql: query must be text of at most {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1124
+#: packages/claudia-server/src/claudia_server/computes.py:965
 msgid "define_sql: {problem}"
 msgstr ""
 
@@ -6661,7 +6657,7 @@ msgstr ""
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:372
+#: web/app/components/SidePanel.vue:371
 msgid "document panel"
 msgstr ""
 
@@ -6713,11 +6709,11 @@ msgstr ""
 msgid "error {value}: {why}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:86
+#: packages/claudia-server/src/claudia_server/styles.py:85
 msgid "every role is an object with id, name, purpose and colour"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:436
+#: web/app/components/SidePanel.vue:434
 msgid "everything that was done to this document"
 msgstr ""
 
@@ -6729,15 +6725,15 @@ msgstr ""
 msgid "example.com:8420"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:199
+#: packages/claudia-server/src/claudia_server/composes.py:188
 msgid "export_office: format must be \"docx\" or \"odt\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:367
+#: packages/claudia-server/src/claudia_server/creates.py:258
 msgid "export_office: format must be \"pptx\" or \"odp\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:294
+#: packages/claudia-server/src/claudia_server/computes.py:254
 msgid "export_office: format must be \"xlsx\" or \"ods\""
 msgstr ""
 
@@ -6781,7 +6777,7 @@ msgstr ""
 msgid "give names to values (later ones may use earlier ones) and calculate with them."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:72
+#: packages/claudia-server/src/claudia_server/styles.py:71
 msgid "give the CSS as set properties or as text, not both"
 msgstr ""
 
@@ -6805,7 +6801,7 @@ msgstr ""
 msgid "high"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:399
+#: web/app/components/SidePanel.vue:397
 msgid "history and chat"
 msgstr ""
 
@@ -6857,11 +6853,11 @@ msgstr ""
 msgid "internal server error"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:828
+#: packages/claudia-server/src/claudia_server/protocol.py:829
 msgid "invalid command: {reason!r}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:504
+#: web/app/components/SidePanel.vue:502
 msgid "is working"
 msgstr ""
 
@@ -6893,7 +6889,7 @@ msgstr ""
 msgid "leave the table: on to the next / back to the previous part of the window"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/search_methods.py:173
+#: packages/claudia-server/src/claudia_server/search_methods.py:170
 msgid "leave: at most {limit} at a time"
 msgstr ""
 
@@ -6901,7 +6897,7 @@ msgstr ""
 msgid "leave: each is {at, match}, at being a cell {sheet, row, col} and match a number or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:143
+#: packages/claudia-server/src/claudia_server/composes_search.py:135
 msgid "leave: each is {at, match}, at being a place the search listed ({block} or {block, object, source}) and match a number or null"
 msgstr ""
 
@@ -6909,11 +6905,11 @@ msgstr ""
 msgid "leave: each is {at, match}, at being a place the search listed ({slide, object, source} or {slide, source}) and match a number or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/search_methods.py:185
+#: packages/claudia-server/src/claudia_server/search_methods.py:182
 msgid "leave: match is the number of a match at that place, or null for all"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/search_methods.py:188
+#: packages/claudia-server/src/claudia_server/search_methods.py:185
 msgid "leave: said is the text the match had when it was shown"
 msgstr ""
 
@@ -7053,7 +7049,7 @@ msgstr ""
 msgid "no document {id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:919
+#: packages/claudia-server/src/claudia_server/computes.py:760
 msgid "no function named {name!r}"
 msgstr ""
 
@@ -7065,7 +7061,7 @@ msgstr ""
 msgid "no method {name!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:976
+#: packages/claudia-server/src/claudia_server/protocol.py:977
 msgid "no ownership transfer is waiting for you with that password"
 msgstr ""
 
@@ -7093,11 +7089,11 @@ msgstr ""
 msgid "object"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:211
+#: packages/claudia-server/src/claudia_server/styles.py:205
 msgid "objects must be a list of at most {limit} object ids"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:503
+#: packages/claudia-server/src/claudia_server/composes.py:466
 msgid "offset is outside the paragraph"
 msgstr ""
 
@@ -7121,11 +7117,11 @@ msgstr ""
 msgid "only Sunday is off: Saturday is a workday"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1007
+#: packages/claudia-server/src/claudia_server/protocol.py:1008
 msgid "only an editor or an owner of a document may change its description and tags"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:988
+#: packages/claudia-server/src/claudia_server/protocol.py:989
 msgid "only an owner of a document may delete it"
 msgstr ""
 
@@ -7137,7 +7133,7 @@ msgstr ""
 msgid "only look"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:452
+#: packages/claudia-server/src/claudia_server/composes.py:428
 msgid "only the assistant makes suggestions"
 msgstr ""
 
@@ -7145,11 +7141,11 @@ msgstr ""
 msgid "only the branch taken is evaluated, so IF(B1=0, 0, A1/B1) never divides by zero."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:890
+#: packages/claudia-server/src/claudia_server/protocol.py:891
 msgid "only the owner of a document adds people to it"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:958
+#: packages/claudia-server/src/claudia_server/protocol.py:959
 msgid "only the owner of a document can hand it over"
 msgstr ""
 
@@ -7157,7 +7153,7 @@ msgstr ""
 msgid "only the owner of a document discards its hidden lines"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:906
+#: packages/claudia-server/src/claudia_server/protocol.py:907
 msgid "only the owner of a document makes a recovery key"
 msgstr ""
 
@@ -7173,7 +7169,7 @@ msgstr ""
 msgid "optional"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:459
+#: packages/claudia-server/src/claudia_server/computes.py:416
 msgid "outcome_table: combine must be \"all\" or \"pair\""
 msgstr ""
 
@@ -7205,7 +7201,7 @@ msgstr ""
 msgid "pdftocairo"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:474
+#: web/app/components/SidePanel.vue:472
 msgid "peek"
 msgstr ""
 
@@ -7215,6 +7211,10 @@ msgstr ""
 
 #: web/app/components/TopBar.vue:27
 msgid "people in this document"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/printing.py:20
+msgid "people set a document up, not the assistant"
 msgstr ""
 
 #: web/app/lib/noun-phrases.ts:23
@@ -7273,19 +7273,19 @@ msgstr ""
 msgid "query result"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:427
+#: packages/claudia-server/src/claudia_server/computes.py:384
 msgid "random_preview: params must be numbers"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:432
+#: packages/claudia-server/src/claudia_server/computes.py:389
 msgid "random_preview: there is no distribution {distribution!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:438
+#: packages/claudia-server/src/claudia_server/computes.py:395
 msgid "random_preview: {problem}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:413
+#: packages/claudia-server/src/claudia_server/computes.py:370
 msgid "random_preview: {what} must be a number or null"
 msgstr ""
 
@@ -7309,23 +7309,23 @@ msgstr ""
 msgid "request failed"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:642
+#: packages/claudia-server/src/claudia_server/computes.py:591
 msgid "resize_lines: at most {limit} lines at a time"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:666
+#: packages/claudia-server/src/claudia_server/computes.py:615
 msgid "resize_lines: axis must be \"row\" or \"col\""
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:649
+#: packages/claudia-server/src/claudia_server/computes.py:598
 msgid "resize_lines: each line is [index, size]"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:654
+#: packages/claudia-server/src/claudia_server/computes.py:603
 msgid "resize_lines: size must be a number or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:656
+#: packages/claudia-server/src/claudia_server/computes.py:605
 msgid "resize_lines: size must be between {lo} and {hi}"
 msgstr ""
 
@@ -7357,11 +7357,11 @@ msgstr ""
 msgid "search_replace: that would change {count} cells, at most {limit} at a time: narrow the search"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:138 packages/claudia-server/src/claudia_server/creates_search.py:112
+#: packages/claudia-server/src/claudia_server/composes_search.py:130 packages/claudia-server/src/claudia_server/creates_search.py:112
 msgid "search_replace: that would change {count} texts, at most {limit} at a time: narrow the search"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/search_methods.py:103
+#: packages/claudia-server/src/claudia_server/search_methods.py:100
 msgid "search_replace: the search took longer than {seconds} seconds, so nothing was replaced: narrow it"
 msgstr ""
 
@@ -7373,19 +7373,19 @@ msgstr ""
 msgid "select an object (colleagues cannot change it while you hold it)"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:551
+#: web/app/components/SidePanel.vue:549
 msgid "send"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:524
+#: packages/claudia-server/src/claudia_server/computes.py:476
 msgid "set_cells: at most {limit} cells at a time"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:528
+#: packages/claudia-server/src/claudia_server/computes.py:480
 msgid "set_cells: each cell is an object with row, col and input"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:533
+#: packages/claudia-server/src/claudia_server/computes.py:485
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr ""
 
@@ -7405,11 +7405,11 @@ msgstr ""
 msgid "sheets"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:467
+#: web/app/components/SidePanel.vue:465
 msgid "silence = agree"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:466
+#: web/app/components/SidePanel.vue:464
 msgid "silence = decline"
 msgstr ""
 
@@ -7441,7 +7441,7 @@ msgstr ""
 msgid "spread of the logarithm"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1077
+#: packages/claudia-server/src/claudia_server/computes.py:918
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr ""
 
@@ -7457,11 +7457,11 @@ msgstr ""
 msgid "start with “{text}”"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:620
+#: packages/claudia-server/src/claudia_server/computes.py:570
 msgid "structure: axis must be \"row\" or \"col\""
 msgstr ""
 
-#: web/app/components/SidePanel.vue:475
+#: web/app/components/SidePanel.vue:473
 msgid "suggest switching here"
 msgstr ""
 
@@ -7481,7 +7481,7 @@ msgstr ""
 msgid "tables"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1012
+#: packages/claudia-server/src/claudia_server/protocol.py:1013
 msgid "tags are words"
 msgstr ""
 
@@ -7501,23 +7501,15 @@ msgstr ""
 msgid "text of the object"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1018 packages/claudia-server/src/claudia_server/protocol.py:930 packages/claudia-server/src/claudia_server/protocol.py:947 packages/claudia-server/src/claudia_server/protocol.py:962 packages/claudia-server/src/claudia_server/protocol.py:992
+#: packages/claudia-server/src/claudia_server/protocol.py:1019 packages/claudia-server/src/claudia_server/protocol.py:931 packages/claudia-server/src/claudia_server/protocol.py:948 packages/claudia-server/src/claudia_server/protocol.py:963 packages/claudia-server/src/claudia_server/protocol.py:993
 msgid "that is not your current password"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:259
+#: packages/claudia-server/src/claudia_server/composes.py:248
 msgid "that would make too many paragraphs"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/printing.py:19
-msgid "the assistant can only make suggestions; people set the document up"
-msgstr ""
-
-#: packages/claudia-server/src/claudia_server/composes.py:107 packages/claudia-server/src/claudia_server/composes_search.py:107
-msgid "the assistant can only make suggestions; people write the text"
-msgstr ""
-
-#: packages/claudia-server/src/claudia_server/protocol.py:822
+#: packages/claudia-server/src/claudia_server/protocol.py:823
 msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr ""
 
@@ -7625,7 +7617,7 @@ msgstr ""
 msgid "the mean of the values"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:406 packages/claudia-server/src/claudia_server/style_targets.py:244 packages/claudia-server/src/claudia_server/styles.py:226
+#: packages/claudia-server/src/claudia_server/composes.py:382 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:220
 msgid "the new style would look just like “{name}”"
 msgstr ""
 
@@ -7637,7 +7629,7 @@ msgstr ""
 msgid "the pivot table called ``name`` — the summary of a table the field panel of Tools ▸ Pivot Table describes. Written by the pivot's own commands, not by hand: change the pivot in its panel, not this formula. As the whole formula it fills the cells below and beside it; inside another formula it gives the first cell."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1272
+#: packages/claudia-server/src/claudia_server/computes.py:1112
 msgid "the pivot table {name} gave nothing: there is no SQL to show"
 msgstr ""
 
@@ -7649,7 +7641,7 @@ msgstr ""
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:254
+#: packages/claudia-server/src/claudia_server/composes.py:243
 msgid "the range ends before it starts"
 msgstr ""
 
@@ -7745,7 +7737,7 @@ msgstr ""
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes_lists.py:118
+#: packages/claudia-server/src/claudia_server/composes_lists.py:116
 msgid "there is no earlier list of this kind to continue"
 msgstr ""
 
@@ -7753,15 +7745,15 @@ msgstr ""
 msgid "there is no line called {line!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes_lists.py:66
+#: packages/claudia-server/src/claudia_server/composes_lists.py:64
 msgid "there is no list scheme {scheme!r}; there are {schemes}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:501
+#: packages/claudia-server/src/claudia_server/composes.py:464
 msgid "there is no paragraph {block!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1268
+#: packages/claudia-server/src/claudia_server/computes.py:1108
 msgid "there is no pivot table called {name!r}"
 msgstr ""
 
@@ -7769,7 +7761,7 @@ msgstr ""
 msgid "there is no step {revision} on this line"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:123
+#: packages/claudia-server/src/claudia_server/thing_names.py:121
 msgid "there is nothing called {id!r} in this document"
 msgstr ""
 
@@ -7777,35 +7769,35 @@ msgstr ""
 msgid "these cells’ own style"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:62
+#: packages/claudia-server/src/claudia_server/styles.py:61
 msgid "this document has no palette"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:55
+#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:54
 msgid "this document has no styles"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/rendered.py:184
+#: packages/claudia-server/src/claudia_server/rendered.py:168
 msgid "this document has nothing rendered with the id {id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/replay.py:161 packages/claudia-server/src/claudia_server/thing_names.py:37
+#: packages/claudia-server/src/claudia_server/replay.py:161 packages/claudia-server/src/claudia_server/thing_names.py:35
 msgid "this document has nothing that can be named"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:105 packages/claudia-server/src/claudia_server/creates_search.py:72
+#: packages/claudia-server/src/claudia_server/creates.py:96 packages/claudia-server/src/claudia_server/creates_search.py:72
 msgid "this document is not a presentation"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:100 packages/claudia-server/src/claudia_server/composes_search.py:83
+#: packages/claudia-server/src/claudia_server/composes.py:100 packages/claudia-server/src/claudia_server/composes_search.py:81
 msgid "this document is not a text"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:214
+#: packages/claudia-server/src/claudia_server/computes.py:205
 msgid "this document is not a workbook"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes_lists.py:111
+#: packages/claudia-server/src/claudia_server/composes_lists.py:109
 msgid "this paragraph is not a list item"
 msgstr ""
 
@@ -7817,15 +7809,15 @@ msgstr ""
 msgid "this server does not host {app}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1010
+#: packages/claudia-server/src/claudia_server/protocol.py:1011
 msgid "this server does not keep a description and tags"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:343 packages/claudia-server/src/claudia_server/protocol.py:908
+#: packages/claudia-server/src/claudia_server/app.py:343 packages/claudia-server/src/claudia_server/protocol.py:909
 msgid "this server does not keep recovery keys"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:918
+#: packages/claudia-server/src/claudia_server/protocol.py:919
 msgid "this server does not list a document's people this way"
 msgstr ""
 
@@ -7833,23 +7825,23 @@ msgstr ""
 msgid "this server does not make rendered containers"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:892
+#: packages/claudia-server/src/claudia_server/protocol.py:893
 msgid "this server does not manage people"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:941
+#: packages/claudia-server/src/claudia_server/protocol.py:942
 msgid "this server does not support changing a password"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:990
+#: packages/claudia-server/src/claudia_server/protocol.py:991
 msgid "this server does not support deleting a document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:960 packages/claudia-server/src/claudia_server/protocol.py:973
+#: packages/claudia-server/src/claudia_server/protocol.py:961 packages/claudia-server/src/claudia_server/protocol.py:974
 msgid "this server does not support handing over ownership"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:928
+#: packages/claudia-server/src/claudia_server/protocol.py:929
 msgid "this server does not support leaving a document"
 msgstr ""
 
@@ -7861,7 +7853,7 @@ msgstr ""
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:480
+#: packages/claudia-server/src/claudia_server/composes.py:453
 msgid "this suggestion is not open any more"
 msgstr ""
 
@@ -7881,19 +7873,19 @@ msgstr ""
 msgid "today's date as a day number (the time of day is left out)."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:477
+#: packages/claudia-server/src/claudia_server/computes.py:434
 msgid "trace: reach must be one of {reaches}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:485
+#: packages/claudia-server/src/claudia_server/computes.py:442
 msgid "trace: the window must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:481
+#: packages/claudia-server/src/claudia_server/computes.py:438
 msgid "trace: window is [row0, col0, row1, col1]"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:488
+#: packages/claudia-server/src/claudia_server/computes.py:445
 msgid "trace: window too large (at most {limit} positions)"
 msgstr ""
 
@@ -7913,15 +7905,15 @@ msgstr ""
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1073 packages/claudia-server/src/claudia_server/computes.py:1103 packages/claudia-server/src/claudia_server/computes.py:1292 packages/claudia-server/src/claudia_server/computes.py:680 packages/claudia-server/src/claudia_server/computes.py:766 packages/claudia-server/src/claudia_server/computes.py:815
+#: packages/claudia-server/src/claudia_server/computes.py:1134 packages/claudia-server/src/claudia_server/computes.py:628 packages/claudia-server/src/claudia_server/computes.py:702 packages/claudia-server/src/claudia_server/computes.py:914 packages/claudia-server/src/claudia_server/computes.py:944
 msgid "unknown sheet {sheet!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:330
+#: packages/claudia-server/src/claudia_server/creates.py:229
 msgid "unknown slide {slide!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:288
+#: packages/claudia-server/src/claudia_server/styles.py:279
 msgid "unset must be a list of property names"
 msgstr ""
 
@@ -7961,7 +7953,7 @@ msgstr ""
 msgid "words"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:420
+#: packages/claudia-server/src/claudia_server/composes.py:396
 msgid "words must be from 0 to {limit}"
 msgstr ""
 
@@ -8297,7 +8289,7 @@ msgstr ""
 msgid "{method}: a sheet is named by its id"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/search_methods.py:150
+#: packages/claudia-server/src/claudia_server/search_methods.py:147
 msgid "{method}: kinds is a list of {kinds}"
 msgstr ""
 
@@ -8309,7 +8301,7 @@ msgstr ""
 msgid "{method}: {parameter} {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:91 packages/claudia-server/src/claudia_server/creates_search.py:80
+#: packages/claudia-server/src/claudia_server/composes_search.py:89 packages/claudia-server/src/claudia_server/creates_search.py:80
 msgid "{method}: {why}"
 msgstr ""
 
@@ -8401,7 +8393,7 @@ msgstr ""
 msgid "{n} min ago"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:433
+#: web/app/components/SidePanel.vue:431
 msgid "{n} newer changes by others"
 msgstr ""
 
@@ -8437,7 +8429,7 @@ msgstr ""
 msgid "{n} samples were drawn, there are too many combinations to run all."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:238
+#: web/app/components/SidePanel.vue:237
 msgid "{n} things to point at. Use the arrow keys, then Enter."
 msgstr ""
 
@@ -8461,7 +8453,7 @@ msgstr ""
 msgid "{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1186
+#: packages/claudia-server/src/claudia_server/computes.py:1026
 msgid "{problem}"
 msgstr ""
 
@@ -8541,15 +8533,15 @@ msgstr ""
 msgid "{what} (kept as “{name}”)"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:146
+#: packages/claudia-server/src/claudia_server/composes.py:135
 msgid "{what} is outside the paragraph"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:225
+#: packages/claudia-server/src/claudia_server/computes.py:216
 msgid "{what} must be a whole number from 0 to {last}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:325
+#: packages/claudia-server/src/claudia_server/computes.py:285
 msgid "{what} must be a whole number from {low} to {high}"
 msgstr ""
 
@@ -8581,39 +8573,39 @@ msgstr ""
 msgid "{what}, {n} to {m} times"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:953
+#: packages/claudia-server/src/claudia_server/computes.py:794
 msgid "{what}: anchor is {{sheet, row, col}} on a sheet of this document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:968
+#: packages/claudia-server/src/claudia_server/computes.py:809
 msgid "{what}: give a range or an anchor (the cell of a SQL() formula), not both"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:937
+#: packages/claudia-server/src/claudia_server/computes.py:778
 msgid "{what}: range is {{sheet, row0, col0, row1, col1}}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:931
+#: packages/claudia-server/src/claudia_server/computes.py:772
 msgid "{what}: scope must be a sheet id or null"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:963
+#: packages/claudia-server/src/claudia_server/computes.py:804
 msgid "{what}: the definition is an object with {allowed}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:946
+#: packages/claudia-server/src/claudia_server/computes.py:787
 msgid "{what}: the range must not end before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:271
+#: packages/claudia-server/src/claudia_server/computes.py:231
 msgid "{what}: this document does not know the diagram {diagram_id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:941
+#: packages/claudia-server/src/claudia_server/computes.py:782
 msgid "{what}: this document does not know the sheet {sheet!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/computes.py:1173 packages/claudia-server/src/claudia_server/computes.py:1182 packages/claudia-server/src/claudia_server/computes.py:983
+#: packages/claudia-server/src/claudia_server/computes.py:1013 packages/claudia-server/src/claudia_server/computes.py:1022 packages/claudia-server/src/claudia_server/computes.py:824
 msgid "{what}: {problem}"
 msgstr ""
 
@@ -8621,7 +8613,7 @@ msgstr ""
 msgid "{who} has been asked to take over {doc}. Until they accept, you are still the owner. You will become an editor the moment they do."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:402
+#: web/app/components/SidePanel.vue:400
 msgid "{who} suggests going to {line}."
 msgstr ""
 
@@ -8653,7 +8645,7 @@ msgstr ""
 msgid "“{requested}” is not on this server; the preview and the PDF use {used} for it."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:509
+#: web/app/components/SidePanel.vue:507
 msgid "← Back where I was"
 msgstr ""
 
@@ -8661,22 +8653,22 @@ msgstr ""
 msgid "← Styles"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:456
+#: web/app/components/SidePanel.vue:454
 msgid "↺ restore"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:431
+#: web/app/components/SidePanel.vue:429
 msgid "↺ restore this step"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:498
+#: web/app/components/SidePanel.vue:496
 msgid "▶ here"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:498
+#: web/app/components/SidePanel.vue:496
 msgid "▷ go here"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:455
+#: web/app/components/SidePanel.vue:453
 msgid "◆ saved: {label}"
 msgstr ""

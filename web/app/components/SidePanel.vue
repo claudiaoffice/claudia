@@ -23,12 +23,11 @@ const chatLog = ref<HTMLElement | null>(null)
 const input = ref<InstanceType<typeof ChatInput> | null>(null)
 const draft = ref('')
 
-/** The two ways the AI can treat a request (D262); text documents have no direct way yet, the AI suggests there. */
+/** The two ways the AI can treat a request (D262), in every app (D640). */
 const modes: { mode: AiMode; label: string }[] = [
   { mode: 'act', label: t('Act at once') },
   { mode: 'suggest', label: t('Suggest first') },
 ]
-const suggestsOnly = computed(() => state.app === 'composes')
 /** A radio group moves with the arrow keys and is one tab stop (WAI-ARIA radio group): the checked one. */
 function onModeKey(event: KeyboardEvent) {
   const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key]
@@ -388,7 +387,6 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
           @click="session.setAiMode(m.mode)"
         >{{ m.label }}</button>
       </div>
-      <small v-if="suggestsOnly">{{ t('Text documents: the AI suggests either way.') }}</small>
     </div>
 
     <div class="tabs" role="tablist">
@@ -1009,10 +1007,6 @@ time {
   padding: 10px 14px 4px;
   font-size: 11.5px;
   color: rgb(230 224 245 / 62%);
-}
-.aiMode small {
-  font-size: 11px;
-  color: rgb(230 224 245 / 55%);
 }
 .segmented {
   display: flex;

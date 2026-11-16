@@ -8,8 +8,6 @@ them in one step of the history, when somebody first needs to point at them.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 from claudia_core import MAX_THING_NAME, Batch, ObjectModel, RenameThing, clean_name, free_name, name_problem
 
 from .i18n import localized, msg
@@ -130,23 +128,16 @@ def _name_thing(ctx: Context, *, id: str, base) -> dict:  # noqa: A002 - the wir
     return {"name": name, "revision": applied.revision.to_data()}
 
 
-def add_name_methods(table: MethodTable, *, guard: Callable[[Context], None] | None = None) -> None:
-    """Add ``rename_thing``, ``name_thing`` and ``name_unnamed`` to an app's method table. ``guard`` is asked first and
-    may refuse (a text the assistant may not write, D63)."""
+def add_name_methods(table: MethodTable) -> None:
+    """Add ``rename_thing``, ``name_thing`` and ``name_unnamed`` to an app's method table."""
 
     def rename_thing(ctx: Context, **params) -> dict:
-        if guard is not None:
-            guard(ctx)
         return _rename_thing(ctx, **params)
 
     def name_unnamed(ctx: Context, **params) -> dict:
-        if guard is not None:
-            guard(ctx)
         return _name_unnamed(ctx, **params)
 
     def name_thing(ctx: Context, **params) -> dict:
-        if guard is not None:
-            guard(ctx)
         return _name_thing(ctx, **params)
 
     rename_thing.__doc__ = _rename_thing.__doc__

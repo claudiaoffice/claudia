@@ -36,8 +36,7 @@ class SearchApp:
     ``scope`` reads the ``scope`` a client sent into whatever ``scan``/``plan`` take (and refuses it with a
     ``RequestError``); ``place`` checks one ``at`` a client sent back and returns it in its canonical form
     (``ValueError`` if it is not a place of this app); ``scan`` and ``plan`` run on the app's model; ``command``
-    turns a plan into the one command that makes it; ``before_replace`` may refuse a replacement for who asks
-    (``RequestError``).
+    turns a plan into the one command that makes it.
     ``too_many`` and ``bad_place`` are the app's own sentences, in its own words for what a place is."""
 
     kinds: tuple[str, ...]
@@ -54,7 +53,6 @@ class SearchApp:
     find_doc: str
     preview_doc: str
     replace_doc: str
-    before_replace: Callable[[Context], None] = lambda ctx: None
 
 
 def add_search_methods(table: MethodTable, app: SearchApp) -> None:
@@ -95,7 +93,6 @@ def add_search_methods(table: MethodTable, app: SearchApp) -> None:
         }
 
     def _search_replace(ctx, *, query, kinds, scope, leave, base):
-        app.before_replace(ctx)
         made = _plan(app, ctx, query, kinds, scope, leave, "search_replace")
         if made.timed_out:
             raise RequestError(

@@ -7,6 +7,7 @@ import pytest
 from claudia_composes import TextModel
 from claudia_core import Document, MemoryStore
 from claudia_opc_io import read_parts
+from claudia_server.apps import MODEL_METHODS
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.protocol import Context, Limits, RequestError, core_methods
@@ -15,6 +16,7 @@ ANN = Account("ann", "owner")
 BEN = Account("ben", "editor")
 VERA = Account("vera", "viewer")
 AI = Account.assistant()
+AI_AS_DEPLOYED = Account.assistant(MODEL_METHODS["composes"])  # what a server gives it (SEC-10, D640)
 
 
 @pytest.fixture
@@ -287,19 +289,15 @@ def suggest(doc, start=4, end=9, replacement="fast", account=AI):
     )
 
 
-def test_only_the_assistant_suggests_and_people_do_not_get_edited_by_it(paper):
+def test_only_the_assistant_suggests_and_in_act_mode_it_writes_the_text_too(paper):
     type_(paper, "the quick brown fox")
     for account in (ANN, BEN):
         with pytest.raises(RequestError) as caught:
             suggest(paper, account=account)
         assert caught.value.code == "forbidden"
-    for name, params in (
-        ("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "x"}),
-        ("set_style", {"block": "b1", "style": "title"}),
-    ):
-        with pytest.raises(RequestError) as caught:
-            call(paper, name, params, AI)
-        assert caught.value.code == "forbidden", "the AI has no direct write path into the text (D63)"
+    type_(paper, "a ", account=AI_AS_DEPLOYED)
+    call(paper, "set_style", {"block": "b1", "style": "title"}, AI_AS_DEPLOYED)
+    assert texts(paper) == ["a the quick brown fox"], "D640: in a text the AI writes as in the other apps"
 
 
 def test_a_suggestion_is_listed_and_changes_no_text(paper):
@@ -467,7 +465,7 @@ def test_naming_a_style_ends_the_invitation(paper):
     assert caught.value.code == "command_error" and "already a style named" in caught.value.message
 
 
-def test_viewers_and_the_assistant_do_not_change_styles(paper):
+def test_viewers_and_the_assistant_as_deployed_do_not_change_styles(paper):
     calls = (
         ("change_style", {"style": "quote", "set": {"color": "red"}}),
         ("deviate_style", {"parent": "quote", "blocks": [], "set": {"color": "red"}}),
@@ -478,7 +476,7 @@ def test_viewers_and_the_assistant_do_not_change_styles(paper):
             call(paper, name, params, VERA)
         assert caught.value.code == "forbidden"
         with pytest.raises(RequestError) as caught:
-            call(paper, name, params, AI)
+            call(paper, name, params, AI_AS_DEPLOYED)
         assert caught.value.code == "forbidden"
     assert paper.revision is None
 
@@ -665,8 +663,8 @@ def test_an_object_in_a_text_turns_and_keeps_its_anchor(paper):
     assert obj["anchor"]["dx"] == 40 and obj["anchor"]["offset"] == 7
 
 
-def test_the_assistant_does_not_turn_objects_in_a_text(paper):
+def test_the_assistant_as_deployed_does_not_turn_objects_in_a_text(paper):
     text_with_a_note(paper)
     with pytest.raises(RequestError) as caught:
-        call(paper, "rotate_object", {"id": "o1", "rotation": 10}, AI)
+        call(paper, "rotate_object", {"id": "o1", "rotation": 10}, AI_AS_DEPLOYED)
     assert caught.value.code in {"forbidden", "command_error"}

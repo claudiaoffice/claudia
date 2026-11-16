@@ -4,13 +4,14 @@ import pytest
 
 from claudia_composes import BlockAnchor, InsertText, SetStyle, SplitBlock, TextModel
 from claudia_core import Document, MemoryStore, ObjectBody, VisualObject, paragraph_for
+from claudia_server.apps import MODEL_METHODS
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.protocol import Context, Limits, RequestError
 
 ANN = Account("ann", "owner")
 BEN = Account("ben", "editor")
-AI = Account.assistant()
+AI = Account.assistant(MODEL_METHODS["composes"])  # as a server gives it (SEC-10, D640)
 
 
 @pytest.fixture

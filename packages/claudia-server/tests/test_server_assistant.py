@@ -56,16 +56,28 @@ class BrokenEngine:
         raise RuntimeError("the model fell over")
 
 
-def scenario(test, engine=None, methods=computes_methods, allowed_methods=MODEL_METHODS["computes"]):
-    """Run ``test(hosted, assistant)`` inside an event loop with a workbook that has the assistant attached.
+def scenario(
+    test,
+    engine=None,
+    methods=computes_methods,
+    allowed_methods=MODEL_METHODS["computes"],
+    *,
+    model=WorkbookModel,
+    suggest_methods=(),
+):
+    """Run ``test(hosted, assistant)`` inside an event loop with a document (a workbook unless ``model`` says
+    otherwise) that has the assistant attached.
 
     ``allowed_methods`` is what SEC-10 checks at dispatch; it defaults to the real allow-list for computes, so a
-    test that does not care about it still exercises the real boundary rather than an unrestricted stand-in."""
+    test that does not care about it still exercises the real boundary rather than an unrestricted stand-in.
+    ``suggest_methods`` are what it may write for a person in *suggest* mode (D262)."""
 
     async def run():
-        hub = Hub(MemoryProvider(WorkbookModel), methods=methods)
+        hub = Hub(MemoryProvider(model), methods=methods)
         hosted = await hub.open("plan", create=True)
-        assistant = Assistant(engine or ScriptedEngine(), pause=0, allowed_methods=allowed_methods)
+        assistant = Assistant(
+            engine or ScriptedEngine(), pause=0, allowed_methods=allowed_methods, suggest_methods=suggest_methods
+        )
         assistant.attach(hosted)
         await test(hosted, assistant)
 

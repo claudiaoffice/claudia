@@ -6,13 +6,12 @@ belong here rather than three times over. :func:`add_style_methods` puts them in
 What stays with the app is the part that names the app's own things: composes' ``set_style`` and ``deviate_style``
 take paragraph ids, and the equivalent for a slide or a sheet takes object ids, so each app registers its own.
 
-``guard`` is how an app keeps a rule of its own. composes passes ``_people_only``: in a text the assistant suggests
-and does not write (D63, SEC-10), and a style change is writing. The others pass nothing.
+Who may change them is the role and, for the assistant, its allow-list (SEC-10), the same in every app (D640).
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 
 from claudia_core import (
     BUILTIN_ROLES,
@@ -109,7 +108,7 @@ def _changed(ctx: Context, command, base) -> dict:
     return {"revision": applied.revision.to_data()}
 
 
-def _add_palette_methods(table: MethodTable, allowed: Callable[[Context], None]) -> None:
+def _add_palette_methods(table: MethodTable) -> None:
     """The palette's own methods (D200). Split out of :func:`add_style_methods` only because the two
     together had grown past the statement limit — they belong side by side."""
 
@@ -141,7 +140,6 @@ def _add_palette_methods(table: MethodTable, allowed: Callable[[Context], None])
 
         Nothing is refused for contrast: a person may pick any colour, and `palette` then reports what it costs
         (D202). `command_error` if there is no such role or the colour is not hexadecimal."""
-        allowed(ctx)
         try:
             return _changed(ctx, SetRole(role, colour), base)
         except ValueError as exc:
@@ -153,14 +151,13 @@ def _add_palette_methods(table: MethodTable, allowed: Callable[[Context], None])
 
         `command_error` if a style of this document names a role the new palette does not have: dropping it would
         change how the document looks without saying so, which is the one thing a palette exists to prevent."""
-        allowed(ctx)
         try:
             return _changed(ctx, ReplacePalette(_roles_from(roles)), base)
         except ValueError as exc:
             raise RequestError("command_error", str(exc)) from None
 
 
-def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], None]) -> None:
+def _add_object_style_methods(table: MethodTable) -> None:
     """The two methods that style an *object* rather than a paragraph: pointing one at a style, and deviating
     from that style for the objects a person has selected (D75, D178, D203). Split out of
     :func:`add_style_methods` only to keep each under the statement limit."""
@@ -173,7 +170,6 @@ def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], N
         Not what its words look like: those follow the paragraph's own style, which `set_paragraph_style` points
         elsewhere. An object has the two, and they mean different things (D181). `command_error` if there is no
         such object or no such style."""
-        allowed(ctx)
         try:
             return _changed(ctx, SetObjectStyle(id, style), base)
         except (KeyError, ValueError) as exc:
@@ -186,7 +182,6 @@ def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], N
         Not the object's own style, which `set_object_style` points elsewhere. The same in all three apps.
         `command_error` if there is no such object or style, or the style does not fit the words — an outline or a
         box style (D316)."""
-        allowed(ctx)
         try:
             return _changed(ctx, SetParagraphStyle(id, style), base)
         except (KeyError, ValueError) as exc:
@@ -203,7 +198,6 @@ def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], N
 
         Returns `{style, name, revision}`. `command_error` if nothing differs from the parent, if there is no such
         style, or if one of the objects is not there."""
-        allowed(ctx)
         model = ctx.document.model
         if len(objects) > MAX_STYLED_OBJECTS or not all(isinstance(one, str) for one in objects):
             raise RequestError(
@@ -236,19 +230,17 @@ def _add_object_style_methods(table: MethodTable, allowed: Callable[[Context], N
 def add_style_methods(
     table: MethodTable,
     *,
-    guard: Callable[[Context], None] | None = None,
     targets: Iterable[StyleTarget] = (OBJECTS,),
 ) -> None:
     """Register the shared style and palette methods in ``table``.
 
-    ``guard`` runs before every one that writes; see the module docstring. ``targets`` are the kinds of thing the
+    ``targets`` are the kinds of thing the
     app's ``apply_style`` and ``deviate`` accept (:mod:`claudia_server.style_targets`): every app has floating
     objects; composes adds its paragraphs, computes its cells.
     """
-    allowed = guard if guard is not None else (lambda ctx: None)
-    _add_palette_methods(table, allowed)
-    _add_object_style_methods(table, allowed)
-    add_target_methods(table, allowed, targets, own_css=own_css)
+    _add_palette_methods(table)
+    _add_object_style_methods(table)
+    add_target_methods(table, targets, own_css=own_css)
 
     @table.method("styles")
     def _styles(ctx):
@@ -272,7 +264,6 @@ def add_style_methods(
         A colour may be a palette role (`@accent`, `@accent/55`) as well as a literal (D200). `command_error`
         names every property that is not allowed. A change that changes nothing is not an edit (`revision` is
         then null)."""
-        allowed(ctx)
         known = _book(ctx)
         try:
             own = known.get(style).css
@@ -297,7 +288,6 @@ def add_style_methods(
     def _rename_style(ctx, *, style, name, base):
         """Give a style the name its maker chose. That ends the invitation to name it. `command_error` if another
         style has that name (in any letters) or the name is empty, long, or more than one line."""
-        allowed(ctx)
         return _changed(ctx, RenameStyle(style, name, False), base)
 
     @table.method("check_css", "text:text")

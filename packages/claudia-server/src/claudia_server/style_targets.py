@@ -194,7 +194,6 @@ def _run(ctx: Context, steps: list[Command], name: str, base) -> Any:
 
 def add_target_methods(
     table: MethodTable,
-    allowed: Callable[[Context], None],
     targets: Iterable[StyleTarget],
     *,
     own_css: Callable[[dict | None, str | None], dict | None],
@@ -218,7 +217,6 @@ def add_target_methods(
         `{"sheet": id, "range": [r0, c0, r1, c1]}` (see `style_model`'s `targets`). With `slot`, only that slot of
         each target; without, every slot of it the style fits — one bundle fills both slots of a cell or a text box
         (D309, D311, D316). `command_error` if the style fits no chosen slot of a target, or a target is not there."""
-        allowed(ctx)
         found = _known(_book(ctx), style)
         steps = _Resolver(ctx, adapters, slots, targets).commands(found, slot)
         applied = _run(ctx, steps, "Apply style", base)
@@ -233,7 +231,6 @@ def add_target_methods(
 
         Returns `{style, name, revision}`. `command_error` if nothing differs from the parent, a property does not
         belong to the parent's kind, or the new style fits no chosen slot."""
-        allowed(ctx)
         book = _book(ctx)
         source = _known(book, parent)
         resolver = _Resolver(ctx, adapters, slots, targets)

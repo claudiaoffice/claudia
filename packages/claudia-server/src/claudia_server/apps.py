@@ -54,7 +54,8 @@ _ENGINES: dict[str, Callable[[], Engine]] = {
 # none, so an assistant for it can write nothing until somebody decides what it may do.
 MODEL_METHODS = {
     "computes": ("set_cells", "add_sheet", "structure", "resize_lines", "search_replace"),
-    "composes": ("suggest",),
+    # D640: as in the other apps, the words and the paragraph styles; ``suggest`` for what it can only remark on.
+    "composes": ("suggest", "replace_text", "set_style"),
     # D265: slides and the objects that need no binary data, their words and their words' style; D342: the speaker
     # notes. Not images, export, snapping or rotation to begin with, and not the planned times (people plan).
     "creates": (

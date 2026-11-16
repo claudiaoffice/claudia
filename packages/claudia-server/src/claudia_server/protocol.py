@@ -817,7 +817,8 @@ def _apply(ctx, command, base):
     at: if the document moved to another line meanwhile the edit is refused with `stale`. Refused with `locked` if a
     colleague holds the part it touches; `command_error` if the command itself is rejected. Nothing changes on any
     error. Refused with `forbidden` for the assistant (SEC-10): a raw command would walk around the checks an app's
-    own methods make against it (`composes._people_only` and the like), whatever `apply` itself is allowed to call."""
+    own methods make against it (a place that is not there, a picture without words, the page set up by people),
+    whatever `apply` itself is allowed to call."""
     if ctx.account.system:
         raise RequestError("forbidden", msg("the assistant cannot apply a raw command; use the app's own methods"))
     try:

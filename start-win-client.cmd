@@ -1,10 +1,10 @@
 @echo off
 rem   start-win-client.cmd [composes|computes|creates] [--server URL] [--debug]      (the app defaults to composes)
 rem
-rem Starts the Windows desktop client (clients\windows, the Neutralino shell) directly -- the Windows counterpart
+rem Starts the Windows desktop client (clients\neutralino, built for Windows, D660) directly -- the Windows counterpart
 rem of start-mac-client.sh (macOS) and start-linux-client.sh (Linux/GTK), with the same arguments. Like macOS and unlike
 rem Linux, there is no second system interpreter to hand off to here: the Windows client itself is plain
-rem Node/TypeScript, not Python at all (clients\windows\README.md's "Running it from a checkout" is the step-by-step
+rem Node/TypeScript, not Python at all (clients\neutralino\README.md's "Running it from a checkout" is the step-by-step
 rem this script automates).
 rem
 rem   * .venv (via "uv sync") is what the *server* runs on -- same Python 3.14 requirement as Linux and macOS, same
@@ -18,9 +18,10 @@ rem   * The web frontend is rebuilt every run, not just built once and left stal
 rem     comment on the 2026-11-06 report that caught exactly that bug for the Linux client. Skip with
 rem     CLAUDIA_SKIP_WEB_BUILD=1 once you know your build is current.
 rem   * The Windows client's own TypeScript and the three app pages (tsc, then the shell page and the core of each
-rem     app) are rebuilt every run for the same reason. Skip with CLAUDIA_SKIP_WINDOWS_BUILD=1.
+rem     app, built for Windows) are rebuilt every run for the same reason. Skip with CLAUDIA_SKIP_NEUTRALINO_BUILD=1
+rem     (CLAUDIA_SKIP_WINDOWS_BUILD=1, its name before D660, still works).
 rem   * The Neutralino binary and client library (not checked into the repo, D157) are fetched automatically with
-rem     "npx @neutralinojs/neu update" the first time they are missing -- the step clients\windows\README.md otherwise
+rem     "npx @neutralinojs/neu update" the first time they are missing -- the step clients\neutralino\README.md otherwise
 rem     has you run by hand in apps\<app>.
 rem
 rem "--server URL" connects to a server (https; plain http only for this computer) instead of starting one here.
@@ -40,7 +41,8 @@ for %%A in (composes computes creates) do (
         set "ARGS=!ARGS:*%%A=!"
     )
 )
-set "APP_DIR=clients\windows\apps\!APP!"
+set "APP_DIR=clients\neutralino\apps\!APP!"
+if "%CLAUDIA_SKIP_NEUTRALINO_BUILD%"=="" set "CLAUDIA_SKIP_NEUTRALINO_BUILD=%CLAUDIA_SKIP_WINDOWS_BUILD%"
 
 where node >nul 2>nul
 if errorlevel 1 (
@@ -63,10 +65,10 @@ if not "%CLAUDIA_SKIP_WEB_BUILD%"=="1" (
     popd
 )
 
-if not "%CLAUDIA_SKIP_WINDOWS_BUILD%"=="1" (
+if not "%CLAUDIA_SKIP_NEUTRALINO_BUILD%"=="1" (
     echo Building the Windows client...
-    pushd clients\windows
-    call npm ci && call npm run build
+    pushd clients\neutralino
+    call npm ci && call npm run build:windows
     if errorlevel 1 (
         popd
         exit /b 1
@@ -88,5 +90,5 @@ if defined NEEDS_NEUTRALINO (
     popd
 )
 
-node clients\windows\dist\launch.js !APP! !ARGS!
+node clients\neutralino\dist\launch.js !APP! !ARGS!
 exit /b %errorlevel%

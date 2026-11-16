@@ -179,11 +179,12 @@ npm run e2e:recovery         # starts its own server on 8767: the recovery key, 
 npm run e2e:search           # starts its own server on 8768: Edit ▸ Search & replace, the marks, the builder, one undoable replace
 npm run e2e:pivots           # starts its own server on 8769: Tools ▸ Pivot Table…, the field panel, value settings, SQL, delete and undo
 npm run e2e:macos-shell      # the macOS client's window: its shell page and core in Chromium, the web app in the frame
-npm run e2e:windows-shell    # the same for the Windows client
+npm run e2e:windows-shell    # the same, built for Windows
 ```
 
-The scripts that start a server of their own need ports 8766, 8767, 8768 and 8769 free, so stop the three servers first. `e2e:macos-shell` needs the macOS client built
-(`cd clients/macos && npm ci && npm run build`) as well as the web app (`e2e:windows-shell` the same in `clients/windows`), starts a server of its own for each app and one on 8791
+The scripts that start a server of their own need ports 8766, 8767, 8768 and 8769 free, so stop the three servers first. `e2e:macos-shell` needs the macOS and Windows client built for macOS
+(`cd clients/neutralino && npm ci && npm run build:macos`) as well as the web app (`e2e:windows-shell` the same with `build:windows`; the two write
+the same folders, so build right before each), starts a server of its own for each app and one on 8791
 for `--server`, and fakes only Neutralino's client library; `CHROMIUM=/path/to/chrome` picks a browser binary other than Playwright's. CI runs all of them in its `e2e` job,
 together with `tests/e2e` (the Python test that checks each server greets with its own app).
 

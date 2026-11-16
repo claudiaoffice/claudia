@@ -1,6 +1,6 @@
 """The one local server that the three desktop apps share (D445). No GTK in here.
 
-The twin of ``clients/windows/src/desktop-server.ts`` and ``clients/macos/src/desktop-server.ts``, in Python:
+The twin of ``clients/neutralino/src/desktop-server.ts`` (macOS and Windows), in Python:
 
 * **One server for the suite.** It serves all three apps (no ``--model``), keeps one folder of documents and one of
   state, and stops by itself (``--exit-when-idle``, D434) ten minutes after nothing was connected. The first window

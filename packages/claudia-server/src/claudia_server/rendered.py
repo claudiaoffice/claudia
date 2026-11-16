@@ -15,7 +15,6 @@ says nothing about *how* a tool is run."""
 
 from __future__ import annotations
 
-import secrets
 from collections.abc import Callable
 from typing import Any
 
@@ -38,10 +37,11 @@ from claudia_core.renderings import RenderedDefinition
 from claudia_render import RenderService, UnknownType, default_alt
 
 from .i18n import msg
+from .object_methods import IMAGE_STYLE, Placement
 from .protocol import Context, MethodTable, RequestError
 from .thing_names import default_name
+from .wire import fresh_id
 
-STYLE = "plain-image"
 MAX_ALT = 500
 
 
@@ -112,13 +112,6 @@ def _desk(ctx: Context) -> RenderDesk:
     return ctx.renderings
 
 
-def _fresh(prefix: str, taken) -> str:
-    while True:
-        candidate = f"{prefix}{secrets.token_hex(4)}"
-        if candidate not in taken:
-            return candidate
-
-
 def _types(ctx: Context) -> dict:
     """What can be made as a rendered container, as `{types}`; each is `{type, version, title, tier, requires, params,
     editor, max_source_chars}`: its settings (name, type, default, choices, bounds) and for an editor and the AI an
@@ -136,49 +129,40 @@ def _renderings(model_of: Callable[[Context], ObjectModel]):
     return renderings
 
 
-def _add(
-    model_of: Callable[[Context], ObjectModel],
-    anchor_of: Callable[..., dict],
-    ensure: Callable[..., None],
-    guard: Callable[[Context], None],
-):
+def _add(model_of: Callable[[Context], ObjectModel], placement: Placement):
     def add_rendering(ctx: Context, *, w, h, type, source, params, alt, base, **where):  # noqa: A002 - the wire name
         """Put a rendered container where the person points: `type` is one of `rendering_types`, `source` the text
         (the truth the picture is made from), `params` its settings (defaults fill the rest), `alt` a short description
         for whoever cannot see the picture (one is made from the text if left out). Returns the new `object`, its
         `rendering` and the revision. The text is not drawn yet: the picture arrives as a later edit."""
-        guard(ctx)
         desk, model = _desk(ctx), model_of(ctx)
-        ensure(model, **where)
+        anchor = placement.anchor(model, None, **where)
         settings = desk.check(type, source, params or {})
-        rendering_id = _fresh("r", model.renderings)
-        object_id = _fresh("o", model.objects)
+        rendering_id = fresh_id("r", model.renderings)
+        object_id = fresh_id("o", model.objects)
         words = (alt or "")[:MAX_ALT]
         body = ObjectBody(
             object_id,
             "rendered",
             w,
             h,
-            STYLE,
+            IMAGE_STYLE,
             rendered=rendering_id,
             description=words,
             name=default_name(ctx, "rendered"),
         )
         definition = RenderedDefinition(rendering_id, type, source, settings)  # type: ignore[arg-type]
-        command = Batch(
-            (DefineRendering(definition.to_data()), AddObject(body, anchor_of(**where))), name="Add rendered container"
-        )
+        command = Batch((DefineRendering(definition.to_data()), AddObject(body, anchor)), name="Add rendered container")
         applied = ctx.document.execute(command, author=ctx.user, base=base)
         return {"object": object_id, "rendering": rendering_id, "revision": applied.revision.to_data()}
 
     return add_rendering
 
 
-def _set_source(model_of: Callable[[Context], ObjectModel], guard: Callable[[Context], None]):
+def _set_source(model_of: Callable[[Context], ObjectModel]):
     def set_rendering_source(ctx: Context, *, id, source, params, base):  # noqa: A002
         """Change the text of a rendered container (and, if `params` is given, its settings; the others keep their
         value). The picture stays as it is until the new one is made."""
-        guard(ctx)
         desk, model = _desk(ctx), model_of(ctx)
         if id not in model.renderings:
             raise RequestError("command_error", msg("this document has nothing rendered with the id {id!r}", id=id))
@@ -195,25 +179,20 @@ def add_rendering_methods(
     table: MethodTable,
     *,
     model_of: Callable[[Context], ObjectModel],
-    anchor: tuple[str, Callable[..., dict], Callable[..., None]] | None,
-    guard: Callable[[Context], None] = lambda ctx: None,
+    placement: Placement,
 ) -> None:
-    """Register ``rendering_types`` and ``renderings`` on ``table``, and unless ``anchor`` is ``None`` the methods that
-    change containers too. ``guard`` may refuse who is not to change them (the text app: people only). ``anchor`` is how
-    an app places an object: its parameters as a wire spec (``"slide:str x:int y:int"``), a function from them to the
-    anchor's plain data, and a check that they name a real place."""
+    """Register ``rendering_types``, ``renderings`` and the methods that change rendered containers on ``table``.
+    ``placement`` is how the app places an object, the same one its
+    :func:`~claudia_server.object_methods.add_object_methods` takes."""
     table.method("rendering_types")(_types)
     table.method("renderings")(_renderings(model_of))
-    if anchor is None:
-        return
-    spec, anchor_of, ensure = anchor
     table.method(
         "add_rendering",
-        f"{spec} w:int h:int type:str source:text params:dict? alt:text? base:revision?",
+        f"{placement.new} w:int h:int type:str source:text params:dict? alt:text? base:revision?",
         write=True,
-    )(_add(model_of, anchor_of, ensure, guard))
+    )(_add(model_of, placement))
     table.method("set_rendering_source", "id:str source:text params:dict? base:revision?", write=True)(
-        _set_source(model_of, guard)
+        _set_source(model_of)
     )
 
 

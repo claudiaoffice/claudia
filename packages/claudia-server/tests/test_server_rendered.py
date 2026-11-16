@@ -14,6 +14,7 @@ from claudia_computes import AddSheet, WorkbookModel
 from claudia_core import Document, MemoryStore
 from claudia_creates import SlideModel
 from claudia_render import CliPlugin, PluginRegistry, Rendered, parse_manifest
+from claudia_server.apps import MODEL_METHODS
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.computes import computes_methods
@@ -189,14 +190,14 @@ def test_a_container_is_not_moved_out_of_the_text(text, desk):
         call(text, composes_methods, "move_object", {"id": object_id, "block": "nope", "offset": 0})
 
 
-def test_in_the_text_the_assistant_does_not_place_containers(text, desk):
+def test_in_the_text_the_assistant_as_deployed_does_not_place_containers(text, desk):
     with pytest.raises(RequestError) as refused:
         call(
             text,
             composes_methods,
             "add_rendering",
             {"block": "b1", "offset": 0, "w": 9, "h": 9, "type": "boxer", "source": "x"},
-            account=Account("ai", "editor", system=True),
+            account=Account.assistant(MODEL_METHODS["composes"]),
             desk=desk,
         )
     assert refused.value.code == "forbidden"

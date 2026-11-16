@@ -57,8 +57,8 @@ The messages are the same JSON text on every platform; what carries them differs
 
 ## Who implements it
 
-The shell side is `claudia_shell_gtk.contract` and `bridge` (Linux) and `clients/macos/src/contract.ts` and `bridge.ts`
-(macOS) and `clients/windows/src/contract.ts` and `bridge.ts` (Windows; their tests judge every message by this schema and by the code, and the two must agree). The web app speaks the
+The shell side is `claudia_shell_gtk.contract` and `bridge` (Linux) and `clients/neutralino/src/contract.ts` and
+`bridge.ts` (macOS and Windows, D660; their tests judge every message by this schema and by the code, and the two must agree). The web app speaks the
 contract itself (`web/app/lib/shell-bridge.ts`), on the start page as well as in a document.
 
 ## Connecting to other servers

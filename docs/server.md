@@ -139,8 +139,13 @@ sentence naming the one that is here, D535), and a server that keeps documents i
   `set_style`, the style methods `styles`, `change_style`, `deviate_style`, `rename_style` and `check_css` (a style is
   CSS from the kernel's allow-list; a change either alters the style for all its uses or deviates into a new style
   that waits for its name), `look` and `hold` (where my cursor is, and locking the ± n words around it), `suggest` (assistant only)
-  and `accept_suggestion` / `reject_suggestion`. The assistant has no direct write path into a text: it suggests,
-  people accept (D63).
+  and `accept_suggestion` / `reject_suggestion`. The assistant writes a text as it writes a sheet or a slide (D640):
+  for a person in *act* mode through `replace_text` and `set_style`, in *suggest* mode through `suggest`, and people
+  accept (D262).
+* **Objects (D177, CODE-27).** The three apps answer the same methods for the objects on a sheet, a slide or in a
+  text: `images`, `add_image`, `describe_object`, `move_object`, `resize_object`, `rotate_object`, `remove_object`,
+  and the rendered containers' `add_rendering`. Only the words that say where differ: a cell (`sheet`, `row`, `col`),
+  a point on a slide (`slide`, `x`, `y`), a character of a text (`block`, `offset`, and for a move `dx`, `dy`).
 * **Help (E13).** `help_search` (an optional `query`, blank for everything) and `help_topic` (an id from a search result)
   read the help topics, which every app inherits for free the moment it has its own `help/` folder; nothing here needs a
   role, so the `ai` user can read it too. `help_search` only returns topics meant for the document's own app — a topic

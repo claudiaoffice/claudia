@@ -191,8 +191,8 @@ def test_an_allow_entry_that_is_only_below_the_level_is_not_stale_but_unnecessar
 
 def test_every_project_is_judged_and_named():
     bad = report(("x", [advisory("high", "x")], [], True))
-    result = audit.judge({"web": report(), "clients/macos": bad}, level="moderate", allow=[])
-    assert [f.split(":")[0] for f in result.failures] == ["clients/macos"]
+    result = audit.judge({"web": report(), "clients/neutralino": bad}, level="moderate", allow=[])
+    assert [f.split(":")[0] for f in result.failures] == ["clients/neutralino"]
 
 
 # -- the allow-list in pyproject.toml ---------------------------------------------------------------------------------
@@ -299,13 +299,12 @@ def test_a_failed_first_attempt_is_tried_once_more(tmp_path):
 
 
 def test_the_lockfiles_found_are_the_web_app_the_layout_library_and_each_client(tmp_path):
-    for name in ("web", "layout", "clients/windows", "clients/macos", "clients/linux"):
+    for name in ("web", "layout", "clients/neutralino", "clients/linux"):
         (tmp_path / name).mkdir(parents=True)
-    for name in ("web", "layout", "clients/windows", "clients/macos"):
+    for name in ("web", "layout", "clients/neutralino"):
         (tmp_path / name / "package-lock.json").write_text("{}", encoding="utf-8")
     assert [str(p.relative_to(tmp_path)).replace("\\", "/") for p in audit.lockfiles(tmp_path)] == [
-        "clients/macos/package-lock.json",
-        "clients/windows/package-lock.json",
+        "clients/neutralino/package-lock.json",
         "layout/package-lock.json",
         "web/package-lock.json",
     ]

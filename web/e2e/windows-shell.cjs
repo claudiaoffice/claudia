@@ -1,17 +1,19 @@
-// The Windows client's window, in a real browser: the built shell page (clients/windows/apps/<app>), the built core as a real
+// The Windows client's window, in a real browser: the built shell page (clients/neutralino/apps/<app>, built for
+// Windows, D660), the built core as a real
 // process, a real Claudia server and the real web app in the frame. Only Neutralino is faked -- its client library
 // object (menu recorded, events, `extensions.dispatch` over a WebSocket to the core, broadcasts back) -- because that is
 // the one piece that needs a Windows machine. What this shows, per app: the shell page and the web app complete the handshake; the
 // web app's own menu bar gives way to the native one; a click in the native menu does what it says in the document;
 // the window's end leaves the shared server (D445) running, to stop by itself once idle. And once more with a server given on the command line (`--server`).
 //
-//   (cd clients/windows && npm ci && npm run build) && cd web && npm run build && npm run e2e:windows-shell
+//   (cd clients/neutralino && npm ci && npm run build:windows) && cd web && npm run build && npm run e2e:windows-shell
 //
-// Needs: the built Windows client (clients/windows/apps/<app>/{index.html,shell/,ext/core.mjs}), the built web app
+// Needs: the client built for Windows (clients/neutralino/apps/<app>/{index.html,shell/,ext/core.mjs}), the built web app
 // (web/.output/public), the Python environment (.venv). Not covered, and for a Windows machine: Neutralino itself, WebView2, the
 // real menu.
 //
-// The twin of macos-shell.cjs (which ships with the macOS client); it runs on any host with the two builds, Windows included.
+// The twin of macos-shell.cjs; it runs on any host with the Windows build, Windows included (a build behaves like its
+// platform wherever it runs).
 // Where the two differ: the folders the core uses (%LOCALAPPDATA%), and the server's interpreter, which the core looks
 // for in .venv\Scripts on Windows and is therefore handed explicitly here, so that the same script runs in Linux CI.
 const { chromium } = require('playwright')
@@ -25,7 +27,7 @@ const os = require('node:os')
 const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
-const WINDOWS = path.join(ROOT, 'clients/windows')
+const WINDOWS = path.join(ROOT, 'clients/neutralino')
 // The interpreter of the checkout's .venv: Scripts\python.exe on Windows, bin/python elsewhere (CI is Linux).
 const PYTHON = [path.join(ROOT, '.venv/Scripts/python.exe'), path.join(ROOT, '.venv/bin/python')].find((p) => fs.existsSync(p)) || path.join(ROOT, '.venv/bin/python')
 const SHOTS = process.env.SHOTS
@@ -35,7 +37,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 function need(file, how) {
   if (!fs.existsSync(file)) throw new Error(`${path.relative(ROOT, file)} is missing: ${how}`)
 }
-need(path.join(WINDOWS, 'node_modules/ws'), 'run `npm ci` in clients/windows')
+need(path.join(WINDOWS, 'node_modules/ws'), 'run `npm ci` in clients/neutralino')
 const { WebSocketServer } = createRequire(path.join(WINDOWS, 'package.json'))('ws')
 
 // The client library as the shell page sees it. `window.__dispatch` and the broadcast hook are set up by the test.
@@ -79,8 +81,8 @@ function servePages(appDir) {
 /** A window of one app: the core as a process, linked to this test as if the test were Neutralino. */
 async function openWindow(browser, app, server) {
   const appDir = path.join(WINDOWS, 'apps', app)
-  need(path.join(appDir, 'ext/core.mjs'), 'run `npm run build` in clients/windows')
-  need(path.join(appDir, 'index.html'), 'run `npm run build` in clients/windows')
+  need(path.join(appDir, 'ext/core.mjs'), 'run `npm run build:windows` in clients/neutralino')
+  need(path.join(appDir, 'index.html'), 'run `npm run build:windows` in clients/neutralino')
   need(path.join(ROOT, 'web/.output/public/index.html'), 'run `npm run build` in web')
   const home = fs.mkdtempSync(path.join(os.tmpdir(), `claudia-e2e-windows-${app}-`))
 

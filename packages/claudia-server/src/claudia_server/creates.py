@@ -18,8 +18,6 @@ client's view, as ``apply`` does.
 
 from __future__ import annotations
 
-import secrets
-
 from claudia_creates_io import (
     apply_edits_to_odp,
     apply_edits_to_pptx,
@@ -34,21 +32,13 @@ from claudia_creates_io import (
 from claudia_core import (
     AddObject,
     Batch,
-    DefineImage,
     DefineShape,
-    DescribeObject,
-    ImageImport,
-    MoveObject,
     ObjectBody,
     PageSetupError,
-    RemoveObject,
-    ResizeObject,
     SetSnap,
     SetText,
-    decode_image,
     paragraph_for,
 )
-from claudia_core.clock import utc_now
 from claudia_creates import (
     AddSlide,
     PrintSetup,
@@ -63,7 +53,7 @@ from claudia_creates import (
 
 from .creates_search import add_search_methods
 from .i18n import msg
-from .images import image_bytes, picture_words
+from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
@@ -71,10 +61,11 @@ from .rendered import add_rendering_methods
 from .replay import add_replay_methods
 from .styles import add_style_methods
 from .thing_names import add_name_methods, default_name
+from .wire import current_revision, done, fresh_id
 
 #: The style a new object of each kind starts with: its container's slot (D304). A text box's box is a box style
 #: of its own (D310), so a change to it never has to deviate from Body text.
-STYLE_OF_KIND = {"text": "plain-box", "shape": "plain-shape", "image": "plain-image"}
+STYLE_OF_KIND = {"text": "plain-box", "shape": "plain-shape"}
 #: The style a new object's words start with: its words' slot. A shape's outline and its words are two styles of
 #: two kinds (D310).
 PARAGRAPH_STYLE_OF_KIND = {"text": "body-text", "shape": "shape-label"}
@@ -106,139 +97,47 @@ def _deck(ctx: Context) -> SlideModel:
     return model
 
 
-def _rev(ctx: Context) -> str | None:
-    revision = ctx.document.revision
-    return None if revision is None else revision.to_data()
-
-
-def _fresh(prefix: str, taken) -> str:
-    """An id nobody has used in this document. Ids are random, never counted: the id of a removed object must not come
-    back, or undoing its removal would collide with the newcomer."""
-    while True:
-        candidate = f"{prefix}{secrets.token_hex(4)}"
-        if candidate not in taken:
-            return candidate
-
-
-def _done(ctx: Context, command, base, **extra) -> dict:
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {**extra, "revision": applied.revision.to_data()}
-
-
-def _add_image(ctx, *, slide, x, y, w, h, data, alt, source_name, source_path, decorative, base):
-    """Import a picture from disk and put it on a slide: `data` is the file's bytes, base64. `alt` is a short,
-    required description of what it shows — unless the picture is only `decorative` (a flourish, a divider),
-    when it has none and `alt` is empty. `source_name` is the file name as the client has it; `source_path`
-    is its full path if the client could supply one (a plain web browser cannot, for its own security — send
-    `null`). Clipboard and drag-and-drop imports are not implemented yet; this is the "browse a file" path.
-    Returns the new object's id and the revision. The image keeps its own proportions.
-
-    Module-level, not nested in `creates_methods_with`, because it needs no shape library: only `add_object`
-    and `shapes` read from one."""
-    deck = _deck(ctx)
-    words = picture_words(alt, bool(decorative))
-    asset = decode_image(data)
-    steps: list = [] if asset.id in deck.images else [DefineImage(asset)]
-    imported = ImageImport.from_data(
-        {
-            "asset": asset.id,
-            "alt": words,
-            "imported_by": ctx.user,
-            "imported_at": utc_now(),
-            "source": "disk",
-            "source_name": source_name,
-            "source_path": source_path,
-        }
-    )
-    object_id = _fresh("o", deck.objects)
-    body = ObjectBody(
-        object_id,
-        "image",
-        w,
-        h,
-        STYLE_OF_KIND["image"],
-        image=asset.id,
-        imported=imported,
-        decorative=bool(decorative),
-        name=default_name(ctx, "image"),
-    )
-    steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
-    command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
-    return _done(ctx, command, base, object=object_id)
-
-
-def _move_object(ctx, *, id, x, y, base):
-    """Move an object so that its top left corner is at (x, y)."""
-    slide = _deck(ctx).get_object(id).anchor.slide
-    return _done(ctx, MoveObject(id, SlideAnchor(slide, x, y).to_data()), base)
-
-
-def _resize_object(ctx, *, id, x, y, w, h, base):
-    """Give an object a new frame: top left corner and size (resizing from the left or top moves the corner)."""
-    slide = _deck(ctx).get_object(id).anchor.slide
-    return _done(ctx, ResizeObject(id, SlideAnchor(slide, x, y).to_data(), w, h), base)
-
-
-def _rotate_object(ctx, *, id, rotation, base):
-    """Turn an object about its centre to `rotation` whole degrees clockwise. Any whole number does (-20 is 340). A
-    slide keeps the turned outline of what is on it on the slide, so a turn that would push a corner off also moves
-    the object just far enough in, in the same step of the history; one that cannot fit at all is refused."""
-    return _done(ctx, _deck(ctx).turn_command(id, rotation), base)
-
-
 def _set_text(ctx, *, id, text, base):
     """Replace the text of an object."""
-    return _done(ctx, SetText(id, text), base)
+    return done(ctx, SetText(id, text), base)
 
 
 def _set_snap(ctx, *, id, snap, base):
     """Hold an object to the grid (`snap` true) or release it (false). The grid is only a helper the view
     draws, never part of the slide, but this choice is: it has its own place in the document's history."""
-    return _done(ctx, SetSnap(id, snap), base)
+    return done(ctx, SetSnap(id, snap), base)
 
 
-def _describe_object(ctx, *, id, description, decorative, base):
-    """Say what an object is to someone who cannot see it (`description`, a short sentence), or that it is only
-    decoration (`decorative` true, and then no description). A picture needs one or the other."""
-    if _deck(ctx).get_object(id).body.kind == "image":
-        picture_words(description, bool(decorative))
-    return _done(ctx, DescribeObject(id, description, bool(decorative)), base)
+def _on_slide(_deck: SlideModel, held: SlideAnchor | None, *, x: int, y: int, slide: str = "") -> dict:
+    """Where an object of a presentation is: its top left corner on a slide. A new one names its slide; a moved one
+    stays on its own."""
+    return SlideAnchor(slide if held is None else held.slide, x, y).to_data()
 
 
-def _remove_object(ctx, *, id, base):
-    """Take an object off its slide. Undo brings it back in the same place of the stacking order."""
-    return _done(ctx, RemoveObject(id), base)
+ON_SLIDE = Placement(
+    new="slide:str x:int y:int",
+    move="x:int y:int",
+    frame="x:int y:int",
+    anchor=_on_slide,
+    says={
+        "add_image": "`x` and `y` are its top left corner.",
+        "move_object": "`x` and `y` are its top left corner now.",
+        "resize_object": "The top left corner (`x`, `y`) comes with the size, since resizing from the left or top "
+        "moves the corner.",
+        "rotate_object": "A slide keeps the turned outline of what is on it on the slide, so a turn that would push a "
+        "corner off also moves the object just far enough in, in the same step of the history; one that cannot fit at "
+        "all is refused.",
+    },
+)
 
 
 def _add_object_methods(table: MethodTable) -> None:
-    """The methods that change one object: import a picture, place it, size it, turn it, word it, style its
-    words, hold it to the grid, take it away. Split out of the table builder below only because it had grown
-    past the statement limit — they belong together."""
-    table.kind("image")(image_bytes)
-    table.method(
-        "add_image",
-        "slide:str x:int y:int w:int h:int data:image alt:str source_name:str source_path:str? decorative:bool? "
-        "base:revision?",
-        write=True,
-    )(_add_image)
-    table.method("move_object", "id:str x:int y:int base:revision?", write=True)(_move_object)
-    table.method("resize_object", "id:str x:int y:int w:int h:int base:revision?", write=True)(_resize_object)
-    table.method("rotate_object", "id:str rotation:int base:revision?", write=True)(_rotate_object)
+    """The methods that change one object, the same in every app (CODE-27), and what only a slide's objects have:
+    words of their own and a hold to the grid."""
+    add_object_methods(table, model_of=_deck, placement=ON_SLIDE)
+    add_rendering_methods(table, model_of=_deck, placement=ON_SLIDE)
     table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
-    table.method("describe_object", "id:str description:text decorative:bool? base:revision?", write=True)(
-        _describe_object
-    )
-    table.method("remove_object", "id:str base:revision?", write=True)(_remove_object)
-    add_rendering_methods(
-        table,
-        model_of=_deck,
-        anchor=(
-            "slide:str x:int y:int",
-            lambda slide, x, y: SlideAnchor(slide, x, y).to_data(),
-            lambda model, **where: None,
-        ),
-    )
 
 
 def _add_print_methods(table: MethodTable) -> None:
@@ -261,7 +160,7 @@ def _add_print_methods(table: MethodTable) -> None:
             command = SetPrintSetup(PrintSetup.from_data(setup))
         except (PrintSetupError, PageSetupError) as exc:
             raise RequestError("command_error", str(exc)) from None
-        return _done(ctx, command, base)
+        return done(ctx, command, base)
 
 
 def _add_plan_methods(table: MethodTable) -> None:
@@ -271,13 +170,13 @@ def _add_plan_methods(table: MethodTable) -> None:
     def _set_slide_notes(ctx, *, slide, notes, base):
         """Set the speaker notes of a slide (D342), Markdown, shown formatted in the presenter view only; `""` clears
         them. `command_error` for an unknown slide or notes that cannot be kept."""
-        return _done(ctx, SetSlideNotes(slide, notes), base)
+        return done(ctx, SetSlideNotes(slide, notes), base)
 
     @table.method("set_slide_time", "slide:str seconds:int? base:revision?", write=True)
     def _set_slide_time(ctx, *, slide, seconds, base):
         """Set the planned time of a slide (D343) in whole seconds, 1 to 86400; `null` clears it. `command_error`
         for an unknown slide or a time that makes no sense."""
-        return _done(ctx, SetSlideTime(slide, seconds), base)
+        return done(ctx, SetSlideTime(slide, seconds), base)
 
 
 def _add_shared_methods(table: MethodTable) -> None:
@@ -330,7 +229,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
             raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
         objects = [obj.to_data_for(ctx.user) for obj in deck.objects_on(slide)]
         return {
-            "revision": _rev(ctx),
+            "revision": current_revision(ctx),
             "slide": slide,
             "objects": objects,
             "notes": deck.notes_of(slide),
@@ -347,14 +246,6 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
             "library": [shape.to_data() for shape in library],
             "document": [shape.to_data() for _, shape in sorted(deck.shapes.items())],
         }
-
-    @table.method("images")
-    def _images(ctx):
-        """The decoded image assets this document has taken in (and what its image objects are drawn with), each
-        as `{id, format, width, height, animated, data, first_frame}` (`data`/`first_frame` are base64). There is
-        no library to pick from: an image always comes in through `add_image`."""
-        deck = _deck(ctx)
-        return [image.to_data() for _, image in sorted(deck.images.items())]
 
     @table.method("export_office", "format:str")
     def _export_office(ctx, *, format):
@@ -397,8 +288,8 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):
         """Add an empty slide at the end. Returns its id and the revision."""
-        slide = _fresh("s", _deck(ctx).slides)
-        return _done(ctx, AddSlide(slide, name=default_name(ctx, "slide")), base, slide=slide)
+        slide = fresh_id("s", _deck(ctx).slides)
+        return done(ctx, AddSlide(slide, name=default_name(ctx, "slide")), base, slide=slide)
 
     @table.method(
         "add_object", 'slide:str kind:str x:int y:int w:int h:int shape:str? text:text="" base:revision?', write=True
@@ -416,13 +307,13 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
             if outline is None:
                 raise RequestError("bad_request", msg("add_object: this server has no shape {shape!r}", shape=shape))
             steps.append(DefineShape(outline))
-        object_id = _fresh("o", deck.objects)
+        object_id = fresh_id("o", deck.objects)
         style = STYLE_OF_KIND[kind]
         words = paragraph_for(object_id, PARAGRAPH_STYLE_OF_KIND[kind], text, ctx.user)
         body = ObjectBody(object_id, kind, w, h, style, words, shape=shape, name=default_name(ctx, kind))
         steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
-        return _done(ctx, command, base, object=object_id)
+        return done(ctx, command, base, object=object_id)
 
     return table
 

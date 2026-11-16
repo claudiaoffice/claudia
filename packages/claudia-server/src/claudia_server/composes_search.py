@@ -3,8 +3,6 @@
 What is shared by every app lives in :mod:`claudia_server.search_methods`; this is what a text brings: its kinds of
 text (paragraphs by their style, the words and the descriptions of floating objects), its scope (a section or a
 selection), a place as ``{block}`` or ``{block, object, source}`` (CODE-18) and who holds a stretch of text.
-
-Replacing is writing, so the assistant, which only suggests (D63), may look but not replace.
 """
 
 from __future__ import annotations
@@ -72,9 +70,9 @@ REPLACE_DOC = """Replace what `search_find` finds, with `query.replace` (the sam
         inside a stretch somebody else holds, an object somebody has selected, and a text that was typed into since
         the person looked, are skipped and named in `skipped` (`{at, kind, reason, by}`), never refused as a whole.
         Answers `{revision, replaced, skipped}`, `replaced` being the number of texts changed (nothing changing is not
-        an error and leaves no entry in the history). `forbidden` for the assistant, which only suggests;
-        `command_error` for a query that cannot run, has nothing to replace with or did not finish within two seconds
-        (nothing is replaced then); `bad_request` when more than 10000 texts would change."""
+        an error and leaves no entry in the history). `command_error` for a query that cannot run, has nothing to
+        replace with or did not finish within two seconds (nothing is replaced then); `bad_request` when more than
+        10000 texts would change."""
 
 
 def _text(ctx: Context) -> TextModel:
@@ -99,12 +97,6 @@ def _place(at) -> Location:
         block, object_id, source = object_of(at)
         return {"block": block, "object": object_id, "source": source}
     return {"block": block} if "offset" not in at else {"block": block, "offset": offset}
-
-
-def _people_only(ctx: Context) -> None:
-    """The assistant suggests; it does not write (D63)."""
-    if ctx.account.system:
-        raise RequestError("forbidden", msg("the assistant can only make suggestions; people write the text"))
 
 
 def add_search_methods(table: MethodTable) -> None:
@@ -148,6 +140,5 @@ def add_search_methods(table: MethodTable) -> None:
             find_doc=FIND_DOC,
             preview_doc=PREVIEW_DOC,
             replace_doc=REPLACE_DOC,
-            before_replace=_people_only,
         ),
     )

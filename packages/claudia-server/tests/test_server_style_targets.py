@@ -24,6 +24,7 @@ from claudia_core import (
     new_registry,
 )
 from claudia_creates import SlideModel
+from claudia_server.apps import MODEL_METHODS
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.computes import computes_methods
@@ -140,11 +141,16 @@ def test_an_unknown_style_is_refused(deck):
         call(deck, "apply_style", {"targets": [{"object": box}], "style": "sparkly"})
 
 
-def test_the_assistant_does_not_restyle_a_text(paper):
-    """composes keeps its guard: the assistant suggests, it does not write (D63)."""
+def test_the_assistant_as_deployed_does_not_restyle_a_text(paper):
+    """Not one of the methods a server lets the assistant write through in a text (SEC-10, D640)."""
+    deployed = Account.assistant(MODEL_METHODS["composes"])
     with pytest.raises(RequestError) as caught:
         call(
-            paper, "apply_style", {"targets": [{"block": "b1"}], "style": "quote"}, methods=composes_methods, account=AI
+            paper,
+            "apply_style",
+            {"targets": [{"block": "b1"}], "style": "quote"},
+            methods=composes_methods,
+            account=deployed,
         )
     assert caught.value.code == "forbidden"
 
@@ -284,7 +290,7 @@ def test_a_later_kind_of_thing_is_a_row_and_an_adapter_and_nothing_else():
     serve it unchanged — fitting, applying, deviating and counting."""
     table = core_methods.extended()
     slots = SLOTS.with_row("slide", (Slot("background", (BOX_FACET,), "box"),))
-    add_target_methods(table, lambda ctx: None, (SlideBackgrounds(),), own_css=own_css, slots=slots)
+    add_target_methods(table, (SlideBackgrounds(),), own_css=own_css, slots=slots)
     doc = Document(Backgrounds(), store=MemoryStore())
     doc.model.styles.add(StyleDef("loud", "Loud", "", None, {"background-color": "#F00"}, kind="box"))
 

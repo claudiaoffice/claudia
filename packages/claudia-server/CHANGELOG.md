@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `add_image` and `describe_object` in composes (CODE-27): a picture comes into a text from disk, hanging from a
+  character (`block`, `offset`), and any object of a text can be described or marked decorative, as in the other two
+  apps. `PROTOCOL_VERSION` stays 1: methods were added.
 - `name_thing` (D554), in the three apps: give a thing that has no name the one it gets when first pointed at (a
   heading of a text its own words, anything else "Paragraph 1", "Text box 3" ... in the asker's language); a named
   thing keeps its name and nothing is written. `blocks` in composes says a named paragraph's `name`.
@@ -52,6 +55,21 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   scripts follow the files in the web folder (`WebScriptHashes`, read again when a page's name, time or size changed).
   The desktop apps' shared server (D445) outlives its windows, and the start scripts build the web app at every start,
   so the second start showed an empty window (the new build's inline script was refused).
+
+### Changed
+- **Breaking** for the assistant in composes (D640): it acts or suggests as in the other apps. In *act* mode it may
+  write through `replace_text` and `set_style` (`apps.MODEL_METHODS["composes"]`), and the scripted stand-in makes its
+  replacements itself, from the end of each paragraph; in *suggest* mode it suggests, as before. composes' own guard
+  (`_people_only`) is gone, and with it the `guard` hooks of `add_style_methods`, `add_name_methods`,
+  `add_list_methods`, `add_object_methods`, `add_rendering_methods` and `SearchApp.before_replace`, which only
+  composes used: the assistant's allow-list (SEC-10) is the one rule. Page setup stays people's in every app
+  (`printing.people_only`, now with the message "people set a document up, not the assistant").
+- The methods that change one object (`images`, `add_image`, `describe_object`, `move_object`, `resize_object`,
+  `rotate_object`, `remove_object`) are registered once for the three apps by `object_methods.add_object_methods`
+  (CODE-27); an app says only where an object is, with a `Placement` that `rendered.add_rendering_methods` takes too
+  (in place of its `anchor` tuple). `wire.fresh_id`, `wire.done` and `wire.current_revision` replace the per-app
+  copies. The wire names and parameters are unchanged (`tests/test_server_object_methods.py` holds them); the help
+  texts of these methods now share their first sentences.
 
 ## [0.36.0] - 2026-11-15
 

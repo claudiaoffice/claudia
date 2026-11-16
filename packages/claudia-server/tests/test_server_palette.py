@@ -10,6 +10,7 @@ import pytest
 from claudia_composes import TextModel
 from claudia_core import Document, MemoryStore
 from claudia_creates import SlideModel
+from claudia_server.apps import MODEL_METHODS
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.creates import creates_methods
@@ -17,7 +18,6 @@ from claudia_server.protocol import Context, Limits, RequestError
 
 ANN = Account("ann", "owner")
 VERA = Account("vera", "viewer")
-ASSISTANT = Account("claudia", "editor", system=True)
 
 
 @pytest.fixture
@@ -104,11 +104,12 @@ def test_a_viewer_may_read_the_palette_and_not_change_it(deck):
         call(deck, "set_role", {"role": "accent", "colour": "#008080"}, account=VERA)
 
 
-def test_in_a_text_the_assistant_may_read_the_palette_and_not_change_it(text):
-    # composes' own rule, kept by the ``guard`` hook when the methods moved into the shared module (D63, D203).
-    assert call(text, "palette", account=ASSISTANT, methods=composes_methods)["roles"]
-    with pytest.raises(RequestError, match="suggestions"):
-        call(text, "set_role", {"role": "accent", "colour": "#008080"}, account=ASSISTANT, methods=composes_methods)
+def test_in_a_text_the_assistant_as_deployed_may_read_the_palette_and_not_change_it(text):
+    # Its allow-list (SEC-10) is the rule, as in the other apps (D640); composes' own guard is gone.
+    deployed = Account.assistant(MODEL_METHODS["composes"])
+    assert call(text, "palette", account=deployed, methods=composes_methods)["roles"]
+    with pytest.raises(RequestError, match="not one of the methods"):
+        call(text, "set_role", {"role": "accent", "colour": "#008080"}, account=deployed, methods=composes_methods)
 
 
 # ----------------------------------------------------------------------------- replacing the palette

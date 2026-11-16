@@ -84,6 +84,7 @@ Work plan for Nov 14/15th 2026
       these are used to produce a "slide view" or "corkboard" overview of the document, that allows re-arranging whole objects with drag-n-drop
 - [ ] "binder" or "research" would be a place to store links, PDFs, documents, images,... in one place as sources. Needs proper separation of concerns from the bibliography!
 - [ ] a work planner: I'm "drafting", "brainstorming", "polishing"; introduce these as "modes" that switch between different views on the same underlying document, but allow some actions on it more easily than others
+- [ ] ask users what they want to focus on today when claudia first starts. Then gently remind them about it.
 
 # creates
 
@@ -98,38 +99,5 @@ A collection of docs should be able to reference each other. Equivalent to a "Pr
 
 # bugs and review
 
-Linux: still random port
-File > Open doesn't give feedback
-File > New marks the "create new" on front page => good!
-File > Open a file allows import => good!
-![[Pasted image 20261115105251.png]]Missing font problem gone
-Download PDF in print view => perfect
-Export now opens file location picker => perfect
-Dragging an external file into the window when the start page is visible => does not import, is that possible?
 
 
-windows client:
-fresh checkout of main
-npm run build
-then main window doesnt show anything
-
-macos:
-"open a file" on start page opens file picker
-"this computer" still shows "random" port
-File > Open highlights the search bar => good!
-File > Open a file opens file picker => perfect!
-File > New puts cursor in "document name" input and highlights the "new" seciton => perfect!
-printing works / fonts instlalled => perfect
-dragging file from finder into start page window starts impot => perfect!
-on the next opening of the application I did not see the start page => same as with windows. maybe two servers?
-
-
-![[Pasted image 20261115113530.png]]
-
-"in x texts" that is confusing in composes, because average user thinks of his doc as one text, just "n matches" is good.
-
-"look in" and the buttons below look all very nice but should be smaller, or a multi-select (checkboxed) dropdown, because they take too much screen space, and "replace with" and "build pattern" are small links only, and the distance to "n matches" is too small.
-
-If you click on the three dots in the dialog and select "About searching and patterns" the help panel opens below the dialog, but there is no help topic linked to "about searching and patterns", and the fact that the help opened isn't visible, because the dialog box is hovering above it.
-
-You should be able to move the dialog around on the screen, but at the moment its fixed.

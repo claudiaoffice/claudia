@@ -1,6 +1,6 @@
 """The page's files on this computer (D501, D502): the Open and Save dialogs, reading the chosen file and writing the
 saved one, and handing a PDF to the computer's viewer to print it. No GTK in here (``window.GtkDialogs`` shows the
-dialogs), so it is tested with fake dialogs and a temporary folder; the twin of ``clients/macos/src/files.ts``.
+dialogs), so it is tested with fake dialogs and a temporary folder; the twin of ``clients/neutralino/src/files.ts``.
 
 The page cannot do this itself: a file input cannot be opened from a menu item (which is no click in the page), and a
 download goes into the Downloads folder without a word about it. A file travels in pieces (``file_chunk``, 36 KiB of

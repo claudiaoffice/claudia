@@ -138,7 +138,7 @@ class Action:
     """The Cocoa selector (``copy:``, ``cut:``, ``paste:``, ``undo:``, ``redo:``) a macOS shell puts on this item
     next to its accelerator (D158). GTK ignores it; it is carried here, rather than kept only in the macOS client, so
     one manifest stays the single source for every shell (the module docstring's reason for existing at all) and
-    ``describe()`` can hand it to a shell that never imports this package (``clients/macos``). Unset for everything
+    ``describe()`` can hand it to a shell that never imports this package (``clients/neutralino``). Unset for everything
     that is not a standard editing command — macOS has no selector for "paste as plain text" or an app's own
     commands, and giving those a Cocoa role would route the key to a native editing action with no page effect."""
     key_owner: KeyOwner = KeyOwner.PAGE

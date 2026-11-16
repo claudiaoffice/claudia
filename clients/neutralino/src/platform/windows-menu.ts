@@ -1,0 +1,82 @@
+// The Windows menu (D44, D158): the manifest's own menus, unchanged, with the keys shown the way Windows shows them.
+//
+// Simpler than the macOS menu (macos-menu.ts), for two reasons the spike and the macOS build each found (D44, D158,
+// notes/e0-3-neutralino-windows-macos.md §2):
+//  - Windows keeps File, Edit, Format, View, Tools, Config, Help as one ordinary window menu. There is no
+//    application-menu convention to move About and Quit into, so unlike buildMacMenu() this file does not
+//    rebuild or relocate anything -- the manifest's own menu order is the window menu, unchanged.
+//  - "On Windows no Cocoa actions exist; the Edit items worked through `document.execCommand` in the page" -- the
+//    manifest's `role` field (D158) exists only to give macOS's `NSMenuItem` a Cocoa selector so Cmd+C is claimed
+//    by the menu at all. Windows has no such requirement: every item, Edit's standard ones included, is forwarded
+//    to the page as a plain `action` message (menu-actions.ts's routeMenuClick does not special-case them either),
+//    and the page's own shortcut handling (`web/app/lib/shortcuts.ts`, D122) is what actually runs the command --
+//    the same path Linux already uses for Undo/Redo (`_shared_edit_block`'s own comment: "page-handled, not
+//    shell-handled"). So this file reads `role` from nothing; the field stays in the shared manifest for macOS
+//    alone and is simply absent from every WindowMenuItem this module builds.
+//  - `shortcut` is display-only here (confirmed on a real Windows 11 machine, the spike's own finding): the OS
+//    does not claim the key combination the way macOS's Cocoa layer does, so a wrong or missing guess only costs a
+//    blank column next to the label, never a silently broken shortcut. `gtkAccelToWindowsShortcut` is still kept
+//    to the shapes actually seen in the shared manifest (`grep accelerators= manifest.py`) rather than written as
+//    a general GTK-accelerator parser, so a shape nobody has used yet does not quietly mistranslate -- but, unlike
+//    macOS's `gtkAccelToMacShortcut`, it is allowed to cover more than one shape precisely because getting one
+//    wrong here is cosmetic, not functional.
+
+import { buildMenus, type ManifestAction, type ManifestListing, type WindowMenuItem } from '../menu.js'
+
+const MODIFIER = /<(Primary|Shift|Alt)>/g
+const KEY_NAMES: Readonly<Record<string, string>> = {
+  Up: 'Up',
+  Down: 'Down',
+  Left: 'Left',
+  Right: 'Right',
+  Return: 'Enter',
+  Delete: 'Del',
+  Tab: 'Tab',
+  minus: '-',
+  underscore: '_',
+  question: '?',
+}
+/** Symbols typed with Shift: shown as the symbol, without the Shift (as the web menus show them). */
+const SHIFTED = new Set(['underscore', 'question'])
+
+/**
+ * The shared manifest's GTK accelerator syntax, turned into the "Ctrl+Shift+N" style Windows menus display. Every key
+ * of every menu entry has one since UX-35, so every shape the manifest uses is covered (modifiers, letters, digits,
+ * F-keys, arrows and the named keys below), shown in the same order and words as the web app's menus
+ * (`web/app/lib/shortcuts.ts`'s `chordLabel`). `null` for a key name this does not know -- a blank shortcut column
+ * is the safe default for a shape nobody has used yet, and getting one wrong is cosmetic here (this module's own top
+ * comment).
+ */
+export function gtkAccelToWindowsShortcut(accelerator: string): string | null {
+  const modifiers = [...accelerator.matchAll(MODIFIER)].map((m) => m[1])
+  const name = accelerator.replace(MODIFIER, '')
+  let key: string | undefined
+  if (/^[A-Za-z0-9]$/.test(name)) key = name.toUpperCase()
+  else if (/^F([1-9]|1[0-2])$/.test(name)) key = name
+  else key = KEY_NAMES[name]
+  if (key === undefined) return null
+  const parts: string[] = []
+  if (modifiers.includes('Primary')) parts.push('Ctrl')
+  if (modifiers.includes('Shift') && !SHIFTED.has(name)) parts.push('Shift')
+  if (modifiers.includes('Alt')) parts.push('Alt')
+  return [...parts, key].join('+')
+}
+
+function buildItem(action: ManifestAction): WindowMenuItem {
+  const item: WindowMenuItem = { id: action.id, text: action.label }
+  if (action.checkable) item.isChecked = false // the page corrects this once it reports real state (action_state)
+  const translated = action.accelerators.map(gtkAccelToWindowsShortcut).find((s): s is string => s !== null)
+  if (translated) item.shortcut = translated
+  return item
+}
+
+/** The full native window menu for one app: the manifest's own menus, in their order (nothing is relocated into an
+ * application menu, this module's top comment). */
+export function buildWindowsMenu(listing: ManifestListing): WindowMenuItem[] {
+  return buildMenus(listing, buildItem)
+}
+
+/** Windows needs nothing else in the front page's short menu: the keys of the text fields work without a menu. */
+export function keptOnWindowsFrontPage(_action: ManifestAction): boolean {
+  return false
+}

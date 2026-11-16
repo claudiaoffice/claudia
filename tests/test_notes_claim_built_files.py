@@ -24,6 +24,9 @@ BUILT = re.compile(r"\bbuilt\b", re.IGNORECASE)
 PATH = re.compile(r"`((?:web|packages|clients|scripts|docs)/[a-zA-Z0-9_.\-/]+)`")
 # directories that a fresh, unbuilt checkout never has: naming one of these is not a claim the tree must satisfy
 NOT_EXPECTED_IN_A_CHECKOUT = {"node_modules", ".venv", ".nuxt", ".output", "dist", "_build", "__pycache__"}
+# folders a decision moved: a note written before the move keeps the old name, and the claim holds if the file is at
+# the new place (D660: the macOS and Windows clients became one package)
+MOVED = {"clients/macos": "clients/neutralino", "clients/windows": "clients/neutralino"}
 
 
 def _build_outputs() -> set[str]:
@@ -35,6 +38,13 @@ def _build_outputs() -> set[str]:
 
 def _made_by_a_build(cited: str, outputs: set[str]) -> bool:
     return any(cited == out or cited.startswith(out + "/") for out in outputs)
+
+
+def _where_it_is_now(cited: str) -> str:
+    for old, new in MOVED.items():
+        if cited == old or cited.startswith(old + "/"):
+            return new + cited[len(old) :]
+    return cited
 
 
 def paragraphs_claiming_built():
@@ -54,7 +64,7 @@ def test_a_built_claim_names_only_files_that_exist():
             cited = match.group(1)
             if NOT_EXPECTED_IN_A_CHECKOUT & set(Path(cited).parts) or _made_by_a_build(cited, outputs):
                 continue
-            if not (ROOT / cited).exists():
+            if not (ROOT / _where_it_is_now(cited)).exists():
                 missing.append(f"{note.relative_to(ROOT)}: claims {cited!r} is built, but it is not in the tree")
     assert not missing, "\n".join(missing)
 
@@ -67,3 +77,12 @@ def test_a_build_output_named_in_gitignore_is_not_expected_in_a_fresh_checkout()
     assert _made_by_a_build("web/public/wasm/harfbuzz.wasm", outputs)
     assert not _made_by_a_build("web/public/wasmfile.ts", outputs)
     assert not _made_by_a_build("web/app/lib/pointing.ts", outputs)
+
+
+def test_a_note_from_before_a_move_names_the_old_folder():
+    """Notes are history: one written before D660 says `clients/macos/src/menu.ts`, which now is in clients/neutralino.
+    A file that is at neither place is still missing."""
+    assert _where_it_is_now("clients/macos/src/menu.ts") == "clients/neutralino/src/menu.ts"
+    assert _where_it_is_now("clients/windows") == "clients/neutralino"
+    assert _where_it_is_now("clients/macosx/a.ts") == "clients/macosx/a.ts"
+    assert _where_it_is_now("web/app/lib/pointing.ts") == "web/app/lib/pointing.ts"

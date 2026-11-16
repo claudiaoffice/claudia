@@ -20,10 +20,11 @@
 * ``look`` and ``hold``: where my cursor is. ``hold`` also locks the ± n words around it for everybody else (D11);
 * ``move_object``, ``resize_object``, ``rotate_object`` and ``remove_object``: the floating objects. An object hangs
   from a character, floats at an offset from it and turns about its centre (rotation-ui);
-* ``suggest`` (the assistant only), ``accept_suggestion`` and ``reject_suggestion`` (D63).
+* ``suggest`` (the assistant only), ``accept_suggestion`` and ``reject_suggestion``: composes' suggest mode (D262).
 
-The assistant has no direct write path into the text: ``replace_text`` and ``set_style`` refuse it, it can only
-suggest, and people accept (D63).
+The assistant writes a text as it writes a sheet or a slide (D640): in *act* through the methods its allow-list names
+(``apps.MODEL_METHODS``, SEC-10), in *suggest* only through ``suggest``, and people accept. How the page is set up is
+people's, as in the other apps (:func:`claudia_server.printing.people_only`).
 """
 
 from __future__ import annotations
@@ -65,9 +66,6 @@ from claudia_core import (
     Batch,
     Command,
     CreateStyle,
-    MoveObject,
-    RemoveObject,
-    ResizeObject,
     StyleDef,
     validate_css,
 )
@@ -75,14 +73,16 @@ from claudia_core import (
 from .composes_lists import add_list_methods
 from .composes_search import add_search_methods
 from .i18n import msg
+from .object_methods import Placement, add_object_methods
 from .office_export import export_with_original, office_export
-from .printing import add_language_methods
+from .printing import add_language_methods, people_only
 from .protocol import Context, RequestError, core_methods
 from .rendered import add_rendering_methods
 from .replay import add_replay_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
 from .thing_names import add_name_methods
+from .wire import current_revision, done
 
 MAX_ZONE_WORDS = 10  # the widest ± n words zone a cursor may ask for
 ZONE_SECONDS = 15.0  # a held zone lapses this long after its owner was last active
@@ -99,12 +99,6 @@ def _text(ctx: Context) -> TextModel:
     if not isinstance(model, TextModel):
         raise RequestError("command_error", msg("this document is not a text"))
     return model
-
-
-def _people_only(ctx: Context) -> None:
-    """The assistant suggests; it does not write (D63)."""
-    if ctx.account.system:
-        raise RequestError("forbidden", msg("the assistant can only make suggestions; people write the text"))
 
 
 class _BlockTargets:
@@ -130,15 +124,10 @@ class _BlockTargets:
         return Counter(block.style for block in model.blocks)
 
 
-add_style_methods(composes_methods, guard=_people_only, targets=(_BlockTargets(), OBJECTS))
-add_list_methods(composes_methods, guard=_people_only)
-add_name_methods(composes_methods, guard=_people_only)
+add_style_methods(composes_methods, targets=(_BlockTargets(), OBJECTS))
+add_list_methods(composes_methods)
+add_name_methods(composes_methods)
 add_replay_methods(composes_methods)
-
-
-def _rev(ctx: Context) -> str | None:
-    revision = ctx.document.revision
-    return None if revision is None else revision.to_data()
 
 
 def _inside(model: TextModel, block: str, offset: int, what: str = "offset") -> int:
@@ -159,7 +148,7 @@ def _blocks(ctx):
     model = _text(ctx)
     labels = model.labels()
     return {
-        "revision": _rev(ctx),
+        "revision": current_revision(ctx),
         "styles": model.styles.views(model.palette.colours()),
         "lists": model.lists.to_data(),
         "schemes": [scheme.to_data() for scheme in SCHEMES.values()],
@@ -302,11 +291,10 @@ def _replace_text(ctx, *, block, start, end_block, end, text, base):
     break in `text` starts a new paragraph; a range that spans paragraphs joins what is left of them. Typing is an
     empty range, deleting is empty text. One request is one step in the history. Returns the revision and where the
     cursor ends up: `{revision, block, offset}`. Refused with `locked` where a colleague holds the text."""
-    _people_only(ctx)
     commands, (cursor, offset) = edit_plan(_text(ctx), block, start, last=end_block, end=end, text=text)
     result = {"block": cursor, "offset": offset}
     if not commands:
-        return {"revision": _rev(ctx), **result}
+        return {"revision": current_revision(ctx), **result}
     command = commands[0] if len(commands) == 1 else Batch(tuple(commands), _named(text, text.count("\n") + 1))
     applied = ctx.document.execute(command, author=ctx.user, base=base)
     return {"revision": applied.revision.to_data(), **result}
@@ -315,9 +303,7 @@ def _replace_text(ctx, *, block, start, end_block, end, text, base):
 @composes_methods.method("set_style", "block:str style:str base:revision?", write=True)
 def _set_style(ctx, *, block, style, base):
     """Give the paragraph `block` the style named `style` (one of the ids `blocks` lists)."""
-    _people_only(ctx)
-    applied = ctx.document.execute(SetStyle(block, style), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, SetStyle(block, style), base)
 
 
 # ------------------------------------------------------------------------------ the page (D904)
@@ -332,13 +318,12 @@ def _page(ctx):
 def _set_page(ctx, *, setup, base):
     """Lay the text out on another page (`setup` as `page` returns it). One step for everybody, in the history.
     `command_error` names what is wrong with a page that cannot be used."""
-    _people_only(ctx)
+    people_only(ctx)
     try:
         page = PageSetup.from_data(setup)
     except PageSetupError as exc:
         raise RequestError("command_error", str(exc)) from None
-    applied = ctx.document.execute(SetPageSetup(page), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, SetPageSetup(page), base)
 
 
 # ------------------------------------------------------------------------------ the language (D915, D917)
@@ -354,15 +339,7 @@ def _objects(ctx):
     `w` and `h` are CSS pixels. `imported`'s `source_path` is only sent to the person who imported that image."""
     model = _text(ctx)
     objects = [obj.to_data_for(ctx.user) for block in model.blocks for obj in model.objects_on(block.id)]
-    return {"revision": _rev(ctx), "objects": objects}
-
-
-@composes_methods.method("images")
-def _images(ctx):
-    """The image assets the text's objects are drawn with, each as `{id, format, width, height, animated, data,
-    first_frame}` (`data`/`first_frame` base64)."""
-    model = _text(ctx)
-    return [image.to_data() for _, image in sorted(model.images.items())]
+    return {"revision": current_revision(ctx), "objects": objects}
 
 
 @composes_methods.method("shapes")
@@ -382,7 +359,6 @@ def _deviate_style(ctx, *, parent, blocks, set, text, base):
     paragraphs `blocks`, in one step. It gets a provisional name such as “Heading 1 (changed)” and is marked `to_name`
     until somebody names it (D75). Returns `{style, name, revision}`. `command_error` if nothing differs from the
     parent."""
-    _people_only(ctx)
     model = _text(ctx)
     if len(blocks) > MAX_STYLED_BLOCKS or not all(isinstance(b, str) for b in blocks):
         raise RequestError(
@@ -441,7 +417,7 @@ def _hold(ctx, *, block, offset, words):
     return {}
 
 
-# ------------------------------------------------------------------------------ suggestions (D63)
+# ------------------------------------------------------------------------------ suggestions (D262)
 @composes_methods.method(
     "suggest", "block:str start:int end:int reason:text replacement:text? base:revision?", write=True
 )
@@ -461,39 +437,26 @@ def _suggest(ctx, *, block, start, end, reason, replacement, base):
 def _accept(ctx, *, id, base):
     """Accept a suggestion: I replace the text, and I am its author; the suggestion's author is recorded as the one it
     came through. `command_error` if it is not open any more, is a remark, or the text under it has changed."""
-    _people_only(ctx)
     suggestion = _text(ctx).suggestion(id)
     if suggestion.replacement is None:
         raise RequestError("command_error", msg("a remark suggests no change; dismiss it instead"))
     anchor = suggestion.anchor
     command = AcceptSuggestion(id, anchor.block, anchor.start, anchor.end, suggestion.replacement, suggestion.author)
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, command, base)
 
 
 @composes_methods.method("reject_suggestion", "id:str base:revision?", write=True)
 def _reject(ctx, *, id, base):
     """Reject a suggestion, or dismiss a remark. Logged; undo reopens it."""
-    _people_only(ctx)
     suggestion = _text(ctx).suggestion(id)
     if suggestion.state != "open":
         raise RequestError("command_error", msg("this suggestion is not open any more"))
     state = "dismissed" if suggestion.replacement is None else "rejected"
-    applied = ctx.document.execute(ResolveSuggestion(id, state), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, ResolveSuggestion(id, state), base)
 
 
-# Rendered text containers (D390, D395, D560): the text app places them too. A container hangs from a character of a
-# paragraph, floats over it and does not push the words aside (D179); only people write them, like the text itself.
-def _hang(block: str, offset: int) -> dict:
-    return BlockAnchor(block, offset).to_data()
-
-
-def _float_from(block: str, offset: int, dx: int, dy: int) -> dict:
-    """An anchor with the object floating at `dx` to the right and `dy` down from the character it hangs from."""
-    return BlockAnchor(block, offset, dx, dy).to_data()
-
-
+# Objects in a text, rendered containers among them (D390, D395, D560): an object hangs from a character of a paragraph
+# and floats over it at an offset from that character, without pushing the words aside (D179, D1023).
 def _paragraph_has(model: TextModel, *, block: str, offset: int) -> None:
     try:
         text = model.block(block).text
@@ -503,49 +466,30 @@ def _paragraph_has(model: TextModel, *, block: str, offset: int) -> None:
         raise RequestError("command_error", msg("offset is outside the paragraph"))
 
 
-add_rendering_methods(
-    composes_methods,
-    model_of=_text,
-    anchor=("block:str offset:int", _hang, _paragraph_has),
-    guard=_people_only,
-)
-
-
-@composes_methods.method("move_object", "id:str block:str offset:int dx:int? dy:int? base:revision?", write=True)
-def _move_object(ctx, *, id, block, offset, dx, dy, base):
-    """Hang an object from another character: `offset` of the paragraph `block`, and float it at `dx` to the right and
-    `dy` down from there (CSS pixels; negative goes left and up). Leave `dx` or `dy` out and the object keeps the
-    offset it has. Its size stays."""
-    _people_only(ctx)
-    model = _text(ctx)
-    held = model.get_object(id).anchor
+def _at_character(model: TextModel, held, *, block: str, offset: int, dx: int | None = None, dy: int | None = None):
+    """Where an object of a text is: character ``offset`` of the paragraph ``block``, floating ``dx`` to the right and
+    ``dy`` down from it. What a move leaves out it keeps from where the object floats now (nothing, for a new one)."""
     _paragraph_has(model, block=block, offset=offset)
-    placed = _float_from(block, offset, held.dx if dx is None else dx, held.dy if dy is None else dy)
-    applied = ctx.document.execute(MoveObject(id, placed), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    if dx is None:
+        dx = 0 if held is None else held.dx
+    if dy is None:
+        dy = 0 if held is None else held.dy
+    return BlockAnchor(block, offset, dx, dy).to_data()
 
 
-@composes_methods.method("resize_object", "id:str w:int h:int base:revision?", write=True)
-def _resize_object(ctx, *, id, w, h, base):
-    """Give an object a new size in CSS pixels; it keeps hanging from where it hangs."""
-    _people_only(ctx)
-    anchor = _text(ctx).get_object(id).anchor
-    applied = ctx.document.execute(ResizeObject(id, anchor.to_data(), w, h), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
-
-
-@composes_methods.method("rotate_object", "id:str rotation:int base:revision?", write=True)
-def _rotate_object(ctx, *, id, rotation, base):
-    """Turn an object about its centre to `rotation` whole degrees clockwise; any whole number does (-20 is 340). The
-    character it hangs from and the offset from it stay. A chart does not turn."""
-    _people_only(ctx)
-    applied = ctx.document.execute(_text(ctx).turn_command(id, rotation), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
-
-
-@composes_methods.method("remove_object", "id:str base:revision?", write=True)
-def _remove_object(ctx, *, id, base):
-    """Take an object off the text. Undo brings it back where it was."""
-    _people_only(ctx)
-    applied = ctx.document.execute(RemoveObject(id), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+IN_TEXT = Placement(
+    new="block:str offset:int",
+    move="block:str offset:int dx:int? dy:int?",
+    frame="",
+    anchor=_at_character,
+    says={
+        "add_image": "It hangs from character `offset` of the paragraph `block`.",
+        "move_object": "Hang it from another character: `offset` of the paragraph `block`, and float it at `dx` to the "
+        "right and `dy` down from there (CSS pixels; negative goes left and up). Leave `dx` or `dy` out and the object "
+        "keeps the offset it has.",
+        "resize_object": "Sizes are CSS pixels; it keeps hanging from where it hangs.",
+        "rotate_object": "The character it hangs from and the offset from it stay.",
+    },
+)
+add_object_methods(composes_methods, model_of=_text, placement=IN_TEXT)
+add_rendering_methods(composes_methods, model_of=_text, placement=IN_TEXT)

@@ -11,6 +11,7 @@ from test_server_model_engine import commands, set_cell, system_prompt
 from test_server_model_engine import scenario as model_scenario
 
 from claudia_ai.testing import FakeModel
+from claudia_composes import TextModel
 from claudia_server.ai_mode import ACT, DEFAULT_MODE, SUGGEST, UNSAID_MODE, parse_mode
 from claudia_server.apps import MODEL_METHODS, SUGGEST_METHODS
 from claudia_server.auth import Account
@@ -119,12 +120,40 @@ def test_a_message_that_is_not_for_the_ai_leaves_no_mode_behind():
     scenario(test)
 
 
-def test_composes_keeps_its_suggestions_in_both_modes():
-    async def test(hosted, assistant):
-        assert SUGGEST_METHODS["composes"] == ("suggest",)
-        assert set(MODEL_METHODS["composes"]) == {"suggest"}, "no direct text edit is allowed to the AI yet"
+def text_with(person, words):
+    person.request("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": words})
 
-    scenario(test, TextEngine(), methods=composes_methods, allowed_methods=MODEL_METHODS["composes"])
+
+def words_of(person):
+    return person.request("blocks")["result"]["blocks"][0]["text"]
+
+
+def test_in_a_text_act_mode_writes_and_suggest_mode_suggests():
+    """D640: composes follows D262 like the other apps; its anchored suggestions are its suggest mode."""
+
+    async def test(hosted, assistant):
+        ann = Person(hosted, ANN)
+        text_with(ann, "We recieve mail.")
+        ann.request("chat", {"text": "@ai proofread", "ai_mode": "suggest"})
+        await assistant.idle()
+        assert words_of(ann) == "We recieve mail." and len(ann.request("suggestions")["result"]) == 1
+        ann.request("chat", {"text": "@ai proofread", "ai_mode": "act"})
+        await assistant.idle()
+        assert words_of(ann) == "We receive mail."
+
+    scenario(
+        test,
+        TextEngine(),
+        methods=composes_methods,
+        allowed_methods=MODEL_METHODS["composes"],
+        model=TextModel,
+        suggest_methods=SUGGEST_METHODS["composes"],
+    )
+
+
+def test_in_a_text_the_ai_writes_through_its_allow_list_like_in_the_other_apps():
+    assert SUGGEST_METHODS["composes"] == ("suggest",)
+    assert {"suggest", "replace_text", "set_style"} == set(MODEL_METHODS["composes"])
 
 
 # -- the effective account

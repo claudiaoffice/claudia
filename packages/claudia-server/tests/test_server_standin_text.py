@@ -1,9 +1,11 @@
-"""The scripted stand-in for the text app: it only ever suggests (D63), and says so when it understands nothing."""
+"""The scripted stand-in for the text app: it suggests, or in act mode writes (D640), and says when it understands
+nothing."""
 
 import pytest
 
 from claudia_composes import InsertText, SetStyle, TextModel, TextRange
 from claudia_core import Document, MemoryStore
+from claudia_server.ai_mode import ACT
 from claudia_server.assistant import Call, Say, Task
 from claudia_server.standin_text import LONG_SENTENCE_WORDS, MAX_SUGGESTIONS, TextEngine
 
@@ -17,18 +19,41 @@ def write(doc, text, block="b1", at=0):
     doc.execute(InsertText(block, at, text), author="ann")
 
 
-def plan(doc, text="review this", sender="ann"):
-    return TextEngine().plan(Task(sender, text, doc))
+def plan(doc, text="review this", sender="ann", mode=None):
+    task = Task(sender, text, doc) if mode is None else Task(sender, text, doc, mode=mode)
+    return TextEngine().plan(task)
 
 
 def suggestions(steps):
     return [s for s in steps if isinstance(s, Call)]
 
 
-def test_it_suggests_and_never_writes(paper):
+def test_in_suggest_mode_it_only_suggests(paper):
     write(paper, "We recieve teh mail.")
     steps = plan(paper)
-    assert steps and {s.method for s in suggestions(steps)} == {"suggest"}, "no other way into the text (D63)"
+    assert steps and {s.method for s in suggestions(steps)} == {"suggest"}, "the asker decides what is written (D262)"
+
+
+def test_in_act_mode_it_writes_its_replacements_from_the_end_of_a_paragraph(paper):
+    write(paper, "We recieve teh mail.")
+    calls = suggestions(plan(paper, mode=ACT))
+    assert [(c.method, c.params["start"], c.params["end"], c.params["text"]) for c in calls] == [
+        ("replace_text", 11, 14, "the"),
+        ("replace_text", 3, 10, "receive"),
+    ], "the later place first, so the earlier offsets still hold"
+    assert all(c.params["block"] == c.params["end_block"] == "b1" for c in calls)
+
+
+def test_in_act_mode_a_remark_without_a_replacement_stays_a_remark(paper):
+    write(paper, " ".join(["word"] * (LONG_SENTENCE_WORDS + 2)) + ".")
+    calls = suggestions(plan(paper, mode=ACT))
+    assert [c.method for c in calls] == ["suggest"] and "replacement" not in calls[0].params
+
+
+def test_in_act_mode_it_says_what_it_changed_and_how_to_take_it_back(paper):
+    write(paper, "We recieve teh mail.")
+    said = [s.text for s in plan(paper, mode=ACT) if isinstance(s, Say)]
+    assert said == ["I changed 2 places; undo takes a change back."]
 
 
 def test_spelling_wordiness_and_intensifiers_become_replacements(paper):
@@ -138,7 +163,7 @@ def test_a_review_in_the_chat_ends_in_suggestions_people_can_accept():
             return frames[-1]
 
         request("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "We recieve mail."})
-        request("chat", {"text": "@ai please proofread"})
+        request("chat", {"text": "@ai please proofread", "ai_mode": "suggest"})
         await assistant.idle()
         (item,) = request("suggestions")["result"]
         assert (item["author"], item["original"], item["replacement"]) == ("ai", "recieve", "receive")

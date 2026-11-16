@@ -1,10 +1,10 @@
 #!/bin/sh
 #   ./start-mac-client.sh [composes|computes|creates] [--server URL] [--debug]      (the app defaults to composes)
 #
-# Starts the macOS desktop client (clients/macos, the Neutralino shell) directly -- the macOS counterpart of
+# Starts the macOS desktop client (clients/neutralino, the Neutralino shell, built for macOS; D660) directly -- the macOS counterpart of
 # ./start-linux-client.sh (Linux/GTK), with the same arguments. Unlike that script, there is no second system interpreter to
 # hand off to: the macOS client itself is Node/TypeScript, not Python at all. What is left is setup that
-# clients/macos/README.md's "Running it from a checkout" otherwise has a person do by hand:
+# clients/neutralino/README.md's "Running it from a checkout" otherwise has a person do by hand:
 #
 #   * `.venv` (via `uv sync --no-dev`) is what the *server* runs on -- same Python 3.14 requirement as Linux, same reason
 #     (D116). `--no-dev`: the client needs none of the documentation tools of the dev group, one of which can force a
@@ -12,8 +12,8 @@
 #   * The web frontend is rebuilt every run, not just built once and left stale -- see start-linux-client.sh's own
 #     comment on the 2026-11-06 report that caught exactly that bug for the Linux client. Skip with
 #     CLAUDIA_SKIP_WEB_BUILD=1 once you know your build is current.
-#   * The macOS client's own TypeScript and the three app pages are rebuilt every run for the same reason. Skip with
-#     CLAUDIA_SKIP_MACOS_BUILD=1.
+#   * The client's own TypeScript and the three app pages are rebuilt (for macOS) every run for the same reason. Skip
+#     with CLAUDIA_SKIP_NEUTRALINO_BUILD=1 (CLAUDIA_SKIP_MACOS_BUILD=1, its name before D660, still works).
 #   * The Neutralino binary and client library (not checked into the repo, D157) are fetched automatically with
 #     `npx @neutralinojs/neu update` the first time they are missing.
 #
@@ -27,7 +27,7 @@ case "${1:-}" in
     composes|computes|creates) app="$1"; shift ;;
     *) app=composes ;;
 esac
-APP_DIR="clients/macos/apps/$app"
+APP_DIR="clients/neutralino/apps/$app"
 
 if ! command -v node >/dev/null 2>&1; then
     echo "Claudia's macOS client needs Node.js (version 22 or newer), and none was found on PATH." >&2
@@ -42,9 +42,9 @@ if [ "${CLAUDIA_SKIP_WEB_BUILD:-}" != "1" ]; then
     (cd web && npm ci && npm run build)
 fi
 
-if [ "${CLAUDIA_SKIP_MACOS_BUILD:-}" != "1" ]; then
+if [ "${CLAUDIA_SKIP_NEUTRALINO_BUILD:-${CLAUDIA_SKIP_MACOS_BUILD:-}}" != "1" ]; then
     echo "Building the macOS client..."
-    (cd clients/macos && npm ci && npm run build)
+    (cd clients/neutralino && npm ci && npm run build:macos)
 fi
 
 if [ -z "${CLAUDIA_NEUTRALINO_BIN:-}" ] && { ! ls "$APP_DIR"/bin/neutralino-mac_* >/dev/null 2>&1 || [ ! -f "$APP_DIR/js/neutralino.js" ]; }; then
@@ -52,4 +52,4 @@ if [ -z "${CLAUDIA_NEUTRALINO_BIN:-}" ] && { ! ls "$APP_DIR"/bin/neutralino-mac_
     (cd "$APP_DIR" && npx --yes @neutralinojs/neu update)
 fi
 
-exec node clients/macos/dist/launch.js "$app" "$@"
+exec node clients/neutralino/dist/launch.js "$app" "$@"

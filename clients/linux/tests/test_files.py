@@ -1,5 +1,5 @@
 """The shell's side of the page's files (D501, D502), without GTK: the dialogs are fakes, the files are real, in a
-temporary folder. The twin of ``clients/macos/tests/files.test.ts``."""
+temporary folder. The twin of ``clients/neutralino/tests/files.test.ts``."""
 
 from __future__ import annotations
 

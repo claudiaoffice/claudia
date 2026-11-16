@@ -1,7 +1,8 @@
 """A scripted stand-in for the AI model in the text app (the real model is E3.6).
 
 It reads the text with a small, readable set of wording rules (spelling, wordy phrases, "very", double spaces, long
-sentences) and answers with *suggestions* (D63): it has no way to change the text, people accept. It says honestly when
+sentences). For an asker in *suggest* mode it answers with suggestions, which people accept; in *act* mode it makes the
+replacements itself, and what has no replacement (a long sentence) stays a remark (D262, D640). It says honestly when
 it does not understand an instruction. It looks at the whole text, or at the paragraph the asker is in when they say
 "this paragraph" / "here".
 """
@@ -13,6 +14,7 @@ from dataclasses import dataclass
 
 from claudia_composes import TextModel, TextRange
 
+from .ai_mode import ACT
 from .assistant import Call, Say, Step, Task
 
 LONG_SENTENCE_WORDS = 35  # more words than this in one sentence earns a remark
@@ -26,7 +28,8 @@ _HELP = re.compile(r"^\W*(?:hi|hello|hey|help|what can you do)\b", re.I)
 HELP = (
     "I am a stand-in for the real model and understand only a few things: say review (or check, proofread) and I "
     "suggest fixes for spelling, wordy phrases, 'very' and double spaces, and remark on very long sentences. "
-    "Say 'check this paragraph' to look only at the paragraph you are in. I only suggest: you decide what is written."
+    "Say 'check this paragraph' to look only at the paragraph you are in. In suggest mode I only suggest and you "
+    "decide what is written; in act mode I make the fixes myself, and undo takes one back."
 )
 NOT_UNDERSTOOD = "I did not understand that: I am only a stand-in for the real model. Say help to see what I can do."
 NOTHING = "I found nothing to suggest."
@@ -132,7 +135,7 @@ def findings(text: str) -> list[Finding]:
 
 
 class TextEngine:
-    """Reads one instruction about a text and turns it into suggestions."""
+    """Reads one instruction about a text and turns it into suggestions, or in act mode into edits."""
 
     def plan(self, task: Task) -> list[Step]:
         """The steps for what the asker wrote."""
@@ -144,35 +147,36 @@ class TextEngine:
         model = task.document.model
         assert isinstance(model, TextModel)
         only = self._paragraph_of(task, model) if _HERE.search(text) else None
-        open_now = {
-            (s.anchor.block, s.anchor.start, s.anchor.end, s.replacement)
-            for s in model.suggestions.values()
-            if s.state == "open"
-        }
-        steps: list[Step] = []
+        acting = task.mode == ACT
+        steps: list[Call] = []
         more = 0
         for block in model.blocks:
             if only is not None and block.id != only:
                 continue
-            for item in findings(block.text):
-                if (block.id, item.start, item.end, item.replacement) in open_now:
-                    continue
+            for item in self._findings_in(model, block.id, block.text, acting=acting):
                 if len(steps) >= MAX_SUGGESTIONS:
                     more += 1
-                    continue
-                params: dict = {"block": block.id, "start": item.start, "end": item.end, "reason": item.reason}
-                if item.replacement is not None:
-                    params["replacement"] = item.replacement
-                focus = (TextRange(block.id, item.start, item.end).to_data(),)
-                steps.append(Call("suggest", params, focus))
+                elif acting and item.replacement is not None:
+                    steps.append(_written(block.id, item))
+                else:
+                    steps.append(_suggested(block.id, item))
         if not steps:
             return [Say(NOTHING)]
-        said = (
-            f"I made {len(steps)} suggestion{'s' if len(steps) != 1 else ''}; nothing is changed until you accept one."
-        )
-        if more:
-            said += f" There are {more} more: ask me again after you went through these."
-        return [*steps, Say(said)]
+        return [*steps, Say(_report(steps, more))]
+
+    @staticmethod
+    def _findings_in(model: TextModel, block: str, text: str, *, acting: bool) -> list[Finding]:
+        """What the rules find in one paragraph. Suggesting, what is suggested already is left out; acting, every
+        place counts (an open suggestion for it simply goes out of date) and the list runs from the paragraph's end,
+        so that an edit never moves a place that is still to come."""
+        if acting:
+            return findings(text)[::-1]
+        open_now = {
+            (s.anchor.start, s.anchor.end, s.replacement)
+            for s in model.suggestions.values()
+            if s.state == "open" and s.anchor.block == block
+        }
+        return [item for item in findings(text) if (item.start, item.end, item.replacement) not in open_now]
 
     @staticmethod
     def _paragraph_of(task: Task, model: TextModel) -> str | None:
@@ -181,3 +185,35 @@ class TextEngine:
             if isinstance(region, TextRange) and any(b.id == region.block for b in model.blocks):
                 return region.block
         return None
+
+
+def _focus(block: str, item: Finding) -> tuple[dict, ...]:
+    return (TextRange(block, item.start, item.end).to_data(),)
+
+
+def _suggested(block: str, item: Finding) -> Call:
+    params: dict = {"block": block, "start": item.start, "end": item.end, "reason": item.reason}
+    if item.replacement is not None:
+        params["replacement"] = item.replacement
+    return Call("suggest", params, _focus(block, item))
+
+
+def _written(block: str, item: Finding) -> Call:
+    params = {"block": block, "start": item.start, "end_block": block, "end": item.end, "text": item.replacement}
+    return Call("replace_text", params, _focus(block, item))
+
+
+def _report(steps: list[Call], more: int) -> str:
+    """What it says when it is done: how many places it changed or suggested, and what is left."""
+    changed = sum(1 for step in steps if step.method == "replace_text")
+    suggested = len(steps) - changed
+    parts = []
+    if changed:
+        parts.append(f"I changed {changed} place{'s' if changed != 1 else ''}; undo takes a change back.")
+    if suggested:
+        parts.append(
+            f"I made {suggested} suggestion{'s' if suggested != 1 else ''}; nothing is changed until you accept one."
+        )
+    if more:
+        parts.append(f"There are {more} more: ask me again after you went through these.")
+    return " ".join(parts)

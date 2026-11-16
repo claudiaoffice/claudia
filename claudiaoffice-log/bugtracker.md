@@ -117,7 +117,7 @@ statement in the docs or on the website).
 | CODE-11 | P3 | Code | Windows client: its generated menu is stale, and a test depends on the clone's folder name | **fixed** |
 | CODE-12 | P3 | Code | `.gitignore` ignores the tracked `docs/` sources; two test documents are committed | **fixed** |
 | CODE-13 | P2 | Code / Perf | `WorkerPool` is built and owned by every hub, and nothing submits work to it | open (re-checked 2026-11-13; now also SEC-18, PERF-10) |
-| CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | open; re-checked at `7994b00`: 11 identical source files (1,658 lines), 10 test files, 3 generated menus |
+| CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | **fixed** 2026-11-15 (D660) |
 | CODE-15 | P2 | Code | `./start.sh` kept documents in three layouts and all servers' state in one shared folder | **fixed** 2026-11-12 |
 | CODE-16 | P2 | Code / macOS | The macOS client's generated creates menu had no Format ▸ Apply Style…, and nothing checked it | **fixed** 2026-11-12 |
 | SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **fixed** 2026-11-13 (D288) |
@@ -154,7 +154,7 @@ statement in the docs or on the website).
 | PROC-23 | **P1** | Process / CI | Three web e2e scripts on `main` fail after the dock merge (`demo`, `composes`: the chat box; `keys`: the View menu); `details.cjs` never ran in CI | **fixed** 2026-11-15 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | partly fixed 2026-11-15; supersessions need a decision |
 | CODE-26 | **P1** | Code / macOS client | Closing a window with its close button crashes the macOS app every time (Neutralino 6.8.0) | **fixed** 2026-11-15 (D506) |
-| CODE-27 | P2 | Code / Arch | The object methods are written once in the kernel and three times on the wire | **new, open** |
+| CODE-27 | P2 | Code / Arch | The object methods are written once in the kernel and three times on the wire | **fixed** 2026-11-15 on the server; composes' screens for pictures and descriptions open |
 | CODE-28 | P3 | Code / Arch | An app's server wiring is spread over five tables in `apps.py` | **new, open** |
 | CODE-29 | P3 | Code / Arch | `claudia_server` is flat: app glue next to infrastructure | **new, open** |
 | CODE-30 | P3 | Code / server | Parameters are validated twice, and a handler's bug answers `command_error` | **new, open** |
@@ -167,7 +167,7 @@ statement in the docs or on the website).
 | CODE-37 | P3 | Code / web | Two image dialogs that differ in one prop | **new, open** |
 | CODE-38 | P3 | Code / naming | computes kept the generic names (`Session`, `Workspace.vue`, `standin.py`) | **new, open** |
 | CODE-39 | P3 | Code / web | `OpenDialog.vue` does five jobs in 1,615 lines | **new, open** |
-| CODE-40 | P3 | Code / macOS client | An orphaned build file in the macOS creates app | **new, open** |
+| CODE-40 | P3 | Code / macOS client | An orphaned build file in the macOS creates app | **fixed** 2026-11-15 (with D660) |
 | CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
@@ -1103,7 +1103,7 @@ is enough), formula recalculation of large structure edits via the pool (PERF-07
 exists. **Acceptance.** A test that a slow `fsync` (monkeypatched to sleep 50 ms) on one document does not delay a
 `cells` request on another.
 
-### CODE-14 · The Windows and macOS shells are one design kept as two copies · P2 · new, open
+### CODE-14 · The Windows and macOS shells are one design kept as two copies · P2 · fixed 2026-11-15
 **Evidence (read, `d696927`).** At `7e619a2` the Windows shell (7 files, 975 lines) had none of macOS's connection,
 trust or server list. The branch `win-client-complete` (merged as `d696927`) rebuilt it on the macOS design, which
 closes that feature gap, by copying: `clients/windows/src` and `clients/macos/src` now have the same 22 file names,
@@ -1117,6 +1117,12 @@ byte-identical, so a fix in one copy fails the build until it is in the other.
 identical (1,233 lines), and the two `tools/generate_menu.py` copies write byte-identical `src/generated/menu.*.json`.
 Still nothing checks the copies stay equal. Merging them needs D113 ("one package per OS") amended: asked in
 `notes/code-review-2026-11-15.md`.
+**Fixed (2026-11-15, D660, superseding D113):** one package, `clients/neutralino/`. Everything is shared but
+`src/platform/` (folders, interpreter, binary and window start, dialogs, menu and shortcuts, ending a process tree),
+behind `HostPlatform` and `PagePlatform`; each bundle is made for one platform (`build:macos`, `build:windows`). The
+platform tests run for both systems on any host, so the Linux CI checks the Windows code too; one
+`tools/generate_menu.py` writes the menus once. The macOS client gained the Windows client's `bin/` scripts; the
+Windows window now closes through the page, as on macOS (to be tried on a real Windows machine).
 
 ### CODE-15 · `./start.sh` folder layout · P2 · fixed 2026-11-12
 **Evidence.** Documents in `<repo>/docs-<app>` (before 2938f0a: `demo-docs`, `demo-docs-<app>` — the folders people
@@ -1503,6 +1509,14 @@ spelt out 25 times in `computes.py` where `creates.py` has `_done` (124). The ap
 small adapter (anchor from the request's parameters, which container it is in) and the shared handlers are registered
 once on its table. `fresh_id(prefix, taken)` and `done(ctx, command, base, **extra)` live there too. Test first: one
 parametrised test that runs the six methods against all three apps.
+**Fixed on the server (2026-11-15):** `claudia_server/object_methods.py` registers `images`, `add_image`,
+`describe_object`, `move_object`, `resize_object`, `rotate_object` and `remove_object` once; each app gives a
+`Placement` (`CELLS`, `ON_SLIDE`, `IN_TEXT`), which `add_rendering_methods` takes too. `wire.py` holds `fresh_id`,
+`done` and `current_revision` (six, three and three copies before). Tests first: `tests/test_server_object_methods.py`
+holds every app's wire words for these methods and runs one object through all of them in each app; it failed for
+composes, which now has `add_image` and `describe_object` on the wire. **Still open:** composes' menu entries and
+screens for them (Edit ▸ Image…, Format ▸ Describe…), to be agreed as mock-ups first; the web sessions' copies
+(CODE-35).
 
 ### CODE-28 · An app's server wiring is spread over five tables · P3 · new, open
 `claudia_server/apps.py` keys five dicts by app name: `_METHODS` (23), `_ENGINES` (44), `MODEL_METHODS` (55),
@@ -1608,11 +1622,12 @@ file import, recovery and details editing, plus remembered settings, in one comp
 that `OpenDialog` arranges; components grouped by app and purpose (`sheet/`, `text/`, `slide/`, `admin/`,
 `dialogs/`), which Nuxt resolves with path prefixes.
 
-### CODE-40 · An orphaned build file in the macOS creates app · P3 · new, open
+### CODE-40 · An orphaned build file in the macOS creates app · P3 · fixed 2026-11-15
 `clients/macos/apps/creates/inject/claudia-bridge.js` (16 KB) is an esbuild bundle of `src/menu.ts`, `src/page-bridge.ts`,
 `src/file-dialog.ts` and `src/inject-entry.ts`; the last three no longer exist, and no config, script, test or source
 names the file. composes and computes have no such folder. It is the leftover of the superseded D159 adapter.
 **Recommendation:** delete it once a build of the creates bundle confirms nothing picks it up.
+**Fixed (2026-11-15):** not carried over into `clients/neutralino/` (D660); the creates build and its tests pass without it.
 
 ### CODE-41 · Import cycles in computes are worked around with function-level imports · P3 · new, open
 **Measured:** ruff's PLC0415 is off for the whole repository ("local imports break the kernel's import cycles on

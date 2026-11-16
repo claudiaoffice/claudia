@@ -1,0 +1,322 @@
+// The local server a window starts for itself (E0.2/D115), adapted from clients/linux/src/claudia_shell_gtk/server.py
+// for Node, macOS and Windows.
+//
+// What differs from the Linux version:
+//  - Neither macOS nor Windows has Linux's PR_SET_PDEATHSIG: if *this* process is killed outright rather than exited
+//    normally, the spawned server can be left running. Not solved here (D161) -- the core ends with its window, which is
+//    what makes that rare (D251), not impossible.
+//  - The real `claudia_server` package has no `--lifeline`/stdin-close option (only the *spike's* own `testserver.py`
+//    did), so `stop()` has signals, as Linux falls back to.
+//  - On a Mac `spawn()` asks for a process group of its own (`detached: true`, POSIX), and `child.kill(signal)` reaches
+//    the whole group: SIGTERM, then SIGKILL after a grace period.
+//  - Windows has neither process groups nor real signals: Node's `kill()` ignores its signal there and ends the process
+//    outright, and the interpreter that `uv sync` puts in `.venv\Scripts\python.exe` is a launcher that starts the
+//    real server as its child, so `kill()` can leave the server running. `stop()` therefore ends the whole tree with
+//    `taskkill /pid <pid> /T /F` (src/platform/windows.ts) and falls back to `kill()` where that cannot be done. A
+//    server stopped like this gets no graceful shutdown on Windows; whether that matters depends on what
+//    claudia_server does on SIGTERM, which this client has not checked. Not verified on a real Windows machine.
+//  - Since D445 this class is only the mechanics of one server process: starting it, asking whether it answers, ending it
+//    when it did not come up. Which server a window uses, and the fact that a server that came up is *not* ended with its
+//    window (it stops itself, `--exit-when-idle`), is desktop-server.ts's business. The server.log is shared by every
+//    start, so a start-up error quotes only what this start wrote.
+
+import { spawn as nodeSpawn, type ChildProcess } from 'node:child_process'
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, statSync } from 'node:fs'
+import { createServer } from 'node:net'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+import { randomBytes } from 'node:crypto'
+import { hostPlatform } from './platform/host.js'
+
+export const LOOPBACK = '127.0.0.1'
+const HEALTH_PATH = '/api/health'
+/** How much of the log's tail a start-up error quotes -- same figure as server.py's own `_LOG_TAIL`. */
+const LOG_TAIL = 2000
+
+export class ServerStartError extends Error {
+  /** `true` when the process ended by itself at start-up (a port or a folder that another server holds, a crash); then
+   * another server may have won, and a caller that shares the server (desktop-server.ts) looks for it. */
+  readonly exited: boolean
+
+  constructor(message: string, options: { exited?: boolean } = {}) {
+    super(message)
+    this.exited = options.exited === true
+  }
+}
+
+/** A port on `host` nobody is listening on right now (mirrors `free_port()` in the Linux client's server.py). The
+ * port can in principle be taken by something else between this call returning and the server actually binding it
+ * -- same race the Linux version accepts, not solved here either. */
+export function freePort(host: string = LOOPBACK): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const probe = createServer()
+    probe.once('error', reject)
+    probe.listen(0, host, () => {
+      const address = probe.address()
+      probe.close(() => {
+        if (address && typeof address === 'object') resolve(address.port)
+        else reject(new Error('could not read the probed port back from the OS'))
+      })
+    })
+  })
+}
+
+export interface ServerCommandOptions {
+  port: number
+  documents: string
+  web: string
+  state: string
+  /** `--exit-when-idle`: the server stops itself once nothing has used it for this long (D434, D445). */
+  idleSeconds: number
+}
+
+/** The command line of the desktop server on this computer (D445): all three apps (no `--model`; each app's documents
+ * go to `DIR/<app>`), loopback only, serving the bundled frontend itself so the page and its WebSocket share an origin
+ * and no `--allow-origin` is needed, and stopping by itself when nobody has used it for `idleSeconds` (D434). */
+export function buildServerCommand(python: string, options: ServerCommandOptions): string[] {
+  return [
+    python,
+    '-m',
+    'claudia_server',
+    '--host',
+    LOOPBACK,
+    '--port',
+    String(options.port),
+    '--no-tls',
+    '--dir',
+    options.documents,
+    '--state-dir',
+    options.state,
+    '--web',
+    options.web,
+    '--exit-when-idle',
+    String(options.idleSeconds),
+  ]
+}
+
+type SpawnFn = (command: string[], logPath: string) => ChildProcess
+type HealthFn = (url: string) => Promise<boolean>
+
+/** Ends the process `pid` and everything it started; `true` if that was done, `false` if it could not be, and the
+ * caller falls back to `kill()` (src/platform/host.ts's `killTree`). */
+export type KillTreeFn = (pid: number) => Promise<boolean>
+
+/** Starts `command` with its stdout and stderr both appended to `logPath` (merged, like server.py's own
+ * `stderr=subprocess.STDOUT`) -- the thing a start-up failure is otherwise silent about. The fd is opened and
+ * handed to the child via `stdio`, then closed in this process: the child gets its own duplicated descriptor at
+ * spawn time (POSIX), so closing this process's copy right after does not touch the child's. */
+export function defaultSpawn(command: string[], logPath: string): ChildProcess {
+  const [program, ...args] = command
+  if (!program) throw new Error('empty command')
+  mkdirSync(dirname(logPath), { recursive: true })
+  const fd = openSync(logPath, 'a')
+  try {
+    // `detached`: a process group of its own on a Mac, so a Ctrl-C in the launcher's terminal does not reach it; on
+    // Windows it does not buy a process group (the top comment), but the child still survives this process ending
+    // unexpectedly. `windowsHide` (a no-op elsewhere): without it Windows gives a detached child a visible, empty
+    // console window of its own (found on a real Windows run, 2026-11-09). Its output goes to `logPath` either way.
+    const child = nodeSpawn(program, args, { detached: true, windowsHide: true, stdio: ['ignore', fd, fd] })
+    // The server outlives the window that started it (D445): nothing here may wait for it.
+    child.unref()
+    return child
+  } finally {
+    closeSync(fd)
+  }
+}
+
+function logSize(path: string): number {
+  try {
+    return statSync(path).size
+  } catch {
+    return 0
+  }
+}
+
+/** A fresh path under the OS temp directory, for when no explicit `log` option is given -- the same "always have
+ * somewhere to look" fallback `spawn()` in server.py uses via `tempfile.mkstemp`. */
+function tempLogPath(): string {
+  return join(tmpdir(), `claudia-server-${randomBytes(6).toString('hex')}.log`)
+}
+
+async function defaultHealth(url: string): Promise<boolean> {
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 500)
+    try {
+      const response = await fetch(url + HEALTH_PATH, { signal: controller.signal })
+      return response.ok
+    } finally {
+      clearTimeout(timer)
+    }
+  } catch {
+    return false
+  }
+}
+
+export interface LocalServerOptions {
+  url: string
+  spawnFn?: SpawnFn
+  healthFn?: HealthFn
+  startupTimeoutMs?: number
+  nowFn?: () => number
+  /** The grace period checkReady() itself uses when it auto-stops a dead-on-arrival or timed-out server. Separate
+   * from the `graceMs` an explicit stop() call takes, mainly so a test can keep this short without changing what
+   * a deliberate stop() call elsewhere defaults to. */
+  stopGraceMs?: number
+  /** How the process tree is ended (tests hand in a fake; the default is the platform's, src/platform/host.ts);
+   * `undefined`: by signals to its process group. */
+  killTree?: KillTreeFn | undefined
+  /** Where the server's stdout/stderr are appended (mirrors server.py's own `log`). Defaults to a fresh file
+   * under the OS temp directory, so there is always somewhere to look even when the caller does not pick one. */
+  log?: string
+}
+
+/** One server process: spawn() it, ask checkReady() until it answers, stop() it. */
+export class LocalServer {
+  readonly url: string
+  readonly logPath: string
+  private readonly command: string[]
+  private readonly spawnFn: SpawnFn
+  private readonly healthFn: HealthFn
+  private readonly startupTimeoutMs: number
+  private readonly nowFn: () => number
+  private readonly stopGraceMs: number
+  private readonly killTree: KillTreeFn | undefined
+  private process: ChildProcess | null = null
+  /** How long server.log was when this server was started: the log is shared by every start, and an error quotes only
+   * what this start wrote. */
+  private logFrom = 0
+  private spawnedAt = 0
+  private ready = false
+  /** Set by the child's own 'error' event -- the OS refusing to start the process at all (ENOENT, EACCES, ...),
+   * which Node reports this way instead of as an ordinary exit. Left unhandled, 'error' is fatal to the whole
+   * process; checkReady() turns it into a plain ServerStartError like every other start-up failure here. */
+  private spawnError: Error | null = null
+
+  constructor(command: string[], options: LocalServerOptions) {
+    this.command = command
+    this.url = options.url
+    this.logPath = options.log ?? tempLogPath()
+    this.spawnFn = options.spawnFn ?? defaultSpawn
+    this.killTree = 'killTree' in options ? options.killTree : hostPlatform().killTree
+    this.healthFn = options.healthFn ?? defaultHealth
+    this.startupTimeoutMs = options.startupTimeoutMs ?? 30_000
+    this.nowFn = options.nowFn ?? (() => Date.now())
+    this.stopGraceMs = options.stopGraceMs ?? 3000
+  }
+
+  get pid(): number | undefined {
+    return this.process?.pid
+  }
+
+  get running(): boolean {
+    return this.process !== null && this.process.exitCode === null && !this.process.killed
+  }
+
+  spawn(): void {
+    if (this.process !== null) throw new Error('the server was started already')
+    this.spawnError = null
+    this.logFrom = logSize(this.logPath)
+    this.process = this.spawnFn(this.command, this.logPath)
+    this.process.on('error', (error) => {
+      this.spawnError = error
+    })
+    this.spawnedAt = this.nowFn()
+    this.ready = false
+  }
+
+  /** Does the server answer yet? Never blocks for long (the caller polls this from its own event loop, same
+   * discipline as server.py's own docstring asks of GTK's main loop). Throws (and stops the server) once it has
+   * exited, failed to start at all, or has not answered within the timeout. */
+  async checkReady(): Promise<boolean> {
+    const process = this.process
+    if (process === null) throw new Error('the server was not started')
+    if (this.ready) return true
+    if (this.spawnError !== null) {
+      const message = this.spawnError.message
+      await this.stop(this.stopGraceMs)
+      throw new ServerStartError(`the server could not be started: ${message}${this.whatItSaid()}`)
+    }
+    if (process.exitCode !== null) {
+      await this.stop(this.stopGraceMs)
+      throw new ServerStartError(`the server stopped at start-up (exit code ${process.exitCode})${this.whatItSaid()}`, {
+        exited: true,
+      })
+    }
+    if (await this.healthFn(this.url)) {
+      this.ready = true
+      return true
+    }
+    if (this.nowFn() - this.spawnedAt > this.startupTimeoutMs) {
+      await this.stop(this.stopGraceMs)
+      throw new ServerStartError(
+        `the server did not answer at ${this.url} within ${this.startupTimeoutMs}ms${this.whatItSaid()}`,
+      )
+    }
+    return false
+  }
+
+  /** The log's last `LOG_TAIL` characters, formatted for a ServerStartError message -- or '' when there is
+   * nothing to show (mirrors server.py's own `_what_it_said()`). Never throws: a log read failing is not a
+   * reason to hide the error that triggered this in the first place. */
+  private whatItSaid(): string {
+    try {
+      if (!existsSync(this.logPath)) return ''
+      const tail = readFileSync(this.logPath).subarray(this.logFrom).toString('utf8').slice(-LOG_TAIL).trim()
+      return tail ? `\n--- what the server printed (${this.logPath}) ---\n${tail}` : ''
+    } catch {
+      return ''
+    }
+  }
+
+  /** spawn(), then wait until the server answers. Returns its address. */
+  async start(): Promise<string> {
+    this.spawn()
+    for (;;) {
+      if (await this.checkReady()) return this.url
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+  }
+
+  /** End the server and everything it started. Where the platform ends a process tree (Windows) that is the one, hard
+   * step, with `kill()` when it could not be done, and `graceMs` only bounds the wait for the 'exit' event; elsewhere it
+   * is SIGTERM to the process group, then SIGKILL after `graceMs` if it has not exited by then. Safe to call before
+   * spawn(), twice, and after the server died on its own. Resolves as soon as the process is gone, not necessarily
+   * after the full grace period. */
+  async stop(graceMs = 3000): Promise<void> {
+    const process = this.process
+    if (process === null) return
+    this.process = null
+    if (process.exitCode !== null) return // already gone
+    await new Promise<void>((resolve) => {
+      let settled = false
+      const finish = () => {
+        if (settled) return
+        settled = true
+        clearTimeout(timer)
+        resolve()
+      }
+      process.once('exit', finish)
+      const pid = process.pid
+      const killTree = this.killTree
+      let timer: ReturnType<typeof setTimeout>
+      if (killTree !== undefined && pid !== undefined) {
+        void killTree(pid).then((ended) => {
+          if (!ended) process.kill() // the signal argument is ignored on Windows (Node's own docs): already the hard stop
+        })
+        // Only so that a hung 'exit' event (the process gone from the OS's view but Node slow to report it) does not
+        // leave this promise unsettled for ever.
+        timer = setTimeout(finish, graceMs)
+      } else {
+        process.kill('SIGTERM')
+        // No PDEATHSIG-equivalent and no --lifeline (see this module's top comment): SIGKILL is the only fallback if
+        // the process has not gone by the grace period. Sent, then treated as done -- SIGKILL cannot be caught or
+        // ignored, so there is nothing further worth waiting for even though the OS reports exit asynchronously.
+        timer = setTimeout(() => {
+          process.kill('SIGKILL')
+          finish()
+        }, graceMs)
+      }
+    })
+  }
+}

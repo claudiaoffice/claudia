@@ -26,11 +26,16 @@ def test_every_browser_script_of_the_web_app_is_run_by_ci():
 
 
 def test_every_native_client_with_its_own_tests_is_tested_by_ci():
-    for client in ("windows", "macos"):
-        package = json.loads((ROOT / "clients" / client / "package.json").read_text(encoding="utf-8"))
-        assert "test" in package["scripts"]
-        # a job that installs the client's own dependencies is one that can run its tests
-        assert f"cache-dependency-path: clients/{client}/package-lock.json" in CI, f"no CI job tests clients/{client}"
+    package = json.loads((ROOT / "clients" / "neutralino" / "package.json").read_text(encoding="utf-8"))
+    assert "test" in package["scripts"]
+    # a job that installs the client's own dependencies is one that can run its tests
+    assert "cache-dependency-path: clients/neutralino/package-lock.json" in CI, "no CI job tests clients/neutralino"
+
+
+def test_the_neutralino_client_is_built_for_both_systems_by_ci():
+    """One package for macOS and Windows (D660): a bundle is made for one system, so CI makes both."""
+    for system in ("macos", "windows"):
+        assert f"npm run build:{system}" in CI, f"CI never builds clients/neutralino for {system}"
 
 
 def test_the_image_and_package_builds_notice_a_change_to_the_layout_library():

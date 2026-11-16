@@ -4,13 +4,14 @@ import pytest
 
 from claudia_composes import TextModel
 from claudia_core import Document, MemoryStore
+from claudia_server.apps import MODEL_METHODS
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.protocol import Context, Limits, RequestError
 
 ANN = Account("ann", "owner")
 BEN = Account("ben", "editor")
-AI = Account.assistant()
+AI = Account.assistant(MODEL_METHODS["composes"])  # as a server gives it (SEC-10, D640)
 
 
 @pytest.fixture
@@ -217,7 +218,7 @@ def test_a_list_can_start_at_another_number(paper):
         ("list_start", {"list": "l1", "start": 2}),
     ],
 )
-def test_the_assistant_has_no_direct_write_path_into_the_structure_either(paper, name, params):
+def test_the_assistant_may_not_change_the_structure_of_lists(paper, name, params):
     with pytest.raises(RequestError) as caught:
         call(paper, name, params, AI)
     assert caught.value.code == "forbidden"

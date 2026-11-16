@@ -51,7 +51,6 @@ generic object commands do not care what kind an object is).
 
 from __future__ import annotations
 
-import secrets
 import time
 from collections import Counter
 from functools import lru_cache
@@ -127,24 +126,16 @@ from claudia_core import (
     Batch,
     Command,
     DefineDiagram,
-    DefineImage,
-    DescribeObject,
     ForgetDiagram,
-    ImageImport,
-    MoveObject,
     ObjectBody,
     PageSetup,
     PageSetupError,
-    RemoveObject,
-    ResizeObject,
     UpdateDiagram,
-    decode_image,
 )
-from claudia_core.clock import utc_now
 
 from .computes_search import add_search_methods
 from .i18n import msg, translate
-from .images import image_bytes, picture_words
+from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, RequestError, core_methods
@@ -153,6 +144,7 @@ from .replay import add_replay_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods
 from .thing_names import add_name_methods, default_name
+from .wire import current_revision, done, fresh_id
 
 MAX_WINDOW_CELLS = 50_000  # positions in one ``cells`` window
 MAX_TYPED_CELLS = 10_000  # cells in one ``set_cells``
@@ -205,7 +197,6 @@ computes_methods = core_methods.extended()
 add_style_methods(computes_methods, targets=(OBJECTS, _CellTargets()))
 add_name_methods(computes_methods)
 add_replay_methods(computes_methods)
-computes_methods.kind("image")(image_bytes)
 
 
 def _workbook(ctx: Context) -> WorkbookModel:
@@ -227,41 +218,10 @@ def _index(value, limit: int, what: str):
     return value
 
 
-def _fresh_object_id(taken) -> str:
-    """An id nobody has used in this document. Ids are random, never counted: the id of a removed object must not
-    come back, or undoing its removal would collide with the newcomer (mirrors ``creates.py``'s ``_fresh``)."""
-    while True:
-        candidate = f"o{secrets.token_hex(4)}"
-        if candidate not in taken:
-            return candidate
-
-
-def _fresh_diagram_id(taken) -> str:
-    """As :func:`_fresh_object_id`, for a diagram definition. The client never makes up this id itself — unlike
-    an image, whose asset id is a content hash, two otherwise-identical chart definitions are still two
-    definitions, so the server assigns a fresh one every time, the way ``add_sheet`` assigns a sheet id."""
-    while True:
-        candidate = f"g{secrets.token_hex(4)}"
-        if candidate not in taken:
-            return candidate
-
-
-def _fresh_chart_id(taken) -> str:
-    """As :func:`_fresh_object_id`, for a chart tab."""
-    while True:
-        candidate = f"t{secrets.token_hex(4)}"
-        if candidate not in taken:
-            return candidate
-
-
 def _fresh_range_id(workbook: WorkbookModel) -> str:
-    """As :func:`_fresh_object_id`, for a named range (D552): the id a tag in the chat points at, which a rename of the
-    name leaves alone."""
-    taken = {thing for _kind, thing, _name in workbook.named_things()}
-    while True:
-        candidate = f"r{secrets.token_hex(4)}"
-        if candidate not in taken:
-            return candidate
+    """A fresh id for a named range (D552): the id a tag in the chat points at, which a rename of the name leaves
+    alone."""
+    return fresh_id("r", {thing for _kind, thing, _name in workbook.named_things()})
 
 
 def _diagram_definition(workbook: WorkbookModel, diagram_id: str, what: str) -> None:
@@ -332,7 +292,7 @@ def _random_state(ctx):
     """What every random number in the workbook is a function of (E6.22, D291): `{revision, seed, draw}`. All
     users see the same numbers because they share both."""
     book = _workbook(ctx)
-    return {"revision": _rev(ctx), "seed": book.random_seed, "draw": book.random_draw}
+    return {"revision": current_revision(ctx), "seed": book.random_seed, "draw": book.random_draw}
 
 
 @computes_methods.method("resample", "steps:int=1 base:revision?", write=True)
@@ -350,8 +310,7 @@ def _set_random_seed(ctx, *, seed, base):
     """Give the workbook's random numbers a seed (0 to 2^53): the same seed and draw number give the same numbers
     on every computer, so a model can be reproduced. One undo step."""
     seed = _whole(seed, 0, MAX_SEED, "set_random_seed: seed")
-    applied = ctx.document.execute(SetRandomSeed(seed), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, SetRandomSeed(seed), base)
 
 
 @computes_methods.method("print_setup")
@@ -365,7 +324,7 @@ def _print_setup(ctx):
     range (E6.19.5), not part of this."""
     book = _workbook(ctx)
     return {
-        "revision": _rev(ctx),
+        "revision": current_revision(ctx),
         "page": book.print_page.to_data(),
         "sheets": {str(key): book.sheet_print_of(str(key)).to_data() for key in (*book.sheets, *book.charts)},
     }
@@ -380,8 +339,7 @@ def _set_print_page(ctx, *, page, base):
         command = SetPrintPage(PageSetup.from_data(page))
     except PageSetupError as exc:
         raise RequestError("command_error", str(exc)) from None
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, command, base)
 
 
 @computes_methods.method("set_sheet_print", "sheet:str setup:dict base:revision?", write=True)
@@ -394,8 +352,7 @@ def _set_sheet_print(ctx, *, sheet, setup, base):
         command = SetSheetPrint(sheet, SheetPrintSetup.from_data(setup))
     except PrintSetupError as exc:
         raise RequestError("command_error", str(exc)) from None
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, command, base)
 
 
 MAX_PREVIEW_DRAWS = 1_000  # draws in one ``random_preview``
@@ -461,7 +418,7 @@ def _outcome_table(ctx, *, sheet, row, col, combine):
         table = _workbook(ctx).outcome_table(SheetId(sheet), row, col, combine=combine)
     except (KeyError, ValueError) as exc:
         raise RequestError("command_error", str(exc)) from None
-    return {"revision": _rev(ctx), "table": None if table is None else table.to_data()}
+    return {"revision": current_revision(ctx), "table": None if table is None else table.to_data()}
 
 
 @computes_methods.method("trace", 'sheet:str row:int col:int reach:str="group" window:list?')
@@ -492,7 +449,7 @@ def _trace(ctx, *, sheet, row, col, reach, window):
         found = _workbook(ctx).trace(SheetId(sheet), row, col, reach=reach, window=area)
     except KeyError as exc:
         raise RequestError("command_error", str(exc)) from None
-    return {"revision": _rev(ctx), "trace": found.to_data()}
+    return {"revision": current_revision(ctx), "trace": found.to_data()}
 
 
 @computes_methods.method("cells", "sheet:str row0:int row1:int col0:int col1:int")
@@ -511,12 +468,7 @@ def _cells(ctx, *, sheet, row0, row1, col0, col1):
         )
     found = _workbook(ctx).sheet(sheet)
     inside = found.cells_in(row0, row1, col0, col1)
-    return {"revision": _rev(ctx), "cells": [[r, c, found.view((r, c))] for r, c in inside]}
-
-
-def _rev(ctx) -> str | None:
-    revision = ctx.document.revision
-    return None if revision is None else revision.to_data()
+    return {"revision": current_revision(ctx), "cells": [[r, c, found.view((r, c))] for r, c in inside]}
 
 
 def _typed(ctx, items: list) -> tuple[tuple[int, int, dict | None], ...]:
@@ -548,7 +500,7 @@ def _cell_styles(ctx, *, sheet, row0, row1, col0, col1):
     if row1 < row0 or col1 < col0:
         raise RequestError("bad_request", msg("cell_styles: the window must not end before it starts"))
     found = _workbook(ctx).sheet(sheet)
-    return {"revision": _rev(ctx), "ranges": found.cell_styles.ranges_in((row0, col0, row1, col1))}
+    return {"revision": current_revision(ctx), "ranges": found.cell_styles.ranges_in((row0, col0, row1, col1))}
 
 
 @computes_methods.method("clear_cell_style", "sheet:str range:list slot:str? base:revision?", write=True)
@@ -584,8 +536,7 @@ def _cell_style_at(ctx, *, sheet, row, col):
 def _set_cells(ctx, sheet, cells, base):
     """Type into cells: `cells` is a list of `{row, col, input}` where `input` is what the person typed (empty clears;
     a leading apostrophe makes text). One change in the history. Same errors as `apply`."""
-    applied = ctx.document.execute(SetCells(sheet, _typed(ctx, cells)), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, SetCells(sheet, _typed(ctx, cells)), base)
 
 
 def _fresh_sheet_id(taken) -> str:
@@ -607,8 +558,7 @@ def _add_sheet(ctx, name, base):
             msg("add_sheet: the name must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
         )
     sheet_id = _fresh_sheet_id(_workbook(ctx).sheets)
-    applied = ctx.document.execute(AddSheet(SheetId(sheet_id), name), author=ctx.user, base=base)
-    return {"sheet": sheet_id, "revision": applied.revision.to_data()}
+    return done(ctx, AddSheet(SheetId(sheet_id), name), base, sheet=sheet_id)
 
 
 @computes_methods.method("structure", "sheet:str axis:str insert:bool at:int count:int=1 base:revision?", write=True)
@@ -618,8 +568,7 @@ def _structure(ctx, *, sheet, axis, insert, at, count, base):
     edit = AXES.get((axis, insert))
     if edit is None:
         raise RequestError("bad_request", msg('structure: axis must be "row" or "col"'))
-    applied = ctx.document.execute(Structure(edit(sheet, at, count)), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, Structure(edit(sheet, at, count)), base)
 
 
 @computes_methods.method("sizes", "sheet:str")
@@ -629,7 +578,7 @@ def _sizes(ctx, *, sheet):
     sheet's default (`DEFAULT_ROW_HEIGHT`/`DEFAULT_COL_WIDTH` in `claudia_computes.model`)."""
     found = _workbook(ctx).sheet(sheet)
     return {
-        "revision": _rev(ctx),
+        "revision": current_revision(ctx),
         "rows": [[r, h] for r, h in sorted(found.row_heights.items())],
         "cols": [[c, w] for c, w in sorted(found.col_widths.items())],
     }
@@ -664,8 +613,7 @@ def _resize_lines(ctx, *, sheet, axis, sizes, base):
     list of `[index, size]`. One change in the history. Same errors as `apply`."""
     if axis not in SIZE_LIMITS:
         raise RequestError("bad_request", msg('resize_lines: axis must be "row" or "col"'))
-    applied = ctx.document.execute(ResizeLines(sheet, axis, _sized(axis, sizes)), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, ResizeLines(sheet, axis, _sized(axis, sizes)), base)
 
 
 @computes_methods.method("objects", "sheet:str")
@@ -679,16 +627,7 @@ def _objects(ctx, *, sheet):
     if sheet not in workbook.sheets:
         raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
     objects = [obj.to_data_for(ctx.user) for obj in workbook.objects_on(sheet)]
-    return {"revision": _rev(ctx), "sheet": sheet, "objects": objects}
-
-
-@computes_methods.method("images")
-def _images(ctx):
-    """The decoded image assets this document has taken in (and what its image objects are drawn with), each as
-    `{id, format, width, height, animated, data, first_frame}` (`data`/`first_frame` are base64). There is no
-    library to pick from: an image always comes in through `add_image`."""
-    workbook = _workbook(ctx)
-    return [image.to_data() for _, image in sorted(workbook.images.items())]
+    return {"revision": current_revision(ctx), "sheet": sheet, "objects": objects}
 
 
 @computes_methods.method("diagrams")
@@ -717,7 +656,7 @@ def _chart_figure(ctx, *, diagram):
     the client's business, not this document's."""
     workbook = _workbook(ctx)
     _diagram_definition(workbook, diagram, "chart_figure")
-    return {"revision": _rev(ctx), "figure": workbook.chart_figure(diagram)}
+    return {"revision": current_revision(ctx), "figure": workbook.chart_figure(diagram)}
 
 
 @computes_methods.method("define_diagram", "definition:dict base:revision?", write=True)
@@ -730,10 +669,9 @@ def _define_diagram(ctx, *, definition, base):
     if "id" in definition or "format" in definition:
         raise RequestError("bad_request", msg("define_diagram: id and format are assigned by the server"))
     workbook = _workbook(ctx)
-    diagram_id = _fresh_diagram_id(workbook.diagrams)
+    diagram_id = fresh_id("g", workbook.diagrams)
     command = DefineDiagram({**definition, "id": diagram_id, "format": 1})
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"diagram": diagram_id, "revision": applied.revision.to_data()}
+    return done(ctx, command, base, diagram=diagram_id)
 
 
 @computes_methods.method("update_diagram", "id:str definition:dict base:revision?", write=True)
@@ -742,16 +680,14 @@ def _update_diagram(ctx, *, id, definition, base):
     nothing to re-place. Same shape as `define_diagram`'s `definition`; the id and format are unchanged."""
     _diagram_definition(_workbook(ctx), id, "update_diagram")
     command = UpdateDiagram(id, {**definition, "id": id, "format": 1})
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, command, base)
 
 
 @computes_methods.method("forget_diagram", "id:str base:revision?", write=True)
 def _forget_diagram(ctx, *, id, base):
     """Let a chart definition go. Refused while a tab or a floating object still shows it — remove or repoint
     those first (`remove_chart`, `remove_object`, or `update_diagram`/`add_chart` onto another definition)."""
-    applied = ctx.document.execute(ForgetDiagram(id), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, ForgetDiagram(id), base)
 
 
 @computes_methods.method(
@@ -765,11 +701,10 @@ def _add_diagram_object(ctx, *, sheet, row, col, w, h, diagram, base):
     if sheet not in workbook.sheets:
         raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
     _diagram_definition(workbook, diagram, "add_diagram_object")
-    object_id = _fresh_object_id(workbook.objects)
+    object_id = fresh_id("o", workbook.objects)
     body = ObjectBody(object_id, "diagram", w, h, "plain-image", diagram=diagram, name=default_name(ctx, "diagram"))
     command = AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data())
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"object": object_id, "revision": applied.revision.to_data()}
+    return done(ctx, command, base, object=object_id)
 
 
 @computes_methods.method("add_chart", "name:str spec_id:str index:int? base:revision?", write=True)
@@ -784,109 +719,15 @@ def _add_chart(ctx, *, name, spec_id, index, base):
         )
     workbook = _workbook(ctx)
     _diagram_definition(workbook, spec_id, "add_chart")
-    chart_id = _fresh_chart_id(workbook.charts)
-    applied = ctx.document.execute(AddChart(chart_id, name, spec_id, index), author=ctx.user, base=base)
-    return {"chart": chart_id, "revision": applied.revision.to_data()}
+    chart_id = fresh_id("t", workbook.charts)
+    return done(ctx, AddChart(chart_id, name, spec_id, index), base, chart=chart_id)
 
 
 @computes_methods.method("remove_chart", "id:str base:revision?", write=True)
 def _remove_chart(ctx, *, id, base):
     """Remove a chart tab. The definition it showed is untouched — it may still be shown elsewhere
     (`forget_diagram` is the separate, explicit step for letting the definition itself go)."""
-    applied = ctx.document.execute(RemoveChart(id), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
-
-
-@computes_methods.method(
-    "add_image",
-    "sheet:str row:int col:int w:int h:int data:image alt:str source_name:str source_path:str? decorative:bool? "
-    "base:revision?",
-    write=True,
-)
-def _add_image(ctx, *, sheet, row, col, w, h, data, alt, source_name, source_path, decorative, base):
-    """Import a picture from disk and anchor it to a cell of a sheet: `data` is the file's bytes, base64. `alt`
-    is a short, required description of what it shows — unless the picture is only `decorative` (a flourish, a
-    divider), when it has none and `alt` is empty. `source_name` is the file name as the client has it;
-    `source_path` is its full path if the client could supply one (a plain web browser cannot, for its own
-    security — send `null`). Returns the new object's id and the revision. The image keeps its own proportions,
-    and its pixel size (and anchor) never change on their own afterwards — only `move_object` moves it."""
-    workbook = _workbook(ctx)
-    if sheet not in workbook.sheets:
-        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
-    words = picture_words(alt, bool(decorative))
-    asset = decode_image(data)
-    steps: list = [] if asset.id in workbook.images else [DefineImage(asset)]
-    imported = ImageImport.from_data(
-        {
-            "asset": asset.id,
-            "alt": words,
-            "imported_by": ctx.user,
-            "imported_at": utc_now(),
-            "source": "disk",
-            "source_name": source_name,
-            "source_path": source_path,
-        }
-    )
-    object_id = _fresh_object_id(workbook.objects)
-    body = ObjectBody(
-        object_id,
-        "image",
-        w,
-        h,
-        "plain-image",
-        image=asset.id,
-        imported=imported,
-        decorative=bool(decorative),
-        name=default_name(ctx, "image"),
-    )
-    steps.append(AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data()))
-    command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"object": object_id, "revision": applied.revision.to_data()}
-
-
-@computes_methods.method("describe_object", "id:str description:text decorative:bool? base:revision?", write=True)
-def _describe_object(ctx, *, id, description, decorative, base):
-    """Say what an object is to someone who cannot see it (`description`, a short sentence), or that it is only
-    decoration (`decorative` true, and then no description). A picture needs one or the other."""
-    if _workbook(ctx).get_object(id).body.kind == "image":
-        picture_words(description, bool(decorative))
-    applied = ctx.document.execute(DescribeObject(id, description, bool(decorative)), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
-
-
-@computes_methods.method("move_object", "id:str row:int col:int base:revision?", write=True)
-def _move_object(ctx, *, id, row, col, base):
-    """Move an object so that its anchor is at (`row`, `col`); its pixel size stays."""
-    sheet = _workbook(ctx).get_object(id).anchor.sheet
-    command = MoveObject(id, CellAnchor(sheet, row, col).to_data())
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
-
-
-@computes_methods.method("resize_object", "id:str row:int col:int w:int h:int base:revision?", write=True)
-def _resize_object(ctx, *, id, row, col, w, h, base):
-    """Give an object a new frame: its anchor cell and its pixel size together, since dragging a corner moves the
-    corner. An image keeps its own proportions, so `w` and `h` must match them."""
-    sheet = _workbook(ctx).get_object(id).anchor.sheet
-    command = ResizeObject(id, CellAnchor(sheet, row, col).to_data(), w, h)
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
-
-
-@computes_methods.method("rotate_object", "id:str rotation:int base:revision?", write=True)
-def _rotate_object(ctx, *, id, rotation, base):
-    """Turn an object about its centre to `rotation` whole degrees clockwise; any whole number does (-20 is 340). Its
-    anchor cell stays. A chart does not turn."""
-    applied = ctx.document.execute(_workbook(ctx).turn_command(id, rotation), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
-
-
-@computes_methods.method("remove_object", "id:str base:revision?", write=True)
-def _remove_object(ctx, *, id, base):
-    """Take an object off its sheet. Undo brings it back in the same place of the stacking order."""
-    applied = ctx.document.execute(RemoveObject(id), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, RemoveChart(id), base)
 
 
 @lru_cache(maxsize=8)
@@ -1031,7 +872,10 @@ def _names(ctx):
     anchor, columns, rows}]}`. `columns` are the columns as a query names them, with their type (`int`, `real`,
     `text` or `mixed`) and purpose; `rows` the data rows. Ask again after a `names` push event."""
     workbook = _workbook(ctx)
-    return {"revision": _rev(ctx), "names": [_name_data(workbook, named) for named in workbook.names.sorted()]}
+    return {
+        "revision": current_revision(ctx),
+        "names": [_name_data(workbook, named) for named in workbook.names.sorted()],
+    }
 
 
 @computes_methods.method("define_name", "definition:dict base:revision?", write=True)
@@ -1042,8 +886,7 @@ def _define_name(ctx, *, definition, base):
     `purpose` is `input`, `data`, `calc` or `result`; `column_purposes` is `[[offset, purpose]]`. A name is a word
     that is not a cell address. One change in the history."""
     named = _name_from(_workbook(ctx), definition, "define_name")
-    applied = ctx.document.execute(DefineName(named), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, DefineName(named), base)
 
 
 @computes_methods.method("rename_name", "old:str new:str scope:str? base:revision?", write=True)
@@ -1051,16 +894,14 @@ def _rename_name(ctx, *, old, new, scope, base):
     """Call a name something else; the formulas that use it are rewritten. `scope` is the sheet id the name is
     scoped to, or null for a workbook-wide one."""
     scope_id = _scope_of(_workbook(ctx), scope, "rename_name")
-    applied = ctx.document.execute(RenameName(scope_id, old, new), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, RenameName(scope_id, old, new), base)
 
 
 @computes_methods.method("remove_name", "name:str scope:str? base:revision?", write=True)
 def _remove_name(ctx, *, name, scope, base):
     """Take a name away. The cells stay; formulas that used the name show `#NAME?`."""
     scope_id = _scope_of(_workbook(ctx), scope, "remove_name")
-    applied = ctx.document.execute(RemoveName(scope_id, name), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, RemoveName(scope_id, name), base)
 
 
 @computes_methods.method("sql_preview", "query:str sheet:str limit:int=20")
@@ -1122,8 +963,7 @@ def _define_sql(ctx, *, sheet, row, col, query, name, base):
             )
         except ValueError as problem:
             raise RequestError("bad_request", msg("define_sql: {problem}", problem=problem)) from None
-    applied = ctx.document.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, steps[0] if len(steps) == 1 else Batch(tuple(steps)), base)
 
 
 # ---------------------------------------------------------------------------------------------- pivot tables
@@ -1194,7 +1034,10 @@ def _pivots(ctx):
     there). Ask again after a `pivots` push event and after a `cells` event on a pivot's sheet: its region grows and
     shrinks with its source."""
     workbook = _workbook(ctx)
-    return {"revision": _rev(ctx), "pivots": [_pivot_data(workbook, entry) for entry in workbook.pivots.sorted()]}
+    return {
+        "revision": current_revision(ctx),
+        "pivots": [_pivot_data(workbook, entry) for entry in workbook.pivots.sorted()],
+    }
 
 
 @computes_methods.method(
@@ -1229,8 +1072,7 @@ def _define_pivot(ctx, *, name, definition, labels, sheet, row, col, new_sheet, 
         command = create_pivot(workbook, name, (SheetId(target), row, col), parsed, words, new_sheet)
     except ValueError as problem:
         raise _refused(problem) from None
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"sheet": target, "revision": applied.revision.to_data()}
+    return done(ctx, command, base, sheet=target)
 
 
 @computes_methods.method("update_pivot", "name:str definition:dict labels:dict? base:revision?", write=True)
@@ -1243,8 +1085,7 @@ def _update_pivot(ctx, *, name, definition, labels, base):
         command = update_pivot(workbook, name, parsed, words)
     except ValueError as problem:
         raise _refused(problem) from None
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, command, base)
 
 
 @computes_methods.method("delete_pivot", "name:str base:revision?", write=True)
@@ -1254,8 +1095,7 @@ def _delete_pivot(ctx, *, name, base):
         command = delete_pivot(_workbook(ctx), name)
     except ValueError as problem:
         raise _refused(problem) from None
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, command, base)
 
 
 @computes_methods.method("pivot_sql", "name:str")
@@ -1283,21 +1123,31 @@ def _pivot_to_sql(ctx, *, name, base):
         command = pivot_to_sql(_workbook(ctx), name)
     except ValueError as problem:
         raise _refused(problem) from None
-    applied = ctx.document.execute(command, author=ctx.user, base=base)
-    return {"revision": applied.revision.to_data()}
+    return done(ctx, command, base)
 
 
-def _place_on_sheet(workbook, *, sheet, **_cell) -> None:
-    if sheet not in workbook.sheets:
+def _at_cell(workbook: WorkbookModel, held, *, row: int, col: int, sheet: str | None = None) -> dict:
+    """Where an object of a workbook is: a cell of a sheet. A new one names its sheet; a moved one stays on its own."""
+    if held is not None:
+        sheet = held.sheet
+    elif sheet not in workbook.sheets:
         raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
+    return CellAnchor(SheetId(sheet), row, col).to_data()
 
 
-add_rendering_methods(
-    computes_methods,
-    model_of=_workbook,
-    anchor=(
-        "sheet:str row:int col:int",
-        lambda sheet, row, col: CellAnchor(SheetId(sheet), row, col).to_data(),
-        _place_on_sheet,
-    ),
+CELLS = Placement(
+    new="sheet:str row:int col:int",
+    move="row:int col:int",
+    frame="row:int col:int",
+    anchor=_at_cell,
+    says={
+        "add_image": "`row` and `col` name the cell it hangs from; its pixel size (and anchor) never change on their "
+        "own afterwards.",
+        "move_object": "`row` and `col` name the cell it hangs from now.",
+        "resize_object": "The cell it hangs from (`row`, `col`) comes with the size, since dragging a corner moves the "
+        "corner.",
+        "rotate_object": "Its anchor cell stays.",
+    },
 )
+add_object_methods(computes_methods, model_of=_workbook, placement=CELLS)
+add_rendering_methods(computes_methods, model_of=_workbook, placement=CELLS)

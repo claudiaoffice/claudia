@@ -1,7 +1,7 @@
 """The one local server that the three desktop apps share (D445): which port, whether one is running already, what to
 do when two windows start at once, and the presence connection that keeps it from stopping while a window is open.
 
-The twin of ``clients/windows/tests/desktop-server.test.ts``. Everything outside the server's own process is faked;
+The twin of ``clients/neutralino/tests/desktop-server.test.ts``. Everything outside the server's own process is faked;
 the real health check, the real state file and the real presence socket are covered at the bottom.
 """
 
