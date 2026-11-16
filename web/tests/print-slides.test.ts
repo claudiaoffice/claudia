@@ -228,6 +228,14 @@ describe('printing a presentation: its print source', () => {
     expect(first!.objects.map((o) => [o.id, o.kind, o.image])).toEqual([['drawn', 'image', PNG.id]])
     session.close()
   })
+  it('gives the words of a list item the marker the slide draws, so the pages draw it too (E9.21, E9.22)', async () => {
+    const { session, state } = await opened(PRINTING)
+    state.labels['s1-box'] = { marker: '1.', path: [1], number: '1' }
+    const [first, second] = slideDocument(session).slides
+    expect(first!.objects[0]!.paragraph).toMatchObject({ mark: { marker: '1.', indent: 0 } })
+    expect(second!.objects[0]!.paragraph).not.toHaveProperty('mark')
+    session.close()
+  })
   it('reads and changes the print setup through the session', async () => {
     const { link, session, state } = await opened(PRINTING)
     const source = slideSource(session)

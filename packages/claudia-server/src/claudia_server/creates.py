@@ -59,6 +59,7 @@ from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .rendered import add_rendering_methods
 from .replay import add_replay_methods
+from .structure_methods import add_structure_methods
 from .styles import add_style_methods
 from .thing_names import add_name_methods, default_name
 from .wire import current_revision, done, fresh_id
@@ -182,7 +183,8 @@ def _add_plan_methods(table: MethodTable) -> None:
 def _add_shared_methods(table: MethodTable) -> None:
     """What presentations answer the way the other apps do: ``styles``, ``palette``, ``change_style``,
     ``rename_style``, ``check_css`` and ``set_object_style`` (E1.10, D200), the objects (E10.16), the notes and
-    planned times (D342, D343), search and replace (E10.19), and printing and the language (D917)."""
+    planned times (D342, D343), search and replace (E10.19), printing and the language (D917), and lists in text
+    boxes, numbered slide titles and numbering schemes (:mod:`claudia_server.structure_methods`, E9.21, E9.22)."""
     add_style_methods(table)
     _add_object_methods(table)
     add_name_methods(table)
@@ -190,6 +192,7 @@ def _add_shared_methods(table: MethodTable) -> None:
     _add_print_methods(table)
     _add_plan_methods(table)
     add_search_methods(table)
+    add_structure_methods(table)
 
 
 def creates_methods_with(library: ShapeLibrary) -> MethodTable:

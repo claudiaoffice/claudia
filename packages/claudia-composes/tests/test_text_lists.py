@@ -8,7 +8,6 @@ from claudia_composes import (
     ItemChanged,
     JoinBlocks,
     LabelsChanged,
-    SetListItem,
     SplitBlock,
     TextModel,
 )
@@ -22,6 +21,7 @@ from claudia_core import (
     ListsChanged,
     MemoryStore,
     RegionHeld,
+    SetListItem,
     UndoConflict,
 )
 
@@ -60,7 +60,7 @@ def test_making_a_paragraph_an_item_tells_the_clients_the_item_and_its_label(lis
     assert listed.model.block("b1").item == ListItem("l1", 0)
     item, labels = events
     assert item.to_data() == {"type": "item", "block": "b1", "item": {"list": "l1", "level": 0}}
-    assert labels.to_data() == {"type": "labels", "labels": {"b1": {"marker": "1.", "path": [1]}}}
+    assert labels.to_data() == {"type": "labels", "labels": {"b1": {"marker": "1.", "path": [1], "number": "1"}}}
 
 
 def test_undo_gives_the_paragraph_its_old_item_back_and_the_label_goes(listed):
@@ -107,8 +107,8 @@ def test_only_the_labels_that_changed_are_told(listed):
     (event,) = events
     assert event.to_data()["labels"] == {
         "b1": None,
-        "b2": {"marker": "1.", "path": [1]},
-        "b3": {"marker": "2.", "path": [2]},
+        "b2": {"marker": "1.", "path": [1], "number": "1"},
+        "b3": {"marker": "2.", "path": [2], "number": "2"},
     }
 
 
@@ -258,3 +258,37 @@ def test_the_text_counts_with_the_structure_every_app_shares(listed):
 
     assert isinstance(listed.model.structure, TextStructure)
     assert listed.model.labels() is listed.model.structure.labels()
+
+
+# ----------------------------------------------------------------------------- step D: numbered headings
+def test_numbered_heading_styles_number_their_paragraphs_as_one_outline(listed):
+    from claudia_composes import SetStyle
+    from claudia_core import SetStyleNumbering
+
+    for block, style in (("b1", "heading-1"), ("b2", "heading-2"), ("b3", "heading-1")):
+        listed.execute(SetStyle(block, style), author="ann")
+    listed.execute(CreateList(ListDef("outline", "chapters")), author="ann")
+    listed.execute(SetStyleNumbering("heading-1", "outline"), author="ann")
+    listed.execute(SetStyleNumbering("heading-2", "outline"), author="ann")
+    assert markers(listed) == {"b1": "1", "b2": "1.1", "b3": "2"}
+    listed.execute(SetListItem("b2", ListItem("l1")), author="ann")  # its own item wins
+    assert markers(listed) == {"b1": "1", "b2": "1.", "b3": "2"}
+
+
+def test_the_words_of_a_floating_object_become_an_item_through_the_same_command(listed):
+    from claudia_composes import BlockAnchor
+    from claudia_core import AddObject, ObjectBody, paragraph_for
+
+    body = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
+    listed.execute(AddObject(body, BlockAnchor("b1", 1).to_data()), author="ann")
+    listed.execute(SetListItem("o1", ListItem("l1")), author="ann")
+    assert markers(listed) == {"o1": "1."} and listed.model.list_in_use("l1")
+    listed.undo("ann")
+    assert markers(listed) == {}
+
+
+def test_a_snapshot_keeps_the_schemes_and_one_from_before_them_has_the_built_in_ones(listed):
+    state = listed.model.serialize()
+    assert [s["id"] for s in state["schemes"]] == ["bullets", "numbers", "chapters"]
+    del state["schemes"]
+    assert TextModel.restore(state).schemes.ids() == ["bullets", "numbers", "chapters"]

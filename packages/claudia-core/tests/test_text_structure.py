@@ -6,17 +6,19 @@ so that composes and creates cannot count differently."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import pytest
 
 from claudia_core import (
+    NO_NUMBERING,
     LabelsChanged,
     ListBook,
     ListDef,
     ListItem,
     Paragraph,
     Placed,
+    SchemeBook,
     StyleBook,
     StyleDef,
     TextStructure,
@@ -30,6 +32,7 @@ class Host:
     containers: dict[str, list[Paragraph]]
     lists: ListBook = field(default_factory=lambda: ListBook([ListDef("l1", "numbers"), ListDef("l2", "bullets")]))
     styles: StyleBook = field(default_factory=lambda: StyleBook([StyleDef("body", "Body", "", None, {})]))
+    schemes: SchemeBook = field(default_factory=SchemeBook)
     asides: frozenset[str] = frozenset()
     order: int = 0
 
@@ -87,7 +90,10 @@ def test_settling_tells_only_what_changed_and_a_label_that_went_away_as_none():
     structure.settle(events)
     (event,) = events.seen
     assert isinstance(event, LabelsChanged)
-    assert event.to_data() == {"type": "labels", "labels": {"t1": None, "t2": {"marker": "1.", "path": [1]}}}
+    assert event.to_data() == {
+        "type": "labels",
+        "labels": {"t1": None, "t2": {"marker": "1.", "path": [1], "number": "1"}},
+    }
     structure.settle(events)
     assert len(events.seen) == 1, "nothing more to tell"
 
@@ -99,7 +105,7 @@ def test_a_paragraph_that_is_no_longer_there_is_not_told_about():
     del host.containers["s1"]
     host.order += 1
     structure.settle(events)
-    assert events.seen[0].to_data()["labels"] == {"t2": {"marker": "1.", "path": [1]}}
+    assert events.seen[0].to_data()["labels"] == {"t2": {"marker": "1.", "path": [1], "number": "1"}}
 
 
 def test_where_a_paragraph_is_read_and_whether_it_is_part_of_the_main_text_is_the_hosts_word():
@@ -118,4 +124,84 @@ def test_a_paragraph_that_is_no_item_or_an_item_of_a_list_the_book_lacks_has_no_
 
 def test_the_effective_item_of_a_paragraph_is_its_own():
     host = Host({"s1": [p("t1", ListItem("l1", 2))]})
-    assert TextStructure(host).effective_item(host.containers["s1"][0]) == ListItem("l1", 2)
+    (placed,) = TextStructure(host).reading_order()
+    assert TextStructure(host).effective_item(placed) == ListItem("l1", 2)
+
+
+# ----------------------------------------------------------------------------- numbered headings (step D)
+def headed() -> StyleBook:
+    """Body text, Heading 1 and 2 numbered in the list "outline", and a title (level 0) that names the list too."""
+    return StyleBook(
+        [
+            StyleDef("body", "Body", "", None, {}),
+            StyleDef("h1", "Heading 1", "", "body", {}, heading_level=1, numbering="outline"),
+            StyleDef("h2", "Heading 2", "", "h1", {}, heading_level=2),
+            StyleDef("title", "Title", "", "body", {}, heading_level=0, numbering="outline"),
+            StyleDef("plain", "Plain heading", "", "h1", {}, numbering=NO_NUMBERING),
+        ]
+    )
+
+
+def styled(pid: str, style: str, item: ListItem | None = None) -> Paragraph:
+    return Paragraph(pid, style, pid, (), item)
+
+
+def outline_host(*paragraphs: Paragraph, asides: frozenset[str] = frozenset()) -> Host:
+    lists = ListBook([ListDef("outline", "chapters"), ListDef("l1", "numbers")])
+    return Host({"s1": list(paragraphs)}, lists=lists, styles=headed(), asides=asides)
+
+
+def markers(host: Host) -> dict[str, str]:
+    return {k: v.marker for k, v in TextStructure(host).labels().items()}
+
+
+def test_a_heading_style_that_names_a_list_numbers_its_paragraphs_at_the_level_below_its_heading_level():
+    host = outline_host(
+        styled("t", "title"),
+        styled("a", "h1"),
+        styled("x", "body"),
+        styled("b", "h2"),
+        styled("c", "h2"),
+        styled("d", "h1"),
+        styled("e", "h2"),
+    )
+    assert markers(host) == {"a": "1", "b": "1.1", "c": "1.2", "d": "2", "e": "2.1"}
+    labels = TextStructure(host).labels()
+    assert (labels["c"].path, labels["c"].number) == ((1, 2), "1.2")
+
+
+def test_the_title_and_a_style_that_says_not_numbered_get_no_number():
+    host = outline_host(styled("t", "title"), styled("p", "plain"), styled("a", "h1"))
+    assert markers(host) == {"a": "1"}
+
+
+def test_an_own_item_wins_over_the_one_the_style_gives():
+    host = outline_host(styled("a", "h1"), styled("b", "h1", ListItem("l1")))
+    assert markers(host) == {"a": "1", "b": "1."}
+
+
+def test_words_beside_the_main_text_are_not_numbered_as_headings():
+    host = outline_host(styled("a", "h1"))
+    host.containers["box"] = [styled("o1", "h1")]
+    host.asides = frozenset({"box"})
+    assert markers(host) == {"a": "1"}
+
+
+def test_a_style_that_names_a_list_the_book_lacks_numbers_nothing():
+    host = outline_host(styled("a", "h1"))
+    host.lists = ListBook([ListDef("l1", "numbers")])
+    assert markers(host) == {}
+
+
+def test_the_numbers_follow_a_change_of_the_styles_and_of_the_schemes():
+    host = outline_host(styled("a", "h1"), styled("b", "h2"))
+    structure = TextStructure(host)
+    assert {k: v.marker for k, v in structure.labels().items()} == {"a": "1", "b": "1.1"}
+    host.styles.set_numbering("h1", NO_NUMBERING)
+    assert structure.labels() == {}, "the style book's version is part of what the labels depend on"
+    host.styles.set_numbering("h1", "outline")
+    chapters = host.schemes.get("chapters")
+    host.schemes.replace(
+        replace(chapters, levels=(replace(chapters.levels[0], before="Chapter "), *chapters.levels[1:]))
+    )
+    assert structure.labels()["a"].marker == "Chapter 1"

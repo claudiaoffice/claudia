@@ -8,9 +8,12 @@ it at a level. What a docx has is a numbering part: a paragraph says ``w:numId``
 * A ``w:num`` is one list of the model: paragraphs with the same ``w:numId`` are items of it in document order,
   whatever lies between them, which is what Word counts too. A paragraph takes its numbering from its own ``w:numPr``
   or, where that lacks it, from its style (and the styles that one is based on); ``w:numId`` 0 means no list.
-* The scheme of a list is that of the first level: a number format is ``numbers``, a bullet is ``bullets``. A list
-  whose levels do not look like the scheme's (another number format, another bullet, another text) is reported as
-  ``list-look``: the model shows its own markers, and the file keeps its own.
+* The scheme of a list is the scheme of the document that draws its levels as the file does; a look no scheme has
+  becomes a scheme of its own (E9.22, :mod:`claudia_composes_io._list_looks`). A level the model cannot say (another
+  separator than a full stop, an ordinal, a picture bullet) leaves the list with the built-in scheme of its kind,
+  and it is reported as ``list-look``: the model shows its own markers, and the file keeps its own.
+* A heading style that Word numbers (a ``w:numPr`` in the style, at the level below its outline level) is numbered
+  in that list in the model too (:attr:`claudia_core.StyleDef.numbering`): its paragraphs are no items of their own.
 """
 
 from __future__ import annotations
@@ -26,11 +29,10 @@ from docx.oxml.ns import nsmap, qn
 from docx.parts.numbering import NumberingPart
 from lxml import etree
 
-from claudia_core import MAX_LIST_LEVEL, SCHEMES, ListBook, ListDef, ListItem
+from claudia_core import MAX_LIST_LEVEL, LevelFormat, ListBook, ListDef, ListItem, Scheme, SchemeBook
 
-#: What the model draws at each level: the number format and the bullet sign, repeating every three levels.
-_NUMBER_FORMATS = ("decimal", "lowerLetter", "lowerRoman")
-_BULLET_SIGNS = ("•", "◦", "▪")
+from ._list_looks import read_word_level, scheme_for, word_level
+
 #: How far each level moves the text in: a scheme says it in em, a docx wants twentieths of a point (0.4 cm per em).
 _TWIPS_PER_EM = 227
 _VAL = qn("w:val")
@@ -49,10 +51,9 @@ def _int(text: str | None) -> int | None:
 
 
 # -- the look of a list ---------------------------------------------------------------------------------------------
-def abstract_num(definition: ListDef, abstract_id: int) -> etree._Element:
-    """The ``w:abstractNum`` that makes a list of the model look as the model draws it: nine levels, each with its
-    marker and its indent."""
-    scheme = SCHEMES[definition.scheme]
+def abstract_num(definition: ListDef, scheme: Scheme, abstract_id: int) -> etree._Element:
+    """The ``w:abstractNum`` that makes a list of the model look as its ``scheme`` draws it: nine levels, each with
+    its marker and its indent."""
     step = round(scheme.indent * _TWIPS_PER_EM)
     element = OxmlElement("w:abstractNum")
     element.set(qn("w:abstractNumId"), str(abstract_id))
@@ -70,12 +71,9 @@ def abstract_num(definition: ListDef, abstract_id: int) -> etree._Element:
         start.set(_VAL, str(definition.start if level == 0 and scheme.counts else 1))
         marker.append(start)
         number_format, text = OxmlElement("w:numFmt"), OxmlElement("w:lvlText")
-        if scheme.counts:
-            number_format.set(_VAL, _NUMBER_FORMATS[level % 3])
-            text.set(_VAL, f"%{level + 1}.")
-        else:
-            number_format.set(_VAL, "bullet")
-            text.set(_VAL, _BULLET_SIGNS[level % 3])
+        said = word_level(scheme.level(level), level)
+        number_format.set(_VAL, said[0])
+        text.set(_VAL, said[1])
         marker.extend([number_format, text])
         justify = OxmlElement("w:lvlJc")
         justify.set(_VAL, "left")
@@ -87,21 +85,6 @@ def abstract_num(definition: ListDef, abstract_id: int) -> etree._Element:
         marker.append(properties)
         element.append(marker)
     return element
-
-
-def _looks_different(abstract: etree._Element, scheme: str) -> bool:
-    """Does a level of ``abstract`` draw something other than the model's scheme would?"""
-    for level in abstract.findall(qn("w:lvl")):
-        number = _int(level.get(qn("w:ilvl")))
-        if number is None or not 0 <= number <= MAX_LIST_LEVEL:
-            continue
-        number_format, text = _val(level, "w:numFmt"), _val(level, "w:lvlText")
-        if scheme == "numbers":
-            if number_format != _NUMBER_FORMATS[number % 3] or text != f"%{number + 1}.":
-                return True
-        elif number_format != "bullet" or text != _BULLET_SIGNS[number % 3]:
-            return True
-    return False
 
 
 # -- the numbering part ---------------------------------------------------------------------------------------------
@@ -130,10 +113,10 @@ class Numbering:
     def _next(self, existing: Iterable[int]) -> int:
         return max(existing, default=0) + 1
 
-    def _add_abstract(self, definition: ListDef) -> int:
+    def _add_abstract(self, definition: ListDef, scheme: Scheme) -> int:
         """Put the ``w:abstractNum`` of ``definition`` before the first ``w:num`` (the schema wants it there)."""
         abstract_id = self._next(self.abstracts())
-        element = abstract_num(definition, abstract_id)
+        element = abstract_num(definition, scheme, abstract_id)
         first_num = self.root.find(qn("w:num"))
         if first_num is not None:
             first_num.addprevious(element)
@@ -141,9 +124,9 @@ class Numbering:
             self.root.append(element)
         return abstract_id
 
-    def add_list(self, definition: ListDef) -> int:
-        """The ``w:numId`` of a new list that looks as ``definition`` says."""
-        abstract_id = self._add_abstract(definition)
+    def add_list(self, definition: ListDef, scheme: Scheme) -> int:
+        """The ``w:numId`` of a new list that looks as ``definition`` and its ``scheme`` say."""
+        abstract_id = self._add_abstract(definition, scheme)
         num_id = self._next(self.nums())
         num = OxmlElement("w:num")
         num.set(qn("w:numId"), str(num_id))
@@ -157,12 +140,12 @@ class Numbering:
             self.root.append(num)
         return num_id
 
-    def restyle(self, num_id: int, definition: ListDef) -> None:
-        """Make the list ``num_id`` look as ``definition`` says, so that every paragraph of it follows."""
+    def restyle(self, num_id: int, definition: ListDef, scheme: Scheme) -> None:
+        """Make the list ``num_id`` look as ``definition`` and its ``scheme`` say, so that every paragraph follows."""
         num = self.nums()[num_id]
         target = num.find(qn("w:abstractNumId"))
         assert target is not None  # a w:num always names its abstractNum (schema)
-        target.set(_VAL, str(self._add_abstract(definition)))
+        target.set(_VAL, str(self._add_abstract(definition, scheme)))
         for override in num.findall(qn("w:lvlOverride")):
             num.remove(override)
 
@@ -173,8 +156,12 @@ class ListReading:
     """What the paragraphs of a docx say about lists."""
 
     book: ListBook = field(default_factory=ListBook)
+    #: The schemes the lists are drawn with: the built-in ones and those the file's lists need.
+    schemes: SchemeBook = field(default_factory=SchemeBook)
     #: The item each paragraph is (the paragraphs that are no item are not in it).
     items: dict[etree._Element, ListItem] = field(default_factory=dict)
+    #: The items that a paragraph has only from its style (Word numbers a heading style that way).
+    styled: set[etree._Element] = field(default_factory=set)
     #: The ``w:numId`` of each list of the book.
     num_of: dict[str, int] = field(default_factory=dict)
     #: Lists whose look the model does not show, and levels deeper than the model has.
@@ -197,16 +184,18 @@ def numbering_of_style(style: object | None) -> tuple[int | None, int | None]:
     return num_id, level
 
 
-def numbering_of(paragraph: object) -> tuple[int | None, int | None]:
-    """The ``w:numId`` and ``w:ilvl`` of a python-docx paragraph: its own, and its style's where it has none."""
+def numbering_of(paragraph: object) -> tuple[int | None, int | None, bool]:
+    """The ``w:numId`` and ``w:ilvl`` of a python-docx paragraph: its own, and its style's where it has none; and
+    whether the list comes from the style."""
     properties = paragraph._p.pPr  # type: ignore[attr-defined]
     own = properties.find(qn("w:numPr")) if properties is not None else None
     num_id, level = _int(_val(own, "w:numId")), _int(_val(own, "w:ilvl"))
+    styled = num_id is None
     if num_id is None or level is None:
         from_style = numbering_of_style(paragraph.style)  # type: ignore[attr-defined]
         num_id = from_style[0] if num_id is None else num_id
         level = from_style[1] if level is None else level
-    return num_id, level
+    return num_id, level, styled
 
 
 def read_lists(paragraphs: Iterable[object], numbering: Numbering | None) -> ListReading:
@@ -217,7 +206,7 @@ def read_lists(paragraphs: Iterable[object], numbering: Numbering | None) -> Lis
         return reading
     nums, list_of = numbering.nums(), {}
     for paragraph in paragraphs:
-        num_id, level = numbering_of(paragraph)
+        num_id, level, styled = numbering_of(paragraph)
         if not num_id or num_id not in nums:
             continue  # no numbering, "numId 0" (Word's way of saying none), or a list the file does not define
         if num_id not in list_of:
@@ -225,6 +214,8 @@ def read_lists(paragraphs: Iterable[object], numbering: Numbering | None) -> Lis
         if (level or 0) > MAX_LIST_LEVEL:
             reading.too_deep += 1
         reading.items[paragraph._p] = ListItem(list_of[num_id], min(max(level or 0, 0), MAX_LIST_LEVEL))  # type: ignore[attr-defined]
+        if styled:
+            reading.styled.add(paragraph._p)  # type: ignore[attr-defined]
         reading.num_of[list_of[num_id]] = num_id
     return reading
 
@@ -237,20 +228,32 @@ def _definition(num: etree._Element, numbering: Numbering, reading: ListReading)
         if abstract is not None
         else None
     )
-    scheme = "bullets" if first is None or _val(first, "w:numFmt") in ("bullet", "none", None) else "numbers"
+    counts = first is not None and _val(first, "w:numFmt") not in ("bullet", "none", None)
     start = 1
-    if scheme == "numbers":
+    if counts:
         start = _int(_val(first, "w:start")) or 1
         for override in num.findall(qn("w:lvlOverride")):
             if _int(override.get(qn("w:ilvl"))) == 0 and (changed := _int(_val(override, "w:startOverride"))):
                 start = changed
     called = _val(abstract, "w:name") if abstract is not None else None
     name = called if called and called.strip() and len(called) <= 60 and called.isprintable() else None
-    if abstract is None or _looks_different(abstract, scheme):
+    scheme = None if abstract is None else scheme_for(_levels(abstract), counts, name, reading.schemes)
+    if scheme is None:
         reading.odd_looks += 1
+        scheme = "numbers" if counts else "bullets"
     list_id = reading.book.unique_id()
     reading.book.add(ListDef(list_id, scheme, max(1, min(start, 999_999)), name))
     return list_id
+
+
+def _levels(abstract: etree._Element) -> dict[int, LevelFormat | None]:
+    """What each level of a ``w:abstractNum`` draws, as a level of a scheme (``None`` where none can say it)."""
+    found: dict[int, LevelFormat | None] = {}
+    for level in abstract.findall(qn("w:lvl")):
+        number = _int(level.get(qn("w:ilvl")))
+        if number is not None and 0 <= number <= MAX_LIST_LEVEL:
+            found[number] = read_word_level(_val(level, "w:numFmt"), _val(level, "w:lvlText"), number)
+    return found
 
 
 # -- writing ---------------------------------------------------------------------------------------------------------
@@ -274,9 +277,12 @@ class ListWriter:
     """Writes items into the paragraphs of a document: one ``w:num`` for each list of ``book``, made when a first item
     needs it. ``known`` are the lists the file already has (a list id and the ``w:numId`` it is)."""
 
-    def __init__(self, document: object, book: ListBook, known: dict[str, int] | None = None) -> None:
+    def __init__(
+        self, document: object, book: ListBook, schemes: SchemeBook, known: dict[str, int] | None = None
+    ) -> None:
         self.document = document
         self.book = book
+        self.schemes = schemes
         self.num_of = dict(known or {})
         self._owned: set[str] = set()  # the parts of the package that the writing changed
 
@@ -295,7 +301,8 @@ class ListWriter:
             created = numbering_in(self.document) is None
             numbering = numbering_in(self.document, create=True)
             assert numbering is not None  # create=True always has one
-            self.num_of[list_id] = numbering.add_list(self.book.get(list_id))
+            definition = self.book.get(list_id)
+            self.num_of[list_id] = numbering.add_list(definition, self._scheme(definition))
             self._touch(created=created)
         return self.num_of[list_id]
 
@@ -303,10 +310,17 @@ class ListWriter:
         """The list the file has as ``list_id`` is drawn as the book now says."""
         numbering = numbering_in(self.document)
         if numbering is not None and list_id in self.num_of and self.num_of[list_id] in numbering.nums():
-            numbering.restyle(self.num_of[list_id], self.book.get(list_id))
+            definition = self.book.get(list_id)
+            numbering.restyle(self.num_of[list_id], definition, self._scheme(definition))
             self._touch(created=False)
         else:
             self.num_of.pop(list_id, None)  # the file lost it: the next item makes it
+
+    def _scheme(self, definition: ListDef) -> Scheme:
+        """The scheme a list is drawn with; one the document lost is drawn as plain numbers or bullets."""
+        if definition.scheme in self.schemes:
+            return self.schemes.get(definition.scheme)
+        return next(s for s in SchemeBook() if s.id == "numbers")
 
     def write(self, paragraph: object, item: ListItem | None) -> None:
         """Make ``paragraph`` (a python-docx paragraph) an item as ``item`` says, or no item for ``None``."""

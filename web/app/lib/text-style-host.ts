@@ -45,5 +45,12 @@ export function textStyleHost(session: TextSession): StyleHost {
     check: (text) => session.checkCss(text),
     setRole: (role, colour) => session.setRole(role, colour),
     setHeadingLevel: (style, level) => session.setHeadingLevel(style, level),
+    setNumbering: (style, numbering) => session.setStyleNumbering(style, numbering),
+    get lists() {
+      return session.state.lists
+    },
+    get schemes() {
+      return session.state.schemes
+    },
   }
 }

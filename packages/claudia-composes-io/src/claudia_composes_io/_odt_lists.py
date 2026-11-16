@@ -11,8 +11,9 @@ what each level shows. The two meet like this:
   the model for items that share a list id.
 * The first paragraph of a ``text:list-item`` is an item at the depth of its ``text:list``. Any further paragraph in
   the same item is a paragraph of the text like any other (Word and LibreOffice call it "unnumbered").
-* The scheme of a list is that of the first level of its style: a number format is ``numbers``, a bullet or a picture
-  is ``bullets``. A style whose levels do not look like the scheme's (another number format, another bullet) is
+* The scheme of a list is the scheme of the document that draws the levels of its style as the file does; a look no
+  scheme has becomes a scheme of its own (E9.22, :mod:`claudia_composes_io._list_looks`). A level the model cannot say
+  (a picture bullet, a number format it does not know) leaves the list with the built-in scheme of its kind, and it is
   reported as ``list-look``: the model shows its own markers, and the file keeps its own.
 """
 
@@ -23,8 +24,10 @@ from dataclasses import dataclass, field
 
 from lxml import etree
 
-from claudia_core import MAX_LIST_LEVEL, SCHEMES, ListBook, ListDef, ListItem
-from claudia_odf_io import NS
+from claudia_core import MAX_LIST_LEVEL, ListBook, ListDef, ListItem, Scheme, SchemeBook, StyleBook
+from claudia_odf_io import LEVEL_BULLET, LEVEL_NUMBER, NS, OUTLINE_LEVEL, level_style, list_style, read_levels
+
+from ._list_looks import scheme_for
 
 _XML_ID = f"{{{NS['xml']}}}id"
 
@@ -40,50 +43,10 @@ LIST_HEADER, NUMBERED = _q("text", "list-header"), _q("text", "numbered-paragrap
 LIST_PARTS = {LIST, LIST_ITEM, LIST_HEADER, NUMBERED}
 _STYLE_NAME, _CONTINUE_LIST = _q("text", "style-name"), _q("text", "continue-list")
 _CONTINUE_NUMBERING = _q("text", "continue-numbering")
-_LEVEL_STYLES = {_q("text", name): name for name in ("list-level-style-number", "list-level-style-bullet")}
-#: What the model draws at each level: the number format and the bullet sign, repeating every three levels.
-_NUMBER_FORMATS = ("1", "a", "i")
-_BULLET_SIGNS = ("•", "◦", "▪")
-#: How far each level moves the text in (a scheme says it in em; a list style wants a length).
-_CM_PER_EM = 0.4
+_LEVEL_STYLES = (LEVEL_NUMBER, LEVEL_BULLET)
 
 
 # -- the style of a list --------------------------------------------------------------------------------------------
-def list_style(definition: ListDef, name: str) -> bytes:
-    """The ``text:list-style`` that makes a list of the model look as the model draws it: ``name`` is what the lists
-    in the text call it, and every level (the model has nine) its marker and its indent. It declares the prefixes
-    it uses, so that it can go into a part that does not."""
-    scheme = SCHEMES[definition.scheme]
-    step = f"{round(scheme.indent * _CM_PER_EM, 3):g}"
-    declared = " ".join(f'xmlns:{prefix}="{NS[prefix]}"' for prefix in ("text", "style", "fo"))
-    display = f' style:display-name="{_attribute(definition.name)}"' if definition.name else ""
-    levels = []
-    for level in range(MAX_LIST_LEVEL + 1):
-        indent = f"{round(scheme.indent * _CM_PER_EM * (level + 1), 3):g}"
-        position = (
-            '<style:list-level-properties text:list-level-position-and-space-mode="label-alignment">'
-            f'<style:list-level-label-alignment text:label-followed-by="listtab" '
-            f'text:list-tab-stop-position="{indent}cm" fo:text-indent="-{step}cm" fo:margin-left="{indent}cm"/>'
-            "</style:list-level-properties>"
-        )
-        if scheme.counts:
-            start = f' text:start-value="{definition.start}"' if level == 0 and definition.start != 1 else ""
-            levels.append(
-                f'<text:list-level-style-number text:level="{level + 1}" style:num-suffix="." '
-                f'style:num-format="{_NUMBER_FORMATS[level % 3]}"{start}>{position}</text:list-level-style-number>'
-            )
-        else:
-            levels.append(
-                f'<text:list-level-style-bullet text:level="{level + 1}" text:bullet-char="{_BULLET_SIGNS[level % 3]}">'
-                f"{position}</text:list-level-style-bullet>"
-            )
-    return f'<text:list-style {declared} style:name="{name}"{display}>{"".join(levels)}</text:list-style>'.encode()
-
-
-def _attribute(text: str) -> str:
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace('"', "&quot;")
-
-
 def _style_elements(roots: Iterable[etree._Element]) -> dict[str, etree._Element]:
     """Every ``text:list-style`` of the file by name."""
     found: dict[str, etree._Element] = {}
@@ -107,38 +70,14 @@ def _positive(text: str | None) -> int | None:
         return None
 
 
-def _look_differs(style: etree._Element, scheme: str) -> bool:
-    """Does a level of ``style`` draw something other than the model's scheme would?"""
-    for level in style:
-        if level.tag not in _LEVEL_STYLES:
-            continue
-        number = _positive(level.get(_q("text", "level")))
-        if number is None or number > MAX_LIST_LEVEL + 1:
-            continue
-        index = (number - 1) % 3
-        if scheme == "numbers":
-            if (
-                level.tag != _q("text", "list-level-style-number")
-                or level.get(_q("style", "num-format")) != _NUMBER_FORMATS[index]
-                or level.get(_q("style", "num-suffix")) != "."
-                or level.get(_q("style", "num-prefix"))
-                or level.get(_q("text", "display-levels"), "1") != "1"
-            ):
-                return True
-        elif (
-            level.tag != _q("text", "list-level-style-bullet")
-            or level.get(_q("text", "bullet-char")) != (_BULLET_SIGNS[index])
-        ):
-            return True
-    return False
-
-
 # -- reading ---------------------------------------------------------------------------------------------------------
 @dataclass
 class ListReading:
     """What the paragraphs of a text say about lists."""
 
     book: ListBook = field(default_factory=ListBook)
+    #: The schemes the lists are drawn with: the built-in ones and those the file's lists need.
+    schemes: SchemeBook = field(default_factory=SchemeBook)
     #: The item each paragraph is (the paragraphs that are no item are not in it).
     items: dict[etree._Element, ListItem] = field(default_factory=dict)
     #: The top-level element each paragraph is in (the paragraph itself when it is in no list).
@@ -173,16 +112,19 @@ def _identity(top: etree._Element, reading: ListReading, by_id: dict[str, str], 
 def _definition(list_id: str, top: etree._Element, styles: dict[str, etree._Element], reading: ListReading) -> ListDef:
     style = styles.get(top.get(_STYLE_NAME) or "")
     level = _first_level(style)
-    scheme = "numbers" if level is not None and level.tag == _q("text", "list-level-style-number") else "bullets"
+    counts = level is not None and level.tag == _q("text", "list-level-style-number")
     start = 1
-    if scheme == "numbers":
+    if counts:
         start = _positive(level.get(_q("text", "start-value")) if level is not None else None) or 1
         item = top.find(LIST_ITEM)
         start = _positive(item.get(_q("text", "start-value")) if item is not None else None) or start
     display = style.get(_q("style", "display-name")) if style is not None else None
     name = display if display and display.strip() and len(display) <= 60 and display.isprintable() else None
-    if style is None or _look_differs(style, scheme):
+    levels = None if style is None else read_levels(style, _LEVEL_STYLES)
+    scheme = None if levels is None else scheme_for(levels, counts, name, reading.schemes)
+    if scheme is None:
         reading.odd_looks += 1
+        scheme = "numbers" if counts else "bullets"
     return ListDef(list_id, scheme, min(start, 999_999), name)
 
 
@@ -252,6 +194,13 @@ def _element(local: str) -> etree._Element:
     return etree.Element(_q("text", local), nsmap={"text": NS["text"]})
 
 
+def scheme_of(schemes: SchemeBook, definition: ListDef) -> Scheme:
+    """The scheme a list is drawn with; one the document lost is drawn as plain numbers."""
+    if definition.scheme in schemes:
+        return schemes.get(definition.scheme)
+    return SchemeBook().get("numbers")
+
+
 class ListNames:
     """The styles and the links of the lists of a text being written, in document order: which style each list is
     drawn with, and that every list after the first piece of a list continues it. ``taken`` are the names of styles
@@ -261,11 +210,13 @@ class ListNames:
     def __init__(
         self,
         book: ListBook,
+        schemes: SchemeBook,
         taken: Iterable[str] = (),
         known: dict[str, str | None] | None = None,
         changed: Iterable[str] = (),
     ) -> None:
         self.book = book
+        self.schemes = schemes
         self.taken = set(taken)
         self.known = dict(known or {})
         for list_id in changed:
@@ -285,7 +236,8 @@ class ListNames:
         name = f"L{number + 1}"
         self.taken.add(name)
         self.known[list_id] = name
-        self.new_styles.append(list_style(self.book.get(list_id), name))
+        definition = self.book.get(list_id)
+        self.new_styles.append(list_style(definition, scheme_of(self.schemes, definition), name))
         return name
 
     def start(self, list_id: str, element: etree._Element, inherit: etree._Element | None = None) -> None:
@@ -364,3 +316,58 @@ class ListFlow:
     def close(self) -> None:
         """No more items of the list that is open."""
         self.open, self.current = [], None
+
+
+# -- numbered headings: the outline style ----------------------------------------------------------------------------
+OUTLINE_STYLE = _q("text", "outline-style")
+#: The levels an outline has in OpenDocument; the model's headings go down to MAX_LIST_LEVEL + 1.
+_OUTLINE_LEVELS = 10
+
+
+def heading_list(styles: StyleBook) -> str | None:
+    """The list the heading styles are numbered in: an odt numbers its headings with one outline, so the list most
+    heading styles name (the first one, on a tie)."""
+    counted: dict[str, int] = {}
+    for style in styles:
+        level = styles.heading_level(style.id) if style.kind == "paragraph" else None
+        numbering = styles.numbering(style.id) if level else None
+        if numbering is not None:
+            counted[numbering] = counted.get(numbering, 0) + 1
+    return max(counted, key=lambda list_id: counted[list_id]) if counted else None
+
+
+def outline_style(styles: StyleBook, lists: ListBook, schemes: SchemeBook) -> bytes:
+    """The ``text:outline-style`` that numbers the headings of the text as the model does: each outline level as the
+    level below it of the scheme of :func:`heading_list` (heading 1 at the scheme's first level); every level unnumbered
+    when no heading style is numbered. It declares its prefixes, so that it can go into any part."""
+    list_id = heading_list(styles)
+    definition = lists.get(list_id) if list_id is not None and list_id in lists else None
+    scheme = scheme_of(schemes, definition) if definition is not None else None
+    declared = " ".join(f'xmlns:{prefix}="{NS[prefix]}"' for prefix in ("text", "style"))
+    levels = []
+    for number in range(_OUTLINE_LEVELS):
+        if scheme is None or number > MAX_LIST_LEVEL:
+            levels.append(f'<text:outline-level-style text:level="{number + 1}" style:num-format=""/>')
+            continue
+        start = definition.start if number == 0 and definition is not None and definition.start != 1 else None
+        levels.append(level_style("outline-level-style", scheme.level(number), number, "", start))
+    return f'<text:outline-style {declared} style:name="Outline">{"".join(levels)}</text:outline-style>'.encode()
+
+
+def read_outline(roots: Iterable[etree._Element], lists: ListBook, schemes: SchemeBook) -> str | None:
+    """The list an odt numbers its headings in, added to ``lists`` (its scheme to ``schemes`` if it needs one of its
+    own); ``None`` when the file's outline numbers nothing or says something the model cannot."""
+    style = next((found for root in roots for found in root.iter(OUTLINE_STYLE)), None)
+    if style is None:
+        return None
+    if not any(level.get(_q("style", "num-format")) for level in style.iter(OUTLINE_LEVEL)):
+        return None  # every level unnumbered: what a program writes for headings that are not numbered
+    levels = {n: level for n, level in read_levels(style, {OUTLINE_LEVEL}).items() if n <= MAX_LIST_LEVEL}
+    scheme = scheme_for(levels, True, "Outline", schemes)
+    if scheme is None:
+        return None
+    first = next((e for e in style.iter(OUTLINE_LEVEL) if e.get(_q("text", "level")) == "1"), None)
+    start = _positive(first.get(_q("text", "start-value")) if first is not None else None) or 1
+    list_id = "outline" if "outline" not in lists else lists.unique_id()
+    lists.add(ListDef(list_id, scheme, min(start, 999_999), "Outline"))
+    return list_id

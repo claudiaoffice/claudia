@@ -19,8 +19,8 @@ import { type FontResolver, parseFamilies, type Resolution } from '../fonts/reso
 import { drawSvg, parseSvg, type SvgDocument, SvgError, svgFonts } from '../svg/render'
 import { boxItems, layoutBox } from '../text/box'
 import { type BoxDecoration, boxDecorationFromCss, type Css, paragraphStyleFromCss, parseColor, type StyleFromCss } from '../text/css'
-import { markerCss } from '../text/list-geometry'
-import { layoutParagraph, type ParagraphOptions } from '../text/paragraph'
+import { MARKER_GAP_EM, markerCss } from '../text/list-geometry'
+import { layoutParagraph, type ParagraphLayout, type ParagraphOptions } from '../text/paragraph'
 import { paragraphStyle, type ParagraphStyle, type Rgba } from '../text/style'
 
 /** A style as the server sends it: `resolved` is its CSS with parents taken in and palette roles replaced. */
@@ -51,11 +51,53 @@ export interface VisualObject {
   w: number
   h: number
   style: string
-  paragraph: { style: string; text: string } | null
+  /** Its words; `mark` is what is drawn before them (a list item's marker or a numbered title's number, counted by the
+   *  server, E9.21, E9.22) and how far their level moves them in, in em. */
+  paragraph: { style: string; text: string; mark?: ObjectMark | null } | null
   shape: string | null
   image: string | null
   rotation: number
 }
+/** What is drawn before the words of an object: the marker, and how far the level moves the words in (em). */
+export interface ObjectMark {
+  marker: string
+  indent: number
+}
+
+/** The words of an object laid out in their box, with the marker before them on their first line, as the web app's
+ *  `ParagraphWords` draws them: the words moved in by their level, the first line by the marker and a marker gap. */
+function wordsBox(
+  fonts: FontSet,
+  text: string,
+  style: ParagraphStyle,
+  mark: ObjectMark | null | undefined,
+  size: { w: number; h: number },
+  decoration: BoxDecoration | undefined,
+  align: 'top' | 'middle' | 'bottom',
+  options: ParagraphOptions,
+): { laid: ReturnType<typeof layoutBox>; marker: ParagraphLayout | null } {
+  if (!mark?.marker) return { laid: layoutBox(fonts, text, style, size.w, size.h, decoration, align, options), marker: null }
+  const em = style.size
+  const plain: ParagraphStyle = { ...style, align: 'left', indentLeft: 0, indentRight: 0, firstLine: 0, whiteSpace: 'nowrap', hyphens: 'manual' }
+  const marker = layoutParagraph(fonts, plain, mark.marker, size.w) // nowrap: one line, however wide
+  const room = (marker.lines[0]?.natural ?? 0) + Math.round(MARKER_GAP_EM * em)
+  const moved: ParagraphStyle = { ...style, indentLeft: style.indentLeft + Math.round(mark.indent * em), firstLine: style.firstLine + room }
+  return { laid: layoutBox(fonts, text, moved, size.w, size.h, decoration, align, options), marker }
+}
+
+/** The display group of words laid out by `wordsBox`, the marker on the first line just before the words. */
+function wordsItems(fonts: FontSet, laid: ReturnType<typeof layoutBox>, marker: ParagraphLayout | null, x: number, y: number, rotation = 0): GroupItem {
+  const group = boxItems(fonts, laid, x, y, rotation)
+  const first = laid.paragraph?.lines[0]
+  const mark = marker?.lines[0]
+  if (first && mark && laid.visibleLines > 0 && laid.paragraph) {
+    const em = laid.paragraph.style.size
+    const left = x + laid.content.x + first.x - Math.round(MARKER_GAP_EM * em) - mark.natural
+    group.items.push(...lineItems(fonts, marker!, mark, left, y + laid.textTop + first.baseline - mark.baseline))
+  }
+  return group
+}
+
 /** An outline: an SVG path in a box of 100 × 100, and where its words go. */
 export interface ShapeOutline {
   id: string
@@ -230,7 +272,11 @@ export function drawObject(o: VisualObject, r: Rect, ctx: ObjectContext): GroupI
   })
   if (o.kind === 'text') {
     const words = o.paragraph ? styles.paragraph(o.paragraph.style) : null
-    const laid = layoutBox(fonts, o.paragraph?.text ?? null, words?.style ?? null, r.w, r.h, decoration, words?.verticalAlign ?? 'top', ctx.paragraphOptions)
+    if (o.paragraph && words) {
+      const { laid, marker } = wordsBox(fonts, o.paragraph.text, words.style, o.paragraph.mark, r, decoration, words.verticalAlign, ctx.paragraphOptions)
+      return wordsItems(fonts, laid, marker, r.x, r.y, o.rotation)
+    }
+    const laid = layoutBox(fonts, null, null, r.w, r.h, decoration, 'top', ctx.paragraphOptions)
     return boxItems(fonts, laid, r.x, r.y, o.rotation)
   }
   if (o.kind === 'shape') {
@@ -260,8 +306,8 @@ export function drawObject(o: VisualObject, r: Rect, ctx: ObjectContext): GroupI
       }
       const words = styles.paragraph(o.paragraph.style)
       const explicit = styles.css(o.paragraph.style)['vertical-align']
-      const laid = layoutBox(fonts, o.paragraph.text, words.style, inner.w, inner.h, undefined, explicit ? words.verticalAlign : 'middle', ctx.paragraphOptions)
-      items.push(boxItems(fonts, laid, inner.x, inner.y))
+      const { laid, marker } = wordsBox(fonts, o.paragraph.text, words.style, o.paragraph.mark, inner, undefined, explicit ? words.verticalAlign : 'middle', ctx.paragraphOptions)
+      items.push(wordsItems(fonts, laid, marker, inner.x, inner.y))
     }
     return group(items, false)
   }

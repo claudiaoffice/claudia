@@ -290,3 +290,55 @@ def test_whatever_is_done_to_the_lists_of_a_file_it_says_the_same_lists_as_the_m
             current.lists.replace(ListDef(ids[0], scheme, rng.randint(1, 5) if scheme == "numbers" else 1))
         edited = apply_edits_to_docx(original, baseline, current)
         assert shape(docx_to_text(edited)) == shape(current)
+
+
+# ----------------------------------------------------------------------------- schemes and numbered headings (E9.22)
+def headed_text() -> TextModel:
+    """A text whose Heading 1 and 2 are numbered in the list "outline" (scheme chapters), and a numbered list whose
+    scheme the document changed: "Step 1)"."""
+    from dataclasses import replace
+
+    blocks = [
+        Block("b1", "heading-1", "Why"),
+        Block("b2", "heading-2", "Asked"),
+        Block("b3", "body", "one", item=ListItem("l1")),
+        Block("b4", "heading-1", "How"),
+    ]
+    model = TextModel(blocks)
+    model.lists.add(ListDef("outline", "chapters", name="Outline"))
+    model.lists.add(ListDef("l1", "numbers"))
+    numbers = model.schemes.get("numbers")
+    first = replace(numbers.levels[0], before="Step ", after=")")
+    model.schemes.replace(replace(numbers, levels=(first, *numbers.levels[1:])))
+    for style in ("heading-1", "heading-2"):
+        model.styles.set_numbering(style, "outline")
+    return model
+
+
+def test_numbered_headings_are_written_as_numbered_word_styles_and_read_back_as_such():
+    data = text_to_docx(headed_text())
+    styles = {s.name: s for s in Document(BytesIO(data)).styles}
+    said = styles["Heading 2"].element.pPr.find(qn("w:numPr"))
+    assert said is not None and said.find(qn("w:ilvl")).get(qn("w:val")) == "1"
+    assert numbering_of(data)[0] == (None, None), "a heading is numbered by its style, not by itself"
+    model = docx_to_text(data)
+    assert {b.id: b.item for b in model.blocks}["b1"] is None
+    assert model.styles.numbering("heading-1") == model.styles.numbering("heading-2") is not None
+    assert {k: v.marker for k, v in model.labels().items()} == {"b1": "1", "b2": "1.1", "b3": "Step 1)", "b4": "2"}
+
+
+def test_a_changed_scheme_is_written_into_the_list_and_comes_back():
+    model = again(headed_text())
+    assert model.schemes.get(model.lists.get("l2").scheme).marker((3,)) == "Step 3)"
+    assert docx_import_losses(text_to_docx(headed_text())) == ()
+
+
+def test_numbering_the_headings_of_an_imported_file_patches_its_styles():
+    plain = TextModel([Block("b1", "heading-1", "Why"), Block("b2", "body", "text")])
+    original = text_to_docx(plain)
+    baseline = docx_to_text(original)
+    current = docx_to_text(original)
+    current.lists.add(ListDef("outline", "chapters"))
+    current.styles.set_numbering("heading-1", "outline")
+    patched = docx_to_text(apply_edits_to_docx(original, baseline, current))
+    assert {k: v.marker for k, v in patched.labels().items()} == {"b1": "1"}

@@ -518,11 +518,19 @@ def _search_block(describe: str = "Find text, formulas and values, and replace t
     return (_page("edit.search-replace", "Search & Replace…", describe, accelerators=("<Primary>f",)),)
 
 
-def _format_menu(*, look: str, clear_cell_style: bool = False, describe: bool = False, rotate: bool = False) -> Menu:
+def _format_menu(
+    *,
+    look: str,
+    clear_cell_style: bool = False,
+    describe: bool = False,
+    rotate: bool = False,
+    headings: tuple[str, str] = ("Number Headings", "Number every heading style: 1, 1.1, 1.2, 2 …"),
+) -> Menu:
     """The Format menu, one shape in every app (D300): Apply Style…, Edit This Style…, All Styles…, List ▸ · Colours… ·
     and where there are objects, Describe Object… (BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024). List ▸
     is in every app as on the web; outside a text the page reports its entries disabled. Computes adds Clear Cell
-    Style, which the web has in Apply Style's flyout."""
+    Style, which the web has in Apply Style's flyout. ``headings`` is what Number Headings is called and says in this
+    app (creates: Number All Slide Titles, E9.22)."""
     styles: tuple[MenuEntry, ...] = (
         _page(
             "format.apply-style",
@@ -599,6 +607,19 @@ def _format_menu(*, look: str, clear_cell_style: bool = False, describe: bool = 
                     "Move the item one level out",
                     accelerators=("<Shift>Tab",),
                     key_owner=KeyOwner.VIEW,
+                ),
+                _page(
+                    "format.number-headings",
+                    headings[0],
+                    headings[1],
+                    accelerators=("<Primary><Alt><Shift>b",),
+                    checkable=True,
+                ),
+                _page(
+                    "format.all-numbering",
+                    "All Numbering…",
+                    "The numbering schemes of this document: how each level of a list is drawn",
+                    accelerators=("<Primary><Alt><Shift>j",),
                 ),
             ),
         ),
@@ -1138,7 +1159,12 @@ def creates() -> Manifest:
         "creates",
         "Claudia Creates",
         edit=edit_menu,
-        format_menu=_format_menu(look="Change how the object you have selected looks", describe=True, rotate=True),
+        format_menu=_format_menu(
+            look="Change how the object you have selected looks",
+            describe=True,
+            rotate=True,
+            headings=("Number All Slide Titles", "Number the title of every slide: 1, 2, 3 …"),
+        ),
         view=view_menu,
         tools=Menu("Tools", ((_tools_ask(),),)),
         prints=True,

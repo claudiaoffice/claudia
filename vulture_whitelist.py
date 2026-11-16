@@ -220,3 +220,8 @@ used._peek_revision  # registered as a protocol method by a decorator (server te
 used.thing_last_seen  # registered as a protocol method by a decorator (server test_server_as_of.py)
 used.sheet_format  # openpyxl: assigning it writes the sheet's ``sheetFormatPr`` (xlsx_write_looks, D458)
 used._blob  # python-pptx: a generic Part keeps its bytes in ``_blob`` (claudia_creates_io.pptx_setup, D461)
+used._new_scheme  # structure_methods: table.method("new_scheme")
+used._change_scheme  # structure_methods: table.method("change_scheme")
+used._reset_scheme  # structure_methods: table.method("reset_scheme")
+used._remove_scheme  # structure_methods: table.method("remove_scheme")
+used._set_style_numbering  # styles: table.method("set_style_numbering")

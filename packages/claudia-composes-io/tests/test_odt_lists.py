@@ -151,10 +151,28 @@ def test_a_list_without_a_style_is_a_bullet_list_whose_look_is_reported():
     assert odt_import_losses(data) == (Loss("list-look", "", 1),)
 
 
-def test_numbers_drawn_as_roman_numerals_are_reported_as_another_look():
+def test_numbers_drawn_as_roman_numerals_become_a_scheme_of_the_document_and_are_no_loss():
+    """E9.22: schemes are document data, so a look the built-in ones lack is kept as a scheme of its own."""
     style = (
-        '<text:list-style style:name="R"><text:list-level-style-number text:level="1" style:num-format="I" '
-        'style:num-suffix="."/></text:list-style>'
+        '<text:list-style style:name="R" style:display-name="Articles"><text:list-level-style-number text:level="1" '
+        'style:num-format="I" style:num-prefix="Art. " style:num-suffix=":"/></text:list-style>'
+    )
+    data = an_odt(
+        '<text:list text:style-name="R"><text:list-item><text:p>a</text:p></text:list-item></text:list>',
+        automatic=style,
+    )
+    model = odt_to_text(data)
+    scheme = model.schemes.get(model.lists.get("l1").scheme)
+    assert (scheme.name, scheme.marker((4,))) == ("Articles", "Art. IV:")
+    assert Loss("list-look", "", 1) not in odt_import_losses(data)
+    again = odt_to_text(text_to_odt(model))
+    assert again.schemes.get(again.lists.get("l1").scheme).marker((4,)) == "Art. IV:"
+
+
+def test_a_level_the_model_cannot_draw_is_still_reported_as_another_look():
+    style = (
+        '<text:list-style style:name="R"><text:list-level-style-number text:level="1" '
+        'style:num-format="１, ２, ３, ..." style:num-suffix="."/></text:list-style>'
     )
     data = an_odt(
         '<text:list text:style-name="R"><text:list-item><text:p>a</text:p></text:list-item></text:list>',
@@ -384,3 +402,32 @@ def test_a_file_that_is_rich_in_lists_and_everything_else_survives_any_edit():
         assert problems(edited) == []
         assert shape(odt_to_text(edited)) == shape(current)
         assert table in content(edited)
+
+
+# ----------------------------------------------------------------------------- numbered headings (E9.22)
+def test_numbered_headings_are_written_as_the_outline_style_and_read_back_as_such():
+    from claudia_composes_io import apply_edits_to_odt
+
+    model = TextModel(
+        [Block("b1", "heading-1", "Why"), Block("b2", "heading-2", "Asked"), Block("b3", "heading-1", "How")]
+    )
+    model.lists.add(ListDef("outline", "chapters"))
+    model.styles.set_numbering("heading-1", "outline")
+    model.styles.set_numbering("heading-2", "outline")
+    data = text_to_odt(model)
+    outline = etree.fromstring(read_parts(data)["styles.xml"]).find(".//text:outline-style", NS)
+    assert outline is not None and outline[1].get(f"{{{NS['text']}}}display-levels") == "2"
+    back = odt_to_text(data)
+    assert {k: v.marker for k, v in back.labels().items()} == {"b1": "1", "b2": "1.1", "b3": "2"}
+    current = odt_to_text(data)
+    for style in current.styles:  # what Number Headings does when it is switched off
+        if current.styles.numbering(style.id) is not None:
+            current.styles.set_numbering(style.id, None)
+    patched = odt_to_text(apply_edits_to_odt(data, odt_to_text(data), current))
+    assert patched.labels() == {}
+
+
+def test_a_text_whose_headings_are_not_numbered_writes_no_outline_numbers():
+    data = text_to_odt(TextModel([Block("b1", "heading-1", "Why")]))
+    assert b"outline-style" not in read_parts(data)["styles.xml"]
+    assert odt_to_text(data).labels() == {}

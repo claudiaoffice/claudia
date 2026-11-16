@@ -150,16 +150,21 @@ export function textSource(session: TextSession): PrintSource {
 
 // ------------------------------------------------------------------------------ creates
 /** The objects of a slide as the layout library knows them. A rendered text container (D390) prints as the picture it
- * shows; one nothing has drawn a picture for yet is left out, as the office exports leave it out. */
-function printable(objects: readonly SlideObject[]): LayoutSlideObject[] {
-  return objects.flatMap((o) => (o.kind !== 'rendered' ? [o as LayoutSlideObject] : o.image ? [{ ...o, kind: 'image' as const }] : []))
+ * shows; one nothing has drawn a picture for yet is left out, as the office exports leave it out. The words of a list
+ * item or a numbered title carry their marker, so the pages draw what the slide does (E9.21, E9.22). */
+function printable(objects: readonly SlideObject[], markOf: (id: string) => { marker: string; indent: number } | null = () => null): LayoutSlideObject[] {
+  return objects.flatMap((o) => {
+    if (o.kind === 'rendered') return o.image ? [{ ...o, kind: 'image' as const } as LayoutSlideObject] : []
+    const mark = o.paragraph ? markOf(o.id) : null
+    return [(mark && o.paragraph ? { ...o, paragraph: { ...o.paragraph, mark } } : o) as LayoutSlideObject]
+  })
 }
 
 /** A presentation as the layout library reads it: the slides in order with their objects, and how it prints. */
 export function slideDocument(session: SlideSession): SlideDocument {
   const state = session.state
   return {
-    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id)) })),
+    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id)) })),
     styles: Object.values(state.styles).map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved })),
     shapes: Object.values(state.shapes),
     // an SVG picture is drawn from its text (D914); the others from their bytes

@@ -92,6 +92,11 @@ class Command(ABC):
         this command meaningless or would make it undo someone else's work: the undo is then refused (E1.4)."""
         return self
 
+    def ends_paragraph(self, paragraph_id: str) -> bool:
+        """Does this command make the paragraph ``paragraph_id`` part of another one, or take it away? A command that
+        names a paragraph by id (one that makes it a list item) cannot be undone past one that does. Default: no."""
+        return False
+
     def redacted(self) -> Command:
         """A replacement that keeps what other commands depend on (kind, ids) but not the content (E1.8).
 

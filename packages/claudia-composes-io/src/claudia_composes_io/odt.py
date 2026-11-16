@@ -57,7 +57,19 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
-from ._odt_lists import LIST, ListFlow, ListNames, can_rebuild, read_lists
+from ._odt_lists import (
+    LIST,
+    OUTLINE_STYLE,
+    ListFlow,
+    ListNames,
+    ListReading,
+    can_rebuild,
+    heading_list,
+    outline_style,
+    read_lists,
+    read_outline,
+    scheme_of,
+)
 from ._odt_pictures import (
     PICTURE_STYLE,
     PICTURE_STYLE_XML,
@@ -261,6 +273,18 @@ def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, _Scan, dic
     return parts, body, _scan(body), _open_styles(parts, content)
 
 
+def _number_headings(model: TextModel, parts: dict[str, bytes], body: etree._Element) -> None:
+    """Number the heading styles of ``model`` in the list the file's outline numbers its headings in, if it does."""
+    content = body.getroottree().getroot()
+    roots = [content, *([etree.fromstring(parts["styles.xml"])] if "styles.xml" in parts else [])]
+    list_id = read_outline(roots, model.lists, model.schemes)
+    if list_id is None:
+        return
+    for style in model.styles:
+        if style.kind == "paragraph" and isinstance(style.heading_level, int) and style.heading_level >= 1:
+            model.styles.set_numbering(style.id, list_id)
+
+
 def _lists_of(parts: dict[str, bytes], body: etree._Element, scan: _Scan):  # noqa: ANN202
     """The lists of a file and the items among its paragraphs (:func:`claudia_composes_io._odt_lists.read_lists`)."""
     content = body.getroottree().getroot()
@@ -285,7 +309,14 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
         text = read_text(paragraph)
         runs = (Run(len(text), None),) if text else ()
         blocks.append(Block(f"b{number}", _style_of(paragraph, parents, None), text, runs, lists.items.get(paragraph)))
-    model = TextModel(blocks or None, page=setup.page, language=setup.language, lists=lists.book if blocks else None)
+    model = TextModel(
+        blocks or None,
+        page=setup.page,
+        language=setup.language,
+        lists=lists.book if blocks else None,
+        schemes=lists.schemes,
+    )
+    _number_headings(model, parts, body)
     root = body.getroottree().getroot()
     graphics = graphic_styles(root, etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
     for picture in file_pictures(scan.paragraphs, graphics, parts):
@@ -481,7 +512,8 @@ def _styles_part(model: TextModel, names: StyleNames) -> bytes:
     """``styles.xml`` of a new file: the styles of the text, the language of the text and its page."""
     definitions = b"".join(_style_definitions(model, names)[0]).decode()
     footer = FOOTER_STYLE_XML if model.page.page_numbers else ""
-    styles = default_style_xml(model.language) + definitions + footer
+    outline = outline_style(model.styles, model.lists, model.schemes).decode() if heading_list(model.styles) else ""
+    styles = default_style_xml(model.language) + definitions + outline + footer
     return (
         f'{_DECLARATION}<office:document-styles {_NS_DECLS} office:version="{VERSION}">'
         f"<office:styles>{styles}</office:styles>"
@@ -524,7 +556,7 @@ def text_to_odt(
         etree.SubElement(root, _q("office", name))
     text = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "text"))
     styles = StyleNames(model.styles)
-    names = ListNames(model.lists)
+    names = ListNames(model.lists, model.schemes)
     flow = ListFlow(text, lambda list_id, element: names.start(list_id, element))
     regions: list[etree._Element] = []
     pictures = PictureWriter(rasterise)
@@ -616,6 +648,18 @@ def odt_unwritten_changes(model: TextModel, baseline: TextModel | None = None) -
 
 
 # -- edit and re-export ----------------------------------------------------------------------------------------------
+def _drawn(model: TextModel, list_id: str) -> tuple[object, object]:
+    """What decides how a list of the model is drawn: its definition and its scheme."""
+    definition = model.lists.get(list_id)
+    return definition, scheme_of(model.schemes, definition)
+
+
+def _drawn_as(reading: ListReading, list_id: str) -> tuple[object, object]:
+    """How the file draws a list it has: the definition and the scheme it was read with."""
+    definition = reading.book.get(list_id)
+    return definition, scheme_of(reading.schemes, definition)
+
+
 class _Patch:
     """One run of :func:`apply_edits_to_odt`: the original's parts, what is to change and the edits recorded so far."""
 
@@ -678,10 +722,10 @@ class _Patch:
         changed = [
             list_id
             for list_id in self.reading.book.ids()
-            if list_id in current.lists and current.lists.get(list_id) != self.reading.book.get(list_id)
+            if list_id in current.lists and _drawn(current, list_id) != _drawn_as(self.reading, list_id)
         ]
         taken = {name for root in roots for name in _names_in(root)}
-        self.names = ListNames(current.lists, taken, self.reading.style_of, changed)
+        self.names = ListNames(current.lists, current.schemes, taken, self.reading.style_of, changed)
         self.changed_lists = set(changed)
         self.passed: set[etree._Element] = set()
         kept = [block.id for block in current.blocks if block.id in self.before]
@@ -698,6 +742,7 @@ class _Patch:
         self._finish_lists()
         setup_changed = self._patch_setup()
         setup_changed = self._patch_style_definitions() or setup_changed
+        setup_changed = self._patch_outline() or setup_changed
         if not self.changed and not setup_changed:
             return self.original
         if self.changed:
@@ -1042,6 +1087,22 @@ class _Patch:
             elif name not in self.defined and name not in self.missing:
                 self.missing[name] = now
         return changed
+
+    def _patch_outline(self) -> bool:
+        """The outline style, written over the file's when the numbering of the headings changed (E9.22)."""
+        before, after = self.baseline, self.current
+        was = outline_style(before.styles, before.lists, before.schemes)
+        now = outline_style(after.styles, after.lists, after.schemes)
+        if was == now:
+            return False
+        if self.styles is None or (styles := self.styles.root.find("office:styles", NS)) is None:
+            raise UnsupportedEdit("this file has no styles.xml to number its headings in")
+        found = next(self.styles.root.iter(OUTLINE_STYLE), None)
+        if found is not None:
+            self.styles.replace(found, now)
+        else:
+            self.styles.insert_into(styles, now)
+        return True
 
     def _add_missing_styles(self, setup_changed: bool = False) -> None:
         if self.missing:

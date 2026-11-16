@@ -2,7 +2,7 @@
 
 model      TextModel, TextObject: paragraphs, authorship, open suggestions, styles, and floating objects (E10.16)
 anchors    BlockAnchor: where an object hangs in a text and how far it floats from there; why it follows the text
-commands   the text and structure commands (SetStyle, SetListItem, SetPageSetup, SetLanguage, …), suggestions (D63)
+commands   the text and structure commands (SetStyle, SetPageSetup, SetLanguage, …), suggestions (D63)
 page       PageSetup (the kernel's, D917): the paper, orientation, margins and page numbers a text prints on
 language   normalize_language, SetLanguage (the kernel's, D917): the language a text is written in (D915)
 region     TextRange, and ``word_window``: the ± n words zone around a cursor (D11)
@@ -46,7 +46,6 @@ from .commands import (
     ProposeSuggestion,
     ResolveSuggestion,
     SetLanguage,
-    SetListItem,
     SetPageSetup,
     SetStyle,
     SplitBlock,
@@ -105,7 +104,6 @@ __all__ = [
     "RotateObject",
     "Run",
     "SetLanguage",
-    "SetListItem",
     "SetPageSetup",
     "SetParagraphStyle",
     "SetSnap",

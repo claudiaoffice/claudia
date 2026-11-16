@@ -26,6 +26,11 @@ export interface StyleView {
   /** Its own setting, when it has one: a level, `'body'` (no heading, whatever its parent is), or absent (as its
    * parent). For the style editor; everything that draws or exports reads `heading`. */
   heading_level?: number | 'body' | null
+  /** Its own numbering: the list that numbers its paragraphs, `'none'` (not numbered, whatever its parent is), or
+   * absent (as its parent) (E9.22). */
+  numbering?: string | null
+  /** The list it numbers its paragraphs in, its parents taken in; `null` for none. */
+  numbered?: string | null
 }
 
 export interface CssProblem {

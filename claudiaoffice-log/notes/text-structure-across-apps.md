@@ -1,6 +1,6 @@
 # Text structure across the three apps — the entities, where they live, what moves (plan)
 
-**Status: plan of 2026-11-16; steps A, B and C built the same day (sections 8 and 9). Steps D–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
+**Status: plan of 2026-11-16; steps A to D built the same day (sections 8 to 10). Steps E–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
 of the same day) to creates, and replaces that note's section 11 ("Where the code goes"). The class diagram is
 `mockups/text-structure-architecture.svg`; it replaces `composes-toc-architecture.svg`. No decision numbers are taken.
 
@@ -305,3 +305,53 @@ Written first, as part of the steps above:
   a `ListBook` now (state schema 13), so the core list commands work on it, and it tells clients `labels` events. No
   client shows them yet: that, and a way to make a text box an item, are step D.
 - Not moved in step C, as planned: `SetListItem` (step D) and the text commands (step G).
+
+## 10. Done: step D (2026-11-16, patch 6)
+
+### What was built
+
+- **Schemes are document data** (`claudia_core.schemes`): `LevelFormat` (format: decimal, lower/upper alpha, lower/upper
+  roman, bullet or none; the bullet sign; text before and after; `from_level`, the first level whose counter the label
+  shows), `Scheme` (nine levels, indent, gap), `SchemeBook` with the built-ins `bullets`, `numbers` and the new
+  `chapters` (1, 1.1, 1.1.1, no full stop), and `CreateScheme`/`ChangeScheme`/`RemoveScheme` with the event `schemes`.
+  `SCHEMES` is gone. `Label` has `number`, the trail a reference prints ("2.a"). Composes state schema 13, creates 14.
+- **Numbered headings:** `StyleDef.numbering` (a list id, `"none"`, or as the parent) and `SetStyleNumbering`. A
+  paragraph of the main text whose style has a heading level of 1 or more and names a list is an item of it at the
+  level below its heading level (its *effective item*, `TextStructure.items()`), unless it has an item of its own.
+- **`core.SetListItem` on any paragraph** (`ItemHost`: `item_of`, `put_item`, `item_regions`); `composes.SetListItem`
+  is gone. `Command.ends_paragraph` lets an item not be undone past a join or the removal of its object.
+- **Server** (`structure_methods.py`, both apps): `lists`, `make_list`/`indent_item`/`continue_list`/`list_start` over
+  paragraph ids in reading order, `number_headings`, `new_scheme`/`change_scheme`/`reset_scheme`/`remove_scheme`; and
+  `set_style_numbering` with the other style methods. `composes_lists.py` is gone.
+- **Web:** Format ▸ List ▸ Number Headings (creates: Number All Slide Titles) and All Numbering… in both apps; the
+  numbering manager `NumberingDialog.vue` (schemes left, levels, indent, gap, preview, Used by; reset a built-in,
+  remove one of the document's own; read-only for a viewer); the style editor's Numbering row; creates' List flyout works
+  on the selected box. A numbered heading's number hangs before it in the editor and in print; a box's marker stands
+  before its words (`ParagraphWords.vue`, the slide view, the presenter and print: `ObjectMark` in the layout).
+  `LAYOUT_VERSION` 5.
+- **Files:** docx and odt write a list with the levels of its scheme and read a list back with the scheme that draws it
+  or a new one (only a level the model cannot say is `list-look`); numbered heading styles are Word styles with
+  `w:numPr` and the odt's `text:outline-style`, both ways, and in the patch of a kept file. pptx writes `buAutoNum`
+  (counting on across boxes with `startAt`) or `buChar` and reads them back as one list; odp writes lists continued
+  across boxes with their list styles and reads them back.
+- **Menus and keys:** the manifest, the generated keys and the Neutralino menus have `format.number-headings`
+  (Ctrl+Alt+Shift+B, checkable) and `format.all-numbering` (Ctrl+Alt+Shift+J). German for every new label.
+
+### Where the build differs from the plan or the mock-ups, and why
+
+- **Ctrl+Alt+Shift+B for Number Headings and Ctrl+Alt+Shift+J for All Numbering**, not H and E (mock-up B): H is Present
+  from This Slide's in creates (an action has one key in every app), and Ctrl+Alt+E is AltGr+E (€) on Windows.
+- **Number All Slide Titles is its own entry**, not what Numbered List turns into on a title box (section 4): Numbered
+  List on a title box makes that box an item, as anywhere; one entry per action keeps the menus the same in every app.
+- **A heading's number hangs before it** in the editor and in print (5 em box, right-aligned, a marker gap from the
+  text); the text does not move. A text box's marker stands inline before its words.
+- **An odt has one outline:** the list most heading styles are numbered in becomes `text:outline-style`; an import
+  numbers every heading style in it.
+- **pptx cannot draw a trail** ("2.1") or text around a number other than its few forms: such a marker is left out and
+  reported as `list-look` (export losses). A kept odp whose lists changed is written anew (`UnsupportedEdit`).
+- **Server methods keep the parameter name `blocks`** for paragraph ids, so the composes client did not change.
+
+### Left for later steps
+
+- Step E (contents and agenda) and the rest of the plan (F–I); `ObjectLink` (section 4) with the alignment work.
+- creates' style editor does not offer the heading level or the numbering yet (Number All Slide Titles needs neither).

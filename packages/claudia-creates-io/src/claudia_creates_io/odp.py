@@ -38,7 +38,16 @@ from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_core import ImageAsset, ObjectBody, Rasterise, VisualObject, nudge_into, paragraph_for, picture_body
+from claudia_core import (
+    ImageAsset,
+    ListItem,
+    ObjectBody,
+    Rasterise,
+    VisualObject,
+    nudge_into,
+    paragraph_for,
+    picture_body,
+)
 from claudia_creates import MAX_NOTES_LENGTH, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
 from claudia_odf_io import (
     MIME,
@@ -69,6 +78,7 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from ._items import Mark, OdpListReader, OdpLists, list_styles, marks_of, odp_level
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._styling import colour_of, look, page_colour, points_of
 from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
@@ -590,13 +600,14 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
     the order the file draws them, from bottom to top. Place and size are read through the slide's own size (not an
     assumed shape: a 4:3 deck comes in as 4:3). What the model does not hold is in :func:`odp_import_losses`. Raises
     :class:`~claudia_odf_io.OdfError` for a file that is not an odp."""
-    _, _, styles, slides = _document(odp_bytes)
+    _, content, styles, slides = _document(odp_bytes)
     if not slides:
         empty = SlideModel.empty()
         empty.language = read_language(styles)
         return empty
     model, library, defined = SlideModel(), ShapeLibrary.load(), set()
     model.language = read_language(styles)
+    items = OdpListReader(list_styles(content, styles), model.lists, model.schemes)
     for slide in slides:
         model.insert_slide(slide.id, notes=slide.notes)
         for found in slide.objects:
@@ -630,7 +641,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                 found.w,
                 found.h,
                 style,
-                paragraph_for(found.id, words, found.text),
+                paragraph_for(found.id, words, found.text).with_item(_item_of(found, items)),
                 shape=shape,
                 rotation=found.rotation,
             )
@@ -638,13 +649,20 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
     return model
 
 
+def _item_of(found: _Object, items: OdpListReader) -> ListItem | None:
+    """The item the words of an object are: its first paragraph is the first of an item of a list."""
+    placed = odp_level(found.paragraphs[0], found.element) if found.paragraphs else None
+    return None if placed is None else items.item(*placed)
+
+
 def odp_import_losses(odp_bytes: bytes) -> tuple[Loss, ...]:
     """What :func:`odp_to_slides` does not show of the file, each as a code (``"picture"``, ``"table"``, ``"group"``,
     ``"notes"``, ``"transition"``, ``"rotated-object"``...) with how many there are, in the order they come. None of it
     is lost from the *file*: an edit exported with :func:`apply_edits_to_odp` keeps all of it."""
-    _, _, _, slides = _document(odp_bytes)
+    _, content, styles, slides = _document(odp_bytes)
     losses = LossLog()
     looks = formatting = links = 0
+    items = OdpListReader(list_styles(content, styles))
     hidden: dict[str, int] = {}
     for slide in slides:
         for kind, detail in slide.left_out:
@@ -652,6 +670,7 @@ def odp_import_losses(odp_bytes: bytes) -> tuple[Loss, ...]:
         for found in slide.objects:
             if found.kind == "image":
                 continue  # a picture has no look of its own that the model leaves out
+            _item_of(found, items)
             if found.element.get(_q("draw", "style-name")) or any(
                 p.get(_q("text", "style-name")) for p in found.paragraphs
             ):
@@ -663,7 +682,8 @@ def odp_import_losses(odp_bytes: bytes) -> tuple[Loss, ...]:
                 links += sum(1 for _ in paragraph.iter(_q("text", "a")))
                 for kind in hidden_content(paragraph):
                     hidden[kind] = hidden.get(kind, 0) + 1
-    for code, number in (("look", looks), ("formatting", formatting), ("link", links)):
+    counted = (("look", looks), ("formatting", formatting), ("link", links), ("list-look", items.odd_looks))
+    for code, number in counted:
         if number:
             losses.add(code, count=number)
     for kind, number in hidden.items():
@@ -823,6 +843,17 @@ class _Writer:
     )
     rasters: dict[str, bytes] = field(default_factory=dict)  # name in the package -> a PNG drawn by ``rasterise``
     losses: LossLog = field(default_factory=LossLog)
+    marks: dict[str, Mark] = field(default_factory=dict)  # the list mark of each object's words, by object id
+    lists: OdpLists | None = None  # the list styles and links written so far
+
+    def words(self, obj: VisualObject, text: str, style: str | None, *, empty: bool = True) -> list[etree._Element]:
+        """The paragraphs of an object's words (none for no words unless ``empty``), as the item of a list when they
+        are one."""
+        paragraphs = _paragraphs(text, style) if text or empty else []
+        mark = self.marks.get(obj.body.id)
+        if mark is None or not paragraphs or self.lists is None:
+            return paragraphs
+        return [self.lists.wrap(paragraphs, mark)]
 
     def object(self, obj: VisualObject) -> etree._Element | None:
         """The element of an object, or ``None`` for an image whose picture the model does not have."""
@@ -838,7 +869,7 @@ class _Writer:
             graphic = self.looks.graphic({}, over, self.pt_per_unit)
             frame = _el("draw", "frame", {"draw:style-name": graphic, **placing})
             box = etree.SubElement(frame, _q("draw", "text-box"))
-            box.extend(_paragraphs(text, words))
+            box.extend(self.words(obj, text, words))
             return frame
         graphic = self.looks.graphic(look(self.model, body.style), over, self.pt_per_unit)
         definition = self.model.shapes.get(body.shape) if body.shape else None
@@ -848,17 +879,17 @@ class _Writer:
         attributes = {"draw:style-name": graphic, **placing}
         if shape_id == "circle":
             element = _el("draw", "ellipse", attributes)
-            element.extend(_paragraphs(text, words) if text else [])
+            element.extend(self.words(obj, text, words, empty=False))
         elif shape_id == "triangle":
             element = _el("draw", "custom-shape", attributes)
-            element.extend(_paragraphs(text, words))
+            element.extend(self.words(obj, text, words))
             geometry = etree.SubElement(element, _q("draw", "enhanced-geometry"))
             geometry.set(_q("svg", "viewBox"), "0 0 21600 21600")
             geometry.set(_q("draw", "type"), "isosceles-triangle")
             geometry.set(_q("draw", "enhanced-path"), _TRIANGLE_PATH)
         else:
             element = _el("draw", "rect", attributes)
-            element.extend(_paragraphs(text, words) if text else [])
+            element.extend(self.words(obj, text, words, empty=False))
         return element
 
     def notes(self, markdown: str) -> etree._Element:
@@ -958,6 +989,7 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
     cm_per_unit = (_SLIDE_CM[0] / SLIDE_WIDTH, _SLIDE_CM[1] / SLIDE_HEIGHT)
     pt_per_unit = _SLIDE_CM[1] / _CM_PER_INCH * 72 / SLIDE_HEIGHT
     writer = _Writer(model, _Looks(set()), cm_per_unit, pt_per_unit, rasterise=rasterise)
+    writer.marks, writer.lists = marks_of(model), OdpLists(model)
     root = _el("office", "document-content", {"office:version": "1.3"})
     for name in ("scripts", "font-face-decls"):
         etree.SubElement(root, _q("office", name))
@@ -974,6 +1006,7 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
         if model.notes_of(slide_id):
             page.append(writer.notes(model.notes_of(slide_id)))
     automatic.extend(writer.looks.elements)
+    automatic.extend(etree.fromstring(style) for style in writer.lists.styles)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
     extra = {
         name: (
@@ -1106,6 +1139,8 @@ class _Patch:
 
     # -- the run ---------------------------------------------------------------------------------------------------
     def run(self) -> bytes:
+        if marks_of(self.baseline) != marks_of(self.current):
+            raise UnsupportedEdit("lists in text boxes cannot be patched onto the original file yet")
         for slide in self.slides:
             if slide.id not in self.current.slides:
                 self._remove_slide(slide)

@@ -3,7 +3,8 @@
 //   Apply style ▸     the styles that fit what is selected, each drawn in its look, grouped as the app groups them
 //   Edit this style…  the popover at the selection (Shift+F10)
 //   All styles…       the dialog, with Edit beside Rename (D302)
-//   List ▸            bullets, numbers and their levels (E9.21); there in every app, disabled where it has no use yet
+//   List ▸            bullets, numbers and their levels (E9.21), numbered headings and the numbering manager (E9.22);
+//                     there in every app, disabled where it has no use
 //   ─────────────
 //   Colours…          the document's palette (D200)
 //
@@ -26,12 +27,16 @@ export interface ListMenu {
   canContinue: boolean
   /** The keys, as the app binds them, for the right-hand side of the entries. */
   hints?: { bulleted?: string; numbered?: string; indent?: string; outdent?: string }
+  /** Number Headings (creates: Number All Slide Titles), ticked while they are numbered (E9.22). */
+  headings?: { label: string; on: boolean; possible: boolean; toggle(): void }
   bulleted(): void
   numbered(): void
   continueList(): void
   startAt(): void
   indent(): void
   outdent(): void
+  /** All Numbering…: the numbering manager; a viewer may look. */
+  allNumbering?(): void
 }
 
 /** The List entry of an app that has no lists (yet): shown for consistency, disabled, with the reason (E9.21). */
@@ -77,6 +82,15 @@ function listItem(t: (text: string) => string, list: ListMenu): MenuItem {
     { label: '', separator: true },
     { id: 'format.list-indent', label: t('Indent'), hint: list.hints?.indent, disabled: locked || !list.canNest, action: () => list.indent() },
     { id: 'format.list-outdent', label: t('Outdent'), hint: list.hints?.outdent, disabled: locked || !list.canNest, action: () => list.outdent() },
+    { label: '', separator: true },
+    {
+      id: 'format.number-headings',
+      label: list.headings?.label ?? t('Number Headings'),
+      checked: !!list.headings?.on,
+      disabled: locked || !list.headings?.possible,
+      action: () => list.headings?.toggle(),
+    },
+    { id: 'format.all-numbering', label: t('All Numbering…'), disabled: off || !list.allNumbering, action: () => list.allNumbering?.() },
   )
   return { label: t('List'), items: flyout, disabled: off }
 }

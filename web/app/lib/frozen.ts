@@ -18,18 +18,26 @@ export interface FrozenDeck {
   shapes: Record<string, ShapeDef>
   images: Record<string, ImageAsset>
   styleModel: StyleModel | null
+  /** What is drawn before the words of an object (a list marker, a slide title's number) and how far they move in,
+   *  by object id (E9.21, E9.22); absent in a copy from before lists. */
+  marks?: Record<string, { marker: string; indent: number }>
 }
 
 /** Copy what the show draws from out of the session. A JSON round trip, because the session's state is reactive and a
  * reactive object is a view of the live one, not a copy. */
-export function freeze(session: Pick<SlideSession, 'state' | 'objectsOn' | 'notesOf' | 'secondsOf'>): FrozenDeck {
+export function freeze(session: Pick<SlideSession, 'state' | 'objectsOn' | 'notesOf' | 'secondsOf'> & Partial<Pick<SlideSession, 'markOf'>>): FrozenDeck {
   const s: SlideState = session.state
   const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value ?? null)) as T
   const objects: Record<string, SlideObject[]> = {}
   const notes: Record<string, string> = {}
   const times: Record<string, number> = {}
+  const marks: Record<string, { marker: string; indent: number }> = {}
   for (const slide of s.slides) {
     objects[slide.id] = copy(session.objectsOn(slide.id))
+    for (const o of objects[slide.id]!) {
+      const mark = session.markOf?.(o.id)
+      if (mark) marks[o.id] = mark
+    }
     const note = session.notesOf(slide.id)
     if (note) notes[slide.id] = note
     const seconds = session.secondsOf(slide.id)
@@ -45,6 +53,7 @@ export function freeze(session: Pick<SlideSession, 'state' | 'objectsOn' | 'note
     shapes: copy(s.shapes),
     images: copy(s.images),
     styleModel: copy(s.styleModel),
+    marks,
   }
 }
 

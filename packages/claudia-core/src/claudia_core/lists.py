@@ -1,8 +1,9 @@
 """Lists: what makes a paragraph an item, how bullets and numbers are derived, and the book of lists (E9.21).
 
 A list item is *structure*, like a heading level: a paragraph has an :class:`~claudia_core.ListItem` (which list,
-which level). Its look stays with its style. What a list adds is a **scheme**, a named recipe for how the markers
-of each level are drawn and how far each level is indented. Markers are never characters of the text.
+which level). Its look stays with its style. What a list adds is a **scheme** (:mod:`claudia_core.schemes`, part of
+the document), a named recipe for how the markers of each level are drawn and how far each level is indented.
+Markers are never characters of the text.
 
 * A **list** is explicit: a :class:`ListDef` with an id, a scheme, the number to start at and an optional ``name``.
   Items that share a list id are one list, in document order, whatever lies between them; items of two different
@@ -10,11 +11,13 @@ of each level are drawn and how far each level is indented. Markers are never ch
   references of E9.22 will show it); nothing here needs it yet.
 * **Labels are derived, never stored.** :func:`~claudia_core.numbering_labels` is one pure function from the items,
   in document order, to the label of each: the marker that is drawn (``•``, ``3.``, ``b.``) and, for numbers, the
-  trail of counters (``(2, 1)``) that a reference to "section 2.1" will later need. It is total: a missing parent or an
-  unknown list can never make it fail.
+  trail of counters (``(2, 1)``) and the number a reference to "section 2.1" prints. It is total: a missing parent,
+  an unknown list or a missing scheme can never make it fail.
 * The :class:`ListBook` is what an app's model holds (an attribute ``lists``); the commands below are the only
   ways to change it, so every change is in the log, can be undone and is seen by everybody. A model may have a
   method ``list_in_use(list_id) -> bool`` that tells :class:`RemoveList` whether an item uses a list.
+* :class:`SetListItem` makes any paragraph an item: a paragraph of a composes text or the words of a text box on a
+  slide. The model says how it finds the paragraph and what it tells the clients (:class:`ItemHost`).
 
 Every app that has paragraphs can hold lists: the same functions count the items of a composes text and of the
 paragraphs in a creates text box.
@@ -23,88 +26,29 @@ paragraphs in a creates text box.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Protocol
 
 from .commands import Command, CommandRegistry, core_commands
 from .paragraphs import MAX_LIST_LEVEL, ListItem
+from .schemes import SchemeBook, builtin_scheme, schemes_of
+from .styles import NO_NUMBERING
 
 if TYPE_CHECKING:
     from .context import Context
+    from .region import Region
 
 _ID = re.compile(r"[a-z0-9][a-z0-9-]{0,39}")
 _MAX_NAME = 60
 _MAX_START = 999_999
-_ROMAN = ((1000, "m"), (900, "cm"), (500, "d"), (400, "cd"), (100, "c"), (90, "xc"), (50, "l"), (40, "xl"), (10, "x"),
-          (9, "ix"), (5, "v"), (4, "iv"), (1, "i"))  # fmt: skip
-
-
-# --------------------------------------------------------------------------- schemes
-def _alpha(n: int) -> str:
-    """1 -> a, 26 -> z, 27 -> aa, 28 -> ab ...: letters counted like spreadsheet columns."""
-    out = ""
-    while n > 0:
-        n, rest = divmod(n - 1, 26)
-        out = chr(ord("a") + rest) + out
-    return out
-
-
-def _roman(n: int) -> str:
-    """Lower-case roman numerals up to 3999; after that plain digits, which stay correct and readable."""
-    if not 1 <= n <= 3999:
-        return str(n)
-    out = ""
-    for value, letters in _ROMAN:
-        while n >= value:
-            out += letters
-            n -= value
-    return out
-
-
-_NUMBER_FORMATS: tuple[Callable[[int], str], ...] = (str, _alpha, _roman)
-_BULLET_SIGNS = ("•", "◦", "▪")
-
-
-@dataclass(frozen=True)
-class Scheme:
-    """How a list looks: ``kind`` says whether it counts, ``indent`` is how far each level moves the text in (in
-    ``em``), and ``gap`` the space between two neighbouring items of one list (in ``em``). Schemes are code, like
-    the built-in styles; the numbering manager of E9.22 will make them editable."""
-
-    id: str
-    name: str
-    kind: str  # "bullet" | "number"
-    indent: float = 1.6
-    gap: float = 0.25
-
-    @property
-    def counts(self) -> bool:
-        """Does this scheme count its items?"""
-        return self.kind == "number"
-
-    def marker(self, level: int, number: int) -> str:
-        """What is drawn at ``level`` for the ``number``-th item (ignored by a scheme that does not count)."""
-        if not self.counts:
-            return _BULLET_SIGNS[level % len(_BULLET_SIGNS)]
-        return f"{_NUMBER_FORMATS[level % len(_NUMBER_FORMATS)](number)}."
-
-    def to_data(self) -> dict:
-        """The plain-data form that is sent to clients."""
-        return {"id": self.id, "name": self.name, "kind": self.kind, "indent": self.indent, "gap": self.gap}
-
-
-#: The schemes there are: the id of a list's scheme is a key of this.
-SCHEMES: dict[str, Scheme] = {
-    "bullets": Scheme("bullets", "Bullets", "bullet"),
-    "numbers": Scheme("numbers", "Numbers", "number"),
-}
 
 
 # --------------------------------------------------------------------------- the lists
 @dataclass(frozen=True)
 class ListDef:
-    """One list: its ``id``, its ``scheme`` (an id), the number its first level starts at, and an optional ``name``."""
+    """One list: its ``id``, its ``scheme`` (the id of a :class:`~claudia_core.Scheme` of the document), the number
+    its first level starts at, and an optional ``name``."""
 
     id: str
     scheme: str
@@ -124,8 +68,10 @@ class ListDef:
         """``ValueError`` with a sentence if the list makes no sense."""
         if not _ID.fullmatch(self.id):
             raise ValueError(f"A list id is lower-case letters, digits and hyphens (up to 40), got {self.id!r}")
-        if self.scheme not in SCHEMES:
-            raise ValueError(f"There is no list scheme {self.scheme!r}; there are {', '.join(SCHEMES)}")
+        if self.id == NO_NUMBERING:
+            raise ValueError(f"“{NO_NUMBERING}” says that a style is not numbered; no list can have it as its id")
+        if not isinstance(self.scheme, str) or not _ID.fullmatch(self.scheme):
+            raise ValueError(f"A list names its scheme by id, got {self.scheme!r}")
         if not isinstance(self.start, int) or not 1 <= self.start <= _MAX_START:
             raise ValueError(f"A list starts at a number from 1 to {_MAX_START}, got {self.start!r}")
         if self.name is not None and (
@@ -181,7 +127,8 @@ class ListBook:
 
     # -- changing (used by the commands) -----------------------------------------
     def add(self, each: ListDef) -> None:
-        """Add a list with a new id, a known scheme and sensible numbers."""
+        """Add a list with a new id and sensible numbers. That its scheme exists is the commands' to check: the book
+        does not hold the schemes."""
         each.check()
         if each.id in self._lists:
             raise ValueError(f"The list {each.id!r} exists already")
@@ -207,23 +154,28 @@ class ListBook:
 @dataclass(frozen=True)
 class Label:
     """What an item shows: the ``marker`` that is drawn and, for a counting scheme, the ``path`` of counters from
-    the outermost level down to the item's own (``(2, 1)`` is "2.a"); ``None`` for bullets."""
+    the outermost level down to the item's own (``(2, 1)`` is "2.a") and the ``number`` a reference prints, the whole
+    trail without the text around it ("2.a"); both ``None`` for bullets."""
 
     marker: str
     path: tuple[int, ...] | None = None
+    number: str | None = None
 
     def to_data(self) -> dict:
-        """The plain-data form that is sent to clients: ``{marker, path}``, ``path`` being ``None`` for a bullet."""
-        return {"marker": self.marker, "path": None if self.path is None else list(self.path)}
+        """The plain-data form that is sent to clients: ``{marker, path, number}``, the last two ``None`` for a
+        bullet."""
+        return {"marker": self.marker, "path": None if self.path is None else list(self.path), "number": self.number}
 
 
-def numbering_labels(entries: Iterable[tuple[str, ListItem | None]], lists: ListBook) -> dict[str, Label]:
+def numbering_labels(
+    entries: Iterable[tuple[str, ListItem | None]], lists: ListBook, schemes: SchemeBook
+) -> dict[str, Label]:
     """The label of every list item, from ``(paragraph id, item)`` pairs in document order.
 
     Counters are per list and per level. An item of level *n* counts one up at level *n* and starts every deeper
     level over. A level nothing has counted yet starts at the list's ``start`` (level 0) or at 1; a missing parent
-    counts as that start, so a deleted parent never makes numbering fail. Paragraphs that are not items, and items
-    of a list the book does not have, get no label.
+    counts as that start, so a deleted parent never makes numbering fail. Paragraphs that are not items, items of a
+    list the book does not have and items of a list whose scheme is gone get no label.
     """
     counters: dict[str, list[int]] = {}
     out: dict[str, Label] = {}
@@ -231,9 +183,11 @@ def numbering_labels(entries: Iterable[tuple[str, ListItem | None]], lists: List
         if item is None or item.list not in lists:
             continue
         definition = lists.get(item.list)
-        scheme = SCHEMES[definition.scheme]
+        if definition.scheme not in schemes:
+            continue
+        scheme = schemes.get(definition.scheme)
         if not scheme.counts:
-            out[paragraph_id] = Label(scheme.marker(item.level, 0))
+            out[paragraph_id] = Label(scheme.marker((0,) * (item.level + 1)))
             continue
         seen = counters.setdefault(item.list, [0] * (MAX_LIST_LEVEL + 1))
         level = item.level
@@ -241,7 +195,7 @@ def numbering_labels(entries: Iterable[tuple[str, ListItem | None]], lists: List
         for deeper in range(level + 1, MAX_LIST_LEVEL + 1):
             seen[deeper] = 0
         path = tuple(seen[k] or (definition.start if k == 0 else 1) for k in range(level + 1))
-        out[paragraph_id] = Label(scheme.marker(level, seen[level]), path)
+        out[paragraph_id] = Label(scheme.marker(path), path, scheme.number(path))
     return out
 
 
@@ -268,6 +222,12 @@ def _tell(ctx: Context, book: ListBook) -> None:
     ctx.emit(ListsChanged(tuple(book.to_data())))
 
 
+def _scheme_exists(ctx: Context, each: ListDef) -> None:
+    schemes = schemes_of(ctx.model)
+    if each.scheme not in schemes:
+        raise ValueError(f"There is no list scheme {each.scheme!r}; there are {', '.join(schemes.ids())}")
+
+
 def _known(book: ListBook, list_id: str) -> ListDef:
     try:
         return book.get(list_id)
@@ -289,11 +249,14 @@ class CreateList(Command):
 
     @property
     def summary(self) -> str:
-        scheme = SCHEMES.get(self.list.scheme)
-        return f"started a {'numbered' if scheme and scheme.counts else 'bulleted'} list"
+        scheme = builtin_scheme(self.list.scheme)  # a summary is read without the document at hand
+        if scheme is None:
+            return "started a list"
+        return f"started a {'numbered' if scheme.counts else 'bulleted'} list"
 
     def apply(self, ctx: Context) -> Command:
         book = _book(ctx)
+        _scheme_exists(ctx, self.list)
         book.add(self.list)
         _tell(ctx, book)
         return RemoveList(self.list.id)
@@ -328,6 +291,9 @@ class RemoveList(Command):
         in_use = getattr(ctx.model, "list_in_use", None)
         if in_use is not None and in_use(self.list):
             raise ValueError(f"The list {self.list!r} is in use and cannot be taken back")
+        numbered = [style.name for style in getattr(ctx.model, "styles", ()) if style.numbering == self.list]
+        if numbered:
+            raise ValueError(f"The list {self.list!r} numbers the style “{numbered[0]}” and cannot be taken back")
         book.remove(self.list)
         _tell(ctx, book)
         return CreateList(known)
@@ -362,6 +328,7 @@ class ChangeList(Command):
     def apply(self, ctx: Context) -> Command:
         book = _book(ctx)
         _known(book, self.list.id)
+        _scheme_exists(ctx, self.list)
         old = book.replace(self.list)
         _tell(ctx, book)
         return ChangeList(old)
@@ -375,3 +342,74 @@ class ChangeList(Command):
 
     def shifted_by(self, other: Command) -> Command | None:
         return None if isinstance(other, ChangeList) and other.list.id == self.list.id else self
+
+
+# --------------------------------------------------------------------------- items
+class ItemHost(Protocol):
+    """What :class:`SetListItem` needs of a model: any of its paragraphs by id, whatever holds it."""
+
+    lists: ListBook
+
+    def item_of(self, paragraph_id: str) -> ListItem | None:
+        """The paragraph's own item; ``KeyError`` if there is no such paragraph."""
+        ...
+
+    def put_item(self, paragraph_id: str, item: ListItem | None) -> object:
+        """Make the paragraph an item as ``item`` says (``None``: no item), and return the event that tells the
+        clients. The list exists; the host checks the paragraph does."""
+        ...
+
+    def item_regions(self, paragraph_id: str) -> tuple[Region, ...]:
+        """What a change of the paragraph's item holds against others' edits."""
+        ...
+
+
+def _items(ctx: Context) -> ItemHost:
+    model = ctx.model
+    if not all(hasattr(model, name) for name in ("item_of", "put_item", "lists")):
+        raise TypeError(f"The {model.app} model has no list items")
+    return model
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class SetListItem(Command):
+    """Make a paragraph an item of a list, at a level, or (``None``) a plain paragraph again (E9.21). Any paragraph:
+    one of a composes text, or the words of a text box, so a list runs on across the text boxes of a presentation as
+    it does across the paragraphs of a text."""
+
+    kind: ClassVar[str] = "core.SetListItem"
+    paragraph: str
+    item: ListItem | None
+
+    @property
+    def label(self) -> str:
+        return "List"
+
+    @property
+    def summary(self) -> str:
+        return "no longer a list item" if self.item is None else f"list item, level {self.item.level + 1}"
+
+    def apply(self, ctx: Context) -> Command:
+        host = _items(ctx)
+        if self.item is not None:
+            self.item.check()
+            _known(host.lists, self.item.list)
+        old = host.item_of(self.paragraph)
+        ctx.emit(host.put_item(self.paragraph, self.item))
+        return SetListItem(self.paragraph, old)
+
+    def to_data(self) -> dict:
+        return {"paragraph": self.paragraph, "item": None if self.item is None else self.item.to_data()}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> SetListItem:
+        item = data["item"]
+        return cls(data["paragraph"], None if item is None else ListItem.from_data(item))
+
+    def regions(self, model: object) -> tuple[Region, ...]:
+        regions = getattr(model, "item_regions", None)
+        return () if regions is None else regions(self.paragraph)
+
+    def shifted_by(self, other: Command) -> Command | None:
+        return None if other.ends_paragraph(self.paragraph) else self

@@ -30,6 +30,7 @@ from claudia_core import (
     Placed,
     Region,
     Run,
+    SchemeBook,
     SetLanguage,
     StyleBook,
     StyleDef,
@@ -45,6 +46,7 @@ from claudia_core import (
 )
 
 from .anchors import BlockAnchor
+from .events import ItemChanged
 from .page import PageSetup
 from .region import TextRange
 from .spans import TextCommand
@@ -268,7 +270,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 8: paragraphs may be items of lists, which the text holds in a book of its own (E9.21)
     # 11: paragraphs may have names, by their id (D554)
     # 8: object bodies without a description; 9: no rendered containers; 12: styles carry heading levels (E9.22)
-    state_schema: ClassVar[int] = 12
+    # 13: the text holds its numbering schemes; styles may name a list that numbers them (E9.22)
+    state_schema: ClassVar[int] = 13
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -279,6 +282,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         page: PageSetup | None = None,
         language: str | None = None,
         lists: ListBook | None = None,
+        schemes: SchemeBook | None = None,
     ):
         super().__init__()
         self.blocks: list[Block] = blocks if blocks is not None else [Block(FIRST_BLOCK, DEFAULT_STYLE)]
@@ -292,6 +296,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self.language: str | None = language
         #: The lists the items of the text belong to (E9.21); what a list is, not which paragraphs are in it.
         self.lists: ListBook = lists if lists is not None else ListBook()
+        #: How the lists are drawn (E9.22), part of the document; the built-in schemes to start with.
+        self.schemes: SchemeBook = schemes if schemes is not None else SchemeBook()
         self.suggestions: dict[str, Suggestion] = {}
         #: The names of paragraphs, by id (D554). A paragraph id is never given twice, so a name stays with its
         #: paragraph through every edit; one whose paragraph was joined away is kept, unused, until undo brings the
@@ -327,6 +333,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "page": self.page.to_data(),
             "language": self.language,
             "lists": self.lists.to_data(),
+            "schemes": self.schemes.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
             "shapes": self.shapes_to_data(),
             "images": self.images_to_data(),
@@ -348,8 +355,9 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         palette = Palette.from_data(state["palette"]) if "palette" in state else None  # schema 4 and earlier
         page = PageSetup.from_data(state["page"]) if "page" in state else None  # schema 5 and earlier: A4
         lists = ListBook.from_data(state["lists"]) if "lists" in state else None  # schema 7 and earlier
+        schemes = SchemeBook.from_data(state.get("schemes"))  # schema 12 and earlier: the built-in ones
         # schema 6 and earlier: no language
-        model = cls(blocks, styles, palette, page, state.get("language"), lists)
+        model = cls(blocks, styles, palette, page, state.get("language"), lists, schemes)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model.restore_objects(  # schema 3 and earlier had no objects
@@ -486,8 +494,33 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         return any(b.style == style_id for b in self.blocks) or ObjectModel.style_in_use(self, style_id)
 
     def list_in_use(self, list_id: str) -> bool:
-        """Is any paragraph an item of this list? (Asked by the list commands before they take a list back.)"""
-        return any(b.item is not None and b.item.list == list_id for b in self.blocks)
+        """Is any paragraph, or the words of any object, an item of this list? (Asked by the list commands before
+        they take a list back.)"""
+        return any(b.item is not None and b.item.list == list_id for b in self.blocks) or self.object_list_in_use(
+            list_id
+        )
+
+    # -- list items of any paragraph (claudia_core.ItemHost) ------------------------------------
+    def item_of(self, paragraph_id: str) -> ListItem | None:
+        """The item of a paragraph of the text or of the words of an object."""
+        if paragraph_id in self.objects:
+            return self.object_item(paragraph_id)
+        return self.block(paragraph_id).item
+
+    def put_item(self, paragraph_id: str, item: ListItem | None) -> object:
+        """Make a paragraph, or an object's words, an item; the event that tells the clients."""
+        if paragraph_id in self.objects:
+            return self.put_object_item(paragraph_id, item)
+        self.set_item(paragraph_id, item)
+        return ItemChanged(paragraph_id, item)
+
+    def item_regions(self, paragraph_id: str) -> tuple[Region, ...]:
+        """A paragraph's whole text, or the object; a paragraph that is not (yet) there holds its first character
+        (the inverse of a join sets the item of the paragraph it splits off)."""
+        if paragraph_id in self.objects:
+            return self.selection_of(paragraph_id)
+        block = next((b for b in self.blocks if b.id == paragraph_id), None)
+        return (TextRange(paragraph_id, 0, max(1, 0 if block is None else len(block.text))),)
 
     # -- the shared text structure (step C): the text as a ParagraphHost ---------------------
     def reading_order(self) -> Iterator[Placed]:

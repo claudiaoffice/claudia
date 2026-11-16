@@ -1,5 +1,5 @@
 {
- "version": "0.29.0",
+ "version": "0.30.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -115,6 +115,22 @@
    "summary"
   ]
  },
+ "ChangeScheme": {
+  "class": [
+   "Command"
+  ],
+  "init": "(scheme: 'Scheme') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ChangeScheme'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "ChangeStyle": {
   "class": [
    "Command"
@@ -211,6 +227,7 @@
   "init": "()",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
+   "ends_paragraph": "(self, paragraph_id: 'str') -> 'bool'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Command'",
    "leaves": "(self) -> 'Iterator[Command]'",
    "redacted": "(self) -> 'Command'",
@@ -294,6 +311,21 @@
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'CreateList'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "CreateScheme": {
+  "class": [
+   "Command"
+  ],
+  "init": "(scheme: 'Scheme') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'CreateScheme'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -604,6 +636,9 @@
  "FORMAT": {
   "value": "1"
  },
+ "FORMATS": {
+  "value": "('decimal', 'lower-alpha', 'upper-alpha', 'lower-roman', 'upper-roman', 'bullet', 'none')"
+ },
  "Facet": {
   "class": [
    "object"
@@ -810,6 +845,18 @@
    "label"
   ]
  },
+ "ItemHost": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "item_of": "(self, paragraph_id: 'str') -> 'ListItem | None'",
+   "item_regions": "(self, paragraph_id: 'str') -> 'tuple[Region, ...]'",
+   "put_item": "(self, paragraph_id: 'str', item: 'ListItem | None') -> 'object'"
+  },
+  "properties": []
+ },
  "KINDS": {
   "value": "{'paragraph': (Facet(name='text', properties=('font-family', 'font-size', 'font-weight', 'font-style', 'text-decoration', 'color', 'letter-spacing', 'word-spacing')), Facet(name='paragraph', properties=('text-align', 'line-height', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'hyphens')), Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space'))), 'box': (Facet(name='box', properties=('background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top', 'border-right', 'border-bottom', 'border-left', 'vertical-align', 'white-space')),), 'outline': (Facet(name='outline', properties=('fill', 'stroke', 'stroke-width')),)}"
  },
@@ -825,7 +872,7 @@
   "class": [
    "object"
   ],
-  "init": "(marker: 'str', path: 'tuple[int, ...] | None' = None) -> None",
+  "init": "(marker: 'str', path: 'tuple[int, ...] | None' = None, number: 'str | None' = None) -> None",
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
@@ -858,6 +905,21 @@
   "init": "(...)",
   "methods": {},
   "properties": []
+ },
+ "LevelFormat": {
+  "class": [
+   "object"
+  ],
+  "init": "(format: 'str' = 'decimal', bullet: 'str' = '', before: 'str' = '', after: 'str' = '', from_level: 'int' = 0) -> None",
+  "methods": {
+   "check": "(self, level: 'int') -> 'None'",
+   "counter": "(self, number: 'int') -> 'str'",
+   "from_data": "(data: 'dict') -> 'LevelFormat'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "counts"
+  ]
  },
  "Line": {
   "class": [
@@ -1012,6 +1074,9 @@
    "summary"
   ]
  },
+ "NO_NUMBERING": {
+  "value": "'none'"
+ },
  "OBJECT_KINDS": {
   "value": "('text', 'shape', 'image', 'diagram', 'rendered')"
  },
@@ -1062,11 +1127,14 @@
    "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
    "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",
    "names_in_use": "(self) -> 'list[str]'",
+   "object_item": "(self, object_id: 'str') -> 'ListItem | None'",
+   "object_list_in_use": "(self, list_id: 'str') -> 'bool'",
    "objects_changed": "(self, container: 'str', *, changed: 'tuple[VisualObject[A], ...]' = (), removed: 'tuple[str, ...]' = ()) -> 'ObjectsChanged'",
    "objects_on": "(self, container: 'str') -> 'list[VisualObject[A]]'",
    "objects_to_data": "(self) -> 'list[dict]'",
    "open_container": "(self, container: 'str') -> 'None'",
    "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
+   "put_object_item": "(self, object_id: 'str', item: 'ListItem | None') -> 'ObjectsChanged'",
    "rename_thing": "(self, ctx: 'Context', thing_id: 'str', name: 'str') -> 'tuple[str, tuple[Command, ...]]'",
    "renderings_to_data": "(self) -> 'list[dict]'",
    "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",
@@ -1352,11 +1420,28 @@
   "init": "(id: 'str') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
+   "ends_paragraph": "(self, paragraph_id: 'str') -> 'bool'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RemoveObject'",
    "redacted": "(self) -> 'Command'",
    "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RemoveScheme": {
+  "class": [
+   "Command"
+  ],
+  "init": "(scheme: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RemoveScheme'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -1572,9 +1657,6 @@
   "methods": {},
   "properties": []
  },
- "SCHEMES": {
-  "value": "{'bullets': Scheme(id='bullets', name='Bullets', kind='bullet', indent=1.6, gap=0.25), 'numbers': Scheme(id='numbers', name='Numbers', kind='number', indent=1.6, gap=0.25)}"
- },
  "SINE_MILLIONTHS": {
   "value": "(0, 17452, 34899, 52336, 69756, 87156, 104528, 121869, 139173, 156434, 173648, 190809, 207912, 224951, 241922, 258819, 275637, 292372, 309017, 325568, 342020, 358368, 374607, 390731, 406737, 422618, 438371, 453990, 469472, 484810, 500000, 515038, 529919, 544639, 559193, 573576, 587785, 601815, 615661, 629320, 642788, 656059, 669131, 681998, 694658, 707107, 719340, 731354, 743145, 754710, 766044, 777146, 788011, 798636, 809017, 819152, 829038, 838671, 848048, 857167, 866025, 874620, 882948, 891007, 898794, 906308, 913545, 920505, 927184, 933580, 939693, 945519, 951057, 956305, 961262, 965926, 970296, 974370, 978148, 981627, 984808, 987688, 990268, 992546, 994522, 996195, 997564, 998630, 999391, 999848, 1000000)"
  },
@@ -1596,14 +1678,46 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', name: 'str', kind: 'str', indent: 'float' = 1.6, gap: 'float' = 0.25) -> None",
+  "init": "(id: 'str', name: 'str', kind: 'str', levels: 'tuple[LevelFormat, ...]' = <factory>, indent: 'float' = 1.6, gap: 'float' = 0.25) -> None",
   "methods": {
-   "marker": "(self, level: 'int', number: 'int') -> 'str'",
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'Scheme'",
+   "level": "(self, level: 'int') -> 'LevelFormat'",
+   "marker": "(self, path: 'tuple[int, ...]') -> 'str'",
+   "number": "(self, path: 'tuple[int, ...]') -> 'str'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
    "counts"
   ]
+ },
+ "SchemeBook": {
+  "class": [
+   "object"
+  ],
+  "init": "(schemes: 'Iterable[Scheme] | None' = None)",
+  "methods": {
+   "add": "(self, each: 'Scheme') -> 'None'",
+   "drawing": "(self, levels: 'Mapping[int, LevelFormat]', counts: 'bool', name: 'str | None' = None) -> 'str | None'",
+   "from_data": "(items: 'Iterable[dict] | None') -> 'SchemeBook'",
+   "get": "(self, scheme_id: 'str') -> 'Scheme'",
+   "ids": "(self) -> 'list[str]'",
+   "remove": "(self, scheme_id: 'str') -> 'Scheme'",
+   "replace": "(self, each: 'Scheme') -> 'Scheme'",
+   "to_data": "(self) -> 'list[dict]'",
+   "unique_id": "(self) -> 'str'"
+  },
+  "properties": []
+ },
+ "SchemesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(schemes: 'tuple[dict, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "SetHeadingLevel": {
   "class": [
@@ -1629,6 +1743,23 @@
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetLanguage'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetListItem": {
+  "class": [
+   "Command"
+  ],
+  "init": "(paragraph: 'str', item: 'ListItem | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetListItem'",
+   "regions": "(self, model: 'object') -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -1717,6 +1848,22 @@
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetSnap'",
    "redacted": "(self) -> 'Command'",
    "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetStyleNumbering": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'str', numbering: 'str | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetStyleNumbering'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -1853,6 +2000,7 @@
    "ids": "(self) -> 'list[str]'",
    "name_taken": "(self, name: 'str', *, besides: 'str | None' = None) -> 'bool'",
    "number_format": "(self, style_id: 'str') -> 'str | None'",
+   "numbering": "(self, style_id: 'str') -> 'str | None'",
    "provisional_name": "(self, parent_id: 'str') -> 'str'",
    "remove": "(self, style_id: 'str') -> 'StyleDef'",
    "rename": "(self, style_id: 'str', name: 'str', *, to_name: 'bool' = False) -> 'None'",
@@ -1860,6 +2008,7 @@
    "set_css": "(self, style_id: 'str', css: 'dict[str, str]') -> 'None'",
    "set_heading_level": "(self, style_id: 'str', level: 'HeadingLevel') -> 'None'",
    "set_number_format": "(self, style_id: 'str', format_id: 'str | None') -> 'None'",
+   "set_numbering": "(self, style_id: 'str', numbering: 'str | None') -> 'None'",
    "to_data": "(self) -> 'list[dict]'",
    "unique_id": "(self, base: 'str') -> 'str'",
    "views": "(self, colours: 'Mapping[str, str] | None' = None) -> 'list[dict]'"
@@ -1870,7 +2019,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph', number_format: 'str | None' = None, heading_level: 'HeadingLevel' = None) -> None",
+  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph', number_format: 'str | None' = None, heading_level: 'HeadingLevel' = None, numbering: 'str | None' = None) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'StyleDef'",
    "to_data": "(self) -> 'dict'"
@@ -1914,7 +2063,8 @@
   ],
   "init": "(host: 'ParagraphHost') -> 'None'",
   "methods": {
-   "effective_item": "(self, paragraph: 'Paragraph') -> 'ListItem | None'",
+   "effective_item": "(self, placed: 'Placed') -> 'ListItem | None'",
+   "items": "(self) -> 'Iterator[tuple[str, ListItem | None]]'",
    "labels": "(self) -> 'dict[str, Label]'",
    "reading_order": "(self) -> 'Iterator[Placed]'",
    "settle": "(self, ctx: 'Emitter') -> 'None'"
@@ -2020,6 +2170,12 @@
  "builtin_palette": {
   "function": "() -> 'Palette'"
  },
+ "builtin_scheme": {
+  "function": "(scheme_id: 'str') -> 'Scheme | None'"
+ },
+ "builtin_schemes": {
+  "function": "() -> 'tuple[Scheme, ...]'"
+ },
  "check": {
   "function": "(manifest: 'Manifest', env: 'Environment') -> 'RequirementReport'"
  },
@@ -2087,7 +2243,7 @@
   "function": "(x: 'int', y: 'int', w: 'int', h: 'int', rotation: 'int', width: 'int', height: 'int') -> 'tuple[int, int] | None'"
  },
  "numbering_labels": {
-  "function": "(entries: 'Iterable[tuple[str, ListItem | None]]', lists: 'ListBook') -> 'dict[str, Label]'"
+  "function": "(entries: 'Iterable[tuple[str, ListItem | None]]', lists: 'ListBook', schemes: 'SchemeBook') -> 'dict[str, Label]'"
  },
  "object_texts": {
   "function": "(model: 'ObjectModel', containers: 'Iterable[str]', sources: 'Iterable[str]' = ('box', 'label', 'description')) -> 'Iterator[ObjectText]'"

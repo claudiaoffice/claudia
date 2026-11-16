@@ -25,7 +25,8 @@ import { galleryFor } from '~/lib/style-host'
 import { describeShortcut } from '~/lib/descriptions'
 import { chordLabel, hintOf, searchShortcuts } from '~/lib/shortcuts'
 import { canTurn } from '~/lib/turning'
-import { formatItems, noLists } from '~/lib/format-menu'
+import { formatItems, type ListMenu } from '~/lib/format-menu'
+import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
 import { useGrid } from '~/lib/grid'
 import { marksFor, slideSearchHost } from '~/lib/slide-search-host'
 import { useSearch } from '~/lib/use-search'
@@ -58,7 +59,7 @@ const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
 /** The modal layer: creates had only the image dialog before the styles arrived. */
-const dialog = ref<null | 'styles' | 'colours' | 'rename'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'rename' | 'list-start' | 'numbering'>(null)
 const EXPORT_FORMATS = [
   { value: 'pptx', get label() { return t('PowerPoint presentation (.pptx)') } },
   { value: 'odp', get label() { return t('OpenDocument presentation (.odp)') } },
@@ -201,8 +202,56 @@ function styleItems() {
     look: { disabled: !body, open: () => canvas.value?.openStyleMenu() },
     allStyles: () => (dialog.value = 'styles'),
     colours: () => (dialog.value = 'colours'),
-    list: noLists(t('Text boxes hold no lists yet')),
+    list: listMenu(),
   })
+}
+
+/** Format ▸ List ▸ for the selected text box or shape (E9.21, E9.22): its words are an item of a list that runs on from
+ * box to box across the slides, and Number All Slide Titles numbers the slide title style. */
+function listMenu(): ListMenu {
+  const scheme = session.selectedScheme()
+  const item = session.selectedItem()
+  const styles = Object.values(state.styles)
+  return {
+    readonly: readonly.value,
+    current: scheme === 'bullets' || scheme === 'numbers' ? scheme : null,
+    canNest: !!item,
+    canContinue: session.canContinue(),
+    bulleted: () => void session.makeList('bullets'),
+    numbered: () => void session.makeList('numbers'),
+    continueList: () => void session.continueList(),
+    startAt: () => (dialog.value = 'list-start'),
+    indent: () => void session.indent(1),
+    outdent: () => void session.indent(-1),
+    headings: {
+      label: t('Number All Slide Titles'),
+      on: headingsNumbered(styles),
+      possible: hasHeadingStyles(styles),
+      toggle: () => void session.numberHeadings(!headingsNumbered(styles)),
+    },
+    allNumbering: () => (dialog.value = 'numbering'),
+  }
+}
+
+/** What the numbering manager works with (E9.22): the presentation's books, and the session's requests. */
+const numberingHost = computed<NumberingHost>(() => ({
+  schemes: state.schemes,
+  lists: state.lists,
+  styles: Object.values(state.styles),
+  readOnly: readonly.value,
+  newScheme: (like, name) => session.newScheme(like, name),
+  changeScheme: (scheme) => session.changeScheme(scheme),
+  resetScheme: (scheme) => session.resetScheme(scheme),
+  removeScheme: (scheme) => session.removeScheme(scheme),
+}))
+
+const listStart = () => String(state.lists.find((l) => l.id === session.selectedItem()?.list)?.start ?? 1)
+function startListAt(value: string) {
+  const start = Number.parseInt(value, 10)
+  if (Number.isInteger(start) && start >= 1 && start <= 999999) {
+    void session.startAt(start)
+    dialog.value = null
+  }
 }
 
 /** Put the colours the document started with back, as the server itself states them (no second copy to drift). */
@@ -411,6 +460,8 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
       <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename slide')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.selectedScheme() ?? undefined" @close="dialog = null" />
+      <PromptDialog v-if="dialog === 'list-start'" :title="t('Start numbering at')" :label="t('First number')" :ok="t('Start')" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
     <template #footer>

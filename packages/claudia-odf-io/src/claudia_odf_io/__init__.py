@@ -10,6 +10,7 @@ package    new_package, update_manifest, problems -- a package from its parts, i
 language   default_style_xml, read_language, patch_language -- the language of a file, in its default style
 report     Loss, LossLog, unwritten_changes -- what could not be kept, as a list, and what a writer left out
 transform  inches, transform_of, turned_box, angle_of -- lengths of the format and how a drawing object is turned
+lists      list_style, level_style, read_levels -- the levels of a numbering scheme as list styles say them (E9.22)
 """
 
 from ._version import __version__
@@ -21,6 +22,14 @@ from .language import (
     patch_language,
     read_language,
 )
+from .lists import (
+    LEVEL_BULLET,
+    LEVEL_NUMBER,
+    OUTLINE_LEVEL,
+    level_style,
+    list_style,
+    read_levels,
+)
 from .meta import GENERATOR, DocumentInfo, new_meta, odf_date, read_info, update_meta, update_package_meta
 from .names import NS, decode_style_name, encode_style_name, local_name, qname
 from .package import MIME, VERSION, new_package, problems, read_manifest, update_manifest
@@ -31,6 +40,12 @@ from .splice import OdfError, Span, XmlPart
 from .transform import angle_of, inches, transform_of, turned_box
 
 __all__ = [
+    "LEVEL_BULLET",
+    "LEVEL_NUMBER",
+    "OUTLINE_LEVEL",
+    "level_style",
+    "list_style",
+    "read_levels",
     "GENERATOR",
     "MIME",
     "NOT_WRITTEN",

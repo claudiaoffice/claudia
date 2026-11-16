@@ -620,7 +620,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
           </svg>
           <div class="words" :style="textStyle(o)">
             <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">{{ t('Double-click to type') }}</span>
-            <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" />
+            <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" :marker="session.markOf(o.id)?.marker" :indent="session.markOf(o.id)?.indent" />
           </div>
           <textarea
             v-if="editing?.id === o.id"

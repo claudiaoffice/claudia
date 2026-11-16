@@ -4,6 +4,37 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.30.0] - 2026-11-16
+
+Numbering schemes as document data, numbered headings, list items on any paragraph (step D of
+`claudiaoffice-log/notes/text-structure-across-apps.md`, E9.22).
+
+### Added
+- `claudia_core.schemes`: `LevelFormat` (a level's number format or bullet, the text before and after it, and the
+  first level whose counter it shows), `Scheme` (nine levels, an indent and a gap), `SchemeBook` (what a model holds as
+  `schemes`; a new book has the built-in `bullets`, `numbers` and the new `chapters`, 1, 1.1, 1.1.1), `builtin_schemes`,
+  `builtin_scheme`, `FORMATS`, and the commands `CreateScheme`, `ChangeScheme`, `RemoveScheme` (refused while a list
+  uses the scheme) with the event `SchemesChanged` (wire type `schemes`). `SchemeBook.drawing` finds or makes the scheme
+  that draws some levels, as a file's list is read.
+- `StyleDef.numbering` (a list id, `NO_NUMBERING` or `None` as the parent) and `StyleBook.numbering`, `StyleBook.version`;
+  `StyleBook.views` sends `numbered`. `SetStyleNumbering` numbers a heading style in a list.
+- `SetListItem` (`core.SetListItem`, moved from `claudia-composes`): any paragraph becomes a list item, a paragraph of a
+  text or the words of an object; the model says how through `ItemHost` (`item_of`, `put_item`, `item_regions`).
+  `ObjectModel.object_item`, `put_object_item` and `object_list_in_use` do it for the words of objects.
+- `Command.ends_paragraph`: whether a command makes a paragraph part of another or takes it away (a join, removing an
+  object), so that an item set on it cannot be undone past it.
+- `Label.number`: the trail a reference prints ("2.a"); the wire form of a label has `number`.
+- `TextStructure.items()` and effective items: a paragraph of the main text whose style gives a heading level of 1 or
+  more and names a list is an item of that list at the level below its heading level, unless it has an item of its own.
+  `ParagraphHost` has `schemes`; the labels are worked out again when the styles or the schemes change too.
+
+### Changed
+- **Breaking:** `SCHEMES` and `lists.Scheme` are gone: the schemes are the document's (`SchemeBook`).
+  `numbering_labels(entries, lists, schemes)` takes the scheme book. `ListDef.check` checks the scheme's id only; that
+  the scheme exists is checked by `CreateList` and `ChangeList` against the model's `schemes`, which a model that
+  holds lists now needs. `TextStructure.effective_item` takes a `Placed`.
+- `RemoveList` is refused while a style is numbered in the list.
+
 ## [0.29.0] - 2026-11-16
 
 The text structure every app shares (step C of `claudiaoffice-log/notes/text-structure-across-apps.md`).

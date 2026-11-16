@@ -35,7 +35,7 @@ from .assets import MAX_ALT_CHARS, ImageAsset, ImageImport
 from .commands import Batch, Command, CommandRegistry, core_commands
 from .facets import SLOTS, fits
 from .names import clean_name, name_key, name_problem
-from .paragraphs import Paragraph
+from .paragraphs import ListItem, Paragraph
 from .renderings import RenderedDefinition
 from .shapes import ShapeDefinition
 
@@ -653,6 +653,32 @@ class ObjectModel[A: Anchor]:
         """Does any object have this style, for itself or for its words? (Asked by the core style commands before
         they take a style back.)"""
         return any(style_id in object_styles(obj.body) for obj in self.objects.values())
+
+    # -- list items (E9.21, step D): the words of an object may be an item of a list ------------------
+    def _words(self, object_id: str) -> Paragraph:
+        paragraph = self.get_object(object_id).body.paragraph
+        if paragraph is None:
+            raise ValueError("an image carries no text")
+        return paragraph
+
+    def object_item(self, object_id: str) -> ListItem | None:
+        """The list item the words of this object are (an object has one paragraph, D181)."""
+        return self._words(object_id).item
+
+    def put_object_item(self, object_id: str, item: ListItem | None) -> ObjectsChanged:
+        """Make the words of this object an item as ``item`` says (``None``: none); the event tells the clients."""
+        new = self.get_object(object_id).with_body(paragraph=self._words(object_id).with_item(item))
+        self.replace_object(new)
+        return self.objects_changed(new.container, changed=(new,))
+
+    def object_list_in_use(self, list_id: str) -> bool:
+        """Are the words of any object an item of this list?"""
+        return any(
+            obj.body.paragraph is not None
+            and obj.body.paragraph.item is not None
+            and obj.body.paragraph.item.list == list_id
+            for obj in self.objects.values()
+        )
 
     # -- shapes ------------------------------------------------------------------
     def define_shape(self, shape: ShapeDefinition) -> None:
@@ -1542,6 +1568,9 @@ class RemoveObject(Command):
     @classmethod
     def from_data(cls, data: dict, registry: CommandRegistry) -> RemoveObject:
         return cls(data["id"])
+
+    def ends_paragraph(self, paragraph_id: str) -> bool:
+        return paragraph_id == self.id  # an object's words are the paragraph with its id
 
     def regions(self, model: object) -> tuple[ObjectSet, ...]:
         return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()

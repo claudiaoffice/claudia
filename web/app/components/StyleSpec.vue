@@ -16,6 +16,7 @@ import { SIDES, facetsOfSlot, type Side, type StyleEditor, type StyleHost } from
 import { useI18n } from '~/lib/i18n'
 import { goToThis, thisOnly } from '~/lib/noun-phrases'
 import { headingChoices, headingSetting, settingValue } from '~/lib/heading-level'
+import { numberingChoices, numberingValue } from '~/lib/numbering'
 
 const { t } = useI18n()
 
@@ -91,6 +92,17 @@ const unreadable = computed(() => {
 const headings = computed(() => (current.value && props.host.setHeadingLevel && current.value.kind === 'paragraph' ? headingChoices(current.value, props.host.styles) : null))
 async function setHeading(value: string) {
   if (current.value && props.host.setHeadingLevel) await run(props.host.setHeadingLevel(current.value.id, headingSetting(value)))
+}
+
+/** Its numbering (E9.22): for a style that gives a heading level of 1 or more, in a host whose paragraphs can be
+ *  numbered. The lists come from the document; Number Headings and All Numbering make and draw them. */
+const numberings = computed(() =>
+  headings.value && props.host.setNumbering && (current.value?.heading ?? 0) >= 1
+    ? numberingChoices(current.value!, props.host.styles, props.host.lists ?? [], props.host.schemes ?? [], t)
+    : null,
+)
+async function setNumbering(value: string) {
+  if (current.value && props.host.setNumbering) await run(props.host.setNumbering(current.value.id, value === 'inherit' ? null : value))
 }
 
 const KEY = 'claudia.style-view'
@@ -198,6 +210,12 @@ const ALIGN = computed(
           <span class="label">{{ t('Heading') }}</span>
           <select :value="settingValue(current!)" :disabled="off" data-testid="heading-level" @change="setHeading(($event.target as HTMLSelectElement).value)">
             <option v-for="choice in headings" :key="choice.value" :value="choice.value">{{ choice.label }}</option>
+          </select>
+        </label>
+        <label v-if="numberings" class="row" :title="t('Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …')">
+          <span class="label">{{ t('Numbering') }}</span>
+          <select :value="numberingValue(current!)" :disabled="off" data-testid="heading-numbering" @change="setNumbering(($event.target as HTMLSelectElement).value)">
+            <option v-for="choice in numberings" :key="choice.value" :value="choice.value">{{ choice.label }}</option>
           </select>
         </label>
       </section>

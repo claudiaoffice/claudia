@@ -574,3 +574,45 @@ describe('tags to things on slides (E5.20, D551)', () => {
     expect(session.isGone('long-gone')).toBe(true)
   })
 })
+
+describe('lists in text boxes (E9.21, E9.22)', () => {
+  const NUMBERS = { id: 'numbers', name: 'Numbers', kind: 'number', indent: 2, gap: 0.25, levels: [] }
+  const item = (id: string, list: string, level = 0) => text(id, { paragraph: { ...paragraph(id, id), item: { list, level } } })
+  async function listed(objects: any[]) {
+    const link = new FakeLink()
+    server(link, objects)
+    link.handlers.lists = () => ({ lists: [{ id: 'l1', scheme: 'numbers', start: 1, name: null }, { id: 'l2', scheme: 'numbers', start: 1, name: null }], schemes: [NUMBERS], labels: { a: { marker: '1.', path: [1], number: '1' }, b: { marker: 'a.', path: [1, 1], number: '1.a' } } })
+    for (const method of ['make_list', 'indent_item', 'continue_list', 'list_start', 'number_headings']) link.handlers[method] = () => ({ revision: 'main:3' })
+    const session = new SlideSession(() => link, { retryDelays: [1] })
+    await session.open()
+    return { link, session, state: session.state }
+  }
+
+  it('loads the lists, the schemes and the markers, and draws a box’s marker moved in by its level', async () => {
+    const { session } = await listed([item('a', 'l1'), item('b', 'l1', 1), text('c')])
+    expect(session.markOf('a')).toEqual({ marker: '1.', indent: 0 })
+    expect(session.markOf('b')).toEqual({ marker: 'a.', indent: 2 })
+    expect(session.markOf('c')).toBeNull()
+  })
+
+  it('follows the labels the server tells, and takes one away when it says none', async () => {
+    const { link, session } = await listed([item('a', 'l1'), text('t')])
+    link.push('labels', { type: 'labels', labels: { a: null, t: { marker: '1', path: [1], number: '1' } } })
+    expect(session.markOf('a')).toBeNull()
+    expect(session.markOf('t')).toEqual({ marker: '1', indent: 0 }) // a numbered title is not moved in
+  })
+
+  it('asks for the selected box to be made an item, and may continue a list only from its first box', async () => {
+    const { link, session, state } = await listed([item('a', 'l1'), item('b', 'l2'), text('c')])
+    state.selected = 'c'
+    expect(session.canList()).toBe(true)
+    await session.makeList('numbers')
+    expect(link.last('make_list')).toMatchObject({ blocks: ['c'], scheme: 'numbers' })
+    state.selected = 'b'
+    expect(session.canContinue()).toBe(true)
+    state.selected = 'a'
+    expect(session.canContinue()).toBe(false)
+    await session.numberHeadings(true)
+    expect(link.last('number_headings')).toMatchObject({ on: true })
+  })
+})

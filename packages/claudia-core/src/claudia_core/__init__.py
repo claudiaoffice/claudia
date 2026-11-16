@@ -19,7 +19,8 @@
                  that can be styled (D303-D305, D312, D315)
     css          the CSS a style may hold: a versioned allow-list, a validator, the text form of a style
     styles       StyleBook and the commands that change it (E1.10)
-    lists        ListDef, ListBook, the schemes and the counting of list items (E9.21)
+    lists        ListDef, ListBook, SetListItem and the counting of list items (E9.21)
+    schemes      Scheme, LevelFormat, SchemeBook: how the markers of a list are drawn, part of the document (E9.22)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
     object_texts the words and descriptions of objects as texts a search can look in and replace, for any app
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
@@ -116,15 +117,15 @@ from .file_pictures import FILE_IMPORTER, IMAGE_STYLE, UNKNOWN_TIME, asset_of, k
 from .history import History, Step
 from .language import LanguageChanged, LanguageError, SetLanguage, normalize_language
 from .lists import (
-    SCHEMES,
     ChangeList,
     CreateList,
+    ItemHost,
     Label,
     ListBook,
     ListDef,
     ListsChanged,
     RemoveList,
-    Scheme,
+    SetListItem,
     numbering_labels,
 )
 from .log import CommandLog, Entry
@@ -222,17 +223,31 @@ from .region import Region, transform
 from .renderings import MAX_RENDERING_SOURCE, RenderedDefinition
 from .replay import replay
 from .revision import MAIN, Branch, Revision
+from .schemes import (
+    FORMATS,
+    ChangeScheme,
+    CreateScheme,
+    LevelFormat,
+    RemoveScheme,
+    Scheme,
+    SchemeBook,
+    SchemesChanged,
+    builtin_scheme,
+    builtin_schemes,
+)
 from .shapes import BOX, FORMAT, ShapeDefinition, ShapeError, parse_shape
 from .store import DocumentStore, MemoryStore
 from .structure import Emitter, LabelsChanged, ParagraphHost, Placed, TextStructure
 from .styles import (
     MAX_HEADING_LEVEL,
+    NO_NUMBERING,
     ChangeStyle,
     CreateStyle,
     HeadingLevel,
     RemoveStyle,
     RenameStyle,
     SetHeadingLevel,
+    SetStyleNumbering,
     StyleBook,
     StyleDef,
     StylesChanged,
@@ -251,6 +266,8 @@ __all__ = [
     "picture_body",
     "MAX_LIST_LEVEL",
     "numbering_labels",
+    "ItemHost",
+    "SetListItem",
     "Scheme",
     "RemoveList",
     "ListsChanged",
@@ -260,7 +277,15 @@ __all__ = [
     "Label",
     "CreateList",
     "ChangeList",
-    "SCHEMES",
+    "FORMATS",
+    "ChangeScheme",
+    "CreateScheme",
+    "LevelFormat",
+    "RemoveScheme",
+    "SchemeBook",
+    "SchemesChanged",
+    "builtin_scheme",
+    "builtin_schemes",
     "__version__",
     "AddObject",
     "ALLOWED_CSS",
@@ -443,6 +468,8 @@ __all__ = [
     "Step",
     "StyleBook",
     "SetHeadingLevel",
+    "SetStyleNumbering",
+    "NO_NUMBERING",
     "Emitter",
     "LabelsChanged",
     "ParagraphHost",

@@ -9,11 +9,13 @@ export interface ListItem {
   list: string
   level: number
 }
-/** What is drawn in front of an item (derived by the server, never typed): a bullet or a number; `path` is the trail of
- * counters ("2.a" is `[2, 1]`), `null` for bullets. */
+/** What is drawn in front of an item or a numbered heading (derived by the server, never typed): a bullet or a number;
+ * `path` is the trail of counters ("2.a" is `[2, 1]`) and `number` what a reference prints ("2.a"), both `null` for
+ * bullets. */
 export interface Label {
   marker: string
   path: number[] | null
+  number?: string | null
 }
 export interface Block {
   id: string
@@ -22,7 +24,7 @@ export interface Block {
   runs: Run[]
   /** Set when the paragraph is a list item. */
   item?: ListItem | null
-  /** Set when it is one and the server has counted it. */
+  /** Set when it is one, or its style numbers it (a numbered heading), and the server has counted it. */
   label?: Label
   /** Its name, when somebody has pointed at it or named it (D554). */
   name?: string

@@ -3,6 +3,16 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.16.0] - 2026-11-16
+
+Lists in text boxes and numbered slide titles (step D, E9.22). State schema 13 → 14 (a snapshot of 13 restores with
+the built-in schemes).
+
+### Added
+- `SlideModel.schemes` (a `claudia_core.SchemeBook`, in the state as `schemes`); `item_of`, `put_item` and
+  `item_regions`: the words of a text box or shape become a list item with `claudia_core.SetListItem`, and the list
+  runs on from box to box across the slides. Numbering the style `slide-title` numbers every slide title.
+
 ## [0.15.0] - 2026-11-16
 
 Lists in a presentation, counted with the structure every app shares (step C, E10.21). State schema 12 → 13 (a

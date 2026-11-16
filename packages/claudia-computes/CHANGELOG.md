@@ -10,6 +10,8 @@ the number formats). Search on claudia-search (SEC-18, CODE-18). Named ranges ar
 state schema 12 → 13.
 
 ### Added
+- The cell styles are `StyleDef`s of `claudia-core` 0.30, which have a `numbering` (always `None` here); the built-in
+  styles' repr shows it, and `RemoveObject` has `ends_paragraph`.
 - The cell styles are `StyleDef`s of `claudia-core` 0.28, which have a `heading_level` (always `None` here: a cell is
   no heading); the built-in styles' repr shows it.
 - `NamedRange.id` (D552): a stable id, `r` + 8 hex digits from the scope and the name for ranges that were defined

@@ -83,6 +83,8 @@ export interface Paragraph {
   style: string
   text: string
   runs: Run[]
+  /** Its place in a list (E9.21): which list and how deep, when it is an item of one. */
+  item?: { list: string; level: number } | null
 }
 
 /** The words of an object, or `''` when it has none — the one place the client decides what an object with no
@@ -112,6 +114,10 @@ export interface StyleDef {
   kind: string
   computed: Record<string, string>
   resolved: Record<string, string>
+  /** The heading level it gives (0 the title, 1 to 9 a level, `null` none) and the list that numbers it (E9.22). */
+  heading?: number | null
+  numbering?: string | null
+  numbered?: string | null
 }
 
 /** One colour of the document's palette: what it means, and the colour it is (D200). */

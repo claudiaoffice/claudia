@@ -647,6 +647,30 @@
                 "label": "Outdent",
                 "role": null,
                 "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>b"
+                ],
+                "checkable": true,
+                "id": "format.number-headings",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Number Headings",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>j"
+                ],
+                "checkable": false,
+                "id": "format.all-numbering",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "All Numbering\u2026",
+                "role": null,
+                "start": false
               }
             ],
             "label": "List"

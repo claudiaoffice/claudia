@@ -1,6 +1,7 @@
 // The style menu is the same in every app (E9.7): it talks to a StyleHost, which says what the thing under the caret is
 // styled with and how to change it. A text is one host (paragraph styles); cells and shapes will be others. Nothing in
 // the menu knows which.
+import type { ListInfo, SchemeInfo } from './numbering'
 import {
   fontSizeOf,
   hasDecoration,
@@ -60,6 +61,11 @@ export interface StyleHost {
   setRole(role: string, colour: string): Promise<boolean>
   /** Make a paragraph style give a heading level (E9.22); only a host whose paragraphs can be headings has it. */
   setHeadingLevel?(style: string, level: number | 'body' | null): Promise<boolean>
+  /** Number a heading style in a list (E9.22; `'none'`: not numbered, `null`: as its parent), and the lists and
+   *  schemes it can choose from; only a host whose paragraphs can be numbered has them. */
+  setNumbering?(style: string, numbering: string | null): Promise<boolean>
+  lists?: ListInfo[]
+  schemes?: SchemeInfo[]
 
   // -- what only some hosts have (cells, today: `computes-cell-style-popover.svg`)
   /** The popover's heading, when the noun alone says too little: “Cells B2:D3”. */

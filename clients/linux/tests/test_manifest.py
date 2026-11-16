@@ -251,6 +251,8 @@ def test_every_app_has_the_list_flyout_of_the_web(app: manifest.Manifest) -> Non
         "format.list-start",
         "format.list-indent",
         "format.list-outdent",
+        "format.number-headings",
+        "format.all-numbering",
     ]
 
 
@@ -270,7 +272,9 @@ def test_every_app_offers_the_same_three_format_actions(app_name: str, request: 
     styles = ["format.apply-style"] + (["format.clear-cell-style"] if app_name == "computes" else [])
     turning = ["format.rotate-right", "format.rotate-left", "format.rotate-by"] if app_name == "creates" else []
     assert [
-        a.id for a in m.menu("Format").all_actions() if not a.id.startswith(("format.list", "format.bul", "format.num"))
+        a.id
+        for a in m.menu("Format").all_actions()
+        if not a.id.startswith(("format.list", "format.bul", "format.num", "format.all-numbering"))
     ] == [
         *styles,
         "format.look",
@@ -499,7 +503,8 @@ def test_each_action_is_carried_out_by_exactly_one_party(app: manifest.Manifest)
 def test_checkable_actions_are_the_view_toggles_and_the_language_picker(app: manifest.Manifest) -> None:
     checkable = {a.id for a in app.actions if a.checkable}
     language_ids = {f"config.language.{tag}" for tag, _label in manifest.LANGUAGES}
-    lists = {"format.bulleted-list", "format.numbered-list"}  # ticked when the paragraphs are that kind of list
+    # ticked when the paragraphs are that kind of list, and while the headings are numbered (E9.22)
+    lists = {"format.bulleted-list", "format.numbered-list", "format.number-headings"}
     if app.app == "composes":
         assert checkable == {"view.authors", "view.panel", "view.dark", "view.page"} | lists | language_ids
     elif app.app == "creates":
@@ -822,3 +827,14 @@ def test_the_gmenu_xml_shows_every_key_whoever_listens_for_it(app: manifest.Mani
     assert shown["file.print"] is not None
     for action in app.actions:
         assert shown[action.id] == (action.accelerators[0] if action.accelerators else None), action.id
+
+
+def test_number_headings_is_called_what_it_does_in_each_app(
+    composes: manifest.Manifest, creates: manifest.Manifest
+) -> None:
+    """E9.22: one action, one key; in a presentation the headings it numbers are the slide titles."""
+    assert composes.action("format.number-headings").label == "Number Headings"
+    assert creates.action("format.number-headings").label == "Number All Slide Titles"
+    for app in (composes, creates):
+        assert app.action("format.number-headings").accelerators == ("<Primary><Alt><Shift>b",)
+        assert app.action("format.all-numbering").accelerators == ("<Primary><Alt><Shift>j",)

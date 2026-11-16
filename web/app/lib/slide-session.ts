@@ -12,6 +12,8 @@ import type { ImageAsset } from './images'
 import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
 import type { PrintSetupData } from '@claudia/layout'
+import type { Label } from './blocks'
+import type { ListInfo, SchemeInfo } from './numbering'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
 // so existing imports of them from this module keep working.
@@ -60,6 +62,12 @@ export interface SlideState extends BaseState {
   /** The language of the presentation (D915, D917), a BCP 47 tag; `null` when not set, `undefined` for a server
    *  that does not know languages. */
   language: string | null | undefined
+  /** The lists the words of text boxes may be items of, and how they are drawn (E9.21, E9.22). */
+  lists: ListInfo[]
+  schemes: SchemeInfo[]
+  /** What is drawn before the words of an object that is a list item or a numbered title, by object id: the server
+   *  counts across the boxes of all slides, in reading order. */
+  labels: Record<string, Label>
 }
 
 export class SlideSession extends BaseSession<SlideState> {
@@ -83,6 +91,9 @@ export class SlideSession extends BaseSession<SlideState> {
       selected: null,
       printSetup: null,
       language: undefined,
+      lists: [],
+      schemes: [],
+      labels: {},
     })
   }
 
@@ -101,16 +112,20 @@ export class SlideSession extends BaseSession<SlideState> {
     const loaded = await Promise.all(
       slides.map((slide) => link.request<{ objects: SlideObject[]; notes?: string; seconds?: number | null }>('slide', { slide: slide.id })),
     )
-    // an older server knows neither: the preview then starts from slide-sized pages and offers no language
-    const [printSetup, language] = await Promise.all([
+    // an older server knows neither: the preview then starts from slide-sized pages and offers no language; nor lists
+    const [printSetup, language, numbering] = await Promise.all([
       link.request<PrintSetupData>('print_setup').catch(() => null),
       link
         .request<{ language: string | null }>('language')
         .then((a) => a.language)
         .catch(() => undefined),
+      link.request<{ lists: ListInfo[]; schemes: SchemeInfo[]; labels: Record<string, Label> }>('lists').catch(() => null),
     ])
     s.printSetup = printSetup
     s.language = language
+    s.lists = numbering?.lists ?? []
+    s.schemes = numbering?.schemes ?? []
+    s.labels = numbering?.labels ?? {}
     s.objects = {}
     s.order = {}
     s.notes = {}
@@ -230,6 +245,18 @@ export class SlideSession extends BaseSession<SlideState> {
       case 'print_setup':
         s.printSetup = data.setup as PrintSetupData
         return true
+      case 'labels':
+        for (const [id, label] of Object.entries(data.labels as Record<string, Label | null>)) {
+          if (label) s.labels[id] = label
+          else delete s.labels[id]
+        }
+        return true
+      case 'lists':
+        s.lists = data.lists as ListInfo[]
+        return true
+      case 'schemes':
+        s.schemes = data.schemes as SchemeInfo[]
+        return true
       case 'language':
         s.language = (data.language as string | null) ?? null
         return true
@@ -343,6 +370,86 @@ export class SlideSession extends BaseSession<SlideState> {
     const ids = this.state.slides.map((slide) => slide.id)
     const times = ids.map((id) => this.state.times[id]).filter((seconds): seconds is number => seconds !== undefined)
     return { seconds: times.reduce((a, b) => a + b, 0), planned: times.length, unplanned: ids.length - times.length }
+  }
+
+  // -- lists in text boxes (E9.21, E9.22). The server counts the items across every box of every slide, in reading order
+  // (slide by slide, bottom to top); what is asked for here is structure, and the markers arrive as `labels` events.
+  /** The words of every object, in the order they are read, by object id: the order lists are counted in. */
+  readingOrder(): string[] {
+    return this.state.slides.flatMap((slide) => this.objectsOn(slide.id).filter((o) => o.paragraph).map((o) => o.id))
+  }
+
+  /** The list item the words of the selected object are, or `null`. */
+  selectedItem(): { list: string; level: number } | null {
+    const id = this.state.selected
+    return (id && this.state.objects[id]?.paragraph?.item) || null
+  }
+
+  /** The scheme of the list the selected object's words are an item of, or `null`. */
+  selectedScheme(): string | null {
+    const item = this.selectedItem()
+    return (item && this.state.lists.find((l) => l.id === item.list)?.scheme) ?? null
+  }
+
+  /** Can the selected object's words be made an item: an object with words, and a document I may change? */
+  canList(): boolean {
+    const id = this.state.selected
+    return !this.readOnly && !!id && !!this.state.objects[id]?.paragraph
+  }
+
+  /** May the list of the selected box go on from an earlier one: it is the list's first box, and a box of another
+   *  list of the same scheme is read before it (the server's `continue_list` rule). */
+  canContinue(): boolean {
+    const item = this.selectedItem()
+    const scheme = this.selectedScheme()
+    if (!item || !scheme) return false
+    const order = this.readingOrder()
+    const itemOf = (id: string) => this.state.objects[id]?.paragraph?.item
+    const first = order.findIndex((id) => itemOf(id)?.list === item.list)
+    if (order[first] !== this.state.selected) return false
+    return order.slice(0, first).some((id) => {
+      const other = itemOf(id)
+      return !!other && other.list !== item.list && this.state.lists.find((l) => l.id === other.list)?.scheme === scheme
+    })
+  }
+
+  private async listRequest(method: string, params: Record<string, unknown>): Promise<boolean> {
+    if (this.readOnly) return false
+    return (await this.attempt(method, { ...params, base: this.state.revision })) !== false
+  }
+
+  /** Bullets or numbers for the selected box, or (`null`) none; asking for what it is takes it out of its list. */
+  makeList(scheme: string | null): Promise<boolean> {
+    const id = this.state.selected
+    return id && this.canList() ? this.listRequest('make_list', { blocks: [id], scheme }) : Promise.resolve(false)
+  }
+
+  /** Move the selected box's item one level in (`1`) or out (`-1`). */
+  indent(by: 1 | -1): Promise<boolean> {
+    const id = this.state.selected
+    return id && this.selectedItem() ? this.listRequest('indent_item', { blocks: [id], by }) : Promise.resolve(false)
+  }
+
+  /** Let the list of the selected box go on where the nearest earlier list of its kind ends. */
+  continueList(): Promise<boolean> {
+    const id = this.state.selected
+    return id && this.selectedItem() ? this.listRequest('continue_list', { block: id }) : Promise.resolve(false)
+  }
+
+  /** Number the first level of the selected box's list from `start` on. */
+  startAt(start: number): Promise<boolean> {
+    const item = this.selectedItem()
+    return item ? this.listRequest('list_start', { list: item.list, start }) : Promise.resolve(false)
+  }
+
+  /** What is drawn before the words of an object, and how far its level moves them in (em): its list marker, or the
+   *  number its style gives it (a numbered slide title), which is not moved in. `null` for none. */
+  markOf(id: string): { marker: string; indent: number } | null {
+    const label = this.state.labels[id]
+    if (!label) return null
+    const item = this.state.objects[id]?.paragraph?.item
+    const scheme = item && this.state.schemes.find((x) => x.id === this.state.lists.find((l) => l.id === item.list)?.scheme)
+    return { marker: label.marker, indent: item ? item.level * (scheme?.indent ?? 1.6) : 0 }
   }
 
   /** Write the notes of a slide (D342): one step in the history, for everybody. `""` clears them. */

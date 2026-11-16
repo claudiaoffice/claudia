@@ -5,6 +5,18 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Lists, numbered headings and numbering schemes in composes and creates, one module for both
+  (`claudia_server.structure_methods`, step D, E9.22): `lists` (the lists, the schemes and every label),
+  `make_list`, `indent_item`, `continue_list` and `list_start` on any paragraph id in reading order (in creates the
+  objects whose words they are, so a list runs on across text boxes), `number_headings` (creates: Number All Slide
+  Titles), `new_scheme`, `change_scheme`, `reset_scheme`, `remove_scheme`; `set_style_numbering` in all three apps.
+  `blocks` sends the document's own schemes, each with its `levels`. `PROTOCOL_VERSION` stays: methods were added.
+
+### Removed
+- `claudia_server.composes_lists`: its methods are `structure_methods`'.
+
+
 ### Changed
 - The server's state files (certificate, key, settings, the file store's list) and the fetched hyphenation patterns are
   written with `claudia_file_writer` (CODE-34, D701): ten attempts with waits up to a second on Windows instead of

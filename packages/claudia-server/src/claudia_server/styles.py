@@ -27,6 +27,7 @@ from claudia_core import (
     SetObjectStyle,
     SetParagraphStyle,
     SetRole,
+    SetStyleNumbering,
     StyleBook,
     StyleDef,
     format_css,
@@ -306,6 +307,21 @@ def add_style_methods(
         if own == level and type(own) is type(level):
             return {"revision": _rev(ctx)}
         return _changed(ctx, SetHeadingLevel(style, level), base)
+
+    @table.method("set_style_numbering", "style:str numbering:str? base:revision?", write=True)
+    def _set_style_numbering(ctx, *, style, numbering, base):
+        """Make a heading style number its paragraphs in the list `numbering` (E9.22): a paragraph with the style is
+        an item of that list at the level below its heading level, so all heading styles naming one list count as one
+        outline. `"none"` says not numbered whatever the parent says, null (or leaving it out) as its parent does;
+        `styles` then says the list each style numbers in as `numbered`. `command_error` for a list the document does
+        not have, a style that is not a paragraph style, or no such style. What the style has already is no step."""
+        try:
+            own = _book(ctx).get(style).numbering
+        except KeyError as exc:
+            raise RequestError("command_error", exc.args[0]) from None
+        if own == numbering:
+            return {"revision": _rev(ctx)}
+        return _changed(ctx, SetStyleNumbering(style, numbering), base)
 
     @table.method("check_css", "text:text")
     def _check_css(ctx, *, text):

@@ -5,6 +5,14 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Lists in text boxes and numbered slide titles in pptx and odp (E9.22): pptx writes `a:buAutoNum` (counting on from
+  box to box with `startAt`) or `a:buChar` and reads them back as one list; a marker PowerPoint cannot number (a trail
+  such as 2.1) is reported as `list-look`. odp writes one `text:list` per box, continued across boxes
+  (`text:continue-list`), with a list style of the scheme, and reads it back. Patching a kept pptx writes the
+  markers that changed; a kept odp whose lists changed is written anew.
+
+
 ## [0.6.0] - 2026-11-15
 
 A turned object lies on the slide by its outline (D1021, D1022).

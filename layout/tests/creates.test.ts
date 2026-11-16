@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { gridOf, layoutSlides, type PrintSetupData, type SlideDocument, type SlideObject, slideFontsNeeded } from '../src/apps/creates'
 import type { ShapeOutline, TextStyle } from '../src/apps/objects'
 import { canonicalJson } from '../src/canonical'
-import { type DisplayItem, type GroupItem, walk } from '../src/display/list'
+import { type DisplayItem, type GlyphRun, type GroupItem, walk } from '../src/display/list'
 import type { FontSet } from '../src/fonts/fontset'
 import type { FontResolver } from '../src/fonts/resolve'
 import { writePdf } from '../src/pdf/writer'
@@ -171,5 +171,25 @@ describe('a presentation on pages', () => {
     const again = layoutSlides(deck(4, { layout: 'handouts-4', page: { ...A4, orientation: 'landscape', page_numbers: true } }), fonts, resolver)
     expect(canonicalJson(again.list)).toBe(canonicalJson(out.list))
     expect(sha256(writePdf(again.list.pages, fonts, () => undefined, { title: 'Deck' }))).toBe(sha256(pdf))
+  })
+})
+
+describe('the markers of text boxes on a printed slide (E9.21, E9.22)', () => {
+  it('draws a box’s marker on its first line just before its words, moved in by its level, as the slide does', () => {
+    const plain = text('t1', 's1', 'Gründe')
+    const marked = (indent: number): SlideObject => ({ ...plain, paragraph: { ...plain.paragraph!, mark: { marker: '2.', indent } } })
+    const glyphs = (o: SlideObject) => {
+      const [slide] = slidesOf(layoutSlides({ ...deck(1), slides: [{ id: 's1', objects: [o] }] }, fonts, resolver).list.pages[0]!.items)
+      return [...walk(slide!.items)].filter((i): i is GlyphRun => i.kind === 'glyphs')
+    }
+    const before = glyphs(plain).find((r) => r.text === 'Gründe')!
+    const runs = glyphs(marked(0))
+    const number = runs.find((r) => r.text === '2.')!
+    const words = runs.find((r) => r.text === 'Gründe')!
+    expect(number.y).toBe(words.y)
+    expect(number.x).toBe(before.x)
+    expect(words.x).toBeGreaterThan(number.x)
+    const deeper = glyphs(marked(2)).find((r) => r.text === '2.')!
+    expect(deeper.x).toBeGreaterThan(number.x)
   })
 })

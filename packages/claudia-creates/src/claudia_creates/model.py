@@ -25,12 +25,14 @@ from claudia_core import (
     DocumentModel,
     Label,
     ListBook,
+    ListItem,
     ObjectBody,
     ObjectModel,
     ObjectSet,
     Palette,
     Placed,
     Region,
+    SchemeBook,
     SetLanguage,
     StyleBook,
     TextStructure,
@@ -130,7 +132,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 11: slides have names, in one namespace with the objects (D550)
     # 12: styles carry heading levels; a new presentation has a slide title style (E9.22, E10.21)
     # 13: the presentation holds lists, whose items are the words of text boxes and shapes (step C, E10.21)
-    state_schema: ClassVar[int] = 13
+    # 14: the presentation holds its numbering schemes; styles may name a list that numbers them (step D, E9.22)
+    state_schema: ClassVar[int] = 14
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -158,6 +161,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.palette: Palette = palette if palette is not None else builtin_palette()
         #: The lists the words of the objects may be items of (E10.21). What a list is, not which words are in it.
         self.lists: ListBook = ListBook()
+        #: How the lists are drawn (E9.22), part of the presentation; the built-in schemes to start with.
+        self.schemes: SchemeBook = SchemeBook()
         #: Changes when a slide comes or goes, and so the order the words are read in (step C).
         #: Objects keep their own count.
         self._slide_order = 0
@@ -192,6 +197,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "print_setup": self.print_setup.to_data(),
             "language": self.language,
             "lists": self.lists.to_data(),
+            "schemes": self.schemes.to_data(),
         }
 
     @classmethod
@@ -213,6 +219,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             state["objects"], state["images"], state["shapes"], renderings=state.get("renderings", ())
         )
         model.lists = ListBook.from_data(state.get("lists", ()))  # schema 12 and earlier: no lists
+        model.schemes = SchemeBook.from_data(state.get("schemes"))  # schema 13 and earlier: the built-in ones
         model.structure = TextStructure(model)  # the clients learn the labels with the document
         return model
 
@@ -319,12 +326,20 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
 
     def list_in_use(self, list_id: str) -> bool:
         """Are the words of any object an item of this list? (Asked by the list commands before they take one back.)"""
-        return any(
-            obj.body.paragraph is not None
-            and obj.body.paragraph.item is not None
-            and obj.body.paragraph.item.list == list_id
-            for obj in self.objects.values()
-        )
+        return self.object_list_in_use(list_id)
+
+    # -- list items of the objects' words (claudia_core.ItemHost) ---------------------------------
+    def item_of(self, paragraph_id: str) -> ListItem | None:
+        """The item the words of an object are; an object's paragraph has the object's id."""
+        return self.object_item(paragraph_id)
+
+    def put_item(self, paragraph_id: str, item: ListItem | None) -> object:
+        """Make the words of an object an item; the event that tells the clients."""
+        return self.put_object_item(paragraph_id, item)
+
+    def item_regions(self, paragraph_id: str) -> tuple[Region, ...]:
+        """The object whose words they are."""
+        return self.selection_of(paragraph_id)
 
     def settle(self, ctx) -> None:
         """Tell the clients which labels changed: a text box taken away may renumber every one after it."""

@@ -48,6 +48,8 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Start At… | Ctrl+Shift+Alt+N |  |
 | Format | List ▸ Indent | Tab | the document view or the browser |
 | Format | List ▸ Outdent | Shift+Tab | the document view or the browser |
+| Format | List ▸ Number Headings | Ctrl+Shift+Alt+B |  |
+| Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
@@ -115,6 +117,8 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Start At… | Ctrl+Shift+Alt+N |  |
 | Format | List ▸ Indent | Tab | the document view or the browser |
 | Format | List ▸ Outdent | Shift+Tab | the document view or the browser |
+| Format | List ▸ Number Headings | Ctrl+Shift+Alt+B |  |
+| Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
 | Format | Describe Object… | Ctrl+Alt+D |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
@@ -188,6 +192,8 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Start At… | Ctrl+Shift+Alt+N |  |
 | Format | List ▸ Indent | Tab | the document view or the browser |
 | Format | List ▸ Outdent | Shift+Tab | the document view or the browser |
+| Format | List ▸ Number All Slide Titles | Ctrl+Shift+Alt+B |  |
+| Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
 | Format | Describe Object… | Ctrl+Alt+D |  |
 | Format | Rotate ▸ Rotate Right 90° | Ctrl+Alt+. |  |

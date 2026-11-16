@@ -5,6 +5,14 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Numbering schemes and numbered headings in docx and odt (E9.22): a list is written with the levels of its scheme
+  (Word's number format and level text, OpenDocument's list style), and read back with the document's scheme that draws
+  it, or a new one; only a level the model cannot say is still reported as `list-look`. A numbered heading style is a
+  Word style with `w:numPr` (read back as the style's numbering, not as items) and the odt's `text:outline-style`.
+  `apply_edits_to_docx` and `apply_edits_to_odt` write a changed scheme or heading numbering into the kept file.
+
+
 ### Changed
 - Headings by their level (E9.22): every paragraph style with a heading level of 1 or deeper is a heading in the file
   (`text:h` with its `text:outline-level`, the style's `default-outline-level`; Word's `w:outlineLvl`, from 0), and keeps

@@ -6,7 +6,7 @@ import { computed, nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdat
 import { replayTints } from '~/lib/replay-tint'
 import { colorOf } from '~/lib/people'
 import type { Block, Pos } from '~/lib/blocks'
-import { itemLayout } from '~/lib/list-layout'
+import { headingNumberLayout, itemLayout } from '~/lib/list-layout'
 import { headingAttrs, paragraphCss, semanticTag } from '~/lib/style-css'
 import type { TextSession } from '~/lib/text-session'
 import type { TextMark } from '~/lib/text-search-host'
@@ -35,8 +35,9 @@ const headingOf = (style: string) => headingAttrs(state.styles, style)
 // `resolved`, not `computed`: a palette role is a colour by the time it reaches the page (D200).
 const cssOf = (style: string) => paragraphCss(state.styles.find((s) => s.id === style)?.resolved ?? {})
 
-/** A list item's indent and gap, from the scheme of its list (E9.21); the marker itself is drawn by CSS. */
-const layoutOf = (at: number) => itemLayout(state.blocks, at, state.lists, state.schemes, cssOf(state.blocks[at]?.style ?? '')) ?? {}
+/** A list item's indent and gap, from the scheme of its list (E9.21), or a numbered heading's marker gap (E9.22); the
+ * marker itself is drawn by CSS. */
+const layoutOf = (at: number) => itemLayout(state.blocks, at, state.lists, state.schemes, cssOf(state.blocks[at]?.style ?? '')) ?? (state.blocks[at]?.label ? headingNumberLayout() : {})
 
 // ------------------------------------------------------------------------------ what is drawn
 interface TextSeg {
@@ -478,7 +479,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
           v-for="(block, at) in state.blocks"
           :key="`${block.id}:${tagOf(block.style)}`"
           class="para"
-          :class="[`st-${block.style}`, { item: block.item }, replayClass(block.id)]"
+          :class="[`st-${block.style}`, { item: block.item, numbered: !block.item && block.label }, replayClass(block.id)]"
           :style="{ ...cssOf(block.style), ...layoutOf(at) }"
           v-bind="headingOf(block.style)"
           :data-block="block.id"
@@ -563,6 +564,21 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
   white-space: nowrap;
   font-weight: 400;
   font-style: normal;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* a numbered heading (E9.22): its number, derived from its style, hangs before it in its own look, a marker gap away
+   (as the printed pages draw it). Like a list marker it is never part of the text. */
+.doc :deep(.para.numbered) {
+  position: relative;
+}
+.doc :deep(.para.numbered[data-marker]::before) {
+  content: attr(data-marker);
+  position: absolute;
+  right: 100%;
+  padding-right: var(--marker-gap); /* MARKER_GAP_EM, from `headingNumberLayout` */
+  white-space: nowrap;
   user-select: none;
   pointer-events: none;
 }

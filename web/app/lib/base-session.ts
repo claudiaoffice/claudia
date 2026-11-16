@@ -9,6 +9,7 @@ import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region,
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
 import type { Thing } from './tags'
+import type { SchemeInfo } from './numbering'
 import { nearest, PastLink, step as stepRow, timeline, type Filter, type Item } from './replay'
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
@@ -840,6 +841,40 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   async setRenderingSource(id: string, source: string, params: Record<string, unknown> | null = null): Promise<boolean> {
     if (this.state.renderings[id]?.source === source && !params) return true
     return (await this.attempt('set_rendering_source', { id, source, params, base: this.state.revision })) !== false
+  }
+
+  // ------------------------------------------------------------------------------ numbering (E9.21, E9.22)
+  // The same requests in every app whose paragraphs can be numbered (`claudia_server.structure_methods`); the markers
+  // come back as `labels` events, the lists as `lists` and the schemes as `schemes`.
+  /** Number every heading style (in creates: every slide title), or no longer. */
+  async numberHeadings(on: boolean): Promise<boolean> {
+    return (await this.attempt('number_headings', { on, base: this.state.revision })) !== false
+  }
+
+  /** A new scheme drawn as `like` is, named `name`; its id, or `null` after saying why not. */
+  async newScheme(like: string, name: string): Promise<string | null> {
+    const done = await this.attempt('new_scheme', { like, name, base: this.state.revision })
+    return done === false ? null : (done.scheme as string)
+  }
+
+  /** Give a scheme another definition (as the server sends it). */
+  async changeScheme(scheme: SchemeInfo): Promise<boolean> {
+    return (await this.attempt('change_scheme', { scheme, base: this.state.revision })) !== false
+  }
+
+  /** Draw a built-in scheme as it was built in again. */
+  async resetScheme(scheme: string): Promise<boolean> {
+    return (await this.attempt('reset_scheme', { scheme, base: this.state.revision })) !== false
+  }
+
+  /** Take a scheme no list uses out of the document. */
+  async removeScheme(scheme: string): Promise<boolean> {
+    return (await this.attempt('remove_scheme', { scheme, base: this.state.revision })) !== false
+  }
+
+  /** Number a heading style in a list (`"none"`: not numbered; `null`: as its parent). */
+  async setStyleNumbering(style: string, numbering: string | null): Promise<boolean> {
+    return (await this.attempt('set_style_numbering', { style, numbering, base: this.state.revision })) !== false
   }
 
   async undo(): Promise<boolean> {

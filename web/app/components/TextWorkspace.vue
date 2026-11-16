@@ -9,6 +9,7 @@ import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
 import type { StyleView } from '~/lib/style-css'
 import { formatItems } from '~/lib/format-menu'
+import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
 import {
   askItem,
   clipboardItems,
@@ -46,7 +47,7 @@ const { t, locale, choose } = useI18n()
 
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 /** composes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'styles' | 'colours' | 'list-start'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering'>(null)
 const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = textStyleHost(session)
 const active = ref<string | null>(null)
@@ -219,6 +220,18 @@ function startListAt(value: string) {
 }
 const listStart = () => String(state.lists.find((l) => l.id === session.currentItem()?.list)?.start ?? 1)
 
+/** What the numbering manager works with (E9.22): the text's books, and the session's requests. */
+const numberingHost = computed<NumberingHost>(() => ({
+  schemes: state.schemes,
+  lists: state.lists,
+  styles: state.styles,
+  readOnly: readonly.value,
+  newScheme: (like, name) => session.newScheme(like, name),
+  changeScheme: (scheme) => session.changeScheme(scheme),
+  resetScheme: (scheme) => session.resetScheme(scheme),
+  removeScheme: (scheme) => session.removeScheme(scheme),
+}))
+
 /** What the shared menu items need from this window (`lib/document-menus.ts`). */
 const shared = computed<DocumentMenuContext>(() => ({
   t,
@@ -301,6 +314,13 @@ const menus = computed<Menu[]>(() => {
                 startAt: () => (dialog.value = 'list-start'),
                 indent: () => void session.indent(1),
                 outdent: () => void session.indent(-1),
+                headings: {
+                  label: t('Number Headings'),
+                  on: headingsNumbered(state.styles),
+                  possible: hasHeadingStyles(state.styles),
+                  toggle: () => void session.numberHeadings(!headingsNumbered(state.styles)),
+                },
+                allNumbering: () => (dialog.value = 'numbering'),
               },
             }),
     },
@@ -413,6 +433,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.currentScheme() ?? undefined" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'list-start'" :title="t('Start numbering at')" :label="t('First number')" :ok="t('Start')" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>

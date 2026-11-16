@@ -11,7 +11,7 @@ from dataclasses import replace
 import pytest
 from composes_helpers import SENTENCE
 
-from claudia_composes import BlockAnchor, InsertText, JoinBlocks, SetListItem, SetStyle, SplitBlock, TextModel
+from claudia_composes import BlockAnchor, InsertText, JoinBlocks, SetStyle, SplitBlock, TextModel
 from claudia_core import (
     CreateList,
     Document,
@@ -20,6 +20,7 @@ from claudia_core import (
     MemoryStore,
     ObjectBody,
     RenameThing,
+    SetListItem,
     ThingRenamed,
     VisualObject,
     paragraph_for,

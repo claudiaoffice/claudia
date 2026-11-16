@@ -1,5 +1,5 @@
 {
- "version": "0.6.0",
+ "version": "0.7.0",
  "DocumentInfo": {
   "class": [
    "object"
@@ -10,6 +10,12 @@
  },
  "GENERATOR": {
   "value": "'Claudia'"
+ },
+ "LEVEL_BULLET": {
+  "value": "'{urn:oasis:names:tc:opendocument:xmlns:text:1.0}list-level-style-bullet'"
+ },
+ "LEVEL_NUMBER": {
+  "value": "'{urn:oasis:names:tc:opendocument:xmlns:text:1.0}list-level-style-number'"
  },
  "Loss": {
   "class": [
@@ -41,6 +47,9 @@
  },
  "NS": {
   "value": "{'office': 'urn:oasis:names:tc:opendocument:xmlns:office:1.0', 'style': 'urn:oasis:names:tc:opendocument:xmlns:style:1.0', 'text': 'urn:oasis:names:tc:opendocument:xmlns:text:1.0', 'table': 'urn:oasis:names:tc:opendocument:xmlns:table:1.0', 'draw': 'urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'presentation': 'urn:oasis:names:tc:opendocument:xmlns:presentation:1.0', 'chart': 'urn:oasis:names:tc:opendocument:xmlns:chart:1.0', 'fo': 'urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'svg': 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'number': 'urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0', 'meta': 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0', 'manifest': 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0', 'xlink': 'http://www.w3.org/1999/xlink', 'anim': 'urn:oasis:names:tc:opendocument:xmlns:animation:1.0', 'smil': 'urn:oasis:names:tc:opendocument:xmlns:smil-compatible:1.0', 'calcext': 'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0', 'of': 'urn:oasis:names:tc:opendocument:xmlns:of:1.2', 'dc': 'http://purl.org/dc/elements/1.1/', 'xml': 'http://www.w3.org/XML/1998/namespace'}"
+ },
+ "OUTLINE_LEVEL": {
+  "value": "'{urn:oasis:names:tc:opendocument:xmlns:text:1.0}outline-level-style'"
  },
  "OdfError": {
   "class": [
@@ -116,6 +125,12 @@
  "language_from_parts": {
   "function": "(language: 'str | None', script: 'str | None', country: 'str | None') -> 'str | None'"
  },
+ "level_style": {
+  "function": "(kind: 'str', level: 'LevelFormat', number: 'int', inner: 'str' = '', start: 'int | None' = None) -> 'str'"
+ },
+ "list_style": {
+  "function": "(definition: 'ListDef', scheme: 'Scheme', name: 'str') -> 'bytes'"
+ },
  "local_name": {
   "function": "(tag: 'str') -> 'str'"
  },
@@ -154,6 +169,9 @@
  },
  "read_language": {
   "function": "(styles: 'etree._Element | None') -> 'str | None'"
+ },
+ "read_levels": {
+  "function": "(style: 'etree._Element', tags: 'Iterable[str]') -> 'dict[int, LevelFormat | None]'"
  },
  "read_manifest": {
   "function": "(manifest_xml: 'bytes') -> 'dict[str, str]'"

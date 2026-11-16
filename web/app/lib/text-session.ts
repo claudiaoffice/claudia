@@ -28,6 +28,7 @@ import type { ImageAsset } from './images'
 import type { BlockAnchor, ObjectsEvent, PaletteEvent, StyleModel, VisualObject } from './objects'
 import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
+import type { ListInfo, SchemeInfo } from './numbering'
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
 import { headingLevel, styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
@@ -47,22 +48,7 @@ export interface SuggestionInfo {
   state: string
   outdated: boolean
 }
-/** A list of the document (the server's `lists`): its scheme, the number it starts at and, when it has one, its name. */
-export interface ListInfo {
-  id: string
-  scheme: string
-  start: number
-  name: string | null
-}
-/** How a list looks (the server's `schemes`): whether it counts, how far a level moves the text in and the gap between
- * two items, both in em. */
-export interface SchemeInfo {
-  id: string
-  name: string
-  kind: 'bullet' | 'number'
-  indent: number
-  gap: number
-}
+export type { ListInfo, SchemeInfo } from './numbering'
 export interface Selection {
   anchor: Pos
   focus: Pos
@@ -302,6 +288,9 @@ export class TextSession extends BaseSession<TextState> {
         return true
       case 'lists':
         s.lists = data.lists as ListInfo[]
+        return true
+      case 'schemes':
+        s.schemes = data.schemes as SchemeInfo[]
         return true
       case 'palette':
         // Only the styles are drawn from, and they travel with this event; the roles are kept for the controls

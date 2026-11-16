@@ -3,6 +3,22 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.14.0] - 2026-11-16
+
+Numbered headings and numbering schemes (step D, E9.22). State schema 12 → 13 (a snapshot of 12 restores with the
+built-in schemes).
+
+### Added
+- `TextModel.schemes` (a `claudia_core.SchemeBook`, in the state as `schemes`); `item_of`, `put_item` and
+  `item_regions`: the text is a `claudia_core.ItemHost`, for its own paragraphs and the words of its floating objects.
+- A paragraph whose style is numbered (`StyleDef.numbering`) gets a label like a list item: numbered headings.
+- `JoinBlocks.ends_paragraph`.
+
+### Changed
+- **Breaking:** `SetListItem` is `claudia_core.SetListItem` (`core.SetListItem`, field `paragraph`);
+  `composes.SetListItem` is gone and old histories with it do not replay (the owner's decision of 2026-11-16).
+- `list_in_use` counts the words of floating objects too.
+
 ## [0.13.0] - 2026-11-16
 
 The text counts with the structure every app shares (step C).

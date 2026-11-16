@@ -103,3 +103,27 @@ describe('a list on the page', () => {
     expect(all.map((r) => r.text)).toEqual(['Davor.', 'Noch', 'nicht', 'gezählt.'])
   })
 })
+
+describe('a numbered heading on the page (E9.22)', () => {
+  const doc: TextDocument = {
+    blocks: [
+      { id: 'b1', style: 'heading-1', text: 'Warum', label: { marker: '1' } },
+      { id: 'b2', style: 'body', text: 'Text.' },
+      { id: 'b3', style: 'heading-2', text: 'Wie', label: { marker: '1.1' } },
+    ],
+    styles: STYLES,
+    page: A4,
+    language: 'de',
+  }
+  const all = () => [...walk(layoutText(doc, fonts, resolver, { hyphenator: hyphenatorFor('de') }).list.pages[0]!.items)].filter((r): r is GlyphRun => r.kind === 'glyphs')
+
+  it('hangs its number before the heading, on its first line, and leaves the heading where it was', () => {
+    const runs = all()
+    const at = (text: string) => runs.find((r) => r.text === text)!
+    for (const [number, heading] of [['1', 'Warum'], ['1.1', 'Wie']] as const) {
+      expect(at(number).y).toBe(at(heading).y)
+      expect(at(number).x).toBeLessThan(at(heading).x)
+    }
+    expect(at('Warum').x).toBeCloseTo(at('Text.').x, -1)
+  })
+})

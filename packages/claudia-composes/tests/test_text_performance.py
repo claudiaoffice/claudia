@@ -7,9 +7,9 @@ of a given size with and without list items, or on a small and a large one.
 import gc
 import time
 
-from claudia_composes import InsertText, SetListItem, TextModel
+from claudia_composes import InsertText, TextModel
 from claudia_composes.model import Block
-from claudia_core import Document, ListBook, ListDef, ListItem, MemoryStore
+from claudia_core import Document, ListBook, ListDef, ListItem, MemoryStore, SetListItem
 
 SMALL, LARGE = 2_000, 20_000
 

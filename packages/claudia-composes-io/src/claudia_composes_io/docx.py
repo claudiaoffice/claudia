@@ -18,19 +18,20 @@ custom style. Paragraphs can be changed, added and removed; blocks cannot be mov
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Collection, Iterator, Mapping
 from io import BytesIO
 from itertools import count
 from typing import Any, cast
 
 from docx import Document
+from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.text.paragraph import Paragraph
 
-from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
-from claudia_core import Rasterise, VisualObject
+from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel, builtin_styles
+from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, VisualObject
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
@@ -81,7 +82,8 @@ def text_to_docx(
     write_styles(document, model.styles, names, model.palette.colours())
     by_block = open_replacements(model, track=track_suggestions)
     change_ids, when = count(1), when_made(change_times)
-    lists = ListWriter(document, model.lists)
+    lists = ListWriter(document, model.lists, model.schemes)
+    write_style_numbering(document, model.styles, names, lists)
     pictures = PictureWriter(document, rasterise)
     for block in model.blocks:
         paragraph = document.add_paragraph(style=names.of(block.style))
@@ -272,19 +274,70 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
     document = Document(BytesIO(docx_bytes))
     reading = read_lists(document.paragraphs, numbering_in(document))
     setup = read_setup(document)
+    styles = builtin_styles()
+    numbered: dict[str, str] = {}  # the list a heading style is numbered in, by style id
     blocks = []
     for index, paragraph in enumerate(document.paragraphs, start=1):
         style = paragraph.style
         style_id = _CLAUDIA_STYLE.get(style.name, DEFAULT_STYLE) if style is not None else DEFAULT_STYLE
         text = paragraph.text
         runs = (Run(len(text), None),) if text else ()
-        blocks.append(Block(f"b{index}", style_id, text, runs, reading.items.get(paragraph._p)))
-    model = TextModel(blocks or None, page=setup.page, language=setup.language, lists=reading.book if blocks else None)
+        item = reading.items.get(paragraph._p)
+        if _style_numbers(paragraph._p in reading.styled, styles, style_id, item, numbered):
+            item = None  # the style numbers it: Word's numbered headings
+        blocks.append(Block(f"b{index}", style_id, text, runs, item))
+    model = TextModel(
+        blocks or None,
+        styles,
+        page=setup.page,
+        language=setup.language,
+        lists=reading.book if blocks else None,
+        schemes=reading.schemes,
+    )
+    for style_id, list_id in numbered.items():
+        model.styles.set_numbering(style_id, list_id)
     for picture in file_pictures(document):
         if picture.asset.id not in model.images:
             model.define_image(picture.asset)
         model.insert_object(VisualObject(picture.body, BlockAnchor(f"b{picture.block + 1}", picture.offset)))
     return model
+
+
+def _style_numbers(
+    styled: bool, styles: StyleBook, style_id: str, item: ListItem | None, numbered: dict[str, str]
+) -> bool:
+    """Is ``item``, which a paragraph has from its Word style (``styled``), the numbering of a heading style: the list
+    level below the style's heading level, in the list the style was first seen numbered in? ``numbered`` collects the
+    list of each such style."""
+    if item is None or not styled:
+        return False
+    level = styles.heading_level(style_id)
+    if level is None or level < 1 or item.level != min(level - 1, MAX_LIST_LEVEL):
+        return False
+    return numbered.setdefault(style_id, item.list) == item.list
+
+
+def write_style_numbering(
+    document: Any, book: StyleBook, names: WordNames, lists: ListWriter, only: Collection[str] | None = None
+) -> None:
+    """Number the Word styles of the heading styles that ``book`` numbers (a ``w:numPr`` at the level below the
+    heading level), and say "not numbered" (``w:numId`` 0) for a heading style whose parent is numbered and which is
+    not. ``only``: just these style ids."""
+    word_styles = {s.name: s for s in document.styles if s.type == WD_STYLE_TYPE.PARAGRAPH}
+    for style in book:
+        level = book.heading_level(style.id) if style.kind == "paragraph" else None
+        word = word_styles.get(names.of(style.id)) if style.id in names else None
+        if word is None or not level or (only is not None and style.id not in only):
+            continue
+        properties = word.element.get_or_add_pPr()
+        properties._remove_numPr()
+        numbering = book.numbering(style.id)
+        if numbering is not None and numbering in lists.book:
+            said = properties.get_or_add_numPr()
+            said.get_or_add_ilvl().val = min(level - 1, MAX_LIST_LEVEL)
+            said.get_or_add_numId().val = lists.num_id(numbering)
+        elif style.based_on is not None and book.numbering(style.based_on) is not None:
+            properties.get_or_add_numPr().get_or_add_numId().val = 0
 
 
 def docx_import_losses(docx_bytes: bytes) -> tuple[Loss, ...]:
@@ -439,6 +492,20 @@ def docx_unwritten_changes(model: TextModel, baseline: TextModel | None = None) 
     return text_unwritten_changes(model, baseline, written=DOCX_WRITTEN)
 
 
+def _drawn(model: TextModel, list_id: str) -> tuple[object, object]:
+    """What decides how a list is drawn: its definition and its scheme."""
+    definition = model.lists.get(list_id)
+    return definition, model.schemes.get(definition.scheme) if definition.scheme in model.schemes else None
+
+
+def _numbering(model: TextModel, style_id: str) -> tuple[int | None, str | None]:
+    """What decides how a heading style is numbered in Word: its heading level and the list it is numbered in."""
+    styles = model.styles
+    if styles.get(style_id).kind != "paragraph":
+        return None, None
+    return styles.heading_level(style_id), styles.numbering(style_id)
+
+
 def apply_edits_to_docx(
     original_bytes: bytes,
     baseline: TextModel,
@@ -482,11 +549,16 @@ def apply_edits_to_docx(
     if kept != [block.id for block in held if block.id in current_ids]:
         raise UnsupportedEdit("blocks cannot be moved relative to each other in the file")
     paragraph_of = {block.id: paragraph for block, paragraph in zip(held, paragraphs, strict=True)}
-    lists = ListWriter(document, current.lists, read_lists(paragraphs, numbering_in(document)).num_of)
+    lists = ListWriter(document, current.lists, current.schemes, read_lists(paragraphs, numbering_in(document)).num_of)
     names, owned = _patch_setup(document, baseline, current)
     for list_id in baseline.lists.ids():
-        if list_id in current.lists and current.lists.get(list_id) != baseline.lists.get(list_id):
+        if list_id in current.lists and _drawn(current, list_id) != _drawn(baseline, list_id):
             lists.restyle(list_id)
+    kept_styles = [style.id for style in current.styles if style.id in baseline.styles]
+    renumbered = [i for i in kept_styles if _numbering(current, i) != _numbering(baseline, i)]
+    if renumbered:
+        write_style_numbering(document, current.styles, names, lists, renumbered)
+        owned.add("word/styles.xml")
     replacements = open_replacements(current, track=track_suggestions)
     rewritten = {
         block.id for block in current.blocks if baseline_by_id.get(block.id) != block or block.id in replacements

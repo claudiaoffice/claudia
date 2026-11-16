@@ -4,6 +4,11 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (E9.22)
+- Format ▸ List ▸ Number Headings (creates: Number All Slide Titles, Ctrl+Alt+Shift+B, ticked while they are numbered)
+  and All Numbering… (Ctrl+Alt+Shift+J). The mock-up's keys were taken: Ctrl+Alt+Shift+H is Present from This Slide's,
+  and Ctrl+Alt+E is AltGr+E (€) on Windows.
+
 ### Added (D1024)
 - Format ▸ Rotate ▸ Rotate Right 90° (Ctrl+Alt+.), Rotate Left 90° (Ctrl+Alt+,) and Rotate By… (Ctrl+Alt+Shift+Z) in creates. Ctrl+Alt+Z stays Replay History's, so Rotate By… takes the Shift.
 - The menus of the macOS and Windows clients are generated again from the manifest: they had not been since the Insert menu was added.

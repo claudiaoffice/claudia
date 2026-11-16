@@ -15,7 +15,7 @@ from claudia_odf_io import Loss, unwritten_changes
 from ._pictures import PICTURE_KINDS
 
 #: The facets a converter writes, by the name :func:`facets` gives them.
-_WRITTEN_BY_BOTH = {"blocks", "suggestions", "lists", "page", "language", "styles", "palette", "pictures"}
+_WRITTEN_BY_BOTH = {"blocks", "suggestions", "lists", "schemes", "page", "language", "styles", "palette", "pictures"}
 ODT_WRITTEN: frozenset[str] = frozenset(_WRITTEN_BY_BOTH)
 DOCX_WRITTEN: frozenset[str] = frozenset(_WRITTEN_BY_BOTH)
 

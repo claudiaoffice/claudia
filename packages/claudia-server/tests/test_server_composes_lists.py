@@ -51,8 +51,16 @@ def test_the_methods_are_there():
 def test_blocks_say_nothing_of_lists_where_there_are_none(paper):
     answer = call(paper, "blocks")
     assert answer["lists"] == []
-    assert [s["id"] for s in answer["schemes"]] == ["bullets", "numbers"]
-    assert answer["schemes"][1] == {"id": "numbers", "name": "Numbers", "kind": "number", "indent": 1.6, "gap": 0.25}
+    assert [s["id"] for s in answer["schemes"]] == ["bullets", "numbers", "chapters"]
+    numbers = answer["schemes"][1]
+    assert {k: numbers[k] for k in ("id", "name", "kind", "indent", "gap")} == {
+        "id": "numbers",
+        "name": "Numbers",
+        "kind": "number",
+        "indent": 1.6,
+        "gap": 0.25,
+    }
+    assert numbers["levels"][1] == {"format": "lower-alpha", "bullet": "", "before": "", "after": ".", "from_level": 1}
     assert all("item" not in b and "label" not in b for b in answer["blocks"])
 
 
@@ -61,7 +69,7 @@ def test_an_item_comes_with_its_list_its_level_and_its_label(paper):
     answer = call(paper, "blocks")
     assert answer["lists"] == [{"id": "l1", "scheme": "numbers", "start": 1, "name": None}]
     two = blocks(paper)["b2"]
-    assert two["item"] == {"list": "l1", "level": 0} and two["label"] == {"marker": "1.", "path": [1]}
+    assert two["item"] == {"list": "l1", "level": 0} and two["label"] == {"marker": "1.", "path": [1], "number": "1"}
     assert blocks(paper)["b3"]["label"]["marker"] == "2."
 
 

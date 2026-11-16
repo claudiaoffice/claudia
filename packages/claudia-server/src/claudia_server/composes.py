@@ -10,8 +10,9 @@
   pages themselves are laid out in the client (D901);
 * ``objects``, ``images`` and ``shapes``: the floating objects of the text and what they are drawn with, for the
   print preview, which draws them where they hang (D907);
-* ``make_list``, ``indent_item``, ``continue_list`` and ``list_start``: bullets, numbers and their levels
-  (:mod:`claudia_server.composes_lists`, E9.21);
+* ``lists``, ``make_list``, ``indent_item``, ``continue_list``, ``list_start``, ``number_headings`` and the scheme
+  methods: bullets, numbers, their levels, numbered headings and the numbering manager, the same as in creates
+  (:mod:`claudia_server.structure_methods`, E9.21, E9.22);
 * ``styles``, ``change_style``, ``deviate_style``, ``rename_style`` and ``check_css``: the styles are CSS in the
   document (E1.10, D73). Changing a style changes every paragraph that has it; deviating makes a new style, with a
   provisional name, from an old one and applies it, in one step (D75); naming ends the invitation to name it;
@@ -64,7 +65,6 @@ from claudia_composes import (
     word_window,
 )
 from claudia_core import (
-    SCHEMES,
     Batch,
     Command,
     CreateStyle,
@@ -72,7 +72,6 @@ from claudia_core import (
     validate_css,
 )
 
-from .composes_lists import add_list_methods
 from .composes_search import add_search_methods
 from .composes_words import add_word_methods
 from .i18n import msg
@@ -82,6 +81,7 @@ from .printing import add_language_methods, people_only
 from .protocol import Context, RequestError, core_methods
 from .rendered import add_rendering_methods
 from .replay import add_replay_methods
+from .structure_methods import add_structure_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
 from .thing_names import add_name_methods
@@ -128,7 +128,7 @@ class _BlockTargets:
 
 
 add_style_methods(composes_methods, targets=(_BlockTargets(), OBJECTS))
-add_list_methods(composes_methods)
+add_structure_methods(composes_methods)
 add_name_methods(composes_methods)
 add_replay_methods(composes_methods)
 
@@ -145,16 +145,17 @@ def _blocks(ctx):
     """The paragraphs in order, each as `{id, style, text, runs}` (`runs` are `[length, author, via]`: who wrote
     which stretch), the styles (see `styles`), the lists and the schemes they can have, and the revision they are
     at. A paragraph that is a list item also has `item` (`{list, level}`) and `label` (`{marker, path}`: what is
-    drawn in front of it, derived from the structure, and for numbers the trail of counters); a named one has `name`
-    (D554). `lists` are
-    `{id, scheme, start, name}`; `schemes` are `{id, name, kind, indent, gap}` (`indent` and `gap` in em)."""
+    drawn in front of it, derived from the structure, and for numbers the trail of counters and the number a
+    reference prints); so has a paragraph whose style numbers it (a numbered heading). A named one has `name`
+    (D554). `lists` are `{id, scheme, start, name}`; `schemes` are `{id, name, kind, levels, indent, gap}` (`indent`
+    and `gap` in em; see `lists`)."""
     model = _text(ctx)
     labels = model.labels()
     return {
         "revision": current_revision(ctx),
         "styles": model.styles.views(model.palette.colours()),
         "lists": model.lists.to_data(),
-        "schemes": [scheme.to_data() for scheme in SCHEMES.values()],
+        "schemes": model.schemes.to_data(),
         "blocks": [_block_view(model, b, labels) for b in model.blocks],
     }
 

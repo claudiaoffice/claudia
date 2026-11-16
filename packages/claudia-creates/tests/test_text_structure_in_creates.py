@@ -17,7 +17,10 @@ from claudia_core import (
     ListItem,
     MemoryStore,
     RemoveObject,
+    SetListItem,
+    SetStyleNumbering,
     TextStructure,
+    UndoConflict,
 )
 from claudia_creates import AddSlide, SlideModel
 
@@ -55,7 +58,7 @@ def test_a_list_continues_from_one_text_box_to_the_next_across_slides(deck):
     deck.execute(add(item(text_box("c", slide="s2", text="third"))), author="ann")
     deck.execute(add(item(text_box("b", text="second"), level=1)), author="ann")
     assert markers(deck) == {"a": "1.", "b": "a.", "c": "2."}
-    assert events[-1].to_data()["labels"] == {"b": {"marker": "a.", "path": [1, 1]}}
+    assert events[-1].to_data()["labels"] == {"b": {"marker": "a.", "path": [1, 1], "number": "1.a"}}
     deck.execute(RemoveObject("a"), author="ann")
     assert markers(deck) == {"b": "a.", "c": "1."}
 
@@ -71,3 +74,41 @@ def test_a_snapshot_from_before_lists_opens_without_any():
     state = SlideModel.empty().serialize()
     del state["lists"]
     assert len(SlideModel.restore(state).lists) == 0
+
+
+# ----------------------------------------------------------------------------- step D: items and numbered titles
+def test_the_words_of_a_text_box_become_an_item_and_undo_takes_it_back(deck):
+    deck.execute(add(text_box("a", text="first")), author="ann")
+    deck.execute(add(text_box("b", slide="s2", text="second")), author="ann")
+    deck.execute(SetListItem("a", ListItem("l1")), author="ann")
+    deck.execute(SetListItem("b", ListItem("l1")), author="ann")
+    assert markers(deck) == {"a": "1.", "b": "2."}
+    deck.undo("ann")
+    assert markers(deck) == {"a": "1."}
+    assert deck.model.list_in_use("l1")
+
+
+def test_an_item_cannot_be_undone_once_a_colleague_took_its_text_box_away(deck):
+    deck.execute(add(text_box("a", text="first")), author="ann")
+    deck.execute(SetListItem("a", ListItem("l1")), author="ann")
+    deck.execute(RemoveObject("a"), author="ben")
+    with pytest.raises(UndoConflict):
+        deck.undo("ann")
+
+
+def test_numbering_the_slide_title_style_numbers_every_title_in_slide_order(deck):
+    deck.execute(add(text_box("t2", slide="s2", style="slide-title", text="Results")), author="ann")
+    deck.execute(add(text_box("t1", style="slide-title", text="Why")), author="ann")
+    deck.execute(add(text_box("x", text="body text")), author="ann")
+    deck.execute(CreateList(ListDef("outline", "chapters")), author="ann")
+    deck.execute(SetStyleNumbering("slide-title", "outline"), author="ann")
+    assert markers(deck) == {"t1": "1", "t2": "2"}
+    deck.undo("ann")
+    assert markers(deck) == {}
+
+
+def test_a_snapshot_keeps_the_schemes_and_one_from_before_them_has_the_built_in_ones(deck):
+    state = deck.model.serialize()
+    assert [s["id"] for s in state["schemes"]] == ["bullets", "numbers", "chapters"]
+    del state["schemes"]
+    assert SlideModel.restore(state).schemes.ids() == ["bullets", "numbers", "chapters"]

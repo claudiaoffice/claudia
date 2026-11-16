@@ -7,7 +7,6 @@ from typing import ClassVar, Self
 import pytest
 
 from claudia_core import (
-    SCHEMES,
     ChangeList,
     CommandRegistry,
     CreateList,
@@ -21,12 +20,15 @@ from claudia_core import (
     MemoryStore,
     Paragraph,
     RemoveList,
+    SchemeBook,
     UndoConflict,
+    builtin_scheme,
     encode,
     new_registry,
     numbering_labels,
 )
 
+SCHEMES = SchemeBook()
 BULLETS = ListDef("l1", "bullets")
 NUMBERS = ListDef("l2", "numbers")
 
@@ -41,7 +43,7 @@ def item(list_id: str, level: int = 0) -> ListItem:
 
 def counted(entries: list[tuple[str, ListItem | None]], lists: ListBook | None = None) -> dict[str, str]:
     """Just the markers, by paragraph id."""
-    return {k: v.marker for k, v in numbering_labels(entries, lists or book()).items()}
+    return {k: v.marker for k, v in numbering_labels(entries, lists or book(), SCHEMES).items()}
 
 
 # ----------------------------------------------------------------------------- the item
@@ -85,7 +87,9 @@ def test_a_list_has_a_scheme_a_start_and_may_have_a_name():
 def test_the_book_refuses_what_makes_no_sense():
     b = ListBook()
     with pytest.raises(ValueError, match="scheme"):
-        b.add(ListDef("l1", "roman-spirals"))
+        b.add(ListDef("l1", "Roman spirals"))
+    with pytest.raises(ValueError, match="no list can have"):
+        b.add(ListDef("none", "bullets"))
     with pytest.raises(ValueError, match="id"):
         b.add(ListDef("L 1!", "bullets"))
     with pytest.raises(ValueError, match="start"):
@@ -107,9 +111,10 @@ def test_the_book_round_trips_through_plain_data_and_keeps_its_order():
     assert ListBook.from_data(b.to_data()).ids() == ["l2", "l1"]
 
 
-def test_the_built_in_schemes_are_bullets_and_numbers():
-    assert set(SCHEMES) == {"bullets", "numbers"}
-    assert [SCHEMES["bullets"].marker(level, 1) for level in range(4)] == ["•", "◦", "▪", "•"]
+def test_the_built_in_schemes_are_bullets_numbers_and_chapters():
+    assert SCHEMES.ids() == ["bullets", "numbers", "chapters"]
+    bullets = SCHEMES.get("bullets")
+    assert [bullets.marker((1,) * (level + 1)) for level in range(4)] == ["•", "◦", "▪", "•"]
 
 
 # ----------------------------------------------------------------------------- counting
@@ -131,9 +136,9 @@ def test_numbers_count_per_level_and_a_new_parent_starts_its_children_over():
 
 def test_the_label_carries_the_number_trail_for_references_to_come():
     entries = [("a", item("l2", 0)), ("b", item("l2", 1)), ("c", item("l2", 2))]
-    labels = numbering_labels(entries, book())
-    assert labels["c"] == Label("i.", (1, 1, 1))
-    assert numbering_labels([("x", item("l1"))], book())["x"].path is None
+    labels = numbering_labels(entries, book(), SCHEMES)
+    assert labels["c"] == Label("i.", (1, 1, 1), "1.a.i")
+    assert numbering_labels([("x", item("l1"))], book(), SCHEMES)["x"].path is None
 
 
 def test_an_item_of_another_list_does_not_count_and_does_not_break_the_count():
@@ -160,7 +165,7 @@ def test_the_first_level_starts_at_the_lists_start_value():
 
 def test_a_level_without_a_parent_above_it_starts_at_one_so_nothing_can_fail():
     entries = [("a", item("l2", 2)), ("b", item("l2", 2))]
-    labels = numbering_labels(entries, book())
+    labels = numbering_labels(entries, book(), SCHEMES)
     assert [labels["a"].marker, labels["b"].marker] == ["i.", "ii."]
     assert labels["b"].path == (1, 1, 2)  # the missing parents count as one each
 
@@ -174,11 +179,11 @@ def test_letters_go_on_after_z_and_romans_fall_back_to_digits_after_3999():
     assert counted(deep)["b3"] == "iii."
     big = ListDef("l2", "numbers", 4000)
     assert counted([("a", item("l2", 2))], book(big))["a"] == "i."  # level 2 restarts at one, not at `start`
-    assert SCHEMES["numbers"].marker(2, 4000) == "4000."
+    assert builtin_scheme("numbers").marker((1, 1, 4000)) == "4000."
 
 
 def test_an_item_of_a_list_the_book_does_not_have_is_left_without_a_label():
-    assert numbering_labels([("a", item("ghost"))], book()) == {}
+    assert numbering_labels([("a", item("ghost"))], book(), SCHEMES) == {}
 
 
 # ----------------------------------------------------------------------------- commands
@@ -190,6 +195,7 @@ class Listed(DocumentModel):
 
     def __init__(self):
         self.lists = ListBook()
+        self.schemes = SchemeBook()
         self.in_use: set[str] = set()
 
     @classmethod
@@ -280,6 +286,7 @@ def test_undo_goes_through_when_a_colleague_changed_another_list(paper):
 def test_the_history_says_what_happened():
     assert CreateList(ListDef("l2", "numbers")).summary == "started a numbered list"
     assert CreateList(ListDef("l1", "bullets")).summary == "started a bulleted list"
+    assert CreateList(ListDef("l1", "scheme-3")).summary == "started a list"
     assert ChangeList(ListDef("l2", "numbers", 3)).summary == "changed the list l2"
     assert RemoveList("l2").summary == "took back the list l2"
 

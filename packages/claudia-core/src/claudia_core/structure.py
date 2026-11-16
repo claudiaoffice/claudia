@@ -6,15 +6,18 @@ worked out here, once: which list items count together and so what each one's la
 be told about it.
 
 * A :class:`ParagraphHost` is the one thing an app writes for itself: its paragraphs in the order they are read
-  (:class:`Placed`), its style book and its list book, and a ``structure_version`` that changes whenever that order or
-  a paragraph's place in a list may have changed (an item set, a paragraph split or joined, an object added or taken
-  away, a slide removed). Typing changes none of it.
+  (:class:`Placed`), its books of styles, lists and schemes, and a ``structure_version`` that changes whenever that
+  order or a paragraph's place in a list may have changed (an item set, a paragraph split or joined, an object added
+  or taken away, a slide removed). Typing changes none of it.
 * A :class:`TextStructure` belongs to one model. It counts the items in reading order with
-  :func:`~claudia_core.numbering_labels`, keeps the answer until the structure or the lists change, and in ``settle``
-  tells the clients the labels that differ from what they were told (:class:`LabelsChanged`).
+  :func:`~claudia_core.numbering_labels`, keeps the answer until the structure, the styles, the lists or the schemes
+  change, and in ``settle`` tells the clients the labels that differ from what they were told (:class:`LabelsChanged`).
+* A paragraph's **effective item** is its own item, else the one its style gives it (step D, numbered headings): a
+  style with a heading level of 1 or more that names a list makes its paragraphs items of that list, at the level
+  below their heading level. Only paragraphs of the main text get one: words floating beside a text are no headings.
 
-Steps D and later add to this class what else is derived from the structure: an item a paragraph gets from its style
-(numbered headings), the outline, the entries of a table of contents and what a reference shows.
+Later steps add to this class what else is derived from the structure: the outline, the entries of a table of
+contents and what a reference shows.
 """
 
 from __future__ import annotations
@@ -24,7 +27,8 @@ from dataclasses import dataclass
 from typing import NamedTuple, Protocol
 
 from .lists import Label, ListBook, numbering_labels
-from .paragraphs import ListItem, Paragraph
+from .paragraphs import MAX_LIST_LEVEL, ListItem, Paragraph
+from .schemes import SchemeBook
 from .styles import StyleBook
 
 
@@ -45,6 +49,7 @@ class ParagraphHost(Protocol):
 
     styles: StyleBook
     lists: ListBook
+    schemes: SchemeBook
 
     def reading_order(self) -> Iterable[Placed]:
         """Every paragraph of the document, in the order it is read."""
@@ -81,11 +86,12 @@ class Emitter(Protocol):
 
 
 class TextStructure:
-    """What is derived from the structure of one document's paragraphs: today the label of every list item."""
+    """What is derived from the structure of one document's paragraphs: today the label of every list item and of
+    every numbered heading."""
 
     def __init__(self, host: ParagraphHost) -> None:
         self.host = host
-        self._key: tuple[Hashable, int] | None = None
+        self._key: tuple[Hashable, int, int, int] | None = None
         self._labels: dict[str, Label] = {}
         #: The labels the clients have been told about (with the document, then by ``settle``).
         self._told: dict[str, Label] = self.labels()
@@ -94,19 +100,40 @@ class TextStructure:
         """The host's paragraphs in the order they are read."""
         yield from self.host.reading_order()
 
-    def effective_item(self, paragraph: Paragraph) -> ListItem | None:
-        """The list item a paragraph is: its own."""
-        return paragraph.item
+    def effective_item(self, placed: Placed) -> ListItem | None:
+        """The list item a paragraph is: its own, else (in the main text) the one its style gives it."""
+        own = placed.paragraph.item
+        return self._numbered(placed.paragraph, {}) if own is None and placed.main else own
+
+    def _numbered(self, paragraph: Paragraph, seen: dict[str, ListItem | None]) -> ListItem | None:
+        """The item a paragraph's style gives it; ``seen`` keeps the answer per style while one count runs."""
+        if paragraph.style not in seen:
+            styles = self.host.styles
+            item = None
+            if paragraph.style in styles:
+                level, numbering = styles.heading_level(paragraph.style), styles.numbering(paragraph.style)
+                if numbering is not None and numbering in self.host.lists and level is not None and level >= 1:
+                    item = ListItem(numbering, min(level - 1, MAX_LIST_LEVEL))
+            seen[paragraph.style] = item
+        return seen[paragraph.style]
+
+    def items(self) -> Iterator[tuple[str, ListItem | None]]:
+        """Every paragraph id with its effective item, in reading order."""
+        seen: dict[str, ListItem | None] = {}
+        for placed in self.reading_order():
+            own = placed.paragraph.item
+            if own is None and placed.main:
+                own = self._numbered(placed.paragraph, seen)
+            yield placed.paragraph.id, own
 
     def labels(self) -> dict[str, Label]:
-        """The label of every list item, by paragraph id, counted in reading order. Worked out again only when the
-        structure or the lists changed since last time; the answer is shared, so callers must not change it."""
-        key = (self.host.structure_version, self.host.lists.version)
+        """The label of every list item and numbered heading, by paragraph id, counted in reading order. Worked out
+        again only when the structure, the styles, the lists or the schemes changed since last time; the answer is
+        shared, so callers must not change it."""
+        host = self.host
+        key = (host.structure_version, host.styles.version, host.lists.version, host.schemes.version)
         if self._key != key:
-            self._labels = numbering_labels(
-                ((placed.paragraph.id, self.effective_item(placed.paragraph)) for placed in self.reading_order()),
-                self.host.lists,
-            )
+            self._labels = numbering_labels(self.items(), host.lists, host.schemes)
             self._key = key
         return self._labels
 

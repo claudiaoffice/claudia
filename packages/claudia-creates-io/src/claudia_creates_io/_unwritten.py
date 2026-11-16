@@ -18,7 +18,7 @@ from ._notes import markdown_to_lines
 
 #: The facets a converter writes, by the name :func:`facets` gives them.
 PPTX_WRITTEN: frozenset[str] = frozenset(
-    {"slides", "notes", "styles", "palette", "shapes", "images", "objects", "renderings"}
+    {"slides", "notes", "styles", "palette", "shapes", "images", "objects", "renderings", "lists", "schemes"}
 )
 ODP_WRITTEN: frozenset[str] = PPTX_WRITTEN | {"language"}
 

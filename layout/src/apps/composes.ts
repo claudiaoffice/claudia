@@ -38,7 +38,8 @@ import {
 export type { ImageInfo, Note, PageSetupData, ShapeOutline, TextStyle } from './objects'
 
 /** A paragraph: `{id, style, text}` (runs are authorship only and do not change how it looks), and, for a list item,
- *  its place in its list and the marker the server counted for it (E9.21). */
+ *  its place in its list and the marker the server counted for it (E9.21). A paragraph with a label and no item is a
+ *  numbered heading (E9.22): its number hangs before it, in its own look. */
 export interface TextBlock {
   id: string
   style: string
@@ -96,6 +97,17 @@ function markerOf(sheet: Styles, style: string, marker: string, indent: number, 
   return { layout: layoutParagraph(sheet.fonts, plain, marker, width), x: indent + Math.round(left * em) }
 }
 
+/** How wide the box a heading's number is right-aligned in is, in em: room for "10.10.10" in a heading's size. */
+const HEADING_NUMBER_EM = 5
+
+/** The number of a numbered heading (E9.22): in the heading's own look, right-aligned in a box that ends a marker gap
+ *  before the heading's text, so it hangs into the margin as the editor draws it. */
+function headingNumberOf(sheet: Styles, own: ParagraphStyle, marker: string, em: number): FlowBlock['marker'] {
+  const plain: ParagraphStyle = { ...own, align: 'right', indentLeft: 0, indentRight: 0, firstLine: 0, spaceBefore: 0, spaceAfter: 0, whiteSpace: 'nowrap', hyphens: 'manual' }
+  const width = Math.round(HEADING_NUMBER_EM * em)
+  return { layout: layoutParagraph(sheet.fonts, plain, marker, width), x: own.indentLeft - Math.round(MARKER_GAP_EM * em) - width }
+}
+
 /** composes' default style: what a paragraph with a style the text does not have is drawn in. */
 const BODY = 'body'
 
@@ -149,7 +161,11 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
     if (style.hyphens === 'auto' && b.text) wantsHyphens = true
     const inset = insets(r.decoration)
     const width = box.w - inset.left - inset.right
-    const marker = item && b.label?.marker ? markerOf(sheet, b.style, b.label.marker, r.style.indentLeft, item.left, item.step, em) : undefined
+    const marker = !b.label?.marker
+      ? undefined
+      : item
+        ? markerOf(sheet, b.style, b.label.marker, r.style.indentLeft, item.left, item.step, em)
+        : headingNumberOf(sheet, r.style, b.label.marker, em)
     return { id: b.id, layout: layoutParagraph(fonts, style, b.text, width, paragraphOptions), decoration: r.decoration, ...(marker ? { marker } : {}) }
   })
   if (wantsHyphens && !hyphenator) {

@@ -56,6 +56,7 @@ from claudia_creates import (
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
+from ._items import ItemReader, marks_of, read_pptx_mark, sayable_in_pptx, write_pptx_mark
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._styling import colour_of, look, page_colour, points_of
 from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
@@ -202,10 +203,13 @@ def pptx_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[
     ``"notes-quote"`` (slides whose notes use what the file shows only as plain words), ``"svg-fallback"`` (a picture
     drawn as SVG, which only PowerPoint 2016 and later show; other programs show an empty picture unless a rasteriser
     was given, ``rasterised``), ``"rendering-pending"`` (a rendered text container nothing has been drawn for yet:
-    left out) and what :func:`pptx_unwritten_changes` says of a fresh file (``"planned-time"``...)."""
+    left out), ``"list-look"`` (a list marker PowerPoint has no automatic number for, such as ``2.1``: left out) and
+    what :func:`pptx_unwritten_changes` says of a fresh file (``"planned-time"``...)."""
     losses = LossLog()
     if authored := authored_objects(model):
         losses.add("authorship", count=authored)
+    if unsaid := sum(1 for mark in marks_of(model).values() if not sayable_in_pptx(mark)):
+        losses.add("list-look", count=unsaid)
     for loss in notes_losses(model):
         losses.add(loss.kind, loss.detail, loss.count)
     for obj in model.objects.values():
@@ -346,6 +350,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None) -> 
     pt_per_unit = (_DECK_HEIGHT / 914_400 * 72) / SLIDE_HEIGHT
     layout = prs.slide_layouts[_BLANK_LAYOUT]
     page = page_colour(model)
+    marks = marks_of(model)
     for slide_id in model.slides:
         slide = prs.slides.add_slide(layout)
         if model.notes_of(slide_id):
@@ -366,6 +371,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None) -> 
                 shape = slide.shapes.add_textbox(*box)
                 shape.text_frame.text = words
                 _style_text(shape.text_frame, text_css, pt_per_unit, page)
+                write_pptx_mark(shape.text_frame.paragraphs[0]._p, marks.get(body.id))  # noqa: SLF001
                 _turn(shape, body)
                 _describe(shape, body)
             elif body.kind in ("image", "rendered"):
@@ -382,6 +388,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None) -> 
                 shape.text_frame.text = words
                 _style_shape(shape, css, pt_per_unit, page)
                 _style_text(shape.text_frame, text_css, pt_per_unit, page)
+                write_pptx_mark(shape.text_frame.paragraphs[0]._p, marks.get(body.id))  # noqa: SLF001
                 _turn(shape, body)
                 _describe(shape, body)
     write_print_setup(prs, model.print_setup)  # a new presentation always has the part that says it
@@ -536,6 +543,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
     library = ShapeLibrary.load()
     defined: set[str] = set()
     object_ids = count(1)
+    items = ItemReader(model.lists, model.schemes)
     for slide_number, pptx_slide in enumerate(prs.slides, start=1):
         slide_id = f"s{slide_number}"
         model.insert_slide(slide_id)
@@ -549,6 +557,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
             x, y = round(shape.left / scale_x), round(shape.top / scale_y)
             w, h = round(shape.width / scale_x), round(shape.height / scale_y)
             text = shape.text_frame.text if shape.has_text_frame else ""
+            said = read_pptx_mark(shape.text_frame.paragraphs[0]._p) if shape.has_text_frame else None  # noqa: SLF001
             x, y, rotation = _turned_place(x, y, w, h, round(shape.rotation) % 360)
             object_id = f"o{next(object_ids)}"
             if kind == "image":
@@ -585,7 +594,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                 w,
                 h,
                 style,
-                paragraph_for(object_id, words, text),
+                paragraph_for(object_id, words, text).with_item(None if said is None else items.item(*said)),
                 shape=shape_id,
                 rotation=rotation,
                 description="" if decorative else description[:MAX_ALT_CHARS],
@@ -727,12 +736,13 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
     pt_per_unit = (slide_height / 914_400 * 72) / SLIDE_HEIGHT
 
     touched_parts: set[str] = set()
+    marks_before, marks_after = marks_of(baseline), marks_of(current)
     for slide_number, slide_id in enumerate(baseline.slides):
         touched_parts |= _patch_notes(prs, members, slide_number, baseline, current, slide_id)
         shape_indices = _modeled_shape_indices(prs.slides[slide_number])
         for position, object_id in enumerate(obj.id for obj in baseline.objects_on(slide_id)):
             before, after = baseline_by_id[object_id], current_by_id[object_id]
-            if before == after:
+            if before == after and marks_before.get(object_id) == marks_after.get(object_id):
                 continue  # nothing about this object changed: leave its shape exactly as is
             if before.body.kind != after.body.kind or before.body.shape != after.body.shape:
                 raise UnsupportedEdit(
@@ -740,6 +750,8 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
                 )
             shape = prs.slides[slide_number].shapes[shape_indices[position]]
             _patch_shape(shape, before, after, (scale_x, scale_y), pt_per_unit, current)
+            if after.body.kind != "image":
+                write_pptx_mark(shape.text_frame.paragraphs[0]._p, marks_after.get(object_id))  # noqa: SLF001
             touched_parts.add(_slide_part(members, slide_number))
 
     if baseline.print_setup != current.print_setup:

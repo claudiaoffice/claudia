@@ -26,6 +26,8 @@ function listMenu(calls: string[], over: Partial<ListMenu> = {}): ListMenu {
     startAt: () => calls.push('start'),
     indent: () => calls.push('indent'),
     outdent: () => calls.push('outdent'),
+    headings: { label: 'Number Headings', on: false, possible: true, toggle: () => calls.push('headings') },
+    allNumbering: () => calls.push('numbering'),
     ...over,
   }
 }
@@ -99,7 +101,7 @@ describe('the List entry of the Format menu (E9.21)', () => {
 
   it('offers bullets and numbers, continuing and starting, and the levels, with the keys beside them', () => {
     const { items } = flyout()
-    expect(items.map((i) => (i.separator ? '—' : i.label))).toEqual(['Bulleted List', 'Numbered List', '—', 'Continue Previous List', 'Start At…', '—', 'Indent', 'Outdent'])
+    expect(items.map((i) => (i.separator ? '—' : i.label))).toEqual(['Bulleted List', 'Numbered List', '—', 'Continue Previous List', 'Start At…', '—', 'Indent', 'Outdent', '—', 'Number Headings', 'All Numbering…'])
     expect(items.filter((i) => i.hint).map((i) => [i.label, i.hint])).toEqual([
       ['Bulleted List', 'Ctrl+Shift+8'],
       ['Numbered List', 'Ctrl+Shift+7'],
@@ -111,12 +113,20 @@ describe('the List entry of the Format menu (E9.21)', () => {
   it('does what the entries say', () => {
     const { items, calls } = flyout()
     for (const item of items.filter((i) => !i.separator)) item.action!()
-    expect(calls).toEqual(['bulleted', 'numbered', 'continue', 'start', 'indent', 'outdent'])
+    expect(calls).toEqual(['bulleted', 'numbered', 'continue', 'start', 'indent', 'outdent', 'headings', 'numbering'])
   })
 
   it('ticks the kind of list the caret is in', () => {
     expect(flyout({ current: 'numbers' }).items.filter((i) => i.checked).map((i) => i.label)).toEqual(['Numbered List'])
     expect(flyout({ current: null }).items.filter((i) => i.checked)).toEqual([])
+  })
+
+  it('ticks Number Headings while the headings are numbered, under the name the app gives it (E9.22)', () => {
+    const on = flyout({ headings: { label: 'Number All Slide Titles', on: true, possible: true, toggle: () => undefined } }).items
+    expect(on.find((i) => i.id === 'format.number-headings')).toMatchObject({ label: 'Number All Slide Titles', checked: true, disabled: false })
+    const none = flyout({ headings: { label: 'Number Headings', on: false, possible: false, toggle: () => undefined } }).items
+    expect(none.find((i) => i.id === 'format.number-headings')!.disabled).toBe(true)
+    expect(flyout({ readonly: true }).items.find((i) => i.id === 'format.all-numbering')!.disabled).toBe(false)
   })
 
   it('leaves what needs an item disabled outside one, and continuing where there is nothing to continue', () => {
@@ -140,9 +150,10 @@ describe('the List entry of the Format menu (E9.21)', () => {
     for (const item of entry.items!.filter((i) => i.action)) expect(() => item.action!()).not.toThrow()
   })
 
-  it('is disabled for a viewer', () => {
+  it('is disabled for a viewer, who may still look at the numbering schemes', () => {
     const entry = menu({ list: listMenu([], { readonly: true }) }).items.find((i) => i.label === 'List')!
-    expect(entry.items!.filter((i) => !i.separator).every((i) => i.disabled)).toBe(true)
+    const enabled = entry.items!.filter((i) => !i.separator && !i.disabled).map((i) => i.label)
+    expect(enabled).toEqual(['All Numbering…'])
   })
 })
 

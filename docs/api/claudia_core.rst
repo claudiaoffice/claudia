@@ -71,12 +71,10 @@ Lists
 A paragraph is an item of a list by structure only (``Paragraph.item``); how it looks, and which number it carries,
 is derived (E9.21). (The field ``list`` of ``ListItem`` and of the commands is left out of the member lists below,
 because a documented attribute called ``list`` makes every ``list[...]`` in a signature ambiguous for Sphinx; each
-class docstring says what it holds.) ``claudia_core.SCHEMES`` maps the id of each scheme (``bullets``,
-``numbers``) to its :class:`~claudia_core.Scheme`.
+class docstring says what it holds.) How a list is drawn is its scheme, part of the document (below).
 
 .. autoclass:: claudia_core.ListDef
 .. autoclass:: claudia_core.ListBook
-.. autoclass:: claudia_core.Scheme
 .. autoclass:: claudia_core.Label
 .. autofunction:: claudia_core.numbering_labels
 .. autoclass:: claudia_core.ListsChanged
@@ -86,6 +84,27 @@ class docstring says what it holds.) ``claudia_core.SCHEMES`` maps the id of eac
    :exclude-members: list
 .. autoclass:: claudia_core.RemoveList
    :exclude-members: list
+.. autoclass:: claudia_core.SetListItem
+.. autoclass:: claudia_core.ItemHost
+
+Numbering schemes
+-----------------
+
+.. automodule:: claudia_core.schemes
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+.. autoclass:: claudia_core.LevelFormat
+.. autoclass:: claudia_core.Scheme
+.. autoclass:: claudia_core.SchemeBook
+.. autofunction:: claudia_core.builtin_schemes
+.. autofunction:: claudia_core.builtin_scheme
+.. autodata:: claudia_core.FORMATS
+.. autoclass:: claudia_core.SchemesChanged
+.. autoclass:: claudia_core.CreateScheme
+.. autoclass:: claudia_core.ChangeScheme
+.. autoclass:: claudia_core.RemoveScheme
 
 Text structure
 --------------
@@ -298,6 +317,8 @@ reaches a browser is always literal.
 .. autoclass:: claudia_core.RemoveStyle
 .. autoclass:: claudia_core.SetHeadingLevel
 .. autodata:: claudia_core.MAX_HEADING_LEVEL
+.. autoclass:: claudia_core.SetStyleNumbering
+.. autodata:: claudia_core.NO_NUMBERING
 
 Facets, kinds and slots
 -----------------------

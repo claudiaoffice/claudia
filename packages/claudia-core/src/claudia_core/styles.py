@@ -39,6 +39,10 @@ MAX_HEADING_LEVEL = 9
 #: in a table of contents).
 type HeadingLevel = int | Literal["body"] | None
 
+#: A style's own numbering that says "not numbered, whatever my parent is" (as ``"body"`` does for the heading level).
+#: No list can have this id.
+NO_NUMBERING = "none"
+
 
 def _check_heading_level(style: StyleDef) -> None:
     level = style.heading_level
@@ -50,6 +54,15 @@ def _check_heading_level(style: StyleDef) -> None:
         raise ValueError(f"Only a paragraph style can be a heading; “{style.name}” is a {style.kind} style")
 
 
+def _check_numbering(style: StyleDef) -> None:
+    if style.numbering is None:
+        return
+    if not isinstance(style.numbering, str) or not _ID.fullmatch(style.numbering):
+        raise ValueError(f"A style's numbering is the id of a list, got {style.numbering!r}")
+    if style.kind != "paragraph":
+        raise ValueError(f"Only a paragraph style can be numbered; “{style.name}” is a {style.kind} style")
+
+
 @dataclass(frozen=True)
 class StyleDef:
     """One style: ``css`` holds only what differs from ``based_on``. ``to_name`` marks a style that was made by
@@ -59,7 +72,9 @@ class StyleDef:
     way -- a style without one shows numbers as its parent does. ``heading_level`` makes the paragraphs that have the
     style headings of a level (E9.22, :data:`HeadingLevel`); it is inherited the same way, so a deviation from a
     heading stays one. It is the one place that decides what a heading is: no app, layout or client keeps a list of
-    heading styles."""
+    heading styles. ``numbering`` is the id of a list (:class:`~claudia_core.ListDef`) that numbers the paragraphs of
+    a heading style, at the list level below their heading level (heading 1 at the list's first level); ``None`` is
+    "as my parent", :data:`NO_NUMBERING` "not numbered"."""
 
     id: str
     name: str
@@ -70,10 +85,11 @@ class StyleDef:
     kind: str = "paragraph"
     number_format: str | None = None
     heading_level: HeadingLevel = None
+    numbering: str | None = None
 
     def to_data(self) -> dict:
-        """The plain-data form that goes into snapshots and commands; ``number_format`` and ``heading_level`` only
-        when they are set, so a style that has neither writes exactly what it wrote before."""
+        """The plain-data form that goes into snapshots and commands; ``number_format``, ``heading_level`` and
+        ``numbering`` only when they are set, so a style that has none of them writes exactly what it wrote before."""
         data: dict[str, object] = {
             "id": self.id,
             "name": self.name,
@@ -87,6 +103,8 @@ class StyleDef:
             data["number_format"] = self.number_format
         if self.heading_level is not None:
             data["heading_level"] = self.heading_level
+        if self.numbering is not None:
+            data["numbering"] = self.numbering
         return data
 
     @classmethod
@@ -103,6 +121,7 @@ class StyleDef:
             data["kind"],
             data.get("number_format"),
             data.get("heading_level"),
+            data.get("numbering"),
         )
 
 
@@ -118,6 +137,9 @@ class StyleBook:
 
     def __init__(self, styles: Iterable[StyleDef] = ()):
         self._styles: dict[str, StyleDef] = {}
+        #: Counts every change, so that whoever derives something from the book (the numbers of headings) knows to
+        #: derive it again.
+        self.version = 0
         for style in styles:
             self.add(style)
 
@@ -178,6 +200,16 @@ class StyleBook:
                 return style.heading_level
         return None
 
+    def numbering(self, style_id: str) -> str | None:
+        """The list a style numbers its paragraphs in: its own, else the nearest parent's; ``None`` for none (no list
+        anywhere in the chain, or :data:`NO_NUMBERING` before one is found)."""
+        for style in reversed(self.chain(style_id)):
+            if style.numbering == NO_NUMBERING:
+                return None
+            if style.numbering is not None:
+                return style.numbering
+        return None
+
     def children(self, style_id: str) -> list[str]:
         """The ids of the styles that are based directly on this one."""
         return [s.id for s in self._styles.values() if s.based_on == style_id]
@@ -227,7 +259,7 @@ class StyleBook:
         declaration that names a role is left out of ``resolved``: a book is not the place to invent a colour.
 
         ``heading`` is :meth:`heading_level` worked out, so that no client, layout or exporter walks the parents to
-        find out whether a paragraph is a heading (E9.22).
+        find out whether a paragraph is a heading (E9.22); ``numbered`` is :meth:`numbering` worked out the same way.
         """
         return [
             {
@@ -235,6 +267,7 @@ class StyleBook:
                 "computed": self.computed(style.id),
                 "resolved": self.resolved(style.id, colours),
                 "heading": self.heading_level(style.id),
+                "numbered": self.numbering(style.id),
             }
             for style in self._styles.values()
         ]
@@ -270,24 +303,37 @@ class StyleBook:
             )
         if len(style.purpose) > _MAX_PURPOSE or "\n" in style.purpose:
             raise ValueError(f"The purpose of a style is one line of up to {_MAX_PURPOSE} characters")
+        _check_numbering(style)
         self._styles[style.id] = replace(style, name=name, css=validate_css(style.css))
+        self.version += 1
 
     def set_css(self, style_id: str, css: dict[str, str]) -> None:
         """Give a style these own properties (instead of what it had); they must belong to its kind."""
         style = self.get(style_id)
         check_kind(style.kind, css)
         self._styles[style_id] = replace(style, css=validate_css(css))
+        self.version += 1
 
     def set_number_format(self, style_id: str, format_id: str | None) -> None:
         """Make a style show numbers through the number format ``format_id`` (``None``: as its parent does). The
         book does not know the formats; the app that has them checks the id (D378)."""
         self._styles[style_id] = replace(self.get(style_id), number_format=format_id)
+        self.version += 1
 
     def set_heading_level(self, style_id: str, level: HeadingLevel) -> None:
         """Give a style its own heading level (``None``: as its parent; ``"body"``: no heading)."""
         changed = replace(self.get(style_id), heading_level=level)
         _check_heading_level(changed)
         self._styles[style_id] = changed
+        self.version += 1
+
+    def set_numbering(self, style_id: str, numbering: str | None) -> None:
+        """Make a style number its paragraphs in the list ``numbering`` (``None``: as its parent; :data:`NO_NUMBERING`:
+        not at all). The book does not hold the lists; the command checks that the list exists."""
+        changed = replace(self.get(style_id), numbering=numbering)
+        _check_numbering(changed)
+        self._styles[style_id] = changed
+        self.version += 1
 
     def rename(self, style_id: str, name: str, *, to_name: bool = False) -> None:
         """Give a style another name that no other style has; ``to_name`` says whether it is still provisional."""
@@ -296,12 +342,14 @@ class StyleBook:
         if self.name_taken(clean, besides=style_id):
             raise ValueError(f"There is already a style named “{clean}”")
         self._styles[style_id] = replace(style, name=clean, to_name=to_name)
+        self.version += 1
 
     def remove(self, style_id: str) -> StyleDef:
         """Take a style out of the book and return it; refused while other styles are based on it."""
         style = self.get(style_id)
         if self.children(style_id):
             raise ValueError(f"The style “{style.name}” has styles based on it")
+        self.version += 1
         return self._styles.pop(style_id)
 
 
@@ -539,3 +587,48 @@ class SetHeadingLevel(Command):
 
     def shifted_by(self, other: Command) -> Command | None:
         return None if isinstance(other, SetHeadingLevel) and other.style == self.style else self
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class SetStyleNumbering(Command):
+    """Make a heading style number its paragraphs in a list (E9.22): ``numbering`` is the list's id, ``None`` "as the
+    parent does", :data:`NO_NUMBERING` "not numbered". A paragraph with the style is an item of that list at the level
+    below its heading level, unless it is an item of its own; so all heading styles that name one list count together,
+    as one outline (1, 1.1, 2 ...)."""
+
+    kind: ClassVar[str] = "core.SetStyleNumbering"
+    style: str
+    numbering: str | None
+
+    @property
+    def label(self) -> str:
+        return "Numbering"
+
+    @property
+    def summary(self) -> str:
+        if self.numbering is None:
+            return f"made the style {self.style} numbered as its parent is"
+        if self.numbering == NO_NUMBERING:
+            return f"made the style {self.style} unnumbered"
+        return f"numbered the style {self.style} in the list {self.numbering}"
+
+    def apply(self, ctx: Context) -> Command:
+        book = _book(ctx)
+        known = _known(book, self.style)
+        lists = getattr(ctx.model, "lists", None)
+        if self.numbering not in (None, NO_NUMBERING) and (lists is None or self.numbering not in lists):
+            raise ValueError(f"There is no list {self.numbering!r} to number the style “{known.name}” in")
+        book.set_numbering(self.style, self.numbering)
+        _tell(ctx, book)
+        return SetStyleNumbering(self.style, known.numbering)
+
+    def to_data(self) -> dict:
+        return {"style": self.style, "numbering": self.numbering}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> SetStyleNumbering:
+        return cls(data["style"], data["numbering"])
+
+    def shifted_by(self, other: Command) -> Command | None:
+        return None if isinstance(other, SetStyleNumbering) and other.style == self.style else self

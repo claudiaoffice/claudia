@@ -33,3 +33,8 @@ export function itemLayout(blocks: Block[], index: number, lists: ListInfo[], sc
   }
   return css
 }
+
+/** The CSS of a numbered heading (E9.22): the gap between its hanging number and its text, as the printed page has it. */
+export function headingNumberLayout(): Record<string, string> {
+  return { '--marker-gap': `${MARKER_GAP_EM}em` }
+}

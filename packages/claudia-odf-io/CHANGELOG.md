@@ -5,6 +5,15 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-16
+
+The levels of numbering schemes in OpenDocument (E9.22), shared by the text and the presentation app.
+
+### Added
+- `claudia_odf_io.lists`: `list_style` (a `text:list-style` drawing a list as its scheme does), `level_style` (one
+  level of a list style or of the outline style), `read_levels` (what a list style's levels say as levels of a scheme),
+  `LEVEL_NUMBER`, `LEVEL_BULLET`, `OUTLINE_LEVEL`.
+
 ## [0.6.0] - 2026-11-15
 
 Turning objects (D1021): `rotation-ui` and `import-export-wiring` had both given `set_attributes` a `remove`.
