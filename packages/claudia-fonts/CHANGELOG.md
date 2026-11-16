@@ -3,13 +3,24 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [Unreleased]
+## [0.3.0] - 2026-11-16
+
+Fonts that take exactly the room of the common office fonts, and the words for how close a stand-in is (E3.13).
 
 ### Added
+- Arimo, Tinos, Cousine (the widths of Arial and Helvetica, Times New Roman, Courier New, and of Liberation Sans,
+  Serif and Mono) and Gelasio (Georgia) join the starter set, pinned at the same google/fonts commit and shipped in
+  `builtin/`. Tinos has no `OFL.txt` there; its licence is in each file's name table, which a test checks.
+- `DEFAULT_GENERICS`: the font of each CSS generic family and the fallback (Fraunces, Inter, JetBrains Mono, Inter).
+- `CLOSENESS` and `Closeness` (`same`, `same-widths`, `other`), and `Resolution.closeness`.
 - The starter set ships with the package (D500): `claudia_fonts/builtin/` holds the pinned files of
   `starter.lock.json`, `builtin_folder()` names it. A test checks the files against the lock.
 
 ### Changed
+- `substitutions.json` is `stand_ins.json`, which holds the generic families too; `DEFAULT_SUBSTITUTIONS` now names
+  Arimo, Tinos, Cousine and Gelasio (before: Liberation Sans, Serif and Mono, which no server had unless an operator
+  added them), and Liberation Sans, Serif and Mono get the same stand-ins. The layout library's copy is generated
+  from it (`scripts/generate_font_stand_ins.py`).
 - The same font file found twice (the shipped set and a fetched copy) is not reported as "replaced".
 
 ### Fixed

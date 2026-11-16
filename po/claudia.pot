@@ -6761,7 +6761,7 @@ msgstr ""
 msgid "first {length} shown"
 msgstr ""
 
-#: web/app/lib/print/assets.ts:75
+#: web/app/lib/print/assets.ts:77
 msgid "font {hash}… is not in the server's catalogue"
 msgstr ""
 
@@ -7605,7 +7605,7 @@ msgstr ""
 msgid "the first month of 8,000 over 3 years"
 msgstr ""
 
-#: web/app/lib/print/assets.ts:77
+#: web/app/lib/print/assets.ts:79
 msgid "the font {family} {style} did not arrive intact"
 msgstr ""
 
@@ -7617,7 +7617,7 @@ msgstr ""
 msgid "the header row"
 msgstr ""
 
-#: web/app/lib/print/assets.ts:102
+#: web/app/lib/print/assets.ts:104
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr ""
 

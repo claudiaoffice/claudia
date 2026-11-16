@@ -100,7 +100,8 @@ def read_looks(parts: dict[str, bytes]) -> XlsxLooks:
     return _Reader(parse_xml(data), _theme(parts)).looks()
 
 
-_DEFAULT_CSS = {"font-family": "Calibri, Carlito, sans-serif", "font-size": "11pt", "vertical-align": "bottom"}
+#: Excel's look of a file that has no styles: Calibri, 11 points, at the bottom of the cell.
+_DEFAULT_CSS = {"font-family": "Calibri, sans-serif", "font-size": "11pt", "vertical-align": "bottom"}
 
 
 def _theme(parts: dict[str, bytes]) -> list[str]:

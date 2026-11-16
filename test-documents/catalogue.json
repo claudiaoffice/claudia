@@ -1101,6 +1101,19 @@
         "duration_s": 0.023,
         "detail": null
       }
+    },
+    {
+      "id": "xlsx-stand-in-fonts",
+      "format": "xlsx",
+      "feature": "stand-in-fonts",
+      "source": "xlsx/stand-in-fonts/source.xlsx",
+      "spec": "xlsx/stand-in-fonts/spec.py",
+      "summary": "One cell per common office font (Arial, Times New Roman, Calibri, Georgia, Century Gothic ...): each keeps its own name on import and export, and stand-ins.json says what a server with the shipped fonts shows it with; the shared sample of the stand-in tests (E3.13).",
+      "backlog": "E3.13",
+      "tags": [
+        "tier1"
+      ],
+      "enabled": true
     }
   ]
 }

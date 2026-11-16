@@ -63,7 +63,7 @@ def style_of(model, row: int, col: int, slot: str = "words") -> str:
 def test_the_default_font_of_the_file_becomes_body_text():
     _, model = book([], rows('<row r="1"><c r="A1"><v>1</v></c></row>'))
     body = model.styles.get("body-text").css
-    assert body["font-family"] == "Arial, 'Liberation Sans', sans-serif"
+    assert body["font-family"] == "Arial, sans-serif"
     assert body["font-size"] == "10pt"
     assert body["vertical-align"] == "bottom"
     assert style_of(model, 0, 0) == "body-text"
@@ -325,7 +325,7 @@ def unusual_styles() -> bytes:
 
 def test_the_less_common_parts_of_a_look():
     looks = read_looks({"xl/styles.xml": unusual_styles(), "xl/theme/theme1.xml": THEME.encode()})
-    assert looks.normal.style["font-family"] == "'Courier New', 'Liberation Mono', monospace"
+    assert looks.normal.style["font-family"] == "'Courier New', monospace"
     odd = looks.look(1)
     assert odd.style["font-style"] == "italic"
     assert odd.style["text-decoration"] == "underline line-through"
@@ -346,7 +346,7 @@ def test_the_less_common_parts_of_a_look():
 def test_names_for_a_deviation_say_what_it_changes():
     words = difference_words(
         {
-            "font-family": "Cambria, Caladea, serif",
+            "font-family": "Cambria, serif",
             "font-style": "normal",
             "text-decoration": "line-through",
             "border-top": "1px solid #000000",

@@ -1,5 +1,5 @@
 {
- "version": "0.2.0",
+ "version": "0.3.0",
  "Axis": {
   "class": [
    "object"
@@ -9,6 +9,9 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "CLOSENESS": {
+  "value": "('same', 'same-widths', 'other')"
  },
  "COLLECTION_FILE": {
   "value": "'collection.json'"
@@ -29,6 +32,9 @@
   },
   "properties": []
  },
+ "Closeness": {
+  "function": "(*args, **kwargs)"
+ },
  "Collection": {
   "class": [
    "object"
@@ -48,6 +54,9 @@
    "from_data": "(data: 'object') -> 'CollectionRecord'"
   },
   "properties": []
+ },
+ "DEFAULT_GENERICS": {
+  "value": "<mappingproxy>"
  },
  "DEFAULT_SUBSTITUTIONS": {
   "value": "<mappingproxy>"
@@ -132,7 +141,9 @@
   ],
   "init": "(requested: 'str', provided: 'str | None', substituted: 'bool') -> None",
   "methods": {},
-  "properties": []
+  "properties": [
+   "closeness"
+  ]
  },
  "WebFontCache": {
   "class": [

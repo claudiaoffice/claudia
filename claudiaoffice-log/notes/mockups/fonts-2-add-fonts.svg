@@ -1,0 +1,139 @@
+<svg viewBox="0 0 1400 975" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="975" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — Server settings ▸ Fonts ▸ Add fonts…: check first, then add, proposed (E3.3)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">A dialog over the Fonts page. Nothing on the server changes until step B is confirmed. The licence record is mandatory (D94).</text>
+<rect x="40" y="96" width="640" height="700" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">A · Files chosen, licence said in words</text>
+<text x="62" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The files&#x27; own licence fields are read; when they name none, the administrator says it.</text>
+<rect x="62" y="172" width="596" height="600" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="82" y="204" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Add fonts to Studio server</text>
+<text x="638" y="204" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="400" fill="#6e6880" text-anchor="end">×</text>
+<text x="82" y="224" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">claudia.example.org</text>
+<line x1="62" y1="238" x2="658" y2="238" stroke="#e3dfee" stroke-width="1"/>
+<text x="82" y="264" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">From files</text>
+<rect x="82" y="274" width="556" height="84" rx="10" fill="#faf8fd" stroke="#5b4bc4" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="100" y="304" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">4 files chosen</text>
+<text x="100" y="324" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">HausschriftSans-Regular.ttf, -Italic.ttf, -Bold.ttf, -BoldItalic.ttf</text>
+<text x="100" y="344" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Drop more here, or</text>
+<text x="206.0" y="344" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#5b4bc4" text-anchor="start">choose files…</text>
+<circle cx="626" cy="286" r="11" fill="#5b4bc4"/>
+<text x="626" y="290.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="82" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">or fetch an open collection</text>
+<rect x="252" y="364" width="312" height="30" rx="6" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="263" y="383.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Choose from the pinned list</text>
+<text x="548" y="383.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">▾</text>
+<rect x="572" y="364" width="66" height="30" rx="7" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="605.0" y="383.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Fetch</text>
+<text x="82" y="428" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">Name of the collection</text>
+<rect x="82" y="436" width="556" height="30" rx="6" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="93" y="455.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">City house fonts</text>
+<text x="82" y="492" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">Who may receive these fonts</text>
+<circle cx="278" cy="488" r="11" fill="#5b4bc4"/>
+<text x="278" y="492.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<circle cx="90" cy="512" r="7.5" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="108" y="517" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Anyone</text>
+<text x="108" y="535" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">An open licence. Served to everyone who opens a document here, kept with documents,</text>
+<text x="108" y="550" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">embedded in exports.</text>
+<circle cx="90" cy="578" r="7.5" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.5"/>
+<circle cx="90" cy="578" r="4" fill="#5b4bc4"/>
+<text x="108" y="583" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">People using this server</text>
+<text x="108" y="601" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A licence for your organisation. Shown and printed here; never kept with a document or</text>
+<text x="108" y="616" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">embedded in an exported file.</text>
+<text x="82" y="650" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">Licence, in your words</text>
+<rect x="82" y="658" width="556" height="30" rx="6" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="93" y="677.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Licensed to the City for internal use (contract 2024-117)</text>
+<text x="82" y="708" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The files name no licence; this goes into the collection&#x27;s licence record.</text>
+<circle cx="626" cy="646" r="11" fill="#5b4bc4"/>
+<text x="626" y="650.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<line x1="62" y1="720" x2="658" y2="720" stroke="#e3dfee" stroke-width="1"/>
+<rect x="530" y="732" width="108" height="30" rx="7" fill="#5b4bc4"/>
+<text x="584.0" y="751.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Check files</text>
+<rect x="442" y="732" width="78" height="30" rx="7" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="481.0" y="751.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="720" y="96" width="640" height="700" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="742" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">B · Checked: what will be added, said before it happens</text>
+<text x="742" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Each file gets a line. The confirmation names the server and the scope, as in the danger-zone pages.</text>
+<rect x="742" y="172" width="596" height="600" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="762" y="204" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Add fonts to Studio server</text>
+<text x="1318" y="204" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="400" fill="#6e6880" text-anchor="end">×</text>
+<text x="762" y="224" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">claudia.example.org</text>
+<line x1="742" y1="238" x2="1338" y2="238" stroke="#e3dfee" stroke-width="1"/>
+<text x="762" y="264" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">City house fonts</text>
+<rect x="876.30875" y="250" width="85.9" height="20" rx="10.0" fill="#ece8f8"/>
+<text x="919.3" y="263.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#4a3cab" text-anchor="middle">◐ This server</text>
+<rect x="762" y="280" width="556" height="52" rx="8" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="776" y="301" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-Regular.ttf</text>
+<text x="776" y="320" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Hausschrift Sans · Regular · TrueType</text>
+<rect x="1217.611875" y="289" width="88.4" height="20" rx="10.0" fill="#e3f3ef"/>
+<text x="1261.8" y="302.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#0f6e60" text-anchor="middle">Will be added</text>
+<rect x="762" y="338" width="556" height="52" rx="8" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="776" y="359" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-Italic.ttf</text>
+<text x="776" y="378" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Hausschrift Sans · Italic · TrueType</text>
+<rect x="1217.611875" y="347" width="88.4" height="20" rx="10.0" fill="#e3f3ef"/>
+<text x="1261.8" y="360.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#0f6e60" text-anchor="middle">Will be added</text>
+<rect x="762" y="396" width="556" height="52" rx="8" fill="#ffffff" stroke="#e3dfee" stroke-width="1"/>
+<text x="776" y="417" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-Bold.ttf</text>
+<text x="776" y="436" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Hausschrift Sans · Bold · TrueType</text>
+<rect x="1217.611875" y="405" width="88.4" height="20" rx="10.0" fill="#e3f3ef"/>
+<text x="1261.8" y="418.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#0f6e60" text-anchor="middle">Will be added</text>
+<rect x="762" y="454" width="556" height="70" rx="8" fill="#fdf8f7" stroke="#e3dfee" stroke-width="1"/>
+<text x="776" y="475" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-BoldItalic.ttf</text>
+<text x="776" y="494" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#9c2f28" text-anchor="start">The file forbids embedding (fsType 2), so no PDF could carry it.</text>
+<text x="776" y="512" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Kept in the record as a problem, so the Fonts page can say why.</text>
+<rect x="1249.5028125" y="463" width="56.5" height="20" rx="10.0" fill="#f8e6e4"/>
+<text x="1277.8" y="476.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#9c2f28" text-anchor="middle">Left out</text>
+<circle cx="1306" cy="512" r="11" fill="#5b4bc4"/>
+<text x="1306" y="516.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<rect x="762" y="538" width="556" height="74" rx="10" fill="#f7f3ec"/>
+<text x="778" y="562" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Adds 3 fonts in 1 family to Studio server (claudia.example.org). From now on every</text>
+<text x="778" y="578.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">document here that asks for Hausschrift Sans is laid out, shown and printed with them.</text>
+<text x="778" y="595.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Documents do not keep them, and exports do not embed them.</text>
+<circle cx="1306" cy="546" r="11" fill="#5b4bc4"/>
+<text x="1306" y="550.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<line x1="742" y1="720" x2="1338" y2="720" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1207" y="729" width="114" height="36" rx="9" fill="none" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="1210" y="732" width="108" height="30" rx="7" fill="#5b4bc4"/>
+<text x="1264.0" y="751.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Add 3 fonts</text>
+<rect x="1130" y="732" width="70" height="30" rx="7" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1165.0" y="751.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Back</text>
+<circle cx="51" cy="826" r="11" fill="#5b4bc4"/>
+<text x="51" y="830.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="72" y="831" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Files or a pinned collection</text>
+<text x="72" y="851" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">TrueType, OpenType, or a .zip of them.</text>
+<text x="72" y="868.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The pinned list (Liberation, Noto,</text>
+<text x="72" y="885.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Source Serif …) is a lock file like the</text>
+<text x="72" y="902.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">starter set: every file checked by</text>
+<text x="72" y="919.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">SHA-256. Hidden on a server with no</text>
+<text x="72" y="936.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">network.</text>
+<circle cx="323" cy="826" r="11" fill="#5b4bc4"/>
+<text x="323" y="830.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="344" y="831" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Who may receive them</text>
+<text x="344" y="851" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The three-way answer of board 1,</text>
+<text x="344" y="868.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">asked once per collection. &quot;Not</text>
+<text x="344" y="885.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">usable&quot; is never chosen: it is what the</text>
+<text x="344" y="902.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">check finds.</text>
+<circle cx="595" cy="826" r="11" fill="#5b4bc4"/>
+<text x="595" y="830.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="616" y="831" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Licence in words</text>
+<text x="616" y="851" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">When the name table names a licence</text>
+<text x="616" y="868.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">(OFL, Apache) it is filled in and the first</text>
+<text x="616" y="885.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">choice is taken; the administrator can</text>
+<text x="616" y="902.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">still change both.</text>
+<circle cx="867" cy="826" r="11" fill="#5b4bc4"/>
+<text x="867" y="830.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="888" y="831" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">One line per file</text>
+<text x="888" y="851" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Also: “replaces Inter 4.0 shipped with</text>
+<text x="888" y="868.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Claudia, for every document here”</text>
+<text x="888" y="885.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">when a family and style already exist</text>
+<text x="888" y="902.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">(D500 order), and “shown on screen;</text>
+<text x="888" y="919.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">print uses Regular” for CFF outlines,</text>
+<text x="888" y="936.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">which layout does not read yet (D905).</text>
+<circle cx="1139" cy="826" r="11" fill="#5b4bc4"/>
+<text x="1139" y="830.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="1160" y="831" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Scope in words</text>
+<text x="1160" y="851" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The confirmation names the server, the</text>
+<text x="1160" y="868.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">number of fonts and what they will and</text>
+<text x="1160" y="885.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">will not do, as the danger-zone rule</text>
+<text x="1160" y="902.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">asks. Adding is logged on the server</text>
+<text x="1160" y="919.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">with who and when.</text>
+</svg>

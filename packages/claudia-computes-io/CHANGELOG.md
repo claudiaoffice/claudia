@@ -3,6 +3,14 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Changed
+- A cell's font is imported as the file names it and its generic family only (`Arial, sans-serif`), without the
+  metric twin that was written after it (`'Liberation Sans'`): the server's catalogue chooses the stand-in where the
+  sheet is shown or printed (E3.13), so the workbook keeps one source for it. Exports are unchanged (they write the
+  first family).
+
 ## [0.10.0] - 2026-11-15
 
 Charts go to and from xlsx (D463).

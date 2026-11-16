@@ -218,7 +218,7 @@ def test_the_less_common_parts_of_an_ods_look():
     looks = read_looks({}, content)
     _, odd = looks.look("odd")
     css = odd.style
-    assert css["font-family"] == "'Times New Roman', 'Liberation Serif', serif"
+    assert css["font-family"] == "'Times New Roman', serif"
     assert (css["font-weight"], css["font-style"]) == ("bold", "italic")
     assert css["text-decoration"] == "underline line-through"
     assert "color" not in css  # the window's text colour

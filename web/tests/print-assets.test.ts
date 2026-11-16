@@ -64,6 +64,17 @@ describe('print assets', () => {
     expect(await assets.hyphenator(null)).toBeNull()
   })
 
+  it('lays out with the generic families and stand-ins the server sends, in the words of claudia_fonts (E3.13)', async () => {
+    const generics = { serif: 'Test Sans', 'sans-serif': 'Test Sans', monospace: 'Test Sans', fallback: 'Test Sans' }
+    serve({ '/api/fonts': { fonts: [FONT], substitutions: { Arial: 'Test Sans' }, generics } })
+    const assets = await PrintAssets.load()
+    expect(assets.catalogue.generics).toEqual(generics)
+    expect(assets.resolver.resolve('serif', 400, false, 12000)).toMatchObject({ family: 'Test Sans', how: 'exact', closeness: 'same' })
+    expect(assets.resolver.resolve('Arial, sans-serif', 400, false, 12000)).toMatchObject({ family: 'Test Sans', closeness: 'same-widths' })
+    serve()
+    expect((await PrintAssets.load()).catalogue.generics).toBeUndefined() // an older server: the generated table
+  })
+
   it('refuses a font or patterns that did not arrive intact', async () => {
     serve({ [`/api/hyphenation/${digest(PATTERNS)}`]: 'something else' })
     const assets = await PrintAssets.load()

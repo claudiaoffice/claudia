@@ -6761,7 +6761,7 @@ msgstr "[fîrst céll ôf thé pîvôt tàblé~~~~~~~~~~~~]"
 msgid "first {length} shown"
 msgstr "[fîrst {length} shôwn~~~~~~~~]"
 
-#: web/app/lib/print/assets.ts:75
+#: web/app/lib/print/assets.ts:77
 msgid "font {hash}… is not in the server's catalogue"
 msgstr "[fônt {hash}… îs nôt în thé sérvér's càtàlôgûé~~~~~~~~~~~~~~~~~~]"
 
@@ -7605,7 +7605,7 @@ msgstr "[thé fîrst mônth ôf 2,000 ôvér 2 yéàrs~~~~~~~~~~~~~~~]"
 msgid "the first month of 8,000 over 3 years"
 msgstr "[thé fîrst mônth ôf 8,000 ôvér 3 yéàrs~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/print/assets.ts:77
+#: web/app/lib/print/assets.ts:79
 msgid "the font {family} {style} did not arrive intact"
 msgstr "[thé fônt {family} {style} dîd nôt àrrîvé întàct~~~~~~~~~~~~~~~~~~~]"
 
@@ -7617,7 +7617,7 @@ msgstr "[thé fôrmûlà în thé céll às téxt, ôr #N/À îf thé céll hôl
 msgid "the header row"
 msgstr "[thé héàdér rôw~~~~~~]"
 
-#: web/app/lib/print/assets.ts:102
+#: web/app/lib/print/assets.ts:104
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr "[thé hyphénàtîôn pàttérns fôr {name} dîd nôt àrrîvé întàct~~~~~~~~~~~~~~~~~~~~~~~]"
 

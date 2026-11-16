@@ -14,14 +14,26 @@ from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
 from types import MappingProxyType
+from typing import Literal, get_args
 
 from .collection import Collection, RecordError
 from .font import FONT_SUFFIXES, FontFile, FontProblem, read_font
 
-DEFAULT_SUBSTITUTIONS: Mapping[str, str] = MappingProxyType(
-    json.loads(resources.files("claudia_fonts").joinpath("substitutions.json").read_text(encoding="utf-8"))
-)
-"""Metric-compatible open fonts for the common office fonts (Arial and Liberation Sans take the same room)."""
+_STAND_INS = json.loads(resources.files("claudia_fonts").joinpath("stand_ins.json").read_text(encoding="utf-8"))
+
+DEFAULT_SUBSTITUTIONS: Mapping[str, str] = MappingProxyType(dict(_STAND_INS["same_widths"]))
+"""Open fonts that take exactly the room of a common office font, by the office font (Arial → Arimo): the
+``same_widths`` of ``stand_ins.json`` (E3.13). Every one of them is shipped (D500)."""
+
+DEFAULT_GENERICS: Mapping[str, str] = MappingProxyType(dict(_STAND_INS["generics"]))
+"""The font each CSS generic family stands for (``serif``, ``sans-serif``, ``monospace``) and the last resort
+(``fallback``), from ``stand_ins.json``: the suite's own fonts (D905). Clients get them with ``GET /api/fonts``."""
+
+Closeness = Literal["same", "same-widths", "other"]
+CLOSENESS: tuple[Closeness, ...] = get_args(Closeness)
+"""How close what a document is shown with is to the font it asks for (E3.13), in the words people see: the font
+itself, a font with exactly its widths (lines and pages break the same, the letters differ), or another font. The
+layout library has the same words (``layout/src/fonts/stand-ins.generated.ts``)."""
 
 
 @dataclass(frozen=True)
@@ -39,6 +51,14 @@ class Resolution:
     requested: str
     provided: str | None
     substituted: bool
+
+    @property
+    def closeness(self) -> Closeness:
+        """``same`` for the family itself, ``same-widths`` for its substitute, ``other`` when the catalogue has
+        neither (whoever shows the document then uses another font, such as the generic family's)."""
+        if self.provided is None:
+            return "other"
+        return "same-widths" if self.substituted else "same"
 
 
 def _font_files(folder: Path) -> list[Path]:

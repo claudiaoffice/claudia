@@ -650,6 +650,24 @@ def build_xlsx_widths_and_heights() -> bytes:
     return _xlsx_bytes(wb)
 
 
+def build_xlsx_stand_in_fonts() -> bytes:
+    """An xlsx with one cell per font of ``stand-ins.json`` (E3.13): the fonts office files ask for most, set the
+    way Excel sets them, on a computer that has them. The shared sample of every test of the font stand-ins."""
+    import json
+
+    from openpyxl.styles import Font
+
+    fonts = json.loads((ROOT / "xlsx" / "stand-in-fonts" / "stand-ins.json").read_text(encoding="utf-8"))["fonts"]
+    wb = openpyxl.Workbook()
+    sheet = wb.active
+    sheet.title = "Fonts"
+    for row, entry in enumerate(fonts, start=1):
+        cell = sheet.cell(row=row, column=1, value=entry["family"])
+        cell.font = Font(name=entry["family"], size=11)
+        sheet.cell(row=row, column=2, value=row * 1000 + 0.5).font = Font(name=entry["family"], size=11)
+    return _xlsx_bytes(wb)
+
+
 def build_ods_widths_and_heights() -> bytes:
     """An ods the way LibreOffice lays sizes out: a width and a height set, a row sized by its content (the one
     LibreOffice writes for every row nobody sized), columns left at its own width, and a validation."""
@@ -860,6 +878,7 @@ FIXTURES = {
     "ods/names-and-tables/source.ods": build_ods_names_and_tables,
     "xlsx/widths-and-heights/source.xlsx": build_xlsx_widths_and_heights,
     "ods/widths-and-heights/source.ods": build_ods_widths_and_heights,
+    "xlsx/stand-in-fonts/source.xlsx": build_xlsx_stand_in_fonts,
     "ods/charts/source.ods": build_ods_charts,
     "xlsx/charts/source.xlsx": build_xlsx_charts,
     "docx/pictures/source.docx": build_docx_pictures,

@@ -42,15 +42,6 @@ from claudia_core.styles import palette_colours
 
 #: The code of a number format that shows a number as it comes (Excel's *General*, LibreOffice's *Standard*).
 GENERAL = "General"
-#: The font every program has a metric twin of on a free system (same widths, so a sheet keeps its line breaks).
-_TWINS = {
-    "calibri": "Carlito",
-    "cambria": "Caladea",
-    "arial": "'Liberation Sans'",
-    "helvetica": "'Liberation Sans'",
-    "times new roman": "'Liberation Serif'",
-    "courier new": "'Liberation Mono'",
-}
 _SERIF = {"cambria", "times new roman", "georgia", "garamond", "liberation serif", "caladea", "book antiqua"}
 _MONO = {"courier new", "consolas", "courier", "liberation mono", "dejavu sans mono", "lucida console"}
 #: What a property of a cell's look is when the file does not set it: a deviation that takes a parent's property
@@ -115,18 +106,18 @@ def checked(prop: str, value: str) -> str | None:
 
 
 def font_family(name: str) -> str | None:
-    """A font name as a family list with its free metric twin and a generic family: ``Calibri, Carlito,
-    sans-serif``. ``None`` for a name no style may hold."""
+    """A font name as the file says it, followed by its generic family: ``Calibri, sans-serif``. ``None`` for a name
+    no style may hold.
+
+    The font that stands in for a missing one is not written here: the server's catalogue chooses it where the sheet
+    is shown or printed (``claudia_fonts``' ``stand_ins.json``, E3.13), so the workbook keeps asking for the font
+    the file asked for, and an export writes that name back."""
     low = name.strip().lower()
     if not low:
         return None
     named = name.strip() if re.fullmatch(r"[A-Za-z][A-Za-z0-9-]*", name.strip()) else f"'{name.strip()}'"
     generic = "serif" if low in _SERIF else "monospace" if low in _MONO else "sans-serif"
-    parts = [named]
-    if low in _TWINS:
-        parts.append(_TWINS[low])
-    parts.append(generic)
-    return checked("font-family", ", ".join(parts))
+    return checked("font-family", f"{named}, {generic}")
 
 
 def first_family(css_family: str) -> str:

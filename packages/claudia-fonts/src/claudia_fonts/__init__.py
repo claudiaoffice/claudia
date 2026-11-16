@@ -2,7 +2,8 @@
 
 A *collection* is a folder of font files with a ``collection.json`` that states the licence
 (:mod:`claudia_fonts.collection`). The :class:`Catalogue` reads collections and knows the fonts a server has, what it
-refused and why, and which family stands in for a missing one (:mod:`claudia_fonts.catalogue`). Two consumers use it
+refused and why, and which family stands in for a missing one and how close it is (:mod:`claudia_fonts.catalogue`,
+``stand_ins.json``). Two consumers use it
 with the same files: clients get WOFF2 web fonts and the CSS for them (:mod:`claudia_fonts.webfonts`), and a
 typesetting engine gets a fontconfig setup that shows it exactly these fonts (:mod:`claudia_fonts.fontconfig`).
 
@@ -12,7 +13,7 @@ get the pinned starter set of open fonts. It is a library the servers use. It is
 """
 
 from ._version import __version__
-from .catalogue import DEFAULT_SUBSTITUTIONS, Catalogue, Problem, Resolution
+from .catalogue import CLOSENESS, DEFAULT_GENERICS, DEFAULT_SUBSTITUTIONS, Catalogue, Closeness, Problem, Resolution
 from .collection import COLLECTION_FILE, Collection, CollectionRecord, RecordError
 from .font import Axis, FontFile, FontProblem, read_font
 from .fontconfig import JobFonts, write_fontconfig
@@ -20,10 +21,13 @@ from .starter import FetchError, LockedCollection, LockedFile, builtin_folder, c
 from .webfonts import NotServable, WebFontCache, font_face_css
 
 __all__ = [
+    "CLOSENESS",
     "COLLECTION_FILE",
     "Axis",
+    "DEFAULT_GENERICS",
     "DEFAULT_SUBSTITUTIONS",
     "Catalogue",
+    "Closeness",
     "Collection",
     "CollectionRecord",
     "FetchError",

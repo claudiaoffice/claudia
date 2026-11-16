@@ -1,8 +1,11 @@
 """The TeX source that is built around a formula or a page, and how errors are found again in the user's text."""
 
+import json
+from pathlib import Path
+
 import pytest
 
-from claudia_fonts import Catalogue, Collection, CollectionRecord
+from claudia_fonts import Catalogue, Collection, CollectionRecord, builtin_folder, collection_folders
 from claudia_fonts.testing import make_font
 from claudia_typeset import FontUnavailable, Job, Mode, TexError, build_source, parse_log
 
@@ -44,9 +47,23 @@ def test_a_chosen_font_replaces_the_text_font_only(catalogue):
     assert r"\setmathfont{Latin Modern Math}" in built.text
 
 
-def test_a_font_the_catalogue_replaces_by_its_table_is_asked_for_by_the_provided_name(catalogue):
-    built = build_source(Job(Mode.PAGE, "x", font="Times New Roman"), catalogue)
-    assert r"\setmainfont{Liberation Serif}" in built.text
+SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "xlsx" / "stand-in-fonts" / "stand-ins.json"
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [e for e in json.loads(SAMPLE.read_text(encoding="utf-8"))["fonts"] if e["stand_in"]],
+    ids=lambda e: e["family"],
+)
+def test_a_font_of_the_sample_is_set_in_the_stand_in_a_server_with_the_shipped_fonts_has(tmp_path, entry):
+    """E3.13: the shared sample's fonts are typeset in the same stand-ins as print and PDF use."""
+    math = tmp_path / "math"
+    math.mkdir()
+    make_font(math / "lmmath.ttf", "Latin Modern Math", math=True)
+    shipped = [Collection.from_folder(f) for f in collection_folders(builtin_folder())]
+    catalogue = Catalogue.from_collections([*shipped, Collection(math, CollectionRecord("m", "test", True))])
+    built = build_source(Job(Mode.PAGE, "x", font=entry["family"]), catalogue)
+    assert rf"\setmainfont{{{entry['stand_in']}}}" in built.text
 
 
 def test_a_font_that_nobody_provides_is_reported_by_name(catalogue):

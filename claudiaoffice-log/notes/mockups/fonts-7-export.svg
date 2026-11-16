@@ -1,0 +1,112 @@
+<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="900" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — Exporting: each stand-in turns back into the font it stood in for, said before it happens, proposed</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">ExportFormatDialog.vue (File ▸ Manage ▸ Export…) with a Fonts section, shown when the document has a stand-in or a font to embed. Download of a kept original file needs none: its fonts are untouched.</text>
+<rect x="40" y="96" width="880" height="760" rx="14" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="64" y="132" font-family="Fraunces, Georgia, serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="start">Export this presentation</text>
+<text x="896" y="132" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="400" fill="#6e6880" text-anchor="end">×</text>
+<line x1="40" y1="150" x2="920" y2="150" stroke="#e3dfee" stroke-width="1"/>
+<text x="64" y="180" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">This saves “Q3 review” to this computer, in the format you pick. History and chat are not included.</text>
+<text x="64" y="212" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">Save as</text>
+<rect x="134" y="194" width="300" height="30" rx="6" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="145" y="213.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">PowerPoint presentation (.pptx)</text>
+<text x="418" y="213.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">▾</text>
+<text x="64" y="264" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Fonts in the file</text>
+<circle cx="200" cy="259" r="11" fill="#5b4bc4"/>
+<text x="200" y="263.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="64" y="288" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">PowerPoint gets the names this presentation asks for. Where a stand-in was shown here, the other computer shows the real font if it has it.</text>
+<rect x="64" y="328" width="832" height="28" rx="6" fill="#f7f3ec"/>
+<text x="78" y="346" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="start">FONT</text>
+<text x="234" y="346" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="start">WRITTEN INTO THE FILE AS</text>
+<text x="424" y="346" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="start">WHAT HAPPENS THERE</text>
+<text x="78" y="382" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Arial</text>
+<rect x="234" y="366" width="172" height="30" rx="6" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="245" y="385.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Arial</text>
+<text x="390" y="385.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">▾</text>
+<rect x="231" y="363" width="178" height="36" rx="8" fill="none" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="424" y="378" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Here shown as Liberation Sans. PowerPoint uses Arial, which every Windows and</text>
+<text x="424" y="394" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Mac has.</text>
+<line x1="64" y1="414" x2="896" y2="414" stroke="#e3dfee" stroke-width="1"/>
+<text x="78" y="440" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Calibri</text>
+<rect x="234" y="424" width="172" height="30" rx="6" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="245" y="443.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Calibri</text>
+<text x="390" y="443.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">▾</text>
+<text x="424" y="436" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Here shown as Carlito. PowerPoint uses Calibri.</text>
+<line x1="64" y1="472" x2="896" y2="472" stroke="#e3dfee" stroke-width="1"/>
+<text x="78" y="498" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Century Gothic</text>
+<rect x="234" y="482" width="172" height="30" rx="6" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="245" y="501.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Century Gothic</text>
+<text x="390" y="501.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">▾</text>
+<text x="424" y="494" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#8a4a12" text-anchor="start">Here shown as Inter, which is narrower: text you fitted here may not fit there</text>
+<text x="424" y="510" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#8a4a12" text-anchor="start">(slides 4, 7, 9).</text>
+<line x1="64" y1="530" x2="896" y2="530" stroke="#e3dfee" stroke-width="1"/>
+<text x="78" y="556" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Montserrat</text>
+<text x="234" y="556" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Montserrat, embedded</text>
+<text x="424" y="552" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">An open font: it travels inside the file.</text>
+<line x1="64" y1="588" x2="896" y2="588" stroke="#e3dfee" stroke-width="1"/>
+<text x="78" y="614" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Aptos</text>
+<text x="234" y="614" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Aptos, embedded</text>
+<text x="424" y="610" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Embedded as the file came; the font allows it.</text>
+<line x1="64" y1="646" x2="896" y2="646" stroke="#e3dfee" stroke-width="1"/>
+<circle cx="218" cy="342" r="11" fill="#5b4bc4"/>
+<text x="218" y="346.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<circle cx="908" cy="501" r="11" fill="#5b4bc4"/>
+<text x="908" y="505.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<circle cx="908" cy="559" r="11" fill="#5b4bc4"/>
+<text x="908" y="563.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<rect x="236" y="405" width="330" height="102" rx="10" fill="#1f1a3318"/>
+<rect x="234" y="402" width="330" height="102" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="240" y="408" width="318" height="44" rx="6" fill="#e7e1f4"/>
+<text x="250" y="426" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Arial</text>
+<text x="250" y="443" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">The original name. Recommended.</text>
+<text x="250" y="474" font-family="'Liberation Sans', sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Liberation Sans, embedded</text>
+<text x="250" y="491" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Exactly what you saw here, on any computer.</text>
+<circle cx="216" cy="452" r="11" fill="#5b4bc4"/>
+<text x="216" y="456.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<rect x="64" y="672" width="832" height="50" rx="10" fill="#f7f3ec"/>
+<text x="80" y="702" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Afterwards: “Q3 review.pptx is saved. Arial, Calibri and Century Gothic are written by name; Montserrat and Aptos are embedded.”</text>
+<circle cx="892" cy="676" r="11" fill="#5b4bc4"/>
+<text x="892" y="680.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">6</text>
+<line x1="40" y1="794" x2="920" y2="794" stroke="#e3dfee" stroke-width="1"/>
+<rect x="803" y="807" width="96" height="36" rx="9" fill="none" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="806" y="810" width="90" height="30" rx="7" fill="#5b4bc4"/>
+<text x="851.0" y="829.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Export</text>
+<rect x="718" y="810" width="78" height="30" rx="7" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="757.0" y="829.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<circle cx="971" cy="116" r="11" fill="#5b4bc4"/>
+<text x="971" y="120.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="992" y="121" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">The third moment</text>
+<text x="992" y="141" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Import named the pairs, the chip kept them in view, and export</text>
+<text x="992" y="158.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">turns each stand-in back into its name. The section is the</text>
+<text x="992" y="175.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">export&#x27;s own: the wording is the same as on import.</text>
+<circle cx="971" cy="212.0" r="11" fill="#5b4bc4"/>
+<text x="971" y="216.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="992" y="217.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Written as: the original by default</text>
+<text x="992" y="237.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The file asks for Arial again, so Word and PowerPoint use real</text>
+<text x="992" y="254.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Arial, and a document that came in with Arial goes out with Arial</text>
+<text x="992" y="271.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">(the request of 2026-11-16).</text>
+<circle cx="971" cy="308.0" r="11" fill="#5b4bc4"/>
+<text x="971" y="312.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="992" y="313.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">What changed while it was a stand-in</text>
+<text x="992" y="333.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Where the widths differ, boxes and columns that were fitted here</text>
+<text x="992" y="350.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">will not fit the same way there. The dialog says where, from the</text>
+<text x="992" y="367.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">same count as on import, instead of letting the recipient find out.</text>
+<circle cx="971" cy="404.0" r="11" fill="#5b4bc4"/>
+<text x="971" y="408.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="992" y="409.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Embedded where allowed</text>
+<text x="992" y="429.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Open fonts, and fonts the file already carried, are embedded in</text>
+<text x="992" y="446.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">.pptx, .docx and the OpenDocument formats where the font&#x27;s</text>
+<text x="992" y="463.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">own embedding bits allow it. Arial is not embedded: Windows</text>
+<text x="992" y="480.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">and macOS ship it, and PowerPoint skips it too.</text>
+<circle cx="971" cy="517.0" r="11" fill="#5b4bc4"/>
+<text x="971" y="521.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="992" y="522.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Or: what you saw</text>
+<text x="992" y="542.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">For a recipient without the original font (LibreOffice on Linux),</text>
+<text x="992" y="559.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">the stand-in can be written and embedded instead. Chosen per</text>
+<text x="992" y="576.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">font, remembered for this document.</text>
+<circle cx="971" cy="613.0" r="11" fill="#5b4bc4"/>
+<text x="971" y="617.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">6</text>
+<text x="992" y="618.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">One sentence after</text>
+<text x="992" y="638.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The notice after saving repeats the outcome, like the list of what</text>
+<text x="992" y="655.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">a format could not hold.</text>
+</svg>

@@ -57,8 +57,13 @@ describe('a composes text on pages', () => {
   })
 
   it('says when a style asks for a font the server does not have', () => {
+    const garamond = STYLES.map((s) => (s.id === 'body' ? { ...s, resolved: { ...s.resolved, 'font-family': 'Garamond, serif' } } : s))
+    expect(layoutText(doc(3, { styles: garamond }), fonts, resolver).notes).toEqual([{ kind: 'font', requested: 'Garamond', used: 'Fraunces' }])
+  })
+
+  it('lays a font with a same-width stand-in out in that stand-in, and says nothing about it yet (E3.13 c)', () => {
     const georgia = STYLES.map((s) => (s.id === 'body' ? { ...s, resolved: { ...s.resolved, 'font-family': 'Georgia, serif' } } : s))
-    expect(layoutText(doc(3, { styles: georgia }), fonts, resolver).notes).toEqual([{ kind: 'font', requested: 'Georgia', used: 'Fraunces' }])
+    expect(layoutText(doc(3, { styles: georgia }), fonts, resolver).notes).toEqual([])
   })
 
   it('draws floating objects where they hang, clipped, and says what it cannot print', () => {

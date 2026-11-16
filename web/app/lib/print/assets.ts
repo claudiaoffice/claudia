@@ -59,7 +59,9 @@ export class PrintAssets {
     const harfbuzz = await HarfBuzz.load({ shaping, subset }, sha256)
     const fonts: ListedFont[] = listing.fonts ?? []
     if (!fonts.length) throw new Error(t('the server has no fonts to lay out with; its administrator can add some (python -m claudia_fonts fetch)'))
-    const catalogue: Catalogue = { fonts, substitutions: listing.substitutions ?? {} }
+    // the stand-ins and generic families as the server says (claudia_fonts' stand_ins.json, E3.13); an older server
+    // sends no generics, and the layout library then uses its generated copy of the same table
+    const catalogue: Catalogue = { fonts, substitutions: listing.substitutions ?? {}, ...(listing.generics ? { generics: listing.generics } : {}) }
     const languages: HyphenationEntry[] = Array.isArray(hyphenation?.languages) ? hyphenation.languages : []
     return new PrintAssets(new FontSet(harfbuzz), new FontResolver(catalogue), catalogue, new Map(fonts.map((f) => [f.sha256, f])), languages)
   }

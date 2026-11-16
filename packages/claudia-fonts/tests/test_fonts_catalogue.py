@@ -172,13 +172,3 @@ def test_the_substitutes_can_be_changed(tmp_path):
     catalogue = Catalogue.from_folders([root], substitutions={"Garamond": "Alpha"})
     assert catalogue.resolve("Garamond").provided == "Alpha"
     assert catalogue.resolve("Calibri").provided is None
-
-
-def test_the_built_in_table_covers_the_common_office_fonts():
-    from claudia_fonts import DEFAULT_SUBSTITUTIONS
-
-    assert DEFAULT_SUBSTITUTIONS["Arial"] == "Liberation Sans"
-    assert DEFAULT_SUBSTITUTIONS["Times New Roman"] == "Liberation Serif"
-    assert DEFAULT_SUBSTITUTIONS["Courier New"] == "Liberation Mono"
-    assert DEFAULT_SUBSTITUTIONS["Calibri"] == "Carlito"
-    assert DEFAULT_SUBSTITUTIONS["Cambria"] == "Caladea"

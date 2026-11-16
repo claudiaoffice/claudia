@@ -6,6 +6,7 @@
  */
 import type { FaceRef } from './fontset'
 import type { Axis } from './sfnt'
+import { type Closeness, STAND_IN_GENERICS } from './stand-ins.generated'
 
 /** A font as the server's catalogue lists it (`GET /api/fonts`). */
 export interface CatalogueFont {
@@ -22,8 +23,10 @@ export interface CatalogueFont {
 
 export interface Catalogue {
   fonts: CatalogueFont[]
-  /** metric-compatible open fonts for common office fonts: `Arial` → `Liberation Sans` */
+  /** open fonts that take exactly the room of a common office font: `Arial` → `Arimo` */
   substitutions: Readonly<Record<string, string>>
+  /** the font of each generic family, as the server says (`GET /api/fonts`); {@link DEFAULT_GENERICS} without */
+  generics?: Generics
 }
 
 /** The family each CSS generic family stands for (and the last resort, `fallback`). */
@@ -34,12 +37,9 @@ export interface Generics {
   fallback: string
 }
 
-export const DEFAULT_GENERICS: Generics = {
-  serif: 'Fraunces',
-  'sans-serif': 'Inter',
-  monospace: 'JetBrains Mono',
-  fallback: 'Inter',
-}
+/** The suite's own fonts (D905), generated from claudia_fonts' `stand_ins.json` (E3.13): what a catalogue that
+ *  names no generic families gets. */
+export const DEFAULT_GENERICS: Generics = { ...STAND_IN_GENERICS }
 
 const GENERIC_ALIASES: Record<string, keyof Generics> = {
   serif: 'serif',
@@ -64,7 +64,12 @@ export interface Resolution {
   /** `exact`: the first family named; `substitute`: its metric-compatible replacement; `next`: a later family of the
    *  stack; `fallback`: none of them, the catalogue's fallback */
   how: 'exact' | 'substitute' | 'next' | 'fallback'
+  /** how close the font used is to the one asked for (E3.13): `same` for `exact`, `same-widths` for `substitute`,
+   *  `other` for `next` and `fallback` */
+  closeness: Closeness
 }
+
+const CLOSENESS_OF: Record<Resolution['how'], Closeness> = { exact: 'same', substitute: 'same-widths', next: 'other', fallback: 'other' }
 
 /** The family names of a CSS `font-family` value, unquoted, in order. */
 export function parseFamilies(value: string): string[] {
@@ -105,10 +110,11 @@ export class FontResolver {
   private readonly byFamily = new Map<string, CatalogueFont[]>()
   private readonly substitutions = new Map<string, string>()
 
-  constructor(
-    catalogue: Catalogue,
-    private readonly generics: Generics = DEFAULT_GENERICS,
-  ) {
+  private readonly generics: Generics
+
+  /** `generics` overrides the catalogue's own, which override {@link DEFAULT_GENERICS}. */
+  constructor(catalogue: Catalogue, generics?: Generics) {
+    this.generics = generics ?? catalogue.generics ?? DEFAULT_GENERICS
     for (const f of catalogue.fonts) {
       if (f.outlines && f.outlines !== 'truetype') continue
       const key = f.family.toLowerCase()
@@ -145,10 +151,13 @@ export class FontResolver {
           if (found) how = i === 0 ? 'substitute' : 'next'
         }
       }
-      if (found) return { ...found, requested, how: i === 0 && generic ? 'exact' : how }
+      if (found) {
+        const said = i === 0 && generic ? 'exact' : how
+        return { ...found, requested, how: said, closeness: CLOSENESS_OF[said] }
+      }
     }
     const last = this.pick(this.generics.fallback, weight, italic, size) ?? this.any(weight, italic, size)
-    return last ? { ...last, requested, how: 'fallback' } : null
+    return last ? { ...last, requested, how: 'fallback', closeness: 'other' } : null
   }
 
   private any(weight: number, italic: boolean, size: number) {

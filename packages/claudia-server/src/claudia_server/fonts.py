@@ -6,7 +6,9 @@ folders given with ``--fonts``) lists every font with the SHA-256 of its file, a
 hash. A file's address never changes its meaning, so browsers may keep it for good.
 
 * ``GET /api/fonts`` - the catalogue: each font that may be handed out (family, style, weight, slant, axes, outlines,
-  hash and licence), the metric-compatible substitutions, and the catalogue's digest.
+  hash and licence), the metric-compatible substitutions, the font of each generic family (``generics``: serif,
+  sans-serif, monospace and the fallback, E3.13), and the catalogue's digest. All from ``claudia_fonts``'s
+  ``stand_ins.json``, so a client never keeps a table of its own.
 * ``GET /api/fonts/{sha256}`` - the file itself (TrueType or OpenType), for layout and for embedding in a PDF.
 * ``GET /api/fonts/{sha256}.woff2`` - the same font as WOFF2, for showing text in a page.
 
@@ -26,7 +28,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, Response
 
-from claudia_fonts import Catalogue, FontFile, NotServable, WebFontCache, collection_folders
+from claudia_fonts import DEFAULT_GENERICS, Catalogue, FontFile, NotServable, WebFontCache, collection_folders
 
 #: The format of ``GET /api/fonts``; it rises when a field changes meaning or goes away.
 FONTS_FORMAT = 1
@@ -52,13 +54,14 @@ class FontService:
         """The fonts that may be handed out, by family, weight and slant."""
         return [f for f in self.catalogue.fonts() if f.redistributable]
 
-    def listing(self, substitutions: Mapping[str, str]) -> dict:
+    def listing(self, substitutions: Mapping[str, str], generics: Mapping[str, str] = DEFAULT_GENERICS) -> dict:
         """The body of ``GET /api/fonts``."""
         return {
             "format": FONTS_FORMAT,
             "digest": self.catalogue.digest,
             "fonts": [f.to_data() | {"file": f"/api/fonts/{f.sha256}"} for f in self.servable()],
             "substitutions": dict(substitutions),
+            "generics": dict(generics),
         }
 
     def summary(self) -> str:

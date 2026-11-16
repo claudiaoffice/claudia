@@ -29,4 +29,6 @@ As a user, I need a number of centralized services on the server that cannot mea
 
 Before we start coding, let's first make designs in SVG or PNG that we can discuss before settling on a UI.
 
+**2026-11-16:** the font library part is proposed as a fourth server settings page, Fonts: `notes/e3-3-font-management-ui.md`, `notes/mockups/fonts-1-server-settings.svg`, `fonts-2-add-fonts.svg`.
+
 Project: [[claudia-office|claudia-office]]

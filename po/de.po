@@ -6761,7 +6761,7 @@ msgstr "erste Zelle der PivotTable"
 msgid "first {length} shown"
 msgstr "die ersten {length} angezeigt"
 
-#: web/app/lib/print/assets.ts:75
+#: web/app/lib/print/assets.ts:77
 msgid "font {hash}… is not in the server's catalogue"
 msgstr "Schrift {hash}… ist nicht im Katalog des Servers"
 
@@ -7605,7 +7605,7 @@ msgstr "der erste Monat von 2.000 über 2 Jahre"
 msgid "the first month of 8,000 over 3 years"
 msgstr "der erste Monat von 8.000 über 3 Jahre"
 
-#: web/app/lib/print/assets.ts:77
+#: web/app/lib/print/assets.ts:79
 msgid "the font {family} {style} did not arrive intact"
 msgstr "die Schrift {family} {style} ist nicht vollständig angekommen"
 
@@ -7617,7 +7617,7 @@ msgstr "die Formel in der Zelle als Text, oder #N/A, wenn die Zelle keine enthä
 msgid "the header row"
 msgstr "die Kopfzeile"
 
-#: web/app/lib/print/assets.ts:102
+#: web/app/lib/print/assets.ts:104
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr "die Trennmuster für {name} sind nicht vollständig angekommen"
 

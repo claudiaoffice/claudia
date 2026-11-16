@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `GET /api/fonts` also sends `generics`, the font of each CSS generic family and the fallback, from
+  `claudia_fonts` (E3.13), so clients keep no table of their own; `FONTS_FORMAT` stays 1 (a field was added).
+  `FontService.listing` takes them as `generics` (default `DEFAULT_GENERICS`).
 - `add_image` and `describe_object` in composes (CODE-27): a picture comes into a text from disk, hanging from a
   character (`block`, `offset`), and any object of a text can be described or marked decorative, as in the other two
   apps. `PROTOCOL_VERSION` stays 1: methods were added.
