@@ -159,8 +159,8 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         metavar="DIR",
         help="font collections to hand to clients for layout and PDF export (/api/fonts), besides the open fonts "
-        "every server has (D500): a collection folder or a folder of them; repeatable. Default: STATE_DIR/fonts if "
-        "it exists",
+        "every server has (D500): a collection folder or a folder of them; repeatable. STATE_DIR/fonts, where the "
+        "server settings add fonts, is read after them",
     )
     parser.add_argument(
         "--hyphenation",
@@ -366,14 +366,18 @@ def _shapes(args: argparse.Namespace, models: list[type[DocumentModel]]) -> Shap
 
 def _fonts(args: argparse.Namespace, state_dir: Path) -> FontService:
     """The fonts this server hands to its clients: the starter set that ships with ``claudia_fonts`` (D500, so that
-    printing never finds a server without fonts), then the folders of ``--fonts``, else ``STATE_DIR/fonts`` if there
-    is one; a font of the same family and style in those replaces the shipped one. ``UsageError`` for a folder given
-    on the command line that does not exist."""
+    printing never finds a server without fonts), then the folders of ``--fonts``, then ``STATE_DIR/fonts``, where
+    Server settings ▸ Fonts adds collections (D1041); a font of the same family and style in a later one replaces an
+    earlier one. ``UsageError`` for a folder given on the command line that does not exist."""
     for folder in args.fonts:
         if not Path(folder).is_dir():
             raise UsageError(f"--fonts: {folder} is not a folder")
-    folders = [builtin_folder(), *([Path(f) for f in args.fonts] or [state_dir / "fonts"])]
-    return FontService.from_folders(folders, state_dir / "webfonts")
+    return FontService.from_folders(
+        [Path(f) for f in args.fonts],
+        state_dir / "webfonts",
+        shipped=[builtin_folder()],
+        added_root=state_dir / "fonts",
+    )
 
 
 def _program_of(entry: object) -> str | None:
@@ -602,7 +606,13 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     idle = IdleWatch(args.exit_when_idle) if args.exit_when_idle else None
     exposed = not is_loopback(args.host)
     admin = AdminContext(
-        admins=admins, sessions=AdminSessions(), settings=settings, state_dir=state_dir, ai=ai, exposed=exposed
+        admins=admins,
+        sessions=AdminSessions(),
+        settings=settings,
+        state_dir=state_dir,
+        ai=ai,
+        exposed=exposed,
+        fonts=fonts,
     )
     app = create_app(
         suite,

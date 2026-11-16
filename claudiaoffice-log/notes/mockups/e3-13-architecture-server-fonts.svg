@@ -1,0 +1,84 @@
+<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="900" fill="#f3f1ea"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6e6880"/></marker></defs>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">E3.13 f — Server settings ▸ Fonts: where the pieces live</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">The library decides (claudia_fonts), the server exposes and guards (claudia_server), the page only shows and asks (web). Who may receive a font: D1041.</text>
+<text x="40" y="108" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">WEB (nuxt, /admin/)</text>
+<text x="500" y="108" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">SERVER (claudia_server)</text>
+<text x="960" y="108" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#6e6880" text-anchor="start">LIBRARY (claudia_fonts) AND DISK</text>
+<rect x="40" y="124" width="420" height="200" rx="10" fill="#e8e4f5" stroke="#cfc9dc"/>
+<text x="54" y="148" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">AdminFonts.vue  (4th page of AdminShell)</text>
+<text x="54" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">summary, collections as cards (shipped = one card)</text>
+<text x="54" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">families table: All · Stand-ins · Not usable, search</text>
+<text x="54" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">problems in words; ⋯ Rename… / Remove collection…</text>
+<text x="54" y="224" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">MayGoBadge.vue: ✓ Anywhere · ◐ This server</text>
+<text x="54" y="242" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">previews: /api/fonts/{sha}.woff2 with the admin session</text>
+<text x="54" y="260" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">PromptDialog (rename), Modal (remove, danger)</text>
+<rect x="40" y="344" width="420" height="150" rx="10" fill="#e8e4f5" stroke="#cfc9dc"/>
+<text x="54" y="368" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">AddFontsDialog.vue  (check first, then add)</text>
+<text x="54" y="390" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">A: files / .zip, name, who may receive, licence</text>
+<text x="54" y="408" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">   choosing files holds and checks them (no change)</text>
+<text x="54" y="426" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">B: one line per font, the scope in words</text>
+<text x="54" y="444" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">   only “Add n fonts” changes the server</text>
+<rect x="40" y="514" width="420" height="170" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="54" y="538" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">lib/admin-fonts.ts  +  lib/admin-api.ts</text>
+<text x="54" y="560" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">types of the page and the check (wire names as sent)</text>
+<text x="54" y="578" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">familyRows, filterCounts, stylesLabel, previewStyle</text>
+<text x="54" y="596" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">problemText, checkLine, scopeSentences, collectionMeta</text>
+<text x="54" y="614" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">words via t(): codes from the server, words here</text>
+<text x="54" y="632" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">admin-api: fontsPage, holdFontFile, checkFonts,</text>
+<text x="54" y="650" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">  addFontCollection, renameFontCollection, remove…</text>
+<rect x="500" y="124" width="420" height="250" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="514" y="148" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">admin_fonts.py  (/api/admin/fonts, administrators only)</text>
+<text x="514" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">GET  /fonts                → the page (_Page)</text>
+<text x="514" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">POST /fonts/files          → hold one file (FontUploads)</text>
+<text x="514" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">POST /fonts/check          → check_files, changes nothing</text>
+<text x="514" y="224" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">POST /fonts/collections    → add_collection, reload</text>
+<text x="514" y="242" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">PATCH/DELETE /fonts/collections/{id} → added ones only</text>
+<text x="514" y="260" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">every change answers the whole page; one lock</text>
+<text x="514" y="278" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">ADMIN_FONTS_FORMAT = 1</text>
+<rect x="500" y="394" width="420" height="190" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="514" y="418" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">fonts.py  FontService  (/api/fonts)</text>
+<text x="514" y="440" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">sources: shipped (D500) · operator (--fonts) · added</text>
+<text x="514" y="458" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">reload() reads them again; origin_of(collection)</text>
+<text x="514" y="476" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">servable(local) / listing(local):</text>
+<text x="514" y="494" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">  This-server fonts only for the server&#x27;s people</text>
+<text x="514" y="512" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">local(request): access secret or admin session</text>
+<text x="514" y="530" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Cache-Control: private for those</text>
+<rect x="500" y="604" width="420" height="80" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="514" y="628" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">cli.py · app.py</text>
+<text x="514" y="650" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">STATE_DIR/fonts is the added root, read after --fonts</text>
+<text x="514" y="668" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">AdminContext.fonts; font_router(…, local)</text>
+<rect x="960" y="124" width="400" height="250" rx="10" fill="#e3f3ef" stroke="#cfc9dc"/>
+<text x="974" y="148" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_fonts.adding  (new)</text>
+<text x="974" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">check_files(files, catalogue) → FileCheck lines</text>
+<text x="974" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">  added · replaces · left-out + code</text>
+<text x="974" y="206" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">  zip opened into its fonts; licence hint (name ID 13)</text>
+<text x="974" y="224" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">add_collection(root, …) → folder, written whole</text>
+<text x="974" y="242" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">rename_collection(folder, name)</text>
+<text x="974" y="260" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">remove_collection(root, folder): only under root</text>
+<rect x="960" y="394" width="400" height="190" rx="10" fill="#e3f3ef" stroke="#cfc9dc"/>
+<text x="974" y="418" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">collection.py · catalogue.py · font.py</text>
+<text x="974" y="440" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">CollectionRecord.may_go, added_by, added</text>
+<text x="974" y="458" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">  format 1 kept: redistributable false = This server</text>
+<text x="974" y="476" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">Problem.code/detail/family/style; not_usable</text>
+<text x="974" y="494" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">FontProblem codes; Catalogue.collections,</text>
+<text x="974" y="512" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">  stands_in_for (claudia_core.stand_ins)</text>
+<rect x="960" y="604" width="400" height="80" rx="10" fill="#fdf1e2" stroke="#cfc9dc"/>
+<text x="974" y="628" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Disk</text>
+<text x="974" y="650" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">builtin/ (shipped) · --fonts folders (operator)</text>
+<text x="974" y="668" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">STATE_DIR/fonts/&lt;slug&gt;/collection.json + files</text>
+<path d="M460 220L500 220" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<text x="480.0" y="214.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="middle">fetch</text>
+<path d="M460 420L500 260" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<path d="M920 250L960 250" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<path d="M920 480L960 480" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<path d="M1160 374L1160 394" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<path d="M1160 584L1160 604" stroke="#6e6880" stroke-width="1.4" fill="none" marker-end="url(#a)"/>
+<rect x="40" y="710" width="1320" height="150" rx="10" fill="#ffffff" stroke="#cfc9dc"/>
+<text x="54" y="734" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">Not in this patch (backlog, E3.13)</text>
+<text x="54" y="756" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">• Fetch an open collection from a pinned list (server-side, SHA-256 checked), Edit stand-ins…, Remove file… — the second patch the owner chose to defer.</text>
+<text x="54" y="774" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">• The web client does not send the access secret when it loads fonts for layout and print: a document&#x27;s people get This-server fonts only on a server without a secret.</text>
+<text x="54" y="792" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">• No export or PDF checks This-server fonts yet; LaTeX formulas see added fonts after a restart (the LaTeX plugin keeps the catalogue it was started with).</text>
+<text x="54" y="810" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#3d3752" text-anchor="start">• Bug found: after naming the first administrator the settings page stays on the setup form until reloaded (reported, not fixed here).</text>
+</svg>

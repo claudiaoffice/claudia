@@ -18,6 +18,8 @@ used.protocol  # FastAPI route /api/protocol in create_app
 used.live  # FastAPI WebSocket route in create_app
 used.app_protocol  # FastAPI route /api/{app}/protocol (D431)
 used.app_documents  # FastAPI route /api/{app}/docs (D431)
+used.fonts_page  # FastAPI route GET /api/admin/fonts (admin_fonts, D1041)
+used.hold_file  # FastAPI route POST /api/admin/fonts/files (admin_fonts)
 used.app_live  # FastAPI WebSocket route /api/{app}/docs/{id}/ws (D431)
 used.present  # FastAPI WebSocket route /api/presence (D434)
 used.upload  # FastAPI route POST /api/uploads (D440)

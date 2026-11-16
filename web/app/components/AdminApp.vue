@@ -26,7 +26,7 @@ const exposed = ref(false)
 // refreshed below once this visit's own `/api/admin/status` call resolves — `friendlyLabel`/`upsert` read and
 // write localStorage, which gives Vue nothing to react to on its own.
 const label = ref(friendlyLabel(origin, host))
-const active = ref<'ai' | 'typeset' | 'access'>('ai')
+const active = ref<'ai' | 'typeset' | 'fonts' | 'access'>('ai')
 const session = useAdminSession()
 
 onMounted(async () => {
@@ -60,6 +60,7 @@ function close() {
       <AdminShell v-else :label="label" :host="host" :signed-in-as="session.name.value" :active="active" @navigate="active = $event" @sign-out="session.logout()" @close="close">
         <AdminAiModel v-if="active === 'ai'" :token="session.token.value!" />
         <AdminTypesetting v-else-if="active === 'typeset'" :token="session.token.value!" />
+        <AdminFonts v-else-if="active === 'fonts'" :token="session.token.value!" :server="label" />
         <AdminAccessDocuments v-else :token="session.token.value!" />
       </AdminShell>
     </template>

@@ -48,6 +48,7 @@ Unused numbers in a closed block stay unused.
 | D530–D549 | document description and tags, the front page's way back from a collection, moving and copying documents between places (branch `file-handling`; D530–D536 used, D536 by the QA of 2026-11-15) | 2026-11-15 | open |
 | D660–D679 | code review follow-up: one Neutralino package for macOS and Windows (CODE-14; D660 used) | 2026-11-15 | open |
 | D680–D699 | the AI in composes: a model-driven participant, its document lens, words by quoting them (E7.10; branch `composes-ai`; D680–D681 used) | 2026-11-16 | open |
+| D1041–D1060 | font management: who may receive a server's fonts, Server settings ▸ Fonts, fonts kept honest from import to export (E3.13; branch `font-server-ui`; D1041 used) | 2026-11-16 | open |
 
 ## Never to be used
 

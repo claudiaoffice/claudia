@@ -26,6 +26,8 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from urllib.parse import unquote
 
+from fastapi import HTTPException, Request
+
 from claudia_container import ContainerError, read_manifest
 
 from .formats import CLAUDIA, FORMATS, file_details, sniff
@@ -71,6 +73,20 @@ class Upload:
         if self.fmt != CLAUDIA:
             answer["kind"] = FORMATS[self.fmt][1]
         return answer
+
+
+async def read_body(request: Request, most: int) -> bytes:
+    """The request's body, refused with 413 past ``most`` bytes (before reading it, when it says how long it is)."""
+    declared = request.headers.get("content-length")
+    if declared is not None and declared.isdigit() and int(declared) > most:
+        raise HTTPException(413, f"the file is larger than {most // (1024 * 1024)} MB")
+    chunks, size = [], 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > most:
+            raise HTTPException(413, f"the file is larger than {most // (1024 * 1024)} MB")
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def file_name(header: str | None) -> str:

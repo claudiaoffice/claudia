@@ -5,7 +5,22 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- Fonts whose collection may go to this server's people only (`redistributable: false`, "This server", D1041) are
+  listed and served to a request with the access secret or an administrator's session; before, they were never handed
+  out. On a server without an access secret that is everyone who reaches it. Their files and the listing are kept by
+  the person's own browser only (`Cache-Control: private`). `font_router` takes `local`, `FontService.servable` and
+  `listing` take `local`.
+- `STATE_DIR/fonts` is read after the folders of `--fonts` too (it was read only without them): it is where Server
+  settings ▸ Fonts adds collections. `FontService.from_folders` takes `shipped` and `added_root`, and the service
+  knows each collection's origin (`Origin`: shipped, operator, added) and reads them again with `reload`.
+
 ### Added
+- Server settings ▸ Fonts (E3.13 f, D1041): `/api/admin/fonts` (the catalogue as the page shows it: collections, the
+  starter set as one card, families with what each stands in for, every font not used with a reason code),
+  `/api/admin/fonts/files` (hold a file), `/check` (what each font would become; changes nothing) and
+  `/collections` (add, `PATCH` to rename, `DELETE` to remove a collection added there). Administrators only.
+  `AdminContext.fonts`, module `claudia_server.admin_fonts`, `ADMIN_FONTS_FORMAT` 1.
 - `GET /api/fonts` also sends `generics`, the font of each CSS generic family and the fallback, from
   `claudia_fonts` (E3.13), so clients keep no table of their own; `FONTS_FORMAT` stays 1 (a field was added).
   `FontService.listing` takes them as `generics` (default `DEFAULT_GENERICS`).

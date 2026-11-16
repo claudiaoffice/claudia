@@ -172,3 +172,36 @@ def test_the_substitutes_can_be_changed(tmp_path):
     catalogue = Catalogue.from_folders([root], substitutions={"Garamond": "Alpha"})
     assert catalogue.resolve("Garamond").provided == "Alpha"
     assert catalogue.resolve("Calibri").provided is None
+
+
+def test_a_problem_says_why_as_a_code_with_the_font_it_is_about(tmp_path):
+    """Server settings ▸ Fonts says a problem in the page's own language, at the family it is about (D1041)."""
+    root = folder(
+        tmp_path, "one", ("a.ttf", {"family": "Alpha"}), ("b.ttf", {"family": "Alpha", "style": "Bold", "fs_type": 2})
+    )
+    catalogue = Catalogue.from_folders([root])
+    [problem] = catalogue.problems
+    assert (problem.code, problem.detail, problem.family, problem.style, problem.collection) == (
+        "forbids-embedding",
+        "2",
+        "Alpha",
+        "Bold",
+        "one",
+    )
+    assert problem.not_usable
+
+
+def test_a_replaced_font_is_a_problem_but_not_a_missing_font(tmp_path):
+    one = folder(tmp_path, "one", ("a.ttf", {"family": "Alpha"}))
+    two = folder(tmp_path, "two", ("a.ttf", {"family": "Alpha", "version": "2.0"}))
+    [problem] = Catalogue.from_folders([one, two]).problems
+    assert (problem.code, problem.detail, problem.collection) == ("replaced", "two", "one")
+    assert not problem.not_usable
+
+
+def test_the_catalogue_says_what_a_family_stands_in_for_and_keeps_its_collections(tmp_path):
+    root = folder(tmp_path, "one", ("a.ttf", {"family": "Arimo"}))
+    catalogue = Catalogue.from_folders([root])
+    assert catalogue.stands_in_for("arimo")[:2] == ("Arial", "Helvetica")
+    assert catalogue.stands_in_for("Zeta") == ()
+    assert [c.folder for c in catalogue.collections] == [root]

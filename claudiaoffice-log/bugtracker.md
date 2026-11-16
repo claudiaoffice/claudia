@@ -172,6 +172,9 @@ statement in the docs or on the website).
 | CODE-42 | P3 | Code / Export | Exports named a generic font family by a font Claudia does not show | **fixed** 2026-11-16 (E3.13) |
 | CODE-43 | P2 | Code / Import | docx and odt import ignored the file's fonts and reported no loss | **fixed** 2026-11-16 (E3.13) |
 | CODE-44 | P2 | Code / Import | pptx and odp import did not read fonts | **fixed** 2026-11-16 (E3.13) |
+| CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |
+| CODE-46 | P2 | Code / Import | The slides importers do not read text size and colour, so most boxes are a `look` loss | **new, open** |
+| CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | **new, open** |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1671,6 +1674,26 @@ style of drawn things); a box in another font gets a style of its own based on B
 somebody names it. `slides_to_pptx`, `slides_to_odp` and `apply_edits_to_odp` write the fonts. A font is no loss;
 words in two fonts in one box are `formatting`. Tests on `test-documents/pptx/` and `odp/stand-in-fonts`. **Left:**
 placeholders of a pptx are not imported at all (reported separately).
+
+### CODE-45 · pptx placeholders (titles, body text) are not imported at all · P2 · new, open
+**Measured** (found while fixing CODE-44, reported to the owner as bug A, size 1): `pptx._classify` takes text boxes,
+auto shapes and pictures only, so a placeholder — the title and the body text of nearly every slide made from a
+layout — is left out of the model, and with it its words and its font. Most decks from PowerPoint come in nearly empty.
+The stand-in-fonts sample uses a text box for its title for that reason. **Acceptance:** a deck made from the default
+"Title and Content" layout imports with its title and body as objects (in their placeholder's place and size, the
+title's words in the theme's heading font), round-trips through `apply_edits_to_pptx` keeping the placeholder, and
+`pptx_import_losses` reports nothing for them. Touches the object ids, the losses and the export; its own patch.
+
+### CODE-46 · The slides importers do not read text size and colour, so most boxes are a `look` loss · P2 · new, open
+**Measured** (reported as bug B, size 2): `pptx_to_slides` and `odp_to_slides` read the words and (since CODE-44) the
+font of a box, not its size or colour, so a box with PowerPoint's 18 points or a coloured title comes in as Body text
+and is reported as `look`. **Acceptance:** sizes and colours of the stand-in-fonts sample's boxes come in as the
+styles' `font-size` and `color` (a provisional style per look, as for fonts) and are no loss.
+
+### CODE-47 · Words of a docx with a font of their own are a `formatting` loss · P3 · new, open
+**Measured** (reported as bug C, size 3): a run with its own `w:rFonts` (not through a style) keeps the paragraph
+style's font and is reported as `formatting`, since the text model has no direct formatting (D306). Belongs with the
+way direct formatting comes in (D379 for computes: provisional styles); until then the loss report is right.
 
 ## Website
 

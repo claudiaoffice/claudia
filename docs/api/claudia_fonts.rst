@@ -15,6 +15,25 @@ Collections
    :members:
 .. autoclass:: claudia_fonts.Collection
    :members:
+.. autodata:: claudia_fonts.MayGo
+.. autodata:: claudia_fonts.MAY_GO
+
+Adding fonts
+------------
+
+Server settings ▸ Fonts ▸ Add fonts… (E3.13 f, D1041): check first, then add.
+
+.. automodule:: claudia_fonts.adding
+   :no-index:
+.. autoexception:: claudia_fonts.AddRefused
+.. autoclass:: claudia_fonts.FileCheck
+   :members:
+.. autofunction:: claudia_fonts.check_files
+.. autofunction:: claudia_fonts.add_collection
+.. autofunction:: claudia_fonts.rename_collection
+.. autofunction:: claudia_fonts.remove_collection
+.. autodata:: claudia_fonts.adding.MAX_FILES
+.. autodata:: claudia_fonts.adding.MAX_BYTES
 
 Fonts
 -----

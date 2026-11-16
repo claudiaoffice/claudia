@@ -61,13 +61,30 @@ def test_a_font_file_is_served_as_it_is_and_may_be_kept_for_good(tmp_path):
     assert woff2.status_code == 200 and woff2.content[:4] == b"wOF2"
 
 
-def test_fonts_that_may_not_be_handed_out_are_neither_listed_nor_served(tmp_path):
+def test_fonts_for_this_server_only_go_to_people_with_its_access_secret(tmp_path):
+    """D1041: a collection whose fonts may go to this server's people only (``redistributable: false``) is listed and
+    served to a request with the access secret, and to nobody else."""
     root = tmp_path / "fonts"
     collection(root / "closed", "Closed", redistributable=False, fonts=(("Closed Sans", "Regular", 400),))
-    c, service = client(tmp_path, root)
-    assert c.get("/api/fonts").json()["fonts"] == []
+    service = FontService.from_folders([root], tmp_path / "webfonts")
+    secret = "s" * 24
+    c = TestClient(create_app(Hub(MemoryProvider(ListModel)), ScryptDirectory(), fonts=service, access_secret=secret))
     closed = service.catalogue.fonts()[0]
+    assert c.get("/api/fonts").json()["fonts"] == []
     assert c.get(f"/api/fonts/{closed.sha256}").status_code == 404
+    assert c.get(f"/api/fonts/{closed.sha256}.woff2").status_code == 404
+    with_secret = {"authorization": f"Bearer {secret}"}
+    [listed] = c.get("/api/fonts", headers=with_secret).json()["fonts"]
+    assert (listed["family"], listed["may_go"]) == ("Closed Sans", "this-server")
+    assert c.get(f"/api/fonts/{closed.sha256}", headers=with_secret).status_code == 200
+    assert c.get(f"/api/fonts/{closed.sha256}.woff2", headers=with_secret).status_code == 200
+
+
+def test_on_a_server_without_an_access_secret_its_people_are_everyone_who_reaches_it(tmp_path):
+    root = tmp_path / "fonts"
+    collection(root / "closed", "Closed", redistributable=False, fonts=(("Closed Sans", "Regular", 400),))
+    c, _ = client(tmp_path, root)
+    assert [f["family"] for f in c.get("/api/fonts").json()["fonts"]] == ["Closed Sans"]
 
 
 @pytest.mark.parametrize("name", ["0" * 64, "nothex", "../../etc/passwd", "0" * 64 + ".ttf"])
@@ -99,6 +116,18 @@ def test_the_command_line_reads_fonts_folders_and_says_what_it_has(tmp_path):
     # the 3 files of the folder, and the files of the families every server has (D500)
     files, families = _shipped()
     assert f"fonts: {files + 3} files in {families + 2} families for clients (/api/fonts)" in plan.banner
+
+
+def test_the_state_folder_s_fonts_are_read_after_the_operator_s(tmp_path):
+    """The collections added through the server settings (``STATE_DIR/fonts``, D1041) are read with ``--fonts`` too,
+    after its folders."""
+    state = tmp_path / "state"
+    collection(state / "fonts" / "added", "Added", fonts=(("Gamma", "Regular", 400),))
+    root = tmp_path / "fonts"
+    collection(root / "a", "A", fonts=(("Alpha", "Regular", 400),))
+    plan = make_plan(["--no-tls", "--state-dir", str(state), "--fonts", str(root)])
+    files, families = _shipped()
+    assert f"fonts: {files + 2} files in {families + 2} families for clients (/api/fonts)" in plan.banner
 
 
 def test_the_state_folder_s_fonts_are_used_when_none_are_given(tmp_path):

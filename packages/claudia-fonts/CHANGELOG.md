@@ -3,6 +3,25 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.4.0] - 2026-11-16
+
+Adding fonts through the server settings, and who may receive them (E3.13 f, D1041).
+
+### Added
+- `claudia_fonts.adding`: `check_files` (what each font of an upload, a zip opened into its fonts, would become:
+  added, replacing a font of the same family and style, or left out with a reason code), `add_collection`,
+  `rename_collection`, `remove_collection` (only under the root of added collections), `AddRefused`, `FileCheck`.
+- `CollectionRecord.may_go` (`MayGo`, `MAY_GO`: `anywhere` or `this-server`), `added_by`, `added` and `to_data`; the
+  record keeps format 1 (two optional fields were added). `FontFile.to_data` says `may_go`.
+- `Problem.code`, `detail`, `family`, `style`, `collection` and `not_usable`; `FontProblem.code`, `detail`, `family`,
+  `style`: why a font is not used, as a code a page can put in its own words. `Catalogue.collections` and
+  `Catalogue.stands_in_for`.
+- `claudia_fonts.testing.make_font` takes `licence` (the name table's licence description).
+
+### Changed
+- `redistributable: false` means "the people using this server only" (D1041), not "never handed out":
+  `WebFontCache.get` makes the WOFF2 file of such a font with `local=True`.
+
 ## [0.3.0] - 2026-11-16
 
 Fonts that take exactly the room of the common office fonts, and the words for how close a stand-in is (E3.13).

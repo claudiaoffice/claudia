@@ -31,7 +31,7 @@
   "class": [
    "object"
   ],
-  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool) -> None",
+  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool, fonts: claudia_server.fonts.FontService | None = None) -> None",
   "methods": {},
   "properties": []
  },

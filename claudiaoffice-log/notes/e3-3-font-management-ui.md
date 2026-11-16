@@ -109,6 +109,9 @@ server, where the person is the administrator, can she add it to the server too,
 
 ## Open questions for the owner
 
+*Question 1 answered 2026-11-16: three answers (D1041); built as Server settings ▸ Fonts, first version
+(`implementation-notes/e3-13-server-settings-fonts.md`).*
+
 1. **Three answers for "may go"** — Anywhere / This server / Not usable — instead of the yes/no of D94? Without it a
    licensed house font (common in public administration, E12.7) can never be used, because only redistributable
    fonts reach a client today. "This server" fonts would then need the font routes to stop being public for them.

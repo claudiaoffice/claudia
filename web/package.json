@@ -37,7 +37,8 @@
     "e2e:details": "node e2e/details.cjs",
     "e2e:dock": "node e2e/dock.cjs",
     "e2e:dock-text": "node e2e/dock-text.cjs",
-    "e2e:pivots": "node e2e/pivots.cjs"
+    "e2e:pivots": "node e2e/pivots.cjs",
+    "e2e:admin-fonts": "node e2e/admin-fonts.cjs"
   },
   "dependencies": {
     "@claudia/layout": "file:../layout",
