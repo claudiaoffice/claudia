@@ -1,11 +1,13 @@
 # claudia composes — outline levels, numbered headings, references and the table of contents (design)
 
-**Status: proposal of 2026-11-16, nothing built.** The owner agreed the direction on 2026-11-16 (section 1). Screens
+**Status: proposal of 2026-11-16, nothing built.** Widened the same day to creates and computes by
+`text-structure-across-apps.md`, which decides where the code goes (it replaces section 11 below) and the order of work
+(its steps A–I replace the slices S0–S6 of section 12; the tests listed there still apply). The owner agreed the direction on 2026-11-16 (section 1). Screens
 and class diagram are in `mockups/`, to be agreed before any UI code (project rule):
 
 | Sheet | Shows |
 |---|---|
-| `composes-toc-architecture.svg` | Where each part lives in the code base, what is stored and what is derived |
+| `text-structure-architecture.svg` | Where each part lives in the code base, for all three apps (see `text-structure-across-apps.md`) |
 | `composes-numbered-headings.svg` | Numbered headings in the text, Format ▸ List ▸, the style editor's Outline section, the All numbering dialog |
 | `composes-references.svg` | Insert ▸ Cross-Reference…, the target picker, a reference in the text (states, menu, keys) |
 | `composes-table-of-contents.svg` | The table of contents in flow view and on the page, its options, how pages are found |
@@ -304,23 +306,10 @@ reference to that paragraph and reports `reference-position`; one with no bookma
 
 ## 11. Where the code goes
 
-The class diagram is `mockups/composes-toc-architecture.svg`. In short:
-
-| Package / folder | What changes |
-|---|---|
-| `claudia-core` `styles.py` | `StyleDef.outline`, `StyleDef.numbering`, `StyleBook.version`, `SetStyleOutline` |
-| `claudia-core` `lists.py` → `schemes.py` | `Scheme`, `LevelFormat`, `SchemeBook`, the scheme commands; `Label.number`; `numbering_labels` takes the book |
-| `claudia-core` `fields.py` (new) | `Field`, `FieldRegistry`, `RefField`, U+FFFC helpers (count, split, strip) |
-| `claudia-core` `paragraphs.py` | `Paragraph.fields`, `Paragraph.generated`, `Generated` base |
-| `claudia-composes` `model.py` | effective items, label cache key, `fields_shown`, `toc_entries` cache, `settle` emits; insert/remove/split/join carry fields; state schema 12 |
-| `claudia-composes` `commands.py` | `InsertText` schema 3, `SetField`, `SetGenerated`; refusals for generated paragraphs |
-| `claudia-composes` `references.py`, `contents.py` (new) | `resolve`, reverse index; `Toc`, `toc_entries` |
-| `claudia-server` `composes_references.py` (new), `composes_lists.py` | `reference_targets`, `insert_reference`, `set_reference`, `insert_toc`, `set_toc`; `number_headings`, `set_style_outline`, scheme methods; API snapshot, minor version |
-| `claudia-composes-io` | section 9 |
-| `layout/src/apps/composes.ts`, `layout/src/text/entry.ts` (new) | `TextBlock.label`, `fields`, `entries`; markers in print; leader lines; the passes of 6.5 |
-| `web/app/lib` `blocks.ts`, `text-session.ts`, `document-menus.ts`, `format-menu.ts` | fields and generated paragraphs in the replica; menu entries |
-| `web/app/components` | `TextEditor.vue` (atoms, heading roles), new `ReferencePicker.vue` (the chat's `#` list as a shared component), `NumberingDialog.vue`, `TocOptions.vue`; the style editor's Outline section |
-| `clients/linux/.../manifest.py` | the actions of section 8; generated files regenerated |
+**Replaced on 2026-11-16 by `text-structure-across-apps.md`** (class diagram
+`mockups/text-structure-architecture.svg`): what this section put into `claudia-composes` (effective items, the label
+cache, `references.py`, `contents.py`, `SetListItem`, the list wire methods) goes into `claudia-core` and a shared
+server module, so that creates uses the same code.
 
 ## 12. Slices and tests (TDD, tests first)
 
