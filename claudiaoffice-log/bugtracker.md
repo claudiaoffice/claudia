@@ -169,6 +169,7 @@ statement in the docs or on the website).
 | CODE-39 | P3 | Code / web | `OpenDialog.vue` does five jobs in 1,615 lines | **new, open** |
 | CODE-40 | P3 | Code / macOS client | An orphaned build file in the macOS creates app | **fixed** 2026-11-15 (with D660) |
 | CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |
+| CODE-42 | P3 | Code / computes | A new sheet can get the id of a removed sheet | **new, open** |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1646,6 +1647,18 @@ means editing the region; `WorkbookModel` imports its own commands (`model.py` 4
 to rename a sheet as commands.
 **Recommendation:** let a command say how it moves a region (a method, or a table keyed by command kind) and move
 command construction out of the model; then turn PLC0415 on per package with named exceptions.
+
+## Reported 2026-11-17, found while building the text structure (step D)
+
+### CODE-42 · A new sheet can get the id of a removed sheet · P3 · new, open
+**Read** at `5dbccde9`: `_fresh_sheet_id` in `claudia_server/computes.py` (used by `add_sheet` and `define_pivot` with
+a new sheet) starts counting at the number of sheets, so an id that a removed sheet had is free again. Sheets `s1`,
+`s2`, `s3`; Ann removes `s3`; Ben adds a sheet, which is `s3`; Ann's undo of her removal brings back a second `s3`
+(or is refused), and history entries that name the old `s3` now mean Ben's sheet. Objects had the same flaw and were
+fixed on `main` with `wire.fresh_id` (bug 5 of the text-structure work, 2026-11-16).
+**Acceptance (the test to write first):** add three sheets, remove the last, add one: the new id is not the removed
+one, and undoing the removal brings the removed sheet back beside the new one.
+**Fix:** take sheet ids from `wire.fresh_id` (or a counter in the workbook that never goes down), as objects do.
 
 ## Website
 
