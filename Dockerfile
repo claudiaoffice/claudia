@@ -23,7 +23,7 @@ COPY web/ ./
 RUN npm run build
 
 # ---- python: the workspace packages and their locked dependencies, in one virtual environment --
-FROM python:3.14-slim-bookworm AS python
+FROM python:3.15-slim-bookworm AS python
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
@@ -42,7 +42,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN /app/.venv/bin/python -m claudia_server.hyphenation fetch /app/hyphenation
 
 # ---- runtime ----------------------------------------------------------------------------------
-FROM python:3.14-slim-bookworm
+FROM python:3.15-slim-bookworm
 RUN groupadd --system --gid 10001 claudia \
     && useradd --system --uid 10001 --gid claudia --no-create-home claudia \
     && mkdir -p /data/documents /data/state \
