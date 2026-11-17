@@ -5,6 +5,19 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-17
+
+Properties and links of a docx (D466, D468).
+
+### Added
+- `text_to_docx(..., info=)`: the file's properties are the log's (title, creator, dates) and not the template's
+  (IEW-02).
+- `removed-link` loss of a docx patch: an edit removed the words a link covered.
+
+### Fixed
+- Editing the words of a docx paragraph that held a hyperlink wrote the words of the link twice (IEW-01). The link is
+  carried to the place of its words in the new text (`_docx_links.carry_links`).
+
 ## [0.6.0] - 2026-11-15
 
 Text boxes and shapes floating over a text reach docx and odt (D465).

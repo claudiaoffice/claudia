@@ -49,7 +49,7 @@ Status: ✅ wired · ◐ partly · ❌ not wired and **nothing says so** (silent
 |  | *Update 2026-11-15 (D464, slice 6a): pictures (images and rendered containers) and their alt text are wired both ways in docx and odt, read, patched and listed; text boxes and shapes follow in 6b.* *Update 2026-11-15 (D465, slice 6b): text boxes and shapes (circle, rectangle, triangle) are wired the same way; their looks are written, not read (`look`).* | | | | |
 | Alt text / decorative (`DescribeObject`; BITV 1.1.1) | ❌ (follows objects) | ❌ | ❌ | creates writes it (pptx `descr`, odp `svg:desc`); composes cannot because it writes no objects |
 | LaTeX / Mermaid rendered containers (`DefineRendering`, `UpdateRendering`, `ForgetRendering`; D66, D390–D395) | ❌ same as objects (they are pictures) | ❌ | ❌ | |
-| Document metadata (title, author, dates from the log; D411) | odt ✅ docx ❌ (python-docx defaults) | n/a | odt ◐ (see suggestions row) | |
+| Document metadata (title, author, dates from the log; D411) | odt ✅ docx ✅ (D466, 2026-11-17) | n/a | odt ◐ (see suggestions row) | |
 | Things Claudia never models: tables, footnotes, links, inline formatting, fields, comments, headers/footers | n/a | odt 🔔 (table, list, index, frame, formatting, link, hidden kinds); **docx ❌ no loss list at all** (`_reader` returns `None`) | odt ✅ byte-exact outside edited paragraphs; docx ◐ re-saved through python-docx, other parts restored | |
 | LaTeX/Beamer import/export (D87), bibliography (D86) | no converter in the repository | | | Decided, not started (as far as the code shows) |
 | History, chat, presence, locks, checkpoints, restore | n/a | | | Not content of the file (D145) |
@@ -79,7 +79,7 @@ Status: ✅ wired · ◐ partly · ❌ not wired and **nothing says so** (silent
 | Outcome table, trace ("follow the computation"), random preview | n/a (views of the model) | | | |
 | Merged cells, comments, validation, conditional formats, filters, pivot tables, protection, hidden sheets | n/a | 🔔 reported (both formats) | ✅ stay in the file | Not modelled |
 | Language (`core.SetLanguage`) | ❌ | ❌ | ❌ | No converter in any app writes it |
-| Document metadata | ods ✅ xlsx ❌ | | | |
+| Document metadata | ods ✅ xlsx ✅ (D466) | | | |
 
 ---
 
@@ -93,14 +93,14 @@ Status: ✅ wired · ◐ partly · ❌ not wired and **nothing says so** (silent
 | Pictures (`AddObject` image, `DefineImage`, `ForgetImage`; png/jpg/svg) | ✅ ✅ (svg: 🔔 `svg-fallback` / `svg-picture`) | ❌ stays beyond-claudia: odp 🔔 `picture`; pptx ❌ silent | ✅ stays in the file | |
 | Alt text / decorative (`DescribeObject`) | pptx ✅ (`descr` + decorative mark) odp ✅ (`svg:desc`; 🔔 `decorative`) | ❌ (pictures are not imported) | | |
 | LaTeX / Mermaid renderings (`DefineRendering`, …) | ✅ as pictures; 🔔 `rendering-pending` | ❌ | | Editability does not come back |
-| Styles (`SetObjectStyle`, `SetParagraphStyle`, `ChangeStyle`, palette; D304–D311) | ◐ resolved to literal formatting (parents and palette roles taken in, D211); style **names** are not in the file | ❌ look not read: every text box becomes plain-box/body-text, every shape plain-shape (D407). odp 🔔 `look`; pptx ❌ silent | ✅ restyle of existing objects (both) | |
+| Styles (`SetObjectStyle`, `SetParagraphStyle`, `ChangeStyle`, palette; D304–D311) | ◐ resolved to literal formatting (parents and palette roles taken in, D211); style **names** are not in the file | ✅ fill, outline, size, colour, bold, italic, font, alignment and page colour are read into styles (D467, 2026-11-17); `look` = what the model has no property for | ✅ restyle of existing objects (both) | |
 | Speaker notes (`SetSlideNotes`, D347) | ✅ ✅ (Markdown subset; odp 🔔 `notes-link/image/code/quote`; pptx does not report these) | ✅ ✅ | ✅ ✅ | |
 | Planned time per slide (`SetSlideTime`, D343) | ❌ by design; odp 🔔 `planned-time`; **pptx silent** | n/a | | |
 | Print setup (`SetPrintSetup`, D917) | ❌ ❌ silent (slide size fixed 16:9) | ❌ | | Layout/handouts have no Office equivalent; paper/margins do |
 | Language (`SetLanguage`) | ❌ ❌ | ❌ | | |
 | Templates, layouts, masters (E10.4, D68, D373–D376, undecided) | ❌ every pptx slide on the blank layout | ❌ masters stay in the file (D375 undecided) | ✅ stay | Not built in the model |
 | Bullets/lists in text boxes | n/a today (model has `Paragraph.item`; creates has no list UI or methods) | | | Will need both converters when built |
-| Document metadata | odp ✅ pptx ❌ | | | |
+| Document metadata | odp ✅ pptx ✅ (D466) | | | |
 | Snap/grid (`SetSnap`), presenter mode, transitions | n/a (editing/viewing aids; `add_transition` exists as helper only) | | | |
 | Tables, groups, charts, animations in files | n/a | odp 🔔 `table`, `group`, `object`, `transition`; pptx ❌ silent | ✅ stay | |
 | LaTeX/Beamer export (D87) | no converter in the repository | | | |
@@ -139,3 +139,11 @@ Status: ✅ wired · ◐ partly · ❌ not wired and **nothing says so** (silent
 - Creates: custom shape outlines on export; slide-size handling on import when the file is not 16:9.
 - Composes: whether any client-side path (PDF/print) matters for this list (it does not go through these converters).
 - All "✅" mean *wired in code and covered by unit tests I could see named in the notes*; I did not run the suites or open exported files in LibreOffice/Word.
+
+---
+
+## Status, 2026-11-17
+
+Steps 1–7 of section 6 are done. Since the audit: the docx/xlsx/pptx properties (D466), the links of a docx paragraph
+through an edit (D468) and the looks of imported decks (D467). Open, by design, in `import-export-wiring-bugs.md`: IEW-L1
+.. L35. The question list of section 7 is unanswered by choice of the owner (2026-11-17).

@@ -3,6 +3,13 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.11.0] - 2026-11-17
+
+Properties of an xlsx (D466).
+
+### Added
+- `workbook_to_xlsx(..., info=)`: the file's properties are the log's, not openpyxl's (IEW-02).
+
 ## [0.10.0] - 2026-11-15
 
 Charts go to and from xlsx (D463).

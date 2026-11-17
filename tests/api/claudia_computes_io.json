@@ -1,5 +1,5 @@
 {
- "version": "0.10.0",
+ "version": "0.11.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -55,7 +55,7 @@
   "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None) -> 'bytes'"
  },
  "workbook_to_xlsx": {
-  "function": "(model: 'WorkbookModel') -> 'bytes'"
+  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None) -> 'bytes'"
  },
  "xlsx_export_losses": {
   "function": "(model: 'WorkbookModel') -> 'tuple[Loss, ...]'"

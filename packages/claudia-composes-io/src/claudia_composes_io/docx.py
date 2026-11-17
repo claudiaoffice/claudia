@@ -31,12 +31,13 @@ from docx.text.paragraph import Paragraph
 
 from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
 from claudia_core import Rasterise, VisualObject, primitive
-from claudia_odf_io import Loss, LossLog
+from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
 from claudia_opc_io import owns, reconcile
 
 from ._boxes import box_losses, is_written, look_of
 from ._docx_blocks import hidden_content, place, remove
 from ._docx_boxes import BoxEdits, BoxWriter, FileBox, file_boxes, restyled_words
+from ._docx_links import Carried, carry_links
 from ._docx_lists import ListWriter, numbering_in, read_lists
 from ._docx_pictures import (
     FilePicture,
@@ -77,6 +78,7 @@ def text_to_docx(
     track_suggestions: bool = True,
     change_times: Mapping[str, str] | None = None,
     rasterise: Rasterise | None = None,
+    info: DocumentInfo | None = None,
 ) -> bytes:
     """``model`` as docx bytes: one paragraph per block. When ``track_suggestions`` (the default), every open
     suggestion that proposes a replacement is written as a tracked change instead of being silently dropped; a
@@ -84,7 +86,9 @@ def text_to_docx(
     ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one with no time is
     written without a date, which Word shows as undated (D411). The pictures floating over the text (an image, a
     rendered text container) are written as anchored drawings in the paragraph they hang from, with their alt text;
-    an SVG is shown by the picture ``rasterise`` draws of it, or else by an empty one (D464)."""
+    an SVG is shown by the picture ``rasterise`` draws of it, or else by an empty one (D464). The file says in its
+    properties who made the document and when and who changed it last, from ``info``; what ``info`` does not know it
+    leaves out (D466)."""
     document = Document()
     write_page(document, None, model.page)
     write_language(document, model.language)
@@ -103,7 +107,7 @@ def text_to_docx(
         _fill_paragraph(paragraph, block.text, by_block.get(block.id, []), change_ids, when, marks)
     out = BytesIO()
     document.save(out)
-    return out.getvalue()
+    return stamp_office_meta(out.getvalue(), info)
 
 
 def _floating_runs(model: TextModel, block_id: str, pictures: PictureWriter, boxes: BoxWriter) -> list[tuple[int, Any]]:
@@ -173,11 +177,19 @@ class _BlockWriter:
             paragraph.style = self.names.of(after.style)
         if before.item != after.item:
             self.lists.write(paragraph, after.item)
+        carried, dropped = carry_links(
+            paragraph._p,
+            before.text,
+            after.text,
+            [(s.anchor.start, s.anchor.end) for s in self.replacements.get(after.id, [])],
+        )
+        if dropped and self.losses is not None:
+            self.losses.add("removed-link", count=dropped)
         _clear_runs(paragraph)
-        self._fill(paragraph, after)
+        self._fill(paragraph, after, carried)
         return paragraph._p
 
-    def _fill(self, paragraph: Paragraph, block: Block) -> None:
+    def _fill(self, paragraph: Paragraph, block: Block, carried: list[Carried] | None = None) -> None:
         _fill_paragraph(
             paragraph,
             block.text,
@@ -185,6 +197,7 @@ class _BlockWriter:
             self.change_ids,
             self.when,
             self.marks.get(block.id, []),
+            carried,
         )
 
 
@@ -226,17 +239,25 @@ def _fill_paragraph(
     change_ids: Iterator[int],
     when: WhenMade,
     marks: list[tuple[int, Any]] | None = None,
+    carried: list[Carried] | None = None,
 ) -> None:
     """Write ``text`` into ``paragraph`` with its suggestions as tracked changes and ``marks`` (``(offset, run)``: the
     pictures) after the characters they stand behind; one that stands inside words a tracked change deletes follows the
-    change."""
-    waiting = sorted(marks or [], key=lambda mark: mark[0])
+    change. A ``carried`` link (IEW-01) stands in the place of its own words, which are not written again."""
+    waiting = sorted(
+        [(offset, run, 0) for offset, run in marks or []]
+        + [(link.start, link.element, link.length) for link in carried or []],
+        key=lambda mark: mark[0],
+    )
     position = 0
     element = paragraph._p  # python-docx's own documented way to reach markup it does not model (its FAQ)
 
     def release() -> None:
+        nonlocal position
         while waiting and waiting[0][0] <= position:
-            element.append(waiting.pop(0)[1])
+            _, found, held = waiting.pop(0)
+            element.append(found)
+            position += held
 
     def write(end: int) -> None:
         nonlocal position
@@ -263,7 +284,7 @@ def _fill_paragraph(
             )
         position = stop
     write(len(text))
-    for _, run in waiting:
+    for _, run, _ in waiting:
         element.append(run)
 
 

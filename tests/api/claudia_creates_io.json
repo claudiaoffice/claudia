@@ -1,5 +1,5 @@
 {
- "version": "0.6.0",
+ "version": "0.7.0",
  "Rasterise": {
   "function": "(*args, **kwargs)"
  },
@@ -48,6 +48,6 @@
   "function": "(model: 'SlideModel', *, info: 'DocumentInfo | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
  },
  "slides_to_pptx": {
-  "function": "(model: 'SlideModel', *, rasterise: 'Rasterise | None' = None) -> 'bytes'"
+  "function": "(model: 'SlideModel', *, rasterise: 'Rasterise | None' = None, info: 'DocumentInfo | None' = None) -> 'bytes'"
  }
 }

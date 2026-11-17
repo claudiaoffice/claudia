@@ -536,6 +536,15 @@ def test_export_office_returns_pptx_bytes_that_round_trip(deck):
     assert len(reloaded.slides) == 1
 
 
+def test_a_pptx_says_who_made_it_when_and_not_what_wrote_it(deck):
+    from claudia_opc_io import read_parts
+
+    add_text(deck, text="Hello there")
+    core = read_parts(base64.b64decode(call(deck, "export_office", {"format": "pptx"})["data"]))["docProps/core.xml"]
+    assert b">ann</dc:creator>" in core and b">ann</cp:lastModifiedBy>" in core
+    assert b"python-pptx" not in core and b"<dcterms:created" in core
+
+
 def test_export_office_returns_an_odp_that_round_trips_and_says_who_made_it_when(deck):
     from claudia_creates_io import odp_to_slides
 

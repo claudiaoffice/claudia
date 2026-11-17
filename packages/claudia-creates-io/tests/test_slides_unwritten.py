@@ -12,6 +12,7 @@ from claudia_creates_io import (
     odp_unwritten_changes,
     pptx_export_losses,
     pptx_import_losses,
+    pptx_to_slides,
     pptx_unwritten_changes,
     slides_to_pptx,
 )
@@ -124,21 +125,37 @@ def a_pptx_made_by_another_program() -> bytes:
 def test_bold_words_and_links_of_a_pptx_are_listed_as_what_the_model_does_not_show():
     losses = {loss.kind: loss.count for loss in pptx_import_losses(a_pptx_made_by_another_program())}
     assert losses["formatting"] == 1 and losses["link"] == 1
-    assert losses["look"] == 1  # the text box takes the look of its theme, which the model does not know
+    assert "look" not in losses  # a text box that says nothing of its look has the one the model gives it
 
 
-def test_a_shape_with_a_look_of_its_own_is_listed_once_for_each_object():
-    from pptx.dml.color import RGBColor
+def two_ovals(fill) -> bytes:  # noqa: ANN001 (what a shape's fill does with the colour it is given)
     from pptx.enum.shapes import MSO_SHAPE
 
     document = Presentation(BytesIO(slides_to_pptx(SlideModel.empty())))
     for index in range(2):
         shape = document.slides[0].shapes.add_shape(MSO_SHAPE.OVAL, Inches(1), Inches(1 + index), Inches(1), Inches(1))
-        shape.fill.solid()
-        shape.fill.fore_color.rgb = RGBColor(255, 0, 0)
+        fill(shape.fill)
     out = BytesIO()
     document.save(out)
-    assert pptx_import_losses(out.getvalue()) == (Loss("look", "", 2),)
+    return out.getvalue()
+
+
+def test_a_colour_a_shape_says_is_read_and_so_is_no_loss():
+    from pptx.dml.color import RGBColor
+
+    def red(fill) -> None:  # noqa: ANN001
+        fill.solid()
+        fill.fore_color.rgb = RGBColor(255, 0, 0)
+
+    data = two_ovals(red)
+    assert pptx_import_losses(data) == ()
+    model = pptx_to_slides(data)
+    assert {model.styles.resolved(o.body.style, {})["fill"] for o in model.objects.values()} == {"#ff0000"}
+
+
+def test_a_look_the_model_has_no_property_for_is_listed_once_for_each_object():
+    data = two_ovals(lambda fill: fill.gradient())
+    assert pptx_import_losses(data) == (Loss("look", "", 2),)
 
 
 def test_a_pptx_written_by_claudia_with_the_default_looks_has_no_look_to_list():

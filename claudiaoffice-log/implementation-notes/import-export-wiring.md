@@ -1,4 +1,4 @@
-# Import and export wiring (D450–D469, branch `import-export-wiring`)
+# Import and export wiring (D450–D469, branches `import-export-wiring` and `import-export`)
 
 The audit (`import-export-coverage-2026-11-14.md`) found functions of the three apps that never reach the formats.
 The work goes in slices, each a patch against the branch.
@@ -165,3 +165,21 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
   twice), IEW-22 (restyling to a style the file has wrote it twice). Open: IEW-20 (fresh export of an imported deck loses
   its looks and layouts - the next creates step is to read looks).
 
+## Slice 8 — fixes of IEW-01, IEW-02, IEW-20 and the write-up (D466–D468)
+* opc-io: `properties.py` (`stamp_core_properties`, `stamp_package`, `utc_second`, `CORE_PART`, `APPLICATION`). odf-io:
+  `meta.stamp_office_meta(data, info)`; `odf_date` is `utc_second` with `OdfError`. The three writers take `info`
+  (`text_to_docx`, `workbook_to_xlsx`, `slides_to_pptx`); the server passes `document_info` of the log on a fresh write
+  (`composes.py`, `computes.py`, `creates.py`). Patched files keep their properties (D217).
+* composes-io: `_docx_links.py` (`carry_links`, `Carried`); `docx.py` `_BlockWriter.edit` carries links and records
+  `removed-link`; `_fill_paragraph` puts marks and links in one offset-ordered list.
+* creates-io: `_file_looks.py` (`Look`, `LookBook`), `_odp_looks.py` (`StyleIndex`, `read_look`), `_pptx_looks.py`
+  (`Theme`, `read_look`); `odp.py` and `pptx.py` read looks and the page colour on import, write bold, italic, font, alignment
+  and the page colour on a fresh export; `_styling.py` has `is_bold` and `written_family`. `pptx.py` lost `_look_of` and
+  `_default_looks` (the old rule "different from the default" was replaced by "has no property in the model").
+* A look that the base style already says is not made a style (`LookBook._new`): a file of Claudia's comes back with the
+  styles it had. The imported page is white where a file says none.
+* Checked against LibreOffice 24.2.7: the odp of the QA repro (`in.odp`, a red box and blue words on a template page)
+  rendered after import and fresh export keeps both colours and the outline; words sit at the top of the box where the
+  original had them in the middle (IEW-L31).
+* IEW-L7 was a stale entry: the native menus have had Format ▸ List since D361. Removed from the limits.
+* Merge of main: `origin/main` (ef829d5) is contained in `origin/import-export` (d9c38a2); nothing to merge on 2026-11-17.

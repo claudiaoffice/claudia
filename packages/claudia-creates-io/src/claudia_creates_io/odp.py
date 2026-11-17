@@ -78,8 +78,10 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from ._file_looks import Look, LookBook
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
-from ._styling import colour_of, look, page_colour, points_of
+from ._odp_looks import StyleIndex, read_look
+from ._styling import colour_of, is_bold, look, page_colour, points_of, written_family
 from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
 from .pptx import UnsupportedEdit
 
@@ -182,6 +184,10 @@ class _Object:
     rotation: int = 0  # whole degrees clockwise (D459)
     asset: ImageAsset | None = None  # the picture of an "image"
     description: str = ""  # what an "image" says to someone who cannot see it
+    look: Look = field(default_factory=Look)  # how it looks, as far as the model has properties for it (D467)
+
+
+_WHITE = "#ffffff"  # what a page is where a file says nothing of its colour
 
 
 @dataclass
@@ -190,6 +196,7 @@ class _Slide:
     element: etree._Element
     master: str | None
     size: tuple[float, float]  # inches
+    background: str | None = None  # the colour of the page, as ``#rrggbb``, when the file says one (D467)
     objects: list[_Object] = field(default_factory=list)
     #: What is on the slide and not in the model, as ``(kind, detail)``: "picture", "table", "rotated-object"...
     left_out: list[tuple[str, str]] = field(default_factory=list)
@@ -303,6 +310,19 @@ def _bare(element: etree._Element, graphics: dict[str, etree._Element]) -> bool:
             stroke = stroke or props.get(_q("draw", "stroke"))
         name = style.get(_q("style", "parent-style-name"))
     return fill == "none" and stroke == "none"
+
+
+def _background(
+    page: etree._Element, master: str | None, index: StyleIndex, styles: etree._Element | None
+) -> str | None:
+    """The colour a page is filled with, as ``#rrggbb``: the page's own style says, or else that of its master page."""
+    style = page.get(_q("draw", "style-name"))
+    if style is None and styles is not None:
+        found = next((m for m in styles.iter(_q("style", "master-page")) if m.get(_q("style", "name")) == master), None)
+        style = found.get(_q("draw", "style-name")) if found is not None else None
+    said = index.attributes("drawing-page", style, "style:drawing-page-properties")
+    colour = said.get("draw:fill-color")
+    return colour.lower() if said.get("draw:fill") == "solid" and colour and len(colour) == 7 else None
 
 
 def _has_words(element: etree._Element) -> bool:
@@ -522,15 +542,16 @@ def _scan(content: etree._Element, styles: etree._Element | None, parts: Mapping
     masters = _masters(styles)
     page_styles = _drawing_page_styles(content, styles)
     graphics = _graphic_styles(content, styles)
+    index = StyleIndex(content, styles)
     probe, found, numbers = _Probe(), [], iter(range(1, 10**9))
-    for index, page in enumerate(_presentation(content).findall("draw:page", NS), start=1):
+    for number, page in enumerate(_presentation(content).findall("draw:page", NS), start=1):
         master = page.get(_q("draw", "master-page-name"))
         size = layouts.get(masters.get(master or "", ""))
         if size is None:
             size = next(iter(layouts.values()), (_SLIDE_CM[0] / _CM_PER_INCH, _SLIDE_CM[1] / _CM_PER_INCH))
-        slide = _Slide(f"s{index}", page, master, size)
+        slide = _Slide(f"s{number}", page, master, size, _background(page, master, index, styles))
         for child in page:
-            _scan_child(slide, child, probe, numbers, (graphics, parts))
+            _scan_child(slide, child, probe, numbers, (graphics, parts, index))
         _read_notes(slide, looks)
         if page.get(_q("draw", "style-name")) and _has_transition(
             page_styles.get(page.get(_q("draw", "style-name")) or "")
@@ -545,7 +566,7 @@ def _scan_child(
     child: etree._Element,
     probe: _Probe,
     numbers: Iterator[int],
-    held: tuple[dict[str, etree._Element], Mapping[str, bytes]],
+    held: tuple[dict[str, etree._Element], Mapping[str, bytes], StyleIndex],
 ) -> None:
     tag = child.tag
     if not isinstance(tag, str):
@@ -561,7 +582,7 @@ def _scan_child(
         return
     if namespace != NS["draw"] or local_name(tag) not in _DRAWN:
         return
-    graphics, parts = held
+    graphics, parts, index = held
     kind, what = _classify(child, graphics, parts)
     if kind is None:
         assert isinstance(what, tuple)
@@ -580,9 +601,10 @@ def _scan_child(
         if box[5]:
             slide.left_out.append(("overhanging-object", kind))
         description = description_of(child) if kind == "image" else ""
-        slide.objects.append(
-            _Object(f"o{next(numbers)}", child, kind, shape, *box[:4], text, paragraphs, box[4], asset, description)
-        )
+        found = _Object(f"o{next(numbers)}", child, kind, shape, *box[:4], text, paragraphs, box[4], asset, description)
+        if kind != "image":
+            found.look = read_look(child, paragraphs, index, slide.size, shape=kind == "shape")
+        slide.objects.append(found)
 
 
 def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, etree._Element | None, list[_Slide]]:
@@ -616,6 +638,9 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
         return empty
     model, library, defined = SlideModel(), ShapeLibrary.load(), set()
     model.language = read_language(styles)
+    looks = LookBook(model)
+    # one palette for the deck: the page colour of its first slide, white where a file says none (D467)
+    model.palette.set_colour("page", slides[0].background or _WHITE)
     for slide in slides:
         model.insert_slide(slide.id, notes=slide.notes)
         for found in slide.objects:
@@ -634,6 +659,9 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                 model.insert_object(VisualObject(body, SlideAnchor(slide.id, found.x, found.y)))
                 continue
             style, words = _default_styles(found.kind)
+            if found.kind != "text":
+                style = looks.outline(style, found.look.outline)
+            words = looks.words(words, found.look.words)
             if found.kind == "text":
                 shape = None
             else:
@@ -666,16 +694,15 @@ def odp_import_losses(odp_bytes: bytes) -> tuple[Loss, ...]:
     losses = LossLog()
     looks = formatting = links = 0
     hidden: dict[str, int] = {}
+    page = slides[0].background if slides else None
     for slide in slides:
         for kind, detail in slide.left_out:
             losses.add(kind, detail)
+        looks += slide.background != page  # one palette for the deck: the colour of another slide's page is not shown
         for found in slide.objects:
             if found.kind == "image":
                 continue  # a picture has no look of its own that the model leaves out
-            if found.element.get(_q("draw", "style-name")) or any(
-                p.get(_q("text", "style-name")) for p in found.paragraphs
-            ):
-                looks += 1
+            looks += found.look.unread
             for paragraph in found.paragraphs:
                 formatting += sum(
                     1 for span in paragraph.iter(_q("text", "span")) if span.get(_q("text", "style-name"))
@@ -767,8 +794,16 @@ class _Looks:
             props["fo:font-style"] = "italic"
         return self._style(("text", bold, italic), "clt", "text", [_el("style", "text-properties", props)])
 
+    def page(self, colour: tuple[int, int, int]) -> str:
+        """A drawing page style that fills the page with ``colour``."""
+        props = {"draw:fill": "solid", "draw:fill-color": _hex(colour)}
+        return self._style(
+            ("page", *props.items()), "dp", "drawing-page", [_el("style", "drawing-page-properties", props)]
+        )
+
     def paragraph(self, css: dict[str, str], over: str | None, pt_per_unit: float) -> str | None:
-        """A paragraph style for the size, colour and alignment of words, or ``None`` if ``css`` says none of them."""
+        """A paragraph style for the size, colour, weight, slant, font and alignment of words, or ``None`` if ``css``
+        says none of them."""
         size, colour = points_of(css, "font-size", pt_per_unit), colour_of(css, "color", over)
         align = {"left": "start", "right": "end", "center": "center", "justify": "justify"}.get(
             css.get("text-align", "")
@@ -778,6 +813,12 @@ class _Looks:
             text["fo:font-size"] = f"{size:.1f}".rstrip("0").rstrip(".") + "pt"
         if colour:
             text["fo:color"] = _hex(colour)
+        if is_bold(css):
+            text["fo:font-weight"] = "bold"
+        if css.get("font-style") in ("italic", "oblique"):
+            text["fo:font-style"] = "italic"
+        if family := written_family(css):
+            text["fo:font-family"] = family
         if not text and not align:
             return None
         properties = []
@@ -983,9 +1024,12 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
         etree.SubElement(root, _q("office", name))
     automatic = etree.SubElement(root, _q("office", "automatic-styles"))
     presentation = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "presentation"))
+    background = colour_of({"fill": page_colour(model) or ""}, "fill")
     for number, slide_id in enumerate(model.slides, start=1):
         page = etree.SubElement(presentation, _q("draw", "page"))
         page.set(_q("draw", "name"), f"page{number}")
+        if background:
+            page.set(_q("draw", "style-name"), writer.looks.page(background))
         page.set(_q("draw", "master-page-name"), "Default")
         for obj in model.objects_on(slide_id):
             element = writer.object(obj)

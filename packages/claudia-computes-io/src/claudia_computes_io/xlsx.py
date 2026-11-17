@@ -34,7 +34,7 @@ from openpyxl.comments import Comment
 from claudia_computes import CellAnchor, Content, ObjectBody, Sheet, VisualObject, WorkbookModel
 from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_computes.values import ErrorValue, Value
-from claudia_odf_io import Loss, LossLog
+from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
 from claudia_opc_io import write_parts
 
 from ._unwritten import XLSX_WRITTEN, in_order, workbook_unwritten_changes
@@ -165,12 +165,13 @@ def xlsx_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None 
     return in_order((*found, *header_losses(model, baseline).result(), *layout_losses(model, baseline).result()))
 
 
-def workbook_to_xlsx(model: WorkbookModel) -> bytes:
+def workbook_to_xlsx(model: WorkbookModel, *, info: DocumentInfo | None = None) -> bytes:
     """A base xlsx of ``model``: one worksheet per sheet, each cell as its stored content (a formula as its text,
     with the leading ``=``; see ``_written`` for what is written differently), and the cells' looks: Body text as
     the file's Normal, named styles as named cell styles, the rest as direct formats with their number formats
     (``xlsx_write_looks``, D379), and the bar charts floating on its sheets, each pinned to its cell (a chart tab as a
-    sheet of its own with the chart in it; ``xlsx_charts``, D463)."""
+    sheet of its own with the chart in it; ``xlsx_charts``, D463). The file says in its properties who made the workbook
+    and when and who changed it last, from ``info``; what ``info`` does not know it leaves out (D466)."""
     wb = openpyxl.Workbook()
     assert wb.active is not None  # a freshly constructed Workbook always starts with one
     wb.remove(wb.active)
@@ -188,7 +189,8 @@ def workbook_to_xlsx(model: WorkbookModel) -> bytes:
     write_names(wb, model)
     out = BytesIO()
     wb.save(out)
-    return _with_charts(out.getvalue(), charts) if charts else out.getvalue()
+    data = _with_charts(out.getvalue(), charts) if charts else out.getvalue()
+    return stamp_office_meta(data, info)
 
 
 def _with_charts(data: bytes, charts: list[WrittenChart]) -> bytes:

@@ -1,4 +1,4 @@
-# Import/export wiring: bug list for QA (branch `import-export-wiring`)
+# Import/export wiring: bug list for QA (branches `import-export-wiring`, `import-export`)
 
 Kept by the developer for the QA role; updated with every patch. IDs `IEW-nn` are this branch's own; QA can move any of
 them to `bugtracker.md` with the tracker's ID scheme. *Evidence:* every item was reproduced by a test or by a program
@@ -7,11 +7,7 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 
 ## Open
 
-| ID | Where | What QA sees | Found in |
-|---|---|---|---|
-| IEW-01 | composes, docx patch | In a Word file, a paragraph that contains a hyperlink: edit its text and the link's words are written twice (`see [the link]` becomes `the linkSEE the link!`). Needs the hyperlink to be edited in place. Existed before this branch. | slice 4 |
-| IEW-02 | composes, docx export | The file's metadata is python-docx's: author "python-docx", created 2013. odt has its metadata from the log (D411); docx has none. | audit |
-| IEW-20 | creates, odp/pptx export | A deck opened from a file and downloaded as a *fresh* .odp or .pptx loses its looks (colours, fonts) and its placement on the layouts of the file's template: the model does not read looks (D407) and a fresh file has a bare default master. A download **patched** onto the kept file keeps everything. The download dialog lists `look`. Reading looks in is the next step for creates. | reported by QA 2026-11-15 |
+None known. (IEW-01, IEW-02 and IEW-20 were fixed on 2026-11-17, see below.)
 
 ## Fixed
 
@@ -33,6 +29,9 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-19 | creates, odp import | The words of a text box or shape that hung over the edge of the slide were dropped as `off-slide-object` - typically the body (outline) placeholder of a deck converted from a taller layout (e.g. by LibreOffice from PowerPoint): the slide showed its title and no content. An unturned box is now cut back to the slide and listed as `overhanging-object`. | slice 6b | `test_odp.py::test_a_box_that_hangs_over_the_slide_is_cut_back_…` |
 | IEW-21 | composes, docx import | A text box written by Word or LibreOffice (a drawing and the picture kept for old readers, `mc:AlternateContent`) was counted twice as a frame, so the `frame` loss count was one too high and a box could not be told from its fallback. | slice 6b | `test_composes_boxes.py` (LibreOffice-built `docx-boxes`) |
 | IEW-22 | composes, docx/odt patch | Restyling an object's words to a style the file already had (`Shape label`, `Remark`) wrote the style again under a second name (`Shape label 2`) and the words kept the old one. | slice 6b | `test_composes_boxes.py` (restyled words) |
+| IEW-01 | composes, docx patch | In a Word file, a paragraph that contains a hyperlink: edit its text and the link's words were written twice (`see [the link]` became `the linkSEE the link!`). The link is now kept where its words are (D468); a link whose words were removed is dropped and listed as `removed-link`. Existed before this branch. | slice 8 | `test_docx_links.py` (7 cases), `test_docx.py` |
+| IEW-02 | composes/computes/creates, docx/xlsx/pptx export | The file's properties were the template's: author "python-docx", created 2013, title "PowerPoint Presentation". They are the log's now: title, creator, created, last modified by, modified; application "Claudia" (D466). | slice 8 | `test_properties.py`, `test_server_composes.py::test_a_docx_says_when_it_was_made_…` and the xlsx and pptx twins |
+| IEW-20 | creates, odp/pptx import and fresh export | A deck opened from a file and downloaded as a *fresh* .odp or .pptx lost its colours, fonts and sizes, and its page colour. Fills, outlines, sizes, colours, bold, italic, fonts, alignment and the page colour are read into styles and written again (D467); `look` is listed only for what the model has no property for. Checked by round trip through LibreOffice 24.2.7: the shape, its outline and its words keep their colours. **Not fixed** (see IEW-L31, L35): the vertical anchoring of words and the placement on the layouts of a template. | slice 8 | `test_odp.py` (looks, page colour, unread kinds, fresh export), `test_pptx.py` (looks, theme colours, fresh export, unread kinds), `test_slides_unwritten.py` |
 
 | IEW-12 | creates, pptx/odp export | A turned object came out of Claudia upright: pptx fresh export wrote no rotation (the patch did), odp wrote none and left an object that somebody turned in a file out of the model (`rotated-object`). | slice 7 | `test_creates_rotation.py` |
 | IEW-13 | creates, pptx patch | Giving a text box, shape or picture of an imported pptx another description (alt text) changed nothing in the file. | slice 7 | `test_creates_pictures.py::test_a_text_box_is_given_a_description_in_a_kept_pptx_too` |
@@ -48,7 +47,6 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-L4 | A custom paragraph style is written to the file but not read back as a style (it is a name only). | Import has no style definitions yet. |
 | IEW-L5 | A paragraph that ends a docx section is only emptied when removed; it returns as an empty block. | Keeps the two sections apart. |
 | IEW-L6 | Padding without a border is a `style` loss in docx. | docx has no padding without a border. |
-| IEW-L7 | The native-shell menus (GTK, Neutralino) have no Format ▸ List. | Out of scope of this branch; the web menus have it. |
 | IEW-L8 | A table column in a formula (`Sales[Amount]`) is written to ods as the cell's value (loss `formula:reference`). | OpenFormula and LibreOffice have no such reference. xlsx keeps it live. |
 | IEW-L9 | A table's colours by purpose and whether it grows are not in any file (loss `name:purpose`); a `SQL()` result name is not either (`name:result`); a table of one sheet is a plain name of that sheet (`name:table-scope`). | Files have no such thing. |
 | IEW-L10 | An xlsx table whose header cell is not text, or two of whose columns have one name, is written as a plain range (`name:table-header`). | Excel would repair the file. |
@@ -72,6 +70,11 @@ Status: `open` · `fixed` (in this branch) · `limit` (a limit by design, listed
 | IEW-L28 | A text box or shape of a docx or odt comes in only when it holds one paragraph of plain words (or none), is anchored in a paragraph, is one of the three outlines (circle, rectangle, triangle; an ellipse is a circle only when round), is not mirrored and has no line, wrap or effect the model lacks; any other stays in the file and is listed as `frame`/`shape`. Groups, boxes in tables, headers and footers, multi-paragraph boxes and custom outlines are not held. | The model has one paragraph per box and three outlines. |
 | IEW-L29 | The look of a box (fill, outline) is written from its style but not read: a box of a file always comes in as `plain-box` / `plain-shape`, and `look` is listed when the file's differs. A patch that restyles a box draws it anew and the file's look is lost. The formatting of the words (bold, colour, size) is not held either (`formatting`). | D407 (looks are read in a later step). |
 | IEW-L30 | Word 2007 shows nothing of a box written without the legacy fallback Word 2010+ keeps (`mc:Fallback`): our docx has none. Boxes of every kind share one stacking order only within their kind (pictures below boxes). | Kept small; Word 2010+ and LibreOffice draw them. |
+| IEW-L31 | A look is read from what the shape itself says. What a placeholder takes from its layout or master (pptx), the vertical anchoring of words (top, middle, bottom), insets, autofit, and a text box's own fill or line are not read; a text box that has a fill or line is listed as `look`. A deck therefore opens with its words at the top of the box where the file centred them. | The model has one look for a box and no anchoring. |
+| IEW-L32 | One page colour for the deck: the first slide's (white where the file says none). A slide with another colour is listed as one `look`; a gradient or picture page is not read. | The palette has one `page`. |
+| IEW-L33 | The words of a box take their look from its first paragraph with words and its first run. Other runs that are bold, italic or underlined are listed as `formatting`, and so is a paragraph that is wholly bold (its bold is read into the style as well). | The model has one paragraph style for the words of a box. |
+| IEW-L34 | A pptx colour made lighter, darker or translucent (`lumMod`, `tint`, `alpha`...) is read as the colour it names and listed as `look`; a theme font (`+mn-lt`) is not read; a font that is a name is passed on as the file says it, whether the app has it or not. odp: a stroke width in another unit than a length, `draw:opacity`, `draw:shadow` and a dash are listed as `look`. | The model holds a colour and a font name only. |
+| IEW-L35 | A fresh odp or pptx has a bare default master (layouts of the file's template, its art and its placeholders are not carried): the objects keep their places and looks but are no longer placeholders. A download patched onto the kept file keeps everything. | Templates and layouts are not in the model (E10.4, D375). |
 
 ## What to try (QA)
 
@@ -106,8 +109,8 @@ or pptx with turned pictures: the preview shows them (alt text in the object's d
 the picture is the same file, its alt text and turn as you left them. Set File ▸ Print setup to 6 slides a page on A4
 landscape and download as .pptx: PowerPoint's print dialog says handouts, 6 per page, and the file's notes page is A4
 landscape; margins and page numbers are listed as not written. Set the language to German and download as .odp and
-.pptx: spell-checking in LibreOffice uses German. Open a PowerPoint deck with coloured shapes and bold words: the
-download dialog lists `look` and `formatting`.
+.pptx: spell-checking in LibreOffice uses German. Open a PowerPoint deck with bold words in the middle of a line: the
+download dialog lists `formatting` (and, since slice 8, `look` only for what the model cannot show).
 
 *Slice 6a, pictures in composes.* Insert a picture into a paragraph (Insert ▸ Picture…) and give it a description; download
 as .docx and as .odt and open both in Word/LibreOffice: the picture is at its place in the paragraph, as large and as
@@ -123,3 +126,13 @@ in Word/LibreOffice: they are at their place in the paragraph, as large and as t
 fill and outline. Open a Word or LibreOffice file with such boxes: they show in the text; move, resize and reword one and
 download again: the other boxes, the pictures and the rest are as they were. Delete a box: it is gone from the file. Open an
 odp whose body text is in a placeholder: the body text shows on its slide (IEW-19).
+
+*Slice 8, properties, links and looks.* Download a text, a spreadsheet and a presentation of Claudia as .docx, .xlsx and
+.pptx: File properties in Word, Excel and PowerPoint (or `unzip -p file docProps/core.xml`) show the title, your name as the
+author and last modifier, the dates of the log and the application "Claudia", not python-docx and not 2013. Open a Word
+file with a hyperlink in a paragraph, retype the words around the link in Claudia and download again: the link is
+there once, on its own words; delete the linked words: the link is gone and the dialog lists `removed-link`. Open an odp
+or pptx with coloured shapes, coloured and bold words and a coloured page, download it again as a new .odp and as .pptx
+and open both in LibreOffice (PowerPoint): colours, outlines, sizes, bold and fonts are those of the original, the words
+sit at the top of their boxes (IEW-L31) and the layouts of the template are gone (IEW-L35); the dialog lists `look` only
+for gradients, dashes, shadows, lightened colours and the pages of other slides. A deck of Claudia's has no `look` loss.

@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- A fresh docx, xlsx or pptx download has the properties of the log (D466, IEW-02); a docx patch keeps the links of a
+  paragraph whose words were edited (D468, IEW-01); an imported odp or pptx downloaded as a fresh file keeps its colours
+  (D467, IEW-20).
+
 ### Changed
 - The server's state files (certificate, key, settings, the file store's list) and the fetched hyphenation patterns are
   written with `claudia_file_writer` (CODE-34, D701): ten attempts with waits up to a second on Windows instead of

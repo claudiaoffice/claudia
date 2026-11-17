@@ -8,9 +8,9 @@ would turn a 14% wash into full-strength iris)."""
 from __future__ import annotations
 
 from claudia_core.looks import colour_of, parse_colour, points_of
-from claudia_creates import SlideModel
+from claudia_creates import BUILTIN_STYLES, SlideModel
 
-__all__ = ["colour_of", "look", "page_colour", "parse_colour", "points_of"]
+__all__ = ["colour_of", "is_bold", "look", "page_colour", "parse_colour", "points_of", "written_family"]
 
 
 def page_colour(model: SlideModel) -> str | None:
@@ -29,3 +29,21 @@ def look(model: SlideModel, style_id: str) -> dict[str, str]:
     if style_id not in model.styles:
         return {}
     return model.styles.resolved(style_id, model.palette.colours())
+
+
+_BUILTIN_FAMILY = BUILTIN_STYLES[0].css["font-family"]
+
+
+def is_bold(css: dict[str, str]) -> bool:
+    """Do the words of a style say bold (``bold`` or a weight from 700)?"""
+    return css.get("font-weight") in ("bold", "bolder", "700", "800", "900")
+
+
+def written_family(css: dict[str, str]) -> str | None:
+    """The first font a style names, as a file says it (a name, quoted when it holds a space), or ``None`` when it
+    names the stack every built-in style has: that is no choice anybody made, and a file does not need to say it."""
+    families = css.get("font-family", "")
+    if not families or families == _BUILTIN_FAMILY:
+        return None
+    first = families.split(",")[0].strip().strip("'\"")
+    return f"'{first}'" if " " in first else first

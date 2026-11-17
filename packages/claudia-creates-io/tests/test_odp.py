@@ -422,7 +422,7 @@ def test_a_box_with_next_to_nothing_on_the_slide_is_left_out():
 
 def test_what_the_model_does_not_show_is_reported():
     kinds = {loss.kind: loss.count for loss in odp_import_losses(RICH)}
-    assert kinds == {"picture": 1, "table": 1, "look": 3}
+    assert kinds == {"picture": 1, "table": 1}
 
 
 def test_other_things_on_a_slide_are_reported_by_what_they_are():
@@ -1204,3 +1204,83 @@ def test_libreoffice_turns_what_is_written_the_way_the_model_does(tmp_path):
     assert (shape.left / unit, shape.top / unit, shape.width / unit, shape.height / unit) == pytest.approx(
         (700, 300, 400, 200), abs=1.5
     )
+
+
+LOOKS = (
+    '<style:style style:name="gr2" style:family="graphic"><style:graphic-properties draw:fill="solid" '
+    'draw:fill-color="#336699" draw:stroke="solid" svg:stroke-color="#112233" svg:stroke-width="0.1cm"/></style:style>'
+    '<style:style style:name="P1" style:family="paragraph"><style:paragraph-properties fo:text-align="end"/>'
+    '<style:text-properties fo:font-size="24pt" fo:color="#ff0000" fo:font-weight="bold" fo:font-style="italic" '
+    'fo:font-family="Georgia"/></style:style>'
+)
+
+
+def test_what_an_object_looks_like_is_read_into_styles_of_the_model():
+    model = odp_to_slides(an_odp(page(ellipse(words='<text:p text:style-name="P1">Hi</text:p>')), automatic=LOOKS))
+    body = next(iter(model.objects.values())).body
+    css = model.styles.get(body.style).css
+    assert (css["fill"], css["stroke"]) == ("#336699", "#112233")
+    words = model.styles.get(body.paragraph.style).css
+    assert words["color"] == "#ff0000"
+    assert (words["font-weight"], words["font-style"], words["text-align"]) == ("bold", "italic", "right")
+    assert "Georgia" in words["font-family"]
+    assert {loss.kind for loss in odp_import_losses(an_odp(page(ellipse()), automatic=LOOKS))} == set()
+
+
+def test_the_colour_of_the_page_is_the_colour_of_the_slides():
+    automatic = (
+        '<style:style style:name="dp1" style:family="drawing-page"><style:drawing-page-properties '
+        'draw:fill="solid" draw:fill-color="#102030"/></style:style>'
+    )
+    data = an_odp(
+        f'<draw:page draw:name="page1" draw:style-name="dp1" draw:master-page-name="Default">{textbox()}</draw:page>',
+        automatic=automatic,
+    )
+    assert odp_to_slides(data).palette.colours()["page"] == "#102030"
+
+
+def test_an_imported_deck_keeps_its_colours_through_a_fresh_export():
+    model = odp_to_slides(an_odp(page(ellipse(words='<text:p text:style-name="P1">Hi</text:p>')), automatic=LOOKS))
+    again = slides_to_odp(model)
+    content = etree.fromstring(dict(read_parts(again))["content.xml"]).xpath(
+        "//@*[local-name()='fill-color' or local-name()='color' or local-name()='font-weight']"
+    )
+    assert {"#336699", "#ff0000", "bold"} <= {str(value) for value in content}
+
+
+@pytest.mark.parametrize(
+    "properties",
+    [
+        'draw:fill="gradient"',
+        'draw:fill="solid" draw:fill-color="#336699" draw:stroke="dash" svg:stroke-color="#000000"',
+        'draw:fill="none" draw:shadow="visible"',
+    ],
+)
+def test_a_look_the_model_has_no_property_for_is_reported(properties):
+    automatic = (
+        f'<style:style style:name="gr2" style:family="graphic"><style:graphic-properties {properties}/></style:style>'
+    )
+    assert {loss.kind: loss.count for loss in odp_import_losses(an_odp(page(ellipse()), automatic=automatic))} == {
+        "look": 1
+    }
+
+
+def test_what_a_text_box_has_drawn_around_it_is_not_shown_and_is_reported():
+    automatic = (
+        '<style:style style:name="gr1" style:family="graphic"><style:graphic-properties draw:fill="solid" '
+        'draw:fill-color="#336699"/></style:style>'
+    )
+    data = an_odp(page(textbox()), automatic=automatic)
+    assert {loss.kind for loss in odp_import_losses(data)} == {"look"}
+
+
+def test_the_colour_of_another_slides_page_is_reported():
+    automatic = (
+        '<style:style style:name="dp1" style:family="drawing-page"><style:drawing-page-properties '
+        'draw:fill="solid" draw:fill-color="#102030"/></style:style>'
+    )
+    second = (
+        f'<draw:page draw:name="page2" draw:style-name="dp1" draw:master-page-name="Default">{textbox()}</draw:page>'
+    )
+    data = an_odp(page(textbox()) + second, automatic=automatic)
+    assert [(loss.kind, loss.count) for loss in odp_import_losses(data)] == [("look", 1)]

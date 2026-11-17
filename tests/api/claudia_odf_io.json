@@ -1,5 +1,5 @@
 {
- "version": "0.7.0",
+ "version": "0.8.0",
  "DocumentInfo": {
   "class": [
    "object"
@@ -166,6 +166,9 @@
  },
  "shapes_of": {
   "function": "(paragraph: 'etree._Element') -> 'list[etree._Element]'"
+ },
+ "stamp_office_meta": {
+  "function": "(data: 'bytes', info: 'DocumentInfo | None') -> 'bytes'"
  },
  "transform_of": {
   "function": "(degrees: 'int', box: 'tuple[float, float, float, float]') -> 'str | None'"

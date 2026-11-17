@@ -6345,7 +6345,7 @@ msgstr ""
 msgid "add_object: kind must be one of {kinds}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/creates.py:308
+#: packages/claudia-server/src/claudia_server/creates.py:310
 msgid "add_object: this server has no shape {shape!r}"
 msgstr ""
 

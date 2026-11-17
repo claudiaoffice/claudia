@@ -5,6 +5,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-17
+
+A fresh Office file says who made it (D466).
+
+### Added
+- `stamp_office_meta(data, info)`: the properties of a docx, xlsx or pptx from the `DocumentInfo` of the log.
+
+### Changed
+- `odf_date` is `claudia_opc_io.utc_second` with an `OdfError` for what is not a moment; the dates are the same.
+
 ## [0.7.0] - 2026-11-16
 
 Shapes in paragraphs (D465).

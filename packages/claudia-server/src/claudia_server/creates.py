@@ -258,6 +258,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
             raise RequestError("bad_request", msg('export_office: format must be "pptx" or "odp"'))
         deck = _deck(ctx)
         draw = None if ctx.renderings is None else ctx.renderings.rasteriser
+        info = document_info(ctx.document.log, ctx.document.branch)
         if format == "pptx":
             return export_with_original(
                 ctx,
@@ -265,11 +266,12 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
                 SlideModel,
                 lambda original, baseline, current, _: apply_edits_to_pptx(original, baseline, current),
                 lambda: office_export(
-                    format, slides_to_pptx(deck, rasterise=draw), pptx_export_losses(deck, rasterised=draw is not None)
+                    format,
+                    slides_to_pptx(deck, rasterise=draw, info=info),
+                    pptx_export_losses(deck, rasterised=draw is not None),
                 ),
                 pptx_unwritten_changes,
             )
-        info = document_info(ctx.document.log, ctx.document.branch)
         return export_with_original(
             ctx,
             format,
