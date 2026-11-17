@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Fixed
+- The LaTeX programs set in Server settings (`xelatex`, `pdftocairo`) and the `render` tools are used as they are
+  now, not as they were when the server started: changing a path no longer needs a restart (CODE-55).
 - A document that is opened draws the containers that have text and no picture (CODE-51). Before, a picture was made
   only when its text changed, so a container whose picture was never made (the tool failed, the server stopped first)
   stayed without one for ever.

@@ -385,6 +385,14 @@ def _program_of(entry: object) -> str | None:
     return entry.get("path") if isinstance(entry, dict) else entry  # type: ignore[return-value]
 
 
+def _tool_table(settings: ServerSettings) -> dict[str, object]:
+    """The tools of the settings *as they are now*: the LaTeX programs of ``typeset`` and the ``render`` tools. Asked
+    for again on every use, so what an administrator changes in Server settings takes effect without a restart."""
+    tools: dict[str, object] = {"xelatex": settings.typeset.xelatex, "pdftocairo": settings.typeset.pdftocairo}
+    tools.update(settings.render.tools)
+    return {name: path for name, path in tools.items() if path is not None}
+
+
 def _renderings(settings: ServerSettings, state_dir: Path, fonts: FontService) -> tuple[RenderDesk, list[str]]:
     """What makes rendered containers (D395): the built-in types, the manifests of the plugins folder and the tools the
     administrator registered (the LaTeX programs are those of the typeset settings). The lines are for the start-up
@@ -393,9 +401,8 @@ def _renderings(settings: ServerSettings, state_dir: Path, fonts: FontService) -
     registry = builtin_registry(lambda: fonts.catalogue, work / "plugins")
     folder = Path(settings.render.plugins_dir) if settings.render.plugins_dir else state_dir / "plugins"
     reports = registry.load_directory(folder, work / "plugins")
-    tools: dict[str, object] = {"xelatex": settings.typeset.xelatex, "pdftocairo": settings.typeset.pdftocairo}
-    tools.update(settings.render.tools)
-    service = RenderService(registry, ToolRegistry({k: v for k, v in tools.items() if v is not None}), work)
+    tools = _tool_table(settings)
+    service = RenderService(registry, ToolRegistry(lambda: _tool_table(settings)), work)
     lines = ["rendered containers: " + ", ".join(plugin.manifest.type for plugin in registry.plugins())]
     lines += [f"  not used, {folder.name}/{r.file}: {r.error}" for r in reports if r.error]
     draw = svg_rasteriser(_program_of(tools.get("rsvg_convert")))

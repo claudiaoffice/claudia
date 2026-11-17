@@ -125,3 +125,51 @@ def test_a_setting_that_is_not_a_tool_entry_is_refused_at_once(tmp_path):
 def test_the_registry_lists_what_the_administrator_configured(tmp_path):
     tools = ToolRegistry({"b": "/x/b", "a": {"path": "/x/a", "mode": "fast"}})
     assert tools.configured() == (ToolEntry("a", "/x/a", {"mode": "fast"}), ToolEntry("b", "/x/b", {}))
+
+
+NEWER_BOXER = BOXER.replace("boxer 2.5.1", "boxer 3.0.0")
+
+
+@runs_in_a_loop
+async def test_a_table_given_as_a_function_is_read_again_on_every_use(tmp_path):
+    older = fake_tool(tmp_path / "old", "boxer", BOXER)
+    newer = fake_tool(tmp_path / "new", "boxer", NEWER_BOXER)
+    table = {"boxer": str(older)}
+    tools = ToolRegistry(lambda: table)
+    assert (await tools.resolve(ToolRequirement("boxer"))).program == older
+    table["boxer"] = str(newer)  # the administrator changes the setting while the server runs
+    tool = await tools.resolve(ToolRequirement("boxer"))
+    assert (tool.program, tool.version) == (newer, "3.0.0"), "a tool found once must not outlive its setting"
+    assert tools.configured() == (ToolEntry("boxer", str(newer), {}),)
+    assert (await tools.status("boxer")).version == "3.0.0"
+
+
+@runs_in_a_loop
+async def test_a_setting_that_did_not_change_keeps_the_tool_that_was_found(tmp_path):
+    program = fake_tool(tmp_path / "bin", "boxer", BOXER)
+    tools = ToolRegistry(lambda: {"boxer": str(program)})
+    first = await tools.resolve(ToolRequirement("boxer"))
+    assert await tools.resolve(ToolRequirement("boxer")) is first, "no new probe of the program for nothing"
+
+
+@runs_in_a_loop
+async def test_a_setting_removed_while_running_sends_the_tool_back_to_the_path(tmp_path, monkeypatch):
+    on_path = fake_tool(tmp_path / "bin", "boxer", NEWER_BOXER)
+    monkeypatch.setenv("PATH", str(on_path.parent))
+    configured = fake_tool(tmp_path / "own", "boxer", BOXER)
+    table: dict[str, object] = {"boxer": str(configured)}
+    tools = ToolRegistry(lambda: table)
+    assert (await tools.resolve(ToolRequirement("boxer"))).version == "2.5.1"
+    table.clear()
+    assert (await tools.resolve(ToolRequirement("boxer"))).version == "3.0.0"
+
+
+@runs_in_a_loop
+async def test_a_setting_that_became_invalid_is_said_not_kept_from_before(tmp_path):
+    program = fake_tool(tmp_path / "bin", "boxer", BOXER)
+    table: dict[str, object] = {"boxer": str(program)}
+    tools = ToolRegistry(lambda: table)
+    await tools.resolve(ToolRequirement("boxer"))
+    table["boxer"] = str(tmp_path / "nowhere" / "boxer")
+    with pytest.raises(ToolUnavailable, match="nowhere"):
+        await tools.resolve(ToolRequirement("boxer"))

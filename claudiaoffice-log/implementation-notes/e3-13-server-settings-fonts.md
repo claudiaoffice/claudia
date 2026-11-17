@@ -65,3 +65,8 @@ from a pinned list, Edit stand-ins… and Remove file… come in a second patch.
   `xetex` or `pdflatex` the message is now "…fontspec package requires either XeTeX or LuaTeX" or "Undefined control
   sequence". Open: the failure text is clipped in a small frame (CODE-53), pictures are kept without the fonts in their
   key (CODE-54).
+- Tool paths (CODE-55): the `ToolRegistry` of the render service takes a function (`cli._tool_table`) that reads
+  `ServerSettings` on every use, so a path set in Server settings ▸ LaTeX is used by the next drawing; a tool found
+  under an older table is looked for again (the same table is compared, not a timestamp, so nothing is probed for
+  nothing). The `Typesetter`s of the LaTeX plugin were already keyed by program. `rsvg_convert` (office-file
+  pictures) is still read at start.

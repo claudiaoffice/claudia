@@ -208,7 +208,7 @@
   "class": [
    "object"
   ],
-  "init": "(settings: 'Mapping[str, object] | None' = None, *, version_args: 'Mapping[str, tuple[str, ...]]' = mappingproxy({'pdftocairo': ('-v',)})) -> 'None'",
+  "init": "(settings: 'Mapping[str, object] | Callable[[], Mapping[str, object]] | None' = None, *, version_args: 'Mapping[str, tuple[str, ...]]' = mappingproxy({'pdftocairo': ('-v',)})) -> 'None'",
   "methods": {
    "configured": "(self) -> 'tuple[ToolEntry, ...]'",
    "forget": "(self) -> 'None'",

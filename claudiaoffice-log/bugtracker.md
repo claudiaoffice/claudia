@@ -182,6 +182,7 @@ statement in the docs or on the website).
 | CODE-52 | P3 | Code / Typeset | A TeX error was cut at 79 characters ("Fatal Package", "cannot be f") | **fixed** 2026-11-17 |
 | CODE-53 | P3 | Web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |
 | CODE-54 | P3 | Code / Render | A finished picture is kept without the fonts in its key, so it stays after a font of the same family and style is replaced | open |
+| CODE-55 | P2 | Code / Server | A tool path changed in Server settings (xelatex, pdftocairo) was used only after a restart of the server | **fixed** 2026-11-17 |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1773,6 +1774,17 @@ catalogue. The typesetter's own cache has the catalogue digest, but the service'
 the same family and style is replaced (or added in front of a stand-in), a formula drawn earlier is still shown as it
 was drawn until the cache is cleared. Recommendation: a plugin may give a `cache_token()` (the LaTeX plugin gives the
 catalogue digest) that goes into the key. Acceptance: draw, replace a font, draw again: a new picture.
+
+
+### CODE-55 · A tool path changed in Server settings was used only after a restart · P2 · fixed 2026-11-17
+
+Found: an administrator set `xetex` instead of `xelatex`, corrected it, and the container still failed until the
+server was restarted. Cause: `cli._renderings` copied the typeset paths into the `ToolRegistry` once at start, and the
+registry also kept every tool it had found. Fix: the registry takes a function for its table, asks it on every use and
+forgets what it found when the table changed; the server passes the live settings. Test: a tool found under the old
+setting is not used after the setting changes; the server's table follows `settings.typeset`. Open: `rsvg_convert`
+(`render.tools`, not editable in Server settings) is still read at start; Server settings has no check that the
+program is a LaTeX engine (`xetex` is not one).
 
 ## Website
 

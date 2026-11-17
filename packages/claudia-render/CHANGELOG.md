@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- `ToolRegistry` takes its settings as a mapping or as a function that returns one. A function is asked again on
+  every use, and the tools found under a table that has changed are looked for again, so a setting changed while a
+  server runs takes effect at once (CODE-55).
+
 ## [0.2.0] - 2026-11-17
 
 Fonts added while a server runs reach the LaTeX container (CODE-50).
