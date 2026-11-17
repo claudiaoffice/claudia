@@ -49,6 +49,7 @@ Unused numbers in a closed block stay unused.
 | D660–D679 | code review follow-up: one Neutralino package for macOS and Windows (CODE-14; D660 used) | 2026-11-15 | open |
 | D680–D699 | the AI in composes: a model-driven participant, its document lens, words by quoting them (E7.10; branch `composes-ai`; D680–D681 used) | 2026-11-16 | open |
 | D700–D719 | code review follow-up: no claudia-client, one way to write a file (CODE-33, CODE-34; D700–D701 used) | 2026-11-16 | open |
+| D730–D749 | the Windows installer: self-contained server, packaged client, Inno Setup, the service, signing (E8.1; branch `win-installer`; D730–D735 used) | 2026-11-17 | open |
 
 ## Never to be used
 

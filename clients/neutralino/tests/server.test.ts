@@ -10,7 +10,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MACOS_HOST } from '../src/platform/macos.js'
 import { WINDOWS_HOST } from '../src/platform/windows.js'
-import { LocalServer, ServerStartError, buildServerCommand, defaultSpawn, freePort } from '../src/server.js'
+import { LocalServer, ServerStartError, buildServerCommand, defaultSpawn, freePort, serverProgramCommand } from '../src/server.js'
 
 describe('freePort', () => {
   it('returns a port nobody is listening on yet, and two calls do not collide', async () => {
@@ -49,6 +49,16 @@ describe('buildServerCommand', () => {
       '--exit-when-idle',
       '600',
     ])
+  })
+})
+
+describe('a self-contained server (D730)', () => {
+  it('is started as the program itself, with no `-m claudia_server` in front of its options', () => {
+    expect(serverProgramCommand({ exe: 'C:\\Claudia\\server\\claudia-server.exe' })).toEqual(['C:\\Claudia\\server\\claudia-server.exe'])
+    expect(serverProgramCommand('/usr/bin/python3.14')).toEqual(['/usr/bin/python3.14', '-m', 'claudia_server'])
+    const command = buildServerCommand({ exe: '/opt/claudia-server' }, { port: 1, documents: '/d', web: '/w', state: '/s', idleSeconds: 5 })
+    expect(command.slice(0, 3)).toEqual(['/opt/claudia-server', '--host', '127.0.0.1'])
+    expect(command).not.toContain('-m')
   })
 })
 

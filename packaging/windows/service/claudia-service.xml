@@ -1,0 +1,33 @@
+<!--
+  Claudia's server as a Windows service (D733), run by WinSW (https://github.com/winsw/winsw, MIT), which is
+  claudia-service.exe beside this file: WinSW reads the file with its own name, and starts the program below.
+
+  Only the optional component "Claudia server as a Windows service" of the installer puts it in place, and the installer
+  runs `claudia-service.exe install`; nothing here is read unless that was chosen. %BASE% is the folder of this file.
+
+  What is deliberate:
+  * It listens on this computer only (127.0.0.1). To serve other people on a network, change the host option here and put a
+    certificate in front of it: this file is the one place, and it is kept by an update of Claudia only where unchanged.
+  * It keeps its own documents and state in %ProgramData%\Claudia, not in the folder of whoever is signed in, because it
+    runs without anyone signed in. A desktop app on the same computer uses it (a Claudia server is on port 8765, and the
+    apps use the one they find there), so its documents are those of the service, not those of the app's own server.
+  * No exit-when-idle option: a service stays until it is stopped.
+-->
+<service>
+  <id>ClaudiaServer</id>
+  <name>Claudia server</name>
+  <description>Hosts the documents of Claudia Composes, Computes and Creates for this computer.</description>
+  <executable>%BASE%\..\server\claudia-server.exe</executable>
+  <arguments>--host 127.0.0.1 --port 8765 --no-tls --dir "%ProgramData%\Claudia\documents" --state-dir "%ProgramData%\Claudia\state" --web "%BASE%\..\web"</arguments>
+  <startmode>Automatic</startmode>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="30 sec"/>
+  <onfailure action="none"/>
+  <resetfailure>1 hour</resetfailure>
+  <stoptimeout>15 sec</stoptimeout>
+  <logpath>%ProgramData%\Claudia\state\service</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>5120</sizeThreshold>
+    <keepFiles>4</keepFiles>
+  </log>
+</service>

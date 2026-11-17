@@ -70,14 +70,21 @@ export interface ServerCommandOptions {
   idleSeconds: number
 }
 
+/** What starts the server: the Python 3.14 that runs `-m claudia_server`, or the one self-contained program of the
+ * Windows installer (`claudia-server.exe`, D730), which has the interpreter and the packages inside. */
+export type ServerProgram = string | { exe: string }
+
+/** The start of the server's command line, up to where its own options begin. */
+export function serverProgramCommand(program: ServerProgram): string[] {
+  return typeof program === 'string' ? [program, '-m', 'claudia_server'] : [program.exe]
+}
+
 /** The command line of the desktop server on this computer (D445): all three apps (no `--model`; each app's documents
  * go to `DIR/<app>`), loopback only, serving the bundled frontend itself so the page and its WebSocket share an origin
  * and no `--allow-origin` is needed, and stopping by itself when nobody has used it for `idleSeconds` (D434). */
-export function buildServerCommand(python: string, options: ServerCommandOptions): string[] {
+export function buildServerCommand(program: ServerProgram, options: ServerCommandOptions): string[] {
   return [
-    python,
-    '-m',
-    'claudia_server',
+    ...serverProgramCommand(program),
     '--host',
     LOOPBACK,
     '--port',
