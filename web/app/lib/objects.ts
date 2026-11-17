@@ -26,10 +26,14 @@ export interface CellAnchor {
   row: number
   col: number
 }
+/** A character of a paragraph, plus how far the object is moved off it (D1023): both are in the units of `w` and `h`,
+ * and absent for an object that sits exactly at its character. */
 export interface BlockAnchor {
   kind: 'block'
   container: string
   offset: number
+  dx?: number
+  dy?: number
 }
 export type Anchor = SlideAnchor | CellAnchor | BlockAnchor
 

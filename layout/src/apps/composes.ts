@@ -71,7 +71,8 @@ export interface OutlineEntry {
 }
 /** A floating object as the server sends it (the shape all three apps share), anchored to a character. */
 export interface TextObject extends VisualObject {
-  anchor: { kind: 'block'; container: string; offset: number }
+  /** `dx`/`dy` move the object off its anchor character, in the same units as `w`/`h` (D1023). */
+  anchor: { kind: 'block'; container: string; offset: number; dx?: number; dy?: number }
 }
 
 export interface TextDocument {
@@ -352,8 +353,8 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
     const w = px(o.w)
     const h = px(o.h)
     // keep the object on its page: inside the margins across, and above the bottom margin
-    const x = Math.max(box.x, Math.min(spot.x, box.x + box.w - w))
-    const y = Math.max(box.y, Math.min(spot.top, geometry.height - geometry.margin.bottom - h))
+    const x = Math.max(box.x, Math.min(spot.x + px(o.anchor.dx ?? 0), box.x + box.w - w))
+    const y = Math.max(box.y, Math.min(spot.top + px(o.anchor.dy ?? 0), geometry.height - geometry.margin.bottom - h))
     const group = drawObject(o, { x, y, w, h }, { fonts, resolver, styles: sheet, shapes, images, notes, embedded, paragraphOptions, diagramNote: 'charts cannot be printed from a text yet' })
     if (!group) continue
     for (const it of walk(group.items)) if (it.kind === 'image' && !usedImages.includes(it.image)) usedImages.push(it.image)
