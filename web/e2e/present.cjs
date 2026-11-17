@@ -25,7 +25,7 @@ async function writeBox(page, words) {
   await page.click('[data-tool="text"]')
   const box = page.locator('.obj.text').last()
   await box.dblclick({ position: { x: 30, y: 30 } })
-  await page.waitForSelector('textarea.editor')
+  await page.waitForSelector('[data-testid="paragraph-editor"]')
   await page.keyboard.type(words)
   await page.keyboard.press('Enter')
   await waitFor(page, (w) => [...document.querySelectorAll('.obj.text')].some((e) => e.textContent.includes(w)), words, 'the words')

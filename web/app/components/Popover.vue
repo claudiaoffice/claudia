@@ -2,6 +2,7 @@
 // A floating panel at a point of the window (a context menu, a picker). It stays inside the window, closes on Escape or a
 // click outside, and never takes the text selection away from the page: only the fields in it take the focus.
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { placePopover } from '~/lib/popover-placement'
 
 /** `anchor`: the button that opened it; pressing it is not "outside", so that the button can close the panel itself.
  * `bare`: skip the default card chrome (padding, surface background, border, shadow) for a panel that draws its
@@ -10,17 +11,22 @@ const props = defineProps<{ x: number; y: number; label: string; width?: number;
 const emit = defineEmits<{ close: [] }>()
 
 const box = ref<HTMLElement | null>(null)
-const at = ref({ left: props.x, top: props.y })
+const at = ref<{ left: number; top: number; maxHeight?: number }>({ left: props.x, top: props.y })
 
 async function fit() {
   await nextTick()
   const el = box.value
   if (!el) return
-  const margin = 8
-  const { innerWidth, innerHeight } = window
-  const left = Math.max(margin, Math.min(props.x, innerWidth - el.offsetWidth - margin))
-  const top = props.y + el.offsetHeight + margin > innerHeight ? Math.max(margin, innerHeight - el.offsetHeight - margin) : props.y
-  at.value = { left, top }
+  // scrollHeight is what the panel would be without a limit, so that limiting it does not change what is asked of it
+  const height = el.scrollHeight + (el.offsetHeight - el.clientHeight)
+  at.value = placePopover({
+    x: props.x,
+    y: props.y,
+    width: el.offsetWidth,
+    height,
+    window: { w: window.innerWidth, h: window.innerHeight },
+    anchored: !!props.anchor,
+  })
 }
 
 function outside(event: PointerEvent) {
@@ -60,7 +66,7 @@ defineExpose({ fit })
     :class="{ bare }"
     role="dialog"
     :aria-label="label"
-    :style="{ left: `${at.left}px`, top: `${at.top}px`, width: `${width ?? 320}px` }"
+    :style="{ left: `${at.left}px`, top: `${at.top}px`, width: `${width ?? 320}px`, ...(at.maxHeight ? { maxHeight: `${at.maxHeight}px` } : {}) }"
     @mousedown="(e) => (e.target as HTMLElement).closest('input,textarea,select,label') || e.preventDefault()"
   >
     <slot />

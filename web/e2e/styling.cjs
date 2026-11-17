@@ -61,8 +61,29 @@ async function main() {
   await page.screenshot({ path: `${SHOTS}/styling-0-dropdown.png` })
   await page.mouse.click(700, 500) // press outside: it closes
   await page.waitForSelector('.style-list', { state: 'detached' })
+
+  // on a window too short for the whole list, the list stays below its button and scrolls, so that the button can still close it
+  await page.setViewportSize({ width: 1360, height: 480 })
   await page.click('[data-testid=style-button]')
-  const box = await page.locator('.style-list [data-style=heading-2]').boundingBox()
+  const short = await page.evaluate(() => {
+    const button = document.querySelector('[data-testid=style-button]').getBoundingClientRect()
+    const panel = document.querySelector('.popover[aria-label=Styles]')
+    const where = panel.getBoundingClientRect()
+    const top = document.elementFromPoint(button.left + button.width / 2, button.top + button.height / 2)
+    return {
+      belowTheButton: where.top >= button.bottom,
+      insideTheWindow: where.bottom <= window.innerHeight,
+      scrolls: panel.scrollHeight > panel.clientHeight,
+      buttonReachable: !!top?.closest('[data-testid=style-button]'),
+    }
+  })
+  assert.deepEqual(short, { belowTheButton: true, insideTheWindow: true, scrolls: true, buttonReachable: true }, 'a long list does not cover its button')
+  await page.click('[data-testid=style-button]')
+  await page.waitForSelector('.style-list', { state: 'detached' })
+  await page.setViewportSize({ width: 1360, height: 860 })
+
+  await page.click('[data-testid=style-button]')
+  const box =await page.locator('.style-list [data-style=heading-2]').boundingBox()
   await page.mouse.click(box.x + 20, box.y + box.height / 2) // a real mouse click on the entry, where it is drawn
   await page.waitForSelector('.style-list', { state: 'detached' })
   await page.waitForFunction(() => document.querySelector('[data-testid=text] [data-block]').className.includes('st-heading-2'))
