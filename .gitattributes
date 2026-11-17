@@ -1,0 +1,3 @@
+# The starter fonts and their licence texts are pinned by hash (packages/claudia-fonts/src/claudia_fonts/starter.lock.json),
+# so a checkout must give back the bytes that were committed. Git's line-ending conversion on Windows would not.
+packages/claudia-fonts/src/claudia_fonts/builtin/** -text

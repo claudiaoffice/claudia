@@ -10,7 +10,7 @@ styles (the apps' own style modules and the exporters' name tables, which map th
 from __future__ import annotations
 
 import re
-from pathlib import Path
+from pathlib import Path, PurePath, PureWindowsPath
 
 ROOT = Path(__file__).resolve().parent.parent
 _ID = re.compile(r"""["'](?:heading-[1-9]|slide-title|subtitle)["']""")
@@ -21,6 +21,11 @@ _ALLOWED = {
     "packages/claudia-composes-io/src/claudia_composes_io/_odt_styles.py",
     "packages/claudia-composes-io/src/claudia_composes_io/_docx_styles.py",
 }
+
+
+def _place(path: PurePath, root: PurePath) -> str:
+    """Where a file is, written the way ``_ALLOWED`` writes it: with slashes, whatever the system uses."""
+    return path.relative_to(root).as_posix()
 
 
 def _sources() -> list[Path]:
@@ -38,13 +43,22 @@ def _sources() -> list[Path]:
 
 def test_no_client_layout_or_other_module_keeps_a_list_of_heading_styles_by_name():
     offenders = [
-        f"{path.relative_to(ROOT)}:{number}: {line.strip()}"
+        f"{_place(path, ROOT)}:{number}: {line.strip()}"
         for path in _sources()
-        if str(path.relative_to(ROOT)) not in _ALLOWED
+        if _place(path, ROOT) not in _ALLOWED
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1)
         if _ID.search(line)
     ]
     assert not offenders, "a heading is a style's heading level, not its name:\n" + "\n".join(offenders)
+
+
+def test_a_place_is_named_with_slashes_on_every_system():
+    """On Windows a path is written with backslashes, and the table of allowed places is not: the guard once found
+    every exporter on Windows and nowhere else."""
+    root = PureWindowsPath("D:/a/claudia/claudia")
+    styles = root / "packages" / "claudia-creates" / "src" / "claudia_creates" / "styles.py"
+    assert _place(styles, root) == "packages/claudia-creates/src/claudia_creates/styles.py"
+    assert _place(styles, root) in _ALLOWED
 
 
 def test_the_guard_finds_what_it_is_for():
