@@ -416,6 +416,12 @@ def _reference_block() -> tuple[MenuEntry, ...]:
             "Write a tag for the selected object into the chat, so that everybody can go to it",
             accelerators=("<Primary><Alt>x",),
         ),
+        _page(
+            "edit.go-to-target",
+            "Go to Target",
+            "Go to what the reference at the caret points at (Ctrl+click on a reference does the same)",
+            accelerators=("<Primary><Alt>Return",),
+        ),
     )
 
 
@@ -721,7 +727,8 @@ AGENDA_ENTRY = ("Agenda", "A text box listing the slide titles with their number
 
 
 def _insert_menu(contents: tuple[str, str]) -> Menu:
-    """Insert ▸ Table of Contents (E9.31; in creates Agenda, ``contents`` is its label and tooltip), then Container ▸
+    """Insert ▸ Cross-Reference… (step H, Ctrl+F2, LibreOffice's Fields key; in computes off) and Table of Contents
+    (E9.31; in creates Agenda, ``contents`` is its label and tooltip), then Container ▸
     LaTeX, Mermaid, Typst (D560): the same in every app. Computes shows Table of Contents and the page reports it off,
     as it does List ▸. A container is a rendered text: the person writes the text and the server draws it (D390). The
     keys are the weighty ones, Ctrl+Alt+Shift+I (index), F (formula), G (graph) and Y (Typst), because the plain
@@ -730,7 +737,15 @@ def _insert_menu(contents: tuple[str, str]) -> Menu:
     return Menu(
         "Insert",
         (
-            (_page("insert.contents", label, tooltip, accelerators=("<Primary><Alt><Shift>i",)),),
+            (
+                _page(
+                    "insert.cross-reference",
+                    "Cross-Reference…",
+                    "Put a reference to a heading, an item or a named thing at the caret; it follows what it points at",
+                    accelerators=("<Primary>F2",),
+                ),
+                _page("insert.contents", label, tooltip, accelerators=("<Primary><Alt><Shift>i",)),
+            ),
             (
                 Submenu(
                     "Container",

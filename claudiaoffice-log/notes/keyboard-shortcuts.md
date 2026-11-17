@@ -34,8 +34,10 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Paste As ▸ Plain Text | Ctrl+Shift+V | the document view or the browser |
 | Edit | Search & Replace… | Ctrl+F |  |
 | Edit | Reference in Chat | Ctrl+Alt+X |  |
+| Edit | Go to Target | Ctrl+Alt+Enter |  |
 | Edit | Insert ▸ Soft Hyphen | Ctrl+- |  |
 | Edit | Insert ▸ Non-breaking Hyphen | Ctrl+_ |  |
+| Insert | Cross-Reference… | Ctrl+F2 |  |
 | Insert | Table of Contents | Ctrl+Shift+Alt+I |  |
 | Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
 | Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
@@ -94,6 +96,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Paste As ▸ Plain Text | Ctrl+Shift+V | the document view or the browser |
 | Edit | Search & Replace… | Ctrl+F |  |
 | Edit | Reference in Chat | Ctrl+Alt+X |  |
+| Edit | Go to Target | Ctrl+Alt+Enter |  |
 | Edit | New Sheet… | Shift+F11 |  |
 | Edit | Rename Sheet… | Ctrl+Shift+F11 |  |
 | Edit | Image… | Ctrl+Alt+I |  |
@@ -105,6 +108,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Column ▸ Insert Right | Shift+Alt+→ |  |
 | Edit | Column ▸ Delete | Ctrl+Alt+_ |  |
 | Edit | Clear Cells | Del | the document view or the browser |
+| Insert | Cross-Reference… | Ctrl+F2 |  |
 | Insert | Table of Contents | Ctrl+Shift+Alt+I |  |
 | Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
 | Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
@@ -175,6 +179,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Paste As ▸ Plain Text | Ctrl+Shift+V | the document view or the browser |
 | Edit | Search & Replace… | Ctrl+F |  |
 | Edit | Reference in Chat | Ctrl+Alt+X |  |
+| Edit | Go to Target | Ctrl+Alt+Enter |  |
 | Edit | New Slide | Ctrl+M |  |
 | Edit | Rename Slide… | Ctrl+Shift+F11 |  |
 | Edit | Plan the Time of This Slide… | Ctrl+Shift+Alt+T |  |
@@ -182,6 +187,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Text Box | Ctrl+Alt+B |  |
 | Edit | Image… | Ctrl+Alt+I |  |
 | Edit | Delete | Del | the document view or the browser |
+| Insert | Cross-Reference… | Ctrl+F2 |  |
 | Insert | Agenda | Ctrl+Shift+Alt+I |  |
 | Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
 | Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |

@@ -152,21 +152,29 @@ export function searchItem(c: DocumentMenuContext, search: { open: () => void })
   return { id: 'edit.search-replace', label: t('Search & Replace…'), hint: chordLabel(SEARCH_CHORD), action: () => search.open() }
 }
 
-/** Insert ▸ Table of Contents (in creates: Agenda, E9.31), then Container ▸ LaTeX, Mermaid, Typst: the same in every
+/** Insert ▸ Cross-Reference… (step H) and Table of Contents (in creates: Agenda, E9.31), then Container ▸ LaTeX, Mermaid, Typst: the same in every
  * app (D560). An entry is there for every kind, and off for somebody who may only look, or while the server cannot
  * make that kind (its tool is not set up). The ids are written out, one by one: they are what the shells' manifest
- * (`insert.contents`, `insert.container.*`, with their keys) is checked against. An app without `contents` (computes)
- * shows the entry, off, as it shows List ▸. */
+ * (`insert.cross-reference`, `insert.contents`, `insert.container.*`, with their keys) is checked against. An app
+ * without `contents` or `reference` (computes) shows the entries, off, as it shows List ▸. */
 export function insertMenu(
   c: DocumentMenuContext,
   container: { types: readonly RenderType[]; add: (type: string) => void },
   contents?: { label: string; add: () => void; possible: boolean },
+  reference?: { add: () => void; possible: boolean },
 ): Menu {
   const { t } = c
   const off = (type: string) => c.role === 'viewer' || !container.types.some((k) => k.type === type)
   return {
     label: t('Insert'),
     items: [
+      {
+        id: 'insert.cross-reference',
+        label: t('Cross-Reference…'),
+        hint: hintOf('insert.cross-reference'),
+        action: () => reference?.add(),
+        disabled: c.role === 'viewer' || !reference?.possible,
+      },
       {
         id: 'insert.contents',
         label: contents?.label ?? t('Table of Contents'),
@@ -197,6 +205,12 @@ export function panelItem(c: DocumentMenuContext, panel: { open: () => boolean; 
 export function referenceItem(c: DocumentMenuContext, reference: { run: () => void; possible: () => boolean }): MenuItem {
   const { t } = c
   return { id: 'edit.reference', label: t('Reference in Chat'), action: () => reference.run(), disabled: !reference.possible() }
+}
+
+/** Edit ▸ Go to Target: to what the reference at the caret points at (step H). Off where there is none. */
+export function goToTargetItem(c: DocumentMenuContext, target: { run: () => void; possible: () => boolean }): MenuItem {
+  const { t } = c
+  return { id: 'edit.go-to-target', label: t('Go to Target'), hint: hintOf('edit.go-to-target'), action: () => target.run(), disabled: !target.possible() }
 }
 
 /** View ▸ Replay history…: show the document as it was, step by step (E5.19, D551). */

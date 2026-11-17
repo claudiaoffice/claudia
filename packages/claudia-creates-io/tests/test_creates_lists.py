@@ -11,6 +11,7 @@ from claudia_creates_io import (
     UnsupportedEdit,
     apply_edits_to_odp,
     apply_edits_to_pptx,
+    odp_export_losses,
     odp_import_losses,
     odp_to_slides,
     pptx_export_losses,
@@ -199,3 +200,23 @@ def test_a_kept_odp_whose_agenda_changed_is_written_afresh_instead():
     )
     with pytest.raises(UnsupportedEdit):  # the file keeps no agenda, nor ids: it is written afresh
         apply_edits_to_odp(slides_to_odp(baseline), baseline, current)
+
+
+# ----------------------------------------------------------------------------- references (step H)
+@pytest.mark.parametrize(
+    ("write", "read", "losses"),
+    [(slides_to_pptx, pptx_to_slides, pptx_export_losses), (slides_to_odp, odp_to_slides, odp_export_losses)],
+)
+def test_a_reference_is_written_as_what_it_reads_as_and_the_loss_is_said(write, read, losses):
+    from claudia_core import FIELD_CHAR, RefField
+
+    model = SlideModel.empty()
+    model.insert_slide("s2")
+    model.insert_object(box("t2", "s2", "Results", style="slide-title"))
+    words = replace(paragraph_for("r", "body-text", f"see slide {FIELD_CHAR}"), fields=(RefField("t2", "page"),))
+    model.insert_object(
+        VisualObject(ObjectBody("r", "text", 400, 300, "plain-box", words), SlideAnchor("s1", 100, 300))
+    )
+    back = read(write(model))
+    assert "see slide 2" in [o.body.paragraph.text for o in back.objects.values() if o.body.paragraph]
+    assert ("reference", 1) in [(loss.kind, loss.count) for loss in losses(model)]

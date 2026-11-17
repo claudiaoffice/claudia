@@ -322,6 +322,18 @@
             "label": "Reference in Chat",
             "role": null,
             "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>Return"
+            ],
+            "checkable": false,
+            "id": "edit.go-to-target",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Go to Target",
+            "role": null,
+            "start": false
           }
         ],
         [
@@ -361,6 +373,18 @@
       "label": "Insert",
       "sections": [
         [
+          {
+            "accelerators": [
+              "<Primary>F2"
+            ],
+            "checkable": false,
+            "id": "insert.cross-reference",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Cross-Reference\u2026",
+            "role": null,
+            "start": false
+          },
           {
             "accelerators": [
               "<Primary><Alt><Shift>i"

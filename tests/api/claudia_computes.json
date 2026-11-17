@@ -595,11 +595,14 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None, fields: 'tuple[Field, ...]' = ()) -> None",
   "methods": {
    "check": "(self) -> 'None'",
+   "cut": "(self, start: 'int', end: 'int') -> 'tuple[Paragraph, str, list[Run], tuple[Field, ...]]'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "typed": "(self, offset: 'int', text: 'str', runs: 'Iterable[Run]', fields: 'tuple[Field, ...]' = ()) -> 'Paragraph'",
+   "with_fields": "(self, fields: 'tuple[Field, ...]') -> 'Paragraph'",
    "with_generated": "(self, generated: 'Generated | None') -> 'Paragraph'",
    "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",

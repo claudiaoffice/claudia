@@ -71,7 +71,7 @@ function pictureSrc(o: SlideObject): string {
             <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="paintStyle(o)" />
           </svg>
           <div class="words" :style="wordsStyle(o)">
-            <ParagraphWords v-if="wordsOf(o) || deck.agendas?.[o.id]" :text="wordsOf(o)" :marker="deck.marks?.[o.id]?.marker" :indent="deck.marks?.[o.id]?.indent" :entries="deck.agendas?.[o.id] ?? null" :leader="o.paragraph?.generated?.leader" />
+            <ParagraphWords v-if="wordsOf(o) || deck.agendas?.[o.id]" :text="wordsOf(o)" :marker="deck.marks?.[o.id]?.marker" :indent="deck.marks?.[o.id]?.indent" :entries="deck.agendas?.[o.id] ?? null" :leader="o.paragraph?.generated?.leader" :shown="deck.referenced?.[o.id] ?? null" />
           </div>
         </template>
       </div>

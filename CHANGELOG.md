@@ -4,6 +4,28 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.33.0] - 2026-11-17
+
+References (step H of `claudiaoffice-log/notes/text-structure-across-apps.md`).
+
+### Added
+- `claudia_core.fields`: a field sits at one U+FFFC of a paragraph's text (`FIELD_CHAR`); `RefField` (kind `ref`: the
+  id of what it points at and what it shows, `SHOWS`), `Field`, `field_from_data`, `fields_before`, `plain` (words
+  without U+FFFC), `Shown` and the event `FieldsChanged` (wire type `fields`), `FieldHost`, and the command `SetField`
+  (`core.SetField`, Show As).
+- `Paragraph.fields`, `typed`, `cut` and `with_fields`: the fields go with their characters; `check` says so. Its wire
+  form has `fields`.
+- `InsertText.fields`: the fields of the U+FFFC it puts in (a reference put in, a delete's fields put back).
+- `TextStructure.shown()`: what every field reads as, derived (a target's number, words, both, its place, its name;
+  `broken` when it is gone); `settle` reports changes as `FieldsChanged`.
+- `ObjectModel.object_fields` and `put_object_fields`.
+
+### Changed
+- **Breaking:** `TypingHost.insert_text` takes the fields and `remove_text` returns them;
+  `ObjectModel.insert_object_text` and `remove_object_text` likewise.
+- `SetText` and `replace_spans` take words: a U+FFFC in them makes no field, and the fields of the words they replace
+  go with them (an undo puts them back).
+
 ## [0.32.0] - 2026-11-17
 
 Typing into any paragraph (step G of `claudiaoffice-log/notes/text-structure-across-apps.md`, section 3.1).

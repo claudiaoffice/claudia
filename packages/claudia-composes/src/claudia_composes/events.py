@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from claudia_core import Generated, ListItem
+from claudia_core import Field, Generated, ListItem
 
 from .runs import Run, runs_to_data
 
@@ -84,6 +84,19 @@ class ItemChanged:
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
         return {"type": "item", "block": self.block, "item": None if self.item is None else self.item.to_data()}
+
+
+@dataclass(frozen=True)
+class FieldsPut:
+    """The paragraph ``block`` has these fields at its U+FFFC now (a reference put in, taken out or shown otherwise).
+    What they read as comes as a ``fields`` event."""
+
+    block: str
+    fields: tuple[Field, ...]
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "block_fields", "block": self.block, "fields": [f.to_data() for f in self.fields]}
 
 
 @dataclass(frozen=True)

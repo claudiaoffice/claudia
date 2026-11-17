@@ -3,6 +3,18 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.17.0] - 2026-11-17
+
+References (step H).
+
+### Added
+- `TextModel.fields_of` and `put_fields` (the text is a `claudia_core.FieldHost`); the event `FieldsPut` (wire type
+  `block_fields`). Splitting and joining share out a paragraph's fields by their characters.
+
+### Changed
+- **Breaking:** `TextModel.insert` takes the fields of the U+FFFC put in, `remove` returns those cut; `insert_text` and
+  `remove_text` follow `claudia_core.TypingHost`.
+
 ## [0.16.0] - 2026-11-17
 
 Typing is the kernel's (step G).

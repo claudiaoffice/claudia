@@ -1,5 +1,5 @@
 {
- "version": "0.18.0",
+ "version": "0.19.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -222,11 +222,14 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None, fields: 'tuple[Field, ...]' = ()) -> None",
   "methods": {
    "check": "(self) -> 'None'",
+   "cut": "(self, start: 'int', end: 'int') -> 'tuple[Paragraph, str, list[Run], tuple[Field, ...]]'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "typed": "(self, offset: 'int', text: 'str', runs: 'Iterable[Run]', fields: 'tuple[Field, ...]' = ()) -> 'Paragraph'",
+   "with_fields": "(self, fields: 'tuple[Field, ...]') -> 'Paragraph'",
    "with_generated": "(self, generated: 'Generated | None') -> 'Paragraph'",
    "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
@@ -537,21 +540,23 @@
    "containers": "(self) -> 'list[str]'",
    "delete_slide": "(self, slide: 'str') -> 'int'",
    "empty": "() -> 'Self'",
+   "fields_of": "(self, paragraph_id: 'str') -> 'tuple[Field, ...]'",
    "generated_of": "(self, paragraph_id: 'str') -> 'Generated | None'",
    "get": "(self, object_id: 'str') -> 'SlideObject'",
    "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '') -> 'None'",
-   "insert_text": "(self, paragraph_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'tuple[object, ...]'",
+   "insert_text": "(self, paragraph_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'tuple[object, ...]'",
    "item_of": "(self, paragraph_id: 'str') -> 'ListItem | None'",
    "item_regions": "(self, paragraph_id: 'str') -> 'tuple[Region, ...]'",
    "labels": "(self) -> 'dict[str, Label]'",
    "list_in_use": "(self, list_id: 'str') -> 'bool'",
    "named_things": "(self)",
    "notes_of": "(self, slide: 'str') -> 'str'",
+   "put_fields": "(self, paragraph_id: 'str', fields: 'tuple[Field, ...]') -> 'tuple[object, ...]'",
    "put_generated": "(self, paragraph_id: 'str', generated: 'Generated | None') -> 'object'",
    "put_item": "(self, paragraph_id: 'str', item: 'ListItem | None') -> 'object'",
    "reading_order": "(self) -> 'Iterator[Placed]'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
-   "remove_text": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[object, ...]]'",
+   "remove_text": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]'",
    "restore": "(state: 'dict') -> 'Self'",
    "serialize": "(self) -> 'dict'",
    "set_notes": "(self, slide: 'str', text: 'str') -> 'str'",

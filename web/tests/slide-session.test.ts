@@ -655,3 +655,33 @@ describe('agendas (E9.31)', () => {
     expect(session.state.agendas).toEqual({})
   })
 })
+
+describe('references in the words of text boxes (step H)', () => {
+  async function referring() {
+    const link = new FakeLink()
+    const words = { ...paragraph('a', 'see ￼'), fields: [{ kind: 'ref', target: 't2', show: 'page' }] }
+    server(link, [text('a', { paragraph: words }), text('t2')])
+    link.handlers.fields = () => ({ revision: 'main:0', fields: { a: [{ text: '2', state: 'ok' }] } })
+    link.handlers.reference_targets = () => [{ id: 't2', kind: 'heading', level: 1, number: null, text: 'Results', name: null }]
+    link.handlers.insert_reference = () => ({ revision: 'main:1' })
+    const session = new SlideSession(() => link, { retryDelays: [1] })
+    await session.open()
+    return { link, session, state: session.state }
+  }
+
+  it('loads and follows what the references read as, and finds the first one of a box', async () => {
+    const { link, session, state } = await referring()
+    expect(state.referenced.a).toEqual([{ text: '2', state: 'ok' }])
+    expect(session.referenceIn('a')).toMatchObject({ field: { target: 't2' }, shown: { text: '2' } })
+    expect(session.referenceIn('t2')).toBeNull()
+    link.push('fields', { type: 'fields', paragraph: 'a', fields: [{ text: '3', state: 'ok' }] })
+    expect(state.referenced.a).toEqual([{ text: '3', state: 'ok' }])
+  })
+
+  it('lists the targets and puts a reference into a box at an offset of its words', async () => {
+    const { link, session } = await referring()
+    expect((await session.referenceTargets()).map((t) => t.id)).toEqual(['t2'])
+    await session.insertReference('a', 99, 't2', 'text')
+    expect(link.last('insert_reference')).toMatchObject({ paragraph: 'a', offset: 5, target: 't2', show: 'text' })
+  })
+})

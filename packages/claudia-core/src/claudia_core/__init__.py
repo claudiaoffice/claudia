@@ -24,6 +24,7 @@
     generated    Toc, ContentsEntry, SetGenerated: tables of contents and agendas, derived from the headings (E9.31)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
     writing      InsertText, DeleteText, TextCommand: typing into any paragraph, character by character (step G)
+    fields       RefField, SetField, FieldsChanged: references in the words, read from what they point at (step H)
     object_texts the words and descriptions of objects as texts a search can look in and replace, for any app
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
@@ -114,6 +115,20 @@ from .facets import (
     check_kind,
     facet_of,
     fits,
+)
+from .fields import (
+    FIELD_CHAR,
+    SHOWS,
+    Field,
+    FieldHost,
+    FieldsChanged,
+    RefField,
+    SetField,
+    Show,
+    Shown,
+    field_from_data,
+    fields_before,
+    plain,
 )
 from .file_pictures import FILE_IMPORTER, IMAGE_STYLE, UNKNOWN_TIME, asset_of, keeps_proportions, picture_body
 from .generated import (
@@ -304,6 +319,18 @@ __all__ = [
     "InsertText",
     "DeleteText",
     "word_changes",
+    "FIELD_CHAR",
+    "SHOWS",
+    "Field",
+    "FieldHost",
+    "FieldsChanged",
+    "RefField",
+    "SetField",
+    "Show",
+    "Shown",
+    "field_from_data",
+    "fields_before",
+    "plain",
     "generated_from_data",
     "ChangeScheme",
     "CreateScheme",

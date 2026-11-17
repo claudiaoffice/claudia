@@ -176,3 +176,30 @@ describe('a table of contents on pages (E9.31, step F)', () => {
     expect(plain.pageOf.get('b1')).toBe(1)
   })
 })
+
+describe('page references in a text (step I)', () => {
+  const referring = (at: 'start' | 'end'): TextDocument => {
+    const base = doc(30)
+    const last = base.blocks.filter((b) => b.style === 'heading-1').at(-1)!
+    const words = 'Mehr dazu auf Seite '
+    const ref: TextDocument['blocks'][number] = { id: 'ref', style: 'body', text: `${words}.`, pageRefs: [{ at: words.length, target: last.id }] }
+    return { ...base, blocks: at === 'start' ? [ref, ...base.blocks] : [...base.blocks, ref] }
+  }
+  const runsOf = (pages: ReturnType<typeof layoutText>['list']['pages']) => pages.flatMap((p) => [...walk(p.items)].filter((r): r is GlyphRun => r.kind === 'glyphs'))
+
+  it('fills in the page the target starts on, found by laying the text out', () => {
+    const d = referring('start')
+    const out = layoutText(d, fonts, resolver, GERMAN)
+    const last = d.blocks.filter((b) => b.style === 'heading-1').at(-1)!
+    const page = out.pageOf.get(last.id)!
+    expect(page).toBeGreaterThan(1)
+    expect(runsOf(out.list.pages).some((r) => r.text === `${page}.`)).toBe(true)
+    expect(out.notes.filter((n) => n.kind === 'pages')).toEqual([])
+  })
+
+  it('needs nothing more for a reference to a page before it, and a text without any takes one pass as before', () => {
+    const out = layoutText(referring('end'), fonts, resolver, GERMAN)
+    expect(runsOf(out.list.pages).some((r) => /^\d+\.$/.test(r.text) && r.text !== '000.')).toBe(true)
+    expect(canonicalJson(layoutText(doc(30), fonts, resolver, GERMAN).list)).toBe(canonicalJson(layoutText(doc(30), fonts, resolver, GERMAN).list))
+  })
+})

@@ -3,6 +3,17 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.19.0] - 2026-11-17
+
+References in text boxes (step H).
+
+### Added
+- `SlideModel.fields_of` and `put_fields`: the presentation is a `claudia_core.FieldHost`; a reference to a slide title
+  can show its slide number.
+
+### Changed
+- **Breaking:** `insert_text` and `remove_text` follow `claudia_core.TypingHost` (with fields).
+
 ## [0.18.0] - 2026-11-17
 
 Typing into text boxes (step G).

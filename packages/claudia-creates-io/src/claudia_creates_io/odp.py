@@ -78,7 +78,7 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
-from ._items import Mark, OdpListReader, OdpLists, agendas, list_styles, marks_of, odp_level, words_of
+from ._items import Mark, OdpListReader, OdpLists, agendas, list_styles, marks_of, odp_level, references, words_of
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._styling import colour_of, look, page_colour, points_of
 from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
@@ -1041,6 +1041,8 @@ def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[L
         losses.add("authorship", count=authored)
     if written := agendas(model):
         losses.add("agenda", count=written)  # written as the lines it shows: it no longer follows the slides
+    if written := references(model):
+        losses.add("reference", count=written)  # written as what it reads as: it no longer follows its target
     for loss in notes_losses(model):
         losses.add(loss.kind, loss.detail, loss.count)
     decorative = sum(1 for obj in model.objects.values() if obj.body.decorative)

@@ -50,6 +50,9 @@ export interface TextBlock {
    *  the paragraph `target`, and whether the target's page is drawn after it, a leader away. The pages are found here:
    *  the server never paginates (step F). */
   contents?: TextContents | null
+  /** The page references in the words (step I): the page the paragraph `target` starts on goes in at `at` of `text`
+   *  (offsets of `text` as given, in order). Found here, in at most three passes. */
+  pageRefs?: readonly { at: number; target: string }[] | null
 }
 /** A table of contents as the layout draws it. */
 export interface TextContents {
@@ -141,6 +144,34 @@ function placeRoom(sheet: Styles, style: ParagraphStyle): number {
   return widest + 2 * Math.round(LEADER_GAP_EM * style.size)
 }
 
+/** For each flow block, the paragraph of the text it is (or the entry of a table of contents it draws). */
+interface Origin {
+  block: number
+  entry?: TextContents['entries'][number]
+  contents?: TextContents
+  room?: number
+}
+
+/** The page (from 1) each paragraph of the text starts on, by id. */
+function pagesOf(starts: ReadonlyMap<number, { page: number }>, origins: readonly Origin[], blocks: readonly TextBlock[]): Map<string, number> {
+  const out = new Map<string, number>()
+  for (const [i, at] of starts) if (!origins[i]!.entry) out.set(blocks[origins[i]!.block]!.id, at.page + 1)
+  return out
+}
+
+/** A paragraph's words with its page references filled in from `known` ("000", as wide as most pages, before then). */
+function withPages(block: TextBlock, known: ReadonlyMap<string, number> | null): string {
+  const refs = block.pageRefs
+  if (!refs?.length) return block.text
+  let out = ''
+  let from = 0
+  for (const ref of refs) {
+    out += block.text.slice(from, ref.at) + String(known?.get(ref.target) ?? '000')
+    from = ref.at
+  }
+  return out + block.text.slice(from)
+}
+
 /** Where each flow block starts: the page (from 0), and the top of its first line on it, in page coordinates. */
 function startsOf(flow: readonly FlowPage[], blocks: readonly FlowBlock[]): Map<number, { page: number; top: number }> {
   const out = new Map<number, { page: number; top: number }>()
@@ -156,7 +187,7 @@ function contentsItems(
   sheet: Styles,
   flow: readonly FlowPage[],
   blocks: readonly FlowBlock[],
-  origins: readonly { entry?: TextContents['entries'][number]; contents?: TextContents; room?: number }[],
+  origins: readonly Origin[],
   pageOf: ReadonlyMap<string, number>,
   starts: ReadonlyMap<number, { page: number; top: number }>,
   pages: DisplayPage[],
@@ -239,55 +270,76 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   let wantsHyphens = false
   const lists = doc.lists ?? []
   const schemes = doc.schemes ?? []
-  /** for each flow block, the paragraph of the text it is (or the entry of a table of contents it draws) */
-  const origins: { block: number; entry?: TextContents['entries'][number]; contents?: TextContents; room?: number }[] = []
-  const blocks: FlowBlock[] = doc.blocks.flatMap((b, index): FlowBlock[] => {
-    if (b.contents) {
-      const contents = b.contents
-      const entries = contents.entries.length ? contents.entries : [{ target: '', words: '', style: b.style }]
-      return entries.map((entry, k) => {
-        const r = sheet.paragraph(entry.style)
-        // the page column has a fixed width (room for "000"), so filling it in never moves a line (mock-up D)
-        const room = contents.places && entry.target ? placeRoom(sheet, r.style) : 0
-        const style: ParagraphStyle = { ...r.style, indentRight: r.style.indentRight + room, keepWithNext: k < entries.length - 1 }
-        const inset = insets(r.decoration)
-        origins.push({ block: index, entry, contents, room })
-        const id = k ? `${b.id}~${k}` : b.id
-        return { id, layout: layoutParagraph(fonts, style, entry.words, box.w - inset.left - inset.right, paragraphOptions), decoration: r.decoration }
-      })
+  /** The flow blocks of the text, with page references as `known` has them ("000" before they are known), and for
+   *  each flow block the paragraph of the text it is (or the entry of a table of contents it draws). */
+  const build = (known: ReadonlyMap<string, number> | null) => {
+    const origins: Origin[] = []
+    const blocks: FlowBlock[] = doc.blocks.flatMap((b, index): FlowBlock[] => {
+      if (b.contents) {
+        const contents = b.contents
+        const entries = contents.entries.length ? contents.entries : [{ target: '', words: '', style: b.style }]
+        return entries.map((entry, k) => {
+          const r = sheet.paragraph(entry.style)
+          // the page column has a fixed width (room for "000"), so filling it in never moves a line (mock-up D)
+          const room = contents.places && entry.target ? placeRoom(sheet, r.style) : 0
+          const style: ParagraphStyle = { ...r.style, indentRight: r.style.indentRight + room, keepWithNext: k < entries.length - 1 }
+          const inset = insets(r.decoration)
+          origins.push({ block: index, entry, contents, room })
+          const id = k ? `${b.id}~${k}` : b.id
+          return { id, layout: layoutParagraph(fonts, style, entry.words, box.w - inset.left - inset.right, paragraphOptions), decoration: r.decoration }
+        })
+      }
+      origins.push({ block: index })
+      const r = sheet.paragraph(b.style)
+      const item = itemGeometry(doc.blocks, index, lists, schemes)
+      const em = r.style.size
+      const style: ParagraphStyle = {
+        ...r.style,
+        keepWithNext: keepsWithNext(b.style, styles),
+        // a list item's text starts after its marker's box; the gap to the next item of its list replaces its space after
+        ...(item ? { indentLeft: r.style.indentLeft + Math.round(item.pad * em) } : {}),
+        ...(item && item.gap !== null ? { spaceAfter: Math.round(item.gap * em) } : {}),
+      }
+      if (style.hyphens === 'auto' && b.text) wantsHyphens = true
+      const inset = insets(r.decoration)
+      const width = box.w - inset.left - inset.right
+      const marker = !b.label?.marker
+        ? undefined
+        : item
+          ? markerOf(sheet, b.style, b.label.marker, r.style.indentLeft, item.left, item.step, em)
+          : headingNumberOf(sheet, r.style, b.label.marker, em)
+      const words = withPages(b, known)
+      return [{ id: b.id, layout: layoutParagraph(fonts, style, words, width, paragraphOptions), decoration: r.decoration, ...(marker ? { marker } : {}) }]
+    })
+    return { blocks, origins }
+  }
+  // ---- at most three passes: a page reference can move a line, and the line a page break (mock-up D, D901)
+  const referring = doc.blocks.some((b) => b.pageRefs?.length)
+  const wanted = new Set(doc.blocks.flatMap((b) => (b.pageRefs ?? []).map((ref) => ref.target)))
+  let known: Map<string, number> | null = null
+  let built = build(null)
+  let flow = paginate(built.blocks, geometry)
+  let starts = startsOf(flow, built.blocks)
+  let pageOf = pagesOf(starts, built.origins, doc.blocks)
+  for (let pass = 2; referring && pass <= 3; pass++) {
+    if (known && [...wanted].every((target) => known!.get(target) === pageOf.get(target))) break
+    known = pageOf
+    built = build(known)
+    flow = paginate(built.blocks, geometry)
+    starts = startsOf(flow, built.blocks)
+    pageOf = pagesOf(starts, built.origins, doc.blocks)
+    if (pass === 3 && [...wanted].some((target) => known!.get(target) !== pageOf.get(target))) {
+      notes.push({ kind: 'pages', reason: 'the page references did not settle in three passes; some may be one page off' })
     }
-    origins.push({ block: index })
-    const r = sheet.paragraph(b.style)
-    const item = itemGeometry(doc.blocks, index, lists, schemes)
-    const em = r.style.size
-    const style: ParagraphStyle = {
-      ...r.style,
-      keepWithNext: keepsWithNext(b.style, styles),
-      // a list item's text starts after its marker's box; the gap to the next item of its list replaces its space after
-      ...(item ? { indentLeft: r.style.indentLeft + Math.round(item.pad * em) } : {}),
-      ...(item && item.gap !== null ? { spaceAfter: Math.round(item.gap * em) } : {}),
-    }
-    if (style.hyphens === 'auto' && b.text) wantsHyphens = true
-    const inset = insets(r.decoration)
-    const width = box.w - inset.left - inset.right
-    const marker = !b.label?.marker
-      ? undefined
-      : item
-        ? markerOf(sheet, b.style, b.label.marker, r.style.indentLeft, item.left, item.step, em)
-        : headingNumberOf(sheet, r.style, b.label.marker, em)
-    return [{ id: b.id, layout: layoutParagraph(fonts, style, b.text, width, paragraphOptions), decoration: r.decoration, ...(marker ? { marker } : {}) }]
-  })
+  }
+  const { blocks, origins } = built
   if (wantsHyphens && !hyphenator) {
     notes.push({
       kind: 'hyphenation',
       reason: doc.language ? `there are no hyphenation patterns for ${doc.language}, so words are not hyphenated` : 'the text has no language set, so words are not hyphenated',
     })
   }
-  const flow = paginate(blocks, geometry)
   const pages: DisplayPage[] = flowItems(fonts, flow, blocks, geometry)
-  const starts = startsOf(flow, blocks)
-  const pageOf = new Map<string, number>()
-  for (const [i, at] of starts) if (!origins[i]!.entry) pageOf.set(doc.blocks[origins[i]!.block]!.id, at.page + 1)
   contentsItems(fonts, sheet, flow, blocks, origins, pageOf, starts, pages, box)
 
   // ---- floating objects, where they hang (D179: over the text, which does not wrap around them)

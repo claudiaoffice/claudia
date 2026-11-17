@@ -1,6 +1,6 @@
 # Text structure across the three apps — the entities, where they live, what moves (plan)
 
-**Status: plan of 2026-11-16; steps A to D built the same day (sections 8 to 10), steps E to G on 2026-11-17 (sections 11 to 13). Steps H and I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
+**Status: plan of 2026-11-16; steps A to D built the same day (sections 8 to 10), steps E to I on 2026-11-17 (sections 11 to 15). The plan is built.** It widens `e9-composes-outline-references-toc.md` (the composes design
 of the same day) to creates, and replaces that note's section 11 ("Where the code goes"). The class diagram is
 `mockups/text-structure-architecture.svg`; it replaces `composes-toc-architecture.svg`. No decision numbers are taken.
 
@@ -454,3 +454,57 @@ Written first, as part of the steps above:
 - **Composes keeps its own split, join and style commands**, as the plan says; the floating objects of composes and
   the text boxes of computes are typing hosts in the model (composes) or can become one (computes) when their web
   editors move to `ParagraphEditor.vue`.
+
+## 14. Done: step H (2026-11-17, patch 12)
+
+### What was built
+
+- **Fields in the kernel** (`claudia_core.fields`): a field sits at one U+FFFC; `Paragraph.fields` (the *k*-th U+FFFC is
+  the *k*-th field), `typed`/`cut`/`with_fields` keep them with their characters, and `check` refuses a mismatch.
+  `RefField` (target id, show: number, text, number-text, page, name); `SetField` (Show As). Typing carries fields
+  (`InsertText.fields`; a delete's inverse puts them back); composes' split and join share them out. Words from a
+  person (typing, paste, `SetText`, `write_words`, the assistant's) have U+FFFC taken out (`plain`).
+- **Derived, never stored:** `TextStructure.shown()` resolves each field from the target's label (number), words,
+  place (creates: the slide number), or name; a target that is gone is `broken`, and undo mends it. `settle` sends a
+  `fields` event for what changed; composes also sends `block_fields` when a paragraph's fields change.
+- **Server** (both apps): `reference_targets(query?)` (headings with numbers and levels, numbered items, named things),
+  `insert_reference`, `set_field`, `fields`; `blocks` carries `fields` and `shown`.
+- **Web:** Insert ▸ Cross-Reference… (Ctrl+F2) opens `ReferencePicker.vue` (shared: search, grouped outline, Show
+  as, Reads); Edit ▸ Go to Target (Ctrl+Alt+Enter) and Ctrl+click go to the target. In composes a reference is an
+  atom in the editor (one character to the caret; Backspace selects it first; right-click gives Show As, Go to Target,
+  Remove Reference); broken ones are dashed rose with "⚠ missing reference". In creates `ParagraphEditor.vue` draws
+  references as atoms that read back as their U+FFFC, `ParagraphWords.vue` draws them on the slide, thumbnails,
+  presenter and print. Computes shows both menu entries off.
+- **Files:** docx bookmarks at targets and `REF`/`PAGEREF` fields; odt `text:bookmark` and `text:bookmark-ref`; both
+  with the shown text as the cached result, and read back as references. pptx/odp write the shown text (loss
+  `reference`). A kept docx/odt with references is written anew.
+
+### Where the build differs from the plan or the mock-ups, and why
+
+- **Show As is a flat list in the reference's menu** (the shared `ContextMenu.vue` has no flyouts); each entry says
+  "Show As …" and the current one is ticked and off.
+- **Creates puts a reference at the caret of the box being edited by taking its words first**, then inserting the
+  reference on the server; the editor closes. A live atom insert inside the open editor comes with the AI and paste work.
+- **"page" shows "#" in composes** until step I fills pages in from the layout; in creates it is the slide number.
+- **No reverse index yet:** `shown()` walks the paragraphs that have fields on each settle; the performance guard stayed
+  green.
+
+## 15. Done: step I (2026-11-17, patch 13)
+
+### What was built
+
+- **"See slide 7"** came with step H: in creates a reference shown as `page` is the slide number the kernel knows.
+- **"See page 12"** in composes: the print source passes a page reference as `pageRefs` (where the number goes, and
+  its target); `layoutText` lays the text out with "000" there, paginates, fills in the pages and lays out again until
+  the pages of the targets settle, at most three passes (mock-up D, D901); one that does not settle is the note
+  `pages`. `LAYOUT_VERSION` 8.
+- **Page view** shows page references with their numbers from the same background layout as the table of contents
+  (`usePageNumbers` runs for a page reference too); flow shows a muted "#" with "The page is known in Page view and
+  when printing".
+
+### Where the build differs from the plan, and why
+
+- **Every pass lays out the whole text**, not only the paragraphs with page references: simpler, and a text with no
+  page reference still takes one pass, so nothing else got slower.
+- **Exports** write a page reference as `PAGEREF` (docx) or a `page` bookmark reference (odt) with an empty cached
+  result: Word and LibreOffice fill in their own pages, and the server never paginates.

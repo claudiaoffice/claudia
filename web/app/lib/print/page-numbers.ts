@@ -1,5 +1,5 @@
-// The pages of a text in Page view (E9.31, step F): where each paragraph starts, as the printed pages have it, for the
-// page numbers of a table of contents. The same layout as the print preview, so Page view, print and PDF agree; it runs
+// The pages of a text in Page view (E9.31, steps F and I): where each paragraph starts, as the printed pages have it,
+// for the page numbers of a table of contents and of page references. The same layout as the print preview, so Page view, print and PDF agree; it runs
 // only in Page view, only while the text has a table that shows pages, and once the typing has paused.
 import { onScopeDispose, shallowRef, watch, type ShallowRef } from 'vue'
 import type { TextSession } from '../text-session'
@@ -13,7 +13,8 @@ export const PAGES_AFTER_MS = 1200
 export function usePageNumbers(session: TextSession, on: () => boolean, after = PAGES_AFTER_MS): ShallowRef<ReadonlyMap<string, number> | null> {
   const pages = shallowRef<ReadonlyMap<string, number> | null>(null)
   const state = session.state
-  const wanted = () => on() && state.blocks.some((b) => b.generated?.places)
+  // a table that shows pages, or a reference to a page (step I)
+  const wanted = () => on() && state.blocks.some((b) => b.generated?.places || b.shown?.some((s) => s.state === 'page'))
   let timer: ReturnType<typeof setTimeout> | null = null
   let run = 0
   async function layOut() {

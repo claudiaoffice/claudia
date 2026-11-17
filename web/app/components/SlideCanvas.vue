@@ -49,7 +49,7 @@ const DRAG_START = 3 // screen pixels the pointer must travel before a click bec
 
 const area = ref<HTMLElement | null>(null)
 const slideEl = ref<HTMLElement | null>(null)
-const editor = ref<{ focus(): void; take(): string } | null>(null)
+const editor = ref<{ focus(): void; take(): string; caretOffset(): number } | null>(null)
 const size = ref({ w: 1200, h: 700 })
 const scale = computed(() => fitScale(size.value, MARGIN))
 const readonly = computed(() => lookOnly(state))
@@ -480,7 +480,7 @@ function onObjectContext(event: MouseEvent, o: SlideObject) {
 // ------------------------------------------------------------------------------ editing text
 const editing = ref<{ id: string; text: string } | null>(null)
 const setEditor = (el: unknown) => {
-  editor.value = (el as { focus(): void; take(): string } | null) ?? null
+  editor.value = (el as { focus(): void; take(): string; caretOffset(): number } | null) ?? null
 }
 
 async function beginEdit(id: string | null = state.selected) {
@@ -514,6 +514,18 @@ async function commitEdit(text?: string) {
   // Words that are one fenced block (```latex … ```) of a type the server makes become a container (D560)
   if (current && current.kind === 'text' && (await session.fenceToContainer(e.id, words))) return
   if (current && words !== wordsOf(current)) await session.writeWords(e.id, words)
+}
+
+/** Where a reference goes (step H): at the caret of the words being edited (they are taken first), else at the end
+ * of the selected object's words; with the point on the window to open the picker at. `null` for no words. */
+async function referencePlace(): Promise<{ id: string; offset: number; x: number; y: number } | null> {
+  const id = editing.value?.id ?? state.selected
+  const o = id ? state.objects[id] : null
+  if (!id || !o?.paragraph || o.paragraph.generated) return null
+  const rect = document.querySelector<HTMLElement>(`.obj[data-id="${CSS.escape(id)}"]`)?.getBoundingClientRect()
+  const offset = editing.value ? (editor.value?.caretOffset() ?? 0) : o.paragraph.text.length
+  if (editing.value) await commitEdit()
+  return { id, offset, x: rect ? rect.left : 200, y: rect ? rect.bottom + 6 : 200 }
 }
 
 function cancelEdit() {
@@ -552,7 +564,7 @@ async function onKey(event: KeyboardEvent) {
   }
 }
 
-defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe, quarter, openRotateBy })
+defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe, quarter, openRotateBy, referencePlace })
 
 const HANDLE_CURSOR: Record<Handle, string> = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize', n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize' }
 const HANDLE_AT: Record<Handle, [number, number]> = { nw: [0, 0], n: [0.5, 0], ne: [1, 0], e: [1, 0.5], se: [1, 1], s: [0.5, 1], sw: [0, 1], w: [0, 0.5] }
@@ -610,7 +622,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
           </svg>
           <div class="words" :style="textStyle(o)">
             <span v-if="wordsOf(o) === '' && o.kind === 'text' && !o.paragraph?.generated && editing?.id !== o.id" class="hint">{{ t('Double-click to type') }}</span>
-            <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" :marker="session.markOf(o.id)?.marker" :indent="session.markOf(o.id)?.indent" :entries="session.agendaOf(o.id)" :leader="o.paragraph?.generated?.leader" />
+            <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" :marker="session.markOf(o.id)?.marker" :indent="session.markOf(o.id)?.indent" :entries="session.agendaOf(o.id)" :leader="o.paragraph?.generated?.leader" :shown="state.referenced[o.id] ?? null" />
           </div>
           <ParagraphEditor
             v-if="editing?.id === o.id"
@@ -620,6 +632,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
             :label="t('text of the object')"
             :marker="session.markOf(o.id)?.marker"
             :indent="session.markOf(o.id)?.indent"
+            :shown="state.referenced[o.id] ?? null"
             :style="editorStyle(o)"
             @commit="commitEdit"
             @cancel="cancelEdit"

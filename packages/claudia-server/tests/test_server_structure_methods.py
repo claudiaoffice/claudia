@@ -211,3 +211,55 @@ def test_an_agenda_lists_the_slide_titles_with_their_slide_numbers(deck):
     assert [e[1] for e in entries_of(deck, agenda)] == ["1", "2"]
     with pytest.raises(RequestError):
         call(deck, "set_text", {"id": agenda, "text": "typed"})
+
+
+# ----------------------------------------------------------------------------- references (step H)
+def test_both_apps_have_the_reference_methods():
+    wanted = {"fields", "reference_targets", "insert_reference", "set_field"}
+    assert wanted <= composes_methods.names()
+    assert wanted <= creates_methods.names()
+
+
+def test_the_picker_lists_headings_with_their_numbers_then_numbered_items_then_named_things(paper):
+    call(paper, "number_headings", {"on": True})
+    call(paper, "make_list", {"blocks": ["b2"], "scheme": "numbers"})
+    targets = call(paper, "reference_targets")
+    assert [(t["id"], t["kind"], t["level"], t["number"], t["text"]) for t in targets[:3]] == [
+        ("b1", "heading", 1, "1", "Why"),
+        ("b3", "heading", 2, "1.1", "Asked"),
+        ("b4", "heading", 1, "2", "How"),
+    ]
+    assert ("b2", "item") in [(t["id"], t["kind"]) for t in targets]
+    assert [t["id"] for t in call(paper, "reference_targets", {"query": "ask"})] == ["b3"]
+
+
+def test_a_reference_is_put_in_shows_its_target_and_its_show_can_change(paper):
+    call(paper, "number_headings", {"on": True})
+    call(paper, "insert_reference", {"paragraph": "b2", "offset": 3, "target": "b3"})
+    blocks = {b["id"]: b for b in call(paper, "blocks")["blocks"]}
+    assert blocks["b2"]["text"] == "one￼" and blocks["b2"]["fields"] == [
+        {"kind": "ref", "target": "b3", "show": "number"}
+    ]
+    assert blocks["b2"]["shown"] == [{"text": "1.1", "state": "ok"}]
+    assert call(paper, "fields")["fields"] == {"b2": [{"text": "1.1", "state": "ok"}]}
+    call(paper, "set_field", {"paragraph": "b2", "index": 0, "show": "text"})
+    assert call(paper, "fields")["fields"]["b2"] == [{"text": "Asked", "state": "ok"}]
+    revision = call(paper, "set_field", {"paragraph": "b2", "index": 0, "show": "text"})["revision"]
+    assert revision == paper.revision.to_data()
+    with pytest.raises(RequestError):
+        call(paper, "set_field", {"paragraph": "b2", "index": 3, "show": "text"})
+    with pytest.raises(RequestError):
+        call(paper, "set_field", {"paragraph": "b2", "index": 0, "show": "colour"})
+
+
+def test_typed_words_make_no_reference(paper):
+    call(paper, "replace_text", {"block": "b2", "start": 0, "end_block": "b2", "end": 0, "text": "x￼y"})
+    assert call(paper, "blocks")["blocks"][1]["text"] == "xyone"
+
+
+def test_a_reference_in_a_text_box_to_a_slide_title_shows_its_words_or_its_slide(deck):
+    call(deck, "insert_reference", {"paragraph": deck.ids["a"], "offset": 0, "target": deck.ids["t2"]})
+    assert call(deck, "fields")["fields"][deck.ids["a"]] == [{"text": "t2", "state": "ok"}]
+    call(deck, "set_field", {"paragraph": deck.ids["a"], "index": 0, "show": "page"})
+    assert call(deck, "fields")["fields"][deck.ids["a"]] == [{"text": "2", "state": "ok"}]
+    assert any(t["id"] == deck.ids["t2"] and t["kind"] == "heading" for t in call(deck, "reference_targets"))

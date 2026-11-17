@@ -9,6 +9,7 @@ import type { Block, Pos } from '~/lib/blocks'
 import { headingNumberLayout, itemLayout } from '~/lib/list-layout'
 import { headingAttrs, paragraphCss, semanticTag } from '~/lib/style-css'
 import type { TextSession } from '~/lib/text-session'
+import { FIELD_CHAR, fieldIndex, partsOf, type Shown } from '~/lib/references'
 import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
 import { usePointed } from '~/lib/pointed'
@@ -16,7 +17,12 @@ import { usePointed } from '~/lib/pointed'
 const { t } = useI18n()
 
 const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean; active: string | null; marks?: TextMark[]; pages?: ReadonlyMap<string, number> | null }>()
-const emit = defineEmits<{ suggestion: [id: string]; 'style-menu': [at: { x: number; y: number }]; contents: [block: string] }>()
+const emit = defineEmits<{
+  suggestion: [id: string]
+  'style-menu': [at: { x: number; y: number }]
+  contents: [block: string]
+  'reference-menu': [at: { block: string; index: number; x: number; y: number }]
+}>()
 
 const state = props.session.state
 /** What a replay marks (D553): a paragraph as a whole, whichever stretch of it changed. */
@@ -62,7 +68,17 @@ interface OtherSeg {
   at?: number
   id?: string
 }
-type Seg = TextSeg | OtherSeg
+/** A reference (step H): one character of the text, drawn as an atom that reads as what the server derived. */
+interface FieldSeg {
+  kind: 'field'
+  key: string
+  start: number
+  index: number
+  text: string
+  state: Shown['state']
+  target: string
+}
+type Seg = TextSeg | OtherSeg | FieldSeg
 
 const clamp = (n: number, max: number) => Math.max(0, Math.min(n, max))
 
@@ -101,6 +117,11 @@ function segmentsOf(block: Block): Seg[] {
   }
   const unwritten = [state.sending, state.pending].filter((u) => u && u.at.block === block.id)
   for (const u of unwritten) cuts.add(clamp(u!.at.offset, len))
+  for (const part of partsOf(block.text)) {
+    if (part.kind !== 'field') continue
+    cuts.add(part.start)
+    cuts.add(part.start + 1)
+  }
 
   const points = [...cuts].sort((a, b) => a - b)
   const out: Seg[] = []
@@ -124,6 +145,12 @@ function segmentsOf(block: Block): Seg[] {
     const sug = marks.find((s) => s.start <= from && s.end >= to && s.end > s.start)
     const zone = zones.find((z) => z.start <= from && z.end >= to)
     const hit = hits.find((h) => h.start <= from && h.end >= to && h.end > h.start)
+    if (block.text[from] === FIELD_CHAR && to === from + 1) {
+      const index = fieldIndex(block.text, from)
+      const shown = block.shown?.[index]
+      out.push({ kind: 'field', key: `f${from}`, start: from, index, text: shown?.text ?? '', state: shown?.state ?? 'ok', target: block.fields?.[index]?.target ?? '' })
+      return
+    }
     out.push({
       kind: 'text',
       key: `t${from}`,
@@ -152,14 +179,18 @@ function title(seg: TextSeg): string | undefined {
 // ------------------------------------------------------------------------------ page <-> model
 const blockEl = (id: string) => root.value?.querySelector<HTMLElement>(`[data-block="${CSS.escape(id)}"]`) ?? null
 
-/** How many characters of the text (not counting what only the screen shows) lie before a point of the page. */
+/** How many characters of the text (not counting what only the screen shows) lie before a point of the page. A
+ * reference is one character, whatever it reads as (step H). */
 function textBefore(el: HTMLElement, node: Node, offset: number): number {
+  const atom = (node.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node.parentElement)?.closest<HTMLElement>('[data-atom]')
+  if (atom && el.contains(atom)) return Number(atom.dataset.off) + 1 // a point inside a reference is after it
   const range = document.createRange()
   range.selectNodeContents(el)
   range.setEnd(node, offset)
   let count = 0
   const walk = (n: Node) => {
     if (n.nodeType === Node.TEXT_NODE) count += (n as Text).data.length
+    else if ((n as HTMLElement).hasAttribute?.('data-atom')) count += 1
     else if (!(n as HTMLElement).hasAttribute?.('data-skip')) n.childNodes.forEach(walk)
   }
   walk(range.cloneContents())
@@ -190,6 +221,8 @@ function domPoint(pos: Pos, afterOverlay: boolean): [Node, number] | null {
     const last = overlays.at(-1)
     if (last?.firstChild) return [last.firstChild, (last.firstChild as Text).data.length]
   }
+  const atom = el.querySelector<HTMLElement>(`[data-atom][data-off="${pos.offset - 1}"]`)
+  if (atom?.parentNode) return [atom.parentNode, [...atom.parentNode.childNodes].indexOf(atom) + 1] // right after a reference
   const segs = [...el.querySelectorAll<HTMLElement>('[data-seg]')]
   if (!segs.length) return [el, 0]
   const found = segs.find((s) => pos.offset < Number(s.dataset.off) + (s.textContent?.length ?? 0)) ?? segs.at(-1)!
@@ -399,6 +432,14 @@ function focus() {
 function onContextMenu(event: MouseEvent) {
   if (event.shiftKey && event.clientX !== 0) return // Shift + right button: the browser's own menu (spelling, copy link…), as everywhere
   event.preventDefault()
+  const atom = (event.target as HTMLElement).closest<HTMLElement>('[data-atom]')
+  const at = atom?.closest<HTMLElement>('[data-block]')?.dataset.block
+  if (atom && at) {
+    // on a reference: its own menu (Show As, Go to Target, Remove), mock-up C
+    props.session.setSelection({ block: at, offset: Number(atom.dataset.off) }, { block: at, offset: Number(atom.dataset.off) + 1 })
+    emit('reference-menu', { block: at, index: Number(atom.dataset.field), x: event.clientX, y: event.clientY })
+    return
+  }
   adoptSelection(true)
   const keyboard = event.clientX === 0 && event.clientY === 0
   const rect = keyboard ? document.getSelection()?.rangeCount ? document.getSelection()!.getRangeAt(0).getClientRects()[0] : undefined : undefined
@@ -414,8 +455,26 @@ function caretPoint(): { x: number; y: number } {
   return { x: (box?.left ?? 0) + 60, y: (box?.top ?? 0) + 60 }
 }
 
+/** What a screen reader says for a reference: what it points at and reads as, or that it is missing. */
+function referenceLabel(seg: FieldSeg): string {
+  if (seg.state === 'broken') return t('missing reference')
+  return t('Reference to {what}', { what: seg.text || t('a page') })
+}
+function referenceTitle(seg: FieldSeg): string {
+  if (seg.state === 'broken') return t('What this reference points at was deleted')
+  if (seg.state === 'page') return props.pages?.get(seg.target) ? t('Ctrl+click to go there') : t('The page is known in Page view and when printing')
+  return t('Ctrl+click to go there')
+}
+/** Ctrl+click on a reference goes to what it points at (mock-up D); a plain click puts the caret after it. */
+function onReferenceClick(event: MouseEvent, seg: FieldSeg) {
+  if (!(event.ctrlKey || event.metaKey) || seg.state === 'broken') return
+  event.preventDefault()
+  goTo(seg.target)
+}
+
 /** Follow an entry of a table of contents: the caret goes to the start of its heading (E9.31). */
 function goTo(target: string) {
+  if (!state.blocks.some((b) => b.id === target)) return // a reference to an object or a slide: nothing to scroll to here
   props.session.setSelection({ block: target, offset: 0 })
   scrollToBlock(target)
   focus()
@@ -464,7 +523,7 @@ function scrollToSuggestion(id: string) {
   mark?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
-defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
+defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
 </script>
 
 <template>
@@ -547,6 +606,21 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
               :style="{ '--a': seg.author ? colorOf(state, seg.author) : undefined, '--c': seg.zone ?? undefined }"
               :title="title(seg)"
               >{{ seg.text }}</span
+            >
+            <span
+              v-else-if="seg.kind === 'field'"
+              data-atom
+              :data-off="seg.start"
+              :data-field="seg.index"
+              :data-thing="seg.target"
+              contenteditable="false"
+              class="ref"
+              :class="seg.state"
+              role="link"
+              :aria-label="referenceLabel(seg)"
+              :title="referenceTitle(seg)"
+              @click="onReferenceClick($event, seg)"
+              ><template v-if="seg.state === 'broken'">⚠ {{ t('missing reference') }}</template><template v-else-if="seg.state === 'page'">{{ pages?.get(seg.target) ?? '#' }}</template><template v-else>{{ seg.text || '#' }}</template></span
             >
             <span v-else-if="seg.kind === 'overlay'" data-skip data-overlay :data-at="seg.at" class="overlay" :style="{ '--a': colorOf(state, state.me.user) }">{{ seg.text }}</span>
             <span v-else-if="seg.kind === 'reply'" data-skip contenteditable="false" class="reply" :data-sug="seg.id" :class="{ hot: seg.id === active }" @click.stop="emit('suggestion', seg.id!)">{{ seg.text }}</span>
@@ -702,6 +776,20 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
 .doc :deep(.toc-chip:focus-visible) {
   color: var(--ink);
   border-color: var(--app);
+}
+
+/* a reference (step H): a quiet iris underline; broken, a dashed rose one with a sign (never colour alone) */
+.doc :deep(.ref) {
+  border-bottom: 1.5px solid var(--iris);
+  cursor: pointer;
+  user-select: all;
+}
+.doc :deep(.ref.page) {
+  color: var(--muted);
+}
+.doc :deep(.ref.broken) {
+  color: var(--danger);
+  border-bottom: 1.5px dashed var(--danger);
 }
 
 /* who wrote what */

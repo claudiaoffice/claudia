@@ -32,6 +32,7 @@ import type { Session } from '../session'
 import { plotlyPictures } from './chart-picture'
 import { chartSizes, loadForPrint, setupOf, sheetDocument, type ChartPictures, type SheetRequest } from './sheet-document'
 import { entryWords, type ContentsEntry } from '../contents'
+import { readAs, type Shown } from '../references'
 import { CONTENTS, describeSheets, SCALES, scaleId, withScale, type Contents } from './sheet'
 
 import { translate as t } from '../i18n'
@@ -163,6 +164,7 @@ function printable(
   objects: readonly SlideObject[],
   markOf: (id: string) => { marker: string; indent: number } | null = () => null,
   agendaOf: (id: string) => ContentsEntry[] | null = () => null,
+  shownOf: (id: string) => Shown[] | undefined = () => undefined,
 ): LayoutSlideObject[] {
   return objects.flatMap((o) => {
     if (o.kind === 'rendered') return o.image ? [{ ...o, kind: 'image' as const } as LayoutSlideObject] : []
@@ -170,7 +172,8 @@ function printable(
     const mark = markOf(o.id)
     const entries = o.paragraph.generated ? agendaOf(o.id) : null
     const agenda = entries ? { lines: entries.map((e) => ({ words: entryWords(e), place: e.place })), leader: o.paragraph.generated!.leader } : null
-    return [{ ...o, paragraph: { ...o.paragraph, ...(mark ? { mark } : {}), ...(agenda ? { agenda } : {}) } } as LayoutSlideObject]
+    const text = o.paragraph.fields?.length ? readAs(o.paragraph.text, shownOf(o.id)) : o.paragraph.text // a reference: what it reads as
+    return [{ ...o, paragraph: { ...o.paragraph, text, ...(mark ? { mark } : {}), ...(agenda ? { agenda } : {}) } } as LayoutSlideObject]
   })
 }
 
@@ -178,7 +181,7 @@ function printable(
 export function slideDocument(session: SlideSession): SlideDocument {
   const state = session.state
   return {
-    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id), (id) => session.agendaOf(id)) })),
+    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id), (id) => session.agendaOf(id), (id) => state.referenced[id]) })),
     styles: Object.values(state.styles).map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved })),
     shapes: Object.values(state.shapes),
     // an SVG picture is drawn from its text (D914); the others from their bytes
@@ -208,7 +211,7 @@ export function slideSource(session: SlideSession): PrintSource {
     language: () => state.language,
     canSetLanguage: () => !session.readOnly && state.language !== undefined,
     setLanguage: (tag) => void session.setLanguage(tag),
-    watched: () => [state.slides, state.objects, state.order, state.styles, state.shapes, state.images, state.printSetup, state.language, state.labels, state.agendas],
+    watched: () => [state.slides, state.objects, state.order, state.styles, state.shapes, state.images, state.printSetup, state.language, state.labels, state.agendas, state.referenced],
     prepare: async () => {},
     images: () => Object.values(state.images),
     async layOut(assets) {

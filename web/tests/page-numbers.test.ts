@@ -62,6 +62,14 @@ describe('page numbers in Page view', () => {
     expect(layOut).toHaveBeenCalledTimes(1)
   })
 
+  it('lays out for a page reference too (step I)', async () => {
+    const s = session(false)
+    s.state.blocks[1].shown = [{ text: '', state: 'page' }]
+    const { pages } = mounted(s, () => true)
+    await vi.advanceTimersByTimeAsync(150)
+    expect(pages.value?.get('h1')).toBe(3)
+  })
+
   it('shows no pages when the text cannot be laid out', async () => {
     layOut.mockRejectedValue(new Error('no fonts'))
     const { pages } = mounted(session(), () => true)

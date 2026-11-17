@@ -34,9 +34,10 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeIs, runtime
 from .assets import MAX_ALT_CHARS, ImageAsset, ImageImport
 from .commands import Batch, Command, CommandRegistry, core_commands
 from .facets import SLOTS, fits
+from .fields import Field, plain
 from .generated import Generated
 from .names import clean_name, name_key, name_problem
-from .paragraphs import ListItem, Paragraph, Run, delete_runs, insert_runs, slice_runs, total
+from .paragraphs import ListItem, Paragraph, Run
 from .renderings import RenderedDefinition
 from .shapes import ShapeDefinition
 
@@ -683,31 +684,36 @@ class ObjectModel[A: Anchor]:
         self.replace_object(new)
         return self.objects_changed(new.container, changed=(new,))
 
-    def insert_object_text(self, object_id: str, offset: int, text: str, runs: list[Run]) -> ObjectsChanged:
-        """Type ``text``, written as ``runs`` say, into the words of this object at ``offset`` (step G); the event
-        tells the clients. An agenda takes no typing."""
+    def insert_object_text(
+        self, object_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...] = ()
+    ) -> ObjectsChanged:
+        """Type ``text``, written as ``runs`` say and with the ``fields`` of its U+FFFC, into the words of this object
+        at ``offset`` (step G); the event tells the clients. An agenda takes no typing."""
         words = self._words(object_id)
         if words.generated is not None and text:
             raise ValueError("an agenda takes no typing: its entries come from the slide titles")
-        if not 0 <= offset <= len(words.text):
-            raise IndexError("insert outside the text")
-        if total(runs) != len(text):
-            raise ValueError("the runs must cover exactly the inserted text")
-        typed = words.with_text(words.text[:offset] + text + words.text[offset:], insert_runs(words.runs, offset, runs))
-        new = self.get_object(object_id).with_body(paragraph=typed)
+        return self._put_words(object_id, words.typed(offset, text, runs, fields))
+
+    def remove_object_text(
+        self, object_id: str, start: int, end: int
+    ) -> tuple[str, list[Run], tuple[Field, ...], ObjectsChanged]:
+        """Cut ``start <= i < end`` out of the words of this object: what was cut, with its runs and fields, and the
+        event."""
+        kept, text, runs, fields = self._words(object_id).cut(start, end)
+        return text, runs, fields, self._put_words(object_id, kept)
+
+    def object_fields(self, object_id: str) -> tuple[Field, ...]:
+        """The fields in the words of this object (step H)."""
+        return self._words(object_id).fields
+
+    def put_object_fields(self, object_id: str, fields: tuple[Field, ...]) -> ObjectsChanged:
+        """Give the words of this object other fields at their U+FFFC; the event tells the clients."""
+        return self._put_words(object_id, self._words(object_id).with_fields(fields))
+
+    def _put_words(self, object_id: str, words: Paragraph) -> ObjectsChanged:
+        new = self.get_object(object_id).with_body(paragraph=words)
         self.replace_object(new)
         return self.objects_changed(new.container, changed=(new,))
-
-    def remove_object_text(self, object_id: str, start: int, end: int) -> tuple[str, list[Run], ObjectsChanged]:
-        """Cut ``start <= i < end`` out of the words of this object: what was cut, with its runs, and the event."""
-        words = self._words(object_id)
-        if not 0 <= start <= end <= len(words.text):
-            raise IndexError("delete outside the text")
-        text, runs = words.text[start:end], slice_runs(words.runs, start, end)
-        kept = words.with_text(words.text[:start] + words.text[end:], delete_runs(words.runs, start, end))
-        new = self.get_object(object_id).with_body(paragraph=kept)
-        self.replace_object(new)
-        return text, runs, self.objects_changed(new.container, changed=(new,))
 
     def object_list_in_use(self, list_id: str) -> bool:
         """Are the words of any object an item of this list?"""
@@ -1793,7 +1799,8 @@ class SetText(Command):
             raise ValueError("an image carries no text")
         if old.body.paragraph.generated is not None and self.text:
             raise ValueError("an agenda takes no typing: its entries come from the slide titles")
-        written = old.body.paragraph.with_text(self.text, ()).written_by(ctx.author)
+        # whole new words: they make no field, and the fields of the old ones go (the inverse puts them back)
+        written = replace(old.body.paragraph, text=plain(self.text), fields=()).written_by(ctx.author)
         new = old.with_body(paragraph=written)
         model.replace_object(new)
         ctx.emit(model.objects_changed(new.container, changed=(new,)))

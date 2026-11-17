@@ -3,6 +3,7 @@
 import { utf8Decode, type TextDocument } from '@claudia/layout'
 import type { Block } from '../blocks'
 import { entryWords } from '../contents'
+import { FIELD_CHAR, partsOf, readAs } from '../references'
 import type { StyleView } from '../style-css'
 import type { ListInfo, PrintExtras, SchemeInfo } from '../text-session'
 
@@ -23,9 +24,23 @@ export function fromBase64(data: string): Uint8Array {
 /** A paragraph as the layout library reads it; a table of contents (E9.31) with its entries, whose pages the layout
  *  finds (step F). */
 function printedBlock(b: Block): TextDocument['blocks'][number] {
-  if (!b.generated) return { id: b.id, style: b.style, text: b.text, item: b.item ?? null, label: b.label ? { marker: b.label.marker } : null }
+  if (!b.generated) return { id: b.id, style: b.style, ...printedWords(b), item: b.item ?? null, label: b.label ? { marker: b.label.marker } : null }
   const entries = (b.entries ?? []).map((e) => ({ target: e.target, words: entryWords(e), style: e.style }))
   return { id: b.id, style: b.style, text: '', contents: { entries, places: b.generated.places, leader: b.generated.leader } }
+}
+
+/** A paragraph's words as they print: each reference as what it reads as (step H), and a page reference left for the
+ *  layout to fill in (`pageRefs`, step I). */
+function printedWords(b: Block): { text: string; pageRefs?: { at: number; target: string }[] } {
+  if (!b.fields?.length) return { text: b.text }
+  let text = ''
+  const pageRefs: { at: number; target: string }[] = []
+  for (const part of partsOf(b.text)) {
+    if (part.kind === 'words') text += part.text
+    else if (b.shown?.[part.index]?.state === 'page' && b.fields[part.index]) pageRefs.push({ at: text.length, target: b.fields[part.index]!.target })
+    else text += readAs(FIELD_CHAR, b.shown?.slice(part.index, part.index + 1))
+  }
+  return pageRefs.length ? { text, pageRefs } : { text }
 }
 
 /** The text as the layout library reads it: a list item with the marker the server counted for it, so the printed

@@ -1,5 +1,5 @@
 {
- "version": "0.16.0",
+ "version": "0.17.0",
  "AcceptSuggestion": {
   "class": [
    "TextCommand"
@@ -47,11 +47,14 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None, fields: 'tuple[Field, ...]' = ()) -> None",
   "methods": {
    "check": "(self) -> 'None'",
+   "cut": "(self, start: 'int', end: 'int') -> 'tuple[Paragraph, str, list[Run], tuple[Field, ...]]'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "typed": "(self, offset: 'int', text: 'str', runs: 'Iterable[Run]', fields: 'tuple[Field, ...]' = ()) -> 'Paragraph'",
+   "with_fields": "(self, fields: 'tuple[Field, ...]') -> 'Paragraph'",
    "with_generated": "(self, generated: 'Generated | None') -> 'Paragraph'",
    "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
@@ -163,6 +166,16 @@
    "summary"
   ]
  },
+ "FieldsPut": {
+  "class": [
+   "object"
+  ],
+  "init": "(block: 'str', fields: 'tuple[Field, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "ForgetImage": {
   "class": [
    "Command"
@@ -201,7 +214,7 @@
   "class": [
    "TextCommand"
   ],
-  "init": "(paragraph: 'str', offset: 'int', text: 'str', by: 'tuple[Run, ...]' = ()) -> None",
+  "init": "(paragraph: 'str', offset: 'int', text: 'str', by: 'tuple[Run, ...]' = (), fields: 'tuple[Field, ...]' = ()) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "breaks": "(self, span: 'Span') -> 'bool'",
@@ -338,11 +351,14 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None, fields: 'tuple[Field, ...]' = ()) -> None",
   "methods": {
    "check": "(self) -> 'None'",
+   "cut": "(self, start: 'int', end: 'int') -> 'tuple[Paragraph, str, list[Run], tuple[Field, ...]]'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "typed": "(self, offset: 'int', text: 'str', runs: 'Iterable[Run]', fields: 'tuple[Field, ...]' = ()) -> 'Paragraph'",
+   "with_fields": "(self, fields: 'tuple[Field, ...]') -> 'Paragraph'",
    "with_generated": "(self, generated: 'Generated | None') -> 'Paragraph'",
    "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
@@ -606,6 +622,7 @@
    "check_style": "(self, style: 'str') -> 'None'",
    "containers": "(self) -> 'list[str]'",
    "empty": "() -> 'Self'",
+   "fields_of": "(self, paragraph_id: 'str') -> 'tuple[Field, ...]'",
    "fresh_id": "(self) -> 'str'",
    "fresh_ids": "(self, count: 'int') -> 'list[str]'",
    "fresh_suggestion_id": "(self) -> 'str'",
@@ -613,8 +630,8 @@
    "has_thing": "(self, thing_id: 'str') -> 'bool'",
    "heading_level": "(self, block: 'Block') -> 'int | None'",
    "index_of": "(self, block_id: 'str') -> 'int'",
-   "insert": "(self, block_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'None'",
-   "insert_text": "(self, paragraph_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'tuple[object, ...]'",
+   "insert": "(self, block_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'None'",
+   "insert_text": "(self, paragraph_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'tuple[object, ...]'",
    "is_outdated": "(self, suggestion: 'Suggestion') -> 'bool'",
    "item_of": "(self, paragraph_id: 'str') -> 'ListItem | None'",
    "item_regions": "(self, paragraph_id: 'str') -> 'tuple[Region, ...]'",
@@ -624,13 +641,14 @@
    "move_objects": "(self, command: 'TextCommand') -> 'list[dict]'",
    "move_suggestions": "(self, command: 'TextCommand') -> 'list[dict]'",
    "named_things": "(self)",
+   "put_fields": "(self, paragraph_id: 'str', fields: 'tuple[Field, ...]') -> 'tuple[object, ...]'",
    "put_generated": "(self, paragraph_id: 'str', generated: 'Generated | None') -> 'object'",
    "put_item": "(self, paragraph_id: 'str', item: 'ListItem | None') -> 'object'",
    "put_suggestion": "(self, suggestion: 'Suggestion') -> 'None'",
    "reading_order": "(self) -> 'Iterator[Placed]'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
-   "remove": "(self, block_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run]]'",
-   "remove_text": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[object, ...]]'",
+   "remove": "(self, block_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...]]'",
+   "remove_text": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]'",
    "restore": "(state: 'dict') -> 'Self'",
    "restyle": "(self, block_id: 'str', style: 'str') -> 'None'",
    "serialize": "(self) -> 'dict'",

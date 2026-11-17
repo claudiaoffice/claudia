@@ -1,5 +1,5 @@
 {
- "version": "0.32.0",
+ "version": "0.33.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -663,6 +663,9 @@
  "FALLBACK_SIDE": {
   "value": "32"
  },
+ "FIELD_CHAR": {
+  "value": "'\ufffc'"
+ },
  "FILE_IMPORTER": {
   "value": "'file'"
  },
@@ -678,6 +681,31 @@
   ],
   "init": "(name: 'str', properties: 'tuple[str, ...]') -> None",
   "methods": {},
+  "properties": []
+ },
+ "Field": {
+  "value": "<TypeAliasType>"
+ },
+ "FieldHost": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "fields_of": "(self, paragraph: 'str') -> 'tuple[Field, ...]'",
+   "put_fields": "(self, paragraph: 'str', fields: 'tuple[Field, ...]') -> 'tuple[object, ...]'",
+   "text_regions": "(self, paragraph: 'str', start: 'int', end: 'int') -> 'tuple[Region, ...]'"
+  },
+  "properties": []
+ },
+ "FieldsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(paragraph: 'str', shown: 'tuple[Shown, ...]') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
   "properties": []
  },
  "FontRequirement": {
@@ -907,7 +935,7 @@
   "class": [
    "TextCommand"
   ],
-  "init": "(paragraph: 'str', offset: 'int', text: 'str', by: 'tuple[Run, ...]' = ()) -> None",
+  "init": "(paragraph: 'str', offset: 'int', text: 'str', by: 'tuple[Run, ...]' = (), fields: 'tuple[Field, ...]' = ()) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "breaks": "(self, span: 'Span') -> 'bool'",
@@ -1202,10 +1230,11 @@
    "has_thing": "(self, thing_id: 'str') -> 'bool'",
    "images_to_data": "(self) -> 'list[dict]'",
    "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None, *, shared_names: 'bool' = True) -> 'None'",
-   "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'ObjectsChanged'",
+   "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'ObjectsChanged'",
    "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
    "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",
    "names_in_use": "(self) -> 'list[str]'",
+   "object_fields": "(self, object_id: 'str') -> 'tuple[Field, ...]'",
    "object_generated": "(self, object_id: 'str') -> 'Generated | None'",
    "object_item": "(self, object_id: 'str') -> 'ListItem | None'",
    "object_list_in_use": "(self, list_id: 'str') -> 'bool'",
@@ -1214,9 +1243,10 @@
    "objects_to_data": "(self) -> 'list[dict]'",
    "open_container": "(self, container: 'str') -> 'None'",
    "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
+   "put_object_fields": "(self, object_id: 'str', fields: 'tuple[Field, ...]') -> 'ObjectsChanged'",
    "put_object_generated": "(self, object_id: 'str', generated: 'Generated | None') -> 'ObjectsChanged'",
    "put_object_item": "(self, object_id: 'str', item: 'ListItem | None') -> 'ObjectsChanged'",
-   "remove_object_text": "(self, object_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], ObjectsChanged]'",
+   "remove_object_text": "(self, object_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], ObjectsChanged]'",
    "rename_thing": "(self, ctx: 'Context', thing_id: 'str', name: 'str') -> 'tuple[str, tuple[Command, ...]]'",
    "renderings_to_data": "(self) -> 'list[dict]'",
    "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",
@@ -1336,11 +1366,14 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None, fields: 'tuple[Field, ...]' = ()) -> None",
   "methods": {
    "check": "(self) -> 'None'",
+   "cut": "(self, start: 'int', end: 'int') -> 'tuple[Paragraph, str, list[Run], tuple[Field, ...]]'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "typed": "(self, offset: 'int', text: 'str', runs: 'Iterable[Run]', fields: 'tuple[Field, ...]' = ()) -> 'Paragraph'",
+   "with_fields": "(self, fields: 'tuple[Field, ...]') -> 'Paragraph'",
    "with_generated": "(self, generated: 'Generated | None') -> 'Paragraph'",
    "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
@@ -1458,6 +1491,19 @@
   ],
   "init": "(...)",
   "methods": {},
+  "properties": []
+ },
+ "RefField": {
+  "class": [
+   "object"
+  ],
+  "init": "(target: 'str', show: 'Show' = 'number') -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'RefField'",
+   "to_data": "(self) -> 'dict'",
+   "with_show": "(self, show: 'Show') -> 'RefField'"
+  },
   "properties": []
  },
  "Region": {
@@ -1740,6 +1786,9 @@
   "methods": {},
   "properties": []
  },
+ "SHOWS": {
+  "value": "('number', 'text', 'number-text', 'page', 'name')"
+ },
  "SINE_MILLIONTHS": {
   "value": "(0, 17452, 34899, 52336, 69756, 87156, 104528, 121869, 139173, 156434, 173648, 190809, 207912, 224951, 241922, 258819, 275637, 292372, 309017, 325568, 342020, 358368, 374607, 390731, 406737, 422618, 438371, 453990, 469472, 484810, 500000, 515038, 529919, 544639, 559193, 573576, 587785, 601815, 615661, 629320, 642788, 656059, 669131, 681998, 694658, 707107, 719340, 731354, 743145, 754710, 766044, 777146, 788011, 798636, 809017, 819152, 829038, 838671, 848048, 857167, 866025, 874620, 882948, 891007, 898794, 906308, 913545, 920505, 927184, 933580, 939693, 945519, 951057, 956305, 961262, 965926, 970296, 974370, 978148, 981627, 984808, 987688, 990268, 992546, 994522, 996195, 997564, 998630, 999391, 999848, 1000000)"
  },
@@ -1801,6 +1850,23 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "SetField": {
+  "class": [
+   "Command"
+  ],
+  "init": "(paragraph: 'str', index: 'int', field: 'Field') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetField'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[Region, ...]'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "SetGenerated": {
   "class": [
@@ -2033,6 +2099,19 @@
   },
   "properties": []
  },
+ "Show": {
+  "value": "<TypeAliasType>"
+ },
+ "Shown": {
+  "class": [
+   "object"
+  ],
+  "init": "(text: 'str', state: \"Literal['ok', 'broken', 'page']\" = 'ok') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "Slot": {
   "class": [
    "object"
@@ -2186,7 +2265,8 @@
    "labels": "(self) -> 'dict[str, Label]'",
    "outline": "(self) -> 'list[tuple[Placed, int]]'",
    "reading_order": "(self) -> 'Iterator[Placed]'",
-   "settle": "(self, ctx: 'Emitter') -> 'None'"
+   "settle": "(self, ctx: 'Emitter') -> 'None'",
+   "shown": "(self) -> 'dict[str, tuple[Shown, ...]]'"
   },
   "properties": []
  },
@@ -2219,8 +2299,8 @@
   ],
   "init": "(*args, **kwargs)",
   "methods": {
-   "insert_text": "(self, paragraph: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'tuple[object, ...]'",
-   "remove_text": "(self, paragraph: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[object, ...]]'",
+   "insert_text": "(self, paragraph: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]') -> 'tuple[object, ...]'",
+   "remove_text": "(self, paragraph: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]'",
    "text_moved": "(self, command: 'TextCommand') -> 'tuple[object, ...]'",
    "text_regions": "(self, paragraph: 'str', start: 'int', end: 'int') -> 'tuple[Region, ...]'"
   },
@@ -2351,6 +2431,12 @@
  "facet_of": {
   "function": "(prop: 'str') -> 'Facet'"
  },
+ "field_from_data": {
+  "function": "(data: 'dict') -> 'Field'"
+ },
+ "fields_before": {
+  "function": "(text: 'str', offset: 'int') -> 'int'"
+ },
  "fits": {
   "function": "(kind: 'str', slot: 'Slot') -> 'bool'"
  },
@@ -2410,6 +2496,9 @@
  },
  "picture_body": {
   "function": "(object_id: 'str', asset: 'ImageAsset', size: 'tuple[int, int]', *, name: 'str' = '', description: 'str' = '', decorative: 'bool' = False, rotation: 'int' = 0) -> 'ObjectBody'"
+ },
+ "plain": {
+  "function": "(text: 'str') -> 'str'"
  },
  "replace_spans": {
   "function": "(paragraph: 'Paragraph', edits: 'Iterable[tuple[int, int, str]]', author: 'str | None') -> 'Paragraph'"

@@ -83,6 +83,9 @@ async function opened(blocks: Block[]) {
     insert_contents: () => ({ ...answer, block: 'toc' }),
     remove_contents: () => answer,
     set_contents: () => answer,
+    insert_reference: () => answer,
+    set_field: () => answer,
+    reference_targets: () => [{ id: 'b1', kind: 'heading', level: 1, number: '1', text: 'Why', name: null }],
   }
   const session = new TextSession(() => link, { retryDelays: [0] })
   await session.open()
@@ -164,6 +167,41 @@ describe('a table is never text', () => {
     session.deleteForward()
     await vi.runAllTimersAsync()
     expect(session.state.selection?.focus).toEqual(at(0, 'toc'))
+    expect(link.sent('replace_text')).toEqual([])
+  })
+})
+
+describe('references (step H)', () => {
+  const F = '\ufffc'
+  const referring = (): Block => ({ ...plain('b2', `see ${F}`), fields: [{ kind: 'ref', target: 'b1', show: 'number' }], shown: [{ text: '1', state: 'ok' }] })
+
+  it('lists the targets, puts a reference at the caret and puts the caret after it', async () => {
+    const { session, link } = await opened([plain('b1', 'Why'), plain('b2', 'see ')])
+    expect((await session.referenceTargets('why')).map((t) => t.id)).toEqual(['b1'])
+    session.setSelection(at(4, 'b2'))
+    await session.insertReference('b1', 'number')
+    expect(link.sent('insert_reference')).toEqual([{ paragraph: 'b2', offset: 4, target: 'b1', show: 'number', base: 'main:2' }])
+    expect(session.state.selection?.focus).toEqual(at(5, 'b2'))
+  })
+
+  it('finds the reference at a place, changes what it shows, and pastes no U+FFFC', async () => {
+    const { session, link } = await opened([plain('b1', 'Why'), referring()])
+    expect(session.referenceAt(at(4, 'b2'))).toMatchObject({ block: 'b2', index: 0, field: { target: 'b1' }, shown: { text: '1' } })
+    expect(session.referenceAt(at(0, 'b2'))).toBeNull()
+    await session.setFieldShow('b2', 0, 'text')
+    expect(link.sent('set_field')).toEqual([{ paragraph: 'b2', index: 0, show: 'text', base: 'main:2' }])
+    session.setSelection(at(0, 'b1'))
+    session.paste(`a${F}b`)
+    await vi.runAllTimersAsync()
+    expect(link.sent('replace_text').at(-1)).toMatchObject({ text: 'ab' })
+  })
+
+  it('Backspace after a reference selects it first, so it is not lost by a slip', async () => {
+    const { session, link } = await opened([plain('b1', 'Why'), referring()])
+    session.setSelection(at(5, 'b2'))
+    session.deleteBackward()
+    await vi.runAllTimersAsync()
+    expect(session.state.selection).toEqual({ anchor: at(4, 'b2'), focus: at(5, 'b2') })
     expect(link.sent('replace_text')).toEqual([])
   })
 })

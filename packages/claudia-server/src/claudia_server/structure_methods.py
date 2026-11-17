@@ -28,29 +28,37 @@ from dataclasses import replace
 from typing import Protocol
 
 from claudia_core import (
+    FIELD_CHAR,
     NO_NUMBERING,
+    SHOWS,
     Batch,
     ChangeList,
     ChangeScheme,
     Command,
     CreateList,
     CreateScheme,
+    FieldHost,
     GeneratedHost,
+    InsertText,
     ItemHost,
     ListDef,
     ListItem,
     ParagraphHost,
+    RefField,
     RemoveList,
     RemoveScheme,
     Revision,
     Scheme,
+    SetField,
     SetGenerated,
     SetListItem,
     SetStyleNumbering,
+    Show,
     TextStructure,
     Toc,
     builtin_scheme,
     generated_from_data,
+    plain,
 )
 
 from .i18n import msg
@@ -62,7 +70,7 @@ MAX_LISTED = 2_000  # paragraphs one request may touch
 OUTLINE_LIST, OUTLINE_SCHEME = "outline", "chapters"
 
 
-class _Host(ParagraphHost, ItemHost, GeneratedHost, Protocol):
+class _Host(ParagraphHost, ItemHost, GeneratedHost, FieldHost, Protocol):
     """What these methods need of a model: its paragraphs in reading order, their items and what is derived."""
 
     structure: TextStructure
@@ -218,6 +226,7 @@ def add_structure_methods(table: MethodTable) -> None:
     _add_list_methods(table)
     _add_scheme_methods(table)
     _add_contents_methods(table)
+    _add_reference_methods(table)
 
 
 def toc_from(data: object) -> Toc:
@@ -260,6 +269,110 @@ def _add_contents_methods(table: MethodTable) -> None:
         if current == wanted:
             return _revision(ctx)
         return _run(ctx, [SetGenerated(paragraph, wanted)], "Table of contents", base)
+
+
+#: The most targets ``reference_targets`` lists.
+MAX_TARGETS = 500
+
+
+def reference_targets(model: _Host, query: str = "") -> list[dict]:
+    """What a reference can point at (step H), for the picker: the headings as an outline with their numbers (in a
+    presentation the slide titles), the numbered items, then the named things (paragraphs, objects, slides). Each is
+    `{id, kind, level, number, text, name}` (`kind` `heading`, `item` or `named`); `query` keeps those whose number,
+    words or name contain it, case ignored."""
+    labels = model.structure.labels()
+    things = model.named_things() if hasattr(model, "named_things") else ()
+    named = {thing: name for _kind, thing, name in things}
+    found: list[dict] = []
+    seen: set[str] = set()
+
+    def add(kind: str, paragraph_id: str, level: int | None, text: str) -> None:
+        label = labels.get(paragraph_id)
+        found.append(
+            {
+                "id": paragraph_id,
+                "kind": kind,
+                "level": level,
+                "number": label.number if label is not None else None,
+                "text": plain(text),
+                "name": named.get(paragraph_id),
+            }
+        )
+        seen.add(paragraph_id)
+
+    for placed, level in model.structure.outline():
+        add("heading", placed.paragraph.id, level, placed.paragraph.text)
+    for placed in model.reading_order():
+        label = labels.get(placed.paragraph.id)
+        if placed.paragraph.id not in seen and label is not None and label.number:
+            add("item", placed.paragraph.id, None, placed.paragraph.text)
+    texts = {placed.paragraph.id: placed.paragraph.text for placed in model.reading_order()}
+    for thing in named:
+        if thing not in seen:
+            add("named", thing, None, texts.get(thing, ""))
+    wanted = query.casefold().strip()
+    if wanted:
+        found = [t for t in found if any(wanted in (t[k] or "").casefold() for k in ("number", "text", "name"))]
+    return found[:MAX_TARGETS]
+
+
+def default_show(model: _Host, target: str) -> Show:
+    """What a new reference to ``target`` shows: a numbered heading or item its number, any other paragraph its
+    words, anything else (a picture, a slide) its name."""
+    if target in model.structure.labels() and model.structure.labels()[target].number:
+        return "number"
+    if any(placed.paragraph.id == target for placed in model.reading_order()):
+        return "text"
+    return "name"
+
+
+def _show(show: object) -> Show:
+    if show not in SHOWS:
+        raise RequestError("bad_request", msg("show must be one of {shows}", shows=", ".join(SHOWS)))
+    return show
+
+
+def _add_reference_methods(table: MethodTable) -> None:
+    @table.method("fields")
+    def _fields(ctx):
+        """What the references of the document read as, by paragraph id: for each U+FFFC of the paragraph's text in
+        order `{text, state}` (`state` `ok`, `broken` when what it points at is gone, or `page` when the layout fills
+        in the page), and the `revision`. A `fields` event brings those that change (step H)."""
+        model = _host(ctx)
+        shown = model.structure.shown()
+        return {
+            "revision": current_revision(ctx),
+            "fields": {paragraph: [s.to_data() for s in found] for paragraph, found in shown.items()},
+        }
+
+    @table.method("reference_targets", 'query:str=""')
+    def _targets(ctx, *, query):
+        """What a reference can point at, for the picker: headings with their numbers and levels, numbered items,
+        named things, as `{id, kind, level, number, text, name}`; `query` filters (step H)."""
+        return reference_targets(_host(ctx), query)
+
+    @table.method("insert_reference", "paragraph:str offset:int target:str show:str? base:revision?", write=True)
+    def _insert_reference(ctx, *, paragraph, offset, target, show, base):
+        """Put a reference to the thing `target` into `paragraph` at `offset`: one U+FFFC in the text that reads as
+        `show` says (`number`, `text`, `number-text`, `page` or `name`; by default the target's number when it has
+        one, else its words or its name). One step, as typing is."""
+        model = _host(ctx)
+        wanted = _show(show) if show is not None else default_show(model, target)
+        reference = RefField(target, wanted)
+        return _run(ctx, [InsertText(paragraph, offset, FIELD_CHAR, fields=(reference,))], "Insert a reference", base)
+
+    @table.method("set_field", "paragraph:str index:int show:str base:revision?", write=True)
+    def _set_field(ctx, *, paragraph, index, show, base):
+        """Make the `index`-th reference of `paragraph` show `show` (Show As). One step; the same is no step."""
+        model = _host(ctx)
+        try:
+            current = model.fields_of(paragraph)[index]
+        except (IndexError, KeyError, ValueError):
+            raise RequestError("command_error", msg("there is no such reference here")) from None
+        wanted = current.with_show(_show(show))
+        if wanted == current:
+            return _revision(ctx)
+        return _run(ctx, [SetField(paragraph, index, wanted)], "Change a reference", base)
 
 
 def _add_list_methods(table: MethodTable) -> None:

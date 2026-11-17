@@ -7,6 +7,7 @@ import type { ShapeDef, SlideInfo, SlideObject, SlideSession, SlideState } from 
 import type { ImageAsset } from './images'
 import type { StyleDef, StyleModel } from './objects'
 import type { ContentsEntry } from './contents'
+import type { Shown } from './references'
 
 export interface FrozenDeck {
   /** The revision the copy was taken at, `null` for a document that has none yet. */
@@ -24,6 +25,8 @@ export interface FrozenDeck {
   marks?: Record<string, { marker: string; indent: number }>
   /** The lines of each agenda, by object id (E9.31); absent in a copy from before agendas. */
   agendas?: Record<string, ContentsEntry[]>
+  /** What the references in the words of each object read as, by object id (step H). */
+  referenced?: Record<string, Shown[]>
 }
 
 /** Copy what the show draws from out of the session. A JSON round trip, because the session's state is reactive and a
@@ -61,6 +64,7 @@ export function freeze(session: Pick<SlideSession, 'state' | 'objectsOn' | 'note
     styleModel: copy(s.styleModel),
     marks,
     agendas,
+    referenced: copy(s.referenced ?? {}),
   }
 }
 

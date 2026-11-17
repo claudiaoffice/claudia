@@ -6,6 +6,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- References in text boxes (step H) are written to pptx and odp as what they read as, with the loss `reference`.
 - Agendas in pptx and odp (E9.31): written as the lines they show (number, title and slide number), with the loss
   `agenda` (the file keeps the words, not the link to the slide titles). A kept pptx rewrites an agenda whose lines
   changed; a kept odp with a changed agenda is written afresh (`UnsupportedEdit`).

@@ -6,6 +6,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- References (step H) in composes and creates (`claudia_server.structure_methods`): `reference_targets(query?)`
+  (headings with their numbers, numbered items, named things), `insert_reference(paragraph, offset, target, show?)`,
+  `set_field(paragraph, index, show)` and `fields` (what every reference reads as; a `fields` event brings changes).
+  `blocks` sends a paragraph's `fields` and `shown`. Words a person writes (`replace_text`, `write_words`, the
+  assistant's) make no reference: their U+FFFC are taken out.
 - `write_words` in creates (step G): the words of an object as a person typed them; only what differs from the words it
   has changes, so the words that stay keep their writer (`set_text` gives all of them to whoever saved). The web app
   writes through it from its new paragraph editor.

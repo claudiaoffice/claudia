@@ -30,6 +30,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 
+from .fields import FIELD_CHAR, Field, field_from_data, fields_before, plain
 from .generated import Generated, generated_from_data
 
 #: How long one paragraph's text may be.
@@ -139,6 +140,8 @@ class Paragraph:
     #: The options of a generated paragraph, a table of contents or an agenda (E9.31). Its entries are derived; it
     #: has no words of its own.
     generated: Generated | None = None
+    #: The fields in the words, in order. The *k*-th U+FFFC of ``text`` is the *k*-th field (step H).
+    fields: tuple[Field, ...] = ()
 
     def __len__(self) -> int:
         """The number of characters in the paragraph."""
@@ -147,6 +150,42 @@ class Paragraph:
     def with_text(self, text: str, runs: Iterable[Run]) -> Paragraph:
         """The same paragraph with other words in it, and the runs that say who wrote them."""
         return replace(self, text=text, runs=tuple(normalized(runs)))
+
+    def typed(self, offset: int, text: str, runs: Iterable[Run], fields: tuple[Field, ...] = ()) -> Paragraph:
+        """The paragraph with ``text`` put in at ``offset``, written as ``runs`` say, with the ``fields`` of the U+FFFC
+        in it. ``ValueError`` when they do not match, ``IndexError`` outside the words."""
+        if not 0 <= offset <= len(self.text):
+            raise IndexError("insert outside the text")
+        if total(runs := list(runs)) != len(text):
+            raise ValueError("the runs must cover exactly the inserted text")
+        if text.count(FIELD_CHAR) != len(fields):
+            raise ValueError("every field stands at one U+FFFC of the text that is put in")
+        at = fields_before(self.text, offset)
+        return replace(
+            self,
+            text=self.text[:offset] + text + self.text[offset:],
+            runs=tuple(normalized(insert_runs(self.runs, offset, runs))),
+            fields=(*self.fields[:at], *fields, *self.fields[at:]),
+        )
+
+    def cut(self, start: int, end: int) -> tuple[Paragraph, str, list[Run], tuple[Field, ...]]:
+        """The paragraph without ``start <= i < end``, and what was cut: its words, runs and fields."""
+        if not 0 <= start <= end <= len(self.text):
+            raise IndexError("delete outside the text")
+        first, last = fields_before(self.text, start), fields_before(self.text, end)
+        kept = replace(
+            self,
+            text=self.text[:start] + self.text[end:],
+            runs=tuple(normalized(delete_runs(self.runs, start, end))),
+            fields=(*self.fields[:first], *self.fields[last:]),
+        )
+        return kept, self.text[start:end], slice_runs(self.runs, start, end), self.fields[first:last]
+
+    def with_fields(self, fields: tuple[Field, ...]) -> Paragraph:
+        """The same paragraph with other fields at its U+FFFC (as many as it has)."""
+        if len(fields) != self.text.count(FIELD_CHAR):
+            raise ValueError("every field stands at one U+FFFC of the text")
+        return replace(self, fields=tuple(fields))
 
     def with_style(self, style: str) -> Paragraph:
         """The same paragraph under another style."""
@@ -180,6 +219,10 @@ class Paragraph:
             self.generated.check()
             if self.text:
                 raise ValueError("a generated paragraph has no words of its own")
+        if self.text.count(FIELD_CHAR) != len(self.fields):
+            raise ValueError("every field stands at one U+FFFC of the text, and every U+FFFC is a field")
+        for found in self.fields:
+            found.check()
 
     def to_data(self) -> dict:
         """The plain-data form: ``{id, style, text, runs}``, ``item`` when the paragraph is a list item and
@@ -189,6 +232,8 @@ class Paragraph:
             data["item"] = self.item.to_data()
         if self.generated is not None:
             data["generated"] = self.generated.to_data()
+        if self.fields:
+            data["fields"] = [f.to_data() for f in self.fields]
         return data
 
     @classmethod
@@ -202,6 +247,7 @@ class Paragraph:
             tuple(runs_from_data(data.get("runs", []))),
             None if item is None else ListItem.from_data(item),
             None if generated is None else generated_from_data(generated),
+            tuple(field_from_data(f) for f in data.get("fields", ())),
         )
 
 
@@ -211,10 +257,9 @@ def replace_spans(paragraph: Paragraph, edits: Iterable[tuple[int, int, str]], a
     Everything outside the stretches keeps its words, its runs and its style, so replacing a term does not make the
     person who replaced it the author of the sentence around it. The stretches must not overlap; the order they are
     given in does not matter."""
-    text, runs = paragraph.text, list(paragraph.runs)
     for start, end, new in sorted(edits, reverse=True):  # from the back, so that the offsets before it still hold
-        runs = delete_runs(runs, start, end)
-        if new:
-            runs = insert_runs(runs, start, [Run(len(new), author)])
-        text = text[:start] + new + text[end:]
-    return paragraph.with_text(text, runs)
+        paragraph = paragraph.cut(start, end)[0]
+        words = plain(new)  # a replacement is words: it makes no field (the fields it cuts go with their U+FFFC)
+        if words:
+            paragraph = paragraph.typed(start, words, [Run(len(words), author)])
+    return paragraph

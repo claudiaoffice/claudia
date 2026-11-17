@@ -21,6 +21,7 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, ClassVar, Protocol
 
 from .commands import Command, CommandRegistry, core_commands
+from .fields import FIELD_CHAR, Field, field_from_data, plain
 from .paragraphs import Run, runs_from_data, runs_to_data
 
 if TYPE_CHECKING:
@@ -54,12 +55,17 @@ class TypingHost(Protocol):
     """What :class:`InsertText` and :class:`DeleteText` need of a model: any of its paragraphs by id, whatever holds
     it. Each change returns the events that tell the clients."""
 
-    def insert_text(self, paragraph: str, offset: int, text: str, runs: list[Run]) -> tuple[object, ...]:
-        """Put ``text``, written as ``runs`` say, into the paragraph at ``offset``."""
+    def insert_text(
+        self, paragraph: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...]
+    ) -> tuple[object, ...]:
+        """Put ``text``, written as ``runs`` say and with the ``fields`` of its U+FFFC, into the paragraph at
+        ``offset``."""
         ...
 
-    def remove_text(self, paragraph: str, start: int, end: int) -> tuple[str, list[Run], tuple[object, ...]]:
-        """Cut ``start <= i < end`` out of the paragraph: what was cut, with its runs, and the events."""
+    def remove_text(
+        self, paragraph: str, start: int, end: int
+    ) -> tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]:
+        """Cut ``start <= i < end`` out of the paragraph: what was cut, with its runs and fields, and the events."""
         ...
 
     def text_regions(self, paragraph: str, start: int, end: int) -> tuple[Region, ...]:
@@ -87,13 +93,15 @@ def _emit(ctx: Context, events: tuple[object, ...]) -> None:
 @dataclass(frozen=True)
 class InsertText(TextCommand):
     """Type ``text`` into a paragraph at ``offset``. ``by`` says who wrote it when that is not whoever runs the
-    command (the inverse of a delete puts back text with its original authors)."""
+    command (the inverse of a delete puts back text with its original authors); ``fields`` are the fields of the
+    U+FFFC in ``text`` (a reference put in, a delete's fields put back)."""
 
     kind: ClassVar[str] = "core.InsertText"
     paragraph: str
     offset: int
     text: str
     by: tuple[Run, ...] = ()
+    fields: tuple[Field, ...] = ()
 
     @property
     def label(self) -> str:
@@ -106,7 +114,7 @@ class InsertText(TextCommand):
     def apply(self, ctx: Context) -> Command:
         host = _host(ctx)
         runs = list(self.by) or ([Run(len(self.text), ctx.author)] if self.text else [])
-        _emit(ctx, host.insert_text(self.paragraph, self.offset, self.text, runs))
+        _emit(ctx, host.insert_text(self.paragraph, self.offset, self.text, runs, self.fields))
         _emit(ctx, host.text_moved(self))
         return DeleteText(self.paragraph, self.offset, len(self.text))
 
@@ -114,11 +122,15 @@ class InsertText(TextCommand):
         data: dict = {"paragraph": self.paragraph, "offset": self.offset, "text": self.text}
         if self.by:
             data["by"] = runs_to_data(list(self.by))
+        if self.fields:
+            data["fields"] = [f.to_data() for f in self.fields]
         return data
 
     @classmethod
     def from_data(cls, data: dict, registry: CommandRegistry) -> InsertText:
-        return cls(data["paragraph"], data["offset"], data["text"], tuple(runs_from_data(data.get("by", []))))
+        by = tuple(runs_from_data(data.get("by", [])))
+        fields = tuple(field_from_data(f) for f in data.get("fields", ()))
+        return cls(data["paragraph"], data["offset"], data["text"], by, fields)
 
     def regions(self, model: object) -> tuple[Region, ...]:
         host: TypingHost = model  # type: ignore[assignment]
@@ -149,7 +161,8 @@ class InsertText(TextCommand):
         return replace(self, paragraph=paragraph, offset=offset)
 
     def redacted(self) -> Command:
-        return replace(self, text="█" * len(self.text))  # same length, so later offsets still hold
+        # same length, so later offsets still hold; the U+FFFC stay with their fields (an id, not words)
+        return replace(self, text="".join(c if c == FIELD_CHAR else "█" for c in self.text))
 
 
 @core_commands.register
@@ -172,10 +185,10 @@ class DeleteText(TextCommand):
 
     def apply(self, ctx: Context) -> Command:
         host = _host(ctx)
-        text, runs, events = host.remove_text(self.paragraph, self.offset, self.offset + self.length)
+        text, runs, fields, events = host.remove_text(self.paragraph, self.offset, self.offset + self.length)
         _emit(ctx, events)
         _emit(ctx, host.text_moved(self))
-        return InsertText(self.paragraph, self.offset, text, tuple(runs))
+        return InsertText(self.paragraph, self.offset, text, tuple(runs), fields)
 
     def to_data(self) -> dict:
         return {"paragraph": self.paragraph, "offset": self.offset, "length": self.length}
@@ -219,14 +232,15 @@ class DeleteText(TextCommand):
 
 def word_changes(paragraph: str, old: str, new: str) -> tuple[TextCommand, ...]:
     """The steps that turn the words ``old`` of a paragraph into ``new`` by changing only what differs between them
-    (the common start and end stay, with who wrote them): a delete and an insert, either or both, or nothing."""
+    (the common start and end stay, with who wrote them, and their fields): a delete and an insert, either or both, or
+    nothing. What is put in makes no field: a U+FFFC in it that is not one of the kept ones is left out."""
     start = 0
     while start < min(len(old), len(new)) and old[start] == new[start]:
         start += 1
     end = 0
     while end < min(len(old), len(new)) - start and old[len(old) - 1 - end] == new[len(new) - 1 - end]:
         end += 1
-    removed, added = old[start : len(old) - end], new[start : len(new) - end]
+    removed, added = old[start : len(old) - end], plain(new[start : len(new) - end])
     steps: list[TextCommand] = []
     if removed:
         steps.append(DeleteText(paragraph, start, len(removed)))

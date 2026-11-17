@@ -4,6 +4,10 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (step H)
+- Insert ▸ Cross-Reference… (Ctrl+F2) and Edit ▸ Go to Target (Ctrl+Alt+Enter), in every app; computes shows them
+  off.
+
 ### Added (E9.31)
 - Insert ▸ Table of Contents (creates: Agenda), Ctrl+Alt+Shift+I, before Insert ▸ Container; computes shows it off.
 

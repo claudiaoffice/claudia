@@ -14,6 +14,7 @@ import {
   fileMenu,
   helpMenu,
   insertMenu,
+  goToTargetItem,
   panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
@@ -27,6 +28,7 @@ import { chordLabel, hintOf, searchShortcuts } from '~/lib/shortcuts'
 import { canTurn } from '~/lib/turning'
 import { formatItems, type ListMenu } from '~/lib/format-menu'
 import { looksOf, type ContentsHost } from '~/lib/contents'
+import type { Show } from '~/lib/references'
 import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
 import { useGrid } from '~/lib/grid'
 import { marksFor, slideSearchHost } from '~/lib/slide-search-host'
@@ -246,6 +248,28 @@ const numberingHost = computed<NumberingHost>(() => ({
   removeScheme: (scheme) => session.removeScheme(scheme),
 }))
 
+// ------------------------------------------------------------------------------ references (step H)
+/** Insert ▸ Cross-Reference…: the picker at the selected box (its words are taken first when they are being edited). */
+const picker = ref<{ id: string; offset: number; x: number; y: number } | null>(null)
+async function openPicker() {
+  const place = await canvas.value?.referencePlace()
+  if (place) picker.value = place
+  else session.notice(t('Select a text box or a shape with words to put a reference into.'), 'warning')
+}
+async function putReference(target: string, show: Show) {
+  const place = picker.value
+  picker.value = null
+  if (place) await session.insertReference(place.id, place.offset, target, show)
+}
+/** Edit ▸ Go to Target: to the slide of what the selected box's reference points at, and select it there. */
+async function goToTarget() {
+  const found = state.selected ? session.referenceIn(state.selected) : null
+  const target = found && found.shown?.state !== 'broken' ? state.objects[found.field.target] : undefined
+  if (!target) return
+  await session.showSlide(target.anchor.container)
+  await session.select(target.id)
+}
+
 /** The agenda whose options are open (E9.31), and what the dialog works with: no levels (the slide titles are one
  * level) and slide numbers in place of page numbers. Remove takes the text box away. */
 const agendaOf = ref<string | null>(null)
@@ -353,6 +377,7 @@ const menus = computed<Menu[]>(() => {
         searchItem(c, { open: () => openSearch() }),
         { label: '', separator: true },
         referenceItem(c, { run: () => void frame.value?.referenceThing(state.selected ?? state.activeSlide), possible: () => !!(state.selected ?? state.activeSlide) }),
+        goToTargetItem(c, { run: () => void goToTarget(), possible: () => !!state.selected && !!session.referenceIn(state.selected) }),
         { label: '', separator: true },
         { id: 'edit.new-slide', label: t('New Slide'), action: () => session.addSlide(), disabled: readonly.value },
         { id: 'edit.rename-slide', label: t('Rename Slide…'), action: () => askRename(), disabled: readonly.value || !state.activeSlide },
@@ -373,7 +398,7 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Agenda'), add: insertAgenda, possible: !readonly.value && !!state.activeSlide }),
+    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Agenda'), add: insertAgenda, possible: !readonly.value && !!state.activeSlide }, { add: () => void openPicker(), possible: !readonly.value && !!state.selected }),
     {
       label: t('Format'),
       items: [
@@ -490,6 +515,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
       <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename slide')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <ReferencePicker v-if="picker" :x="picker.x" :y="picker.y" :targets="(q) => session.referenceTargets(q)" @choose="putReference" @close="picker = null" />
       <ContentsDialog
         v-if="dialog === 'agenda' && agendaHost"
         :host="agendaHost"

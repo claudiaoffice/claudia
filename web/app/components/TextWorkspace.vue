@@ -12,12 +12,15 @@ import { formatItems } from '~/lib/format-menu'
 import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
 import { looksOf, type ContentsHost } from '~/lib/contents'
 import { usePageNumbers } from '~/lib/print/page-numbers'
+import { SHOWS, type Show } from '~/lib/references'
+import { showLabel } from '~/lib/reference-labels'
 import {
   askItem,
   clipboardItems,
   configMenu,
   darkItem,
   fileMenu,
+  goToTargetItem,
   helpMenu,
   insertMenu,
   panelItem, referenceItem, replayItem,
@@ -25,7 +28,7 @@ import {
   undoRedoItems,
   type DocumentMenuContext,
 } from '~/lib/document-menus'
-import { chordLabel, chordOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { chordLabel, chordOf, hintOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import { marksFor, textSearchHost } from '~/lib/text-search-host'
 import { useSearch } from '~/lib/use-search'
 import { useI18n } from '~/lib/i18n'
@@ -35,7 +38,7 @@ import SearchPanel from './SearchPanel.vue'
 import PrintPreview from './PrintPreview.vue'
 import { textSource } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
-import type { Menu } from './MenuBar.vue'
+import type { Menu, MenuItem } from './MenuBar.vue'
 
 const props = defineProps<{ session: TextSession }>()
 const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }] }>()
@@ -53,7 +56,13 @@ const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering' | 'c
 const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = textStyleHost(session)
 const active = ref<string | null>(null)
-const editor = ref<{ focus: () => void; scrollToSuggestion: (id: string) => void; scrollToBlock: (id: string) => void; caretPoint: () => { x: number; y: number } } | null>(null)
+const editor = ref<{
+  focus: () => void
+  scrollToSuggestion: (id: string) => void
+  scrollToBlock: (id: string) => void
+  caretPoint: () => { x: number; y: number }
+  goTo: (target: string) => void
+} | null>(null)
 
 // How I look at the text is mine alone (and is remembered in this browser).
 function remembered<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
@@ -234,6 +243,44 @@ const numberingHost = computed<NumberingHost>(() => ({
   removeScheme: (scheme) => session.removeScheme(scheme),
 }))
 
+// ------------------------------------------------------------------------------ references (step H)
+/** Insert ▸ Cross-Reference…: the picker at the caret. */
+const picker = ref<{ x: number; y: number } | null>(null)
+function openPicker() {
+  picker.value = editor.value?.caretPoint() ?? { x: 200, y: 200 }
+}
+async function putReference(target: string, show: Show) {
+  picker.value = null
+  await session.insertReference(target, show)
+  editor.value?.focus()
+}
+/** The reference at the caret: the one right after it, else the one right before it (or the selected one). */
+function referenceAtCaret() {
+  const sel = state.selection
+  if (!sel) return null
+  const at = sel.anchor.block === sel.focus.block ? Math.min(sel.anchor.offset, sel.focus.offset) : sel.focus.offset
+  return session.referenceAt({ block: sel.focus.block, offset: at }) ?? (at > 0 ? session.referenceAt({ block: sel.focus.block, offset: at - 1 }) : null)
+}
+function goToTarget() {
+  const found = referenceAtCaret()
+  if (found && found.shown?.state !== 'broken') editor.value?.goTo(found.field.target)
+}
+/** A reference's own menu (mock-up C): Show As, Go to Target, Remove Reference. */
+const refMenu = ref<{ block: string; index: number; x: number; y: number } | null>(null)
+const refMenuItems = computed<MenuItem[]>(() => {
+  const at = refMenu.value
+  const block = at && state.blocks.find((b) => b.id === at.block)
+  const field = block?.fields?.[at!.index]
+  if (!at || !field) return []
+  const shows = SHOWS.map((s) => ({ label: `${field.show === s ? '✓ ' : ''}${t('Show As')} ${showLabel(s)}`, disabled: readonly.value || field.show === s, action: () => void session.setFieldShow(at.block, at.index, s) }))
+  return [
+    ...shows,
+    { label: '', separator: true },
+    { label: t('Go to Target'), hint: hintOf('edit.go-to-target'), disabled: block.shown?.[at.index]?.state === 'broken', action: () => editor.value?.goTo(field.target) },
+    { label: t('Remove Reference'), hint: 'Delete', disabled: readonly.value, action: () => void session.replaceSelection('') },
+  ]
+})
+
 /** In Page view, the page each paragraph starts on, for the tables of contents (E9.31, step F). */
 const pageNumbers = usePageNumbers(session, () => view.value === 'page' && !printing.value)
 
@@ -299,6 +346,7 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         // the paragraph with the caret (D554); a floating object cannot be selected in the text yet
         referenceItem(c, { run: () => void frame.value?.referenceThing(session.state.selection?.focus.block ?? ''), possible: () => !!session.state.selection }),
+        goToTargetItem(c, { run: () => goToTarget(), possible: () => !!referenceAtCaret() }),
         { label: '', separator: true },
         // The two characters that had keys and no menu entry (UX-35/UX-36): where a word may break, and where never.
         {
@@ -311,7 +359,7 @@ const menus = computed<Menu[]>(() => {
         },
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }),
+    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }),
     {
       label: t('Format'),
       items:
@@ -440,7 +488,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <StyleBar v-if="!printing" data-region="toolbar" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" :pages="pageNumbers" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" />
+    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" :pages="pageNumbers" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" @reference-menu="refMenu = $event" />
     <template #footer>
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">
@@ -464,6 +512,8 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <ReferencePicker v-if="picker" :x="picker.x" :y="picker.y" :targets="(q) => session.referenceTargets(q)" @choose="putReference" @close="(picker = null), editor?.focus()" />
+      <ContextMenu v-if="refMenu" :x="refMenu.x" :y="refMenu.y" :items="refMenuItems" :width="260" :label="t('Reference menu')" @close="refMenu = null" />
       <ContentsDialog v-if="dialog === 'contents' && contentsHost" :host="contentsHost" :title="t('Table of contents')" @close="dialog = null" />
       <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.currentScheme() ?? undefined" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'list-start'" :title="t('Start numbering at')" :label="t('First number')" :ok="t('Start')" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />

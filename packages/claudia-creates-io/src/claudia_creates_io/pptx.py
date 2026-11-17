@@ -56,7 +56,16 @@ from claudia_creates import (
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
-from ._items import ItemReader, agendas, marks_of, read_pptx_mark, sayable_in_pptx, words_of, write_pptx_mark
+from ._items import (
+    ItemReader,
+    agendas,
+    marks_of,
+    read_pptx_mark,
+    references,
+    sayable_in_pptx,
+    words_of,
+    write_pptx_mark,
+)
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._styling import colour_of, look, page_colour, points_of
 from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
@@ -213,6 +222,8 @@ def pptx_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[
         losses.add("list-look", count=unsaid)
     if written := agendas(model):
         losses.add("agenda", count=written)
+    if written := references(model):
+        losses.add("reference", count=written)  # written as what it reads as: it no longer follows its target
     for loss in notes_losses(model):
         losses.add(loss.kind, loss.detail, loss.count)
     for obj in model.objects.values():

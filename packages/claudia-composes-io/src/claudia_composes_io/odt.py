@@ -32,7 +32,7 @@ from zipfile import BadZipFile
 from lxml import etree
 
 from claudia_composes import BUILTIN_STYLES, DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
-from claudia_core import Rasterise, Toc, VisualObject
+from claudia_core import Rasterise, Toc, VisualObject, plain
 from claudia_odf_io import (
     MIME,
     NS,
@@ -49,7 +49,6 @@ from claudia_odf_io import (
     insert_elements,
     new_meta,
     new_package,
-    read_text,
     set_text,
     update_manifest,
     update_package_meta,
@@ -81,6 +80,7 @@ from ._odt_pictures import (
     graphic_styles,
     unheld_pictures,
 )
+from ._odt_references import bookmark_name, bookmarks_starting, mark_target, read_words, reference_item, swap_fields
 from ._odt_setup import (
     FOOTER_STYLE,
     FOOTER_STYLE_XML,
@@ -92,6 +92,7 @@ from ._odt_setup import (
 )
 from ._odt_styles import BUILTIN_NAMES, StyleNames, style_xml
 from ._pictures import picture_losses, pictures_of
+from ._references import ReadReference, with_references
 from ._suggestions import WhenMade, open_replacements, when_made
 from ._unwritten import ODT_WRITTEN, text_unwritten_changes
 from .docx import UnsupportedEdit
@@ -313,13 +314,22 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     contents = iter(scan.contents)
     waiting = next(contents, None)
     tables = count(len(scan.paragraphs) + 1)  # a table of contents' id comes after every paragraph's
+    marked: dict[str, str] = {}  # the paragraph each bookmark starts, by name
+    referring: list[tuple[int, list[ReadReference]]] = []
     for number, paragraph in enumerate(scan.paragraphs, start=1):
         while waiting is not None and waiting[0] < number:
             blocks.append(Block(f"b{next(tables)}", DEFAULT_STYLE, generated=waiting[1]))
             waiting = next(contents, None)
-        text = read_text(paragraph)
+        text, found = read_words(paragraph)
+        text = plain(text) if not found else text
+        for name in bookmarks_starting(paragraph):
+            marked[name] = f"b{number}"
+        if found:
+            referring.append((len(blocks), found))
         runs = (Run(len(text), None),) if text else ()
         blocks.append(Block(f"b{number}", _style_of(paragraph, parents, None), text, runs, lists.items.get(paragraph)))
+    for at, found in referring:  # now that every bookmark is known
+        blocks[at] = with_references(blocks[at], found, marked)
     for _, toc in [*([waiting] if waiting else []), *contents]:
         blocks.append(Block(f"b{next(tables)}", DEFAULT_STYLE, generated=toc))
     model = TextModel(
@@ -573,7 +583,9 @@ def text_to_odt(
     flow = ListFlow(text, lambda list_id, element: names.start(list_id, element))
     regions: list[etree._Element] = []
     pictures = PictureWriter(rasterise)
-    entries = model.structure.all_entries()
+    entries, shown = model.structure.all_entries(), model.structure.shown()
+    blocks = {block.id for block in model.blocks}
+    targets = {f.target for block in model.blocks for f in block.fields if f.target in blocks}
     for number, block in enumerate(model.blocks, start=1):
         if block.generated is not None:
             name = f"Table of Contents{number}"
@@ -581,6 +593,11 @@ def text_to_odt(
             continue
         paragraph, found = _new_paragraph(block.style, block.text, by_block.get(block.id, []), ids, when, styles)
         _add_pictures(paragraph, model, block, by_block.get(block.id, []), pictures)
+        if block.fields:
+            said = shown.get(block.id, ())
+            swap_fields(paragraph, [reference_item(f, s, targets) for f, s in zip(block.fields, said, strict=True)])
+        if block.id in targets:
+            mark_target(paragraph, bookmark_name(block.id))
         flow.add(paragraph, block.item)
         regions += found
     automatic = root.find("office:automatic-styles", NS)
@@ -1165,9 +1182,11 @@ def apply_edits_to_odt(
 
     Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, blocks
     moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know), and
-    a table of contents in either model (it is not a paragraph of the file; the file is written anew, E9.31)."""
+    a table of contents or a reference in either model (the file is written anew, E9.31, step H)."""
     if any(block.generated is not None for model in (baseline, current) for block in model.blocks):
         raise UnsupportedEdit("a text with a table of contents is written anew, not patched")
+    if any(block.fields for model in (baseline, current) for block in model.blocks):
+        raise UnsupportedEdit("a text with references is written anew, not patched")
     when = when_made(change_times, info.modified if info else None)
     return _Patch(
         original_bytes,

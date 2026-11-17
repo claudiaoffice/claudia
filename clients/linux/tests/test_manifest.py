@@ -100,11 +100,18 @@ def test_insert_offers_the_container_types_with_a_key_each(app: manifest.Manifes
     assert {a.key_owner for a in container.items} == {manifest.KeyOwner.PAGE}
 
 
-def test_insert_starts_with_the_table_of_contents_which_creates_calls_agenda(app: manifest.Manifest) -> None:
+def test_insert_starts_with_the_cross_reference_and_the_table_of_contents_which_creates_calls_agenda(
+    app: manifest.Manifest,
+) -> None:
     """Insert ▸ Table of Contents (E9.31), Ctrl+Alt+Shift+I, listened for by the page; in creates it is Agenda. Computes
     shows it and the page reports it off, as it does List ▸."""
-    ((contents,), _containers) = app.menu("Insert").sections
-    assert isinstance(contents, manifest.Action)
+    ((reference, contents), _containers) = app.menu("Insert").sections
+    assert isinstance(reference, manifest.Action) and isinstance(contents, manifest.Action)
+    assert (reference.id, reference.label, reference.accelerators) == (
+        "insert.cross-reference",
+        "Cross-Reference…",
+        ("<Primary>F2",),
+    )
     assert contents.id == "insert.contents"
     assert contents.label == ("Agenda" if app.app == "creates" else "Table of Contents")
     assert contents.accelerators == ("<Primary><Alt><Shift>i",)
@@ -350,6 +357,7 @@ def test_computes_edit_has_search_then_new_sheet_then_row_and_column_submenus_th
     assert [e.label for e in tail] == [
         "Search & Replace…",
         "Reference in Chat",  # E5.20: the same entry in every app
+        "Go to Target",  # step H: to what a reference points at
         "New Sheet…",
         "Rename Sheet…",  # E6.24
         "Image…",  # UX-36: Image… and Chart… were on the web only
@@ -358,7 +366,7 @@ def test_computes_edit_has_search_then_new_sheet_then_row_and_column_submenus_th
         "Column",
         "Clear Cells",
     ]
-    row, column = tail[6], tail[7]
+    row, column = tail[7], tail[8]
     assert isinstance(row, Submenu)
     assert [a.id for a in row.items] == ["edit.row-insert-above", "edit.row-insert-below", "edit.row-delete"]
     assert isinstance(column, Submenu) and [a.id for a in column.items] == [
@@ -388,6 +396,7 @@ def test_creates_edit_has_search_new_slide_edit_text_text_box_then_delete(create
     assert tail == [
         "Search & Replace…",  # E10.19, as in composes and computes
         "Reference in Chat",
+        "Go to Target",
         "New Slide",
         "Rename Slide…",  # D550
         "Plan the Time of This Slide…",

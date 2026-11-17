@@ -70,6 +70,25 @@ describe('from a session to the layout library', () => {
       { id: 'empty', style: 'body', text: '', contents: { entries: [], places: false, leader: 'none' } },
     ])
   })
+  it('prints a reference as what it reads as, and leaves a page reference for the layout to fill in (steps H, I)', () => {
+    const F = '\ufffc'
+    const doc = textDocument(
+      [
+        {
+          id: 'b1',
+          style: 'body',
+          text: `see ${F} on page ${F}.`,
+          runs: [],
+          fields: [{ kind: 'ref', target: 'h', show: 'number' }, { kind: 'ref', target: 'h', show: 'page' }],
+          shown: [{ text: '2.1', state: 'ok' }, { text: '', state: 'page' }],
+        },
+      ],
+      [],
+      DEFAULT_PAGE,
+      null,
+    )
+    expect(doc.blocks[0]).toMatchObject({ text: 'see 2.1 on page .', pageRefs: [{ at: 16, target: 'h' }] })
+  })
   it('passes the heading level the server gave each style, so the layout keeps headings with their text (E9.22)', () => {
     const style = (id: string, heading?: number | null) => ({ id, name: id, purpose: '', based_on: null, css: {}, computed: {}, resolved: {}, to_name: false, kind: 'paragraph', heading })
     const doc = textDocument([], [style('chapter', 1), style('body', null), style('old')], DEFAULT_PAGE, null)

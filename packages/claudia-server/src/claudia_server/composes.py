@@ -69,6 +69,7 @@ from claudia_core import (
     Command,
     CreateStyle,
     StyleDef,
+    plain,
     validate_css,
 )
 
@@ -150,23 +151,27 @@ def _blocks(ctx):
     drawn in front of it, derived from the structure, and for numbers the trail of counters and the number a
     reference prints); so has a paragraph whose style numbers it (a numbered heading). A table of contents has
     `generated` (its options, `{kind, first, last, numbers, places, leader}`) and `entries` (`{target, level, number,
-    text, style, place}`, derived from the headings, E9.31). A named one has `name` (D554). `lists` are `{id, scheme,
+    text, style, place}`, derived from the headings, E9.31). A paragraph with references has `fields` (`{kind,
+    target, show}`, one for each U+FFFC of its text) and `shown` (`{text, state}`, what each reads as, step H). A named
+    one has `name` (D554). `lists` are `{id, scheme,
     start, name}`; `schemes` are `{id, name, kind, levels, indent, gap}` (`indent` and `gap` in em; see `lists`)."""
     model = _text(ctx)
-    labels, entries = model.labels(), model.structure.all_entries()
+    labels, entries, shown = model.labels(), model.structure.all_entries(), model.structure.shown()
     return {
         "revision": current_revision(ctx),
         "styles": model.styles.views(model.palette.colours()),
         "lists": model.lists.to_data(),
         "schemes": model.schemes.to_data(),
-        "blocks": [_block_view(model, b, labels, entries) for b in model.blocks],
+        "blocks": [_block_view(model, b, labels, entries, shown) for b in model.blocks],
     }
 
 
-def _block_view(model, block, labels, entries) -> dict:
+def _block_view(model, block, labels, entries, shown) -> dict:
     """A paragraph as `blocks` sends it: its data, its list label if it is an item, the entries of a table of
-    contents, its name if it has one (D554)."""
+    contents, what its fields read as (`shown`, step H), its name if it has one (D554)."""
     view = block.to_data()
+    if block.id in shown:
+        view["shown"] = [s.to_data() for s in shown[block.id]]
     if block.id in labels:
         view["label"] = labels[block.id].to_data()
     if block.id in entries:
@@ -253,7 +258,7 @@ def edit_plan(
         raise RequestError("command_error", msg("the range ends before it starts"))
     _inside(model, first, start, "start")
     _inside(model, last, end, "end")
-    lines = text.split("\n")
+    lines = plain(text).split("\n")  # words a person writes make no field (step H)
     if len(lines) - 1 > MAX_NEW_PARAGRAPHS or len(model.blocks) + len(lines) > MAX_BLOCKS:
         raise RequestError("command_error", msg("that would make too many paragraphs"))
     blocks = model.blocks

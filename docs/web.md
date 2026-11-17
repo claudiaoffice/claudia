@@ -244,7 +244,9 @@ A text's **table of contents** gets its page numbers from the same layout (E9.31
 layout finds the page each heading starts on, prints it right-aligned after the entry with the leader before it (the
 column is kept free, so filling it in moves no line), makes each entry a link to its heading and the headings the
 PDF's bookmarks. **Page view** shows the same page numbers in the editor: `lib/print/page-numbers.ts` lays the text out
-in the background, only while a table shows pages, once the typing has paused. Flow has no pages, so it shows none.
+in the background, only while a table or a reference shows pages, once the typing has paused. Flow has no pages, so it
+shows none. A **page reference** in running text ("see page 12", step I) is filled in by the same layout: at most
+three passes, since a number can move a line and the line a page break; one that does not settle is reported as a note.
 
 ## Presenter mode (creates)
 

@@ -10,8 +10,13 @@
 import { onMounted, ref } from 'vue'
 import { MARKER_GAP_EM } from '@claudia/layout'
 import { editedWords } from '~/lib/edited-words'
+import { partsOf, type Shown } from '~/lib/references'
 
-const props = withDefaults(defineProps<{ text: string; label: string; marker?: string | null; indent?: number }>(), { marker: null, indent: 0 })
+const props = withDefaults(defineProps<{ text: string; label: string; marker?: string | null; indent?: number; shown?: readonly Shown[] | null }>(), {
+  marker: null,
+  indent: 0,
+  shown: null,
+})
 const emit = defineEmits<{ commit: [text: string]; cancel: [] }>()
 
 const field = ref<HTMLElement | null>(null)
@@ -58,6 +63,18 @@ function onPaste(event: ClipboardEvent) {
   insertAtCaret(event.clipboardData?.getData('text/plain') ?? '')
 }
 
+/** How many characters of the words lie before the caret (a reference counts one): where a reference goes. */
+function caretOffset(): number {
+  const el = field.value
+  if (!el) return props.text.length
+  const selection = document.getSelection()
+  if (!selection?.rangeCount || !selection.focusNode || !el.contains(selection.focusNode)) return editedWords(el).length
+  const range = document.createRange()
+  range.selectNodeContents(el)
+  range.setEnd(selection.focusNode, selection.focusOffset)
+  return editedWords(range.cloneContents()).length
+}
+
 /** The words as they are now, taken: the editor is done (for a press elsewhere, which ends the editing itself). */
 function take(): string {
   done = true
@@ -74,12 +91,31 @@ function focus() {
   selection?.collapseToEnd()
 }
 
+/** Draw the words into the field: text, and each reference as an atom that cannot be typed into (step H); it reads
+ * back as its U+FFFC, so the words that go to the server keep it. */
+function fill(el: HTMLElement) {
+  el.textContent = ''
+  for (const part of partsOf(props.text)) {
+    if (part.kind === 'words') {
+      el.append(document.createTextNode(part.text))
+      continue
+    }
+    const atom = document.createElement('span')
+    const shown = props.shown?.[part.index]
+    atom.dataset.atom = ''
+    atom.contentEditable = 'false'
+    atom.className = `ref ${shown?.state ?? 'ok'}`
+    atom.textContent = shown && shown.state === 'ok' ? shown.text : '#'
+    el.append(atom)
+  }
+}
+
 onMounted(() => {
-  if (field.value) field.value.textContent = props.text
+  if (field.value) fill(field.value)
   focus()
 })
 
-defineExpose({ focus, take })
+defineExpose({ focus, take, caretOffset })
 </script>
 
 <template>
@@ -114,6 +150,13 @@ defineExpose({ focus, take })
   outline: none;
   white-space: pre-wrap;
   caret-color: currentColor;
+}
+.field :deep(.ref) {
+  border-bottom: 0.08em solid var(--iris);
+}
+.field :deep(.ref.broken) {
+  color: var(--danger);
+  border-bottom-style: dashed;
 }
 .field:empty::before {
   content: '\200b'; /* an empty field keeps a line's height, so the caret shows */

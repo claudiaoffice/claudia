@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from lxml import etree
 
 from claudia_core import (
+    FIELD_CHAR,
     Label,
     LevelFormat,
     ListBook,
@@ -97,16 +98,28 @@ def agenda_lines(model: SlideModel, object_id: str) -> str:
 
 
 def words_of(model: SlideModel, body: object) -> str:
-    """The words a format writes for an object: its own, or for an agenda the lines it shows."""
+    """The words a format writes for an object: its own, with each reference as what it reads as now (step H), or for
+    an agenda the lines it shows."""
     paragraph = getattr(body, "paragraph", None)
     if paragraph is None:
         return ""
-    return agenda_lines(model, body.id) if paragraph.generated is not None else paragraph.text  # type: ignore[attr-defined]
+    if paragraph.generated is not None:
+        return agenda_lines(model, body.id)  # type: ignore[attr-defined]
+    if not paragraph.fields:
+        return paragraph.text
+    shown = iter(model.structure.shown().get(paragraph.id, ()))
+    return "".join(next(shown).text if char == FIELD_CHAR else char for char in paragraph.text)
 
 
 def agendas(model: SlideModel) -> int:
     """How many agendas the presentation has (each is written as text: the loss ``agenda``)."""
     return sum(1 for obj in model.objects.values() if obj.body.paragraph is not None and obj.body.paragraph.generated)
+
+
+def references(model: SlideModel) -> int:
+    """How many references the words of the presentation hold (each is written as what it reads as: the loss
+    ``reference``)."""
+    return sum(len(obj.body.paragraph.fields) for obj in model.objects.values() if obj.body.paragraph is not None)
 
 
 # -- pptx ------------------------------------------------------------------------------------------------------------

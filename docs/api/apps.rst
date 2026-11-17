@@ -159,7 +159,7 @@ composes
 
 .. automodule:: claudia_composes
    :members:
-   :exclude-members: AddObject, DefineImage, DefineShape, DeleteText, DescribeObject, ForgetImage, ForgetShape, InsertText, LabelsChanged, LanguageChanged, LanguageError, MoveObject, ObjectBody, ObjectSet, PAPERS, PageSetup, PageSetupError, Paragraph, RemoveObject, ResizeObject, RotateObject, Run, SetLanguage, SetParagraph, SetParagraphStyle, SetSnap, SetText, TextCommand, VisualObject, normalize_language, paragraph_for
+   :exclude-members: AddObject, DefineImage, DefineShape, DeleteText, Field, DescribeObject, ForgetImage, ForgetShape, InsertText, LabelsChanged, LanguageChanged, LanguageError, MoveObject, ObjectBody, ObjectSet, PAPERS, PageSetup, PageSetupError, Paragraph, RemoveObject, ResizeObject, RotateObject, Run, SetLanguage, SetParagraph, SetParagraphStyle, SetSnap, SetText, TextCommand, VisualObject, normalize_language, paragraph_for
 
 .. automodule:: claudia_composes.anchors
    :no-members:

@@ -134,6 +134,25 @@ Typing
 .. autoclass:: claudia_core.TypingHost
 .. autofunction:: claudia_core.word_changes
 
+References
+----------
+
+.. automodule:: claudia_core.fields
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+.. autoclass:: claudia_core.RefField
+.. autoclass:: claudia_core.Shown
+.. autoclass:: claudia_core.FieldsChanged
+.. autoclass:: claudia_core.FieldHost
+.. autoclass:: claudia_core.SetField
+.. autofunction:: claudia_core.field_from_data
+.. autofunction:: claudia_core.fields_before
+.. autofunction:: claudia_core.plain
+.. autodata:: claudia_core.FIELD_CHAR
+.. autodata:: claudia_core.SHOWS
+
 Tables of contents
 ------------------
 

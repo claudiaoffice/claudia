@@ -29,6 +29,7 @@ import type { BlockAnchor, ObjectsEvent, PaletteEvent, StyleModel, VisualObject 
 import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
 import type { ListInfo, SchemeInfo } from './numbering'
+import { FIELD_CHAR, fieldIndex, plain, type ReferenceTarget, type RefField, type Show, type Shown } from './references'
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
 import { headingLevel, styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 
@@ -262,7 +263,9 @@ export class TextSession extends BaseSession<TextState> {
       case 'item':
       case 'labels':
       case 'block_generated':
-      case 'generated': {
+      case 'generated':
+      case 'block_fields':
+      case 'fields': {
         const event = eventInUnits(s.blocks, data as TextEvent)
         if (!applyEvent(s.blocks, event)) this.track(this.reload())
         else this.follow(event)
@@ -547,7 +550,7 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   paste(text: string) {
-    void this.replaceSelection(text.replace(/\r\n?/g, '\n'))
+    void this.replaceSelection(plain(text.replace(/\r\n?/g, '\n'))) // pasted words make no reference (step H)
   }
 
   /** The selected text, which is then taken out. */
@@ -587,6 +590,12 @@ export class TextSession extends BaseSession<TextState> {
     if (neighbour?.generated) {
       // the first key next to a table selects it, as the mock-up has it (E9.31): a table is never half deleted
       this.state.selection = collapsed({ block: neighbour.id, offset: 0 })
+      return true
+    }
+    const atom = direction < 0 ? r[0].offset - 1 : r[0].offset
+    if (!word && text[atom] === FIELD_CHAR) {
+      // the first key next to a reference selects it, the second takes it away (mock-up D): never lost by a slip
+      this.state.selection = { anchor: { block: r[0].block, offset: atom }, focus: { block: r[0].block, offset: atom + 1 } }
       return true
     }
     if (direction < 0) {
@@ -716,6 +725,46 @@ export class TextSession extends BaseSession<TextState> {
   currentItem(): ListItem | null {
     const focus = this.state.selection?.focus
     return this.state.blocks.find((b) => b.id === focus?.block)?.item ?? null
+  }
+
+  // ------------------------------------------------------------------------------ references (step H)
+  /** What a reference can point at, for the picker: headings, numbered items, named things (`query` filters). */
+  async referenceTargets(query = ''): Promise<ReferenceTarget[]> {
+    try {
+      return await this.need().request<ReferenceTarget[]>('reference_targets', { query })
+    } catch {
+      return [] // an older server knows no references
+    }
+  }
+
+  /** Put a reference to `target` at the caret (in place of the selection), showing `show`; the caret goes after it. */
+  insertReference(target: string, show: Show): Promise<boolean> {
+    if (this.denied() || this.onContents()) return Promise.resolve(false)
+    return this.act(async () => {
+      const r = this.range()
+      if (!r) return false
+      if (!same(r[0], r[1]) && !(await this.write(r[0], r[1], ''))) return false
+      const at = this.state.selection?.focus ?? r[0]
+      const params = { paragraph: at.block, offset: pointOf(this.textOf(at.block), at.offset), target, show, base: this.state.revision }
+      if ((await this.attempt('insert_reference', params)) === false) return false
+      this.state.selection = collapsed({ block: at.block, offset: at.offset + 1 })
+      return true
+    })
+  }
+
+  /** Make the `index`-th reference of a paragraph show `show` (Show As). */
+  setFieldShow(block: string, index: number, show: Show): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => (await this.attempt('set_field', { paragraph: block, index, show, base: this.state.revision })) !== false)
+  }
+
+  /** The reference at a place of the text (the character after `at`), as `{block, index, field, shown}`, or `null`. */
+  referenceAt(at: Pos): { block: string; index: number; field: RefField; shown: Shown | undefined } | null {
+    const block = this.state.blocks.find((b) => b.id === at.block)
+    if (!block || block.text[at.offset] !== FIELD_CHAR) return null
+    const index = fieldIndex(block.text, at.offset)
+    const field = block.fields?.[index]
+    return field ? { block: block.id, index, field, shown: block.shown?.[index] } : null
   }
 
   // ------------------------------------------------------------------------------ tables of contents (E9.31)

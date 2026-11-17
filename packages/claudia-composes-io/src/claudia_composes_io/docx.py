@@ -31,7 +31,7 @@ from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.text.paragraph import Paragraph
 
 from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel, builtin_styles
-from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, VisualObject
+from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, VisualObject, plain
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
@@ -44,9 +44,19 @@ from ._docx_pictures import (
     file_pictures,
     unheld_pictures,
 )
+from ._docx_references import (
+    bookmark_name,
+    bookmarks_starting,
+    has_references,
+    mark_targets,
+    read_words,
+    reference_runs,
+    swap_fields,
+)
 from ._docx_setup import read_setup, write_language, write_page
 from ._docx_styles import WORD_NAMES, WordNames, unsaid_of, write_styles
 from ._pictures import picture_losses, pictures_of
+from ._references import ReadReference, with_references
 from ._style_look import look_for
 from ._suggestions import WhenMade, open_replacements, when_made
 from ._unwritten import DOCX_WRITTEN, text_unwritten_changes
@@ -86,7 +96,9 @@ def text_to_docx(
     lists = ListWriter(document, model.lists, model.schemes)
     write_style_numbering(document, model.styles, names, lists)
     pictures = PictureWriter(document, rasterise)
-    entries = model.structure.all_entries()
+    entries, shown = model.structure.all_entries(), model.structure.shown()
+    targets = _targets(model)
+    bookmarks = count(1)
     for block in model.blocks:
         paragraph = document.add_paragraph(style=names.of(block.style))
         if block.generated is not None:
@@ -96,9 +108,20 @@ def text_to_docx(
             lists.write(paragraph, block.item)
         marks = [(obj.anchor.offset, pictures.run(obj, asset)) for obj, asset in pictures_of(model, block.id)]
         _fill_paragraph(paragraph, block.text, by_block.get(block.id, []), change_ids, when, marks)
+        if block.fields:
+            said = shown.get(block.id, ())
+            swap_fields(paragraph, [reference_runs(f, s, targets) for f, s in zip(block.fields, said, strict=True)])
+        if block.id in targets:
+            mark_targets(paragraph, bookmark_name(block.id), bookmarks)
     out = BytesIO()
     document.save(out)
     return out.getvalue()
+
+
+def _targets(model: TextModel) -> set[str]:
+    """The paragraphs of the text that a reference points at: they get a bookmark."""
+    blocks = {block.id for block in model.blocks}
+    return {f.target for block in model.blocks for f in block.fields if f.target in blocks}
 
 
 def _patch_setup(document: Any, baseline: TextModel, current: TextModel) -> tuple[WordNames, set[str]]:
@@ -284,6 +307,8 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
     blocks = []
     paragraphs = document.paragraphs
     tables = count(len(paragraphs) + 1)  # a table of contents' id comes after every paragraph's
+    marked: dict[str, str] = {}  # the paragraph each bookmark starts, by name
+    referring: list[tuple[int, list[ReadReference]]] = []
     for at, toc in body_order(document):
         if toc is not None:
             blocks.append(Block(f"b{next(tables)}", DEFAULT_STYLE, generated=toc))
@@ -292,12 +317,18 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
         index, paragraph = at + 1, paragraphs[at]
         style = paragraph.style
         style_id = _CLAUDIA_STYLE.get(style.name, DEFAULT_STYLE) if style is not None else DEFAULT_STYLE
-        text = paragraph.text
+        text, found = read_words(paragraph._p) if has_references(paragraph._p) else (plain(paragraph.text), [])
+        for name in bookmarks_starting(paragraph._p):
+            marked[name] = f"b{index}"
+        if found:
+            referring.append((len(blocks), found))
         runs = (Run(len(text), None),) if text else ()
         item = reading.items.get(paragraph._p)
         if _style_numbers(paragraph._p in reading.styled, styles, style_id, item, numbered):
             item = None  # the style numbers it: Word's numbered headings
         blocks.append(Block(f"b{index}", style_id, text, runs, item))
+    for at, found in referring:  # now that every bookmark is known
+        blocks[at] = with_references(blocks[at], found, marked)
     model = TextModel(
         blocks or None,
         styles,
@@ -528,6 +559,8 @@ def _no_contents(*models: TextModel) -> None:
     """:class:`UnsupportedEdit` for a text with a table of contents: it is not a paragraph of the file."""
     if any(b.generated is not None for model in models for b in model.blocks):
         raise UnsupportedEdit("a text with a table of contents is written anew, not patched")
+    if any(b.fields for model in models for b in model.blocks):
+        raise UnsupportedEdit("a text with references is written anew, not patched")
 
 
 def apply_edits_to_docx(

@@ -6,6 +6,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- References in docx and odt (step H): a docx gets a bookmark at each target and Word's `REF`/`PAGEREF` field for each
+  reference, an odt a `text:bookmark` and a `text:bookmark-ref`, each with what it reads as now; both are read back as
+  references to the same paragraphs (one whose bookmark starts no paragraph comes in as its words). A kept file with a
+  reference is written anew.
 - Tables of contents in docx and odt (E9.31): docx writes a TOC field in a content control with its entries and asks
   Word to update the fields on opening; odt writes `text:table-of-content` with its entries, and lists the loss
   `toc-pages` (the entries carry no page numbers). Both read a table back with its levels. The Contents styles are

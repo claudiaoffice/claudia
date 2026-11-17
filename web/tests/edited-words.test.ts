@@ -11,6 +11,10 @@ describe('the words of an edited paragraph', () => {
     expect(editedWords(element('SPAN', text('Why'), element('DIV', text('we')), element('DIV', element('BR'))))).toBe('Why\nwe\n')
     expect(editedWords(element('SPAN', text('one\ntwo')))).toBe('one\ntwo')
   })
+  it('reads a reference as the U+FFFC it stands at, and a typed U+FFFC as nothing (step H)', () => {
+    const atom: WordNode = { ...element('SPAN', text('2.1')), getAttribute: (name) => (name === 'data-atom' ? '' : null) }
+    expect(editedWords(element('SPAN', text('see '), atom, text('.\ufffc')))).toBe('see \ufffc.')
+  })
   it('drops the line break a browser keeps at the very end, and reads an empty field as no words', () => {
     expect(editedWords(element('SPAN', text('Why'), element('BR')))).toBe('Why')
     expect(editedWords(element('SPAN'))).toBe('')

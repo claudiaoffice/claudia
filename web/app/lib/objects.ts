@@ -10,6 +10,7 @@
 
 import type { ImageImport } from './images'
 import type { Toc } from './contents'
+import type { RefField } from './references'
 
 /** Where an object sits, in the terms of one app. `container` is its slide, sheet or paragraph. */
 export interface SlideAnchor {
@@ -88,6 +89,8 @@ export interface Paragraph {
   item?: { list: string; level: number } | null
   /** Set when the words are an agenda (E9.31): its options. Such a paragraph holds no text; its lines are derived. */
   generated?: Toc | null
+  /** The references in the words, one for each U+FFFC, in order (step H). */
+  fields?: RefField[]
 }
 
 /** The words of an object, or `''` when it has none — the one place the client decides what an object with no

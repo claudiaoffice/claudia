@@ -3,6 +3,7 @@
 // `follow` of the command in claudia_composes, so that what the screen shows is what the server holds.
 
 import type { ContentsEntry, Toc } from './contents'
+import { fieldIndex, type RefField, type Shown } from './references'
 
 /** `[length, author, via]`: who wrote this stretch, and whose suggestion it came through. */
 export type Run = [number, string | null, string | null]
@@ -34,6 +35,10 @@ export interface Block {
   generated?: Toc | null
   /** A table of contents' lines, derived by the server from the headings. */
   entries?: ContentsEntry[]
+  /** The references in the words, one for each U+FFFC of `text`, in order (step H). */
+  fields?: RefField[]
+  /** What each of them reads as now, derived by the server. */
+  shown?: Shown[]
 }
 export interface Pos {
   block: string
@@ -55,6 +60,8 @@ export type TextEvent =
   | { type: 'labels'; labels: Record<string, Label | null> }
   | { type: 'block_generated'; block: string; generated: Toc | null }
   | { type: 'generated'; paragraph: string; entries: ContentsEntry[] | null }
+  | { type: 'block_fields'; block: string; fields: RefField[] }
+  | { type: 'fields'; paragraph: string; fields: Shown[] }
 
 // ------------------------------------------------------------------------------ runs
 export function normalizeRuns(runs: Run[]): Run[] {
@@ -104,6 +111,11 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
     }
     return true
   }
+  if (ev.type === 'fields') {
+    const found = blocks[indexOf(blocks, ev.paragraph)]
+    if (found) found.shown = ev.fields
+    return true // the words of a floating object, or a paragraph that went away in the same step
+  }
   if (ev.type === 'generated') {
     const found = blocks[indexOf(blocks, ev.paragraph)]
     if (found && ev.entries) found.entries = ev.entries
@@ -130,6 +142,14 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
         runs: sliceRuns(block.runs, ev.offset, block.text.length),
         ...(block.item ? { item: { ...block.item } } : {}), // an item makes an item; its label comes with the server's count
       }
+      if (block.fields?.length) {
+        // the fields go with their characters; what they read as comes again from the server
+        const at = fieldIndex(block.text, ev.offset)
+        rest.fields = block.fields.slice(at)
+        rest.shown = block.shown?.slice(at)
+        block.fields = block.fields.slice(0, at)
+        block.shown = block.shown?.slice(0, at)
+      }
       block.text = block.text.slice(0, ev.offset)
       block.runs = sliceRuns(block.runs, 0, ev.offset)
       blocks.splice(i + 1, 0, rest)
@@ -140,6 +160,10 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
       if (!next || next.id !== ev.block || block.text.length !== ev.at) return false
       block.text += next.text
       block.runs = insertRuns(block.runs, ev.at, next.runs)
+      if (next.fields?.length) {
+        block.fields = [...(block.fields ?? []), ...next.fields]
+        block.shown = [...(block.shown ?? []), ...(next.shown ?? [])]
+      }
       blocks.splice(i + 1, 1)
       return true
     }
@@ -149,6 +173,9 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
     case 'item':
       block.item = ev.item
       if (!ev.item) delete block.label
+      return true
+    case 'block_fields':
+      block.fields = ev.fields
       return true
     case 'block_generated':
       if (ev.generated && block.text) return false // a table of contents holds no text: the replica is out of step
@@ -185,6 +212,8 @@ export function followSpan(span: Span, ev: TextEvent): Span {
     case 'labels':
     case 'block_generated':
     case 'generated':
+    case 'block_fields':
+    case 'fields':
       return span
   }
 }
@@ -277,7 +306,7 @@ export function runsToPoints(text: string, runs: Run[]): Run[] {
 
 /** An event as the server sent it (code points) in UTF-16 units, judged against the paragraphs it will be applied to. */
 export function eventInUnits(blocks: Block[], ev: TextEvent): TextEvent {
-  if (ev.type === 'labels' || ev.type === 'generated') return ev
+  if (ev.type === 'labels' || ev.type === 'generated' || ev.type === 'fields') return ev
   const text = blocks.find((b) => b.id === (ev.type === 'join' ? ev.into : ev.block))?.text ?? ''
   switch (ev.type) {
     case 'text': {
@@ -292,6 +321,7 @@ export function eventInUnits(blocks: Block[], ev: TextEvent): TextEvent {
     case 'style':
     case 'item':
     case 'block_generated':
+    case 'block_fields':
       return ev
   }
 }

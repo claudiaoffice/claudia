@@ -19,6 +19,7 @@ from claudia_core import (
     CommandRegistry,
     Context,
     DocumentModel,
+    Field,
     Generated,
     Label,
     ListBook,
@@ -38,16 +39,15 @@ from claudia_core import (
     TextStructure,
     VisualObject,
     builtin_palette,
-    delete_runs,
+    fields_before,
     fits,
     insert_runs,
     new_registry,
     slice_runs,
-    total,
 )
 
 from .anchors import BlockAnchor
-from .events import BlockGenerated, ItemChanged, SuggestionsChanged, TextChanged
+from .events import BlockGenerated, FieldsPut, ItemChanged, SuggestionsChanged, TextChanged
 from .page import PageSetup
 from .region import TextRange
 from .spans import TextCommand
@@ -542,20 +542,44 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         return ItemChanged(paragraph_id, item)
 
     # -- typing (claudia_core.TypingHost) -----------------------------------------------------------
-    def insert_text(self, paragraph_id: str, offset: int, text: str, runs: list[Run]) -> tuple[object, ...]:
+    def insert_text(
+        self, paragraph_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...] = ()
+    ) -> tuple[object, ...]:
         """Type into a paragraph of the text or the words of a floating object; the events that tell the clients."""
         if paragraph_id in self.objects:
-            return (self.insert_object_text(paragraph_id, offset, text, runs),)
-        self.insert(paragraph_id, offset, text, runs)
-        return (TextChanged(paragraph_id, offset, 0, text, tuple(runs)),) if text else ()
+            return (self.insert_object_text(paragraph_id, offset, text, runs, fields),)
+        self.insert(paragraph_id, offset, text, runs, fields)
+        if not text:
+            return ()
+        changed = TextChanged(paragraph_id, offset, 0, text, tuple(runs))
+        return (changed, FieldsPut(paragraph_id, self.block(paragraph_id).fields)) if fields else (changed,)
 
-    def remove_text(self, paragraph_id: str, start: int, end: int) -> tuple[str, list[Run], tuple[object, ...]]:
+    def remove_text(
+        self, paragraph_id: str, start: int, end: int
+    ) -> tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]:
         """Cut characters out of a paragraph of the text or the words of a floating object."""
         if paragraph_id in self.objects:
-            text, runs, event = self.remove_object_text(paragraph_id, start, end)
-            return text, runs, (event,)
-        text, runs = self.remove(paragraph_id, start, end)
-        return text, runs, ((TextChanged(paragraph_id, start, end - start, ""),) if end > start else ())
+            text, runs, fields, event = self.remove_object_text(paragraph_id, start, end)
+            return text, runs, fields, (event,)
+        text, runs, fields = self.remove(paragraph_id, start, end)
+        events: tuple[object, ...] = (TextChanged(paragraph_id, start, end - start, ""),) if end > start else ()
+        if fields:
+            events = (*events, FieldsPut(paragraph_id, self.block(paragraph_id).fields))
+        return text, runs, fields, events
+
+    # -- fields (claudia_core.FieldHost, step H) ----------------------------------------------------------
+    def fields_of(self, paragraph_id: str) -> tuple[Field, ...]:
+        """The fields of a paragraph of the text or in the words of a floating object."""
+        if paragraph_id in self.objects:
+            return self.object_fields(paragraph_id)
+        return self.block(paragraph_id).fields
+
+    def put_fields(self, paragraph_id: str, fields: tuple[Field, ...]) -> tuple[object, ...]:
+        """Give a paragraph other fields at its U+FFFC; the event that tells the clients."""
+        if paragraph_id in self.objects:
+            return (self.put_object_fields(paragraph_id, fields),)
+        self._put(self.block(paragraph_id).with_fields(fields))
+        return (FieldsPut(paragraph_id, fields),)
 
     def text_regions(self, paragraph_id: str, start: int, end: int) -> tuple[Region, ...]:
         """A stretch of a paragraph of the text, or the floating object whose words change."""
@@ -689,27 +713,18 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         one and puts it where the old one was."""
         self.blocks[self.index_of(block.id)] = block
 
-    def insert(self, block_id: str, offset: int, text: str, runs: list[Run]) -> None:
-        """Put ``text`` into a paragraph at ``offset``; ``runs`` say who wrote it."""
+    def insert(self, block_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...] = ()) -> None:
+        """Put ``text`` into a paragraph at ``offset``; ``runs`` say who wrote it, ``fields`` are its U+FFFC's."""
         block = self.block(block_id)
         if block.generated is not None:
             raise ValueError("a table of contents takes no typing: its entries come from the headings")
-        if not 0 <= offset <= len(block.text):
-            raise IndexError("insert outside the text")
-        if total(runs) != len(text):
-            raise ValueError("the runs must cover exactly the inserted text")
-        self._put(
-            block.with_text(block.text[:offset] + text + block.text[offset:], insert_runs(block.runs, offset, runs))
-        )
+        self._put(block.typed(offset, text, runs, fields))
 
-    def remove(self, block_id: str, start: int, end: int) -> tuple[str, list[Run]]:
-        """Cut ``start <= i < end`` out of a paragraph; returns what was cut, with its runs."""
-        block = self.block(block_id)
-        if not 0 <= start <= end <= len(block.text):
-            raise IndexError("delete outside the text")
-        removed = block.text[start:end], slice_runs(block.runs, start, end)
-        self._put(block.with_text(block.text[:start] + block.text[end:], delete_runs(block.runs, start, end)))
-        return removed
+    def remove(self, block_id: str, start: int, end: int) -> tuple[str, list[Run], tuple[Field, ...]]:
+        """Cut ``start <= i < end`` out of a paragraph; returns what was cut, with its runs and fields."""
+        kept, text, runs, fields = self.block(block_id).cut(start, end)
+        self._put(kept)
+        return text, runs, fields
 
     def split(self, block_id: str, offset: int, new_id: str, style: str) -> None:
         """Cut a paragraph at ``offset``; the rest becomes the paragraph ``new_id`` right behind it, in ``style``
@@ -720,10 +735,18 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         if any(b.id == new_id for b in self.blocks):
             raise ValueError(f"the paragraph {new_id!r} exists already")
         self.check_style(style)
+        at = fields_before(block.text, offset)
         rest = Block(
-            new_id, style, block.text[offset:], tuple(slice_runs(block.runs, offset, len(block.text))), block.item
+            new_id,
+            style,
+            block.text[offset:],
+            tuple(slice_runs(block.runs, offset, len(block.text))),
+            block.item,
+            fields=block.fields[at:],
         )
-        self._put(block.with_text(block.text[:offset], slice_runs(block.runs, 0, offset)))
+        self._put(
+            replace(block.with_text(block.text[:offset], slice_runs(block.runs, 0, offset)), fields=block.fields[:at])
+        )
         self.blocks.insert(self.index_of(block_id) + 1, rest)
         self.open_container(new_id)
         self._note_id(new_id)
@@ -743,7 +766,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             raise ValueError("text cannot be joined into a table of contents")
         if len(first.text) != at:
             raise ValueError("the paragraph before it is not as long as the command says")
-        self._put(first.with_text(first.text + second.text, insert_runs(first.runs, at, second.runs)))
+        joined = first.with_text(first.text + second.text, insert_runs(first.runs, at, second.runs))
+        self._put(replace(joined, fields=first.fields + second.fields))
         self.carry_objects(block_id, into, shift=at)
         self.blocks.remove(second)
         self.close_container(block_id)

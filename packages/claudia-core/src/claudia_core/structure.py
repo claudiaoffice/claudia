@@ -24,10 +24,11 @@ Later steps add to this class what a reference shows.
 
 from __future__ import annotations
 
-from collections.abc import Hashable, Iterable, Iterator
+from collections.abc import Callable, Hashable, Iterable, Iterator
 from dataclasses import dataclass
 from typing import NamedTuple, Protocol
 
+from .fields import Field, FieldsChanged, Shown, plain
 from .generated import CONTENTS_STYLE, ContentsEntry, Generated, GeneratedChanged
 from .lists import Label, ListBook, numbering_labels
 from .paragraphs import MAX_LIST_LEVEL, ListItem, Paragraph
@@ -102,6 +103,8 @@ class TextStructure:
         self._told: dict[str, Label] = self.labels()
         #: The entries of each generated paragraph the clients have been told about.
         self._told_entries: dict[str, tuple[ContentsEntry, ...]] = self.all_entries()
+        #: What the fields of each paragraph read as, as the clients have been told.
+        self._told_fields: dict[str, tuple[Shown, ...]] = self.shown()
 
     def reading_order(self) -> Iterator[Placed]:
         """The host's paragraphs in the order they are read."""
@@ -202,11 +205,34 @@ class TextStructure:
         """The entries of one table of contents; none for a paragraph that is not one."""
         return self.all_entries().get(paragraph_id, ())
 
+    # -- fields (step H) ------------------------------------------------------------------------------------
+    def shown(self) -> dict[str, tuple[Shown, ...]]:
+        """What the fields of every paragraph that has any read as now, by paragraph id. A reference to a paragraph
+        shows its number (the label's, or its words when it has none), its words, both, its place (a slide's number;
+        a page is the layout's) or its name; a reference to anything else (a picture) shows its name. One whose
+        target is gone is ``broken``. A document without fields costs one look at each paragraph."""
+        placed_all = list(self.reading_order())
+        holders = [placed for placed in placed_all if placed.paragraph.fields]
+        if not holders:
+            return {}
+        by_id = {placed.paragraph.id: placed for placed in placed_all}
+        labels = self.labels()
+        named = getattr(self.host, "named_things", None)
+        names = {thing: name for _kind, thing, name in named()} if named is not None else {}
+        exists = getattr(self.host, "has_thing", lambda _thing: False)
+        return {
+            placed.paragraph.id: tuple(
+                _resolve(field, by_id.get(field.target), labels, names, exists) for field in placed.paragraph.fields
+            )
+            for placed in holders
+        }
+
     def settle(self, ctx: Emitter) -> None:
         """Tell the clients which labels and which entries of tables of contents changed: one item set may have
         renumbered a hundred others, one retyped heading changes an entry. A paragraph that is no longer there is not
         mentioned (its client drops it with the paragraph)."""
         self._settle_entries(ctx)
+        self._settle_fields(ctx)
         now = self.labels()
         if now is self._told or now == self._told:
             return
@@ -220,6 +246,15 @@ class TextStructure:
         self._told = now
         if changed:
             ctx.emit(LabelsChanged(tuple(changed)))
+
+    def _settle_fields(self, ctx: Emitter) -> None:
+        now = self.shown()
+        if now == self._told_fields:
+            return
+        for paragraph_id, shown in now.items():
+            if self._told_fields.get(paragraph_id) != shown:
+                ctx.emit(FieldsChanged(paragraph_id, shown))
+        self._told_fields = now
 
     def _settle_entries(self, ctx: Emitter) -> None:
         now = self.all_entries()
@@ -235,3 +270,26 @@ class TextStructure:
                 if paragraph_id in present:
                     ctx.emit(GeneratedChanged(paragraph_id, None))
         self._told_entries = now
+
+
+def _resolve(
+    found: Field, target: Placed | None, labels: dict[str, Label], names: dict[str, str], exists: Callable[[str], bool]
+) -> Shown:
+    """What one field reads as (see :meth:`TextStructure.shown`)."""
+    if target is None:
+        name = names.get(found.target)
+        return Shown(name or found.target) if name or exists(found.target) else Shown("", "broken")
+    words = plain(target.paragraph.text)
+    label = labels.get(found.target)
+    number = label.number if label is not None and label.number else None
+    match found.show:
+        case "number":
+            return Shown(number or words)
+        case "number-text":
+            return Shown(f"{number} {words}" if number else words)
+        case "page":
+            return Shown(target.place) if target.place is not None else Shown("", "page")
+        case "name":
+            return Shown(names.get(found.target) or words)
+        case _:
+            return Shown(words)

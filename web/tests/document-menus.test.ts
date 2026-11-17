@@ -9,6 +9,7 @@ import {
   darkItem,
   fileMenu,
   helpMenu,
+  goToTargetItem,
   insertMenu,
   panelItem,
   searchItem,
@@ -222,5 +223,24 @@ describe('insertMenu: Insert ▸ Table of Contents, in creates Agenda (E9.31)', 
     expect(contentsOf(insertMenu(context('editor').c, { types: [], add: () => {} })).disabled).toBe(true)
     const viewer = insertMenu(context('viewer').c, { types: [], add: () => {} }, { label: 'x', add: () => {}, possible: true })
     expect(contentsOf(viewer).disabled).toBe(true)
+  })
+})
+
+describe('Insert ▸ Cross-Reference… and Edit ▸ Go to Target (step H)', () => {
+  it('puts the picker first in Insert, with its key, and is off where there is nothing to point from', () => {
+    let opened = 0
+    const item = insertMenu(context('editor').c, { types: [], add: () => {} }, undefined, { add: () => opened++, possible: true }).items[0]!
+    expect([item.id, item.hint, item.disabled]).toEqual(['insert.cross-reference', 'Ctrl+F2', false])
+    item.action!()
+    expect(opened).toBe(1)
+    expect(insertMenu(context('editor').c, { types: [], add: () => {} }).items[0]!.disabled).toBe(true)
+  })
+  it('goes to the target with Ctrl+Alt+Enter, only where there is a reference', () => {
+    let went = 0
+    const item = goToTargetItem(context('editor').c, { run: () => went++, possible: () => true })
+    expect([item.id, item.hint, item.disabled]).toEqual(['edit.go-to-target', 'Ctrl+Alt+Enter', false])
+    item.action!()
+    expect(went).toBe(1)
+    expect(goToTargetItem(context('editor').c, { run: () => {}, possible: () => false }).disabled).toBe(true)
   })
 })

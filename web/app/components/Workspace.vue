@@ -36,6 +36,7 @@ import {
   fileMenu,
   helpMenu,
   insertMenu,
+  goToTargetItem,
   panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
@@ -1052,6 +1053,7 @@ const menus = computed<Menu[]>(() => {
         searchItem(c, { open: () => openSearch() }),
         { label: '', separator: true },
         referenceItem(c, { run: () => void frame.value?.referenceThing(thingInFocus() ?? ""), possible: () => !!thingInFocus() }),
+        goToTargetItem(c, { run: () => {}, possible: () => false }), // references come to sheets with their text boxes
         { label: '', separator: true },
         { id: 'edit.new-sheet', label: t('New Sheet…'), action: () => (dialog.value = 'sheet'), disabled: readonly.value },
         { id: 'edit.rename-sheet', label: t('Rename Sheet…'), action: () => askRename(), disabled: readonly.value || !shownTab.value },

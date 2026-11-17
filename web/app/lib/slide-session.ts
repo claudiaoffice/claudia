@@ -12,9 +12,10 @@ import type { ImageAsset } from './images'
 import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { CssCheck, CssEdit } from './style-css'
 import type { PrintSetupData } from '@claudia/layout'
-import type { Label } from './blocks'
+import { pointOf, type Label } from './blocks'
 import type { ListInfo, SchemeInfo } from './numbering'
 import type { ContentsEntry } from './contents'
+import type { ReferenceTarget, RefField, Show, Shown } from './references'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
 // so existing imports of them from this module keep working.
@@ -71,6 +72,8 @@ export interface SlideState extends BaseState {
   labels: Record<string, Label>
   /** The lines of every agenda (E9.31), by object id: derived by the server from the slide titles. */
   agendas: Record<string, ContentsEntry[]>
+  /** What the references in the words of each object read as, by object id (step H). */
+  referenced: Record<string, Shown[]>
 }
 
 export class SlideSession extends BaseSession<SlideState> {
@@ -98,6 +101,7 @@ export class SlideSession extends BaseSession<SlideState> {
       schemes: [],
       labels: {},
       agendas: {},
+      referenced: {},
     })
   }
 
@@ -117,7 +121,7 @@ export class SlideSession extends BaseSession<SlideState> {
       slides.map((slide) => link.request<{ objects: SlideObject[]; notes?: string; seconds?: number | null }>('slide', { slide: slide.id })),
     )
     // an older server knows neither: the preview then starts from slide-sized pages and offers no language; nor lists
-    const [printSetup, language, numbering, contents] = await Promise.all([
+    const [printSetup, language, numbering, contents, fields] = await Promise.all([
       link.request<PrintSetupData>('print_setup').catch(() => null),
       link
         .request<{ language: string | null }>('language')
@@ -125,6 +129,7 @@ export class SlideSession extends BaseSession<SlideState> {
         .catch(() => undefined),
       link.request<{ lists: ListInfo[]; schemes: SchemeInfo[]; labels: Record<string, Label> }>('lists').catch(() => null),
       link.request<{ entries: Record<string, ContentsEntry[]> }>('contents').catch(() => null),
+      link.request<{ fields: Record<string, Shown[]> }>('fields').catch(() => null),
     ])
     s.printSetup = printSetup
     s.language = language
@@ -132,6 +137,7 @@ export class SlideSession extends BaseSession<SlideState> {
     s.schemes = numbering?.schemes ?? []
     s.labels = numbering?.labels ?? {}
     s.agendas = contents?.entries ?? {}
+    s.referenced = fields?.fields ?? {}
     s.objects = {}
     s.order = {}
     s.notes = {}
@@ -256,6 +262,9 @@ export class SlideSession extends BaseSession<SlideState> {
           if (label) s.labels[id] = label
           else delete s.labels[id]
         }
+        return true
+      case 'fields':
+        s.referenced[data.paragraph as string] = data.fields as Shown[]
         return true
       case 'generated': {
         const { paragraph, entries } = data as { paragraph: string; entries: ContentsEntry[] | null }
@@ -479,6 +488,30 @@ export class SlideSession extends BaseSession<SlideState> {
     const id = done.object as string
     await this.select(id)
     return id
+  }
+
+  // -- references in the words of objects (step H) ------------------------------------------------------------------
+  /** What a reference can point at, for the picker: the slide titles, numbered items and named things. */
+  async referenceTargets(query = ''): Promise<ReferenceTarget[]> {
+    try {
+      return await this.need().request<ReferenceTarget[]>('reference_targets', { query })
+    } catch {
+      return [] // an older server knows no references
+    }
+  }
+
+  /** Put a reference to `target` into the words of an object at `offset` (a UTF-16 offset of its words). */
+  async insertReference(id: string, offset: number, target: string, show: Show): Promise<boolean> {
+    const words = this.state.objects[id]?.paragraph?.text ?? ''
+    if (this.readOnly) return false
+    const params = { paragraph: id, offset: pointOf(words, Math.min(offset, words.length)), target, show, base: this.state.revision }
+    return (await this.attempt('insert_reference', params)) !== false
+  }
+
+  /** The first reference in the words of an object, as `{field, shown}`, or `null`. */
+  referenceIn(id: string): { field: RefField; shown: Shown | undefined } | null {
+    const field = this.state.objects[id]?.paragraph?.fields?.[0]
+    return field ? { field, shown: this.state.referenced[id]?.[0] } : null
   }
 
   /** Write the notes of a slide (D342): one step in the history, for everybody. `""` clears them. */
