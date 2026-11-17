@@ -196,6 +196,7 @@ statement in the docs or on the website).
 | CODE-61 | P3 | Process / Backlog | Stale statuses in the backlog (E9.30, E10.21, probably E9.31 say open where code exists) | **new, open** |
 | SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |
 | UX-44 | P3 | UX / BITV | The blinking dots of the side panel ignored `prefers-reduced-motion` (WCAG 2.3.3) | **fixed** 2026-11-17 |
+| CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1899,6 +1900,20 @@ the kind set comes from the generated layout fixtures (`scripts/generate_layout_
 ### CODE-61 · Stale backlog statuses · P3 · open
 E9.30, E10.21 and probably E9.31 say open where code and tests exist. **Fix.** Check each against the tests it names and
 set its status; `tests/test_backlog.py` could require a test path in every story marked done.
+
+### CODE-62 · A window that revives the shared server while the old one still holds the port starts it on a random port · P3 · new, open
+**Measured** (found while fixing the `deb.yml` job on 2026-11-17, reported to the owner as a size 3 bug): D445 says
+every app of the suite talks to one shared local server on the same port. When the server is gone, a shell window
+revives it (`_keep_presence` in `clients/linux/src/claudia_shell_gtk/desktop_server.py`). If the old server process
+is still shutting down and holds the port, `free_port` chooses a random one, so the revived server lives on a port
+nobody has remembered and `desktop-server.json` and `CLAUDIA_SERVER_PORT` no longer agree with it. The CI job showed
+it: the window was ended after the server, revived it on a random port, and the new server then found the folder lock
+of the old one ("another Claudia server uses …/documents"). The Neutralino twin, `clients/neutralino/src/desktop-server.ts`,
+is built the same way and is likely affected (**read**, not run).
+**Acceptance:** a test in which the first server still holds the port while a window revives it: the revived server
+waits for the port (a bounded time) and starts on the same one; only when the port stays taken does it say so, instead
+of silently using another.
+**Worked around** in `deb.yml` (the window is ended first, then the server is waited for); the cause is not fixed.
 
 ### SEC-19 · Imports have no memory cap · P2 · open
 Imports run on `hub.workers`; `check_package` refuses bombs by declared size, but a 512 MiB package may still build a
