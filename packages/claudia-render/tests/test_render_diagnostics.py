@@ -86,3 +86,8 @@ def test_the_plain_reader_gives_the_first_lines_as_one_message_without_colour_co
 def test_a_reader_nobody_knows_is_refused():
     with pytest.raises(ValueError, match="reader"):
         read_diagnostics("magic", "x")
+
+
+def test_a_diagnostic_survives_being_sent_and_read_again():
+    for one in (Diagnostic("error", "no such box", 3, 5), Diagnostic("warning", "x")):
+        assert Diagnostic.from_data(one.to_data()) == one

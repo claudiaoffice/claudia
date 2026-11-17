@@ -241,3 +241,9 @@ async def test_the_types_are_described_with_whether_their_tools_work(tmp_path):
     broken, _ = make(tmp_path / "other", tool=False)
     (two,) = await broken.describe_types()
     assert two["available"] is False and "boxer" in two["problem"]
+
+
+@pytest.mark.parametrize("limit", ["max_seconds", "max_memory_mb", "max_output_mb", "concurrency"])
+def test_a_policy_with_a_limit_of_nothing_is_refused(limit):
+    with pytest.raises(ValueError, match="positive"):
+        RenderPolicy(**{limit: 0})

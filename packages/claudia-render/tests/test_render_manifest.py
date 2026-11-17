@@ -226,3 +226,39 @@ def test_a_plugin_may_name_patterns_that_make_a_text_unacceptable():
 def test_a_pattern_that_is_not_one_is_refused(forbid):
     with pytest.raises(ManifestError, match="forbid"):
         parse_manifest(data(forbid=forbid))
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"requires": "pikchr"}, "a list is expected"),
+        ({"requires": [{"tool": "Pikchr"}]}, "tool must be a plain lower-case name"),
+        ({"requires": [{"tool": "pikchr", "version_at_least": "new"}]}, "dotted numbers"),
+        ({"params": [{"name": "Bad", "type": "text", "default": ""}]}, "name must be a plain lower-case name"),
+        ({"params": [{"name": "size", "type": "number"}]}, "a default is required"),
+        ({"tier": "interactive"}, "this server runs only"),
+        ({"svg_elements": ["fe-blend"]}, "element names"),
+        ({"max_source_chars": 0}, "a whole number"),
+        ({"max_source_chars": "many"}, "a whole number"),
+        ({"editor": {"syntax": "Not Plain"}}, "editor syntax"),
+        ({"limits": {"seconds": "slow"}}, "limits seconds: a number"),
+        ({"limits": {"seconds": 601}}, "seconds up to 600"),
+        ({"limits": {"address_space": "no"}}, "true or false"),
+    ],
+)
+def test_a_manifest_that_breaks_a_rule_is_refused_with_the_rule_named(changes, message):
+    with pytest.raises(ManifestError, match=message):
+        parse_manifest(data(**changes))
+
+
+@pytest.mark.parametrize(
+    ("cli", "message"),
+    [
+        ({"argv": "pikchr", "output": "stdout"}, "a list of text is expected"),
+        ({"argv": ["${tool.pikchr}"], "output": "stdout", "input": "../input.txt"}, "a plain file name"),
+        ({"argv": ["${tool.pikchr}"], "output": "stdout", "env": {"path": "x"}}, "upper-case variable name"),
+    ],
+)
+def test_a_command_line_that_breaks_a_rule_is_refused_with_the_rule_named(cli, message):
+    with pytest.raises(ManifestError, match=message):
+        parse_manifest(data(cli=cli))

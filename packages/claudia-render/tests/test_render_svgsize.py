@@ -41,3 +41,19 @@ def test_the_alt_text_is_the_title_of_the_picture_when_it_has_one_else_the_kind_
     assert default_alt("mermaid", "flowchart LR\n A-->B", f"<svg {NS}><title>Order flow</title></svg>") == "Order flow"
     assert default_alt("mermaid", "flowchart LR\n A-->B", f"<svg {NS}/>") == "mermaid: flowchart LR A-->B"
     assert len(default_alt("latex", "x" * 500, f"<svg {NS}/>")) <= 200
+
+
+@pytest.mark.parametrize("box", ["0 0 wide 5", "a b c d", "0 0 5"])
+def test_a_view_box_that_is_not_four_numbers_gives_no_size(box):
+    with pytest.raises(ValueError, match="size"):
+        svg_size(f'<svg {NS} viewBox="{box}"/>')
+
+
+def test_text_that_is_not_xml_is_no_picture_and_the_error_says_so():
+    with pytest.raises(ValueError, match="not valid XML"):
+        svg_size("<svg")
+
+
+def test_the_alt_text_survives_a_picture_that_cannot_be_read_and_a_title_with_nothing_in_it():
+    assert default_alt("typst", "= Plan", "<svg") == "typst: = Plan"
+    assert default_alt("typst", "= Plan", f"<svg {NS}><title>  </title></svg>") == "typst: = Plan"
