@@ -26,10 +26,7 @@ async function main() {
   if (await page.locator('text=Create administrator').count()) {
     await page.fill('input[autocomplete=username]', ADMIN[0])
     for (const field of await page.locator('input[type=password]').all()) await field.fill(ADMIN[1])
-    await page.click('text=Create administrator')
-    // the page stays on the form after the first administrator is named (reported 2026-11-16); a reload signs in
-    await page.waitForTimeout(1500)
-    await page.reload()
+    await page.click('text=Create administrator') // the settings follow without a reload (CODE-48)
   } else {
     await page.fill('input[autocomplete=username]', ADMIN[0])
     await page.fill('input[type=password]', ADMIN[1])

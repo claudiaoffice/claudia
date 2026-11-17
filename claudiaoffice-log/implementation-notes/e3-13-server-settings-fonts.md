@@ -50,5 +50,5 @@ from a pinned list, Edit stand-ins… and Remove file… come in a second patch.
 ## For whoever continues
 
 - `e2e/admin-fonts.cjs` takes `CHROMIUM` for a browser of one's own when Playwright's is not installed.
-- After naming the first administrator, the settings page stays on the setup form until reloaded (`AdminApp.vue`'s
-  `noAdministrator` is never reset); reported to the owner, the e2e script reloads.
+- After naming the first administrator, the settings page stayed on the setup form until reloaded: CODE-48, fixed
+  2026-11-17; the e2e script goes on without a reload.

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // The server settings pages' own small root (E3.11) — reached at `/admin/` on this same bundle (app.vue branches on
-// the path; there is no router). Decides, in order: does this server have no administrator at all yet; is nobody
-// signed in yet (try the stored token once, then ask); otherwise, which page of the shell to show.
-import { onMounted, ref } from 'vue'
-import { adminApi, AdminApiError, hasNoAdministrator } from '~/lib/admin-api'
+// the path; there is no router). Decides, with `adminScreen`: somebody signed in sees the settings; otherwise, does this
+// server have no administrator at all yet, or is it to ask who signs in (after trying the stored token once).
+import { computed, onMounted, ref, watch } from 'vue'
+import { adminApi, AdminApiError, adminScreen, hasNoAdministrator } from '~/lib/admin-api'
 import { useAdminSession } from '~/lib/admin-session'
 import { friendlyLabel } from '~/lib/connection'
 import { defaultLabel, upsert } from '~/lib/server-bookmarks'
@@ -28,6 +28,12 @@ const exposed = ref(false)
 const label = ref(friendlyLabel(origin, host))
 const active = ref<'ai' | 'typeset' | 'fonts' | 'access'>('ai')
 const session = useAdminSession()
+const screen = computed(() => adminScreen(noAdministrator.value, session.name.value))
+// Once somebody is signed in, the server has an administrator: signing out later asks who signs in, rather than
+// offering to become the first one again.
+watch(session.name, (name) => {
+  if (name) noAdministrator.value = false
+})
 
 onMounted(async () => {
   try {
@@ -55,9 +61,9 @@ function close() {
   <div class="admin-app">
     <p v-if="loadError" class="load-error" role="alert">{{ loadError }}</p>
     <template v-else-if="!loading">
-      <FirstAdminSetup v-if="noAdministrator" :host="host" :exposed="exposed" :session="session" />
-      <AdminLogin v-else-if="!session.name.value" :label="label" :session="session" @close="close" />
-      <AdminShell v-else :label="label" :host="host" :signed-in-as="session.name.value" :active="active" @navigate="active = $event" @sign-out="session.logout()" @close="close">
+      <FirstAdminSetup v-if="screen === 'setup'" :host="host" :exposed="exposed" :session="session" />
+      <AdminLogin v-else-if="screen === 'sign-in'" :label="label" :session="session" @close="close" />
+      <AdminShell v-else-if="session.name.value" :label="label" :host="host" :signed-in-as="session.name.value" :active="active" @navigate="active = $event" @sign-out="session.logout()" @close="close">
         <AdminAiModel v-if="active === 'ai'" :token="session.token.value!" />
         <AdminTypesetting v-else-if="active === 'typeset'" :token="session.token.value!" />
         <AdminFonts v-else-if="active === 'fonts'" :token="session.token.value!" :server="label" />

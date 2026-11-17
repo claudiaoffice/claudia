@@ -1237,7 +1237,7 @@ msgstr "[Côûld nôt plàcé thé chàrt.~~~~~~~~~~]"
 msgid "Could not reach the server."
 msgstr "[Côûld nôt réàch thé sérvér.~~~~~~~~~~~]"
 
-#: web/app/components/AdminApp.vue:43
+#: web/app/components/AdminApp.vue:49
 msgid "Could not reach this server."
 msgstr "[Côûld nôt réàch thîs sérvér.~~~~~~~~~~~]"
 
@@ -2545,7 +2545,7 @@ msgstr "[Lîst îtém~~~~]"
 msgid "List, rename and tidy the styles of this document"
 msgstr "[Lîst, rénàmé ànd tîdy thé stylés ôf thîs dôcûmént~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminApp.vue:67
+#: web/app/components/AdminApp.vue:73
 msgid "Loading…"
 msgstr "[Lôàdîng…~~~]"
 

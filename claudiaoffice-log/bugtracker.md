@@ -175,6 +175,7 @@ statement in the docs or on the website).
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |
 | CODE-46 | P2 | Code / Import | The slides importers do not read text size and colour, so most boxes are a `look` loss | **new, open** |
 | CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | **new, open** |
+| CODE-48 | P3 | Code / Web | After naming the first administrator, the server settings stayed on the setup form | **fixed** 2026-11-17 |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1694,6 +1695,16 @@ styles' `font-size` and `color` (a provisional style per look, as for fonts) and
 **Measured** (reported as bug C, size 3): a run with its own `w:rFonts` (not through a style) keeps the paragraph
 style's font and is reported as `formatting`, since the text model has no direct formatting (D306). Belongs with the
 way direct formatting comes in (D379 for computes: provisional styles); until then the loss report is right.
+
+### CODE-48 · After naming the first administrator, the server settings stayed on the setup form · P3 · fixed 2026-11-17
+**Measured** (found while building Server settings ▸ Fonts, reported to the owner as bug D, size 3): `AdminApp.vue`
+chose the setup form from the status read when the page loaded (`administrator: null`) and never read it again, so
+after "Create administrator" signed the new administrator in, the form stayed until the page was reloaded. Every new
+server is set up this way.
+**Fixed (2026-11-17, branch `font-server-ui`):** `adminScreen` (`web/app/lib/admin-api.ts`) chooses the screen, and
+somebody signed in always sees the settings; once somebody is signed in, signing out asks who signs in instead of
+offering the setup again. Tests in `tests/admin-api.test.ts`; `e2e/admin-fonts.cjs` names the first administrator on
+a new server and goes on without a reload.
 
 ## Website
 

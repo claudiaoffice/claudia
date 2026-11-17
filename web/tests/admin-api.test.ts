@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AdminApiError, createAdminApi, hasNoAdministrator } from '~/lib/admin-api'
+import { AdminApiError, adminScreen, createAdminApi, hasNoAdministrator } from '~/lib/admin-api'
 
 function fakeFetch(handler: (url: string, init?: RequestInit) => { status: number; body?: unknown }): typeof fetch {
   return (async (input: string | URL | Request, init?: RequestInit) => {
@@ -102,5 +102,21 @@ describe('hasNoAdministrator', () => {
 
   it('is false once somebody has, even on a loopback-only server where needs_administrator stays false', () => {
     expect(hasNoAdministrator({ administrator: 'tobi' })).toBe(false)
+  })
+})
+
+describe('adminScreen', () => {
+  it('offers to become the first administrator while nobody has and nobody is signed in', () => {
+    expect(adminScreen(true, null)).toBe('setup')
+  })
+
+  it('shows the settings once the first administrator is named, without a reload (bug CODE-48)', () => {
+    // the status said "no administrator" when the page loaded; naming one signs them in
+    expect(adminScreen(true, 'anna')).toBe('settings')
+  })
+
+  it('asks to sign in when there is an administrator and nobody is signed in, else shows the settings', () => {
+    expect(adminScreen(false, null)).toBe('sign-in')
+    expect(adminScreen(false, 'anna')).toBe('settings')
   })
 })

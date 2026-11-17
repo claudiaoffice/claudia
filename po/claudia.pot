@@ -1237,7 +1237,7 @@ msgstr ""
 msgid "Could not reach the server."
 msgstr ""
 
-#: web/app/components/AdminApp.vue:43
+#: web/app/components/AdminApp.vue:49
 msgid "Could not reach this server."
 msgstr ""
 
@@ -2545,7 +2545,7 @@ msgstr ""
 msgid "List, rename and tidy the styles of this document"
 msgstr ""
 
-#: web/app/components/AdminApp.vue:67
+#: web/app/components/AdminApp.vue:73
 msgid "Loading…"
 msgstr ""
 

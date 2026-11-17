@@ -1237,7 +1237,7 @@ msgstr "Das Diagramm konnte nicht eingefügt werden."
 msgid "Could not reach the server."
 msgstr "Der Server ist nicht erreichbar."
 
-#: web/app/components/AdminApp.vue:43
+#: web/app/components/AdminApp.vue:49
 msgid "Could not reach this server."
 msgstr "Dieser Server ist nicht erreichbar."
 
@@ -2545,7 +2545,7 @@ msgstr "Listenpunkt"
 msgid "List, rename and tidy the styles of this document"
 msgstr "Die Formate dieses Dokuments auflisten, umbenennen und aufräumen"
 
-#: web/app/components/AdminApp.vue:67
+#: web/app/components/AdminApp.vue:73
 msgid "Loading…"
 msgstr "Wird geladen…"
 

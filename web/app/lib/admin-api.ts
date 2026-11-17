@@ -34,6 +34,14 @@ export function hasNoAdministrator(status: Pick<AdminStatus, 'administrator'>): 
   return status.administrator === null
 }
 
+/** Which screen the server settings show: becoming the first administrator, signing in, or the settings. Somebody
+ *  signed in always sees the settings, also right after naming the first administrator, while the status read when
+ *  the page loaded still says there is none (CODE-48). */
+export function adminScreen(noAdministrator: boolean, signedIn: string | null): 'setup' | 'sign-in' | 'settings' {
+  if (signedIn) return 'settings'
+  return noAdministrator ? 'setup' : 'sign-in'
+}
+
 export interface AdminAccount {
   name: string
   added: string
