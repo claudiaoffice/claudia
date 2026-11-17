@@ -388,6 +388,22 @@ def test_search_and_replace_is_a_page_action_with_ctrl_f_in_every_app(
     assert search.accelerators == ("<Primary>f",)
 
 
+@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
+def test_image_is_a_page_action_with_the_same_key_in_every_app(app_name: str, request: pytest.FixtureRequest) -> None:
+    """E10.16: a picture goes into a text as it does onto a slide and into a sheet, and one action has one key in all
+    three apps (UX-35)."""
+    app = request.getfixturevalue(app_name)
+    (image,) = [a for a in app.menu("Edit").all_actions() if a.id == "edit.image"]
+    assert image.kind is Kind.PAGE and image.label == "Image…"
+    assert image.accelerators == ("<Primary><Alt>i",)
+
+
+def test_composes_edit_puts_image_between_the_references_and_the_hyphens(composes: manifest.Manifest) -> None:
+    """E10.16: not in a new Insert entry — that menu is the page's own, and the key is Edit ▸ Image…'s everywhere."""
+    labels = [e.label for e in entries(composes.menu("Edit"))[6:]]
+    assert labels[-3:] == ["Go to Target", "Image…", "Insert"]
+
+
 def test_creates_edit_has_search_new_slide_edit_text_text_box_then_delete(creates: manifest.Manifest) -> None:
     """D123. The shape library itself is dynamic (one entry per document) and, like composes' style names, is
     deliberately not a static manifest entry — see this module's own docstring and ``manifest.py``'s."""

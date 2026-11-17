@@ -2,9 +2,10 @@
 import { roleNow } from '~/lib/replay'
 // A text: the style bar, the page, the suggestions above the panel, and the counts along the bottom, inside the
 // document window every app shares (DocumentFrame).
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { DEFAULT_STYLE, SHAPE_LABEL_STYLE } from '@claudia/layout'
 import { countWords } from '~/lib/blocks'
+import { pictureSize, type PictureImport } from '~/lib/images'
 import { toMarkdown } from '~/lib/markdown'
 import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
@@ -37,6 +38,7 @@ import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
 import SearchPanel from './SearchPanel.vue'
 import PrintPreview from './PrintPreview.vue'
+import ImageImportDialog from './ImageImportDialog.vue'
 import { textSource } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
 import type { Menu, MenuItem } from './MenuBar.vue'
@@ -53,7 +55,7 @@ const { t, locale, choose } = useI18n()
 
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 /** composes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering' | 'contents'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering' | 'contents' | 'image'>(null)
 const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = textStyleHost(session)
 const active = ref<string | null>(null)
@@ -160,6 +162,19 @@ async function addContainer(type: string) {
   const at = state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
   if (!at) return
   await session.addContainer(type, at, { w: CONTAINER_WIDTH, h: CONTAINER_HEIGHT })
+}
+
+const PICTURE_HEIGHT = 240 // as high as this, unless that would be wider than a container may be
+/** Edit ▸ Image…: a picture hangs from the character the caret is at, as a container does (E10.8, E10.16). It keeps its
+ * own proportions, and is no wider than a container is by default. */
+function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
+  const at = state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
+  if (!at) return Promise.resolve(null)
+  return session.addImage(picture, at, pictureSize(aspect, PICTURE_HEIGHT, CONTAINER_WIDTH))
+}
+function pictureInserted() {
+  dialog.value = null
+  nextTick(() => editor.value?.focus())
 }
 
 async function pasteFromClipboard() {
@@ -349,6 +364,9 @@ const menus = computed<Menu[]>(() => {
         referenceItem(c, { run: () => void frame.value?.referenceThing(session.state.selection?.focus.block ?? ''), possible: () => !!session.state.selection }),
         goToTargetItem(c, { run: () => goToTarget(), possible: () => !!referenceAtCaret() }),
         { label: '', separator: true },
+        // a picture hangs from the caret's character, like a container (E10.16); its key is the same in all three apps
+        { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value || !state.selection },
+        { label: '', separator: true },
         // The two characters that had keys and no menu entry (UX-35/UX-36): where a word may break, and where never.
         {
           label: t('Insert'),
@@ -515,6 +533,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       />
       <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
+      <ImageImportDialog v-if="dialog === 'image'" :add="addPicture" @close="dialog = null" @inserted="pictureInserted" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <ReferencePicker v-if="picker" :x="picker.x" :y="picker.y" :targets="(q) => session.referenceTargets(q)" @choose="putReference" @close="(picker = null), editor?.focus()" />
       <ContextMenu v-if="refMenu" :x="refMenu.x" :y="refMenu.y" :items="refMenuItems" :width="260" :label="t('Reference menu')" @close="refMenu = null" />

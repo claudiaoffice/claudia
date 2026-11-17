@@ -1,23 +1,22 @@
 <script setup lang="ts">
-// Insert ▸ Image (E10.8): choose a picture from disk, describe it, put it on the slide. Only the "browse a file"
-// path — clipboard and drag-and-drop import are not built yet, by the same decision that kept `add_image` to just
-// that. A plain web browser cannot tell us a chosen file's full path (only its name), so `sourcePath` is always
+// Edit ▸ Image… (E10.8, E6.17, E10.16): choose a picture from disk, describe it, put it in the document — on the slide,
+// at a cell of the sheet, or at the caret of the text. The one dialog of all three apps: it asks the person and decodes
+// the picture, and the app's workspace says where it goes (`add`). Only the "browse a file" path — clipboard and
+// drag-and-drop import are not built yet, by the same decision that kept `add_image` to just that. A plain web browser cannot tell us a chosen file's full path (only its name), so `sourcePath` is always
 // null from here; a desktop client that can read the real path would pass it instead, and the server would mask it
 // the same way for everyone but the importer (`hub.py`'s per-viewer `to_data_for`).
 import { computed, onBeforeUnmount, ref } from 'vue'
-import type { Frame } from '~/lib/geometry'
-import { IMAGE_FILE_ACCEPT, MAX_IMAGE_BYTES, fileToBase64 } from '~/lib/images'
+import { IMAGE_FILE_ACCEPT, MAX_IMAGE_BYTES, fileToBase64, type PictureImport } from '~/lib/images'
 import { chooseLocalFile } from '~/lib/local-files'
-import type { SlideSession } from '~/lib/slide-session'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 
 const props = defineProps<{
-  session: SlideSession
-  /** Where the new object goes, given the picture's own aspect (width / height) — mirrors how `SlideWorkspace`
-   * already places a shape, so a picture is shifted the same way among whatever else was just added. */
-  frameFor: (aspect: number) => Frame
+  /** Puts the picture where the app wants it, given the picture's own aspect (width / height) — a slide's frame, a
+   * sheet's cell, a text's caret, each as that app already places an object. Its id, or `null` after the session told
+   * the person why not. */
+  add: (picture: PictureImport, aspect: number) => Promise<string | null>
 }>()
 const emit = defineEmits<{ close: []; inserted: [id: string] }>()
 
@@ -79,10 +78,7 @@ async function submit() {
   busy.value = true
   const data = await fileToBase64(file.value)
   const aspect = naturalSize.value.width / naturalSize.value.height
-  const id = await props.session.addImage(
-    { data, alt: decorative.value ? '' : alt.value.trim(), decorative: decorative.value, sourceName: file.value.name, sourcePath: null },
-    props.frameFor(aspect),
-  )
+  const id = await props.add({ data, alt: decorative.value ? '' : alt.value.trim(), decorative: decorative.value, sourceName: file.value.name, sourcePath: null }, aspect)
   busy.value = false
   if (id) emit('inserted', id) // a failure already told the person why, via the session's own notice
 }

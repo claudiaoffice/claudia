@@ -35,6 +35,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Search & Replace… | Ctrl+F |  |
 | Edit | Reference in Chat | Ctrl+Alt+X |  |
 | Edit | Go to Target | Ctrl+Alt+Enter |  |
+| Edit | Image… | Ctrl+Alt+I |  |
 | Edit | Insert ▸ Soft Hyphen | Ctrl+- |  |
 | Edit | Insert ▸ Non-breaking Hyphen | Ctrl+_ |  |
 | Insert | Cross-Reference… | Ctrl+F2 |  |

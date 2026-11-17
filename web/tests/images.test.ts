@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fileToBase64, formatByteSize, imageByteSize, imageDataUrl } from '~/lib/images'
+import { fileToBase64, formatByteSize, imageByteSize, imageDataUrl, pictureSize } from '~/lib/images'
 
 describe('fileToBase64', () => {
   it('encodes a small file exactly as the bytes it holds', async () => {
@@ -55,5 +55,21 @@ describe('formatByteSize', () => {
 
   it('shows one decimal place once it is big enough for a megabyte', () => {
     expect(formatByteSize(1_572_864)).toBe('1.5 MB')
+  })
+})
+
+describe('pictureSize', () => {
+  it('is as high as asked, as wide as its own proportions make it', () => {
+    expect(pictureSize(2, 240, 480)).toEqual({ w: 480, h: 240 })
+    expect(pictureSize(0.5, 240, 480)).toEqual({ w: 120, h: 240 })
+  })
+  it('is narrowed to the width it may have, and keeps its proportions (the server allows a pixel of difference)', () => {
+    const size = pictureSize(4, 240, 480)
+    expect(size).toEqual({ w: 480, h: 120 })
+    for (const aspect of [2.1, 3.3, 5.7, 9.99]) {
+      const wide = pictureSize(aspect, 240, 480)
+      expect(wide.w).toBeLessThanOrEqual(480)
+      expect(Math.abs(wide.w - aspect * wide.h)).toBeLessThanOrEqual(1) // the server's own tolerance (ASPECT_TOLERANCE)
+    }
   })
 })

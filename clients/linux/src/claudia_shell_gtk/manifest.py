@@ -871,6 +871,7 @@ def composes() -> Manifest:
             _shared_clipboard_block(native=True),
             _search_block("Find words, headings, remarks and what is said in objects, and replace them"),
             _reference_block(),
+            (_page("edit.image", "Image…", "Put a picture in the text", accelerators=("<Primary><Alt>i",)),),
             (
                 Submenu(
                     "Insert",
