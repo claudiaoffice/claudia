@@ -52,6 +52,8 @@ export { contentBox, MIN_CONTENT, MIN_PAGE, PAPER_SIZES, pageGeometry, paperById
 export type { Margins, Orientation, PageGeometry, PaperSize } from './flow/paper'
 export { flowItems, locate, paginate } from './flow/paginate'
 export type { FlowBlock, FlowPage, Fragment, PlacedLine, Spot } from './flow/paginate'
+export { bandOf, firstRowAt, MIN_SLOT_EM, slotsAt } from './flow/exclusions'
+export type { Area, Column, Exclusion, Slot, Wrap } from './flow/exclusions'
 
 export { fingerprintText, IDENTITY, isGradient, rectPath, walk } from './display/list'
 export type { DisplayItem, DisplayList, DisplayPage, GlyphRun, Gradient, GradientStop, GroupItem, ImageItem, Matrix, PageLink, Paint, PathItem, PathOp, Rect, RunGlyph } from './display/list'
