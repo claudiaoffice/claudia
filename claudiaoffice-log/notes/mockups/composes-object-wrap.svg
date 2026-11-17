@@ -1,13 +1,13 @@
 <svg viewBox="0 0 1760 1230" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
-<title id="t">claudia composes — how text flows around a floating object (proposal)</title>
-<desc id="d">Four wrap modes on the same paragraph: over the text, around the object, above and below, behind the text; the Wrap Text popover; the rules that make screen and print agree; the mapping to DOCX and ODF; and the open points.</desc>
+<title id="t">claudia composes — how text flows around a floating object (decided 2026-11-17)</title>
+<desc id="d">Four wrap modes on the same paragraph: over the text, around the object, above and below, behind the text; the one key that cycles the modes and the grab cursor for an object behind the text; the rules that make screen and print agree; the mapping to DOCX and ODF; and the open points.</desc>
 <defs><filter id="sh" x="-10%" y="-10%" width="125%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1f1a33" flood-opacity="0.22"/></filter><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#5b4bc4"/></marker></defs>
 <rect x="0" y="0" width="1760" height="1230" rx="0" fill="#f3f1ea" />
 <text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >claudia composes — text flowing around a floating object</text>
-<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start" >Proposal, nothing of this is built. Today an object floats over the words and nothing wraps (D179). Content is invented. The decision that shapes everything else is who lays the lines out: see the architecture sheet.</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start" >Decided on 2026-11-17 (D1061–D1064); the wrap itself is not built yet. Until now an object floats over the words and nothing wraps (D179). Content is invented. The engine lays the lines out first: see the architecture sheet.</text>
 <rect x="40" y="96" width="1680" height="470" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
 <text x="62" y="126" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >A · Four ways, on the same paragraph</text>
-<text x="62" y="144" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >The default stays what it is today, so no existing document changes. The wrap belongs to the object's place in the text, not to the picture: the same picture can be over the words in one text and around in another.</text>
+<text x="62" y="144" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >A new object starts as Above and below; a document with no wrap saved stays Over the text, so no existing one changes. The wrap belongs to the object's place in the text, not to the picture: the same picture can be over the words in one text and around in another.</text>
 <rect x="62" y="172" width="372" height="262" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
 <rect x="80" y="194" width="336" height="5" rx="2.5" fill="#cfc9e2" />
 <rect x="80" y="210" width="336" height="5" rx="2.5" fill="#cfc9e2" />
@@ -30,7 +30,7 @@
 <circle cx="76" cy="164" r="10" fill="#5b4bc4" />
 <text x="76" y="168" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >1</text>
 <text x="92" y="169" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start" >1 · Over the text</text>
-<text x="434" y="169" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end" >today, the default</text>
+<text x="434" y="169" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end" >no wrap saved, as today</text>
 <text x="68" y="460" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >· Lines run full width underneath.</text>
 <text x="68" y="477" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >· The object is opaque and hides what it covers.</text>
 <text x="68" y="494" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >· Nothing moves when the object does.</text>
@@ -82,7 +82,7 @@
 <circle cx="908" cy="164" r="10" fill="#5b4bc4" />
 <text x="908" y="168" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >3</text>
 <text x="924" y="169" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start" >3 · Above and below</text>
-<text x="1266" y="169" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end" >no text beside it</text>
+<text x="1266" y="169" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end" >the default for a new object</text>
 <text x="900" y="460" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >· Lines stop above the box and go on under it.</text>
 <text x="900" y="477" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >· The object stands alone on its lines.</text>
 <text x="900" y="494" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >· Good for a figure with a caption.</text>
@@ -110,80 +110,72 @@
 <text x="1682" y="169" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end" >a watermark, a stamp</text>
 <text x="1316" y="460" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >· Drawn under the words, which stay readable.</text>
 <text x="1316" y="477" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >· Lines run full width over it.</text>
-<text x="1316" y="494" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >· Reached by Tab, not by a click (open point 2).</text>
+<text x="1316" y="494" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >· Reached with Ctrl held (grab cursor, B) or by Tab.</text>
 <text x="656" y="458" font-size="10" font-weight="400" fill="#1f1a33" text-anchor="start" ></text>
 <path d="M656,280 L666,280" fill="none" stroke="#d6477a" stroke-width="1.2" />
 <text x="628" y="272" font-size="9.5" font-weight="600" fill="#d6477a" text-anchor="end" >distance</text>
 <rect x="40" y="586" width="560" height="340" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
-<text x="62" y="616" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >B · Setting it: Format ▸ Wrap Text…</text>
-<text x="62" y="634" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >One entry with one key (Ctrl+Alt+L), and in the object's context menu. It opens next to the held object,</text>
-<text x="62" y="649" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >as Rotate By… does; the four tiles are a radio group, the arrow keys move, Enter keeps.</text>
-<g transform="translate(0,14)">
-<rect x="62" y="650" width="516" height="240" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
-<rect x="80" y="664" width="480" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="682" width="440" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="700" width="400" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="718" width="480" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="736" width="440" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="754" width="400" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="772" width="480" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="790" width="440" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="808" width="400" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="826" width="480" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="80" y="844" width="440" height="5" rx="2.5" fill="#cfc9e2" />
-<rect x="120" y="700" width="108" height="72" rx="0" fill="#d9d3f0" filter="url(#sh)"/>
-<path d="M120,772 L150,730 L174,752 L194,738 L228,772 Z" fill="#b4a8e6" />
-<rect x="119" y="699" width="110" height="74" rx="0" fill="none" stroke="#5b4bc4" stroke-width="2" />
-<rect x="223" y="767" width="11" height="11" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="2" />
-<rect x="244" y="692" width="312" height="190" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
-<text x="260" y="718" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" >Wrap text</text>
-<rect x="260" y="728" width="66" height="58" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
-<rect x="268" y="736" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="268" y="744" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="268" y="752" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="268" y="760" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="286" y="743" width="16" height="14" rx="0" fill="#b4a8e6" />
-<text x="293" y="800" font-size="9" font-weight="400" fill="#1f1a33" text-anchor="middle" >Over the</text>
-<text x="293" y="811" font-size="9" font-weight="400" fill="#1f1a33" text-anchor="middle" >text</text>
-<rect x="333" y="728" width="66" height="58" rx="8" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="2" />
-<rect x="341" y="736" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="341" y="760" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="341" y="744" width="14" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="377" y="744" width="14" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="341" y="752" width="14" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="377" y="752" width="14" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="359" y="743" width="14" height="14" rx="0" fill="#b4a8e6" />
-<text x="366" y="800" font-size="9" font-weight="500" fill="#1f1a33" text-anchor="middle" >Around</text>
-<rect x="406" y="728" width="66" height="58" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
-<rect x="414" y="736" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="414" y="760" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="432" y="749" width="14" height="12" rx="0" fill="#b4a8e6" />
-<text x="439" y="800" font-size="9" font-weight="400" fill="#1f1a33" text-anchor="middle" >Above and</text>
-<text x="439" y="811" font-size="9" font-weight="400" fill="#1f1a33" text-anchor="middle" >below</text>
-<rect x="479" y="728" width="66" height="58" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
-<rect x="487" y="736" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="487" y="744" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="487" y="752" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="487" y="760" width="50" height="3" rx="1.5" fill="#bdb5d8" />
-<rect x="503" y="740" width="18" height="16" rx="0" fill="#ddd6f3" />
-<rect x="487" y="736" width="50" height="3" rx="1.5" fill="#8f86b3" />
-<rect x="487" y="744" width="50" height="3" rx="1.5" fill="#8f86b3" />
-<rect x="487" y="752" width="50" height="3" rx="1.5" fill="#8f86b3" />
-<rect x="487" y="760" width="50" height="3" rx="1.5" fill="#8f86b3" />
-<text x="512" y="800" font-size="9" font-weight="400" fill="#1f1a33" text-anchor="middle" >Behind</text>
-<text x="512" y="811" font-size="9" font-weight="400" fill="#1f1a33" text-anchor="middle" >the text</text>
-<text x="260" y="836" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Distance from the text</text>
-<rect x="402" y="822" width="56" height="22" rx="6" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
-<text x="430" y="837" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="middle" >8 px</text>
-<rect x="260" y="852" width="74" height="24" rx="7" fill="#5b4bc4" />
-<text x="297" y="868" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle" >Keep</text>
-<rect x="342" y="852" width="74" height="24" rx="7" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
-<text x="379" y="868" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="middle" >Cancel</text>
-<text x="430" y="868" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start" >one step in the history</text>
-<circle cx="244" cy="692" r="10" fill="#5b4bc4" />
-<text x="244" y="696" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >5</text>
-</g>
-<text x="62" y="916" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start" >Distance applies to Around and Above and below; the tiles say what each does without jargon.</text>
+<text x="62" y="616" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >B · One key: Format ▸ Wrap Text, Ctrl+Alt+L</text>
+<text x="62" y="634" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >Each press moves the held object to the next mode and is one step in the history.</text>
+<text x="62" y="649" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >The menu entry shows the current mode and a screen reader announces it.</text>
+<rect x="62" y="660" width="516" height="26" rx="6" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<text x="74" y="677" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Format ▸ Wrap Text: Around</text>
+<text x="566" y="677" font-size="11" font-weight="500" fill="#6e6880" text-anchor="end" >Ctrl+Alt+L</text>
+<rect x="82" y="702" width="66" height="58" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<rect x="90" y="710" width="50" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="90" y="718" width="50" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="90" y="726" width="50" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="90" y="734" width="50" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="108" y="717" width="16" height="14" rx="0" fill="#b4a8e6" />
+<text x="115" y="776" font-size="10" font-weight="400" fill="#1f1a33" text-anchor="middle" >Over</text>
+<path d="M152,731 L206,731" fill="none" stroke="#5b4bc4" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="212" y="702" width="66" height="58" rx="8" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="2" />
+<rect x="220" y="710" width="50" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="220" y="734" width="50" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="220" y="718" width="14" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="256" y="718" width="14" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="220" y="726" width="14" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="256" y="726" width="14" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="238" y="717" width="14" height="14" rx="0" fill="#b4a8e6" />
+<text x="245" y="776" font-size="10" font-weight="500" fill="#1f1a33" text-anchor="middle" >Around</text>
+<path d="M282,731 L336,731" fill="none" stroke="#5b4bc4" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="342" y="702" width="66" height="58" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<rect x="350" y="710" width="50" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="350" y="734" width="50" height="3" rx="1.5" fill="#bdb5d8" />
+<rect x="368" y="723" width="14" height="12" rx="0" fill="#b4a8e6" />
+<text x="375" y="776" font-size="10" font-weight="400" fill="#1f1a33" text-anchor="middle" >Above/below</text>
+<path d="M412,731 L466,731" fill="none" stroke="#5b4bc4" stroke-width="1.4" marker-end="url(#ar)"/>
+<rect x="472" y="702" width="66" height="58" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<rect x="480" y="710" width="50" height="3" rx="1.5" fill="#8f86b3" />
+<rect x="480" y="718" width="50" height="3" rx="1.5" fill="#8f86b3" />
+<rect x="480" y="726" width="50" height="3" rx="1.5" fill="#8f86b3" />
+<rect x="480" y="734" width="50" height="3" rx="1.5" fill="#8f86b3" />
+<rect x="496" y="714" width="18" height="16" rx="0" fill="#ddd6f3" />
+<text x="505" y="776" font-size="10" font-weight="400" fill="#1f1a33" text-anchor="middle" >Behind</text>
+<path d="M508,790 V806 H115 V790" fill="none" stroke="#5b4bc4" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="311" y="802" font-size="10" font-weight="500" fill="#5b4bc4" text-anchor="middle" dy="-4">…and back to Over</text>
+<rect x="62" y="820" width="330" height="88" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="150" y="826" width="120" height="76" rx="0" fill="#ddd6f3" opacity="0.75"/>
+<rect x="150" y="826" width="120" height="76" rx="0" fill="none" stroke="#5b4bc4" stroke-width="2" stroke-dasharray="5 3"/>
+<rect x="78" y="832" width="298" height="4" rx="2" fill="#8f86b3" />
+<rect x="78" y="844" width="262" height="4" rx="2" fill="#8f86b3" />
+<rect x="78" y="856" width="226" height="4" rx="2" fill="#8f86b3" />
+<rect x="78" y="868" width="298" height="4" rx="2" fill="#8f86b3" />
+<rect x="78" y="880" width="262" height="4" rx="2" fill="#8f86b3" />
+<rect x="78" y="892" width="226" height="4" rx="2" fill="#8f86b3" />
+<rect x="206" y="862" width="30" height="22" rx="7" fill="#fff" stroke="#1f1a33" stroke-width="1.6" />
+<rect x="207" y="854" width="6" height="16" rx="3" fill="#fff" stroke="#1f1a33" stroke-width="1.6" />
+<rect x="214" y="850" width="6" height="16" rx="3" fill="#fff" stroke="#1f1a33" stroke-width="1.6" />
+<rect x="221" y="850" width="6" height="16" rx="3" fill="#fff" stroke="#1f1a33" stroke-width="1.6" />
+<rect x="228" y="854" width="6" height="16" rx="3" fill="#fff" stroke="#1f1a33" stroke-width="1.6" />
+<rect x="200" y="866" width="9" height="14" rx="4" fill="#fff" stroke="#1f1a33" stroke-width="1.6" />
+<rect x="404" y="826" width="38" height="20" rx="5" fill="#fff" stroke="#1f1a33" stroke-width="1.2" />
+<text x="423" y="840" font-size="10.5" font-weight="600" fill="#1f1a33" text-anchor="middle" >Ctrl</text>
+<text x="450" y="840" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start" >held</text>
+<text x="404" y="862" font-size="10.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Over a Behind object's area</text>
+<text x="404" y="876" font-size="10.5" font-weight="500" fill="#1f1a33" text-anchor="start" >the cursor is a hand; a click</text>
+<text x="404" y="890" font-size="10.5" font-weight="500" fill="#1f1a33" text-anchor="start" >takes the object, not the text.</text>
+<text x="62" y="920" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start" >Tab and Edit ▸ Select Next Object reach it without a pointer. Distance: where it is set is open.</text>
 <rect x="620" y="586" width="640" height="340" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
 <text x="642" y="616" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >C · The rules, so that screen and print agree</text>
 <text x="642" y="634" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >Each line asks one question: how wide am I here? The answer comes from the objects that reach its band.</text>
@@ -243,7 +235,7 @@
 <text x="950" y="893" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >5</text>
 <text x="968" y="892" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >The same arithmetic runs in the layout library for the</text>
 <text x="968" y="906" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >page view and print, and in a test that compares the</text>
-<text x="968" y="920" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >lines the editor shows (open point 1).</text>
+<text x="968" y="920" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >lines the editor shows (stage 2, D1062).</text>
 <rect x="1280" y="586" width="440" height="340" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
 <text x="1302" y="616" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >D · What Word and LibreOffice call them</text>
 <text x="1302" y="634" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >Import and export, so that wrap survives the round trip.</text>
@@ -270,31 +262,29 @@
 <text x="1300" y="868" font-size="10.5" font-weight="600" fill="#d6477a" text-anchor="start" >ODF values are from memory of what LibreOffice writes: check</text>
 <text x="1300" y="882" font-size="10.5" font-weight="600" fill="#d6477a" text-anchor="start" >against a file it wrote before any import code (as with rotation).</text>
 <rect x="40" y="946" width="1680" height="250" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
-<text x="62" y="976" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Open points, each with a recommendation</text>
-<text x="62" y="1012" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start" >1 Who lays the lines out</text>
-<text x="62" y="1029" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >The editor's lines are the browser's (contenteditable), print's are the</text>
-<text x="62" y="1043" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >engine's. Recommended: the page view and print use the engine, exactly; the flow</text>
-<text x="62" y="1057" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >view uses the same rules as CSS floats, and a test compares which lines get</text>
-<text x="62" y="1071" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >narrowed. Details on the architecture sheet.</text>
-<text x="618" y="1012" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start" >2 Selecting a Behind object</text>
-<text x="618" y="1029" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >The layer above the text takes a click, so an object behind the words cannot be</text>
-<text x="618" y="1043" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >hit without stealing the caret. Recommended: Tab and Edit ▸ Select Next Object</text>
-<text x="618" y="1057" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >reach it, and so does a click on its visible edge; a click in the words always</text>
-<text x="618" y="1071" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >places the caret.</text>
-<text x="1174" y="1012" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start" >3 Four modes, not Word's seven</text>
-<text x="1174" y="1029" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Tight and through need a contour and 'in line' makes the object a character.</text>
-<text x="1174" y="1043" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Recommended: four now, imported ones keep their original; 'in line' later as an</text>
-<text x="1174" y="1057" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >anchor kind of its own.</text>
-<text x="62" y="1104" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start" >4 One key or four</text>
-<text x="62" y="1121" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Every menu entry has a key. Recommended: one entry, Wrap Text… (Ctrl+Alt+L, free</text>
-<text x="62" y="1135" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >in all three manifests); the four modes are a radio group inside it. Four</text>
-<text x="62" y="1149" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >entries would need keys on digits, which German AltGr uses.</text>
-<text x="618" y="1104" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start" >5 Where the wrap is kept</text>
-<text x="618" y="1121" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >In the anchor, next to dx and dy (D1023): it is composes-only, and Move already</text>
-<text x="618" y="1135" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >replaces the whole anchor. Recommended, with a new method set_wrap so that the</text>
-<text x="618" y="1149" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >history says 'Wrap text around Picture 1'.</text>
-<text x="1174" y="1104" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start" >6 Default for a new object</text>
-<text x="1174" y="1121" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Over the text, as today. Recommended for pictures from Edit ▸ Image…: Above and</text>
-<text x="1174" y="1135" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >below, since a picture dropped between two lines rarely wants words over it. The</text>
-<text x="1174" y="1149" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >owner's call.</text>
+<text x="62" y="976" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Decided on 2026-11-17, and what is still open</text>
+<text x="62" y="1012" font-size="12" font-weight="600" fill="#13917f" text-anchor="start" >1 Who lays the lines out (D1062)</text>
+<text x="62" y="1029" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Decided: the engine first, for print and the print preview. The editor keeps the</text>
+<text x="62" y="1043" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >browser's lines until a second stage puts a float of the object's size at the</text>
+<text x="62" y="1057" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >anchor's line; a test compares which lines the float and the engine narrow.</text>
+<text x="62" y="1071" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Details on the architecture sheet.</text>
+<text x="618" y="1012" font-size="12" font-weight="600" fill="#13917f" text-anchor="start" >2 Selecting a Behind object (D1063)</text>
+<text x="618" y="1029" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Decided: Ctrl held while the pointer is over the object's area turns the cursor</text>
+<text x="618" y="1043" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >into a hand, and a click takes the object. Without Ctrl a click in the words</text>
+<text x="618" y="1057" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >always places the caret. Tab and Select Next Object still reach it.</text>
+<text x="1174" y="1012" font-size="12" font-weight="600" fill="#d6477a" text-anchor="start" >3 Four modes, not Word's seven</text>
+<text x="1174" y="1029" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Not asked yet. Recommended: four now; tight and through need a contour and 'in</text>
+<text x="1174" y="1043" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >line' makes the object a character, so imported ones keep their original and 'in</text>
+<text x="1174" y="1057" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >line' comes later as an anchor kind of its own.</text>
+<text x="62" y="1104" font-size="12" font-weight="600" fill="#13917f" text-anchor="start" >4 One key, cycling (D1064)</text>
+<text x="62" y="1121" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Decided: one entry, Wrap Text, Ctrl+Alt+L, each press goes to the next mode.</text>
+<text x="62" y="1135" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Free in all three manifests; no digit keys, which German AltGr uses. Where the</text>
+<text x="62" y="1149" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >distance is set is open.</text>
+<text x="618" y="1104" font-size="12" font-weight="600" fill="#d6477a" text-anchor="start" >5 Where the wrap is kept</text>
+<text x="618" y="1121" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Not asked yet. Recommended: in the anchor next to dx and dy (D1023), with a</text>
+<text x="618" y="1135" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >method set_wrap so that the history says 'Wrap text around Picture 1'.</text>
+<text x="1174" y="1104" font-size="12" font-weight="600" fill="#13917f" text-anchor="start" >6 Default for a new object (D1061)</text>
+<text x="1174" y="1121" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Decided: Above and below. Proposed, not yet confirmed: switch it on when the</text>
+<text x="1174" y="1135" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >editor draws the wrap, so what is seen is what prints; until then print and</text>
+<text x="1174" y="1149" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >preview wrap and the editor does not.</text>
 </svg>

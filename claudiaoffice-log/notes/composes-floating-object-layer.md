@@ -10,7 +10,7 @@ Mock-ups, in `notes/mockups/`:
 | File | Shows |
 |---|---|
 | `composes-object-layer.svg` / `.png` | Every kind of object at its character, held and let go, Edit ▸ Image… and the one import dialog, the placement rule, the numbers |
-| `composes-object-wrap.svg` / `.png` | **Proposal, not built.** Four ways text can flow around an object, the Wrap Text… popover, the rules, the Word and LibreOffice mapping, open points |
+| `composes-object-wrap.svg` / `.png` | **Decided 2026-11-17, not built.** Four ways text can flow around an object, the one cycling key, the Ctrl grab cursor, the rules, the Word and LibreOffice mapping, what is decided and what is open |
 | `composes-object-layer-architecture.svg` / `.png` | Where the code lives layer by layer (built / this patch / proposed) and the three ways of laying out lines round an object |
 
 ## What was wrong (found 2026-11-17, all fixed in the patch that came with this note)
@@ -32,10 +32,10 @@ The screen measures the character with a `Range` on the browser's own line; prin
 Those two can differ by a few pixels, so "what you see is what is printed" holds up to that difference. It is not
 tested against a rendered page: there was no browser in the session that built this.
 
-## Wrap: the proposal (nothing of it is built)
+## Wrap: decided on 2026-11-17 (D1061–D1064), nothing of it is built
 
 Four modes, kept in the anchor beside `dx`/`dy` (it is composes-only, and `MoveObject` already replaces the whole
-anchor): **over the text** (today, the default, so no document changes), **around** the object, **above and below**,
+anchor): **over the text** (what a document with no wrap saved means, so no document changes; a new object starts as *above and below*, D1061), **around** the object, **above and below**,
 **behind** the text, plus a distance in pixels. Rules, in short: the object's place is worked out from the layout
 *without* its own wrap, so no loop is possible; objects are taken in the order of the text and only change lines at
 and after their top; a line takes the free stretches of its own band, and a stretch narrower than 3 em is not used.
@@ -44,7 +44,7 @@ The full list is on the mock-up.
 Where it would go: `layout/src/flow/exclusions.ts` (new, pure, integers), `layoutParagraph` taking a width per line
 instead of one width, `paginate` handing it the bands that reach its page; the model field and a `set_wrap` method
 (`MoveObject` with the old anchor and the new wrap, so the history says what happened); `format.wrap-text`
-(Ctrl+Alt+L, free in the three manifests) with a popover like Rotate By….
+(Ctrl+Alt+L, free in the three manifests), one key that cycles the four modes.
 
 ### The decision that shapes it: who lays out the lines
 
@@ -59,7 +59,7 @@ The editor's lines are the browser's (contenteditable). Print and the print prev
    of the column wraps on its wider side in the flow view while print shows both sides; a test compares which lines get
    narrowed.
 
-*Recommended:* option 3, stage 1 first, stage 2 when it is asked for. It keeps contenteditable, and it keeps the rule
+*Decided (D1062):* option 3, stage 1 first, stage 2 when it is asked for. It keeps contenteditable, and it keeps the rule
 that the engine is the one place that decides how a document renders.
 
 ### Import and export
@@ -75,15 +75,18 @@ Tight, through and in-line are not modelled: they come in as the nearest of the 
 written back. The ODF values are from memory of what LibreOffice writes and have to be checked against a file it wrote
 before any import code is written (as with rotation). The importers were not read for this note.
 
-## Open points (each with a recommendation; the first two need the owner)
+## Decided, and what is still open
 
-1. **Who lays out the lines** (above). Recommended: option 3, stage 1 first.
-2. **A behind object cannot be clicked** without taking the caret from the text. Recommended: Tab and Edit ▸ Select
-   Next Object reach it, and so does a click on its visible edge.
-3. **One key or four.** Every menu entry has a key. Recommended: one entry, Wrap Text…, with the four modes as a radio
-   group inside; four entries would need digit keys, which German AltGr uses.
-4. **Default wrap for a new picture.** Recommended: above and below for pictures from Edit ▸ Image…, over the text for
-   containers. The owner's call.
+1. **Who lays out the lines.** Decided (D1062): the engine first, for print and the print preview.
+2. **A behind object.** Decided (D1063): Ctrl held while the pointer is over the object's area turns the cursor into a
+   hand, and a click takes the object. Without Ctrl a click in the words places the caret. Tab and Edit ▸ Select Next
+   Object reach it without a pointer.
+3. **One key.** Decided (D1064): Format ▸ Wrap Text, `format.wrap-text`, Ctrl+Alt+L; each press moves to the next of
+   the four modes and back to *over*. Where the distance is set is **open** (the key does not carry it).
+4. **Default wrap for a new object.** Decided (D1061): *above and below*, for what the person puts in. A document with
+   no wrap saved stays *over*; imported objects keep the file's wrap. **Proposed, not confirmed:** switch the default on
+   only when the editor draws the wrap (stage 2), because until then a new picture would print wrapped and show over
+   the words.
 5. **Moving by dragging.** The offset exists and nothing sets it by hand. Recommended: drag the held object; the ring
    stays and the offset follows the pointer, snapped to the object's own grid (D214), one step per drag.
 6. **Menu home of Image….** The earlier mock put it under Insert; Edit ▸ Image… is built because creates and computes
@@ -98,9 +101,7 @@ before any import code is written (as with rotation). The importers were not rea
   dialog wiring in the three workspaces were type-checked only in their `.ts` parts and never run. Firefox, the main
   testing browser, has not seen any of it. Please click through: insert a picture, hold and let go of an object, a
   LaTeX container in the middle of a line.
-- `layout/tests/composes.test.ts` has a new test for the offset in print; it needs the pinned fonts, which the session
-  could not fetch, so it was written but not run.
-- The i18n catalogs got the one new string by hand, with its place line; `scripts/extract_i18n.py` followed by
-  `update_po.py` and `po_to_json.py` will refresh every place line.
+- `layout/tests/composes.test.ts`: the offset test was written without being run and was wrong (it looked for the clip
+  of a *shape*, which has none); run with the fonts present, it now uses a text box and passes.
 - The full quality gate (ruff, mypy, the Playwright run, the Python suites) was not run; vitest (the touched web
   tests) and `clients/linux/tests/test_manifest.py` were.

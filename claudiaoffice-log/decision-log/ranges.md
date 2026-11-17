@@ -53,6 +53,7 @@ Unused numbers in a closed block stay unused.
 | D740–D759 | the Windows installer: self-contained server, packaged client, Inno Setup, the service, signing (E8.1; branch `win-installer`; D740–D745 used) | 2026-11-17 | open |
 | D760–D779 | stabilisation of main, second round: style loss in the creates exporters, one name for facts Python owns, pinned and promoted CI (CODE-58, CODE-60, PROC-27; D760–D762 used) | 2026-11-17 | open |
 | D1041–D1060 | font management: who may receive a server's fonts, Server settings ▸ Fonts, fonts kept honest from import to export (E3.13; branch `font-server-ui`; D1041 used) | 2026-11-16 | open |
+| D1061–D1080 | the floating object layer in composes: wrap, the engine first, grabbing an object behind the text, the cycling key (branch `floating-objects`; D1061–D1064 used) | 2026-11-17 | open |
 
 ## Never to be used
 
