@@ -163,3 +163,25 @@ becomes visible data for the UI, and that the import computes which slides or co
 
 Each needs the i18n strings in the `.po` catalog, keyboard shortcuts in the manifest, the native menus of the desktop
 clients, and a BITV check of the dialogs (status in words, table semantics, focus order).
+
+## Manage files of a collection (E3.13 f2, proposed 2026-11-17, mocks only)
+
+Asked for by the owner while setting up Latin Modern for LaTeX: a collection cannot be changed after it was made, so a
+file cannot be added to it or taken out of it. Board `mockups/fonts-8-manage-files.svg/png`:
+
+- **A** The card's ⋯ menu gets *Manage files…* (Alt+M) first, then *Rename…* (F2) and *Remove collection…* (Del); the
+  keys work while the menu is open. Collections that are not added on this page (shipped, `--fonts`) get *View files…*,
+  the same list without the buttons that change it.
+- **B** *Manage files — <collection>*: one row per file (name, family · style · format · size), *In use* or *Not used*
+  with the reason in words, and a *Remove* button named for its file. *Add files…* is at the top. Licence and scope
+  stay the collection's.
+- **C** Removing one file is said before it happens (what stays asked for, what it is drawn with, that the file is
+  deleted from the disk), the safe button has the focus. The last file cannot be removed (aria-disabled, with the
+  reason in its description): *Remove collection…* is the way.
+- **D** *Add files to <collection>* is the Add fonts… dialog without the name and licence questions: check first, then
+  add; a file that replaces one of this collection or a font of another collection is named as such.
+
+Open for the owner: the keys (Alt+M, F2, Del); whether a file may be removed while documents use it (proposed: yes, as
+the document keeps the name and gets a stand-in); changing a collection's licence and scope later (not in these mocks).
+Server side, the existing `add_collection`/`remove_collection` become file-level (`add_files`, `remove_file`) with the
+same check, the same lock and the same answer of the whole page; the LaTeX container needs nothing more (CODE-50).

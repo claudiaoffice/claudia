@@ -1,0 +1,165 @@
+<svg viewBox="0 0 1400 1345" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="1345" rx="0" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — Server settings ▸ Fonts ▸ Manage files of a collection, proposed (E3.13 f2)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">A collection added here can be changed after it was made: see its files, add files, remove files. Nothing changes until a button says so.</text>
+<rect x="40" y="96" width="640" height="540" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">A · The card's menu: Manage files… first</text>
+<text x="62" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Same ⋯ menu as Rename… and Remove collection…; only for collections added on this page.</text>
+<rect x="70" y="170" width="270" height="150" rx="12" fill="#fff" stroke="#1f1a33" stroke-width="1.2"/>
+<text x="88" y="200" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">City office fonts</text>
+<text x="88" y="218" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">1 family · Licensed to the City</text>
+<rect x="88" y="230" width="107.8" height="20" rx="10" fill="#ebe7fa"/>
+<text x="99" y="244" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#4a3bb0" text-anchor="start">◐ This server</text>
+<text x="88" y="272" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Set up on this page by anna, 2026-11-16.</text>
+<text x="88" y="288" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">3 files, 2 in use.</text>
+<rect x="300" y="178" width="28" height="26" rx="6" fill="#fff" stroke="#1f1a33" stroke-width="1.5"/>
+<text x="314" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="middle">⋯</text>
+<rect x="330" y="208" width="250" height="118" rx="8" fill="#fff" stroke="#c9c2dc" stroke-width="1.2"/>
+<rect x="336" y="214" width="238" height="32" rx="5" fill="#ebe7fa"/>
+<text x="348" y="235" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Manage files…</text>
+<text x="562" y="235" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="end">Alt+M</text>
+<text x="348" y="266" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Rename…</text>
+<text x="562" y="266" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="end">F2</text>
+<line x1="336" y1="278" x2="574" y2="278" stroke="#e3dfee" stroke-width="1"/>
+<text x="348" y="305" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#a4262c" text-anchor="start">Remove collection…</text>
+<text x="562" y="305" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="end">Del</text>
+<circle cx="590" cy="224" r="11" fill="#5b4bc4"/>
+<text x="590" y="228.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle">1</text>
+<text x="70" y="368" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Collections that are not added here are read-only</text>
+<rect x="70" y="380" width="270" height="96" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="88" y="408" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Shipped with Claudia</text>
+<text x="88" y="426" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">9 families · OFL-1.1</text>
+<rect x="88" y="438" width="88.0" height="20" rx="10" fill="#e1f3ea"/>
+<text x="99" y="452" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#17724c" text-anchor="start">✓ Anywhere</text>
+<rect x="358" y="388" width="150" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="433" y="408" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">View files…</text>
+<text x="358" y="444" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Same list, no buttons that change it.</text>
+<text x="358" y="460" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">No ⋯ menu: the files are not Claudia's</text>
+<text x="358" y="476" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">to change (set by --fonts or shipped).</text>
+<circle cx="522" cy="392" r="11" fill="#5b4bc4"/>
+<text x="522" y="396.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle">2</text>
+<text x="70" y="520" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Keys: the menu opens with Enter or Space on ⋯; its entries have the keys shown while it is open.</text>
+<text x="70" y="538" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Every entry is a button in a menu (role=menu), as Rename… and Remove collection… already are.</text>
+<text x="70" y="566" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The Fonts page keeps its card order; a card does not move when its files change.</text>
+<rect x="720" y="96" width="640" height="540" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="742" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">B · Manage files: one row per file</text>
+<text x="742" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">What each file is, whether the server uses it, and if not, why in words.</text>
+<rect x="742" y="164" width="596" height="450" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="762" y="196" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Manage files — City office fonts</text>
+<text x="1318" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="400" fill="#6e6880" text-anchor="end">×</text>
+<text x="762" y="216" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">◐ This server · Licensed to the City (contract 2024-117) · added by anna, 2026-11-16</text>
+<line x1="742" y1="230" x2="1338" y2="230" stroke="#e3dfee" stroke-width="1"/>
+<text x="764" y="272" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">3 files · 2 in use · 1 not usable</text>
+<rect x="1200" y="254" width="118" height="30" rx="6" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1"/>
+<text x="1259.0" y="273.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#fff" text-anchor="middle">Add files…</text>
+<circle cx="1182" cy="264" r="11" fill="#5b4bc4"/>
+<text x="1182" y="268.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle">3</text>
+<rect x="764" y="292" width="552" height="58" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="780" y="314" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-Regular.ttf</text>
+<text x="780" y="332" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Hausschrift Sans · Regular · TrueType · 212 KB</text>
+<rect x="1104" y="302" width="74.8" height="20" rx="10" fill="#e1f3ea"/>
+<text x="1115" y="316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#17724c" text-anchor="start">✓ In use</text>
+<rect x="1228" y="300" width="78" height="26" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1267.0" y="317.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Remove</text>
+<rect x="764" y="360" width="552" height="58" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="780" y="382" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-Italic.ttf</text>
+<text x="780" y="400" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Hausschrift Sans · Italic · TrueType · 198 KB</text>
+<rect x="1104" y="370" width="74.8" height="20" rx="10" fill="#e1f3ea"/>
+<text x="1115" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#17724c" text-anchor="start">✓ In use</text>
+<rect x="1228" y="368" width="78" height="26" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1267.0" y="385.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Remove</text>
+<rect x="764" y="428" width="552" height="72" rx="8" fill="#fdf3f3" stroke="#efc5c8" stroke-width="1"/>
+<text x="780" y="450" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-BoldItalic.ttf</text>
+<text x="780" y="468" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Hausschrift Sans · Bold Italic · TrueType · 205 KB</text>
+<text x="780" y="488" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#a4262c" text-anchor="start">Forbids embedding (fsType 2), so no PDF could carry it.</text>
+<rect x="1104" y="438" width="88.0" height="20" rx="10" fill="#fbe6e8"/>
+<text x="1115" y="452" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#a4262c" text-anchor="start">⚠ Not used</text>
+<rect x="1228" y="436" width="78" height="26" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1267.0" y="453.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Remove</text>
+<text x="764" y="524" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Removing a file deletes it from this server's disk. Documents keep asking for</text>
+<text x="764" y="539" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">the same font and are drawn and printed with a stand-in until a file of that</text>
+<text x="764" y="554" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">family and style is added again. Documents themselves are not changed.</text>
+<line x1="742" y1="566" x2="1338" y2="566" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1246" y="576" width="80" height="30" rx="6" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1"/>
+<text x="1286.0" y="595.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#fff" text-anchor="middle">Done</text>
+<circle cx="1342" cy="330" r="11" fill="#5b4bc4"/>
+<text x="1342" y="334.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle">4</text>
+<text x="764" y="596" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Each Remove button is named for its file: “Remove HausschriftSans-Italic.ttf”.</text>
+<rect x="40" y="660" width="640" height="620" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="694" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">C · Remove one file: said before it happens</text>
+<text x="62" y="714" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A small dialog over the list, as for Remove collection…; the safe button has the focus.</text>
+<rect x="70" y="740" width="580" height="250" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="90" y="772" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Remove this file?</text>
+<text x="630" y="772" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="400" fill="#6e6880" text-anchor="end">×</text>
+<text x="90" y="792" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">City office fonts · HausschriftSans-Italic.ttf</text>
+<line x1="70" y1="806" x2="650" y2="806" stroke="#e3dfee" stroke-width="1"/>
+<text x="90" y="834" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Hausschrift Sans Italic will no longer be available on this server.</text>
+<text x="90" y="856" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Documents that ask for it keep asking, and are shown and printed with</text>
+<text x="90" y="874" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">a stand-in until the file is added again. Their text is not changed.</text>
+<text x="90" y="904" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">The file is deleted from the server's disk. This cannot be undone here.</text>
+<line x1="70" y1="926" x2="650" y2="926" stroke="#e3dfee" stroke-width="1"/>
+<rect x="446" y="942" width="82" height="34" rx="8" fill="none" stroke="#5b4bc4" stroke-width="2.5"/>
+<rect x="450" y="946" width="74" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="487.0" y="965.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="536" y="946" width="104" height="30" rx="6" fill="#a4262c" stroke="#a4262c" stroke-width="1"/>
+<text x="588.0" y="965.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#fff" text-anchor="middle">Remove file</text>
+<circle cx="630" cy="760" r="11" fill="#5b4bc4"/>
+<text x="630" y="764.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle">5</text>
+<text x="70" y="1034" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">The last file of a collection cannot be removed</text>
+<rect x="70" y="1046" width="580" height="98" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="90" y="1070" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-Regular.ttf</text>
+<text x="90" y="1088" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Hausschrift Sans · Regular · TrueType · 212 KB</text>
+<rect x="556" y="1056" width="84" height="26" rx="6" fill="#f1eff5" stroke="#d8d2e6" stroke-width="1"/>
+<text x="598.0" y="1073.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#a29cb4" text-anchor="middle">Remove</text>
+<text x="90" y="1114" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A collection keeps at least one file. To take everything away, use</text>
+<text x="90" y="1131" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Remove collection… in the card's menu.</text>
+<circle cx="660" cy="1050" r="11" fill="#5b4bc4"/>
+<text x="660" y="1054.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle">6</text>
+<text x="70" y="1176" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The disabled button stays in the tab order (aria-disabled) and says why in its own description,</text>
+<text x="70" y="1194" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">so a screen reader hears the reason and does not meet a button that is silently dead.</text>
+<text x="70" y="1232" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">After a removal the page and this list show the new state at once;</text>
+<text x="70" y="1249" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">LaTeX and the layout use it from the next job.</text>
+<rect x="720" y="660" width="640" height="620" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="742" y="694" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">D · Add files to this collection: check first, then add</text>
+<text x="742" y="714" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The dialog of Add fonts…, without the name and licence questions: those belong to the collection.</text>
+<rect x="742" y="740" width="596" height="490" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="762" y="772" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Add files to City office fonts</text>
+<text x="1318" y="772" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="400" fill="#6e6880" text-anchor="end">×</text>
+<text x="762" y="792" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Same licence and scope as the collection: ◐ This server · Licensed to the City (contract 2024-117)</text>
+<line x1="742" y1="806" x2="1338" y2="806" stroke="#e3dfee" stroke-width="1"/>
+<rect x="764" y="824" width="552" height="52" rx="8" fill="#fff" stroke="#e3dfee" stroke-width="1"/>
+<text x="780" y="845" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-Bold.ttf</text>
+<text x="780" y="862" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Hausschrift Sans · Bold · TrueType</text>
+<rect x="1178.2" y="834" width="121.0" height="20" rx="10" fill="#e1f3ea"/>
+<text x="1189.2" y="848" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#17724c" text-anchor="start">✓ Will be added</text>
+<rect x="764" y="884" width="552" height="64" rx="8" fill="#fffaf0" stroke="#ecd9ab" stroke-width="1"/>
+<text x="780" y="905" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">HausschriftSans-Italic.ttf</text>
+<text x="780" y="922" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Hausschrift Sans · Italic · TrueType</text>
+<text x="780" y="940" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#8a5a00" text-anchor="start">Replaces the file of the same family and style in this collection (198 KB, added 2026-11-16).</text>
+<rect x="1165.0" y="894" width="134.2" height="20" rx="10" fill="#fdf0d8"/>
+<text x="1176.0" y="908" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#8a5a00" text-anchor="start">⚠ Replaces a file</text>
+<rect x="764" y="956" width="552" height="64" rx="8" fill="#fffaf0" stroke="#ecd9ab" stroke-width="1"/>
+<text x="780" y="977" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Inter-Regular.ttf</text>
+<text x="780" y="994" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Inter · Regular · TrueType</text>
+<text x="780" y="1012" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#8a5a00" text-anchor="start">Used instead of Inter from Shipped with Claudia, for every document here.</text>
+<rect x="1165.0" y="966" width="134.2" height="20" rx="10" fill="#fdf0d8"/>
+<text x="1176.0" y="980" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#8a5a00" text-anchor="start">⚠ Replaces a font</text>
+<rect x="764" y="1028" width="552" height="64" rx="8" fill="#fdf3f3" stroke="#efc5c8" stroke-width="1"/>
+<text x="780" y="1049" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">notes.txt</text>
+<text x="780" y="1068" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#a4262c" text-anchor="start">Not a font file.</text>
+<rect x="1211.2" y="1038" width="88.0" height="20" rx="10" fill="#fbe6e8"/>
+<text x="1222.2" y="1052" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#a4262c" text-anchor="start">✕ Left out</text>
+<rect x="764" y="1106" width="552" height="50" rx="8" fill="#f3efe6"/>
+<text x="778" y="1126" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">Adds 1 file and replaces 2 on Studio server. Documents here that ask for these fonts are laid out</text>
+<text x="778" y="1144" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">with them from now on. Nothing else changes: the collection keeps its licence and scope.</text>
+<circle cx="1318" cy="850" r="11" fill="#5b4bc4"/>
+<text x="1318" y="854.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#fff" text-anchor="middle">7</text>
+<line x1="742" y1="1170" x2="1338" y2="1170" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1162" y="1182" width="70" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1197.0" y="1201.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Back</text>
+<rect x="1240" y="1182" width="88" height="30" rx="6" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1"/>
+<text x="1284.0" y="1201.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#fff" text-anchor="middle">Add 3 files</text>
+<text x="764" y="1202" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">“Add 3 files” counts every file that will be written.</text>
+<text x="40" y="1305" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">Numbers: 1 first entry, key Alt+M · 2 read-only “View files…” for collections not added here · 3 Add files… reuses the check-then-add dialog · 4 each file: what it is,</text>
+<text x="40" y="1321" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">used or not, and why · 5 removal said in words, safe button focused · 6 the last file stays · 7 replacing is named before it happens.</text>
+</svg>
