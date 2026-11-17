@@ -35,9 +35,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -163,7 +163,7 @@ jobs:
           if [ -e /opt/claudia ]; then echo "::error::/opt/claudia is still there after the removal"; ls -R /opt/claudia | head; exit 1; fi
           if pgrep -f claudia_server >/dev/null; then echo "::error::a server is still running after the removal"; exit 1; fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: claudia-office-deb
           path: dist/*.deb
@@ -177,7 +177,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: claudia-office-deb
           path: dist
