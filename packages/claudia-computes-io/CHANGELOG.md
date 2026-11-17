@@ -7,6 +7,20 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 Pivot tables go to and from ods and xlsx (D625, D628).
 
+### Fixed
+- A cell style whose font is a generic family is written into xlsx and ods as the font Claudia shows it with (`serif`
+  as Fraunces, `system-ui` as Inter), not as a font called `serif` or `system-ui` (CODE-42;
+  `claudia_core.stand_ins.file_font`).
+
+### Changed
+- A cell's font is imported as the file names it and its generic family only (`Arial, sans-serif`), without the
+  metric twin that was written after it (`'Liberation Sans'`): the server's catalogue chooses the stand-in where the
+  sheet is shown or printed (E3.13), so the workbook keeps one source for it. Exports are unchanged (they write the
+  first family).
+- `ods_import_losses` and `xlsx_import_losses` no longer count every pivot table as `pivot-table`: a pivot read as a live
+  one is not a loss, and an unread one has its detail.
+- A name the import made for the source of a pivot is not written to a kept file until it changes.
+
 ### Added
 - `workbook_to_ods` and `workbook_to_xlsx` write the pivot tables of a model as pivot tables (`table:data-pilot-table`; an
   xlsx cache with its records and a `pivotTableDefinition` in the tabular layout, `refreshOnLoad`), with the cells they
@@ -23,11 +37,6 @@ Pivot tables go to and from ods and xlsx (D625, D628).
   `xlsx_unwritten_changes` count a changed, new or deleted pivot as `pivot-table`.
 - `claudia_computes_io.pivot_exchange` (`FilePivot`, `written_pivots`, `sheet_cells`, `adopt_pivots`), `ods_pivots` and
   `xlsx_pivots`: the shared rules and the two format adapters.
-
-### Changed
-- `ods_import_losses` and `xlsx_import_losses` no longer count every pivot table as `pivot-table`: a pivot read as a live
-  one is not a loss, and an unread one has its detail.
-- A name the import made for the source of a pivot is not written to a kept file until it changes.
 
 ## [0.10.0] - 2026-11-15
 

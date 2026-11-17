@@ -1,5 +1,5 @@
 {
- "version": "0.1.0",
+ "version": "0.2.0",
  "API_VERSION": {
   "value": "1"
  },
@@ -60,7 +60,7 @@
   "class": [
    "Plugin"
   ],
-  "init": "(manifest: 'Manifest', catalogue: 'Catalogue', directory: 'str | Path') -> 'None'",
+  "init": "(manifest: 'Manifest', catalogue: 'Callable[[], Catalogue]', directory: 'str | Path') -> 'None'",
   "methods": {
    "render": "(self, request: 'RenderRequest', tools: 'Mapping[str, ResolvedTool]', limits: 'Limits') -> 'RenderResult'"
   },
@@ -208,7 +208,7 @@
   "class": [
    "object"
   ],
-  "init": "(settings: 'Mapping[str, object] | None' = None, *, version_args: 'Mapping[str, tuple[str, ...]]' = mappingproxy({'pdftocairo': ('-v',)})) -> 'None'",
+  "init": "(settings: 'Mapping[str, object] | Callable[[], Mapping[str, object]] | None' = None, *, version_args: 'Mapping[str, tuple[str, ...]]' = mappingproxy({'pdftocairo': ('-v',)})) -> 'None'",
   "methods": {
    "configured": "(self) -> 'tuple[ToolEntry, ...]'",
    "forget": "(self) -> 'None'",
@@ -250,7 +250,7 @@
   "properties": []
  },
  "builtin_registry": {
-  "function": "(catalogue: 'Catalogue', directory: 'str | Path') -> 'PluginRegistry'"
+  "function": "(catalogue: 'Callable[[], Catalogue]', directory: 'str | Path') -> 'PluginRegistry'"
  },
  "default_alt": {
   "function": "(kind: 'str', source: 'str', svg: 'str') -> 'str'"

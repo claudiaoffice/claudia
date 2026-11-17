@@ -1,7 +1,18 @@
 {
- "version": "0.2.0",
+ "version": "0.3.0",
  "OwnedTest": {
   "function": "(*args, **kwargs)"
+ },
+ "ThemeFonts": {
+  "class": [
+   "object"
+  ],
+  "init": "(major: 'str | None', minor: 'str | None') -> None",
+  "methods": {
+   "named": "(self, reference: 'str | None') -> 'str | None'",
+   "read": "(theme_xml: 'bytes | None') -> 'ThemeFonts'"
+  },
+  "properties": []
  },
  "owns": {
   "function": "(part_names: 'Iterable[str]') -> 'OwnedTest'"

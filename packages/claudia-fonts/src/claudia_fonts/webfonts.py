@@ -44,12 +44,13 @@ class WebFontCache:
     def __init__(self, directory: str | Path) -> None:
         self._directory = Path(directory)
 
-    def get(self, font: FontFile) -> Path:
-        """The WOFF2 file of ``font``, made now if it does not exist yet.
+    def get(self, font: FontFile, *, local: bool = False) -> Path:
+        """The WOFF2 file of ``font``, made now if it does not exist yet. ``local``: it is for one of the server's own
+        people, who may have the fonts for this server only too (D1041).
 
-        :class:`NotServable` if the font's collection does not allow handing fonts out, or if the file on disk is no
-        longer the one the catalogue read."""
-        if not font.redistributable:
+        :class:`NotServable` if the font's collection does not allow handing it out (to anybody, or without
+        ``local``), or if the file on disk is no longer the one the catalogue read."""
+        if not (font.redistributable or local):
             raise NotServable(f"{font.family} {font.style} ({font.collection}) may not be handed out to clients")
         target = self._directory / f"{font.sha256}.woff2"
         if target.is_file():

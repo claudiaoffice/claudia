@@ -7,7 +7,8 @@ where an installation is found, tried and given an identity; the sandbox that th
 :func:`claudia_typeset.run_sandboxed`.
 
 Resolution is lazy and a failure is never remembered: a server without a tool starts, the first request says what is
-missing, and installing the tool fixes it without a restart (as D98 settled for LaTeX).
+missing, and installing the tool fixes it without a restart (as D98 settled for LaTeX). Changing the setting of a tool
+needs no restart either (CODE-55).
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ import hashlib
 import json
 import re
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
@@ -114,21 +115,38 @@ def _hint(name: str) -> str:
 class ToolRegistry:
     """The administrator's table of tools, and the tools found through it.
 
-    ``settings`` maps a logical name to a path, or to a mapping with a ``path`` and options. ``version_args`` says how
-    to ask a tool for its version where it is not ``--version``."""
+    ``settings`` maps a logical name to a path, or to a mapping with a ``path`` and options; or it is a function that
+    returns such a mapping, which is then asked again on every use, so a setting the administrator changes while the
+    server runs takes effect at once (a tool found under the old setting is looked for again). ``version_args`` says
+    how to ask a tool for its version where it is not ``--version``."""
 
     def __init__(
         self,
-        settings: Mapping[str, object] | None = None,
+        settings: Mapping[str, object] | Callable[[], Mapping[str, object]] | None = None,
         *,
         version_args: Mapping[str, tuple[str, ...]] = DEFAULT_VERSION_ARGS,
     ) -> None:
-        self._entries = {name: _entry(name, raw) for name, raw in (settings or {}).items()}
+        self._settings = settings
         self._version_args = version_args
+        self._entries: dict[str, ToolEntry] = {}
+        self._seen: dict[str, object] | None = None
         self._resolved: dict[str, ResolvedTool] = {}
+        self._read_settings()
+
+    def _read_settings(self) -> None:
+        """Take the table as it is now. Anything found under a table that has changed is forgotten: it may stand
+        behind another program now, or none."""
+        table = self._settings() if callable(self._settings) else self._settings
+        current = dict(table or {})
+        if current == self._seen:
+            return
+        self._entries = {name: _entry(name, raw) for name, raw in current.items()}
+        self._seen = {name: dict(raw) if isinstance(raw, Mapping) else raw for name, raw in current.items()}
+        self._resolved.clear()
 
     def configured(self) -> tuple[ToolEntry, ...]:
         """What the administrator registered, by name."""
+        self._read_settings()
         return tuple(self._entries[name] for name in sorted(self._entries))
 
     def forget(self) -> None:
@@ -137,6 +155,7 @@ class ToolRegistry:
 
     async def resolve(self, requirement: ToolRequirement) -> ResolvedTool:
         """The tool ``requirement`` names, found and tried; `ToolUnavailable` says what is wrong and what to do."""
+        self._read_settings()
         name = requirement.tool
         tool = self._resolved.get(name) or await self._find(name)
         least = requirement.version_at_least
@@ -152,6 +171,7 @@ class ToolRegistry:
 
     async def status(self, name: str) -> ToolStatus:
         """Try one tool and say how it is, as a sentence for the administrator; never raises."""
+        self._read_settings()
         try:
             tool = self._resolved.get(name) or await self._find(name)
         except ToolUnavailable as error:

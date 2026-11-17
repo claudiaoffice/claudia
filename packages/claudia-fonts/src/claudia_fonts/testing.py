@@ -38,6 +38,7 @@ def make_font(
     typographic: bool = False,
     version: str = "1.0",
     axes: tuple[tuple[str, float, float, float], ...] = (),
+    licence: str = "",
 ) -> Path:
     """Write a small valid TrueType font with one letter (``A``) and return its path.
 
@@ -45,7 +46,8 @@ def make_font(
     all the catalogue looks at; with ``typographic`` the family and style are stored as the typographic names (IDs 16
     and 17) and the legacy family (ID 1) is ``"<family> <style>"``, as fonts with many weights do. Different
     ``version`` strings make different bytes. ``axes`` (tag, minimum, default, maximum) adds an ``fvar`` table, which
-    makes the font look variable to a reader (it has no variation data)."""
+    makes the font look variable to a reader (it has no variation data). ``licence`` is the licence description of the
+    name table (ID 13), which a font may carry."""
     target = Path(path)
     builder = FontBuilder(UNITS, isTTF=True)
     builder.setupGlyphOrder([".notdef", "A"])
@@ -54,6 +56,8 @@ def make_font(
     builder.setupHorizontalMetrics({".notdef": (500, 0), "A": (600, 0)})
     builder.setupHorizontalHeader(ascent=800, descent=-200)
     names = {"familyName": family, "styleName": style, "version": f"Version {version}"}
+    if licence:
+        names["licenseDescription"] = licence
     if typographic:
         names |= {"familyName": f"{family} {style}", "styleName": "Regular"}
         names |= {"typographicFamily": family, "typographicSubfamily": style}

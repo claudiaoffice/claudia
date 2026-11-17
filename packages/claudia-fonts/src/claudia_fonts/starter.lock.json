@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "note": "The starter set of fonts a Claudia server can fetch (python -m claudia_fonts fetch DIR): open fonts at a pinned commit of github.com/google/fonts, each file checked by SHA-256. Variable fonts are used as they are; layout instances them per weight.",
+  "note": "The starter set of fonts a Claudia server can fetch (python -m claudia_fonts fetch DIR): open fonts at a pinned commit of github.com/google/fonts, each file checked by SHA-256. Variable fonts are used as they are; layout instances them per weight. Arimo, Tinos and Cousine take exactly the room of Arial, Times New Roman and Courier New (and of Liberation Sans, Serif and Mono), Gelasio that of Georgia: the stand-ins of claudia_core.stand_ins (E3.13). Tinos has no OFL.txt at this commit; its licence is in each file's name table.",
   "collections": [
     {
       "name": "Inter",
@@ -163,6 +163,136 @@
           "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/caladea/OFL.txt",
           "sha256": "ccdab61d371d8c8683a128a92cd7d498dbdb1d37689f7cb21f1bf6b16658d213",
           "size": 4393
+        }
+      ]
+    },
+    {
+      "name": "Arimo",
+      "folder": "arimo",
+      "licence": "OFL-1.1",
+      "redistributable": true,
+      "source": "https://github.com/google/fonts/tree/35e77c3854970a550d9894a85aba21420813a019/ofl/arimo",
+      "version": "google/fonts@35e77c385497",
+      "files": [
+        {
+          "name": "Arimo-Italic[wght].ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/arimo/Arimo-Italic%5Bwght%5D.ttf",
+          "sha256": "a80fc54fd0233c1dfe298577c4d00f5ae81d5bb83510975e473c47e699b7f4ed",
+          "size": 543196
+        },
+        {
+          "name": "Arimo[wght].ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/arimo/Arimo%5Bwght%5D.ttf",
+          "sha256": "e43898b143ec826ac8cb4034816458a7047fbe0836558de2a1f8c6223ae3e0ca",
+          "size": 496268
+        },
+        {
+          "name": "OFL.txt",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/arimo/OFL.txt",
+          "sha256": "11cce536cd2f3864d767003af5dcd739e2e15818cf2279b6175edeadd3960992",
+          "size": 4384
+        }
+      ]
+    },
+    {
+      "name": "Tinos",
+      "folder": "tinos",
+      "licence": "OFL-1.1",
+      "redistributable": true,
+      "source": "https://github.com/google/fonts/tree/35e77c3854970a550d9894a85aba21420813a019/ofl/tinos",
+      "version": "google/fonts@35e77c385497",
+      "files": [
+        {
+          "name": "Tinos-Bold.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/tinos/Tinos-Bold.ttf",
+          "sha256": "393269dbab8899f938db19783eca5eac92eb431f7ae0ab45b8349ca895f1a06b",
+          "size": 597880
+        },
+        {
+          "name": "Tinos-BoldItalic.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/tinos/Tinos-BoldItalic.ttf",
+          "sha256": "a5de79f0fe863ea0954757acb3d47b3ccd0a930ce3dd5b97230cd3866790a06e",
+          "size": 578976
+        },
+        {
+          "name": "Tinos-Italic.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/tinos/Tinos-Italic.ttf",
+          "sha256": "5942266ed398b155d7dc23e36833e7ec6be988f2439bdbeb8ef1bede808eaa91",
+          "size": 565016
+        },
+        {
+          "name": "Tinos-Regular.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/tinos/Tinos-Regular.ttf",
+          "sha256": "60a0e8ef0c04dd5dd69ffe91025fa2ae5836cbd35600a82ba031977557e2cb61",
+          "size": 521588
+        }
+      ]
+    },
+    {
+      "name": "Cousine",
+      "folder": "cousine",
+      "licence": "OFL-1.1",
+      "redistributable": true,
+      "source": "https://github.com/google/fonts/tree/35e77c3854970a550d9894a85aba21420813a019/ofl/cousine",
+      "version": "google/fonts@35e77c385497",
+      "files": [
+        {
+          "name": "Cousine-Bold.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/cousine/Cousine-Bold.ttf",
+          "sha256": "17c8a7245156d2253531c9e529474937b09d9f641c5ae7695c5e33f22822eef4",
+          "size": 298048
+        },
+        {
+          "name": "Cousine-BoldItalic.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/cousine/Cousine-BoldItalic.ttf",
+          "sha256": "848e858726fee0ae27b754e4cd6a2755209bf1428a8c91f747696d58c33906c3",
+          "size": 308292
+        },
+        {
+          "name": "Cousine-Italic.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/cousine/Cousine-Italic.ttf",
+          "sha256": "ea2a76ae3d0ece9cd59f0d30fdc08dd70e8f5f457beee5b0852a7b50c2286c7c",
+          "size": 306880
+        },
+        {
+          "name": "Cousine-Regular.ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/cousine/Cousine-Regular.ttf",
+          "sha256": "1da22250675fc4c42fcf3a9736c44bc0570516105331443b663fd5cfbd1412fe",
+          "size": 296856
+        },
+        {
+          "name": "OFL.txt",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/cousine/OFL.txt",
+          "sha256": "b81c4d4dc0a9f72c9155e78187316e016e2012a8102468804173dc61468b906d",
+          "size": 4387
+        }
+      ]
+    },
+    {
+      "name": "Gelasio",
+      "folder": "gelasio",
+      "licence": "OFL-1.1",
+      "redistributable": true,
+      "source": "https://github.com/google/fonts/tree/35e77c3854970a550d9894a85aba21420813a019/ofl/gelasio",
+      "version": "google/fonts@35e77c385497",
+      "files": [
+        {
+          "name": "Gelasio-Italic[wght].ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/gelasio/Gelasio-Italic%5Bwght%5D.ttf",
+          "sha256": "52559e845a4d33514e5f93bb9ae7dbeae1894a53f2c565a15f18af40cd337c09",
+          "size": 174212
+        },
+        {
+          "name": "Gelasio[wght].ttf",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/gelasio/Gelasio%5Bwght%5D.ttf",
+          "sha256": "4daecea457258c9ebeb8bc99ed3fd24353618bfad3ea4b93fa0b5d0468fc04e4",
+          "size": 168556
+        },
+        {
+          "name": "OFL.txt",
+          "url": "https://raw.githubusercontent.com/google/fonts/35e77c3854970a550d9894a85aba21420813a019/ofl/gelasio/OFL.txt",
+          "sha256": "b393cb01867c919b44381512120dc3e4c954c7b47e2035c405f3a324799a4d29",
+          "size": 4387
         }
       ]
     }

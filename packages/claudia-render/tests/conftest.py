@@ -110,7 +110,7 @@ def real_service(tmp_path, tex_catalogue):
     if mermaid := mermaid_settings():
         settings["mmdc"] = mermaid
     return RenderService(
-        builtin_registry(tex_catalogue, tmp_path / "plugins"), ToolRegistry(settings), tmp_path / "service"
+        builtin_registry(lambda: tex_catalogue, tmp_path / "plugins"), ToolRegistry(settings), tmp_path / "service"
     )
 
 

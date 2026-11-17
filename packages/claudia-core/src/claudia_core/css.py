@@ -29,6 +29,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from .facets import FACET_PROPERTIES
+from .stand_ins import GENERIC_ALIASES
 
 #: Bumped whenever the list or the meaning of a value changes; an old document is upcast, never broken (E1.3).
 #: 2: a colour may be a role of the palette (``@accent``, ``@accent/55``).
@@ -209,7 +210,7 @@ _COLOR_NAMES = frozenset(
         "currentcolor",
     )
 )
-_GENERIC_FAMILIES = frozenset({"serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui", "ui-serif"})
+_GENERIC_FAMILIES = frozenset(GENERIC_ALIASES)  # every CSS name for a generic family (stand_ins, E3.13)
 _DECORATIONS = frozenset({"underline", "line-through", "overline"})
 
 

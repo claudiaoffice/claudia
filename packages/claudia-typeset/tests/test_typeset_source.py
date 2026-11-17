@@ -1,8 +1,11 @@
 """The TeX source that is built around a formula or a page, and how errors are found again in the user's text."""
 
+import json
+from pathlib import Path
+
 import pytest
 
-from claudia_fonts import Catalogue, Collection, CollectionRecord
+from claudia_fonts import Catalogue, Collection, CollectionRecord, builtin_folder, collection_folders
 from claudia_fonts.testing import make_font
 from claudia_typeset import FontUnavailable, Job, Mode, TexError, build_source, parse_log
 
@@ -44,9 +47,23 @@ def test_a_chosen_font_replaces_the_text_font_only(catalogue):
     assert r"\setmathfont{Latin Modern Math}" in built.text
 
 
-def test_a_font_the_catalogue_replaces_by_its_table_is_asked_for_by_the_provided_name(catalogue):
-    built = build_source(Job(Mode.PAGE, "x", font="Times New Roman"), catalogue)
-    assert r"\setmainfont{Liberation Serif}" in built.text
+SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "stand-in-fonts.json"
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [e for e in json.loads(SAMPLE.read_text(encoding="utf-8"))["fonts"] if e["stand_in"]],
+    ids=lambda e: e["family"],
+)
+def test_a_font_of_the_sample_is_set_in_the_stand_in_a_server_with_the_shipped_fonts_has(tmp_path, entry):
+    """E3.13: the shared sample's fonts are typeset in the same stand-ins as print and PDF use."""
+    math = tmp_path / "math"
+    math.mkdir()
+    make_font(math / "lmmath.ttf", "Latin Modern Math", math=True)
+    shipped = [Collection.from_folder(f) for f in collection_folders(builtin_folder())]
+    catalogue = Catalogue.from_collections([*shipped, Collection(math, CollectionRecord("m", "test", True))])
+    built = build_source(Job(Mode.PAGE, "x", font=entry["family"]), catalogue)
+    assert rf"\setmainfont{{{entry['stand_in']}}}" in built.text
 
 
 def test_a_font_that_nobody_provides_is_reported_by_name(catalogue):
@@ -139,3 +156,64 @@ def test_paths_of_our_machine_never_reach_the_message():
     assert error is not None
     assert "/srv/claudia" not in error.message + error.context
     assert error.line == 1
+
+
+# a real log (TeX Live 2023): the message goes on in the lines that begin with the name of the package in brackets
+CONTINUED = "\n".join(
+    [
+        "/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.sty:45: Fatal Package fontspec Error: "
+        "The fontspec package requires either XeTeX or",
+        "(fontspec)                      LuaTeX.",
+        "(fontspec)                      ",
+        "(fontspec)                      You must change your typesetting engine to,",
+        '(fontspec)                      e.g., "xelatex" or "lualatex" instead of',
+        '(fontspec)                      "latex" or "pdflatex".',
+        "",
+        "Type <return> to continue.",
+        " ...",
+        "l.45 \\msg_fatal:nn {fontspec} {cannot-use-pdftex}",
+        "",
+    ]
+)
+
+
+def test_a_message_that_goes_on_in_the_next_lines_is_whole():
+    error = parse_log(CONTINUED, first_line=1, line_count=1)
+    assert error is not None
+    assert error.message.startswith(
+        "Fatal Package fontspec Error: The fontspec package requires either XeTeX or LuaTeX."
+    )
+    assert 'instead of "latex" or "pdflatex".' in error.message
+    assert "(fontspec)" not in error.message and "Type <return>" not in error.message
+    assert error.context.startswith("\\msg_fatal")
+
+
+# the same kind of message when the engine cut its line at 79 characters (the first two lines are 79 characters long)
+CUT = "\n".join(
+    [
+        "./e.tex:2: Package demo Error: This message is deliberately long so that TeX wr",
+        "aps its first line of the log well before the end of it, and a second sentence ",
+        "follows here..",
+        "",
+        "See the demo package documentation for explanation.",
+        "Type  H <return>  for immediate help.",
+        " ...",
+        "l.2 ... second sentence follows here.}{Help text.}",
+        "",
+    ]
+)
+
+
+def test_a_line_that_was_cut_at_the_line_width_is_joined_again():
+    assert all(len(line) == 79 for line in CUT.splitlines()[:2])
+    error = parse_log(CUT, first_line=1, line_count=3)
+    assert error is not None
+    assert error.message == (
+        "Package demo Error: This message is deliberately long so that TeX wraps its first line of the log well "
+        "before the end of it, and a second sentence follows here.."
+    )
+
+
+def test_a_short_message_is_not_joined_with_what_follows_it():
+    log = "./main.tex:9: Undefined control sequence.\nl.9 \\foo\n"
+    assert parse_log(log, first_line=1, line_count=9).message == "Undefined control sequence."

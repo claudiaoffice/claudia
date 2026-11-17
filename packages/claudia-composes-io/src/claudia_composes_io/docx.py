@@ -35,6 +35,7 @@ from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
 from ._docx_blocks import hidden_content, place, remove
+from ._docx_fonts import style_fonts
 from ._docx_lists import ListWriter, numbering_in, read_lists
 from ._docx_pictures import (
     PictureEdits,
@@ -44,6 +45,7 @@ from ._docx_pictures import (
 )
 from ._docx_setup import read_setup, write_language, write_page
 from ._docx_styles import WORD_NAMES, WordNames, unsaid_of, write_styles
+from ._fonts import take_fonts
 from ._pictures import picture_losses, pictures_of
 from ._style_look import look_for
 from ._suggestions import WhenMade, open_replacements, when_made
@@ -272,7 +274,9 @@ def _tracked_change(
 def docx_to_text(docx_bytes: bytes) -> TextModel:
     """``docx_bytes`` as a :class:`~claudia_composes.TextModel`: one block per paragraph, in order, Word's
     built-in styles mapped back to claudia's (anything else -- "Normal", a custom style, no style at all --
-    becomes body text, the same fallback ``text_to_docx`` uses going the other way). A picture the model can show as it
+    becomes body text, the same fallback ``text_to_docx`` uses going the other way), each of those styles with the font
+    the file gives it (E3.13: a style's own, the one it is based on, the document defaults, a theme font). A picture the
+    model can show as it
     is (an image the app decodes, not cropped or flipped, in its own proportions) comes in as an image object hanging
     from its paragraph, with its alt text (D464). A tracked change's own text
     is not seen here: python-docx's own ``paragraph.text`` already skips it (only runs that are direct children
@@ -288,6 +292,7 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
         runs = (Run(len(text), None),) if text else ()
         blocks.append(Block(f"b{index}", style_id, text, runs, reading.items.get(paragraph._p)))
     model = TextModel(blocks or None, page=setup.page, language=setup.language, lists=reading.book if blocks else None)
+    take_fonts(model, style_fonts(document, {DEFAULT_STYLE: "Normal", **_WORD_STYLE}))
     for picture in file_pictures(document):
         if picture.asset.id not in model.images:
             model.define_image(picture.asset)

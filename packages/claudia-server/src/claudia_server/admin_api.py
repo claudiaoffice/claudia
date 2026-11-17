@@ -28,9 +28,11 @@ from claudia_core.clock import utc_now
 from claudia_typeset.programs import EngineUnavailable, resolve_program
 
 from .admin import AdminAccount, AdminDirectory, needs_administrator
+from .admin_fonts import font_admin_routes
 from .admin_sessions import AdminSessions
 from .apps import model_assistant_for, stand_in_assistant_for
 from .assistant import Assistant
+from .fonts import FontService
 from .server_settings import AiSettings, ServerSettings, TypesetSettings, save_admins, save_settings
 from .suite import Suite
 
@@ -115,6 +117,8 @@ class AdminContext:
     state_dir: Path
     ai: AiRuntime
     exposed: bool
+    fonts: FontService | None = None
+    """The server's fonts, for Server settings ▸ Fonts (``admin_fonts``); ``None`` for a server without them."""
 
 
 def _bearer_token(request: Request) -> str | None:
@@ -344,4 +348,6 @@ def admin_router(suite: Suite, set_access_secret: Callable[[str | None], None], 
     _identity_routes(router, context, require_admin)
     _admin_routes(router, context, require_admin)
     _settings_routes(router, suite, set_access_secret, context, require_admin)
+    if context.fonts is not None:
+        font_admin_routes(router, context.fonts, require_admin, lambda: context.settings.access_secret is not None)
     return router

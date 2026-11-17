@@ -8,8 +8,13 @@ so every collection brings a ``collection.json`` next to its fonts. The record i
     {"format": 1, "name": "Liberation", "licence": "OFL-1.1", "redistributable": true,
      "source": "https://github.com/liberationfonts", "version": "2.1.5"}
 
-``redistributable`` is the answer to one question: may this server hand the font files to the clients of its users
-(web fonts) and put them into exports? ``licence`` is free text for people, normally an SPDX identifier.
+``redistributable`` answers who may receive the fonts (D1041, the "may go" of Server settings ▸ Fonts): ``true``,
+anyone (an open licence: the files are handed to every client and may go into exports and documents); ``false``, the
+people using this server only (a licence for one organisation: the files are handed only to people who passed the
+server's access secret, and never go into an export). A font the catalogue cannot use is the third answer, "not
+usable", which no record gives: :class:`~claudia_fonts.Problem` says why. ``licence`` is free text for people,
+normally an SPDX identifier. ``added_by`` and ``added`` (an ISO date) say who added a collection through the server
+settings and when; a collection an operator put on the disk has neither.
 """
 
 from __future__ import annotations
@@ -18,9 +23,14 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, get_args
 
 COLLECTION_FILE = "collection.json"
 RECORD_FORMAT = 1
+
+MayGo = Literal["anywhere", "this-server"]
+MAY_GO: tuple[MayGo, ...] = get_args(MayGo)
+"""Who may receive the fonts of a collection (D1041): anyone, or the people using this server."""
 
 
 class RecordError(ValueError):
@@ -49,6 +59,26 @@ class CollectionRecord:
     redistributable: bool
     source: str = ""
     version: str = ""
+    added_by: str = ""
+    added: str = ""
+
+    @property
+    def may_go(self) -> MayGo:
+        """Who may receive the fonts, ``anywhere`` (an open licence) or ``this-server`` (its own people only)."""
+        return "anywhere" if self.redistributable else "this-server"
+
+    def to_data(self) -> dict:
+        """The record as ``collection.json`` holds it; empty optional fields are left out."""
+        data: dict = {
+            "format": RECORD_FORMAT,
+            "name": self.name,
+            "licence": self.licence,
+            "redistributable": self.redistributable,
+        }
+        for key in ("source", "version", "added_by", "added"):
+            if getattr(self, key):
+                data[key] = getattr(self, key)
+        return data
 
     @classmethod
     def from_data(cls, data: object) -> CollectionRecord:
@@ -72,6 +102,8 @@ class CollectionRecord:
             redistributable=redistributable,
             source=_text(data, "source", required=False),
             version=_text(data, "version", required=False),
+            added_by=_text(data, "added_by", required=False),
+            added=_text(data, "added", required=False),
         )
 
 

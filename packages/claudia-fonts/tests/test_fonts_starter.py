@@ -5,6 +5,7 @@ import json
 import sys
 
 import pytest
+from fontTools.ttLib import TTFont
 
 from claudia_fonts import COLLECTION_FILE, Catalogue, FetchError, builtin_folder, collection_folders, fetch, read_lock
 from claudia_fonts.__main__ import main
@@ -15,10 +16,19 @@ from claudia_fonts.testing import make_font
 def test_the_packaged_lock_pins_open_fonts_by_hash_at_a_fixed_commit():
     lock = read_lock()
     names = [c.name for c in lock]
-    assert names == ["Inter", "Fraunces", "JetBrains Mono", "Carlito", "Caladea"]
+    assert names == [
+        "Inter",
+        "Fraunces",
+        "JetBrains Mono",
+        "Carlito",
+        "Caladea",
+        "Arimo",
+        "Tinos",
+        "Cousine",
+        "Gelasio",
+    ]
     for collection in lock:
         assert collection.licence == "OFL-1.1" and collection.redistributable
-        assert any(f.name == "OFL.txt" for f in collection.files)
         for f in collection.files:
             assert f.url.startswith("https://raw.githubusercontent.com/google/fonts/35e77c38")
             assert len(f.sha256) == 64
@@ -39,6 +49,22 @@ def test_the_package_ships_exactly_the_pinned_starter_set():
             assert hashlib.sha256((folder / f.name).read_bytes()).hexdigest() == f.sha256, f.name
         record = json.loads((folder / COLLECTION_FILE).read_text())
         assert (record["name"], record["licence"], record["redistributable"]) == (collection.name, "OFL-1.1", True)
+
+
+def test_every_shipped_collection_carries_its_licence_text():
+    """The OFL wants its text with the fonts: an OFL.txt, or (as google/fonts ships Tinos) the licence in every
+    font's own name table (ID 13), which the OFL allows."""
+    root = builtin_folder()
+    for collection in read_lock():
+        folder = root / collection.folder
+        if (folder / "OFL.txt").is_file():
+            assert "SIL Open Font License" in (folder / "OFL.txt").read_text(encoding="utf-8")
+            continue
+        fonts = [f for f in collection.files if f.name.endswith(".ttf")]
+        assert fonts, collection.name
+        for f in fonts:
+            licence = TTFont(folder / f.name)["name"].getDebugName(13) or ""
+            assert "SIL Open Font License" in licence, f.name
 
 
 def test_the_shipped_starter_set_is_a_catalogue_with_the_fallback_family():

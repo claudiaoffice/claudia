@@ -31,7 +31,7 @@
   "class": [
    "object"
   ],
-  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool) -> None",
+  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool, fonts: claudia_server.fonts.FontService | None = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -307,6 +307,8 @@
    "new_connection_id": "(self) -> 'int'",
    "note_ai_mode": "(self, user: 'str', mode: 'str | None') -> 'None'",
    "pick_color": "(self) -> 'str'",
+   "render_outcomes": "(self) -> 'dict[str, dict]'",
+   "render_unfinished": "(self) -> 'None'",
    "role_of": "(self, user: 'str') -> 'str | None'",
    "stop_rendering": "(self) -> 'None'",
    "sweep": "(self) -> 'None'",

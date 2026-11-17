@@ -3,13 +3,45 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [Unreleased]
+## [0.4.0] - 2026-11-16
+
+Adding fonts through the server settings, and who may receive them (E3.13 f, D1041).
 
 ### Added
+- `claudia_fonts.adding`: `check_files` (what each font of an upload, a zip opened into its fonts, would become:
+  added, replacing a font of the same family and style, or left out with a reason code), `add_collection`,
+  `rename_collection`, `remove_collection` (only under the root of added collections), `AddRefused`, `FileCheck`.
+- `CollectionRecord.may_go` (`MayGo`, `MAY_GO`: `anywhere` or `this-server`), `added_by`, `added` and `to_data`; the
+  record keeps format 1 (two optional fields were added). `FontFile.to_data` says `may_go`.
+- `Problem.code`, `detail`, `family`, `style`, `collection` and `not_usable`; `FontProblem.code`, `detail`, `family`,
+  `style`: why a font is not used, as a code a page can put in its own words. `Catalogue.collections` and
+  `Catalogue.stands_in_for`.
+- `claudia_fonts.testing.make_font` takes `licence` (the name table's licence description).
+
+### Changed
+- `redistributable: false` means "the people using this server only" (D1041), not "never handed out":
+  `WebFontCache.get` makes the WOFF2 file of such a font with `local=True`.
+
+## [0.3.0] - 2026-11-16
+
+Fonts that take exactly the room of the common office fonts, and the words for how close a stand-in is (E3.13).
+
+### Added
+- Arimo, Tinos, Cousine (the widths of Arial and Helvetica, Times New Roman, Courier New, and of Liberation Sans,
+  Serif and Mono) and Gelasio (Georgia) join the starter set, pinned at the same google/fonts commit and shipped in
+  `builtin/`. Tinos has no `OFL.txt` there; its licence is in each file's name table, which a test checks.
+- `DEFAULT_GENERICS`: the font of each CSS generic family and the fallback (Fraunces, Inter, JetBrains Mono, Inter).
+- `CLOSENESS` and `Closeness` (`same`, `same-widths`, `other`), and `Resolution.closeness`.
 - The starter set ships with the package (D500): `claudia_fonts/builtin/` holds the pinned files of
   `starter.lock.json`, `builtin_folder()` names it. A test checks the files against the lock.
 
 ### Changed
+- `substitutions.json` is gone: the table, with the generic families, is `claudia_core.stand_ins`, and
+  `DEFAULT_SUBSTITUTIONS` and `DEFAULT_GENERICS` are its `SAME_WIDTHS` and `GENERIC_FONTS` (claudia-core is now a
+  dependency). `DEFAULT_SUBSTITUTIONS` now names
+  Arimo, Tinos, Cousine and Gelasio (before: Liberation Sans, Serif and Mono, which no server had unless an operator
+  added them), and Liberation Sans, Serif and Mono get the same stand-ins. The layout library's copy is generated
+  from it (`scripts/generate_font_stand_ins.py`).
 - `LockedFile` is `claudia_file_writer.PinnedFile` and `FetchError` is `claudia_file_writer.FetchError` (CODE-34,
   D701): the fetch of the starter set and that of the hyphenation patterns were the same code twice. `LockedFile`
   gains `from_lock` and `is_at`; a lock's file name may no longer hold a colon or other characters a font file name

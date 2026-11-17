@@ -5,12 +5,45 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- The LaTeX programs set in Server settings (`xelatex`, `pdftocairo`) and the `render` tools are used as they are
+  now, not as they were when the server started: changing a path no longer needs a restart (CODE-55).
+- A document that is opened draws the containers that have text and no picture (CODE-51). Before, a picture was made
+  only when its text changed, so a container whose picture was never made (the tool failed, the server stopped first)
+  stayed without one for ever.
+- `renderings` (wire) gives each definition an `outcome`: what the last try to draw it said, as in the event
+  `render_result`, or `null`. A window that joins after a try failed now hears it and says "could not draw it"
+  instead of "drawing…". `Context` has `render_outcomes`; `HostedDocument` has `render_unfinished` and
+  `render_outcomes`.
+- LaTeX formulas use fonts added in Server settings ▸ Fonts at once, not after a restart (CODE-50): the render desk
+  is given the font service's current catalogue for every job. The page no longer says a restart is needed.
+- Add fonts… no longer stays blocked after too many files were chosen (CODE-49): files waiting to be added are held per
+  administrator, `DELETE /api/admin/fonts/files` lets go of those given up, the refusal says the limits and what to
+  do, and `GET /api/admin/fonts` sends them as `limits` so the dialog says them before anything is sent.
+  `FontUploads.put`, `files` and `drop` take the administrator.
+
 ### Changed
+- Fonts whose collection may go to this server's people only (`redistributable: false`, "This server", D1041) are
+  listed and served to a request with the access secret or an administrator's session; before, they were never handed
+  out. On a server without an access secret that is everyone who reaches it. Their files and the listing are kept by
+  the person's own browser only (`Cache-Control: private`). `font_router` takes `local`, `FontService.servable` and
+  `listing` take `local`.
+- `STATE_DIR/fonts` is read after the folders of `--fonts` too (it was read only without them): it is where Server
+  settings ▸ Fonts adds collections. `FontService.from_folders` takes `shipped` and `added_root`, and the service
+  knows each collection's origin (`Origin`: shipped, operator, added) and reads them again with `reload`.
 - The server's state files (certificate, key, settings, the file store's list) and the fetched hyphenation patterns are
   written with `claudia_file_writer` (CODE-34, D701): ten attempts with waits up to a second on Windows instead of
   five, a temporary file name that two threads cannot share, and the pattern fetch is the one the fonts use.
 
 ### Added
+- Server settings ▸ Fonts (E3.13 f, D1041): `/api/admin/fonts` (the catalogue as the page shows it: collections, the
+  starter set as one card, families with what each stands in for, every font not used with a reason code),
+  `/api/admin/fonts/files` (hold a file), `/check` (what each font would become; changes nothing) and
+  `/collections` (add, `PATCH` to rename, `DELETE` to remove a collection added there). Administrators only.
+  `AdminContext.fonts`, module `claudia_server.admin_fonts`, `ADMIN_FONTS_FORMAT` 1.
+- `GET /api/fonts` also sends `generics`, the font of each CSS generic family and the fallback, from
+  `claudia_fonts` (E3.13), so clients keep no table of their own; `FONTS_FORMAT` stays 1 (a field was added).
+  `FontService.listing` takes them as `generics` (default `DEFAULT_GENERICS`).
 - `add_image` and `describe_object` in composes (CODE-27): a picture comes into a text from disk, hanging from a
   character (`block`, `offset`), and any object of a text can be described or marked decorative, as in the other two
   apps. `PROTOCOL_VERSION` stays 1: methods were added.

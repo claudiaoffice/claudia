@@ -1,0 +1,34 @@
+{
+  "note": "The shared sample of the font stand-ins (E3.13): the fonts office files ask for most and what a server with only the shipped fonts shows each with. Read by _build_fixtures.py to make xlsx/, docx/, odt/, pptx/ and odp/stand-in-fonts/source.*, by their spec.py, and by the tests of every place the fonts reach: claudia-core, claudia-fonts, the server's /api/fonts, typesetting, the importers and exporters, and the layout library (print and PDF). fonts: one cell (xlsx) or text box (pptx, odp) each, in this order; stand_in is the family the catalogue gives for the font itself (null: neither the font nor a font with its widths, so the generic family's font is used); closeness is same, same-widths or other (claudia_fonts.CLOSENESS). text_styles: the font of each style of the docx and odt (body from Word's theme body font and from the odt's default style, title from Word's theme heading font, the others the style's own). slides: the deck's body and title fonts (the theme of the pptx, the default and title styles of the odp); a box in another font gets a style of its own. generic_families: font-family values that start with a CSS generic family (or a name that stands for one, such as system-ui) and the font they are laid out with; an export names that font (CODE-42).",
+  "fonts": [
+    {"family": "Arial", "generic": "sans-serif", "stand_in": "Arimo", "closeness": "same-widths"},
+    {"family": "Helvetica", "generic": "sans-serif", "stand_in": "Arimo", "closeness": "same-widths"},
+    {"family": "Liberation Sans", "generic": "sans-serif", "stand_in": "Arimo", "closeness": "same-widths"},
+    {"family": "Times New Roman", "generic": "serif", "stand_in": "Tinos", "closeness": "same-widths"},
+    {"family": "Courier New", "generic": "monospace", "stand_in": "Cousine", "closeness": "same-widths"},
+    {"family": "Calibri", "generic": "sans-serif", "stand_in": "Carlito", "closeness": "same-widths"},
+    {"family": "Cambria", "generic": "serif", "stand_in": "Caladea", "closeness": "same-widths"},
+    {"family": "Georgia", "generic": "serif", "stand_in": "Gelasio", "closeness": "same-widths"},
+    {"family": "Century Gothic", "generic": "sans-serif", "stand_in": null, "closeness": "other"},
+    {"family": "Inter", "generic": "sans-serif", "stand_in": "Inter", "closeness": "same"}
+  ],
+  "text_styles": [
+    {"style": "body", "family": "Arial"},
+    {"style": "title", "family": "Georgia"},
+    {"style": "heading-1", "family": "Calibri"},
+    {"style": "heading-2", "family": "Times New Roman"},
+    {"style": "quote", "family": "Century Gothic"}
+  ],
+  "slides": {
+    "body": "Arial",
+    "title": "Georgia"
+  },
+  "generic_families": [
+    {"css": "serif", "font": "Fraunces"},
+    {"css": "sans-serif", "font": "Inter"},
+    {"css": "monospace", "font": "JetBrains Mono"},
+    {"css": "system-ui, 'Segoe UI', sans-serif", "font": "Inter"},
+    {"css": "ui-monospace, 'Cascadia Mono', monospace", "font": "JetBrains Mono"},
+    {"css": "cursive", "font": "Fraunces"}
+  ]
+}
