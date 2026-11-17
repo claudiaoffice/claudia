@@ -249,7 +249,7 @@ people who already have a document still log in with their name and password. So
 make a document is answered like somebody who asked for one that does not exist, so nothing is learned about which
 documents there are. The secret is compared in constant time and never printed. The web app has no field for it yet.
 
-Redaction rewrites the document file and its journal (D725, `redaction_plan` and `redact` for owners, D726). Not there yet: unencrypted export and import (E2.9), rate limits over time (E2.7: the caps above bound what is waiting, not how often an address may try), read restrictions for viewers and a viewer opening a sealed document first (E2.4).
+Redaction rewrites the document file and its journal (D725; `redaction_plan` and `redact`, owners on anything and editors on their own work, D727). Not there yet: unencrypted export and import (E2.9), rate limits over time (E2.7: the caps above bound what is waiting, not how often an address may try), read restrictions for viewers and a viewer opening a sealed document first (E2.4).
 
 
 ## Presentations (creates)

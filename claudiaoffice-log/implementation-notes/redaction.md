@@ -1,4 +1,4 @@
-# Redaction: the contract, the plan and the rewritten file (D720–D726, E1.8, E2.6, SEC-05)
+# Redaction: the contract, the plan and the rewritten file (D720–D728, E1.8, E2.6, SEC-05)
 
 2026-11-16, branch `redaction` from `main` at `ef829d5`. The owner agreed to all four proposals for D229 the same day.
 
@@ -17,7 +17,7 @@ claudia-computes    WorkbookModel.blank: sheets, "s1!A1:B5", chart tabs, objects
 claudia-creates     SlideModel.blank: slides (notes and everything on them), objects
 claudia-container   rewrite_journal, forget_original                   (D725, D723)
 claudia-server      SealedStore.rewrite (keys kept), JournalStore.rewrite, filestore.history_items / chat_items
-                    wire: redaction_plan, redact (owners only)         (D726)
+                    wire: redaction_plan, redact                      (D727: owners anything, editors their own)
 ```
 
 ## How the plan is worked out
@@ -59,3 +59,12 @@ packing does) and the kernel puts the log and chat back in memory.
   sha256 of the original bytes; a person who has the picture could confirm it was there. Accepted with the shape rule.
 * A rendered container's picture is blanked when an import is blanked; a redacted `DefineRendering` step keeps the
   picture of the old source, which is a step of its own (`DefineImage`) and has to be picked too.
+
+## 2026-11-17: editors redact their own work (D727, D728)
+
+`_redaction_request` in `protocol.py` lets a viewer and the assistant through to nothing (`forbidden`), an editor only
+to steps and chat messages whose author is she (`command_error` otherwise, before any plan is made). After the plan,
+`_others_reached` names the authors of dependents who are not she: `redaction_plan` still answers, with
+`allowed: false` and `others`, so that the dialog can say whose work is in the way (mock-up 5) and leaves out the
+preview; `redact` refuses. The restore-suggestion guard now holds for everybody, not only owners. The chat note of
+D728 is a plain `chat` call by the client after `redact`; the server does not post anything itself.

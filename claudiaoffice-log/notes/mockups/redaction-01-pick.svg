@@ -237,11 +237,11 @@
 <circle cx="626" cy="431" r="10" fill="#5B4BC4"/>
 <text x="626" y="435" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
 <rect x="16" y="450" width="590" height="98" rx="8" fill="#FFFDF7" stroke="#5B4BC4" stroke-width="1.5" stroke-dasharray="5 3"/>
-<text x="28" y="472" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#5B4BC4" text-anchor="start">1  Owners only: &quot;Redact…&quot; in the panel&#x27;s context menu, and File ▸ Manage ▸ Redact History…</text>
-<text x="28" y="488" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Ctrl+click picks more entries and messages, Shift+click a run of them; Shift+Del opens the dialog</text>
-<text x="28" y="504" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">for what is picked. File ▸ Manage ▸ Redact History… (Ctrl+Shift+Alt+E) opens it with nothing picked:</text>
-<text x="28" y="520" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">the panel then shows a pick box on every entry. Editors and viewers do not see the entry at all.</text>
-<text x="28" y="536" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">A private message can be picked only by someone who can read it (D726).</text>
+<text x="28" y="472" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#5B4BC4" text-anchor="start">1  &quot;Redact…&quot; in the panel&#x27;s context menu, and File ▸ Manage ▸ Redact History… (Ctrl+Shift+Alt+E).</text>
+<text x="28" y="488" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Ctrl+click picks more entries and messages, Shift+click a run of them; Shift+Del opens the dialog.</text>
+<text x="28" y="504" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">Owners can pick anything they can read; editors only their own changes and messages, so for them</text>
+<text x="28" y="520" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">the entry is greyed on anybody else&#x27;s (D727). Viewers do not see it. File ▸ Manage ▸ Redact History…</text>
+<text x="28" y="536" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">opens the dialog with nothing picked: the panel then shows a pick box on every entry one may redact.</text>
 <circle cx="906" cy="286" r="10" fill="#5B4BC4"/>
 <text x="906" y="290" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
 <rect x="16" y="568" width="590" height="50" rx="8" fill="#FFFDF7" stroke="#5B4BC4" stroke-width="1.5" stroke-dasharray="5 3"/>

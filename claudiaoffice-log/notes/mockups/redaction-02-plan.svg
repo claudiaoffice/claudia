@@ -277,10 +277,11 @@
 <text x="698" y="528" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">they held. How long each was stays visible.</text>
 <circle cx="686" cy="548" r="3" fill="#1F1A33"/>
 <text x="698" y="552" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Copies, downloads, exports and backups made before keep it.</text>
-<rect x="680" y="576" width="16" height="16" rx="4" fill="#FFFFFF" stroke="#B8B2C6" stroke-width="1" />
-<text x="706" y="589" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Also tell bob and ana in the chat, and why:</text>
-<rect x="706" y="600" width="530" height="30" rx="6" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
-<text x="716" y="620" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#9A93AE" text-anchor="start">A bank PIN was in the sheet. It is gone now.</text>
+<rect x="680" y="576" width="16" height="16" rx="4" fill="#5B4BC4" />
+<path d="M684,584.5 L687,587.5 L692.5,581" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="706" y="589" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">Tell bob in the chat that his work was redacted:</text>
+<rect x="706" y="600" width="530" height="30" rx="6" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.5" />
+<text x="716" y="620" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#1F1A33" text-anchor="start">@bob I redacted 3 of your items: a bank PIN was in them.</text>
 <line x1="652" y1="668" x2="1264" y2="668" stroke="#DAD4C8" stroke-width="1"/>
 <rect x="876" y="686" width="116" height="36" rx="8" fill="#FFFFFF" stroke="#DAD4C8" stroke-width="1" />
 <text x="914.75" y="708.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#1F1A33" text-anchor="middle">Cancel</text>
@@ -297,13 +298,14 @@
 <text x="640" y="356" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
 <circle cx="640" cy="482" r="10" fill="#5B4BC4"/>
 <text x="640" y="486" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
-<rect x="16" y="470" width="560" height="146" rx="8" fill="#FFFDF7" stroke="#5B4BC4" stroke-width="1.5" stroke-dasharray="5 3"/>
+<rect x="16" y="470" width="560" height="162" rx="8" fill="#FFFDF7" stroke="#5B4BC4" stroke-width="1.5" stroke-dasharray="5 3"/>
 <text x="28" y="492" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="600" fill="#5B4BC4" text-anchor="start">1  Unticking an item takes it out and works the plan out again;</text>
 <text x="28" y="508" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">     the list, the amber box and the preview follow at once.</text>
 <text x="28" y="524" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">2  The later steps that would break are named before anything happens</text>
 <text x="28" y="540" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">     (D722). They cannot be unticked: leave out what they need instead.</text>
 <text x="28" y="556" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">3  The facts in words, in the danger-zone way of the server pages:</text>
-<text x="28" y="572" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">     the button names the scope, there is no &quot;OK&quot;.</text>
-<text x="28" y="588" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">If somebody works on the document while the dialog is open and the</text>
-<text x="28" y="604" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">plan changes, the dialog says so and shows the new plan (D726).</text>
+<text x="28" y="572" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">     the button names the scope, there is no &quot;OK&quot; (D728). The chat note</text>
+<text x="28" y="588" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">     is on by default and can be changed or unticked; it is posted after.</text>
+<text x="28" y="604" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">If somebody works on the document while the dialog is open and the</text>
+<text x="28" y="620" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" font-weight="400" fill="#1F1A33" text-anchor="start">plan changes, the dialog says so and shows the new plan (D726).</text>
 </svg>

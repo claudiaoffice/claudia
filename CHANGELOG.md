@@ -6,7 +6,7 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [0.28.0] - 2026-11-16
 
-The redaction contract (D229, D720–D726, E1.8).
+The redaction contract (D229, D720–D728, E1.8).
 
 ### Added
 - `Document.plan_redaction(revisions, *, chat, parts)` and `RedactionPlan` (D721, D722): what a redaction does,

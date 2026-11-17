@@ -87,7 +87,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [0.37.0] - 2026-11-16
 
 ### Added
-- Wire methods `redaction_plan` and `redact`, owners only (D726): an owner sees what a redaction does (the steps, the
+- Wire methods `redaction_plan` and `redact` (D726, D727): owners redact anything they can read, editors their own
+  changes and messages; an editor's plan that would blank somebody else's later step says `allowed: false` and names
+  them in `others`, and `redact` refuses it. The person sees what a redaction does (the steps, the
   later steps blanked with them, the chat messages, the document as it will look) and confirms that plan by repeating
   its dependents. The `redacted` event carries `chat`. An owner redacts only chat messages she can read.
 - `filestore.history_items(log)` and `chat_items(chat)`: the journal items that build a log and a chat again.

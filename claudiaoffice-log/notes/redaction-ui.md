@@ -1,7 +1,8 @@
 # Redaction: the screens (E3.13), proposed
 
-Status: **proposal, not agreed.** The rules behind it are decided (D720–D726, superseding D229) and built in the kernel,
-the container and the server (E1.8, E2.6, SEC-05). This note is what the clients would show; no client code exists yet.
+Status: **proposal; the open points are answered (D727, D728), the screens wait for the go-ahead.** The rules behind
+it are decided (D720–D728, superseding D229) and built in the kernel, the container and the server (E1.8, E2.6,
+SEC-05). This note is what the clients would show; no client code exists yet.
 
 ## The four screens
 
@@ -11,6 +12,7 @@ the container and the server (E1.8, E2.6, SEC-05). This note is what the clients
 | `mockups/redaction-02-plan.svg` | The plan: what goes and what it becomes, the later step that goes with it (amber), what this means in words, an optional chat note, and a red button that names the scope. The document behind shows the preview. |
 | `mockups/redaction-03-after.svg` | Afterwards: hatched entries with filler of the same length, "Message redacted", the redaction as its own entry, a toast naming the server. |
 | `mockups/redaction-04-import-parts.svg` | An import (composes): everything, or only the paragraphs, pictures and boxes picked in the text. |
+| `mockups/redaction-05-editor.svg` | An editor whose redaction would blank somebody else's later step: the reason, the red button off, "Ask an owner" with a chat note. |
 
 ## The flow
 
@@ -40,13 +42,16 @@ sequenceDiagram
 
 | Where | Entry | Key | Who |
 |---|---|---|---|
-| History & Chat, context menu of picked entries | Redact *n* items… | Shift+Del | owners |
-| File ▸ Manage | Redact History… | Ctrl+Shift+Alt+E (free in all three apps) | owners |
+| History & Chat, context menu of picked entries | Redact *n* items… | Shift+Del | owners on anything, editors on their own entries (D727) |
+| File ▸ Manage | Redact History… | Ctrl+Shift+Alt+E (free in all three apps) | owners and editors |
 
 * The same two entries in composes, computes and creates, in the web client and the shells; the shells take
   `File ▸ Manage ▸ Redact History…` from the shared manifest (`clients/linux/src/claudia_shell_gtk/manifest.py`), so
   `keyboard-shortcuts.md` is regenerated, never edited.
-* Editors, viewers and the AI never see either entry. A private chat message can only be picked by someone who can read it.
+* Viewers and the AI never see either entry. For an editor, "Redact…" is greyed on somebody else's entries, and a plan
+  that would blank somebody else's later step comes back with `allowed: false` and their names (mock-up 5).
+* A private chat message can only be picked by someone who can read it.
+* The chat note (D728) is ticked when the dialog opens; the client posts it with `chat` after `redact` succeeds.
 * Every string goes through `po/claudia.pot` (the four server messages are already there, with German).
 
 ## Accessibility (BITV)
@@ -82,7 +87,7 @@ classDiagram
       File > Manage > Redact History
     }
     SidePanel_vue --> RedactionDialog_vue : opens with picked
-    document_menus_ts --> RedactionDialog_vue : opens empty, owners only
+    document_menus_ts --> RedactionDialog_vue : opens empty, owners and editors
     RedactionDialog_vue --> redaction_ts
     RedactionDialog_vue --> replay_tint_ts : preview of plan.state
     redaction_ts --> protocol_ts : redaction_plan / redact
@@ -96,13 +101,9 @@ classDiagram
 * The import's "Pick in the text…" uses each app's own selection (paragraphs, ranges, slides and objects) and sends
   their ids as `parts`.
 
-## Open points for the owner
+## Answered (2026-11-17)
 
-1. **A chat note** (mock 2) is optional and off by default. Should telling the people whose work was blanked be on by
-   default, or always?
-2. **Typed confirmation.** The mock uses a red button that names the scope and Ctrl+Enter, as the server pages do. Some
-   tools ask the person to type the document's name for an irreversible act. Wanted here?
-3. **Editors.** D726 lets only owners redact. Should an author be able to redact *her own* chat messages without an
-   owner?
-4. **Finer parts of an import** (a few words inside one paragraph) are not offered (D723); paragraphs, pictures, boxes,
-   ranges and slides are the units. Enough?
+1. **Chat note:** an option, on by default (D728).
+2. **Confirmation:** the red button that names the scope, with Ctrl+Enter; no typed confirmation for now (D728).
+3. **Editors:** redact their own changes and messages; owners anything (D727).
+4. **Parts of an import:** whole objects; single words may come later (D728).
