@@ -116,7 +116,8 @@ jobs:
           server_version="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' packages/claudia-server/src/claudia_server/_version.py)"
           port=8811
           for app in composes computes creates; do
-            CLAUDIA_SERVER_PORT=$port xvfb-run -a dbus-run-session -- "claudia-$app" > "$RUNNER_TEMP/$app.log" 2>&1 &
+            # setsid: the window is a process group of its own, so that all of it can be ended at once
+            CLAUDIA_SERVER_PORT=$port setsid xvfb-run -a dbus-run-session -- "claudia-$app" > "$RUNNER_TEMP/$app.log" 2>&1 &
             window=$!
             ok=
             for _ in $(seq 1 90); do
@@ -131,9 +132,19 @@ jobs:
             kill -0 "$window"
             pgrep -af "/opt/claudia/venv/bin/python.* -m claudia_server" | grep -q -- "--port $port"
             /opt/claudia/venv/bin/python packaging/smoke_server.py "http://127.0.0.1:$port" --expect-version "$server_version"
-            pkill -TERM -f "claudia_server .*--port $port" || true
-            kill "$window" 2>/dev/null || true
+            # The window goes first. A window whose server has gone starts it again (D445), and that server would hold the
+            # suite's one folder of documents (D435) when the next app starts. Then the server is ended, and awaited until it
+            # has let go of the folder.
+            kill -TERM -- "-$window" 2>/dev/null || true
             wait "$window" 2>/dev/null || true
+            pkill -TERM -f "claudia_server .*--port $port" || true
+            for _ in $(seq 1 30); do
+              pgrep -f "claudia_server" >/dev/null || break
+              sleep 1
+            done
+            if pgrep -f "claudia_server" >/dev/null; then
+              echo "::error::the server of claudia-$app did not stop"; pgrep -af "claudia_server"; exit 1
+            fi
             port=$((port + 1))
           done
 
