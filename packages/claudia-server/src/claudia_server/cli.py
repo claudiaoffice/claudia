@@ -390,7 +390,7 @@ def _renderings(settings: ServerSettings, state_dir: Path, fonts: FontService) -
     administrator registered (the LaTeX programs are those of the typeset settings). The lines are for the start-up
     report: what is offered, and each manifest that could not be taken, with the reason."""
     work = state_dir / "render"
-    registry = builtin_registry(fonts.catalogue, work / "plugins")
+    registry = builtin_registry(lambda: fonts.catalogue, work / "plugins")
     folder = Path(settings.render.plugins_dir) if settings.render.plugins_dir else state_dir / "plugins"
     reports = registry.load_directory(folder, work / "plugins")
     tools: dict[str, object] = {"xelatex": settings.typeset.xelatex, "pdftocairo": settings.typeset.pdftocairo}

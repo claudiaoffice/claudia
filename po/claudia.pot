@@ -1894,7 +1894,7 @@ msgid "Fonts"
 msgstr ""
 
 #: web/app/components/AdminFonts.vue:90
-msgid "Fonts added. Documents laid out from now on use them; LaTeX formulas use them after the server restarts."
+msgid "Fonts added. Documents laid out from now on use them, and so do LaTeX formulas."
 msgstr ""
 
 #: web/app/components/NamesDialog.vue:66

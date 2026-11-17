@@ -6,7 +6,7 @@ same registry as every other plugin's, so the administrator has one place to say
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from claudia_fonts import Catalogue
@@ -31,19 +31,27 @@ from .tools import ResolvedTool
 
 
 class LatexPlugin(Plugin):
-    """Typesets LaTeX with XeLaTeX and the fonts of the catalogue; the settings are ``mode`` and ``width_mm``."""
+    """Typesets LaTeX with XeLaTeX and the fonts of the catalogue; the settings are ``mode`` and ``width_mm``.
 
-    def __init__(self, manifest: Manifest, catalogue: Catalogue, directory: str | Path) -> None:
+    ``catalogue`` is asked for on every job and not kept: a server adds fonts while it runs (Server settings ▸ Fonts)
+    and then has a new catalogue, which the next formula must be set with."""
+
+    def __init__(self, manifest: Manifest, catalogue: Callable[[], Catalogue], directory: str | Path) -> None:
         self.manifest = manifest
         self._catalogue = catalogue
         self._directory = Path(directory)
         self._typesetters: dict[tuple[Path, Path, Limits], Typesetter] = {}
+        self._set_with: Catalogue | None = None
 
     def _typesetter(self, tools: Mapping[str, ResolvedTool], limits: Limits) -> Typesetter:
+        catalogue = self._catalogue()
+        if catalogue is not self._set_with:  # new fonts: a typesetter keeps its catalogue and its fontconfig
+            self._typesetters.clear()
+            self._set_with = catalogue
         key = (tools["xelatex"].program, tools["pdftocairo"].program, limits)
         if key not in self._typesetters:
             self._typesetters[key] = Typesetter(
-                self._catalogue, self._directory, limits=limits, xelatex=key[0], pdftocairo=key[1]
+                catalogue, self._directory, limits=limits, xelatex=key[0], pdftocairo=key[1]
             )
         return self._typesetters[key]
 

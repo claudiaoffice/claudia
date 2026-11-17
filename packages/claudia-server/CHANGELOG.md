@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Fixed
+- LaTeX formulas use fonts added in Server settings ▸ Fonts at once, not after a restart (CODE-50): the render desk
+  is given the font service's current catalogue for every job. The page no longer says a restart is needed.
 - Add fonts… no longer stays blocked after too many files were chosen (CODE-49): files waiting to be added are held per
   administrator, `DELETE /api/admin/fonts/files` lets go of those given up, the refusal says the limits and what to
   do, and `GET /api/admin/fonts` sends them as `limits` so the dialog says them before anything is sent.

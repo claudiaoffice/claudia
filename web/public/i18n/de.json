@@ -471,7 +471,7 @@
   "Font size": "Schriftgröße",
   "Font styles": "Schnitte",
   "Fonts": "Schriften",
-  "Fonts added. Documents laid out from now on use them; LaTeX formulas use them after the server restarts.": "Schriften hinzugefügt. Dokumente, die ab jetzt gesetzt werden, nutzen sie; LaTeX-Formeln nutzen sie nach einem Neustart des Servers.",
+  "Fonts added. Documents laid out from now on use them, and so do LaTeX formulas.": "Schriften hinzugefügt. Dokumente, die ab jetzt gesetzt werden, nutzen sie, und LaTeX-Formeln ebenso.",
   "For": "Für",
   "For cell {cell}": "Für Zelle {cell}",
   "For the cell": "Für die Zelle",

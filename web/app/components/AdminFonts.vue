@@ -87,7 +87,7 @@ onMounted(async () => {
 function added(next: FontsPage) {
   adding.value = false
   show(next)
-  notice.value = t('Fonts added. Documents laid out from now on use them; LaTeX formulas use them after the server restarts.')
+  notice.value = t('Fonts added. Documents laid out from now on use them, and so do LaTeX formulas.')
 }
 
 async function rename(name: string) {

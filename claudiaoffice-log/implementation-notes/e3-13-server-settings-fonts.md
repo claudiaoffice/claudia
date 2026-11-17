@@ -43,7 +43,7 @@ from a pinned list, Edit stand-ins… and Remove file… come in a second patch.
 | i18n | done: every string through `t()`, German translated, pseudo-locale made |
 | the web client's layout and print fonts | gap → E3.13 backlog: the client does not send the access secret when it loads `/api/fonts`, so This-server fonts reach a document's people only on a server without a secret |
 | PDF export and office exports | gap → E3.13 backlog: nothing checks This-server fonts yet (the print preview embeds what it lays out) |
-| LaTeX typesetting | gap → E3.13 backlog: the LaTeX plugin keeps the catalogue it started with; added fonts after a restart (the page says so) |
+| LaTeX typesetting | done + test (CODE-50): the plugin asks for the current catalogue on every job (`test_render_latex_fonts.py`, `test_server_fonts_latex.py` with the real XeLaTeX) |
 | desktop clients | not affected: they show the same web bundle, and none has a menu entry of its own for the server settings |
 | document import and export | not affected: a server setting, not part of a document |
 
@@ -55,3 +55,7 @@ from a pinned list, Edit stand-ins… and Remove file… come in a second patch.
 - Files chosen in Add fonts… are held on the server per administrator until added, let go of (the dialog does so on
   Cancel, Start again, closing and a failed upload) or 30 minutes pass; the limits come with the page (`limits`), so
   the dialog says them before sending (CODE-49).
+- LaTeX needs a font of the family "Latin Modern Roman" (at least `lmroman10-regular.otf`) and `latinmodern-math.otf`;
+  it asks the font service for the catalogue on every job, so added fonts are used at once (CODE-50, claudia-render
+  0.2.0). The service-level cache of finished pictures (`RenderService.render`) does not have the fonts in its key, so
+  a picture made before a font of the same family and style was replaced stays (reported to the owner, not fixed).

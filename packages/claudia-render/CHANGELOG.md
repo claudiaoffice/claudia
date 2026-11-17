@@ -5,7 +5,19 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-17
+
+Fonts added while a server runs reach the LaTeX container (CODE-50).
+
+### Changed
+- `builtin_registry` and `LatexPlugin` take a function that gives the font catalogue (`Callable[[], Catalogue]`)
+  instead of a catalogue: the container asks for it on every job and makes a new typesetter when the fonts changed.
+  A server passes `lambda: fonts.catalogue`; a caller with fixed fonts passes `lambda: catalogue`.
+
 ### Fixed
+- Fonts added in Server settings ▸ Fonts while the server ran were not used by LaTeX formulas until the server was
+  restarted: the container kept the catalogue it was built with, and said "the font 'Latin Modern Roman' is not
+  available" for fonts the page listed (CODE-50).
 - On macOS a job folder is made in `/tmp` when the system's temporary folder is too long for it (`/var/folders/…/T`,
   which resolves to the longer `/private/var/folders/…/T`): Chromium refuses a profile whose socket path passes about
   104 characters. The length that counts is the resolved one.

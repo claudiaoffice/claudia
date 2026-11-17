@@ -1,0 +1,58 @@
+"""Fonts added in Server settings ▸ Fonts reach the LaTeX container without a restart (CODE-50).
+
+The real chain: the font service of a running server, the page's own way of adding a collection, and a formula set by
+the real XeLaTeX. Skips where TeX Live is not installed (CI has it)."""
+
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from claudia_fonts import builtin_folder
+from claudia_fonts.adding import add_collection
+from claudia_render import RenderFailed, RenderService, ToolRegistry, builtin_registry
+from claudia_server.fonts import FontService
+
+pytestmark = pytest.mark.skipif(
+    not all(shutil.which(p) for p in ("xelatex", "pdftocairo", "kpsewhich")), reason="TeX Live is not installed"
+)
+
+
+def _tex_font(name: str) -> tuple[str, bytes]:
+    found = subprocess.run(["kpsewhich", name], capture_output=True, text=True, check=False).stdout.strip()
+    if not found:
+        pytest.skip(f"TeX Live has no {name}")
+    return name, Path(found).read_bytes()
+
+
+def test_a_formula_is_set_with_the_latin_modern_fonts_added_while_the_server_runs(tmp_path):
+    import asyncio
+
+    fonts = FontService.from_folders(
+        [], tmp_path / "webfonts", shipped=[builtin_folder()], added_root=tmp_path / "fonts"
+    )
+    service = RenderService(
+        builtin_registry(lambda: fonts.catalogue, tmp_path / "plugins"),
+        ToolRegistry({"xelatex": shutil.which("xelatex"), "pdftocairo": shutil.which("pdftocairo")}),
+        tmp_path / "service",
+    )
+
+    async def scenario() -> None:
+        with pytest.raises(RenderFailed, match="'Latin Modern Roman' is not available"):
+            await service.render("latex", "x^2", {})
+        add_collection(
+            tmp_path / "fonts",
+            [_tex_font("lmroman10-regular.otf"), _tex_font("latinmodern-math.otf")],
+            fonts.catalogue,
+            name="Latin Modern",
+            licence="GUST Font License",
+            redistributable=True,
+            added_by="anna",
+            added="2026-11-17",
+        )
+        fonts.reload()  # what the page does after adding
+        done = await service.render("latex", r"x^2 + \frac{1}{2}", {})
+        assert "<svg" in done.svg[:300]
+
+    asyncio.run(scenario())

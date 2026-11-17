@@ -177,6 +177,7 @@ statement in the docs or on the website).
 | CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | **new, open** |
 | CODE-48 | P3 | Code / Web | After naming the first administrator, the server settings stayed on the setup form | **fixed** 2026-11-17 |
 | CODE-49 | P2 | Code / Server | Add fonts… stayed blocked for 30 minutes after too many files were chosen | **fixed** 2026-11-17 |
+| CODE-50 | P2 | Code / Render | LaTeX formulas ignored fonts added while the server ran ("Latin Modern Roman is not available") | **fixed** 2026-11-17 |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1717,6 +1718,22 @@ anything is sent; a failed upload, "Start again", Cancel and closing let go of t
 (`DELETE /api/admin/fonts/files`); the server holds files per administrator, so one person's leftovers never block
 another; the refusal names the limits and what to do. Tests in `test_server_admin_fonts.py` and
 `tests/admin-fonts.test.ts`; `e2e/admin-fonts.cjs` chooses 65 files (refused before sending) and starts again (let go).
+
+### CODE-50 · LaTeX formulas ignored fonts added while the server ran · P2 · fixed 2026-11-17
+**Measured** (by the owner on 2026-11-17, then reproduced): after adding the Latin Modern fonts under Server settings ▸
+Fonts, a LaTeX container still said the font was missing. `FontService.reload()` makes a new `Catalogue`, but the
+LaTeX plugin (and the typesetter it builds, with its fontconfig) kept the one it was made with at server start. The
+fonts page listed Latin Modern Roman; the container's own list did not have it. The Fonts page itself said LaTeX
+would use added fonts "after the server restarts".
+**Fixed (2026-11-17, branch `font-server-ui`):** `builtin_registry` and `LatexPlugin` take a function that gives the
+catalogue; the plugin asks on every job and makes a new typesetter when the catalogue changed. The server passes
+`lambda: fonts.catalogue`; the page no longer mentions a restart. claudia-render 0.2.0 (API change, 0.x). Tests:
+`test_render_latex_fonts.py` (no TeX needed) and `test_server_fonts_latex.py` (adds Latin Modern through the page's own
+`add_collection`, reloads, and sets a formula with the real XeLaTeX).
+**Which files LaTeX needs:** a font of the family "Latin Modern Roman" (the family name is what counts; every design
+size, `lmroman5` to `lmroman12`, has it; at least `lmroman10-regular.otf`, for bold and italic also
+`lmroman10-bold.otf`, `lmroman10-italic.otf`, `lmroman10-bolditalic.otf`) and the math font `latinmodern-math.otf`
+(in TeX Live under `fonts/opentype/public/lm-math/`). `lmsans`, `lmmono` and `lmromancaps` are other families.
 
 ## Website
 
