@@ -49,7 +49,7 @@ const DRAG_START = 3 // screen pixels the pointer must travel before a click bec
 
 const area = ref<HTMLElement | null>(null)
 const slideEl = ref<HTMLElement | null>(null)
-const editor = ref<HTMLTextAreaElement | null>(null)
+const editor = ref<{ focus(): void; take(): string } | null>(null)
 const size = ref({ w: 1200, h: 700 })
 const scale = computed(() => fitScale(size.value, MARGIN))
 const readonly = computed(() => lookOnly(state))
@@ -479,12 +479,8 @@ function onObjectContext(event: MouseEvent, o: SlideObject) {
 
 // ------------------------------------------------------------------------------ editing text
 const editing = ref<{ id: string; text: string } | null>(null)
-const editText = computed({
-  get: () => editing.value?.text ?? '',
-  set: (text: string) => editing.value && (editing.value.text = text),
-})
 const setEditor = (el: unknown) => {
-  if (el) editor.value = el as HTMLTextAreaElement
+  editor.value = (el as { focus(): void; take(): string } | null) ?? null
 }
 
 async function beginEdit(id: string | null = state.selected) {
@@ -504,36 +500,26 @@ async function beginEdit(id: string | null = state.selected) {
   editing.value = { id: o.id, text: wordsOf(o) }
   await nextTick()
   editor.value?.focus()
-  const length = wordsOf(o).length
-  editor.value?.setSelectionRange(length, length)
 }
 
-async function commitEdit() {
+/** Take the words of the editor (`text`, or what it holds now for a press elsewhere) as typing: only what differs
+ * from the box's words is written, so the rest keeps its writer (step G). */
+async function commitEdit(text?: string) {
   const e = editing.value
   if (!e) return
+  const words = text ?? editor.value?.take() ?? e.text
   editing.value = null
   area.value?.focus({ preventScroll: true })
   const current = state.objects[e.id]
   // Words that are one fenced block (```latex … ```) of a type the server makes become a container (D560)
-  if (current && current.kind === 'text' && (await session.fenceToContainer(e.id, e.text))) return
-  if (current && e.text !== wordsOf(current)) await session.setText(e.id, e.text)
+  if (current && current.kind === 'text' && (await session.fenceToContainer(e.id, words))) return
+  if (current && words !== wordsOf(current)) await session.writeWords(e.id, words)
 }
 
 function cancelEdit() {
   if (!editing.value) return
   editing.value = null
   area.value?.focus({ preventScroll: true })
-}
-
-function onEditorKey(event: KeyboardEvent) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault()
-    commitEdit()
-  } else if (event.key === 'Escape') {
-    event.preventDefault()
-    cancelEdit()
-  }
-  event.stopPropagation()
 }
 
 // ------------------------------------------------------------------------------ keys
@@ -626,16 +612,17 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
             <span v-if="wordsOf(o) === '' && o.kind === 'text' && !o.paragraph?.generated && editing?.id !== o.id" class="hint">{{ t('Double-click to type') }}</span>
             <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" :marker="session.markOf(o.id)?.marker" :indent="session.markOf(o.id)?.indent" :entries="session.agendaOf(o.id)" :leader="o.paragraph?.generated?.leader" />
           </div>
-          <textarea
+          <ParagraphEditor
             v-if="editing?.id === o.id"
             :ref="setEditor"
-            v-model="editText"
             class="editor"
-            :aria-label="t('text of the object')"
+            :text="editing.text"
+            :label="t('text of the object')"
+            :marker="session.markOf(o.id)?.marker"
+            :indent="session.markOf(o.id)?.indent"
             :style="editorStyle(o)"
-            @keydown="onEditorKey"
-            @blur="commitEdit"
-            @pointerdown.stop
+            @commit="commitEdit"
+            @cancel="cancelEdit"
           />
         </template>
       </div>
@@ -760,7 +747,6 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
 }
 .editor {
   position: absolute;
-  resize: none;
   border: none;
   outline: 2px solid var(--iris);
   background: rgb(255 255 255 / 85%);

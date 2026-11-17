@@ -120,6 +120,20 @@ Text structure
 .. autoclass:: claudia_core.LabelsChanged
 .. autoclass:: claudia_core.Emitter
 
+Typing
+------
+
+.. automodule:: claudia_core.writing
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+.. autoclass:: claudia_core.InsertText
+.. autoclass:: claudia_core.DeleteText
+.. autoclass:: claudia_core.TextCommand
+.. autoclass:: claudia_core.TypingHost
+.. autofunction:: claudia_core.word_changes
+
 Tables of contents
 ------------------
 

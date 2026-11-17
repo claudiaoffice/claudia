@@ -1,6 +1,6 @@
 # Text structure across the three apps — the entities, where they live, what moves (plan)
 
-**Status: plan of 2026-11-16; steps A to D built the same day (sections 8 to 10), steps E and F on 2026-11-17 (sections 11 and 12). Steps G–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
+**Status: plan of 2026-11-16; steps A to D built the same day (sections 8 to 10), steps E to G on 2026-11-17 (sections 11 to 13). Steps H and I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
 of the same day) to creates, and replaces that note's section 11 ("Where the code goes"). The class diagram is
 `mockups/text-structure-architecture.svg`; it replaces `composes-toc-architecture.svg`. No decision numbers are taken.
 
@@ -428,3 +428,29 @@ Written first, as part of the steps above:
 ### Left for later steps
 
 - G, H and I. `/Contents` texts on the PDF's links and tagged PDF (PDF/UA) with the rest of the PDF accessibility work.
+
+## 13. Done: step G (2026-11-17, patch 10)
+
+### What was built
+
+- **Typing is the kernel's** (`claudia_core.writing`): `core.InsertText` and `core.DeleteText` on any paragraph id,
+  keeping the runs; the model is a `TypingHost` (`insert_text`, `remove_text`, `text_regions`, `text_moved`).
+  `TextCommand` and `Span` moved with them. Composes implements the host for its paragraphs (the `text` event, its
+  suggestions and floating objects following as before, now through `text_moved`) and for the words of its floating
+  objects; creates for the words of its objects (`objects` events). `composes.InsertText`/`DeleteText` are dropped
+  (section 7, point 3), with the fixture log of schema 1 that used them; `docs/versioning.md` says so.
+- **`word_changes`** gives the steps that turn some words into others by changing only what differs (the common start
+  and end stay). The server's `write_words` (creates) runs them as one step, "Edit text".
+- **`ParagraphEditor.vue`** replaces creates' `<textarea>`: a plain-text field (`contenteditable="plaintext-only"`)
+  that draws the marker as `ParagraphWords.vue` does, so the words do not move when editing starts. Enter takes the
+  words, Shift+Enter breaks the line, Esc leaves; a press elsewhere takes them. The words go through `write_words`, so
+  a colleague's edit no longer takes the authorship of the whole box. `lib/edited-words.ts` reads a field's line breaks.
+
+### Where the build differs from the plan, and why
+
+- **The editor sends the words when editing ends, not each keystroke.** The box is held while it is edited (a
+  colleague cannot type into it at the same time), so nothing is gained by sending every character, and the server
+  writes only the difference. Atoms (step H) go into the same field.
+- **Composes keeps its own split, join and style commands**, as the plan says; the floating objects of composes and
+  the text boxes of computes are typing hosts in the model (composes) or can become one (computes) when their web
+  editors move to `ParagraphEditor.vue`.

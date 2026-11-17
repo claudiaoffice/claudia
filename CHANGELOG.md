@@ -4,6 +4,18 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.32.0] - 2026-11-17
+
+Typing into any paragraph (step G of `claudiaoffice-log/notes/text-structure-across-apps.md`, section 3.1).
+
+### Added
+- `claudia_core.writing`: `InsertText` (`core.InsertText`) and `DeleteText` (`core.DeleteText`) type into and delete
+  from any paragraph, character by character, keeping who wrote which part; the model says how through `TypingHost`
+  (`insert_text`, `remove_text`, `text_regions`, `text_moved`). `TextCommand` and `Span` (moved from
+  `claudia-composes`): how a stretch of text follows other people's edits. `word_changes` gives the steps that turn
+  some words into others by changing only what differs.
+- `ObjectModel.insert_object_text` and `remove_object_text`: typing into the words of an object.
+
 ## [0.31.0] - 2026-11-17
 
 Tables of contents and agendas, generated paragraphs (step E of `claudiaoffice-log/notes/text-structure-across-apps.md`,

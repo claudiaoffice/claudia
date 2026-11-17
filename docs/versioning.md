@@ -20,3 +20,8 @@ Claudia has three kinds of public interface. Each has its own version and its ow
 ## Documents are forever
 
 A document written by version N must open in every later version. A command whose data changes gets a new `schema` and an upcaster that is tested with a fixture log of the old schema. Opening a document written by a *newer* version fails with a clear message (`SchemaTooNew`); nothing is guessed.
+
+One exception, decided by the owner on 2026-11-16: when commands moved from an app into the kernel for the text
+structure every app shares (`composes.SetListItem`, `composes.InsertText` and `composes.DeleteText` became
+`core.SetListItem`, `core.InsertText` and `core.DeleteText`), the old kinds were dropped, not kept as aliases. A command
+log with them no longer replays; snapshots still open.

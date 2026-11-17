@@ -3,6 +3,14 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.18.0] - 2026-11-17
+
+Typing into text boxes (step G).
+
+### Added
+- `SlideModel.insert_text`, `remove_text`, `text_regions` and `text_moved`: the presentation is a
+  `claudia_core.TypingHost`, so the words of an object are typed into character by character.
+
 ## [0.17.0] - 2026-11-17
 
 Agendas (step E, E9.31). State schema 14 → 15 (the words of an object may have `generated`; a snapshot of 14 restores

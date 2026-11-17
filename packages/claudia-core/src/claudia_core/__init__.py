@@ -23,6 +23,7 @@
     schemes      Scheme, LevelFormat, SchemeBook: how the markers of a list are drawn, part of the document (E9.22)
     generated    Toc, ContentsEntry, SetGenerated: tables of contents and agendas, derived from the headings (E9.31)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
+    writing      InsertText, DeleteText, TextCommand: typing into any paragraph, character by character (step G)
     object_texts the words and descriptions of objects as texts a search can look in and replace, for any app
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
@@ -264,6 +265,7 @@ from .styles import (
     StylesChanged,
 )
 from .turning import SINE_MILLIONTHS, nudge_into, turned_extent
+from .writing import DeleteText, InsertText, Span, TextCommand, TypingHost, word_changes
 
 __all__ = [
     "FALLBACK_SIDE",
@@ -296,6 +298,12 @@ __all__ = [
     "GeneratedHost",
     "SetGenerated",
     "Toc",
+    "TypingHost",
+    "TextCommand",
+    "Span",
+    "InsertText",
+    "DeleteText",
+    "word_changes",
     "generated_from_data",
     "ChangeScheme",
     "CreateScheme",

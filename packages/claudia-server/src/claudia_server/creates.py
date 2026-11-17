@@ -3,7 +3,7 @@
 ``creates_methods`` is ``core_methods`` plus ``slides``, ``slide``, ``shapes``, ``styles``, ``add_slide``,
 ``set_slide_notes``, ``set_slide_time`` (speaker notes and planned times, D342, D343),
 ``search_find``, ``search_preview`` and ``search_replace`` (:mod:`claudia_server.creates_search`, E10.19),
-``add_object``, ``add_image``, ``move_object``, ``resize_object``, ``set_text``, ``set_snap`` and
+``add_object``, ``add_image``, ``move_object``, ``resize_object``, ``set_text``, ``write_words``, ``set_snap`` and
 ``remove_object``. Positions and sizes are whole units of the slide space (1600 by 900). A shape is chosen by its
 id from the server's shape library;
 the first time a document uses it, its outline is copied into the document, in the same step of the history as the
@@ -39,6 +39,7 @@ from claudia_core import (
     SetText,
     Toc,
     paragraph_for,
+    word_changes,
 )
 from claudia_creates import (
     AddSlide,
@@ -104,6 +105,19 @@ def _set_text(ctx, *, id, text, base):
     return done(ctx, SetText(id, text), base)
 
 
+def _write_words(ctx, *, id, text, base):
+    """Write the words of an object as `text`, as a person types them (step G): only what differs from the words it
+    has now changes, so the words that stay keep who wrote them, where `set_text` would give them all to whoever
+    saved. One step in the history; none when nothing changed. `command_error` for a picture or an agenda."""
+    words = _deck(ctx).get_object(id).body.paragraph
+    if words is None:
+        raise RequestError("command_error", msg("an image carries no text"))
+    steps = word_changes(id, words.text, text)
+    if not steps:
+        return {"revision": current_revision(ctx)}
+    return done(ctx, Batch(steps, "Edit text"), base)
+
+
 def _set_snap(ctx, *, id, snap, base):
     """Hold an object to the grid (`snap` true) or release it (false). The grid is only a helper the view
     draws, never part of the slide, but this choice is: it has its own place in the document's history."""
@@ -139,6 +153,7 @@ def _add_object_methods(table: MethodTable) -> None:
     add_object_methods(table, model_of=_deck, placement=ON_SLIDE)
     add_rendering_methods(table, model_of=_deck, placement=ON_SLIDE)
     table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
+    table.method("write_words", "id:str text:text base:revision?", write=True)(_write_words)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
 
 

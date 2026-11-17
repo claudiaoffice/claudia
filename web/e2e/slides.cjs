@@ -82,7 +82,7 @@ const centre = (b) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 })
     const text = (await objects(ann))[0]
     assert.ok(text.cls.includes('selected'), 'a new object is selected')
     await ann.dblclick(`.obj[data-id="${text.id}"]`)
-    await ann.waitForSelector('textarea.editor')
+    await ann.waitForSelector('[data-testid="paragraph-editor"]')
     await ann.keyboard.type('Hello slide')
     await ann.keyboard.press('Enter')
     await waitFor(ann, (id) => document.querySelector(`.obj[data-id="${id}"]`)?.textContent.includes('Hello slide'), text.id, 'the text to arrive')

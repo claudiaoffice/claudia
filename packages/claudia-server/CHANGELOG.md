@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `write_words` in creates (step G): the words of an object as a person typed them; only what differs from the words it
+  has changes, so the words that stay keep their writer (`set_text` gives all of them to whoever saved). The web app
+  writes through it from its new paragraph editor.
 - Tables of contents and agendas (step E, E9.31): `contents` (every table's entries) and `set_contents` in composes and
   creates (`claudia_server.structure_methods`); `insert_contents` and `remove_contents` in composes
   (`claudia_server.composes_contents`: a "Contents" paragraph in the reader's language and the table, as one step);

@@ -1,5 +1,5 @@
 {
- "version": "0.15.0",
+ "version": "0.16.0",
  "AcceptSuggestion": {
   "class": [
    "TextCommand"
@@ -128,14 +128,14 @@
   "class": [
    "TextCommand"
   ],
-  "init": "(block: 'str', offset: 'int', length: 'int') -> None",
+  "init": "(paragraph: 'str', offset: 'int', length: 'int') -> None",
   "methods": {
-   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "apply": "(self, ctx: 'Context') -> 'Command'",
    "breaks": "(self, span: 'Span') -> 'bool'",
    "follow": "(self, span: 'Span') -> 'Span'",
-   "from_data": "(data, registry) -> 'DeleteText'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DeleteText'",
    "redacted": "(self) -> 'Command'",
-   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "regions": "(self, model: 'object') -> 'tuple[Region, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -201,14 +201,14 @@
   "class": [
    "TextCommand"
   ],
-  "init": "(block: 'str', offset: 'int', text: 'str', by: 'tuple[Run, ...]' = ()) -> None",
+  "init": "(paragraph: 'str', offset: 'int', text: 'str', by: 'tuple[Run, ...]' = ()) -> None",
   "methods": {
-   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "apply": "(self, ctx: 'Context') -> 'Command'",
    "breaks": "(self, span: 'Span') -> 'bool'",
    "follow": "(self, span: 'Span') -> 'Span'",
-   "from_data": "(data, registry) -> 'InsertText'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'InsertText'",
    "redacted": "(self) -> 'Command'",
-   "regions": "(self, model) -> 'tuple[Region, ...]'",
+   "regions": "(self, model: 'object') -> 'tuple[Region, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -614,6 +614,7 @@
    "heading_level": "(self, block: 'Block') -> 'int | None'",
    "index_of": "(self, block_id: 'str') -> 'int'",
    "insert": "(self, block_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'None'",
+   "insert_text": "(self, paragraph_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'tuple[object, ...]'",
    "is_outdated": "(self, suggestion: 'Suggestion') -> 'bool'",
    "item_of": "(self, paragraph_id: 'str') -> 'ListItem | None'",
    "item_regions": "(self, paragraph_id: 'str') -> 'tuple[Region, ...]'",
@@ -629,6 +630,7 @@
    "reading_order": "(self) -> 'Iterator[Placed]'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "remove": "(self, block_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run]]'",
+   "remove_text": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[object, ...]]'",
    "restore": "(state: 'dict') -> 'Self'",
    "restyle": "(self, block_id: 'str', style: 'str') -> 'None'",
    "serialize": "(self) -> 'dict'",
@@ -641,6 +643,8 @@
    "style_uses": "(self) -> 'dict[str, int]'",
    "suggestion": "(self, suggestion_id: 'str') -> 'Suggestion'",
    "suggestion_data": "(self, suggestion: 'Suggestion', *, with_state: 'bool' = False) -> 'dict'",
+   "text_moved": "(self, command: 'TextCommand') -> 'tuple[object, ...]'",
+   "text_regions": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[Region, ...]'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "visible_suggestions": "(self) -> 'list[dict]'"
   },

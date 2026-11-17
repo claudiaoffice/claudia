@@ -66,3 +66,19 @@ def test_the_clients_hear_which_paragraph_became_a_table_and_which_became_plain_
         "generated": Toc(1, 2).to_data(),
     }
     assert BlockGenerated("b2", None).to_data()["generated"] is None
+
+
+def test_the_words_of_a_floating_object_are_typed_into_like_a_paragraph(text):
+    """Step G: the kernel's typing reaches the words of a floating object too, and its zone is the object."""
+    from claudia_core import DeleteText, InsertText, ObjectSet
+
+    box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
+    text.model.insert_object(VisualObject(box, BlockAnchor("b1", 1)))
+    text.execute(InsertText("o1", 1, " short"), author="ben")
+    assert text.model.get_object("o1").body.paragraph.text == "a short note"
+    assert all(isinstance(r, ObjectSet) for r in InsertText("o1", 1, "x").regions(text.model))
+    text.execute(DeleteText("o1", 8, 4), author="ben")
+    assert text.model.get_object("o1").body.paragraph.text == "a short "
+    text.undo("ben")
+    text.undo("ben")
+    assert text.model.get_object("o1").body.paragraph.text == "a note"

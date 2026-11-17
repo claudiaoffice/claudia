@@ -3,6 +3,20 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.16.0] - 2026-11-17
+
+Typing is the kernel's (step G).
+
+### Changed
+- **Breaking:** `InsertText` and `DeleteText` are `claudia_core.InsertText` and `claudia_core.DeleteText`
+  (`core.InsertText`, `core.DeleteText`, field `paragraph`); `composes.InsertText` and `composes.DeleteText` are gone
+  and old command logs with them do not replay (the owner's decision of 2026-11-16; snapshots still open).
+  `TextCommand` and `Span` are `claudia_core`'s, still importable from here.
+
+### Added
+- `TextModel.insert_text`, `remove_text`, `text_regions` and `text_moved`: the text is a `claudia_core.TypingHost`, for
+  its paragraphs and the words of its floating objects.
+
 ## [0.15.0] - 2026-11-17
 
 Tables of contents (step E, E9.31). State schema 13 → 14 (a paragraph may have `generated`; a snapshot of 13 restores

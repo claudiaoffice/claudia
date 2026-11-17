@@ -1,5 +1,5 @@
 {
- "version": "0.31.0",
+ "version": "0.32.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -447,6 +447,26 @@
    "summary"
   ]
  },
+ "DeleteText": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(paragraph: 'str', offset: 'int', length: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "breaks": "(self, span: 'Span') -> 'bool'",
+   "follow": "(self, span: 'Span') -> 'Span'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DeleteText'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "DescribeObject": {
   "class": [
    "Command"
@@ -883,6 +903,26 @@
    "label"
   ]
  },
+ "InsertText": {
+  "class": [
+   "TextCommand"
+  ],
+  "init": "(paragraph: 'str', offset: 'int', text: 'str', by: 'tuple[Run, ...]' = ()) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "breaks": "(self, span: 'Span') -> 'bool'",
+   "follow": "(self, span: 'Span') -> 'Span'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'InsertText'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "ItemHost": {
   "class": [
    "Protocol"
@@ -1162,6 +1202,7 @@
    "has_thing": "(self, thing_id: 'str') -> 'bool'",
    "images_to_data": "(self) -> 'list[dict]'",
    "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None, *, shared_names: 'bool' = True) -> 'None'",
+   "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'ObjectsChanged'",
    "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
    "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",
    "names_in_use": "(self) -> 'list[str]'",
@@ -1175,6 +1216,7 @@
    "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
    "put_object_generated": "(self, object_id: 'str', generated: 'Generated | None') -> 'ObjectsChanged'",
    "put_object_item": "(self, object_id: 'str', item: 'ListItem | None') -> 'ObjectsChanged'",
+   "remove_object_text": "(self, object_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], ObjectsChanged]'",
    "rename_thing": "(self, ctx: 'Context', thing_id: 'str', name: 'str') -> 'tuple[str, tuple[Command, ...]]'",
    "renderings_to_data": "(self) -> 'list[dict]'",
    "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",
@@ -2026,6 +2068,9 @@
   },
   "properties": []
  },
+ "Span": {
+  "function": "(iterable=(), /)"
+ },
  "StaleEdit": {
   "class": [
    "KernelError"
@@ -2115,6 +2160,18 @@
  "TEXT_FLOOR": {
   "value": "4.5"
  },
+ "TextCommand": {
+  "class": [
+   "Command",
+   "ABC"
+  ],
+  "init": "()",
+  "methods": {
+   "breaks": "(self, span: 'Span') -> 'bool'",
+   "follow": "(self, span: 'Span') -> 'Span'"
+  },
+  "properties": []
+ },
  "TextStructure": {
   "class": [
    "object"
@@ -2153,6 +2210,19 @@
    "from_data": "(data: 'dict') -> 'Toc'",
    "lists": "(self, level: 'int | None') -> 'bool'",
    "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "TypingHost": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "insert_text": "(self, paragraph: 'str', offset: 'int', text: 'str', runs: 'list[Run]') -> 'tuple[object, ...]'",
+   "remove_text": "(self, paragraph: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[object, ...]]'",
+   "text_moved": "(self, command: 'TextCommand') -> 'tuple[object, ...]'",
+   "text_regions": "(self, paragraph: 'str', start: 'int', end: 'int') -> 'tuple[Region, ...]'"
   },
   "properties": []
  },
@@ -2376,5 +2446,8 @@
  },
  "validate_css": {
   "function": "(css: 'Mapping[str, object]') -> 'dict[str, str]'"
+ },
+ "word_changes": {
+  "function": "(paragraph: 'str', old: 'str', new: 'str') -> 'tuple[TextCommand, ...]'"
  }
 }

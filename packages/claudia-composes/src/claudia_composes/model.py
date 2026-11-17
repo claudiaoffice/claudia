@@ -47,7 +47,7 @@ from claudia_core import (
 )
 
 from .anchors import BlockAnchor
-from .events import BlockGenerated, ItemChanged
+from .events import BlockGenerated, ItemChanged, SuggestionsChanged, TextChanged
 from .page import PageSetup
 from .region import TextRange
 from .spans import TextCommand
@@ -540,6 +540,40 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             return self.put_object_item(paragraph_id, item)
         self.set_item(paragraph_id, item)
         return ItemChanged(paragraph_id, item)
+
+    # -- typing (claudia_core.TypingHost) -----------------------------------------------------------
+    def insert_text(self, paragraph_id: str, offset: int, text: str, runs: list[Run]) -> tuple[object, ...]:
+        """Type into a paragraph of the text or the words of a floating object; the events that tell the clients."""
+        if paragraph_id in self.objects:
+            return (self.insert_object_text(paragraph_id, offset, text, runs),)
+        self.insert(paragraph_id, offset, text, runs)
+        return (TextChanged(paragraph_id, offset, 0, text, tuple(runs)),) if text else ()
+
+    def remove_text(self, paragraph_id: str, start: int, end: int) -> tuple[str, list[Run], tuple[object, ...]]:
+        """Cut characters out of a paragraph of the text or the words of a floating object."""
+        if paragraph_id in self.objects:
+            text, runs, event = self.remove_object_text(paragraph_id, start, end)
+            return text, runs, (event,)
+        text, runs = self.remove(paragraph_id, start, end)
+        return text, runs, ((TextChanged(paragraph_id, start, end - start, ""),) if end > start else ())
+
+    def text_regions(self, paragraph_id: str, start: int, end: int) -> tuple[Region, ...]:
+        """A stretch of a paragraph of the text, or the floating object whose words change."""
+        if paragraph_id in self.objects:
+            return self.selection_of(paragraph_id)
+        return (TextRange(paragraph_id, start, end),)
+
+    def text_moved(self, command: TextCommand) -> tuple[object, ...]:
+        """Let the open suggestions and the floating objects follow a text command (see
+        :mod:`claudia_composes.anchors` for why an object's anchor follows the text here, where a sheet's is
+        deliberately frozen); the events for those that moved."""
+        events: list[object] = []
+        moved = self.move_suggestions(command)
+        if moved:
+            events.append(SuggestionsChanged(tuple(moved)))
+        containers = dict.fromkeys(obj["anchor"]["container"] for obj in self.move_objects(command))
+        events.extend(self.objects_changed(c, changed=tuple(self.objects_on(c))) for c in containers)
+        return tuple(events)
 
     # -- generated paragraphs (claudia_core.GeneratedHost) ----------------------------------------
     def generated_of(self, paragraph_id: str) -> Generated | None:

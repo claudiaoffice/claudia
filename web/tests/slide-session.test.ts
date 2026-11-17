@@ -130,7 +130,7 @@ function server(link: FakeLink, objects: any[] = []) {
     add_image: () => ({ object: 'o1', revision: 'main:1' }),
     move_object: () => ({ revision: 'main:2' }),
     resize_object: () => ({ revision: 'main:2' }),
-    set_text: () => ({ revision: 'main:2' }),
+    write_words: () => ({ revision: 'main:2' }),
     set_snap: () => ({ revision: 'main:2' }),
     describe_object: () => ({ revision: 'main:2' }),
     rotate_object: () => ({ revision: 'main:2' }),
@@ -358,8 +358,8 @@ describe('making changes', () => {
     expect(link.last('move_object')).toEqual({ id: 'a', x: 5, y: 6, base: 'main:0' })
     await session.resize('a', { x: 1, y: 2, w: 300, h: 100 })
     expect(link.last('resize_object')).toEqual({ id: 'a', x: 1, y: 2, w: 300, h: 100, base: 'main:0' })
-    await session.setText('a', 'Hello')
-    expect(link.last('set_text')).toEqual({ id: 'a', text: 'Hello', base: 'main:0' })
+    await session.writeWords('a', 'Hello')
+    expect(link.last('write_words')).toEqual({ id: 'a', text: 'Hello', base: 'main:0' })
     await session.setSnap('a', false)
     expect(link.last('set_snap')).toEqual({ id: 'a', snap: false, base: 'main:0' })
     await session.remove('a')

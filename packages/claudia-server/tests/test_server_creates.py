@@ -323,6 +323,21 @@ def test_a_selection_must_look_like_one(deck):
     assert caught.value.code == "bad_request"
 
 
+def test_words_are_written_as_typed_so_the_words_that_stay_keep_their_writer(deck):
+    """write_words (step G): only what differs changes, one step in the history; nothing at all for the same words."""
+    box = add_text(deck)
+    call(deck, "set_text", {"id": box, "text": "Why we did it"})
+    revision = call(deck, "write_words", {"id": box, "text": "Why we did it"}, account=BEN)["revision"]
+    assert revision == deck.revision.to_data()
+    call(deck, "write_words", {"id": box, "text": "Why we really did it"}, account=BEN)
+    (found,) = objects(deck)
+    assert found["paragraph"]["text"] == "Why we really did it"
+    assert [(r[0], r[1]) for r in found["paragraph"]["runs"]] == [(7, "ann"), (7, "ben"), (6, "ann")]
+    assert deck.history_for("ben").undo_label == "Edit text"
+    with pytest.raises(RequestError, match="no text"):
+        call(deck, "write_words", {"id": add_image(deck), "text": "x"})
+
+
 def test_the_methods_are_described_for_client_developers(deck):
     described = creates_methods.describe()["methods"]
     for name in (
@@ -334,6 +349,7 @@ def test_the_methods_are_described_for_client_developers(deck):
         "move_object",
         "resize_object",
         "set_text",
+        "write_words",
         "set_snap",
         "set_slide_notes",
         "set_slide_time",

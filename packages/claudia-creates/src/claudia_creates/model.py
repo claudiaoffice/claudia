@@ -33,9 +33,11 @@ from claudia_core import (
     Palette,
     Placed,
     Region,
+    Run,
     SchemeBook,
     SetLanguage,
     StyleBook,
+    TextCommand,
     TextStructure,
     VisualObject,
     builtin_palette,
@@ -350,6 +352,24 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     def item_regions(self, paragraph_id: str) -> tuple[Region, ...]:
         """The object whose words they are."""
         return self.selection_of(paragraph_id)
+
+    # -- typing (claudia_core.TypingHost): the words of an object, character by character (step G) ----------------
+    def insert_text(self, paragraph_id: str, offset: int, text: str, runs: list[Run]) -> tuple[object, ...]:
+        """Type into the words of an object; the event that tells the clients."""
+        return (self.insert_object_text(paragraph_id, offset, text, runs),)
+
+    def remove_text(self, paragraph_id: str, start: int, end: int) -> tuple[str, list[Run], tuple[object, ...]]:
+        """Cut characters out of the words of an object."""
+        text, runs, event = self.remove_object_text(paragraph_id, start, end)
+        return text, runs, (event,)
+
+    def text_regions(self, paragraph_id: str, start: int, end: int) -> tuple[Region, ...]:
+        """The object whose words change."""
+        return self.selection_of(paragraph_id)
+
+    def text_moved(self, command: TextCommand) -> tuple[object, ...]:
+        """Nothing on a slide hangs from words: nothing follows."""
+        return ()
 
     def settle(self, ctx) -> None:
         """Tell the clients which labels changed: a text box taken away may renumber every one after it."""

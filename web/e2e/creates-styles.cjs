@@ -46,7 +46,7 @@ const select = (page, id) => page.click(`.obj[data-id="${id}"]`, { position: { x
 
 async function write(page, id, words) {
   await page.dblclick(`.obj[data-id="${id}"]`, { position: { x: 30, y: 30 } })
-  await page.waitForSelector('textarea.editor')
+  await page.waitForSelector('[data-testid="paragraph-editor"]')
   await page.keyboard.type(words)
   await page.keyboard.press('Enter')
   await waitFor(page, ([i, w]) => document.querySelector(`.obj[data-id="${i}"]`)?.textContent.includes(w), [id, words], 'the words')

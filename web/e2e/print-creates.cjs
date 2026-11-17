@@ -53,7 +53,7 @@ async function write(page, words) {
   await page.waitForFunction((n) => document.querySelectorAll('.obj.text').length === n + 1, before)
   const id = await page.locator('.obj.text').nth(before).getAttribute('data-id')
   await page.dblclick(`.obj[data-id="${id}"]`)
-  await page.waitForSelector('textarea.editor')
+  await page.waitForSelector('[data-testid="paragraph-editor"]')
   await page.keyboard.type(words)
   await page.keyboard.press('Enter')
   await page.waitForFunction(([i, w]) => document.querySelector(`.obj[data-id="${i}"]`)?.textContent.includes(w), [id, words])

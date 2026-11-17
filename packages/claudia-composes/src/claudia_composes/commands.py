@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import Batch, Command, Context, PageSetup, Region, SetLanguage, SetListItem
+from claudia_core import Batch, Command, Context, DeleteText, InsertText, PageSetup, Region, SetLanguage, SetListItem
 
 from .events import (
     BlocksJoined,
@@ -19,11 +19,10 @@ from .events import (
     PageSetupChanged,
     StyleChanged,
     SuggestionsChanged,
-    TextChanged,
 )
 from .model import Suggestion, TextModel
 from .region import TextRange
-from .runs import Run, runs_from_data, runs_to_data
+from .runs import Run
 from .spans import Span, TextCommand
 
 register = TextModel.registry.register
@@ -36,149 +35,9 @@ def _quote(text: str) -> str:
 
 def _moved(ctx: Context[TextModel], command: TextCommand) -> None:
     """Let the open suggestions and the floating objects follow a text command, and tell the clients about those
-    that moved (see :mod:`claudia_composes.anchors` for why an object's anchor follows the text here, where a
-    sheet's is deliberately frozen)."""
-    moved = ctx.model.move_suggestions(command)
-    if moved:
-        ctx.emit(SuggestionsChanged(tuple(moved)))
-    for container in dict.fromkeys(obj["anchor"]["container"] for obj in ctx.model.move_objects(command)):
-        ctx.emit(ctx.model.objects_changed(container, changed=tuple(ctx.model.objects_on(container))))
-
-
-# ------------------------------------------------------------------------------ typing
-@register
-@dataclass(frozen=True)
-class InsertText(TextCommand):
-    """Type ``text`` into a paragraph at ``offset``. ``by`` says who wrote it when that is not whoever runs the
-    command (the inverse of a delete puts back text with its original authors)."""
-
-    kind: ClassVar[str] = "composes.InsertText"
-    schema: ClassVar[int] = 2
-    block: str
-    offset: int
-    text: str
-    by: tuple[Run, ...] = ()
-
-    @property
-    def label(self) -> str:
-        return "Type"
-
-    @property
-    def summary(self) -> str:
-        return f"typed {_quote(self.text)}"
-
-    def apply(self, ctx: Context[TextModel]) -> Command:
-        runs = list(self.by) or ([Run(len(self.text), ctx.author)] if self.text else [])
-        ctx.model.insert(self.block, self.offset, self.text, runs)
-        if self.text:
-            ctx.emit(TextChanged(self.block, self.offset, 0, self.text, tuple(runs)))
-        _moved(ctx, self)
-        return DeleteText(self.block, self.offset, len(self.text))
-
-    def to_data(self) -> dict:
-        data: dict = {"block": self.block, "offset": self.offset, "text": self.text}
-        if self.by:
-            data["by"] = runs_to_data(list(self.by))
-        return data
-
-    @classmethod
-    def from_data(cls, data, registry) -> InsertText:
-        return cls(data["block"], data["offset"], data["text"], tuple(runs_from_data(data.get("by", []))))
-
-    def regions(self, model) -> tuple[Region, ...]:
-        return (TextRange(self.block, self.offset, self.offset + max(1, len(self.text))),)
-
-    def follow(self, span: Span) -> Span:
-        block, start, end = span
-        n = len(self.text)
-        if block != self.block:
-            return span
-        if self.offset <= start:
-            return (block, start + n, end + n)
-        if self.offset < end:
-            return (block, start, end + n)
-        return span
-
-    def breaks(self, span: Span) -> bool:
-        block, start, end = span
-        return block == self.block and start < self.offset < end
-
-    def shifted_by(self, other: Command) -> Command | None:
-        if not isinstance(other, TextCommand):
-            return self
-        span = (self.block, self.offset, self.offset)
-        if other.breaks(span):
-            return None
-        block, offset, _ = other.follow(span)
-        return replace(self, block=block, offset=offset)
-
-    def redacted(self) -> Command:
-        return replace(self, text="█" * len(self.text))  # same length, so later offsets still hold
-
-
-@register
-@dataclass(frozen=True)
-class DeleteText(TextCommand):
-    """Delete ``length`` characters of a paragraph from ``offset`` on."""
-
-    kind: ClassVar[str] = "composes.DeleteText"
-    schema: ClassVar[int] = 2
-    block: str
-    offset: int
-    length: int
-
-    @property
-    def label(self) -> str:
-        return "Delete text"
-
-    @property
-    def summary(self) -> str:
-        return f"deleted {self.length} character{'' if self.length == 1 else 's'}"
-
-    def apply(self, ctx: Context[TextModel]) -> Command:
-        text, runs = ctx.model.remove(self.block, self.offset, self.offset + self.length)
-        if self.length:
-            ctx.emit(TextChanged(self.block, self.offset, self.length, ""))
-        _moved(ctx, self)
-        return InsertText(self.block, self.offset, text, tuple(runs))
-
-    def to_data(self) -> dict:
-        return {"block": self.block, "offset": self.offset, "length": self.length}
-
-    @classmethod
-    def from_data(cls, data, registry) -> DeleteText:
-        return cls(data["block"], data["offset"], data["length"])
-
-    def regions(self, model) -> tuple[Region, ...]:
-        return (TextRange(self.block, self.offset, self.offset + max(1, self.length)),)
-
-    def follow(self, span: Span) -> Span:
-        block, start, end = span
-        if block != self.block:
-            return span
-        cut = self.offset, self.offset + self.length
-
-        def moved(position: int) -> int:
-            return position - min(max(position - cut[0], 0), self.length)
-
-        return (block, moved(start), moved(end))
-
-    def breaks(self, span: Span) -> bool:
-        block, start, end = span
-        return block == self.block and start < end and self.offset < end and self.offset + self.length > start
-
-    def shifted_by(self, other: Command) -> Command | None:
-        """Deleting what I typed: follow colleagues' typing before it; refuse if they typed in it or cut part of it."""
-        if not isinstance(other, TextCommand):
-            return self
-        span = (self.block, self.offset, self.offset + self.length)
-        if other.breaks(span):
-            return None
-        block, start, end = other.follow(span)
-        return replace(self, block=block, offset=start, length=end - start)
-
-    def redacted(self) -> Command:
-        return self
+    that moved (:meth:`TextModel.text_moved`)."""
+    for event in ctx.model.text_moved(command):
+        ctx.emit(event)
 
 
 # ------------------------------------------------------------------------------ structure

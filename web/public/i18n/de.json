@@ -1652,6 +1652,7 @@
   "alpha": "Alpha",
   "alternatives with names, typed as {name1: value1, ...}.": "Alternativen mit Namen, eingegeben als {name1: value1, ...}.",
   "alternatives: {list}": "Alternativen: {list}",
+  "an image carries no text": "ein Bild hat keine Wörter",
   "and more further out": "und weitere weiter außen",
   "and {moreCount} more": "und {moreCount} weitere",
   "and {n} more": "und {n} weitere",
