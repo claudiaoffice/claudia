@@ -5,6 +5,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- `pptx_to_slides` and `odp_to_slides` read the fonts of the deck (E3.13, bug 2): Body text takes the deck's body font
+  (the theme's minor font of a pptx, the default style of drawn things of an odp), and the words of a text box or
+  shape in another font (the title in the heading font, a box somebody gave a font) get a style of their own based on
+  theirs, named by the font ("Body text · Georgia") until somebody names it for its purpose. `slides_to_pptx` and
+  `slides_to_odp` write those fonts back (the body font into the theme or the default style, never a stand-in), and
+  `apply_edits_to_odp` writes a box's font when its words get another style.
+- A font is no loss on import: `pptx_import_losses` and `odp_import_losses` report `formatting` only for words of one
+  box in two fonts, not for a run or span that does no more than name the box's font.
+
 ## [0.7.0] - 2026-11-17
 
 Looks of an imported deck (D466, D467).
@@ -34,13 +44,6 @@ A turned object lies on the slide by its outline (D1021, D1022).
 - The picture code the converters of the text app needed too moved out: `Rasterise` and how a picture of a file
   becomes an image object are in `claudia-core`, the transform and frame helpers of odp in `claudia-odf-io` (D464).
   `claudia_creates_io.Rasterise` is still there.
-- `points_of`, `colour_of` and `parse_colour` moved to `claudia-core` (D465); `claudia_creates_io` keeps its names.
-
-### Fixed
-- `odp_to_slides` dropped a text box or shape that hung over an edge of the slide, such as the body placeholder of a
-  deck whose layout was made for a taller slide, with its words (IEW-19). An unturned box is now cut back to the slide
-  and `odp_import_losses` reports it as `overhanging-object`; a box with next to nothing on the slide or a turned one
-  over the edge is still `off-slide-object`.
 
 ## [0.5.0] - 2026-11-15
 

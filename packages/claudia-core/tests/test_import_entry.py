@@ -45,6 +45,8 @@ def test_the_inverse_gives_back_the_state_before():
     assert isinstance(applied.inverse, Import) and applied.inverse.state == ListModel([1]).serialize()
 
 
-def test_a_redaction_cannot_blank_the_base_of_the_document():
+def test_an_import_is_blanked_by_its_app_not_by_itself():
+    """Only the model knows what in a state is content (D723): without it nothing is taken away, with it all is."""
     command = imported(ListModel([1]).serialize())
     assert command.redacted() is command
+    assert command.redacted_in(ListModel) == Import("", "xlsx", {"items": [0]}, None, False)

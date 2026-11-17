@@ -15,6 +15,7 @@ renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-re
 | `e2-container-and-encryption.md` | E2: threat model, format, key slots, journal, and the three delivered slices with their findings | 2026-11-02/03 |
 | `e3-server-and-security.md` | E3.1 as built, and the SEC-01/02/07 fixes with their breaking changes | 2026-11-02/03 |
 | `e3-fonts-and-typesetting.md` | E3.3, E3.4, E3.10: the two libraries, the probe results, Windows, and the user's own LaTeX | 2026-11-03 |
+| `e3-3-font-management-ui.md` | Proposal, not built or decided: the server's catalogue in Server settings ▸ Fonts, the document's own fonts at Format ▸ Fonts… (pinned by hash, optionally kept inside the document), adding a missing font to the document rather than the server; open questions; stand-ins made visible on import, while working and on export; mock-ups `mockups/fonts-1…7-*.svg`; architecture of slices a and b `mockups/e3-13-architecture-slices-a-b.svg` | 2026-11-16 |
 | `e4-e6-formulas.md` | The formula engine as built, the proposed decisions, and what was measured | 2026-11-03 |
 | `e5-linux-client.md` | The GTK shell, the shell contract, the menu mapping, and the compatibility notes | 2026-11-03 |
 | `e7-ai.md` | The `ai` user design and the E7.1 port: packages, decisions taken while porting, what is unverified | 2026-11-01/02 |

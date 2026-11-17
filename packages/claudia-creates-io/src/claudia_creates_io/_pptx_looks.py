@@ -174,9 +174,6 @@ def _read_run(look: Look, properties: etree._Element, theme: Theme, units_per_po
         look.unread |= more or colour is None
     elif properties.find(_a("gradFill")) is not None:
         look.unread = True
-    typeface = properties.find(_a("latin"))
-    if typeface is not None and (name := typeface.get("typeface", "")) and not name.startswith("+"):
-        look.words["font-family"] = f"'{name}'" if " " in name else name
 
 
 def _first(parent: etree._Element, names: tuple[str, ...]) -> etree._Element | None:

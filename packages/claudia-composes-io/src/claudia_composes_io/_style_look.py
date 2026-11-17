@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 
 from claudia_core import StyleBook
 from claudia_core.css import resolve_css
+from claudia_core.stand_ins import file_font
 
 _NUMBER = r"-?(?:\d+\.?\d*|\.\d+)"
 _LENGTH = re.compile(rf"({_NUMBER})(pt|px|em|rem|cm|mm|in|%)?")
@@ -22,7 +23,6 @@ _FUNCTION = re.compile(r"(rgba?|hsla?)\(\s*([^)]*)\)", re.IGNORECASE)
 _PX = 0.75  # points in a CSS pixel
 _REM = 12.0  # points in a rem: the size of body text
 _SIDES = ("top", "right", "bottom", "left")
-_GENERIC = {"serif": "Liberation Serif", "sans-serif": "Liberation Sans", "monospace": "Liberation Mono"}
 _NAMED = {
     "black": (0, 0, 0),
     "white": (255, 255, 255),
@@ -144,19 +144,6 @@ class Look:
     unsaid: list[str] = field(default_factory=list)
 
 
-def _family(value: str) -> str | None:
-    for part in (p.strip() for p in value.split(",")):
-        name = part.strip("'\"")
-        if not name:
-            continue
-        low = name.lower()
-        if low in _GENERIC:
-            return _GENERIC[low]
-        if low not in {"system-ui", "ui-serif", "cursive", "fantasy"}:
-            return name
-    return None
-
-
 def _weight(value: str) -> int | None:
     low = value.lower()
     if low in _WEIGHTS:
@@ -178,7 +165,8 @@ def look_of(css: Mapping[str, str], *, font_size: float, parent_size: float) -> 
 def _apply(look: Look, prop: str, value: str, font_size: float, parent_size: float) -> bool:  # noqa: PLR0911, PLR0912
     """Put one property into ``look``; ``False`` when the file cannot say it."""
     if prop == "font-family":
-        look.family = _family(value)
+        # a generic family is written as the font Claudia shows it with (CODE-42)
+        look.family = file_font(value)
         return look.family is not None
     if prop == "font-size":
         look.size = points(value, font_size=parent_size, percent_of=parent_size)

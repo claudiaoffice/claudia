@@ -1,0 +1,13 @@
+{
+  "_comment": "What the Windows installer's build downloads, pinned (D732): the file is refused if its SHA-256 differs. To update: change the version and url, download the file once, and put `sha256sum` of it here (and say so in the log).",
+  "winsw": {
+    "version": "2.12.0",
+    "url": "https://github.com/winsw/winsw/releases/download/v2.12.0/WinSW-x64.exe",
+    "sha256": "05b82d46ad331cc16bdc00de5c6332c1ef818df8ceefcd49c726553209b3a0da",
+    "license": "MIT, https://github.com/winsw/winsw/blob/master/LICENSE.txt"
+  },
+  "webview2": {
+    "_comment": "Microsoft's small bootstrapper of the WebView2 Runtime. Microsoft replaces it in place, so it cannot be pinned by hash; the build checks that it is signed by Microsoft instead.",
+    "url": "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
+  }
+}

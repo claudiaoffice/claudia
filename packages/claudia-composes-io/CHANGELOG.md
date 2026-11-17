@@ -5,6 +5,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- `docx_to_text` and `odt_to_text` read the fonts of the file (E3.13, bug 1): Body text, Title, the headings and Quote
+  take the font their style names in the file -- a docx's own font or theme font (`minorHAnsi`), along `basedOn` and
+  the document defaults; an odt's `style:font-name` or `fo:font-family`, along the parent styles and the default
+  style. The font is the one the file names (Arial), never a stand-in; a fresh export writes it back, and it is no
+  loss.
+- A style whose font is a generic family is written into docx and odt as the font Claudia shows it with (`serif` as
+  Fraunces, `system-ui` as Inter, `ui-monospace` as JetBrains Mono), not as Liberation Serif, Sans or Mono, the next
+  family of the list, or a font called `ui-monospace` (CODE-42; `claudia_core.stand_ins.file_font`).
+
 ## [0.7.0] - 2026-11-17
 
 Properties and links of a docx (D466, D468).

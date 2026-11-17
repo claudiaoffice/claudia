@@ -6,6 +6,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Fixed
+- A TeX error comes back whole (CODE-52). TeX cuts the lines of its log at 79 characters and goes on in the next lines,
+  and only the first line was taken: "Fatal Package" or "Package fontspec Error: The font \"Latin Modern Roman\"
+  cannot be f". The engine is run with `max_print_line` set high, and `parse_log` joins a message that goes on in
+  the lines after it (those that begin with the package's name in brackets, and a line that follows one cut at the
+  width).
 - `ResultCache.put` is retried on Windows while the result file is held for a moment (`claudia_file_writer`, CODE-34,
   D701).
 

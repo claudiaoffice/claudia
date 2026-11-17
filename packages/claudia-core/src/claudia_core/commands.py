@@ -93,11 +93,19 @@ class Command(ABC):
         return self
 
     def redacted(self) -> Command:
-        """A replacement that keeps what other commands depend on (kind, ids) but not the content (E1.8).
+        """A replacement that keeps what other commands depend on but not the content (E1.8).
 
-        Models override this when later commands refer to what this one created (a sheet, an object):
-        the replacement must then still create it, blank. The default is a no-op tombstone."""
+        The contract (D720): the replacement keeps the *shape* of the change — the ids of what it makes, the places
+        and lengths it touches — and loses everything a person wrote, typed, picked or imported, so that the steps
+        after it still apply. A command whose later steps refer to what it created (a sheet, an object, the length
+        of a text) overrides this and blanks in place; the default is a no-op tombstone, and a step that then no
+        longer applies is blanked too (D722)."""
         return Redacted(self.kind, self.stub())
+
+    def redacted_in(self, model: type[DocumentModel]) -> Command:
+        """:meth:`redacted` for a command whose content only the app can blank (an import, a diagram): ``model`` is
+        the class of the document's model. Everything else ignores it."""
+        return self.redacted()
 
     def stub(self) -> dict:
         """The non-secret identifying data that survives redaction (ids only, no content)."""
@@ -233,6 +241,9 @@ class Batch(Command):
     def redacted(self) -> Command:
         return Batch(tuple(c.redacted() for c in self.commands), self.name)
 
+    def redacted_in(self, model: type[DocumentModel]) -> Command:
+        return Batch(tuple(c.redacted_in(model) for c in self.commands), self.name)
+
 
 @core_commands.register
 @dataclass(frozen=True)
@@ -254,6 +265,9 @@ class Setup(Batch):
     def redacted(self) -> Command:
         return Setup(tuple(c.redacted() for c in self.commands), self.name)
 
+    def redacted_in(self, model: type[DocumentModel]) -> Command:
+        return Setup(tuple(c.redacted_in(model) for c in self.commands), self.name)
+
 
 @core_commands.register
 @dataclass(frozen=True)
@@ -262,8 +276,9 @@ class Import(Command):
     model's own ``serialize()`` form, and what the file was. The file itself is not in the log; when it is kept, it
     sits sealed in the document file and ``sha256`` says which bytes it is (D439).
 
-    It is in the history, under the name of who imported it, but nobody's undo step. It cannot be redacted: every
-    later entry is a change of the state it carries, so blanking it would leave the rest of the log meaningless."""
+    It is in the history, under the name of who imported it, but nobody's undo step. It is redacted by blanking the
+    state it carries, in full or in parts, with the model's own :meth:`~claudia_core.DocumentModel.blank`, which keeps
+    every id and length so that the later entries, all changes of that state, still apply (D723)."""
 
     kind: ClassVar[str] = "core.Import"
     undoable = False
@@ -290,7 +305,20 @@ class Import(Command):
         return cls(data["name"], data["fmt"], data["state"], data.get("sha256"), bool(data.get("kept", False)))
 
     def redacted(self) -> Command:
+        """Only the app can blank an import: see :meth:`redacted_in`. Without the model nothing is taken away."""
         return self
+
+    def redacted_in(self, model: type[DocumentModel]) -> Command:
+        return self.blanked(model)
+
+    def blanked(self, model: type[DocumentModel], parts: frozenset[str] | None = None) -> Import:
+        """The import with its content blanked by ``model`` (D723): all of it, or only the things in ``parts`` (ids
+        the app knows: paragraphs, sheets and cell ranges, slides, objects). The file goes in either case: its
+        digest and the kept original say what the file held. A full blanking also forgets the file's name, which can
+        say as much as what was in it; blanking in parts keeps it, since the person chose what to take away."""
+        state = model.restore(self.state)
+        state.blank(parts)
+        return Import(self.name if parts is not None else "", self.fmt, state.serialize(), None, False)
 
 
 @core_commands.register
@@ -355,29 +383,43 @@ class Checkpoint(Command):
 @core_commands.register
 @dataclass(frozen=True)
 class Redaction(Command):
-    """The record that these revisions were redacted. Carries no content. A no-op when replayed."""
+    """The record that these revisions and chat messages were redacted. Carries no content. A no-op when replayed.
+
+    ``chat`` holds the numbers of the chat messages (D724); a record written before chat could be redacted has
+    none, and one that names none is written without it, so the older form reads and writes the same."""
 
     kind: ClassVar[str] = "core.Redaction"
     undoable = False
     meta: ClassVar[bool] = True
     targets: tuple[Revision, ...]
+    chat: tuple[int, ...] = ()
 
     @property
     def label(self) -> str:
-        return f"Redacted {len(self.targets)} change(s)"
+        parts = [_count(len(self.targets), "change")] if self.targets or not self.chat else []
+        if self.chat:
+            parts.append(_count(len(self.chat), "message"))
+        return "Redacted " + " and ".join(parts)
 
     def apply(self, ctx: Context) -> Command:
         return self
 
     def to_data(self) -> dict:
-        return {"targets": [t.to_data() for t in self.targets]}
+        data: dict = {"targets": [t.to_data() for t in self.targets]}
+        if self.chat:
+            data["chat"] = list(self.chat)
+        return data
 
     @classmethod
     def from_data(cls, data: dict, registry: CommandRegistry) -> Redaction:
-        return cls(tuple(Revision.parse(t) for t in data["targets"]))
+        return cls(tuple(Revision.parse(t) for t in data["targets"]), tuple(data.get("chat", ())))
 
     def redacted(self) -> Command:
         return self
+
+
+def _count(number: int, noun: str) -> str:
+    return f"{number} {noun}" if number == 1 else f"{number} {noun}s"
 
 
 @core_commands.register

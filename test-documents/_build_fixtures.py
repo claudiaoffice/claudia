@@ -650,6 +650,190 @@ def build_xlsx_widths_and_heights() -> bytes:
     return _xlsx_bytes(wb)
 
 
+def _stand_in_fonts() -> dict:
+    """The shared table of the stand-in samples (``stand-in-fonts.json``, E3.13)."""
+    import json
+
+    return json.loads((ROOT / "stand-in-fonts.json").read_text(encoding="utf-8"))
+
+
+def _font_face(family: str) -> str:
+    quoted = f"&apos;{family}&apos;" if " " in family else family
+    return f'<style:font-face style:name="{family}" svg:font-family="{quoted}"/>'
+
+
+def build_docx_stand_in_fonts() -> bytes:
+    """A docx whose styles set their fonts the ways Word does (E3.13, bug 1): body text from the theme's body font
+    through the document defaults, the title from the theme's heading font, the other styles with a font of their
+    own. One paragraph per style, its words the name of its font."""
+    import re
+
+    from docx.oxml.ns import qn
+
+    fonts = {entry["style"]: entry["family"] for entry in _stand_in_fonts()["text_styles"]}
+    document = docx.Document()
+    theme = next(part for part in document.part.package.parts if "theme" in str(part.partname))
+    xml = theme.blob.decode()
+    xml = re.sub(r'(<a:majorFont>\s*<a:latin typeface=")[^"]*', rf"\g<1>{fonts['title']}", xml)
+    xml = re.sub(r'(<a:minorFont>\s*<a:latin typeface=")[^"]*', rf"\g<1>{fonts['body']}", xml)
+    theme._blob = xml.encode()
+    for style_id, word in (("heading-1", "Heading 1"), ("heading-2", "Heading 2"), ("quote", "Quote")):
+        properties = document.styles[word].element.get_or_add_rPr()
+        found = properties.find(qn("w:rFonts"))
+        if found is not None:
+            properties.remove(found)  # a theme font in the same element would win over the style's own
+        document.styles[word].font.name = fonts[style_id]
+    for style_id, word in (("title", "Title"), ("body", "Normal"), ("heading-1", "Heading 1")):
+        document.add_paragraph(fonts[style_id], style=word)
+    for style_id, word in (("heading-2", "Heading 2"), ("quote", "Quote")):
+        document.add_paragraph(fonts[style_id], style=word)
+    return _bytes(document)
+
+
+def build_odt_stand_in_fonts() -> bytes:
+    """An odt whose styles set their fonts the ways LibreOffice does (E3.13, bug 1): body text from the default
+    style, the others from their own ``style:font-name`` (a font face) or ``fo:font-family``. One paragraph per
+    style, its words the name of its font."""
+    fonts = {entry["style"]: entry["family"] for entry in _stand_in_fonts()["text_styles"]}
+    faces = "".join(_font_face(family) for family in dict.fromkeys(fonts.values()))
+
+    def named(name: str, display: str, font: str, extra: str = "") -> str:
+        return (
+            f'<style:style style:name="{name}" style:display-name="{display}" style:family="paragraph" '
+            f'style:parent-style-name="Standard"{extra}><style:text-properties style:font-name="{font}"/></style:style>'
+        )
+
+    quote = fonts["quote"]
+    styles = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:font-face-decls>{faces}'
+        "</office:font-face-decls><office:styles>"
+        f'<style:default-style style:family="paragraph"><style:text-properties style:font-name="{fonts["body"]}"/>'
+        "</style:default-style>"
+        '<style:style style:name="Standard" style:family="paragraph" style:class="text"/>'
+        + named("Title", "Title", fonts["title"])
+        + named("Heading_20_1", "Heading 1", fonts["heading-1"], ' style:default-outline-level="1"')
+        + named("Heading_20_2", "Heading 2", fonts["heading-2"], ' style:default-outline-level="2"')
+        + '<style:style style:name="Quotations" style:family="paragraph" style:parent-style-name="Standard">'
+        f'<style:text-properties fo:font-family="&apos;{quote}&apos;"/></style:style>'
+        "</office:styles></office:document-styles>"
+    ).encode()
+    body = (
+        f'<text:p text:style-name="Title">{fonts["title"]}</text:p>'
+        f'<text:p text:style-name="Standard">{fonts["body"]}</text:p>'
+        f'<text:h text:style-name="Heading_20_1" text:outline-level="1">{fonts["heading-1"]}</text:h>'
+        f'<text:h text:style-name="Heading_20_2" text:outline-level="2">{fonts["heading-2"]}</text:h>'
+        f'<text:p text:style-name="Quotations">{quote}</text:p>'
+    )
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-content {_ODT_DECLS} office:version="1.3"><office:scripts/><office:font-face-decls/>'
+        f"<office:automatic-styles/><office:body><office:text>{body}</office:text></office:body>"
+        "</office:document-content>"
+    )
+    return new_package("text", content.encode(), styles)
+
+
+def build_pptx_stand_in_fonts() -> bytes:
+    """A deck whose theme says the body and heading fonts (E3.13, bug 2): a title in the heading font (named the way
+    PowerPoint refers to it, ``+mj-lt``), a text box in
+    the body font set by nothing but the theme, and one text box per other font of the table with the font set on its
+    words, the way PowerPoint sets a font somebody picked. Each box's words are the name of its font."""
+    import re
+
+    table = _stand_in_fonts()
+    prs = _new_presentation()
+    theme = next(part for part in prs.part.package.iter_parts() if "theme" in str(part.partname))
+    xml = theme.blob.decode()
+    xml = re.sub(r'(<a:majorFont>\s*<a:latin typeface=")[^"]*', rf"\g<1>{table['slides']['title']}", xml)
+    xml = re.sub(r'(<a:minorFont>\s*<a:latin typeface=")[^"]*', rf"\g<1>{table['slides']['body']}", xml)
+    theme._blob = xml.encode()
+    slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank: the model does not read placeholders yet
+    title = slide.shapes.add_textbox(*_box(100, 60, 1400, 100))
+    title.text_frame.text = table["slides"]["title"]
+    title.text_frame.paragraphs[0].runs[0].font.name = "+mj-lt"  # the theme's heading font, as PowerPoint refers to it
+    for row, entry in enumerate(table["fonts"]):
+        box = slide.shapes.add_textbox(*_box(100, 200 + row * 62, 1400, 56))
+        box.text_frame.text = entry["family"]
+        if entry["family"] != table["slides"]["body"]:
+            box.text_frame.paragraphs[0].runs[0].font.name = entry["family"]
+    return _pptx_bytes(prs)
+
+
+def build_odp_stand_in_fonts() -> bytes:
+    """A deck written the way LibreOffice writes one (E3.13, bug 2): the body font in the default style, the title's
+    font in its presentation style, and one text box per other font of the table with the font in the style of its
+    words. Each box's words are the name of its font."""
+    table = _stand_in_fonts()
+    body, title = table["slides"]["body"], table["slides"]["title"]
+    others = [entry["family"] for entry in table["fonts"] if entry["family"] != body]
+    faces = "".join(_font_face(family) for family in dict.fromkeys([body, title, *others]))
+    automatic = (
+        '<style:style style:name="pr1" style:family="presentation">'
+        f'<style:text-properties style:font-name="{title}"/></style:style>'
+    )
+    automatic += "".join(
+        f'<style:style style:name="T{n}" style:family="text"><style:text-properties style:font-name="{family}"/>'
+        "</style:style>"
+        for n, family in enumerate(others, start=1)
+    )
+
+    def frame(row: int, words: str) -> str:
+        return (
+            f'<draw:frame svg:x="2cm" svg:y="{3 + row * 1.1:.1f}cm" svg:width="24cm" svg:height="1cm"><draw:text-box>'
+            f"<text:p>{words}</text:p></draw:text-box></draw:frame>"
+        )
+
+    frames = [
+        '<draw:frame presentation:class="title" presentation:style-name="pr1" svg:x="2cm" svg:y="0.5cm" '
+        f'svg:width="24cm" svg:height="2cm"><draw:text-box><text:p>{title}</text:p></draw:text-box></draw:frame>'
+    ]
+    number = 0
+    for row, entry in enumerate(table["fonts"]):
+        if entry["family"] == body:
+            frames.append(frame(row, body))
+        else:
+            number += 1
+            frames.append(frame(row, f'<text:span text:style-name="T{number}">{entry["family"]}</text:span>'))
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-content {_ODT_DECLS} office:version="1.3"><office:scripts/>'
+        f"<office:font-face-decls>{faces}</office:font-face-decls><office:automatic-styles>{automatic}"
+        "</office:automatic-styles><office:body><office:presentation>"
+        f'<draw:page draw:name="page1" draw:master-page-name="Default">{"".join(frames)}</draw:page>'
+        "</office:presentation></office:body></office:document-content>"
+    )
+    styles = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<office:document-styles {_ODT_DECLS} office:version="1.3"><office:font-face-decls>{faces}'
+        "</office:font-face-decls><office:styles>"
+        f'<style:default-style style:family="graphic"><style:text-properties style:font-name="{body}"/>'
+        "</style:default-style></office:styles><office:automatic-styles>"
+        '<style:page-layout style:name="PM1"><style:page-layout-properties fo:page-width="28cm" '
+        'fo:page-height="15.75cm"/></style:page-layout></office:automatic-styles><office:master-styles>'
+        '<style:master-page style:name="Default" style:page-layout-name="PM1"/></office:master-styles>'
+        "</office:document-styles>"
+    ).encode()
+    return new_package("presentation", content.encode(), styles)
+
+
+def build_xlsx_stand_in_fonts() -> bytes:
+    """An xlsx with one cell per font of ``stand-in-fonts.json`` (E3.13): the fonts office files ask for most, set the
+    way Excel sets them, on a computer that has them. The shared sample of every test of the font stand-ins."""
+
+    from openpyxl.styles import Font
+
+    fonts = _stand_in_fonts()["fonts"]
+    wb = openpyxl.Workbook()
+    sheet = wb.active
+    sheet.title = "Fonts"
+    for row, entry in enumerate(fonts, start=1):
+        cell = sheet.cell(row=row, column=1, value=entry["family"])
+        cell.font = Font(name=entry["family"], size=11)
+        sheet.cell(row=row, column=2, value=row * 1000 + 0.5).font = Font(name=entry["family"], size=11)
+    return _xlsx_bytes(wb)
+
+
 def build_ods_widths_and_heights() -> bytes:
     """An ods the way LibreOffice lays sizes out: a width and a height set, a row sized by its content (the one
     LibreOffice writes for every row nobody sized), columns left at its own width, and a validation."""
@@ -916,6 +1100,11 @@ FIXTURES = {
     "ods/names-and-tables/source.ods": build_ods_names_and_tables,
     "xlsx/widths-and-heights/source.xlsx": build_xlsx_widths_and_heights,
     "ods/widths-and-heights/source.ods": build_ods_widths_and_heights,
+    "xlsx/stand-in-fonts/source.xlsx": build_xlsx_stand_in_fonts,
+    "docx/stand-in-fonts/source.docx": build_docx_stand_in_fonts,
+    "odt/stand-in-fonts/source.odt": build_odt_stand_in_fonts,
+    "pptx/stand-in-fonts/source.pptx": build_pptx_stand_in_fonts,
+    "odp/stand-in-fonts/source.odp": build_odp_stand_in_fonts,
     "ods/charts/source.ods": build_ods_charts,
     "xlsx/charts/source.xlsx": build_xlsx_charts,
     "docx/pictures/source.docx": build_docx_pictures,

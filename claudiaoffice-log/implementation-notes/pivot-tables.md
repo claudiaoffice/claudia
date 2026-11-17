@@ -1,6 +1,6 @@
-# Pivot tables in computes (E6.30, D620–D625)
+# Pivot tables in computes (E6.30, D620–D628)
 
-Pivot tables in computes: step 1 the engine, step 2 a pivot in a workbook, step 3 the server API. No client or file-format work yet.
+Pivot tables in computes: step 1 the engine, step 2 a pivot in a workbook, step 3 the server API, step 4 the web client, step 5 files (ods and xlsx) and the help topic.
 
 ## Decisions this slice rests on
 
@@ -8,7 +8,7 @@ Pivot tables in computes: step 1 the engine, step 2 a pivot in a workbook, step 
 - **Two queries** (D621): the members of the column field, then one `CASE` column per member; the total row is a `UNION ALL`. Members are written as literals, so the SQL shown is the SQL run.
 - **The grid is values with roles** (D622): `PivotResult` holds the cells and a role per cell (corner, field, header, label, value, total) so the clients style by purpose (D604). Words such as "Total" and "(blank)" come from the caller (`PivotLabels`) for i18n.
 - **A pivot in a workbook** (D626): a registry of definitions by name, a `PIVOT("name")` formula in the first cell as the owner of the cells (so spilling, live recalculation, moving with row inserts and undo are the existing ones), a result name for the cells. Live, no Refresh (D623). The interface is the four approved mock-ups (D624).
-- **Open decisions:** xlsx and ods (D625).
+- **Files** (D625, D628): a pivot is written to ods and xlsx as a pivot with its cells beside it, and read back as a live pivot only when the engine makes the file's cells.
 
 ## What was built
 
@@ -38,12 +38,27 @@ Step 4 (web client, D627):
 - The field panel shows what the server has and puts a change in front of it until the server answers; a refused change is dropped and said.
 - The keys of D624 were refused by the manifest's own test; D627 has the ones in use.
 
+Step 5 (`packages/claudia-computes-io`, `claudia-computes` help, D628):
+
+Diagram: `notes/mockups/computes-pivot-5-files-architecture.svg` (PNG alongside) — where the code is and why.
+
+- `pivot_exchange.py` is the format-neutral part and holds every rule: `FilePivot`; writing (`written_pivots`, `sheet_cells`: the cells of a sheet with the pivot's grid as values; `pivot_positions`, `outside_pivots`); reading (`adopt_pivots`: plan, prove, apply). *Why one place:* the two formats differ in words, not in meaning, and a rule written twice drifts. The proof (`_prove`) derives the file's words ("Total Result", a German "Summe von") from the file's own cells, recomputes with the engine and requires equal cells; anything else leaves the cells alone and says `different`.
+- `ods_pivots.py` and `xlsx_pivots.py` are adapters: write a `FilePivot` as XML and read XML as a `FilePivot`, with their refusals (the loss details of D628). `xlsx_pivots` builds the cache (shared items for fields on an axis or with text, numbers inline for the others, records pointing at them), the table (tabular layout, `refreshOnLoad`) and the package parts through `PackagePatch`.
+- `ods.py` and `xlsx.py` call them: `workbook_to_*` writes `sheet_cells` and then the pivots, `*_to_workbook` reads and adopts (`_model_of`), `*_import_losses` and `*_export_losses` say what is not read or not written, and the edit-and-reexport paths write the cells of a pivot whose source changed (xlsx asks the caches to be read again) and count a changed definition as an unwritten change (`pivots` facet of `_unwritten.py`).
+- Help topic `computes.pivot-tables` (English and German) in `claudia_computes/help/`.
+- Test documents `ods/pivot-tables` and `xlsx/pivot-tables` are real files LibreOffice wrote; `scripts/odf_libreoffice_check.py` also has LibreOffice make a pivot of a model and compares its cells with the model's.
+- Checked with LibreOffice only (no Excel here): LibreOffice reads our xlsx as pivot tables with the same cells for one and several values, with and without a column field; our reader reads the xlsx and ods LibreOffice writes.
+
 ## Limits of this version
 
 One row field, one column field, five aggregates, filters by member list. The definition stores tuples, so more fields need no format change.
 
 ## Open questions
 
+- Excel itself has not seen a written xlsx: no repair prompt is checked; the grand-total flags are read from Microsoft's documentation (D628).
+- A pivot of a file with filters needs free rows above it to be written as a pivot in xlsx (`room`); Claudia does not draw filter buttons on the sheet.
+- Value formats, `GETPIVOTDATA` (D481) and pivot styles by purpose (D604) are not in files yet.
+- `add_pivot_table` (the spike of D147) builds a cache and a table of its own and is public API; it should use `xlsx_pivots` and be deprecated (technical debt, bugtracker).
 - A pivot read as a table (`SQL()`, another pivot) uses its first row as the header: wrong for two or three header rows (D626).
 - SQL groups case-sensitively, Excel does not (D621).
 - Dates are serial numbers: grouping by month, quarter or year needs a conversion in the generator.
@@ -53,5 +68,5 @@ One row field, one column field, five aggregates, filters by member list. The de
 
 ## Next steps (not started)
 
-1. A Help topic for pivot tables; number formats for value fields; the filter dropdown on the sheet; a Firefox check.
-4. ods, then xlsx import and export (D625), `GETPIVOTDATA` (D481).
+1. Number formats for value fields; the filter dropdown on the sheet; a Firefox check; `GETPIVOTDATA` (D481).
+2. A real Excel file with a pivot table in the test-document library (and a check that Excel opens ours).

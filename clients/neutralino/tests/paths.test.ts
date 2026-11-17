@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { claudiaFolder, configDir, defaultRepo, findFrontend, findRepo, findServerPython, serverDocumentsDir, serverStateDir, stateDir } from '../src/paths.js'
+import { claudiaFolder, configDir, defaultRepo, findFrontend, findRepo, findServerProgram, findServerPython, serverDocumentsDir, serverStateDir, stateDir } from '../src/paths.js'
 import { hostPlatform } from '../src/platform/host.js'
 import { localAppData } from '../src/platform/windows.js'
 
@@ -139,5 +139,22 @@ describe('findRepo / defaultRepo', () => {
     const repo = defaultRepo(join(here, '..', 'apps', 'creates', 'ext'))
     expect(existsSync(join(repo, 'clients', 'neutralino', 'package.json'))).toBe(true)
     expect(defaultRepo()).toBe(repo)
+  })
+})
+
+describe('findServerProgram (D730)', () => {
+  it('CLAUDIA_SERVER_EXE, when set, is the program: the installer ships the server with its interpreter inside', () => {
+    expect(findServerProgram({ repo: '/does/not/matter', env: { CLAUDIA_SERVER_EXE: 'C:\\Claudia\\server\\claudia-server.exe' } })).toEqual({
+      exe: 'C:\\Claudia\\server\\claudia-server.exe',
+    })
+  })
+
+  it('wins over CLAUDIA_SERVER_PYTHON, because it is what an installed client sets', () => {
+    expect(findServerProgram({ env: { CLAUDIA_SERVER_EXE: '/opt/s', CLAUDIA_SERVER_PYTHON: '/opt/python' } })).toEqual({ exe: '/opt/s' })
+  })
+
+  it('is the interpreter, as before, when no exe is named', () => {
+    expect(findServerProgram({ repo: '/x', env: { CLAUDIA_SERVER_PYTHON: '/opt/python3.14' } })).toBe('/opt/python3.14')
+    expect(findServerProgram({ repo: '/definitely/not/a/real/path', env: {} })).toBeNull()
   })
 })

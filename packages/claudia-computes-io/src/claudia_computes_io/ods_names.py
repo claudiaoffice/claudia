@@ -260,7 +260,11 @@ class NamesPatch:
         """The names to add, to write again and to take out."""
         before = {named.key: named for named in self.baseline.names if not named.is_result}
         after = {named.key: named for named in self.current.names if not named.is_result}
-        added = [after[key] for key in after if key not in before or key not in self.entries]
+        # (a name the baseline has and the file has not is one the import made for a pivot's source, D628: it is
+        # written only once it differs from the baseline)
+        added = [
+            after[key] for key in after if key not in before or (key not in self.entries and before[key] != after[key])
+        ]
         again: list[NamedRange] = []
         gone = [before[key] for key in before if key not in after and key in self.entries]
         for key, named in after.items():

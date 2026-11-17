@@ -104,13 +104,15 @@ class EphemeralPublished:
 
 @dataclass(frozen=True)
 class Redacted:
-    """The content of these revisions was removed (exported as ``RedactedEvent``): views must reload."""
+    """The content of these revisions and chat messages was removed (exported as ``RedactedEvent``): views must
+    reload what they show of them (the state follows as ``Rebuilt`` when revisions were redacted)."""
 
     revisions: tuple[Revision, ...]
+    chat: tuple[int, ...] = ()
 
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
-        return {"type": "redacted", "revisions": [r.to_data() for r in self.revisions]}
+        return {"type": "redacted", "revisions": [r.to_data() for r in self.revisions], "chat": list(self.chat)}
 
 
 @dataclass(frozen=True)

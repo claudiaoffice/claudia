@@ -44,7 +44,8 @@ Path({record!r}).write_text(json.dumps({{
     "cwd": os.getcwd(),
     "fonts_conf_exists": os.path.exists(os.environ.get("FONTCONFIG_FILE", "")),
     "env": {{key: os.environ.get(key) for key in
-            ("shell_escape", "openin_any", "openout_any", "FONTCONFIG_FILE", "SOURCE_DATE_EPOCH", "HOME", "PATH")}},
+            ("shell_escape", "max_print_line", "openin_any", "openout_any", "FONTCONFIG_FILE",
+             "SOURCE_DATE_EPOCH", "HOME", "PATH")}},
     "source": source,
 }}))
 with open({runs!r}, "a") as runs:
@@ -172,6 +173,7 @@ def test_the_engine_runs_in_a_clean_environment_that_only_reaches_its_own_folder
     seen = fake.seen
     env = seen["env"]
     assert env["shell_escape"] == "f"
+    assert int(env["max_print_line"]) >= 1000  # TeX does not cut the lines of its log, so a message is whole
     assert env["openin_any"] == "p"
     assert env["openout_any"] == "p"
     assert env["SOURCE_DATE_EPOCH"] == "0"

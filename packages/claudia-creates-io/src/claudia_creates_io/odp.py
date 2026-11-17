@@ -34,6 +34,7 @@ import copy
 import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
+from html import escape
 from zipfile import BadZipFile
 
 from lxml import etree
@@ -48,6 +49,7 @@ from claudia_core import (
     paragraph_for,
     picture_body,
 )
+from claudia_core.stand_ins import file_font
 from claudia_creates import MAX_NOTES_LENGTH, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
 from claudia_odf_io import (
     MIME,
@@ -80,8 +82,9 @@ from claudia_opc_io import read_parts, write_parts
 
 from ._file_looks import Look, LookBook
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
+from ._odp_fonts import DeckFonts
 from ._odp_looks import StyleIndex, read_look
-from ._styling import colour_of, is_bold, look, page_colour, points_of, written_family
+from ._styling import colour_of, is_bold, look, page_colour, points_of, style_for_font, take_body_font
 from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
 from .pptx import UnsupportedEdit
 
@@ -631,13 +634,15 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
     the order the file draws them, from bottom to top. Place and size are read through the slide's own size (not an
     assumed shape: a 4:3 deck comes in as 4:3). What the model does not hold is in :func:`odp_import_losses`. Raises
     :class:`~claudia_odf_io.OdfError` for a file that is not an odp."""
-    _, _, styles, slides = _document(odp_bytes)
+    _, content, styles, slides = _document(odp_bytes)
     if not slides:
         empty = SlideModel.empty()
         empty.language = read_language(styles)
         return empty
     model, library, defined = SlideModel(), ShapeLibrary.load(), set()
     model.language = read_language(styles)
+    fonts = DeckFonts(content, styles)
+    take_body_font(model, fonts.body)
     looks = LookBook(model)
     # one palette for the deck: the page colour of its first slide, white where a file says none (D467)
     model.palette.set_colour("page", slides[0].background or _WHITE)
@@ -662,6 +667,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
             if found.kind != "text":
                 style = looks.outline(style, found.look.outline)
             words = looks.words(words, found.look.words)
+            words = style_for_font(model, words, fonts.of_object(found.element, found.paragraphs))
             if found.kind == "text":
                 shape = None
             else:
@@ -690,7 +696,8 @@ def odp_import_losses(odp_bytes: bytes) -> tuple[Loss, ...]:
     ``"notes"``, ``"transition"``, ``"rotated-object"``, ``"overhanging-object"`` (cut back to the slide)...) with how
     many there are, in the order they come. None of it is lost from the *file*: an edit exported with
     :func:`apply_edits_to_odp` keeps all of it."""
-    _, _, _, slides = _document(odp_bytes)
+    _, content, styles, slides = _document(odp_bytes)
+    fonts = DeckFonts(content, styles)
     losses = LossLog()
     looks = formatting = links = 0
     hidden: dict[str, int] = {}
@@ -703,9 +710,12 @@ def odp_import_losses(odp_bytes: bytes) -> tuple[Loss, ...]:
             if found.kind == "image":
                 continue  # a picture has no look of its own that the model leaves out
             looks += found.look.unread
+            formatting += fonts.mixes(found.element, found.paragraphs)
             for paragraph in found.paragraphs:
                 formatting += sum(
-                    1 for span in paragraph.iter(_q("text", "span")) if span.get(_q("text", "style-name"))
+                    1
+                    for span in paragraph.iter(_q("text", "span"))
+                    if span.get(_q("text", "style-name")) and not fonts.only_a_font(span.get(_q("text", "style-name")))
                 )
                 links += sum(1 for _ in paragraph.iter(_q("text", "a")))
                 for kind in hidden_content(paragraph):
@@ -801,9 +811,11 @@ class _Looks:
             ("page", *props.items()), "dp", "drawing-page", [_el("style", "drawing-page-properties", props)]
         )
 
-    def paragraph(self, css: dict[str, str], over: str | None, pt_per_unit: float) -> str | None:
-        """A paragraph style for the size, colour, weight, slant, font and alignment of words, or ``None`` if ``css``
-        says none of them."""
+    def paragraph(
+        self, css: dict[str, str], over: str | None, pt_per_unit: float, font: str | None = None
+    ) -> str | None:
+        """A paragraph style for the size, colour, weight, slant and alignment of words and their ``font`` (the name the
+        file is to say: never a stand-in, E3.13), or ``None`` if none of them is said."""
         size, colour = points_of(css, "font-size", pt_per_unit), colour_of(css, "color", over)
         align = {"left": "start", "right": "end", "center": "center", "justify": "justify"}.get(
             css.get("text-align", "")
@@ -817,8 +829,8 @@ class _Looks:
             text["fo:font-weight"] = "bold"
         if css.get("font-style") in ("italic", "oblique"):
             text["fo:font-style"] = "italic"
-        if family := written_family(css):
-            text["fo:font-family"] = family
+        if font:
+            text["fo:font-family"] = _font_family(font)
         if not text and not align:
             return None
         properties = []
@@ -892,7 +904,7 @@ class _Writer:
         placing = _placing(anchor, body, self.cm_per_unit)
         text = body.paragraph.text if body.paragraph is not None else ""
         words_css = look(self.model, body.paragraph.style) if body.paragraph is not None else {}
-        words = self.looks.paragraph(words_css, over, self.pt_per_unit)
+        words = self.looks.paragraph(words_css, over, self.pt_per_unit, _own_font(self.model, words_css))
         if body.kind in ("image", "rendered"):
             return self._picture(body, placing)
         if body.kind == "text":
@@ -994,12 +1006,39 @@ _NOTES_FRAME = {
 }
 
 
-def _styles_part(language: str | None) -> bytes:
+def _font_family(font: str) -> str:
+    """``font`` as the value of ``fo:font-family``: quoted if it has a space."""
+    return f"'{font}'" if " " in font else font
+
+
+def _body_font(model: SlideModel) -> str | None:
+    """The font the file is to name for Body text (E3.13)."""
+    return file_font(look(model, _DEFAULT_TEXT_STYLE).get("font-family", ""))
+
+
+def _own_font(model: SlideModel, css: dict[str, str]) -> str | None:
+    """The font words in ``css`` are to name of their own: none if it is the body font, which the deck names once."""
+    font = file_font(css.get("font-family", ""))
+    return font if font != _body_font(model) else None
+
+
+def _default_graphic_xml(font: str | None) -> str:
+    """The default style of drawn things, which names the deck's body font; nothing for none."""
+    if not font:
+        return ""
+    family = escape(xml_safe(_font_family(font)), quote=True)
+    return (
+        '<style:default-style style:family="graphic">'
+        f'<style:text-properties fo:font-family="{family}"/></style:default-style>'
+    )
+
+
+def _styles_part(language: str | None, font: str | None = None) -> bytes:
     width, height = (f"{value:g}cm" for value in _SLIDE_CM)
     declared = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in _NS_DECLS.items())
     return (
         f"{_DECLARATION}<office:document-styles {declared} "
-        f'office:version="1.3"><office:styles>{default_style_xml(language)}</office:styles>'
+        f'office:version="1.3"><office:styles>{default_style_xml(language)}{_default_graphic_xml(font)}</office:styles>'
         '<office:automatic-styles><style:page-layout style:name="PM1">'
         f'<style:page-layout-properties fo:page-width="{width}" fo:page-height="{height}" '
         'style:print-orientation="landscape" fo:margin-top="0cm" fo:margin-bottom="0cm" fo:margin-left="0cm" '
@@ -1050,7 +1089,7 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
     return new_package(
         "presentation",
         content.encode(),
-        _styles_part(model.language),
+        _styles_part(model.language, _body_font(model)),
         meta=new_meta(info or DocumentInfo()),
         extra=extra,
     )
@@ -1388,7 +1427,7 @@ class _Patch:
             old_words = look(self.baseline, words_before.style)
             new_words = look(self.current, words_after.style)
             if _words_of(old_words) != _words_of(new_words):
-                style_name = self.looks.paragraph(new_words, over, pt_per_unit)
+                style_name = self.looks.paragraph(new_words, over, pt_per_unit, _own_font(self.current, new_words))
         text = words_after.text if words_after is not None else ""
         if attributes or taken:
             self.part.set_attributes(found.element, attributes, remove=taken)
@@ -1489,8 +1528,8 @@ def _graphic_of(css: dict[str, str]) -> tuple[str | None, str | None, str | None
     return css.get("fill"), css.get("stroke"), css.get("stroke-width")
 
 
-def _words_of(css: dict[str, str]) -> tuple[str | None, str | None, str | None]:
-    return css.get("font-size"), css.get("color"), css.get("text-align")
+def _words_of(css: dict[str, str]) -> tuple[str | None, ...]:
+    return css.get("font-size"), css.get("color"), css.get("text-align"), css.get("font-family")
 
 
 def apply_edits_to_odp(

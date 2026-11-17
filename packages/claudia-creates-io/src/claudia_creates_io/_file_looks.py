@@ -1,15 +1,15 @@
 """How the objects of a file look, as styles of the model (IEW-20, D467).
 
 A file says what a box or a line of words looks like (a fill, an outline, a colour, a size) in styles of its own. The
-model has styles too, so the look of a file's object is read into one: the converters read the few properties the model
-has (``fill``, ``stroke``, ``stroke-width``, ``color``, ``font-size``, ``font-weight``, ``font-style``,
-``text-align``, ``font-family``) as CSS and hand them to a :class:`LookBook`, which makes a style for each look the
-deck has -- once, however many objects share it -- based on the built-in style of the object's kind, so what the file
-did not say stays what Claudia's own objects have. A fresh export of the deck then writes the same colours and sizes
-the file had, and an edit patched onto the file is measured against the same model.
+model has styles too, so the look of a file's object is read into one: the converters read the few properties the
+model has (``fill``, ``stroke``, ``stroke-width``, ``color``, ``font-size``, ``font-weight``, ``font-style``,
+``text-align``) as CSS and hand them to a :class:`LookBook`, which makes a style for each look the deck has -- once,
+however many objects share it -- based on the built-in style of the object's kind, so what the file did not say stays
+what Claudia's own objects have. A fresh export of the deck then writes the same colours and sizes the file had, and an
+edit patched onto the file is measured against the same model.
 
-A property that cannot be read (a gradient, a font that is not a name, a size in a unit the converter does not know)
-is left out and is the reader's to report as ``look``."""
+A property that cannot be read (a gradient, a size in a unit the converter does not know) is left out and is the
+reader's to report as ``look``. Fonts have their own way in (E3.13)."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from claudia_core import CssError, StyleDef, validate_css
 from claudia_creates import SlideModel
 
-from ._styling import colour_of, look, page_colour, points_of, written_family
+from ._styling import colour_of, look, page_colour, points_of
 
 
 @dataclass
@@ -83,8 +83,6 @@ def _same(prop: str, value: str, have: dict[str, str], page: str | None) -> bool
     if prop in _SIZES:
         mine, theirs = points_of(have, prop, 1.0), points_of({prop: value}, prop, 1.0)
         return mine is not None and theirs is not None and abs(mine - theirs) < 0.3
-    if prop == "font-family":
-        return (written_family(have) or "") == (written_family({prop: value}) or "")
     return have[prop] == value
 
 

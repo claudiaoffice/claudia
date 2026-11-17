@@ -3,15 +3,17 @@ import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 
-// The dark sidebar shared by the three server settings pages (E3.11; canvas note s3): "these pages now live on
+// The dark sidebar shared by the server settings pages (E3.11; canvas note s3): "these pages now live on
 // the server, not in your Preferences — reached the same way whether it's your own box or someone else's." Same
 // components as the client; the dark sidebar and the server's name are the only things that say so.
-defineProps<{ label: string; host: string; signedInAs: string; active: 'ai' | 'typeset' | 'access' }>()
-const emit = defineEmits<{ navigate: [page: 'ai' | 'typeset' | 'access']; signOut: []; close: [] }>()
+type Page = 'ai' | 'typeset' | 'fonts' | 'access'
+defineProps<{ label: string; host: string; signedInAs: string; active: Page }>()
+const emit = defineEmits<{ navigate: [page: Page]; signOut: []; close: [] }>()
 
-const pages: { id: 'ai' | 'typeset' | 'access'; name: string }[] = [
+const pages: { id: Page; name: string }[] = [
   { id: 'ai', get name() { return t('AI model') } },
   { id: 'typeset', get name() { return t('Typesetting') } },
+  { id: 'fonts', get name() { return t('Fonts') } },
   { id: 'access', get name() { return t('Access & documents') } },
 ]
 </script>
@@ -40,6 +42,7 @@ const pages: { id: 'ai' | 'typeset' | 'access'; name: string }[] = [
           <li v-for="p in pages" :key="p.id">
             <button type="button" :aria-current="p.id === active ? 'page' : undefined" @click="emit('navigate', p.id)">
               <svg v-if="p.id === 'ai'" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3z" /></svg>
+              <svg v-else-if="p.id === 'fonts'" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><text x="2" y="17" font-family="Georgia, serif" font-size="14" font-weight="600">Aa</text></svg>
               <svg v-else-if="p.id === 'typeset'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h10l-6.2 7L17 19H7" /></svg>
               <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="3.2" /><path d="M10.3 12.7L18 5M15.5 7.5l2 2M18 5l2 2" /></svg>
               <span>{{ p.name }}</span>

@@ -6,6 +6,8 @@
 // Field names are kept exactly as the wire sends them (snake_case), the same choice protocol.ts makes for the
 // document socket: one less mapping layer, and the tests can compare directly against what the server returns.
 
+import type { CheckAnswer, FontsPage, MayGo } from './admin-fonts'
+
 export class AdminApiError extends Error {
   constructor(
     public status: number,
@@ -30,6 +32,14 @@ export interface AdminStatus {
  *  the settings pages directly can still *choose* to set one up, so the screen must still be reachable then. */
 export function hasNoAdministrator(status: Pick<AdminStatus, 'administrator'>): boolean {
   return status.administrator === null
+}
+
+/** Which screen the server settings show: becoming the first administrator, signing in, or the settings. Somebody
+ *  signed in always sees the settings, also right after naming the first administrator, while the status read when
+ *  the page loaded still says there is none (CODE-48). */
+export function adminScreen(noAdministrator: boolean, signedIn: string | null): 'setup' | 'sign-in' | 'settings' {
+  if (signedIn) return 'settings'
+  return noAdministrator ? 'setup' : 'sign-in'
 }
 
 export interface AdminAccount {
@@ -72,14 +82,24 @@ export interface ServerSettingsView {
 
 export type AdminApi = ReturnType<typeof createAdminApi>
 
+/** What Add fonts… sends to make a collection (E3.13 f, D1041). */
+export interface NewFontCollection {
+  files: string[]
+  name: string
+  licence: string
+  may_go: MayGo
+}
+
 /** Everything the settings pages call, bound to one `fetch` implementation — a real one in the browser, a fake one
  *  in a test (the same injection `i18n.ts`'s `loadCatalog` uses, just once here instead of on every function). */
 export function createAdminApi(fetchImpl: typeof fetch = fetch) {
-  async function call<T>(method: string, path: string, body?: unknown, token?: string): Promise<T> {
+  async function call<T>(method: string, path: string, body?: unknown, token?: string, raw?: { data: Blob; name: string }): Promise<T> {
     const headers: Record<string, string> = {}
     if (body !== undefined) headers['content-type'] = 'application/json'
+    if (raw) headers['x-claudia-name'] = encodeURIComponent(raw.name)
     if (token) headers.authorization = `Bearer ${token}`
-    const response = await fetchImpl(`/api/admin${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) })
+    const sent = raw ? raw.data : body === undefined ? undefined : JSON.stringify(body)
+    const response = await fetchImpl(`/api/admin${path}`, { method, headers, body: sent })
     if (response.status === 204) return undefined as T
     let parsed: unknown = null
     try {
@@ -117,6 +137,19 @@ export function createAdminApi(fetchImpl: typeof fetch = fetch) {
       call('POST', '/settings/access-secret/rotate', undefined, token),
     setAi: (token: string, settings: AiSettings): Promise<ServerSettingsView> => call('PUT', '/settings/ai', settings, token),
     setTypeset: (token: string, settings: TypesetSettings): Promise<ServerSettingsView> => call('PUT', '/settings/typeset', settings, token),
+
+    // Server settings ▸ Fonts (E3.13 f, D1041): every change answers the whole page.
+    fontsPage: (token: string): Promise<FontsPage> => call('GET', '/fonts', undefined, token),
+    /** Holds one file for Add fonts… (the bytes as the body, as `/api/uploads` takes them); nothing is added yet. */
+    holdFontFile: (token: string, data: Blob, name: string): Promise<{ token: string; name: string; size: number }> =>
+      call('POST', '/fonts/files', undefined, token, { data, name }),
+    /** Lets go of held files that will not be added (Cancel, Start again, a failed upload), CODE-49. */
+    dropFontFiles: (token: string, files: string[]): Promise<{ dropped: number }> => call('DELETE', '/fonts/files', { files }, token),
+    checkFonts: (token: string, files: string[]): Promise<CheckAnswer> => call('POST', '/fonts/check', { files }, token),
+    addFontCollection: (token: string, collection: NewFontCollection): Promise<FontsPage> => call('POST', '/fonts/collections', collection, token),
+    renameFontCollection: (token: string, id: string, name: string): Promise<FontsPage> =>
+      call('PATCH', `/fonts/collections/${encodeURIComponent(id)}`, { name }, token),
+    removeFontCollection: (token: string, id: string): Promise<FontsPage> => call('DELETE', `/fonts/collections/${encodeURIComponent(id)}`, undefined, token),
   }
 }
 

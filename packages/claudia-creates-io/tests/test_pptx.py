@@ -710,7 +710,7 @@ def test_what_a_pptx_says_of_the_look_of_an_object_and_its_page_is_read():
     body = next(iter(model.objects.values())).body
     css = model.styles.get(body.style).css
     assert (css["fill"], css["stroke"]) == ("#336699", "#112233")
-    words = model.styles.get(body.paragraph.style).css
+    words = model.styles.computed(body.paragraph.style)  # the font is a style of its own, based on the look
     assert (words["color"], words["font-weight"], words["font-style"], words["text-align"]) == (
         "#ff0000",
         "bold",

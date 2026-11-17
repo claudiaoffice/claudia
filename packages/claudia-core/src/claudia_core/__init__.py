@@ -72,7 +72,7 @@ from .css import (
     roles_used,
     validate_css,
 )
-from .document import Applied, Changes, CheckpointInfo, Document, Line, Look, environment_of
+from .document import Applied, Changes, CheckpointInfo, Document, Line, Look, RedactionPlan, environment_of
 from .errors import (
     KernelError,
     MissingUpcaster,
@@ -148,6 +148,7 @@ from .names import MAX_THING_NAME, clean_name, free_name, name_key, name_problem
 from .object_texts import ObjectText, edit_object_text, object_texts
 from .objects import (
     ASPECT_TOLERANCE,
+    FILLER,
     MAX_OBJECTS_PER_CONTAINER,
     MAX_SELECTION,
     MIN_OBJECT_SIZE,
@@ -304,6 +305,7 @@ __all__ = [
     "DocumentStore",
     "encode",
     "Entry",
+    "FILLER",
     "Environment",
     "environment_of",
     "Ephemeral",
@@ -393,6 +395,7 @@ __all__ = [
     "RedactedEvent",
     "Redaction",
     "RedactionError",
+    "RedactionPlan",
     "Region",
     "RegionHeld",
     "RemoveObject",

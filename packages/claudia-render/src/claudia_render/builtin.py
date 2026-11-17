@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from importlib import resources
 from pathlib import Path
 
@@ -14,11 +15,12 @@ from .manifest import parse_manifest
 from .registry import PluginRegistry
 
 
-def builtin_registry(catalogue: Catalogue, directory: str | Path) -> PluginRegistry:
+def builtin_registry(catalogue: Callable[[], Catalogue], directory: str | Path) -> PluginRegistry:
     """A registry holding the built-in plugins, which keep their files under ``directory``.
 
     ``plugins/*.json`` of this package are the manifests; the one that names the ``latex`` adapter is the only
-    one built here from code. A server then adds the administrator's folder with ``load_directory``."""
+    one built here from code. ``catalogue`` gives the fonts it sets with, asked for on every job, so that fonts added
+    while a server runs are used at once. A server then adds the administrator's folder with ``load_directory``."""
     base = Path(directory)
     registry = PluginRegistry()
     for item in sorted(resources.files("claudia_render").joinpath("plugins").iterdir(), key=lambda i: i.name):

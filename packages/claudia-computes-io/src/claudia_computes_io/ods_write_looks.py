@@ -16,9 +16,10 @@ from lxml import etree
 
 from claudia_computes import WorkbookModel
 from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
+from claudia_core.stand_ins import file_font
 from claudia_odf_io import NS
 
-from .cell_looks import GENERAL, CellLook, LookExport, first_family, points, solid
+from .cell_looks import GENERAL, CellLook, LookExport, points, solid
 from .odf_numbers import number_style
 from .ods_layout import column_style, row_style
 
@@ -47,8 +48,8 @@ def _border(value: str) -> str:
 
 def _text_properties(css: Mapping[str, str]) -> dict[str, str]:
     props: dict[str, str] = {}
-    if "font-family" in css:
-        family = first_family(css["font-family"])
+    family = file_font(css.get("font-family", ""))
+    if family:
         props["fo:font-family"] = f"'{family}'" if " " in family else family
     size = points(css.get("font-size", ""))
     if size:

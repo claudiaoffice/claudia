@@ -173,7 +173,7 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
 * composes-io: `_docx_links.py` (`carry_links`, `Carried`); `docx.py` `_BlockWriter.edit` carries links and records
   `removed-link`; `_fill_paragraph` puts marks and links in one offset-ordered list.
 * creates-io: `_file_looks.py` (`Look`, `LookBook`), `_odp_looks.py` (`StyleIndex`, `read_look`), `_pptx_looks.py`
-  (`Theme`, `read_look`); `odp.py` and `pptx.py` read looks and the page colour on import, write bold, italic, font, alignment
+  (`Theme`, `read_look`); `odp.py` and `pptx.py` read looks and the page colour on import, write bold, italic, alignment
   and the page colour on a fresh export; `_styling.py` has `is_bold` and `written_family`. `pptx.py` lost `_look_of` and
   `_default_looks` (the old rule "different from the default" was replaced by "has no property in the model").
 * A look that the base style already says is not made a style (`LookBook._new`): a file of Claudia's comes back with the
@@ -183,3 +183,17 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
   original had them in the middle (IEW-L31).
 * IEW-L7 was a stale entry: the native menus have had Format ▸ List since D361. Removed from the limits.
 * Merge of main: `origin/main` (ef829d5) is contained in `origin/import-export` (d9c38a2); nothing to merge on 2026-11-17.
+
+## Folding main into import-export (2026-11-17, patch 0014)
+Main (01eff76, 20 commits: redaction, fonts E3.13, pivots, Windows installer) was folded in so that main takes the
+branch with `git merge -X theirs`. Where the two met:
+* *Versions.* core 0.29.0 (main's 0.28.0 is the redaction; D465's helpers are 0.29.0), opc-io 0.4.0 (main's 0.3.0 is
+  `ThemeFonts`; D466's properties are 0.4.0), odf-io 0.9.0 (main's 0.7.0 is `font_faces`; D465's shapes are 0.8.0, D466's
+  `stamp_office_meta` 0.9.0). composes-io 0.7.0, computes-io 0.11.0 and creates-io 0.7.0 keep main's fonts and pivots
+  under *Unreleased*; the server stays 0.37.0.
+* *Fonts and looks (D467).* main reads and writes fonts of an odp and pptx its own way (E3.13). IEW-20's readers no
+  longer read a font, and the writers no longer write one: `style_for_font` makes a style of its own for words in another
+  font, based on the look style. `pptx_import_losses` takes main's `mixes_fonts` for `formatting` and keeps D467's rule for
+  `look`; the pptx colour `Theme` (theme colours) and main's `ThemeFonts` (theme fonts) are two readers of one part.
+* *xlsx.* `workbook_to_xlsx` adds the pivots, then the charts, then the properties.
+* *Test documents.* the catalogue has the entries of both sides (`docx-boxes`, `odt-boxes`, the stand-in fonts, the pivots).

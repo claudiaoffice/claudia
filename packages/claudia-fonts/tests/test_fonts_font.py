@@ -89,6 +89,7 @@ def test_a_font_can_be_listed_as_plain_data(tmp_path):
         "collection": "Test",
         "licence": "OFL-1.1",
         "redistributable": True,
+        "may_go": "anywhere",
         "math": False,
         "axes": [],
         "outlines": "truetype",

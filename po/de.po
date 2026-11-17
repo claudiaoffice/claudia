@@ -77,9 +77,37 @@ msgstr "1. Jan bis 30. Jul 2012, 30/360"
 msgid "1 cell"
 msgstr "1 Zelle"
 
+#: web/app/components/AdminFonts.vue:52
+msgid "1 collection"
+msgstr "1 Sammlung"
+
 #: web/app/components/SqlEditor.vue:142
 msgid "1 column"
 msgstr "1 Spalte"
+
+#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:189 web/app/lib/admin-fonts.ts:236
+msgid "1 family"
+msgstr "1 Familie"
+
+#: web/app/components/AdminFonts.vue:51
+msgid "1 file"
+msgstr "1 Datei"
+
+#: web/app/components/AddFontsDialog.vue:134
+msgid "1 file chosen"
+msgstr "1 Datei ausgewählt"
+
+#: web/app/components/AdminFonts.vue:127
+msgid "1 file not usable"
+msgstr "1 Datei nicht nutzbar"
+
+#: web/app/lib/admin-fonts.ts:181
+msgid "1 file not used."
+msgstr "1 Datei wird nicht genutzt."
+
+#: web/app/lib/admin-fonts.ts:235
+msgid "1 font"
+msgstr "1 Schrift"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "1 for a number (and an empty cell), 2 for text, 4 for TRUE/FALSE, 16 for an error, 64 for several values."
@@ -213,6 +241,10 @@ msgstr "Eine Spalte für jedes Element des Spaltenfelds; ein neues Element fügt
 msgid "A document has at most {count} tags."
 msgstr "Ein Dokument hat höchstens {count} Schlagwörter."
 
+#: web/app/lib/admin-fonts.ts:208
+msgid "A file name with * or ? cannot be used; rename the file."
+msgstr "Ein Dateiname mit * oder ? geht nicht; benennen Sie die Datei um."
+
 #: web/app/components/SheetChartInsertDialog.vue:155
 msgid "A floating object on the sheet"
 msgstr "Ein frei schwebendes Objekt auf dem Blatt"
@@ -228,6 +260,10 @@ msgstr "Ein Raster aus Zahlen, die von einem Start aus in einer Schrittweite hoc
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "A hyphen the line is never broken at"
 msgstr "Ein Bindestrich, an dem die Zeile nie umbricht"
+
+#: web/app/components/AddFontsDialog.vue:165
+msgid "A licence for your organisation. Handed only to people who have this server’s access secret."
+msgstr "Eine Lizenz für Ihre Organisation. Nur an Menschen ausgegeben, die den Zugangsschlüssel dieses Servers haben."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "A link: gives the friendly text if there is one, otherwise the address. The cell shows the text; claudia does not follow the link from a formula."
@@ -289,6 +325,10 @@ msgstr "Eine Anfrage über dieser Zahl wird abgelehnt, bevor etwas geschrieben w
 msgid "A square bracket is never closed."
 msgstr "Eine eckige Klammer wird nie geschlossen."
 
+#: web/app/components/AdminFonts.vue:200
+msgid "A stand-in is used when a document asks for a family this server lacks. {fonts} have the same widths as the fonts they stand in for, so lines and pages break as in the original."
+msgstr "Ein Ersatz wird genutzt, wenn ein Dokument eine Familie verlangt, die dieser Server nicht hat. {fonts} haben dieselben Breiten wie die Schriften, die sie ersetzen: Zeilen und Seiten brechen wie im Original um."
+
 #: web/app/components/SheetChartInsertDialog.vue:154
 msgid "A tab"
 msgstr "Ein Reiter"
@@ -317,7 +357,7 @@ msgstr "Eine ganze Zahl als Text in einer anderen Basis (2 bis 36), mit Nullen a
 msgid "ABCD-EFGH-…"
 msgstr "ABCD-EFGH-…"
 
-#: web/app/components/AdminAiModel.vue:71 web/app/components/AdminShell.vue:13
+#: web/app/components/AdminAiModel.vue:71 web/app/components/AdminShell.vue:14
 msgid "AI model"
 msgstr "KI-Modell"
 
@@ -357,7 +397,7 @@ msgstr "Ein Dokument annehmen, das Ihnen übergeben wurde"
 msgid "Accept ownership"
 msgstr "Eigentümerschaft annehmen"
 
-#: web/app/components/AdminAccessDocuments.vue:187 web/app/components/AdminShell.vue:15
+#: web/app/components/AdminAccessDocuments.vue:187 web/app/components/AdminShell.vue:17
 msgid "Access & documents"
 msgstr "Zugang & Dokumente"
 
@@ -372,6 +412,10 @@ msgstr "Sofort ausführen"
 #: web/app/components/AdminAccessDocuments.vue:220
 msgid "Add"
 msgstr "Hinzufügen"
+
+#: web/app/components/AddFontsDialog.vue:209
+msgid "Add 1 font"
+msgstr "1 Schrift hinzufügen"
 
 #: web/app/components/Workspace.vue:1269
 msgid "Add Sheet"
@@ -405,6 +449,18 @@ msgstr "Schlagwort hinzufügen …"
 msgid "Add a text box to the slide"
 msgstr "Der Folie ein Textfeld hinzufügen"
 
+#: web/app/components/AddFontsDialog.vue:128
+msgid "Add fonts to {server}"
+msgstr "Schriften zu {server} hinzufügen"
+
+#: web/app/components/AdminFonts.vue:119
+msgid "Add fonts…"
+msgstr "Schriften hinzufügen …"
+
+#: web/app/components/AddFontsDialog.vue:138
+msgid "Add more files…"
+msgstr "Weitere Dateien …"
+
 #: web/app/components/ShareDialog.vue:50
 msgid "Add person"
 msgstr "Person hinzufügen"
@@ -413,9 +469,21 @@ msgstr "Person hinzufügen"
 msgid "Add tags, e.g. finance, 2027"
 msgstr "Schlagwörter hinzufügen, z. B. finanzen, 2027"
 
+#: web/app/components/AddFontsDialog.vue:209
+msgid "Add {n} fonts"
+msgstr "{n} Schriften hinzufügen"
+
 #: web/app/components/DetailsFields.vue:113
 msgid "Add “{tag}” as a new tag"
 msgstr "„{tag}“ als neues Schlagwort hinzufügen"
+
+#: web/app/lib/admin-fonts.ts:180
+msgid "Added by {by}, {date}."
+msgstr "Hinzugefügt von {by}, {date}."
+
+#: web/app/lib/admin-fonts.ts:180
+msgid "Added in the server settings."
+msgstr "In den Servereinstellungen hinzugefügt."
 
 #: web/app/components/AdminAccessDocuments.vue:200
 msgid "Added {when}"
@@ -428,6 +496,10 @@ msgstr "Addiert die Zahlen der Zellen, die das Kriterium erfüllen; summiert den
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Adds the numbers of the sum range wherever all criteria are met (pairs of a range and its criterion)."
 msgstr "Addiert die Zahlen des Summenbereichs überall dort, wo alle Kriterien erfüllt sind (Paare aus einem Bereich und seinem Kriterium)."
+
+#: web/app/lib/admin-fonts.ts:238
+msgid "Adds {fonts} in {families} to {server}. From now on every document here that asks for {names} is laid out, shown and printed with them."
+msgstr "Fügt {fonts} in {families} zu {server} hinzu. Ab jetzt wird jedes Dokument hier, das {names} verlangt, damit gesetzt, angezeigt und gedruckt."
 
 #: web/app/components/AdminAccessDocuments.vue:200
 msgid "Administrator since {when}"
@@ -481,6 +553,10 @@ msgstr "Alle Tabellenblätter"
 msgid "All slides"
 msgstr "Alle Folien"
 
+#: web/app/components/AdminFonts.vue:43
+msgid "All {n}"
+msgstr "Alle {n}"
+
 #: web/app/components/DetailsFields.vue:108
 msgid "Already used on {place}"
 msgstr "Schon verwendet auf {place}"
@@ -488,6 +564,10 @@ msgstr "Schon verwendet auf {place}"
 #: web/app/lib/shortcuts.ts:122
 msgid "Alt"
 msgstr "Alt"
+
+#: web/app/lib/admin-fonts.ts:178
+msgid "Always here. A font of the same family and style in another collection is used instead."
+msgstr "Immer da. Eine Schrift derselben Familie und desselben Schnitts in einer anderen Sammlung wird stattdessen genutzt."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "An angle in degrees as radians."
@@ -500,6 +580,10 @@ msgstr "Ein Winkel im Bogenmaß als Grad."
 #: web/app/components/PrintPreview.vue:282
 msgid "An object cannot be printed: {reason}."
 msgstr "Ein Objekt kann nicht gedruckt werden: {reason}."
+
+#: web/app/components/AddFontsDialog.vue:158
+msgid "An open licence. Handed to everyone who opens a document here."
+msgstr "Eine offene Lizenz. An alle ausgegeben, die hier ein Dokument öffnen."
 
 #: web/app/components/RotatePopover.vue:71
 msgid "Angle"
@@ -516,6 +600,18 @@ msgstr "Andere Schrift…"
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Answers to what people often want to do"
 msgstr "Antworten auf das, was man oft tun möchte"
+
+#: web/app/components/AddFontsDialog.vue:157
+msgid "Anyone"
+msgstr "Alle"
+
+#: web/app/lib/admin-fonts.ts:245
+msgid "Anyone who opens a document here receives them."
+msgstr "Alle, die hier ein Dokument öffnen, erhalten sie."
+
+#: web/app/lib/admin-fonts.ts:151
+msgid "Anywhere"
+msgstr "Überall"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:223
 msgid "App Language"
@@ -581,6 +677,10 @@ msgstr "Mindestens 8 Zeichen, mit einem Groß- und einem Kleinbuchstaben und ein
 msgid "At most"
 msgstr "Höchstens"
 
+#: web/app/lib/admin-fonts.ts:259
+msgid "At most {files} files or {mb} MB can be added at once. Choose fewer, or add them as two collections."
+msgstr "Höchstens {files} Dateien oder {mb} MB lassen sich auf einmal hinzufügen. Wählen Sie weniger aus, oder fügen Sie sie als zwei Sammlungen hinzu."
+
 #: web/app/components/ObjectDescriptionDialog.vue:29
 msgid "At most {max} characters."
 msgstr "Höchstens {max} Zeichen."
@@ -605,7 +705,7 @@ msgstr "Mittelwert von {field}"
 msgid "Average {value}"
 msgstr "Mittelwert {value}"
 
-#: web/app/components/OpenDialog.vue:1038
+#: web/app/components/AddFontsDialog.vue:207 web/app/components/OpenDialog.vue:1038
 msgid "Back"
 msgstr "Zurück"
 
@@ -737,7 +837,7 @@ msgstr "Berechnung"
 msgid "Calculation step"
 msgstr "Rechenschritt"
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -841,6 +941,14 @@ msgstr "Diagramm…"
 msgid "Chat"
 msgstr "Chat"
 
+#: web/app/components/AddFontsDialog.vue:182
+msgid "Check files"
+msgstr "Dateien prüfen"
+
+#: web/app/components/AddFontsDialog.vue:144
+msgid "Checking the files…"
+msgstr "Die Dateien werden geprüft …"
+
 #: web/app/components/DocumentFrame.vue:55
 msgid "Checkpoint saved."
 msgstr "Prüfpunkt gespeichert."
@@ -864,6 +972,10 @@ msgstr "Ein neues eigenes Passwort für dieses Dokument wählen"
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Choose a style for the selection, each drawn in its own look"
 msgstr "Ein Format für die Auswahl wählen, jedes in seinem eigenen Aussehen"
+
+#: web/app/components/AddFontsDialog.vue:138
+msgid "Choose files…"
+msgstr "Dateien auswählen …"
 
 #: web/app/components/PivotPanel.vue:111
 msgid "Choose members…"
@@ -917,7 +1029,7 @@ msgstr "Klick"
 msgid "Click something in the document to write a tag for it."
 msgstr "Klicke etwas im Dokument an, um ein Tag dafür zu schreiben."
 
-#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:23 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ImagePropertiesDialog.vue:93 web/app/components/NamesDialog.vue:101 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:464 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:93
+#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:25 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ImagePropertiesDialog.vue:93 web/app/components/NamesDialog.vue:101 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:464 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:93
 msgid "Close"
 msgstr "Schließen"
 
@@ -949,7 +1061,19 @@ msgstr "Die PivotTable-Leiste schließen"
 msgid "Close · Esc"
 msgstr "Schließen · Esc"
 
-#: web/app/components/OpenDialog.vue:852
+#: web/app/components/AdminFonts.vue:170
+msgid "Collection"
+msgstr "Sammlung"
+
+#: web/app/components/AdminFonts.vue:102
+msgid "Collection removed."
+msgstr "Sammlung entfernt."
+
+#: web/app/components/AdminFonts.vue:96
+msgid "Collection renamed."
+msgstr "Sammlung umbenannt."
+
+#: web/app/components/AdminFonts.vue:133 web/app/components/OpenDialog.vue:852
 msgid "Collections"
 msgstr "Sammlungen"
 
@@ -1105,7 +1229,7 @@ msgstr "Verbindung nicht möglich"
 msgid "Could not connect."
 msgstr "Verbindung nicht möglich."
 
-#: web/app/lib/rendering.ts:103
+#: web/app/lib/rendering.ts:118
 msgid "Could not draw it: {message}"
 msgstr "Konnte nicht gezeichnet werden: {message}"
 
@@ -1113,11 +1237,11 @@ msgstr "Konnte nicht gezeichnet werden: {message}"
 msgid "Could not place the chart."
 msgstr "Das Diagramm konnte nicht eingefügt werden."
 
-#: web/app/components/AdminAccessDocuments.vue:125 web/app/components/AdminAccessDocuments.vue:142 web/app/components/AdminAccessDocuments.vue:158 web/app/components/AdminAccessDocuments.vue:178 web/app/components/AdminAccessDocuments.vue:32 web/app/components/AdminAccessDocuments.vue:59 web/app/components/AdminAccessDocuments.vue:74 web/app/components/AdminAccessDocuments.vue:97 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:83 web/app/lib/admin-session.ts:98
+#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:125 web/app/components/AdminAccessDocuments.vue:142 web/app/components/AdminAccessDocuments.vue:158 web/app/components/AdminAccessDocuments.vue:178 web/app/components/AdminAccessDocuments.vue:32 web/app/components/AdminAccessDocuments.vue:59 web/app/components/AdminAccessDocuments.vue:74 web/app/components/AdminAccessDocuments.vue:97 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminFonts.vue:78 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:83 web/app/lib/admin-session.ts:98
 msgid "Could not reach the server."
 msgstr "Der Server ist nicht erreichbar."
 
-#: web/app/components/AdminApp.vue:43
+#: web/app/components/AdminApp.vue:49
 msgid "Could not reach this server."
 msgstr "Dieser Server ist nicht erreichbar."
 
@@ -1453,7 +1577,7 @@ msgstr "Ziehung {n}"
 msgid "Draw {n}: draw new random numbers"
 msgstr "Ziehung {n}: neue Zufallszahlen ziehen"
 
-#: web/app/lib/rendering.ts:99
+#: web/app/lib/rendering.ts:114
 msgid "Drawing…"
 msgstr "Wird gezeichnet …"
 
@@ -1493,7 +1617,7 @@ msgstr "{name} bearbeiten"
 msgid "Elapsed"
 msgstr "Vergangen"
 
-#: web/app/lib/rendering.ts:101
+#: web/app/lib/rendering.ts:116
 msgid "Empty {type} container: double-click to write"
 msgstr "Leerer {type}-Container: Doppelklicken, um zu schreiben"
 
@@ -1581,6 +1705,14 @@ msgstr "Exportieren…"
 msgid "F6 / Shift + F6"
 msgstr "F6 / Umschalt + F6"
 
+#: web/app/components/AdminFonts.vue:153
+msgid "Families"
+msgstr "Familien"
+
+#: web/app/components/AdminFonts.vue:168
+msgid "Family"
+msgstr "Familie"
+
 #: web/app/components/PivotPanel.vue:245
 msgid "Field menu"
 msgstr "Feldmenü"
@@ -1620,6 +1752,10 @@ msgstr "Geben Sie Ihren Namen und ein Passwort an."
 #: web/app/components/AdminLogin.vue:26
 msgid "Fill in your name and password."
 msgstr "Geben Sie Ihren Namen und Ihr Passwort an."
+
+#: web/app/components/AddFontsDialog.vue:176
+msgid "Filled in from what the fonts say about themselves; change it if it is not right."
+msgstr "Aus dem übernommen, was die Schriften über sich sagen; ändern Sie es, wenn es nicht stimmt."
 
 #: web/app/lib/pivots.ts:427
 msgid "Fills {range}. Its cells can’t be typed over."
@@ -1749,9 +1885,17 @@ msgstr "Schrifteigenschaften"
 msgid "Font size"
 msgstr "Schriftgröße"
 
-#: web/app/components/StyleFontPicker.vue:33
+#: web/app/components/AdminFonts.vue:169
+msgid "Font styles"
+msgstr "Schnitte"
+
+#: web/app/components/AdminFonts.vue:117 web/app/components/AdminShell.vue:16 web/app/components/StyleFontPicker.vue:33
 msgid "Fonts"
 msgstr "Schriften"
+
+#: web/app/components/AdminFonts.vue:90
+msgid "Fonts added. Documents laid out from now on use them, and so do LaTeX formulas."
+msgstr "Schriften hinzugefügt. Dokumente, die ab jetzt gesetzt werden, nutzen sie, und LaTeX-Formeln ebenso."
 
 #: web/app/components/NamesDialog.vue:66
 msgid "For"
@@ -1796,6 +1940,10 @@ msgstr "Formeln"
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Friday 13 Nov 2026 + 1 = Monday 16 Nov"
 msgstr "Freitag, 13. Nov 2026 + 1 = Montag, 16. Nov"
+
+#: web/app/components/AddFontsDialog.vue:131
+msgid "From files"
+msgstr "Aus Dateien"
 
 #: web/app/components/StyleCssEditor.vue:89
 msgid "From the styles it is based on"
@@ -1876,6 +2024,10 @@ msgstr "Gehen Sie zum Textfeld, in dem Ihr Cursor steht, um nur dieses Textfeld 
 #: web/app/components/SidePanel.vue:498
 msgid "Go to this"
 msgstr "Hierhin gehen"
+
+#: web/app/components/AddFontsDialog.vue:176
+msgid "Goes into the collection’s licence record, with your name and today’s date."
+msgstr "Kommt in den Lizenzeintrag der Sammlung, mit Ihrem Namen und dem heutigen Datum."
 
 #: web/app/lib/palette.ts:25
 msgid "Green"
@@ -2341,6 +2493,10 @@ msgstr "Dieses Dokument verlassen"
 msgid "Left"
 msgstr "Links"
 
+#: web/app/lib/admin-fonts.ts:210
+msgid "Left out"
+msgstr "Ausgelassen"
+
 #: web/app/components/SearchPanel.vue:675
 msgid "Left out ({count})"
 msgstr "Ausgelassen ({count})"
@@ -2364,6 +2520,10 @@ msgstr "Weniger Zeit"
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Let other people into the document"
 msgstr "Anderen Personen Zugang zum Dokument gewähren"
+
+#: web/app/components/AddFontsDialog.vue:174
+msgid "Licence, in your words"
+msgstr "Lizenz, in Ihren Worten"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Light up the cells that take part in this cell's computation"
@@ -2389,7 +2549,7 @@ msgstr "Listenpunkt"
 msgid "List, rename and tidy the styles of this document"
 msgstr "Die Formate dieses Dokuments auflisten, umbenennen und aufräumen"
 
-#: web/app/components/AdminApp.vue:66
+#: web/app/components/AdminApp.vue:73
 msgid "Loading…"
 msgstr "Wird geladen…"
 
@@ -2521,6 +2681,10 @@ msgstr "Maximale Dokumentanzahl"
 msgid "May"
 msgstr "Darf"
 
+#: web/app/components/AdminFonts.vue:171
+msgid "May go"
+msgstr "Darf gehen"
+
 #: web/app/components/PivotMembersDialog.vue:54 web/app/components/PivotMembersDialog.vue:63
 msgid "Members of {field}"
 msgstr "Elemente von {field}"
@@ -2560,6 +2724,10 @@ msgstr "Modellordner"
 #: web/app/components/SearchPanel.vue:463 web/app/components/SearchPanel.vue:467
 msgid "More"
 msgstr "Mehr"
+
+#: web/app/components/AdminFonts.vue:139
+msgid "More for {name}"
+msgstr "Mehr zu {name}"
 
 #: web/app/components/StyleSpec.vue:226
 msgid "More padding"
@@ -2609,7 +2777,7 @@ msgstr "Meine Orte"
 msgid "My places and collections"
 msgstr "Meine Orte und Sammlungen"
 
-#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:44 web/app/components/SlideWorkspace.vue:412 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1268 web/app/components/Workspace.vue:1269
+#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/AdminFonts.vue:204 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:44 web/app/components/SlideWorkspace.vue:412 web/app/components/StyleSpec.vue:260 web/app/components/Workspace.vue:1268 web/app/components/Workspace.vue:1269
 msgid "Name"
 msgstr "Name"
 
@@ -2625,7 +2793,7 @@ msgstr "Name in der PivotTable"
 msgid "Name it"
 msgstr "Benennen"
 
-#: web/app/components/OpenDialog.vue:875
+#: web/app/components/AddFontsDialog.vue:148 web/app/components/OpenDialog.vue:875
 msgid "Name of the collection"
 msgstr "Name der Sammlung"
 
@@ -2725,6 +2893,10 @@ msgstr "Nächste Folie"
 msgid "No description yet"
 msgstr "Noch keine Beschreibung"
 
+#: web/app/components/AdminFonts.vue:195
+msgid "No family matches."
+msgstr "Keine Familie passt."
+
 #: web/app/components/HelpPanel.vue:114
 msgid "No function matches \"{query}\"."
 msgstr "Keine Funktion passt zu „{query}“."
@@ -2777,9 +2949,21 @@ msgstr "Geschützter Bindestrich"
 msgid "None"
 msgstr "Keine"
 
+#: web/app/components/AddFontsDialog.vue:204
+msgid "None of these files is a font this server can use."
+msgstr "Keine dieser Dateien ist eine Schrift, die dieser Server nutzen kann."
+
 #: web/app/components/RandomDialog.vue:106
 msgid "Normal"
 msgstr "Normal"
+
+#: web/app/lib/admin-fonts.ts:205
+msgid "Not a font file: TrueType or OpenType (.ttf, .otf), or a .zip of them."
+msgstr "Keine Schriftdatei: TrueType oder OpenType (.ttf, .otf) oder ein .zip davon."
+
+#: web/app/lib/admin-fonts.ts:210
+msgid "Not a font that can be read."
+msgstr "Keine Schrift, die sich lesen lässt."
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Not available yet"
@@ -2812,6 +2996,10 @@ msgstr "Jetzt nicht"
 #: web/app/components/PrintPreview.vue:338
 msgid "Not set"
 msgstr "Nicht festgelegt"
+
+#: web/app/components/AdminFonts.vue:45
+msgid "Not usable {n}"
+msgstr "Nicht nutzbar {n}"
 
 #: web/app/components/PresentShow.vue:203
 msgid "Notes"
@@ -2977,6 +3165,10 @@ msgstr "Nur eine Spalte – dort ist kein Platz für eine Kopfzeile; eine Beschr
 msgid "Only one row — no room for a header there either."
 msgstr "Nur eine Zeile – auch dort ist kein Platz für eine Kopfzeile."
 
+#: web/app/lib/admin-fonts.ts:247
+msgid "Only people using this server receive them."
+msgstr "Nur Menschen, die diesen Server nutzen, erhalten sie."
+
 #: web/app/components/SearchPanel.vue:429
 msgid "Only the first {count} matches are listed."
 msgstr "Nur die ersten {count} Treffer sind aufgelistet."
@@ -3056,6 +3248,10 @@ msgstr "OpenDocument-Tabelle (.ods)"
 #: web/app/components/TextWorkspace.vue:120
 msgid "OpenDocument text (.odt)"
 msgstr "OpenDocument-Text (.odt)"
+
+#: web/app/lib/admin-fonts.ts:226
+msgid "OpenType (CFF)"
+msgstr "OpenType (CFF)"
 
 #: web/app/components/ImportDialog.vue:50 web/app/lib/import-progress.ts:34
 msgid "Opening"
@@ -3184,6 +3380,10 @@ msgstr "Einfügen als"
 #: web/app/components/SearchPanel.vue:586
 msgid "Pattern syntax: Python re"
 msgstr "Muster-Syntax: Python „re“"
+
+#: web/app/components/AddFontsDialog.vue:164
+msgid "People using this server"
+msgstr "Menschen, die diesen Server nutzen"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Pick a distribution and put RANDOM into the cell"
@@ -3489,9 +3689,17 @@ msgstr "Bemerkungen"
 msgid "Remove"
 msgstr "Entfernen"
 
+#: web/app/components/AdminFonts.vue:205 web/app/components/AdminFonts.vue:210
+msgid "Remove collection"
+msgstr "Sammlung entfernen"
+
 #: web/app/components/OpenDialog.vue:870 web/app/components/OpenDialog.vue:870
 msgid "Remove collection {name}"
 msgstr "Sammlung {name} entfernen"
+
+#: web/app/components/AdminFonts.vue:142
+msgid "Remove collection…"
+msgstr "Sammlung entfernen …"
 
 #: web/app/components/DetailsFields.vue:93
 msgid "Remove tag {tag}"
@@ -3521,7 +3729,7 @@ msgstr "Entfernt Leerzeichen an beiden Enden und reduziert die zwischen Wörtern
 msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
 msgstr "Entfernt die nicht druckbaren Zeichen (Codes 0 bis 31) aus einem Text."
 
-#: web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:826 web/app/components/SlideWorkspace.vue:412 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88 web/app/components/Workspace.vue:1268
+#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:826 web/app/components/SlideWorkspace.vue:412 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88 web/app/components/Workspace.vue:1268
 msgid "Rename"
 msgstr "Umbenennen"
 
@@ -3532,6 +3740,10 @@ msgstr "Blatt umbenennen…"
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:279
 msgid "Rename Slide…"
 msgstr "Folie umbenennen…"
+
+#: web/app/components/AdminFonts.vue:204
+msgid "Rename collection"
+msgstr "Sammlung umbenennen"
 
 #: web/app/components/Workspace.vue:1268
 msgid "Rename sheet"
@@ -3544,6 +3756,10 @@ msgstr "Folie umbenennen"
 #: web/app/components/OpenDialog.vue:812 web/app/components/OpenDialog.vue:826
 msgid "Rename {server}"
 msgstr "{server} umbenennen"
+
+#: web/app/components/AdminFonts.vue:141
+msgid "Rename…"
+msgstr "Umbenennen …"
 
 #: web/app/lib/shortcuts.ts:109
 msgid "Replace"
@@ -3589,6 +3805,10 @@ msgstr "In {count} Zellen ersetzt. Mit „Rückgängig“ ist alles wieder da."
 msgid "Replaced in {count} texts. Undo brings them back."
 msgstr "In {count} Texten ersetzt. Mit „Rückgängig“ ist alles wieder da."
 
+#: web/app/lib/admin-fonts.ts:214
+msgid "Replaces a font"
+msgstr "Ersetzt eine Schrift"
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Replaces a number of characters of a text, from a position, with other text."
 msgstr "Ersetzt eine Anzahl Zeichen eines Textes ab einer Position durch anderen Text."
@@ -3596,6 +3816,10 @@ msgstr "Ersetzt eine Anzahl Zeichen eines Textes ab einer Position durch anderen
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Replaces old text by new text (all of it, or only the n-th occurrence)."
 msgstr "Ersetzt alten Text durch neuen Text (alle Vorkommen oder nur das n-te)."
+
+#: web/app/lib/admin-fonts.ts:216
+msgid "Replaces {family} {style} from {collection}, for every document on this server."
+msgstr "Ersetzt {family} {style} aus {collection}, für jedes Dokument auf diesem Server."
 
 #: web/app/components/SidePanel.vue:413
 msgid "Replay"
@@ -3865,6 +4089,14 @@ msgstr "Suchen & Ersetzen"
 msgid "Search Mine and {place}"
 msgstr "Meine und {place} durchsuchen"
 
+#: web/app/components/AdminFonts.vue:161
+msgid "Search families"
+msgstr "Familien suchen"
+
+#: web/app/components/AdminFonts.vue:162
+msgid "Search families…"
+msgstr "Familien suchen …"
+
 #: web/app/components/HelpPanel.vue:87
 msgid "Search help…"
 msgstr "Hilfe durchsuchen…"
@@ -3929,11 +4161,11 @@ msgstr "Datenreihen in"
 msgid "Server address"
 msgstr "Serveradresse"
 
-#: web/app/components/AdminLogin.vue:37 web/app/components/AdminShell.vue:22 web/app/components/FirstAdminSetup.vue:39
+#: web/app/components/AdminLogin.vue:37 web/app/components/AdminShell.vue:24 web/app/components/FirstAdminSetup.vue:39
 msgid "Server settings"
 msgstr "Servereinstellungen"
 
-#: web/app/components/AdminShell.vue:26
+#: web/app/components/AdminShell.vue:28
 msgid "Server settings pages"
 msgstr "Seiten der Servereinstellungen"
 
@@ -3944,6 +4176,10 @@ msgstr "Höhe festlegen"
 #: web/app/components/RandomDialog.vue:216
 msgid "Set seed"
 msgstr "Startwert setzen"
+
+#: web/app/lib/admin-fonts.ts:179
+msgid "Set up by whoever runs the server; changed on its disk only."
+msgstr "Von dem eingerichtet, der den Server betreibt; nur auf seiner Festplatte zu ändern."
 
 #: web/app/components/LineSizeDialog.vue:119
 msgid "Set width"
@@ -3992,6 +4228,10 @@ msgstr "Umschalt + Pfeiltasten oder Ziehen"
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ShortcutsDialog.vue:24 web/app/lib/document-menus.ts:221
 msgid "Shortcuts"
 msgstr "Tastenkürzel"
+
+#: web/app/components/AdminFonts.vue:154
+msgid "Show"
+msgstr "Zeigen"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:319
 msgid "Show Grid"
@@ -4061,6 +4301,10 @@ msgstr "Den Text als Seiten statt als Fließtext anzeigen"
 msgid "Shown now. Choose it again, or Esc, to see all documents."
 msgstr "Wird gerade angezeigt. Wählen Sie sie noch einmal oder drücken Sie Esc, um alle Dokumente zu sehen."
 
+#: web/app/lib/admin-fonts.ts:219
+msgid "Shown on screen; print and PDF cannot use its outlines yet and use a stand-in."
+msgstr "Auf dem Bildschirm zu sehen; Druck und PDF können ihre Umrisse noch nicht nutzen und nehmen einen Ersatz."
+
 #: web/app/components/AdminLogin.vue:54
 msgid "Sign in"
 msgstr "Anmelden"
@@ -4069,11 +4313,11 @@ msgstr "Anmelden"
 msgid "Sign in to {label}"
 msgstr "Bei {label} anmelden"
 
-#: web/app/components/AdminShell.vue:50
+#: web/app/components/AdminShell.vue:53
 msgid "Sign out"
 msgstr "Abmelden"
 
-#: web/app/components/AdminShell.vue:35
+#: web/app/components/AdminShell.vue:37
 msgid "Signed in as {signedInAs}"
 msgstr "Angemeldet als {signedInAs}"
 
@@ -4165,6 +4409,14 @@ msgstr "Referentennotizen von Folie {n}"
 msgid "Splits a text into columns at the column delimiters and into rows at the row delimiters (each may be several in a range). ignore_empty TRUE drops empty pieces, match_mode 1 ignores case; shorter rows are filled with pad_with (#N/A)."
 msgstr "Teilt einen Text an den Spaltentrennzeichen in Spalten und an den Zeilentrennzeichen in Zeilen (jeweils auch mehrere in einem Bereich). ignore_empty TRUE lässt leere Stücke weg, match_mode 1 ignoriert die Groß-/Kleinschreibung; kürzere Zeilen werden mit pad_with (#N/A) aufgefüllt."
 
+#: web/app/components/AdminFonts.vue:44
+msgid "Stand-ins {n}"
+msgstr "Ersatz {n}"
+
+#: web/app/components/AdminFonts.vue:172
+msgid "Stands in for"
+msgstr "Ersetzt"
+
 #: web/app/components/TextWorkspace.vue:408
 msgid "Start"
 msgstr "Beginnen"
@@ -4176,6 +4428,10 @@ msgstr "Beginnen bei…"
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Start a new document"
 msgstr "Ein neues Dokument beginnen"
+
+#: web/app/components/AddFontsDialog.vue:142
+msgid "Start again"
+msgstr "Neu beginnen"
 
 #: web/app/components/TextWorkspace.vue:408
 msgid "Start numbering at"
@@ -4685,6 +4941,10 @@ msgstr "Das Feld hat keine Elemente."
 msgid "The file could not be saved: {reason}"
 msgstr "Die Datei konnte nicht gespeichert werden: {reason}"
 
+#: web/app/lib/admin-fonts.ts:203
+msgid "The file forbids embedding (fsType {fsType}), so no PDF could carry it."
+msgstr "Die Datei verbietet das Einbetten (fsType {fsType}), also könnte kein PDF sie enthalten."
+
 #: web/app/lib/open.ts:295
 msgid "The file is too large for this server."
 msgstr "Die Datei ist für diesen Server zu groß."
@@ -4708,6 +4968,14 @@ msgstr "Der erste Buchstabe jedes Wortes groß, die anderen klein."
 #: web/app/components/SqlEditor.vue:138
 msgid "The first rows show here as you type."
 msgstr "Die ersten Zeilen erscheinen hier beim Tippen."
+
+#: web/app/lib/admin-fonts.ts:207
+msgid "The font has no family name."
+msgstr "Die Schrift hat keinen Familiennamen."
+
+#: web/app/components/AdminFonts.vue:122
+msgid "The fonts every document on this server is laid out, shown and printed with."
+msgstr "Die Schriften, mit denen jedes Dokument auf diesem Server gesetzt, angezeigt und gedruckt wird."
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The geometric mean of positive numbers."
@@ -4909,7 +5177,7 @@ msgstr "Name oder Passwort stimmen nicht (oder es gibt kein solches Dokument)."
 msgid "The name or password is not right."
 msgstr "Name oder Passwort stimmen nicht."
 
-#: packages/claudia-server/src/claudia_server/auth.py:288 packages/claudia-server/src/claudia_server/sealed.py:262
+#: packages/claudia-server/src/claudia_server/auth.py:288 packages/claudia-server/src/claudia_server/sealed.py:288
 msgid "The name “{name}” belongs to the AI assistant. Choose another name."
 msgstr "Der Name „{name}“ gehört dem KI-Assistenten. Wählen Sie einen anderen Namen."
 
@@ -5144,6 +5412,10 @@ msgstr "Die Zeilen eines Bereichs, für die die Bedingung gilt (eine Spalte aus 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The same as CEILING.PRECISE: rounds up to a multiple of the significance; its sign is ignored."
 msgstr "Dasselbe wie CEILING.PRECISE: rundet auf ein Vielfaches der Schrittweite auf; ihr Vorzeichen wird ignoriert."
+
+#: web/app/lib/admin-fonts.ts:204
+msgid "The same font as {file}: added once."
+msgstr "Dieselbe Schrift wie {file}: einmal hinzugefügt."
 
 #: web/app/components/SearchPanel.vue:650
 msgid "The search was stopped after a while, so this may not be everything."
@@ -5545,6 +5817,10 @@ msgstr "Dünner"
 msgid "Thinner border"
 msgstr "Dünnerer Rahmen"
 
+#: web/app/lib/admin-fonts.ts:206
+msgid "This .zip cannot be opened."
+msgstr "Diese .zip-Datei lässt sich nicht öffnen."
+
 #: web/app/components/SearchPanel.vue:638 web/app/components/SearchPanel.vue:641
 msgid "This also appears in {count} formulas, which are left alone."
 msgstr "Dies kommt auch in {count} Formeln vor, die unverändert bleiben."
@@ -5661,6 +5937,10 @@ msgstr "Diese Präsentation hat keine Folie."
 msgid "This query"
 msgstr "Diese Abfrage"
 
+#: web/app/components/AdminFonts.vue:207
+msgid "This removes {collection} from {server}, with its families: {families}. Documents that ask for them are shown with a stand-in from now on. The files are deleted from the server; there is no undo."
+msgstr "Das entfernt {collection} von {server}, mit ihren Familien: {families}. Dokumente, die sie verlangen, werden ab jetzt mit einem Ersatz gezeigt. Die Dateien werden vom Server gelöscht; das lässt sich nicht rückgängig machen."
+
 #: web/app/components/DeleteDocumentDialog.vue:25
 msgid "This removes {doc} from the server for good — its content, its history and its chat, and everybody's access to it. There is no way back: no recycle bin, no undo. Make sure everybody who needs something from it has it first (File ▸ Download)."
 msgstr "Dadurch wird {doc} endgültig vom Server entfernt – Inhalt, Verlauf und Chat sowie der Zugang aller dazu. Es gibt kein Zurück: keinen Papierkorb, kein Rückgängigmachen. Stellen Sie sicher, dass alle, die etwas daraus brauchen, es zuvor haben (Datei ▸ Herunterladen)."
@@ -5681,11 +5961,27 @@ msgstr "Dadurch wird der aktuelle Inhalt von {doc} auf diesem Computer in dem Fo
 msgid "This section"
 msgstr "Dieser Abschnitt"
 
+#: web/app/lib/admin-fonts.ts:151
+msgid "This server"
+msgstr "Dieser Server"
+
 #: web/app/lib/open.ts:58
 msgid "This server does not list its documents. Type the name of yours."
 msgstr "Dieser Server listet seine Dokumente nicht auf. Geben Sie den Namen Ihres Dokuments ein."
 
-#: web/app/lib/rendering.ts:105
+#: web/app/lib/admin-fonts.ts:248
+msgid "This server has no access secret, so everyone who can reach it counts as its people."
+msgstr "Dieser Server hat keinen Zugangsschlüssel, also zählen alle, die ihn erreichen, zu seinen Menschen."
+
+#: web/app/components/AddFontsDialog.vue:169
+msgid "This server has no access secret, so everyone who can reach it counts as its people. Set one under Access & documents."
+msgstr "Dieser Server hat keinen Zugangsschlüssel, also zählen alle, die ihn erreichen, zu seinen Menschen. Legen Sie einen unter Zugang & Dokumente fest."
+
+#: web/app/components/AdminFonts.vue:118
+msgid "This server has no folder to add fonts to."
+msgstr "Dieser Server hat keinen Ordner, in den Schriften kommen könnten."
+
+#: web/app/lib/rendering.ts:120
 msgid "This server has no tool set up to draw {type}."
 msgstr "Auf diesem Server ist kein Werkzeug eingerichtet, um {type} zu zeichnen."
 
@@ -5753,6 +6049,10 @@ msgstr "Summen"
 msgid "Triangular"
 msgstr "Dreieck"
 
+#: web/app/lib/admin-fonts.ts:226
+msgid "TrueType"
+msgstr "TrueType"
+
 #: web/app/components/SlideNotes.vue:151
 msgid "Try 2 for two minutes, 2:30 or 90s."
 msgstr "Probieren Sie 2 für zwei Minuten, 2:30 oder 90s."
@@ -5805,7 +6105,7 @@ msgstr "Tippen, F2 oder Doppelklick"
 msgid "Type, then Enter or comma. At most {count} tags."
 msgstr "Eintippen, dann Eingabetaste oder Komma. Höchstens {count} Schlagwörter."
 
-#: web/app/components/AdminShell.vue:14 web/app/components/AdminTypesetting.vue:58
+#: web/app/components/AdminShell.vue:15 web/app/components/AdminTypesetting.vue:58
 msgid "Typesetting"
 msgstr "Schriftsatz"
 
@@ -6041,6 +6341,10 @@ msgstr "Weiß"
 msgid "Who may change these settings, who may create or list documents, and how many this server holds."
 msgstr "Wer diese Einstellungen ändern, Dokumente erstellen oder auflisten darf und wie viele dieser Server aufnimmt."
 
+#: web/app/components/AddFontsDialog.vue:153
+msgid "Who may receive these fonts"
+msgstr "Wer diese Schriften erhalten darf"
+
 #: web/app/components/SearchPanel.vue:612
 msgid "Whole cell"
 msgstr "Ganze Zelle"
@@ -6064,6 +6368,10 @@ msgstr "Ganze Arbeitsmappe"
 #: web/app/components/StyleSpec.vue:242
 msgid "Width"
 msgstr "Breite"
+
+#: web/app/lib/admin-fonts.ts:220
+msgid "Will be added"
+msgstr "Wird hinzugefügt"
 
 #: web/app/components/SidePanel.vue:406
 msgid "Withdraw"
@@ -6273,7 +6581,7 @@ msgstr "Ein Wiederherstellungsschlüssel, ein Name und ein neues Passwort sind n
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "Eine Bemerkung schlägt keine Änderung vor; weisen Sie sie stattdessen ab"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:451
+#: packages/claudia-server/src/claudia_server/protocol.py:454
 msgid "a request must be a JSON object"
 msgstr "Eine Anfrage muss ein JSON-Objekt sein"
 
@@ -6361,7 +6669,7 @@ msgstr "add_object: Mit add_rendering kommt ein Container auf eine Folie"
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr "add_sheet: Der Name muss 1 bis {limit} Zeichen haben"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:895
+#: packages/claudia-server/src/claudia_server/protocol.py:1003
 msgid "add_user: role must be editor or viewer"
 msgstr "add_user: role muss editor oder viewer sein"
 
@@ -6529,11 +6837,11 @@ msgstr "Diagrammtyp"
 msgid "chat message"
 msgstr "Chatnachricht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1051
+#: packages/claudia-server/src/claudia_server/protocol.py:1159
 msgid "chat: {reason}"
 msgstr "chat: {reason}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:784
+#: packages/claudia-server/src/claudia_server/protocol.py:892
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr "chat_log: limit muss von 1 bis {limit} gehen"
 
@@ -6661,7 +6969,7 @@ msgstr "nicht zum Muster für Texte passen"
 msgid "do not start with “{text}”"
 msgstr "nicht mit „{text}“ beginnen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:638
+#: packages/claudia-server/src/claudia_server/hub.py:665
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "Dokument-IDs bestehen aus 1–64 Buchstaben, Ziffern, „-“ oder „_“"
 
@@ -6761,7 +7069,7 @@ msgstr "erste Zelle der PivotTable"
 msgid "first {length} shown"
 msgstr "die ersten {length} angezeigt"
 
-#: web/app/lib/print/assets.ts:75
+#: web/app/lib/print/assets.ts:77
 msgid "font {hash}… is not in the server's catalogue"
 msgstr "Schrift {hash}… ist nicht im Katalog des Servers"
 
@@ -6833,7 +7141,7 @@ msgstr "wie viele Zeilen der Bereich hat."
 msgid "how many sheets the workbook has (1 for a reference)."
 msgstr "wie viele Tabellenblätter die Arbeitsmappe hat (1 bei einem Bezug)."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:454
+#: packages/claudia-server/src/claudia_server/protocol.py:457
 msgid "id must be an integer or a short string"
 msgstr "id muss eine ganze Zahl oder ein kurzer Text sein"
 
@@ -6857,11 +7165,11 @@ msgstr "in {source}"
 msgid "insert"
 msgstr "einfügen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:293
+#: packages/claudia-server/src/claudia_server/hub.py:294
 msgid "internal server error"
 msgstr "Interner Serverfehler"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:829
+#: packages/claudia-server/src/claudia_server/protocol.py:937
 msgid "invalid command: {reason!r}"
 msgstr "Ungültiger Befehl: {reason!r}"
 
@@ -6941,7 +7249,7 @@ msgstr "gesperrt von {name}"
 msgid "log more and enable the web inspector"
 msgstr "mehr protokollieren und den Web-Inspektor aktivieren"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:738
+#: packages/claudia-server/src/claudia_server/protocol.py:846
 msgid "log: limit must be from 1 to {limit}"
 msgstr "log: limit muss von 1 bis {limit} gehen"
 
@@ -6973,11 +7281,11 @@ msgstr "Median"
 msgid "menu"
 msgstr "Menü"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:445
+#: packages/claudia-server/src/claudia_server/protocol.py:448
 msgid "message too large"
 msgstr "Nachricht zu groß"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:395
+#: packages/claudia-server/src/claudia_server/protocol.py:398
 msgid "method must be a string"
 msgstr "method muss ein Text sein"
 
@@ -7049,11 +7357,11 @@ msgstr "keine App"
 msgid "no cells"
 msgstr "keine Zellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:613
+#: packages/claudia-server/src/claudia_server/protocol.py:616
 msgid "no checkpoint number {checkpoint}"
 msgstr "Es gibt keinen Prüfpunkt mit der Nummer {checkpoint}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:786
+#: packages/claudia-server/src/claudia_server/hub.py:813
 msgid "no document {id!r}"
 msgstr "Kein Dokument {id!r}"
 
@@ -7061,15 +7369,15 @@ msgstr "Kein Dokument {id!r}"
 msgid "no function named {name!r}"
 msgstr "Keine Funktion namens {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:515
+#: packages/claudia-server/src/claudia_server/protocol.py:518
 msgid "no help topic {id!r}"
 msgstr "Kein Hilfethema {id!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:398
+#: packages/claudia-server/src/claudia_server/protocol.py:401
 msgid "no method {name!r}"
 msgstr "Keine Methode {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:977
+#: packages/claudia-server/src/claudia_server/protocol.py:1085
 msgid "no ownership transfer is waiting for you with that password"
 msgstr "Mit diesem Passwort wartet keine Eigentümerübergabe auf Sie"
 
@@ -7077,7 +7385,7 @@ msgstr "Mit diesem Passwort wartet keine Eigentümerübergabe auf Sie"
 msgid "no style of their own"
 msgstr "kein eigenes Format"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:479
+#: packages/claudia-server/src/claudia_server/protocol.py:482
 msgid "not a region this document understands: {reason!r}"
 msgstr "Keine Region, die dieses Dokument versteht: {reason!r}"
 
@@ -7085,7 +7393,7 @@ msgstr "Keine Region, die dieses Dokument versteht: {reason!r}"
 msgid "not connected"
 msgstr "nicht verbunden"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:449
+#: packages/claudia-server/src/claudia_server/protocol.py:452
 msgid "not valid JSON"
 msgstr "Kein gültiges JSON"
 
@@ -7129,11 +7437,11 @@ msgstr "nur der Sonntag ist frei"
 msgid "only Sunday is off: Saturday is a workday"
 msgstr "nur der Sonntag ist frei: der Samstag ist ein Arbeitstag"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1008
+#: packages/claudia-server/src/claudia_server/protocol.py:1116
 msgid "only an editor or an owner of a document may change its description and tags"
 msgstr "nur wer ein Dokument bearbeiten darf oder es besitzt, kann Beschreibung und Schlagwörter ändern"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:989
+#: packages/claudia-server/src/claudia_server/protocol.py:1097
 msgid "only an owner of a document may delete it"
 msgstr "Nur ein Eigentümer eines Dokuments darf es löschen"
 
@@ -7145,6 +7453,10 @@ msgstr "nur seine Box"
 msgid "only look"
 msgstr "nur ansehen"
 
+#: packages/claudia-server/src/claudia_server/protocol.py:720
+msgid "only owners, and editors on their own work, redact"
+msgstr "Schwärzen dürfen nur Eigentümer, und Bearbeiter bei ihrer eigenen Arbeit"
+
 #: packages/claudia-server/src/claudia_server/composes.py:434 packages/claudia-server/src/claudia_server/composes_words.py:195
 msgid "only the assistant makes suggestions"
 msgstr "Nur der Assistent macht Vorschläge"
@@ -7153,23 +7465,23 @@ msgstr "Nur der Assistent macht Vorschläge"
 msgid "only the branch taken is evaluated, so IF(B1=0, 0, A1/B1) never divides by zero."
 msgstr "nur der gewählte Zweig wird ausgewertet, sodass IF(B1=0, 0, A1/B1) nie durch null teilt."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:891
+#: packages/claudia-server/src/claudia_server/protocol.py:999
 msgid "only the owner of a document adds people to it"
 msgstr "Nur der Eigentümer eines Dokuments fügt Personen hinzu"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:959
+#: packages/claudia-server/src/claudia_server/protocol.py:1067
 msgid "only the owner of a document can hand it over"
 msgstr "Nur der Eigentümer eines Dokuments kann es übergeben"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:701
+#: packages/claudia-server/src/claudia_server/protocol.py:704
 msgid "only the owner of a document discards its hidden lines"
 msgstr "Nur der Eigentümer eines Dokuments verwirft dessen verborgene Linien"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:907
+#: packages/claudia-server/src/claudia_server/protocol.py:1015
 msgid "only the owner of a document makes a recovery key"
 msgstr "Nur der Eigentümer eines Dokuments erstellt einen Wiederherstellungsschlüssel"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:594
+#: packages/claudia-server/src/claudia_server/protocol.py:597
 msgid "only the owner of a document sets this"
 msgstr "Nur der Eigentümer eines Dokuments legt dies fest"
 
@@ -7180,6 +7492,10 @@ msgstr "nur ihre Box"
 #: web/app/components/DetailsFields.vue:67 web/app/components/DetailsFields.vue:89 web/app/components/SearchPanel.vue:209
 msgid "optional"
 msgstr "optional"
+
+#: web/app/components/AddFontsDialog.vue:141
+msgid "or drop them here: TrueType, OpenType, or a .zip of them"
+msgstr "oder hier ablegen: TrueType, OpenType oder ein .zip davon"
 
 #: packages/claudia-server/src/claudia_server/computes.py:416
 msgid "outcome_table: combine must be \"all\" or \"pair\""
@@ -7201,7 +7517,7 @@ msgstr "Absatz"
 msgid "paragraphs"
 msgstr "Absätze"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:367
+#: packages/claudia-server/src/claudia_server/protocol.py:370
 msgid "params must be an object"
 msgstr "params muss ein Objekt sein"
 
@@ -7309,6 +7625,10 @@ msgstr "Rate"
 msgid "recovery key"
 msgstr "Wiederherstellungsschlüssel"
 
+#: packages/claudia-server/src/claudia_server/protocol.py:727
+msgid "redaction: revisions like \"main:12\", chat numbers, parts by revision"
+msgstr "Schwärzen: Schritte wie \"main:12\", Nummern von Chat-Nachrichten, Teile je Schritt"
+
 #: web/app/components/FormulaBar.vue:98 web/app/components/InsertBar.vue:50
 msgid "redo"
 msgstr "wiederholen"
@@ -7401,7 +7721,7 @@ msgstr "set_cells: Jede Zelle ist ein Objekt mit row, col und input"
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr "set_cells: input muss Text mit höchstens {limit} Zeichen sein"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:597
+#: packages/claudia-server/src/claudia_server/protocol.py:600
 msgid "set_restore_policy: policy must be one of {policies}"
 msgstr "set_restore_policy: policy muss eines von {policies} sein"
 
@@ -7493,7 +7813,7 @@ msgstr "Tabelle · {rows} Zeilen"
 msgid "tables"
 msgstr "Tabellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1013
+#: packages/claudia-server/src/claudia_server/protocol.py:1121
 msgid "tags are words"
 msgstr "Schlagwörter sind Wörter."
 
@@ -7513,7 +7833,7 @@ msgstr "Textfeld"
 msgid "text of the object"
 msgstr "Text des Objekts"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1019 packages/claudia-server/src/claudia_server/protocol.py:931 packages/claudia-server/src/claudia_server/protocol.py:948 packages/claudia-server/src/claudia_server/protocol.py:963 packages/claudia-server/src/claudia_server/protocol.py:993
+#: packages/claudia-server/src/claudia_server/protocol.py:1039 packages/claudia-server/src/claudia_server/protocol.py:1056 packages/claudia-server/src/claudia_server/protocol.py:1071 packages/claudia-server/src/claudia_server/protocol.py:1101 packages/claudia-server/src/claudia_server/protocol.py:1127
 msgid "that is not your current password"
 msgstr "Das ist nicht Ihr aktuelles Passwort"
 
@@ -7521,27 +7841,27 @@ msgstr "Das ist nicht Ihr aktuelles Passwort"
 msgid "that would make too many paragraphs"
 msgstr "Das ergäbe zu viele Absätze"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:823
+#: packages/claudia-server/src/claudia_server/protocol.py:931
 msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr "Der Assistent kann keinen rohen Befehl ausführen; nutzen Sie die Methoden der App"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:610
+#: packages/claudia-server/src/claudia_server/protocol.py:613
 msgid "the assistant does not suggest restoring a checkpoint"
 msgstr "Der Assistent schlägt nicht vor, einen Prüfpunkt wiederherzustellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:637
+#: packages/claudia-server/src/claudia_server/protocol.py:640
 msgid "the assistant does not suggest restoring a step"
 msgstr "Der Assistent schlägt nicht vor, einen Schritt wiederherzustellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:664
+#: packages/claudia-server/src/claudia_server/protocol.py:667
 msgid "the assistant does not suggest switching lines"
 msgstr "Der Assistent schlägt nicht vor, die Linie zu wechseln"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:683
+#: packages/claudia-server/src/claudia_server/protocol.py:686
 msgid "the assistant does not vote"
 msgstr "Der Assistent stimmt nicht ab"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:711
+#: packages/claudia-server/src/claudia_server/protocol.py:819
 msgid "the assistant does not withdraw suggestions"
 msgstr "Der Assistent zieht keine Vorschläge zurück"
 
@@ -7605,7 +7925,7 @@ msgstr "der erste Monat von 2.000 über 2 Jahre"
 msgid "the first month of 8,000 over 3 years"
 msgstr "der erste Monat von 8.000 über 3 Jahre"
 
-#: web/app/lib/print/assets.ts:77
+#: web/app/lib/print/assets.ts:79
 msgid "the font {family} {style} did not arrive intact"
 msgstr "die Schrift {family} {style} ist nicht vollständig angekommen"
 
@@ -7617,7 +7937,7 @@ msgstr "die Formel in der Zelle als Text, oder #N/A, wenn die Zelle keine enthä
 msgid "the header row"
 msgstr "die Kopfzeile"
 
-#: web/app/lib/print/assets.ts:102
+#: web/app/lib/print/assets.ts:104
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr "die Trennmuster für {name} sind nicht vollständig angekommen"
 
@@ -7656,6 +7976,10 @@ msgstr "die Position (ab 1) des Wertes. Vergleichsmodus 0 ist genau, -1 der gena
 #: packages/claudia-server/src/claudia_server/composes.py:246
 msgid "the range ends before it starts"
 msgstr "Der Bereich endet vor seinem Anfang"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:806
+msgid "the redaction would now blank other steps than you were shown; look at it again"
+msgstr "Das Schwärzen würde jetzt andere Schritte leeren als die, die Ihnen gezeigt wurden; sehen Sie es sich noch einmal an"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the result of a SQL query (SQLite's SELECT) over the named ranges and tables of this workbook, written ``FROM Sales``; quote a name with a space as ``\"Unit price\"``. A ``?`` in the query is the next value after it. As the whole formula it fills the cells below and beside it, header row first; inside another formula it gives the first value of the first row."
@@ -7749,15 +8073,19 @@ msgstr "die ganze Tabelle, einschließlich Kopfzeile"
 msgid "the words {find!r} are not in paragraph {block}; read it again and quote it exactly"
 msgstr "die Wörter {find!r} stehen nicht in Absatz {block}; bitte erneut lesen und genau zitieren"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:703
+#: packages/claudia-server/src/claudia_server/protocol.py:706 packages/claudia-server/src/claudia_server/protocol.py:797
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr "Es gibt einen offenen Vorschlag; beantworten oder ziehen Sie ihn zuerst zurück"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:732
+msgid "there is no chat message of that number for you"
+msgstr "Für Sie gibt es keine Chat-Nachricht mit dieser Nummer"
 
 #: packages/claudia-server/src/claudia_server/composes_lists.py:116
 msgid "there is no earlier list of this kind to continue"
 msgstr "Es gibt keine frühere Liste dieser Art, die sich fortsetzen ließe"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:666
+#: packages/claudia-server/src/claudia_server/protocol.py:669
 msgid "there is no line called {line!r}"
 msgstr "Es gibt keine Linie namens {line!r}"
 
@@ -7773,7 +8101,7 @@ msgstr "Es gibt keinen Absatz {block!r}"
 msgid "there is no pivot table called {name!r}"
 msgstr "Es gibt keine Pivot-Tabelle namens {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:639
+#: packages/claudia-server/src/claudia_server/protocol.py:642
 msgid "there is no step {revision} on this line"
 msgstr "Auf diesem Verlauf gibt es keinen Schritt {revision}"
 
@@ -7797,7 +8125,7 @@ msgstr "Dieses Dokument hat keine Palette"
 msgid "this document has no styles"
 msgstr "Dieses Dokument hat keine Stile"
 
-#: packages/claudia-server/src/claudia_server/rendered.py:168
+#: packages/claudia-server/src/claudia_server/rendered.py:174
 msgid "this document has nothing rendered with the id {id!r}"
 msgstr "Dieses Dokument enthält nichts Gerendertes mit der Kennung {id!r}"
 
@@ -7829,15 +8157,15 @@ msgstr "diese Zeile"
 msgid "this server does not host {app}"
 msgstr "dieser Server bietet {app} nicht an"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1011
+#: packages/claudia-server/src/claudia_server/protocol.py:1119
 msgid "this server does not keep a description and tags"
 msgstr "Dieser Server speichert keine Beschreibung und Schlagwörter."
 
-#: packages/claudia-server/src/claudia_server/app.py:343 packages/claudia-server/src/claudia_server/protocol.py:909
+#: packages/claudia-server/src/claudia_server/app.py:343 packages/claudia-server/src/claudia_server/protocol.py:1017
 msgid "this server does not keep recovery keys"
 msgstr "Dieser Server bewahrt keine Wiederherstellungsschlüssel auf"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:919
+#: packages/claudia-server/src/claudia_server/protocol.py:1027
 msgid "this server does not list a document's people this way"
 msgstr "Dieser Server listet die Personen eines Dokuments nicht auf diese Weise auf"
 
@@ -7845,37 +8173,41 @@ msgstr "Dieser Server listet die Personen eines Dokuments nicht auf diese Weise 
 msgid "this server does not make rendered containers"
 msgstr "Dieser Server erzeugt keine gerenderten Container"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:893
+#: packages/claudia-server/src/claudia_server/protocol.py:1001
 msgid "this server does not manage people"
 msgstr "Dieser Server verwaltet keine Personen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:942
+#: packages/claudia-server/src/claudia_server/protocol.py:1050
 msgid "this server does not support changing a password"
 msgstr "dieser Server unterstützt kein Ändern des Passworts"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:991
+#: packages/claudia-server/src/claudia_server/protocol.py:1099
 msgid "this server does not support deleting a document"
 msgstr "Dieser Server unterstützt das Löschen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:961 packages/claudia-server/src/claudia_server/protocol.py:974
+#: packages/claudia-server/src/claudia_server/protocol.py:1069 packages/claudia-server/src/claudia_server/protocol.py:1082
 msgid "this server does not support handing over ownership"
 msgstr "Dieser Server unterstützt die Übergabe des Eigentums nicht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:929
+#: packages/claudia-server/src/claudia_server/protocol.py:1037
 msgid "this server does not support leaving a document"
 msgstr "Dieser Server unterstützt das Verlassen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/hub.py:580
+#: packages/claudia-server/src/claudia_server/hub.py:607
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
 
-#: packages/claudia-server/src/claudia_server/hub.py:713
+#: packages/claudia-server/src/claudia_server/hub.py:740
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "dieser Server hält seine Dokumente nur im Speicher und kann keine Datei aufnehmen"
 
 #: packages/claudia-server/src/claudia_server/composes.py:459
 msgid "this suggestion is not open any more"
 msgstr "Dieser Vorschlag ist nicht mehr offen"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:802
+msgid "this would also blank later changes by {names}; ask an owner"
+msgstr "Das würde auch spätere Änderungen von {names} leeren; bitten Sie einen Eigentümer darum"
 
 #: web/app/components/RandomDialog.vue:181
 msgid "to"
@@ -7921,7 +8253,7 @@ msgstr "hier tippen, um eine Zeile hinzuzufügen"
 msgid "undo"
 msgstr "rückgängig"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:371
+#: packages/claudia-server/src/claudia_server/protocol.py:374
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr "Unbekannter Parameter {parameter!r} für {name}"
 
@@ -7948,6 +8280,10 @@ msgstr "von {count} Formaten verwendet"
 #: web/app/components/SearchPanel.vue:352
 msgid "value"
 msgstr "Wert"
+
+#: web/app/lib/admin-fonts.ts:139
+msgid "variable · {n}"
+msgstr "variabel · {n}"
 
 #: web/app/components/SearchPanel.vue:426
 msgid "was typed into since you looked"
@@ -8004,6 +8340,10 @@ msgstr "xelatex"
 #: web/app/components/AdminAccessDocuments.vue:198
 msgid "you"
 msgstr "Sie"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:737
+msgid "you can redact only your own changes and messages; ask an owner"
+msgstr "Sie können nur Ihre eigenen Änderungen und Nachrichten schwärzen; bitten Sie einen Eigentümer darum"
 
 #: web/app/lib/server-bookmarks.ts:91
 msgid "{administrator}'s server"
@@ -8161,6 +8501,30 @@ msgstr "{field} ging zurück in die Liste: Diese Version hat ein Zeilenfeld und 
 msgid "{field}: move, settings or remove"
 msgstr "{field}: verschieben, Einstellungen oder entfernen"
 
+#: web/app/lib/admin-fonts.ts:167
+msgid "{file} cannot be read on the server."
+msgstr "{file} lässt sich auf dem Server nicht lesen."
+
+#: web/app/lib/admin-fonts.ts:165
+msgid "{file} has * or ? in its name; rename the file on the server."
+msgstr "{file} hat * oder ? im Namen; benennen Sie die Datei auf dem Server um."
+
+#: web/app/lib/admin-fonts.ts:163
+msgid "{file} has no family name."
+msgstr "{file} hat keinen Familiennamen."
+
+#: web/app/lib/admin-fonts.ts:169
+msgid "{file} has no usable collection.json, so none of its fonts are used."
+msgstr "{file} hat keine nutzbare collection.json, also wird keine seiner Schriften genutzt."
+
+#: web/app/lib/admin-fonts.ts:161
+msgid "{file} is not a font that can be read."
+msgstr "{file} ist keine Schrift, die sich lesen lässt."
+
+#: web/app/lib/admin-fonts.ts:171
+msgid "{file} is not used."
+msgstr "{file} wird nicht genutzt."
+
 #: packages/claudia-server/src/claudia_server/composes_words.py:76
 msgid "{find!r} is {count} times in paragraph {block}, not {occurrence}"
 msgstr "{find!r} steht {count}-mal in Absatz {block}, nicht {occurrence}-mal"
@@ -8176,6 +8540,10 @@ msgstr "{first} oder {next}"
 #: web/app/lib/search.ts:282
 msgid "{first}, then {next}"
 msgstr "{first}, dann {next}"
+
+#: web/app/lib/admin-fonts.ts:159
+msgid "{font} is not used: the file forbids embedding (fsType {fsType}), so no PDF could carry it."
+msgstr "{font} wird nicht genutzt: Die Datei verbietet das Einbetten (fsType {fsType}), also könnte kein PDF sie enthalten."
 
 #: web/app/components/PaletteDialog.vue:122
 msgid "{foreground} on {background}"
@@ -8205,27 +8573,27 @@ msgstr "{host} ist jetzt von außerhalb dieses Computers erreichbar. Legen Sie e
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr "{host} ist über diesen Computer hinaus noch nicht erreichbar, daher ist das nicht erforderlich – legen Sie aber jetzt einen Namen und ein Passwort fest, wenn Sie die Einstellungen verwalten möchten oder bevor Sie ihn später für andere öffnen."
 
-#: packages/claudia-server/src/claudia_server/hub.py:413
+#: packages/claudia-server/src/claudia_server/hub.py:415
 msgid "{id} already has {limit} connections"
 msgstr "{id} hat schon {limit} Verbindungen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:774
+#: packages/claudia-server/src/claudia_server/hub.py:801
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "{id} lässt sich noch nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:777
+#: packages/claudia-server/src/claudia_server/hub.py:804
 msgid "{id} cannot be opened: {reason}"
 msgstr "{id} lässt sich nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:781
+#: packages/claudia-server/src/claudia_server/hub.py:808
 msgid "{id} cannot be read"
 msgstr "{id} lässt sich nicht lesen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:725
+#: packages/claudia-server/src/claudia_server/hub.py:752
 msgid "{id} cannot be taken in: {reason}"
 msgstr "{id} kann nicht aufgenommen werden: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:716 packages/claudia-server/src/claudia_server/hub.py:721
+#: packages/claudia-server/src/claudia_server/hub.py:743 packages/claudia-server/src/claudia_server/hub.py:748
 msgid "{id} is here already"
 msgstr "{id} ist schon hier"
 
@@ -8317,11 +8685,11 @@ msgstr "{method}: Ein Tabellenblatt wird mit seiner ID angegeben"
 msgid "{method}: kinds is a list of {kinds}"
 msgstr "{method}: kinds ist eine Liste aus {kinds}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:379
+#: packages/claudia-server/src/claudia_server/protocol.py:382
 msgid "{method}: missing parameter {parameter!r}"
 msgstr "{method}: Parameter {parameter!r} fehlt"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:388
+#: packages/claudia-server/src/claudia_server/protocol.py:391
 msgid "{method}: {parameter} {reason}"
 msgstr "{method}: {parameter} {reason}"
 
@@ -8369,11 +8737,11 @@ msgstr "{name} ist da. {count} Dinge darin werden nicht gezeigt und bleiben in d
 msgid "{name} is larger than {mb} MB."
 msgstr "{name} ist größer als {mb} MB."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:404
+#: packages/claudia-server/src/claudia_server/protocol.py:407
 msgid "{name} is not one of the methods this account may call"
 msgstr "{name} gehört nicht zu den Methoden, die dieses Konto aufrufen darf"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:400
+#: packages/claudia-server/src/claudia_server/protocol.py:403
 msgid "{name} needs the editor role"
 msgstr "{name} braucht die Rolle „editor“"
 
@@ -8396,6 +8764,34 @@ msgstr "{n} Berechnung"
 #: web/app/components/FollowPill.vue:22
 msgid "{n} calculations"
 msgstr "{n} Berechnungen"
+
+#: web/app/components/AdminFonts.vue:52
+msgid "{n} collections"
+msgstr "{n} Sammlungen"
+
+#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:189 web/app/lib/admin-fonts.ts:236
+msgid "{n} families"
+msgstr "{n} Familien"
+
+#: web/app/components/AdminFonts.vue:51
+msgid "{n} files"
+msgstr "{n} Dateien"
+
+#: web/app/components/AddFontsDialog.vue:134
+msgid "{n} files chosen"
+msgstr "{n} Dateien ausgewählt"
+
+#: web/app/components/AdminFonts.vue:127
+msgid "{n} files not usable"
+msgstr "{n} Dateien nicht nutzbar"
+
+#: web/app/lib/admin-fonts.ts:182
+msgid "{n} files not used."
+msgstr "{n} Dateien werden nicht genutzt."
+
+#: web/app/lib/admin-fonts.ts:235
+msgid "{n} fonts"
+msgstr "{n} Schriften"
 
 #: web/app/lib/people.ts:46
 msgid "{n} h ago"
@@ -8424,6 +8820,10 @@ msgstr "{n} neuere Änderungen anderer"
 #: web/app/components/SearchPanel.vue:109
 msgid "{n} of {count}"
 msgstr "{n} von {count}"
+
+#: web/app/lib/admin-fonts.ts:138
+msgid "{n} of {total}"
+msgstr "{n} von {total}"
 
 #: web/app/components/PresentShow.vue:182
 msgid "{n} of {total} slides"
@@ -8497,7 +8897,7 @@ msgstr "{range} · {rows} · {fields}"
 msgid "{ref}, empty"
 msgstr "{ref}, leer"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:728
+#: packages/claudia-server/src/claudia_server/protocol.py:836
 msgid "{revision} is not part of the document's current line; reload it"
 msgstr "{revision} gehört nicht zur aktuellen Linie des Dokuments; laden Sie es neu"
 

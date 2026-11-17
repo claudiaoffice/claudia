@@ -44,7 +44,7 @@ E1.10 (the style model) came later with the composes styling work; see `e9-compo
    lists them. Everybody's undo steps, checkpoints and model are those of the new line; locks and presence are
    cleared; views get `BranchSwitched` and `Rebuilt`. Restoring costs one replay, with no growth of the log. Chat
    records keep their `at` revision even after a discard.
-6. **Redaction contract (still open).** A command's `redacted()` must keep what later commands depend on (a sheet, an
+6. **Redaction contract (decided 2026-11-16: D720–D726; this paragraph is the earlier state).** A command's `redacted()` must keep what later commands depend on (a sheet, an
    object, text length) and blank only the content. The default is a no-op tombstone. If the redacted log no longer
    replays, the redaction is rolled back and explained. After redaction the state is rebuilt from the redacted log,
    snapshots are dropped, undo steps derived from the content are dropped, presence is cleared, and purge hooks run.

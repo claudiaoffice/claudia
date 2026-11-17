@@ -117,14 +117,11 @@ def test_the_words_of_a_run_are_read_over_the_defaults_of_its_box():
         "font-weight": "bold",
         "font-style": "italic",
         "color": "#ff0000",
-        "font-family": "'Segoe UI'",
         "text-align": "center",
     }
 
 
-def test_a_theme_font_a_gradient_and_words_that_are_empty_say_nothing_or_are_unread():
-    theme_font = '<a:p><a:r><a:rPr><a:latin typeface="+mn-lt"/></a:rPr><a:t>Hi</a:t></a:r></a:p>'
-    assert read_look(shape(words=theme_font), Theme(), 1, outline=True).words == {}
+def test_a_gradient_and_words_that_are_empty_say_nothing_or_are_unread():
     graded = "<a:p><a:r><a:rPr><a:gradFill/></a:rPr><a:t>Hi</a:t></a:r></a:p>"
     assert read_look(shape(words=graded), Theme(), 1, outline=True).unread
     assert read_look(shape(words="<a:p><a:r><a:t> </a:t></a:r></a:p>"), Theme(), 1, outline=True).words == {}
@@ -156,4 +153,3 @@ def test_the_styles_of_an_odp_are_found_by_family_and_name_with_the_ones_they_ar
         "fo:font-weight": "bold",
     }
     assert index.attributes("paragraph", "missing", "style:text-properties") == {}
-    assert index.font("Fira") == "'Fira Sans'" and index.font("none") is None

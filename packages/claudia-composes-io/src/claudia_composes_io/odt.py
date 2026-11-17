@@ -58,7 +58,9 @@ from claudia_odf_io import (
 from claudia_opc_io import read_parts, write_parts
 
 from ._boxes import box_losses, boxes_of, is_written, look_of
+from ._fonts import take_fonts
 from ._odt_boxes import BoxPlan, BoxStyles, BoxWriter, FileBox, file_boxes, graphic_style_names
+from ._odt_fonts import style_fonts
 from ._odt_lists import LIST, ListFlow, ListNames, can_rebuild, read_lists
 from ._odt_pictures import (
     PICTURE_STYLE,
@@ -112,6 +114,15 @@ _KNOWN = {
     "Quotations": "quote",
     "Quote": "quote",
     **dict.fromkeys(_BODY_NAMES, DEFAULT_STYLE),
+}
+#: Where each style of the text takes its font from: the file's styles that are it, the first the file has counting
+#: (body text from the style body text is written in, else the one every style is based on).
+_FONT_SOURCES = {
+    DEFAULT_STYLE: ("Text_20_body", "Text_20_Body", "Body_20_Text", "Standard", "Default_20_Paragraph_Style"),
+    "title": ("Title",),
+    "heading-1": ("Heading_20_1",),
+    "heading-2": ("Heading_20_2",),
+    "quote": ("Quotations", "Quote"),
 }
 _INDEXES = {
     _q("text", name)
@@ -247,6 +258,10 @@ def _style_of(paragraph: etree._Element, parents: dict[str, str | None], losses:
     return found
 
 
+def _styles_root(parts: dict[str, bytes]) -> etree._Element | None:
+    return etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None
+
+
 #: The model's styles of words by the name an odt shows for them, for a text box or a shape of a file.
 _WORDS_STYLE = {style.name: style.id for style in BUILTIN_STYLES if style.kind == "paragraph"}
 
@@ -290,7 +305,8 @@ def _lists_of(parts: dict[str, bytes], body: etree._Element, scan: _Scan):  # no
 def odt_to_text(odt_bytes: bytes) -> TextModel:
     """``odt_bytes`` as a :class:`~claudia_composes.TextModel`: one block per paragraph of the flow, in order,
     called ``b1``, ``b2``... by its place. Title, Heading 1, Heading 2 and Quotations (or a style based on one) map to
-    the styles of the text app and anything else is body text. The first paragraph of every item of a list is an item
+    the styles of the text app and anything else is body text; each of those styles takes the font the file gives it
+    (E3.13: its own, the one it is based on, the default style). The first paragraph of every item of a list is an item
     of that list (the scheme, start and name of the list from its list style, ``_odt_lists``), at the level of its
     place in the nest. A picture (a ``draw:frame`` with an image in it) that the model shows as it is -- an image the
     app decodes, not cropped, in its own proportions -- is an image object hanging from the character it stands at,
@@ -306,6 +322,7 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
         blocks.append(Block(f"b{number}", _style_of(paragraph, parents, None), text, runs, lists.items.get(paragraph)))
     model = TextModel(blocks or None, page=setup.page, language=setup.language, lists=lists.book if blocks else None)
     root = body.getroottree().getroot()
+    take_fonts(model, style_fonts((root, _styles_root(parts)), _FONT_SOURCES))
     graphics = graphic_styles(root, etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
     floating: list[tuple[int, int, int, FilePicture | FileBox]] = [
         (each.block, each.offset, 0, each) for each in file_pictures(scan.paragraphs, graphics, parts)

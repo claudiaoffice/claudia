@@ -37,17 +37,12 @@ class StyleIndex:
 
     def __init__(self, *roots: etree._Element | None) -> None:
         self._styles: dict[tuple[str, str], etree._Element] = {}
-        self._fonts: dict[str, str] = {}
         for root in roots:
             if root is None:
                 continue
             for style in root.iter(_q("style", "style")):
                 key = (style.get(_q("style", "family")) or "", style.get(_q("style", "name")) or "")
                 self._styles.setdefault(key, style)
-            for face in root.iter(_q("style", "font-face")):
-                family = face.get(_q("svg", "font-family"))
-                if family:
-                    self._fonts.setdefault(face.get(_q("style", "name")) or "", family)
 
     def get(self, family: str, name: str | None) -> etree._Element | None:
         return self._styles.get((family, name or ""))
@@ -64,10 +59,6 @@ class StyleIndex:
                     found.setdefault(_key(str(clark)), str(value))
             name = style.get(_q("style", "parent-style-name"))
         return found
-
-    def font(self, name: str) -> str | None:
-        """The family a ``style:font-name`` stands for."""
-        return self._fonts.get(name)
 
 
 def read_look(
@@ -144,9 +135,6 @@ def _read_words(
         look.words["font-style"] = "italic"
     if said.get("fo:text-align") in _ALIGN:
         look.words["text-align"] = _ALIGN[said["fo:text-align"]]
-    font = said.get("fo:font-family") or index.font(said.get("style:font-name", ""))
-    if font:
-        look.words["font-family"] = font
 
 
 def _colour(value: str | None) -> str | None:

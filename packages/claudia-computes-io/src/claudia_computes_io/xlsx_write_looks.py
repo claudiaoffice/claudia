@@ -22,8 +22,9 @@ from openpyxl.worksheet.dimensions import SheetFormatProperties
 from claudia_computes import Sheet, WorkbookModel
 from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT
+from claudia_core.stand_ins import file_font
 
-from .cell_looks import GENERAL, CellLook, LookExport, first_family, points, sheet_styling, solid
+from .cell_looks import GENERAL, CellLook, LookExport, points, sheet_styling, solid
 from .xlsx_layout import column_runs, height_of, width_of, written_height, written_width
 
 _SIDES = {
@@ -65,7 +66,7 @@ def _font(css: Mapping[str, str]) -> Font:
     decoration = css.get("text-decoration", "")
     weight = css.get("font-weight", "normal")
     return Font(
-        name=first_family(css["font-family"]) if "font-family" in css else None,
+        name=file_font(css["font-family"]) if "font-family" in css else None,
         sz=round(size * 2) / 2 if size else None,  # Excel sizes go in half points
         b=weight in {"bold", "bolder"} or (weight.isdigit() and int(weight) >= 600),  # noqa: PLR2004
         i=css.get("font-style") in ("italic", "oblique"),

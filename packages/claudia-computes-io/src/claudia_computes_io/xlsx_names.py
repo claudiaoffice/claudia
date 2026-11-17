@@ -160,6 +160,8 @@ class XlsxNamesPatch:
         added: list[NamedRange] = []
         for key, named in after.items():
             entry = self.entries.get(key)
+            if entry is None and before.get(key) == named:
+                continue  # (a name the import made, for the source of a pivot, D628: written once it differs)
             if entry is None or key not in before:
                 added.append(named)
                 continue

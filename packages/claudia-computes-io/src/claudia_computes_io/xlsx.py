@@ -55,18 +55,22 @@ from .excel_names import with_marks
 from .extensions import to_excel, with_note
 from .layout_sizes import changed_sizes
 from .openformula import Untranslatable
+from .pivot_exchange import adopt_pivots, pivot_positions, sheet_cells
 from .xlsx_chart_patch import Drawings, patch_charts
 from .xlsx_charts import WrittenChart, file_charts, written_charts
 from .xlsx_layout import layout_losses
 from .xlsx_looks import XlsxLooks, read_looks
 from .xlsx_names import XlsxNamesPatch, header_losses, write_names
 from .xlsx_patch import PackagePatch, SheetNotes, SheetPatch, UnsupportedEdit, written
+from .xlsx_pivots import add_pivots, ask_refresh, read_pivots, written_pivots_of
 from .xlsx_read import (
+    Package,
     SheetRead,
     losses_in_order,
     names_and_tables,
     open_package,
     read_sheet,
+    related,
     workbook_losses,
 )
 from .xlsx_restyle import StylesPatch, restyle_sheet
@@ -145,12 +149,14 @@ def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
     for detail in chart_losses(model):
         losses.add("chart", detail)
     for sheet in model.sheets.values():
-        for position, content in sheet.cells.items():
-            _, note, lost = _written(content, sheet.grid.get(position))
+        for content, value in sheet_cells(model, sheet).values():
+            _, note, lost = _written(content, value)
             if lost is not None:
                 losses.add(lost.kind, lost.detail)
             if note is not None:
                 losses.add("alternatives")
+    for loss in written_pivots_of(model).losses:
+        losses.add(loss.kind, loss.detail, loss.count)
     return (*losses.result(), *xlsx_unwritten_changes(model))
 
 
@@ -161,7 +167,9 @@ def xlsx_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None 
     limit), ``"name"`` (what a file
     cannot hold of a named range or table: ``result``, ``purpose``, ``table-scope``, ``table-header``), ``"chart"``
     and ``"object"`` (with the pictures and shapes they use)."""
-    found = workbook_unwritten_changes(model, baseline, written=XLSX_WRITTEN)
+    found = workbook_unwritten_changes(
+        model, baseline, written=XLSX_WRITTEN | ({"pivots"} if baseline is None else set())
+    )
     return in_order((*found, *header_losses(model, baseline).result(), *layout_losses(model, baseline).result()))
 
 
@@ -178,8 +186,8 @@ def workbook_to_xlsx(model: WorkbookModel, *, info: DocumentInfo | None = None) 
     looks = XlsxLookWriter(model, wb)
     for sheet in model.sheets.values():
         ws = wb.create_sheet(title=sheet.name)
-        for (row, col), content in sheet.cells.items():
-            _put(ws.cell(row=row + 1, column=col + 1), content, sheet.grid.get((row, col)))
+        for (row, col), (content, value) in sheet_cells(model, sheet).items():
+            _put(ws.cell(row=row + 1, column=col + 1), content, value)
         looks.sheet(sheet, ws)
     charts, tabs = written_charts(model)
     for name in tabs:
@@ -189,7 +197,8 @@ def workbook_to_xlsx(model: WorkbookModel, *, info: DocumentInfo | None = None) 
     write_names(wb, model)
     out = BytesIO()
     wb.save(out)
-    data = _with_charts(out.getvalue(), charts) if charts else out.getvalue()
+    data = add_pivots(out.getvalue(), model, written_pivots_of(model).pivots)
+    data = _with_charts(data, charts) if charts else data
     return stamp_office_meta(data, info)
 
 
@@ -221,7 +230,11 @@ def xlsx_to_workbook(xlsx_bytes: bytes) -> WorkbookModel:
     provisional styles that wait for a name (``cell_looks``, D379). What the model does not show at all (charts,
     pictures, a rotated text...) stays in the file for :func:`apply_edits_to_xlsx` and is listed by
     :func:`xlsx_import_losses`. Raises :class:`XlsxError` for bytes that are not an xlsx file."""
-    package = open_package(xlsx_bytes)
+    return _model_of(open_package(xlsx_bytes))[0]
+
+
+def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
+    """The model of an opened file, and the losses of its pivot tables (those that are not live pivots in it)."""
     names, _ = names_and_tables(package)
     known = frozenset(named.name.casefold() for named in names)
     model = WorkbookModel()
@@ -245,7 +258,8 @@ def xlsx_to_workbook(xlsx_bytes: bytes) -> WorkbookModel:
                 body = replace(body, description=chart.description)
             model.insert_object(VisualObject(body, CellAnchor(chart.sheet, chart.row, chart.col)))
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see model.py's own)
-    return model
+    pivots = read_pivots(package, model)
+    return model, (*pivots.losses.result(), *adopt_pivots(model, pivots.found).losses)
 
 
 def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
@@ -271,6 +285,9 @@ def xlsx_import_losses(xlsx_bytes: bytes) -> tuple[Loss, ...]:
                 losses.add(loss.kind, loss.detail, count)
     for what, count in dressing.lost.items():
         losses.add("look", what, count)
+    if any(related(package.parts, part.part, "pivotTable") for part in package.sheets):
+        for loss in _model_of(package)[1]:
+            losses.add(loss.kind, loss.detail, loss.count)
     workbook_losses(package, losses)
     return losses_in_order(losses.result(), _ORDER)
 
@@ -360,14 +377,23 @@ def apply_edits_to_xlsx(
     styles = StylesPatch(patch.parts, current)
     old_looks = LookExport(baseline)
     restyled = changed_styles(old_looks, styles.looks)
-    changed = formulas = False
+    changed = formulas = refresh = False
     for part in package.sheets:
         before, after = baseline.sheets[part.sheet_id], current.sheets[part.sheet_id]
         looks = restyling((old_looks, before), (styles.looks, after), restyled)
-        if before.cells == after.cells and not looks and not _resized(before, after):
+        held = (sheet_cells(baseline, before), sheet_cells(current, after))
+        edited = {
+            position
+            for position in held[0].keys() | held[1].keys()
+            if _content(held[0], position) != _content(held[1], position)
+        }
+        if not edited and not looks and not _resized(before, after):
             continue  # nothing about this sheet changed: its part stays exactly as it is
         changed = True
-        formulas |= _write_sheet(patch, part.part, before, after, (styles, looks))
+        refresh |= bool(edited & pivot_positions(current, part.sheet_id))
+        formulas |= _write_sheet(patch, part.part, (before, after), held, (styles, looks))
+    if refresh:
+        ask_refresh(patch, package)
     changed |= names.run()
     changed |= patch_charts(patch, package, baseline, current, (losses or LossLog()).add)
     if not changed:
@@ -383,19 +409,30 @@ def _resized(before: Sheet, after: Sheet) -> bool:
     return before.col_widths != after.col_widths or before.row_heights != after.row_heights
 
 
+def _content(held: dict[tuple[int, int], tuple[Content, Value]], position: tuple[int, int]) -> Content | None:
+    found = held.get(position)
+    return None if found is None else found[0]
+
+
 def _write_sheet(
-    patch: PackagePatch, part: str, before: Sheet, after: Sheet, looks: tuple[StylesPatch, Restyling]
+    patch: PackagePatch,
+    part: str,
+    sheets: tuple[Sheet, Sheet],
+    held: tuple[dict[tuple[int, int], tuple[Content, Value]], dict[tuple[int, int], tuple[Content, Value]]],
+    looks: tuple[StylesPatch, Restyling],
 ) -> bool:
-    """Write the cells of ``after`` that differ from ``before`` into the sheet ``part``, and the looks that changed;
-    whether a formula changed."""
+    """Write the cells ``held`` after that differ from those held before into the sheet ``part`` (the cells a sheet
+    has with the value each shows, pivots' included: :func:`~claudia_computes_io.pivot_exchange.sheet_cells`), and the
+    looks that changed; whether a formula changed."""
+    before, after = sheets
     sheet = SheetPatch(patch.parts[part])
     notes = SheetNotes(patch, part, sheet)
     formulas = False
-    for row, col in sorted(before.cells.keys() | after.cells.keys()):
-        content = after.cells.get((row, col))
-        if before.cells.get((row, col)) == content:
+    for row, col in sorted(held[0].keys() | held[1].keys()):
+        content = _content(held[1], (row, col))
+        if _content(held[0], (row, col)) == content:
             continue
-        cell = None if content is None else written(content, after.grid.get((row, col)))
+        cell = None if content is None else written(content, held[1][(row, col)][1])
         formulas |= sheet.put(row, col, cell)
         notes.set(row, col, None if cell is None else cell.note)
     notes.finish()
