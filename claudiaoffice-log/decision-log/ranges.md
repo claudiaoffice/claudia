@@ -32,13 +32,13 @@ Unused numbers in a closed block stay unused.
 | D560–D569 | rendered text containers, the screens: Insert menu, editing in place, fences, composes floating (branch `containers`; D560–D564 used; first given D520–D529, which `search-ui` and `file-handling` had too, renumbered at the merge) | 2026-11-15 | open |
 | D901–D920 | pages, print preview and PDF: the layout library, fonts for clients, page setup (branch `layouting`; D901–D918 used) | 2026-11-12 | open |
 | D600–D619 | names, tables and SQL(): named ranges, structured references, spilling, SQL(), chart source (branch `named-ranges-sql`) | 2026-11-11 | open |
-| D620–D639 | pivot tables: a pivot is a named definition that compiles to SQL, its grid, its interface, its files (E6.30; branch `pivot`; D620–D627 used) | 2026-11-15 | open |
+| D620–D639 | pivot tables: a pivot is a named definition that compiles to SQL, its grid, its interface, its files (E6.30; branch `pivot`; D620–D628 used) | 2026-11-15 | open |
 | D640–D659 | code review follow-up: the text app's AI acts or suggests like the others (CODE-27 follow-up; D640 used) | 2026-11-15 | open |
 | D300–D319 | styles as facets, slots and bundles: Format menu, Edit dialog, cell styles (D300–D318 used) | 2026-11-10 | open |
 | D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D414 used) | 2026-11-11 | open |
 | D430–D449 | one server for all three apps: app modules, addresses, limits, idle exit, folder lock, isolation (branch `one-server`; D430–D448 used) | 2026-11-14 | open |
 | D480–D499 | Excel function coverage: matrix results, cell-by-cell operators, the first 300 functions (branch `excel-functions`; D480–D481 used) | 2026-11-14 | open |
-| D450–D469 | import and export wiring: every function of the three apps reaches the OpenDocument and Office formats, and what does not is said (branch `import-export-wiring`; D450–D464 used) | 2026-11-14 | open |
+| D450–D469 | import and export wiring: every function of the three apps reaches the OpenDocument and Office formats, and what does not is said (branches `import-export-wiring`, `import-export`; D450–D468 used) | 2026-11-14 | open |
 | D1001–D1020 | printing sheets: the computes print preview, scale, print area, page cuts, footer, charts (E6.19; branch `computes-print`; D1001–D1010 used) | 2026-11-14 | open |
 | D1021–D1040 | rotation in the three apps: a turn is one command, the outline stays on the slide, charts do not turn, composes objects float at a free offset, the handle, the menu and the keys (E6.17, E9, E10; branch `rotation-ui`; D1021–D1024 used) | 2026-11-15 | open |
 | D500–D519 | the three desktop clients: the shared server on macOS and Linux, fonts every server has, files through the shells' dialogs, printing from a window, the front page's File menu, port 8765, drops on Linux, closing the macOS window through the page (branch `clients`; D500–D506 used) | 2026-11-15 | open |
@@ -49,6 +49,9 @@ Unused numbers in a closed block stay unused.
 | D660–D679 | code review follow-up: one Neutralino package for macOS and Windows (CODE-14; D660 used) | 2026-11-15 | open |
 | D680–D699 | the AI in composes: a model-driven participant, its document lens, words by quoting them (E7.10; branch `composes-ai`; D680–D681 used) | 2026-11-16 | open |
 | D700–D719 | code review follow-up: no claudia-client, one way to write a file (CODE-33, CODE-34; D700–D701 used) | 2026-11-16 | open |
+| D720–D739 | the redaction contract: what a redacted step keeps, the plan, dependents, imports, hidden lines and chat, the store rewritten, the wire and its screens (E1.8, SEC-05; branch `redaction`; D720–D728 used) | 2026-11-16 | open |
+| D740–D759 | the Windows installer: self-contained server, packaged client, Inno Setup, the service, signing (E8.1; branch `win-installer`; D730–D735 used) | 2026-11-17 | open |
+| D1041–D1060 | font management: who may receive a server's fonts, Server settings ▸ Fonts, fonts kept honest from import to export (E3.13; branch `font-server-ui`; D1041 used) | 2026-11-16 | open |
 
 ## Never to be used
 

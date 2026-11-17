@@ -37,11 +37,14 @@ from lxml import etree
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
+from pptx.enum.text import PP_ALIGN
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import Part
 from pptx.util import Emu, Pt
 
 from claudia_core import Rasterise, blank_png, nudge_into, picture_body
 from claudia_core.assets import MAX_ALT_CHARS
+from claudia_core.stand_ins import file_font
 from claudia_creates import (
     MAX_NOTES_LENGTH,
     SLIDE_HEIGHT,
@@ -53,9 +56,10 @@ from claudia_creates import (
     VisualObject,
     paragraph_for,
 )
-from claudia_odf_io import Loss, LossLog
-from claudia_opc_io import owns, reconcile
+from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
+from claudia_opc_io import ThemeFonts, owns, reconcile
 
+from ._file_looks import LookBook
 from ._items import (
     ItemReader,
     agendas,
@@ -67,7 +71,9 @@ from ._items import (
     write_pptx_mark,
 )
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
-from ._styling import colour_of, look, page_colour, points_of
+from ._pptx_fonts import deck_theme, mixes_fonts, shape_font, write_body_font
+from ._pptx_looks import Theme, read_look
+from ._styling import colour_of, is_bold, look, page_colour, points_of, style_for_font, take_body_font
 from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
 from .pptx_pictures import alt_text_of, held_picture
 from .pptx_setup import part_names, read_print_setup, speak, spoken, write_print_setup
@@ -121,15 +127,34 @@ def _rgb(css: dict[str, str], prop: str, over: str | None = None) -> RGBColor | 
     return RGBColor(*found) if found is not None else None
 
 
+_ALIGNMENT = {
+    "left": PP_ALIGN.LEFT,
+    "center": PP_ALIGN.CENTER,
+    "right": PP_ALIGN.RIGHT,
+    "justify": PP_ALIGN.JUSTIFY,
+}
+
+
 def _style_text(text_frame, css: dict[str, str], pt_per_unit: float, over: str | None = None) -> None:
     size = _pt(css, "font-size", pt_per_unit)
     color = _rgb(css, "color", over)
+    # the font the words are shown in, a generic family as the font that shows it (E3.13, CODE-42)
+    font = file_font(css["font-family"]) if "font-family" in css else None
+    align = _ALIGNMENT.get(css.get("text-align", ""))
     for paragraph in text_frame.paragraphs:
+        if align is not None:
+            paragraph.alignment = align
         for run in paragraph.runs:
             if size is not None:
                 run.font.size = size
             if color is not None:
                 run.font.color.rgb = color
+            if is_bold(css):
+                run.font.bold = True
+            if css.get("font-style") in ("italic", "oblique"):
+                run.font.italic = True
+            if font is not None:
+                run.font.name = font
 
 
 def _style_shape(shape, css: dict[str, str], pt_per_unit: float, over: str | None = None) -> None:
@@ -257,7 +282,11 @@ def pptx_import_losses(pptx_bytes: bytes) -> tuple[Loss, ...]:
     prs = Presentation(BytesIO(pptx_bytes))
     losses = LossLog()
     scale_x, scale_y = _slide_scale(prs)
+    theme, colours = deck_theme(prs), _theme_of(prs)
+    page = _background(prs, prs.slides[0], colours) if len(prs.slides) else None
     for pptx_slide in prs.slides:
+        if _background(prs, pptx_slide, colours) != page:
+            losses.add("look")  # one palette for the deck: the page colour of another slide is not shown
         for shape in pptx_slide.shapes:
             if _classify(shape) is None:
                 losses.add(_UNMODELED.get(shape.shape_type, "object"))
@@ -265,7 +294,7 @@ def pptx_import_losses(pptx_bytes: bytes) -> tuple[Loss, ...]:
                 losses.add("turn")
         for shape in pptx_slide.shapes:
             if (kind := _classify(shape)) is not None:
-                _note_words_and_look(shape, kind, losses)
+                _note_words_and_look(shape, kind, losses, theme, colours, scale_x)
         for code, tag in (("transition", "transition"), ("animation", "timing")):
             if pptx_slide._element.find(_qn(tag)) is not None:
                 losses.add(code)
@@ -274,58 +303,42 @@ def pptx_import_losses(pptx_bytes: bytes) -> tuple[Loss, ...]:
     return losses.result()
 
 
-def _look_of(shape) -> tuple[tuple[str, ...], frozenset[tuple[object, object, object]]]:  # noqa: ANN001
-    """What a modeled ``shape`` looks like of its own: its fill and outline (as XML) and the size, font and colour of
-    each of its runs."""
-    properties = shape._element.find(f".//{_qn('spPr')}")
-    drawn = (
-        ()
-        if properties is None
-        else tuple(
-            etree.tostring(child, method="c14n").decode()
-            for child in properties
-            if etree.QName(child).localname in ("solidFill", "gradFill", "noFill", "ln")
-        )
-    )
-    runs = [run for paragraph in shape.text_frame.paragraphs for run in paragraph.runs] if shape.has_text_frame else []
-    written = frozenset(
-        (
-            run.font.size,
-            run.font.name,
-            run.font.color.rgb if run.font.color.type is not None and run.font.color.type == 1 else run.font.color.type,
-        )
-        for run in runs
-    )
-    return drawn, written
+def _theme_of(prs) -> Theme:  # noqa: ANN001
+    """The colours of the theme the deck's slide master uses (none, for a deck that has no theme part)."""
+    try:
+        return Theme(prs.slide_master.part.part_related_by(RT.THEME).blob)
+    except KeyError:
+        return Theme()
 
 
-def _default_looks() -> dict[str, tuple[tuple[str, ...], frozenset[tuple[object, object, object]]]]:
-    """The look :func:`slides_to_pptx` gives an object of each kind that has the default style: what a file made by
-    claudia shows and the model does too, so it is no loss."""
-    model = SlideModel.empty()
-    definition = ShapeLibrary.load().get("rectangle")
-    assert definition is not None  # the three built-in ids are always shipped
-    model.define_shape(definition)
-    for kind, style, words, shape_id in (
-        ("text", _DEFAULT_BOX_STYLE, _DEFAULT_TEXT_STYLE, None),
-        ("shape", _DEFAULT_SHAPE_STYLE, _DEFAULT_LABEL_STYLE, "rectangle"),
-    ):
-        body = ObjectBody(f"d-{kind}", kind, 400, 200, style, paragraph_for(f"d-{kind}", words, "x"), shape=shape_id)
-        model.insert_object(VisualObject(body, SlideAnchor("s1", 100, 100)))
-    shapes = Presentation(BytesIO(slides_to_pptx(model))).slides[0].shapes
-    return {"text": _look_of(shapes[0]), "shape": _look_of(shapes[1])}
+def _background(prs, pptx_slide, colours: Theme) -> str | None:  # noqa: ANN001
+    """The colour of the page of ``pptx_slide`` as ``#rrggbb``: its own, else its layout's, else its master's, as far as
+    that is one plain colour (a gradient or a picture is none)."""
+    for owner in (pptx_slide, pptx_slide.slide_layout, prs.slide_master):
+        element = owner._element.find(f"{_qn('cSld')}/{_qn('bg')}")
+        if element is None:
+            continue
+        fill = element.find(f"{_qn('bgPr')}/{{{ANS}}}solidFill")
+        if fill is not None:
+            return colours.colour(fill)[0]
+        reference = element.find(_qn("bgRef"))
+        return colours.colour(reference)[0] if reference is not None else None
+    return None
 
 
-def _note_words_and_look(shape, kind: str, losses: LossLog) -> None:  # noqa: ANN001
-    """Add to ``losses`` what the model does not show of a modeled ``shape`` of ``kind``: ``"look"`` (a fill, outline,
-    font, size or colour other than the default one claudia writes), ``"formatting"`` (a bold, italic or underlined
-    run) and ``"link"`` (D461)."""
+def _note_words_and_look(  # noqa: ANN001
+    shape, kind: str, losses: LossLog, theme: ThemeFonts, colours: Theme, scale_x: float
+) -> None:
+    """Add to ``losses`` what the model does not show of a modeled ``shape`` of ``kind``: ``"look"`` (a fill, outline or
+    colour the model has no property for, or one made lighter or translucent), ``"formatting"`` (a bold, italic or
+    underlined run, or words in more than one font) and ``"link"`` (D461). The font is not a look the model leaves
+    out: it comes in as the words' style (E3.13)."""
     if kind == "image":
         return  # a picture has no look of its own the model leaves out
-    drawn, written = _look_of(shape)
-    default_drawn, default_written = _default_looks()[kind]
-    if drawn != default_drawn or not written <= default_written:
+    if read_look(shape._element, colours, 1 / scale_x, outline=kind == "shape").unread:
         losses.add("look")
+    if mixes_fonts(shape, theme):
+        losses.add("formatting")
     if shape.has_text_frame:
         for run in (run for paragraph in shape.text_frame.paragraphs for run in paragraph.runs):
             if run.font.bold or run.font.italic or run.font.underline:
@@ -353,20 +366,26 @@ _UNMODELED = {
 }
 
 
-def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None) -> bytes:
+def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None, info: DocumentInfo | None = None) -> bytes:
     """``model`` as pptx bytes: one slide per slide id, its objects added bottom to top so the stacking order
     (the last one is in front) comes out the same as it is drawn in claudia-creates. An image object is written
     as a real picture, its asset's own bytes embedded as-is (D213) — python-pptx reads the format back out of
-    them itself, the same way it would for a file opened from disk."""
+    them itself, the same way it would for a file opened from disk. The file says in its properties who made the deck
+    and when and who changed it last, from ``info``; what ``info`` does not know it leaves out (D466)."""
     prs = Presentation()
+    write_body_font(prs, file_font(look(model, "body-text").get("font-family", "")))
     prs.slide_width, prs.slide_height = _DECK_WIDTH, _DECK_HEIGHT
     scale_x, scale_y = _DECK_WIDTH / SLIDE_WIDTH, _DECK_HEIGHT / SLIDE_HEIGHT
     pt_per_unit = (_DECK_HEIGHT / 914_400 * 72) / SLIDE_HEIGHT
     layout = prs.slide_layouts[_BLANK_LAYOUT]
     page = page_colour(model)
     marks = marks_of(model)
+    background = colour_of({"fill": page or ""}, "fill")
     for slide_id in model.slides:
         slide = prs.slides.add_slide(layout)
+        if background is not None:
+            slide.background.fill.solid()
+            slide.background.fill.fore_color.rgb = RGBColor(*background)
         if model.notes_of(slide_id):
             _write_notes(slide, model.notes_of(slide_id))
         for obj in model.objects_on(slide_id):
@@ -409,7 +428,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None) -> 
     speak(_runs_of_words(prs.slides), model.language)
     out = BytesIO()
     prs.save(out)
-    return out.getvalue()
+    return stamp_office_meta(out.getvalue(), info)
 
 
 def _runs_of_words(slides):  # noqa: ANN001, ANN202
@@ -548,16 +567,23 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
     turn at all is read upright; ``pptx_import_losses`` says how many).
     Neither an object's own style nor its words' style can be recovered -- pptx carries no named-style concept
     the way Word does -- so every text box becomes ``"body-text"`` and every autoshape ``"plain-shape"``, for
-    both, the same two styles ``slides_to_pptx`` itself falls back to."""
+    both, the same two styles ``slides_to_pptx`` itself falls back to. Their fonts can (E3.13): Body text takes the
+    theme's body font, and words in another font (a title in the heading font, a font somebody picked) get a style of
+    their own based on their usual one, named by the font until somebody names it."""
     prs = Presentation(BytesIO(pptx_bytes))
     model = SlideModel()
     if len(prs.slides) == 0:
         return _with_setup(SlideModel.empty(), prs)
+    theme = deck_theme(prs)
+    take_body_font(model, theme.minor)
     scale_x, scale_y = _slide_scale(prs)
     library = ShapeLibrary.load()
     defined: set[str] = set()
     object_ids = count(1)
     items = ItemReader(model.lists, model.schemes)
+    colours, looks = _theme_of(prs), LookBook(model)
+    # one palette for the deck: the page of its first slide, white where a file says none (D467)
+    model.palette.set_colour("page", _background(prs, prs.slides[0], colours) or "#ffffff")
     for slide_number, pptx_slide in enumerate(prs.slides, start=1):
         slide_id = f"s{slide_number}"
         model.insert_slide(slide_id)
@@ -602,6 +628,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                     model.define_shape(definition)
                     defined.add(shape_id)
             description, decorative = alt_text_of(shape)
+            style, words = _styles_of(shape, kind, (style, words), (model, looks, theme, colours), 1 / scale_x)
             body = ObjectBody(
                 object_id,
                 kind,
@@ -616,6 +643,19 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
             )
             model.insert_object(VisualObject(body, SlideAnchor(slide_id, x, y)))
     return _with_setup(model, prs)
+
+
+def _styles_of(  # noqa: ANN001
+    shape, kind: str, styles: tuple[str, str], reading: tuple[SlideModel, LookBook, ThemeFonts, Theme], scale: float
+) -> tuple[str, str]:
+    """The styles of the model for the box and the words of ``shape`` of ``kind``, from the default ones ``styles``:
+    what the shape says of its look (D467) and of its font (E3.13) becomes styles based on them."""
+    model, looks, theme, colours = reading
+    box, words = styles
+    found = read_look(shape._element, colours, scale, outline=kind == "shape")
+    if kind == "shape":
+        box = looks.outline(box, found.outline)
+    return box, style_for_font(model, looks.words(words, found.words), shape_font(shape, theme))
 
 
 def _with_setup(model: SlideModel, prs) -> SlideModel:  # noqa: ANN001

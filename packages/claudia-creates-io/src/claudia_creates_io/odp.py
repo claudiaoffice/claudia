@@ -34,11 +34,13 @@ import copy
 import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
+from html import escape
 from zipfile import BadZipFile
 
 from lxml import etree
 
 from claudia_core import (
+    MIN_OBJECT_SIZE,
     ImageAsset,
     ListItem,
     ObjectBody,
@@ -48,6 +50,7 @@ from claudia_core import (
     paragraph_for,
     picture_body,
 )
+from claudia_core.stand_ins import file_font
 from claudia_creates import MAX_NOTES_LENGTH, SLIDE_HEIGHT, SLIDE_WIDTH, ShapeLibrary, SlideAnchor, SlideModel
 from claudia_odf_io import (
     MIME,
@@ -78,9 +81,12 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from ._file_looks import Look, LookBook
 from ._items import Mark, OdpListReader, OdpLists, agendas, list_styles, marks_of, odp_level, references, words_of
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
-from ._styling import colour_of, look, page_colour, points_of
+from ._odp_fonts import DeckFonts
+from ._odp_looks import StyleIndex, read_look
+from ._styling import colour_of, is_bold, look, page_colour, points_of, style_for_font, take_body_font
 from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
 from .pptx import UnsupportedEdit
 
@@ -183,6 +189,10 @@ class _Object:
     rotation: int = 0  # whole degrees clockwise (D459)
     asset: ImageAsset | None = None  # the picture of an "image"
     description: str = ""  # what an "image" says to someone who cannot see it
+    look: Look = field(default_factory=Look)  # how it looks, as far as the model has properties for it (D467)
+
+
+_WHITE = "#ffffff"  # what a page is where a file says nothing of its colour
 
 
 @dataclass
@@ -191,6 +201,7 @@ class _Slide:
     element: etree._Element
     master: str | None
     size: tuple[float, float]  # inches
+    background: str | None = None  # the colour of the page, as ``#rrggbb``, when the file says one (D467)
     objects: list[_Object] = field(default_factory=list)
     #: What is on the slide and not in the model, as ``(kind, detail)``: "picture", "table", "rotated-object"...
     left_out: list[tuple[str, str]] = field(default_factory=list)
@@ -306,6 +317,19 @@ def _bare(element: etree._Element, graphics: dict[str, etree._Element]) -> bool:
     return fill == "none" and stroke == "none"
 
 
+def _background(
+    page: etree._Element, master: str | None, index: StyleIndex, styles: etree._Element | None
+) -> str | None:
+    """The colour a page is filled with, as ``#rrggbb``: the page's own style says, or else that of its master page."""
+    style = page.get(_q("draw", "style-name"))
+    if style is None and styles is not None:
+        found = next((m for m in styles.iter(_q("style", "master-page")) if m.get(_q("style", "name")) == master), None)
+        style = found.get(_q("draw", "style-name")) if found is not None else None
+    said = index.attributes("drawing-page", style, "style:drawing-page-properties")
+    colour = said.get("draw:fill-color")
+    return colour.lower() if said.get("draw:fill") == "solid" and colour and len(colour) == 7 else None
+
+
 def _has_words(element: etree._Element) -> bool:
     return any(read_text(p).strip() for p in element.iter(_q("text", "p"), _q("text", "h")))
 
@@ -371,10 +395,12 @@ def _own_words(paragraph: etree._Element, owner: etree._Element) -> bool:
     return True
 
 
-def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, int, int, int] | str:
-    """Where an element is, in slide units, and how far it is turned (whole degrees clockwise), or why it has no
-    place (``"rotated"``: a transform that is more than a rotation, ``"unplaced"``, ``"off-slide"``). A turned element
-    is placed by its outline, as the model asks (D1022): one whose outline sticks out of the slide is off it."""
+def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, int, int, int, bool] | str:
+    """Where an element is, in slide units, how far it is turned (whole degrees clockwise) and whether it was cut
+    back to the slide (an unturned box that hangs over an edge, as a placeholder sized for another slide shape does),
+    or why it has no place (``"rotated"``: a transform that is more than a rotation, ``"unplaced"``, ``"off-slide"``:
+    nothing of it, or too little, is on the slide). A turned element is placed by its outline, as the model asks
+    (D1022): one whose outline sticks out of the slide is off it."""
     transform = element.get(_q("draw", "transform"))
     values = [inches(element.get(_q("svg", name))) for name in ("x", "y", "width", "height")]
     turn = 0
@@ -392,9 +418,15 @@ def _box(element: etree._Element, size: tuple[float, float]) -> tuple[int, int, 
     x, y, w, h = (value for value in values if value is not None)
     per_x, per_y = size[0] / SLIDE_WIDTH, size[1] / SLIDE_HEIGHT
     box = (round(x / per_x), round(y / per_y), round(w / per_x), round(h / per_y))
-    if nudge_into(*box, turn, SLIDE_WIDTH, SLIDE_HEIGHT) != box[:2]:
+    if nudge_into(*box, turn, SLIDE_WIDTH, SLIDE_HEIGHT) == box[:2]:
+        return (*box, turn, False)
+    if turn:
         return "off-slide"
-    return (*box, turn)
+    left, top = max(box[0], 0), max(box[1], 0)
+    cut = (left, top, min(box[0] + box[2], SLIDE_WIDTH) - left, min(box[1] + box[3], SLIDE_HEIGHT) - top)
+    if min(cut[2], cut[3]) < MIN_OBJECT_SIZE:
+        return "off-slide"
+    return (*cut, 0, True)
 
 
 class _TextLooks:
@@ -515,15 +547,16 @@ def _scan(content: etree._Element, styles: etree._Element | None, parts: Mapping
     masters = _masters(styles)
     page_styles = _drawing_page_styles(content, styles)
     graphics = _graphic_styles(content, styles)
+    index = StyleIndex(content, styles)
     probe, found, numbers = _Probe(), [], iter(range(1, 10**9))
-    for index, page in enumerate(_presentation(content).findall("draw:page", NS), start=1):
+    for number, page in enumerate(_presentation(content).findall("draw:page", NS), start=1):
         master = page.get(_q("draw", "master-page-name"))
         size = layouts.get(masters.get(master or "", ""))
         if size is None:
             size = next(iter(layouts.values()), (_SLIDE_CM[0] / _CM_PER_INCH, _SLIDE_CM[1] / _CM_PER_INCH))
-        slide = _Slide(f"s{index}", page, master, size)
+        slide = _Slide(f"s{number}", page, master, size, _background(page, master, index, styles))
         for child in page:
-            _scan_child(slide, child, probe, numbers, (graphics, parts))
+            _scan_child(slide, child, probe, numbers, (graphics, parts, index))
         _read_notes(slide, looks)
         if page.get(_q("draw", "style-name")) and _has_transition(
             page_styles.get(page.get(_q("draw", "style-name")) or "")
@@ -538,7 +571,7 @@ def _scan_child(
     child: etree._Element,
     probe: _Probe,
     numbers: Iterator[int],
-    held: tuple[dict[str, etree._Element], Mapping[str, bytes]],
+    held: tuple[dict[str, etree._Element], Mapping[str, bytes], StyleIndex],
 ) -> None:
     tag = child.tag
     if not isinstance(tag, str):
@@ -554,7 +587,7 @@ def _scan_child(
         return
     if namespace != NS["draw"] or local_name(tag) not in _DRAWN:
         return
-    graphics, parts = held
+    graphics, parts, index = held
     kind, what = _classify(child, graphics, parts)
     if kind is None:
         assert isinstance(what, tuple)
@@ -567,13 +600,16 @@ def _scan_child(
     asset = picture_of(child, graphics, parts) if kind == "image" else None
     if isinstance(box, str):
         slide.left_out.append((f"{box}-object", kind))
-    elif len(slide.objects) >= _MAX_OBJECTS or not probe.holds(kind, shape, box, text, asset):
+    elif len(slide.objects) >= _MAX_OBJECTS or not probe.holds(kind, shape, box[:5], text, asset):
         slide.left_out.append(("unfit-object", kind))
     else:
+        if box[5]:
+            slide.left_out.append(("overhanging-object", kind))
         description = description_of(child) if kind == "image" else ""
-        slide.objects.append(
-            _Object(f"o{next(numbers)}", child, kind, shape, *box[:4], text, paragraphs, box[4], asset, description)
-        )
+        found = _Object(f"o{next(numbers)}", child, kind, shape, *box[:4], text, paragraphs, box[4], asset, description)
+        if kind != "image":
+            found.look = read_look(child, paragraphs, index, slide.size, shape=kind == "shape")
+        slide.objects.append(found)
 
 
 def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, etree._Element | None, list[_Slide]]:
@@ -608,6 +644,11 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
     model, library, defined = SlideModel(), ShapeLibrary.load(), set()
     model.language = read_language(styles)
     items = OdpListReader(list_styles(content, styles), model.lists, model.schemes)
+    fonts = DeckFonts(content, styles)
+    take_body_font(model, fonts.body)
+    looks = LookBook(model)
+    # one palette for the deck: the page colour of its first slide, white where a file says none (D467)
+    model.palette.set_colour("page", slides[0].background or _WHITE)
     for slide in slides:
         model.insert_slide(slide.id, notes=slide.notes)
         for found in slide.objects:
@@ -626,6 +667,10 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                 model.insert_object(VisualObject(body, SlideAnchor(slide.id, found.x, found.y)))
                 continue
             style, words = _default_styles(found.kind)
+            if found.kind != "text":
+                style = looks.outline(style, found.look.outline)
+            words = looks.words(words, found.look.words)
+            words = style_for_font(model, words, fonts.of_object(found.element, found.paragraphs))
             if found.kind == "text":
                 shape = None
             else:
@@ -657,27 +702,31 @@ def _item_of(found: _Object, items: OdpListReader) -> ListItem | None:
 
 def odp_import_losses(odp_bytes: bytes) -> tuple[Loss, ...]:
     """What :func:`odp_to_slides` does not show of the file, each as a code (``"picture"``, ``"table"``, ``"group"``,
-    ``"notes"``, ``"transition"``, ``"rotated-object"``...) with how many there are, in the order they come. None of it
-    is lost from the *file*: an edit exported with :func:`apply_edits_to_odp` keeps all of it."""
+    ``"notes"``, ``"transition"``, ``"rotated-object"``, ``"overhanging-object"`` (cut back to the slide)...) with how
+    many there are, in the order they come. None of it is lost from the *file*: an edit exported with
+    :func:`apply_edits_to_odp` keeps all of it."""
     _, content, styles, slides = _document(odp_bytes)
+    fonts = DeckFonts(content, styles)
     losses = LossLog()
     looks = formatting = links = 0
     items = OdpListReader(list_styles(content, styles))
     hidden: dict[str, int] = {}
+    page = slides[0].background if slides else None
     for slide in slides:
         for kind, detail in slide.left_out:
             losses.add(kind, detail)
+        looks += slide.background != page  # one palette for the deck: the colour of another slide's page is not shown
         for found in slide.objects:
             if found.kind == "image":
                 continue  # a picture has no look of its own that the model leaves out
             _item_of(found, items)
-            if found.element.get(_q("draw", "style-name")) or any(
-                p.get(_q("text", "style-name")) for p in found.paragraphs
-            ):
-                looks += 1
+            looks += found.look.unread
+            formatting += fonts.mixes(found.element, found.paragraphs)
             for paragraph in found.paragraphs:
                 formatting += sum(
-                    1 for span in paragraph.iter(_q("text", "span")) if span.get(_q("text", "style-name"))
+                    1
+                    for span in paragraph.iter(_q("text", "span"))
+                    if span.get(_q("text", "style-name")) and not fonts.only_a_font(span.get(_q("text", "style-name")))
                 )
                 links += sum(1 for _ in paragraph.iter(_q("text", "a")))
                 for kind in hidden_content(paragraph):
@@ -767,8 +816,18 @@ class _Looks:
             props["fo:font-style"] = "italic"
         return self._style(("text", bold, italic), "clt", "text", [_el("style", "text-properties", props)])
 
-    def paragraph(self, css: dict[str, str], over: str | None, pt_per_unit: float) -> str | None:
-        """A paragraph style for the size, colour and alignment of words, or ``None`` if ``css`` says none of them."""
+    def page(self, colour: tuple[int, int, int]) -> str:
+        """A drawing page style that fills the page with ``colour``."""
+        props = {"draw:fill": "solid", "draw:fill-color": _hex(colour)}
+        return self._style(
+            ("page", *props.items()), "dp", "drawing-page", [_el("style", "drawing-page-properties", props)]
+        )
+
+    def paragraph(
+        self, css: dict[str, str], over: str | None, pt_per_unit: float, font: str | None = None
+    ) -> str | None:
+        """A paragraph style for the size, colour, weight, slant and alignment of words and their ``font`` (the name the
+        file is to say: never a stand-in, E3.13), or ``None`` if none of them is said."""
         size, colour = points_of(css, "font-size", pt_per_unit), colour_of(css, "color", over)
         align = {"left": "start", "right": "end", "center": "center", "justify": "justify"}.get(
             css.get("text-align", "")
@@ -778,6 +837,12 @@ class _Looks:
             text["fo:font-size"] = f"{size:.1f}".rstrip("0").rstrip(".") + "pt"
         if colour:
             text["fo:color"] = _hex(colour)
+        if is_bold(css):
+            text["fo:font-weight"] = "bold"
+        if css.get("font-style") in ("italic", "oblique"):
+            text["fo:font-style"] = "italic"
+        if font:
+            text["fo:font-family"] = _font_family(font)
         if not text and not align:
             return None
         properties = []
@@ -862,7 +927,7 @@ class _Writer:
         placing = _placing(anchor, body, self.cm_per_unit)
         text = words_of(self.model, body)
         words_css = look(self.model, body.paragraph.style) if body.paragraph is not None else {}
-        words = self.looks.paragraph(words_css, over, self.pt_per_unit)
+        words = self.looks.paragraph(words_css, over, self.pt_per_unit, _own_font(self.model, words_css))
         if body.kind in ("image", "rendered"):
             return self._picture(body, placing)
         if body.kind == "text":
@@ -964,12 +1029,39 @@ _NOTES_FRAME = {
 }
 
 
-def _styles_part(language: str | None) -> bytes:
+def _font_family(font: str) -> str:
+    """``font`` as the value of ``fo:font-family``: quoted if it has a space."""
+    return f"'{font}'" if " " in font else font
+
+
+def _body_font(model: SlideModel) -> str | None:
+    """The font the file is to name for Body text (E3.13)."""
+    return file_font(look(model, _DEFAULT_TEXT_STYLE).get("font-family", ""))
+
+
+def _own_font(model: SlideModel, css: dict[str, str]) -> str | None:
+    """The font words in ``css`` are to name of their own: none if it is the body font, which the deck names once."""
+    font = file_font(css.get("font-family", ""))
+    return font if font != _body_font(model) else None
+
+
+def _default_graphic_xml(font: str | None) -> str:
+    """The default style of drawn things, which names the deck's body font; nothing for none."""
+    if not font:
+        return ""
+    family = escape(xml_safe(_font_family(font)), quote=True)
+    return (
+        '<style:default-style style:family="graphic">'
+        f'<style:text-properties fo:font-family="{family}"/></style:default-style>'
+    )
+
+
+def _styles_part(language: str | None, font: str | None = None) -> bytes:
     width, height = (f"{value:g}cm" for value in _SLIDE_CM)
     declared = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in _NS_DECLS.items())
     return (
         f"{_DECLARATION}<office:document-styles {declared} "
-        f'office:version="1.3"><office:styles>{default_style_xml(language)}</office:styles>'
+        f'office:version="1.3"><office:styles>{default_style_xml(language)}{_default_graphic_xml(font)}</office:styles>'
         '<office:automatic-styles><style:page-layout style:name="PM1">'
         f'<style:page-layout-properties fo:page-width="{width}" fo:page-height="{height}" '
         'style:print-orientation="landscape" fo:margin-top="0cm" fo:margin-bottom="0cm" fo:margin-left="0cm" '
@@ -995,9 +1087,12 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
         etree.SubElement(root, _q("office", name))
     automatic = etree.SubElement(root, _q("office", "automatic-styles"))
     presentation = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "presentation"))
+    background = colour_of({"fill": page_colour(model) or ""}, "fill")
     for number, slide_id in enumerate(model.slides, start=1):
         page = etree.SubElement(presentation, _q("draw", "page"))
         page.set(_q("draw", "name"), f"page{number}")
+        if background:
+            page.set(_q("draw", "style-name"), writer.looks.page(background))
         page.set(_q("draw", "master-page-name"), "Default")
         for obj in model.objects_on(slide_id):
             element = writer.object(obj)
@@ -1019,7 +1114,7 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
     return new_package(
         "presentation",
         content.encode(),
-        _styles_part(model.language),
+        _styles_part(model.language, _body_font(model)),
         meta=new_meta(info or DocumentInfo()),
         extra=extra,
     )
@@ -1369,7 +1464,7 @@ class _Patch:
             old_words = look(self.baseline, words_before.style)
             new_words = look(self.current, words_after.style)
             if _words_of(old_words) != _words_of(new_words):
-                style_name = self.looks.paragraph(new_words, over, pt_per_unit)
+                style_name = self.looks.paragraph(new_words, over, pt_per_unit, _own_font(self.current, new_words))
         text = words_after.text if words_after is not None else ""
         if attributes or taken:
             self.part.set_attributes(found.element, attributes, remove=taken)
@@ -1470,8 +1565,8 @@ def _graphic_of(css: dict[str, str]) -> tuple[str | None, str | None, str | None
     return css.get("fill"), css.get("stroke"), css.get("stroke-width")
 
 
-def _words_of(css: dict[str, str]) -> tuple[str | None, str | None, str | None]:
-    return css.get("font-size"), css.get("color"), css.get("text-align")
+def _words_of(css: dict[str, str]) -> tuple[str | None, ...]:
+    return css.get("font-size"), css.get("color"), css.get("text-align"), css.get("font-family")
 
 
 def apply_edits_to_odp(

@@ -480,6 +480,7 @@ name = "claudia-fonts"
 source = { editable = "packages/claudia-fonts" }
 dependencies = [
     { name = "brotli" },
+    { name = "claudia-core" },
     { name = "claudia-file-writer" },
     { name = "fonttools" },
 ]
@@ -487,6 +488,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "brotli", specifier = ">=1.1" },
+    { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "claudia-file-writer", editable = "packages/claudia-file-writer" },
     { name = "fonttools", specifier = ">=4.50" },
 ]

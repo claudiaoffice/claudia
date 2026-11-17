@@ -16,6 +16,30 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   (`text:continue-list`), with a list style of the scheme, and reads it back. Patching a kept pptx writes the
   markers that changed; a kept odp whose lists changed is written anew.
 
+### Fixed
+- `pptx_to_slides` and `odp_to_slides` read the fonts of the deck (E3.13, bug 2): Body text takes the deck's body font
+  (the theme's minor font of a pptx, the default style of drawn things of an odp), and the words of a text box or
+  shape in another font (the title in the heading font, a box somebody gave a font) get a style of their own based on
+  theirs, named by the font ("Body text · Georgia") until somebody names it for its purpose. `slides_to_pptx` and
+  `slides_to_odp` write those fonts back (the body font into the theme or the default style, never a stand-in), and
+  `apply_edits_to_odp` writes a box's font when its words get another style.
+- A font is no loss on import: `pptx_import_losses` and `odp_import_losses` report `formatting` only for words of one
+  box in two fonts, not for a run or span that does no more than name the box's font.
+
+## [0.7.0] - 2026-11-17
+
+Looks of an imported deck (D466, D467).
+
+### Added
+- `slides_to_pptx(..., info=)`: the file's properties are the log's, not python-pptx's (IEW-02).
+- `odp_to_slides` and `pptx_to_slides` read the fill, outline, size, colour, bold, italic, font and alignment an object
+  says, and the colour of the page, into styles (`file-outline-N`, `file-paragraph-N`) and the palette's `page`;
+  `slides_to_odp` and `slides_to_pptx` write bold, italic, font, alignment (pptx) and the page colour (IEW-20).
+
+### Changed
+- `look` in `odp_import_losses` and `pptx_import_losses` means what the model has no property for (a gradient, a dash, a
+  shadow, a lightened colour, a text box's fill, another slide's page colour), no longer "different from Claudia's
+  default look". A deck of Claudia's has none. An imported deck's page is white where the file says none.
 
 ## [0.6.0] - 2026-11-15
 

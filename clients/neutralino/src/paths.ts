@@ -9,6 +9,7 @@ import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { hostPlatform, type Env, type HostPlatform } from './platform/host.js'
+import type { ServerProgram } from './server.js'
 
 export type { Env }
 
@@ -97,4 +98,13 @@ export function findServerPython(options: { repo?: string; env?: Env; platform?:
   } catch {
     return null
   }
+}
+
+/** What starts the server: `$CLAUDIA_SERVER_EXE` (the self-contained server of the Windows installer, D730; as-is, like
+ * `CLAUDIA_SERVER_PYTHON`, so a wrong path fails where it is spawned and says so), else the interpreter of
+ * `findServerPython`, else `null`. */
+export function findServerProgram(options: { repo?: string; env?: Env; platform?: HostPlatform } = {}): ServerProgram | null {
+  const exe = (options.env ?? process.env).CLAUDIA_SERVER_EXE
+  if (exe) return { exe }
+  return findServerPython(options)
 }

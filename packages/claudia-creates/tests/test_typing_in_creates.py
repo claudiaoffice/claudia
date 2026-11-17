@@ -73,7 +73,7 @@ def test_a_command_is_written_down_and_read_back_under_the_kernel_s_kind(deck):
 
 
 def test_undoing_typing_after_an_undone_delete_that_cut_into_it_takes_out_exactly_the_typing(deck):
-    """CODE-43: a delete that took the start of the typed words with it, undone at once, then the typing undone. The
+    """CODE-57: a delete that took the start of the typed words with it, undone at once, then the typing undone. The
     pair changed nothing, so the typing's undo is not moved by it (it used to cut "a note" to "a sote")."""
     deck.execute(add(text_box("n", text="a note")), author="ana")
     deck.execute(InsertText("n", 1, " short"), author="ben")

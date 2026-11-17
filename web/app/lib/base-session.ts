@@ -4,7 +4,7 @@
 import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
-import type { RenderingDef, RenderOutcome, RenderType } from './rendering'
+import { outcomesOf, toOutcome, type RenderingDef, type RenderOutcome, type RenderType } from './rendering'
 import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
@@ -397,7 +397,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.restorePolicy = restorePolicy.policy
     s.renderTypes = renderTypes?.types ?? []
     s.renderings = Object.fromEntries((renderings ?? []).map((d) => [d.id, d]))
-    s.renderOutcomes = {}
+    s.renderOutcomes = outcomesOf(renderings ?? [])
     const last = entries.at(-1)
     if (last) s.revision = last.revision
   }
@@ -432,7 +432,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         this.onRendering(data.id, data.definition)
         break
       case 'render_result':
-        s.renderOutcomes[data.id] = { ok: data.ok, diagnostics: data.diagnostics ?? [], message: data.message ?? '', unavailable: data.unavailable ?? null }
+        s.renderOutcomes[data.id] = toOutcome(data)
         break
       case 'history':
         s.canUndo = data.can_undo

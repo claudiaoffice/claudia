@@ -617,6 +617,13 @@ def test_an_odt_says_when_it_was_made_and_last_changed_and_by_whom(dated_paper):
     assert (info.modified, info.modifier) == ("2026-11-11T17:13:05Z", ANN.user)
 
 
+def test_a_docx_says_when_it_was_made_and_last_changed_and_by_whom_and_not_what_wrote_it(dated_paper):
+    core = read_parts(exported(dated_paper, "docx"))["docProps/core.xml"].decode()
+    assert "2026-01-02T03:04:05Z" in core and "2026-11-11T17:13:05Z" in core
+    assert f">{ANN.user}</dc:creator>" in core and f">{ANN.user}</cp:lastModifiedBy>" in core
+    assert "python-docx" not in core and "2013" not in core
+
+
 def test_tracked_changes_in_an_odt_leave_no_suggestion_loss(dated_paper):
     losses = call(dated_paper, "export_office", {"format": "odt", "tracked_changes": True})["losses"]
     assert not [loss for loss in losses if loss["kind"] == "suggestion"]

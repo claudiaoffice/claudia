@@ -27,13 +27,14 @@ describe('font resolution', () => {
     const r = resolver.resolve('Calibri, sans-serif', 700, false, 12000)!
     expect(r.family).toBe('Carlito')
     expect(r.how).toBe('substitute')
+    expect(r.closeness).toBe('same-widths')
     expect(r.font.weight).toBe(700)
     expect(r.face.variations).toEqual({})
   })
   it('falls through to a later family, a generic one, and then the fallback, and says so', () => {
-    expect(resolver.resolve('Georgia, Caladea, serif', 400, false, 12000)!).toMatchObject({ family: 'Caladea', how: 'next', requested: 'Georgia' })
-    expect(resolver.resolve('Georgia, serif', 400, false, 12000)!).toMatchObject({ family: 'Fraunces', how: 'next' })
-    expect(resolver.resolve('Comic Sans', 400, false, 12000)!).toMatchObject({ family: 'Inter', how: 'fallback' })
+    expect(resolver.resolve('Garamond, Caladea, serif', 400, false, 12000)!).toMatchObject({ family: 'Caladea', how: 'next', requested: 'Garamond', closeness: 'other' })
+    expect(resolver.resolve('Garamond, serif', 400, false, 12000)!).toMatchObject({ family: 'Fraunces', how: 'next' })
+    expect(resolver.resolve('Comic Sans', 400, false, 12000)!).toMatchObject({ family: 'Inter', how: 'fallback', closeness: 'other' })
   })
   it('chooses the nearest static weight the CSS way', () => {
     expect(resolver.resolve('Carlito', 500, false, 12000)!.font.weight).toBe(400)

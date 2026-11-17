@@ -3,6 +3,7 @@ a bookmark at their target, with what they read as now; read back as references 
 
 import io
 import zipfile
+from dataclasses import replace
 
 import pytest
 from claudia_composes_io import (
@@ -120,3 +121,15 @@ def test_other_word_fields_are_read_as_what_they_show():
     document.save(out)
     back = docx_to_text(out.getvalue())
     assert back.blocks[2].text.endswith(".7") and len(back.blocks[2].fields) == 3
+
+
+@pytest.mark.parametrize(("write", "name"), [(text_to_docx, "word/document.xml"), (text_to_odt, "content.xml")])
+def test_a_reference_in_the_words_of_a_text_box_is_written_as_what_it_reads_as(write, name):
+    from claudia_composes import BlockAnchor
+    from claudia_core import ObjectBody, VisualObject, paragraph_for
+
+    model = referring()
+    words = replace(paragraph_for("o1", "body", f"see {FIELD_CHAR}"), fields=(RefField("b2"),))
+    model.insert_object(VisualObject(ObjectBody("o1", "text", 200, 80, "plain-box", words), BlockAnchor("b1", 0)))
+    xml = part(write(model), name)
+    assert "see 1" in xml and FIELD_CHAR not in xml

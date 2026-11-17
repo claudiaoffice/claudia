@@ -1,5 +1,5 @@
 {
- "version": "0.7.0",
+ "version": "0.10.0",
  "DocumentInfo": {
   "class": [
    "object"
@@ -110,6 +110,12 @@
  "encode_style_name": {
   "function": "(display_name: 'str') -> 'str'"
  },
+ "font_faces": {
+  "function": "(*roots: 'etree._Element | None') -> 'dict[str, str]'"
+ },
+ "font_of": {
+  "function": "(properties: 'etree._Element | None', faces: 'dict[str, str]') -> 'str | None'"
+ },
  "frames_of": {
   "function": "(paragraph: 'etree._Element') -> 'list[etree._Element]'"
  },
@@ -181,6 +187,12 @@
  },
  "set_text": {
   "function": "(paragraph: 'etree._Element', text: 'str') -> 'None'"
+ },
+ "shapes_of": {
+  "function": "(paragraph: 'etree._Element') -> 'list[etree._Element]'"
+ },
+ "stamp_office_meta": {
+  "function": "(data: 'bytes', info: 'DocumentInfo | None') -> 'bytes'"
  },
  "transform_of": {
   "function": "(degrees: 'int', box: 'tuple[float, float, float, float]') -> 'str | None'"

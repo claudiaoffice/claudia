@@ -4,7 +4,18 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
-## [0.33.0] - 2026-11-17
+## [Unreleased]
+
+### Added
+- `claudia_core.stand_ins` (E3.13, CODE-42): `GENERIC_FONTS` (the font of each CSS generic family and the fallback),
+  `GENERIC_ALIASES` (every CSS name for a generic family), `SAME_WIDTHS` (open fonts that take exactly the room of a
+  common office font), `generic_font` and `file_font` (the font an office file names for a `font-family` list). The
+  one source of these facts: `claudia_fonts` builds on it, and the layout library's copy is generated from it.
+- `claudia_core.stand_ins.css_family` (E3.13, bugs 1 and 2): the CSS `font-family` list for a font an office file
+  names, with the generic family it falls back to (`'Times New Roman', serif`). The importers of all three apps use
+  it; the serif and monospace lists of `claudia_computes_io` moved here.
+
+## [0.35.0] - 2026-11-17
 
 References (step H of `claudiaoffice-log/notes/text-structure-across-apps.md`).
 
@@ -26,7 +37,7 @@ References (step H of `claudiaoffice-log/notes/text-structure-across-apps.md`).
 - `SetText` and `replace_spans` take words: a U+FFFC in them makes no field, and the fields of the words they replace
   go with them (an undo puts them back).
 
-## [0.32.0] - 2026-11-17
+## [0.34.0] - 2026-11-17
 
 Typing into any paragraph (step G of `claudiaoffice-log/notes/text-structure-across-apps.md`, section 3.1).
 
@@ -39,10 +50,10 @@ Typing into any paragraph (step G of `claudiaoffice-log/notes/text-structure-acr
 - `ObjectModel.insert_object_text` and `remove_object_text`: typing into the words of an object.
 
 ### Fixed
-- Undo (CODE-43): a step undone or redone by the very next entry is left out with it when an older step is followed
+- Undo (CODE-57): a step undone or redone by the very next entry is left out with it when an older step is followed
   forward, so undoing typing after an undone delete that cut into it takes out exactly the typing.
 
-## [0.31.0] - 2026-11-17
+## [0.33.0] - 2026-11-17
 
 Tables of contents and agendas, generated paragraphs (step E of `claudiaoffice-log/notes/text-structure-across-apps.md`,
 E9.31).
@@ -61,7 +72,7 @@ E9.31).
 - `ObjectModel.object_generated` and `put_object_generated`: the words of an object can be an agenda; `SetText` refuses
   words for one.
 
-## [0.30.0] - 2026-11-16
+## [0.32.0] - 2026-11-16
 
 Numbering schemes as document data, numbered headings, list items on any paragraph (step D of
 `claudiaoffice-log/notes/text-structure-across-apps.md`, E9.22).
@@ -92,7 +103,7 @@ Numbering schemes as document data, numbered headings, list items on any paragra
   holds lists now needs. `TextStructure.effective_item` takes a `Placed`.
 - `RemoveList` is refused while a style is numbered in the list.
 
-## [0.29.0] - 2026-11-16
+## [0.31.0] - 2026-11-16
 
 The text structure every app shares (step C of `claudiaoffice-log/notes/text-structure-across-apps.md`).
 
@@ -107,7 +118,7 @@ The text structure every app shares (step C of `claudiaoffice-log/notes/text-str
 - `ObjectModel.paragraph_order`: changes when an object comes, goes, moves to another container, or its words become
   another list item or take another style; typing does not change it.
 
-## [0.28.0] - 2026-11-16
+## [0.30.0] - 2026-11-16
 
 Heading levels (E9.22, step B of `claudiaoffice-log/notes/text-structure-across-apps.md`).
 
@@ -120,6 +131,48 @@ Heading levels (E9.22, step B of `claudiaoffice-log/notes/text-structure-across-
   or keeps a list of heading styles by name.
 - `SetHeadingLevel(style, level)`: the command, with its exact inverse; refused for another level or a style that is not
   a paragraph style.
+## [0.29.0] - 2026-11-17
+
+The looks helpers and the box of a file, shared by composes and creates (D465).
+
+### Added
+- `points_of`, `colour_of`, `parse_colour`: how a style's length and colour become points and RGB, moved here from
+  `claudia-creates-io` so that composes writes the look of a box the same way creates does (`claudia_creates_io` still
+  has them).
+- `PRIMITIVES`, `primitive(shape_id)`: the three shapes a file has an outline for (circle, rectangle, triangle) and
+  their definition in the model.
+- `TEXT_BOX_STYLE`, `SHAPE_STYLE`, `SHAPE_LABEL_STYLE`, `box_body(...)`: the object and paragraph styles a text box
+  or shape read from a file gets, and the object body built from it.
+
+## [0.28.0] - 2026-11-16
+
+The redaction contract (D229, D720–D728, E1.8).
+
+### Added
+- `Document.plan_redaction(revisions, *, chat, parts)` and `RedactionPlan` (D721, D722): what a redaction does,
+  worked out before anything changes — the blanked form of every step, the later steps that stop working without the
+  content (`dependents`, blanked too), the chat messages, the imports, whether the document as people see it changes
+  (`changes_now`) and that state (`after`). Steps on hidden lines may be redacted (D724); every line that holds a
+  blanked step must still replay.
+- `Command.redacted_in(model)`: the blanked form for a command whose content only the app can judge. `Import` blanks
+  its state through the model (`Import.blanked(model, parts)`, D723), `DefineDiagram` and `UpdateDiagram` through
+  `ObjectModel.blank_diagram`.
+- `DocumentModel.blank(parts)` (D723): blank content in place, keeping ids, places and lengths; the default refuses.
+  `ObjectModel.blank_objects(parts)` does it for the objects of all three apps. `FILLER` is the character a blanked
+  character becomes.
+- `ChatRecord.redacted` and `ChatRecord.blanked()`; `Redaction.chat` and `Redacted.chat` (D724). A record or event
+  without chat reads and writes as before.
+- `ImageAsset.blanked()` and `ImageImport.blanked()` (D720): a redacted picture keeps its id and size, not its pixels;
+  an import record keeps who and when, not the alternative text or the file's name and path.
+- `CommandLog.line(name)`: the entries of one line itself.
+
+### Changed
+- **Breaking:** `Document.redact(what, *, author)` takes a `RedactionPlan` or a bare list of steps; a bare list is
+  refused when other steps would have to be blanked with it (D722). The store is rewritten (`DocumentStore.rewrite`).
+- **Breaking:** `DocumentStore.replace_entries` and `drop_snapshots` are replaced by `rewrite(log, chat)` (D725): the
+  store holds exactly the redacted log and chat afterwards, with no copy of the content left.
+- `DefineImage.redacted()` blanks the picture; `AddObject.redacted()` also takes the description and the words of the
+  import record (D720).
 
 ## [0.27.0] - 2026-11-15
 

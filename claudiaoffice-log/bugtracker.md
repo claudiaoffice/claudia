@@ -34,7 +34,7 @@ statement in the docs or on the website).
 | SEC-02 | P2 | Security | Anyone who reaches the server can create unlimited documents | fixed (verified at `54d1245`) |
 | SEC-03 | P2 | Security / Perf | Password hashing runs on the event loop | fixed (verified at `54d1245`) |
 | SEC-04 | P2 | Security | Answer time reveals whether a document exists | fixed (verified at `54d1245`) |
-| SEC-05 | P2 | Security | Redaction leaves the content in the journal and in packed blocks | verified open |
+| SEC-05 | P2 | Security | Redaction leaves the content in the journal and in packed blocks | **fixed** 2026-11-16 (D725) |
 | SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |
 | SEC-07 | P2 | Security | Plain-text passwords allowed on non-loopback addresses | fixed (verified at `54d1245`) |
 | SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` open (run by hand 2026-11-13: clean) |
@@ -169,8 +169,22 @@ statement in the docs or on the website).
 | CODE-39 | P3 | Code / web | `OpenDialog.vue` does five jobs in 1,615 lines | **new, open** |
 | CODE-40 | P3 | Code / macOS client | An orphaned build file in the macOS creates app | **fixed** 2026-11-15 (with D660) |
 | CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |
-| CODE-42 | P3 | Code / computes | A new sheet can get the id of a removed sheet | **new, open** |
-| CODE-43 | P2 | Code / core | Undoing typing after an undone delete that cut into it removes the wrong characters | **fixed** 2026-11-17 |
+| CODE-42 | P3 | Code / Export | Exports named a generic font family by a font Claudia does not show | **fixed** 2026-11-16 (E3.13) |
+| CODE-43 | P2 | Code / Import | docx and odt import ignored the file's fonts and reported no loss | **fixed** 2026-11-16 (E3.13) |
+| CODE-44 | P2 | Code / Import | pptx and odp import did not read fonts | **fixed** 2026-11-16 (E3.13) |
+| CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |
+| CODE-46 | P2 | Code / Import | The slides importers do not read text size and colour, so most boxes are a `look` loss | **new, open** |
+| CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | **new, open** |
+| CODE-48 | P3 | Code / Web | After naming the first administrator, the server settings stayed on the setup form | **fixed** 2026-11-17 |
+| CODE-49 | P2 | Code / Server | Add fonts… stayed blocked for 30 minutes after too many files were chosen | **fixed** 2026-11-17 |
+| CODE-50 | P2 | Code / Render | LaTeX formulas ignored fonts added while the server ran ("Latin Modern Roman is not available") | **fixed** 2026-11-17 |
+| CODE-51 | P2 | Code / Server | A container whose picture was never made stayed on "Drawing…" for ever, also after reopening the document | **fixed** 2026-11-17 |
+| CODE-52 | P3 | Code / Typeset | A TeX error was cut at 79 characters ("Fatal Package", "cannot be f") | **fixed** 2026-11-17 |
+| CODE-53 | P3 | Web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |
+| CODE-54 | P3 | Code / Render | A finished picture is kept without the fonts in its key, so it stays after a font of the same family and style is replaced | open |
+| CODE-55 | P2 | Code / Server | A tool path changed in Server settings (xelatex, pdftocairo) was used only after a restart of the server | **fixed** 2026-11-17 |
+| CODE-56 | P3 | Code / computes | A new sheet can get the id of a removed sheet | **new, open** |
+| CODE-57 | P2 | Code / core | Undoing typing after an undone delete that cut into it removes the wrong characters | **fixed** 2026-11-17 |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -197,7 +211,7 @@ limit (2.5–5 logins per second), not a correctness problem, and it is the reas
 Verified at `54d1245`: `Gateway._admit` runs the same `_verify` on the not-found path before refusing. The guarding
 test is a timing comparison and is known to be flaky on a loaded machine; see PROC note in CODE-01.
 
-### SEC-05 · Redaction leaves the content in the journal and in packed blocks · P2 · verified open
+### SEC-05 · Redaction leaves the content in the journal and in packed blocks · P2 · fixed 2026-11-16
 **Evidence (read, `54d1245`).** `claudia_container.container` has no `redact`. The journal is append-only and packing
 writes blocks; neither rewrites history to remove a redacted command. The kernel's `Document.redact` changes the live
 state and the log it replays, but the bytes stay in the file.
@@ -208,6 +222,14 @@ becomes P1 the day redaction is exposed or the website's privacy claim (WEB-01) 
 file, fsync, rename, directory fsync), drop the snapshot, rebuild. Also state plainly in the help text that copies and
 backups made earlier keep the content.
 **Acceptance.** After `redact`, a byte scan of every file under the document folder finds none of the redacted text.
+**Fixed (2026-11-16, branch `redaction`, D725).** `Document.redact` calls `DocumentStore.rewrite(log, chat)` instead of
+appending a `replace` record. The sealed store seals the blocks anew from the redacted history and chat alone, drops the
+snapshot and replaces the journal (`claudia_container.rewrite_journal`, same crash order as packing); a redacted import
+also loses its kept original (`forget_original`). The plain journal store writes its journal anew, all at once. Tests
+open every block, the snapshot and every journal record with the keys and find nothing of the redacted content, also
+after a crash between the file and the journal (`packages/claudia-container/tests/test_rewriting.py`,
+`packages/claudia-server/tests/test_server_redaction_stores.py`). Still true and now said in D725: copies and backups
+made earlier keep the content, and what a disk keeps of overwritten sectors is outside Claudia's reach.
 
 ### SEC-06 · The server's self-signed certificate is a CA with no name constraints · P2 · verified open
 **Evidence (read, `54d1245`).** `certs.py` line 100: `BasicConstraints(ca=True, path_length=0)`, critical, with
@@ -1649,9 +1671,142 @@ to rename a sheet as commands.
 **Recommendation:** let a command say how it moves a region (a method, or a table keyed by command kind) and move
 command construction out of the model; then turn PLC0415 on per package with named exceptions.
 
+### CODE-42 · Exports named a generic font family by a font Claudia does not show · P3 · fixed 2026-11-16
+**Measured** (found while building E3.13 a and b): a third copy of the generic families,
+`claudia_composes_io._style_look._GENERIC`, wrote a style whose font is `serif`, `sans-serif` or `monospace` into
+docx and odt as Liberation Serif, Sans and Mono; `system-ui` was skipped for the next family and `ui-monospace` was
+written as a font name. computes wrote the first family as it was, so `serif` or `system-ui` became a font name in xlsx
+and ods. Claudia shows and prints those styles in Fraunces, Inter and JetBrains Mono (D905), so the exported file
+looked different from what the person saw. Small in practice: only styles whose list starts with a generic family.
+**Fixed (2026-11-16, branch `font-server-ui`):** the table moved into the kernel (`claudia_core.stand_ins`: generic
+fonts, CSS names for a generic family, same-width stand-ins); both exporters call `file_font`; `claudia-fonts` and the
+layout library's generated copy read the same table. Tests on the shared sample `test-documents/xlsx/stand-in-fonts`
+(`generic_families`) for docx, odt, xlsx, ods and print (`implementation-notes/e3-13-font-stand-ins.md`).
+
+### CODE-43 · docx and odt import ignored the file's fonts and reported no loss · P2 · fixed 2026-11-16
+**Measured** (found while building E3.13 a and b, reported as bug 1): `docx_to_text` and `odt_to_text` read no font,
+so every imported text showed in the app's own fonts, and `docx_import_losses` / `odt_import_losses` said nothing
+about it. Exactly the case E3.13 is about: a Word file in Arial came in as Inter.
+**Fixed (2026-11-16, branch `font-server-ui`):** both importers give Body text, Title, the headings and Quote the font
+their style has in the file (docx: own or theme font along `basedOn` and the document defaults; odt: font face or
+`fo:font-family` along the parents and the default style), as `css_family` makes it; the exporters write it back. New
+in the libraries: `claudia_opc_io.ThemeFonts`, `claudia_odf_io.font_faces` and `font_of`. Tests on
+`test-documents/docx/` and `odt/stand-in-fonts`.
+
+### CODE-44 · pptx and odp import did not read fonts · P2 · fixed 2026-11-16
+**Measured** (reported as bug 2): `pptx_to_slides` and `odp_to_slides` read no font, and a run or span naming one was
+reported as `formatting`. A deck in Arial and Georgia came in as Inter.
+**Fixed (2026-11-16, branch `font-server-ui`):** Body text takes the deck's body font (theme minor font; odp: default
+style of drawn things); a box in another font gets a style of its own based on Body text, named by the font until
+somebody names it. `slides_to_pptx`, `slides_to_odp` and `apply_edits_to_odp` write the fonts. A font is no loss;
+words in two fonts in one box are `formatting`. Tests on `test-documents/pptx/` and `odp/stand-in-fonts`. **Left:**
+placeholders of a pptx are not imported at all (reported separately).
+
+### CODE-45 · pptx placeholders (titles, body text) are not imported at all · P2 · new, open
+**Measured** (found while fixing CODE-44, reported to the owner as bug A, size 1): `pptx._classify` takes text boxes,
+auto shapes and pictures only, so a placeholder — the title and the body text of nearly every slide made from a
+layout — is left out of the model, and with it its words and its font. Most decks from PowerPoint come in nearly empty.
+The stand-in-fonts sample uses a text box for its title for that reason. **Acceptance:** a deck made from the default
+"Title and Content" layout imports with its title and body as objects (in their placeholder's place and size, the
+title's words in the theme's heading font), round-trips through `apply_edits_to_pptx` keeping the placeholder, and
+`pptx_import_losses` reports nothing for them. Touches the object ids, the losses and the export; its own patch.
+
+### CODE-46 · The slides importers do not read text size and colour, so most boxes are a `look` loss · P2 · new, open
+**Measured** (reported as bug B, size 2): `pptx_to_slides` and `odp_to_slides` read the words and (since CODE-44) the
+font of a box, not its size or colour, so a box with PowerPoint's 18 points or a coloured title comes in as Body text
+and is reported as `look`. **Acceptance:** sizes and colours of the stand-in-fonts sample's boxes come in as the
+styles' `font-size` and `color` (a provisional style per look, as for fonts) and are no loss.
+
+### CODE-47 · Words of a docx with a font of their own are a `formatting` loss · P3 · new, open
+**Measured** (reported as bug C, size 3): a run with its own `w:rFonts` (not through a style) keeps the paragraph
+style's font and is reported as `formatting`, since the text model has no direct formatting (D306). Belongs with the
+way direct formatting comes in (D379 for computes: provisional styles); until then the loss report is right.
+
+### CODE-48 · After naming the first administrator, the server settings stayed on the setup form · P3 · fixed 2026-11-17
+**Measured** (found while building Server settings ▸ Fonts, reported to the owner as bug D, size 3): `AdminApp.vue`
+chose the setup form from the status read when the page loaded (`administrator: null`) and never read it again, so
+after "Create administrator" signed the new administrator in, the form stayed until the page was reloaded. Every new
+server is set up this way.
+**Fixed (2026-11-17, branch `font-server-ui`):** `adminScreen` (`web/app/lib/admin-api.ts`) chooses the screen, and
+somebody signed in always sees the settings; once somebody is signed in, signing out asks who signs in instead of
+offering the setup again. Tests in `tests/admin-api.test.ts`; `e2e/admin-fonts.cjs` names the first administrator on
+a new server and goes on without a reload.
+
+### CODE-49 · Add fonts… stayed blocked for 30 minutes after too many files were chosen · P2 · fixed 2026-11-17
+**Measured** (by the owner on 2026-11-17, reported as bug E, size 2): the dialog sent the chosen files one by one,
+so choosing too many filled the server's room for waiting files (64 files or 128 MB) before the refusal came. Nothing
+let go of them: not "Start again", not Cancel, not closing the dialog. Every later try, even with one font, was
+refused with "too many fonts are waiting to be added" until they ran out after 30 minutes or the server restarted.
+**Fixed (2026-11-17, branch `font-server-ui`):** the page sends the limits (`limits`) and the dialog says them before
+anything is sent; a failed upload, "Start again", Cancel and closing let go of the held files
+(`DELETE /api/admin/fonts/files`); the server holds files per administrator, so one person's leftovers never block
+another; the refusal names the limits and what to do. Tests in `test_server_admin_fonts.py` and
+`tests/admin-fonts.test.ts`; `e2e/admin-fonts.cjs` chooses 65 files (refused before sending) and starts again (let go).
+
+### CODE-50 · LaTeX formulas ignored fonts added while the server ran · P2 · fixed 2026-11-17
+**Measured** (by the owner on 2026-11-17, then reproduced): after adding the Latin Modern fonts under Server settings ▸
+Fonts, a LaTeX container still said the font was missing. `FontService.reload()` makes a new `Catalogue`, but the
+LaTeX plugin (and the typesetter it builds, with its fontconfig) kept the one it was made with at server start. The
+fonts page listed Latin Modern Roman; the container's own list did not have it. The Fonts page itself said LaTeX
+would use added fonts "after the server restarts".
+**Fixed (2026-11-17, branch `font-server-ui`):** `builtin_registry` and `LatexPlugin` take a function that gives the
+catalogue; the plugin asks on every job and makes a new typesetter when the catalogue changed. The server passes
+`lambda: fonts.catalogue`; the page no longer mentions a restart. claudia-render 0.2.0 (API change, 0.x). Tests:
+`test_render_latex_fonts.py` (no TeX needed) and `test_server_fonts_latex.py` (adds Latin Modern through the page's own
+`add_collection`, reloads, and sets a formula with the real XeLaTeX).
+**Which files LaTeX needs:** a font of the family "Latin Modern Roman" (the family name is what counts; every design
+size, `lmroman5` to `lmroman12`, has it; at least `lmroman10-regular.otf`, for bold and italic also
+`lmroman10-bold.otf`, `lmroman10-italic.otf`, `lmroman10-bolditalic.otf`) and the math font `latinmodern-math.otf`
+(in TeX Live under `fonts/opentype/public/lm-math/`). `lmsans`, `lmmono` and `lmromancaps` are other families.
+
+### CODE-51 · A container whose picture was never made stayed on "Drawing…" for ever · P2 · fixed 2026-11-17
+**Measured** (by the owner on 2026-11-17, reproduced in `test_server_rendering_jobs.py`): a picture is made only when a
+container's text changes (`Hub._schedule_render`). A container that never got one (the tool failed, a font was
+missing, the server stopped first) was saved without it, and opening the document again drew nothing. The client says
+"Drawing…" for a container with no picture and no outcome, and the outcome (`render_result`) was an event only: a
+window that joined later never heard that the try had failed.
+**Fixed (2026-11-17, branch `font-server-ui`):** a loaded document draws each container that has text and no picture
+(`HostedDocument.render_unfinished`, called when the hub opens it); the last outcome of each container is kept and
+sent with `renderings` (`outcome`, additive), so a window that joins later says "could not draw it" with the reason.
+A new text clears the old outcome. A container with a picture is left alone. Tests: `test_server_rendering_jobs.py`
+(six), `tests/rendering.test.ts`.
+
+### CODE-52 · A TeX error was cut at 79 characters · P3 · fixed 2026-11-17
+**Measured** (reproduced with the real XeLaTeX): TeX cuts a line of its log at 79 characters and goes on in the next
+line; `parse_log` took the first line only, so a container said "Package fontspec Error: The font \"Latin Modern Roman\"
+cannot be f" or just "Fatal Package", which is why the owner could not tell that the `xetex` program was set where
+`xelatex` belongs ("Fatal Package fontspec Error: The fontspec package requires either XeTeX or LuaTeX").
+**Fixed (2026-11-17, branch `font-server-ui`):** the engine runs with `max_print_line` set high and `parse_log` joins the
+lines a message goes on in (the lines that begin with the package's name in brackets, and the line after one cut at the
+width). Tests: `test_typeset_source.py` (real samples), `test_typeset_engine.py`, `test_typeset_real.py`.
+
+### CODE-53 · The failure text of a rendered container is clipped in a small frame · P3 · open
+**Read** (`RenderedFace.vue`, `.state` has `overflow: hidden`; the frame is as big as the picture was): a long message,
+and the lines of the diagnostics under it, are cut off with no way to read the rest in the container. Recommendation:
+the face shows the first line and the full message is in a tooltip and in the object's description, or in a popover
+opened with Enter; the message stays an alert for screen readers in full. Acceptance: a test that a 300-character message
+is reachable in full from the face (text in the DOM, not hidden from assistive technology).
+
+### CODE-54 · A finished picture is kept without the fonts in its key · P3 · open
+**Read** (`RenderService.render`): the key of the cache of pictures has the source, settings and the tools, not the font
+catalogue. The typesetter's own cache has the catalogue digest, but the service's cache answers first. After a font of
+the same family and style is replaced (or added in front of a stand-in), a formula drawn earlier is still shown as it
+was drawn until the cache is cleared. Recommendation: a plugin may give a `cache_token()` (the LaTeX plugin gives the
+catalogue digest) that goes into the key. Acceptance: draw, replace a font, draw again: a new picture.
+
+
+### CODE-55 · A tool path changed in Server settings was used only after a restart · P2 · fixed 2026-11-17
+
+Found: an administrator set `xetex` instead of `xelatex`, corrected it, and the container still failed until the
+server was restarted. Cause: `cli._renderings` copied the typeset paths into the `ToolRegistry` once at start, and the
+registry also kept every tool it had found. Fix: the registry takes a function for its table, asks it on every use and
+forgets what it found when the table changed; the server passes the live settings. Test: a tool found under the old
+setting is not used after the setting changes; the server's table follows `settings.typeset`. Open: `rsvg_convert`
+(`render.tools`, not editable in Server settings) is still read at start; Server settings has no check that the
+program is a LaTeX engine (`xetex` is not one).
 ## Reported 2026-11-17, found while building the text structure (step D)
 
-### CODE-42 · A new sheet can get the id of a removed sheet · P3 · new, open
+### CODE-56 · A new sheet can get the id of a removed sheet · P3 · new, open
 **Read** at `5dbccde9`: `_fresh_sheet_id` in `claudia_server/computes.py` (used by `add_sheet` and `define_pivot` with
 a new sheet) starts counting at the number of sheets, so an id that a removed sheet had is free again. Sheets `s1`,
 `s2`, `s3`; Ann removes `s3`; Ben adds a sheet, which is `s3`; Ann's undo of her removal brings back a second `s3`
@@ -1661,7 +1816,7 @@ fixed on `main` with `wire.fresh_id` (bug 5 of the text-structure work, 2026-11-
 one, and undoing the removal brings the removed sheet back beside the new one.
 **Fix:** take sheet ids from `wire.fresh_id` (or a counter in the workbook that never goes down), as objects do.
 
-### CODE-43 · Undoing typing after an undone delete that cut into it removes the wrong characters · P2 · fixed 2026-11-17
+### CODE-57 · Undoing typing after an undone delete that cut into it removes the wrong characters · P2 · fixed 2026-11-17
 **Found** while building step G (typing in text boxes); older than it, in composes and creates alike. "a note"; Ben
 types " short" after the "a"; he deletes "a " (which takes the start of his typing with it), undoes that, then undoes
 his typing: "a sote". `Document._step` followed the undo through every later step, the delete and its own undo too;

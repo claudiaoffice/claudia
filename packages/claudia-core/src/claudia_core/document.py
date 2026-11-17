@@ -15,16 +15,17 @@ passwords belong to other layers. Threading rule (D16): all calls come from one 
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Iterable, Iterator
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from dataclasses import dataclass, field, replace
 
 from .clock import monotonic, utc_now
-from .commands import Checkpoint, Command, Redaction, Restore, Switch
+from .commands import Checkpoint, Command, Import, Redaction, Restore, Switch
 from .context import Context
 from .errors import (
     KernelError,
     RedactionError,
     RegionHeld,
+    ReplayError,
     RevisionMismatch,
     StaleEdit,
     UndoConflict,
@@ -101,6 +102,30 @@ class CheckpointInfo:
     marks: Revision  # the state revision it labels
     entry: Revision  # where the label itself sits in the log
     time: str
+
+
+@dataclass(frozen=True)
+class RedactionPlan:
+    """What a redaction does, worked out before anything changes (``Document.plan_redaction``, D721).
+
+    ``targets`` are the steps asked for, ``dependents`` the later steps that stop working without the content and are
+    blanked with it (D722), ``chat`` the numbers of the chat messages. ``imports`` are the targets that imported a
+    file, whose kept original the server forgets too (D723). ``changes_now`` says whether the document as people see
+    it changes (D721: it may, and is shown first); ``after`` is that state, on a scratch model."""
+
+    targets: tuple[Revision, ...]
+    dependents: tuple[Revision, ...]
+    chat: tuple[int, ...]
+    imports: tuple[Revision, ...]
+    changes_now: bool
+    after: DocumentModel = field(repr=False, compare=False)
+    replacements: Mapping[Revision, Command] = field(repr=False, compare=False)
+    basis: tuple = field(repr=False, compare=False)
+
+    @property
+    def revisions(self) -> tuple[Revision, ...]:
+        """The steps that are blanked, the targets and their dependents together, in order."""
+        return tuple(sorted({*self.targets, *self.dependents}, key=lambda r: (r.branch, r.seq)))
 
 
 class Document:
@@ -640,55 +665,178 @@ class Document:
                 self._snapshots.pop(rev, None)
         return removed
 
-    # ------------------------------------------------------------------ redaction (E1.8)
+    # ------------------------------------------------------------------ redaction (E1.8, D229, D720–D726)
     def on_purge(self, hook: Callable[[tuple[Revision, ...]], None]) -> None:
         """Register a cache (AI memory, asset index, search index, ...) that must forget redacted content."""
         self._purge_hooks.append(hook)
 
-    def redact(self, revisions: Iterable[Revision], *, author: str | None = None) -> Applied:
-        """Remove the *content* of these commands from the history.
+    def plan_redaction(
+        self,
+        revisions: Iterable[Revision] = (),
+        *,
+        chat: Iterable[int] = (),
+        parts: Mapping[Revision, Iterable[str]] | None = None,
+    ) -> RedactionPlan:
+        """Work out what redacting these steps and chat messages does, without changing anything (D721).
 
-        Each entry keeps its revision, author, time, kind and ids; its command becomes ``command.redacted()``.
-        The redaction itself is logged (without content), snapshots and undo steps derived from the content are
-        dropped, purge hooks run, and the state is rebuilt from the redacted log, so replaying the stored log from now
-        on gives exactly the state shown here. Copies and backups made earlier keep the content (D21)."""
-        revs = tuple(sorted(set(revisions), key=lambda r: (r.branch, r.seq)))
-        if not revs:
+        A step may be on any line, a hidden one too (D724). Each is replaced by its blanked form (D720); ``parts``
+        blanks only some things of an import (D723). Every line that holds a replaced step is replayed, and a later
+        step that no longer applies is blanked as well and named in ``dependents`` (D722), until every line replays.
+        ``RedactionError`` for a request that names nothing, something the document does not have, something that
+        holds no content or is redacted already, and for the last resort: a later step that does not apply even when
+        blanked itself."""
+        targets = self._redactable(revisions)
+        numbers = self._redactable_chat(chat)
+        wanted = {rev: frozenset(things) for rev, things in (parts or {}).items()}
+        if not set(wanted) <= set(targets):
+            raise RedactionError("parts can only be given for a step that is redacted")
+        if not targets and not numbers:
             raise RedactionError("nothing to redact")
-        on_path = {e.rev for e in self.log.path(self.revision)}
+        replacements = {rev: self._blanked(rev, wanted.get(rev)) for rev in targets}
+        dependents: list[Revision] = []
+        while (failing := self._first_failure(replacements)) is not None:
+            rev, cause = failing
+            entry = self.log.get(rev)
+            if rev in replacements or entry.redacted or entry.command.meta:
+                raise RedactionError(
+                    f"Redacting this would stop step {rev} ({entry.command.label}) from working, even if it were "
+                    f"blanked too ({cause}). Nothing was redacted."
+                )
+            replacements[rev] = self._blanked(rev, None)
+            dependents.append(rev)
+        after = self._replayed(replacements, self.revision)
+        imports = tuple(rev for rev in targets if isinstance(self.log.get(rev).command, Import))
+        return RedactionPlan(
+            targets,
+            tuple(dependents),
+            numbers,
+            imports,
+            after.serialize() != self.model.serialize(),
+            after,
+            dict(replacements),
+            self._redaction_basis(),
+        )
+
+    def redact(self, what: RedactionPlan | Iterable[Revision], *, author: str | None = None) -> Applied:
+        """Remove the *content* of steps and chat messages from the document and from its store (D229).
+
+        ``what`` is a plan from :meth:`plan_redaction`, shown to the person first, or a bare list of steps, which is
+        refused if any later step would have to be blanked with them: nobody's work goes without being named first.
+        Each entry keeps its revision, author, time, kind and shape; each message its number, author, recipient and
+        time. The redaction itself is logged (without content); the store is rewritten so that no copy of the content
+        is left in it (D725); snapshots and undo steps derived from the content are dropped, purge hooks run, and the
+        state is rebuilt from the redacted log. ``RedactionError`` if the document changed since the plan was made.
+        Copies and backups made earlier keep the content (D21)."""
+        plan = what if isinstance(what, RedactionPlan) else self._plan_alone(what)
+        if plan.basis != self._redaction_basis():
+            raise RedactionError("The document changed since this redaction was worked out. Look at it again.")
+        originals = [self.log.get(rev) for rev in plan.replacements]
+        chat_before = list(self.chat)
+        for rev, command in plan.replacements.items():
+            self.log.replace_command(rev, command)
+        self.chat = [record.blanked() if record.number in plan.chat else record for record in self.chat]
+        if self.store is not None:
+            try:
+                self.store.rewrite(self.log, self.chat)
+            except BaseException:
+                for original in originals:
+                    self.log.restore_entry(original)
+                self.chat = chat_before
+                raise
+        self._snapshots.clear()
+        applied = self._commit(Redaction(plan.revisions, plan.chat), author, None, "do", None)
+        for hook in self._purge_hooks:
+            hook(plan.revisions)
+        if plan.revisions:
+            self._rebuild()
+            for history in self._histories.values():  # undoing blanked content makes no sense
+                history.purge(set(plan.revisions))
+        with self.bus.batching():
+            self.bus.emit(Redacted(plan.revisions, plan.chat))
+            if plan.revisions:
+                self.bus.emit(Rebuilt())
+        return applied
+
+    def _plan_alone(self, revisions: Iterable[Revision]) -> RedactionPlan:
+        plan = self.plan_redaction(revisions)
+        if plan.dependents:
+            later = ", ".join(map(str, plan.dependents))
+            raise RedactionError(
+                f"Redacting this would also blank {later}, which needs what it takes away. Ask for a plan, show it, "
+                "then redact that."
+            )
+        return plan
+
+    def _redactable(self, revisions: Iterable[Revision]) -> tuple[Revision, ...]:
+        revs = tuple(sorted(set(revisions), key=lambda r: (r.branch, r.seq)))
         for rev in revs:
-            if rev not in on_path:
+            if not self.log.has(rev):
                 raise RedactionError(f"{rev} is not part of this document's history")
             entry = self.log.get(rev)
             if entry.command.meta:
                 raise RedactionError(f"{rev} is a {entry.command.kind} record and holds no content")
             if entry.redacted:
                 raise RedactionError(f"{rev} is already redacted")
-        originals = [self.log.get(rev) for rev in revs]
-        changed = [self.log.replace_command(e.rev, e.command.redacted()) for e in originals]
-        try:  # the redacted log must still replay; if not, nothing was redacted
-            replay(type(self.model).empty(), self.log.path(self.revision))
-        except KernelError as exc:
-            for original in originals:
-                self.log.restore_entry(original)
-            raise RedactionError(
-                f"Redacting {', '.join(map(str, revs))} would break later commands ({exc}). "
-                "The model must keep what other commands refer to when it redacts a command."
-            ) from exc
-        if self.store is not None:
-            self.store.replace_entries(changed)
-            self.store.drop_snapshots()
-        self._snapshots.clear()
-        applied = self._commit(Redaction(revs), author, None, "do", None)
-        for hook in self._purge_hooks:
-            hook(revs)
-        self._rebuild()
-        for history in self._histories.values():  # undoing blanked content makes no sense
-            history.purge(set(revs))
-        with self.bus.batching():
-            self.bus.emit(Redacted(revs))
-            self.bus.emit(Rebuilt())
-        return applied
+        return revs
+
+    def _redactable_chat(self, numbers: Iterable[int]) -> tuple[int, ...]:
+        wanted = tuple(sorted(set(numbers)))
+        by_number = {record.number: record for record in self.chat}
+        for number in wanted:
+            if number not in by_number:
+                raise RedactionError(f"there is no chat message {number}")
+            if by_number[number].redacted:
+                raise RedactionError(f"chat message {number} is already redacted")
+        return wanted
+
+    def _blanked(self, rev: Revision, parts: frozenset[str] | None) -> Command:
+        command = self.log.get(rev).command
+        try:
+            if parts is None:
+                return command.redacted_in(type(self.model))
+            if not isinstance(command, Import):
+                raise RedactionError(f"{rev} is not an import: only an import is redacted in parts")
+            return command.blanked(type(self.model), parts)
+        except KernelError:
+            raise
+        except (ValueError, KeyError, TypeError) as exc:
+            raise RedactionError(f"{rev} cannot be blanked: {exc}") from exc
+
+    def _with(self, replacements: Mapping[Revision, Command], head: Revision | None) -> list[Entry]:
+        return [
+            replace(e, command=replacements[e.rev], redacted=True) if e.rev in replacements else e
+            for e in self.log.path(head)
+        ]
+
+    def _replayed(self, replacements: Mapping[Revision, Command], head: Revision | None) -> DocumentModel:
+        return replay(type(self.model).empty(), self._with(replacements, head))
+
+    def _first_failure(self, replacements: Mapping[Revision, Command]) -> tuple[Revision, Exception] | None:
+        """The first step that no longer applies on a line that holds one of the replaced steps, and why."""
+        for name in sorted(self.log.branches):
+            path = self._with(replacements, self.log.head(name))
+            first = next((i for i, e in enumerate(path) if e.rev in replacements), None)
+            if first is None:
+                continue
+            done = 0
+
+            def count(_entry: Entry, _inverse: Command) -> None:
+                nonlocal done
+                done += 1
+
+            try:
+                replay(type(self.model).empty(), path, count)
+            except Exception as exc:  # noqa: BLE001  (any refusal of a step is what the plan looks for)
+                if done < first:  # the steps before any replaced one were never changed
+                    raise RedactionError(f"the history of the line {name!r} does not replay ({exc})") from exc
+                cause = exc.__cause__ if isinstance(exc, ReplayError) and exc.__cause__ is not None else exc
+                return path[done].rev, cause  # type: ignore[return-value]
+        return None
+
+    def _redaction_basis(self) -> tuple:
+        """What a plan was made against: the head of every line and the chat."""
+        heads = tuple((name, self.log.head(name)) for name in sorted(self.log.branches))
+        return heads, tuple((record.number, record.redacted) for record in self.chat)
 
     def _rebuild(self) -> None:
         """Throw the state away and build it again from the log (undo stacks and holds go with it)."""

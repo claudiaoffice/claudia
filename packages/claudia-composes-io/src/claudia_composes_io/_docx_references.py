@@ -134,6 +134,14 @@ def has_references(element: Any) -> bool:
     return any(_REF.match(said.text or "") for said in element.iter(qn("w:instrText")))
 
 
+def _paragraph_of(node: Any) -> Any:
+    """The paragraph a node of the body is words of: the nearest ``w:p`` around it."""
+    found = node.getparent()
+    while found is not None and found.tag != qn("w:p"):
+        found = found.getparent()
+    return found
+
+
 def read_words(element: Any) -> tuple[str, list[ReadReference]]:
     """The words of a paragraph with a U+FFFC for each ``REF``/``PAGEREF`` field, and those fields, in order. Words of
     other fields are their results, as python-docx reads them."""
@@ -141,7 +149,9 @@ def read_words(element: Any) -> tuple[str, list[ReadReference]]:
     found: list[ReadReference] = []
     state = "words"  # or "instruction", "result"
     instruction, result = "", list[str]()
-    for node in element.iter(qn("w:t"), qn("w:instrText"), qn("w:fldChar"), qn("w:tab"), qn("w:br")):
+    said = element.iter(qn("w:t"), qn("w:instrText"), qn("w:fldChar"), qn("w:tab"), qn("w:br"))
+    # the words of a text box or a shape hanging in the paragraph are its own
+    for node in (node for node in said if _paragraph_of(node) is element):
         if node.tag == qn("w:fldChar"):
             kind = node.get(qn("w:fldCharType"))
             if kind == "begin":

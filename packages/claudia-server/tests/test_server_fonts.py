@@ -2,12 +2,13 @@
 
 import hashlib
 import json
+from pathlib import Path
 
 import pytest
 from starlette.testclient import TestClient
 
 from claudia_core.testing import ListModel
-from claudia_fonts import COLLECTION_FILE
+from claudia_fonts import COLLECTION_FILE, DEFAULT_GENERICS, DEFAULT_SUBSTITUTIONS, read_lock
 from claudia_fonts.testing import make_font
 from claudia_server.app import create_app
 from claudia_server.auth import ScryptDirectory
@@ -43,7 +44,8 @@ def test_the_listing_names_every_font_by_hash_with_its_file(tmp_path):
     first = data["fonts"][0]
     assert first["file"] == f"/api/fonts/{first['sha256']}"
     assert first["axes"] == [] and first["outlines"] == "truetype"
-    assert data["substitutions"]["Arial"] == "Liberation Sans"
+    assert data["substitutions"] == dict(DEFAULT_SUBSTITUTIONS)
+    assert data["generics"] == dict(DEFAULT_GENERICS)
 
 
 def test_a_font_file_is_served_as_it_is_and_may_be_kept_for_good(tmp_path):
@@ -59,13 +61,30 @@ def test_a_font_file_is_served_as_it_is_and_may_be_kept_for_good(tmp_path):
     assert woff2.status_code == 200 and woff2.content[:4] == b"wOF2"
 
 
-def test_fonts_that_may_not_be_handed_out_are_neither_listed_nor_served(tmp_path):
+def test_fonts_for_this_server_only_go_to_people_with_its_access_secret(tmp_path):
+    """D1041: a collection whose fonts may go to this server's people only (``redistributable: false``) is listed and
+    served to a request with the access secret, and to nobody else."""
     root = tmp_path / "fonts"
     collection(root / "closed", "Closed", redistributable=False, fonts=(("Closed Sans", "Regular", 400),))
-    c, service = client(tmp_path, root)
-    assert c.get("/api/fonts").json()["fonts"] == []
+    service = FontService.from_folders([root], tmp_path / "webfonts")
+    secret = "s" * 24
+    c = TestClient(create_app(Hub(MemoryProvider(ListModel)), ScryptDirectory(), fonts=service, access_secret=secret))
     closed = service.catalogue.fonts()[0]
+    assert c.get("/api/fonts").json()["fonts"] == []
     assert c.get(f"/api/fonts/{closed.sha256}").status_code == 404
+    assert c.get(f"/api/fonts/{closed.sha256}.woff2").status_code == 404
+    with_secret = {"authorization": f"Bearer {secret}"}
+    [listed] = c.get("/api/fonts", headers=with_secret).json()["fonts"]
+    assert (listed["family"], listed["may_go"]) == ("Closed Sans", "this-server")
+    assert c.get(f"/api/fonts/{closed.sha256}", headers=with_secret).status_code == 200
+    assert c.get(f"/api/fonts/{closed.sha256}.woff2", headers=with_secret).status_code == 200
+
+
+def test_on_a_server_without_an_access_secret_its_people_are_everyone_who_reaches_it(tmp_path):
+    root = tmp_path / "fonts"
+    collection(root / "closed", "Closed", redistributable=False, fonts=(("Closed Sans", "Regular", 400),))
+    c, _ = client(tmp_path, root)
+    assert [f["family"] for f in c.get("/api/fonts").json()["fonts"]] == ["Closed Sans"]
 
 
 @pytest.mark.parametrize("name", ["0" * 64, "nothex", "../../etc/passwd", "0" * 64 + ".ttf"])
@@ -94,15 +113,29 @@ def test_the_command_line_reads_fonts_folders_and_says_what_it_has(tmp_path):
     collection(root / "b", "B", fonts=(("Beta", "Regular", 400), ("Beta", "Bold", 700)))
     state = tmp_path / "state"
     plan = make_plan(["--no-tls", "--state-dir", str(state), "--fonts", str(root)])
-    # the 3 of the folder, and the 14 files of the 5 families every server has (D500)
-    assert "fonts: 17 files in 7 families for clients (/api/fonts)" in plan.banner
+    # the 3 files of the folder, and the files of the families every server has (D500)
+    files, families = _shipped()
+    assert f"fonts: {files + 3} files in {families + 2} families for clients (/api/fonts)" in plan.banner
+
+
+def test_the_state_folder_s_fonts_are_read_after_the_operator_s(tmp_path):
+    """The collections added through the server settings (``STATE_DIR/fonts``, D1041) are read with ``--fonts`` too,
+    after its folders."""
+    state = tmp_path / "state"
+    collection(state / "fonts" / "added", "Added", fonts=(("Gamma", "Regular", 400),))
+    root = tmp_path / "fonts"
+    collection(root / "a", "A", fonts=(("Alpha", "Regular", 400),))
+    plan = make_plan(["--no-tls", "--state-dir", str(state), "--fonts", str(root)])
+    files, families = _shipped()
+    assert f"fonts: {files + 2} files in {families + 2} families for clients (/api/fonts)" in plan.banner
 
 
 def test_the_state_folder_s_fonts_are_used_when_none_are_given(tmp_path):
     state = tmp_path / "state"
     collection(state / "fonts" / "test")
     plan = make_plan(["--no-tls", "--state-dir", str(state)])
-    assert "fonts: 15 files in 6 families for clients (/api/fonts)" in plan.banner
+    files, families = _shipped()
+    assert f"fonts: {files + 1} files in {families + 1} families for clients (/api/fonts)" in plan.banner
 
 
 def test_a_server_nobody_gave_fonts_has_the_starter_set_so_printing_always_works(tmp_path):
@@ -110,9 +143,33 @@ def test_a_server_nobody_gave_fonts_has_the_starter_set_so_printing_always_works
     fonts to lay out with" and nothing else. The pinned starter set ships with claudia_fonts, so there is always the
     fallback family (Inter) and the metric-compatible stand-ins for Calibri and Cambria (Carlito, Caladea)."""
     bare = make_plan(["--no-tls", "--state-dir", str(tmp_path / "empty")])
-    assert "fonts: 14 files in 5 families for clients (/api/fonts)" in bare.banner
+    files, count = _shipped()
+    assert f"fonts: {files} files in {count} families for clients (/api/fonts)" in bare.banner
     families = {f.family for f in _fonts(build_parser().parse_args([]), tmp_path / "empty").servable()}
-    assert {"Inter", "Fraunces", "JetBrains Mono", "Carlito", "Caladea"} <= families
+    assert {"Inter", "Fraunces", "JetBrains Mono", "Carlito", "Caladea", "Arimo", "Tinos", "Cousine"} <= families
+
+
+def _shipped() -> tuple[int, int]:
+    """How many font files and families the shipped starter set has (D500)."""
+    lock = read_lock()
+    return sum(1 for c in lock for f in c.files if f.name.endswith(".ttf")), len(lock)
+
+
+SAMPLE = Path(__file__).resolve().parents[3] / "test-documents" / "stand-in-fonts.json"
+
+
+def test_a_server_nobody_gave_fonts_lists_every_stand_in_of_the_sample_and_the_table_that_names_it(tmp_path):
+    """E3.13: what the shared sample's fonts are shown with is listed, so every client can lay them out."""
+    service = _fonts(build_parser().parse_args([]), tmp_path / "empty")
+    app = create_app(Hub(MemoryProvider(ListModel)), ScryptDirectory(), fonts=service)
+    data = TestClient(app).get("/api/fonts").json()
+    listed = {f["family"] for f in data["fonts"]}
+    for entry in json.loads(SAMPLE.read_text(encoding="utf-8"))["fonts"]:
+        if entry["closeness"] == "same-widths":
+            assert data["substitutions"][entry["family"]] == entry["stand_in"]
+        if entry["stand_in"]:
+            assert entry["stand_in"] in listed, entry["family"]
+    assert set(data["generics"].values()) <= listed
 
 
 def test_a_font_the_operator_adds_replaces_the_shipped_one_of_the_same_family_and_style(tmp_path):

@@ -10,12 +10,26 @@ from __future__ import annotations
 from collections.abc import Collection
 
 from claudia_composes import Block, TextModel
+from claudia_core import PRIMITIVES
 from claudia_odf_io import Loss, unwritten_changes
 
+from ._boxes import all_boxes
 from ._pictures import PICTURE_KINDS
 
 #: The facets a converter writes, by the name :func:`facets` gives them.
-_WRITTEN_BY_BOTH = {"blocks", "suggestions", "lists", "schemes", "page", "language", "styles", "palette", "pictures"}
+_WRITTEN_BY_BOTH = {
+    "blocks",
+    "suggestions",
+    "lists",
+    "schemes",
+    "page",
+    "language",
+    "styles",
+    "palette",
+    "pictures",
+    "boxes",
+    "outlines",
+}
 ODT_WRITTEN: frozenset[str] = frozenset(_WRITTEN_BY_BOTH)
 DOCX_WRITTEN: frozenset[str] = frozenset(_WRITTEN_BY_BOTH)
 
@@ -57,15 +71,19 @@ def text_unwritten_changes(
 
 def _objects(model: TextModel) -> dict[str, object]:
     """The objects of a text as the facets a converter writes or leaves out: the pictures (an image, a rendered text
-    container, and what draws them), and the other objects with the outlines that shape them."""
+    container, and what draws them), the boxes (a text box, a circle, a rectangle or a triangle, and their outlines),
+    and the other objects with the outlines that shape them."""
     data = model.serialize()
     picture_ids = {obj.id for obj in model.objects.values() if obj.body.kind in PICTURE_KINDS}
+    box_ids = set(all_boxes(model))
     return {
         "pictures": {
             "objects": [each for each in data["objects"] if each["id"] in picture_ids],
             "images": data["images"],
             "renderings": data["renderings"],
         },
-        "objects": [each for each in data["objects"] if each["id"] not in picture_ids],
-        "shapes": data["shapes"],
+        "boxes": [each for each in data["objects"] if each["id"] in box_ids],
+        "outlines": [each for each in data["shapes"] if each["id"] in PRIMITIVES],
+        "objects": [each for each in data["objects"] if each["id"] not in picture_ids | box_ids],
+        "shapes": [each for each in data["shapes"] if each["id"] not in PRIMITIVES],
     }

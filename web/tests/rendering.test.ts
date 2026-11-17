@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fenceOf, formatFence, parseFence, pictureOf, renderedView, renderStatus, statusText, type RenderingDef } from '../app/lib/rendering'
+import { fenceOf, formatFence, outcomesOf, parseFence, pictureOf, renderedView, renderStatus, statusText, toOutcome, type RenderingDef } from '../app/lib/rendering'
 
 const def = (over: Partial<RenderingDef> = {}): RenderingDef => ({
   format: 1, id: 'r1', type: 'latex', source: 'x^2', params: {}, image: null, renderer: '', ...over,
@@ -64,6 +64,21 @@ describe('what the person is told', () => {
   it('keeps a picture it has even after a failed try, with the failure told', () => {
     const bad = { ok: false, diagnostics: [], message: 'bad', unavailable: null }
     expect(renderStatus(def({ image: 'i1' }), bad).kind).toBe('failed')
+  })
+})
+
+describe('what a window that joins late is told', () => {
+  const failed = { ok: false, diagnostics: [], message: 'Fatal Package fontspec Error', unavailable: null }
+  it('takes the last outcome of each container from the definitions the server sends', () => {
+    const known = outcomesOf([def({ id: 'a', outcome: failed }), def({ id: 'b', outcome: null }), def({ id: 'c' })])
+    expect(Object.keys(known)).toEqual(['a'])
+    expect(renderStatus(def({ id: 'a' }), known.a)).toEqual({ kind: 'failed', message: 'Fatal Package fontspec Error', diagnostics: [] })
+  })
+  it('says "drawing" only for a container no try has spoken for', () => {
+    expect(renderStatus(def({ id: 'b' }), outcomesOf([def({ id: 'b' })]).b).kind).toBe('drawing')
+  })
+  it('fills what the server left out the same way for an event and for a definition', () => {
+    expect(toOutcome({ ok: false, message: 'x' })).toEqual({ ok: false, diagnostics: [], message: 'x', unavailable: null })
   })
 })
 

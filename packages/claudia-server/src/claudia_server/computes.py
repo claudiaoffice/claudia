@@ -253,16 +253,16 @@ def _export_office(ctx, *, format):
     if format not in ("xlsx", "ods"):
         raise RequestError("bad_request", msg('export_office: format must be "xlsx" or "ods"'))
     book = _workbook(ctx)
+    info = document_info(ctx.document.log, ctx.document.branch)
     if format == "xlsx":
         return export_with_original(
             ctx,
             format,
             WorkbookModel,
             lambda original, baseline, current, found: apply_edits_to_xlsx(original, baseline, current, losses=found),
-            lambda: office_export(format, workbook_to_xlsx(book), xlsx_export_losses(book)),
+            lambda: office_export(format, workbook_to_xlsx(book, info=info), xlsx_export_losses(book)),
             xlsx_unwritten_changes,
         )
-    info = document_info(ctx.document.log, ctx.document.branch)
     return export_with_original(
         ctx,
         format,

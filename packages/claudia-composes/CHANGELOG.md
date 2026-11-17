@@ -3,7 +3,7 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [0.17.0] - 2026-11-17
+## [0.18.0] - 2026-11-17
 
 References (step H).
 
@@ -15,7 +15,7 @@ References (step H).
 - **Breaking:** `TextModel.insert` takes the fields of the U+FFFC put in, `remove` returns those cut; `insert_text` and
   `remove_text` follow `claudia_core.TypingHost`.
 
-## [0.16.0] - 2026-11-17
+## [0.17.0] - 2026-11-17
 
 Typing is the kernel's (step G).
 
@@ -29,7 +29,7 @@ Typing is the kernel's (step G).
 - `TextModel.insert_text`, `remove_text`, `text_regions` and `text_moved`: the text is a `claudia_core.TypingHost`, for
   its paragraphs and the words of its floating objects.
 
-## [0.15.0] - 2026-11-17
+## [0.16.0] - 2026-11-17
 
 Tables of contents (step E, E9.31). State schema 13 → 14 (a paragraph may have `generated`; a snapshot of 13 restores
 unchanged).
@@ -44,7 +44,7 @@ unchanged).
 - Typing into a table of contents and joining a paragraph with text into one are refused; a table cannot be joined to
   the paragraph before it (it is taken away instead).
 
-## [0.14.0] - 2026-11-16
+## [0.15.0] - 2026-11-16
 
 Numbered headings and numbering schemes (step D, E9.22). State schema 12 → 13 (a snapshot of 12 restores with the
 built-in schemes).
@@ -60,7 +60,7 @@ built-in schemes).
   `composes.SetListItem` is gone and old histories with it do not replay (the owner's decision of 2026-11-16).
 - `list_in_use` counts the words of floating objects too.
 
-## [0.13.0] - 2026-11-16
+## [0.14.0] - 2026-11-16
 
 The text counts with the structure every app shares (step C).
 
@@ -73,7 +73,7 @@ The text counts with the structure every app shares (step C).
   are an item of a list count between the paragraph they hang from and the next one.
 - `LabelsChanged` is `claudia_core.LabelsChanged`; the name stays importable from here.
 
-## [0.12.0] - 2026-11-16
+## [0.13.0] - 2026-11-16
 
 Headings by their level (E9.22). State schema 11 → 12 (a snapshot of 11 is rebuilt from the log, D15).
 
@@ -85,6 +85,10 @@ Headings by their level (E9.22). State schema 11 → 12 (a snapshot of 11 is reb
   or Heading 1 or 2; the module constant `HEADING_STYLES` is gone. `block_kind` and the sections of a search follow the
   level, so a style of the writer's own becomes a heading by `SetHeadingLevel`, and a section starts at any heading of
   level 1 or deeper.
+## [0.12.0] - 2026-11-16
+
+### Added
+- `blank(parts)` on the model (D723): an imported document is redacted in full or in parts — the paragraphs (by id) and objects; a blanked paragraph keeps its length in `FILLER` characters and its suggestions lose their words.
 
 ## [0.11.0] - 2026-11-15
 

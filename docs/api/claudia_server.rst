@@ -112,12 +112,14 @@ Fonts
 -----
 
 What ``create_app`` is given to serve fonts to clients (not in ``__all__``; documented so its signature resolves):
-``GET /api/fonts``, ``/api/fonts/{sha256}`` and ``/api/fonts/{sha256}.woff2`` (D905).
+``GET /api/fonts``, ``/api/fonts/{sha256}`` and ``/api/fonts/{sha256}.woff2`` (D905). Fonts for this server only go to
+its own people (D1041).
 
 .. autoclass:: claudia_server.fonts.FontService
    :members:
 .. autofunction:: claudia_server.fonts.font_router
 .. autodata:: claudia_server.fonts.FONTS_FORMAT
+.. autodata:: claudia_server.fonts.Origin
 
 Hyphenation patterns for the clients' layout, the same way (D913): ``GET /api/hyphenation`` and
 ``/api/hyphenation/{sha256}``, and ``python -m claudia_server.hyphenation fetch DIR``.
@@ -165,6 +167,16 @@ configured it to do.
 .. autoclass:: claudia_server.AdminContext
 .. autoclass:: claudia_server.AiRuntime
 .. autofunction:: claudia_server.admin_router
+
+Server settings ▸ Fonts (E3.13 f, D1041): ``/api/admin/fonts``, its ``files``, ``check`` and ``collections`` routes.
+
+.. automodule:: claudia_server.admin_fonts
+   :no-index:
+.. autofunction:: claudia_server.admin_fonts.font_admin_routes
+.. autoclass:: claudia_server.admin_fonts.FontUploads
+   :members:
+.. autodata:: claudia_server.admin_fonts.ADMIN_FONTS_FORMAT
+.. autodata:: claudia_server.admin_fonts.HOLD_SECONDS
 .. autoclass:: claudia_server.ServerSettings
 .. autoclass:: claudia_server.AiSettings
 .. autoclass:: claudia_server.TypesetSettings

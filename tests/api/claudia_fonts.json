@@ -1,5 +1,13 @@
 {
- "version": "0.2.0",
+ "version": "0.4.0",
+ "AddRefused": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
  "Axis": {
   "class": [
    "object"
@@ -10,6 +18,9 @@
   },
   "properties": []
  },
+ "CLOSENESS": {
+  "value": "('same', 'same-widths', 'other')"
+ },
  "COLLECTION_FILE": {
   "value": "'collection.json'"
  },
@@ -17,7 +28,7 @@
   "class": [
    "object"
   ],
-  "init": "(fonts: 'Iterable[FontFile]', problems: 'Iterable[Problem]', substitutions: 'Mapping[str, str]') -> 'None'",
+  "init": "(fonts: 'Iterable[FontFile]', problems: 'Iterable[Problem]', substitutions: 'Mapping[str, str]', collections: 'Iterable[Collection]' = ()) -> 'None'",
   "methods": {
    "by_hash": "(self, sha256: 'str') -> 'FontFile | None'",
    "families": "(self) -> 'tuple[str, ...]'",
@@ -25,9 +36,13 @@
    "fonts_of": "(self, family: 'str') -> 'tuple[FontFile, ...]'",
    "from_collections": "(collections: 'Iterable[Collection]', *, substitutions: 'Mapping[str, str] | None' = None) -> 'Catalogue'",
    "from_folders": "(folders: 'Iterable[str | Path]', *, substitutions: 'Mapping[str, str] | None' = None) -> 'Catalogue'",
-   "resolve": "(self, family: 'str') -> 'Resolution'"
+   "resolve": "(self, family: 'str') -> 'Resolution'",
+   "stands_in_for": "(self, family: 'str') -> 'tuple[str, ...]'"
   },
   "properties": []
+ },
+ "Closeness": {
+  "function": "(*args, **kwargs)"
  },
  "Collection": {
   "class": [
@@ -43,11 +58,17 @@
   "class": [
    "object"
   ],
-  "init": "(name: 'str', licence: 'str', redistributable: 'bool', source: 'str' = '', version: 'str' = '') -> None",
+  "init": "(name: 'str', licence: 'str', redistributable: 'bool', source: 'str' = '', version: 'str' = '', added_by: 'str' = '', added: 'str' = '') -> None",
   "methods": {
-   "from_data": "(data: 'object') -> 'CollectionRecord'"
+   "from_data": "(data: 'object') -> 'CollectionRecord'",
+   "to_data": "(self) -> 'dict'"
   },
-  "properties": []
+  "properties": [
+   "may_go"
+  ]
+ },
+ "DEFAULT_GENERICS": {
+  "value": "<mappingproxy>"
  },
  "DEFAULT_SUBSTITUTIONS": {
   "value": "<mappingproxy>"
@@ -58,6 +79,16 @@
   ],
   "init": "(...)",
   "methods": {},
+  "properties": []
+ },
+ "FileCheck": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', verdict: 'Verdict', code: 'str' = '', detail: 'str' = '', family: 'str | None' = None, style: 'str | None' = None, outlines: 'str | None' = None, licence: 'str' = '', data: 'bytes' = b'') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
   "properties": []
  },
  "FontFile": {
@@ -74,7 +105,7 @@
   "class": [
    "ValueError"
   ],
-  "init": "(...)",
+  "init": "(message: 'str', *, code: 'str' = '', detail: 'str' = '', family: 'str | None' = None, style: 'str | None' = None) -> 'None'",
   "methods": {},
   "properties": []
  },
@@ -105,6 +136,12 @@
   },
   "properties": []
  },
+ "MAY_GO": {
+  "value": "('anywhere', 'this-server')"
+ },
+ "MayGo": {
+  "function": "(*args, **kwargs)"
+ },
  "NotServable": {
   "class": [
    "Exception"
@@ -117,9 +154,11 @@
   "class": [
    "object"
   ],
-  "init": "(path: 'Path', reason: 'str') -> None",
+  "init": "(path: 'Path', reason: 'str', code: 'str' = '', detail: 'str' = '', family: 'str | None' = None, style: 'str | None' = None, collection: 'str' = '') -> None",
   "methods": {},
-  "properties": []
+  "properties": [
+   "not_usable"
+  ]
  },
  "RecordError": {
   "class": [
@@ -135,7 +174,9 @@
   ],
   "init": "(requested: 'str', provided: 'str | None', substituted: 'bool') -> None",
   "methods": {},
-  "properties": []
+  "properties": [
+   "closeness"
+  ]
  },
  "WebFontCache": {
   "class": [
@@ -143,12 +184,18 @@
   ],
   "init": "(directory: 'str | Path') -> 'None'",
   "methods": {
-   "get": "(self, font: 'FontFile') -> 'Path'"
+   "get": "(self, font: 'FontFile', *, local: 'bool' = False) -> 'Path'"
   },
   "properties": []
  },
+ "add_collection": {
+  "function": "(root: 'str | Path', files: 'Sequence[tuple[str, bytes]]', catalogue: 'Catalogue', *, name: 'str', licence: 'str', redistributable: 'bool', added_by: 'str', added: 'str') -> 'Path'"
+ },
  "builtin_folder": {
   "function": "() -> 'Path'"
+ },
+ "check_files": {
+  "function": "(files: 'Sequence[tuple[str, bytes]]', catalogue: 'Catalogue') -> 'tuple[FileCheck, ...]'"
  },
  "collection_folders": {
   "function": "(path: 'str | Path') -> 'list[Path]'"
@@ -164,6 +211,12 @@
  },
  "read_lock": {
   "function": "(text: 'str | None' = None) -> 'tuple[LockedCollection, ...]'"
+ },
+ "remove_collection": {
+  "function": "(root: 'str | Path', folder: 'str | Path') -> 'None'"
+ },
+ "rename_collection": {
+  "function": "(folder: 'str | Path', name: 'str') -> 'None'"
  },
  "write_fontconfig": {
   "function": "(catalogue: 'Catalogue', directory: 'str | Path', cache_directory: 'str | Path') -> 'JobFonts'"

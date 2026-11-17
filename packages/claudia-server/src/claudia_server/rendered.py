@@ -123,8 +123,14 @@ def _renderings(model_of: Callable[[Context], ObjectModel]):
     def renderings(ctx: Context) -> list[dict]:
         """The definitions of the rendered containers this document holds, each as `{format, id, type, source, params,
         image, renderer}`: the text is the truth, `image` the id of the picture last made from it (see `images`), and
-        `renderer` says what made it. A container without a picture yet has `image: null`."""
-        return [d.to_data() for _, d in sorted(model_of(ctx).renderings.items())]
+        `renderer` says what made it. A container without a picture yet has `image: null`. `outcome` is what the last
+        try to draw it said, as in the event `render_result` (`{id, ok, diagnostics, message, unavailable}`), or `null`
+        when no try has finished since its text last changed: with `image: null` that means it is being drawn."""
+        outcomes = ctx.render_outcomes()
+        return [
+            {**d.to_data(), "outcome": outcomes.get(rendering_id)}
+            for rendering_id, d in sorted(model_of(ctx).renderings.items())
+        ]
 
     return renderings
 

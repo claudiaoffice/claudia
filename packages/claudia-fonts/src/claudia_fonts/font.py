@@ -19,7 +19,16 @@ WILDCARDS = "*?"  # the engine setup hides files by name pattern, so a name must
 
 
 class FontProblem(ValueError):
-    """A font file that is not used; the message says why."""
+    """A font file that is not used; the message says why, for a log. ``code`` says it for a page that puts it in its
+    own words (``wildcard``, ``unreadable``, ``not-a-font``, ``no-family``, ``forbids-embedding``), ``detail`` is what
+    those words need (the OS/2 ``fsType`` of a font that forbids embedding), and ``family`` and ``style`` are the
+    font's, when the file could be read that far."""
+
+    def __init__(
+        self, message: str, *, code: str = "", detail: str = "", family: str | None = None, style: str | None = None
+    ) -> None:
+        super().__init__(message)
+        self.code, self.detail, self.family, self.style = code, detail, family, style
 
 
 @dataclass(frozen=True)
@@ -67,6 +76,7 @@ class FontFile:
             "collection": self.collection,
             "licence": self.licence,
             "redistributable": self.redistributable,
+            "may_go": "anywhere" if self.redistributable else "this-server",
             "math": self.math,
             "axes": [axis.to_data() for axis in self.axes],
             "outlines": self.outlines,
@@ -81,11 +91,13 @@ def read_font(path: str | Path, collection: Collection) -> FontFile:
     do not restrict: Latin Modern sets both."""
     path = Path(path)
     if any(character in path.name for character in WILDCARDS):
-        raise FontProblem(f"{path.name}: a file name with a wildcard (* or ?) cannot be hidden exactly; rename it")
+        raise FontProblem(
+            f"{path.name}: a file name with a wildcard (* or ?) cannot be hidden exactly; rename it", code="wildcard"
+        )
     try:
         data = path.read_bytes()
     except OSError as error:
-        raise FontProblem(f"{path.name}: cannot be read: {error}") from error
+        raise FontProblem(f"{path.name}: cannot be read: {error}", code="unreadable") from error
     try:
         font = TTFont(io.BytesIO(data), lazy=True)
         names, os2, head = font["name"], font["OS/2"], font["head"]
@@ -104,11 +116,17 @@ def read_font(path: str | Path, collection: Collection) -> FontFile:
         )
         outlines = "truetype" if "glyf" in font else "cff"
     except Exception as error:  # noqa: BLE001 - fontTools raises many kinds of errors on damaged files
-        raise FontProblem(f"{path.name}: not a font that can be read ({error})") from error
+        raise FontProblem(f"{path.name}: not a font that can be read ({error})", code="not-a-font") from error
     if not family:
-        raise FontProblem(f"{path.name}: the font has no family name")
+        raise FontProblem(f"{path.name}: the font has no family name", code="no-family")
     if fs_type & RESTRICTED_EMBEDDING:
-        raise FontProblem(f"{path.name}: the font forbids embedding (OS/2 fsType {fs_type}), so it is not used")
+        raise FontProblem(
+            f"{path.name}: the font forbids embedding (OS/2 fsType {fs_type}), so it is not used",
+            code="forbids-embedding",
+            detail=str(fs_type),
+            family=family,
+            style=style,
+        )
     record = collection.record
     return FontFile(
         path=path,

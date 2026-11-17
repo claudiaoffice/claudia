@@ -181,6 +181,14 @@ def frames_of(paragraph: etree._Element) -> list[etree._Element]:
     return [piece.owner for piece in _walk(paragraph) if piece.kind == "visible" and piece.owner.tag == frame]
 
 
+def shapes_of(paragraph: etree._Element) -> list[etree._Element]:
+    """The shapes that stand in ``paragraph`` as the elements of the format that draw one by itself (``draw:rect``,
+    ``draw:ellipse``, ``draw:circle``, ``draw:custom-shape``), anchored to a character or to the paragraph, in order.
+    A frame is not one (see :func:`frames_of`), nor is a shape inside a group or a frame."""
+    shapes = {f"{{{NS['draw']}}}{name}" for name in ("rect", "ellipse", "circle", "custom-shape")}
+    return [piece.owner for piece in _walk(paragraph) if piece.kind == "visible" and piece.owner.tag in shapes]
+
+
 def offset_of(paragraph: etree._Element, element: etree._Element) -> int | None:
     """How many characters of the text of ``paragraph`` (see :func:`read_text`) stand before ``element``, an element
     that is shown and is no text (a frame, a note, a field); ``None`` when it is not in the paragraph."""

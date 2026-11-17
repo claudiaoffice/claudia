@@ -7,6 +7,7 @@ from vulture.whitelist_utils import Whitelist
 
 used = Whitelist()
 
+used.dash_style  # python-pptx LineFormat property that tests/test_pptx.py sets on a shape
 used.failed  # Context.failed: set by Document, read by models in settle() after a rolled-back command
 used.__cause__  # ReplayError chains the original exception
 used._add_1_to_2  # registered as an upcaster by a decorator (tests/test_commands.py)
@@ -18,6 +19,9 @@ used.protocol  # FastAPI route /api/protocol in create_app
 used.live  # FastAPI WebSocket route in create_app
 used.app_protocol  # FastAPI route /api/{app}/protocol (D431)
 used.app_documents  # FastAPI route /api/{app}/docs (D431)
+used.fonts_page  # FastAPI route GET /api/admin/fonts (admin_fonts, D1041)
+used.hold_file  # FastAPI route POST /api/admin/fonts/files (admin_fonts)
+used.let_go  # FastAPI route DELETE /api/admin/fonts/files (admin_fonts, CODE-49)
 used.app_live  # FastAPI WebSocket route /api/{app}/docs/{id}/ws (D431)
 used.present  # FastAPI WebSocket route /api/presence (D434)
 used.upload  # FastAPI route POST /api/uploads (D440)
@@ -147,6 +151,8 @@ used._propose_switch  # core_methods.method("propose_switch")
 used._answer_restore  # core_methods.method("answer_restore")
 used._withdraw_restore  # core_methods.method("withdraw_restore")
 used._discard_side_history  # core_methods.method("discard_side_history")
+used._redaction_plan  # core_methods.method("redaction_plan") (D726)
+used._redact  # core_methods.method("redact") (D726)
 used._slide  # creates_methods_with(...).method("slide")
 used._styles  # add_style_methods(...).method("styles")
 # styles.py: the style and palette methods every app shares, registered the same way (E1.10, D200)

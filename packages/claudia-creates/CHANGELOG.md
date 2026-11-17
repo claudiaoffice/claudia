@@ -3,7 +3,7 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [0.19.0] - 2026-11-17
+## [0.20.0] - 2026-11-17
 
 References in text boxes (step H).
 
@@ -14,7 +14,7 @@ References in text boxes (step H).
 ### Changed
 - **Breaking:** `insert_text` and `remove_text` follow `claudia_core.TypingHost` (with fields).
 
-## [0.18.0] - 2026-11-17
+## [0.19.0] - 2026-11-17
 
 Typing into text boxes (step G).
 
@@ -22,7 +22,7 @@ Typing into text boxes (step G).
 - `SlideModel.insert_text`, `remove_text`, `text_regions` and `text_moved`: the presentation is a
   `claudia_core.TypingHost`, so the words of an object are typed into character by character.
 
-## [0.17.0] - 2026-11-17
+## [0.18.0] - 2026-11-17
 
 Agendas (step E, E9.31). State schema 14 → 15 (the words of an object may have `generated`; a snapshot of 14 restores
 unchanged).
@@ -31,7 +31,7 @@ unchanged).
 - `SlideModel.generated_of` and `put_generated`: the presentation is a `claudia_core.GeneratedHost`; an agenda is a text
   box whose words are generated from the slide titles.
 
-## [0.16.0] - 2026-11-16
+## [0.17.0] - 2026-11-16
 
 Lists in text boxes and numbered slide titles (step D, E9.22). State schema 13 → 14 (a snapshot of 13 restores with
 the built-in schemes).
@@ -41,7 +41,7 @@ the built-in schemes).
   `item_regions`: the words of a text box or shape become a list item with `claudia_core.SetListItem`, and the list
   runs on from box to box across the slides. Numbering the style `slide-title` numbers every slide title.
 
-## [0.15.0] - 2026-11-16
+## [0.16.0] - 2026-11-16
 
 Lists in a presentation, counted with the structure every app shares (step C, E10.21). State schema 12 → 13 (a
 snapshot of 12 is rebuilt from the log, D15; restoring one without lists gives none).
@@ -52,12 +52,16 @@ snapshot of 12 is rebuilt from the log, D15; restoring one without lists gives n
   slide by slide, on each slide in stacking order (bottom first), with the slide's number as their place, so a list
   continues from one text box to the next, across slides.
 
-## [0.14.0] - 2026-11-16
+## [0.15.0] - 2026-11-16
 
 A slide title (E9.22, E10.21). State schema 11 → 12 (a snapshot of 11 is rebuilt from the log, D15).
 
 ### Added
 - The built-in paragraph style `slide-title` ("Slide title"), heading level 1: what names a slide.
+## [0.14.0] - 2026-11-16
+
+### Added
+- `blank(parts)` on the model (D723): an imported document is redacted in full or in parts — slides (with their speaker notes and every object on them) and objects.
 
 ## [0.13.0] - 2026-11-15
 

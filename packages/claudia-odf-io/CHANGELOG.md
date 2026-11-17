@@ -3,9 +3,7 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [Unreleased]
-
-## [0.7.0] - 2026-11-16
+## [0.10.0] - 2026-11-16
 
 The levels of numbering schemes in OpenDocument (E9.22), shared by the text and the presentation app.
 
@@ -13,6 +11,30 @@ The levels of numbering schemes in OpenDocument (E9.22), shared by the text and 
 - `claudia_odf_io.lists`: `list_style` (a `text:list-style` drawing a list as its scheme does), `level_style` (one
   level of a list style or of the outline style), `read_levels` (what a list style's levels say as levels of a scheme),
   `LEVEL_NUMBER`, `LEVEL_BULLET`, `OUTLINE_LEVEL`.
+
+## [0.9.0] - 2026-11-17
+
+A fresh Office file says who made it (D466).
+
+### Added
+- `stamp_office_meta(data, info)`: the properties of a docx, xlsx or pptx from the `DocumentInfo` of the log.
+
+### Changed
+- `odf_date` is `claudia_opc_io.utc_second` with an `OdfError` for what is not a moment; the dates are the same.
+
+## [0.8.0] - 2026-11-16
+
+Shapes in paragraphs (D465).
+
+### Added
+- `shapes_of(paragraph)`: the drawn shapes (`draw:rect`, `draw:ellipse`, `draw:circle`, `draw:custom-shape`) hanging
+  in a paragraph, as `draw:frames_of` finds the frames.
+
+## [0.7.0] - 2026-11-16
+
+### Added
+- `font_faces` and `font_of`: the font faces a file declares, and the font a style's text properties name (by a font
+  face or `fo:font-family`), for the odt and odp importers (E3.13).
 
 ## [0.6.0] - 2026-11-15
 

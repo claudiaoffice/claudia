@@ -1,5 +1,5 @@
 {
- "version": "0.10.0",
+ "version": "0.11.0",
  "AddChart": {
   "class": [
    "Command"
@@ -221,6 +221,7 @@
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineDiagram'",
    "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -1197,6 +1198,7 @@
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateDiagram'",
    "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -1239,6 +1241,8 @@
    "add_chart": "(self, chart: 'Chart', index: 'int | None') -> 'None'",
    "add_sheet": "(self, sheet: 'Sheet', index: 'int | None') -> 'None'",
    "anchor_from_data": "(self, data: 'dict') -> 'CellAnchor'",
+   "blank": "(self, parts: 'frozenset[str] | None') -> 'None'",
+   "blank_diagram": "(definition: 'dict') -> 'dict'",
    "chart": "(self, chart_id: 'str') -> 'Chart'",
    "chart_cells": "(self, diagram_id: 'str') -> 'tuple[RangeRef, bool] | None'",
    "chart_figure": "(self, diagram_id: 'str') -> 'dict'",

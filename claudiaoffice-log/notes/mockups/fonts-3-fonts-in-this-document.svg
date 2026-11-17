@@ -1,0 +1,162 @@
+<svg viewBox="0 0 1400 1060" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="1060" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — Format ▸ Fonts…: the fonts of this document, and whether they are the ones it was written with, proposed</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">The same dialog in composes, computes and creates. Here: a composes document imported from report.docx, on Studio server. Any editor of the document may use it.</text>
+<rect x="40" y="96" width="400" height="560" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">A · Format menu</text>
+<text x="62" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Beside Colours…: both are the document&#x27;s look.</text>
+<rect x="60" y="172" width="360" height="460" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="60" y="172" width="360" height="46" rx="12" fill="#faf8f4"/>
+<rect x="60" y="206" width="360" height="12" rx="0" fill="#faf8f4"/>
+<line x1="60" y1="218" x2="420" y2="218" stroke="#e3dfee" stroke-width="1"/>
+<rect x="74" y="184" width="22" height="22" rx="6" fill="#d6477a"/>
+<text x="117" y="200" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">File</text>
+<text x="156.5625" y="200" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Edit</text>
+<text x="197.734375" y="200" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Insert</text>
+<rect x="241.6875" y="181" width="60.984375" height="28" rx="7" fill="#e7e1f4"/>
+<text x="250.6875" y="200" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Format</text>
+<text x="311.671875" y="200" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">View</text>
+<text x="402" y="200" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="400" fill="#6e6880" text-anchor="end">report</text>
+<rect x="188" y="225" width="226" height="210" rx="10" fill="#1f1a3318"/>
+<rect x="186" y="222" width="226" height="210" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="202" y="247" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Apply Style…</text>
+<text x="398" y="247" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+A</text>
+<text x="202" y="277" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Edit This Style…</text>
+<text x="398" y="277" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Shift+F10</text>
+<text x="202" y="307" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">All Styles…</text>
+<text x="398" y="307" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+A</text>
+<line x1="194" y1="322" x2="404" y2="322" stroke="#e3dfee" stroke-width="1"/>
+<text x="202" y="346" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">List</text>
+<text x="398" y="346" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">▸</text>
+<line x1="194" y1="361" x2="404" y2="361" stroke="#e3dfee" stroke-width="1"/>
+<text x="202" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Colours…</text>
+<text x="398" y="385" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+K</text>
+<rect x="192" y="396" width="214" height="28" rx="6" fill="#e7e1f4"/>
+<text x="202" y="415" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Fonts…</text>
+<text x="398" y="415" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+E</text>
+<circle cx="172" cy="410" r="11" fill="#5b4bc4"/>
+<text x="172" y="414.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<rect x="84" y="258" width="75.0" height="8" rx="4" fill="#ebe7f0"/>
+<rect x="84" y="280" width="90.0" height="8" rx="4" fill="#ebe7f0"/>
+<rect x="84" y="302" width="84.0" height="8" rx="4" fill="#ebe7f0"/>
+<rect x="84" y="324" width="93.0" height="8" rx="4" fill="#ebe7f0"/>
+<rect x="84" y="346" width="57.0" height="8" rx="4" fill="#ebe7f0"/>
+<rect x="84" y="548" width="300" height="8" rx="4" fill="#ebe7f0"/>
+<rect x="84" y="570" width="260" height="8" rx="4" fill="#ebe7f0"/>
+<rect x="84" y="592" width="280" height="8" rx="4" fill="#ebe7f0"/>
+<rect x="470" y="96" width="890" height="700" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="492" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">B · Fonts in this document</text>
+<text x="492" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">One line per family the document&#x27;s styles ask for. Status in words and a sign, never by colour alone.</text>
+<rect x="492" y="172" width="846" height="600" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="512" y="204" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Fonts in this document</text>
+<text x="1318" y="204" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="400" fill="#6e6880" text-anchor="end">×</text>
+<text x="512" y="224" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">report · imported from report.docx · laid out with the fonts of Studio server</text>
+<line x1="492" y1="238" x2="1338" y2="238" stroke="#e3dfee" stroke-width="1"/>
+<rect x="512" y="254" width="806" height="40" rx="8" fill="#fcefdf"/>
+<text x="526" y="279" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#8a4a12" text-anchor="start">△</text>
+<text x="546" y="279" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#8a4a12" text-anchor="start">2 of 6 fonts are not as written: the footer (Segoe UI, missing) and endnotes (other version) may break differently.</text>
+<circle cx="1306" cy="260" r="11" fill="#5b4bc4"/>
+<text x="1306" y="264.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<rect x="512" y="310" width="806" height="28" rx="6" fill="#f7f3ec"/>
+<text x="528" y="328" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="start">STATUS</text>
+<text x="652" y="328" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="start">FAMILY</text>
+<text x="812" y="328" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="start">USED BY</text>
+<text x="974" y="328" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="start">LAID OUT WITH</text>
+<circle cx="886" cy="324" r="11" fill="#5b4bc4"/>
+<text x="886" y="328.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<rect x="528" y="351" width="82.5" height="20" rx="10.0" fill="#e3f3ef"/>
+<text x="569.3" y="364.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#0f6e60" text-anchor="middle">✓ As written</text>
+<text x="652" y="366" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="400" fill="#1f1a33" text-anchor="start">Fraunces</text>
+<text x="812" y="365" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#5b4bc4" text-anchor="start">Title, Heading 1, Heading 2</text>
+<text x="974" y="365" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">the same file, from the server</text>
+<line x1="512" y1="384" x2="1318" y2="384" stroke="#e3dfee" stroke-width="1"/>
+<rect x="528" y="397" width="82.5" height="20" rx="10.0" fill="#e3f3ef"/>
+<text x="569.3" y="410.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#0f6e60" text-anchor="middle">✓ As written</text>
+<text x="652" y="412" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="400" fill="#1f1a33" text-anchor="start">Inter</text>
+<text x="812" y="411" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#5b4bc4" text-anchor="start">Body text, List, + 4</text>
+<text x="974" y="411" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">the same file, from the server</text>
+<line x1="512" y1="430" x2="1318" y2="430" stroke="#e3dfee" stroke-width="1"/>
+<rect x="528" y="443" width="53.2" height="20" rx="10.0" fill="#e3f3ef"/>
+<text x="554.6" y="456.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#0f6e60" text-anchor="middle">✓ Kept</text>
+<text x="652" y="458" font-family="'DejaVu Serif', serif" font-size="15" font-weight="400" fill="#1f1a33" text-anchor="start">Source Serif 4</text>
+<text x="812" y="457" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#5b4bc4" text-anchor="start">Quote</text>
+<text x="974" y="457" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">the file kept in this document</text>
+<line x1="512" y1="476" x2="1318" y2="476" stroke="#e3dfee" stroke-width="1"/>
+<rect x="528" y="489" width="98.2" height="20" rx="10.0" fill="#ece8f8"/>
+<text x="577.1" y="502.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#4a3cab" text-anchor="middle">≠ Other version</text>
+<text x="652" y="504" font-family="'Liberation Serif', serif" font-size="15" font-weight="400" fill="#1f1a33" text-anchor="start">Liberation Serif</text>
+<text x="812" y="503" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#5b4bc4" text-anchor="start">Endnote</text>
+<text x="974" y="503" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">2.1.5 here; written with 2.1.3</text>
+<rect x="1195" y="485" width="115" height="28" rx="7" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1252.5" y="503.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="middle">Use this version</text>
+<line x1="512" y1="522" x2="1318" y2="522" stroke="#e3dfee" stroke-width="1"/>
+<rect x="528" y="535" width="71.8" height="20" rx="10.0" fill="#fcefdf"/>
+<text x="563.9" y="548.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#8a4a12" text-anchor="middle">≈ Stand-in</text>
+<text x="652" y="550" font-family="Carlito, sans-serif" font-size="15" font-weight="400" fill="#1f1a33" text-anchor="start">Calibri</text>
+<text x="812" y="549" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#5b4bc4" text-anchor="start">Table text, Caption</text>
+<text x="974" y="549" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Carlito: same widths, same breaks</text>
+<rect x="1228" y="531" width="82" height="28" rx="7" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1269.0" y="549.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="middle">Add font…</text>
+<line x1="512" y1="568" x2="1318" y2="568" stroke="#e3dfee" stroke-width="1"/>
+<rect x="528" y="581" width="70.1" height="20" rx="10.0" fill="#f8e6e4"/>
+<text x="563.0" y="594.96" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#9c2f28" text-anchor="middle">✗ Missing</text>
+<text x="652" y="596" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="400" fill="#1f1a33" text-anchor="start">Segoe UI</text>
+<text x="812" y="595" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#5b4bc4" text-anchor="start">Footer</text>
+<text x="974" y="595" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Inter: widths differ</text>
+<rect x="1231" y="577" width="79" height="28" rx="7" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1270.5" y="595.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="middle">Replace…</text>
+<rect x="1141" y="577" width="82" height="28" rx="7" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1182.0" y="595.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="middle">Add font…</text>
+<line x1="512" y1="614" x2="1318" y2="614" stroke="#e3dfee" stroke-width="1"/>
+<circle cx="508" cy="499" r="11" fill="#5b4bc4"/>
+<text x="508" y="503.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<circle cx="508" cy="591" r="11" fill="#5b4bc4"/>
+<text x="508" y="595.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<rect x="512" y="624" width="16" height="16" rx="4" fill="#13917f" stroke="#13917f" stroke-width="1"/>
+<path d="M516 632.5 l3 3 l5.5 -6.5" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="538" y="637" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Keep the fonts inside the document</text>
+<circle cx="782.41125" cy="632" r="11" fill="#5b4bc4"/>
+<text x="782.41125" y="636.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">6</text>
+<text x="538" y="658" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Keeps the exact files of Fraunces, Inter and Source Serif 4 in the document (3.1 MB, sealed with it), so it looks the same on any Claudia</text>
+<text x="538" y="674.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">server, whatever fonts that server has. A font that may only stay on a server is named, never kept. Exports embed the kept fonts in .odt</text>
+<text x="538" y="691.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">and .docx where the font allows it.</text>
+<line x1="492" y1="714" x2="1338" y2="714" stroke="#e3dfee" stroke-width="1"/>
+<text x="512" y="748" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#5b4bc4" text-anchor="start">Fonts on Studio server…</text>
+<rect x="1240" y="728" width="78" height="30" rx="7" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1279.0" y="747.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Close</text>
+<circle cx="51" cy="834" r="11" fill="#5b4bc4"/>
+<text x="51" y="838.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">1</text>
+<text x="72" y="839" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Format ▸ Fonts…</text>
+<text x="72" y="859" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">In all three apps, beside Colours…, with Ctrl+Alt+E (free in all three;</text>
+<text x="72" y="876.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Ctrl+Alt+F is Follow Computation in computes). The desktop clients&#x27;</text>
+<text x="72" y="893.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">native menus get the same entry.</text>
+<circle cx="501" cy="834" r="11" fill="#5b4bc4"/>
+<text x="501" y="838.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="522" y="839" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">One sentence first</text>
+<text x="522" y="859" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">What a person wants to know on opening this: does it look as it was</text>
+<text x="522" y="876.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">written, and if not, where. The sentence names the styles&#x27;</text>
+<text x="522" y="893.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">purposes, not cells or pages.</text>
+<circle cx="951" cy="834" r="11" fill="#5b4bc4"/>
+<text x="951" y="838.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="972" y="839" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Used by: the styles</text>
+<text x="972" y="859" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Since text has no direct formatting (D306), a font is always reached</text>
+<text x="972" y="876.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">through a style. A style&#x27;s name opens Edit This Style.</text>
+<circle cx="51" cy="952" r="11" fill="#5b4bc4"/>
+<text x="51" y="956.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">4</text>
+<text x="72" y="957" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Add font… and Replace…</text>
+<text x="72" y="977" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Add font… puts a font into this document, not into the server (board</text>
+<text x="72" y="994.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">4C): no administrator needed. Replace… changes the font of every</text>
+<text x="72" y="1011.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">style that names it, as one undoable command in the history.</text>
+<circle cx="501" cy="952" r="11" fill="#5b4bc4"/>
+<text x="501" y="956.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">5</text>
+<text x="522" y="957" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Pinned by hash</text>
+<text x="522" y="977" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">The document records each family&#x27;s file by SHA-256 (the planned</text>
+<text x="522" y="994.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">fonts.lock of E3.3). Other version: same family, different file; pages</text>
+<text x="522" y="1011.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">may differ. Use this version re-pins it, as a logged command.</text>
+<circle cx="951" cy="952" r="11" fill="#5b4bc4"/>
+<text x="951" y="956.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#ffffff" text-anchor="middle">6</text>
+<text x="972" y="957" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Kept inside the document</text>
+<text x="972" y="977" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Kept fonts live in the sealed document like its images, so the server</text>
+<text x="972" y="994.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">adds them to the layout only for this document. Proposed default:</text>
+<text x="972" y="1011.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">on, for every new or imported document.</text>
+</svg>

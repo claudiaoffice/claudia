@@ -174,7 +174,7 @@ def held_picture(part: Any, drawing: Any) -> tuple[ImageAsset, tuple[int, int], 
     return asset, size, rotation, description, decorative, name
 
 
-def _length(child: Any) -> int:  # noqa: ANN401
+def text_length(child: Any) -> int:  # noqa: ANN401
     """How many characters of the paragraph's text a child of a ``w:p`` stands for (what python-docx's own
     ``paragraph.text`` counts: the runs and the hyperlinks, nothing in a tracked change)."""
     return len(child.text) if child.tag in (qn("w:r"), qn("w:hyperlink")) else 0
@@ -186,7 +186,7 @@ def offset_of(paragraph: Any, run: Any) -> int:  # noqa: ANN401
     for child in paragraph:
         if child is run:
             break
-        position += _length(child)
+        position += text_length(child)
     return position
 
 
@@ -324,7 +324,7 @@ def place(paragraph: Any, offset: int, run: Any) -> None:  # noqa: ANN401
         if child.tag == qn("w:pPr"):
             after = child
             continue
-        length = _length(child)
+        length = text_length(child)
         if position + length <= offset:
             after, position = child, position + length
             continue
@@ -439,7 +439,7 @@ class PictureEdits:
         self.marks: dict[str, list[tuple[int, Any]]] = {}
         self.loose: dict[str, list[tuple[int, Any]]] = {}
         self.changed = False
-        self._writer = PictureWriter(document, rasterise)
+        self.writer = PictureWriter(document, rasterise)
         wanted = all_pictures(current)
         in_file = file_pictures(document)
         new = dict(wanted)
@@ -447,7 +447,7 @@ class PictureEdits:
             new.pop(picture.object_id, None)
             self._edit(picture, wanted.get(picture.object_id), baseline, new)
         for obj, asset in new.values():
-            self._route(obj, self._writer.run(obj, asset))
+            self._route(obj, self.writer.run(obj, asset))
             if self.losses is not None and asset.format == "svg" and not self.rasterised:
                 self.losses.add("svg-fallback")  # (the picture every program draws is an empty one)
             self.changed = True

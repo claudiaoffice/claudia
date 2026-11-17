@@ -1,5 +1,5 @@
 {
- "version": "0.17.0",
+ "version": "0.18.0",
  "AcceptSuggestion": {
   "class": [
    "TextCommand"
@@ -615,6 +615,7 @@
   "methods": {
    "add_suggestion": "(self, suggestion: 'Suggestion') -> 'None'",
    "anchor_from_data": "(self, data: 'dict') -> 'BlockAnchor'",
+   "blank": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "block": "(self, block_id: 'str') -> 'Block'",
    "block_kind": "(self, block: 'Block') -> 'str'",
    "carry_objects": "(self, source: 'str', target: 'str', *, shift: 'int') -> 'None'",

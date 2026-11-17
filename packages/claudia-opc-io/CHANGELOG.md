@@ -3,6 +3,21 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.4.0] - 2026-11-17
+
+The properties of an OPC package (D466).
+
+### Added
+- `claudia_opc_io.properties`: `stamp_core_properties(parts, *, created, creator, modified, modifier)` writes
+  `docProps/core.xml` and `docProps/app.xml` of a package's parts, `stamp_package(data, ...)` does it to package bytes,
+  `utc_second(moment)` is a moment in W3CDTF UTC to the second; `CORE_PART` and `APPLICATION` ("Claudia").
+
+## [0.3.0] - 2026-11-16
+
+### Added
+- `ThemeFonts`: the heading and body fonts of an Office theme, and the font a reference to one names in Word's
+  notation (`minorHAnsi`) and PowerPoint's (`+mn-lt`), for the docx and pptx importers (E3.13).
+
 ## [0.2.0] - 2026-11-11
 
 ### Changed

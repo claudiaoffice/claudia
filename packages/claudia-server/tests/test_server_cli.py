@@ -572,3 +572,23 @@ def test_a_redirect_port_that_cannot_be_opened_is_reported_as_such(monkeypatch, 
     monkeypatch.setattr(cli.redirect, "start", refuse)
     assert cli.main([]) == 2
     assert "cannot listen for the redirect" in capsys.readouterr().err
+
+
+def test_the_latex_programs_of_the_settings_are_used_as_they_are_when_a_container_is_drawn(tmp_path):
+    """CODE-55: an administrator who changes a program in Server settings is not asked to restart the server."""
+    from claudia_server.cli import _renderings
+    from claudia_server.fonts import FontService
+    from claudia_server.server_settings import ServerSettings, TypesetSettings
+
+    settings = ServerSettings(max_documents=10)
+    fonts = FontService.from_folders([], tmp_path / "webfonts", shipped=[], added_root=tmp_path / "fonts")
+    desk, _ = _renderings(settings, tmp_path, fonts)
+
+    def configured() -> dict[str, str | None]:
+        return {entry.name: entry.path for entry in desk.service.tools.configured()}
+
+    assert configured() == {}
+    settings.typeset = TypesetSettings(xelatex="/opt/tex/xelatex", pdftocairo="/opt/poppler/pdftocairo")
+    assert configured() == {"xelatex": "/opt/tex/xelatex", "pdftocairo": "/opt/poppler/pdftocairo"}
+    settings.typeset = TypesetSettings(xelatex="/other/xelatex")
+    assert configured() == {"xelatex": "/other/xelatex"}

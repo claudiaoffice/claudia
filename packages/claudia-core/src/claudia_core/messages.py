@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from .revision import Revision
 
@@ -33,10 +33,11 @@ class ChatRecord:
     text: str
     time: str
     at: Revision | None  # the document revision when it was written, to place it in the history
+    redacted: bool = False  # its words were taken away (D724); who, to whom, when and where stay
 
     def to_data(self) -> dict:
         """The plain-data form of the record."""
-        return {
+        data = {
             "number": self.number,
             "author": self.author,
             "to": self.to,
@@ -44,14 +45,27 @@ class ChatRecord:
             "time": self.time,
             "at": self.at.to_data() if self.at else None,
         }
+        if self.redacted:
+            data["redacted"] = True
+        return data
 
     @classmethod
     def from_data(cls, data: dict) -> ChatRecord:
         """Inverse of ``to_data``."""
         at = data.get("at")
         return cls(
-            data["number"], data["author"], data["to"], data["text"], data["time"], Revision.parse(at) if at else None
+            data["number"],
+            data["author"],
+            data["to"],
+            data["text"],
+            data["time"],
+            Revision.parse(at) if at else None,
+            bool(data.get("redacted", False)),
         )
+
+    def blanked(self) -> ChatRecord:
+        """The message with its words gone (D724): it keeps its number, author, recipient, time and place."""
+        return replace(self, text="", redacted=True)
 
 
 @dataclass(frozen=True)

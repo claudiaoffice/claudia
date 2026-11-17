@@ -14,6 +14,7 @@ from dataclasses import dataclass, replace
 from typing import ClassVar, Self
 
 from claudia_core import (
+    FILLER,
     SLOTS,
     Command,
     CommandRegistry,
@@ -394,6 +395,28 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         model._last = dict(state.get("last", model._last))
         model.structure = TextStructure(model)  # with the objects in: the clients learn the labels with the document
         return model
+
+    def blank(self, parts: frozenset[str] | None) -> None:
+        """Blank the paragraphs and objects named in ``parts`` (all of them for ``None``), for redacting an import
+        (D723): every character becomes :data:`~claudia_core.FILLER`, so lengths, places and who wrote what stay; the
+        suggestions on a blanked paragraph lose their words and reasons. ``ValueError`` for a name that is neither."""
+        blocks = {block.id for block in self.blocks}
+        if parts is not None and (unknown := sorted(parts - blocks - set(self.objects))):
+            raise ValueError(f"the text has no paragraph or object {unknown[0]!r}")
+        chosen = blocks if parts is None else blocks & parts
+        self.blocks = [
+            block.with_text(FILLER * len(block.text), block.runs) if block.id in chosen else block
+            for block in self.blocks
+        ]
+        for key, suggestion in self.suggestions.items():
+            if suggestion.anchor.block in chosen:
+                self.suggestions[key] = replace(
+                    suggestion,
+                    original=FILLER * len(suggestion.original),
+                    replacement=None if suggestion.replacement is None else FILLER * len(suggestion.replacement),
+                    reason="",
+                )
+        self.blank_objects(None if parts is None else parts & set(self.objects))
 
     def region_from_data(self, data: dict) -> Region:
         """Read a region a client sent: a stretch of text, or a selection of floating objects."""

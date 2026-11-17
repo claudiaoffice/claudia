@@ -10,6 +10,8 @@ export interface RenderingDef {
   params: Record<string, unknown>
   image: string | null
   renderer: string
+  /** What the last try to draw it said, when a window joined after the try (`renderings`); `null`: none yet. */
+  outcome?: RenderOutcome | null
 }
 
 /** What a tool said about the text: how bad, what, and where (lines and columns from 1). */
@@ -37,6 +39,19 @@ export interface RenderType {
   max_source_chars?: number
   params?: unknown[]
   [more: string]: unknown
+}
+
+/** The server's word as a client keeps it: what an event `render_result` or a definition's `outcome` says. */
+export function toOutcome(data: Partial<RenderOutcome>): RenderOutcome {
+  return { ok: !!data.ok, diagnostics: data.diagnostics ?? [], message: data.message ?? '', unavailable: data.unavailable ?? null }
+}
+
+/** What the last tries said, by container, from the definitions the server sent: a window that joins after a try failed
+ * must say "could not draw it" and not "drawing…" for ever. */
+export function outcomesOf(definitions: readonly RenderingDef[]): Record<string, RenderOutcome> {
+  const known: Record<string, RenderOutcome> = {}
+  for (const definition of definitions) if (definition.outcome) known[definition.id] = toOutcome(definition.outcome)
+  return known
 }
 
 export type RenderStatus =

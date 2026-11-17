@@ -85,7 +85,7 @@ def test_the_words_of_a_floating_object_are_typed_into_like_a_paragraph(text):
 
 
 def test_undoing_typing_after_an_undone_delete_that_cut_into_it_takes_out_exactly_the_typing():
-    """CODE-43 in a paragraph of the text: the delete and its undo changed nothing together."""
+    """CODE-57 in a paragraph of the text: the delete and its undo changed nothing together."""
     from claudia_core import DeleteText, InsertText
 
     doc = Document(TextModel([Block("b1", "body", "a note")]), store=MemoryStore())

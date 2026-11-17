@@ -182,6 +182,7 @@ class Typesetter:
             "openin_any": "p",  # paranoid: no absolute paths, no "..", no dot files
             "openout_any": "p",
             "shell_escape": "f",
+            "max_print_line": "10000",  # TeX cuts the lines of its log at 79 characters, and a message with them
             "SOURCE_DATE_EPOCH": "0",  # the same source gives the same PDF
             "FORCE_SOURCE_DATE": "1",
         }

@@ -10,9 +10,10 @@ Layout under the root folder::
     docs/<id>/journal.jsonl      one JSON object per line, appended as things happen
 
 Journal lines: ``entry`` (a log entry), ``branch`` (a line was created; maybe now the active one), ``chat``,
-``replace`` (redaction: entries rewritten) and ``discard`` (the owner forgot the abandoned future). Reading the journal
-in order rebuilds the log. A last line that is cut off (the power went out mid-write) is ignored; a damaged line
-anywhere else is an error, never a guess.
+``replace`` (redaction in journals written before D725: entries rewritten) and ``discard`` (the owner forgot the
+abandoned future). Reading the journal in order rebuilds the log. A last line that is cut off (the power went out
+mid-write) is ignored; a damaged line anywhere else is an error, never a guess. A redaction does not add a line: it
+writes the whole journal anew from the redacted log and chat (D725), so the old lines are gone.
 """
 
 from __future__ import annotations
@@ -36,6 +37,7 @@ from claudia_core import (
     Revision,
     Snapshot,
 )
+from claudia_file_writer import write_atomically
 
 from .auth import Account, ScryptDirectory
 from .hub import StoredInfo
@@ -59,11 +61,10 @@ class JournalStore:
         self._handle: BinaryIO | None = None
 
     def _write(self, kind: str, data) -> None:
-        line = json.dumps({"t": kind, "d": data}, separators=(",", ":"), ensure_ascii=False) + "\n"
         handle = self._handle
         if handle is None or handle.closed:
             handle = self._handle = self.path.open("ab")
-        handle.write(line.encode())
+        handle.write(_line(kind, data))
         handle.flush()
         os.fsync(handle.fileno())  # the change did not happen unless it is on disk
 
@@ -76,9 +77,12 @@ class JournalStore:
         """As ``DocumentStore.append_entry``."""
         self._write("entry", entry.to_data())
 
-    def replace_entries(self, entries: Sequence[Entry]) -> None:
-        """As ``DocumentStore.replace_entries``."""
-        self._write("replace", [e.to_data() for e in entries])
+    def rewrite(self, log: CommandLog, chat: Sequence[ChatRecord]) -> None:
+        """As ``DocumentStore.rewrite``: the journal is written anew from the redacted log and chat and put in place of
+        the old one all at once, so a crash leaves the old journal or the new one, never a mixture."""
+        self.close()
+        lines = [_line(kind, data) for kind, data in [*history_items(log), *chat_items(chat)]]
+        write_atomically(self.path, b"".join(lines), durable=True)
 
     def write_branch(self, branch: Branch, active: bool) -> None:
         """As ``DocumentStore.write_branch``."""
@@ -95,8 +99,26 @@ class JournalStore:
     def write_snapshot(self, snapshot: Snapshot) -> None:
         """Snapshots are only a cache; this store keeps none."""
 
-    def drop_snapshots(self) -> None:
-        """Nothing to drop."""
+
+def _line(kind: str, data) -> bytes:
+    return (json.dumps({"t": kind, "d": data}, separators=(",", ":"), ensure_ascii=False) + "\n").encode()
+
+
+def history_items(log: CommandLog) -> list[tuple[str, Any]]:
+    """The journal items that build ``log`` again: its lines (the active one marked), then every entry in order. What a
+    store writes when it writes a document anew (D725)."""
+    data = log.to_data()
+    lines = [
+        ("branch", {"branch": branch, "active": branch["name"] == data["active"]})
+        for branch in data["branches"]
+        if branch["name"] != "main"
+    ]
+    return [*lines, *(("entry", entry) for entry in data["entries"])]
+
+
+def chat_items(chat: Sequence[ChatRecord]) -> list[tuple[str, Any]]:
+    """The journal items of the chat, in order."""
+    return [("chat", record.to_data()) for record in chat]
 
 
 class _Replay:

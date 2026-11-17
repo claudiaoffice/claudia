@@ -28,6 +28,47 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   with the next paragraph; Heading 3 to 6 come and go as the files' own Heading 3 to 6. A heading deeper than the text
   has a style for (an `outline-level` of 7 and more) is body text and reported as before. Word's names of the built-in
   styles are kept in one table (`WORD_NAMES`), not two.
+### Fixed
+- `docx_to_text` and `odt_to_text` read the fonts of the file (E3.13, bug 1): Body text, Title, the headings and Quote
+  take the font their style names in the file -- a docx's own font or theme font (`minorHAnsi`), along `basedOn` and
+  the document defaults; an odt's `style:font-name` or `fo:font-family`, along the parent styles and the default
+  style. The font is the one the file names (Arial), never a stand-in; a fresh export writes it back, and it is no
+  loss.
+- A style whose font is a generic family is written into docx and odt as the font Claudia shows it with (`serif` as
+  Fraunces, `system-ui` as Inter, `ui-monospace` as JetBrains Mono), not as Liberation Serif, Sans or Mono, the next
+  family of the list, or a font called `ui-monospace` (CODE-42; `claudia_core.stand_ins.file_font`).
+
+## [0.7.0] - 2026-11-17
+
+Properties and links of a docx (D466, D468).
+
+### Added
+- `text_to_docx(..., info=)`: the file's properties are the log's (title, creator, dates) and not the template's
+  (IEW-02).
+- `removed-link` loss of a docx patch: an edit removed the words a link covered.
+
+### Fixed
+- Editing the words of a docx paragraph that held a hyperlink wrote the words of the link twice (IEW-01). The link is
+  carried to the place of its words in the new text (`_docx_links.carry_links`).
+
+## [0.6.0] - 2026-11-15
+
+Text boxes and shapes floating over a text reach docx and odt (D465).
+
+### Added
+- `text_to_docx` and `text_to_odt` write the text boxes and the shapes (circle, rectangle, triangle) of a text as
+  drawings in the paragraph they hang from, with their words, size, turn, description, fill and outline.
+- `docx_to_text` and `odt_to_text` read them back as text box and shape objects (`x1`, `x2`... in the order of the
+  file); the look of a box is written but not read, and `docx_import_losses` / `odt_import_losses` report `look` when
+  the file's differs from the model's.
+- `apply_edits_to_docx` and `apply_edits_to_odt` add, remove, move, resize, turn, reword and describe the boxes of a
+  kept file; a box whose kind, shape or style changes is drawn anew (and its foreign look lost); the ones nobody
+  touched stay byte for byte. The unwritten-change facets of boxes follow what the writers hold.
+
+### Fixed
+- `docx_to_text` counted a Word text box twice (its drawing and the picture Word keeps for old readers) (IEW-21).
+- The patch of a docx or odt wrote a style the file already had under a second name (`Shape label 2`) when an object
+  was restyled to it (IEW-22).
 
 ## [0.5.0] - 2026-11-15
 

@@ -30,6 +30,8 @@ export { readSfnt, SfntError, tableDirectory } from './fonts/sfnt'
 export type { Axis, SfntInfo, Table } from './fonts/sfnt'
 export { DEFAULT_GENERICS, FontResolver, parseFamilies, weightOf } from './fonts/resolve'
 export type { Catalogue, CatalogueFont, Generics, Resolution } from './fonts/resolve'
+export { CLOSENESS, SAME_WIDTHS, STAND_IN_GENERICS } from './fonts/stand-ins.generated'
+export type { Closeness } from './fonts/stand-ins.generated'
 
 export { BLACK, paragraphStyle } from './text/style'
 export type { ParagraphStyle, Rgba, TextAlign } from './text/style'

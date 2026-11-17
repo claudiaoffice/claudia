@@ -60,7 +60,7 @@ import hashlib
 import hmac
 import json
 import logging
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -91,7 +91,7 @@ from .security_headers import SecurityHeaders, WebScriptHashes
 from .suite import Module, Suite
 from .thing_names import naming_steps
 from .throttle import Throttle
-from .uploads import Upload, UploadDesk, UploadRefused, file_name
+from .uploads import Upload, UploadDesk, UploadRefused, file_name, read_body
 
 log = logging.getLogger("claudia_server")
 HELLO_TIMEOUT = 10.0
@@ -702,7 +702,7 @@ def create_app(
     if admin is not None:
         app.include_router(admin_router(suite, gateway.set_secret, admin))
     if fonts is not None:
-        app.include_router(font_router(fonts, DEFAULT_SUBSTITUTIONS))
+        app.include_router(font_router(fonts, DEFAULT_SUBSTITUTIONS, _people_of(gateway, admin)))
     if hyphenation is not None:
         app.include_router(hyphenation_router(hyphenation))
     # The addresses with the app (D431) come after every fixed /api/<word>/... route, so that none of those is read as
@@ -762,7 +762,7 @@ def _fixed_routes(app: FastAPI, suite: Suite, gateway: Gateway, presence: _Prese
             if not throttle.allow(address):
                 raise HTTPException(429, "too many questions; try again in a minute", headers={"Retry-After": "60"})
             try:
-                uid = json.loads(await _body(request, 1024))["uid"]
+                uid = json.loads(await read_body(request, 1024))["uid"]
             except (ValueError, KeyError, TypeError) as exc:
                 raise HTTPException(400, 'ask with {"uid": ...}') from exc
             found = await suite.find(uid) if is_uid(uid) else None
@@ -782,18 +782,17 @@ def _fixed_routes(app: FastAPI, suite: Suite, gateway: Gateway, presence: _Prese
     _upload_routes(app, suite, gateway)
 
 
-async def _body(request: Request, most: int) -> bytes:
-    """The request's body, refused with 413 past ``most`` bytes (before reading it, when it says how long it is)."""
-    declared = request.headers.get("content-length")
-    if declared is not None and declared.isdigit() and int(declared) > most:
-        raise HTTPException(413, f"the file is larger than {most // (1024 * 1024)} MB")
-    chunks, size = [], 0
-    async for chunk in request.stream():
-        size += len(chunk)
-        if size > most:
-            raise HTTPException(413, f"the file is larger than {most // (1024 * 1024)} MB")
-        chunks.append(chunk)
-    return b"".join(chunks)
+def _people_of(gateway: Gateway, admin: AdminContext | None) -> Callable[[Request], bool]:
+    """Whether a request comes from this server's own people, who may have its fonts for this server only (D1041):
+    it carries the access secret (any request does on a server without one), or an administrator's session."""
+
+    def local(request: Request) -> bool:
+        token = _bearer_token(request.headers.get("authorization"))
+        if gateway.accepts_secret(token):
+            return True
+        return admin is not None and admin.sessions.resolve(token) is not None
+
+    return local
 
 
 def _upload_routes(app: FastAPI, suite: Suite, gateway: Gateway) -> None:
@@ -811,7 +810,7 @@ def _upload_routes(app: FastAPI, suite: Suite, gateway: Gateway) -> None:
         address = request.client.host if request.client else ""
         try:
             gateway.uploads.room_for(address)
-            data = await _body(request, gateway.uploads.max_bytes)
+            data = await read_body(request, gateway.uploads.max_bytes)
             held = gateway.uploads.put(address, file_name(request.headers.get("x-claudia-name")), data)
         except UploadRefused as exc:
             raise HTTPException(exc.status, exc.message) from exc

@@ -31,14 +31,20 @@ from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.text.paragraph import Paragraph
 
 from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel, builtin_styles
-from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, VisualObject, plain
-from claudia_odf_io import Loss, LossLog
+from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, VisualObject, plain, primitive
+from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
 from claudia_opc_io import owns, reconcile
 
+from ._boxes import box_losses, is_written, look_of
+from ._boxes import has_references as has_box_references
 from ._docx_blocks import hidden_content, place, remove
+from ._docx_boxes import BoxEdits, BoxWriter, FileBox, file_boxes, restyled_words
 from ._docx_contents import body_order, write_contents
+from ._docx_fonts import style_fonts
+from ._docx_links import Carried, carry_links
 from ._docx_lists import ListWriter, numbering_in, read_lists
 from ._docx_pictures import (
+    FilePicture,
     PictureEdits,
     PictureWriter,
     file_pictures,
@@ -55,6 +61,7 @@ from ._docx_references import (
 )
 from ._docx_setup import read_setup, write_language, write_page
 from ._docx_styles import WORD_NAMES, WordNames, unsaid_of, write_styles
+from ._fonts import take_fonts
 from ._pictures import picture_losses, pictures_of
 from ._references import ReadReference, with_references
 from ._style_look import look_for
@@ -78,6 +85,7 @@ def text_to_docx(
     track_suggestions: bool = True,
     change_times: Mapping[str, str] | None = None,
     rasterise: Rasterise | None = None,
+    info: DocumentInfo | None = None,
 ) -> bytes:
     """``model`` as docx bytes: one paragraph per block. When ``track_suggestions`` (the default), every open
     suggestion that proposes a replacement is written as a tracked change instead of being silently dropped; a
@@ -85,7 +93,9 @@ def text_to_docx(
     ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one with no time is
     written without a date, which Word shows as undated (D411). The pictures floating over the text (an image, a
     rendered text container) are written as anchored drawings in the paragraph they hang from, with their alt text;
-    an SVG is shown by the picture ``rasterise`` draws of it, or else by an empty one (D464)."""
+    an SVG is shown by the picture ``rasterise`` draws of it, or else by an empty one (D464). The file says in its
+    properties who made the document and when and who changed it last, from ``info``; what ``info`` does not know it
+    leaves out (D466)."""
     document = Document()
     write_page(document, None, model.page)
     write_language(document, model.language)
@@ -99,6 +109,7 @@ def text_to_docx(
     entries, shown = model.structure.all_entries(), model.structure.shown()
     targets = _targets(model)
     bookmarks = count(1)
+    boxes = BoxWriter(document, names, model, pictures)
     for block in model.blocks:
         paragraph = document.add_paragraph(style=names.of(block.style))
         if block.generated is not None:
@@ -106,7 +117,7 @@ def text_to_docx(
             continue
         if block.item is not None:
             lists.write(paragraph, block.item)
-        marks = [(obj.anchor.offset, pictures.run(obj, asset)) for obj, asset in pictures_of(model, block.id)]
+        marks = _floating_runs(model, block.id, pictures, boxes)
         _fill_paragraph(paragraph, block.text, by_block.get(block.id, []), change_ids, when, marks)
         if block.fields:
             said = shown.get(block.id, ())
@@ -115,7 +126,38 @@ def text_to_docx(
             mark_targets(paragraph, bookmark_name(block.id), bookmarks)
     out = BytesIO()
     document.save(out)
-    return out.getvalue()
+    return stamp_office_meta(out.getvalue(), info)
+
+
+def _floating_runs(model: TextModel, block_id: str, pictures: PictureWriter, boxes: BoxWriter) -> list[tuple[int, Any]]:
+    """The runs of what floats over the paragraph ``block_id`` (pictures and boxes, the one in front last), each with
+    the character it stands at."""
+    assets = {obj.id: asset for obj, asset in pictures_of(model, block_id)}
+    runs = []
+    for object_id in model.stack_of(block_id):
+        obj = model.get_object(object_id)
+        if object_id in assets:
+            runs.append((obj.anchor.offset, pictures.run(obj, assets[object_id])))
+        elif is_written(obj):
+            runs.append((obj.anchor.offset, boxes.run(obj)))
+    return runs
+
+
+def _patch_lists(
+    document: Any, paragraphs: list[Any], baseline: TextModel, current: TextModel, names: WordNames, owned: set[str]
+) -> ListWriter:
+    """The list writer of a kept file, with the lists whose look changed drawn again and the numbering of the styles
+    that changed written (``owned`` gets the parts it rewrote)."""
+    lists = ListWriter(document, current.lists, current.schemes, read_lists(paragraphs, numbering_in(document)).num_of)
+    for list_id in baseline.lists.ids():
+        if list_id in current.lists and _drawn(current, list_id) != _drawn(baseline, list_id):
+            lists.restyle(list_id)
+    kept_styles = [style.id for style in current.styles if style.id in baseline.styles]
+    renumbered = [i for i in kept_styles if _numbering(current, i) != _numbering(baseline, i)]
+    if renumbered:
+        write_style_numbering(document, current.styles, names, lists, renumbered)
+        owned.add("word/styles.xml")
+    return lists
 
 
 def _targets(model: TextModel) -> set[str]:
@@ -133,7 +175,7 @@ def _patch_setup(document: Any, baseline: TextModel, current: TextModel) -> tupl
     if baseline.language != current.language:
         write_language(document, current.language)
         owned.add("word/styles.xml")
-    names = _word_names(document, current)
+    names = _word_names(document, current, baseline)
     if _write_changed_styles(document, baseline, current, names):
         owned |= {"word/styles.xml", "word/settings.xml"}
     return names, owned
@@ -177,11 +219,19 @@ class _BlockWriter:
             paragraph.style = self.names.of(after.style)
         if before.item != after.item:
             self.lists.write(paragraph, after.item)
+        carried, dropped = carry_links(
+            paragraph._p,
+            before.text,
+            after.text,
+            [(s.anchor.start, s.anchor.end) for s in self.replacements.get(after.id, [])],
+        )
+        if dropped and self.losses is not None:
+            self.losses.add("removed-link", count=dropped)
         _clear_runs(paragraph)
-        self._fill(paragraph, after)
+        self._fill(paragraph, after, carried)
         return paragraph._p
 
-    def _fill(self, paragraph: Paragraph, block: Block) -> None:
+    def _fill(self, paragraph: Paragraph, block: Block, carried: list[Carried] | None = None) -> None:
         _fill_paragraph(
             paragraph,
             block.text,
@@ -189,6 +239,7 @@ class _BlockWriter:
             self.change_ids,
             self.when,
             self.marks.get(block.id, []),
+            carried,
         )
 
 
@@ -216,9 +267,11 @@ def _remove_block(element: Any, losses: LossLog | None) -> None:
     remove(element)
 
 
-def _word_names(document: Any, model: TextModel) -> WordNames:
-    """The Word name of each style of ``model``, none of them one that ``document`` has for another style."""
-    return WordNames(model.styles, taken={style.name for style in document.styles})
+def _word_names(document: Any, model: TextModel, baseline: TextModel | None = None) -> WordNames:  # noqa: ANN401
+    """The Word name of each style of ``model``, none of them one that ``document`` has for another style: a style the
+    file has under the name ``baseline`` (the model it was read as) gives the style of that id is that style."""
+    own = set() if baseline is None else {WordNames(baseline.styles).of(style.id) for style in baseline.styles}
+    return WordNames(model.styles, taken={style.name for style in document.styles} - own)
 
 
 def _fill_paragraph(
@@ -228,17 +281,25 @@ def _fill_paragraph(
     change_ids: Iterator[int],
     when: WhenMade,
     marks: list[tuple[int, Any]] | None = None,
+    carried: list[Carried] | None = None,
 ) -> None:
     """Write ``text`` into ``paragraph`` with its suggestions as tracked changes and ``marks`` (``(offset, run)``: the
     pictures) after the characters they stand behind; one that stands inside words a tracked change deletes follows the
-    change."""
-    waiting = sorted(marks or [], key=lambda mark: mark[0])
+    change. A ``carried`` link (IEW-01) stands in the place of its own words, which are not written again."""
+    waiting = sorted(
+        [(offset, run, 0) for offset, run in marks or []]
+        + [(link.start, link.element, link.length) for link in carried or []],
+        key=lambda mark: mark[0],
+    )
     position = 0
     element = paragraph._p  # python-docx's own documented way to reach markup it does not model (its FAQ)
 
     def release() -> None:
+        nonlocal position
         while waiting and waiting[0][0] <= position:
-            element.append(waiting.pop(0)[1])
+            _, found, held = waiting.pop(0)
+            element.append(found)
+            position += held
 
     def write(end: int) -> None:
         nonlocal position
@@ -265,7 +326,7 @@ def _fill_paragraph(
             )
         position = stop
     write(len(text))
-    for _, run in waiting:
+    for _, run, _ in waiting:
         element.append(run)
 
 
@@ -294,7 +355,9 @@ def _tracked_change(
 def docx_to_text(docx_bytes: bytes) -> TextModel:
     """``docx_bytes`` as a :class:`~claudia_composes.TextModel`: one block per paragraph, in order, Word's
     built-in styles mapped back to claudia's (anything else -- "Normal", a custom style, no style at all --
-    becomes body text, the same fallback ``text_to_docx`` uses going the other way). A picture the model can show as it
+    becomes body text, the same fallback ``text_to_docx`` uses going the other way), each of those styles with the font
+    the file gives it (E3.13: a style's own, the one it is based on, the document defaults, a theme font). A picture the
+    model can show as it
     is (an image the app decodes, not cropped or flipped, in its own proportions) comes in as an image object hanging
     from its paragraph, with its alt text (D464). A tracked change's own text
     is not seen here: python-docx's own ``paragraph.text`` already skips it (only runs that are direct children
@@ -339,10 +402,18 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
     )
     for style_id, list_id in numbered.items():
         model.styles.set_numbering(style_id, list_id)
-    for picture in file_pictures(document):
-        if picture.asset.id not in model.images:
-            model.define_image(picture.asset)
-        model.insert_object(VisualObject(picture.body, BlockAnchor(f"b{picture.block + 1}", picture.offset)))
+    take_fonts(model, style_fonts(document, WORD_NAMES))
+    floating: list[tuple[int, int, int, FilePicture | FileBox]] = [
+        (each.block, each.offset, 0, each) for each in file_pictures(document)
+    ]
+    floating += [(each.block, each.offset, 1, each) for each in file_boxes(document)]
+    for _, _, _, each in sorted(floating, key=lambda found: found[:3]):
+        if isinstance(each, FileBox):
+            if each.body.shape is not None and each.body.shape not in model.shapes:
+                model.define_shape(primitive(each.body.shape))
+        elif each.asset.id not in model.images:
+            model.define_image(each.asset)
+        model.insert_object(VisualObject(each.body, BlockAnchor(f"b{each.block + 1}", each.offset)))
     return model
 
 
@@ -405,12 +476,15 @@ def docx_import_losses(docx_bytes: bytes) -> tuple[Loss, ...]:
             losses.add("style", style.name)
     reading = read_lists(document.paragraphs, numbering_in(document))
     held = file_pictures(document)
+    boxes = file_boxes(document)
+    plain = TextModel(None)
     counts = {
         "list-look": reading.odd_looks,
         "list-depth": reading.too_deep,
         "page": int(read_setup(document).odd_page),
         "picture": unheld_pictures(document, held),
-        "frame": _frames(body),
+        "frame": _frames(body, boxes),
+        "look": sum(1 for box in boxes if not box.look.matches(look_of(plain, box.body))),
     }
     for code, tags in _IMPORT_LOSSES:
         number = counts[code] if code in counts else sum(1 for tag in tags for _ in body.iter(qn(tag)))
@@ -419,10 +493,19 @@ def docx_import_losses(docx_bytes: bytes) -> tuple[Loss, ...]:
     return losses.result()
 
 
-def _frames(body: Any) -> int:  # noqa: ANN401
-    """How many drawings and legacy pictures of ``body`` are not pictures (a text box, a shape, a chart, a diagram)."""
-    drawings = sum(1 for drawing in body.iter(qn("w:drawing")) if not drawing.xpath(".//pic:pic"))
-    return drawings + sum(1 for _ in body.iter(qn("w:pict")))
+_FALLBACK = "{http://schemas.openxmlformats.org/markup-compatibility/2006}Fallback"
+
+
+def _frames(body: Any, held: list[FileBox]) -> int:  # noqa: ANN401
+    """How many drawings and legacy pictures of ``body`` are neither pictures nor the text boxes and shapes the model
+    holds (a text box it cannot show, a chart, a diagram). What Word writes for the programs that do not know a drawing
+    (a legacy picture in the ``mc:Fallback`` next to it) is the same box, not another."""
+    kept = {id(each.drawing) for each in held}
+    drawings = sum(
+        1 for drawing in body.iter(qn("w:drawing")) if id(drawing) not in kept and not drawing.xpath(".//pic:pic")
+    )
+    legacy = sum(1 for pict in body.iter(qn("w:pict")) if pict.getparent().tag != _FALLBACK)
+    return drawings + legacy
 
 
 #: What a docx has that the model does not show, by code in the order it is reported: the elements to count (a
@@ -434,6 +517,7 @@ _IMPORT_LOSSES = (
     ("page", ()),
     ("frame", ()),
     ("picture", ()),
+    ("look", ()),
     ("footnote", ("w:footnoteReference", "w:endnoteReference")),
     ("comment", ("w:commentReference",)),
     ("formatting", ("w:rPr",)),
@@ -474,6 +558,7 @@ def docx_export_losses(
         if skipped:
             losses.add("suggestion-anchor", count=skipped)
     picture_losses(model, losses, vector_loss=None if rasterised else "svg-fallback")
+    box_losses(model, losses)
     return (*losses.result(), *docx_unwritten_changes(model))
 
 
@@ -482,7 +567,8 @@ def _write_changed_styles(document: Any, baseline: TextModel, current: TextModel
     restyled paragraph now has that the file lacks; ``True`` when the file's styles changed."""
     colours, before_colours = current.palette.colours(), baseline.palette.colours()
     known = {block.id: block.style for block in baseline.blocks}
-    wanted = {block.style for block in current.blocks if known.get(block.id) != block.style} - WORD_NAMES.keys()
+    wanted = {block.style for block in current.blocks if known.get(block.id) != block.style}
+    wanted = (wanted | restyled_words(baseline, current)) - WORD_NAMES.keys()
     changed = set()
     for style in current.styles:
         if style.kind != "paragraph":
@@ -559,7 +645,7 @@ def _no_contents(*models: TextModel) -> None:
     """:class:`UnsupportedEdit` for a text with a table of contents: it is not a paragraph of the file."""
     if any(b.generated is not None for model in models for b in model.blocks):
         raise UnsupportedEdit("a text with a table of contents is written anew, not patched")
-    if any(b.fields for model in models for b in model.blocks):
+    if any(b.fields for model in models for b in model.blocks) or any(map(has_box_references, models)):
         raise UnsupportedEdit("a text with references is written anew, not patched")
 
 
@@ -608,16 +694,8 @@ def apply_edits_to_docx(
     if kept != [block.id for block in held if block.id in current_ids]:
         raise UnsupportedEdit("blocks cannot be moved relative to each other in the file")
     paragraph_of = {block.id: paragraph for block, paragraph in zip(held, paragraphs, strict=True)}
-    lists = ListWriter(document, current.lists, current.schemes, read_lists(paragraphs, numbering_in(document)).num_of)
     names, owned = _patch_setup(document, baseline, current)
-    for list_id in baseline.lists.ids():
-        if list_id in current.lists and _drawn(current, list_id) != _drawn(baseline, list_id):
-            lists.restyle(list_id)
-    kept_styles = [style.id for style in current.styles if style.id in baseline.styles]
-    renumbered = [i for i in kept_styles if _numbering(current, i) != _numbering(baseline, i)]
-    if renumbered:
-        write_style_numbering(document, current.styles, names, lists, renumbered)
-        owned.add("word/styles.xml")
+    lists = _patch_lists(document, paragraphs, baseline, current, names, owned)
     replacements = open_replacements(current, track=track_suggestions)
     rewritten = {
         block.id for block in current.blocks if baseline_by_id.get(block.id) != block or block.id in replacements
@@ -625,6 +703,9 @@ def apply_edits_to_docx(
     if losses is not None:  # (what a rendered container is that nothing has been drawn for)
         picture_losses(current, losses)
     pictures = PictureEdits(document, baseline, current, rewritten, rasterise, losses)
+    boxes = BoxEdits(document, names, baseline, current, rewritten, pictures.writer, losses)
+    for block_id, runs in boxes.marks.items():
+        pictures.marks.setdefault(block_id, []).extend(runs)
     for block in held:
         if block.id not in current_ids:
             _remove_block(paragraph_of[block.id]._p, losses)
@@ -637,7 +718,9 @@ def apply_edits_to_docx(
             last = writer.add(after, last, following)
         else:
             last = writer.edit(paragraph_of[after.id], before, after)
-    pictures.settle({block_id: paragraph._p for block_id, paragraph in paragraph_of.items()})
+    elements = {block_id: paragraph._p for block_id, paragraph in paragraph_of.items()}
+    pictures.settle(elements)
+    boxes.settle(elements)
     patched = BytesIO()
     document.save(patched)
     if pictures.changed:

@@ -26,9 +26,11 @@
     writing      InsertText, DeleteText, TextCommand: typing into any paragraph, character by character (step G)
     fields       RefField, SetField, FieldsChanged: references in the words, read from what they point at (step H)
     object_texts the words and descriptions of objects as texts a search can look in and replace, for any app
+    looks        colours and lengths of a resolved style as values a file format holds (D465)
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
                  (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
+    file_boxes   the text boxes and shapes of an office file as the model holds them (D465)
     file_pictures  the pictures of an office file as image objects: what an app needs to hold one (D464)
     raster       Rasterise and the empty picture that stands in for an SVG nobody can draw (D394)
     page         PageSetup: the paper, orientation, margins and page numbers a document prints on (D904, D917)
@@ -74,7 +76,7 @@ from .css import (
     roles_used,
     validate_css,
 )
-from .document import Applied, Changes, CheckpointInfo, Document, Line, Look, environment_of
+from .document import Applied, Changes, CheckpointInfo, Document, Line, Look, RedactionPlan, environment_of
 from .errors import (
     KernelError,
     MissingUpcaster,
@@ -130,6 +132,7 @@ from .fields import (
     fields_before,
     plain,
 )
+from .file_boxes import SHAPE_LABEL_STYLE, SHAPE_STYLE, TEXT_BOX_STYLE, box_body
 from .file_pictures import FILE_IMPORTER, IMAGE_STYLE, UNKNOWN_TIME, asset_of, keeps_proportions, picture_body
 from .generated import (
     CONTENTS_STYLE,
@@ -156,6 +159,7 @@ from .lists import (
     numbering_labels,
 )
 from .log import CommandLog, Entry
+from .looks import colour_of, parse_colour, points_of
 from .manifest import (
     Environment,
     FontRequirement,
@@ -172,6 +176,7 @@ from .names import MAX_THING_NAME, clean_name, free_name, name_key, name_problem
 from .object_texts import ObjectText, edit_object_text, object_texts
 from .objects import (
     ASPECT_TOLERANCE,
+    FILLER,
     MAX_OBJECTS_PER_CONTAINER,
     MAX_SELECTION,
     MIN_OBJECT_SIZE,
@@ -262,7 +267,7 @@ from .schemes import (
     builtin_scheme,
     builtin_schemes,
 )
-from .shapes import BOX, FORMAT, ShapeDefinition, ShapeError, parse_shape
+from .shapes import BOX, FORMAT, PRIMITIVES, ShapeDefinition, ShapeError, parse_shape, primitive
 from .store import DocumentStore, MemoryStore
 from .structure import Emitter, LabelsChanged, ParagraphHost, Placed, TextStructure
 from .styles import (
@@ -393,6 +398,7 @@ __all__ = [
     "DocumentStore",
     "encode",
     "Entry",
+    "FILLER",
     "Environment",
     "environment_of",
     "Ephemeral",
@@ -465,7 +471,16 @@ __all__ = [
     "paragraph_for",
     "parse_chat",
     "parse_css",
+    "PRIMITIVES",
+    "SHAPE_LABEL_STYLE",
+    "SHAPE_STYLE",
+    "TEXT_BOX_STYLE",
+    "box_body",
+    "primitive",
+    "colour_of",
+    "parse_colour",
     "parse_shape",
+    "points_of",
     "Presence",
     "Reading",
     "Rebuilt",
@@ -473,6 +488,7 @@ __all__ = [
     "RedactedEvent",
     "Redaction",
     "RedactionError",
+    "RedactionPlan",
     "Region",
     "RegionHeld",
     "RemoveObject",
