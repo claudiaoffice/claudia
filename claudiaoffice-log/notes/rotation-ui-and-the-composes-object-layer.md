@@ -22,11 +22,14 @@ It is also an open line of the 2026-11-14/15 work plan (`human.md`): "rotation U
   on the slide; it knows no angle.
 - **Print and the PDF already turn.** D907 prints floating objects at their anchor; D910 says rotation uses a table
   of sines so that a display list is the same everywhere. The shared drawing is `layout/src/apps/objects.ts`.
-- **composes has the model of an object layer and no view of it.** An object hangs from a paragraph and a character
-  (`BlockAnchor`, D179), floats over the text without wrap, follows the text through other people's edits, and
-  prints where it hangs (D907). D907 says it plainly: "The composes web client does not show floating objects in
-  the text yet (they arrive by import)". So "introducing the object layer" is a client and interaction job, with one
-  model question (open point 1).
+- **composes has the model of an object layer and (as written) no view of it.** An object hangs from a paragraph and
+  a character (`BlockAnchor`, D179), floats over the text without wrap, follows the text through other people's
+  edits, and prints where it hangs (D907). D907 says it plainly: "The composes web client does not show floating
+  objects in the text yet (they arrive by import)". So "introducing the object layer" is a client and interaction
+  job. *Status 2026-11-17: the one model question this note had (open point 1, the offset) is answered: the anchor
+  carries `dx`/`dy` since D1023, the server takes them in `move_object`, and the screen and the print now place an
+  object at its character plus that offset. The layer shows every kind of object now, not only rendered text. See
+  `composes-floating-object-layer.md`.*
 - **Shared rules the design leans on:** holding an object by selecting it (D82), the object's own snap to the grid
   (D214), one style per container's text (D306), Title Case menu labels with the same key in every client (D321,
   D361), the history entry as the unit of undo.
@@ -101,7 +104,9 @@ before the caret, 32 px down and right.
 
 ## Open points, each with a recommendation
 
-1. **A free offset from the anchor (composes, needs a model change).** Today an object's top-left sits on the
+1. **A free offset from the anchor (composes, needs a model change).** *Done: D1023 added `dx`/`dy` to the anchor; the
+   screen and the print place an object at its character plus the offset (2026-11-17). What is left of this point is
+   the drag that sets the offset, in `composes-floating-object-layer.md`. Text below as written on 2026-11-15.* Today an object's top-left sits on the
    character it hangs from (D179, D907), so it cannot float into a margin or beside a paragraph. The mock-up shows
    an offset (dx, dy) from the anchor. *Recommended:* add it to `BlockAnchor`; without it "floating around" means
    "jumping from character to character". It changes the anchor's wire form and D907's placement rule.
@@ -165,4 +170,4 @@ Listed so the story can be sized; none of it is started.
 - The proposed keys were checked for collisions in the three manifests only, not against the browsers' and the
   desktop environments' own shortcuts; Ctrl+Alt+, and Ctrl+Alt+. are not known to be taken, which is not the same
   as free.
-- The composes mock-up shows an offset from the anchor that the model does not have (open point 1).
+- ~~The composes mock-up shows an offset from the anchor that the model does not have (open point 1).~~ It has it since D1023; no client sets it by dragging yet.
