@@ -14,7 +14,7 @@ import { localAppData } from '../src/platform/windows.js'
 
 describe('claudiaFolder', () => {
   it("is ~/Library/Application Support/Claudia on a Mac", () => {
-    expect(claudiaFolder(hostPlatform('macos'), {}, '/Users/x')).toBe('/Users/x/Library/Application Support/Claudia')
+    expect(claudiaFolder(hostPlatform('macos'), {}, '/Users/x')).toBe(join('/Users/x', 'Library', 'Application Support', 'Claudia'))
   })
 
   it('is <LOCALAPPDATA>/Claudia on Windows', () => {
@@ -30,13 +30,15 @@ describe('claudiaFolder', () => {
 })
 
 describe('serverDocumentsDir / serverStateDir / stateDir', () => {
+  const suite = join('/Users/x', 'Library', 'Application Support', 'Claudia')
+
   it("the local server's folders are the suite's: the three apps share one server (D445)", () => {
-    expect(serverDocumentsDir('/Users/x/Library/Application Support/Claudia')).toBe('/Users/x/Library/Application Support/Claudia/documents')
-    expect(serverStateDir('/Users/x/Library/Application Support/Claudia')).toBe('/Users/x/Library/Application Support/Claudia/state')
+    expect(serverDocumentsDir(suite)).toBe(join(suite, 'documents'))
+    expect(serverStateDir(suite)).toBe(join(suite, 'state'))
   })
 
   it("a shell's own log is its app's: <suite>/<app>/state", () => {
-    expect(stateDir('creates', '/Users/x/Library/Application Support/Claudia')).toBe('/Users/x/Library/Application Support/Claudia/creates/state')
+    expect(stateDir('creates', suite)).toBe(join(suite, 'creates', 'state'))
   })
 })
 

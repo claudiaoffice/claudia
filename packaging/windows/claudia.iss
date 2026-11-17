@@ -147,7 +147,7 @@ const
 
 function CustomTypeName(Param: String): String;
 begin
-  Result := SetupMessage(msgCustomSetupType);
+  Result := SetupMessage(msgCustomInstallation);
 end;
 
 function HasWebView2Version(RootKey: Integer; const SubKey: String): Boolean;

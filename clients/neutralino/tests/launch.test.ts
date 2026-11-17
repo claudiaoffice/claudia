@@ -90,7 +90,8 @@ describe('macProcessName', () => {
 })
 
 describe('missingFiles', () => {
-  const all = new Set(['/a/index.html', '/a/shell/shell.js', '/a/ext/core.mjs', '/a/js/neutralino.js'])
+  // Paths are built with join(), as the code under test builds them: Windows spells them with backslashes.
+  const all = new Set(['index.html', join('shell', 'shell.js'), join('ext', 'core.mjs'), join('js', 'neutralino.js')].map((f) => join('/a', f)))
   const has = (path: string) => all.has(path)
 
   it('is null when everything is there', () => {
@@ -98,13 +99,13 @@ describe('missingFiles', () => {
   })
 
   it('says to build when a generated file is missing', () => {
-    const message = missingFiles('/a', (p) => p !== '/a/ext/core.mjs' && has(p))
-    expect(message).toContain('ext/core.mjs')
+    const message = missingFiles('/a', (p) => p !== join('/a', 'ext', 'core.mjs') && has(p))
+    expect(message).toContain(join('ext', 'core.mjs'))
     expect(message).toContain('npm run build')
   })
 
   it("says to run `neu update` when Neutralino's client library is missing", () => {
-    const message = missingFiles('/a', (p) => p !== '/a/js/neutralino.js' && has(p))
+    const message = missingFiles('/a', (p) => p !== join('/a', 'js', 'neutralino.js') && has(p))
     expect(message).toContain('neu update')
   })
 })

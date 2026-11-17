@@ -63,7 +63,8 @@ describe('ensureAppBundle', () => {
     })
     expect(executablePath).toBe(join(binDir, 'claudia-creates.app', 'Contents', 'MacOS', 'claudia-creates'))
     expect(readFileSync(executablePath, 'utf8')).toBe('pretend-binary-bytes-v1')
-    expect(statSync(executablePath).mode & 0o111).toBeTruthy() // still executable
+    // still executable (Windows has no execute bits; a bundle is only ever made on a Mac, so only there is it checked)
+    if (process.platform !== 'win32') expect(statSync(executablePath).mode & 0o111).toBeTruthy()
     const plist = readFileSync(join(binDir, 'claudia-creates.app', 'Contents', 'Info.plist'), 'utf8')
     expect(plist).toContain('claudia creates')
     expect(plist).toContain('de.claudiaoffice.creates')

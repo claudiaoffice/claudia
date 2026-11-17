@@ -238,6 +238,20 @@ def test_every_message_the_script_uses_exists_in_every_language():
         assert used <= defined, f"{language} lacks {sorted(used - defined)}"
 
 
+# The messages of Inno Setup's own Default.isl that the script reads with SetupMessage(msg<Name>). The compiler knows
+# only the names Default.isl defines, and an unknown one stops the build with "Unknown identifier" -- which only the
+# Windows job sees (it failed on `msgCustomSetupType`, a name that does not exist; the setup type is
+# `CustomInstallation`). Add a name here only after finding it in Default.isl of the Inno Setup the workflow installs.
+SETUP_MESSAGES_IN_DEFAULT_ISL = {"CustomInstallation"}
+
+
+def test_the_script_reads_only_setup_messages_that_inno_setup_defines():
+    used = set(re.findall(r"SetupMessage\(msg(\w+)\)", iss_text()))
+    assert used, "the script reads no setup message any more: drop this test and the list above"
+    unknown = sorted(used - SETUP_MESSAGES_IN_DEFAULT_ISL)
+    assert not unknown, f"not known to be in Default.isl: {unknown}"
+
+
 def test_the_languages_are_those_the_suite_has_catalogs_for():
     languages = set(re.findall(r'^Name: "(\w+)"; MessagesFile', iss_text(), flags=re.M))
     assert languages == {path.stem for path in (ROOT / "po").glob("*.po") if path.stem != "xx"} | {"en"}
