@@ -208,7 +208,7 @@ def _export_office(ctx, *, format, tracked_changes):
             ),
             lambda: office_export(
                 format,
-                text_to_docx(model, track_suggestions=tracked_changes, change_times=times, rasterise=draw),
+                text_to_docx(model, track_suggestions=tracked_changes, change_times=times, rasterise=draw, info=info),
                 docx_export_losses(model, track_suggestions=tracked_changes, rasterised=draw is not None),
             ),
             docx_unwritten_changes,

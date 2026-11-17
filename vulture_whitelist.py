@@ -7,6 +7,7 @@ from vulture.whitelist_utils import Whitelist
 
 used = Whitelist()
 
+used.dash_style  # python-pptx LineFormat property that tests/test_pptx.py sets on a shape
 used.failed  # Context.failed: set by Document, read by models in settle() after a rolled-back command
 used.__cause__  # ReplayError chains the original exception
 used._add_1_to_2  # registered as an upcaster by a decorator (tests/test_commands.py)

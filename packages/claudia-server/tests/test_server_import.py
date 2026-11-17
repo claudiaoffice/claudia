@@ -361,6 +361,33 @@ def test_a_picture_of_a_file_is_an_object_of_the_text_and_its_new_description_is
     assert back.images[found.body.image].data == asset.data
 
 
+@pytest.mark.parametrize("fmt", ["docx", "odt"])
+def test_a_text_box_of_a_file_is_an_object_of_the_text_and_its_new_words_are_patched_into_the_file(fmt):
+    from claudia_composes_io import docx_to_text, odt_to_text, text_to_docx, text_to_odt
+
+    from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, TextModel
+    from claudia_core import ObjectBody, SetText, VisualObject, paragraph_for
+
+    start = TextModel([Block("b1", DEFAULT_STYLE, "Hello world")])
+    body = ObjectBody("o1", "text", 300, 100, "plain-box", paragraph_for("o1", "body", "Some words"))
+    start.insert_object(VisualObject(body, BlockAnchor("b1", 5)))
+    written, read = (text_to_docx, docx_to_text) if fmt == "docx" else (text_to_odt, odt_to_text)
+    suite = Suite([Module(app_hub(MemoryProvider(TextModel), TextModel), _directory())])
+    with TestClient(create_app(suite)) as client:
+        token = upload(client, written(start), name=f"file.{fmt}").json()["upload"]
+        with client.websocket_connect("/api/composes/docs/file/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            doc = hosted(client, "composes", "file").document
+            (found,) = doc.model.objects.values()
+            assert (found.body.kind, found.anchor) == ("text", BlockAnchor("b1", 5))
+            doc.execute(SetText(found.id, "Other words"), author="ann")
+            answer = request(ws, "export_office", {"format": fmt})["result"]
+    assert answer["patched"] is True and not any(loss["kind"] == "not-patched" for loss in answer["losses"])
+    (back,) = read(base64.b64decode(answer["data"])).objects.values()
+    assert (back.body.paragraph.text, back.anchor) == ("Other words", BlockAnchor("b1", 5))
+
+
 # --------------------------------------------------------------------------------- sealed: kept across a restart
 def test_the_kept_file_survives_packing_and_a_restart(tmp_path):
     def server():

@@ -15,6 +15,21 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - A font is no loss on import: `pptx_import_losses` and `odp_import_losses` report `formatting` only for words of one
   box in two fonts, not for a run or span that does no more than name the box's font.
 
+## [0.7.0] - 2026-11-17
+
+Looks of an imported deck (D466, D467).
+
+### Added
+- `slides_to_pptx(..., info=)`: the file's properties are the log's, not python-pptx's (IEW-02).
+- `odp_to_slides` and `pptx_to_slides` read the fill, outline, size, colour, bold, italic, font and alignment an object
+  says, and the colour of the page, into styles (`file-outline-N`, `file-paragraph-N`) and the palette's `page`;
+  `slides_to_odp` and `slides_to_pptx` write bold, italic, font, alignment (pptx) and the page colour (IEW-20).
+
+### Changed
+- `look` in `odp_import_losses` and `pptx_import_losses` means what the model has no property for (a gradient, a dash, a
+  shadow, a lightened colour, a text box's fill, another slide's page colour), no longer "different from Claudia's
+  default look". A deck of Claudia's has none. An imported deck's page is white where the file says none.
+
 ## [0.6.0] - 2026-11-15
 
 A turned object lies on the slide by its outline (D1021, D1022).

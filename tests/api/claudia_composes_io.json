@@ -1,5 +1,5 @@
 {
- "version": "0.5.0",
+ "version": "0.7.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -42,7 +42,7 @@
   "function": "(model: 'TextModel', baseline: 'TextModel | None' = None) -> 'tuple[Loss, ...]'"
  },
  "text_to_docx": {
-  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
+  "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, change_times: 'Mapping[str, str] | None' = None, rasterise: 'Rasterise | None' = None, info: 'DocumentInfo | None' = None) -> 'bytes'"
  },
  "text_to_odt": {
   "function": "(model: 'TextModel', *, track_suggestions: 'bool' = True, info: 'DocumentInfo | None' = None, change_times: 'Mapping[str, str] | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"

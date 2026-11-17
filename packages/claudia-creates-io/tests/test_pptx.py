@@ -10,7 +10,14 @@ from io import BytesIO
 
 import pptx
 import pytest
-from claudia_creates_io import UnsupportedEdit, add_transition, apply_edits_to_pptx, pptx_to_slides, slides_to_pptx
+from claudia_creates_io import (
+    UnsupportedEdit,
+    add_transition,
+    apply_edits_to_pptx,
+    pptx_import_losses,
+    pptx_to_slides,
+    slides_to_pptx,
+)
 from lxml import etree
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE_TYPE
@@ -669,3 +676,95 @@ def test_the_export_report_names_what_powerpoint_cannot_keep():
     assert [(loss.kind, loss.count) for loss in pptx_export_losses(_deck_with_container(pictured=False))] == [
         ("rendering-pending", 1)
     ]
+
+
+def a_deck_with_looks() -> bytes:
+    """What PowerPoint writes: a blue page, a green outlined oval through the theme's own colours, red bold words."""
+    from pptx.dml.color import RGBColor
+    from pptx.enum.shapes import MSO_SHAPE
+    from pptx.enum.text import PP_ALIGN
+    from pptx.util import Pt
+
+    document = pptx.Presentation(BytesIO(slides_to_pptx(SlideModel.empty())))
+    slide = document.slides[0]
+    slide.background.fill.solid()
+    slide.background.fill.fore_color.rgb = RGBColor(0x10, 0x20, 0x30)
+    oval = slide.shapes.add_shape(MSO_SHAPE.OVAL, Emu(914_400), Emu(914_400), Emu(914_400), Emu(914_400))
+    oval.fill.solid()
+    oval.fill.fore_color.rgb = RGBColor(0x33, 0x66, 0x99)
+    oval.line.color.rgb = RGBColor(0x11, 0x22, 0x33)
+    oval.line.width = Pt(3)
+    oval.text_frame.text = "Hi"
+    oval.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
+    run = oval.text_frame.paragraphs[0].runs[0]
+    run.font.size, run.font.bold, run.font.italic, run.font.name = Pt(30), True, True, "Georgia"
+    run.font.color.rgb = RGBColor(255, 0, 0)
+    out = BytesIO()
+    document.save(out)
+    return out.getvalue()
+
+
+def test_what_a_pptx_says_of_the_look_of_an_object_and_its_page_is_read():
+    model = pptx_to_slides(a_deck_with_looks())
+    assert model.palette.colours()["page"] == "#102030"
+    body = next(iter(model.objects.values())).body
+    css = model.styles.get(body.style).css
+    assert (css["fill"], css["stroke"]) == ("#336699", "#112233")
+    words = model.styles.computed(body.paragraph.style)  # the font is a style of its own, based on the look
+    assert (words["color"], words["font-weight"], words["font-style"], words["text-align"]) == (
+        "#ff0000",
+        "bold",
+        "italic",
+        "right",
+    )
+    assert "Georgia" in words["font-family"]
+
+
+def test_a_look_that_was_read_is_written_again_by_a_fresh_export():
+    again = slides_to_pptx(pptx_to_slides(a_deck_with_looks()))
+    document = pptx.Presentation(BytesIO(again))
+    slide = document.slides[0]
+    assert str(slide.background.fill.fore_color.rgb) == "102030"
+    oval = next(shape for shape in slide.shapes if shape.has_text_frame and shape.text_frame.text == "Hi")
+    run = oval.text_frame.paragraphs[0].runs[0]
+    assert (str(oval.fill.fore_color.rgb), str(run.font.color.rgb), run.font.bold, run.font.name) == (
+        "336699",
+        "FF0000",
+        True,
+        "Georgia",
+    )
+
+
+def test_the_colours_of_the_theme_are_the_ones_a_shape_made_of_them_gets():
+    # a shape that only says "accent 1" through its style reference, as PowerPoint's own do
+    document = pptx.Presentation(BytesIO(slides_to_pptx(SlideModel.empty())))
+    from pptx.enum.shapes import MSO_SHAPE
+
+    document.slides[0].shapes.add_shape(MSO_SHAPE.RECTANGLE, Emu(0), Emu(0), Emu(914_400), Emu(914_400))
+    out = BytesIO()
+    document.save(out)
+    model = pptx_to_slides(out.getvalue())
+    css = model.styles.resolved(next(iter(model.objects.values())).body.style, {})
+    assert css["fill"].startswith("#") and len(css["fill"]) == 7
+
+
+def test_a_colour_made_lighter_a_dash_and_a_second_page_colour_are_reported():
+    from pptx.dml.color import RGBColor
+    from pptx.enum.dml import MSO_LINE
+    from pptx.enum.shapes import MSO_SHAPE
+
+    document = pptx.Presentation(BytesIO(slides_to_pptx(SlideModel.empty())))
+    slide = document.slides[0]
+    lighter = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Emu(0), Emu(0), Emu(914_400), Emu(914_400))
+    lighter.fill.solid()
+    lighter.fill.fore_color.rgb = RGBColor(1, 2, 3)
+    lighter.fill._xPr.find(".//{*}srgbClr").append(
+        etree.fromstring('<a:lumMod xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="50000"/>')
+    )
+    dashed = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Emu(0), Emu(914_400), Emu(914_400), Emu(914_400))
+    dashed.line.color.rgb = RGBColor(1, 2, 3)
+    dashed.line.dash_style = MSO_LINE.DASH
+    document.slides.add_slide(document.slide_layouts[6]).background.fill.solid()
+    out = BytesIO()
+    document.save(out)
+    assert {(loss.kind, loss.count) for loss in pptx_import_losses(out.getvalue())} == {("look", 3)}

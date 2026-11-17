@@ -7,66 +7,21 @@ would turn a 14% wash into full-strength iris)."""
 
 from __future__ import annotations
 
-import re
-
 from claudia_core import StyleDef
+from claudia_core.looks import colour_of, parse_colour, points_of
 from claudia_core.stand_ins import css_family
 from claudia_creates import SlideModel
 
-_HEX = re.compile(r"#([0-9a-fA-F]{6})\b")
-_SHORT_HEX = re.compile(r"#([0-9a-fA-F]{3})\b")
-_RGB_FUNCTION = re.compile(r"rgba?\(([^)]*)\)")
-_NUMBER = re.compile(r"[\d.]+")
-
-
-def points_of(css: dict[str, str], prop: str, pt_per_unit: float) -> float | None:
-    """``css[prop]`` (CSS pixels, a unit of the slide's own 1600x900 space) as points, or ``None``."""
-    value = css.get(prop)
-    match = _NUMBER.search(value) if value else None
-    return float(match.group()) * pt_per_unit if match else None
-
-
-def colour_of(css: dict[str, str], prop: str, over: str | None = None) -> tuple[int, int, int] | None:
-    """``css[prop]`` as red, green and blue, or ``None`` if it holds no colour this can read. Hexadecimal **and**
-    ``rgb()``/``rgba()``, because a palette role at an opacity resolves to the latter; a translucent colour is
-    composited over ``over`` (the slide's own colour)."""
-    value = css.get(prop)
-    if not value:
-        return None
-    parsed = parse_colour(value)
-    if parsed is None:
-        return None
-    red, green, blue, alpha = parsed
-    if alpha < 1:
-        behind = parse_colour(over or "") or (255, 255, 255, 1.0)
-        red, green, blue = (
-            round(alpha * near + (1 - alpha) * far) for near, far in zip((red, green, blue), behind[:3], strict=True)
-        )
-    return red, green, blue
-
-
-def parse_colour(value: str) -> tuple[int, int, int, float] | None:
-    """``#rgb``, ``#rrggbb``, ``rgb(r, g, b)`` or ``rgba(r, g, b, a)`` as red, green, blue and opacity."""
-    hex_match = _HEX.search(value)
-    if hex_match:
-        text = hex_match.group(1)
-        return int(text[0:2], 16), int(text[2:4], 16), int(text[4:6], 16), 1.0
-    short = _SHORT_HEX.search(value)
-    if short:
-        text = short.group(1)
-        return (*(int(char * 2, 16) for char in text), 1.0)  # type: ignore[return-value]
-    func = _RGB_FUNCTION.search(value)
-    if not func:
-        return None
-    parts = [part.strip() for part in func.group(1).split(",")]
-    if len(parts) not in (3, 4):
-        return None
-    try:
-        red, green, blue = (min(255, max(0, round(float(part)))) for part in parts[:3])
-        alpha = min(1.0, max(0.0, float(parts[3]))) if len(parts) == 4 else 1.0
-    except ValueError:
-        return None
-    return red, green, blue, alpha
+__all__ = [
+    "colour_of",
+    "is_bold",
+    "look",
+    "page_colour",
+    "parse_colour",
+    "points_of",
+    "style_for_font",
+    "take_body_font",
+]
 
 
 def page_colour(model: SlideModel) -> str | None:
@@ -85,6 +40,11 @@ def look(model: SlideModel, style_id: str) -> dict[str, str]:
     if style_id not in model.styles:
         return {}
     return model.styles.resolved(style_id, model.palette.colours())
+
+
+def is_bold(css: dict[str, str]) -> bool:
+    """Do the words of a style say bold (``bold`` or a weight from 700)?"""
+    return css.get("font-weight") in ("bold", "bolder", "700", "800", "900")
 
 
 #: Why a style made on import for a font exists, until somebody names it for what it is for.

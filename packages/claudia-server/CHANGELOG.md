@@ -21,6 +21,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   administrator, `DELETE /api/admin/fonts/files` lets go of those given up, the refusal says the limits and what to
   do, and `GET /api/admin/fonts` sends them as `limits` so the dialog says them before anything is sent.
   `FontUploads.put`, `files` and `drop` take the administrator.
+- A fresh docx, xlsx or pptx download has the properties of the log (D466, IEW-02); a docx patch keeps the links of a
+  paragraph whose words were edited (D468, IEW-01); an imported odp or pptx downloaded as a fresh file keeps its colours
+  (D467, IEW-20).
 
 ### Changed
 - Fonts whose collection may go to this server's people only (`redistributable: false`, "This server", D1041) are

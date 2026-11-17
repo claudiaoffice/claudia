@@ -1,4 +1,4 @@
-# Import and export wiring (D450–D469, branch `import-export-wiring`)
+# Import and export wiring (D450–D469, branches `import-export-wiring` and `import-export`)
 
 The audit (`import-export-coverage-2026-11-14.md`) found functions of the three apps that never reach the formats.
 The work goes in slices, each a patch against the branch.
@@ -150,3 +150,50 @@ does not write; each converter has a `*_WRITTEN` set that shrinks as slices land
   Word was not available: its pictures are tested by hand-built XML (inline pictures, crops, tables).
 * Found on the way: IEW-17 (the odt patch wrote every style of the app's own file again under a second name after any
   edit).
+
+## Slice 6b — composes: text boxes and shapes to docx and odt (D465)
+* composes-io: `_boxes.py` (what is a box, `BoxLook`, losses), `_docx_boxes.py` (reader, `BoxWriter`, `BoxEdits`),
+  `_odt_boxes.py` (reader, `BoxWriter`, `BoxStyles`, `BoxPlan`), glue in `docx.py` / `odt.py`; `_unwritten.py`: `objects`
+  and `shapes` are in `_WRITTEN_BY_BOTH`.
+* core: `looks.py` (moved from creates-io `_styling`), `shapes.primitive`, `file_boxes.box_body`; odf-io: `shapes_of`.
+* Checked against LibreOffice 24.2.7 (fresh docx/odt rendered, round-tripped, patched LibreOffice-written files): all four
+  boxes come back with size, turn, description and place. LibreOffice writes docx text boxes in `mc:AlternateContent` without
+  `txBox`, writes odt circles as `draw:circle` and shrinks custom shapes with words unless auto-grow is off - all handled.
+  Word was not available: its drawings are tested by hand-built XML.
+* Library cases `docx-boxes`, `odt-boxes` (built by LibreOffice from our file; `_build_fixtures`).
+* Found on the way: IEW-19 (odp: body placeholder hanging over the slide dropped), IEW-21 (docx text boxes counted
+  twice), IEW-22 (restyling to a style the file has wrote it twice). Open: IEW-20 (fresh export of an imported deck loses
+  its looks and layouts - the next creates step is to read looks).
+
+## Slice 8 — fixes of IEW-01, IEW-02, IEW-20 and the write-up (D466–D468)
+* opc-io: `properties.py` (`stamp_core_properties`, `stamp_package`, `utc_second`, `CORE_PART`, `APPLICATION`). odf-io:
+  `meta.stamp_office_meta(data, info)`; `odf_date` is `utc_second` with `OdfError`. The three writers take `info`
+  (`text_to_docx`, `workbook_to_xlsx`, `slides_to_pptx`); the server passes `document_info` of the log on a fresh write
+  (`composes.py`, `computes.py`, `creates.py`). Patched files keep their properties (D217).
+* composes-io: `_docx_links.py` (`carry_links`, `Carried`); `docx.py` `_BlockWriter.edit` carries links and records
+  `removed-link`; `_fill_paragraph` puts marks and links in one offset-ordered list.
+* creates-io: `_file_looks.py` (`Look`, `LookBook`), `_odp_looks.py` (`StyleIndex`, `read_look`), `_pptx_looks.py`
+  (`Theme`, `read_look`); `odp.py` and `pptx.py` read looks and the page colour on import, write bold, italic, alignment
+  and the page colour on a fresh export; `_styling.py` has `is_bold` and `written_family`. `pptx.py` lost `_look_of` and
+  `_default_looks` (the old rule "different from the default" was replaced by "has no property in the model").
+* A look that the base style already says is not made a style (`LookBook._new`): a file of Claudia's comes back with the
+  styles it had. The imported page is white where a file says none.
+* Checked against LibreOffice 24.2.7: the odp of the QA repro (`in.odp`, a red box and blue words on a template page)
+  rendered after import and fresh export keeps both colours and the outline; words sit at the top of the box where the
+  original had them in the middle (IEW-L31).
+* IEW-L7 was a stale entry: the native menus have had Format ▸ List since D361. Removed from the limits.
+* Merge of main: `origin/main` (ef829d5) is contained in `origin/import-export` (d9c38a2); nothing to merge on 2026-11-17.
+
+## Folding main into import-export (2026-11-17, patch 0014)
+Main (01eff76, 20 commits: redaction, fonts E3.13, pivots, Windows installer) was folded in so that main takes the
+branch with `git merge -X theirs`. Where the two met:
+* *Versions.* core 0.29.0 (main's 0.28.0 is the redaction; D465's helpers are 0.29.0), opc-io 0.4.0 (main's 0.3.0 is
+  `ThemeFonts`; D466's properties are 0.4.0), odf-io 0.9.0 (main's 0.7.0 is `font_faces`; D465's shapes are 0.8.0, D466's
+  `stamp_office_meta` 0.9.0). composes-io 0.7.0, computes-io 0.11.0 and creates-io 0.7.0 keep main's fonts and pivots
+  under *Unreleased*; the server stays 0.37.0.
+* *Fonts and looks (D467).* main reads and writes fonts of an odp and pptx its own way (E3.13). IEW-20's readers no
+  longer read a font, and the writers no longer write one: `style_for_font` makes a style of its own for words in another
+  font, based on the look style. `pptx_import_losses` takes main's `mixes_fonts` for `formatting` and keeps D467's rule for
+  `look`; the pptx colour `Theme` (theme colours) and main's `ThemeFonts` (theme fonts) are two readers of one part.
+* *xlsx.* `workbook_to_xlsx` adds the pivots, then the charts, then the properties.
+* *Test documents.* the catalogue has the entries of both sides (`docx-boxes`, `odt-boxes`, the stand-in fonts, the pivots).

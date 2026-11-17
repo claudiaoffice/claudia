@@ -18,10 +18,12 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from typing import cast
 from xml.sax.saxutils import escape
 
 from lxml import etree
+
+from claudia_opc_io import stamp_package, utc_second
 
 from .names import NS, qname
 from .paragraph import xml_safe
@@ -31,7 +33,6 @@ from .splice import OdfError, XmlPart
 GENERATOR = "Claudia"
 _DECLARATION = b'<?xml version="1.0" encoding="UTF-8"?>\n'
 _MANIFEST = "META-INF/manifest.xml"
-_DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 @dataclass(frozen=True)
@@ -50,12 +51,19 @@ def odf_date(moment: str) -> str:
     """``moment`` (ISO 8601) as the UTC second ODF wants: ``2026-11-11T17:13:05Z``. :class:`OdfError` when it is not
     a date."""
     try:
-        parsed = datetime.fromisoformat(moment)
-    except ValueError:
-        raise OdfError(f"{moment!r} is not a date") from None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
-    return parsed.astimezone(UTC).strftime(_DATE_FORMAT)
+        return cast(str, utc_second(moment))
+    except ValueError as exc:
+        raise OdfError(str(exc)) from None
+
+
+def stamp_office_meta(data: bytes, info: DocumentInfo | None) -> bytes:
+    """The Word, Excel or PowerPoint file ``data`` (a fresh one, as python-docx, openpyxl or python-pptx wrote it) with
+    its properties saying who made the document and when and who changed it last, from ``info``, in place of the
+    library's own name and date (D466); what ``info`` does not know is left out. The Office twin of :func:`new_meta`."""
+    info = info or DocumentInfo()
+    return stamp_package(
+        data, created=info.created, creator=info.creator, modified=info.modified, modifier=info.modifier
+    )
 
 
 def _field(prefix: str, local: str, value: str) -> str:

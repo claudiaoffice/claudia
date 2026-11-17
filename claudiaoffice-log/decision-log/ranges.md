@@ -38,7 +38,7 @@ Unused numbers in a closed block stay unused.
 | D401–D420 | OpenDocument import and export: odt, odp, ods (branch `openoffice`; D401–D414 used) | 2026-11-11 | open |
 | D430–D449 | one server for all three apps: app modules, addresses, limits, idle exit, folder lock, isolation (branch `one-server`; D430–D448 used) | 2026-11-14 | open |
 | D480–D499 | Excel function coverage: matrix results, cell-by-cell operators, the first 300 functions (branch `excel-functions`; D480–D481 used) | 2026-11-14 | open |
-| D450–D469 | import and export wiring: every function of the three apps reaches the OpenDocument and Office formats, and what does not is said (branch `import-export-wiring`; D450–D464 used) | 2026-11-14 | open |
+| D450–D469 | import and export wiring: every function of the three apps reaches the OpenDocument and Office formats, and what does not is said (branches `import-export-wiring`, `import-export`; D450–D468 used) | 2026-11-14 | open |
 | D1001–D1020 | printing sheets: the computes print preview, scale, print area, page cuts, footer, charts (E6.19; branch `computes-print`; D1001–D1010 used) | 2026-11-14 | open |
 | D1021–D1040 | rotation in the three apps: a turn is one command, the outline stays on the slide, charts do not turn, composes objects float at a free offset, the handle, the menu and the keys (E6.17, E9, E10; branch `rotation-ui`; D1021–D1024 used) | 2026-11-15 | open |
 | D500–D519 | the three desktop clients: the shared server on macOS and Linux, fonts every server has, files through the shells' dialogs, printing from a window, the front page's File menu, port 8765, drops on Linux, closing the macOS window through the page (branch `clients`; D500–D506 used) | 2026-11-15 | open |

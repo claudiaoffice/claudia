@@ -86,8 +86,7 @@ def test_a_shape_too_large_to_turn_is_read_upright_and_the_report_says_so():
     data = _file_with_rotated_rectangle(50, 50, 1500, 800, 45)
     (obj,) = pptx_to_slides(data).objects_on("s1")
     assert (obj.body.rotation, obj.anchor.x, obj.anchor.y) == (0, 50, 50)
-    # python-pptx's rectangle has a look of its own, which the model does not show either (D461)
-    assert [(loss.kind, loss.count) for loss in pptx_import_losses(data)] == [("turn", 1), ("look", 1)]
+    assert [(loss.kind, loss.count) for loss in pptx_import_losses(data)] == [("turn", 1)]
 
 
 def test_a_shape_that_stays_on_the_slide_is_not_moved():

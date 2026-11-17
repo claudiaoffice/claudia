@@ -12,15 +12,21 @@ from claudia_test_documents.case import Case
 
 def import_checks(model: SlideModel) -> None:
     assert model.slides == ["s1", "s2"]
-    assert [(o.body.kind, o.body.style, o.body.paragraph.text, o.body.shape) for o in model.objects_on("s1")] == [
-        ("text", "plain-box", "Welcome to Claudia", None),  # a text box's box; its words are body text (D310)
-        ("shape", "plain-shape", "Idea", "circle"),
+    assert [(o.body.kind, o.body.paragraph.text, o.body.shape) for o in model.objects_on("s1")] == [
+        ("text", "Welcome to Claudia", None),
+        ("shape", "Idea", "circle"),
     ]
+    box, circle = model.objects_on("s1")
+    # a text box says nothing of its look; the shapes are python-pptx's own, which are Office blue with white words
+    # (D467: what a file says of its looks is read into styles)
+    assert (box.body.style, box.body.paragraph.style) == ("plain-box", "body-text")
+    assert model.styles.get(circle.body.style).css["fill"] == "#4f81bd"
+    assert model.styles.get(circle.body.paragraph.style).css["color"] == "#ffffff"
     s2_objects = [
-        (o.body.kind, o.body.style, o.body.paragraph.text, o.body.shape, o.anchor.x, o.anchor.y, o.body.w, o.body.h)
+        (o.body.kind, o.body.paragraph.text, o.body.shape, o.anchor.x, o.anchor.y, o.body.w, o.body.h)
         for o in model.objects_on("s2")
     ]
-    assert s2_objects == [("shape", "plain-shape", "Box", "rectangle", 100, 500, 400, 200)]
+    assert s2_objects == [("shape", "Box", "rectangle", 100, 500, 400, 200)]
 
 
 def modify(model: SlideModel) -> SlideModel:

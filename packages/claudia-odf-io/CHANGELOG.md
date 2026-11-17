@@ -3,6 +3,24 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.9.0] - 2026-11-17
+
+A fresh Office file says who made it (D466).
+
+### Added
+- `stamp_office_meta(data, info)`: the properties of a docx, xlsx or pptx from the `DocumentInfo` of the log.
+
+### Changed
+- `odf_date` is `claudia_opc_io.utc_second` with an `OdfError` for what is not a moment; the dates are the same.
+
+## [0.8.0] - 2026-11-16
+
+Shapes in paragraphs (D465).
+
+### Added
+- `shapes_of(paragraph)`: the drawn shapes (`draw:rect`, `draw:ellipse`, `draw:circle`, `draw:custom-shape`) hanging
+  in a paragraph, as `draw:frames_of` finds the frames.
+
 ## [0.7.0] - 2026-11-16
 
 ### Added

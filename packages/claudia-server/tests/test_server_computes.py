@@ -201,6 +201,15 @@ def test_export_office_returns_xlsx_bytes_that_round_trip(book):
     assert [s.name for s in reloaded.sheets.values()] == ["Costs"]
 
 
+def test_an_xlsx_says_who_made_it_when_and_not_what_wrote_it(book):
+    from claudia_opc_io import read_parts
+
+    call(book, "add_sheet", {"name": "Costs"})
+    core = read_parts(base64.b64decode(call(book, "export_office", {"format": "xlsx"})["data"]))["docProps/core.xml"]
+    assert b">ann</dc:creator>" in core and b">ann</cp:lastModifiedBy>" in core
+    assert b"openpyxl" not in core and b"<dcterms:created" in core
+
+
 def test_export_office_returns_an_ods_that_round_trips_with_its_values_and_says_who_made_it_when(book):
     from claudia_computes_io import ods_to_workbook
 

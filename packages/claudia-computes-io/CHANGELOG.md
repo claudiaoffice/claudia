@@ -38,6 +38,13 @@ Pivot tables go to and from ods and xlsx (D625, D628).
 - `claudia_computes_io.pivot_exchange` (`FilePivot`, `written_pivots`, `sheet_cells`, `adopt_pivots`), `ods_pivots` and
   `xlsx_pivots`: the shared rules and the two format adapters.
 
+## [0.11.0] - 2026-11-17
+
+Properties of an xlsx (D466).
+
+### Added
+- `workbook_to_xlsx(..., info=)`: the file's properties are the log's, not openpyxl's (IEW-02).
+
 ## [0.10.0] - 2026-11-15
 
 Charts go to and from xlsx (D463).

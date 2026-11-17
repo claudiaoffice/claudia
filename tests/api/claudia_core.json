@@ -1,5 +1,5 @@
 {
- "version": "0.28.0",
+ "version": "0.29.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -1118,6 +1118,9 @@
  "PARAGRAPH_FACET": {
   "value": "<Facet>"
  },
+ "PRIMITIVES": {
+  "value": "('circle', 'rectangle', 'triangle')"
+ },
  "PageSetup": {
   "class": [
    "object"
@@ -1553,6 +1556,12 @@
  "SCHEMES": {
   "value": "{'bullets': Scheme(id='bullets', name='Bullets', kind='bullet', indent=1.6, gap=0.25), 'numbers': Scheme(id='numbers', name='Numbers', kind='number', indent=1.6, gap=0.25)}"
  },
+ "SHAPE_LABEL_STYLE": {
+  "value": "'shape-label'"
+ },
+ "SHAPE_STYLE": {
+  "value": "'plain-shape'"
+ },
  "SINE_MILLIONTHS": {
   "value": "(0, 17452, 34899, 52336, 69756, 87156, 104528, 121869, 139173, 156434, 173648, 190809, 207912, 224951, 241922, 258819, 275637, 292372, 309017, 325568, 342020, 358368, 374607, 390731, 406737, 422618, 438371, 453990, 469472, 484810, 500000, 515038, 529919, 544639, 559193, 573576, 587785, 601815, 615661, 629320, 642788, 656059, 669131, 681998, 694658, 707107, 719340, 731354, 743145, 754710, 766044, 777146, 788011, 798636, 809017, 819152, 829038, 838671, 848048, 857167, 866025, 874620, 882948, 891007, 898794, 906308, 913545, 920505, 927184, 933580, 939693, 945519, 951057, 956305, 961262, 965926, 970296, 974370, 978148, 981627, 984808, 987688, 990268, 992546, 994522, 996195, 997564, 998630, 999391, 999848, 1000000)"
  },
@@ -1863,6 +1872,9 @@
    "label"
   ]
  },
+ "TEXT_BOX_STYLE": {
+  "value": "'plain-box'"
+ },
  "TEXT_FACET": {
   "value": "<Facet>"
  },
@@ -1966,6 +1978,9 @@
  "blank_png": {
   "function": "(width: int, height: int) -> bytes"
  },
+ "box_body": {
+  "function": "(object_id: 'str', size: 'tuple[int, int]', text: 'str', words: 'str', *, shape: 'str | None' = None, description: 'str' = '', decorative: 'bool' = False, rotation: 'int' = 0) -> 'ObjectBody'"
+ },
  "builtin_palette": {
   "function": "() -> 'Palette'"
  },
@@ -1977,6 +1992,9 @@
  },
  "clean_name": {
   "function": "(text: 'str') -> 'str'"
+ },
+ "colour_of": {
+  "function": "(css: 'dict[str, str]', prop: 'str', over: 'str | None' = None) -> 'tuple[int, int, int] | None'"
  },
  "contrast": {
   "function": "(one: 'str', other: 'str') -> 'float'"
@@ -2047,6 +2065,9 @@
  "parse_chat": {
   "function": "(raw: 'str', users: 'Iterable[str]' = ()) -> 'tuple[str, str]'"
  },
+ "parse_colour": {
+  "function": "(value: 'str') -> 'tuple[int, int, int, float] | None'"
+ },
  "parse_css": {
   "function": "(text: 'str') -> 'tuple[dict[str, str], list[CssProblem]]'"
  },
@@ -2055,6 +2076,12 @@
  },
  "picture_body": {
   "function": "(object_id: 'str', asset: 'ImageAsset', size: 'tuple[int, int]', *, name: 'str' = '', description: 'str' = '', decorative: 'bool' = False, rotation: 'int' = 0) -> 'ObjectBody'"
+ },
+ "points_of": {
+  "function": "(css: 'dict[str, str]', prop: 'str', pt_per_unit: 'float') -> 'float | None'"
+ },
+ "primitive": {
+  "function": "(shape_id: 'str') -> 'ShapeDefinition'"
  },
  "replace_spans": {
   "function": "(paragraph: 'Paragraph', edits: 'Iterable[tuple[int, int, str]]', author: 'str | None') -> 'Paragraph'"

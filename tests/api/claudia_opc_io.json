@@ -1,5 +1,11 @@
 {
- "version": "0.3.0",
+ "version": "0.4.0",
+ "APPLICATION": {
+  "value": "'Claudia'"
+ },
+ "CORE_PART": {
+  "value": "'docProps/core.xml'"
+ },
  "OwnedTest": {
   "function": "(*args, **kwargs)"
  },
@@ -22,6 +28,15 @@
  },
  "reconcile": {
   "function": "(original_bytes: 'bytes', regenerated_bytes: 'bytes', owned: 'OwnedTest') -> 'bytes'"
+ },
+ "stamp_core_properties": {
+  "function": "(parts: 'dict[str, bytes]', *, created: 'str | None' = None, creator: 'str | None' = None, modified: 'str | None' = None, modifier: 'str | None' = None) -> 'None'"
+ },
+ "stamp_package": {
+  "function": "(data: 'bytes', *, created: 'str | None' = None, creator: 'str | None' = None, modified: 'str | None' = None, modifier: 'str | None' = None) -> 'bytes'"
+ },
+ "utc_second": {
+  "function": "(moment: 'str | None') -> 'str | None'"
  },
  "write_parts": {
   "function": "(parts: 'dict[str, bytes]') -> 'bytes'"

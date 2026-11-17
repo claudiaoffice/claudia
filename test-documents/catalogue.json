@@ -1103,6 +1103,60 @@
       }
     },
     {
+      "id": "docx-boxes",
+      "format": "docx",
+      "feature": "boxes",
+      "source": "docx/boxes/source.docx",
+      "spec": "docx/boxes/spec.py",
+      "summary": "A text box and three shapes (a circle, a triangle, a turned rectangle) as LibreOffice writes them: they come in as text box and shape objects at their character with their words, size, turn and description; new words, a new size and a removal patch only their own markup and leave the rest as LibreOffice wrote it.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier1",
+        "boxes"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-15T16:34:45Z",
+        "commit": "173177f",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.047,
+        "detail": null
+      }
+    },
+    {
+      "id": "odt-boxes",
+      "format": "odt",
+      "feature": "boxes",
+      "source": "odt/boxes/source.odt",
+      "spec": "odt/boxes/spec.py",
+      "summary": "A text box and three shapes (a circle, a triangle, a turned rectangle) as LibreOffice writes them: they come in as text box and shape objects at their character with their words, size, turn and description; new words, a new size and a removal patch only their own markup and leave the rest as LibreOffice wrote it.",
+      "backlog": "E10.3",
+      "tags": [
+        "tier1",
+        "boxes"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-15T16:34:45Z",
+        "commit": "173177f",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "n/a",
+          "visual": "not_run"
+        },
+        "duration_s": 0.026,
+        "detail": null
+      }
+    },
+    {
       "id": "xlsx-stand-in-fonts",
       "format": "xlsx",
       "feature": "stand-in-fonts",
