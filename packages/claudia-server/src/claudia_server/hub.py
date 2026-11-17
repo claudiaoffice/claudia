@@ -281,6 +281,7 @@ class Connection:
                 self.set_locale,
                 hosted.renderings,
                 hosted.original,
+                hosted.render_outcomes,
             )
             hosted.acting_user = self.account.user
             result = hosted.methods.dispatch(context, name, params)
@@ -345,6 +346,7 @@ class HostedDocument:
         self.acting_user: str | None = None  # whose request is being handled right now (see `_schedule_render`)
         self._render_jobs: dict[str, asyncio.Task] = {}
         self._rendered: dict[str, tuple[str, tuple]] = {}  # what a finished job made a picture of, by container
+        self._outcomes: dict[str, dict] = {}  # what the last finished try said (the `render_result`), by container
         self.limits = limits
         self.methods = methods
         self.max_connections = max_connections
@@ -468,16 +470,40 @@ class HostedDocument:
         previous = self._render_jobs.pop(rendering_id, None)
         if previous is not None and previous is not asyncio.current_task():
             previous.cancel()
+        made = definition is not None and self._made_from(rendering_id, definition)
+        if not made:
+            self._outcomes.pop(rendering_id, None)  # what the last try said was about a text that is gone
         if self.renderings is None or definition is None or not definition.source.strip():
             return
-        if self._made_from(rendering_id, definition):
+        if made:
             return  # a picture was made of this very text: this event is that picture, or an undo or redo of it
+        self._start_render(rendering_id)
+
+    def _start_render(self, rendering_id: str) -> None:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             return  # not served by an event loop (a test of the model): there is nobody to make a picture for
         author = self.acting_user or RENDER_AUTHOR
         self._render_jobs[rendering_id] = loop.create_task(self._render_job(rendering_id, author))
+
+    def render_unfinished(self) -> None:
+        """The document was just loaded: make the picture of each container that has text and no picture.
+
+        Pictures are only made when a text changes, so a container whose picture was never made (the tool was missing
+        or the text refused, the server stopped first) would stay without one for ever, and a window could not tell
+        that from "not made yet". A container that has its picture is left alone."""
+        model = self.document.model
+        if self.renderings is None or not isinstance(model, ObjectModel):
+            return
+        for rendering_id, definition in model.renderings.items():
+            if definition.source.strip() and definition.image is None and rendering_id not in self._render_jobs:
+                self._start_render(rendering_id)
+
+    def render_outcomes(self) -> dict[str, dict]:
+        """What the last try to draw each container said, as sent in `render_result`: a window that joins after the
+        try needs it to tell "could not draw it" from "not drawn yet"."""
+        return self._outcomes
 
     def _made_from(self, rendering_id: str, definition) -> bool:  # noqa: ANN001 - RenderedDefinition
         """Was the last picture of this container made of exactly this text and these settings?
@@ -513,6 +539,7 @@ class HostedDocument:
         finally:
             if self._render_jobs.get(rendering_id) is asyncio.current_task():
                 del self._render_jobs[rendering_id]
+        self._outcomes[rendering_id] = result
         self.broadcast({"event": "render_result", "data": result})
 
     def stop_rendering(self) -> None:
@@ -801,6 +828,7 @@ class Hub:
                 self.assistant().attach(hosted)
             self._documents[doc_id] = hosted
             self._known.add(doc_id)
+            hosted.render_unfinished()
             return hosted
 
     # -- housekeeping ------------------------------------------------------------------------

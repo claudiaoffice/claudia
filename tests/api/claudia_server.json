@@ -307,6 +307,8 @@
    "new_connection_id": "(self) -> 'int'",
    "note_ai_mode": "(self, user: 'str', mode: 'str | None') -> 'None'",
    "pick_color": "(self) -> 'str'",
+   "render_outcomes": "(self) -> 'dict[str, dict]'",
+   "render_unfinished": "(self) -> 'None'",
    "role_of": "(self, user: 'str') -> 'str | None'",
    "stop_rendering": "(self) -> 'None'",
    "sweep": "(self) -> 'None'",

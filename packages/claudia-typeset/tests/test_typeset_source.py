@@ -156,3 +156,64 @@ def test_paths_of_our_machine_never_reach_the_message():
     assert error is not None
     assert "/srv/claudia" not in error.message + error.context
     assert error.line == 1
+
+
+# a real log (TeX Live 2023): the message goes on in the lines that begin with the name of the package in brackets
+CONTINUED = "\n".join(
+    [
+        "/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.sty:45: Fatal Package fontspec Error: "
+        "The fontspec package requires either XeTeX or",
+        "(fontspec)                      LuaTeX.",
+        "(fontspec)                      ",
+        "(fontspec)                      You must change your typesetting engine to,",
+        '(fontspec)                      e.g., "xelatex" or "lualatex" instead of',
+        '(fontspec)                      "latex" or "pdflatex".',
+        "",
+        "Type <return> to continue.",
+        " ...",
+        "l.45 \\msg_fatal:nn {fontspec} {cannot-use-pdftex}",
+        "",
+    ]
+)
+
+
+def test_a_message_that_goes_on_in_the_next_lines_is_whole():
+    error = parse_log(CONTINUED, first_line=1, line_count=1)
+    assert error is not None
+    assert error.message.startswith(
+        "Fatal Package fontspec Error: The fontspec package requires either XeTeX or LuaTeX."
+    )
+    assert 'instead of "latex" or "pdflatex".' in error.message
+    assert "(fontspec)" not in error.message and "Type <return>" not in error.message
+    assert error.context.startswith("\\msg_fatal")
+
+
+# the same kind of message when the engine cut its line at 79 characters (the first two lines are 79 characters long)
+CUT = "\n".join(
+    [
+        "./e.tex:2: Package demo Error: This message is deliberately long so that TeX wr",
+        "aps its first line of the log well before the end of it, and a second sentence ",
+        "follows here..",
+        "",
+        "See the demo package documentation for explanation.",
+        "Type  H <return>  for immediate help.",
+        " ...",
+        "l.2 ... second sentence follows here.}{Help text.}",
+        "",
+    ]
+)
+
+
+def test_a_line_that_was_cut_at_the_line_width_is_joined_again():
+    assert all(len(line) == 79 for line in CUT.splitlines()[:2])
+    error = parse_log(CUT, first_line=1, line_count=3)
+    assert error is not None
+    assert error.message == (
+        "Package demo Error: This message is deliberately long so that TeX wraps its first line of the log well "
+        "before the end of it, and a second sentence follows here.."
+    )
+
+
+def test_a_short_message_is_not_joined_with_what_follows_it():
+    log = "./main.tex:9: Undefined control sequence.\nl.9 \\foo\n"
+    assert parse_log(log, first_line=1, line_count=9).message == "Undefined control sequence."

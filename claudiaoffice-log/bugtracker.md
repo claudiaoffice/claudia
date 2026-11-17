@@ -178,6 +178,10 @@ statement in the docs or on the website).
 | CODE-48 | P3 | Code / Web | After naming the first administrator, the server settings stayed on the setup form | **fixed** 2026-11-17 |
 | CODE-49 | P2 | Code / Server | Add fonts… stayed blocked for 30 minutes after too many files were chosen | **fixed** 2026-11-17 |
 | CODE-50 | P2 | Code / Render | LaTeX formulas ignored fonts added while the server ran ("Latin Modern Roman is not available") | **fixed** 2026-11-17 |
+| CODE-51 | P2 | Code / Server | A container whose picture was never made stayed on "Drawing…" for ever, also after reopening the document | **fixed** 2026-11-17 |
+| CODE-52 | P3 | Code / Typeset | A TeX error was cut at 79 characters ("Fatal Package", "cannot be f") | **fixed** 2026-11-17 |
+| CODE-53 | P3 | Web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |
+| CODE-54 | P3 | Code / Render | A finished picture is kept without the fonts in its key, so it stays after a font of the same family and style is replaced | open |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1734,6 +1738,41 @@ catalogue; the plugin asks on every job and makes a new typesetter when the cata
 size, `lmroman5` to `lmroman12`, has it; at least `lmroman10-regular.otf`, for bold and italic also
 `lmroman10-bold.otf`, `lmroman10-italic.otf`, `lmroman10-bolditalic.otf`) and the math font `latinmodern-math.otf`
 (in TeX Live under `fonts/opentype/public/lm-math/`). `lmsans`, `lmmono` and `lmromancaps` are other families.
+
+### CODE-51 · A container whose picture was never made stayed on "Drawing…" for ever · P2 · fixed 2026-11-17
+**Measured** (by the owner on 2026-11-17, reproduced in `test_server_rendering_jobs.py`): a picture is made only when a
+container's text changes (`Hub._schedule_render`). A container that never got one (the tool failed, a font was
+missing, the server stopped first) was saved without it, and opening the document again drew nothing. The client says
+"Drawing…" for a container with no picture and no outcome, and the outcome (`render_result`) was an event only: a
+window that joined later never heard that the try had failed.
+**Fixed (2026-11-17, branch `font-server-ui`):** a loaded document draws each container that has text and no picture
+(`HostedDocument.render_unfinished`, called when the hub opens it); the last outcome of each container is kept and
+sent with `renderings` (`outcome`, additive), so a window that joins later says "could not draw it" with the reason.
+A new text clears the old outcome. A container with a picture is left alone. Tests: `test_server_rendering_jobs.py`
+(six), `tests/rendering.test.ts`.
+
+### CODE-52 · A TeX error was cut at 79 characters · P3 · fixed 2026-11-17
+**Measured** (reproduced with the real XeLaTeX): TeX cuts a line of its log at 79 characters and goes on in the next
+line; `parse_log` took the first line only, so a container said "Package fontspec Error: The font \"Latin Modern Roman\"
+cannot be f" or just "Fatal Package", which is why the owner could not tell that the `xetex` program was set where
+`xelatex` belongs ("Fatal Package fontspec Error: The fontspec package requires either XeTeX or LuaTeX").
+**Fixed (2026-11-17, branch `font-server-ui`):** the engine runs with `max_print_line` set high and `parse_log` joins the
+lines a message goes on in (the lines that begin with the package's name in brackets, and the line after one cut at the
+width). Tests: `test_typeset_source.py` (real samples), `test_typeset_engine.py`, `test_typeset_real.py`.
+
+### CODE-53 · The failure text of a rendered container is clipped in a small frame · P3 · open
+**Read** (`RenderedFace.vue`, `.state` has `overflow: hidden`; the frame is as big as the picture was): a long message,
+and the lines of the diagnostics under it, are cut off with no way to read the rest in the container. Recommendation:
+the face shows the first line and the full message is in a tooltip and in the object's description, or in a popover
+opened with Enter; the message stays an alert for screen readers in full. Acceptance: a test that a 300-character message
+is reachable in full from the face (text in the DOM, not hidden from assistive technology).
+
+### CODE-54 · A finished picture is kept without the fonts in its key · P3 · open
+**Read** (`RenderService.render`): the key of the cache of pictures has the source, settings and the tools, not the font
+catalogue. The typesetter's own cache has the catalogue digest, but the service's cache answers first. After a font of
+the same family and style is replaced (or added in front of a stand-in), a formula drawn earlier is still shown as it
+was drawn until the cache is cleared. Recommendation: a plugin may give a `cache_token()` (the LaTeX plugin gives the
+catalogue digest) that goes into the key. Acceptance: draw, replace a font, draw again: a new picture.
 
 ## Website
 

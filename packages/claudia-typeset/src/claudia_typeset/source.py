@@ -22,6 +22,8 @@ _ERROR_WITH_LINE = re.compile(r"^(?P<file>[^\n:]*?):(?P<line>\d+): (?P<message>.
 _ERROR_BANG = re.compile(r"^! (?P<message>.+)$", re.MULTILINE)
 _CONTEXT = re.compile(r"^l\.\d+ (?P<context>.*)$", re.MULTILINE)
 _MAX_MESSAGE = 300
+_LINE_WIDTH = 79  # where TeX cuts a line of its log unless it is told otherwise (``max_print_line``)
+_CONTINUED = re.compile(r"^\((?P<package>[^()\s]+)\)\s*(?P<text>.*)$")  # "(fontspec)   more of the message"
 
 
 class FontUnavailable(ValueError):
@@ -94,6 +96,28 @@ def _clean(text: str, job_folder: str | None) -> str:
     return text.strip()[:_MAX_MESSAGE]
 
 
+def _whole_message(output: str, start: int) -> str:
+    """The message of the error whose text begins at ``start`` in the log, with all of it.
+
+    A message goes on in the lines after the first: those that begin with the name of the package in brackets, and,
+    where TeX cut a line at its width, the line that follows a full one. The first line alone can be the first words
+    of a sentence ("Fatal Package fontspec Error: The fontspec package requires either XeTeX or")."""
+    line_start = output.rfind("\n", 0, start) + 1
+    first, *rest = output[line_start:].split("\n")
+    parts = [first[start - line_start :]]
+    cut = len(first) >= _LINE_WIDTH
+    for line in rest:
+        continued = _CONTINUED.match(line)
+        if continued:
+            parts.append(" " + continued["text"])
+        elif cut and line.strip():
+            parts.append(line)
+        else:
+            break
+        cut = len(line) >= _LINE_WIDTH
+    return re.sub(r"\s+", " ", "".join(parts)).strip()
+
+
 def parse_log(output: str, *, first_line: int, line_count: int, job_folder: str | None = None) -> TexError | None:
     """The first error in TeX's output, with its line in the user's text when it is inside it."""
     context = _CONTEXT.search(output)
@@ -102,10 +126,11 @@ def parse_log(output: str, *, first_line: int, line_count: int, job_folder: str 
     if located:
         line = int(located["line"]) - first_line + 1
         inside = 1 <= line <= line_count
-        return TexError(_clean(located["message"], job_folder), line if inside else None, context_text)
+        message = _whole_message(output, located.start("message"))
+        return TexError(_clean(message, job_folder), line if inside else None, context_text)
     bang = _ERROR_BANG.search(output)
     if bang:
-        message = bang["message"]
+        message = _whole_message(output, bang.start("message"))
         if message.startswith("fontspec error"):
             detail = re.search(r'The font "[^"]+" cannot be found', output)
             message = detail[0] if detail else message

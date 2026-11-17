@@ -6,6 +6,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Fixed
+- A document that is opened draws the containers that have text and no picture (CODE-51). Before, a picture was made
+  only when its text changed, so a container whose picture was never made (the tool failed, the server stopped first)
+  stayed without one for ever.
+- `renderings` (wire) gives each definition an `outcome`: what the last try to draw it said, as in the event
+  `render_result`, or `null`. A window that joins after a try failed now hears it and says "could not draw it"
+  instead of "drawing…". `Context` has `render_outcomes`; `HostedDocument` has `render_unfinished` and
+  `render_outcomes`.
 - LaTeX formulas use fonts added in Server settings ▸ Fonts at once, not after a restart (CODE-50): the render desk
   is given the font service's current catalogue for every job. The page no longer says a restart is needed.
 - Add fonts… no longer stays blocked after too many files were chosen (CODE-49): files waiting to be added are held per

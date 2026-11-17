@@ -58,6 +58,17 @@ def test_an_error_is_found_in_the_users_own_line(typesetter):
     assert "/tmp" not in str(raised.value)
 
 
+def test_a_long_message_of_tex_comes_back_whole(typesetter):
+    """TeX cuts a line of its log at 79 characters; the message people get is the whole of it (CODE-52)."""
+    sentence = (
+        "This message is deliberately long so that TeX would cut its first line of the log well before the end of it"
+    )
+    with pytest.raises(TypesetFailed) as raised:
+        typeset(typesetter, Job(Mode.PAGE, r"\PackageError{demo}{" + sentence + r", and a second sentence follows}{}"))
+    assert sentence in raised.value.error.message
+    assert "a second sentence follows" in raised.value.error.message
+
+
 def test_an_unclosed_group_is_reported(typesetter):
     with pytest.raises(TypesetFailed) as raised:
         typeset(typesetter, Job(Mode.MATH, r"\frac{x}{y"))

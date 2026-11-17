@@ -169,6 +169,108 @@ def test_closing_the_document_stops_what_is_still_waiting():
     scenario(body)
 
 
+def _reopen(hub, hosted):
+    """The document is closed (nobody is here, the server restarts) and opened again from what was kept."""
+    hosted.stop_rendering()
+    hub._documents.clear()
+    return hub.open("deck")
+
+
+def reopening_scenario(body):
+    """A document with a container that never got its picture (the tool failed), the tool working again, and the
+    document opened again. ``body(hub, first, service)`` runs with the first window's client still at hand."""
+
+    async def run():
+        service = StubService()
+        hub = Hub(MemoryProvider(SlideModel), methods=creates_methods, renderings=RenderDesk(service))
+        first = await hub.open("deck", create=True)
+        working = service.render
+
+        async def broken(kind, source, params=None):
+            raise RenderFailed("Fatal Package fontspec Error: the font cannot be found")
+
+        service.render = broken
+        ann = Client(first, ANN)
+        added = ann.request("add_rendering", ADD)["result"]
+        await settle()
+        assert first.document.model.renderings[added["rendering"]].image is None
+        service.render = working
+        await body(hub, first, service, added["rendering"])
+
+    asyncio.run(run())
+
+
+def test_a_container_without_a_picture_is_drawn_when_the_document_is_opened_again():
+    async def body(hub, first, service, rendering):
+        again = await _reopen(hub, first)
+        await settle()
+        assert again.document.model.renderings[rendering].image is not None
+        assert [seen[1] for seen in service.seen] == ["hello"]
+
+    reopening_scenario(body)
+
+
+def test_a_container_that_has_its_picture_is_left_alone_when_the_document_is_opened_again():
+    async def run():
+        service = StubService()
+        hub = Hub(MemoryProvider(SlideModel), methods=creates_methods, renderings=RenderDesk(service))
+        first = await hub.open("deck", create=True)
+        Client(first, ANN).request("add_rendering", ADD)
+        await settle()
+        assert len(service.seen) == 1
+        await _reopen(hub, first)
+        await settle()
+        assert len(service.seen) == 1
+
+    asyncio.run(run())
+
+
+def test_an_empty_container_is_not_drawn_when_the_document_is_opened():
+    async def run():
+        service = StubService()
+        hub = Hub(MemoryProvider(SlideModel), methods=creates_methods, renderings=RenderDesk(service))
+        first = await hub.open("deck", create=True)
+        Client(first, ANN).request("add_rendering", {**ADD, "source": "  "})
+        await _reopen(hub, first)
+        await settle()
+        assert service.seen == []
+
+    asyncio.run(run())
+
+
+def test_a_window_that_joins_after_a_failed_try_is_told_what_went_wrong():
+    async def body(hub, first, service, rendering):
+        late = Client(first, Account("bob", "editor"))
+        (entry,) = late.request("renderings")["result"]
+        assert entry["id"] == rendering and entry["outcome"]["ok"] is False
+        assert "Fatal Package fontspec Error" in entry["outcome"]["message"]
+
+    reopening_scenario(body)
+
+
+def test_a_container_that_is_drawn_has_no_failure_left_to_tell():
+    async def body(hub, first, service, rendering):
+        again = await _reopen(hub, first)
+        await settle()
+        (entry,) = Client(again, ANN).request("renderings")["result"]
+        assert entry["image"] is not None and (entry["outcome"] is None or entry["outcome"]["ok"] is True)
+
+    reopening_scenario(body)
+
+
+def test_a_new_text_clears_the_old_failure_until_the_new_try_has_spoken():
+    async def body(hub, first, service, rendering):
+        ann = Client(first, ANN)
+        ann.request("set_rendering_source", {"id": rendering, "source": "second"})
+        (entry,) = ann.request("renderings")["result"]
+        assert entry["outcome"] is None  # the old complaint was about the old text
+        await settle()
+        (entry,) = ann.request("renderings")["result"]
+        assert entry["outcome"]["ok"] is True
+
+    reopening_scenario(body)
+
+
 def test_a_container_on_a_sheet_is_rendered_and_its_frame_follows_the_picture():
     from claudia_computes import AddSheet, WorkbookModel
     from claudia_server.computes import computes_methods

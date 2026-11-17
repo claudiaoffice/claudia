@@ -59,3 +59,9 @@ from a pinned list, Edit stand-ins… and Remove file… come in a second patch.
   it asks the font service for the catalogue on every job, so added fonts are used at once (CODE-50, claudia-render
   0.2.0). The service-level cache of finished pictures (`RenderService.render`) does not have the fonts in its key, so
   a picture made before a font of the same family and style was replaced stays (reported to the owner, not fixed).
+- Containers (CODE-51, CODE-52): a document that is opened draws its containers that have text and no picture, the last
+  outcome of each is sent with `renderings` (`outcome`), and a TeX message comes back whole (`max_print_line`, and
+  `parse_log` joins the lines a message goes on in). The program set as `xelatex` must be a LaTeX engine: with plain
+  `xetex` or `pdflatex` the message is now "…fontspec package requires either XeTeX or LuaTeX" or "Undefined control
+  sequence". Open: the failure text is clipped in a small frame (CODE-53), pictures are kept without the fonts in their
+  key (CODE-54).
