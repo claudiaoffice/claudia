@@ -3,7 +3,7 @@ name = "claudia-monorepo"
 version = "0.0.0"
 description = "Claudia: a privacy-first open source office suite (composes, computes, creates)."
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-client", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-render", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io", "claudia-opc-io", "claudia-odf-io", "claudia-test-documents", "claudia-search"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-ai", "claudia-server", "claudia-container", "claudia-fonts", "claudia-typeset", "claudia-render", "claudia-computes-io", "claudia-composes-io", "claudia-creates-io", "claudia-opc-io", "claudia-odf-io", "claudia-test-documents", "claudia-search", "claudia-file-writer"]
 
 [tool.uv]
 package = false
@@ -18,7 +18,6 @@ claudia-composes = { workspace = true }
 claudia-creates = { workspace = true }
 claudia-ai = { workspace = true }
 claudia-server = { workspace = true }
-claudia-client = { workspace = true }
 claudia-container = { workspace = true }
 claudia-fonts = { workspace = true }
 claudia-typeset = { workspace = true }
@@ -30,6 +29,7 @@ claudia-opc-io = { workspace = true }
 claudia-odf-io = { workspace = true }
 claudia-test-documents = { workspace = true }
 claudia-search = { workspace = true }
+claudia-file-writer = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -74,14 +74,14 @@ ignore = [
 "vulture_whitelist.py" = ["B018"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset", "claudia_render", "claudia_opc_io", "claudia_odf_io", "claudia_test_documents", "claudia_search"]
+known-first-party = ["claudia_core", "claudia_computes", "claudia_composes", "claudia_creates", "claudia_ai", "claudia_server", "claudia_container", "claudia_fonts", "claudia_typeset", "claudia_render", "claudia_opc_io", "claudia_odf_io", "claudia_test_documents", "claudia_search", "claudia_file_writer"]
 
 [tool.mypy]
 python_version = "3.14"
 check_untyped_defs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
-mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-ai/src", "packages/claudia-server/src", "packages/claudia-client/src", "packages/claudia-container/src", "packages/claudia-fonts/src", "packages/claudia-typeset/src", "packages/claudia-render/src", "packages/claudia-test-documents/src", "packages/claudia-search/src"]
+mypy_path = ["packages/claudia-core/src", "packages/claudia-computes/src", "packages/claudia-composes/src", "packages/claudia-creates/src", "packages/claudia-ai/src", "packages/claudia-server/src", "packages/claudia-container/src", "packages/claudia-fonts/src", "packages/claudia-typeset/src", "packages/claudia-render/src", "packages/claudia-test-documents/src", "packages/claudia-search/src", "packages/claudia-file-writer/src"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
@@ -129,15 +129,15 @@ release accepts minimatch 11."""
 # CODE-01: the least each package's tests must reach, statements and branches together, as a whole percentage. A floor
 # only goes up (`scripts/check_coverage.py --ratchet`, committed with the change that earned it); see that script.
 "claudia-ai" = 99
-"claudia-client" = 88
 "claudia-composes" = 97
 "claudia-composes-io" = 96
 "claudia-computes" = 93
 "claudia-computes-io" = 95
-"claudia-container" = 91
+"claudia-container" = 95
 "claudia-core" = 94
 "claudia-creates" = 95
 "claudia-creates-io" = 92
+"claudia-file-writer" = 100
 "claudia-fonts" = 97
 "claudia-odf-io" = 97
 "claudia-opc-io" = 100
@@ -145,4 +145,4 @@ release accepts minimatch 11."""
 "claudia-search" = 99
 "claudia-server" = 94
 "claudia-test-documents" = 89
-"claudia-typeset" = 87
+"claudia-typeset" = 88

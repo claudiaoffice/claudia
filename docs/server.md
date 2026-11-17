@@ -182,9 +182,9 @@ sentence naming the one that is here, D535), and a server that keeps documents i
 
 ## Safety
 
-* TLS by default. The server's own certificate is self-signed; its fingerprint is printed at start-up. The desktop
-  client trusts it like an SSH host (`claudia_client.TlsPolicy`): shown once, remembered, a changed certificate refused
-  loudly. `--redirect-port` answers plain HTTP with a redirect to https and nothing else.
+* TLS by default. The server's own certificate is self-signed; its fingerprint is printed at start-up. The Linux
+  client trusts it like an SSH host (`claudia_shell_gtk.trust`, its "Trust this server?" dialog): shown once,
+  remembered, a changed certificate asked about again. The macOS and Windows clients do not ask yet and refuse it. `--redirect-port` answers plain HTTP with a redirect to https and nothing else.
 * Every HTTP answer says what a browser may do with the page (`claudia_server.security_headers`, SEC-13): a
   `Content-Security-Policy` with scripts from this server only (the start page's two inline scripts by their hash,
   read from the build at start), connections only to this server and its WebSocket, no plugins, and framing only by
@@ -249,7 +249,7 @@ people who already have a document still log in with their name and password. So
 make a document is answered like somebody who asked for one that does not exist, so nothing is learned about which
 documents there are. The secret is compared in constant time and never printed. The web app has no field for it yet.
 
-Not there yet: redaction in packed blocks (E2.6: a redacted text still rests in older blocks), unencrypted export and import (E2.9), rate limits over time (E2.7: the caps above bound what is waiting, not how often an address may try), read restrictions for viewers and a viewer opening a sealed document first (E2.4).
+Redaction rewrites the document file and its journal (D725; `redaction_plan` and `redact`, owners on anything and editors on their own work, D727). Not there yet: unencrypted export and import (E2.9), rate limits over time (E2.7: the caps above bound what is waiting, not how often an address may try), read restrictions for viewers and a viewer opening a sealed document first (E2.4).
 
 
 ## Presentations (creates)

@@ -102,6 +102,56 @@ jobs:
             port=$((port + 1))
           done
 
+      # What a person does with the installed package: start an app from its start button and use what it started. Each
+      # app is a GTK window (under Xvfb here) whose shell brings its own server up, on a port of its own so that the
+      # three runs do not meet the server of the one before (it stops by itself ten minutes after its window closed).
+      - name: Every app opens its window, and its server serves all three apps
+        env:
+          GSK_RENDERER: cairo
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          WEBKIT_DISABLE_COMPOSITING_MODE: "1"
+          WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS: "1" # the runner's container has no room for WebKit's own sandbox
+        run: |
+          sudo apt-get install -y --no-install-recommends libgl1-mesa-dri dbus
+          server_version="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' packages/claudia-server/src/claudia_server/_version.py)"
+          port=8811
+          for app in composes computes creates; do
+            CLAUDIA_SERVER_PORT=$port xvfb-run -a dbus-run-session -- "claudia-$app" > "$RUNNER_TEMP/$app.log" 2>&1 &
+            window=$!
+            ok=
+            for _ in $(seq 1 90); do
+              if curl -fsS "http://127.0.0.1:$port/api/health" >/dev/null 2>&1; then ok=1; break; fi
+              if ! kill -0 "$window" 2>/dev/null; then break; fi
+              sleep 1
+            done
+            if [ -z "$ok" ]; then
+              echo "::error::claudia-$app did not bring its server up"; cat "$RUNNER_TEMP/$app.log"; exit 1
+            fi
+            # the window is still there, and the server it started is the one of the package (not a Python of this runner)
+            kill -0 "$window"
+            pgrep -af "/opt/claudia/venv/bin/python.* -m claudia_server" | grep -q -- "--port $port"
+            /opt/claudia/venv/bin/python packaging/smoke_server.py "http://127.0.0.1:$port" --expect-version "$server_version"
+            pkill -TERM -f "claudia_server .*--port $port" || true
+            kill "$window" 2>/dev/null || true
+            wait "$window" 2>/dev/null || true
+            port=$((port + 1))
+          done
+
+      - name: The package installs over itself, and comes off cleanly
+        run: |
+          sudo apt-get install -y --reinstall ./dist/*.deb
+          test -x /usr/bin/claudia-composes
+          sudo apt-get remove -y claudia-office
+          for app in composes computes creates; do
+            if [ -e "/usr/bin/claudia-$app" ] || [ -e "/usr/share/applications/de.claudiaoffice.$app.desktop" ]; then
+              echo "::error::$app is still there after the removal"; exit 1
+            fi
+          done
+          if dpkg -s claudia-office >/dev/null 2>&1; then echo "::error::dpkg still has the package"; exit 1; fi
+          # nothing of the program is left behind (documents are in the person's home, which the package never touches)
+          if [ -e /opt/claudia ]; then echo "::error::/opt/claudia is still there after the removal"; ls -R /opt/claudia | head; exit 1; fi
+          if pgrep -f claudia_server >/dev/null; then echo "::error::a server is still running after the removal"; exit 1; fi
+
       - uses: actions/upload-artifact@v4
         with:
           name: claudia-office-deb
@@ -125,7 +175,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
-          fi
+          # The Windows installer's workflow makes the release too: whichever is first, the other adds its file to it.
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes \
+            || gh release view "$GITHUB_REF_NAME" >/dev/null
           gh release upload "$GITHUB_REF_NAME" dist/*.deb --clobber

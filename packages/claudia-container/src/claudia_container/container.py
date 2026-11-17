@@ -18,7 +18,6 @@ compression ratios (:class:`ReaderLimitExceeded`), and the cost of the password 
 
 import base64
 import binascii
-import contextlib
 import json
 import os
 import re
@@ -27,15 +26,17 @@ import unicodedata
 import uuid
 import zipfile
 import zlib
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+from claudia_file_writer import atomic_file
+
 from . import blocks
 from .blocks import GENESIS, BlockError, Chain, Head, Place, block_hash, open_block, open_head, seal_block, seal_head
 from .crypto import DecryptionError, KdfParams, derive_login_material, derive_recovery_material, open_sealed, seal
-from .journal import JournalWriter, _fsync_directory, _replace, journal_generation, read_journal
+from .journal import JournalWriter, journal_generation, read_journal
 from .passwords import require_strong_password
 from .slots import Domain, KeySlot, Role, Unlocked, make_slot, new_domain_keys, open_slot
 
@@ -409,29 +410,17 @@ def _write_zip(
     four that every document has: the head, the blocks and the snapshot."""
     if exclusive and path.exists():
         raise FileExistsError(path)
-    temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    try:
-        with os.fdopen(fd, "wb") as handle:
-            with zipfile.ZipFile(handle, "w") as archive:
-                archive.writestr("format", FORMAT_TEXT, compress_type=zipfile.ZIP_STORED)
-                archive.writestr("manifest.json", json.dumps(manifest.to_dict()), compress_type=zipfile.ZIP_DEFLATED)
-                archive.writestr(
-                    "slots.json",
-                    json.dumps({"slots": [slot.to_dict() for slot in slots]}),
-                    compress_type=zipfile.ZIP_DEFLATED,
-                )
-                archive.writestr("people.bin", people_blob, compress_type=zipfile.ZIP_STORED)
-                for name in sorted(others):
-                    archive.writestr(name, others[name], compress_type=zipfile.ZIP_STORED)
-            handle.flush()
-            os.fsync(handle.fileno())
-        _replace(temp, path)
-        _fsync_directory(path.parent)
-    except BaseException:
-        with contextlib.suppress(OSError):
-            temp.unlink()
-        raise
+    with atomic_file(path, durable=True) as handle, zipfile.ZipFile(handle, "w") as archive:
+        archive.writestr("format", FORMAT_TEXT, compress_type=zipfile.ZIP_STORED)
+        archive.writestr("manifest.json", json.dumps(manifest.to_dict()), compress_type=zipfile.ZIP_DEFLATED)
+        archive.writestr(
+            "slots.json",
+            json.dumps({"slots": [slot.to_dict() for slot in slots]}),
+            compress_type=zipfile.ZIP_DEFLATED,
+        )
+        archive.writestr("people.bin", people_blob, compress_type=zipfile.ZIP_STORED)
+        for name in sorted(others):
+            archive.writestr(name, others[name], compress_type=zipfile.ZIP_STORED)
 
 
 def create_document(
@@ -952,6 +941,13 @@ def _extend(
         if sum(len(p) for p in last) < blocks.BLOCK_TARGET_BYTES:
             stored.pop()
             payloads = [*last, *payloads]
+    return _sealed_chain(key, binding, domain, stored, payloads)
+
+
+def _sealed_chain(
+    key: bytes, binding: str, domain: Domain, stored: list[bytes], payloads: Sequence[bytes]
+) -> tuple[dict[str, bytes], Chain]:
+    """``stored`` blocks followed by new blocks sealed from ``payloads``: the block entries and the end of the chain."""
     previous = block_hash(stored[-1]) if stored else GENESIS
     for run in _chunks(payloads):
         data = seal_block(key, Place(binding, domain, len(stored) + 1, previous), run)
@@ -961,17 +957,15 @@ def _extend(
     return entries, Chain(len(stored), previous)
 
 
-def _pack_blocks(
-    path: Path,
-    keys: Mapping[Domain, bytes],
-    *,
-    history: Sequence[bytes],
-    chat: Sequence[bytes],
-    snapshot: bytes | None,
-    generation: int,
+type _Folding = Callable[[_Chains, Manifest, Domain], tuple[dict[str, bytes], Chain]]
+"""How the blocks of one domain are made from the chains in the file: continued (packing) or made anew (rewriting)."""
+
+
+def _write_blocks(
+    path: Path, keys: Mapping[Domain, bytes], fold: _Folding, *, snapshot: bytes | None, generation: int
 ) -> None:
-    """Fold the records of journal ``generation`` into the blocks, write the new head and snapshot, and replace the
-    file atomically. The journal is not touched."""
+    """Make the blocks of both domains with ``fold``, write the new head and snapshot, and replace the file
+    atomically. Every block entry of the old file is left behind. The journal is not touched."""
     _require_all_keys(keys)
     with _WRITE_LOCK:
         entries = _read_entries(path)
@@ -979,8 +973,8 @@ def _pack_blocks(
         chains = _load_chains(entries, manifest, keys)
         if generation <= chains.head.generation:
             raise ValueError(f"journal generation {generation} is already in the file")
-        history_blocks, history_end = _extend(keys[Domain.HISTORY], manifest.binding, Domain.HISTORY, chains, history)
-        chat_blocks, chat_end = _extend(keys[Domain.CHAT], manifest.binding, Domain.CHAT, chains, chat)
+        history_blocks, history_end = fold(chains, manifest, Domain.HISTORY)
+        chat_blocks, chat_end = fold(chains, manifest, Domain.CHAT)
         head = Head(generation, history_end, chat_end)
         replaced = (_HEAD, _SNAPSHOT)
         kept = {n: d for n, d in _carried(entries).items() if n not in replaced and not _BLOCK_NAME.fullmatch(n)}
@@ -994,6 +988,25 @@ def _pack_blocks(
             packed[_SNAPSHOT] = seal(keys[Domain.CONTENT], snapshot, _snapshot_aad(manifest.binding))
         people_blob = entries["people.bin"]
         _write_zip(path, _changed(manifest), _slots_of(entries, path), people_blob, packed, exclusive=False)
+
+
+def _pack_blocks(
+    path: Path,
+    keys: Mapping[Domain, bytes],
+    *,
+    history: Sequence[bytes],
+    chat: Sequence[bytes],
+    snapshot: bytes | None,
+    generation: int,
+) -> None:
+    """Fold the records of journal ``generation`` into the blocks, write the new head and snapshot, and replace the
+    file atomically. The journal is not touched."""
+    added = {Domain.HISTORY: history, Domain.CHAT: chat}
+
+    def extend(chains: _Chains, manifest: Manifest, domain: Domain) -> tuple[dict[str, bytes], Chain]:
+        return _extend(keys[domain], manifest.binding, domain, chains, added[domain])
+
+    _write_blocks(path, keys, extend, snapshot=snapshot, generation=generation)
 
 
 def pack_journal(
@@ -1021,3 +1034,45 @@ def pack_journal(
     generation = writer.generation
     writer.close()
     return JournalWriter.replace(journal, manifest.binding, keys, generation + 1)
+
+
+def rewrite_journal(
+    path: Path,
+    keys: Mapping[Domain, bytes],
+    writer: JournalWriter,
+    *,
+    history: Sequence[bytes],
+    chat: Sequence[bytes],
+    snapshot: bytes | None = None,
+) -> JournalWriter:
+    """Replace everything the document has held so far by ``history`` and ``chat`` (redaction, D725, SEC-05).
+
+    The blocks of the file are made anew from these payloads alone — none of the old blocks is carried over — and the
+    journal, whose records ``history`` and ``chat`` supersede, is replaced by an empty one. Afterwards neither file
+    holds a byte of what was there before: what was redacted is gone from the document folder (copies and backups made
+    earlier keep it, D21). Same order and same crash safety as :func:`pack_journal`: the file first, then the journal; a
+    crash in between leaves a journal the file has superseded, which :func:`read_state` ignores and :func:`begin`
+    replaces. Returns the writer of the fresh journal (``writer`` is closed). ``snapshot`` becomes the snapshot of the
+    file; ``None`` leaves it without one, since a snapshot taken before the redaction holds the content."""
+    payloads = {Domain.HISTORY: history, Domain.CHAT: chat}
+
+    def anew(_chains: _Chains, manifest: Manifest, domain: Domain) -> tuple[dict[str, bytes], Chain]:
+        return _sealed_chain(keys[domain], manifest.binding, domain, [], payloads[domain])
+
+    _write_blocks(path, keys, anew, snapshot=snapshot, generation=writer.generation)
+    generation = writer.generation
+    writer.close()
+    return JournalWriter.replace(journal_path(path), read_manifest(path).binding, keys, generation + 1)
+
+
+def forget_original(path: Path, keys: Mapping[Domain, bytes]) -> None:
+    """Remove the kept original of an imported document (``content/original.bin``, D439), if there is one: its
+    content was redacted (D723). Needs all three keys, as every write of the file does."""
+    _require_all_keys(keys)
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        if _ORIGINAL not in entries:
+            return
+        manifest = _manifest_of(entries, path)
+        others = {name: data for name, data in _carried(entries).items() if name != _ORIGINAL}
+        _write_zip(path, _changed(manifest), _slots_of(entries, path), entries["people.bin"], others, exclusive=False)

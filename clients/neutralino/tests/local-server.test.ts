@@ -74,6 +74,12 @@ describe.each(PLATFORMS)('prepareServer on $platform.id', ({ platform, folder, p
     await expect(prepareServer('creates', { repo, home, env: {} })).rejects.toThrow(pythonParts.at(-1) as string)
   })
 
+  it('the self-contained server of the installer needs no Python (D730)', async () => {
+    rmSync(join(repo, ...pythonParts))
+    const server = await prepareServer('creates', { repo, home, env: { CLAUDIA_SERVER_EXE: '/opt/claudia/server/claudia-server' } })
+    expect((server as unknown as { options: { program: unknown } }).options.program).toEqual({ exe: '/opt/claudia/server/claudia-server' })
+  })
+
   it('a missing frontend is explained with the way to fix it', async () => {
     rmSync(join(repo, 'web', '.output', 'public', 'index.html'))
     await expect(prepareServer('creates', { repo, home, env: {} })).rejects.toThrow(SetupProblem)

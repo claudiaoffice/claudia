@@ -34,17 +34,19 @@ from typing import Literal
 
 from fontTools.ttLib import TTFont
 
+from claudia_file_writer import write_atomically
+
 from .catalogue import Catalogue
 from .collection import COLLECTION_FILE, Collection, CollectionRecord
 from .font import FONT_SUFFIXES, FontProblem, read_font
-from .starter import (
-    _write as write_public,
-)  # the starter set's own writer: a file readable by everyone, whole or not at all
 
 #: At most this many fonts in one collection added at once (a zip counts by its fonts).
 MAX_FILES = 64
 #: At most this many bytes of fonts in one collection added at once.
 MAX_BYTES = 128 * 1024 * 1024
+
+#: Written readable by everyone: the server may run as another user than the one who reads the fonts.
+_PUBLIC = 0o644
 
 Verdict = Literal["added", "left-out"]
 
@@ -215,9 +217,9 @@ def add_collection(
                 number += 1
                 file_name = f"{stem.replace('*', '_').replace('?', '_')}-{number}{suffix}"
             names.add(file_name.casefold())
-            write_public(staging / file_name, check.data)
+            write_atomically(staging / file_name, check.data, mode=_PUBLIC)
         record_bytes = (json.dumps(record.to_data(), indent=2, ensure_ascii=False) + "\n").encode("utf-8")
-        write_public(staging / COLLECTION_FILE, record_bytes)
+        write_atomically(staging / COLLECTION_FILE, record_bytes, mode=_PUBLIC)
         staging.chmod(0o755)
         staging.rename(folder)  # the collection appears whole or not at all
     except BaseException:
@@ -240,7 +242,7 @@ def rename_collection(folder: str | Path, name: str) -> None:
         added=record.added,
     )
     text = json.dumps(renamed.to_data(), indent=2, ensure_ascii=False) + "\n"
-    write_public(folder / COLLECTION_FILE, text.encode("utf-8"))
+    write_atomically(folder / COLLECTION_FILE, text.encode("utf-8"), mode=_PUBLIC)
 
 
 def remove_collection(root: str | Path, folder: str | Path) -> None:

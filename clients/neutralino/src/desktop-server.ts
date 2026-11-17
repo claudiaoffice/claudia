@@ -25,7 +25,7 @@ import { randomBytes } from 'node:crypto'
 import { linkSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { dirname, join } from 'node:path'
-import { buildServerCommand, freePort, LocalServer, LOOPBACK, ServerStartError } from './server.js'
+import { buildServerCommand, freePort, LocalServer, LOOPBACK, ServerStartError, serverProgramCommand, type ServerProgram } from './server.js'
 import { hostPlatform } from './platform/host.js'
 
 /** `--exit-when-idle`: ten minutes (D445). The clock starts only when the last page has closed. */
@@ -121,10 +121,11 @@ export function isPortFree(port: number, host: string = LOOPBACK): Promise<boole
 }
 
 /** The version of the server this app would start (`claudia_server --version`), or `null` if that cannot be found out. */
-export function serverVersion(python: string, timeoutMs = 30_000): Promise<string | null> {
+export function serverVersion(program: ServerProgram, timeoutMs = 30_000): Promise<string | null> {
+  const [file, ...args] = serverProgramCommand(program) as [string, ...string[]]
   return new Promise((resolve) => {
     try {
-      execFile(python, ['-m', 'claudia_server', '--version'], { timeout: timeoutMs, windowsHide: true }, (problem, stdout) => {
+      execFile(file, [...args, '--version'], { timeout: timeoutMs, windowsHide: true }, (problem, stdout) => {
         const found = problem ? null : /claudia-server\s+(\S+)/.exec(String(stdout))
         resolve(found ? (found[1] as string) : null)
       })
@@ -149,7 +150,8 @@ export interface ServerProcess {
 export interface DesktopServerOptions {
   /** The app of this window: the server must serve it. */
   app: string
-  python: string
+  /** What starts the server: an interpreter (it runs `-m claudia_server`) or the installer's `claudia-server.exe`. */
+  program: ServerProgram
   web: string
   documents: string
   /** The server's state folder: `desktop-server.json` and `server.log` are in it. */
@@ -267,7 +269,7 @@ export class DesktopServer {
       )
     }
     if (found.version === null) return
-    const own = await (this.options.version ?? (() => serverVersion(this.options.python)))()
+    const own = await (this.options.version ?? (() => serverVersion(this.options.program)))()
     if (own !== null && own !== found.version) {
       throw new ServerStartError(
         `A Claudia server of another version (${found.version}, this app belongs to ${own}) is running on this computer (port ${port}).\n` +
@@ -277,8 +279,8 @@ export class DesktopServer {
   }
 
   private async startServer(url: string, port: number): Promise<string> {
-    const { python, web, documents, state } = this.options
-    const command = buildServerCommand(python, { port, documents, web, state, idleSeconds: this.options.idleSeconds ?? IDLE_SECONDS })
+    const { program, web, documents, state } = this.options
+    const command = buildServerCommand(program, { port, documents, web, state, idleSeconds: this.options.idleSeconds ?? IDLE_SECONDS })
     const server = (this.options.makeServer ?? defaultMakeServer)(command, url, this.logPath)
     try {
       return await server.start()

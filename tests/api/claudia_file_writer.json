@@ -1,0 +1,48 @@
+{
+ "version": "0.1.0",
+ "FetchError": {
+  "class": [
+   "Exception"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
+ },
+ "PinnedFile": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', url: 'str', sha256: 'str', size: 'int') -> None",
+  "methods": {
+   "from_lock": "(entry: 'Mapping') -> 'Self'",
+   "is_at": "(self, path: 'Path') -> 'bool'"
+  },
+  "properties": []
+ },
+ "Replacer": {
+  "class": [
+   "object"
+  ],
+  "init": "(windows: 'bool | None' = None, attempts: 'int' = 10, first_wait: 'float' = 0.05, longest_wait: 'float' = 1.0, replace: 'Callable[[Path, Path], None] | None' = None, sleep: 'Callable[[float], None] | None' = None) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "atomic_file": {
+  "function": "(path: 'str | os.PathLike', *, mode: 'int' = 384, durable: 'bool' = False, replacer: 'Move | None' = None) -> 'Iterator[BinaryIO]'"
+ },
+ "download": {
+  "function": "(url: 'str', *, max_bytes: 'int', timeout: 'float' = 60) -> 'bytes'"
+ },
+ "fetch_pinned": {
+  "function": "(files: 'Iterable[PinnedFile]', folder: 'str | Path', *, download: 'Callable[[str], bytes]', report: 'Callable[[str], None]' = <function <lambda>>, label: 'str' = 'pinned files') -> 'list[Path]'"
+ },
+ "fsync_directory": {
+  "function": "(directory: 'str | os.PathLike') -> 'None'"
+ },
+ "write_atomically": {
+  "function": "(path: 'str | os.PathLike', data: 'bytes', *, mode: 'int' = 384, durable: 'bool' = False, replacer: 'Move | None' = None) -> 'None'"
+ },
+ "write_once": {
+  "function": "(path: 'str | os.PathLike', data: 'bytes', *, mode: 'int' = 384, replacer: 'Replacer | None' = None) -> 'bool'"
+ }
+}

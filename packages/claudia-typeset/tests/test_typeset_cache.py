@@ -74,3 +74,5 @@ def test_a_result_that_cannot_be_read_back_as_text_counts_as_missing(tmp_path):
     cache = ResultCache(tmp_path)
     (tmp_path / ("d" * 64 + ".svg")).write_bytes(b"\xff\xfe\x00bad")
     assert cache.get("d" * 64) is None
+    cache.put("d" * 64, "<svg/>")
+    assert cache.get("d" * 64) == "<svg/>"

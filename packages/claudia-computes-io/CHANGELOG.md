@@ -5,6 +5,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+Pivot tables go to and from ods and xlsx (D625, D628).
+
 ### Fixed
 - A cell style whose font is a generic family is written into xlsx and ods as the font Claudia shows it with (`serif`
   as Fraunces, `system-ui` as Inter), not as a font called `serif` or `system-ui` (CODE-42;
@@ -15,6 +17,26 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   metric twin that was written after it (`'Liberation Sans'`): the server's catalogue chooses the stand-in where the
   sheet is shown or printed (E3.13), so the workbook keeps one source for it. Exports are unchanged (they write the
   first family).
+- `ods_import_losses` and `xlsx_import_losses` no longer count every pivot table as `pivot-table`: a pivot read as a live
+  one is not a loss, and an unread one has its detail.
+- A name the import made for the source of a pivot is not written to a kept file until it changes.
+
+### Added
+- `workbook_to_ods` and `workbook_to_xlsx` write the pivot tables of a model as pivot tables (`table:data-pilot-table`; an
+  xlsx cache with its records and a `pivotTableDefinition` in the tabular layout, `refreshOnLoad`), with the cells they
+  fill beside them as plain values. A pivot over a source with no header row is written as its values
+  (`pivot-table:source`), one with no value field is not written (`empty`), and an xlsx pivot with filters and no free
+  rows above it is written as values (`room`).
+- `ods_to_workbook` and `xlsx_to_workbook` read a file's pivot table as a live pivot of the model when the engine makes
+  the very cells the file shows (the words of the file are read off its cells); otherwise the cells stay cells. What
+  the model has no word for is said by the loss `pivot-table` with a detail: `external-source`, `data-model`,
+  `calculated-field`, `grouping`, `slicer`, `pivot-chart`, `show-as`, `aggregation`, `hidden-items`, `top-n`, `sort`,
+  `manual-sort`, `source`, `fields`, `layout` or `different`.
+- `apply_edits_to_ods` and `apply_edits_to_xlsx` keep the pivot parts of a file as they are and write the new numbers
+  of a pivot whose source was edited (xlsx also asks the caches to be read again); `ods_unwritten_changes` and
+  `xlsx_unwritten_changes` count a changed, new or deleted pivot as `pivot-table`.
+- `claudia_computes_io.pivot_exchange` (`FilePivot`, `written_pivots`, `sheet_cells`, `adopt_pivots`), `ods_pivots` and
+  `xlsx_pivots`: the shared rules and the two format adapters.
 
 ## [0.10.0] - 2026-11-15
 

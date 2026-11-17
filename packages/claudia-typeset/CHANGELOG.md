@@ -11,6 +11,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   cannot be f". The engine is run with `max_print_line` set high, and `parse_log` joins a message that goes on in
   the lines after it (those that begin with the package's name in brackets, and a line that follows one cut at the
   width).
+- `ResultCache.put` is retried on Windows while the result file is held for a moment (`claudia_file_writer`, CODE-34,
+  D701).
 
 ## [0.3.0] - 2026-11-13
 

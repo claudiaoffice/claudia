@@ -3,6 +3,11 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.14.0] - 2026-11-16
+
+### Added
+- `blank(parts)` on the model (D723): an imported document is redacted in full or in parts — slides (with their speaker notes and every object on them) and objects.
+
 ## [0.13.0] - 2026-11-15
 
 Turning objects (rotation-ui).

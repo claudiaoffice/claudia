@@ -96,7 +96,7 @@ def _make(names: list[str], cert_file: Path, key_file: Path) -> None:
         .not_valid_after(now + dt.timedelta(days=VALID_DAYS))
         .add_extension(x509.SubjectAlternativeName(alternative), critical=False)
         # Self-signed, so it is also its own authority: that is what lets a client that was told to trust this one
-        # certificate check it (see claudia_client/trust.py).
+        # certificate check it with the certificate as its only authority.
         .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
         .add_extension(
             x509.KeyUsage(

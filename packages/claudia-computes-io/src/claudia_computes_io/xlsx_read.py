@@ -522,7 +522,6 @@ def _count_sheet_losses(package: Package, sheet: WorksheetPart, root: etree._Ele
         + len(root.findall(".//x14:dataValidation", NS)),
         "filter": len(root.findall("x:autoFilter", NS)),
         "protection": len(root.findall("x:sheetProtection", NS)),
-        "pivot-table": len(related(package.parts, sheet.part, "pivotTable")),
     }
     counts["comment"] = sum(1 for text in notes_of(package, sheet).values() if not text.startswith(NOTE_MARKER))
     for drawing in related(package.parts, sheet.part, "drawing"):

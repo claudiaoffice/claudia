@@ -276,7 +276,7 @@ def test_a_collection_that_cannot_be_written_leaves_nothing_behind(tmp_path, mon
     def failing(*_args, **_kwargs):
         raise OSError("disk full")
 
-    monkeypatch.setattr("claudia_fonts.adding.write_public", failing)
+    monkeypatch.setattr("claudia_fonts.adding.write_atomically", failing)
     root = tmp_path / "added"
     with pytest.raises(OSError, match="disk full"):
         add_collection(

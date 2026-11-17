@@ -31,6 +31,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - `STATE_DIR/fonts` is read after the folders of `--fonts` too (it was read only without them): it is where Server
   settings ▸ Fonts adds collections. `FontService.from_folders` takes `shipped` and `added_root`, and the service
   knows each collection's origin (`Origin`: shipped, operator, added) and reads them again with `reload`.
+- The server's state files (certificate, key, settings, the file store's list) and the fetched hyphenation patterns are
+  written with `claudia_file_writer` (CODE-34, D701): ten attempts with waits up to a second on Windows instead of
+  five, a temporary file name that two threads cannot share, and the pattern fetch is the one the fonts use.
 
 ### Added
 - Server settings ▸ Fonts (E3.13 f, D1041): `/api/admin/fonts` (the catalogue as the page shows it: collections, the
@@ -113,6 +116,21 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   (in place of its `anchor` tuple). `wire.fresh_id`, `wire.done` and `wire.current_revision` replace the per-app
   copies. The wire names and parameters are unchanged (`tests/test_server_object_methods.py` holds them); the help
   texts of these methods now share their first sentences.
+
+## [0.37.0] - 2026-11-16
+
+### Added
+- Wire methods `redaction_plan` and `redact` (D726, D727): owners redact anything they can read, editors their own
+  changes and messages; an editor's plan that would blank somebody else's later step says `allowed: false` and names
+  them in `others`, and `redact` refuses it. The person sees what a redaction does (the steps, the
+  later steps blanked with them, the chat messages, the document as it will look) and confirms that plan by repeating
+  its dependents. The `redacted` event carries `chat`. An owner redacts only chat messages she can read.
+- `filestore.history_items(log)` and `chat_items(chat)`: the journal items that build a log and a chat again.
+
+### Changed
+- `SealedStore(path, writer, keys)`: the store keeps the document's keys to seal the file anew.
+- Both stores implement `DocumentStore.rewrite` (D725, SEC-05): the sealed store seals the blocks anew and replaces
+  the journal; the plain store writes its journal anew, all at once. A redacted import also loses its kept original.
 
 ## [0.36.0] - 2026-11-15
 

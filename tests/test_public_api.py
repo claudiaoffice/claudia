@@ -22,7 +22,6 @@ ROOT = Path(__file__).resolve().parents[1]
 CHANGELOGS = {
     "claudia_core": ROOT / "CHANGELOG.md",
     "claudia_server": ROOT / "packages" / "claudia-server" / "CHANGELOG.md",
-    "claudia_client": ROOT / "packages" / "claudia-client" / "CHANGELOG.md",
     "claudia_container": ROOT / "packages" / "claudia-container" / "CHANGELOG.md",
     "claudia_creates": ROOT / "packages" / "claudia-creates" / "CHANGELOG.md",
     "claudia_fonts": ROOT / "packages" / "claudia-fonts" / "CHANGELOG.md",
@@ -38,6 +37,7 @@ CHANGELOGS = {
     "claudia_creates_io": ROOT / "packages" / "claudia-creates-io" / "CHANGELOG.md",
     "claudia_test_documents": ROOT / "packages" / "claudia-test-documents" / "CHANGELOG.md",
     "claudia_search": ROOT / "packages" / "claudia-search" / "CHANGELOG.md",
+    "claudia_file_writer": ROOT / "packages" / "claudia-file-writer" / "CHANGELOG.md",
 }
 
 

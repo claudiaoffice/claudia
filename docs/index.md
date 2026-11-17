@@ -16,10 +16,10 @@ shell-contract
 versioning
 api/claudia_core
 api/claudia_server
-api/claudia_client
 api/claudia_ai
 api/claudia_container
 api/claudia_creates
+api/claudia_file_writer
 api/claudia_fonts
 api/claudia_search
 api/claudia_typeset
@@ -29,11 +29,11 @@ api/apps
 contributing
 changelog
 changelog-server
-changelog-client
 changelog-container
 changelog-computes
 changelog-composes
 changelog-creates
+changelog-file-writer
 changelog-fonts
 changelog-search
 changelog-typeset

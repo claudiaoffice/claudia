@@ -15,6 +15,9 @@ Documents
 .. autoclass:: claudia_core.CheckpointInfo
 .. autoclass:: claudia_core.Look
 .. autoclass:: claudia_core.Changes
+.. autoclass:: claudia_core.RedactionPlan
+   :members: revisions
+.. autodata:: claudia_core.FILLER
 
 Names of things
 ---------------

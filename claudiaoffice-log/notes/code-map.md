@@ -26,7 +26,7 @@ claudia-core            stdlib only, enforced by packages/claudia-core/tests/tes
   |-- claudia-composes  (imports core)
   |-- claudia-creates   (imports core)
   |-- claudia-server    (imports core and the app packages; fastapi, uvicorn, websockets, cryptography)
-  '-- claudia-client    declares core but imports nothing from it
+  '-- claudia-client    declares core but imports nothing from it (removed by D700)
 web/  --WebSocket, JSON, protocol v1-->  claudia-server
 ```
 
@@ -62,7 +62,7 @@ know what the calling account may ask for.
 | Users and roles | `claudia_server/auth.py`; the real directory is now inside the document |
 | The wire protocol | `claudia_server/protocol.py`; app methods in `computes.py`, `composes.py`, `creates.py` |
 | HTTP, the static web app, the host guard | `claudia_server/app.py`, `hosts.py` |
-| TLS | `certs.py`, `redirect.py`, `state.py`; client side `claudia_client/trust.py` |
+| TLS | `certs.py`, `redirect.py`, `state.py`; client side `claudia_shell_gtk/trust.py` (`claudia_client` removed, D700) |
 | The AI participant | `assistant.py`, `standin.py`, `standin_text.py`, `model_engine.py`; the model in `claudia-ai` |
 | The command line | `claudia_server/cli.py` |
 | Styles | `claudia_core/css.py`, `styles.py`; hosts in `web/app/lib/*-style-host.ts` |
@@ -86,7 +86,8 @@ know what the calling account may ask for.
 3. **Build output is tracked.** `web/dist/` holds 26 tracked files while the build goes to `web/.output/public`
    (CODE-02). *Still true.*
 4. **README is stale.** *Still true (CODE-03).*
-5. **`claudia-client` lists `claudia-core` as a dependency but imports nothing from it.**
+5. **`claudia-client` lists `claudia-core` as a dependency but imports nothing from it.** *Resolved: the package is
+   gone (CODE-33, D700).*
 6. **`apps.methods_for` is hard-coded per app**; composes and creates have since been added to it.
 7. pytest warns that Starlette's `TestClient` with `httpx` is deprecated in favour of `httpx2`.
 
@@ -117,7 +118,6 @@ PACKAGES = [
     "claudia-composes",
     "claudia-creates",
     "claudia-server",
-    "claudia-client",
 ]
 
 

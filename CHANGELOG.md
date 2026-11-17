@@ -15,6 +15,36 @@ While the major version is 0, a minor version may break the API; every break is 
   names, with the generic family it falls back to (`'Times New Roman', serif`). The importers of all three apps use
   it; the serif and monospace lists of `claudia_computes_io` moved here.
 
+## [0.28.0] - 2026-11-16
+
+The redaction contract (D229, D720–D728, E1.8).
+
+### Added
+- `Document.plan_redaction(revisions, *, chat, parts)` and `RedactionPlan` (D721, D722): what a redaction does,
+  worked out before anything changes — the blanked form of every step, the later steps that stop working without the
+  content (`dependents`, blanked too), the chat messages, the imports, whether the document as people see it changes
+  (`changes_now`) and that state (`after`). Steps on hidden lines may be redacted (D724); every line that holds a
+  blanked step must still replay.
+- `Command.redacted_in(model)`: the blanked form for a command whose content only the app can judge. `Import` blanks
+  its state through the model (`Import.blanked(model, parts)`, D723), `DefineDiagram` and `UpdateDiagram` through
+  `ObjectModel.blank_diagram`.
+- `DocumentModel.blank(parts)` (D723): blank content in place, keeping ids, places and lengths; the default refuses.
+  `ObjectModel.blank_objects(parts)` does it for the objects of all three apps. `FILLER` is the character a blanked
+  character becomes.
+- `ChatRecord.redacted` and `ChatRecord.blanked()`; `Redaction.chat` and `Redacted.chat` (D724). A record or event
+  without chat reads and writes as before.
+- `ImageAsset.blanked()` and `ImageImport.blanked()` (D720): a redacted picture keeps its id and size, not its pixels;
+  an import record keeps who and when, not the alternative text or the file's name and path.
+- `CommandLog.line(name)`: the entries of one line itself.
+
+### Changed
+- **Breaking:** `Document.redact(what, *, author)` takes a `RedactionPlan` or a bare list of steps; a bare list is
+  refused when other steps would have to be blanked with it (D722). The store is rewritten (`DocumentStore.rewrite`).
+- **Breaking:** `DocumentStore.replace_entries` and `drop_snapshots` are replaced by `rewrite(log, chat)` (D725): the
+  store holds exactly the redacted log and chat afterwards, with no copy of the content left.
+- `DefineImage.redacted()` blanks the picture; `AddObject.redacted()` also takes the description and the words of the
+  import record (D720).
+
 ## [0.27.0] - 2026-11-15
 
 Turning objects (D1021–D1024).

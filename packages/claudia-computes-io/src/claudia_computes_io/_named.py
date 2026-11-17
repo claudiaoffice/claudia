@@ -51,7 +51,8 @@ def unheld(model: WorkbookModel, baseline: WorkbookModel | None) -> LossLog:
         if not _is_news(named, baseline):
             continue
         if named.is_result:
-            losses.add("name", RESULT)
+            if model.pivots.get(named.name) is None:  # (a pivot's own name is carried by the pivot, D628)
+                losses.add("name", RESULT)
             continue
         if named.header and named.scope is not None:
             losses.add("name", TABLE_SCOPE)

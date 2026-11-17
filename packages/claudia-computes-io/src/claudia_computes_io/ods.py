@@ -85,9 +85,11 @@ from .ods_chart_patch import ChartPatch
 from .ods_charts import written_charts
 from .ods_layout import OdsSizes, read_sizes
 from .ods_looks import OdsLooks, column_styles, read_looks
-from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names
+from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names, sheet_names
+from .ods_pivots import data_pilot_tables, read_pivots
 from .ods_write_looks import OdsLookWriter, OdsRestyler
 from .openformula import Untranslatable, from_openformula, to_openformula
+from .pivot_exchange import adopt_pivots, outside_pivots, sheet_cells, written_pivots
 from .xlsx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -599,10 +601,16 @@ def _dress(dressing: Dressing, sheet: Sheet, table: _Table) -> None:
 def ods_to_workbook(ods_bytes: bytes) -> WorkbookModel:
     """``ods_bytes`` as a :class:`~claudia_computes.WorkbookModel`: a sheet per table, in order, called ``s1``,
     ``s2``..., and a constant or a formula in every cell that holds something -- in each place of a repeated run of
-    them. The formulas are translated from OpenFormula; one that cannot be comes in as its last value. What the
-    model does not hold is in :func:`ods_import_losses`. Raises :class:`~claudia_odf_io.OdfError` for a file that is
-    not an ods."""
-    parts, content, tables, looks = _document(ods_bytes)
+    them. The formulas are translated from OpenFormula; one that cannot be comes in as its last value. A pivot table
+    comes in as a live pivot when the engine makes the cells the file shows (D625). What the model does not hold is in
+    :func:`ods_import_losses`. Raises :class:`~claudia_odf_io.OdfError` for a file that is not an ods."""
+    return _model_of(*_document(ods_bytes))[0]
+
+
+def _model_of(
+    parts: dict[str, bytes], content: etree._Element, tables: list[_Table], looks: OdsLooks
+) -> tuple[WorkbookModel, tuple[Loss, ...]]:
+    """The model of a file's parts, and the losses of its pivot tables (the ones that are not live pivots in it)."""
     model = WorkbookModel()
     dressing = Dressing(model, looks.normal, looks.named.items(), looks.look)  # type: ignore[arg-type]
     for table in tables:
@@ -611,7 +619,8 @@ def ods_to_workbook(ods_bytes: bytes) -> WorkbookModel:
         _dress(dressing, sheet, table)
         model.sheets[sheet.id] = sheet
         model.open_container(str(sheet.id))
-    for named in read_names(_spreadsheet(content), _places(_spreadsheet(content))).names:
+    places = _places(_spreadsheet(content))
+    for named in read_names(_spreadsheet(content), places).names:
         model.names.put(named)
     for chart in _held_charts(tables, parts):
         if chart.held is not None:
@@ -623,7 +632,11 @@ def ods_to_workbook(ods_bytes: bytes) -> WorkbookModel:
                 body = replace(body, description=chart.description)
             model.insert_object(VisualObject(body, CellAnchor(chart.sheet, chart.row, chart.col)))
     model._calculate_loaded()  # noqa: SLF001 (the restore()-mirroring construction idiom; see xlsx_to_workbook)
-    return model
+    read = read_pivots(_spreadsheet(content), places)
+    adoption = adopt_pivots(model, read.found)
+    for loss in adoption.losses:
+        read.losses.add(loss.kind, loss.detail, loss.count)
+    return model, read.losses.result()
 
 
 def ods_import_losses(ods_bytes: bytes) -> tuple[Loss, ...]:
@@ -641,18 +654,17 @@ def ods_import_losses(ods_bytes: bytes) -> tuple[Loss, ...]:
         _dress(dressing, Sheet(SheetId(table.id), table.name), table)
     for what, count in dressing.lost.items():
         losses.add("look", what, count)
+    if any(True for _ in content.iter(_q("table", "data-pilot-table"))):
+        for loss in _model_of(parts, content, tables, looks)[1]:
+            losses.add(loss.kind, loss.detail, loss.count)
     named = read_names(_spreadsheet(content), _places(_spreadsheet(content)))
     if named.unread_ranges:
         losses.add("named-range", count=named.unread_ranges)
     if named.unread_databases:
         losses.add("filter", count=named.unread_databases)
-    for name, kind in (
-        ("content-validation", "validation"),
-        ("data-pilot-table", "pivot-table"),
-    ):
-        found = sum(1 for _ in content.iter(_q("table", name)))
-        if found:
-            losses.add(kind, count=found)
+    found = sum(1 for _ in content.iter(_q("table", "content-validation")))
+    if found:
+        losses.add("validation", count=found)
     return _in_order(losses.result())
 
 
@@ -781,13 +793,21 @@ def _looks_of(sheet: Sheet, writer: OdsLookWriter | None) -> _Looks:
     return looks
 
 
-def _rows_of(sheet: Sheet, lost: LossLog | None, looks: _Looks | None = None) -> list[etree._Element]:
+def _rows_of(
+    sheet: Sheet,
+    lost: LossLog | None,
+    looks: _Looks | None = None,
+    cells: Mapping[tuple[int, int], tuple[Content, Value]] | None = None,
+) -> list[etree._Element]:
     """The rows of ``sheet``, as the file writes them: a row with something in it on its own, a stretch of rows with
-    nothing in them once (with its default cell style, if it has one)."""
+    nothing in them once (with its default cell style, if it has one). ``cells`` are the cells the file has with the
+    value each shows (:func:`~claudia_computes_io.pivot_exchange.sheet_cells`), the sheet's own when not given."""
     looks = looks or _Looks()
+    if cells is None:
+        cells = {position: (content, sheet.grid.get(position)) for position, content in sheet.cells.items()}
     by_row: dict[int, dict[int, tuple[Content, Value]]] = {}
-    for (row, column), content in sheet.cells.items():
-        by_row.setdefault(row, {})[column] = (content, sheet.grid.get((row, column)))
+    for (row, column), held in cells.items():
+        by_row.setdefault(row, {})[column] = held
     filled = sorted({*by_row, *looks.cells})
     edges = {edge for row in filled for edge in (row, row + 1)}
     edges |= {edge for first, last, _ in looks.rows for edge in (first, last + 1)}
@@ -843,17 +863,19 @@ def _new_table(
     writer: OdsLookWriter | None = None,
     names: etree._Element | None = None,
     shapes: etree._Element | None = None,
+    cells: Mapping[tuple[int, int], tuple[Content, Value]] | None = None,
 ) -> etree._Element:
-    """A ``table:table`` of ``sheet``; ``names`` is the ``table:named-expressions`` of the sheet's own names (D457) and
-    ``shapes`` the ``table:shapes`` with its charts (D462)."""
+    """A ``table:table`` of ``sheet``; ``names`` is the ``table:named-expressions`` of the sheet's own names (D457),
+    ``shapes`` the ``table:shapes`` with its charts (D462) and ``cells`` the cells it holds (see :func:`_rows_of`)."""
     table = _el("table", "table", {"table:name": xml_safe(sheet.name)})
     if shapes is not None:
         table.append(shapes)
     looks = _looks_of(sheet, writer)
-    used = [column for _, column in sheet.cells] + [column for row in looks.cells.values() for column in row]
+    used = [column for _, column in (sheet.cells if cells is None else cells)]
+    used += [column for row in looks.cells.values() for column in row]
     width = max([*used, *sheet.col_widths], default=0) + 1
     table.extend(_columns_of(width, looks))
-    table.extend(_rows_of(sheet, lost, looks) or [_gap(1, row=True)])
+    table.extend(_rows_of(sheet, lost, looks, cells) or [_gap(1, row=True)])
     if names is not None:
         table.append(names)
     return table
@@ -881,13 +903,23 @@ def workbook_to_ods(model: WorkbookModel, *, info: DocumentInfo | None = None) -
     charts = written_charts(model)
     for sheet in model.sheets.values():
         spreadsheet.append(
-            _new_table(sheet, None, writer, local_expressions(model, sheet.id), charts.shapes.get(sheet.id))
+            _new_table(
+                sheet,
+                None,
+                writer,
+                local_expressions(model, sheet.id),
+                charts.shapes.get(sheet.id),
+                sheet_cells(model, sheet),
+            )
         )
     for name, shapes in charts.tabs:
         spreadsheet.append(_new_table(Sheet(SheetId("chart"), name), None, shapes=shapes))
     if not model.sheets and not charts.tabs:
         spreadsheet.append(_new_table(Sheet(SheetId("s1"), "Sheet1"), None))
     spreadsheet.extend(global_elements(model))
+    pilots = data_pilot_tables(model, written_pivots(model).pivots, sheet_names(model))
+    if pilots is not None:
+        spreadsheet.append(pilots)
     root.find("office:automatic-styles", NS).extend(writer.automatic_styles())  # type: ignore[union-attr]
     etree.cleanup_namespaces(root, keep_ns_prefixes=list(_NS_DECLS))  # (formulas name "of:" in their text)
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
@@ -910,12 +942,14 @@ def ods_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
     if dropped:
         losses.add("look", "too-many-cells", dropped)
     for sheet in model.sheets.values():
-        for content in sheet.cells.values():
+        for content, _ in sheet_cells(model, sheet).values():
             written = with_note(content)
             if written.note is not None:
                 losses.add("alternatives")
             if written.content is not None and written.content["t"] == "formula":
                 _formula_attribute(written.content, losses)
+    for loss in written_pivots(model).losses:
+        losses.add(loss.kind, loss.detail, loss.count)
     return _in_order((*losses.result(), *ods_unwritten_changes(model)))
 
 
@@ -925,7 +959,9 @@ def ods_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None =
     a fresh file (``None``): ``"name"`` (what a file cannot hold of a named range or table: ``result``, ``purpose``,
     ``table-scope``), ``"chart"`` and ``"object"``
     (with the pictures and shapes they use)."""
-    return workbook_unwritten_changes(model, baseline, written=ODS_WRITTEN)
+    return workbook_unwritten_changes(
+        model, baseline, written=ODS_WRITTEN | ({"pivots"} if baseline is None else set())
+    )
 
 
 # -- edit and re-export ----------------------------------------------------------------------------------------------
@@ -1019,7 +1055,7 @@ class _Patch:
     def _check_baseline(self) -> None:
         if [(sheet.id, sheet.name) for sheet in self.baseline.sheets.values()] != [
             (table.id, table.name) for table in self.tables
-        ] or any(self.baseline.sheets[SheetId(table.id)].cells != table.cells for table in self.tables):
+        ] or any(self._differs(table) for table in self.tables):
             raise UnsupportedEdit("the baseline is not the workbook this file holds")
         if sorted(chart.object_id for chart in self.charts if chart.held is not None) != sorted(
             obj.id for obj in self.baseline.objects.values() if obj.body.diagram is not None
@@ -1028,6 +1064,12 @@ class _Patch:
         kept = [sheet_id for sheet_id in self.current.sheets if sheet_id in self.baseline.sheets]
         if kept != [sheet_id for sheet_id in self.baseline.sheets if sheet_id in set(kept)]:
             raise UnsupportedEdit("sheets cannot be moved relative to each other in the file")
+
+    def _differs(self, table: _Table) -> bool:
+        """Whether the cells the baseline has on a sheet are not the file's (those a pivot fills are the file's own)."""
+        sheet_id = SheetId(table.id)
+        held = self.baseline.sheets[sheet_id].cells
+        return outside_pivots(self.baseline, sheet_id, held) != outside_pivots(self.baseline, sheet_id, table.cells)
 
     def _lose(self, kind: str, detail: str = "", count: int = 1) -> None:
         if self.losses is not None:
@@ -1149,7 +1191,12 @@ class _Patch:
             if existing is not None:
                 anchor = existing.element
                 continue
-            element = _new_table(sheet, self.losses, names=local_expressions(self.current, sheet_id))
+            element = _new_table(
+                sheet,
+                self.losses,
+                names=local_expressions(self.current, sheet_id),
+                cells=sheet_cells(self.current, sheet),
+            )
             self.new_tables[sheet_id] = element
             self.changed = True
             if anchor is not None:
@@ -1168,16 +1215,13 @@ class _Patch:
             self.changed = True
         before, after = self.baseline.sheets[SheetId(table.id)], sheet
         changes: dict[int, dict[int, _Change]] = {}
-        for position in before.cells.keys() | after.cells.keys():
-            old, new = before.cells.get(position), after.cells.get(position)
+        held_before, held_after = sheet_cells(self.baseline, before), sheet_cells(self.current, after)
+        for position in held_before.keys() | held_after.keys():
+            (old, was), (new, now) = held_before.get(position, (None, None)), held_after.get(position, (None, None))
             if old != new:
-                change = _Change(new, after.grid.get(position))
-            elif (
-                new is not None
-                and new["t"] == "formula"
-                and _shown(before.grid.get(position)) != _shown(after.grid.get(position))
-            ):
-                change = _Change(new, after.grid.get(position), refresh=True)
+                change = _Change(new, now)
+            elif new is not None and new["t"] == "formula" and _shown(was) != _shown(now):
+                change = _Change(new, now, refresh=True)
             else:
                 continue
             changes.setdefault(position[0], {})[position[1]] = change

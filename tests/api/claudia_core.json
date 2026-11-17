@@ -1,5 +1,5 @@
 {
- "version": "0.27.0",
+ "version": "0.28.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -65,6 +65,7 @@
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Batch'",
    "leaves": "(self) -> 'Iterator[Command]'",
    "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
    "regions": "(self, model: 'DocumentModel') -> 'tuple[Region, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
@@ -153,8 +154,9 @@
   "class": [
    "object"
   ],
-  "init": "(number: 'int', author: 'str', to: 'str', text: 'str', time: 'str', at: 'Revision | None') -> None",
+  "init": "(number: 'int', author: 'str', to: 'str', text: 'str', time: 'str', at: 'Revision | None', redacted: 'bool' = False) -> None",
   "methods": {
+   "blanked": "(self) -> 'ChatRecord'",
    "from_data": "(data: 'dict') -> 'ChatRecord'",
    "to_data": "(self) -> 'dict'"
   },
@@ -214,6 +216,7 @@
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Command'",
    "leaves": "(self) -> 'Iterator[Command]'",
    "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
    "regions": "(self, model: 'DocumentModel') -> 'tuple[Region, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "stub": "(self) -> 'dict'",
@@ -248,6 +251,7 @@
    "get": "(self, rev: 'Revision') -> 'Entry'",
    "has": "(self, rev: 'Revision') -> 'bool'",
    "head": "(self, branch: 'str' = 'main') -> 'Revision | None'",
+   "line": "(self, name: 'str') -> 'tuple[Entry, ...]'",
    "next_revision": "(self, branch: 'str' = 'main') -> 'Revision'",
    "on_path": "(self, rev: 'Revision', head: 'Revision | None') -> 'bool'",
    "path": "(self, rev: 'Revision | None') -> 'list[Entry]'",
@@ -343,6 +347,7 @@
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineDiagram'",
    "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -469,9 +474,10 @@
    "open": "(model_cls: 'type[DocumentModel]', log: 'CommandLog', *, snapshot: 'Snapshot | None' = None, branch: 'str | None' = None, **options) -> 'Document'",
    "peek_line": "(self, line: 'str') -> 'DocumentModel'",
    "peek_revision": "(self, rev: 'Revision') -> 'Look'",
+   "plan_redaction": "(self, revisions: 'Iterable[Revision]' = (), *, chat: 'Iterable[int]' = (), parts: 'Mapping[Revision, Iterable[str]] | None' = None) -> 'RedactionPlan'",
    "post_chat": "(self, author: 'str', raw: 'str', *, users: 'Iterable[str]' = ()) -> 'ChatRecord'",
    "publish": "(self, kind: 'str', sender: 'str | None', data: 'dict | None' = None) -> 'Ephemeral'",
-   "redact": "(self, revisions: 'Iterable[Revision]', *, author: 'str | None' = None) -> 'Applied'",
+   "redact": "(self, what: 'RedactionPlan | Iterable[Revision]', *, author: 'str | None' = None) -> 'Applied'",
    "redo": "(self, author: 'str | None') -> 'Applied | None'",
    "restore_checkpoint": "(self, number: 'int', author: 'str | None' = None) -> 'Applied | None'",
    "restore_revision": "(self, rev: 'Revision', author: 'str | None' = None) -> 'Applied | None'",
@@ -498,6 +504,7 @@
   "init": "()",
   "methods": {
    "apply": "(self, command: 'Command', ctx: 'Context') -> 'Command'",
+   "blank": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "describe_regions": "(self, command: 'Command') -> 'tuple[Region, ...]'",
    "empty": "() -> 'Self'",
    "load_state": "(self, state: 'dict') -> 'None'",
@@ -520,8 +527,7 @@
    "append_chat": "(self, record: 'ChatRecord') -> 'None'",
    "append_entry": "(self, entry: 'Entry') -> 'None'",
    "discard_entries": "(self, revisions: 'Sequence[Revision]') -> 'None'",
-   "drop_snapshots": "(self) -> 'None'",
-   "replace_entries": "(self, entries: 'Sequence[Entry]') -> 'None'",
+   "rewrite": "(self, log: 'CommandLog', chat: 'Sequence[ChatRecord]') -> 'None'",
    "write_branch": "(self, branch: 'Branch', active: 'bool') -> 'None'",
    "write_snapshot": "(self, snapshot: 'Snapshot') -> 'None'"
   },
@@ -590,6 +596,9 @@
  },
  "FILE_IMPORTER": {
   "value": "'file'"
+ },
+ "FILLER": {
+  "value": "'\u2588'"
  },
  "FORMAT": {
   "value": "1"
@@ -744,6 +753,7 @@
   ],
   "init": "(id: 'str', format: 'str', width: 'int', height: 'int', animated: 'bool', data: 'bytes', first_frame: 'bytes | None' = None) -> None",
   "methods": {
+   "blanked": "(self) -> 'ImageAsset'",
    "from_data": "(data: 'dict') -> 'ImageAsset'",
    "to_data": "(self) -> 'dict'"
   },
@@ -766,6 +776,7 @@
   ],
   "init": "(asset: 'str', alt: 'str', imported_by: 'str', imported_at: 'str', source: 'str', source_name: 'str', source_path: 'str | None' = None) -> None",
   "methods": {
+   "blanked": "(self) -> 'ImageImport'",
    "from_data": "(data: 'dict') -> 'ImageImport'",
    "masked": "(self, viewer: 'str') -> 'ImageImport'",
    "to_data": "(self) -> 'dict'"
@@ -789,8 +800,10 @@
   "init": "(name: 'str', fmt: 'str', state: 'dict', sha256: 'str | None' = None, kept: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
+   "blanked": "(self, model: 'type[DocumentModel]', parts: 'frozenset[str] | None' = None) -> 'Import'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Import'",
    "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -953,8 +966,7 @@
    "append_chat": "(self, record: 'ChatRecord') -> 'None'",
    "append_entry": "(self, entry: 'Entry') -> 'None'",
    "discard_entries": "(self, revisions: 'Sequence[Revision]') -> 'None'",
-   "drop_snapshots": "(self) -> 'None'",
-   "replace_entries": "(self, entries: 'Sequence[Entry]') -> 'None'",
+   "rewrite": "(self, log: 'CommandLog', chat: 'Sequence[ChatRecord]') -> 'None'",
    "write_branch": "(self, branch: 'Branch', active: 'bool') -> 'None'",
    "write_snapshot": "(self, snapshot: 'Snapshot') -> 'None'"
   },
@@ -1011,6 +1023,8 @@
   "init": "() -> 'None'",
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'A'",
+   "blank_diagram": "(definition: 'dict') -> 'dict'",
+   "blank_objects": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "can_turn": "(self, body: 'ObjectBody') -> 'bool'",
    "check_anchor": "(self, anchor: 'A', body: 'ObjectBody') -> 'None'",
    "check_name_free": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'None'",
@@ -1234,7 +1248,7 @@
   "class": [
    "object"
   ],
-  "init": "(revisions: 'tuple[Revision, ...]') -> None",
+  "init": "(revisions: 'tuple[Revision, ...]', chat: 'tuple[int, ...]' = ()) -> None",
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
@@ -1244,7 +1258,7 @@
   "class": [
    "Command"
   ],
-  "init": "(targets: 'tuple[Revision, ...]') -> None",
+  "init": "(targets: 'tuple[Revision, ...]', chat: 'tuple[int, ...]' = ()) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Redaction'",
@@ -1262,6 +1276,16 @@
   "init": "(...)",
   "methods": {},
   "properties": []
+ },
+ "RedactionPlan": {
+  "class": [
+   "object"
+  ],
+  "init": "(targets: 'tuple[Revision, ...]', dependents: 'tuple[Revision, ...]', chat: 'tuple[int, ...]', imports: 'tuple[Revision, ...]', changes_now: 'bool', after: 'DocumentModel', replacements: 'Mapping[Revision, Command]', basis: 'tuple') -> None",
+  "methods": {},
+  "properties": [
+   "revisions"
+  ]
  },
  "Region": {
   "class": [
@@ -1688,7 +1712,8 @@
   ],
   "init": "(commands: 'tuple[Command, ...]', name: 'str | None' = None) -> None",
   "methods": {
-   "redacted": "(self) -> 'Command'"
+   "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'"
   },
   "properties": [
    "label",
@@ -1893,6 +1918,7 @@
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateDiagram'",
    "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },

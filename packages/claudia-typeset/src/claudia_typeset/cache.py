@@ -4,13 +4,12 @@ The key is a digest of everything that changes the picture: the job, the engine'
 the font catalogue's digest (coarse in v1: a new font anywhere makes every result stale).
 """
 
-import contextlib
 import hashlib
 import json
-import os
 import re
-import tempfile
 from pathlib import Path
+
+from claudia_file_writer import write_atomically
 
 from .job import Job
 
@@ -57,12 +56,5 @@ class ResultCache:
         """Keep ``svg`` under ``key``."""
         path = self._path(key)
         self._directory.mkdir(parents=True, exist_ok=True)
-        handle, temporary = tempfile.mkstemp(dir=self._directory, suffix=".tmp")
-        try:
-            with os.fdopen(handle, "w", encoding="utf-8") as stream:
-                stream.write(svg)
-            os.replace(temporary, path)
-        except BaseException:
-            with contextlib.suppress(FileNotFoundError):
-                os.unlink(temporary)
-            raise
+        # Not ``write_once``: a result is put after ``get`` missed, and a garbled file counts as missing (CODE-34).
+        write_atomically(path, svg.encode("utf-8"))

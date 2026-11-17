@@ -91,6 +91,7 @@ def wrong_cells(program: str, data: bytes, work: Path, model) -> list[str]:
     """The cells of ``model`` whose value LibreOffice reads differently from the model's own (empty if it agrees)."""
     from datetime import datetime
 
+    from claudia_computes_io.pivot_exchange import sheet_cells
     from openpyxl import load_workbook
     from openpyxl.utils.datetime import to_excel
 
@@ -103,7 +104,7 @@ def wrong_cells(program: str, data: bytes, work: Path, model) -> list[str]:
             wrong.append(f"sheet {sheet.name!r} is missing")
             continue
         worksheet = book[sheet.name]
-        for row, column in sheet.cells:
+        for row, column in sheet_cells(model, sheet):  # (the cells a pivot fills are the file's cells too)
             expected = model.value(sheet_id, row, column)
             read = worksheet.cell(row=row + 1, column=column + 1).value
             if isinstance(read, datetime):
@@ -241,6 +242,47 @@ def new_workbook() -> tuple[bytes, object]:
     return data, ods_to_workbook(data)
 
 
+def new_pivot_workbook() -> tuple[bytes, object]:
+    """A file made from a workbook with a pivot table: LibreOffice makes the pivot table again when it opens the
+    file, and what it makes has to be the cells of the model (D625, D628)."""
+    from claudia_computes_io import ods_to_workbook, workbook_to_ods
+
+    from claudia_computes import (
+        AddSheet,
+        CellRef,
+        DefineName,
+        NamedRange,
+        PivotDefinition,
+        RangeRef,
+        SetCells,
+        ValueField,
+        WorkbookModel,
+        create_pivot,
+        parse_input,
+    )
+    from claudia_core import Document, MemoryStore
+
+    rows = [("Region", "Quarter", "Amount")] + [
+        (region, quarter, amount)
+        for region, quarter, amount in (
+            ("North", "Q1", 100),
+            ("North", "Q2", 150),
+            ("South", "Q1", 80),
+            ("East", "Q2", 60),
+        )
+    ]
+    doc = Document(WorkbookModel(), store=MemoryStore())
+    doc.execute(AddSheet("s1", "Data"), author="ana")
+    cells = tuple((r, c, parse_input(str(v))) for r, line in enumerate(rows) for c, v in enumerate(line))
+    doc.execute(SetCells("s1", cells), author="ana")
+    source = RangeRef.between(CellRef(0, 0, "s1"), CellRef(len(rows) - 1, 2, "s1"))
+    doc.execute(DefineName(NamedRange("Sales", None, source, True)), author="ana")
+    definition = PivotDefinition("Sales", ("Region",), ("Quarter",), (ValueField("Amount"),))
+    doc.execute(create_pivot(doc.model, "P", ("s2", 0, 0), definition, None, new_sheet="Pivot"), author="ana")
+    data = workbook_to_ods(doc.model)
+    return data, ods_to_workbook(data)
+
+
 def main() -> int:
     program = soffice()
     if program is None:
@@ -255,6 +297,8 @@ def main() -> int:
     cases.append(("new odp from a deck", "odp", data, shown))
     data, workbook = new_workbook()
     cases.append(("new ods from a workbook", "ods", data, workbook))
+    data, workbook = new_pivot_workbook()
+    cases.append(("new ods with a pivot table", "ods", data, workbook))
     failed = 0
     with tempfile.TemporaryDirectory() as directory:
         for name, fmt, data, texts in cases:

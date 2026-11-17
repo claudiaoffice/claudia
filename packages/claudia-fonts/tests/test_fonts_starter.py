@@ -151,43 +151,6 @@ def test_a_lock_of_another_format_or_with_a_bad_file_name_is_refused():
         read_lock(json.dumps(data))
 
 
-class _Answer:
-    def __init__(self, data):
-        self.data = data
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        return False
-
-    def read(self, limit):
-        return self.data[:limit]
-
-
-def test_the_default_download_reads_at_most_the_limit(monkeypatch):
-    from claudia_fonts import starter
-
-    monkeypatch.setattr(starter, "MAX_FILE_BYTES", 4)
-    monkeypatch.setattr(starter.urllib.request, "urlopen", lambda url, timeout: _Answer(b"abcd"))
-    assert starter._download("https://example.org/a.ttf") == b"abcd"
-    monkeypatch.setattr(starter.urllib.request, "urlopen", lambda url, timeout: _Answer(b"abcdefgh"))
-    with pytest.raises(FetchError, match="larger"):
-        starter._download("https://example.org/a.ttf")
-
-
-def test_a_write_that_fails_leaves_no_temporary_file(tmp_path, monkeypatch):
-    from claudia_fonts import starter
-
-    def refuse(source, target):
-        raise OSError("disk full")
-
-    monkeypatch.setattr(starter.os, "replace", refuse)
-    with pytest.raises(OSError, match="disk full"):
-        starter._write(tmp_path / "a.ttf", b"data")
-    assert list(tmp_path.iterdir()) == []
-
-
 def test_a_lock_fetches_over_https_only():
     data = {
         "format": 1,
@@ -232,9 +195,9 @@ def test_the_command_line_fetches_and_reports(tmp_path, monkeypatch, capsys):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
-def test_a_fetched_file_can_be_read_by_other_users(tmp_path):
-    """The Docker image fetches as root and the server runs as another user: the file must not be 0600 (mkstemp's)."""
-    from claudia_fonts import starter
-
-    starter._write(tmp_path / "a.ttf", b"data")
-    assert (tmp_path / "a.ttf").stat().st_mode & 0o777 == 0o644
+def test_a_fetched_collection_can_be_read_by_other_users(tmp_path):
+    """The Docker image fetches as root and the server runs as another user: the files must not be 0600."""
+    collections, store = lock_of(tmp_path)
+    for folder in fetch(tmp_path / "fonts", collections, download=store.__getitem__):
+        for path in folder.iterdir():
+            assert path.stat().st_mode & 0o777 == 0o644, path.name

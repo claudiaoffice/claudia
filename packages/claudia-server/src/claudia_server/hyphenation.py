@@ -20,11 +20,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import re
 import sys
-import tempfile
-import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
 from importlib import resources
@@ -33,28 +30,21 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse, Response
 
+from claudia_file_writer import FetchError, PinnedFile, fetch_pinned
+from claudia_file_writer import download as https_download
+
 #: The format of ``GET /api/hyphenation``; it rises when a field changes meaning or goes away.
 HYPHENATION_FORMAT = 1
 LOCK_FORMAT = 1
 #: The largest pattern file a fetch accepts (the largest pinned one is under 300 kB).
 MAX_FILE_BYTES = 4 * 1024 * 1024
 _HASH = re.compile(r"[0-9a-f]{64}")
-_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 _FOREVER = "public, max-age=31536000, immutable"
 
 
-class FetchError(Exception):
-    """A pinned file could not be fetched, or its bytes are not the pinned ones."""
-
-
 @dataclass(frozen=True)
-class PatternFile:
+class PatternFile(PinnedFile):
     """One file of the lock: its name in the folder, where it comes from, its SHA-256 and size."""
-
-    name: str
-    url: str
-    sha256: str
-    size: int
 
     def to_data(self) -> dict:
         """What a client is told of the file."""
@@ -88,19 +78,6 @@ class Language:
         }
 
 
-def _file(data: dict) -> PatternFile:
-    name = str(data["name"])
-    if not _NAME.fullmatch(name):
-        raise ValueError(f"lock: bad file name {name!r}")
-    url = str(data["url"])
-    if not url.startswith("https://"):
-        raise ValueError(f"lock: {name} is not fetched over https")
-    sha256 = str(data["sha256"]).lower()
-    if not _HASH.fullmatch(sha256):
-        raise ValueError(f"lock: {name} has no SHA-256")
-    return PatternFile(name, url, sha256, int(data["size"]))
-
-
 def read_lock(text: str | None = None) -> tuple[Language, ...]:
     """The languages of a lock file (by default the packaged ``hyphenation.lock.json``); ``ValueError`` if malformed."""
     if text is None:
@@ -114,8 +91,8 @@ def read_lock(text: str | None = None) -> tuple[Language, ...]:
             tuple(str(a) for a in entry.get("aliases", [])),
             str(entry["name"]),
             str(entry["licence"]),
-            _file(entry["patterns"]),
-            _file(entry["exceptions"]) if entry.get("exceptions") else None,
+            PatternFile.from_lock(entry["patterns"]),
+            PatternFile.from_lock(entry["exceptions"]) if entry.get("exceptions") else None,
         )
         for entry in data["languages"]
     )
@@ -188,25 +165,7 @@ def hyphenation_router(service: HyphenationService) -> APIRouter:
 
 # ---------------------------------------------------------------------------------------------------- fetching
 def _download(url: str) -> bytes:
-    with urllib.request.urlopen(url, timeout=60) as answer:  # noqa: S310 - https only, checked in read_lock
-        data = answer.read(MAX_FILE_BYTES + 1)
-    if len(data) > MAX_FILE_BYTES:
-        raise FetchError(f"{url} is larger than {MAX_FILE_BYTES} bytes")
-    return data
-
-
-def _write(target: Path, data: bytes) -> None:
-    handle, temporary = tempfile.mkstemp(dir=target.parent, suffix=".tmp")
-    try:
-        with os.fdopen(handle, "wb") as out:
-            out.write(data)
-        # mkstemp makes a 0600 file; these are public files, and the Docker image fetches them as root for a server
-        # that runs as another user, so they must stay readable by everyone.
-        os.chmod(temporary, 0o644)
-        os.replace(temporary, target)
-    except BaseException:
-        Path(temporary).unlink(missing_ok=True)
-        raise
+    return https_download(url, max_bytes=MAX_FILE_BYTES)
 
 
 def fetch(
@@ -219,27 +178,10 @@ def fetch(
     """Fetch the files of ``languages`` (default: the lock's) into ``target``; files already there with the right
     bytes are kept. The files, in order. ``download`` gives the bytes of a URL (default: an HTTPS request).
 
-    :class:`FetchError` names the first file that could not be fetched or whose bytes differ from the lock."""
-    root = Path(target)
-    root.mkdir(parents=True, exist_ok=True)
-    get = download or _download
-    out: list[Path] = []
-    for language in read_lock() if languages is None else languages:
-        for f in language.files():
-            path = root / f.name
-            out.append(path)
-            if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == f.sha256:
-                continue
-            report(f"fetching hyphenation patterns: {f.name}")
-            try:
-                data = get(f.url)
-            except OSError as error:
-                raise FetchError(f"{f.url}: {error}") from error
-            got = hashlib.sha256(data).hexdigest()
-            if got != f.sha256:
-                raise FetchError(f"{f.name}: SHA-256 {got}, the lock says {f.sha256}")
-            _write(path, data)
-    return out
+    :class:`claudia_file_writer.FetchError` names the first file that could not be fetched or whose bytes differ
+    from the lock."""
+    files = [f for language in (read_lock() if languages is None else languages) for f in language.files()]
+    return fetch_pinned(files, target, download=download or _download, report=report, label="hyphenation patterns")
 
 
 def main(argv: list[str] | None = None) -> int:

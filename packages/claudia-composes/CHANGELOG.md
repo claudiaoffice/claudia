@@ -3,6 +3,11 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.12.0] - 2026-11-16
+
+### Added
+- `blank(parts)` on the model (D723): an imported document is redacted in full or in parts — the paragraphs (by id) and objects; a blanked paragraph keeps its length in `FILLER` characters and its suggestions lose their words.
+
 ## [0.11.0] - 2026-11-15
 
 Objects float (D1023).

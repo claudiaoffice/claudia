@@ -62,7 +62,7 @@ describe('DesktopServer', () => {
     const logged: string[] = []
     const server = new DesktopServer({
       app: 'computes',
-      python: '/repo/.venv/bin/python',
+      program: '/repo/.venv/bin/python',
       web: '/frontend',
       documents: '/docs',
       state,
@@ -176,7 +176,7 @@ describe('DesktopServer', () => {
   it('goes to another port when 8765 is taken by something that says nothing', async () => {
     const server = new DesktopServer({
       app: 'computes',
-      python: 'py',
+      program: 'py',
       web: 'w',
       documents: 'd',
       state,
@@ -275,7 +275,7 @@ describe('DesktopServer', () => {
       const urls: string[] = []
       const server = new DesktopServer({
         app: 'creates',
-        python: 'py',
+        program: 'py',
         web: 'w',
         documents: 'd',
         state,

@@ -1166,6 +1166,62 @@
         "tier1"
       ],
       "enabled": true
+    },
+    {
+      "id": "ods-pivot-tables",
+      "format": "ods",
+      "feature": "pivot-tables",
+      "source": "ods/pivot-tables/source.ods",
+      "spec": "ods/pivot-tables/spec.py",
+      "summary": "A pivot table LibreOffice made over a table of sales: it comes in as a live pivot of the model because the engine makes the cells the file shows; a source number edited gives the new numbers in its cells and the pivot table of the file is kept.",
+      "backlog": "E6.30",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "pivot"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-16T20:27:08Z",
+        "commit": "b66fae0",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.063,
+        "detail": null
+      }
+    },
+    {
+      "id": "xlsx-pivot-tables",
+      "format": "xlsx",
+      "feature": "pivot-tables",
+      "source": "xlsx/pivot-tables/source.xlsx",
+      "spec": "xlsx/pivot-tables/spec.py",
+      "summary": "A pivot table LibreOffice made over a table of sales: it comes in as a live pivot of the model because the engine makes the cells the file shows; a source number edited gives the new numbers in its cells and the pivot table of the file is kept (the cache is asked to be read again on opening).",
+      "backlog": "E6.30",
+      "tags": [
+        "tier2",
+        "beyond-claudia",
+        "pivot"
+      ],
+      "enabled": true,
+      "last_run": {
+        "at": "2026-11-16T20:27:08Z",
+        "commit": "b66fae0",
+        "status": "pass",
+        "stages": {
+          "import": "pass",
+          "round_trip": "pass",
+          "preserve": "pass",
+          "visual": "not_run"
+        },
+        "duration_s": 0.035,
+        "detail": null
+      }
     }
   ]
 }

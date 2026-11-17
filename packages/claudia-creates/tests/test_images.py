@@ -16,6 +16,7 @@ from conftest import (
 )
 
 from claudia_core import Batch, Document, MemoryStore, UnknownCommand, encode
+from claudia_core.assets import BLANK_GIF
 from claudia_creates import DefineImage, ForgetImage, RemoveObject, SlideModel
 from claudia_creates.events import ImagesChanged, ObjectsChanged
 
@@ -183,10 +184,13 @@ def test_equal_states_serialize_equally_with_shared_images_whatever_order(doc):
     assert other.model.serialize() == doc.model.serialize()
 
 
-# -- redaction is deliberately out of scope here (an open decision, not resolved by this change) --------------
-def test_redacting_an_image_object_does_not_yet_touch_its_import_record(doc):
-    """Documented, not (yet) a design decision: AddObject.redacted() only blanks `text`; an image's `alt` and
-    `source_name`/`source_path` survive redaction today. See the implementation notes."""
+# -- redaction (D720) ------------------------------------------------------------------------------------------
+def test_redacting_an_image_object_takes_its_words_and_its_pixels(doc):
+    """The import record keeps who and when, not the alternative text or the file's name; the picture keeps its id
+    and size, not its pixels."""
     added = put_image(doc)
+    asset = doc.model.get("i1").body.image
     doc.redact([added.revision])
-    assert doc.model.get("i1").body.imported.alt == "a sample picture"
+    imported = doc.model.get("i1").body.imported
+    assert (imported.alt, imported.source_name, imported.source_path) == ("", "", None)
+    assert doc.model.images[asset].data == BLANK_GIF

@@ -2,7 +2,6 @@
 
 import hashlib
 import json
-import sys
 
 import pytest
 from starlette.testclient import TestClient
@@ -143,43 +142,3 @@ def test_the_command_line_fetches_and_reports(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(hyphenation, "_download", lambda url: b"wrong")
     assert hyphenation.main(["fetch", str(tmp_path / "other")]) == 1
     assert "SHA-256" in capsys.readouterr().err
-
-
-class _Answer:
-    def __init__(self, data):
-        self.data = data
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        return False
-
-    def read(self, limit):
-        return self.data[:limit]
-
-
-def test_the_default_download_reads_at_most_the_limit(monkeypatch):
-    monkeypatch.setattr(hyphenation, "MAX_FILE_BYTES", 4)
-    monkeypatch.setattr(hyphenation.urllib.request, "urlopen", lambda url, timeout: _Answer(b"abcd"))
-    assert hyphenation._download("https://example.org/a") == b"abcd"
-    monkeypatch.setattr(hyphenation.urllib.request, "urlopen", lambda url, timeout: _Answer(b"abcdefgh"))
-    with pytest.raises(FetchError, match="larger"):
-        hyphenation._download("https://example.org/a")
-
-
-def test_a_write_that_fails_leaves_no_temporary_file(tmp_path, monkeypatch):
-    def refuse(source, target):
-        raise OSError("disk full")
-
-    monkeypatch.setattr(hyphenation.os, "replace", refuse)
-    with pytest.raises(OSError, match="disk full"):
-        hyphenation._write(tmp_path / "a.txt", b"data")
-    assert list(tmp_path.iterdir()) == []
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
-def test_a_fetched_file_can_be_read_by_other_users(tmp_path):
-    """The Docker image fetches as root and the server runs as another user: the file must not be 0600 (mkstemp's)."""
-    hyphenation._write(tmp_path / "a.txt", b"data")
-    assert (tmp_path / "a.txt").stat().st_mode & 0o777 == 0o644

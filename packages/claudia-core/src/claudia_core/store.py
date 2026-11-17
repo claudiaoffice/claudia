@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
-from .log import Entry
+from .log import CommandLog, Entry
 from .messages import ChatRecord
 from .model import Snapshot
 from .revision import Branch, Revision
@@ -21,8 +21,10 @@ class DocumentStore(Protocol):
     def append_entry(self, entry: Entry) -> None:
         """Persist one log entry. Raise if it cannot be made durable: the change then did not happen."""
 
-    def replace_entries(self, entries: Sequence[Entry]) -> None:
-        """Redaction: these entries (same revisions) replace the stored ones; rewrite what holds them."""
+    def rewrite(self, log: CommandLog, chat: Sequence[ChatRecord]) -> None:
+        """Redaction (D725): from now on the store holds exactly this log and this chat, and **nothing of what it held
+        before may remain** — not in a journal, not in a packed block, not in a snapshot. Raise if that cannot be
+        made durable: the redaction then did not happen."""
 
     def write_branch(self, branch: Branch, active: bool) -> None:
         """A line was created (restore); ``active``: the document continues on it from now on."""
@@ -35,9 +37,6 @@ class DocumentStore(Protocol):
 
     def write_snapshot(self, snapshot: Snapshot) -> None:
         """Keep a snapshot as a cache; it may be dropped at any time."""
-
-    def drop_snapshots(self) -> None:
-        """Caches built from content that was redacted must go."""
 
 
 class MemoryStore:
@@ -57,11 +56,12 @@ class MemoryStore:
         self.calls.append("append_entry")
         self.entries[entry.rev] = entry
 
-    def replace_entries(self, entries: Sequence[Entry]) -> None:
-        """As ``DocumentStore.replace_entries``, in memory."""
-        self.calls.append("replace_entries")
-        for entry in entries:
-            self.entries[entry.rev] = entry
+    def rewrite(self, log: CommandLog, chat: Sequence[ChatRecord]) -> None:
+        """As ``DocumentStore.rewrite``, in memory: every entry of every line, the chat, no snapshot."""
+        self.calls.append("rewrite")
+        self.entries = {entry.rev: entry for name in log.branches for entry in log.line(name)}
+        self.chat = list(chat)
+        self.snapshots.clear()
 
     def write_branch(self, branch: Branch, active: bool) -> None:
         """As ``DocumentStore.write_branch``, in memory."""
@@ -86,8 +86,3 @@ class MemoryStore:
         """As ``DocumentStore.write_snapshot``, in memory."""
         self.calls.append("write_snapshot")
         self.snapshots.append(snapshot)
-
-    def drop_snapshots(self) -> None:
-        """As ``DocumentStore.drop_snapshots``, in memory."""
-        self.calls.append("drop_snapshots")
-        self.snapshots.clear()

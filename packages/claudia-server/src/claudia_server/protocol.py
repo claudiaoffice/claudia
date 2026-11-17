@@ -52,6 +52,7 @@ from claudia_core import (
 
 from .ai_mode import parse_mode
 from .auth import (
+    WRITE_ROLES,
     Account,
     DeletableDirectory,
     DetailsDirectory,
@@ -119,7 +120,7 @@ EVENTS = {
     "branch": "the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, "
     "fork_point}. Everything you hold is stale: call snapshot",
     "rebuilt": "the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot",
-    "redacted": "the content of these revisions was removed: {revisions}",
+    "redacted": "the content of these revisions and chat messages was removed: {revisions, chat}; reload chat_log",
     "thing_renamed": "an object, slide, sheet or chart tab got another name: {id, name} (D550)",
     "stale": "functions the document uses changed: {functions}; results computed by them are out of date",
     "joined": "somebody connected: {id, user, color}",
@@ -704,6 +705,111 @@ def _discard_side_history(ctx):
     if ctx.restore.open_proposal is not None:
         raise RequestError("command_error", msg("there is an open suggestion; answer or withdraw it first"))
     return {"discarded": [rev.to_data() for rev in ctx.document.discard_side_history()]}
+
+
+# ------------------------------------------------------------------------------------------ redaction (E1.8, D726)
+_REDACTION_PARAMS = "revisions:list? chat:list? parts:dict?"
+
+
+def _redaction_request(ctx, revisions, chat, parts) -> dict:
+    """The keyword arguments of ``plan_redaction`` from wire parameters, for someone who may redact what they name
+    (D727): an owner anything she can read, an editor only her own changes and chat messages. ``forbidden`` for a
+    viewer and the assistant, ``bad_request`` for parameters of the wrong shape, ``command_error`` for somebody
+    else's work or a message she cannot read."""
+    if ctx.account.system or ctx.account.role not in WRITE_ROLES:
+        raise RequestError("forbidden", msg("only owners, and editors on their own work, redact"))
+    try:
+        steps = [Revision.parse(text) for text in revisions or ()]
+        wanted = {Revision.parse(rev): [str(thing) for thing in things] for rev, things in (parts or {}).items()}
+        numbers = [int(number) for number in chat or ()]
+    except (ValueError, TypeError, AttributeError):
+        raise RequestError(
+            "bad_request", msg('redaction: revisions like "main:12", chat numbers, parts by revision')
+        ) from None
+    me = ctx.user.casefold()
+    readable = {r.number: r for r in ctx.document.chat if not r.to or me in (r.author.casefold(), r.to.casefold())}
+    if not set(numbers) <= set(readable):
+        raise RequestError("command_error", msg("there is no chat message of that number for you"))
+    if ctx.account.role != "owner":
+        authors = [ctx.document.log.get(rev).author for rev in steps if ctx.document.log.has(rev)]
+        authors += [readable[number].author for number in numbers]
+        if any((author or "").casefold() != me for author in authors):
+            raise RequestError("command_error", msg("you can redact only your own changes and messages; ask an owner"))
+    return {"revisions": steps, "chat": numbers, "parts": wanted}
+
+
+def _planned(ctx, revisions, chat, parts):
+    try:
+        return ctx.document.plan_redaction(**_redaction_request(ctx, revisions, chat, parts))
+    except KernelError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+
+
+def _others_reached(ctx, plan) -> list[str]:
+    """Whose later steps an editor's plan would blank besides her own (D727): an owner reaches nobody's she may not."""
+    if ctx.account.role == "owner":
+        return []
+    me = ctx.user.casefold()
+    authors = {ctx.document.log.get(rev).author or "" for rev in plan.dependents}
+    return sorted(author for author in authors if author.casefold() != me)
+
+
+@core_methods.method("redaction_plan", _REDACTION_PARAMS + " state:bool=true")
+def _redaction_plan(ctx, revisions, chat, parts, state):
+    """What redacting these steps (`revisions`, on any line) and chat messages (`chat`, by number) would do, without
+    doing it (D721). Owners may name anything they can read, editors only their own work (D727). `parts` blanks only
+    some things of an imported document: `{"main:1": ["b4", "s1!A1:B9", "t2"]}` (paragraph, sheet or range, slide,
+    object).
+
+    Returns `{targets, dependents, chat, imports, changes_now, allowed, others, steps, app, state_schema, state}`:
+    `dependents` are later steps that stop working without the content and are blanked with it (D722), `imports` the
+    targets whose kept original goes too, `steps` every step that is blanked as `log` gives it, `state` the document as
+    it will look (left out when `state` is false or the plan is not allowed). `allowed` is false when an editor's plan
+    would blank later steps by somebody else, named in `others`: an owner has to do it. Nothing changes.
+    `command_error` for something the document does not have, or that cannot be redacted."""
+    plan = _planned(ctx, revisions, chat, parts)
+    out = {
+        "targets": [rev.to_data() for rev in plan.targets],
+        "dependents": [rev.to_data() for rev in plan.dependents],
+        "chat": list(plan.chat),
+        "imports": [rev.to_data() for rev in plan.imports],
+        "changes_now": plan.changes_now,
+        "steps": [_entry_view(ctx.document.log.get(rev)) for rev in plan.revisions],
+        "app": plan.after.app,
+    }
+    out["others"] = _others_reached(ctx, plan)
+    out["allowed"] = not out["others"]
+    if state and out["allowed"]:
+        out["state_schema"] = plan.after.state_schema
+        out["state"] = plan.after.serialize()
+    return out
+
+
+@core_methods.method("redact", _REDACTION_PARAMS + " dependents:list", write=True)
+def _redact(ctx, revisions, chat, parts, dependents):
+    """Carry out the redaction `redaction_plan` showed (D229), with the same rights (D727). `dependents` repeats the
+    dependents the plan named, as the confirmation that they were shown: if the plan now names others (somebody worked
+    in between), nothing happens and the error is `command_error`. The content goes from the document, its history and
+    its file (D725); everybody gets `redacted` (and `rebuilt` when steps were blanked). Returns `{revision}` of the
+    record. `command_error` while a suggestion to restore is open. A note to the people concerned (D728) is an ordinary
+    `chat` the client sends afterwards."""
+    if ctx.restore.open_proposal is not None:
+        raise RequestError("command_error", msg("there is an open suggestion; answer or withdraw it first"))
+    plan = _planned(ctx, revisions, chat, parts)
+    if others := _others_reached(ctx, plan):
+        raise RequestError(
+            "command_error",
+            msg("this would also blank later changes by {names}; ask an owner", names=", ".join(others)),
+        )
+    if [rev.to_data() for rev in plan.dependents] != list(dependents):
+        raise RequestError(
+            "command_error", msg("the redaction would now blank other steps than you were shown; look at it again")
+        )
+    try:
+        applied = ctx.document.redact(plan, author=ctx.user)
+    except KernelError as exc:
+        raise RequestError("command_error", str(exc)) from exc
+    return {"revision": applied.revision.to_data()}
 
 
 @core_methods.method("withdraw_restore", write=True)

@@ -306,7 +306,7 @@ def test_what_the_model_does_not_show_is_counted_and_the_cells_still_come_in():
         "named-range": 2,
         "validation": 1,
         "filter": 1,
-        "pivot-table": 1,
+        "pivot-table:source": 1,
     }
 
 

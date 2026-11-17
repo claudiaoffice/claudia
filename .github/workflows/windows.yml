@@ -1,0 +1,393 @@
+# Builds the Windows installer of Claudia (Composes, Computes and Creates, each with a Start menu entry; the server with
+# its Python inside; optionally the server as a Windows service), then installs it on clean Windows machines and checks
+# that it works (D730-D735, packaging/windows/README.md).
+#
+#   pull request / push to main   build, install, test, uninstall; the installer is kept as a workflow artifact for 30 days
+#   tag v1.2.3                    the same, and the installer is attached to the GitHub release of the tag
+#
+# Signing is built in and off: it needs a SignPath account (packaging/windows/README.md, "Signing"). Until the repository
+# variable SIGNPATH_ORGANIZATION_ID is set, the installer is not signed and Windows' SmartScreen will warn about it.
+name: Windows installer
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - packaging/**
+      - clients/neutralino/**
+      - web/**
+      - layout/**
+      - packages/**
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/windows.yml
+  workflow_dispatch:
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  PYINSTALLER: "6.21.0"
+
+jobs:
+  installer:
+    name: Build the installer
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read # SignPath reads the artifact it signs
+    outputs:
+      server-version: ${{ steps.version.outputs.server }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            clients/neutralino/package-lock.json
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: The version of this build
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="$(uv run --no-project python packaging/windows/build.py version "$GITHUB_REF_NAME" --build "$GITHUB_RUN_NUMBER")"
+            numeric="$(uv run --no-project python packaging/windows/build.py version "$GITHUB_REF_NAME" --build "$GITHUB_RUN_NUMBER" --field numeric)"
+          else
+            base="$(node -p "require('./clients/neutralino/package.json').version")"
+            version="$(uv run --no-project python packaging/windows/build.py version "$base" --build "$GITHUB_RUN_NUMBER" --commit "$GITHUB_SHA")"
+            numeric="$(uv run --no-project python packaging/windows/build.py version "$base" --build "$GITHUB_RUN_NUMBER" --commit "$GITHUB_SHA" --field numeric)"
+          fi
+          server="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' packages/claudia-server/src/claudia_server/_version.py)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "numeric=$numeric" >> "$GITHUB_OUTPUT"
+          echo "server=$server" >> "$GITHUB_OUTPUT"
+          echo "Installer version $version ($numeric), server $server"
+
+      - name: Web frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Desktop client and the Neutralino binary of each app
+        working-directory: clients/neutralino
+        shell: bash
+        run: |
+          npm ci
+          npm run build:windows
+          for app in composes computes creates; do
+            (cd "apps/$app" && npx --yes @neutralinojs/neu update)
+          done
+
+      - name: Server with its Python inside
+        run: >
+          uv run --locked --no-dev --with "pyinstaller==$env:PYINSTALLER" pyinstaller --noconfirm
+          --distpath dist --workpath build/pyinstaller packaging/windows/claudia-server.spec
+
+      - name: The server on its own, before it is installed anywhere
+        shell: bash
+        run: |
+          dist/claudia-server/claudia-server.exe --version
+          mkdir -p "$RUNNER_TEMP/solo/documents" "$RUNNER_TEMP/solo/state"
+          dist/claudia-server/claudia-server.exe --host 127.0.0.1 --port 8801 --no-tls \
+            --dir "$RUNNER_TEMP/solo/documents" --state-dir "$RUNNER_TEMP/solo/state" \
+            --web web/.output/public --exit-when-idle 120 &
+          for _ in $(seq 1 60); do curl -fsS http://127.0.0.1:8801/api/health && break; sleep 1; done
+          uv run --no-project --with websockets python packaging/smoke_server.py http://127.0.0.1:8801 \
+            --expect-version "${{ steps.version.outputs.server }}"
+          taskkill //F //IM claudia-server.exe //T || true
+
+      - name: Third-party files, pinned
+        shell: pwsh
+        run: |
+          uv run --no-project python packaging/windows/build.py fetch-winsw build/WinSW-x64.exe
+          uv run --no-project python packaging/windows/build.py fetch-webview2 build/MicrosoftEdgeWebview2Setup.exe
+          $signature = Get-AuthenticodeSignature build/MicrosoftEdgeWebview2Setup.exe
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Microsoft Corporation') {
+            throw "The WebView2 bootstrapper is not signed by Microsoft: $($signature.Status) $($signature.SignerCertificate.Subject)"
+          }
+
+      - name: Stage the files of the installation
+        shell: pwsh
+        run: |
+          $node = Split-Path (Get-Command node).Source
+          uv run --no-project python packaging/windows/build.py stage --node $node --winsw build/WinSW-x64.exe `
+            --webview2 build/MicrosoftEdgeWebview2Setup.exe --out build/stage
+
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue) -and -not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --no-progress -y
+          }
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc /? | Select-Object -First 2
+
+      - name: Compile the installer
+        shell: pwsh
+        run: |
+          uv run --no-project python packaging/windows/build.py installer --stage build/stage `
+            --version "${{ steps.version.outputs.version }}" --numeric "${{ steps.version.outputs.numeric }}" --out dist/installer
+          Get-ChildItem dist/installer | Format-Table Name, Length
+
+      - name: Is signing set up?
+        id: signing
+        shell: bash
+        env:
+          ORGANIZATION: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+        run: |
+          if [ -n "$ORGANIZATION" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT"; else echo "enabled=false" >> "$GITHUB_OUTPUT"; fi
+
+      # Without signing the installer is the artifact the tests and the release use.
+      - uses: actions/upload-artifact@v4
+        if: steps.signing.outputs.enabled != 'true'
+        with:
+          name: claudia-office-windows
+          path: dist/installer/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      # With signing, SignPath signs the installer and the signed one is the artifact (packaging/windows/README.md).
+      - uses: actions/upload-artifact@v4
+        id: unsigned
+        if: steps.signing.outputs.enabled == 'true'
+        with:
+          name: claudia-office-windows-unsigned
+          path: dist/installer/*.exe
+          if-no-files-found: error
+          retention-days: 1
+
+      - uses: signpath/github-action-submit-signing-request@v1
+        if: steps.signing.outputs.enabled == 'true'
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'claudia' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: dist/signed
+
+      - uses: actions/upload-artifact@v4
+        if: steps.signing.outputs.enabled == 'true'
+        with:
+          name: claudia-office-windows
+          path: dist/signed/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+  # What a person does: install the downloaded installer, start what it installed, remove it. Twice: with the server as a
+  # Windows service (an administrator's choice), and the standard install, where a window starts the server itself.
+  test:
+    name: Install, run, uninstall (${{ matrix.os }})
+    needs: installer
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
+    env:
+      SERVER_VERSION: ${{ needs.installer.outputs.server-version }}
+      INSTALL_DIR: C:\Program Files\Claudia Office
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5 # for packaging/smoke_server.py only; the installer is what is tested
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+      - uses: actions/download-artifact@v4
+        with:
+          name: claudia-office-windows
+          path: installer
+
+      - name: Helpers
+        run: |
+          @'
+          function Install-Claudia([string]$Components) {
+            $setup = (Get-ChildItem installer\claudia-office-*-windows-x64.exe).FullName
+            $arguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/ALLUSERS', "/DIR=`"$env:INSTALL_DIR`"", "/LOG=`"$PWD\install.log`"", "/COMPONENTS=$Components")
+            $process = Start-Process $setup -ArgumentList $arguments -Wait -PassThru
+            if ($process.ExitCode -ne 0) { Get-Content install.log -Tail 60; throw "The installer exited with $($process.ExitCode)" }
+          }
+          function Uninstall-Claudia {
+            $uninstaller = Join-Path $env:INSTALL_DIR 'unins000.exe'
+            $process = Start-Process $uninstaller -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "The uninstaller exited with $($process.ExitCode)" }
+          }
+          function Wait-Health([string]$Url, [int]$Seconds = 90) {
+            $until = (Get-Date).AddSeconds($Seconds)
+            while ((Get-Date) -lt $until) {
+              try { return Invoke-RestMethod "$Url/api/health" -TimeoutSec 5 } catch { Start-Sleep -Seconds 1 }
+            }
+            throw "No answer from $Url within $Seconds seconds"
+          }
+          function Invoke-Smoke([string]$Url) {
+            uv run --no-project --with websockets python packaging/smoke_server.py $Url --expect-version $env:SERVER_VERSION
+            if ($LASTEXITCODE -ne 0) { throw 'The smoke test failed' }
+          }
+          function Assert-Gone([string]$Path) {
+            # the uninstaller finishes by a copy of itself that removes the last files, a moment after it has exited
+            for ($i = 0; $i -lt 30 -and (Test-Path $Path); $i++) { Start-Sleep 1 }
+            if (Test-Path $Path) { throw "$Path is still there after the uninstall" }
+          }
+          '@ | Set-Content helpers.ps1
+
+      # ---------------------------------------------------------------------------------- with the server as a service
+      - name: Install, with the server as a Windows service
+        run: |
+          . .\helpers.ps1
+          Install-Claudia 'client,service'
+          foreach ($file in 'node\node.exe', 'server\claudia-server.exe', 'client\dist\launch.js', 'client\packaged.json',
+                   'client\apps\composes\bin\neutralino-win_x64.exe', 'web\index.html', 'service\claudia-service.exe', 'icons\computes.ico') {
+            if (-not (Test-Path (Join-Path $env:INSTALL_DIR $file))) { throw "The installation lacks $file" }
+          }
+          $menu = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs'
+          foreach ($app in 'Composes', 'Computes', 'Creates') {
+            if (-not (Test-Path (Join-Path $menu "Claudia $app.lnk"))) { throw "No Start menu entry for $app" }
+          }
+
+      - name: The service runs and serves, as LocalService
+        run: |
+          . .\helpers.ps1
+          $service = Get-Service ClaudiaServer
+          for ($i = 0; $i -lt 60 -and $service.Status -ne 'Running'; $i++) { Start-Sleep 1; $service.Refresh() }
+          if ($service.Status -ne 'Running') { Get-ChildItem "$env:ProgramData\Claudia\state\service" -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_.FullName -Tail 40 }; throw "ClaudiaServer is $($service.Status)" }
+          $config = sc.exe qc ClaudiaServer | Out-String
+          if ($config -notmatch 'LocalService') { throw "The service does not run as LocalService:`n$config" }
+          if ($config -notmatch 'AUTO_START') { throw "The service does not start with Windows:`n$config" }
+          Wait-Health 'http://127.0.0.1:8765' | Out-Null
+          Invoke-Smoke 'http://127.0.0.1:8765'
+          if (-not (Get-ChildItem "$env:ProgramData\Claudia\documents" -Recurse -ErrorAction SilentlyContinue)) {
+            throw 'The service wrote no documents into %ProgramData%\Claudia\documents: it cannot write there'
+          }
+
+      - name: The service comes back after it is stopped and started
+        run: |
+          . .\helpers.ps1
+          Stop-Service ClaudiaServer
+          Start-Service ClaudiaServer
+          Wait-Health 'http://127.0.0.1:8765' | Out-Null
+          Invoke-Smoke 'http://127.0.0.1:8765'
+
+      - name: The client reports its version, from the installation and without the tools of this runner
+        run: |
+          . .\helpers.ps1
+          # a PATH with Windows only: no Node, no Python, no uv of the runner may be what makes it work
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $version = & "$env:INSTALL_DIR\node\node.exe" "$env:INSTALL_DIR\client\bin\composes.mjs" --version
+          if ($LASTEXITCODE -ne 0 -or $version -notmatch 'claudia') { throw "--version said: $version" }
+          $version
+
+      - name: Uninstall removes the service and the program, and leaves the documents
+        run: |
+          . .\helpers.ps1
+          Uninstall-Claudia
+          if (Get-Service ClaudiaServer -ErrorAction SilentlyContinue) { throw 'The service ClaudiaServer is still registered after the uninstall' }
+          Assert-Gone $env:INSTALL_DIR
+          Assert-Gone (Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\Claudia Composes.lnk')
+          if (Get-Process claudia-server, claudia-service -ErrorAction SilentlyContinue) { throw 'A Claudia process is still running after the uninstall' }
+          if (-not (Test-Path "$env:ProgramData\Claudia\documents")) { throw 'The uninstaller removed the documents of the service' }
+
+      # ------------------------------------------------------------------------------------------ the standard install
+      - name: Install, standard (no service)
+        run: |
+          . .\helpers.ps1
+          Install-Claudia 'client'
+          if (Get-Service ClaudiaServer -ErrorAction SilentlyContinue) { throw 'The standard install registered the service' }
+          if (Test-Path "$env:INSTALL_DIR\service") { throw 'The standard install put the service files on the computer' }
+
+      - name: The installed server runs alone, without the tools of this runner
+        run: |
+          . .\helpers.ps1
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\own\documents", "$env:RUNNER_TEMP\own\state" | Out-Null
+          # a PATH with Windows only while it starts: no Python, Node or uv of this runner may be what makes it work
+          $saved = $env:PATH
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $server = Start-Process "$env:INSTALL_DIR\server\claudia-server.exe" -PassThru -WindowStyle Hidden -ArgumentList @(
+            '--host', '127.0.0.1', '--port', '8802', '--no-tls', '--dir', "$env:RUNNER_TEMP\own\documents",
+            '--state-dir', "$env:RUNNER_TEMP\own\state", '--web', "`"$env:INSTALL_DIR\web`"", '--exit-when-idle', '120')
+          $env:PATH = $saved
+          try {
+            Wait-Health 'http://127.0.0.1:8802' | Out-Null
+            Invoke-Smoke 'http://127.0.0.1:8802'
+          } finally {
+            Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
+          }
+
+      # A window needs a desktop session and the WebView2 Runtime. If this runner cannot show one, this step says so and
+      # the rest still counts; where it can, it is the whole path: shortcut target, launcher, copy of the app folder,
+      # Neutralino, core, and the server the core starts itself.
+      - name: A window opens, and starts the server it needs
+        continue-on-error: true
+        run: |
+          . .\helpers.ps1
+          $window = Start-Process "$env:INSTALL_DIR\node\node.exe" -ArgumentList "`"$env:INSTALL_DIR\client\bin\composes.mjs`"" -PassThru -WindowStyle Minimized
+          try {
+            Wait-Health 'http://127.0.0.1:8765' 120 | Out-Null
+            Invoke-Smoke 'http://127.0.0.1:8765'
+            $copy = "$env:LOCALAPPDATA\Claudia\run\composes"
+            if (-not (Test-Path "$copy\neutralino.config.json")) { throw "The window did not run from a copy of the app folder ($copy)" }
+            if ((Get-Content "$copy\neutralino.config.json" -Raw) -notmatch 'app=composes') { throw 'The copy has no core command for composes' }
+            if ((Get-Content "$env:INSTALL_DIR\client\apps\composes\neutralino.config.json" -Raw) -match 'app=composes') { throw 'The launcher changed the installed files' }
+            if (-not (Get-Process neutralino-win_x64 -ErrorAction SilentlyContinue)) { throw 'No Neutralino window is running' }
+          } finally {
+            Stop-Process -Id $window.Id -Force -ErrorAction SilentlyContinue
+            Get-Process neutralino-win_x64 -ErrorAction SilentlyContinue | Stop-Process -Force
+            Get-Content "$env:LOCALAPPDATA\Claudia\composes\state\shell.log", "$env:LOCALAPPDATA\Claudia\state\server.log" -Tail 40 -ErrorAction SilentlyContinue
+          }
+
+      - name: Uninstall, standard
+        run: |
+          . .\helpers.ps1
+          Uninstall-Claudia
+          Assert-Gone $env:INSTALL_DIR
+          Assert-Gone "$env:LOCALAPPDATA\Claudia\run"
+          if (Get-Process claudia-server, neutralino-win_x64 -ErrorAction SilentlyContinue) { throw 'A Claudia process is still running after the uninstall' }
+
+      - name: The log of the installer, when something failed
+        if: failure()
+        run: |
+          if (Test-Path install.log) { Get-Content install.log -Tail 120 }
+          Get-ChildItem "$env:ProgramData\Claudia" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 40 FullName
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [installer, test]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: claudia-office-windows
+          path: dist
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # The Debian package's workflow makes the release too: whichever is first, the other adds its file to it.
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes \
+            || gh release view "$GITHUB_REF_NAME" >/dev/null
+          gh release upload "$GITHUB_REF_NAME" dist/*.exe --clobber
