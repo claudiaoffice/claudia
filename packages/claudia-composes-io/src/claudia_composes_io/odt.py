@@ -54,7 +54,7 @@ from claudia_odf_io import (
     update_package_meta,
     xml_safe,
 )
-from claudia_opc_io import read_parts, write_parts
+from claudia_opc_io import parse_xml, read_parts, write_parts
 
 from ._boxes import box_losses, boxes_of, is_written, look_of
 from ._boxes import has_references as has_box_references
@@ -279,7 +279,7 @@ def _style_of(paragraph: etree._Element, parents: dict[str, str | None], losses:
 
 
 def _styles_root(parts: dict[str, bytes]) -> etree._Element | None:
-    return etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None
+    return parse_xml(parts["styles.xml"]) if "styles.xml" in parts else None
 
 
 #: The model's styles of words by the name an odt shows for them, for a text box or a shape of a file.
@@ -301,7 +301,7 @@ def _words_style(parents: dict[str, str | None]) -> Callable[[etree._Element, st
 
 
 def _open_styles(parts: dict[str, bytes], content: etree._Element) -> dict[str, str | None]:
-    styles = etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else content
+    styles = parse_xml(parts["styles.xml"]) if "styles.xml" in parts else content
     return _paragraph_styles(styles, content)
 
 
@@ -318,7 +318,7 @@ def _document(data: bytes) -> tuple[dict[str, bytes], etree._Element, _Scan, dic
 def _number_headings(model: TextModel, parts: dict[str, bytes], body: etree._Element) -> None:
     """Number the heading styles of ``model`` in the list the file's outline numbers its headings in, if it does."""
     content = body.getroottree().getroot()
-    roots = [content, *([etree.fromstring(parts["styles.xml"])] if "styles.xml" in parts else [])]
+    roots = [content, *([parse_xml(parts["styles.xml"])] if "styles.xml" in parts else [])]
     list_id = read_outline(roots, model.lists, model.schemes)
     if list_id is None:
         return
@@ -330,7 +330,7 @@ def _number_headings(model: TextModel, parts: dict[str, bytes], body: etree._Ele
 def _lists_of(parts: dict[str, bytes], body: etree._Element, scan: _Scan):  # noqa: ANN202
     """The lists of a file and the items among its paragraphs (:func:`claudia_composes_io._odt_lists.read_lists`)."""
     content = body.getroottree().getroot()
-    styles = etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else content
+    styles = parse_xml(parts["styles.xml"]) if "styles.xml" in parts else content
     return read_lists(scan.paragraphs, (content, styles))
 
 
@@ -346,7 +346,7 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     :class:`~claudia_odf_io.OdfError` for a file that is not an odt."""
     parts, body, scan, parents = _document(odt_bytes)
     lists = _lists_of(parts, body, scan)
-    setup = read_setup(etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
+    setup = read_setup(parse_xml(parts["styles.xml"]) if "styles.xml" in parts else None)
     blocks = []
     contents = iter(scan.contents)
     waiting = next(contents, None)
@@ -379,7 +379,7 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     _number_headings(model, parts, body)
     root = body.getroottree().getroot()
     take_fonts(model, style_fonts((root, _styles_root(parts)), _FONT_SOURCES))
-    graphics = graphic_styles(root, etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
+    graphics = graphic_styles(root, parse_xml(parts["styles.xml"]) if "styles.xml" in parts else None)
     floating: list[tuple[int, int, int, FilePicture | FileBox]] = [
         (each.block, each.offset, 0, each) for each in file_pictures(scan.paragraphs, graphics, parts)
     ]
@@ -404,7 +404,7 @@ def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
     it."""
     parts, body, scan, parents = _document(odt_bytes)
     reading = _lists_of(parts, body, scan)
-    setup = read_setup(etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
+    setup = read_setup(parse_xml(parts["styles.xml"]) if "styles.xml" in parts else None)
     losses = LossLog()
     hidden: dict[str, int] = {}
     formatting = links = 0
@@ -415,7 +415,7 @@ def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
         formatting += sum(1 for span in paragraph.iter(_q("text", "span")) if span.get(_STYLE_NAME))
         links += sum(1 for _ in paragraph.iter(_q("text", "a")))
     graphics = graphic_styles(
-        body.getroottree().getroot(), etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None
+        body.getroottree().getroot(), parse_xml(parts["styles.xml"]) if "styles.xml" in parts else None
     )
     held = file_pictures(scan.paragraphs, graphics, parts)
     unheld = unheld_pictures(scan.paragraphs, held, graphics)
@@ -882,7 +882,7 @@ class _Patch:
         """The images of the new frames into the package and its manifest; those of frames that went out of it, when no
         frame left shows them (and no name of the package starts with theirs: the manifest drops by prefix)."""
         plan = self.pictures
-        hrefs = cast(list[str], etree.fromstring(self.parts["content.xml"]).xpath("//@xlink:href", namespaces=NS))
+        hrefs = cast(list[str], parse_xml(self.parts["content.xml"]).xpath("//@xlink:href", namespaces=NS))
         still = {href.removeprefix("./") for href in hrefs}
         styles = self.parts.get("styles.xml", b"")
         orphans = {

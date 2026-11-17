@@ -1,4 +1,4 @@
-"""The Windows installer's build (D730-D735): the plain file work of ``packaging/windows/build.py``, and that the Inno
+"""The Windows installer's build (D740-D745): the plain file work of ``packaging/windows/build.py``, and that the Inno
 Setup script, the service configuration and the client agree with each other.
 
 Inno Setup itself runs only on Windows (the workflow compiles and installs the installer there); what a Linux run can

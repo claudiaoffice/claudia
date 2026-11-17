@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from xml.etree import ElementTree
 
 from claudia_container import MAX_DESCRIPTION, MAX_TAGS, clean_details
+from claudia_opc_io import check_package
 
 #: The formats an import reads, the app each becomes, and its own words for people.
 FORMATS: dict[str, tuple[str, str]] = {
@@ -112,8 +113,11 @@ def _reader(fmt: str):  # noqa: ANN202 - one of six reader functions
 
 def import_state(fmt: str, data: bytes) -> tuple[dict, list[dict]]:
     """The state an import of ``data`` (a file of format ``fmt``) makes, as ``serialize()`` gives it, and what the
-    document will not show, as ``{kind, detail, count}``. Raises whatever the reader raises for a broken file."""
+    document will not show, as ``{kind, detail, count}``. Raises whatever the reader raises for a broken file, and
+    ``claudia_opc_io.PackageRefused`` for a zip that unpacks to far too much (SEC-15): the office libraries open the
+    zip themselves, so this is the one place every format passes before any of them does."""
     read, losses_of = _reader(fmt)
+    check_package(data)
     model = read(data)
     losses = (
         []

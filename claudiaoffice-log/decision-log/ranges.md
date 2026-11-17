@@ -50,7 +50,7 @@ Unused numbers in a closed block stay unused.
 | D680–D699 | the AI in composes: a model-driven participant, its document lens, words by quoting them (E7.10; branch `composes-ai`; D680–D681 used) | 2026-11-16 | open |
 | D700–D719 | code review follow-up: no claudia-client, one way to write a file (CODE-33, CODE-34; D700–D701 used) | 2026-11-16 | open |
 | D720–D739 | the redaction contract: what a redacted step keeps, the plan, dependents, imports, hidden lines and chat, the store rewritten, the wire and its screens (E1.8, SEC-05; branch `redaction`; D720–D728 used) | 2026-11-16 | open |
-| D740–D759 | the Windows installer: self-contained server, packaged client, Inno Setup, the service, signing (E8.1; branch `win-installer`; D730–D735 used) | 2026-11-17 | open |
+| D740–D759 | the Windows installer: self-contained server, packaged client, Inno Setup, the service, signing (E8.1; branch `win-installer`; D740–D745 used) | 2026-11-17 | open |
 | D1041–D1060 | font management: who may receive a server's fonts, Server settings ▸ Fonts, fonts kept honest from import to export (E3.13; branch `font-server-ui`; D1041 used) | 2026-11-16 | open |
 
 ## Never to be used

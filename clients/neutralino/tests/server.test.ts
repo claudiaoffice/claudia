@@ -52,7 +52,7 @@ describe('buildServerCommand', () => {
   })
 })
 
-describe('a self-contained server (D730)', () => {
+describe('a self-contained server (D740)', () => {
   it('is started as the program itself, with no `-m claudia_server` in front of its options', () => {
     expect(serverProgramCommand({ exe: 'C:\\Claudia\\server\\claudia-server.exe' })).toEqual(['C:\\Claudia\\server\\claudia-server.exe'])
     expect(serverProgramCommand('/usr/bin/python3.14')).toEqual(['/usr/bin/python3.14', '-m', 'claudia_server'])

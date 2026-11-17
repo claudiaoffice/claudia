@@ -485,7 +485,7 @@ describe('run on Windows (D660)', () => {
 // The entry guard made the launcher a silent no-op on Windows (third real run, 2026-11-09): the program runs only
 // when `import.meta.url` equals the URL of `process.argv[1]`, and a hand-made `file://` + path is not that URL for a
 // Windows path. The comparison itself, in isolation (`main()` has real side effects).
-describe('run of a packaged client (D731)', () => {
+describe('run of a packaged client (D741)', () => {
   const INSTALLED = 'C:\\Program Files\\Claudia\\client\\apps\\creates'
   const packaged = { web: 'C:\\Program Files\\Claudia\\web', server: 'C:\\Program Files\\Claudia\\server\\claudia-server.exe' }
   const creates = { app: 'creates', server: null, debug: false } as const

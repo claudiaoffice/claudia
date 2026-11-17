@@ -1,5 +1,5 @@
 <!--
-  Claudia's server as a Windows service (D733), run by WinSW (https://github.com/winsw/winsw, MIT), which is
+  Claudia's server as a Windows service (D743), run by WinSW (https://github.com/winsw/winsw, MIT), which is
   claudia-service.exe beside this file: WinSW reads the file with its own name, and starts the program below.
 
   Only the optional component "Claudia server as a Windows service" of the installer puts it in place, and the installer

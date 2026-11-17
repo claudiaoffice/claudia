@@ -1,8 +1,8 @@
-// The packaged client (D731): the windows of a client that an installer put on a computer.
+// The packaged client (D741): the windows of a client that an installer put on a computer.
 //
 // In a checkout the launcher finds everything relative to the repository. An installed client has a marker,
 // `packaged.json`, next to `apps/` and `dist/` (the installer's build writes it), which says where the installer put the
-// web frontend and the self-contained server (D730). With it the launcher
+// web frontend and the self-contained server (D740). With it the launcher
 //   - hands those two to the core as CLAUDIA_WEB_DIR and CLAUDIA_SERVER_EXE (unless the person set their own), and
 //   - runs the window from a copy of the app's folder in the person's own folder (`stageApp`): the launcher writes the
 //     core's command into neutralino.config.json for the run, and an installation in `Program Files` is read-only for

@@ -1,5 +1,5 @@
 {
-  "_comment": "What the Windows installer's build downloads, pinned (D732): the file is refused if its SHA-256 differs. To update: change the version and url, download the file once, and put `sha256sum` of it here (and say so in the log).",
+  "_comment": "What the Windows installer's build downloads, pinned (D742): the file is refused if its SHA-256 differs. To update: change the version and url, download the file once, and put `sha256sum` of it here (and say so in the log).",
   "winsw": {
     "version": "2.12.0",
     "url": "https://github.com/winsw/winsw/releases/download/v2.12.0/WinSW-x64.exe",

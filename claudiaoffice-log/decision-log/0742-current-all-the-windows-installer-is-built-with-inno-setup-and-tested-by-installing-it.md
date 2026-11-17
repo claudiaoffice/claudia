@@ -1,5 +1,5 @@
 ---
-id: D732
+id: D742
 title: "The Windows installer is built with Inno Setup and tested by installing it"
 status: current
 applies-to: all
@@ -9,7 +9,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# D732 · The Windows installer is built with Inno Setup and tested by installing it
+# D742 · The Windows installer is built with Inno Setup and tested by installing it
 
 **Inno Setup** (`packaging/windows/claudia.iss`) makes one `claudia-office-<version>-windows-x64.exe`: wizard in English and
 German (the languages of `po/`), Start menu entries for the three apps, optional desktop icons, per person or for all people

@@ -3,7 +3,7 @@ name = "claudia-opc-io"
 dynamic = ["version"]
 description = "claudia-opc-io"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = ["lxml>=5"]
 
 [build-system]
 requires = ["hatchling"]

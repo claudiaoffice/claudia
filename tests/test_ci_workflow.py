@@ -43,3 +43,32 @@ def test_the_image_and_package_builds_notice_a_change_to_the_layout_library():
     for workflow in ("docker.yml", "deb.yml"):
         text = (ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
         assert "- layout/**" in text, f"{workflow} does not run for a change in layout/"
+
+
+def test_the_demo_is_deployed_only_after_ci_has_passed_on_the_commit():
+    """The image is built by its own workflow, in parallel with CI, so "the image was built" says nothing about the
+    tests: at f150f0d main was red and the demo would still have been replaced. The deployment starts when CI has
+    succeeded on a push to main, and then waits for the image of that commit."""
+    deploy = (ROOT / ".github" / "workflows" / "deploy-demo.yml").read_text(encoding="utf-8")
+    trigger = re.search(r"workflow_run:\s*\n\s*workflows: \[(.*?)\]", deploy)
+    assert trigger, "deploy-demo.yml is not started by a workflow_run"
+    assert trigger[1].strip() == '"CI"', f"the demo is deployed after {trigger[1]}, not after CI"
+    assert "workflow_run.event == 'push'" in deploy and "workflow_run.head_branch == 'main'" in deploy
+    copy = deploy.split("Copy the image from GHCR", 1)[1].split("- name: Deploy", 1)[0]
+    assert "docker pull" in copy and "for _ in" in copy, (
+        "the image of the commit may still be building when CI ends: the copy must wait for it"
+    )
+
+
+def test_every_lockfile_is_watched_by_dependabot():
+    """A lockfile nobody updates is a known hole waiting (SEC-08): each npm lockfile and the uv lock has an entry."""
+    watched = (ROOT / ".github" / "dependabot.yml").read_text(encoding="utf-8")
+    directories = set(re.findall(r"directory: (\S+)", watched))
+    lockfiles = [
+        path.parent.relative_to(ROOT).as_posix()
+        for path in ROOT.rglob("package-lock.json")
+        if "node_modules" not in path.parts
+    ]
+    missing = sorted(f"/{folder}" for folder in lockfiles if f"/{folder}" not in directories)
+    assert not missing, f"dependabot.yml does not watch: {missing}"
+    assert "package-ecosystem: uv" in watched and "package-ecosystem: github-actions" in watched

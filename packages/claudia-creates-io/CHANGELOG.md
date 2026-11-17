@@ -17,6 +17,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   markers that changed; a kept odp whose lists changed is written anew.
 
 ### Fixed
+- Everything in a file that anybody may have written is read through `claudia_opc_io.parse_xml` (no entity is expanded, none fetched) and unpacked only after `claudia_opc_io.check_package` has judged its size (SEC-15); the pptx reader's presentation, slide and theme parts, and the unpacking of a kept pptx, now use them.
 - `pptx_to_slides` and `odp_to_slides` read the fonts of the deck (E3.13, bug 2): Body text takes the deck's body font
   (the theme's minor font of a pptx, the default style of drawn things of an odp), and the words of a text box or
   shape in another font (the title in the heading font, a box somebody gave a font) get a style of their own based on

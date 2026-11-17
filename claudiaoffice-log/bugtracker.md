@@ -11,7 +11,8 @@ feature branches merged): new items UX-20 to UX-23, SEC-12 to SEC-17, PERF-08, P
 the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-checked in that tree
 (`qa-recommendations.md`). Fifth round 2026-11-13 at `cfa2d91` (all feature branches merged: printing, lists, search, random numbers and
 scenarios, i18n, BITV): new items SEC-18, PERF-09 to PERF-11, UX-33 to UX-37, PROC-18 to PROC-22, CODE-17 to CODE-21,
-DOC-02; the `bitv` items re-checked as merged.
+DOC-02; the `bitv` items re-checked as merged. Sixth round 2026-11-17 at `f150f0d` (stabilisation of `main`, no features): new items
+PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below).
 
 ## How to add a bug
 
@@ -44,7 +45,7 @@ statement in the docs or on the website).
 | SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **new, open** |
 | SEC-13 | P2 | Security | The web app is served without CSP, frame-ancestors, nosniff or referrer headers | **fixed** 2026-11-12 |
 | SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |
-| SEC-15 | P2 | Security | Office import reads every zip part whole and parses some XML with default parsers | **new, open** (P1 once import is on the wire) |
+| SEC-15 | P2 | Security | Office import reads every zip part whole and parses some XML with default parsers | **fixed** 2026-11-17 (`claudia_opc_io.check_package`, `parse_xml`) |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |
 | SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05, **now tracked** |
 | PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |
@@ -185,6 +186,16 @@ statement in the docs or on the website).
 | CODE-55 | P2 | Code / Server | A tool path changed in Server settings (xelatex, pdftocairo) was used only after a restart of the server | **fixed** 2026-11-17 |
 | CODE-56 | P3 | Code / computes | A new sheet can get the id of a removed sheet | **new, open** |
 | CODE-57 | P2 | Code / core | Undoing typing after an undone delete that cut into it removes the wrong characters | **fixed** 2026-11-17 |
+| PROC-24 | **P1** | Process / CI | `main` after the last merge was red: two tests (a story id and decision numbers D730–D735 used twice) | **fixed** 2026-11-17 |
+| PROC-25 | P2 | Process / CD | The demo deployment was not gated on CI: it deployed whatever an image push produced, also from a red `main` | **fixed** 2026-11-17 |
+| PROC-26 | P3 | Process / Supply chain | No dependabot: five lockfiles and the workflows were never watched | **fixed** 2026-11-17 |
+| PROC-27 | P2 | Process / Supply chain | Actions are pinned by tag, not SHA; the `latest` image tag follows a red `main`; CI has no CodeQL and no `pip-audit` | **new, open** |
+| CODE-58 | P2 | Code / Export | pptx and odp exports drop border, padding, line-height, letter-spacing, hyphenation and margins of creates text styles and report no loss | **new, open** (measured) |
+| CODE-59 | P3 | Code / Drift | `OBJECT_KINDS` was written in `claudia_core` and again in `claudia_computes.model` | **fixed** 2026-11-17 |
+| CODE-60 | P2 | Code / Drift | Facts written twice: the web's built-in style ids and `'body-text'` literals, `VisualObject.kind` in `layout/` lacks `rendered`, list leader dots drawn differently by the editor and the display list | **new, open** (read) |
+| CODE-61 | P3 | Process / Backlog | Stale statuses in the backlog (E9.30, E10.21, probably E9.31 say open where code exists) | **new, open** |
+| SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |
+| UX-44 | P3 | UX / BITV | The blinking dots of the side panel ignored `prefers-reduced-motion` (WCAG 2.3.3) | **fixed** 2026-11-17 |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -358,7 +369,7 @@ opening it tells a third party about the server and runs a script from there, ag
 linked from the landing page and public on every server.
 **Fix.** `docs_url=None` by default (`--api-docs` turns it on), or serve the Swagger assets from the package.
 
-### SEC-15 · Office import reads every part whole and parses some XML with defaults · P2 · new, open
+### SEC-15 · Office import reads every part whole and parses some XML with defaults · P2 · fixed 2026-11-17
 **Evidence (read).** `claudia_opc_io.read_parts` and the odf readers `zf.read()` every member with no limit on
 uncompressed size or member count: a few-MB zip bomb exhausts the server's memory. Most ODF parsing uses
 `XMLParser(resolve_entities=False, no_network=True)`, but `odt.py:235` (styles), `xlsx.py` (since 2026-11-13 the
@@ -369,6 +380,11 @@ export is), which is why this is P2; it becomes P1 the day the import UI (E2.9, 
 and the ratio before reading, used by every reader; one module-level hardened `XMLParser` used everywhere.
 **Acceptance.** A zip of one 2 GB part of zeros (~2 MB on disk) is refused with a sentence before 50 MB of memory are
 used; an entity-expansion document is refused or read without expansion, in each of the six readers.
+**Fixed 2026-11-17 (stabilisation round).** `claudia_opc_io.check_package` judges the zip directory (member count, part,
+total, ratio) before anything is unpacked; `read_parts` and the server's `formats.import_state` call it, so a bomb is
+refused for every format. `claudia_opc_io.parse_xml` is the one hardened parser (no entities, no network, no DTD) used
+by the docx, odt, xlsx, pptx and odf readers. Tests: `test_limits.py`, `test_xml.py`, `test_server_formats.py`.
+The xlsx reader's openpyxl parser was probed: it is already safe, so no extra dependency was added.
 
 ### SEC-16 · The LaTeX program setting accepts any executable · P3 · new, open
 **Evidence (read).** `PUT /api/admin/settings/typeset` stores any path; `resolve_program` accepts any runnable file.
@@ -1838,6 +1854,61 @@ today" block proposed in the first round would now be a strong one: live co-edit
 passwords and encryption at rest, recovery keys, formulas, styles, three apps, a Linux client.
 
 ### WEB-02 · Download buttons are `#` placeholders · P3 · open
+
+---
+
+## Round of 2026-11-17 (stabilisation, `main` at `f150f0d`)
+
+### PROC-24 · `main` was red after the merge of all branches · P1 · fixed 2026-11-17
+Two tests failed: `test_backlog` (story id E3.13 used by the font story and by the redaction screens) and
+`test_decision_log` (D730–D735 numbered twice: Windows packaging and another branch). **Fix:** the redaction screens are
+E3.14, the Windows decisions are D740–D745 in every file that names them (workflow, packaging, clients, tests, tasks).
+**Process.** A merge of several branches needs `scripts/check_debt.py --fast` before it is pushed; number clashes are
+the typical result of parallel branches, so `ranges.md` should hand each branch its own range up front.
+
+### PROC-25 · The demo deployment was not gated on CI · P2 · fixed 2026-11-17
+`deploy-demo.yml` ran on the image workflow, so a red `main` still went live. **Fix:** it now runs on `workflow_run` of
+`CI` (success only) and waits for the image with a retry. `tests/test_ci_workflow.py` pins both.
+
+### PROC-26 · No dependabot · P3 · fixed 2026-11-17
+`.github/dependabot.yml` watches uv, npm (web, layout, neutralino), the Dockerfile and the actions; a test fails when a
+lockfile is added that is not watched.
+
+### PROC-27 · Supply chain in CI · P2 · open
+Actions are referenced by tag; the image workflow tags `latest` before CI is green; no CodeQL, no `pip-audit` (SEC-08).
+**Fix.** Pin actions by SHA (dependabot keeps them current), publish `latest` only from a green CI run, add CodeQL for
+Python and JavaScript and `pip-audit` as a scheduled job. **Acceptance.** `test_ci_workflow.py` fails for an unpinned action.
+
+### CODE-58 · The creates exporters drop style properties without saying so · P2 · open (measured)
+`StyleDef.css` of a creates style may hold `border-left`, `padding-left`, `line-height`, `letter-spacing`; the pptx and
+odp exporters write size, colour, alignment, family, weight and background only (`_styling.py`), yet `_unwritten.py`
+lists `styles` as written, so `pptx_export_losses` and `odp_export_losses` both return `()` for a model with those
+properties (probe 2026-11-17). The composes exporters do write border, padding and spacing, so the two apps differ.
+**Fix.** Either map the properties (pptx `a:lnSpc`, `a:ln`, insets `lIns`; odp `fo:` equivalents) or make `styles` a
+partial facet and report each unwritten property under a loss code. **Acceptance.** A bordered, padded style exports
+with a loss entry naming the property, or is written and read back unchanged.
+
+### CODE-60 · Drift: facts written twice and drawn in one place only · P2 · open (read)
+(1) The web has its own list of built-in style ids and `'body-text'` literals while `claudia_composes.model.BUILTIN_STYLES`
+and the creates styles are the source; (2) `layout/src/apps/objects.ts` `VisualObject.kind` has no `rendered`, which the
+server allows (CODE-24); (3) `TextEditor.vue` draws list leader dots in CSS while the display list and the exporters
+differ. **Fix.** The server sends flags with the style list (built-in, heading level, default) and the web reads them;
+the kind set comes from the generated layout fixtures (`scripts/generate_layout_fixtures.py`) like the headings
+(`test_one_source_of_headings.py`). **Acceptance.** A test that fails when a kind or built-in style id exists in only one place.
+
+### CODE-61 · Stale backlog statuses · P3 · open
+E9.30, E10.21 and probably E9.31 say open where code and tests exist. **Fix.** Check each against the tests it names and
+set its status; `tests/test_backlog.py` could require a test path in every story marked done.
+
+### SEC-19 · Imports have no memory cap · P2 · open
+Imports run on `hub.workers`; `check_package` refuses bombs by declared size, but a 512 MiB package may still build a
+model several times that size, in the server's own address space. **Fix.** Run import in a worker process with a
+resource limit (`RLIMIT_AS`), or lower the defaults for a public demo. **Acceptance.** A hostile 500 MiB part of
+many small nodes is refused with a sentence and the server stays up.
+**Also:** SEC-11 (no back-off on failed logins) is P2, not P3, for as long as the demo is public.
+
+### UX-44 · Blinking dots ignored reduced motion · P3 · fixed 2026-11-17
+`SidePanel.vue` `.dots i` now stops animating under `prefers-reduced-motion: reduce` (WCAG 2.3.3).
 
 ---
 

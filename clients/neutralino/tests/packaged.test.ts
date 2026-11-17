@@ -1,4 +1,4 @@
-// The packaged client (D731): what makes a client that an installer put on a computer different from a checkout.
+// The packaged client (D741): what makes a client that an installer put on a computer different from a checkout.
 // The files of an app are read from where the installer put them, but the window runs from a copy in the person's
 // own folder: the launcher writes the core's command into neutralino.config.json, and `Program Files` is read-only
 // and has a space in its name (Neutralino cannot pass a path with a space to the core).

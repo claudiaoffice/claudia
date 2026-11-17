@@ -57,7 +57,7 @@ from claudia_creates import (
     paragraph_for,
 )
 from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
-from claudia_opc_io import ThemeFonts, owns, reconcile
+from claudia_opc_io import ThemeFonts, owns, parse_xml, read_parts, reconcile
 
 from ._file_looks import LookBook
 from ._items import (
@@ -677,8 +677,8 @@ def _resolve_target(source_dir: str, target: str) -> str:
 
 def _slide_part(members: dict[str, bytes], slide_index: int) -> str:
     """The zip member holding slide ``slide_index``'s XML, resolved through ``presentation.xml`` and its rels."""
-    presentation = etree.fromstring(members["ppt/presentation.xml"])
-    rels = etree.fromstring(members["ppt/_rels/presentation.xml.rels"])
+    presentation = parse_xml(members["ppt/presentation.xml"])
+    rels = parse_xml(members["ppt/_rels/presentation.xml.rels"])
     sld_id_lst = presentation.find(_qn("sldIdLst"))
     if sld_id_lst is None:
         raise ValueError("ppt/presentation.xml has no <p:sldIdLst>: not a well-formed presentation part")
@@ -782,8 +782,7 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
             raise UnsupportedEdit("reordering the objects on a slide cannot be patched onto the original file yet")
 
     prs = Presentation(BytesIO(original_bytes))
-    with zipfile.ZipFile(BytesIO(original_bytes)) as z:
-        members = {name: z.read(name) for name in z.namelist()}
+    members = read_parts(original_bytes)
     scale_x, scale_y = _slide_scale(prs)
     slide_height = prs.slide_height
     assert slide_height is not None
@@ -836,10 +835,9 @@ def add_transition(
     if speed not in _SPEEDS:
         raise ValueError(f"speed must be one of {_SPEEDS}, not {speed!r}")
 
-    with zipfile.ZipFile(BytesIO(pptx_bytes)) as z:
-        members = {name: z.read(name) for name in z.namelist()}
+    members = read_parts(pptx_bytes)
     part_name = _slide_part(members, slide_index)
-    root = etree.fromstring(members[part_name])
+    root = parse_xml(members[part_name])
 
     existing = root.find(_qn("transition"))
     if existing is not None:

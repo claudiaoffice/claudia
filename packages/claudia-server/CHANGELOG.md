@@ -9,6 +9,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - `claudia_server.composes_lists`: its methods are `structure_methods`'.
 
 ### Fixed
+- An uploaded file is judged by `claudia_opc_io.check_package` before any reader opens it: a zip that unpacks to far too much (a part over 256 MiB, 512 MiB together, a part that compresses 250 times over, more than 10,000 parts) is refused with a sentence, not read whole in a worker (SEC-15). `claudia-opc-io` is now a declared dependency.
 - The LaTeX programs set in Server settings (`xelatex`, `pdftocairo`) and the `render` tools are used as they are
   now, not as they were when the server started: changing a path no longer needs a restart (CODE-55).
 - A document that is opened draws the containers that have text and no picture (CODE-51). Before, a picture was made

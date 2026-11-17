@@ -1,5 +1,5 @@
 ---
-id: D731
+id: D741
 title: "A packaged client runs from a copy of its app folder, with its own Node"
 status: current
 applies-to: all
@@ -9,7 +9,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# D731 · A packaged client runs from a copy of its app folder, with its own Node
+# D741 · A packaged client runs from a copy of its app folder, with its own Node
 
 **The installed client is the checkout's client with a marker.** `clients/neutralino/packaged.json` (written by the
 installer's build) says where the installer put the web frontend and the server, relative to the client's folder. With it

@@ -22,6 +22,7 @@ from heapq import heappop, heappush
 from typing import ClassVar, Self, TypeIs, cast
 
 from claudia_core import (
+    OBJECT_KINDS,
     Command,
     CommandRegistry,
     DocumentModel,
@@ -77,7 +78,6 @@ MAX_COL_WIDTH = 2_000
 # row/column resize) — only ``MoveObject`` (the person dragging it) changes where it sits. That is a deliberate
 # policy, not an oversight: a picture should not leap across the sheet because somebody inserted a row above it.
 # It is why ``CellAnchor`` is not a ``RangeRef`` and takes no part in ``refs.adjusted``.
-OBJECT_KINDS = ("text", "shape", "image", "diagram", "rendered")
 MIN_OBJECT_SIZE = 20  # pixels; an object is at least this wide and this tall
 MAX_OBJECTS_PER_SHEET = 500
 

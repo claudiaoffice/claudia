@@ -1,4 +1,4 @@
-"""The start of ``claudia-server.exe``: ``python -m claudia_server`` for a program that has no ``python`` (D730).
+"""The start of ``claudia-server.exe``: ``python -m claudia_server`` for a program that has no ``python`` (D740).
 
 The server runs its slow work in a pool of processes (``claudia_server.workers``). On Windows a pool starts its workers
 by running this very program again with ``--multiprocessing-fork`` and a few more words; ``freeze_support`` is what

@@ -11,7 +11,7 @@ from io import BytesIO
 
 from lxml import etree
 
-from claudia_opc_io import write_parts
+from claudia_opc_io import parse_xml, write_parts
 
 from .meta import DocumentInfo, new_meta
 from .names import NS, qname
@@ -94,7 +94,7 @@ def update_manifest(
 
 def read_manifest(manifest_xml: bytes) -> dict[str, str]:
     """The manifest as ``{part name: media type}``; the document itself is ``"/"``."""
-    root = etree.fromstring(manifest_xml)
+    root = parse_xml(manifest_xml)
     path, media = (f"{{{NS['manifest']}}}{name}" for name in ("full-path", "media-type"))
     return {entry.get(path, ""): entry.get(media, "") for entry in root.iter(f"{{{NS['manifest']}}}file-entry")}
 

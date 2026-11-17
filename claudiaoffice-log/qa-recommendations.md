@@ -1,3 +1,47 @@
+# QA review — 2026-11-17 (stabilisation of `main`)
+
+Repository `claudiaoffice/claudia` at `f150f0d`, all feature branches merged, nobody committing meanwhile. Reviewer: QA
+role. **Aim:** a stable intermediate version, no features. Every finding is in `bugtracker.md`, section "Round of
+2026-11-17" (PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed). The previous round (11-13) is below.
+
+**What was run:** a fresh checkout, `scripts/check_debt.py --ci` (ruff, format, mypy, vulture, i18n, menus, ~7,300
+pytest tests with coverage floors, npm audit, layout and web lint/tests/types, Linux client). **Not run here:** the
+Chromium e2e job (the web app cannot be built and driven in this environment), GitHub Actions history (no `gh` access),
+Firefox, screen readers, Windows and macOS clients, a real language model.
+
+## Marks (1 very good … 5 needs rework, prio)
+
+| Area | Mark | Previous | In one line |
+|---|---|---|---|
+| UX and UI consistency, usability | **3** | 3 | Same menus and dialogs across the apps; the differences left are the AI mode switch (UX-34, UX-37), history dialects (UX-22) and panel layout (UX-23). |
+| BITV (WCAG 2.1 AA) | **3** | not graded | Grid structure, focus order, contrast, descriptions and a document-named title are in; open: landmarks (UX-32), dialog focus and menu keyboard use to re-verify, reduced motion fixed (UX-44). Measured by script and reading only, not with a screen reader. |
+| Code quality, technical debt | **2** | 2 | One gate, typed, coverage floors. Debt: facts written twice (CODE-60), flat `claudia_server` (CODE-29), 1,100-line `computes.py` (CODE-21), copied web write calls (CODE-35). |
+| Architecture | **2** | n/a | Pure kernel, thin clients, one wire. Deviation from best practice: the web repeats server facts instead of receiving them (CODE-60), and CPU work shares the event loop (CODE-13). |
+| Security | **3** | 3 | Import is now bounded and parsed safely (SEC-15 fixed). Open: SEC-06, SEC-11 (raise to P2 while the demo is public), SEC-14, SEC-16, SEC-17, SEC-19, unpinned actions (PROC-27). |
+| Performance | **3** | 3 | Guards exist and pass. Open: PERF-01, 02, 05, 10; imports have no memory cap (SEC-19). |
+| Gaps, computes | **2** | 2 | Strongest app. Missing: print, AI proposals, new sheet reusing a removed id (CODE-56). |
+| Gaps, composes | **3** | 3 | No outline view, no search; exporters write what the model has. |
+| Gaps, creates | **3** | 3 | Exporters silently drop style properties (CODE-58); pptx import without placeholders, sizes and colours (CODE-45, 46); no layouts or presenter mode. |
+| Overall | **3** | 3 | `main` is green again; the gap to a stable intermediate version is CI hardening (PROC-27) and drift (CODE-60). |
+
+## Recommendations, in order (each is picked up from its bugtracker entry)
+
+1. **Gate merges on `check_debt.py --fast`** and give each branch its own decision/story range (PROC-24).
+2. **CODE-58:** report or write the dropped style properties in the creates exporters.
+3. **CODE-60:** the server sends style flags and the object-kind set; web and layout read them; a drift test.
+4. **PROC-27:** SHA-pinned actions, `latest` only from green CI, CodeQL, `pip-audit`.
+5. **SEC-19** and **SEC-11:** import in a limited worker; back-off for failed logins.
+6. **UX-34, UX-37:** decide the AI mode behaviour once for all three apps.
+7. **CODE-61:** set the stale backlog statuses; **CODE-29/21:** split `claudia_server` and `computes.py` as agreed.
+
+## What this round's patch contains
+
+SEC-15 (zip limits and one hardened XML parser, with tests); PROC-24 (main's two red tests); PROC-25 (deploy gated on CI);
+PROC-26 (dependabot); CODE-59; UX-44; coverage floor for claudia-fonts raised to 98; tracker updated. No behaviour was
+added.
+
+---
+
 # QA review — 2026-11-13
 
 Repository `claudiaoffice/claudia` at `cfa2d91` ("Accessibility improvements, especially in grid of computes"), every

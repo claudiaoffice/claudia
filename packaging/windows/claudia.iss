@@ -1,4 +1,4 @@
-﻿; Claudia Office for Windows: the installer (D730-D735). Built by packaging/windows/build.py, which stages the files
+﻿; Claudia Office for Windows: the installer (D740-D745). Built by packaging/windows/build.py, which stages the files
 ; and calls ISCC with the /D values below; see packaging/windows/README.md.
 ;
 ;   iscc /DAppVersion=0.4.0 /DNumericVersion=0.4.0.0 /DStageDir=C:\...\stage /DOutputDir=C:\...\dist claudia.iss
@@ -116,7 +116,7 @@ Source: "{#StageDir}\prerequisites\{#WebView2Setup}"; DestDir: "{tmp}"; Flags: d
 
 [Icons]
 ; The windows are those of Neutralino; node starts the launcher, which starts the window and its core. The console of
-; node is minimised: there is nothing in it to read (the logs are in %LOCALAPPDATA%\Claudia, D731).
+; node is minimised: there is nothing in it to read (the logs are in %LOCALAPPDATA%\Claudia, D741).
 Name: "{autoprograms}\Claudia Composes"; Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\composes.mjs"""; WorkingDir: "{app}"; IconFilename: "{app}\icons\composes.ico"; Flags: runminimized
 Name: "{autoprograms}\Claudia Computes"; Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\computes.mjs"""; WorkingDir: "{app}"; IconFilename: "{app}\icons\computes.ico"; Flags: runminimized
 Name: "{autoprograms}\Claudia Creates"; Filename: "{app}\node\node.exe"; Parameters: """{app}\client\bin\creates.mjs"""; WorkingDir: "{app}"; IconFilename: "{app}\icons\creates.ico"; Flags: runminimized
@@ -138,7 +138,7 @@ Filename: "{app}\service\claudia-service.exe"; Parameters: "stop"; RunOnceId: "S
 Filename: "{app}\service\claudia-service.exe"; Parameters: "uninstall"; RunOnceId: "RemoveService"; Flags: runhidden waituntilterminated; Components: service
 
 [UninstallDelete]
-; What the launcher copies for a window (D731) goes with the program; the documents stay (see the message at the end).
+; What the launcher copies for a window (D741) goes with the program; the documents stay (see the message at the end).
 Type: filesandordirs; Name: "{localappdata}\Claudia\run"
 
 [Code]

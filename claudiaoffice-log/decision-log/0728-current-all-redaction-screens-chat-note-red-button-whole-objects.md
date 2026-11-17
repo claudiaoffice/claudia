@@ -11,7 +11,7 @@ superseded-by: []
 
 # D728 · The redaction screens: a chat note on by default, a red button, whole objects
 
-The owner's answers to the open points of `notes/redaction-ui.md` (E3.13):
+The owner's answers to the open points of `notes/redaction-ui.md` (E3.14):
 
 1. **Telling the people concerned is an option, on by default.** The dialog offers a chat note to the authors whose
    work is blanked, ticked when it opens; the person can untick it or change the words. It is an ordinary chat message

@@ -1,5 +1,5 @@
 ---
-id: D733
+id: D743
 title: "The server can be installed as a Windows service, as an option"
 status: current
 applies-to: all
@@ -9,7 +9,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# D733 · The server can be installed as a Windows service, as an option
+# D743 · The server can be installed as a Windows service, as an option
 
 **Optional component, off in the standard install**, available where the installation is for all people (administrator
 rights). WinSW (MIT, pinned) wraps `claudia-server.exe` as the service `ClaudiaServer` (`service/claudia-service.xml`):

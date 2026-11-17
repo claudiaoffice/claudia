@@ -8,6 +8,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 Pivot tables go to and from ods and xlsx (D625, D628).
 
 ### Fixed
+- Everything in a file that anybody may have written is read through `claudia_opc_io.parse_xml` (no entity is expanded, none fetched) and unpacked only after `claudia_opc_io.check_package` has judged its size (SEC-15); the xlsx export's reading of the original's workbook, relationships and content types now uses the xlsx reader's own hardened parser.
 - A cell style whose font is a generic family is written into xlsx and ods as the font Claudia shows it with (`serif`
   as Fraunces, `system-ui` as Inter), not as a font called `serif` or `system-ui` (CODE-42;
   `claudia_core.stand_ins.file_font`).

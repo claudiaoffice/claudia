@@ -1,4 +1,4 @@
-# Redaction: the screens (E3.13), proposed
+# Redaction: the screens (E3.14), proposed
 
 Status: **proposal; the open points are answered (D727, D728), the screens wait for the go-ahead.** The rules behind
 it are decided (D720–D728, superseding D229) and built in the kernel, the container and the server (E1.8, E2.6,

@@ -3,6 +3,11 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.10.1] - 2026-11-17
+
+### Fixed
+- Everything in a file that anybody may have written is read through `claudia_opc_io.parse_xml` (no entity is expanded, none fetched) and unpacked only after `claudia_opc_io.check_package` has judged its size (SEC-15); the manifest is read with `parse_xml`.
+
 ## [0.10.0] - 2026-11-16
 
 The levels of numbering schemes in OpenDocument (E9.22), shared by the text and the presentation app.

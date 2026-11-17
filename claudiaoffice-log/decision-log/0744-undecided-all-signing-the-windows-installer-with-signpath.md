@@ -1,5 +1,5 @@
 ---
-id: D734
+id: D744
 title: "Signing the Windows installer with SignPath"
 status: undecided
 applies-to: all
@@ -9,7 +9,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# D734 · Signing the Windows installer with SignPath
+# D744 · Signing the Windows installer with SignPath
 
 **Proposal, not decided: SignPath Foundation's free certificate for open source.** The workflow has the whole path in and
 switched off: with the repository variable `SIGNPATH_ORGANIZATION_ID` set, the unsigned installer is uploaded, SignPath signs

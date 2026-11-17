@@ -1,0 +1,33 @@
+# Dependabot: the weekly look for updates the lockfiles would never make by themselves (SEC-08: `npm audit` finds
+# known holes; this finds the version that closes them, and keeps GitHub's own actions current). One pull request
+# per ecosystem and week, grouped, so the review is one sitting (CONTRIBUTING). Every pull request runs the whole CI.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    groups:
+      actions: { patterns: ["*"] }
+  - package-ecosystem: uv
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    groups:
+      python: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /web
+    schedule: { interval: weekly, day: monday }
+    groups:
+      web: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /layout
+    schedule: { interval: weekly, day: monday }
+    groups:
+      layout: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /clients/neutralino
+    schedule: { interval: weekly, day: monday }
+    groups:
+      neutralino: { patterns: ["*"] }
+  - package-ecosystem: docker
+    directory: /
+    schedule: { interval: weekly, day: monday }

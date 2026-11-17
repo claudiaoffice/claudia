@@ -1,4 +1,4 @@
-# PyInstaller recipe of claudia-server.exe, the server with its Python and its libraries inside (D730):
+# PyInstaller recipe of claudia-server.exe, the server with its Python and its libraries inside (D740):
 #
 #   uv run --no-dev --with pyinstaller==6.21.0 pyinstaller --noconfirm --distpath dist --workpath build packaging/windows/claudia-server.spec
 #

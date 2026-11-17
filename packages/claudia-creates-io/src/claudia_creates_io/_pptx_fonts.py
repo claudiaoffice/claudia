@@ -11,7 +11,7 @@ from lxml import etree
 from pptx.enum.shapes import PP_PLACEHOLDER
 from pptx.opc.constants import RELATIONSHIP_TYPE
 
-from claudia_opc_io import ThemeFonts
+from claudia_opc_io import ThemeFonts, parse_xml
 
 _A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 _TITLES = (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE)
@@ -69,7 +69,7 @@ def write_body_font(prs: Any, family: str | None) -> None:  # noqa: ANN401
             part = master.part.part_related_by(RELATIONSHIP_TYPE.THEME)
         except KeyError:
             continue
-        root = etree.fromstring(part.blob)
+        root = parse_xml(part.blob)
         for latin in root.iterfind(f".//{_A}fontScheme/{_A}minorFont/{_A}latin"):
             latin.set("typeface", family)
         part._blob = etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)  # noqa: SLF001

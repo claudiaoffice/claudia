@@ -94,7 +94,7 @@ runner. The checked-in `neutralino.config.json` of each app holds the core's com
 Before D660 these were two packages, `clients/macos` and `clients/windows`, of which half the files were identical copies
 (CODE-14).
 
-## Packaged mode (D731)
+## Packaged mode (D741)
 
 A client installed by the Windows installer has a `packaged.json` next to its `package.json` (`{"web": ..., "server": ...}`,
 paths relative to the client's folder). With it the launcher gives the core `CLAUDIA_WEB_DIR` and `CLAUDIA_SERVER_EXE`
@@ -263,6 +263,6 @@ suspicion; `server.log` will say).
 * Messages of the shell are English only (the Linux client has no catalogs either).
 * macOS: no `.app` bundle you install, no `.icns`, signing or notarization; no macOS CI (the pipeline's macOS image fails
   at the moment). The Redo menu item has no shortcut (no confirmed Neutralino grammar for Cmd+Shift+Z).
-* Windows: the installer (`packaging/windows/`, D732) has the `.ico` and the Start menu shortcuts and is not signed (D734); no file associations; shortcuts in the menu are display-only.
+* Windows: the installer (`packaging/windows/`, D742) has the `.ico` and the Start menu shortcuts and is not signed (D744); no file associations; shortcuts in the menu are display-only.
 * `neutralino.config.json` is rewritten for a run and restored after, so a launcher killed outright (a closed console is
   handled, `kill -9` or `taskkill /f` is not) leaves the core's command in it until the next start (`git diff` shows it).

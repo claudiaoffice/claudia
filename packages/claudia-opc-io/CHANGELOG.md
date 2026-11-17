@@ -3,6 +3,21 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.5.0] - 2026-11-17
+
+A package is judged before it is unpacked, and its XML is read without entities (SEC-15).
+
+### Added
+- `claudia_opc_io.limits`: `PackageLimits` (members, part size, total size, and how many times a part may compress),
+  `DEFAULT_LIMITS`, `check_package(data, limits)` and `PackageRefused`. The sizes come from the archive's directory,
+  so a zip bomb is refused before one byte of it is unpacked.
+- `claudia_opc_io.xml`: `parse_xml(data)`, lxml with entities never resolved, no network and no DTD, for every reader
+  of a package's XML. The package now depends on `lxml>=5`.
+
+### Changed
+- `read_parts(data, limits=DEFAULT_LIMITS)` calls `check_package` first and raises `PackageRefused` for a package over
+  the limits (new optional parameter).
+
 ## [0.4.0] - 2026-11-17
 
 The properties of an OPC package (D466).

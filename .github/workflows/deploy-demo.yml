@@ -1,7 +1,9 @@
 # Puts the image that CI built on main into the demo on Scaleway Serverless Containers (demo.claudia-office.de).
 #
-# Starts by itself when "Docker image" has succeeded on main. By hand (Actions > Deploy demo > Run workflow) it can
-# deploy any tag the image has, which is also the way back to an earlier version: give e.g. sha-1a2b3c4.
+# Starts by itself when "CI" has succeeded on a push to main (not when the image alone was built: the image workflow
+# runs beside CI, and a red main must not replace the demo), then waits for the image of that commit, which the
+# "Docker image" workflow pushes. By hand (Actions > Deploy demo > Run workflow) it can deploy any tag the image has,
+# which is also the way back to an earlier version: give e.g. sha-1a2b3c4.
 #
 # The image is copied from GHCR to the Scaleway registry under an unchanging tag per commit, the containers are pointed
 # at it and redeployed. Their settings (environment, scale, domain) are left as they are in Scaleway.
@@ -23,7 +25,7 @@ name: Deploy demo
 
 on:
   workflow_run:
-    workflows: ["Docker image"]
+    workflows: ["CI"]
     types: [completed]
     branches: [main]
   workflow_dispatch:
@@ -113,7 +115,14 @@ jobs:
         run: |
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
           echo "$SCW_SECRET_KEY" | docker login "rg.${REGION}.scw.cloud/${NAMESPACE}" -u nologin --password-stdin
-          docker pull --platform linux/amd64 "$SOURCE:$TAG"
+          # CI may end before the image workflow of the same commit has pushed its image: wait for it, up to 20 minutes
+          pulled=
+          for _ in $(seq 1 40); do
+            if docker pull --platform linux/amd64 "$SOURCE:$TAG"; then pulled=1; break; fi
+            echo "$SOURCE:$TAG is not there yet; the Docker image workflow may still be building it"
+            sleep 30
+          done
+          [ -n "$pulled" ] || { echo "::error::$SOURCE:$TAG did not appear in 20 minutes: did the Docker image workflow fail?"; exit 1; }
           docker tag "$SOURCE:$TAG" "$TARGET"
           docker push "$TARGET"
 

@@ -1,5 +1,5 @@
 ---
-id: D735
+id: D745
 title: "The Windows installer ships no AI runtime, and no MSI yet"
 status: current
 applies-to: all
@@ -9,7 +9,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# D735 · The Windows installer ships no AI runtime, and no MSI yet
+# D745 · The Windows installer ships no AI runtime, and no MSI yet
 
 **Out of the installer for now** (the owner, 2026-11-17): the AI runtime (OpenVINO) and models. A user's own models are the
 user's to bring (D13); the installer's size is the three apps, the server and Node. When it comes it is an optional component

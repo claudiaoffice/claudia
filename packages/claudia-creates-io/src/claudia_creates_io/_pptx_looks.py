@@ -13,6 +13,8 @@ import re
 
 from lxml import etree
 
+from claudia_opc_io import parse_xml
+
 from ._file_looks import Look
 
 _A = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -40,7 +42,7 @@ class Theme:
     def __init__(self, theme_xml: bytes | None = None) -> None:
         self._colours: dict[str, str] = {}
         if theme_xml:
-            for scheme in etree.fromstring(theme_xml).iter(_a("clrScheme")):
+            for scheme in parse_xml(theme_xml).iter(_a("clrScheme")):
                 for entry in scheme:
                     inner = entry[0] if len(entry) else None
                     value = None if inner is None else inner.get("lastClr") or inner.get("val")

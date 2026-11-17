@@ -591,6 +591,12 @@ requires-dist = [
 [[package]]
 name = "claudia-opc-io"
 source = { editable = "packages/claudia-opc-io" }
+dependencies = [
+    { name = "lxml" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "lxml", specifier = ">=5" }]
 
 [[package]]
 name = "claudia-render"
@@ -631,6 +637,7 @@ dependencies = [
     { name = "claudia-creates-io" },
     { name = "claudia-file-writer" },
     { name = "claudia-fonts" },
+    { name = "claudia-opc-io" },
     { name = "claudia-render" },
     { name = "claudia-search" },
     { name = "claudia-typeset" },
@@ -659,6 +666,7 @@ requires-dist = [
     { name = "claudia-creates-io", editable = "packages/claudia-creates-io" },
     { name = "claudia-file-writer", editable = "packages/claudia-file-writer" },
     { name = "claudia-fonts", editable = "packages/claudia-fonts" },
+    { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },
     { name = "claudia-render", editable = "packages/claudia-render" },
     { name = "claudia-search", editable = "packages/claudia-search" },
     { name = "claudia-typeset", editable = "packages/claudia-typeset" },

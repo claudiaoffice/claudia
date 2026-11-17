@@ -69,6 +69,7 @@ from .xlsx_read import (
     losses_in_order,
     names_and_tables,
     open_package,
+    parse_xml,
     read_sheet,
     related,
     workbook_losses,
@@ -453,8 +454,8 @@ def _resolve_target(source_dir: str, target: str) -> str:
 def _sheet_part(members: dict[str, bytes], sheet_name: str) -> str:
     """The zip member holding ``sheet_name``'s XML, resolved through ``workbook.xml`` and its rels -- never assumed
     from sheet order, which openpyxl does not promise to keep stable across a save."""
-    workbook = etree.fromstring(members["xl/workbook.xml"])
-    rels = etree.fromstring(members["xl/_rels/workbook.xml.rels"])
+    workbook = parse_xml(members["xl/workbook.xml"])
+    rels = parse_xml(members["xl/_rels/workbook.xml.rels"])
     sheets = workbook.find(_qn("x", "sheets"))
     if sheets is None:
         raise ValueError("xl/workbook.xml has no <sheets>: not a well-formed workbook part")
@@ -566,7 +567,7 @@ def _register_pivot_cache(members: dict[str, bytes]) -> None:
     """Wire the new pivot cache into the package: a content-type override, a workbook relationship, and the
     ``<pivotCaches>`` element ``workbook.xml`` needs to point at it -- the three parts a pivot cache always needs,
     whatever the pivot table built on top of it looks like."""
-    content_types = etree.fromstring(members["[Content_Types].xml"])
+    content_types = parse_xml(members["[Content_Types].xml"])
     for part_name, content_type in (
         (
             "/xl/pivotCache/pivotCacheDefinition1.xml",
@@ -586,14 +587,14 @@ def _register_pivot_cache(members: dict[str, bytes]) -> None:
         override.set("ContentType", content_type)
     members["[Content_Types].xml"] = _tostring(content_types)
 
-    workbook_rels = etree.fromstring(members["xl/_rels/workbook.xml.rels"])
+    workbook_rels = parse_xml(members["xl/_rels/workbook.xml.rels"])
     rel = etree.SubElement(workbook_rels, _qn("pr", "Relationship"))
     rel.set("Id", "rIdPivotCache1")
     rel.set("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheDefinition")
     rel.set("Target", "pivotCache/pivotCacheDefinition1.xml")
     members["xl/_rels/workbook.xml.rels"] = _tostring(workbook_rels)
 
-    workbook_xml = etree.fromstring(members["xl/workbook.xml"])
+    workbook_xml = parse_xml(members["xl/workbook.xml"])
     calc_pr = workbook_xml.find(_qn("x", "calcPr"))
     pivot_caches = etree.Element(_qn("x", "pivotCaches"))
     pivot_cache = etree.SubElement(pivot_caches, _qn("x", "pivotCache"))

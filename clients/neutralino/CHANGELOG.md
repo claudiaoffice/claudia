@@ -5,7 +5,7 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
-### Added (D730, D731): what the Windows installer needs
+### Added (D740, D741): what the Windows installer needs
 - `CLAUDIA_SERVER_EXE` starts a self-contained `claudia-server` program instead of Python (`findServerProgram`); it wins over `CLAUDIA_SERVER_PYTHON`.
 - Packaged mode: a `packaged.json` next to `package.json` points the client at the installed web frontend and server, and
   the window runs from a copy of the app folder in `%LOCALAPPDATA%\Claudia\run\<app>`, so an installation in `Program Files` can stay read-only.

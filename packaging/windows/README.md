@@ -1,7 +1,7 @@
 # Windows installer
 
 `claudia-office-<version>-windows-x64.exe`: the three apps (composes, computes, creates), the server they share, and an
-optional Windows service. Decisions: D730-D735; notes: `claudiaoffice-log/implementation-notes/windows-installer.md`.
+optional Windows service. Decisions: D740-D745; notes: `claudiaoffice-log/implementation-notes/windows-installer.md`.
 
 **Status: nothing here has run on Windows yet.** `.github/workflows/windows.yml` builds and tests it; its first run is the check.
 
@@ -44,7 +44,7 @@ python packaging/windows/build.py installer --stage build/stage --version 0.3.0-
 Tag `vX.Y.Z` and push. The workflow builds, tests on two Windows images, and attaches the installer to the release.
 Other builds are `<package.json version>-dev.<run>+<sha>` and stay artifacts. The Debian workflow insists that the tag equals the Linux client's `_version.py`, so set that first.
 
-## Signing (D734, not decided)
+## Signing (D744, not decided)
 
 Unsigned, Windows SmartScreen warns on download. The workflow can sign through SignPath Foundation's free programme for open
 source; it is **off** until you set these in the repository settings:
@@ -65,4 +65,4 @@ signed, not the programs inside it.
 
 * Each start of an app shows a minimised console window (node); a launcher without one is a follow-up.
 * No file associations: the apps take no file on their command line.
-* No AI runtime, no MSI, no per-app uninstall (D735).
+* No AI runtime, no MSI, no per-app uninstall (D745).

@@ -997,6 +997,13 @@ time {
     opacity: 1;
   }
 }
+/* BITV 9.2.3.3 / WCAG 2.3.3: a person who asked their system for less motion gets still dots, not a pulse */
+@media (prefers-reduced-motion: reduce) {
+  .dots i {
+    animation: none;
+    opacity: 0.6;
+  }
+}
 /* The panel is dark in both themes (`.panel`: --ink), so these use the panel's own light inks, not the page's
  * --text/--muted: with those the unchosen half was ink on ink, invisible in the light theme (owner's report). */
 .aiMode {

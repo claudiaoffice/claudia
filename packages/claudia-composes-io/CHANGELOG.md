@@ -29,6 +29,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   has a style for (an `outline-level` of 7 and more) is body text and reported as before. Word's names of the built-in
   styles are kept in one table (`WORD_NAMES`), not two.
 ### Fixed
+- Everything in a file that anybody may have written is read through `claudia_opc_io.parse_xml` (no entity is expanded, none fetched) and unpacked only after `claudia_opc_io.check_package` has judged its size (SEC-15); the odt reader's styles and content parts, which were read with lxml's defaults, now use it.
 - `docx_to_text` and `odt_to_text` read the fonts of the file (E3.13, bug 1): Body text, Title, the headings and Quote
   take the font their style names in the file -- a docx's own font or theme font (`minorHAnsi`), along `basedOn` and
   the document defaults; an odt's `style:font-name` or `fo:font-family`, along the parent styles and the default

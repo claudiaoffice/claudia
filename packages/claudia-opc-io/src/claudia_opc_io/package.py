@@ -12,6 +12,8 @@ from __future__ import annotations
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo
 
+from .limits import DEFAULT_LIMITS, PackageLimits, check_package
+
 #: The part that must come first, uncompressed, in an OpenDocument package.
 MIMETYPE = "mimetype"
 #: Every part gets this timestamp (the earliest a zip can hold), so the same parts always give the same bytes; a
@@ -20,8 +22,10 @@ MIMETYPE = "mimetype"
 _EPOCH = (1980, 1, 1, 0, 0, 0)
 
 
-def read_parts(zip_bytes: bytes) -> dict[str, bytes]:
-    """Every part of a zip package, by its name inside the archive, in the archive's own order."""
+def read_parts(zip_bytes: bytes, limits: PackageLimits = DEFAULT_LIMITS) -> dict[str, bytes]:
+    """Every part of a zip package, by its name inside the archive, in the archive's own order. A package that is
+    over ``limits`` raises :class:`~claudia_opc_io.PackageRefused` before any part is unpacked (SEC-15)."""
+    check_package(zip_bytes, limits)
     with ZipFile(BytesIO(zip_bytes)) as zf:
         return {name: zf.read(name) for name in zf.namelist()}
 

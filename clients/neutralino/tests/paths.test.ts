@@ -142,7 +142,7 @@ describe('findRepo / defaultRepo', () => {
   })
 })
 
-describe('findServerProgram (D730)', () => {
+describe('findServerProgram (D740)', () => {
   it('CLAUDIA_SERVER_EXE, when set, is the program: the installer ships the server with its interpreter inside', () => {
     expect(findServerProgram({ repo: '/does/not/matter', env: { CLAUDIA_SERVER_EXE: 'C:\\Claudia\\server\\claudia-server.exe' } })).toEqual({
       exe: 'C:\\Claudia\\server\\claudia-server.exe',

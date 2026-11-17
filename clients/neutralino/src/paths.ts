@@ -100,7 +100,7 @@ export function findServerPython(options: { repo?: string; env?: Env; platform?:
   }
 }
 
-/** What starts the server: `$CLAUDIA_SERVER_EXE` (the self-contained server of the Windows installer, D730; as-is, like
+/** What starts the server: `$CLAUDIA_SERVER_EXE` (the self-contained server of the Windows installer, D740; as-is, like
  * `CLAUDIA_SERVER_PYTHON`, so a wrong path fails where it is spawned and says so), else the interpreter of
  * `findServerPython`, else `null`. */
 export function findServerProgram(options: { repo?: string; env?: Env; platform?: HostPlatform } = {}): ServerProgram | null {

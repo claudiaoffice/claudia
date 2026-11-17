@@ -1,6 +1,6 @@
 # Builds the Windows installer of Claudia (Composes, Computes and Creates, each with a Start menu entry; the server with
 # its Python inside; optionally the server as a Windows service), then installs it on clean Windows machines and checks
-# that it works (D730-D735, packaging/windows/README.md).
+# that it works (D740-D745, packaging/windows/README.md).
 #
 #   pull request / push to main   build, install, test, uninstall; the installer is kept as a workflow artifact for 30 days
 #   tag v1.2.3                    the same, and the installer is attached to the GitHub release of the tag

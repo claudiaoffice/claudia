@@ -71,7 +71,7 @@ export interface ServerCommandOptions {
 }
 
 /** What starts the server: the Python 3.14 that runs `-m claudia_server`, or the one self-contained program of the
- * Windows installer (`claudia-server.exe`, D730), which has the interpreter and the packages inside. */
+ * Windows installer (`claudia-server.exe`, D740), which has the interpreter and the packages inside. */
 export type ServerProgram = string | { exe: string }
 
 /** The start of the server's command line, up to where its own options begin. */

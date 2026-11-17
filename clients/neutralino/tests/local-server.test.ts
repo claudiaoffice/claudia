@@ -74,7 +74,7 @@ describe.each(PLATFORMS)('prepareServer on $platform.id', ({ platform, folder, p
     await expect(prepareServer('creates', { repo, home, env: {} })).rejects.toThrow(pythonParts.at(-1) as string)
   })
 
-  it('the self-contained server of the installer needs no Python (D730)', async () => {
+  it('the self-contained server of the installer needs no Python (D740)', async () => {
     rmSync(join(repo, ...pythonParts))
     const server = await prepareServer('creates', { repo, home, env: { CLAUDIA_SERVER_EXE: '/opt/claudia/server/claudia-server' } })
     expect((server as unknown as { options: { program: unknown } }).options.program).toEqual({ exe: '/opt/claudia/server/claudia-server' })

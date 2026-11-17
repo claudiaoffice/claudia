@@ -1,13 +1,32 @@
 {
- "version": "0.4.0",
+ "version": "0.5.0",
  "APPLICATION": {
   "value": "'Claudia'"
  },
  "CORE_PART": {
   "value": "'docProps/core.xml'"
  },
+ "DEFAULT_LIMITS": {
+  "value": "<PackageLimits>"
+ },
  "OwnedTest": {
   "function": "(*args, **kwargs)"
+ },
+ "PackageLimits": {
+  "class": [
+   "object"
+  ],
+  "init": "(max_members: 'int' = 10000, max_part_bytes: 'int' = 268435456, max_total_bytes: 'int' = 536870912, max_ratio: 'int | None' = 250, ratio_from_bytes: 'int' = 33554432) -> None",
+  "methods": {},
+  "properties": []
+ },
+ "PackageRefused": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(...)",
+  "methods": {},
+  "properties": []
  },
  "ThemeFonts": {
   "class": [
@@ -20,11 +39,17 @@
   },
   "properties": []
  },
+ "check_package": {
+  "function": "(zip_bytes: 'bytes', limits: 'PackageLimits' = PackageLimits(max_members=10000, max_part_bytes=268435456, max_total_bytes=536870912, max_ratio=250, ratio_from_bytes=33554432)) -> 'None'"
+ },
  "owns": {
   "function": "(part_names: 'Iterable[str]') -> 'OwnedTest'"
  },
+ "parse_xml": {
+  "function": "(data: 'bytes') -> 'etree._Element'"
+ },
  "read_parts": {
-  "function": "(zip_bytes: 'bytes') -> 'dict[str, bytes]'"
+  "function": "(zip_bytes: 'bytes', limits: 'PackageLimits' = PackageLimits(max_members=10000, max_part_bytes=268435456, max_total_bytes=536870912, max_ratio=250, ratio_from_bytes=33554432)) -> 'dict[str, bytes]'"
  },
  "reconcile": {
   "function": "(original_bytes: 'bytes', regenerated_bytes: 'bytes', owned: 'OwnedTest') -> 'bytes'"

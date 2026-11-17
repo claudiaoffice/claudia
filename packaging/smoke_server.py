@@ -1,4 +1,4 @@
-"""Does an installed Claudia server work? The check of the installers' tests (D732), against a server that is running.
+"""Does an installed Claudia server work? The check of the installers' tests (D742), against a server that is running.
 
     uv run --no-project --with websockets python packaging/smoke_server.py http://127.0.0.1:8765
         [--expect-version 0.36.0]

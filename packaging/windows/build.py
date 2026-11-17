@@ -1,4 +1,4 @@
-"""Puts the Windows installer together (D730-D735): stages the files of an install and compiles ``claudia.iss``.
+"""Puts the Windows installer together (D740-D745): stages the files of an install and compiles ``claudia.iss``.
 
 The steps that need a toolchain (npm, PyInstaller, ``neu update``, Inno Setup) are steps of the workflow
 (``.github/workflows/windows.yml``) or are run by hand as ``packaging/windows/README.md`` lists them; this script does
