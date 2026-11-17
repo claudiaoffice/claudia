@@ -187,6 +187,18 @@ describe('typing', () => {
   })
 })
 
+describe('typing and then clicking elsewhere', () => {
+  it('keeps the caret where it was clicked when the typed words are sent afterwards', async () => {
+    const { session } = await opened('hello world')
+    session.setSelection(at(11))
+    session.type('!') // typed, kept back until the word ends
+    session.setSelection(at(2)) // clicked elsewhere before it went out
+    await session.flush()
+    expect(text(session)).toEqual(['hello world!'])
+    expect(session.state.selection).toEqual({ anchor: at(2), focus: at(2) })
+  })
+})
+
 describe('editing', () => {
   it('Enter replaces the selection by a line break', async () => {
     const { session, link } = await opened('hello world')

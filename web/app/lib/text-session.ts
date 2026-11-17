@@ -116,6 +116,8 @@ export class TextSession extends BaseSession<TextState> {
   private placing: ReturnType<typeof setTimeout> | null = null
   private placed = ''
   private moved = 0
+  /** How often the caret had been moved by the person when the pending words were begun (see `sendPending`). */
+  private typedAt = 0
   private ready = false
   private flushQueued = false
 
@@ -417,7 +419,9 @@ export class TextSession extends BaseSession<TextState> {
     if (!unwritten) return
     s.pending = null
     s.sending = unwritten
-    await this.write(unwritten.at, unwritten.at, unwritten.text)
+    // The caret goes behind the words only if it has not been moved since they were typed: a click that came before
+    // the words went out (they wait for the word end, or for an earlier request) is where the person wants to be.
+    await this.write(unwritten.at, unwritten.at, unwritten.text, this.typedAt)
     s.sending = null
   }
 
@@ -457,7 +461,7 @@ export class TextSession extends BaseSession<TextState> {
 
   // ------------------------------------------------------------------------------ writing
   /** Replace the text between two positions; the caret ends up behind what was put in. */
-  private async write(from: Pos, to: Pos, text: string): Promise<boolean> {
+  private async write(from: Pos, to: Pos, text: string, version = this.moved): Promise<boolean> {
     const s = this.state
     const [a, b] = ordered(s.blocks, from, to)
     if (indexOf(s.blocks, a.block) < 0 || indexOf(s.blocks, b.block) < 0) return false
@@ -469,7 +473,6 @@ export class TextSession extends BaseSession<TextState> {
       text,
       base: s.revision,
     }
-    const version = this.moved
     const done = await this.attempt('replace_text', params)
     if (done === false) return false
     if (version === this.moved) s.selection = collapsed({ block: done.block, offset: unitOf(this.textOf(done.block), done.offset) })
@@ -516,7 +519,10 @@ export class TextSession extends BaseSession<TextState> {
     const caret = s.selection?.focus
     if (!caret) return
     if (s.pending) s.pending.text += text
-    else s.pending = { at: { ...caret }, text }
+    else {
+      s.pending = { at: { ...caret }, text }
+      this.typedAt = this.moved
+    }
     if (WORD_END.test(text)) void this.flushNow()
     else {
       if (this.idle) clearTimeout(this.idle)

@@ -84,6 +84,10 @@ async function waitSummary(page, expected) {
   try {
     await ready()
     const page = await (await browser.newContext({ viewport: { width: 1360, height: 800 } })).newPage()
+    // what the page asks the server for, to see that an idle panel asks nothing
+    const asked = []
+    page.on('websocket', (socket) => socket.on('framesent', (frame) => asked.push(String(frame.payload))))
+    const searches = () => asked.filter((payload) => /"method":\s*"search_/.test(payload)).length
     page.on('pageerror', (e) => errors.push('pageerror: ' + e.message))
     page.on('console', (m) => m.type() === 'error' && errors.push('console: ' + m.text()))
     await page.goto(URL)
@@ -115,6 +119,14 @@ async function waitSummary(page, expected) {
     await page.screenshot({ path: path.join(SHOTS, 'search-quick.png') })
     log('ok quick find marks both cells')
 
+    // 1b. nothing changes, so nothing is asked: the panel searches again when the text or the document changes, not
+    // by itself (it once asked again after every answer, several times a second, for as long as it was open)
+    await sleep(600)
+    const idleFrom = searches()
+    await sleep(1500)
+    assert.equal(searches() - idleFrom, 0, 'an idle panel asks the server nothing')
+    log('ok an idle panel asks nothing')
+
     // 2. Enter goes to the first match, and makes it the current one
     await page.keyboard.press('Enter')
     await page.waitForSelector('[data-search-mark=current]')
@@ -135,16 +147,20 @@ async function waitSummary(page, expected) {
     await page.click('[data-testid=search-replace-all]')
     await waitCell(page, 0, 0, 'Cost USD')
     await waitCell(page, 1, 0, 'Fee USD')
+    // the grid shows what a replacement would put in a cell while the panel is open, so the cells alone do not say that
+    // it was done: the text is no longer found (the panel has searched the document as it is now)
+    await waitSummary(page, 'No matches')
     log('ok replaced in two cells')
     await click(page, 4, 4)
     // Ctrl+Z is the grid's only once the focus has left the panel's fields (in a field it is that field's own undo)
     await page.waitForFunction(() => !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName ?? ''), null, { timeout: 5000 })
     await page.keyboard.press('Control+z')
-    await waitCell(page, 0, 0, 'Cost EUR').catch(async (problem) => {
+    // Both cells are as they were when the text is found in two cells again. (The cells themselves would show "USD"
+    // again at once: with Replace open the grid shows what Replace all would put there, as a preview.)
+    await waitSummary(page, '2 matches').catch(async (problem) => {
       const focus = await page.evaluate(() => `${document.activeElement?.tagName}.${document.activeElement?.className}`)
       throw new Error(`${problem.message}; the focus was in ${focus}`)
     })
-    await waitCell(page, 1, 0, 'Fee EUR')
     log('ok one Undo brings both back')
 
     // 5. the builder says in a sentence what it finds

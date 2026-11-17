@@ -48,10 +48,15 @@ async function menu(page, title, ...path) {
     await ann.keyboard.type('Introduction')
     await ann.keyboard.press('Enter')
     await ann.keyboard.type('The quick brown fox jumps over the lazy dog.')
+    // what was typed is in the document (a slow server has not answered yet otherwise): the heading goes to the first
+    await ann.waitForFunction(() => {
+      const blocks = document.querySelectorAll('[data-testid=text] [data-block]')
+      return blocks.length === 2 && blocks[1].textContent.includes('lazy dog.') && !document.querySelector('[data-testid=text] [data-overlay]')
+    })
     await ann.click('[data-testid=text] [data-block]:first-child')
     await ann.click('[data-testid=style-button]')
     await ann.click('[data-style=heading-1]')
-    await ann.waitForTimeout(600)
+    await ann.waitForSelector('[data-testid=text] h2.st-heading-1')
     log('ann wrote a heading and a paragraph')
 
     // ---- "#" offers the heading, which is named by its words when it is picked

@@ -139,10 +139,12 @@ async function run() {
   } else preview.value = null
 }
 
+// Everything that is looked at here is a plain value (a text, a number, a flag), so that the search is asked again only
+// when one of them has changed: an object made anew on every look (`{ ...kinds }`), or `deep`, made every answer a
+// reason to ask again, and the panel asked the server several times a second for as long as it was open.
 watch(
-  [() => JSON.stringify(model), scope, () => props.host.revision(), replacing, () => ({ ...kinds }), () => leave.value.length],
+  [() => JSON.stringify(model), scope, () => props.host.revision(), replacing, () => JSON.stringify(kinds), () => leave.value.length],
   () => schedule(),
-  { deep: true },
 )
 // What the document shows follows what was found and where she is in it.
 watch(
