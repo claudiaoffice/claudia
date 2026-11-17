@@ -53,22 +53,21 @@ describe('from a session to the layout library', () => {
     expect(doc.lists).toEqual([{ id: 'l1', scheme: 'numbers' }])
     expect(doc.schemes).toEqual([{ id: 'numbers', indent: 2, gap: 0.5 }])
   })
-  it('prints a table of contents as one paragraph per entry in its Contents style, the first keeping its id (E9.31)', () => {
+  it('passes a table of contents with its entries and options, for the layout to find their pages (E9.31)', () => {
     const toc = { kind: 'toc' as const, first: 1, last: 2, numbers: true, places: true, leader: 'dots' as const }
     const entry = (target: string, number: string | null, text: string, level: number) => ({ target, level, number, text, style: `contents-${level}`, place: null })
     const doc = textDocument(
       [
         { id: 'toc', style: 'body', text: '', runs: [], generated: toc, entries: [entry('h1', '1', 'Why', 1), entry('h2', '1.1', 'Schools', 2)] },
-        { id: 'empty', style: 'body', text: '', runs: [], generated: toc },
+        { id: 'empty', style: 'body', text: '', runs: [], generated: { ...toc, places: false, leader: 'none' as const } },
       ],
       [],
       DEFAULT_PAGE,
       null,
     )
     expect(doc.blocks).toEqual([
-      { id: 'toc', style: 'contents-1', text: '1 Why' },
-      { id: 'toc~1', style: 'contents-2', text: '1.1 Schools' },
-      { id: 'empty', style: 'body', text: '' },
+      { id: 'toc', style: 'body', text: '', contents: { entries: [{ target: 'h1', words: '1 Why', style: 'contents-1' }, { target: 'h2', words: '1.1 Schools', style: 'contents-2' }], places: true, leader: 'dots' } },
+      { id: 'empty', style: 'body', text: '', contents: { entries: [], places: false, leader: 'none' } },
     ])
   })
   it('passes the heading level the server gave each style, so the layout keeps headings with their text (E9.22)', () => {

@@ -240,6 +240,12 @@ slide-sized page by default) or handouts of 2, 3 (with lines for notes), 4, 6 or
 prints is part of it, one step in its history for everybody; a viewer sees the pages but cannot change them.
 `e2e/print.cjs` and `e2e/print-creates.cjs` (`npm run e2e:print`, `npm run e2e:print-creates`) drive both.
 
+A text's **table of contents** gets its page numbers from the same layout (E9.31): the server never paginates. The
+layout finds the page each heading starts on, prints it right-aligned after the entry with the leader before it (the
+column is kept free, so filling it in moves no line), makes each entry a link to its heading and the headings the
+PDF's bookmarks. **Page view** shows the same page numbers in the editor: `lib/print/page-numbers.ts` lays the text out
+in the background, only while a table shows pages, once the typing has paused. Flow has no pages, so it shows none.
+
 ## Presenter mode (creates)
 
 Every slide has **speaker notes** (Markdown, a field under the slide) and a **planned time** (the ⏱ chip beside it:

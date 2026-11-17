@@ -35,6 +35,8 @@ export interface PdfInfo {
 export interface PdfOptions {
   /** deflate the streams (default true); `false` gives a file that can be read in a text editor */
   compress?: boolean
+  /** the bookmarks: headings in reading order, each with its level (0 the title), page (from 0) and top (E9.31) */
+  outline?: readonly { title: string; level: number; page: number; top: number }[]
 }
 
 /** The bytes of the images the display list names, by id. PNG, JPEG, GIF and BMP are understood. */
@@ -353,16 +355,38 @@ export function writePdf(pages: readonly DisplayPage[], fonts: FontSet, images: 
 
   // ---- pages
   const pageRefs: number[] = []
+  const pageDicts: string[] = []
   for (const page of pages) {
     const contentN = reserve()
     setStream(contentN, '', enc(content(page.items, page.height)))
     const pageN = reserve()
-    setObj(
-      pageN,
-      `<< /Type /Page /Parent ${pagesRoot} 0 R /MediaBox [0 0 ${fmt3(page.width)} ${fmt3(page.height)}] /Resources ${resources} 0 R /Contents ${contentN} 0 R >>`,
-    )
+    const dict = `/Type /Page /Parent ${pagesRoot} 0 R /MediaBox [0 0 ${fmt3(page.width)} ${fmt3(page.height)}] /Resources ${resources} 0 R /Contents ${contentN} 0 R`
+    setObj(pageN, `<< ${dict} >>`)
     pageRefs.push(pageN)
+    pageDicts.push(dict)
   }
+  /** where a link or a bookmark goes: the top of a place on a page */
+  const destination = (page: number, top: number): string | null => {
+    const ref = pageRefs[page]
+    const target = pages[page]
+    return ref === undefined || !target ? null : `[${ref} 0 R /XYZ 0 ${fmt3(target.height - top)} null]`
+  }
+  // links (an entry of a table of contents to its heading): made after the pages, so that a page without any keeps
+  // its object number and its bytes
+  pages.forEach((page, index) => {
+    const annots: string[] = []
+    for (const link of page.links ?? []) {
+      const dest = destination(link.page, link.top)
+      if (!dest) continue
+      const r = link.rect
+      const n = reserve()
+      const rect = [r.x, page.height - r.y - r.h, r.x + r.w, page.height - r.y].map(fmt3).join(' ')
+      setObj(n, `<< /Type /Annot /Subtype /Link /Rect [${rect}] /Border [0 0 0] /Dest ${dest} >>`)
+      annots.push(`${n} 0 R`)
+    }
+    if (annots.length) setObj(pageRefs[index]!, `<< ${pageDicts[index]} /Annots [${annots.join(' ')}] >>`)
+  })
+  const outlineRoot = outlineObjects(options.outline ?? [], reserve, setObj, destination)
   const res: string[] = []
   if (embedded.size) res.push(`/Font << ${[...embedded.values()].map((f) => `/${f.name} ${f.ref} 0 R`).join(' ')} >>`)
   const xobjects = [...[...imageRefs.values()].map((i) => `/${i.name} ${i.ref} 0 R`), ...formRefs]
@@ -372,7 +396,8 @@ export function writePdf(pages: readonly DisplayPage[], fonts: FontSet, images: 
   setObj(resources, `<< ${res.join(' ')} >>`)
 
   setObj(pagesRoot, `<< /Type /Pages /Count ${pageRefs.length} /Kids [${pageRefs.map((r) => r + ' 0 R').join(' ')}] >>`)
-  setObj(catalog, `<< /Type /Catalog /Pages ${pagesRoot} 0 R${info.lang ? ` /Lang ${lit(info.lang)}` : ''} /ViewerPreferences << /DisplayDocTitle true >> >>`)
+  const outlines = outlineRoot === null ? '' : ` /Outlines ${outlineRoot} 0 R /PageMode /UseOutlines`
+  setObj(catalog, `<< /Type /Catalog /Pages ${pagesRoot} 0 R${info.lang ? ` /Lang ${lit(info.lang)}` : ''}${outlines} /ViewerPreferences << /DisplayDocTitle true >> >>`)
   const date = pdfDate(info.created)
   setObj(
     infoObj,
@@ -394,6 +419,45 @@ export function writePdf(pages: readonly DisplayPage[], fonts: FontSet, images: 
   xref.push(`trailer\n<< /Size ${objs.length + 1} /Root ${catalog} 0 R /Info ${infoObj} 0 R >>\nstartxref\n${pos}\n%%EOF\n`)
   parts.push(enc(xref.join('')))
   return concat(parts)
+}
+
+/** The bookmarks of the PDF (its outline), nested by level: a heading is the child of the last one above it with a
+ *  smaller level. The number of the outline's root, or `null` when there is nothing to list. */
+function outlineObjects(
+  entries: readonly { title: string; level: number; page: number; top: number }[],
+  reserve: () => number,
+  setObj: (n: number, body: string) => void,
+  destination: (page: number, top: number) => string | null,
+): number | null {
+  interface Node {
+    n: number
+    title: string
+    dest: string | null
+    level: number
+    children: Node[]
+  }
+  if (!entries.length) return null
+  const root: Node = { n: reserve(), title: '', dest: null, level: -1, children: [] }
+  const stack: Node[] = [root]
+  for (const e of entries) {
+    while (stack.length > 1 && stack.at(-1)!.level >= e.level) stack.pop()
+    const node: Node = { n: reserve(), title: e.title, dest: destination(e.page, e.top), level: e.level, children: [] }
+    stack.at(-1)!.children.push(node)
+    stack.push(node)
+  }
+  const count = (node: Node): number => node.children.reduce((sum, child) => sum + 1 + count(child), 0)
+  const write = (node: Node, parent: Node | null, prev: Node | undefined, next: Node | undefined) => {
+    const kids = node.children
+    const family = kids.length ? ` /First ${kids[0]!.n} 0 R /Last ${kids.at(-1)!.n} 0 R /Count ${count(node)}` : ''
+    if (!parent) setObj(node.n, `<< /Type /Outlines${family} >>`)
+    else {
+      const links = `${prev ? ` /Prev ${prev.n} 0 R` : ''}${next ? ` /Next ${next.n} 0 R` : ''}`
+      setObj(node.n, `<< /Title ${textString(node.title)} /Parent ${parent.n} 0 R${links}${family}${node.dest ? ` /Dest ${node.dest}` : ''} >>`)
+    }
+    kids.forEach((kid, i) => write(kid, node, kids[i - 1], kids[i + 1]))
+  }
+  write(root, null, undefined, undefined)
+  return root.n
 }
 
 function glyphOps(run: GlyphRun, font: EmbeddedFont, H: number, gs: string): string {

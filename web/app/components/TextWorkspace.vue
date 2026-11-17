@@ -11,6 +11,7 @@ import type { StyleView } from '~/lib/style-css'
 import { formatItems } from '~/lib/format-menu'
 import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
 import { looksOf, type ContentsHost } from '~/lib/contents'
+import { usePageNumbers } from '~/lib/print/page-numbers'
 import {
   askItem,
   clipboardItems,
@@ -233,6 +234,9 @@ const numberingHost = computed<NumberingHost>(() => ({
   removeScheme: (scheme) => session.removeScheme(scheme),
 }))
 
+/** In Page view, the page each paragraph starts on, for the tables of contents (E9.31, step F). */
+const pageNumbers = usePageNumbers(session, () => view.value === 'page' && !printing.value)
+
 /** The table of contents whose options are open (E9.31), and what the dialog works with. */
 const contentsOf = ref<string | null>(null)
 const contentsHost = computed<ContentsHost | null>(() => {
@@ -436,7 +440,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <StyleBar v-if="!printing" data-region="toolbar" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" />
+    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" :pages="pageNumbers" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" />
     <template #footer>
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">

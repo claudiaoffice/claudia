@@ -15,7 +15,7 @@ import { usePointed } from '~/lib/pointed'
 
 const { t } = useI18n()
 
-const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean; active: string | null; marks?: TextMark[] }>()
+const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean; active: string | null; marks?: TextMark[]; pages?: ReadonlyMap<string, number> | null }>()
 const emit = defineEmits<{ suggestion: [id: string]; 'style-menu': [at: { x: number; y: number }]; contents: [block: string] }>()
 
 const state = props.session.state
@@ -421,6 +421,12 @@ function goTo(target: string) {
   focus()
 }
 
+/** The page a table's entry leads to, in Page view once the text is laid out (step F); `null` in flow, which has no
+ * pages, and for a table that shows none. */
+function pageOf(block: Block, target: string): number | null {
+  return (block.generated?.places && props.pages?.get(target)) || null
+}
+
 /** What a table's chip says: what it is and the levels it lists. */
 function chipOf(block: Block): string {
   const g = block.generated!
@@ -509,7 +515,10 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
             :style="cssOf(entry.style)"
             :href="`#${entry.target}`"
             @click.prevent.stop="goTo(entry.target)"
-            ><span v-if="entry.number" class="toc-number">{{ entry.number }}</span>{{ entry.text }}</a
+            ><span v-if="entry.number" class="toc-number">{{ entry.number }}</span><span class="toc-words">{{ entry.text }}</span
+            ><template v-if="pageOf(block, entry.target)"
+              ><span class="toc-leader" :class="block.generated.leader" aria-hidden="true" /><span class="toc-page">{{ pageOf(block, entry.target) }}</span></template
+            ></a
           >
           <p v-if="!block.entries?.length" data-skip class="toc-empty">{{ t('No headings yet: the table lists them as they are written.') }}</p>
           <button type="button" data-skip class="toc-chip" data-testid="contents-chip" @click.stop="emit('contents', block.id)">
@@ -642,9 +651,25 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
   background: color-mix(in srgb, var(--app) 7%, transparent);
 }
 .doc :deep(.toc-entry) {
-  display: block;
+  display: flex;
+  align-items: baseline;
   color: inherit;
   text-decoration: none;
+}
+.doc :deep(.toc-words) {
+  min-width: 0;
+}
+.doc :deep(.toc-leader) {
+  flex: 1;
+  margin: 0 0.4em;
+}
+.doc :deep(.toc-leader.dots) {
+  border-bottom: 0.12em dotted currentColor;
+}
+.doc :deep(.toc-page) {
+  min-width: 2em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .doc :deep(.toc-entry:hover),
 .doc :deep(.toc-entry:focus-visible) {

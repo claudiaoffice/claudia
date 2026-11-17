@@ -1,6 +1,6 @@
 # Text structure across the three apps — the entities, where they live, what moves (plan)
 
-**Status: plan of 2026-11-16; steps A to D built the same day (sections 8 to 10), step E on 2026-11-17 (section 11). Steps F–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
+**Status: plan of 2026-11-16; steps A to D built the same day (sections 8 to 10), steps E and F on 2026-11-17 (sections 11 and 12). Steps G–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
 of the same day) to creates, and replaces that note's section 11 ("Where the code goes"). The class diagram is
 `mockups/text-structure-architecture.svg`; it replaces `composes-toc-architecture.svg`. No decision numbers are taken.
 
@@ -400,3 +400,31 @@ Written first, as part of the steps above:
 
 - Step F (pages in the contents, print and PDF bookmarks), G, H and I.
 - A table's context menu entry (the chip and Insert ▸ Table of Contents open the options today).
+
+## 12. Done: step F (2026-11-17, patch 9)
+
+### What was built
+
+- **Pages in the layout, never on the server:** a paragraph of a text can carry `contents` (its entries, `places`,
+  `leader`); `layoutText` lays each entry out in its Contents style with a fixed column for the page ("000" in the
+  entry's look and two leader gaps), paginates once, and fills in the page each target starts on, right-aligned on the
+  entry's last line, with a dot leader. Because the column is fixed, filling it in moves no line: one pass is enough
+  for a table of contents (the three passes of mock-up D are for page references in running text, step I).
+  `TextPages.pageOf` (the page of every paragraph) and `TextPages.outline` (the headings: title, level, page, top).
+- **PDF:** each entry is a link to its heading (`DisplayPage.links`, `/Link` annotations with a `/Dest`); the headings
+  are the bookmarks (`PdfOptions.outline`, nested by level, `/PageMode /UseOutlines`). A page without links keeps its
+  bytes. `LAYOUT_VERSION` 7.
+- **Web:** the print source passes a table with its entries and options (no longer one paragraph per entry) and the
+  outline to the PDF. **Page view** shows the page numbers with their leader in the editor: `usePageNumbers` runs the
+  print layout in the background, only in Page view, only while a table shows pages, 1.2 s after the last change.
+
+### Where the build differs from the plan or the mock-ups, and why
+
+- **One pass, not three** (see above). The settle loop comes with step I, where a page reference in running text can
+  change its line's width.
+- **Page view lays out in the background** instead of drawing pages: the editor stays one flowing column; only the
+  numbers come from the layout. A text without fonts (an older server) shows no pages, as in flow.
+
+### Left for later steps
+
+- G, H and I. `/Contents` texts on the PDF's links and tagged PDF (PDF/UA) with the rest of the PDF accessibility work.

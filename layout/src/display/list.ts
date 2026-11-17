@@ -125,6 +125,15 @@ export interface DisplayPage {
   width: number
   height: number
   items: DisplayItem[]
+  /** places on the page that lead elsewhere in the document (an entry of a table of contents to its heading): the
+   *  page (from 0) and the top there; the PDF makes them links */
+  links?: PageLink[]
+}
+/** A rectangle of a page that leads to another place of the document. */
+export interface PageLink {
+  rect: Rect
+  page: number
+  top: number
 }
 
 /** A whole document's display list, with what produced it. */

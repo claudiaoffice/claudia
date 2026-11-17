@@ -20,14 +20,12 @@ export function fromBase64(data: string): Uint8Array {
   return out
 }
 
-/** A paragraph as the layout library reads it; a table of contents (E9.31) as one paragraph per entry, in its Contents
- *  style (no page numbers yet: they come with the page passes, step F). The first keeps the table's id, so an object
- *  that hangs from the table still has its place. */
-function printedBlocks(b: Block): TextDocument['blocks'] {
-  if (!b.generated) return [{ id: b.id, style: b.style, text: b.text, item: b.item ?? null, label: b.label ? { marker: b.label.marker } : null }]
-  const entries = b.entries ?? []
-  if (!entries.length) return [{ id: b.id, style: b.style, text: '' }]
-  return entries.map((e, k) => ({ id: k ? `${b.id}~${k}` : b.id, style: e.style, text: entryWords(e) }))
+/** A paragraph as the layout library reads it; a table of contents (E9.31) with its entries, whose pages the layout
+ *  finds (step F). */
+function printedBlock(b: Block): TextDocument['blocks'][number] {
+  if (!b.generated) return { id: b.id, style: b.style, text: b.text, item: b.item ?? null, label: b.label ? { marker: b.label.marker } : null }
+  const entries = (b.entries ?? []).map((e) => ({ target: e.target, words: entryWords(e), style: e.style }))
+  return { id: b.id, style: b.style, text: '', contents: { entries, places: b.generated.places, leader: b.generated.leader } }
 }
 
 /** The text as the layout library reads it: a list item with the marker the server counted for it, so the printed
@@ -41,7 +39,7 @@ export function textDocument(
   lists: ListsOfText = { lists: [], schemes: [] },
 ): TextDocument {
   return {
-    blocks: blocks.flatMap(printedBlocks),
+    blocks: blocks.map(printedBlock),
     lists: lists.lists.map((l) => ({ id: l.id, scheme: l.scheme })),
     schemes: lists.schemes.map((s) => ({ id: s.id, indent: s.indent, gap: s.gap })),
     styles: styles.map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved, heading: s.heading ?? null })),

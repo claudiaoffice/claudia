@@ -12,9 +12,9 @@ import { layoutParagraph } from '../text/paragraph'
 import { itemGeometry, type ListItemRef, type ListRef, MARKER_GAP_EM, markerCss, type SchemeGeometry } from '../text/list-geometry'
 import type { Hyphenator } from '../text/hyphenate'
 import type { ParagraphStyle } from '../text/style'
-import { insets } from '../display/text'
-import { type DisplayList, type DisplayPage, walk } from '../display/list'
-import { type FlowBlock, flowItems, locate, paginate } from '../flow/paginate'
+import { insets, lineItems } from '../display/text'
+import { type DisplayList, type DisplayPage, type PathOp, rectPath, walk } from '../display/list'
+import { type FlowBlock, type FlowPage, flowItems, locate, paginate } from '../flow/paginate'
 import { contentBox, type PageGeometry, pageGeometry } from '../flow/paper'
 import type { FontSet } from '../fonts/fontset'
 import type { FontResolver } from '../fonts/resolve'
@@ -46,6 +46,23 @@ export interface TextBlock {
   text: string
   item?: ListItemRef | null
   label?: { marker: string } | null
+  /** Set when the paragraph is a table of contents (E9.31): its entries, each a line in its own style that leads to
+   *  the paragraph `target`, and whether the target's page is drawn after it, a leader away. The pages are found here:
+   *  the server never paginates (step F). */
+  contents?: TextContents | null
+}
+/** A table of contents as the layout draws it. */
+export interface TextContents {
+  entries: readonly { target: string; words: string; style: string }[]
+  places: boolean
+  leader: 'dots' | 'none'
+}
+/** A heading as the PDF's outline lists it: its words, its level (0 the title) and where it starts. */
+export interface OutlineEntry {
+  title: string
+  level: number
+  page: number
+  top: number
 }
 /** A floating object as the server sends it (the shape all three apps share), anchored to a character. */
 export interface TextObject extends VisualObject {
@@ -73,6 +90,10 @@ export interface TextLayoutOptions {
 
 export interface TextPages {
   list: DisplayList
+  /** the page (from 1) each paragraph starts on, by id: what a table of contents prints, and Page view shows */
+  pageOf: Map<string, number>
+  /** the headings, for the PDF's bookmarks (E9.31) */
+  outline: OutlineEntry[]
   geometry: PageGeometry
   notes: Note[]
   /** image ids the display list draws */
@@ -108,6 +129,77 @@ function headingNumberOf(sheet: Styles, own: ParagraphStyle, marker: string, em:
   return { layout: layoutParagraph(sheet.fonts, plain, marker, width), x: own.indentLeft - Math.round(MARKER_GAP_EM * em) - width }
 }
 
+/** The gap between an entry's words and its leader, and between the leader and the page, in em; a leader's dots. */
+const LEADER_GAP_EM = 0.4
+const DOT_STEP_EM = 0.5
+const DOT_EM = 0.09
+
+/** How much room a page number takes at the end of an entry's lines: "000" in the entry's look and two leader gaps. */
+function placeRoom(sheet: Styles, style: ParagraphStyle): number {
+  const plain: ParagraphStyle = { ...style, align: 'left', indentLeft: 0, indentRight: 0, firstLine: 0, whiteSpace: 'nowrap', hyphens: 'manual' }
+  const widest = layoutParagraph(sheet.fonts, plain, '000', 1_000_000).lines[0]?.natural ?? 0
+  return widest + 2 * Math.round(LEADER_GAP_EM * style.size)
+}
+
+/** Where each flow block starts: the page (from 0), and the top of its first line on it, in page coordinates. */
+function startsOf(flow: readonly FlowPage[], blocks: readonly FlowBlock[]): Map<number, { page: number; top: number }> {
+  const out = new Map<number, { page: number; top: number }>()
+  for (const p of flow) for (const l of p.lines) if (l.line === 0 && !out.has(l.block)) out.set(l.block, { page: p.index, top: l.top })
+  for (let i = 0; i < blocks.length; i++) if (!out.has(i)) out.set(i, { page: 0, top: 0 }) // an empty paragraph has a line too
+  return out
+}
+
+/** The page numbers of the tables of contents, right-aligned on each entry's last line with the leader before them, and
+ *  each entry a link to its heading (E9.31, step F). The column was kept free when the entries were laid out. */
+function contentsItems(
+  fonts: FontSet,
+  sheet: Styles,
+  flow: readonly FlowPage[],
+  blocks: readonly FlowBlock[],
+  origins: readonly { entry?: TextContents['entries'][number]; contents?: TextContents; room?: number }[],
+  pageOf: ReadonlyMap<string, number>,
+  starts: ReadonlyMap<number, { page: number; top: number }>,
+  pages: DisplayPage[],
+  box: { x: number; w: number },
+): void {
+  const targets = new Map<string, number>()
+  origins.forEach((o, i) => {
+    if (!o.entry) targets.set(blocks[i]!.id, i)
+  })
+  for (const p of flow) {
+    for (const l of p.lines) {
+      const origin = origins[l.block]!
+      const { entry, contents } = origin
+      if (!entry?.target || !contents) continue
+      const b = blocks[l.block]!
+      const line = b.layout.lines[l.line]!
+      const target = targets.get(entry.target)
+      const to = target === undefined ? undefined : starts.get(target)
+      if (to) pages[p.index]!.links = [...(pages[p.index]!.links ?? []), { rect: { x: l.x + line.x, y: l.top, w: Math.max(1, line.natural), h: line.height }, page: to.page, top: to.top }]
+      if (l.line !== b.layout.lines.length - 1 || !contents.places || !origin.room) continue
+      const page = pageOf.get(entry.target)
+      if (page === undefined) continue
+      const style = b.layout.style
+      const plain: ParagraphStyle = { ...style, align: 'left', indentLeft: 0, indentRight: 0, firstLine: 0, whiteSpace: 'nowrap', hyphens: 'manual' }
+      const number = layoutParagraph(sheet.fonts, plain, String(page), box.w)
+      const first = number.lines[0]
+      if (!first) continue
+      const right = box.x + box.w - (style.indentRight - origin.room)
+      const left = right - first.natural
+      pages[p.index]!.items.push(...lineItems(fonts, number, first, left, l.top + line.baseline - first.baseline))
+      if (contents.leader !== 'dots') continue
+      const em = style.size
+      const from = l.x + line.x + line.natural + Math.round(LEADER_GAP_EM * em)
+      const until = left - Math.round(LEADER_GAP_EM * em)
+      const step = Math.max(1, Math.round(DOT_STEP_EM * em))
+      const size = Math.max(1, Math.round(DOT_EM * em))
+      const ops: PathOp[] = []
+      for (let x = until - size; x >= from; x -= step) ops.push(...rectPath({ x, y: l.top + line.baseline - size, w: size, h: size }))
+      if (ops.length) pages[p.index]!.items.push({ kind: 'path', ops, fill: style.color, stroke: null, lineWidth: 0 })
+    }
+  }
+}
+
 /** composes' default style: what a paragraph with a style the text does not have is drawn in. */
 const BODY = 'body'
 
@@ -118,7 +210,7 @@ const BODY = 'body'
 export function fontsNeeded(doc: TextDocument, resolver: FontResolver): string[] {
   const styles = new Map(doc.styles.map((s) => [s.id, s]))
   const out = new Set<string>()
-  for (const id of new Set(doc.blocks.map((b) => b.style))) {
+  for (const id of new Set(doc.blocks.flatMap((b) => [b.style, ...(b.contents?.entries.map((e) => e.style) ?? [])]))) {
     const face = styleFont(cssOf(styles, id, BODY), resolver)
     if (face) out.add(face)
   }
@@ -147,7 +239,24 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   let wantsHyphens = false
   const lists = doc.lists ?? []
   const schemes = doc.schemes ?? []
-  const blocks: FlowBlock[] = doc.blocks.map((b, index) => {
+  /** for each flow block, the paragraph of the text it is (or the entry of a table of contents it draws) */
+  const origins: { block: number; entry?: TextContents['entries'][number]; contents?: TextContents; room?: number }[] = []
+  const blocks: FlowBlock[] = doc.blocks.flatMap((b, index): FlowBlock[] => {
+    if (b.contents) {
+      const contents = b.contents
+      const entries = contents.entries.length ? contents.entries : [{ target: '', words: '', style: b.style }]
+      return entries.map((entry, k) => {
+        const r = sheet.paragraph(entry.style)
+        // the page column has a fixed width (room for "000"), so filling it in never moves a line (mock-up D)
+        const room = contents.places && entry.target ? placeRoom(sheet, r.style) : 0
+        const style: ParagraphStyle = { ...r.style, indentRight: r.style.indentRight + room, keepWithNext: k < entries.length - 1 }
+        const inset = insets(r.decoration)
+        origins.push({ block: index, entry, contents, room })
+        const id = k ? `${b.id}~${k}` : b.id
+        return { id, layout: layoutParagraph(fonts, style, entry.words, box.w - inset.left - inset.right, paragraphOptions), decoration: r.decoration }
+      })
+    }
+    origins.push({ block: index })
     const r = sheet.paragraph(b.style)
     const item = itemGeometry(doc.blocks, index, lists, schemes)
     const em = r.style.size
@@ -166,7 +275,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
       : item
         ? markerOf(sheet, b.style, b.label.marker, r.style.indentLeft, item.left, item.step, em)
         : headingNumberOf(sheet, r.style, b.label.marker, em)
-    return { id: b.id, layout: layoutParagraph(fonts, style, b.text, width, paragraphOptions), decoration: r.decoration, ...(marker ? { marker } : {}) }
+    return [{ id: b.id, layout: layoutParagraph(fonts, style, b.text, width, paragraphOptions), decoration: r.decoration, ...(marker ? { marker } : {}) }]
   })
   if (wantsHyphens && !hyphenator) {
     notes.push({
@@ -176,9 +285,13 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   }
   const flow = paginate(blocks, geometry)
   const pages: DisplayPage[] = flowItems(fonts, flow, blocks, geometry)
+  const starts = startsOf(flow, blocks)
+  const pageOf = new Map<string, number>()
+  for (const [i, at] of starts) if (!origins[i]!.entry) pageOf.set(doc.blocks[origins[i]!.block]!.id, at.page + 1)
+  contentsItems(fonts, sheet, flow, blocks, origins, pageOf, starts, pages, box)
 
   // ---- floating objects, where they hang (D179: over the text, which does not wrap around them)
-  const blockIndex = new Map(doc.blocks.map((b, i) => [b.id, i]))
+  const blockIndex = new Map(blocks.map((b, i) => [b.id, i]))
   const shapes = new Map((doc.shapes ?? []).map((s) => [s.id, s]))
   const images = new Map((doc.images ?? []).map((i) => [i.id, i]))
   const usedImages: string[] = []
@@ -201,8 +314,17 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   // ---- page numbers, centred in the bottom margin (the same in every app)
   if (p.page_numbers) pageNumberItems(fonts, pages, geometry, sheet.paragraph(BODY).style)
 
+  const outline: OutlineEntry[] = []
+  for (const [i, at] of starts) {
+    const b = doc.blocks[origins[i]!.block]!
+    const level = origins[i]!.entry ? null : styles.get(b.style)?.heading
+    if (level !== null && level !== undefined && b.text.trim()) outline.push({ title: b.text.trim(), level, page: at.page, top: at.top })
+  }
+
   return {
     list: { layoutVersion: LAYOUT_VERSION, shaper: fonts.shaperId, ...(hyphenator ? { hyphenation: hyphenator.id } : {}), pages },
+    pageOf,
+    outline,
     geometry,
     notes,
     images: usedImages,

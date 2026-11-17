@@ -123,3 +123,56 @@ describe('a composes text on pages', () => {
     expect(read.pages[0]!.items.map((i) => i.str).join(' ')).toContain('Ein Bericht über Seiten')
   })
 })
+
+describe('a table of contents on pages (E9.31, step F)', () => {
+  const withContents = (leader: 'dots' | 'none' = 'dots', places = true): TextDocument => {
+    const base = doc(30)
+    const headings = base.blocks.filter((b) => b.style === 'heading-1')
+    const contents = { entries: headings.map((h) => ({ target: h.id, words: h.text, style: 'contents-1' })), places, leader }
+    return { ...base, blocks: [{ id: 'toc', style: 'body', text: '', contents }, ...base.blocks] }
+  }
+  const runsOf = (items: Parameters<typeof walk>[0]) => [...walk(items)].filter((r): r is GlyphRun => r.kind === 'glyphs')
+
+  it('prints each heading’s page right-aligned on its entry’s line, as the page the heading starts on', () => {
+    const d = withContents()
+    const out = layoutText(d, fonts, resolver, GERMAN)
+    const headings = d.blocks.filter((b) => b.style === 'heading-1')
+    expect(headings.length).toBeGreaterThan(1)
+    const lastHeading = headings.at(-1)!
+    expect(out.pageOf.get(lastHeading.id)).toBeGreaterThan(1)
+    const runs = runsOf(out.list.pages[0]!.items)
+    const entryWord = lastHeading.text.split(' ').at(-1)!
+    const entry = runs.filter((r) => r.text === entryWord)[headings.length - 1]! // the headings read alike: the last entry
+    const number = runs.find((r) => r.y === entry.y && r.text === String(out.pageOf.get(lastHeading.id)))
+    expect(number).toBeDefined()
+    expect(number!.x).toBeGreaterThan(entry.x)
+  })
+
+  it('draws the dot leader only when asked, and no pages when the places are off', () => {
+    const dots = (d: TextDocument) => layoutText(d, fonts, resolver, GERMAN).list.pages[0]!.items.filter((i) => i.kind === 'path' && i.fill).length
+    expect(dots(withContents('dots'))).toBeGreaterThan(dots(withContents('none')))
+    const off = layoutText(withContents('dots', false), fonts, resolver, GERMAN)
+    const on = layoutText(withContents('dots'), fonts, resolver, GERMAN)
+    expect(runsOf(off.list.pages[0]!.items).length).toBeLessThan(runsOf(on.list.pages[0]!.items).length)
+  })
+
+  it('makes each entry a link to its heading, and the headings the PDF’s bookmarks', async () => {
+    const out = layoutText(withContents(), fonts, resolver, GERMAN)
+    const links = out.list.pages[0]!.links ?? []
+    const headings = withContents().blocks.filter((b) => b.style === 'heading-1')
+    expect(links).toHaveLength(headings.length)
+    expect(links.at(-1)!.page).toBe(out.pageOf.get(headings.at(-1)!.id)! - 1)
+    expect(out.outline.map((o) => o.title)).toEqual(withContents().blocks.filter((b) => b.style === 'title' || b.style === 'heading-1').map((b) => b.text))
+    const pdf = new TextDecoder('latin1').decode(writePdf(out.list.pages, fonts, () => undefined, { title: 'Contents' }, { compress: false, outline: out.outline }))
+    expect(pdf.match(/\/Subtype \/Link/g)).toHaveLength(headings.length)
+    expect(pdf).toContain('/Type /Outlines')
+    expect(pdf).toContain('/PageMode /UseOutlines')
+    expect((await readPdf(writePdf(out.list.pages, fonts, () => undefined, { title: 'Contents' }, { outline: out.outline }))).pages).toHaveLength(out.list.pages.length)
+  })
+
+  it('leaves a text without a table as it was: no links, and the same pages', () => {
+    const plain = layoutText(doc(30), fonts, resolver, GERMAN)
+    expect(plain.list.pages.every((p) => p.links === undefined)).toBe(true)
+    expect(plain.pageOf.get('b1')).toBe(1)
+  })
+})

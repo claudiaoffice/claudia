@@ -292,7 +292,7 @@ describe('printing a presentation: its print source', () => {
     expect(options).toEqual({ hyphenator: { language: 'de' } })
     expect(source.status(pages, DEFAULT_PRINT.page)).toBe('3 slides on 1 page · Slide size landscape')
     pdfOfPages(assets, pages, new Map(), source)
-    expect(layoutCalls.pdf[0]).toMatchObject([pages.list.pages, assets.fonts, expect.any(Function), { title: 'talk', lang: 'de', producer: 'claudia creates' }])
+    expect(layoutCalls.pdf[0]).toMatchObject([pages.list.pages, assets.fonts, expect.any(Function), { title: 'talk', lang: 'de', producer: 'claudia creates' }, {}])
     session.close()
   })
   it('watches everything the pages are drawn from', async () => {
@@ -342,7 +342,11 @@ describe('printing a text: its print source', () => {
     expect(assets.hyphenator).toHaveBeenCalledWith('en-GB')
     expect(source.status(pages, DEFAULT_PAGE)).toBe('1 page · A4 portrait')
     pdfOfPages(assets, pages, new Map(), source)
-    expect(layoutCalls.pdf[0]).toMatchObject([pages.list.pages, assets.fonts, expect.any(Function), { title: 'essay', lang: 'en-GB', producer: 'claudia composes' }])
+    expect(layoutCalls.pdf[0]).toMatchObject([pages.list.pages, assets.fonts, expect.any(Function), { title: 'essay', lang: 'en-GB', producer: 'claudia composes' }, {}])
+    // a text's headings become the PDF's bookmarks (E9.31)
+    const outline = [{ title: 'Why', level: 1, page: 0, top: 0 }]
+    pdfOfPages(assets, { ...pages, outline }, new Map(), source)
+    expect(layoutCalls.pdf[1]![4]).toEqual({ outline })
   })
   it('prints the text without its objects when they cannot be fetched', async () => {
     const session = textSession({ page: null, language: undefined, doc: '' })

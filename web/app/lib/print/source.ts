@@ -15,6 +15,7 @@ import {
   writePdf,
   type DisplayList,
   type Note,
+  type OutlineEntry,
   type PageGeometry,
   type PageSetupData,
   type PaperSize,
@@ -52,6 +53,9 @@ export interface PrintPages {
   slides?: number
   /** a workbook's sheets and chart tabs that were printed, for the status line */
   printed?: { sheets: number; name: string; orientation: 'portrait' | 'landscape' | null }
+  /** a text's headings, the PDF's bookmarks, and the page each of its paragraphs starts on (E9.31) */
+  outline?: OutlineEntry[]
+  pageOf?: ReadonlyMap<string, number>
 }
 
 /** A choice the bar of the preview offers on top of the page: a list of options and the one that is chosen. */
@@ -107,7 +111,8 @@ export interface PrintSource {
 /** The PDF of laid-out pages. No date is written into it, so the same document gives the same file everywhere. */
 export function pdfOfPages(assets: PrintAssets, pages: PrintPages, images: Map<string, Uint8Array>, source: PrintSource): Uint8Array {
   const lang = source.language()
-  return writePdf(pages.list.pages, assets.fonts, (id) => images.get(id) ?? pages.embedded.get(id), { title: source.title(), ...(lang ? { lang } : {}), producer: source.producer })
+  const info = { title: source.title(), ...(lang ? { lang } : {}), producer: source.producer }
+  return writePdf(pages.list.pages, assets.fonts, (id) => images.get(id) ?? pages.embedded.get(id), info, pages.outline?.length ? { outline: pages.outline } : {})
 }
 
 /** No layout choice: the `layouts`/`layout`/`setLayout` of a document that prints one way. */
