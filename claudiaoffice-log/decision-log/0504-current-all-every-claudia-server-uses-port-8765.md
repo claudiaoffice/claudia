@@ -5,7 +5,7 @@ status: current
 applies-to: all
 date: 2026-11-15
 round: "The three desktop clients: one server, files, printing (branch clients)"
-supersedes: []
+supersedes: [D115]
 superseded-by: []
 ---
 

@@ -16,3 +16,5 @@ superseded-by: []
 `trace(sheet, row, col, reach, window)` computes the roles over the whole connected set and cuts the list to the window; `reach` is `group` (everything connected) or `chain` (only what the cell feeds and what feeds it). Cells on other sheets are counted per sheet so the tab can say "3 connected". At most 20 000 cells are followed; `truncated` says when that was not enough. It is a view, not an edit: nothing is logged.
 
 **Notes.** The web and GTK clients are designed (mocks 3a/3b) but not built in this branch: see the implementation notes.
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** The web client is built since (E6.23): `trace` on the server, the lit and dimmed cells in `SheetGrid.vue`, `FollowPill.vue`, the tab marks in `FooterBar.vue`, Tools ▸ Follow computation (Ctrl+Alt+F); the GTK client shows the same page.

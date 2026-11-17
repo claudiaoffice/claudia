@@ -5,17 +5,17 @@ parentId:
 id: "2ld3kmwjmw369o69"
 title: "E14 Server UI"
 type: "task"
-status: "todo"
+status: "in-progress"
 priority: "medium"
 start: "2026-11-05"
 due: ""
-progress: 0
+progress: 60
 assignees: []
 tags: []
 subtaskIds: []
 dependencies: []
 createdAt: "2026-11-05T06:36:12.321Z"
-updatedAt: "2026-11-10T12:00:00.000Z"
+updatedAt: "2026-11-17T18:00:00.000Z"
 customFields:
   y349wfjfmw2k7pty: "ALL"
 ---
@@ -30,5 +30,7 @@ As a user, I need a number of centralized services on the server that cannot mea
 Before we start coding, let's first make designs in SVG or PNG that we can discuss before settling on a UI.
 
 **2026-11-16:** the font library part is proposed as a fourth server settings page, Fonts: `notes/e3-3-font-management-ui.md`, `notes/mockups/fonts-1-server-settings.svg`, `fonts-2-add-fonts.svg`.
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** Three of the four wishes are built: Server settings has pages for the AI model, typesetting (the LaTeX and tool paths), access and documents, and fonts (`AdminApp.vue`, `AdminTypesetting.vue`, `AdminFonts.vue`; E3.11, E3.13 f, D1041); one server hosts the three apps and its front page lists and opens the documents of every app (E3.12, D430, D444). Partly: *Mine* lists the documents this browser or shell opened (`lib/mine.ts`), not every document a person is involved with, which the server cannot know without the documents' passwords.
 
 Project: [[claudia-office|claudia-office]]

@@ -34,3 +34,5 @@ out of the model.**
   patch writes `draw:transform` and the size and takes `svg:x`/`svg:y` off (and the reverse when it is turned back
   to upright). `XmlPart.set_attributes` can take attributes off for that (claudia-odf-io 0.3.0).
 * *Losses.* None for a turn. Pictures are turned too (D460).
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** The arithmetic lives in `claudia_odf_io/transform.py` (`transform_of`, `turned_box`), shared by odp and odt; there is no `odp_transform.py`.

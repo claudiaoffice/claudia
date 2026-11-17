@@ -14,3 +14,5 @@ superseded-by: []
 **The AI is a thinking aid.** Composes: spelling, word choice, complicated wording, language style; later structure and flow; summaries and content proposals on request. Creates: cluttered slides, poor word choice, spelling, structure, and design choices.
 
 **Notes.** A scripted stand-in does the composes half; the rest is not built.
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** A language model can answer in composes now (E7.10, D680), proposing or writing words; the thinking aids beyond the scripted review are still not built.

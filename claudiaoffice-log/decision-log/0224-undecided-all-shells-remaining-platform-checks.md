@@ -14,3 +14,5 @@ superseded-by: []
 **Shells:** Neutralino on Windows and macOS against GTK on Linux. Run on one Mac and one Windows 11 machine, with the automatic checks, menus, file dialogs, clipboard, printing and dead keys passing (D156–D159, `notes/e0-3-neutralino-windows-macos.md`). **Still open:** a clean Windows 10 and the WebView2 runtime; screen readers (VoiceOver, NVDA, Orca) and input methods on macOS and Linux; GNOME on Wayland; the maturity of Neutralino; install size and start time per OS; the allow-list; and above all **how the real frontend reaches a Neutralino shell** given D115 (D159). E0.3 and E0.8 stay open.
 
 *Carried over on 2026-11-10 from the decision log's "Open design questions" section, which had no numbers. Nothing here is decided yet.*
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** "How the real frontend reaches a Neutralino shell" is answered by D251 and built (the shell's own page frames the web app, `clients/neutralino/src/shell-page.ts`; D660 made macOS and Windows one package). The rest is still open.

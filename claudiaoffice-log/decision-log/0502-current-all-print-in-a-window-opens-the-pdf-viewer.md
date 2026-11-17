@@ -1,7 +1,7 @@
 ---
 id: D502
 title: "Proposal: Print… in a desktop window opens the pages as a PDF in the computer's PDF viewer, which prints them"
-status: undecided
+status: current
 applies-to: all
 date: 2026-11-15
 round: "The three desktop clients: one server, files, printing (branch clients)"
@@ -23,3 +23,5 @@ Neutralino has no `window.print()`), so Print… did nothing there once the font
 dialog of each OS fed with the PDF would be one step shorter, but needs a PDF renderer in each shell (Poppler on Linux,
 PDFKit on macOS, none built into Windows); the viewer prints what the preview shows, with the printers and settings the
 person knows. To be confirmed by the owner.
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** Built as proposed: `save_file` with `purpose: print` (`web/app/lib/shell-bridge.ts`, `clients/linux/src/claudia_shell_gtk/files.py` with `Gtk.FileLauncher`, `clients/neutralino/src/launch.ts`). The owner made the code the record of what is decided (log audit of 2026-11-17), so the status is current; replace it with a new decision to change it.

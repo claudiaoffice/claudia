@@ -16,3 +16,5 @@ superseded-by: []
 **Notes.** Claude's recommendation, given in answer to the owner's question; not yet confirmed. Shown in `notes/mockups/menu-bar-states.svg`, panel C.
 
 *Written as a proposal; confirmed by the owner on 2026-11-10, since the code already follows it.*
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** Built as recommended: Edit ▸ Row ▸ and Edit ▸ Column ▸ are in computes' menus in every shell (`edit.row-insert-above` … `edit.column-delete` in `manifest.py`).

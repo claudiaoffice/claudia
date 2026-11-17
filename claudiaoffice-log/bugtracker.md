@@ -153,7 +153,7 @@ statement in the docs or on the website).
 | CODE-24 | P3 | Code / server | `add_object` with kind `rendered` or `diagram` failed inside the server after a message that allowed them | **fixed** 2026-11-15 |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |
 | PROC-23 | **P1** | Process / CI | Three web e2e scripts on `main` fail after the dock merge (`demo`, `composes`: the chat box; `keys`: the View menu); `details.cjs` never ran in CI | **fixed** 2026-11-15 |
-| DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | partly fixed 2026-11-15; supersessions need a decision |
+| DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |
 | CODE-26 | **P1** | Code / macOS client | Closing a window with its close button crashes the macOS app every time (Neutralino 6.8.0) | **fixed** 2026-11-15 (D506) |
 | CODE-27 | P2 | Code / Arch | The object methods are written once in the kernel and three times on the wire | **fixed** 2026-11-15 on the server; composes' screens for pictures and descriptions open |
 | CODE-28 | P3 | Code / Arch | An app's server wiring is spread over five tables in `apps.py` | **new, open** |
@@ -1508,7 +1508,7 @@ without Replay History…. `details.cjs` (D530) was never run anywhere but on th
 expected menu; `e2e:details` and the new `e2e:dock` are npm scripts and CI steps. All other web e2e scripts, the
 Windows and macOS shell scripts and `tests/e2e` passed.
 
-### DOC-03 · The decision log contradicts itself in places · P3 · partly fixed
+### DOC-03 · The decision log contradicts itself in places · P3 · fixed 2026-11-17
 **Read:** current decisions that later current ones overrule without a supersession: D2 (each app its own doc server,
 a GTK client) against D430, D445, D42, D156; D84 (a server hosts one app) against D430; D115 (a new port at every start)
 against D504; D44 (File, Edit, Tools, Help) against D120; D242 (checked from `/api/docs`) against D444. `ranges.md`
@@ -1516,6 +1516,8 @@ listed D300–D319 twice. `_rounds.md` had no entry for the file-handling, dock 
 `ranges.md` row, the rounds, stale lines in two implementation notes and a stale comment in the Windows client.
 **Needs a decision:** whether to mark D2, D44, D84, D115 and D242 superseded (proposed: D84 by D430, D115 by D504, D44
 by D120; D2 and D242 partly, with a sentence each).
+**Fixed 2026-11-17** in the log audit, the code being the truth: D44, D84 and D115 are superseded as proposed, D2 and D242
+carry a sentence each (`implementation-notes/log-audit-2026-11-17.md`).
 
 ## Reported 2026-11-15, after `078d19d`
 

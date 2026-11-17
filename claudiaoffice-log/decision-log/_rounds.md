@@ -462,3 +462,11 @@ clients that keep the uid, as a decision and a story now with the build on a bra
 Decisions: D536 (sealed parts bound to the uid; the owner renames; clients keep the uid; story E5.21); D554 (a
 paragraph is a thing, named when first pointed at). The findings are in `bugtracker.md` (UX-40 to UX-43, CODE-23 to
 CODE-25, PROC-23, DOC-03) and `implementation-notes/qa-2026-11-15.md`.
+
+## Log audit of 2026-11-17 (at `6814bac`)
+
+The owner asked for the backlog and the decision log to be checked item by item against `main`, the code being the
+truth. No new decisions: proposals the code had built became current (D230, D246, D247, D272, D345, D346, D347, D502,
+D503, D681), DOC-03's supersessions were made (D44 by D120, D84 by D430, D115 by D504), and notes were added where a
+decision's "not built" was no longer true. Method and the full list: `implementation-notes/log-audit-2026-11-17.md`.
+

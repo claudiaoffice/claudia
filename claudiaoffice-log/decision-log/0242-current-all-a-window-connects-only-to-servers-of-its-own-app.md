@@ -14,3 +14,5 @@ superseded-by: []
 **A window of one app connects only to servers that run the same app.**
 
 **Notes.** Checked from `/api/docs` (`app`) before the window switches, and again by the page's `hello` (D121 bridge) when it loads, for servers that keep their listing behind a secret. A server of another app is refused with a message naming both apps. This keeps the client simple: no window ever has to show a document of an app it has no manifest for. Confirmed by the owner on 2026-11-10.
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** Partly overtaken (DOC-03): a server can host several apps (D430), so a window asks `/api/docs` for its own app among them and shows only that app's documents (D444); a server without its app is still refused.

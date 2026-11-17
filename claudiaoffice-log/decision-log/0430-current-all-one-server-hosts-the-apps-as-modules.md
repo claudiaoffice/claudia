@@ -5,7 +5,7 @@ status: current
 applies-to: all
 date: 2026-11-14
 round: "One server, app modules (branch one-server)"
-supersedes: []
+supersedes: [D84]
 superseded-by: []
 ---
 

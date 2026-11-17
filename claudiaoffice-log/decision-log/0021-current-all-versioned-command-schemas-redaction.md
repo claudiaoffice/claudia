@@ -16,3 +16,5 @@ superseded-by: []
 **Notes.** Redaction does not reach copies or backups made earlier. Open: what a redaction leaves in the log. Not yet true of the container (SEC-05).
 
 *Not applied before the first release, for the style model only: D308.*
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** True of the container since SEC-05 was fixed (D725): a redaction rewrites the sealed blocks.

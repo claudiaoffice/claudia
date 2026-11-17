@@ -14,3 +14,5 @@ superseded-by: []
 A **font library** lives on the server as a service shared by the three servers: the OS fonts plus downloadable collections. A document declares the fonts it needs; the server delivers fonts the client lacks.
 
 **Notes.** Built as `claudia-fonts`; not yet wired to the server. Fonts are served from our own server, never a CDN.
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** Wired since (D905): the server serves its fonts at `/api/fonts` and `/api/fonts/{sha256}.woff2`, and Server settings ▸ Fonts manages them (D1041).

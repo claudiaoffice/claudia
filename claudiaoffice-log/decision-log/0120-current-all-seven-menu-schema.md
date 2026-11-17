@@ -5,7 +5,7 @@ status: current
 applies-to: all
 date: 2026-11-05
 round: "Menu redesign and accessibility baseline (nineteenth round)"
-supersedes: [D4]
+supersedes: [D4, D44]
 superseded-by: []
 ---
 

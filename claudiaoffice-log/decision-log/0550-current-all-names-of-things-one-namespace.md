@@ -24,3 +24,5 @@ superseded-by: []
 **Not built yet.** Renaming a sheet: formulas write sheet names (`Sheet1!A1`), so a new name needs the formulas rewritten and undone with it (E6.24). Until then a sheet keeps the name it was added with.
 
 **Why.** The owner wanted every object to have a name, so that "#figure 1" in the chat can point at one thing (D551), and asked that names be unique. A shared namespace is the only way "figure 1" means one thing; per-kind namespaces would make a slide and a picture of one name ambiguous in the chat.
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** Renaming a sheet is built since (E6.24): `WorkbookModel.rename_sheet` rewrites every formula that reads the sheet, and `RenameThing` undoes it in one step.

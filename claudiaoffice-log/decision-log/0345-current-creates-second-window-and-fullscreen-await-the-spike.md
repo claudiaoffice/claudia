@@ -1,7 +1,7 @@
 ---
 id: D345
 title: "How the audience window and fullscreen work in each shell is not decided; the spike decides"
-status: undecided
+status: current
 applies-to: creates
 date: 2026-11-13
 round: "Presenter mode in creates (E10.2, branch `presenter`)"
@@ -16,3 +16,5 @@ superseded-by: []
 **Notes.** The owner asked for the spike (question 1, 2026-11-13). What the code already says: the GTK shell turns `javascript_can_open_windows_automatically` off and loads a new-window request in the same view (`clients/linux/.../webpage.py`), so a `create` handler is needed; the macOS and Windows shell pages frame the web app without `allow="fullscreen"` and the apps' `nativeAllowList` lacks `window.setFullScreen` and `window.create`, so both need entries and a contract message. Results go to `spikes/e10-2-presenter-window/results/`; this decision is then rewritten.
 
 **Result so far (2026-11-13).** Safari 27.2 on macOS, one screen (`results/safari-27.2-macos-web.json`): fullscreen of an element and of the document work and Esc leaves it; `window.open` gives a window that announces itself, hears the opener and receives keys, and BroadcastChannel, `postMessage` and `storage` all answer in about 1 ms; the Window Management API is absent (the person drags the window to the other screen); the Screen Wake Lock is there; F5 combinations never arrive (D344). Not yet run: Firefox, the GTK shell, the two Neutralino shells, and a second screen. **The first version therefore ships the one-window show** (the audience view fills the window or, where the browser allows it, the screen; `P` swaps to the presenter view in the same window, `F` toggles fullscreen) and requests fullscreen and the wake lock on a best-effort basis. The two-window mode, the shell changes (a `create` handler in the GTK shell, `allow="fullscreen"` and the `nativeAllowList` entries in the Neutralino shell pages) and this decision wait for the remaining runs.
+
+**Checked against the code, 2026-11-17 (`main` at `6814bac`).** The first version is built as proposed: the audience view in this window, `P` swapping to the presenter view, fullscreen of the element (`PresentShow.vue`, `lib/show.ts`). The second window and shell fullscreen still wait for the spike in Firefox, the GTK shell and both Neutralino shells. Current for the first version, which the owner made the record by making the code the truth (log audit of 2026-11-17).
