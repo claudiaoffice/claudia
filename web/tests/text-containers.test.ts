@@ -70,6 +70,8 @@ async function opened(objects: object[] = [], text = 'a😀b') {
     rendering_types: () => TYPES,
     renderings: () => [{ format: 1, id: 'r1', type: 'latex', source: 'x', params: {}, image: null, renderer: '' }],
     objects: () => ({ revision: 'main:2', objects }),
+    shapes: () => [{ format: 1, id: 'circle', name: 'Circle', path: 'M0 0Z', aspect: 1, text_area: { x: 0, y: 0, w: 100, h: 100 } }],
+    add_image: () => ({ object: 'o7', revision: 'main:3' }),
     images: () => [{ id: 'i1', format: 'svg', width: 3, height: 2, animated: false, data: 'AA==', first_frame: null }],
     add_rendering: () => ({ object: 'o9', rendering: 'r9', revision: 'main:3' }),
     move_object: () => ({ revision: 'main:3' }),
@@ -116,6 +118,37 @@ describe('containers in a text', () => {
     const { link, state } = await opened()
     link.push('image', { type: 'image', id: 'i2', asset: { id: 'i2', format: 'svg', width: 1, height: 1, animated: false, data: 'AA==', first_frame: null } })
     expect(state.images.i2).toBeDefined()
+  })
+  it('knows the outlines the shapes in the text are drawn with, and takes in a new one', async () => {
+    const { link, state } = await opened()
+    expect(state.shapes.circle!.path).toBe('M0 0Z')
+    link.push('shape', { type: 'shape', id: 'star', definition: { format: 1, id: 'star', name: 'Star', path: 'M1 1Z', aspect: null, text_area: { x: 0, y: 0, w: 1, h: 1 } } })
+    expect(state.shapes.star).toBeDefined()
+    link.push('shape', { type: 'shape', id: 'star', definition: null })
+    expect(state.shapes.star).toBeUndefined()
+  })
+  it('keeps the offset of an object off its character, and an object that is not rendered', async () => {
+    const { session } = await opened([object('o1', 'b1', 0, { kind: 'image', rendered: null, image: 'i1', anchor: { kind: 'block', container: 'b1', offset: 0, dx: 12, dy: -4 } })])
+    expect(session.objectsIn('b1')[0]!.anchor).toMatchObject({ dx: 12, dy: -4 })
+  })
+  it('tells where an object hangs in the units of the screen, though the server counts characters', async () => {
+    const { session } = await opened([object('o1', 'b1', 2), object('o2', 'zz', 5)])
+    // 'a😀b': character 2 is after the emoji, which is unit 3 here
+    expect(session.placeOf(session.state.objects.o1!)).toEqual({ block: 'b1', offset: 3 })
+    // a paragraph that is not known (yet): no place to hang it at
+    expect(session.placeOf(session.state.objects.o2!)).toBeNull()
+  })
+  it('puts a picture where the caret is, counting characters the way the server does, and selects it', async () => {
+    const { link, session, state } = await opened()
+    const picture = { data: 'AAAA', alt: 'a cat', sourceName: 'cat.png', sourcePath: null }
+    expect(await session.addImage(picture, { block: 'b1', offset: 3 }, { w: 300, h: 200 })).toBe('o7')
+    expect(link.last('add_image')).toEqual({ block: 'b1', offset: 2, w: 300, h: 200, data: 'AAAA', alt: 'a cat', source_name: 'cat.png', source_path: null, base: 'main:2' })
+    expect(state.selectedObject).toBe('o7')
+  })
+  it('says that a picture is only decoration, and then needs no words', async () => {
+    const { link, session } = await opened()
+    await session.addImage({ data: 'AAAA', alt: '', sourceName: 'line.png', sourcePath: null, decorative: true }, { block: 'b2', offset: 0 }, { w: 100, h: 20 })
+    expect(link.last('add_image')).toMatchObject({ decorative: true, alt: '' })
   })
   it('puts a container where the text is, counting characters the way the server does', async () => {
     const { link, session, state } = await opened()

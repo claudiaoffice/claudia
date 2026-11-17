@@ -84,8 +84,21 @@ export interface TextState extends BaseState {
   objects: Record<string, VisualObject<BlockAnchor>>
   /** The decoded pictures the document holds, by id: what its containers are drawn with. */
   images: Record<string, ImageAsset>
+  /** The outlines the shapes among the objects are drawn with, by id (the server's `shapes`). */
+  shapes: Record<string, TextShape>
   /** The object a person has selected here; this is not shared with colleagues. */
   selectedObject: string | null
+}
+
+/** An outline as the server sends it (`shapes`): `path` is an SVG path in a box of 100 by 100, `aspect` is width / height
+ * when it must be kept. The same as creates' `ShapeDef`. */
+export interface TextShape {
+  format: number
+  id: string
+  name: string
+  path: string
+  aspect: number | null
+  text_area: { x: number; y: number; w: number; h: number }
 }
 
 /** An image of the text as the server sends it (`images`): base64 data. */
@@ -122,7 +135,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, images: {}, selectedObject: null })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, shapes: {}, images: {}, selectedObject: null })
   }
 
   get readOnly(): boolean {
@@ -139,6 +152,13 @@ export class TextSession extends BaseSession<TextState> {
   private placeOnWire(place: { block: string; offset: number }): { block: string; offset: number } {
     const block = this.state.blocks.find((b) => b.id === place.block)
     return { block: place.block, offset: block ? pointOf(block.text, place.offset) : place.offset }
+  }
+
+  /** Where an object hangs, in the units of the screen (the server counts characters, the page UTF-16 units), or `null`
+   * while its paragraph is not known here. */
+  placeOf(o: VisualObject<BlockAnchor>): { block: string; offset: number } | null {
+    const block = this.state.blocks.find((b) => b.id === o.anchor.container)
+    return block ? { block: block.id, offset: Math.min(unitOf(block.text, o.anchor.offset), block.text.length) } : null
   }
 
   selectObject(id: string | null): void {
@@ -165,6 +185,33 @@ export class TextSession extends BaseSession<TextState> {
     return id
   }
 
+  /**
+   * Import a picture from disk and hang it from `place` (a paragraph and a place in it, in screen units); its id, or
+   * `null` after telling the person why not. It is selected. `data` is the file's bytes, base64 (`lib/images.ts`'s
+   * `fileToBase64`); `sourcePath` is the file's full path if the caller could get one — a plain web browser cannot,
+   * for its own security — and `null` if not. The same request as creates' (`add_image`), with a place in the text.
+   */
+  async addImage(
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean },
+    place: { block: string; offset: number },
+    size: { w: number; h: number },
+  ): Promise<string | null> {
+    await this.flush()
+    const done = await this.attempt('add_image', {
+      ...this.placeOnWire(place),
+      ...size,
+      data: picture.data,
+      alt: picture.alt,
+      source_name: picture.sourceName,
+      source_path: picture.sourcePath,
+      ...(picture.decorative ? { decorative: true } : {}),
+      base: this.state.revision,
+    })
+    if (done === false) return null
+    this.state.selectedObject = done.object as string
+    return done.object as string
+  }
+
   /** Hang an object from another place of the text. */
   async moveObject(id: string, place: { block: string; offset: number }): Promise<boolean> {
     return (await this.attempt('move_object', { id, ...this.placeOnWire(place), base: this.state.revision })) !== false
@@ -181,7 +228,7 @@ export class TextSession extends BaseSession<TextState> {
   // ------------------------------------------------------------------------------ loading
   protected async loadApp() {
     const link = this.need()
-    const [answer, suggestions, palette, styleModel, page, objects, images] = await Promise.all([
+    const [answer, suggestions, palette, styleModel, page, objects, images, shapes] = await Promise.all([
       link.request<{ styles: StyleView[]; blocks: Block[]; lists: ListInfo[]; schemes: SchemeInfo[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
       link.request<PaletteEvent>('palette'),
@@ -191,6 +238,7 @@ export class TextSession extends BaseSession<TextState> {
       // an older server shows no floating objects
       link.request<{ objects: VisualObject<BlockAnchor>[] }>('objects').then((a) => a.objects).catch(() => []),
       link.request<ImageAsset[]>('images').catch(() => []),
+      link.request<TextShape[]>('shapes').catch(() => []),
     ])
     // an older server has no language either; the preview then hyphenates nothing and offers no choice
     const language = await link
@@ -202,6 +250,7 @@ export class TextSession extends BaseSession<TextState> {
     s.language = language
     s.objects = Object.fromEntries(objects.map((o) => [o.id, o]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
+    s.shapes = Object.fromEntries(shapes.map((x) => [x.id, x]))
     if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
     s.styles = answer.styles
     s.lists = answer.lists
@@ -292,6 +341,10 @@ export class TextSession extends BaseSession<TextState> {
       case 'image':
         if (data.asset) s.images[data.id] = data.asset as ImageAsset
         else delete s.images[data.id]
+        return true
+      case 'shape':
+        if (data.definition) s.shapes[data.id] = data.definition as TextShape
+        else delete s.shapes[data.id]
         return true
       case 'lists':
         s.lists = data.lists as ListInfo[]
