@@ -8,6 +8,7 @@
 // This is the client half of the separation: the property dialog, the resize handles and the style plumbing can
 // be written once against `ObjectBody` and reused per app by swapping the anchor adapter.
 
+import type { ObjectKind } from '@claudia/layout'
 import type { ImageImport } from './images'
 import type { Toc } from './contents'
 import type { RefField } from './references'
@@ -37,7 +38,7 @@ export interface ObjectBody {
   id: string
   /** The name the object goes by in the whole document (D550), `''` for one that has none yet. */
   name?: string
-  kind: 'text' | 'shape' | 'image' | 'diagram' | 'rendered'
+  kind: ObjectKind
   w: number
   h: number
   /** The id of a style in the document's style book: the object's own `fill`, `stroke` and `stroke-width`

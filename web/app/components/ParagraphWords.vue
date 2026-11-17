@@ -11,7 +11,7 @@
 // An agenda (E9.31) has no words of its own: `entries` are its lines, derived by the server from the slide titles, drawn
 // as a list, each with its number, the title and, a dot leader away, its slide number.
 import { computed } from 'vue'
-import { MARKER_GAP_EM } from '@claudia/layout'
+import { leaderCss, MARKER_GAP_EM } from '@claudia/layout'
 import { piecesOf, type Mark } from '~/lib/paragraph-pieces'
 import type { ContentsEntry, Leader } from '~/lib/contents'
 import { partsOf, type Shown } from '~/lib/references'
@@ -57,7 +57,7 @@ const gap = `${MARKER_GAP_EM}em`
   <span v-if="entries" class="agenda" role="list" data-agenda>
     <span v-for="entry in entries" :key="entry.target" class="line" role="listitem"
       ><span v-if="entry.number" class="marker" :style="{ marginRight: gap }">{{ entry.number }}</span><span class="title">{{ entry.text }}</span
-      ><span v-if="entry.place" class="leader" :class="leader" aria-hidden="true" /><span v-if="entry.place" class="place">{{ entry.place }}</span></span
+      ><span v-if="entry.place" class="leader" :style="leaderCss(leader)" aria-hidden="true" /><span v-if="entry.place" class="place">{{ entry.place }}</span></span
     >
   </span>
   <span v-else class="text" :style="indent ? { display: 'block', paddingLeft: `${indent}em` } : undefined"><span v-if="marker" class="marker" data-marker :style="{ marginRight: gap }">{{ marker }}</span><template v-for="(piece, i) in pieces" :key="i"
@@ -96,13 +96,6 @@ const gap = `${MARKER_GAP_EM}em`
 }
 .title {
   min-width: 0;
-}
-.leader {
-  flex: 1;
-  margin: 0 0.3em;
-}
-.leader.dots {
-  border-bottom: 0.12em dotted currentColor;
 }
 .place {
   font-variant-numeric: tabular-nums;

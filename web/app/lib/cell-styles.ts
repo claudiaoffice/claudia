@@ -7,6 +7,7 @@
 //
 // Everything here is a pure function of those ranges and the document's styles: the grid paints with `cellLook`
 // for the cells on screen only, and the popover says where a look comes from with `whereFrom`.
+import { DEFAULT_STYLE } from '@claudia/layout'
 import { columnName, MAX_COLS, MAX_ROWS } from './cells'
 import { translate as t } from './i18n'
 import { withDisplayInk, type Css } from './style-css'
@@ -30,7 +31,8 @@ export interface Origin {
   layer: Layer | 'default'
 }
 
-export const DEFAULT_CELL_STYLE = 'body-text'
+/** The style a cell has until somebody chooses another (computes' `DEFAULT_CELL_STYLE`). */
+export const DEFAULT_CELL_STYLE = DEFAULT_STYLE.computes
 export const CELL_SLOTS: readonly CellSlot[] = ['box', 'words']
 
 const covers = ([r0, c0, r1, c1]: Area, row: number, col: number) => r0 <= row && row <= r1 && c0 <= col && col <= c1

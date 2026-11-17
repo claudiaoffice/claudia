@@ -2,6 +2,7 @@
 // decoration. Mirrors `claudia_core.ObjectBody.description`/`decorative` and the `describe_object` method; the same in
 // all three apps, so the accessible names, the dialog's checks and the alt text of a picture are written once.
 
+import type { ObjectKind } from '@claudia/layout'
 import { translate as t } from './i18n'
 import type { ImageImport } from './images'
 import { chordOf, type ShortcutDef } from './shortcuts'
@@ -11,7 +12,7 @@ export const MAX_DESCRIPTION = 300
 
 /** The part of an object these functions read (an object of any app has it). */
 export interface Describable {
-  kind: 'text' | 'shape' | 'image' | 'diagram' | 'rendered'
+  kind: ObjectKind
   description: string
   decorative: boolean
   imported: Pick<ImageImport, 'alt'> | null

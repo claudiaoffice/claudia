@@ -19,6 +19,7 @@ import { type FontResolver, parseFamilies, type Resolution } from '../fonts/reso
 import { drawSvg, parseSvg, type SvgDocument, SvgError, svgFonts } from '../svg/render'
 import { boxItems, layoutBox } from '../text/box'
 import { type BoxDecoration, boxDecorationFromCss, type Css, paragraphStyleFromCss, parseColor, type StyleFromCss } from '../text/css'
+import { DOT_EM, DOT_STEP_EM, LEADER_GAP_EM } from '../text/leader'
 import { MARKER_GAP_EM, markerCss } from '../text/list-geometry'
 import { layoutParagraph, type ParagraphLayout, type ParagraphOptions } from '../text/paragraph'
 import { paragraphStyle, type ParagraphStyle, type Rgba } from '../text/style'
@@ -44,10 +45,14 @@ export interface PageSetupData {
   page_numbers: boolean
 }
 
+/** The kinds of floating object, as `claudia_core.OBJECT_KINDS` names them (`tests/test_object_kinds_agree.py` keeps the
+ *  two lists the same). A `rendered` object is a text container that shows a picture once somebody drew one. */
+export type ObjectKind = 'text' | 'shape' | 'image' | 'diagram' | 'rendered'
+
 /** A floating object, the shape all three apps share (without its app's anchor). Lengths in CSS pixels. */
 export interface VisualObject {
   id: string
-  kind: 'text' | 'shape' | 'image' | 'diagram'
+  kind: ObjectKind
   w: number
   h: number
   style: string
@@ -103,12 +108,6 @@ function wordsItems(fonts: FontSet, laid: ReturnType<typeof layoutBox>, marker: 
   }
   return group
 }
-
-/** The gap between an agenda line's words and its leader, and between the leader and the place, in em. */
-const LEADER_GAP_EM = 0.4
-/** How far apart a dot leader's dots are, and how big one is, in em. */
-const DOT_STEP_EM = 0.5
-const DOT_EM = 0.09
 
 /** An agenda in its box (E9.31): its lines' words as one text, one line each, kept clear of the places on the right;
  *  each place right-aligned on the last line its words take, with a dot leader between, as `ParagraphWords` draws it. */
@@ -206,7 +205,7 @@ export function objectFonts(objects: readonly VisualObject[], styles: ReadonlyMa
     const face = styleFont(cssOf(styles, o.paragraph.style, fallback), resolver)
     if (face) out.add(face)
   }
-  const used = new Set(objects.filter((o) => o.kind === 'image' && o.image).map((o) => o.image))
+  const used = new Set(objects.filter((o) => (o.kind === 'image' || o.kind === 'rendered') && o.image).map((o) => o.image))
   for (const image of images) {
     if (!image.svg || !used.has(image.id)) continue
     try {
@@ -366,7 +365,10 @@ export function drawObject(o: VisualObject, r: Rect, ctx: ObjectContext): GroupI
     }
     return group(items, false)
   }
-  if (o.kind === 'image') {
+  // a rendered text container (D390) prints as the picture it shows; one nothing has drawn a picture for yet is left
+  // out, as the office exports leave it out
+  if (o.kind === 'rendered' && !o.image) return null
+  if (o.kind === 'image' || o.kind === 'rendered') {
     const info = o.image ? images.get(o.image) : undefined
     const placeholder = () => group([{ kind: 'path', ops: rectPath(r), fill: null, stroke: { r: 150, g: 150, b: 150, a: 255 }, lineWidth: 500, dash: [3000, 2000] }])
     if (info?.format === 'svg' && info.svg !== undefined) {

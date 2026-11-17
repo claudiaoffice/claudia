@@ -156,8 +156,8 @@ export function textSource(session: TextSession): PrintSource {
 }
 
 // ------------------------------------------------------------------------------ creates
-/** The objects of a slide as the layout library knows them. A rendered text container (D390) prints as the picture it
- * shows; one nothing has drawn a picture for yet is left out, as the office exports leave it out. The words of a list
+/** The objects of a slide as the layout library knows them (it prints a rendered text container, D390, as the picture
+ * it shows, and leaves out one nothing has drawn yet). The words of a list
  * item or a numbered title carry their marker, and an agenda its lines (E9.31), so the pages draw what the slide does
  * (E9.21, E9.22). */
 function printable(
@@ -167,7 +167,6 @@ function printable(
   shownOf: (id: string) => Shown[] | undefined = () => undefined,
 ): LayoutSlideObject[] {
   return objects.flatMap((o) => {
-    if (o.kind === 'rendered') return o.image ? [{ ...o, kind: 'image' as const } as LayoutSlideObject] : []
     if (!o.paragraph) return [o as LayoutSlideObject]
     const mark = markOf(o.id)
     const entries = o.paragraph.generated ? agendaOf(o.id) : null

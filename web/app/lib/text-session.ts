@@ -26,7 +26,7 @@ import {
 } from './blocks'
 import type { ImageAsset } from './images'
 import type { BlockAnchor, ObjectsEvent, PaletteEvent, StyleModel, VisualObject } from './objects'
-import type { PageSetupData, ShapeOutline, TextObject } from '@claudia/layout'
+import { DEFAULT_STYLE, type PageSetupData, type ShapeOutline, type TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
 import type { ListInfo, SchemeInfo } from './numbering'
 import { FIELD_CHAR, fieldIndex, plain, type ReferenceTarget, type RefField, type Show, type Shown } from './references'
@@ -879,7 +879,7 @@ export class TextSession extends BaseSession<TextState> {
   /** The style of the paragraph the caret is in. */
   currentStyle(): string {
     const focus = this.state.selection?.focus
-    return this.state.blocks.find((b) => b.id === focus?.block)?.style ?? 'body'
+    return this.state.blocks.find((b) => b.id === focus?.block)?.style ?? DEFAULT_STYLE.composes
   }
 
   // -- styles (CSS, E9.7)

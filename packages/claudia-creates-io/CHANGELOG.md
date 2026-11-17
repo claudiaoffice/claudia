@@ -6,6 +6,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- A style property no presentation file can hold is a loss (CODE-58): `pptx_export_losses`, `odp_export_losses` and
+  both `*_unwritten_changes` report `style-property`, with the property as detail (`line-height`, `letter-spacing`,
+  `border-left`, `padding-left`...) and how many objects it touches. Before, `styles` counted as written and the export
+  said nothing. A property is judged against the built-in style it comes from, so the defaults of a new deck are no
+  loss, and an edit of a kept file reports only what changed since it was read.
 - References in text boxes (step H) are written to pptx and odp as what they read as, with the loss `reference`.
 - Agendas in pptx and odp (E9.31): written as the lines they show (number, title and slide number), with the loss
   `agenda` (the file keeps the words, not the link to the slide titles). A kept pptx rewrites an agenda whose lines

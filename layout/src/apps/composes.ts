@@ -8,7 +8,9 @@
  *
  * @module
  */
+import { DEFAULT_STYLE } from '../styles.generated'
 import { layoutParagraph } from '../text/paragraph'
+import { DOT_EM, DOT_STEP_EM, LEADER_GAP_EM } from '../text/leader'
 import { itemGeometry, type ListItemRef, type ListRef, MARKER_GAP_EM, markerCss, type SchemeGeometry } from '../text/list-geometry'
 import type { Hyphenator } from '../text/hyphenate'
 import type { ParagraphStyle } from '../text/style'
@@ -132,11 +134,6 @@ function headingNumberOf(sheet: Styles, own: ParagraphStyle, marker: string, em:
   return { layout: layoutParagraph(sheet.fonts, plain, marker, width), x: own.indentLeft - Math.round(MARKER_GAP_EM * em) - width }
 }
 
-/** The gap between an entry's words and its leader, and between the leader and the page, in em; a leader's dots. */
-const LEADER_GAP_EM = 0.4
-const DOT_STEP_EM = 0.5
-const DOT_EM = 0.09
-
 /** How much room a page number takes at the end of an entry's lines: "000" in the entry's look and two leader gaps. */
 function placeRoom(sheet: Styles, style: ParagraphStyle): number {
   const plain: ParagraphStyle = { ...style, align: 'left', indentLeft: 0, indentRight: 0, firstLine: 0, whiteSpace: 'nowrap', hyphens: 'manual' }
@@ -232,7 +229,7 @@ function contentsItems(
 }
 
 /** composes' default style: what a paragraph with a style the text does not have is drawn in. */
-const BODY = 'body'
+const BODY = DEFAULT_STYLE.composes
 
 /**
  * The SHA-256 of every font file laying out `doc` needs, as `resolver` picks them, so the caller can fetch them

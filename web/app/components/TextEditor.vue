@@ -3,6 +3,7 @@
 // into a request, and the text appears when the server's events arrive. What is typed but not yet sent is drawn at the
 // caret as an overlay. Selections are translated between the page and the model (paragraph, offset).
 import { computed, nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
+import { leaderCss } from '@claudia/layout'
 import { replayTints } from '~/lib/replay-tint'
 import { colorOf } from '~/lib/people'
 import type { Block, Pos } from '~/lib/blocks'
@@ -576,7 +577,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
             @click.prevent.stop="goTo(entry.target)"
             ><span v-if="entry.number" class="toc-number">{{ entry.number }}</span><span class="toc-words">{{ entry.text }}</span
             ><template v-if="pageOf(block, entry.target)"
-              ><span class="toc-leader" :class="block.generated.leader" aria-hidden="true" /><span class="toc-page">{{ pageOf(block, entry.target) }}</span></template
+              ><span class="toc-leader" :style="leaderCss(block.generated.leader)" aria-hidden="true" /><span class="toc-page">{{ pageOf(block, entry.target) }}</span></template
             ></a
           >
           <p v-if="!block.entries?.length" data-skip class="toc-empty">{{ t('No headings yet: the table lists them as they are written.') }}</p>
@@ -732,13 +733,6 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
 }
 .doc :deep(.toc-words) {
   min-width: 0;
-}
-.doc :deep(.toc-leader) {
-  flex: 1;
-  margin: 0 0.4em;
-}
-.doc :deep(.toc-leader.dots) {
-  border-bottom: 0.12em dotted currentColor;
 }
 .doc :deep(.toc-page) {
   min-width: 2em;

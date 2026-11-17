@@ -218,14 +218,17 @@ describe('printing a presentation: its print source', () => {
     expect(doc).toMatchObject({ print: DEFAULT_PRINT, language: 'de' })
     session.close()
   })
-  it('prints a rendered text container as the picture it shows, and leaves out one nothing has drawn yet (D390)', async () => {
+  it('hands a rendered text container to the layout as it is: the layout prints it as the picture it shows (D390)', async () => {
     const rendered = (id: string, image: string | null) => ({ ...box(id, 's1'), kind: 'rendered', paragraph: null, rendered: 'r1', image })
     const { session } = await opened({
       ...PRINTING,
       slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? [rendered('drawn', PNG.id), rendered('pending', null)] : [] }),
     })
     const [first] = slideDocument(session).slides
-    expect(first!.objects.map((o) => [o.id, o.kind, o.image])).toEqual([['drawn', 'image', PNG.id]])
+    expect(first!.objects.map((o) => [o.id, o.kind, o.image])).toEqual([
+      ['drawn', 'rendered', PNG.id],
+      ['pending', 'rendered', null],
+    ])
     session.close()
   })
   it('gives the words of a list item the marker the slide draws, so the pages draw it too (E9.21, E9.22)', async () => {

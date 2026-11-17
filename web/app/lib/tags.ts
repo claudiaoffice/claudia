@@ -3,13 +3,11 @@
 // that knows tags shows the thing's current name and can take you to it; anything else (an older client, the AI, an
 // export) reads it as the plain words it is. Pure: no component, no connection, so every rule has a test.
 
+import type { ObjectKind } from '@claudia/layout'
+
 /** What can be named, by what it is: an object's own kind, or the slide, sheet, chart tab or named range it is. */
 export type ThingKind =
-  | 'text'
-  | 'shape'
-  | 'image'
-  | 'diagram'
-  | 'rendered'
+  | ObjectKind
   | 'slide'
   | 'sheet'
   | 'chart'

@@ -72,3 +72,60 @@ def test_every_lockfile_is_watched_by_dependabot():
     missing = sorted(f"/{folder}" for folder in lockfiles if f"/{folder}" not in directories)
     assert not missing, f"dependabot.yml does not watch: {missing}"
     assert "package-ecosystem: uv" in watched and "package-ecosystem: github-actions" in watched
+
+
+# -- PROC-27: the supply chain of CI ------------------------------------------------------------------------------
+WORKFLOWS = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+_USES = re.compile(r"^\s*-?\s*uses:\s*(?P<action>\S+)(?P<rest>.*)$", re.MULTILINE)
+
+
+def test_every_action_of_somebody_else_is_pinned_to_a_commit():
+    """A tag moves: whoever controls an action's repository can change what ``@v5`` runs in our workflows, with our
+    secrets in reach. A commit does not move. The comment names the version, which is what dependabot reads to propose
+    the next pin (``.github/dependabot.yml`` watches the actions)."""
+    loose = []
+    for workflow in WORKFLOWS:
+        for found in _USES.finditer(workflow.read_text(encoding="utf-8")):
+            action = found["action"]
+            if action.startswith("./"):
+                continue
+            pinned = re.fullmatch(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}", action)
+            versioned = re.match(r"\s*#\s*v\d", found["rest"])
+            if not (pinned and versioned):
+                loose.append(f"{workflow.name}: {action}{found['rest']}")
+    assert not loose, "pin by commit, with the version as a comment (`@<sha> # v5.1.0`):\n" + "\n".join(loose)
+
+
+def test_the_image_workflow_does_not_publish_the_tags_that_mean_a_good_main():
+    """``latest`` and ``main`` are what people pull to get the current version. The image workflow runs beside CI, so
+    at f150f0d a red main would still have become ``latest``. It pushes ``sha-…`` (the demo deploys that, after CI) and
+    the release tags; promoting ``latest`` and ``main`` is the promotion workflow's job, after CI."""
+    docker = (ROOT / ".github" / "workflows" / "docker.yml").read_text(encoding="utf-8")
+    tags = docker.split("id: meta", 1)[1].split("labels:", 1)[0]
+    assert "value=latest" not in tags and "event=branch" not in tags
+    assert "type=sha" in tags and "type=semver" in tags
+
+
+def test_latest_and_main_are_promoted_only_after_ci_has_passed_on_the_commit():
+    promote = (ROOT / ".github" / "workflows" / "promote-image.yml").read_text(encoding="utf-8")
+    trigger = re.search(r"workflow_run:\s*\n\s*workflows: \[(.*?)\]", promote)
+    assert trigger and trigger[1].strip() == '"CI"'
+    assert "workflow_run.conclusion == 'success'" in promote
+    assert "workflow_run.event == 'push'" in promote and "workflow_run.head_branch == 'main'" in promote
+    assert "imagetools create" in promote and ":latest" in promote and ":main" in promote
+    assert "for _ in" in promote, "the image of the commit may still be building when CI ends: wait for it"
+    assert "packages: write" in promote
+
+
+def test_codeql_looks_at_python_and_javascript_every_week_and_on_every_change():
+    codeql = (ROOT / ".github" / "workflows" / "codeql.yml").read_text(encoding="utf-8")
+    assert "security-events: write" in codeql
+    assert "python" in codeql and "javascript-typescript" in codeql
+    for trigger in ("push:", "pull_request:", "schedule:"):
+        assert trigger in codeql
+
+
+def test_ci_audits_the_locked_python_dependencies():
+    """SEC-08: ``npm audit`` ran in the gate; the Python side was audited by hand once in a while."""
+    assert re.search(r"pip-audit .*-r \S+", CI), "ci.yml never runs pip-audit on the locked requirements"
+    assert "uv export --frozen" in CI

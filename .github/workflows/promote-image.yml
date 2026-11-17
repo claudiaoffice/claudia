@@ -1,0 +1,61 @@
+# Moves the image tags that mean "the current good version" (:latest and :main) to the image of a commit once CI has
+# succeeded on it (PROC-27).
+#
+# The image workflow builds on every push to main, in parallel with CI, and pushes only :sha-<short sha>. Before this
+# workflow its tags included :latest, so a main with red tests still became what people pulled. Here the promotion
+# waits for CI, then for the image of that commit (the two workflows end in either order), and points the tags at it
+# without building anything again.
+name: Promote image
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: promote-image
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/claudiaoffice/claudia-server
+
+jobs:
+  promote:
+    # A workflow_run starts for failed runs too, and for pull requests of forks; only a green push to main counts.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Point :latest and :main at the image of the commit
+        run: |
+          source="${IMAGE}:sha-${HEAD_SHA:0:7}"
+          # CI may end before the image workflow has pushed: wait for it (the image is built in about ten minutes).
+          found=
+          for _ in $(seq 1 60); do
+            if docker buildx imagetools inspect "$source" >/dev/null 2>&1; then found=1; break; fi
+            echo "waiting for $source"
+            sleep 30
+          done
+          [ -n "$found" ] || { echo "::error::$source was never pushed: did the Docker image workflow fail?"; exit 1; }
+          docker buildx imagetools create -t "${IMAGE}:latest" -t "${IMAGE}:main" "$source"
+          docker buildx imagetools inspect "${IMAGE}:latest"

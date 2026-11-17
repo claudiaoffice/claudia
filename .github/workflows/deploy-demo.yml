@@ -85,14 +85,14 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "target=rg.${REGION}.scw.cloud/${NAMESPACE}/claudia-demo:${tag}" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           sparse-checkout: |
             scripts/prune_registry.py
             .python-version
           sparse-checkout-cone-mode: false
 
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
 
       - name: Delete the old tags in the Scaleway registry
         # Saves storage, but must never stop a deployment; the next run tries again.

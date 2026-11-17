@@ -3,6 +3,7 @@ import { roleNow } from '~/lib/replay'
 // A text: the style bar, the page, the suggestions above the panel, and the counts along the bottom, inside the
 // document window every app shares (DocumentFrame).
 import { computed, ref, watch } from 'vue'
+import { DEFAULT_STYLE, SHAPE_LABEL_STYLE } from '@claudia/layout'
 import { countWords } from '~/lib/blocks'
 import { toMarkdown } from '~/lib/markdown'
 import { textStyleHost } from '~/lib/text-style-host'
@@ -369,7 +370,7 @@ const menus = computed<Menu[]>(() => {
               // D127's groups — structure · running text · called-out blocks — and then any style of the text's own.
               // Structure is every style that gives a heading level (E9.22), by its level: the title and the
               // headings, and any style somebody made a heading.
-              groups: [headingStyles(), builtins(['body']), builtins(['quote', 'remark', 'definition']), customStyles()],
+              groups: [headingStyles(), builtins([DEFAULT_STYLE.composes]), builtins(CALLED_OUT_STYLE_IDS), customStyles()],
               current: session.currentStyle(),
               canApply: !readonly.value,
               apply: (id) => {
@@ -439,7 +440,10 @@ function headingStyles(): StyleView[] {
     .filter((s) => s.heading !== null && s.heading !== undefined && forParagraphs(s))
     .sort((a, b) => a.heading! - b.heading!)
 }
-const BUILTIN_STYLE_IDS = new Set(['body', 'quote', 'remark', 'definition'])
+/** The built-in styles of the called-out blocks (D127), as composes' built-ins name them (`tests/test_style_ids_generated.py`
+ * checks that each is one). */
+const CALLED_OUT_STYLE_IDS = ['quote', 'remark', 'definition']
+const BUILTIN_STYLE_IDS = new Set([DEFAULT_STYLE.composes, ...CALLED_OUT_STYLE_IDS])
 /**
  * A text's style book holds the floating objects' styles too, since one object layer serves all three apps
  * (E10.16). The *Format* menu marks a paragraph, so it lists only the styles that fit a paragraph: a paragraph is
@@ -450,7 +454,7 @@ const BUILTIN_STYLE_IDS = new Set(['body', 'quote', 'remark', 'definition'])
  * (D310), so it is left out by name. Which slots a style is *meant* for, beyond which it fits, is a question for the
  * new style menu (the styling-suite plan, step 2.2).
  */
-const OBJECT_WORDS_STYLE_IDS = new Set(['shape-label'])
+const OBJECT_WORDS_STYLE_IDS = new Set([SHAPE_LABEL_STYLE])
 const forParagraphs = (s: StyleView) => s.kind === 'paragraph' && !OBJECT_WORDS_STYLE_IDS.has(s.id)
 /** A style made by deviating from a built-in (`next_style` in `model.py`) is not one of the three fixed groups above
  * — D127 only grouped the built-ins, so anything else gets its own trailing group rather than being folded silently

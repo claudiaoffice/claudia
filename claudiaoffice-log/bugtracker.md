@@ -38,7 +38,7 @@ statement in the docs or on the website).
 | SEC-05 | P2 | Security | Redaction leaves the content in the journal and in packed blocks | **fixed** 2026-11-16 (D725) |
 | SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |
 | SEC-07 | P2 | Security | Plain-text passwords allowed on non-loopback addresses | fixed (verified at `54d1245`) |
-| SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` open (run by hand 2026-11-13: clean) |
+| SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` in CI since 2026-11-17 (job `pip-audit`; clean when run by hand) |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |
 | SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |
 | SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12) |
@@ -189,14 +189,15 @@ statement in the docs or on the website).
 | PROC-24 | **P1** | Process / CI | `main` after the last merge was red: two tests (a story id and decision numbers D730–D735 used twice) | **fixed** 2026-11-17 |
 | PROC-25 | P2 | Process / CD | The demo deployment was not gated on CI: it deployed whatever an image push produced, also from a red `main` | **fixed** 2026-11-17 |
 | PROC-26 | P3 | Process / Supply chain | No dependabot: five lockfiles and the workflows were never watched | **fixed** 2026-11-17 |
-| PROC-27 | P2 | Process / Supply chain | Actions are pinned by tag, not SHA; the `latest` image tag follows a red `main`; CI has no CodeQL and no `pip-audit` | **new, open** |
-| CODE-58 | P2 | Code / Export | pptx and odp exports drop border, padding, line-height, letter-spacing, hyphenation and margins of creates text styles and report no loss | **new, open** (measured) |
+| PROC-27 | P2 | Process / Supply chain | Actions are pinned by tag, not SHA; the `latest` image tag follows a red `main`; CI has no CodeQL and no `pip-audit` | **fixed** 2026-11-17 (D762); first runs unseen |
+| CODE-58 | P2 | Code / Export | pptx and odp exports drop border, padding, line-height, letter-spacing, hyphenation and margins of creates text styles and report no loss | **fixed** 2026-11-17 (D760: reported, not yet written) |
 | CODE-59 | P3 | Code / Drift | `OBJECT_KINDS` was written in `claudia_core` and again in `claudia_computes.model` | **fixed** 2026-11-17 |
-| CODE-60 | P2 | Code / Drift | Facts written twice: the web's built-in style ids and `'body-text'` literals, `VisualObject.kind` in `layout/` lacks `rendered`, list leader dots drawn differently by the editor and the display list | **new, open** (read) |
+| CODE-60 | P2 | Code / Drift | Facts written twice: the web's built-in style ids and `'body-text'` literals, `VisualObject.kind` in `layout/` lacks `rendered`, list leader dots drawn differently by the editor and the display list | **fixed** 2026-11-17 (D761); see CODE-63 |
 | CODE-61 | P3 | Process / Backlog | Stale statuses in the backlog (E9.30, E10.21, probably E9.31 say open where code exists) | **new, open** |
 | SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |
 | UX-44 | P3 | UX / BITV | The blinking dots of the side panel ignored `prefers-reduced-motion` (WCAG 2.3.3) | **fixed** 2026-11-17 |
 | CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |
+| CODE-63 | P3 | UX / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1875,12 +1876,17 @@ the typical result of parallel branches, so `ranges.md` should hand each branch 
 `.github/dependabot.yml` watches uv, npm (web, layout, neutralino), the Dockerfile and the actions; a test fails when a
 lockfile is added that is not watched.
 
-### PROC-27 · Supply chain in CI · P2 · open
-Actions are referenced by tag; the image workflow tags `latest` before CI is green; no CodeQL, no `pip-audit` (SEC-08).
-**Fix.** Pin actions by SHA (dependabot keeps them current), publish `latest` only from a green CI run, add CodeQL for
-Python and JavaScript and `pip-audit` as a scheduled job. **Acceptance.** `test_ci_workflow.py` fails for an unpinned action.
+### PROC-27 · Supply chain in CI · P2 · fixed 2026-11-17 (D762)
+Actions were referenced by tag; the image workflow tagged `latest` before CI was green; no CodeQL, no `pip-audit` (SEC-08).
+**Fixed.** All 44 `uses:` of other people's actions are `@<sha> # v<version>` (the latest release of the major version
+they followed); `promote-image.yml` points `:latest` and `:main` at the commit's image after a green CI (`docker.yml` now
+pushes `sha-…` and the release tags only); `codeql.yml` (Python, TypeScript); `pip-audit` job in `ci.yml`.
+Tests: `tests/test_ci_workflow.py` (pins, tags, promotion, CodeQL, pip-audit).
+**Not seen:** the first runs. Needs on GitHub: Code scanning enabled, CodeQL's "default setup" off. Open from here:
+`signpath/github-action-submit-signing-request` pinned to v1.3 (the major it used); the workflows could move to the
+newer majors (checkout 7, setup-node 7, setup-uv 9, …) through dependabot's pull requests, one grouped PR a week.
 
-### CODE-58 · The creates exporters drop style properties without saying so · P2 · open (measured)
+### CODE-58 · The creates exporters drop style properties without saying so · P2 · fixed 2026-11-17 (D760)
 `StyleDef.css` of a creates style may hold `border-left`, `padding-left`, `line-height`, `letter-spacing`; the pptx and
 odp exporters write size, colour, alignment, family, weight and background only (`_styling.py`), yet `_unwritten.py`
 lists `styles` as written, so `pptx_export_losses` and `odp_export_losses` both return `()` for a model with those
@@ -1888,18 +1894,38 @@ properties (probe 2026-11-17). The composes exporters do write border, padding a
 **Fix.** Either map the properties (pptx `a:lnSpc`, `a:ln`, insets `lIns`; odp `fo:` equivalents) or make `styles` a
 partial facet and report each unwritten property under a loss code. **Acceptance.** A bordered, padded style exports
 with a loss entry naming the property, or is written and read back unchanged.
+**Fixed (D760): reported.** `style-property` is a loss, with the property as detail and the number of objects as count,
+judged against the built-in defaults (`_styling.unwritten_properties`, tests `test_unwritten_styles.py`). Not done:
+writing the properties (the list of losses is what is left to map).
 
-### CODE-60 · Drift: facts written twice and drawn in one place only · P2 · open (read)
+### CODE-60 · Drift: facts written twice and drawn in one place only · P2 · fixed 2026-11-17 (D761)
 (1) The web has its own list of built-in style ids and `'body-text'` literals while `claudia_composes.model.BUILTIN_STYLES`
 and the creates styles are the source; (2) `layout/src/apps/objects.ts` `VisualObject.kind` has no `rendered`, which the
 server allows (CODE-24); (3) `TextEditor.vue` draws list leader dots in CSS while the display list and the exporters
 differ. **Fix.** The server sends flags with the style list (built-in, heading level, default) and the web reads them;
 the kind set comes from the generated layout fixtures (`scripts/generate_layout_fixtures.py`) like the headings
 (`test_one_source_of_headings.py`). **Acceptance.** A test that fails when a kind or built-in style id exists in only one place.
+**Fixed (D761).** (1) `scripts/generate_style_ids.py` writes `layout/src/styles.generated.ts` (each app's default style,
+the style of a shape's words); layout and web import it; `tests/test_style_ids_generated.py` refuses the literals.
+(2) The layout has `ObjectKind` (= `claudia_core.OBJECT_KINDS`, `tests/test_object_kinds_agree.py`) and prints a
+`rendered` object as its picture, or leaves it out; the web's two copies of that rule are gone, and the web types import
+`ObjectKind`. (3) `layout/src/text/leader.ts` has the gap, step and size of the dots once; the printed pages use it and
+the screen draws the leader with `leaderCss` (the editor's was 0.4 em and a dotted border, the agenda's 0.3 em: both
+now as the pages draw them). **Left:** the Format menu names three called-out styles (CODE-63); the exporters' name
+tables stay as they are (they map to other programs' names).
 
 ### CODE-61 · Stale backlog statuses · P3 · open
 E9.30, E10.21 and probably E9.31 say open where code and tests exist. **Fix.** Check each against the tests it names and
 set its status; `tests/test_backlog.py` could require a test path in every story marked done.
+
+### CODE-63 · The Format ▸ Styles menu lists composes' contents styles as "custom" · P3 · new, open (read)
+`TextWorkspace.vue` groups the styles of a text: headings, Body text, three called-out blocks, then `customStyles()`,
+which is every paragraph style that is neither of those nor a heading. `contents-title` and `contents-1`…`contents-9`
+are built-ins of composes (the look of a table of contents' lines) and are paragraph styles by kind, so they land in
+the trailing "custom" group of every document. Found while replacing the web's own list of built-in ids (CODE-60).
+**Fix.** Decide whether a person applies them to a paragraph at all (the contents entries take them by themselves). If
+not, send a flag with each style view (`"for": "entries"`) and leave them out; this is also the way to remove the
+three hand-written ids. **Acceptance.** A new text's Format ▸ Styles menu has no `Contents 1`.
 
 ### CODE-62 · A window that revives the shared server while the old one still holds the port starts it on a random port · P3 · new, open
 **Measured** (found while fixing the `deb.yml` job on 2026-11-17, reported to the owner as a size 3 bug): D445 says

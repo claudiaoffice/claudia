@@ -1,3 +1,12 @@
+# Follow-up 2026-11-17: CODE-58, CODE-60, PROC-27
+
+On top of `7fe03c7`. CODE-58 (creates exporters report the style properties they cannot write), CODE-60 (default styles
+generated for layout and web, one `ObjectKind`, one leader geometry, drift tests) and PROC-27 (pinned actions,
+`latest` only after CI, CodeQL, `pip-audit`) are fixed (D760–D762); CODE-63 is new. Marks unchanged except: code quality
+stays 2, security 3 (supply chain better, SEC-11/19 open). Not seen: the first runs of the new workflows, the browser e2e.
+
+---
+
 # QA review — 2026-11-17 (stabilisation of `main`)
 
 Repository `claudiaoffice/claudia` at `f150f0d`, all feature branches merged, nobody committing meanwhile. Reviewer: QA

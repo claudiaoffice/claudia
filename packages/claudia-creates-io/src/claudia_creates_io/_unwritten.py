@@ -15,8 +15,11 @@ from claudia_creates import PrintSetup, SlideModel
 from claudia_odf_io import Loss, LossLog, unwritten_changes
 
 from ._notes import markdown_to_lines
+from ._styling import unwritten_properties
 
-#: The facets a converter writes, by the name :func:`facets` gives them.
+#: The facets a converter writes, by the name :func:`facets` gives them. ``styles`` is written *in part*: a style's
+#: font, size, colour, weight, slant and alignment, a shape's fill and outline. What else a style says is reported
+#: property by property (:func:`._styling.unwritten_properties`, CODE-58), not as a facet.
 PPTX_WRITTEN: frozenset[str] = frozenset(
     {"slides", "notes", "styles", "palette", "shapes", "images", "objects", "renderings", "lists", "schemes"}
 )
@@ -51,7 +54,10 @@ def slides_unwritten_changes(
     """What differs between ``baseline`` (``None``: an empty presentation, the start of a fresh export) and ``model``
     in a facet outside ``written``."""
     start = facets(baseline if baseline is not None else SlideModel(), keeps_print_layout=keeps_print_layout)
-    return unwritten_changes(start, facets(model, keeps_print_layout=keeps_print_layout), written=written, kinds=KINDS)
+    changed = unwritten_changes(
+        start, facets(model, keeps_print_layout=keeps_print_layout), written=written, kinds=KINDS
+    )
+    return (*changed, *unwritten_properties(model, baseline))
 
 
 def authored_objects(model: SlideModel) -> int:

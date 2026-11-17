@@ -2,7 +2,7 @@
 import { usePointed } from '~/lib/pointed'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { cellLabel, columnName, inputOf, showFormatted, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
-import { cellLook, styleAt, within, type CellLook } from '~/lib/cell-styles'
+import { cellLook, DEFAULT_CELL_STYLE, styleAt, within, type CellLook } from '~/lib/cell-styles'
 import { cycleObject, objectName } from '~/lib/descriptions'
 import { ariaColCount, ariaRowCount, cellDomId, cellName, colIndexOf, rowIndexOf } from '~/lib/grid-a11y'
 import { imageDataUrl } from '~/lib/images'
@@ -226,8 +226,8 @@ const painted = computed(() => {
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
       const content = props.session.cell(props.sheet, r, c)
-      const box = ranges.length ? styleAt(ranges, r, c, 'box').style : 'body-text'
-      const words = ranges.length ? styleAt(ranges, r, c, 'words').style : 'body-text'
+      const box = ranges.length ? styleAt(ranges, r, c, 'box').style : DEFAULT_CELL_STYLE
+      const words = ranges.length ? styleAt(ranges, r, c, 'words').style : DEFAULT_CELL_STYLE
       const look = lookOf(box, words, content?.t)
       const at = { key: r * 100_000 + c, row: r, col: c, left: x(c), top: y(r), width: colWidthAt(c), height: rowHeightAt(r) }
       if (!look.plain) boxes.push({ ...at, css: look.box })
@@ -314,7 +314,7 @@ const activeName = computed(() => {
   const trace = state.trace
   const role = trace !== null && trace.sheet === props.sheet ? roleAt(trace, row, col) : null
   const ranges = props.session.cellStyles(props.sheet)
-  const words = ranges.length ? styleAt(ranges, row, col, 'words').style : 'body-text'
+  const words = ranges.length ? styleAt(ranges, row, col, 'words').style : DEFAULT_CELL_STYLE
   const code = formatCodeOf(state.styles, state.numberFormats, words)
   return cellName({
     ref,

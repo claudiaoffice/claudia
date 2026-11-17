@@ -43,6 +43,8 @@ export { BASE_FONT_SIZE, boxDecorationFromCss, isPlain, NO_DECORATION, paragraph
 export type { BorderSide, BoxDecoration, Css, StyleFromCss } from './text/css'
 export { boxItems, layoutBox } from './text/box'
 export type { BoxLayout } from './text/box'
+export { DEFAULT_STYLE, SHAPE_LABEL_STYLE } from './styles.generated'
+export { leaderCss, type LeaderKind } from './text/leader'
 export { DEFAULT_GAP, DEFAULT_STEP, itemGeometry, MARKER_GAP_EM, markerCss } from './text/list-geometry'
 export type { ItemGeometry, ListItemRef, ListRef, SchemeGeometry } from './text/list-geometry'
 
@@ -74,7 +76,7 @@ export type { XmlElement, XmlNode } from './svg/xml'
 export { fromBase64, sha256Hex, utf8Decode, utf8Encode } from './bytes'
 
 export { drawObject, objectFonts, PAGE_NUMBER_BAND, PAGE_NUMBER_SIZE, pageNumberItems, Styles } from './apps/objects'
-export type { ObjectContext, VisualObject } from './apps/objects'
+export type { ObjectContext, ObjectKind, VisualObject } from './apps/objects'
 export { gridOf, layoutSlides, SLIDE, SLIDE_LAYOUTS, slideFontsNeeded, slidesPerPage } from './apps/creates'
 export type { PrintSetupData, SlideDocument, SlideLayout, SlideLayoutOptions, SlideObject, SlidePages } from './apps/creates'
 export { fontsNeeded, layoutText } from './apps/composes'

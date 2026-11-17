@@ -46,9 +46,9 @@ jobs:
     outputs:
       server-version: ${{ steps.version.outputs.server }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: "22"
           cache: npm
@@ -56,7 +56,7 @@ jobs:
             web/package-lock.json
             clients/neutralino/package-lock.json
 
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
         with:
           python-version: "3.14"
           enable-cache: true
@@ -156,7 +156,7 @@ jobs:
           if [ -n "$ORGANIZATION" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT"; else echo "enabled=false" >> "$GITHUB_OUTPUT"; fi
 
       # Without signing the installer is the artifact the tests and the release use.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: steps.signing.outputs.enabled != 'true'
         with:
           name: claudia-office-windows
@@ -165,7 +165,7 @@ jobs:
           retention-days: 30
 
       # With signing, SignPath signs the installer and the signed one is the artifact (packaging/windows/README.md).
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: unsigned
         if: steps.signing.outputs.enabled == 'true'
         with:
@@ -174,7 +174,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - uses: signpath/github-action-submit-signing-request@v1
+      - uses: signpath/github-action-submit-signing-request@ced31329c0317e779dad2eec2a7c3bb46ea1343e # v1.3
         if: steps.signing.outputs.enabled == 'true'
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -185,7 +185,7 @@ jobs:
           wait-for-completion: true
           output-artifact-directory: dist/signed
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: steps.signing.outputs.enabled == 'true'
         with:
           name: claudia-office-windows
@@ -211,11 +211,11 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v5 # for packaging/smoke_server.py only; the installer is what is tested
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0; for packaging/smoke_server.py only; the installer is what is tested
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
         with:
           python-version: "3.14"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: claudia-office-windows
           path: installer
@@ -377,7 +377,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: claudia-office-windows
           path: dist

@@ -14,6 +14,7 @@ import { type DisplayItem, type DisplayList, type DisplayPage, type GroupItem, t
 import { contentBox, type PageGeometry, pageGeometry } from '../flow/paper'
 import type { FontSet } from '../fonts/fontset'
 import type { FontResolver } from '../fonts/resolve'
+import { DEFAULT_STYLE } from '../styles.generated'
 import type { Hyphenator } from '../text/hyphenate'
 import { LAYOUT_VERSION } from '../version'
 import {
@@ -78,7 +79,7 @@ export interface SlidePages {
 }
 
 /** creates' default style. */
-const BODY = 'body-text'
+const BODY = DEFAULT_STYLE.creates
 /** The space between the slides of a handout, and between the lines for notes. */
 const GAP = 22677 // 8 mm
 const LINE_GAP = 22677

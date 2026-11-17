@@ -3,7 +3,7 @@
 // sheet prints. Everything comes from the session; what is not loaded yet is loaded first (`loadForPrint`).
 import { utf8Decode, type CellArea, type CellPurpose, type ImageInfo, type PrintedChart, type PrintedSheet, type SheetCell, type SheetDocument, type SheetPicture, type TextStyle } from '@claudia/layout'
 import { showFormatted } from '../cells'
-import { cellLook, styleAt, within, type CellLook, type CellRange } from '../cell-styles'
+import { cellLook, DEFAULT_CELL_STYLE, styleAt, within, type CellLook, type CellRange } from '../cell-styles'
 import { formatCodeOf, inkOf, symbolsFor } from '../number-format'
 import { tableAt } from '../names'
 import { currentLocale } from '../locale'
@@ -88,7 +88,7 @@ class CellStyles {
     const key = `${box}|${words}|${kind ?? ''}`
     let look = this.looks.get(key)
     if (!look) this.looks.set(key, (look = cellLook(this.session.state.styles, this.session.state.styleModel?.facets, box, words, kind)))
-    if (box === 'body-text' && words === 'body-text' && ink === null) return { id: undefined, look }
+    if (box === DEFAULT_CELL_STYLE && words === DEFAULT_CELL_STYLE && ink === null) return { id: undefined, look }
     const id = `cell:${box}|${words}${ink ? `|${ink}` : ''}`
     if (!this.merged.has(id)) {
       const resolved = { ...look.words, ...look.box, 'vertical-align': look.valign, ...(look.wrap ? { 'white-space': 'normal' } : {}), ...(ink ? { color: ink } : {}) }
@@ -119,8 +119,8 @@ function cellsOf(session: Session, id: string, area: CellArea | null, purposes: 
       const content = session.cell(id, row, col)
       if (content === null && near.length === 0 && !named.length) continue // nothing there to show (the common case, fast)
       if (++looked > MAX_PRINTED_CELLS) return out
-      const box = near.length ? styleAt(near, row, col, 'box').style : 'body-text'
-      const words = near.length ? styleAt(near, row, col, 'words').style : 'body-text'
+      const box = near.length ? styleAt(near, row, col, 'box').style : DEFAULT_CELL_STYLE
+      const words = near.length ? styleAt(near, row, col, 'words').style : DEFAULT_CELL_STYLE
       if (!codes.has(words)) codes.set(words, formatCodeOf(state.styles, state.numberFormats, words))
       const shown = showFormatted(content, codes.get(words) ?? null, symbols)
       const { id: style, look } = styles.look(box, words, content?.t, inkOf(shown.colour))
@@ -143,8 +143,7 @@ function picturesOf(session: Session, sheet: string, pictures: ReadonlyMap<strin
     const anchor = { kind: 'cell' as const, row: o.anchor.row, col: o.anchor.col }
     const base = { id: o.id, kind: o.kind, w: o.w, h: o.h, style: o.style, paragraph: o.paragraph ? { style: o.paragraph.style, text: o.paragraph.text } : null, shape: o.shape, image: o.image, rotation: o.rotation, anchor }
     if (o.kind === 'diagram') return [{ ...base, kind: 'diagram', image: o.diagram && pictures.has(o.diagram) ? chartImage(o.diagram) : null }]
-    // a rendered text container (D390) prints as the picture it shows; one nothing has drawn a picture for yet is left out
-    if (o.kind === 'rendered') return o.image ? [{ ...base, kind: 'image' }] : []
+    // a rendered text container (D390) is the layout's to print: as the picture it shows, or not at all
     return [base as SheetPicture]
   })
 }
