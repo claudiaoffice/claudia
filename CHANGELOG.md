@@ -16,6 +16,10 @@ Typing into any paragraph (step G of `claudiaoffice-log/notes/text-structure-acr
   some words into others by changing only what differs.
 - `ObjectModel.insert_object_text` and `remove_object_text`: typing into the words of an object.
 
+### Fixed
+- Undo (CODE-43): a step undone or redone by the very next entry is left out with it when an older step is followed
+  forward, so undoing typing after an undone delete that cut into it takes out exactly the typing.
+
 ## [0.31.0] - 2026-11-17
 
 Tables of contents and agendas, generated paragraphs (step E of `claudiaoffice-log/notes/text-structure-across-apps.md`,

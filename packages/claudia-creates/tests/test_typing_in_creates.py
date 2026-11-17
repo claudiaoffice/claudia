@@ -70,3 +70,17 @@ def test_a_command_is_written_down_and_read_back_under_the_kernel_s_kind(deck):
     typed = InsertText("a", 1, "x", (Run(1, "ann"),))
     assert SlideModel.registry.decode(encode(typed)) == typed
     assert typed.kind == "core.InsertText" and DeleteText.kind == "core.DeleteText"
+
+
+def test_undoing_typing_after_an_undone_delete_that_cut_into_it_takes_out_exactly_the_typing(deck):
+    """CODE-43: a delete that took the start of the typed words with it, undone at once, then the typing undone. The
+    pair changed nothing, so the typing's undo is not moved by it (it used to cut "a note" to "a sote")."""
+    deck.execute(add(text_box("n", text="a note")), author="ana")
+    deck.execute(InsertText("n", 1, " short"), author="ben")
+    deck.execute(DeleteText("n", 0, 2), author="ben")
+    deck.undo("ben")
+    assert words(deck, "n")[0] == "a short note"
+    deck.undo("ben")
+    assert words(deck, "n")[0] == "a note"
+    deck.redo("ben")
+    assert words(deck, "n")[0] == "a short note"

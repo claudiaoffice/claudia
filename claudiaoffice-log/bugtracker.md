@@ -170,6 +170,7 @@ statement in the docs or on the website).
 | CODE-40 | P3 | Code / macOS client | An orphaned build file in the macOS creates app | **fixed** 2026-11-15 (with D660) |
 | CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |
 | CODE-42 | P3 | Code / computes | A new sheet can get the id of a removed sheet | **new, open** |
+| CODE-43 | P2 | Code / core | Undoing typing after an undone delete that cut into it removes the wrong characters | **fixed** 2026-11-17 |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1659,6 +1660,16 @@ fixed on `main` with `wire.fresh_id` (bug 5 of the text-structure work, 2026-11-
 **Acceptance (the test to write first):** add three sheets, remove the last, add one: the new id is not the removed
 one, and undoing the removal brings the removed sheet back beside the new one.
 **Fix:** take sheet ids from `wire.fresh_id` (or a counter in the workbook that never goes down), as objects do.
+
+### CODE-43 · Undoing typing after an undone delete that cut into it removes the wrong characters · P2 · fixed 2026-11-17
+**Found** while building step G (typing in text boxes); older than it, in composes and creates alike. "a note"; Ben
+types " short" after the "a"; he deletes "a " (which takes the start of his typing with it), undoes that, then undoes
+his typing: "a sote". `Document._step` followed the undo through every later step, the delete and its own undo too;
+a delete loses where inside the cut words a span began, so putting them back moved the span to the wrong place.
+**Acceptance:** `test_undoing_typing_after_an_undone_delete_that_cut_into_it_takes_out_exactly_the_typing` (creates
+and composes): the second undo gives "a note", and a redo gives "a short note" again.
+**Fix:** a step undone (or redone) by the very next entry of the log is left out with that entry when an older step is
+followed forward (`document._standing`): the two together changed nothing.
 
 ## Website
 

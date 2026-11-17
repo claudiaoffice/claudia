@@ -15,7 +15,7 @@ passwords belong to other layers. Threading rule (D16): all calls come from one 
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 
 from .clock import monotonic, utc_now
@@ -304,12 +304,12 @@ class Document:
         if step is None:
             return None
         command = step.command
-        for entry in self.log.since(step.rev, self.branch):
-            if entry.command.meta:
-                continue
+        for entry in _standing(e for e in self.log.since(step.rev, self.branch) if not e.command.meta):
             # The step was written for the state right after step.rev. Everything that ran since moved things; so
-            # follow all of it, our own undone steps too (they cancel out only if followed in order). Only a
-            # colleague's change may make the step meaningless; that refuses the undo.
+            # follow all of it, our own undone steps too. A step undone right away is left out with its undo: the
+            # pair changed nothing, and following it can lose a place (a delete takes a span's start with it, and
+            # putting the words back cannot tell where inside them the span began). Only a colleague's change may
+            # make the step meaningless; that refuses the undo.
             for leaf in entry.command.leaves():
                 shifted = command.shifted_by(leaf)
                 if shifted is None and entry.author != author:
@@ -734,3 +734,23 @@ def environment_of(model_cls: type[DocumentModel], *, functions=None, fonts=(), 
         frozenset(fonts),
         frozenset(providable_fonts),
     )
+
+
+def _standing(entries: Iterable[Entry]) -> Iterator[Entry]:
+    """The entries in order, without each step that was undone (or redone) by the very next entry, nor that entry: the
+    two together changed nothing."""
+    pending: Entry | None = None
+    for entry in entries:
+        if (
+            pending is not None
+            and entry.origin in ("undo", "redo")
+            and entry.of == pending.rev
+            and entry.author == pending.author
+        ):
+            pending = None
+            continue
+        if pending is not None:
+            yield pending
+        pending = entry
+    if pending is not None:
+        yield pending
