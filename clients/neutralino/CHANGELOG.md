@@ -5,6 +5,12 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
+### Added (D730, D731): what the Windows installer needs
+- `CLAUDIA_SERVER_EXE` starts a self-contained `claudia-server` program instead of Python (`findServerProgram`); it wins over `CLAUDIA_SERVER_PYTHON`.
+- Packaged mode: a `packaged.json` next to `package.json` points the client at the installed web frontend and server, and
+  the window runs from a copy of the app folder in `%LOCALAPPDATA%\Claudia\run\<app>`, so an installation in `Program Files` can stay read-only.
+- A checkout in a folder with a space on Windows runs from the folder's 8.3 short name, or says how to move it.
+
 ### Changed (D660, CODE-14): one package for macOS and Windows
 - `clients/neutralino` replaces `clients/macos` and `clients/windows`. Everything is shared but `src/platform/`, which
   holds what is the operating system's own: the folders (`~/Library/Application Support/Claudia`,

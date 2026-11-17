@@ -485,6 +485,101 @@ describe('run on Windows (D660)', () => {
 // The entry guard made the launcher a silent no-op on Windows (third real run, 2026-11-09): the program runs only
 // when `import.meta.url` equals the URL of `process.argv[1]`, and a hand-made `file://` + path is not that URL for a
 // Windows path. The comparison itself, in isolation (`main()` has real side effects).
+describe('run of a packaged client (D731)', () => {
+  const INSTALLED = 'C:\\Program Files\\Claudia\\client\\apps\\creates'
+  const packaged = { web: 'C:\\Program Files\\Claudia\\web', server: 'C:\\Program Files\\Claudia\\server\\claudia-server.exe' }
+  const creates = { app: 'creates', server: null, debug: false } as const
+  const staged: { from: string; to: string }[] = []
+  const windows = (overrides: Partial<RunDeps> = {}) =>
+    harness({
+      platform: WINDOWS_HOST,
+      windowBinary: undefined,
+      env: { Path: 'C:\\Windows', LOCALAPPDATA: 'C:\\Users\\Max Muster\\AppData\\Local' },
+      appDir: () => INSTALLED,
+      nodeBinary: 'C:\\Program Files\\Claudia\\node\\node.exe',
+      findBinary: () => `${INSTALLED}\\bin\\neutralino-win_x64.exe`,
+      shortName: (path) => (path.includes('Max Muster') ? 'C:\\Users\\MAXMUS~1\\AppData\\Local\\Claudia\\run\\creates' : 'C:\\PROGRA~1\\Claudia\\node\\node.exe'),
+      packaged: () => packaged,
+      stage: (from, to) => void staged.push({ from, to }),
+      ...overrides,
+    })
+  beforeEach(() => {
+    staged.length = 0
+  })
+
+  it('runs the window from a copy in the person\'s own folder, never from the installation', async () => {
+    const { deps, spawned, commands } = windows()
+    expect(await run(creates, deps)).toBe(0)
+    const copy = join('C:\\Users\\Max Muster\\AppData\\Local', 'Claudia', 'run', 'creates')
+    expect(staged).toEqual([{ from: INSTALLED, to: copy }])
+    // the binary stays in the installation; the page, the config and the core are those of the copy -- by the short
+    // name of the copy, since Neutralino cannot take a space in the folder of the core
+    expect(spawned[0]!.command).toBe(`${INSTALLED}\\bin\\neutralino-win_x64.exe`)
+    expect(spawned[0]!.args).toEqual(['--path=C:\\Users\\MAXMUS~1\\AppData\\Local\\Claudia\\run\\creates'])
+    expect(commands.every((c) => c.appDir === 'C:\\Users\\MAXMUS~1\\AppData\\Local\\Claudia\\run\\creates')).toBe(true)
+    expect(commands.some((c) => c.appDir === INSTALLED)).toBe(false)
+  })
+
+  it('tells the core where the installer put the frontend and the server', async () => {
+    const { deps, spawned } = windows()
+    await run(creates, deps)
+    expect(spawned[0]!.options.env.CLAUDIA_WEB_DIR).toBe(packaged.web)
+    expect(spawned[0]!.options.env.CLAUDIA_SERVER_EXE).toBe(packaged.server)
+  })
+
+  it('leaves a server of the person\'s own choosing alone', async () => {
+    const { deps, spawned } = windows({ env: { Path: 'C:\\Windows', LOCALAPPDATA: 'C:\\Users\\me\\AppData\\Local', CLAUDIA_SERVER_PYTHON: 'C:\\py\\python.exe' } })
+    await run(creates, deps)
+    expect(spawned[0]!.options.env.CLAUDIA_SERVER_EXE).toBeUndefined()
+    expect(spawned[0]!.options.env.CLAUDIA_SERVER_PYTHON).toBe('C:\\py\\python.exe')
+  })
+
+  it('says what is wrong with the marker, and starts nothing', async () => {
+    const { deps, spawned, err } = windows({
+      packaged: () => {
+        throw new Error('packaged.json is not JSON; reinstall Claudia.')
+      },
+    })
+    expect(await run(creates, deps)).toBe(1)
+    expect(spawned).toEqual([])
+    expect(err.join('\n')).toContain('reinstall Claudia')
+  })
+
+  it('says so when the copy cannot be made, and starts nothing', async () => {
+    const { deps, spawned, err } = windows({
+      stage: () => {
+        throw new Error('disk full')
+      },
+    })
+    expect(await run(creates, deps)).toBe(1)
+    expect(spawned).toEqual([])
+    expect(err.join('\n')).toContain('disk full')
+  })
+
+  it('refuses a person folder with a space and no short name, and names the variable that moves it', async () => {
+    const { deps, spawned, err } = windows({ shortName: () => null })
+    expect(await run(creates, deps)).toBe(1)
+    expect(spawned).toEqual([])
+    expect(err.join('\n')).toMatch(/LOCALAPPDATA/)
+  })
+})
+
+describe('run of a checkout in a folder with a space on Windows', () => {
+  it('uses the short name of the folder, which the core\'s command can hold', async () => {
+    const { deps, spawned } = harness({
+      platform: WINDOWS_HOST,
+      windowBinary: undefined,
+      env: { Path: 'C:\\Windows' },
+      appDir: () => 'C:\\My Projects\\claudia\\clients\\neutralino\\apps\\creates',
+      nodeBinary: 'C:\\nodejs\\node.exe',
+      findBinary: () => 'C:\\neutralino-win_x64.exe',
+      shortName: () => 'C:\\MYPROJ~1\\claudia\\clients\\neutralino\\apps\\creates',
+    })
+    expect(await run({ app: 'creates', server: null, debug: false }, deps)).toBe(0)
+    expect(spawned[0]!.args).toEqual(['--path=C:\\MYPROJ~1\\claudia\\clients\\neutralino\\apps\\creates'])
+  })
+})
+
 describe('the entry guard', () => {
   it('is not what a hand-made `file://` string gives, for a path with characters that a URL escapes', () => {
     const path = join(tmpdir(), 'a b', 'launch#1.js')

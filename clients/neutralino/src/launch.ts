@@ -27,7 +27,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand, setInspector } from './core-command.js'
 import { parseCommand, splitAppArgument, type Options } from './cli.js'
 import { getIdentity, type AppIdentity } from './identity.js'
-import { defaultRepo, serverStateDir, stateDir, type Env } from './paths.js'
+import { claudiaFolder, defaultRepo, serverStateDir, stateDir, type Env } from './paths.js'
+import { packagedEnvironment, readPackaged, stageApp, type Packaged } from './packaged.js'
 import { hostPlatform, type HostPlatform, type WindowBinary } from './platform/host.js'
 import { SetupProblem } from './platform/setup-problem.js'
 
@@ -141,6 +142,12 @@ export interface RunDeps {
   windowBinary?: (appDir: string, downloaded: string, identity: AppIdentity) => WindowBinary
   /** The short name of a path for the core's command (default: the platform's; on Windows asked of `cmd`). */
   shortName?: (path: string) => string | null
+  /** What the installer says about this client (src/packaged.ts); `readPackaged` by default, `null` in a checkout. */
+  packaged?: (appDir: string) => Packaged | null
+  /** Copies the app's folder to the folder the window runs from (src/packaged.ts's `stageApp` by default). */
+  stage?: (appDir: string, target: string) => void
+  /** Where a packaged client's window of `app` runs from (default: `run/<app>` in the person's own folder). */
+  runFolder?: (app: string) => string
   /** Sets the core's command in the app's config (default: in neutralino.config.json). */
   setCommand?: (appDir: string, command: string) => void
   /** Switches the window's web inspector on or off in the app's config (default: in neutralino.config.json). */
@@ -163,12 +170,6 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     err(missing)
     return 1
   }
-  if (appDir.includes(' ')) {
-    // Neutralino starts the core with a command line that has this folder in it (`${NL_PATH}`), and cannot tell a
-    // space in a folder name from a space between words.
-    err(`The folder of the app has a space in its path (${appDir}).\nMove the checkout to a path without spaces and start it again.`)
-    return 1
-  }
   const downloaded = (deps.findBinary ?? ((dir, e) => findNeutralinoBinary({ appDir: dir, env: e, platform })))(appDir, env)
   if (downloaded === null) {
     err(
@@ -187,9 +188,42 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
     return 1
   }
 
+  // A packaged client runs from a copy of the app's folder in the person's own folder (src/packaged.ts); a checkout runs
+  // from the folder itself. Neutralino starts the core with a command line that has this folder in it (`${NL_PATH}`)
+  // and cannot tell a space in a folder name from a space between words: the short name does it where there is one.
+  let packaged: Packaged | null
+  try {
+    packaged = (deps.packaged ?? readPackaged)(appDir)
+  } catch (problem) {
+    err((problem as Error).message)
+    return 1
+  }
+  let workDir = appDir
+  if (packaged !== null) {
+    workDir = (deps.runFolder ?? ((app) => join(claudiaFolder(platform, env), 'run', app)))(options.app)
+    try {
+      ;(deps.stage ?? stageApp)(appDir, workDir)
+    } catch (problem) {
+      err(`Could not prepare the folder this window runs from (${workDir}): ${(problem as Error).message}`)
+      return 1
+    }
+  }
+  const safeDir = commandSafePath(workDir, deps.shortName ?? ((path) => platform.shortPath(path)))
+  if (safeDir === null) {
+    err(
+      `The folder of the app has a space in its path (${workDir}), and no short name.\n` +
+        (packaged !== null ? 'Set LOCALAPPDATA to a folder without spaces and start it again.' : 'Move the checkout to a path without spaces and start it again.'),
+    )
+    return 1
+  }
+  workDir = safeDir
+
   const supportsSystemCa = deps.supportsSystemCa ?? process.allowedNodeEnvironmentFlags.has('--use-system-ca')
   const nodeBinary = deps.nodeBinary ?? execPath
   const environment = buildShellEnvironment(options, env, nodeBinary, supportsSystemCa)
+  if (packaged !== null) {
+    for (const [name, value] of Object.entries(packagedEnvironment(packaged, env))) environmentWith(environment, name, value)
+  }
   let nodeForCore = commandSafePath(nodeBinary, deps.shortName ?? ((path) => platform.shortPath(path)))
   if (nodeForCore === null) {
     // No short name either: the core's command cannot hold this path. The launcher already put node's folder first in
@@ -201,27 +235,27 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
   const inspector = deps.setInspector ?? ((dir, enabled) => setInspector(join(dir, 'neutralino.config.json'), enabled))
   try {
     setCommand(
-      appDir,
+      workDir,
       buildCoreCommand({ nodeBinary: nodeForCore, systemCa: supportsSystemCa, app: options.app, server: options.server?.origin ?? null, debug: options.debug }),
     )
     // Neutralino opens the DevTools window by itself when the inspector is on: only --debug wants that.
-    inspector(appDir, options.debug)
+    inspector(workDir, options.debug)
   } catch (problem) {
     err(`Could not set up the core's command: ${(problem as Error).message}`)
     return 1
   }
   if (options.debug) {
-    out(`app folder: ${appDir}`)
+    out(`app folder: ${workDir}`)
     out(`logs: ${join(stateDir(options.app), 'shell.log')} and ${join(serverStateDir(), 'server.log')}; the web inspector is on`)
   }
-  const [shellBinary, ...shellArgs] = buildShellCommand(window.binary, appDir)
+  const [shellBinary, ...shellArgs] = buildShellCommand(window.binary, workDir)
   try {
     return await runWindow(shellBinary as string, shellArgs, environment, window.processName, deps, err)
   } finally {
     // The checkout is left as it was found (the checked-in config holds the default command).
     try {
-      setCommand(appDir, DEFAULT_COMMAND)
-      inspector(appDir, false)
+      setCommand(workDir, DEFAULT_COMMAND)
+      inspector(workDir, false)
     } catch (problem) {
       err(`Could not put the default core command back: ${(problem as Error).message}`)
     }

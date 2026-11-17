@@ -11,7 +11,7 @@ import { mkdir } from 'node:fs/promises'
 import { env as processEnv } from 'node:process'
 import { DesktopServer, type DesktopServerOptions } from './desktop-server.js'
 import { getIdentity } from './identity.js'
-import { claudiaFolder, findFrontend, findServerPython, serverDocumentsDir, serverStateDir, type Env } from './paths.js'
+import { claudiaFolder, findFrontend, findServerProgram, serverDocumentsDir, serverStateDir, type Env } from './paths.js'
 import { hostPlatform, type HostPlatform } from './platform/host.js'
 import { SetupProblem } from './platform/setup-problem.js'
 
@@ -34,12 +34,12 @@ export async function prepareServer(app: string, options: PrepareServerOptions =
   const env = options.env ?? processEnv
   const identity = getIdentity(app)
   const platform = options.platform ?? hostPlatform()
-  const python = findServerPython({ repo: options.repo, env, platform })
-  if (python === null) {
+  const program = findServerProgram({ repo: options.repo, env, platform })
+  if (program === null) {
     const venv = platform.venvPython.join(platform.id === 'windows' ? '\\' : '/')
     throw new SetupProblem(
       "Claudia's server needs Python 3.14, and none was found.\n" +
-        'Set CLAUDIA_SERVER_PYTHON to the interpreter of an environment where Claudia is installed ' +
+        'Set CLAUDIA_SERVER_PYTHON to the interpreter of an environment where Claudia is installed, or CLAUDIA_SERVER_EXE to the installer\'s claudia-server.exe ' +
         `(in a checkout: run 'uv sync --no-dev' and the interpreter is ${venv}).`,
     )
   }
@@ -61,7 +61,7 @@ export async function prepareServer(app: string, options: PrepareServerOptions =
   const port = Number.parseInt(env.CLAUDIA_SERVER_PORT ?? '', 10)
   return new DesktopServer({
     app: identity.name,
-    python,
+    program,
     web,
     documents,
     state,
