@@ -12,7 +12,7 @@
 # It links the layout library (../layout, D902), so the library's sources are copied too (not a node_modules of the
 # build machine's); `npm ci` installs the library's own dependencies (web's postinstall), and `npm run build` copies
 # the pinned HarfBuzz WebAssembly into the app (D903).
-FROM node:22-bookworm-slim AS web
+FROM node:26-bookworm-slim AS web
 WORKDIR /build/web
 COPY layout/package.json layout/package-lock.json layout/tsconfig.json /build/layout/
 COPY layout/src/ /build/layout/src/
