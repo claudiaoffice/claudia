@@ -14,6 +14,7 @@ import { FIELD_CHAR, fieldIndex, partsOf, type Shown } from '~/lib/references'
 import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
 import { usePointed } from '~/lib/pointed'
+import { letsGoOfObject } from '~/lib/text-containers'
 
 const { t } = useI18n()
 
@@ -424,6 +425,29 @@ function onClick(event: MouseEvent) {
   if (mark?.dataset.sug) emit('suggestion', mark.dataset.sug)
 }
 
+/** A press anywhere but on an object, and the caret coming into the text, let go of the selected object: it was
+ * selected by pointing at it, and the person has now turned to the words (its outline would otherwise stay). */
+function letGoOfObject(event: Event) {
+  if (state.selectedObject && letsGoOfObject(event.target as HTMLElement | null)) props.session.selectObject(null)
+}
+
+/** The top-left corner, on the screen, of the character `place` is in front of: where an object anchored there
+ * hangs (D907 prints it at the same place). A paragraph with nothing to measure — no words — gives its own corner. */
+function spotOf(place: Pos): { left: number; top: number } | null {
+  const el = blockEl(place.block)
+  if (!el) return null
+  const at = domPoint(place, false)
+  if (at) {
+    const range = document.createRange()
+    range.setStart(at[0], at[1])
+    range.collapse(true)
+    const rect = [...range.getClientRects()].find((r) => r.height > 0) ?? range.getBoundingClientRect()
+    if (rect.height > 0) return { left: rect.left, top: rect.top }
+  }
+  const box = el.getBoundingClientRect()
+  return { left: box.left, top: box.top }
+}
+
 function focus() {
   root.value?.focus()
   placeSelection()
@@ -528,7 +552,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
 </script>
 
 <template>
-  <div ref="scroller" class="scroller" :class="view" data-testid="text-scroller" @contextmenu.capture="onContextMenu">
+  <div ref="scroller" class="scroller" :class="view" data-testid="text-scroller" @contextmenu.capture="onContextMenu" @pointerdown.capture="letGoOfObject" @focusin="letGoOfObject">
     <div class="sheet">
       <div
         :key="renderKey"
@@ -631,7 +655,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
         </component>
         </template>
       </div>
-      <TextContainers :session="session" :host="root" :tick="layoutTick" @leave="focus()" />
+      <TextContainers :session="session" :host="root" :tick="layoutTick" :spot-of="spotOf" @leave="focus()" />
     </div>
   </div>
 </template>

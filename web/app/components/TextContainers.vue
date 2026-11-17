@@ -1,16 +1,27 @@
 <script setup lang="ts">
-// The rendered containers of a text, floating over their paragraphs (D179, D560): drawn here, in a layer of their own
-// over the page, so that the editing of the words is not touched. Click selects; double-click, Enter or F2 writes in
-// it; Delete removes it; the arrow keys up and down hang it from the previous or next paragraph; the corner sizes it.
+// The floating objects of a text, over their characters (D179, D560, E10.16): drawn here, in a layer of their own over
+// the page, so that the editing of the words is not touched. An object hangs at the character it is anchored to, moved
+// by the offset the model keeps (`floatBox`), which is where it is printed too. A rendered container, a picture, a
+// shape and a text box are all drawn (`lookOf`). Click selects (and a click into the words lets go again, in
+// `TextEditor.vue`); double-click, Enter or F2 writes in a rendered container; Delete removes an object; the arrow keys
+// up and down hang it from the previous or next paragraph; the corner sizes it.
 import { computed, nextTick, ref } from 'vue'
 import { descriptionOf } from '~/lib/text-container-names'
+import { objectName } from '~/lib/descriptions'
 import { imageDataUrl } from '~/lib/images'
 import { renderedView } from '~/lib/rendering'
-import { floatBox, neighbour, resizedBy } from '~/lib/text-containers'
+import { columnOf, floatBox, neighbour, resizedBy } from '~/lib/text-containers'
+import { lookOf, type ObjectLook } from '~/lib/text-object-look'
 import { useI18n } from '~/lib/i18n'
 import type { TextSession } from '~/lib/text-session'
 
-const props = defineProps<{ session: TextSession; host: HTMLElement | null; tick: number }>()
+const props = defineProps<{
+  session: TextSession
+  host: HTMLElement | null
+  tick: number
+  /** Where, on the screen, the character at a place of the text is (`TextEditor.vue`'s `spotOf`). */
+  spotOf: (place: { block: string; offset: number }) => { left: number; top: number } | null
+}>()
 const emit = defineEmits<{ leave: [] }>()
 const { t } = useI18n()
 const session = props.session
@@ -30,15 +41,18 @@ const placed = computed<Placed[]>(() => {
   const box = layer.value?.getBoundingClientRect()
   const host = props.host
   if (!box || !host) return []
+  const r = host.getBoundingClientRect()
+  const css = getComputedStyle(host)
+  const column = columnOf({ left: r.left, top: r.top, width: r.width, height: r.height }, parseFloat(css.paddingLeft) || 0, parseFloat(css.paddingRight) || 0)
   const out: Placed[] = []
   for (const o of Object.values(state.objects)) {
-    if (o.kind !== 'rendered') continue
-    const paragraph = host.querySelector(`[data-block="${CSS.escape(o.anchor.container)}"]`)
-    if (!paragraph) continue
-    const r = paragraph.getBoundingClientRect()
+    const place = session.placeOf(o)
+    const spot = place && props.spotOf(place)
+    if (!spot) continue
     const size = sizing.value?.id === o.id ? sizing.value.now : { w: o.w, h: o.h }
-    const f = floatBox(box, { left: r.left, top: r.top, width: r.width, height: r.height }, size.w, size.h)
-    out.push({ id: o.id, style: { left: `${f.left}px`, top: `${f.top}px`, width: `${f.width}px`, height: `${f.height}px` } })
+    const f = floatBox(box, spot, o.anchor, size.w, size.h, column)
+    const turn = o.rotation ? { transform: `rotate(${o.rotation}deg)` } : {}
+    out.push({ id: o.id, style: { left: `${f.left}px`, top: `${f.top}px`, width: `${f.width}px`, height: `${f.height}px`, ...turn } })
   }
   return out
 })
@@ -47,10 +61,12 @@ const faceOf = (id: string) => {
   const o = state.objects[id]
   return o ? renderedView(state, o, imageDataUrl) : null
 }
+const looks = computed<Record<string, ObjectLook>>(() => Object.fromEntries(Object.values(state.objects).map((o) => [o.id, lookOf(state, o)])))
 const label = (id: string) => {
   const o = state.objects[id]
-  const face = faceOf(id)
-  return o ? descriptionOf(o, face?.label ?? '', t) : ''
+  if (!o) return ''
+  if (o.kind === 'rendered') return descriptionOf(o, faceOf(id)?.label ?? '', t)
+  return objectName(o, { shape: o.shape ? state.shapes[o.shape]?.name : undefined, words: o.paragraph?.text })
 }
 
 function select(id: string, event?: Event) {
@@ -60,6 +76,7 @@ function select(id: string, event?: Event) {
 }
 
 function beginEdit(id: string) {
+  if (state.objects[id]?.kind !== 'rendered') return // only a rendered container is written in, here
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   select(id)
   editing.value = id
@@ -123,7 +140,7 @@ async function endSizing() {
       v-for="p in placed"
       :key="p.id"
       class="object"
-      :class="{ selected: p.id === state.selectedObject }"
+      :class="[{ selected: p.id === state.selectedObject }, `kind-${state.objects[p.id]?.kind}`]"
       :style="p.style"
       :data-object="p.id"
       role="button"
@@ -133,15 +150,27 @@ async function endSizing() {
       @dblclick.stop="beginEdit(p.id)"
       @keydown="onKey($event, p.id)"
     >
-      <template v-if="faceOf(p.id)">
-        <RenderedEditor
-          v-if="editing === p.id"
-          :text="faceOf(p.id)!.definition.source"
-          :label="faceOf(p.id)!.label"
-          @commit="commit(p.id, $event)"
-          @cancel="done"
-        />
-        <RenderedFace v-else :src="faceOf(p.id)!.src" :status="faceOf(p.id)!.status" :label="faceOf(p.id)!.label" />
+      <template v-if="looks[p.id]?.rendered">
+        <template v-if="faceOf(p.id)">
+          <RenderedEditor
+            v-if="editing === p.id"
+            :text="faceOf(p.id)!.definition.source"
+            :label="faceOf(p.id)!.label"
+            @commit="commit(p.id, $event)"
+            @cancel="done"
+          />
+          <RenderedFace v-else :src="faceOf(p.id)!.src" :status="faceOf(p.id)!.status" :label="faceOf(p.id)!.label" />
+        </template>
+      </template>
+      <img v-else-if="looks[p.id]?.picture" class="picture" :src="looks[p.id]!.picture" alt="" draggable="false" >
+      <p v-else-if="looks[p.id]?.unsupported" class="unsupported">{{ t('A chart is not shown in a text yet.') }}</p>
+      <template v-else-if="looks[p.id]">
+        <svg v-if="looks[p.id]!.outline" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path :d="looks[p.id]!.outline!.path" vector-effect="non-scaling-stroke" :style="looks[p.id]!.outline!.paint" />
+        </svg>
+        <div v-if="looks[p.id]!.words" class="words" :style="{ ...looks[p.id]!.words!.css, ...looks[p.id]!.words!.area }">
+          <ParagraphWords :text="looks[p.id]!.words!.text" />
+        </div>
       </template>
       <span
         v-if="p.id === state.selectedObject && !readonly && !editing"
@@ -165,10 +194,13 @@ async function endSizing() {
 .object {
   position: absolute;
   pointer-events: auto;
+  cursor: default;
+}
+/* only a rendered container is a framed card; a picture, a shape and a text box bring their own look */
+.object.kind-rendered {
   background: var(--paper);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
-  cursor: default;
 }
 .object.selected {
   outline: 2px solid var(--iris);
@@ -176,6 +208,43 @@ async function endSizing() {
 .object:focus-visible {
   outline: 3px solid var(--iris);
   outline-offset: 2px;
+}
+.picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+.shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.words {
+  position: absolute;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+.unsupported {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 8px;
+  text-align: center;
+  font-size: 0.85em;
+  color: var(--muted);
+  background: var(--paper);
+  border: 1px dashed var(--line);
 }
 .grip {
   position: absolute;
