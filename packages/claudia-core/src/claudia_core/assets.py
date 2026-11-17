@@ -33,6 +33,8 @@ from dataclasses import dataclass, replace
 from xml.etree import ElementTree
 
 SUPPORTED_IMAGE_FORMATS = ("jpeg", "png", "gif", "bmp", "svg")
+BLANK_GIF = bytes.fromhex("47494638396101000100800000c8c8c8c8c8c82c00000000010001000002024401003b")
+"""A one-pixel grey GIF: what a redacted picture shows (D720)."""
 MAX_IMAGE_BYTES = 8 * 1024 * 1024  # a single asset's encoded size (the source bytes, not any first frame)
 _MAX_BASE64_CHARS = ((MAX_IMAGE_BYTES + 2) // 3) * 4  # the longest base64 text that can decode to <= MAX_IMAGE_BYTES
 MAX_ALT_CHARS = 300
@@ -92,6 +94,11 @@ class ImageAsset:
     def aspect(self) -> float:
         """Width divided by height, for an object that must keep the picture's own proportions."""
         return self.width / self.height
+
+    def blanked(self) -> ImageAsset:
+        """The asset with its picture gone (redaction, D720): the same id and pixel size, so every object that shows it
+        keeps its place and proportions, but the bytes are a single neutral grey pixel."""
+        return ImageAsset(self.id, "gif", self.width, self.height, False, BLANK_GIF)
 
     def to_data(self) -> dict:
         """The plain-data (JSON-compatible) form stored in a document and sent to clients."""
@@ -194,6 +201,11 @@ class ImageImport:
         if data["source_path"] is not None and not isinstance(data["source_path"], str):
             raise ImageError("source_path: text, or null when the client could not supply one")
         return cls(**data)
+
+    def blanked(self) -> ImageImport:
+        """The record with everything a person wrote or picked gone (redaction, D720): the alternative text and the
+        file's name and path. Who imported it, when and how stay, like the author and time of any redacted step."""
+        return replace(self, alt="", source_name="", source_path=None)
 
     def masked(self, viewer: str) -> ImageImport:
         """This record as ``viewer`` may see it: ``source_path`` only to the person who imported it (D… the

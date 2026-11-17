@@ -84,6 +84,21 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   copies. The wire names and parameters are unchanged (`tests/test_server_object_methods.py` holds them); the help
   texts of these methods now share their first sentences.
 
+## [0.37.0] - 2026-11-16
+
+### Added
+- Wire methods `redaction_plan` and `redact` (D726, D727): owners redact anything they can read, editors their own
+  changes and messages; an editor's plan that would blank somebody else's later step says `allowed: false` and names
+  them in `others`, and `redact` refuses it. The person sees what a redaction does (the steps, the
+  later steps blanked with them, the chat messages, the document as it will look) and confirms that plan by repeating
+  its dependents. The `redacted` event carries `chat`. An owner redacts only chat messages she can read.
+- `filestore.history_items(log)` and `chat_items(chat)`: the journal items that build a log and a chat again.
+
+### Changed
+- `SealedStore(path, writer, keys)`: the store keeps the document's keys to seal the file anew.
+- Both stores implement `DocumentStore.rewrite` (D725, SEC-05): the sealed store seals the blocks anew and replaces
+  the journal; the plain store writes its journal anew, all at once. A redacted import also loses its kept original.
+
 ## [0.36.0] - 2026-11-15
 
 The uid of a document: found by its exact value, kept when a file is placed, never twice on a server (D533–D535).

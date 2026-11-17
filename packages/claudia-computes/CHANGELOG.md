@@ -64,6 +64,11 @@ state schema 12 → 13.
 ### Added (UX-33)
 - `WorkbookModel.setup_commands`: a new workbook starts with its first sheet, `s1` "Sheet1", made by the server as nobody's undo step (UX-33). The web client no longer adds it.
 
+## [0.11.0] - 2026-11-16
+
+### Added
+- `blank(parts)` on the model (D723): an imported document is redacted in full or in parts — sheets (by id), ranges (`s1!A1:B5`), chart tabs and objects; cells are emptied, sheets and names stay. `WorkbookModel.blank_diagram` takes a chart's titles.
+
 ## [0.10.0] - 2026-11-15
 
 Pivot tables (E6.30, D620-D622, D626): the engine, and a pivot in a workbook. State schema 13 → 14 (the pivots).

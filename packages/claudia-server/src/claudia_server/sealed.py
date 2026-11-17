@@ -58,6 +58,7 @@ from claudia_container import (
     clean_details,
     create_document,
     derive_login_material,
+    forget_original,
     format_recovery_key,
     journal_path,
     leave_document,
@@ -70,6 +71,7 @@ from claudia_container import (
     read_state,
     recover_access,
     remove_user,
+    rewrite_journal,
     set_details,
     set_recovery_key,
     transfer_owner,
@@ -77,10 +79,10 @@ from claudia_container import (
     unlock_with_recovery,
     write_original,
 )
-from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Snapshot
+from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Import, Snapshot
 
 from .auth import AI_USER, Account, AuthRefused, Credentials, is_reserved
-from .filestore import JournalStore, replay
+from .filestore import JournalStore, chat_items, history_items, replay
 from .hub import DocumentSealed, DuplicateDocument, StoredInfo
 from .i18n import msg
 from .state import private_dir
@@ -128,21 +130,45 @@ def explain(problem: WeakPassword) -> str:
 
 class SealedStore(JournalStore):
     """``DocumentStore`` that seals every change into the journal of the document: chat under the chat key, everything
-    else under the history key. It counts what the journal holds since the last packing."""
+    else under the history key. It counts what the journal holds since the last packing. ``path`` is the document
+    file; ``keys`` are the document's keys, which a redaction needs to seal the file anew."""
 
-    def __init__(self, path: Path, writer: JournalWriter):
+    def __init__(self, path: Path, writer: JournalWriter, keys: Mapping[Domain, bytes]):
         super().__init__(path)
         self.writer = writer
+        self.keys = keys
         self.unpacked = 0
 
     def _write(self, kind: str, data) -> None:
-        payload = json.dumps({"t": kind, "d": data}, separators=(",", ":"), ensure_ascii=False).encode()
-        self.writer.append(Domain.CHAT if kind == "chat" else Domain.HISTORY, payload)
+        self.writer.append(Domain.CHAT if kind == "chat" else Domain.HISTORY, _payload(kind, data))
         self.unpacked += 1
+
+    def rewrite(self, log: CommandLog, chat: Sequence[ChatRecord]) -> None:
+        """As ``DocumentStore.rewrite`` (D725, SEC-05): the blocks of the file are sealed anew from the redacted log and
+        chat alone, without a snapshot, and the journal is replaced by an empty one, so no copy of the redacted
+        content is left in either. The journal's records are part of what is written, so nothing waits to be packed.
+        """
+        history = [_payload(kind, data) for kind, data in history_items(log)]
+        chat_payloads = [_payload(kind, data) for kind, data in chat_items(chat)]
+        try:
+            self.writer = rewrite_journal(self.path, self.keys, self.writer, history=history, chat=chat_payloads)
+        except BaseException:
+            # As after a failed packing: go on with whichever journal is on disk. If the file was already sealed anew,
+            # the redaction holds in the file and the old journal is behind it, so ``begin`` replaces it.
+            with contextlib.suppress(Exception):
+                self.writer.close()
+            with contextlib.suppress(Exception):
+                self.writer = begin(self.path, self.keys)
+            raise
+        self.unpacked = 0
 
     def close(self) -> None:
         """Let go of the journal."""
         self.writer.close()
+
+
+def _payload(kind: str, data) -> bytes:
+    return json.dumps({"t": kind, "d": data}, separators=(",", ":"), ensure_ascii=False).encode()
 
 
 @dataclass
@@ -490,7 +516,7 @@ class SealedDocuments:
             writer = begin(path, keys)
         except (ContainerError, JournalError) as error:
             raise ValueError(f"the document is damaged or has been changed: {error}") from error
-        store = SealedStore(path, writer)
+        store = SealedStore(path, writer, keys)
         if fresh:
             document = Document(self.model_cls.empty(), log=log_, store=store, **self._options)
         else:
@@ -505,7 +531,14 @@ class SealedDocuments:
         if pending:
             self._pack(doc_id, held)  # work that a crash left in the journal goes into the file now
         document.subscribe_batches(lambda _events: self._after_change(doc_id, held))
+        document.on_purge(lambda revisions: self._forget_redacted_original(doc_id, held, revisions))
         return document
+
+    def _forget_redacted_original(self, doc_id: str, held: _Held, revisions: tuple) -> None:
+        """A redacted import takes the kept original of the file with it (D723): the file holds what was blanked."""
+        document = held.document
+        if document is not None and any(isinstance(document.log.get(rev).command, Import) for rev in revisions):
+            forget_original(self._file(doc_id), held.keys)
 
     def _replayed(self, history: list[bytes], chat: list[bytes]) -> tuple[CommandLog, list[ChatRecord]]:
         items = [*_items(history, "history record"), *_items(chat, "chat record")]

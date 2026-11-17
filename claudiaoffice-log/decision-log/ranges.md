@@ -49,6 +49,7 @@ Unused numbers in a closed block stay unused.
 | D660–D679 | code review follow-up: one Neutralino package for macOS and Windows (CODE-14; D660 used) | 2026-11-15 | open |
 | D680–D699 | the AI in composes: a model-driven participant, its document lens, words by quoting them (E7.10; branch `composes-ai`; D680–D681 used) | 2026-11-16 | open |
 | D700–D719 | code review follow-up: no claudia-client, one way to write a file (CODE-33, CODE-34; D700–D701 used) | 2026-11-16 | open |
+| D720–D739 | the redaction contract: what a redacted step keeps, the plan, dependents, imports, hidden lines and chat, the store rewritten, the wire and its screens (E1.8, SEC-05; branch `redaction`; D720–D728 used) | 2026-11-16 | open |
 
 ## Never to be used
 

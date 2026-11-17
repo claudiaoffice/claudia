@@ -68,6 +68,17 @@ class DocumentModel(ABC):
         vars(self).clear()
         vars(self).update(vars(fresh))
 
+    def blank(self, parts: frozenset[str] | None) -> None:
+        """Turn content into neutral filler in place, keeping every id, place and length (redacting an import, D723).
+
+        ``parts`` names what to blank, by ids the app knows (a paragraph, a sheet or a cell range, a slide, an
+        object); ``None`` blanks everything a person wrote, typed, picked or imported. Structure stays: what later
+        steps refer to must still be there. The default refuses, so that an app that has not thought about its
+        content never pretends to have removed it."""
+        from .errors import RedactionError
+
+        raise RedactionError(f"{self.app} documents cannot have imported content redacted yet")
+
     # -- the three verbs ---------------------------------------------------------
     def apply(self, command: Command, ctx: Context) -> Command:
         """Apply ``command`` and return its inverse. Models may wrap this; the default delegates."""
