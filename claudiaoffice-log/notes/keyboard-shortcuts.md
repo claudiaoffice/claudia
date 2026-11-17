@@ -36,6 +36,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Reference in Chat | Ctrl+Alt+X |  |
 | Edit | Insert ▸ Soft Hyphen | Ctrl+- |  |
 | Edit | Insert ▸ Non-breaking Hyphen | Ctrl+_ |  |
+| Insert | Table of Contents | Ctrl+Shift+Alt+I |  |
 | Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
 | Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
 | Insert | Container ▸ Typst | Ctrl+Shift+Alt+Y |  |
@@ -104,6 +105,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Column ▸ Insert Right | Shift+Alt+→ |  |
 | Edit | Column ▸ Delete | Ctrl+Alt+_ |  |
 | Edit | Clear Cells | Del | the document view or the browser |
+| Insert | Table of Contents | Ctrl+Shift+Alt+I |  |
 | Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
 | Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
 | Insert | Container ▸ Typst | Ctrl+Shift+Alt+Y |  |
@@ -180,6 +182,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Text Box | Ctrl+Alt+B |  |
 | Edit | Image… | Ctrl+Alt+I |  |
 | Edit | Delete | Del | the document view or the browser |
+| Insert | Agenda | Ctrl+Shift+Alt+I |  |
 | Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
 | Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
 | Insert | Container ▸ Typst | Ctrl+Shift+Alt+Y |  |

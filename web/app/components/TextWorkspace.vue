@@ -10,6 +10,7 @@ import type { TextSession } from '~/lib/text-session'
 import type { StyleView } from '~/lib/style-css'
 import { formatItems } from '~/lib/format-menu'
 import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
+import { looksOf, type ContentsHost } from '~/lib/contents'
 import {
   askItem,
   clipboardItems,
@@ -47,7 +48,7 @@ const { t, locale, choose } = useI18n()
 
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 /** composes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering' | 'contents'>(null)
 const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = textStyleHost(session)
 const active = ref<string | null>(null)
@@ -232,6 +233,32 @@ const numberingHost = computed<NumberingHost>(() => ({
   removeScheme: (scheme) => session.removeScheme(scheme),
 }))
 
+/** The table of contents whose options are open (E9.31), and what the dialog works with. */
+const contentsOf = ref<string | null>(null)
+const contentsHost = computed<ContentsHost | null>(() => {
+  const block = state.blocks.find((b) => b.id === contentsOf.value)
+  if (!block?.generated) return null
+  return {
+    paragraph: block.id,
+    options: block.generated,
+    entries: block.entries ?? [],
+    looks: looksOf(block.entries ?? [], state.styles),
+    readOnly: readonly.value,
+    set: (options) => session.setContents(block.id, options),
+    remove: () => session.removeContents(block.id),
+  }
+})
+function openContents(block: string) {
+  contentsOf.value = block
+  dialog.value = 'contents'
+}
+/** Insert ▸ Table of Contents: one at the caret; with the caret on a table, its options (the mock-up's rule). */
+function insertContents() {
+  const on = session.currentContents()
+  if (on) openContents(on.id)
+  else void session.insertContents().then(() => editor.value?.focus())
+}
+
 /** What the shared menu items need from this window (`lib/document-menus.ts`). */
 const shared = computed<DocumentMenuContext>(() => ({
   t,
@@ -280,7 +307,7 @@ const menus = computed<Menu[]>(() => {
         },
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }),
+    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }),
     {
       label: t('Format'),
       items:
@@ -409,7 +436,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <StyleBar v-if="!printing" data-region="toolbar" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" @suggestion="pick" @style-menu="openStyleMenu" />
+    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" />
     <template #footer>
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">
@@ -433,6 +460,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <ContentsDialog v-if="dialog === 'contents' && contentsHost" :host="contentsHost" :title="t('Table of contents')" @close="dialog = null" />
       <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.currentScheme() ?? undefined" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'list-start'" :title="t('Start numbering at')" :label="t('First number')" :ok="t('Start')" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />

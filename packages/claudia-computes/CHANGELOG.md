@@ -10,6 +10,7 @@ the number formats). Search on claudia-search (SEC-18, CODE-18). Named ranges ar
 state schema 12 → 13.
 
 ### Added
+- The paragraphs of `claudia-core` 0.31 have `generated` (always `None` here) and `with_generated`.
 - The cell styles are `StyleDef`s of `claudia-core` 0.30, which have a `numbering` (always `None` here); the built-in
   styles' repr shows it, and `RemoveObject` has `ends_paragraph`.
 - The cell styles are `StyleDef`s of `claudia-core` 0.28, which have a `heading_level` (always `None` here: a cell is

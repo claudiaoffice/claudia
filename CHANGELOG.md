@@ -4,6 +4,25 @@ All notable changes to the public API of `claudia-core` are listed here, newest 
 [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning policy (`docs/versioning.md`).
 While the major version is 0, a minor version may break the API; every break is marked **Breaking**.
 
+## [0.31.0] - 2026-11-17
+
+Tables of contents and agendas, generated paragraphs (step E of `claudiaoffice-log/notes/text-structure-across-apps.md`,
+E9.31).
+
+### Added
+- `claudia_core.generated`: `Toc` (the options of a table of contents: the heading levels `first` to `last`, `numbers`,
+  `places`, `leader`), `Generated`, `generated_from_data`, `ContentsEntry` (an entry: its target paragraph, level,
+  number, words, style `contents-<level>` and, when known, its place), `GeneratedChanged` (wire type `generated`, the
+  entries of a table or `None` when it went away), `GeneratedHost` and the command `SetGenerated`
+  (`core.SetGenerated`), which makes a paragraph a table of contents with these options, or a plain paragraph again.
+  `CONTENTS_STYLE`.
+- `Paragraph.generated` and `Paragraph.with_generated`: a generated paragraph stores only its options and holds no text;
+  its wire form has `generated`.
+- `TextStructure.outline()`, `all_entries()` and `entries(paragraph)`: the headings of levels 1 to 9 of the main text in
+  reading order, and every table's entries derived from them; `settle` reports changed entries as `GeneratedChanged`.
+- `ObjectModel.object_generated` and `put_object_generated`: the words of an object can be an agenda; `SetText` refuses
+  words for one.
+
 ## [0.30.0] - 2026-11-16
 
 Numbering schemes as document data, numbered headings, list items on any paragraph (step D of

@@ -236,6 +236,15 @@ describe('printing a presentation: its print source', () => {
     expect(second!.objects[0]!.paragraph).not.toHaveProperty('mark')
     session.close()
   })
+  it('gives an agenda its lines and its leader, so the pages draw what the slide does (E9.31)', async () => {
+    const { session, state } = await opened(PRINTING)
+    const box = state.objects['s1-box']!
+    box.paragraph = { ...box.paragraph!, generated: { kind: 'toc', first: 1, last: 1, numbers: true, places: true, leader: 'dots' } }
+    state.agendas['s1-box'] = [{ target: 't1', level: 1, number: '1', text: 'Why', style: 'slide-agenda', place: '2' }]
+    const [first] = slideDocument(session).slides
+    expect(first!.objects[0]!.paragraph).toMatchObject({ agenda: { lines: [{ words: '1 Why', place: '2' }], leader: 'dots' } })
+    session.close()
+  })
   it('reads and changes the print setup through the session', async () => {
     const { link, session, state } = await opened(PRINTING)
     const source = slideSource(session)

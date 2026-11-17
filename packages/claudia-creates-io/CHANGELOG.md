@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- Agendas in pptx and odp (E9.31): written as the lines they show (number, title and slide number), with the loss
+  `agenda` (the file keeps the words, not the link to the slide titles). A kept pptx rewrites an agenda whose lines
+  changed; a kept odp with a changed agenda is written afresh (`UnsupportedEdit`).
 - Lists in text boxes and numbered slide titles in pptx and odp (E9.22): pptx writes `a:buAutoNum` (counting on from
   box to box with `startAt`) or `a:buChar` and reads them back as one list; a marker PowerPoint cannot number (a trail
   such as 2.1) is reported as `list-look`. odp writes one `text:list` per box, continued across boxes

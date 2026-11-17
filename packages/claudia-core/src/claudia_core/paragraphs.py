@@ -30,6 +30,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 
+from .generated import Generated, generated_from_data
+
 #: How long one paragraph's text may be.
 MAX_PARAGRAPH_TEXT = 20_000
 
@@ -134,6 +136,9 @@ class Paragraph:
     text: str = ""
     runs: tuple[Run, ...] = field(default_factory=tuple)
     item: ListItem | None = None
+    #: The options of a generated paragraph, a table of contents or an agenda (E9.31). Its entries are derived; it
+    #: has no words of its own.
+    generated: Generated | None = None
 
     def __len__(self) -> int:
         """The number of characters in the paragraph."""
@@ -151,6 +156,13 @@ class Paragraph:
         """The same paragraph as an item of a list (or, with ``None``, no longer one)."""
         return replace(self, item=item)
 
+    def with_generated(self, generated: Generated | None) -> Paragraph:
+        """The same paragraph generated as ``generated`` says (``None``: plain again). Only an empty paragraph can be
+        generated: ``ValueError`` otherwise."""
+        if generated is not None and self.text:
+            raise ValueError("only an empty paragraph can become a table of contents")
+        return replace(self, generated=generated)
+
     def written_by(self, author: str | None, via: str | None = None) -> Paragraph:
         """The same paragraph with all of its text attributed to one person: what setting the whole text at once
         means, as opposed to typing into it character by character."""
@@ -164,25 +176,32 @@ class Paragraph:
             raise ValueError("the runs must cover exactly the paragraph's text")
         if self.item is not None:
             self.item.check()
+        if self.generated is not None:
+            self.generated.check()
+            if self.text:
+                raise ValueError("a generated paragraph has no words of its own")
 
     def to_data(self) -> dict:
-        """The plain-data form: ``{id, style, text, runs}``, and ``item`` when the paragraph is a list item. A
-        paragraph that is not one is written exactly as before lists existed."""
+        """The plain-data form: ``{id, style, text, runs}``, ``item`` when the paragraph is a list item and
+        ``generated`` when it is generated. A paragraph that is neither is written exactly as before lists existed."""
         data: dict = {"id": self.id, "style": self.style, "text": self.text, "runs": runs_to_data(self.runs)}
         if self.item is not None:
             data["item"] = self.item.to_data()
+        if self.generated is not None:
+            data["generated"] = self.generated.to_data()
         return data
 
     @classmethod
     def from_data(cls, data: dict) -> Paragraph:
         """Inverse of :meth:`to_data`."""
-        item = data.get("item")
+        item, generated = data.get("item"), data.get("generated")
         return cls(
             data["id"],
             data["style"],
             data.get("text", ""),
             tuple(runs_from_data(data.get("runs", []))),
             None if item is None else ListItem.from_data(item),
+            None if generated is None else generated_from_data(generated),
         )
 
 

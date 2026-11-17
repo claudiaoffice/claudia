@@ -72,6 +72,7 @@ from claudia_core import (
     validate_css,
 )
 
+from .composes_contents import add_contents_methods
 from .composes_search import add_search_methods
 from .composes_words import add_word_methods
 from .i18n import msg
@@ -129,6 +130,7 @@ class _BlockTargets:
 
 add_style_methods(composes_methods, targets=(_BlockTargets(), OBJECTS))
 add_structure_methods(composes_methods)
+add_contents_methods(composes_methods)
 add_name_methods(composes_methods)
 add_replay_methods(composes_methods)
 
@@ -146,25 +148,29 @@ def _blocks(ctx):
     which stretch), the styles (see `styles`), the lists and the schemes they can have, and the revision they are
     at. A paragraph that is a list item also has `item` (`{list, level}`) and `label` (`{marker, path}`: what is
     drawn in front of it, derived from the structure, and for numbers the trail of counters and the number a
-    reference prints); so has a paragraph whose style numbers it (a numbered heading). A named one has `name`
-    (D554). `lists` are `{id, scheme, start, name}`; `schemes` are `{id, name, kind, levels, indent, gap}` (`indent`
-    and `gap` in em; see `lists`)."""
+    reference prints); so has a paragraph whose style numbers it (a numbered heading). A table of contents has
+    `generated` (its options, `{kind, first, last, numbers, places, leader}`) and `entries` (`{target, level, number,
+    text, style, place}`, derived from the headings, E9.31). A named one has `name` (D554). `lists` are `{id, scheme,
+    start, name}`; `schemes` are `{id, name, kind, levels, indent, gap}` (`indent` and `gap` in em; see `lists`)."""
     model = _text(ctx)
-    labels = model.labels()
+    labels, entries = model.labels(), model.structure.all_entries()
     return {
         "revision": current_revision(ctx),
         "styles": model.styles.views(model.palette.colours()),
         "lists": model.lists.to_data(),
         "schemes": model.schemes.to_data(),
-        "blocks": [_block_view(model, b, labels) for b in model.blocks],
+        "blocks": [_block_view(model, b, labels, entries) for b in model.blocks],
     }
 
 
-def _block_view(model, block, labels) -> dict:
-    """A paragraph as `blocks` sends it: its data, its list label if it is an item, its name if it has one (D554)."""
+def _block_view(model, block, labels, entries) -> dict:
+    """A paragraph as `blocks` sends it: its data, its list label if it is an item, the entries of a table of
+    contents, its name if it has one (D554)."""
     view = block.to_data()
     if block.id in labels:
         view["label"] = labels[block.id].to_data()
+    if block.id in entries:
+        view["entries"] = [entry.to_data() for entry in entries[block.id]]
     name = model.block_names.get(block.id)
     if name:
         view["name"] = name

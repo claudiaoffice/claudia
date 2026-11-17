@@ -23,6 +23,7 @@ from claudia_core import (
     Command,
     CommandRegistry,
     DocumentModel,
+    Generated,
     Label,
     ListBook,
     ListItem,
@@ -133,7 +134,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 12: styles carry heading levels; a new presentation has a slide title style (E9.22, E10.21)
     # 13: the presentation holds lists, whose items are the words of text boxes and shapes (step C, E10.21)
     # 14: the presentation holds its numbering schemes; styles may name a list that numbers them (step D, E9.22)
-    state_schema: ClassVar[int] = 14
+    # 15: the words of a text box may be generated (an agenda, step E, E9.31)
+    state_schema: ClassVar[int] = 15
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -336,6 +338,14 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     def put_item(self, paragraph_id: str, item: ListItem | None) -> object:
         """Make the words of an object an item; the event that tells the clients."""
         return self.put_object_item(paragraph_id, item)
+
+    def generated_of(self, paragraph_id: str) -> Generated | None:
+        """The options of the agenda the words of an object are, or ``None``."""
+        return self.object_generated(paragraph_id)
+
+    def put_generated(self, paragraph_id: str, generated: Generated | None) -> object:
+        """Make the words of an empty text box an agenda, or plain again; the event that tells the clients."""
+        return self.put_object_generated(paragraph_id, generated)
 
     def item_regions(self, paragraph_id: str) -> tuple[Region, ...]:
         """The object whose words they are."""

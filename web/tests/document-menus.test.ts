@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { MenuItem } from '~/components/MenuBar.vue'
+import type { Menu, MenuItem } from '~/components/MenuBar.vue'
 import {
   SEARCH_CHORD,
   SHARED_HINTS,
@@ -185,13 +185,14 @@ describe('searchItem: Edit ▸ Search & Replace… (D281, E5.15)', () => {
 })
 
 describe('insertMenu: Insert ▸ Container in every app (D560)', () => {
+  const containerOf = (menu: Menu) => menu.items.find((i) => i.items)!.items!
   const types = [{ type: 'latex', title: 'LaTeX' }, { type: 'mermaid', title: 'Mermaid' }]
   it('offers the three kinds with their keys, the ones the server cannot make off', () => {
     const { c } = context('editor')
     const added: string[] = []
     const menu = insertMenu(c, { types, add: (k) => added.push(k) })
     expect(menu.label).toBe('Insert')
-    const sub = menu.items[0]!.items!
+    const sub = containerOf(menu)
     expect(ids(sub)).toEqual(['insert.container.latex', 'insert.container.mermaid', 'insert.container.typst'])
     expect(sub.map((i) => i.disabled)).toEqual([false, false, true])
     expect(sub.map((i) => i.hint)).toEqual(['Ctrl+Shift+Alt+F', 'Ctrl+Shift+Alt+G', 'Ctrl+Shift+Alt+Y'])
@@ -200,7 +201,26 @@ describe('insertMenu: Insert ▸ Container in every app (D560)', () => {
   })
   it('is off for somebody who can only look', () => {
     const { c } = context('viewer')
-    const sub = insertMenu(c, { types, add: () => {} }).items[0]!.items!
+    const sub = containerOf(insertMenu(c, { types, add: () => {} }))
     expect(sub.every((i) => i.disabled)).toBe(true)
+  })
+})
+
+describe('insertMenu: Insert ▸ Table of Contents, in creates Agenda (E9.31)', () => {
+  const contentsOf = (menu: Menu) => menu.items.find((i) => i.id === 'insert.contents')!
+  it("comes first, under the app's own name, with its key", () => {
+    const { c } = context('editor')
+    let added = 0
+    const item = contentsOf(insertMenu(c, { types: [], add: () => {} }, { label: 'Agenda', add: () => added++, possible: true }))
+    expect(item.label).toBe('Agenda')
+    expect(item.hint).toBe('Ctrl+Shift+Alt+I')
+    expect(item.disabled).toBe(false)
+    item.action!()
+    expect(added).toBe(1)
+  })
+  it('is shown and off where there is nothing to list (computes), or for somebody who can only look', () => {
+    expect(contentsOf(insertMenu(context('editor').c, { types: [], add: () => {} })).disabled).toBe(true)
+    const viewer = insertMenu(context('viewer').c, { types: [], add: () => {} }, { label: 'x', add: () => {}, possible: true })
+    expect(contentsOf(viewer).disabled).toBe(true)
   })
 })

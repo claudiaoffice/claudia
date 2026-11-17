@@ -4,6 +4,9 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (E9.31)
+- Insert ▸ Table of Contents (creates: Agenda), Ctrl+Alt+Shift+I, before Insert ▸ Container; computes shows it off.
+
 ### Added (E9.22)
 - Format ▸ List ▸ Number Headings (creates: Number All Slide Titles, Ctrl+Alt+Shift+B, ticked while they are numbered)
   and All Numbering… (Ctrl+Alt+Shift+J). The mock-up's keys were taken: Ctrl+Alt+Shift+H is Present from This Slide's,

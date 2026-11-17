@@ -2,6 +2,7 @@
 // (paragraphs, styles, page) and what the preview fetched (objects, shapes, images). `source.ts` lays it out.
 import { utf8Decode, type TextDocument } from '@claudia/layout'
 import type { Block } from '../blocks'
+import { entryWords } from '../contents'
 import type { StyleView } from '../style-css'
 import type { ListInfo, PrintExtras, SchemeInfo } from '../text-session'
 
@@ -19,6 +20,16 @@ export function fromBase64(data: string): Uint8Array {
   return out
 }
 
+/** A paragraph as the layout library reads it; a table of contents (E9.31) as one paragraph per entry, in its Contents
+ *  style (no page numbers yet: they come with the page passes, step F). The first keeps the table's id, so an object
+ *  that hangs from the table still has its place. */
+function printedBlocks(b: Block): TextDocument['blocks'] {
+  if (!b.generated) return [{ id: b.id, style: b.style, text: b.text, item: b.item ?? null, label: b.label ? { marker: b.label.marker } : null }]
+  const entries = b.entries ?? []
+  if (!entries.length) return [{ id: b.id, style: b.style, text: '' }]
+  return entries.map((e, k) => ({ id: k ? `${b.id}~${k}` : b.id, style: e.style, text: entryWords(e) }))
+}
+
 /** The text as the layout library reads it: a list item with the marker the server counted for it, so the printed
  *  pages draw the same markers as the editor. */
 export function textDocument(
@@ -30,7 +41,7 @@ export function textDocument(
   lists: ListsOfText = { lists: [], schemes: [] },
 ): TextDocument {
   return {
-    blocks: blocks.map((b) => ({ id: b.id, style: b.style, text: b.text, item: b.item ?? null, label: b.label ? { marker: b.label.marker } : null })),
+    blocks: blocks.flatMap(printedBlocks),
     lists: lists.lists.map((l) => ({ id: l.id, scheme: l.scheme })),
     schemes: lists.schemes.map((s) => ({ id: s.id, indent: s.indent, gap: s.gap })),
     styles: styles.map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved, heading: s.heading ?? null })),

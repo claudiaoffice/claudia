@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import copy
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import count
 from typing import cast
 from zipfile import BadZipFile
@@ -32,7 +32,7 @@ from zipfile import BadZipFile
 from lxml import etree
 
 from claudia_composes import BUILTIN_STYLES, DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
-from claudia_core import Rasterise, VisualObject
+from claudia_core import Rasterise, Toc, VisualObject
 from claudia_odf_io import (
     MIME,
     NS,
@@ -57,6 +57,7 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
+from ._odt_contents import TABLE_OF_CONTENT, contents_element, read_contents
 from ._odt_lists import (
     LIST,
     OUTLINE_STYLE,
@@ -173,6 +174,8 @@ class _Scan:
     """What the flow of a text holds: the paragraphs that are blocks, and what is in it that is not."""
 
     paragraphs: list[etree._Element]
+    #: The tables of contents, each with the number of paragraphs of the flow before it.
+    contents: list[tuple[int, Toc]] = field(default_factory=list)
     tables: int = 0
     indexes: int = 0
     frames: int = 0
@@ -192,6 +195,8 @@ def _scan(body: etree._Element) -> _Scan:
                 visit(child)
             elif tag == _TABLE:
                 found.tables += 1
+            elif tag == TABLE_OF_CONTENT:
+                found.contents.append((len(found.paragraphs), read_contents(child)))
             elif tag in _INDEXES:
                 found.indexes += 1
             elif tag.startswith(f"{{{NS['draw']}}}"):
@@ -305,10 +310,18 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     lists = _lists_of(parts, body, scan)
     setup = read_setup(etree.fromstring(parts["styles.xml"]) if "styles.xml" in parts else None)
     blocks = []
+    contents = iter(scan.contents)
+    waiting = next(contents, None)
+    tables = count(len(scan.paragraphs) + 1)  # a table of contents' id comes after every paragraph's
     for number, paragraph in enumerate(scan.paragraphs, start=1):
+        while waiting is not None and waiting[0] < number:
+            blocks.append(Block(f"b{next(tables)}", DEFAULT_STYLE, generated=waiting[1]))
+            waiting = next(contents, None)
         text = read_text(paragraph)
         runs = (Run(len(text), None),) if text else ()
         blocks.append(Block(f"b{number}", _style_of(paragraph, parents, None), text, runs, lists.items.get(paragraph)))
+    for _, toc in [*([waiting] if waiting else []), *contents]:
+        blocks.append(Block(f"b{next(tables)}", DEFAULT_STYLE, generated=toc))
     model = TextModel(
         blocks or None,
         page=setup.page,
@@ -560,7 +573,12 @@ def text_to_odt(
     flow = ListFlow(text, lambda list_id, element: names.start(list_id, element))
     regions: list[etree._Element] = []
     pictures = PictureWriter(rasterise)
-    for block in model.blocks:
+    entries = model.structure.all_entries()
+    for number, block in enumerate(model.blocks, start=1):
+        if block.generated is not None:
+            name = f"Table of Contents{number}"
+            flow.add(contents_element(block.generated, entries.get(block.id, ()), name, styles.of), None)
+            continue
         paragraph, found = _new_paragraph(block.style, block.text, by_block.get(block.id, []), ids, when, styles)
         _add_pictures(paragraph, model, block, by_block.get(block.id, []), pictures)
         flow.add(paragraph, block.item)
@@ -616,6 +634,9 @@ def odt_export_losses(
     authored = sum(1 for block in model.blocks if any(run.author is not None for run in block.runs))
     if authored:
         losses.add("authorship", count=authored)
+    paged = sum(1 for block in model.blocks if block.generated is not None and block.generated.places)
+    if paged:
+        losses.add("toc-pages", count=paged)  # an odt cannot ask to be updated on opening (E9.31)
     open_ones = [s for s in model.suggestions.values() if s.state == "open"]
     remarks = sum(1 for s in open_ones if s.replacement is None)
     if remarks:
@@ -1142,8 +1163,11 @@ def apply_edits_to_odt(
     edit counted; the rest of it as it was); a file that was not changed is not touched, and without ``info`` the
     metadata is left alone (D411).
 
-    Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, and blocks
-    moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know)."""
+    Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, blocks
+    moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know), and
+    a table of contents in either model (it is not a paragraph of the file; the file is written anew, E9.31)."""
+    if any(block.generated is not None for model in (baseline, current) for block in model.blocks):
+        raise UnsupportedEdit("a text with a table of contents is written anew, not patched")
     when = when_made(change_times, info.modified if info else None)
     return _Patch(
         original_bytes,

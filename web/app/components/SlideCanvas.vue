@@ -32,7 +32,7 @@ const { t } = useI18n()
 // object snaps or not by its own `snap` field, grid lines shown or not (E10.15).
 const props = defineProps<{ session: SlideSession; showGrid: boolean; marks?: SlideMark[] }>()
 /** `styles` asks the workspace to open the all-styles dialog, which owns the modal layer. */
-const emit = defineEmits<{ styles: [] }>()
+const emit = defineEmits<{ styles: []; agenda: [id: string] }>()
 const session = props.session
 const state = session.state
 /** What a replay marks on this slide (D553): by object, what the step changed or what changed after it. */
@@ -497,6 +497,10 @@ async function beginEdit(id: string | null = state.selected) {
     containerEditing.value = o.id // its text is the definition's, in an editor of its own
     return
   }
+  if (o.paragraph?.generated) {
+    emit('agenda', o.id) // an agenda has no words to type (E9.31): its options open instead
+    return
+  }
   editing.value = { id: o.id, text: wordsOf(o) }
   await nextTick()
   editor.value?.focus()
@@ -593,7 +597,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
         v-for="o in objects"
         :key="o.id"
         class="obj"
-        :class="[o.kind, { selected: o.id === state.selected, empty: wordsOf(o) === '' }, replayClass(o.id)]"
+        :class="[o.kind, { selected: o.id === state.selected, empty: wordsOf(o) === '' && !o.paragraph?.generated }, replayClass(o.id)]"
         :style="boxStyle(o)"
         :data-id="o.id"
         :data-thing="o.id"
@@ -619,8 +623,8 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
             <path :d="outline(o)!.path" vector-effect="non-scaling-stroke" :style="paintCss(o)" />
           </svg>
           <div class="words" :style="textStyle(o)">
-            <span v-if="wordsOf(o) === '' && o.kind === 'text' && editing?.id !== o.id" class="hint">{{ t('Double-click to type') }}</span>
-            <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" :marker="session.markOf(o.id)?.marker" :indent="session.markOf(o.id)?.indent" />
+            <span v-if="wordsOf(o) === '' && o.kind === 'text' && !o.paragraph?.generated && editing?.id !== o.id" class="hint">{{ t('Double-click to type') }}</span>
+            <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" :marker="session.markOf(o.id)?.marker" :indent="session.markOf(o.id)?.indent" :entries="session.agendaOf(o.id)" :leader="o.paragraph?.generated?.leader" />
           </div>
           <textarea
             v-if="editing?.id === o.id"

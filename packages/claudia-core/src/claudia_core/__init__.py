@@ -21,6 +21,7 @@
     styles       StyleBook and the commands that change it (E1.10)
     lists        ListDef, ListBook, SetListItem and the counting of list items (E9.21)
     schemes      Scheme, LevelFormat, SchemeBook: how the markers of a list are drawn, part of the document (E9.22)
+    generated    Toc, ContentsEntry, SetGenerated: tables of contents and agendas, derived from the headings (E9.31)
     paragraphs   Paragraph and Run: styled text and who wrote which part, shared by all three apps (E10.17)
     object_texts the words and descriptions of objects as texts a search can look in and replace, for any app
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
@@ -114,6 +115,16 @@ from .facets import (
     fits,
 )
 from .file_pictures import FILE_IMPORTER, IMAGE_STYLE, UNKNOWN_TIME, asset_of, keeps_proportions, picture_body
+from .generated import (
+    CONTENTS_STYLE,
+    ContentsEntry,
+    Generated,
+    GeneratedChanged,
+    GeneratedHost,
+    SetGenerated,
+    Toc,
+    generated_from_data,
+)
 from .history import History, Step
 from .language import LanguageChanged, LanguageError, SetLanguage, normalize_language
 from .lists import (
@@ -278,6 +289,14 @@ __all__ = [
     "CreateList",
     "ChangeList",
     "FORMATS",
+    "CONTENTS_STYLE",
+    "ContentsEntry",
+    "Generated",
+    "GeneratedChanged",
+    "GeneratedHost",
+    "SetGenerated",
+    "Toc",
+    "generated_from_data",
     "ChangeScheme",
     "CreateScheme",
     "LevelFormat",

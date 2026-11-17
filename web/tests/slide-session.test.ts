@@ -616,3 +616,42 @@ describe('lists in text boxes (E9.21, E9.22)', () => {
     expect(link.last('number_headings')).toMatchObject({ on: true })
   })
 })
+
+describe('agendas (E9.31)', () => {
+  const TOC = { kind: 'toc', first: 1, last: 1, numbers: true, places: true, leader: 'dots' }
+  const agenda = (id: string) => text(id, { paragraph: { ...paragraph(id), generated: TOC } })
+  const line = (target: string, words: string, place: string) => ({ target, level: 1, number: null, text: words, style: 'slide-agenda', place })
+  async function withAgenda(objects: any[]) {
+    const link = new FakeLink()
+    server(link, objects)
+    link.handlers.contents = () => ({ revision: 'main:0', entries: { ag: [line('t1', 'Why', '1')] } })
+    link.handlers.insert_agenda = () => ({ object: 'ag2', revision: 'main:1' })
+    link.handlers.set_contents = () => ({ revision: 'main:2' })
+    const session = new SlideSession(() => link, { retryDelays: [1] })
+    await session.open()
+    return { link, session, state: session.state }
+  }
+
+  it('loads the lines of every agenda, follows the server’s, and tells an agenda from a text box', async () => {
+    const { link, session } = await withAgenda([agenda('ag'), text('t1')])
+    expect(session.agendaOf('ag')?.map((e) => e.text)).toEqual(['Why'])
+    expect(session.agendaOf('t1')).toBeNull()
+    link.push('generated', { type: 'generated', paragraph: 'ag', entries: [line('t1', 'Why', '1'), line('t2', 'How', '2')] })
+    expect(session.agendaOf('ag')?.map((e) => e.place)).toEqual(['1', '2'])
+    link.push('generated', { type: 'generated', paragraph: 'ag', entries: null })
+    expect(session.agendaOf('ag')).toEqual([])
+  })
+
+  it('puts an agenda on the slide shown and sends other options', async () => {
+    const { link, session } = await withAgenda([agenda('ag')])
+    await session.insertAgenda()
+    expect(link.last('insert_agenda')).toMatchObject({ slide: 's1' })
+    await session.setContents('ag', { ...TOC, numbers: false } as any)
+    expect(link.last('set_contents')).toMatchObject({ paragraph: 'ag', options: { numbers: false } })
+  })
+
+  it('an older server without agendas shows none', async () => {
+    const { session } = await opened([text('t1')])
+    expect(session.state.agendas).toEqual({})
+  })
+})

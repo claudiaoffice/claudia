@@ -10,6 +10,7 @@ import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region,
 import { languageNow, onLanguageChange, translate as t } from './i18n'
 import type { Thing } from './tags'
 import type { SchemeInfo } from './numbering'
+import type { Toc } from './contents'
 import { nearest, PastLink, step as stepRow, timeline, type Filter, type Item } from './replay'
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
@@ -875,6 +876,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Number a heading style in a list (`"none"`: not numbered; `null`: as its parent). */
   async setStyleNumbering(style: string, numbering: string | null): Promise<boolean> {
     return (await this.attempt('set_style_numbering', { style, numbering, base: this.state.revision })) !== false
+  }
+
+  // ------------------------------------------------------------------------------ tables of contents (E9.31)
+  /** Give a table of contents (in creates: an agenda) other options; the entries come back as a `generated` event. */
+  async setContents(paragraph: string, options: Toc): Promise<boolean> {
+    return (await this.attempt('set_contents', { paragraph, options, base: this.state.revision })) !== false
   }
 
   async undo(): Promise<boolean> {

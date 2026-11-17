@@ -78,7 +78,7 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
-from ._items import Mark, OdpListReader, OdpLists, list_styles, marks_of, odp_level
+from ._items import Mark, OdpListReader, OdpLists, agendas, list_styles, marks_of, odp_level, words_of
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._styling import colour_of, look, page_colour, points_of
 from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
@@ -860,7 +860,7 @@ class _Writer:
         body, anchor = obj.body, obj.anchor
         over = page_colour(self.model)
         placing = _placing(anchor, body, self.cm_per_unit)
-        text = body.paragraph.text if body.paragraph is not None else ""
+        text = words_of(self.model, body)
         words_css = look(self.model, body.paragraph.style) if body.paragraph is not None else {}
         words = self.looks.paragraph(words_css, over, self.pt_per_unit)
         if body.kind in ("image", "rendered"):
@@ -1039,6 +1039,8 @@ def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[L
     losses = LossLog()
     if authored := authored_objects(model):
         losses.add("authorship", count=authored)
+    if written := agendas(model):
+        losses.add("agenda", count=written)  # written as the lines it shows: it no longer follows the slides
     for loss in notes_losses(model):
         losses.add(loss.kind, loss.detail, loss.count)
     decorative = sum(1 for obj in model.objects.values() if obj.body.decorative)
@@ -1141,6 +1143,12 @@ class _Patch:
     def run(self) -> bytes:
         if marks_of(self.baseline) != marks_of(self.current):
             raise UnsupportedEdit("lists in text boxes cannot be patched onto the original file yet")
+        if any(
+            words_of(self.baseline, obj.body) != words_of(self.current, self.current.objects[object_id].body)
+            for object_id, obj in self.baseline.objects.items()
+            if object_id in self.current.objects and obj.body.paragraph is not None and obj.body.paragraph.generated
+        ):
+            raise UnsupportedEdit("an agenda that changed cannot be patched onto the original file yet")
         for slide in self.slides:
             if slide.id not in self.current.slides:
                 self._remove_slide(slide)

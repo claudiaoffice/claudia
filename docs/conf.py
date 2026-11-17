@@ -50,6 +50,7 @@ nitpick_ignore_regex = [
     (r"py:class", r"claudia_(creates|computes|composes)\.model\.(Slide|Sheet|Text)Object"),
     (r"py:class", r"claudia_core\.renderings\.Scalar"),
     (r"py:(class|data)", r"(claudia_core\.styles\.)?HeadingLevel"),
+    (r"py:(class|data)", r"(claudia_core\.generated\.)?Generated"),
 ]
 html_theme = "alabaster"
 myst_heading_anchors = 3

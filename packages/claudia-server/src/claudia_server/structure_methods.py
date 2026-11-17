@@ -15,6 +15,8 @@ slide by slide. So a list runs on from one text box to the next as it does from 
 * ``number_headings(on)``: number every heading style in the list ``outline`` (scheme ``chapters``), or no longer;
   creates offers it as Number All Slide Titles, since a slide title is a heading;
 * ``new_scheme``, ``change_scheme``, ``reset_scheme`` and ``remove_scheme``: the numbering manager (All Numbering).
+* ``contents`` and ``set_contents``: the entries of every table of contents (agenda), and its options (E9.31). Putting
+  one into the document is each app's own (``insert_contents`` in composes, ``insert_agenda`` in creates).
 
 Each is one request and so one step in the history; what the assistant may call is its allow-list (SEC-10, D640).
 Which Enter, Tab or Backspace does is the session's rule, built from these.
@@ -33,6 +35,7 @@ from claudia_core import (
     Command,
     CreateList,
     CreateScheme,
+    GeneratedHost,
     ItemHost,
     ListDef,
     ListItem,
@@ -41,10 +44,13 @@ from claudia_core import (
     RemoveScheme,
     Revision,
     Scheme,
+    SetGenerated,
     SetListItem,
     SetStyleNumbering,
     TextStructure,
+    Toc,
     builtin_scheme,
+    generated_from_data,
 )
 
 from .i18n import msg
@@ -56,7 +62,7 @@ MAX_LISTED = 2_000  # paragraphs one request may touch
 OUTLINE_LIST, OUTLINE_SCHEME = "outline", "chapters"
 
 
-class _Host(ParagraphHost, ItemHost, Protocol):
+class _Host(ParagraphHost, ItemHost, GeneratedHost, Protocol):
     """What these methods need of a model: its paragraphs in reading order, their items and what is derived."""
 
     structure: TextStructure
@@ -64,7 +70,7 @@ class _Host(ParagraphHost, ItemHost, Protocol):
 
 def _host(ctx: Context) -> _Host:
     model = ctx.document.model
-    needed = ("reading_order", "item_of", "put_item", "lists", "schemes", "styles")
+    needed = ("reading_order", "item_of", "put_item", "generated_of", "lists", "schemes", "styles")
     if not all(hasattr(model, name) for name in needed):
         raise RequestError("command_error", msg("this document has no lists"))
     return model  # type: ignore[return-value]
@@ -208,9 +214,52 @@ def _scheme_from(data: object) -> Scheme:
 
 # ------------------------------------------------------------------------------ the methods
 def add_structure_methods(table: MethodTable) -> None:
-    """Add the methods of lists, numbered headings and schemes to an app's method table."""
+    """Add the methods of lists, numbered headings, schemes and tables of contents to an app's method table."""
     _add_list_methods(table)
     _add_scheme_methods(table)
+    _add_contents_methods(table)
+
+
+def toc_from(data: object) -> Toc:
+    """The options of a table of contents from what a client sent; ``command_error`` with a sentence if they make no
+    sense."""
+    try:
+        made = generated_from_data(data)  # type: ignore[arg-type]
+    except (KeyError, TypeError, ValueError, AttributeError) as exc:
+        reason = msg("not the options of a table of contents: {reason}", reason=exc)
+        raise RequestError("command_error", reason) from None
+    return made
+
+
+def _add_contents_methods(table: MethodTable) -> None:
+    @table.method("contents")
+    def _contents(ctx):
+        """The entries of every table of contents (agenda) of the document, by its paragraph id: `{target, level,
+        number, text, style, place}` (`place` the slide number in a presentation; in a text the layout finds the
+        page), and the `revision` they are at. A `generated` event brings the entries that change."""
+        model = _host(ctx)
+        entries = model.structure.all_entries()
+        return {
+            "revision": current_revision(ctx),
+            "entries": {paragraph: [entry.to_data() for entry in found] for paragraph, found in entries.items()},
+        }
+
+    @table.method("set_contents", "paragraph:str options:dict base:revision?", write=True)
+    def _set_contents(ctx, *, paragraph, options, base):
+        """Give the table of contents (agenda) `paragraph` other options: `{kind: "toc", first, last, numbers,
+        places, leader}` (levels 1 to 9; leader `dots` or `none`). One step; the same options are no step.
+        `command_error` for a paragraph that is no table of contents, or options that make no sense."""
+        model = _host(ctx)
+        wanted = toc_from(options)
+        try:
+            current = model.generated_of(paragraph)
+        except (KeyError, ValueError) as exc:
+            raise RequestError("command_error", msg("no paragraph {id!r}", id=paragraph)) from exc
+        if current is None:
+            raise RequestError("command_error", msg("this paragraph is not a table of contents"))
+        if current == wanted:
+            return _revision(ctx)
+        return _run(ctx, [SetGenerated(paragraph, wanted)], "Table of contents", base)
 
 
 def _add_list_methods(table: MethodTable) -> None:

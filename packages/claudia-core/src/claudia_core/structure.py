@@ -16,8 +16,10 @@ be told about it.
   style with a heading level of 1 or more that names a list makes its paragraphs items of that list, at the level
   below their heading level. Only paragraphs of the main text get one: words floating beside a text are no headings.
 
-Later steps add to this class what else is derived from the structure: the outline, the entries of a table of
-contents and what a reference shows.
+* The **entries** of a table of contents (an agenda) are the headings of the main text whose level it lists, with their
+  numbers and, where the kernel knows it, their place (a slide number); see :mod:`claudia_core.generated`.
+
+Later steps add to this class what a reference shows.
 """
 
 from __future__ import annotations
@@ -26,6 +28,7 @@ from collections.abc import Hashable, Iterable, Iterator
 from dataclasses import dataclass
 from typing import NamedTuple, Protocol
 
+from .generated import CONTENTS_STYLE, ContentsEntry, Generated, GeneratedChanged
 from .lists import Label, ListBook, numbering_labels
 from .paragraphs import MAX_LIST_LEVEL, ListItem, Paragraph
 from .schemes import SchemeBook
@@ -86,15 +89,19 @@ class Emitter(Protocol):
 
 
 class TextStructure:
-    """What is derived from the structure of one document's paragraphs: today the label of every list item and of
-    every numbered heading."""
+    """What is derived from the structure of one document's paragraphs: the label of every list item and of every
+    numbered heading, and the entries of every table of contents (agenda)."""
 
     def __init__(self, host: ParagraphHost) -> None:
         self.host = host
         self._key: tuple[Hashable, int, int, int] | None = None
         self._labels: dict[str, Label] = {}
+        self._generated_key: Hashable = None
+        self._generated: dict[str, tuple[Placed, Generated]] = {}
         #: The labels the clients have been told about (with the document, then by ``settle``).
         self._told: dict[str, Label] = self.labels()
+        #: The entries of each generated paragraph the clients have been told about.
+        self._told_entries: dict[str, tuple[ContentsEntry, ...]] = self.all_entries()
 
     def reading_order(self) -> Iterator[Placed]:
         """The host's paragraphs in the order they are read."""
@@ -137,9 +144,69 @@ class TextStructure:
             self._key = key
         return self._labels
 
+    # -- tables of contents (step E) -----------------------------------------------------------------
+    def generated(self) -> dict[str, tuple[Placed, Generated]]:
+        """Every generated paragraph, by id, with its options. Looked for again only when the structure changed (a
+        paragraph made generated or plain again changes it)."""
+        key = self.host.structure_version
+        if self._generated_key != key:
+            self._generated = {
+                placed.paragraph.id: (placed, placed.paragraph.generated)
+                for placed in self.reading_order()
+                if placed.paragraph.generated is not None
+            }
+            self._generated_key = key
+        return self._generated
+
+    def outline(self) -> list[tuple[Placed, int]]:
+        """Every heading of the main text with its level (1 or deeper: the title, level 0, names the document and is
+        never listed), in reading order; generated paragraphs are no headings."""
+        styles, found = self.host.styles, []
+        for placed in self.reading_order():
+            paragraph = placed.paragraph
+            if not placed.main or paragraph.generated is not None or paragraph.style not in styles:
+                continue
+            level = styles.heading_level(paragraph.style)
+            if isinstance(level, int) and level >= 1:
+                found.append((placed, level))
+        return found
+
+    def all_entries(self) -> dict[str, tuple[ContentsEntry, ...]]:
+        """The entries of every table of contents, by its paragraph id. A document without one costs nothing."""
+        generated = self.generated()
+        if not generated:
+            return {}
+        outline, labels, styles = self.outline(), self.labels(), self.host.styles
+        found: dict[str, tuple[ContentsEntry, ...]] = {}
+        for paragraph_id, (own, options) in generated.items():
+            entries = []
+            for placed, level in outline:
+                if not options.lists(level):
+                    continue
+                label = labels.get(placed.paragraph.id)
+                wanted = CONTENTS_STYLE.format(level=level)
+                entries.append(
+                    ContentsEntry(
+                        placed.paragraph.id,
+                        level,
+                        label.number if options.numbers and label is not None else None,
+                        placed.paragraph.text,
+                        wanted if wanted in styles else own.paragraph.style,
+                        placed.place if options.places else None,
+                    )
+                )
+            found[paragraph_id] = tuple(entries)
+        return found
+
+    def entries(self, paragraph_id: str) -> tuple[ContentsEntry, ...]:
+        """The entries of one table of contents; none for a paragraph that is not one."""
+        return self.all_entries().get(paragraph_id, ())
+
     def settle(self, ctx: Emitter) -> None:
-        """Tell the clients which labels changed: one item set may have renumbered a hundred others. A paragraph that
-        is no longer there is not mentioned (its client drops it with the paragraph)."""
+        """Tell the clients which labels and which entries of tables of contents changed: one item set may have
+        renumbered a hundred others, one retyped heading changes an entry. A paragraph that is no longer there is not
+        mentioned (its client drops it with the paragraph)."""
+        self._settle_entries(ctx)
         now = self.labels()
         if now is self._told or now == self._told:
             return
@@ -153,3 +220,18 @@ class TextStructure:
         self._told = now
         if changed:
             ctx.emit(LabelsChanged(tuple(changed)))
+
+    def _settle_entries(self, ctx: Emitter) -> None:
+        now = self.all_entries()
+        if now == self._told_entries:
+            return
+        for paragraph_id, entries in now.items():
+            if self._told_entries.get(paragraph_id) != entries:
+                ctx.emit(GeneratedChanged(paragraph_id, entries))
+        gone = [paragraph_id for paragraph_id in self._told_entries if paragraph_id not in now]
+        if gone:
+            present = {placed.paragraph.id for placed in self.reading_order()}
+            for paragraph_id in gone:
+                if paragraph_id in present:
+                    ctx.emit(GeneratedChanged(paragraph_id, None))
+        self._told_entries = now

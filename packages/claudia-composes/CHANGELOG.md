@@ -3,6 +3,21 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.15.0] - 2026-11-17
+
+Tables of contents (step E, E9.31). State schema 13 → 14 (a paragraph may have `generated`; a snapshot of 13 restores
+unchanged).
+
+### Added
+- `TextModel.generated_of` and `put_generated`: the text is a `claudia_core.GeneratedHost`, for its own paragraphs and
+  the words of its floating objects; the event `BlockGenerated` (wire type `block_generated`).
+- The built-in styles Contents Title (`contents-title`) and Contents 1 to 9 (`contents-1` … `contents-9`), which the
+  entries of a table are drawn in.
+
+### Changed
+- Typing into a table of contents and joining a paragraph with text into one are refused; a table cannot be joined to
+  the paragraph before it (it is taken away instead).
+
 ## [0.14.0] - 2026-11-16
 
 Numbered headings and numbering schemes (step D, E9.22). State schema 12 → 13 (a snapshot of 12 restores with the

@@ -260,7 +260,9 @@ export class TextSession extends BaseSession<TextState> {
       case 'join':
       case 'style':
       case 'item':
-      case 'labels': {
+      case 'labels':
+      case 'block_generated':
+      case 'generated': {
         const event = eventInUnits(s.blocks, data as TextEvent)
         if (!applyEvent(s.blocks, event)) this.track(this.reload())
         else this.follow(event)
@@ -471,9 +473,19 @@ export class TextSession extends BaseSession<TextState> {
     return true
   }
 
+  /** Is the caret (or the start of the selection) on a table of contents? Then typing is refused: its entries come
+   * from the headings (E9.31). */
+  private onContents(): boolean {
+    const at = this.range()?.[0]
+    const block = at && this.state.blocks.find((b) => b.id === at.block)
+    if (!block?.generated) return false
+    this.notice(t('A table of contents takes no typing: its entries come from the headings.'), 'warning')
+    return true
+  }
+
   /** Type: the characters appear at once, and are sent when the word ends. */
   type(text: string) {
-    if (!text || this.denied()) return
+    if (!text || this.denied() || this.onContents()) return
     const caret = this.state.selection?.focus
     const pending = this.state.pending
     if (this.jobs > 0 || !this.isCollapsed() || (pending && caret && !same(pending.at, caret))) {
@@ -527,7 +539,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Put text in place of the selection (paste; Enter). */
   replaceSelection(text: string): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
+    if (this.denied() || (text && this.onContents())) return undefined
     return this.act(async () => {
       const r = this.range()
       return r ? this.write(r[0], r[1], text) : false
@@ -569,7 +581,14 @@ export class TextSession extends BaseSession<TextState> {
     if (!same(r[0], r[1])) return this.write(r[0], r[1], '')
     const { blocks } = this.state
     const i = indexOf(blocks, r[0].block)
+    if (blocks[i]!.generated) return this.removeContentsNow(r[0].block) // the second key on a table takes it away
     const text = blocks[i]!.text
+    const neighbour = direction < 0 ? (r[0].offset === 0 ? blocks[i - 1] : undefined) : r[0].offset === text.length ? blocks[i + 1] : undefined
+    if (neighbour?.generated) {
+      // the first key next to a table selects it, as the mock-up has it (E9.31): a table is never half deleted
+      this.state.selection = collapsed({ block: neighbour.id, offset: 0 })
+      return true
+    }
     if (direction < 0) {
       if (r[0].offset > 0) {
         const start = word ? wordStart(text, r[0].offset) : r[0].offset - (text.codePointAt(r[0].offset - 2)! > 0xffff ? 2 : 1)
@@ -697,6 +716,37 @@ export class TextSession extends BaseSession<TextState> {
   currentItem(): ListItem | null {
     const focus = this.state.selection?.focus
     return this.state.blocks.find((b) => b.id === focus?.block)?.item ?? null
+  }
+
+  // ------------------------------------------------------------------------------ tables of contents (E9.31)
+  /** The table of contents the caret is on, or `null`. */
+  currentContents(): Block | null {
+    const at = this.state.selection?.focus
+    const block = at && this.state.blocks.find((b) => b.id === at.block)
+    return block?.generated ? block : null
+  }
+
+  /** Put a "Contents" paragraph and a table of contents at the caret, as one step; the caret goes onto the table. */
+  insertContents(): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => {
+      const at = this.state.selection?.focus
+      if (!at) return false
+      const done = await this.attempt('insert_contents', { block: at.block, base: this.state.revision })
+      if (done === false) return false
+      if (typeof done.block === 'string') this.state.selection = collapsed({ block: done.block, offset: 0 })
+      return true
+    })
+  }
+
+  /** Take a table of contents away (its "Contents" paragraph stays, as the author's words). */
+  removeContents(block: string): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(async () => this.removeContentsNow(block))
+  }
+
+  private async removeContentsNow(block: string): Promise<boolean> {
+    return (await this.attempt('remove_contents', { block, base: this.state.revision })) !== false
   }
 
   /** The scheme (`bullets`, `numbers`) of the list the caret's item belongs to, or `null`. */

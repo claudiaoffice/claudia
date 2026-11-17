@@ -6,6 +6,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- Tables of contents and agendas (step E, E9.31): `contents` (every table's entries) and `set_contents` in composes and
+  creates (`claudia_server.structure_methods`); `insert_contents` and `remove_contents` in composes
+  (`claudia_server.composes_contents`: a "Contents" paragraph in the reader's language and the table, as one step);
+  `insert_agenda` in creates. `blocks` sends a table's `generated` and `entries`. `PROTOCOL_VERSION` stays: methods
+  were added.
 - Lists, numbered headings and numbering schemes in composes and creates, one module for both
   (`claudia_server.structure_methods`, step D, E9.22): `lists` (the lists, the schemes and every label),
   `make_list`, `indent_item`, `continue_list` and `list_start` on any paragraph id in reading order (in creates the

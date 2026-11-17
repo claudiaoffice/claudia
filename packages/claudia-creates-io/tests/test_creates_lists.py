@@ -8,6 +8,8 @@ from io import BytesIO
 
 import pytest
 from claudia_creates_io import (
+    UnsupportedEdit,
+    apply_edits_to_odp,
     apply_edits_to_pptx,
     odp_import_losses,
     odp_to_slides,
@@ -147,3 +149,53 @@ def test_a_scheme_of_the_presentations_own_goes_into_the_odp_and_comes_back():
 @pytest.mark.parametrize("scheme", ["bullets", "chapters"])
 def test_every_built_in_scheme_survives_an_odp(scheme):
     assert markers(odp_to_slides(slides_to_odp(deck(scheme)))) == markers(deck(scheme))
+
+
+# ----------------------------------------------------------------------------- agendas (E9.31)
+def with_agenda() -> SlideModel:
+    from claudia_core import Toc
+
+    model = SlideModel.empty()
+    model.insert_slide("s2")
+    model.insert_object(box("t1", "s1", "Why", style="slide-title"))
+    model.insert_object(box("t2", "s2", "How", style="slide-title"))
+    agenda = paragraph_for("ag", "body-text", "").with_generated(Toc(1, 1))
+    model.insert_object(
+        VisualObject(ObjectBody("ag", "text", 400, 300, "plain-box", agenda), SlideAnchor("s1", 100, 300))
+    )
+    return model
+
+
+@pytest.mark.parametrize(
+    ("write", "read", "losses"),
+    [(slides_to_pptx, pptx_to_slides, pptx_export_losses), (slides_to_odp, odp_to_slides, None)],
+)
+def test_an_agenda_is_written_as_the_lines_it_shows_and_the_loss_is_said(write, read, losses):
+    back = read(write(with_agenda()))
+    words = [
+        o.body.paragraph.text
+        for o in back.objects.values()
+        if o.body.paragraph and "Why" in o.body.paragraph.text and "How" in o.body.paragraph.text
+    ]
+    assert words == ["Why\t1\nHow\t2"]
+    if losses is not None:
+        assert ("agenda", 1) in [(loss.kind, loss.count) for loss in losses(with_agenda())]
+
+
+def test_a_retitled_slide_rewrites_the_agenda_of_a_kept_pptx():
+    baseline, current = with_agenda(), with_agenda()
+    original = slides_to_pptx(baseline)
+    titled = current.objects["t1"]
+    current.replace_object(titled.with_body(paragraph=paragraph_for("t1", "slide-title", "Why we did it")))
+    patched = pptx_to_slides(apply_edits_to_pptx(original, baseline, current))
+    words = [o.body.paragraph.text for o in patched.objects.values() if o.body.paragraph]
+    assert "Why we did it\t1\nHow\t2" in words
+
+
+def test_a_kept_odp_whose_agenda_changed_is_written_afresh_instead():
+    baseline, current = with_agenda(), with_agenda()
+    current.replace_object(
+        current.objects["t1"].with_body(paragraph=paragraph_for("t1", "slide-title", "Why we did it"))
+    )
+    with pytest.raises(UnsupportedEdit):  # the file keeps no agenda, nor ids: it is written afresh
+        apply_edits_to_odp(slides_to_odp(baseline), baseline, current)

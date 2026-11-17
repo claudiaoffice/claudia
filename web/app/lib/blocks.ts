@@ -2,6 +2,8 @@
 // by which positions (my caret, a colleague's zone, a suggestion) move through those events. Every rule mirrors the
 // `follow` of the command in claudia_composes, so that what the screen shows is what the server holds.
 
+import type { ContentsEntry, Toc } from './contents'
+
 /** `[length, author, via]`: who wrote this stretch, and whose suggestion it came through. */
 export type Run = [number, string | null, string | null]
 /** A paragraph's place in a list: which list (an id of the document's lists) and the level, 0 being the outermost. */
@@ -28,6 +30,10 @@ export interface Block {
   label?: Label
   /** Its name, when somebody has pointed at it or named it (D554). */
   name?: string
+  /** Set when the paragraph is a table of contents (E9.31): its options. Such a paragraph holds no text. */
+  generated?: Toc | null
+  /** A table of contents' lines, derived by the server from the headings. */
+  entries?: ContentsEntry[]
 }
 export interface Pos {
   block: string
@@ -47,6 +53,8 @@ export type TextEvent =
   | { type: 'style'; block: string; style: string }
   | { type: 'item'; block: string; item: ListItem | null }
   | { type: 'labels'; labels: Record<string, Label | null> }
+  | { type: 'block_generated'; block: string; generated: Toc | null }
+  | { type: 'generated'; paragraph: string; entries: ContentsEntry[] | null }
 
 // ------------------------------------------------------------------------------ runs
 export function normalizeRuns(runs: Run[]): Run[] {
@@ -96,6 +104,12 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
     }
     return true
   }
+  if (ev.type === 'generated') {
+    const found = blocks[indexOf(blocks, ev.paragraph)]
+    if (found && ev.entries) found.entries = ev.entries
+    else if (found) delete found.entries
+    return true // a table that went away in the same step needs nothing
+  }
   const i = indexOf(blocks, ev.type === 'join' ? ev.into : ev.block)
   const block = blocks[i]
   if (!block) return false
@@ -136,6 +150,11 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
       block.item = ev.item
       if (!ev.item) delete block.label
       return true
+    case 'block_generated':
+      if (ev.generated && block.text) return false // a table of contents holds no text: the replica is out of step
+      block.generated = ev.generated
+      if (!ev.generated) delete block.entries
+      return true
   }
 }
 
@@ -164,6 +183,8 @@ export function followSpan(span: Span, ev: TextEvent): Span {
     case 'style':
     case 'item':
     case 'labels':
+    case 'block_generated':
+    case 'generated':
       return span
   }
 }
@@ -256,7 +277,7 @@ export function runsToPoints(text: string, runs: Run[]): Run[] {
 
 /** An event as the server sent it (code points) in UTF-16 units, judged against the paragraphs it will be applied to. */
 export function eventInUnits(blocks: Block[], ev: TextEvent): TextEvent {
-  if (ev.type === 'labels') return ev
+  if (ev.type === 'labels' || ev.type === 'generated') return ev
   const text = blocks.find((b) => b.id === (ev.type === 'join' ? ev.into : ev.block))?.text ?? ''
   switch (ev.type) {
     case 'text': {
@@ -270,6 +291,7 @@ export function eventInUnits(blocks: Block[], ev: TextEvent): TextEvent {
       return { ...ev, at: unitOf(text, ev.at) }
     case 'style':
     case 'item':
+    case 'block_generated':
       return ev
   }
 }

@@ -56,7 +56,7 @@ from claudia_creates import (
 from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
-from ._items import ItemReader, marks_of, read_pptx_mark, sayable_in_pptx, write_pptx_mark
+from ._items import ItemReader, agendas, marks_of, read_pptx_mark, sayable_in_pptx, words_of, write_pptx_mark
 from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._styling import colour_of, look, page_colour, points_of
 from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
@@ -203,13 +203,16 @@ def pptx_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[
     ``"notes-quote"`` (slides whose notes use what the file shows only as plain words), ``"svg-fallback"`` (a picture
     drawn as SVG, which only PowerPoint 2016 and later show; other programs show an empty picture unless a rasteriser
     was given, ``rasterised``), ``"rendering-pending"`` (a rendered text container nothing has been drawn for yet:
-    left out), ``"list-look"`` (a list marker PowerPoint has no automatic number for, such as ``2.1``: left out) and
+    left out), ``"list-look"`` (a list marker PowerPoint has no automatic number for, such as ``2.1``: left out),
+    ``"agenda"`` (an agenda, written as the lines it shows: it no longer follows the slides) and
     what :func:`pptx_unwritten_changes` says of a fresh file (``"planned-time"``...)."""
     losses = LossLog()
     if authored := authored_objects(model):
         losses.add("authorship", count=authored)
     if unsaid := sum(1 for mark in marks_of(model).values() if not sayable_in_pptx(mark)):
         losses.add("list-look", count=unsaid)
+    if written := agendas(model):
+        losses.add("agenda", count=written)
     for loss in notes_losses(model):
         losses.add(loss.kind, loss.detail, loss.count)
     for obj in model.objects.values():
@@ -365,7 +368,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None) -> 
             )
 
             css = look(model, body.style)
-            words = body.paragraph.text if body.paragraph else ""
+            words = words_of(model, body)
             text_css = look(model, body.paragraph.style) if body.paragraph else {}
             if body.kind == "text":
                 shape = slide.shapes.add_textbox(*box)
@@ -691,7 +694,7 @@ def _patch_shape(  # noqa: ANN001, PLR0913
         _describe(shape, body)
     if body.kind == "image":
         return  # a picture has no words and no look of its own
-    shape.text_frame.text = body.paragraph.text if body.paragraph is not None else ""
+    shape.text_frame.text = words_of(current, body)
     page = page_colour(current)
     words_css = look(current, body.paragraph.style) if body.paragraph is not None else {}
     _style_text(shape.text_frame, words_css, pt_per_unit, page)
@@ -742,7 +745,10 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
         shape_indices = _modeled_shape_indices(prs.slides[slide_number])
         for position, object_id in enumerate(obj.id for obj in baseline.objects_on(slide_id)):
             before, after = baseline_by_id[object_id], current_by_id[object_id]
-            if before == after and marks_before.get(object_id) == marks_after.get(object_id):
+            same_words = words_of(baseline, before.body) == words_of(
+                current, after.body
+            )  # an agenda follows the slides
+            if before == after and same_words and marks_before.get(object_id) == marks_after.get(object_id):
                 continue  # nothing about this object changed: leave its shape exactly as is
             if before.body.kind != after.body.kind or before.body.shape != after.body.shape:
                 raise UnsupportedEdit(

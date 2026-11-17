@@ -136,3 +136,78 @@ def test_a_viewer_may_read_the_lists_but_not_change_them(deck):
     assert call(deck, "lists", account=VERA)["schemes"]
     with pytest.raises(RequestError):
         call(deck, "number_headings", {"on": True}, account=VERA)
+
+
+# ----------------------------------------------------------------------------- tables of contents and agendas (E)
+def entries_of(doc, paragraph):
+    return [(e["target"], e["number"], e["text"], e["place"]) for e in call(doc, "contents")["entries"][paragraph]]
+
+
+def test_a_table_of_contents_goes_in_after_a_paragraph_with_its_title_in_one_step(paper):
+    call(paper, "number_headings", {"on": True})
+    made = call(paper, "insert_contents", {"block": "b1"})["block"]
+    blocks = call(paper, "blocks")["blocks"]
+    title, table = blocks[1], blocks[2]
+    assert (title["style"], title["text"]) == ("contents-title", "Contents")
+    assert table["id"] == made and table["generated"]["kind"] == "toc"
+    assert [(e["target"], e["number"], e["style"]) for e in table["entries"]] == [
+        ("b1", "1", "contents-1"),
+        ("b3", "1.1", "contents-2"),
+        ("b4", "2", "contents-1"),
+    ]
+    call(paper, "undo")
+    assert len(call(paper, "blocks")["blocks"]) == 4, "title and table were one step"
+
+
+def test_its_entries_follow_the_headings_and_its_options_change_in_one_step(paper):
+    made = call(paper, "insert_contents", {"block": "b4"})["block"]
+    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 3, "text": "Why we did it"})
+    assert entries_of(paper, made)[0] == ("b1", None, "Why we did it", None)
+    call(
+        paper,
+        "set_contents",
+        {
+            "paragraph": made,
+            "options": {"kind": "toc", "first": 2, "last": 2, "numbers": True, "places": True, "leader": "none"},
+        },
+    )
+    assert [e[0] for e in entries_of(paper, made)] == ["b3"]
+    with pytest.raises(RequestError, match="levels 1 to 9"):
+        call(
+            paper,
+            "set_contents",
+            {
+                "paragraph": made,
+                "options": {"kind": "toc", "first": 0, "last": 2, "numbers": True, "places": True, "leader": "none"},
+            },
+        )
+    with pytest.raises(RequestError, match="not a table of contents"):
+        call(
+            paper,
+            "set_contents",
+            {
+                "paragraph": "b1",
+                "options": {"kind": "toc", "first": 1, "last": 2, "numbers": True, "places": True, "leader": "none"},
+            },
+        )
+
+
+def test_typing_into_a_table_of_contents_is_refused_and_removing_it_keeps_its_title(paper):
+    made = call(paper, "insert_contents", {"block": "b4"})["block"]
+    with pytest.raises(RequestError):
+        call(paper, "replace_text", {"block": made, "start": 0, "end_block": made, "end": 0, "text": "x"})
+    call(paper, "remove_contents", {"block": made})
+    blocks = call(paper, "blocks")["blocks"]
+    assert [b["text"] for b in blocks][-1] == "Contents" and all("generated" not in b for b in blocks)
+    with pytest.raises(RequestError, match="not a table of contents"):
+        call(paper, "remove_contents", {"block": "b1"})
+
+
+def test_an_agenda_lists_the_slide_titles_with_their_slide_numbers(deck):
+    ids = deck.ids
+    agenda = call(deck, "insert_agenda", {"slide": deck.model.slides[0]})["object"]
+    assert entries_of(deck, agenda) == [(ids["t1"], None, "t1", "1"), (ids["t2"], None, "t2", "2")]
+    call(deck, "number_headings", {"on": True})
+    assert [e[1] for e in entries_of(deck, agenda)] == ["1", "2"]
+    with pytest.raises(RequestError):
+        call(deck, "set_text", {"id": agenda, "text": "typed"})

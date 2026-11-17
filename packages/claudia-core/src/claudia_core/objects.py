@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeIs, runtime
 from .assets import MAX_ALT_CHARS, ImageAsset, ImageImport
 from .commands import Batch, Command, CommandRegistry, core_commands
 from .facets import SLOTS, fits
+from .generated import Generated
 from .names import clean_name, name_key, name_problem
 from .paragraphs import ListItem, Paragraph
 from .renderings import RenderedDefinition
@@ -671,6 +672,17 @@ class ObjectModel[A: Anchor]:
         self.replace_object(new)
         return self.objects_changed(new.container, changed=(new,))
 
+    def object_generated(self, object_id: str) -> Generated | None:
+        """The options of the table of contents (agenda) the words of this object are, or ``None``."""
+        return self._words(object_id).generated
+
+    def put_object_generated(self, object_id: str, generated: Generated | None) -> ObjectsChanged:
+        """Make the words of this object a table of contents (an agenda) as ``generated`` says, or plain again; only
+        an object without words can become one. The event tells the clients."""
+        new = self.get_object(object_id).with_body(paragraph=self._words(object_id).with_generated(generated))
+        self.replace_object(new)
+        return self.objects_changed(new.container, changed=(new,))
+
     def object_list_in_use(self, list_id: str) -> bool:
         """Are the words of any object an item of this list?"""
         return any(
@@ -937,7 +949,9 @@ class ObjectModel[A: Anchor]:
         self.objects[obj.id] = obj
         before, after = old.body.paragraph, obj.body.paragraph
         if (before is None) != (after is None) or (
-            before is not None and after is not None and (before.item, before.style) != (after.item, after.style)
+            before is not None
+            and after is not None
+            and (before.item, before.style, before.generated) != (after.item, after.style, after.generated)
         ):
             self.paragraph_order += 1
         return old
@@ -1751,6 +1765,8 @@ class SetText(Command):
         old = model.get_object(self.id)
         if old.body.paragraph is None:
             raise ValueError("an image carries no text")
+        if old.body.paragraph.generated is not None and self.text:
+            raise ValueError("an agenda takes no typing: its entries come from the slide titles")
         written = old.body.paragraph.with_text(self.text, ()).written_by(ctx.author)
         new = old.with_body(paragraph=written)
         model.replace_object(new)

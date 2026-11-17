@@ -37,6 +37,7 @@ from claudia_core import (
     PageSetupError,
     SetSnap,
     SetText,
+    Toc,
     paragraph_for,
 )
 from claudia_creates import (
@@ -318,7 +319,22 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
         return done(ctx, command, base, object=object_id)
 
+    @table.method("insert_agenda", "slide:str base:revision?", write=True)
+    def _insert_agenda(ctx, *, slide, base):
+        """Put an agenda on a slide (E9.31): a text box whose words are the titles of all slides with their slide
+        numbers, derived, so it follows every new, retitled or moved slide. Its options are `set_contents`'; it is
+        taken away as any object is. One step. Returns the new object's id and the revision."""
+        deck = _deck(ctx)
+        object_id = fresh_id("o", deck.objects)
+        x, y, w, h = AGENDA_BOX
+        words = paragraph_for(object_id, PARAGRAPH_STYLE_OF_KIND["text"], "", ctx.user).with_generated(Toc(1, 1))
+        body = ObjectBody(object_id, "text", w, h, STYLE_OF_KIND["text"], words, name=default_name(ctx, "text"))
+        return done(ctx, AddObject(body, SlideAnchor(slide, x, y).to_data()), base, object=object_id)
+
     return table
 
+
+#: Where an agenda goes on its slide, in slide units (the 1600 by 900 stage): below the title, across the slide.
+AGENDA_BOX = (160, 250, 1280, 560)
 
 creates_methods = creates_methods_with(ShapeLibrary.load())

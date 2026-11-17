@@ -35,6 +35,8 @@ WORD_NAMES = {
     "heading-5": "Heading 5",
     "heading-6": "Heading 6",
     "quote": "Quote",
+    "contents-title": "TOC Heading",
+    **{f"contents-{level}": f"toc {level}" for level in range(1, 10)},
 }
 #: What Word keeps of a style that it replaces: where the style stands in the document, not how it looks.
 _KEPT = ("w:keepNext", "w:keepLines", "w:outlineLvl", "w:numPr")

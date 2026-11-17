@@ -14,6 +14,7 @@ import type { CssCheck, CssEdit } from './style-css'
 import type { PrintSetupData } from '@claudia/layout'
 import type { Label } from './blocks'
 import type { ListInfo, SchemeInfo } from './numbering'
+import type { ContentsEntry } from './contents'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
 // so existing imports of them from this module keep working.
@@ -68,6 +69,8 @@ export interface SlideState extends BaseState {
   /** What is drawn before the words of an object that is a list item or a numbered title, by object id: the server
    *  counts across the boxes of all slides, in reading order. */
   labels: Record<string, Label>
+  /** The lines of every agenda (E9.31), by object id: derived by the server from the slide titles. */
+  agendas: Record<string, ContentsEntry[]>
 }
 
 export class SlideSession extends BaseSession<SlideState> {
@@ -94,6 +97,7 @@ export class SlideSession extends BaseSession<SlideState> {
       lists: [],
       schemes: [],
       labels: {},
+      agendas: {},
     })
   }
 
@@ -113,19 +117,21 @@ export class SlideSession extends BaseSession<SlideState> {
       slides.map((slide) => link.request<{ objects: SlideObject[]; notes?: string; seconds?: number | null }>('slide', { slide: slide.id })),
     )
     // an older server knows neither: the preview then starts from slide-sized pages and offers no language; nor lists
-    const [printSetup, language, numbering] = await Promise.all([
+    const [printSetup, language, numbering, contents] = await Promise.all([
       link.request<PrintSetupData>('print_setup').catch(() => null),
       link
         .request<{ language: string | null }>('language')
         .then((a) => a.language)
         .catch(() => undefined),
       link.request<{ lists: ListInfo[]; schemes: SchemeInfo[]; labels: Record<string, Label> }>('lists').catch(() => null),
+      link.request<{ entries: Record<string, ContentsEntry[]> }>('contents').catch(() => null),
     ])
     s.printSetup = printSetup
     s.language = language
     s.lists = numbering?.lists ?? []
     s.schemes = numbering?.schemes ?? []
     s.labels = numbering?.labels ?? {}
+    s.agendas = contents?.entries ?? {}
     s.objects = {}
     s.order = {}
     s.notes = {}
@@ -251,6 +257,12 @@ export class SlideSession extends BaseSession<SlideState> {
           else delete s.labels[id]
         }
         return true
+      case 'generated': {
+        const { paragraph, entries } = data as { paragraph: string; entries: ContentsEntry[] | null }
+        if (entries) s.agendas[paragraph] = entries
+        else delete s.agendas[paragraph]
+        return true
+      }
       case 'lists':
         s.lists = data.lists as ListInfo[]
         return true
@@ -450,6 +462,23 @@ export class SlideSession extends BaseSession<SlideState> {
     const item = this.state.objects[id]?.paragraph?.item
     const scheme = item && this.state.schemes.find((x) => x.id === this.state.lists.find((l) => l.id === item.list)?.scheme)
     return { marker: label.marker, indent: item ? item.level * (scheme?.indent ?? 1.6) : 0 }
+  }
+
+  // -- agendas (E9.31): a text box whose lines are the slide titles, derived by the server; its options are a table of
+  // contents' (`BaseSession.setContents`), and it is taken away as any object is.
+  /** The lines of an object that is an agenda, or `null` for any other object. */
+  agendaOf(id: string): ContentsEntry[] | null {
+    return this.state.objects[id]?.paragraph?.generated ? (this.state.agendas[id] ?? []) : null
+  }
+
+  /** Put an agenda on a slide (the one shown, by default) and select it. */
+  async insertAgenda(slide: string = this.state.activeSlide): Promise<string | null> {
+    if (this.readOnly || !slide) return null
+    const done = await this.attempt('insert_agenda', { slide, base: this.state.revision })
+    if (done === false) return null
+    const id = done.object as string
+    await this.select(id)
+    return id
   }
 
   /** Write the notes of a slide (D342): one step in the history, for everybody. `""` clears them. */

@@ -9,6 +9,7 @@
 // be written once against `ObjectBody` and reused per app by swapping the anchor adapter.
 
 import type { ImageImport } from './images'
+import type { Toc } from './contents'
 
 /** Where an object sits, in the terms of one app. `container` is its slide, sheet or paragraph. */
 export interface SlideAnchor {
@@ -85,6 +86,8 @@ export interface Paragraph {
   runs: Run[]
   /** Its place in a list (E9.21): which list and how deep, when it is an item of one. */
   item?: { list: string; level: number } | null
+  /** Set when the words are an agenda (E9.31): its options. Such a paragraph holds no text; its lines are derived. */
+  generated?: Toc | null
 }
 
 /** The words of an object, or `''` when it has none — the one place the client decides what an object with no

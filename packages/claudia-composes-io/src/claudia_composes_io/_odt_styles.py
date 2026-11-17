@@ -28,10 +28,12 @@ BUILTIN_NAMES = {
     "heading-5": "Heading_20_5",
     "heading-6": "Heading_20_6",
     "quote": "Quotations",
+    "contents-title": "Contents_20_Heading",
+    **{f"contents-{level}": f"Contents_20_{level}" for level in range(1, 10)},
 }
 #: The class a program files the well-known styles under; a heading's class and outline level come from its heading
 #: level (E9.22), not from here.
-_CLASS = {"Standard": "text", "Quotations": "html"}
+_CLASS = {"Standard": "text", "Quotations": "html", **{f"Contents_20_{n}": "index" for n in range(1, 10)}}
 _SIDES = ("top", "right", "bottom", "left")
 _DECLARED = " ".join(f'xmlns:{prefix}="{NS[prefix]}"' for prefix in ("style", "fo", "text"))
 

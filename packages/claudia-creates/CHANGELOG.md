@@ -3,6 +3,15 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.17.0] - 2026-11-17
+
+Agendas (step E, E9.31). State schema 14 → 15 (the words of an object may have `generated`; a snapshot of 14 restores
+unchanged).
+
+### Added
+- `SlideModel.generated_of` and `put_generated`: the presentation is a `claudia_core.GeneratedHost`; an agenda is a text
+  box whose words are generated from the slide titles.
+
 ## [0.16.0] - 2026-11-16
 
 Lists in text boxes and numbered slide titles (step D, E9.22). State schema 13 → 14 (a snapshot of 13 restores with

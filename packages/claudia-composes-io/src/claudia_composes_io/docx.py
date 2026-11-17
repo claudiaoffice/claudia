@@ -18,7 +18,7 @@ custom style. Paragraphs can be changed, added and removed; blocks cannot be mov
 
 from __future__ import annotations
 
-from collections.abc import Collection, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterator, Mapping
 from io import BytesIO
 from itertools import count
 from typing import Any, cast
@@ -36,6 +36,7 @@ from claudia_odf_io import Loss, LossLog
 from claudia_opc_io import owns, reconcile
 
 from ._docx_blocks import hidden_content, place, remove
+from ._docx_contents import body_order, write_contents
 from ._docx_lists import ListWriter, numbering_in, read_lists
 from ._docx_pictures import (
     PictureEdits,
@@ -85,8 +86,12 @@ def text_to_docx(
     lists = ListWriter(document, model.lists, model.schemes)
     write_style_numbering(document, model.styles, names, lists)
     pictures = PictureWriter(document, rasterise)
+    entries = model.structure.all_entries()
     for block in model.blocks:
         paragraph = document.add_paragraph(style=names.of(block.style))
+        if block.generated is not None:
+            write_contents(document, paragraph, block.generated, entries.get(block.id, ()), _style_ids(document, names))
+            continue
         if block.item is not None:
             lists.write(paragraph, block.item)
         marks = [(obj.anchor.offset, pictures.run(obj, asset)) for obj, asset in pictures_of(model, block.id)]
@@ -277,7 +282,14 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
     styles = builtin_styles()
     numbered: dict[str, str] = {}  # the list a heading style is numbered in, by style id
     blocks = []
-    for index, paragraph in enumerate(document.paragraphs, start=1):
+    paragraphs = document.paragraphs
+    tables = count(len(paragraphs) + 1)  # a table of contents' id comes after every paragraph's
+    for at, toc in body_order(document):
+        if toc is not None:
+            blocks.append(Block(f"b{next(tables)}", DEFAULT_STYLE, generated=toc))
+            continue
+        assert at is not None  # a paragraph of the body
+        index, paragraph = at + 1, paragraphs[at]
         style = paragraph.style
         style_id = _CLAUDIA_STYLE.get(style.name, DEFAULT_STYLE) if style is not None else DEFAULT_STYLE
         text = paragraph.text
@@ -301,6 +313,12 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
             model.define_image(picture.asset)
         model.insert_object(VisualObject(picture.body, BlockAnchor(f"b{picture.block + 1}", picture.offset)))
     return model
+
+
+def _style_ids(document: Any, names: WordNames) -> Callable[[str], str | None]:
+    """The Word style id of a style of the model, for a paragraph written by hand (``None``: the default)."""
+    ids = {s.name: s.style_id for s in document.styles if s.type == WD_STYLE_TYPE.PARAGRAPH}
+    return lambda style_id: ids.get(names.of(style_id)) if style_id in names else None
 
 
 def _style_numbers(
@@ -506,6 +524,12 @@ def _numbering(model: TextModel, style_id: str) -> tuple[int | None, str | None]
     return styles.heading_level(style_id), styles.numbering(style_id)
 
 
+def _no_contents(*models: TextModel) -> None:
+    """:class:`UnsupportedEdit` for a text with a table of contents: it is not a paragraph of the file."""
+    if any(b.generated is not None for model in models for b in model.blocks):
+        raise UnsupportedEdit("a text with a table of contents is written anew, not patched")
+
+
 def apply_edits_to_docx(
     original_bytes: bytes,
     baseline: TextModel,
@@ -536,8 +560,10 @@ def apply_edits_to_docx(
     picture's own bytes stay. A picture of the file that the model does not show (cropped, flipped, in a table) is not
     touched.
 
-    Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, and blocks
-    moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know)."""
+    Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, blocks
+    moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know), and
+    a table of contents in either model (it is not a paragraph of the file; the file is written anew, E9.31)."""
+    _no_contents(baseline, current)
     held = baseline.blocks
     document = Document(BytesIO(original_bytes))
     paragraphs = document.paragraphs

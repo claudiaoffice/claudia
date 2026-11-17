@@ -19,6 +19,7 @@ from claudia_core import (
     CommandRegistry,
     Context,
     DocumentModel,
+    Generated,
     Label,
     ListBook,
     ListItem,
@@ -46,7 +47,7 @@ from claudia_core import (
 )
 
 from .anchors import BlockAnchor
-from .events import ItemChanged
+from .events import BlockGenerated, ItemChanged
 from .page import PageSetup
 from .region import TextRange
 from .spans import TextCommand
@@ -89,6 +90,14 @@ def _heading(level: int, purpose: str, size: str, line_height: str, top: str, bo
         **extra,
     }
     return _at_level(level, _style(f"heading-{level}", f"Heading {level}", purpose, **css))
+
+
+def _contents(level: int) -> StyleDef:
+    """Contents ``level``: an entry of a table of contents for a heading of that level, moved in by its level."""
+    css = {"margin-bottom": "0.2em", "hyphens": "manual", "margin-left": f"{(level - 1) * 1.5:g}em"}
+    if level == 1:
+        css["font-weight"] = "600"
+    return _style(f"contents-{level}", f"Contents {level}", f"an entry of a table of contents at level {level}", **css)
 
 
 #: The styles every text starts with. The paragraph styles are all based on Body text (D73): a change to Body text
@@ -163,6 +172,23 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "padding-right": "0.9em",
         },
     ),
+    # A table of contents (E9.31): the heading above it is the author's words, in Contents Title, which has no heading
+    # level, so the table does not list itself; each entry is drawn in Contents <n>, by its heading's level (D306).
+    _style(
+        "contents-title",
+        "Contents Title",
+        "the heading above a table of contents; it is not listed in it",
+        **{
+            "font-family": _SERIF,
+            "font-size": "19pt",
+            "font-weight": "500",
+            "line-height": "1.25",
+            "margin-top": "1.6em",
+            "margin-bottom": "0.5em",
+            "hyphens": "manual",
+        },
+    ),
+    *(_contents(level) for level in range(1, 10)),
     # The object styles, with the same ids in all three apps (E10.16), so that a shape or a picture carried
     # from a slide or a sheet into a text keeps a style that exists here. A shape's background and border are
     # ``fill``/``stroke``/``stroke-width``, not ``background-color``/``border-*`` (D178): a shape is an outline in
@@ -271,7 +297,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 11: paragraphs may have names, by their id (D554)
     # 8: object bodies without a description; 9: no rendered containers; 12: styles carry heading levels (E9.22)
     # 13: the text holds its numbering schemes; styles may name a list that numbers them (E9.22)
-    state_schema: ClassVar[int] = 13
+    # 14: a paragraph may be generated (a table of contents, E9.31)
+    state_schema: ClassVar[int] = 14
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -514,6 +541,22 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self.set_item(paragraph_id, item)
         return ItemChanged(paragraph_id, item)
 
+    # -- generated paragraphs (claudia_core.GeneratedHost) ----------------------------------------
+    def generated_of(self, paragraph_id: str) -> Generated | None:
+        """The options of a table of contents, a paragraph of the text or the words of an object."""
+        if paragraph_id in self.objects:
+            return self.object_generated(paragraph_id)
+        return self.block(paragraph_id).generated
+
+    def put_generated(self, paragraph_id: str, generated: Generated | None) -> object:
+        """Make an empty paragraph (or an object's words) a table of contents, or plain again; the event that tells
+        the clients."""
+        if paragraph_id in self.objects:
+            return self.put_object_generated(paragraph_id, generated)
+        self._put(self.block(paragraph_id).with_generated(generated))
+        self._structure += 1
+        return BlockGenerated(paragraph_id, generated)
+
     def item_regions(self, paragraph_id: str) -> tuple[Region, ...]:
         """A paragraph's whole text, or the object; a paragraph that is not (yet) there holds its first character
         (the inverse of a join sets the item of the paragraph it splits off)."""
@@ -615,6 +658,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     def insert(self, block_id: str, offset: int, text: str, runs: list[Run]) -> None:
         """Put ``text`` into a paragraph at ``offset``; ``runs`` say who wrote it."""
         block = self.block(block_id)
+        if block.generated is not None:
+            raise ValueError("a table of contents takes no typing: its entries come from the headings")
         if not 0 <= offset <= len(block.text):
             raise IndexError("insert outside the text")
         if total(runs) != len(text):
@@ -658,6 +703,10 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         first, second = self.block(into), self.block(block_id)
         if self.index_of(block_id) != self.index_of(into) + 1:
             raise ValueError("a paragraph can only be joined to the one right before it")
+        if second.generated is not None:
+            raise ValueError("a table of contents cannot be joined to a paragraph; remove it instead")
+        if first.generated is not None and second.text:
+            raise ValueError("text cannot be joined into a table of contents")
         if len(first.text) != at:
             raise ValueError("the paragraph before it is not as long as the command says")
         self._put(first.with_text(first.text + second.text, insert_runs(first.runs, at, second.runs)))

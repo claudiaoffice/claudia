@@ -16,7 +16,7 @@ import { usePointed } from '~/lib/pointed'
 const { t } = useI18n()
 
 const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean; active: string | null; marks?: TextMark[] }>()
-const emit = defineEmits<{ suggestion: [id: string]; 'style-menu': [at: { x: number; y: number }] }>()
+const emit = defineEmits<{ suggestion: [id: string]; 'style-menu': [at: { x: number; y: number }]; contents: [block: string] }>()
 
 const state = props.session.state
 /** What a replay marks (D553): a paragraph as a whole, whichever stretch of it changed. */
@@ -414,6 +414,20 @@ function caretPoint(): { x: number; y: number } {
   return { x: (box?.left ?? 0) + 60, y: (box?.top ?? 0) + 60 }
 }
 
+/** Follow an entry of a table of contents: the caret goes to the start of its heading (E9.31). */
+function goTo(target: string) {
+  props.session.setSelection({ block: target, offset: 0 })
+  scrollToBlock(target)
+  focus()
+}
+
+/** What a table's chip says: what it is and the levels it lists. */
+function chipOf(block: Block): string {
+  const g = block.generated!
+  const levels = g.first === g.last ? t('level {n}', { n: g.first }) : t('levels {first}–{last}', { first: g.first, last: g.last })
+  return `${t('Table of contents')} · ${levels}`
+}
+
 /** Show a paragraph (a search found something in an object that hangs from it) without moving the caret. */
 function scrollToBlock(id: string) {
   blockEl(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
@@ -474,10 +488,37 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
         @dragstart.prevent
         @blur="session.flush()"
       >
+        <template v-for="(block, at) in state.blocks" :key="`${block.id}:${block.generated ? 'nav' : tagOf(block.style)}`">
+        <!-- a table of contents (E9.31): a navigation landmark of links, not text; the caret steps over it -->
+        <nav
+          v-if="block.generated"
+          class="para toc"
+          :class="[`st-${block.style}`, { picked: state.selection?.focus.block === block.id }, replayClass(block.id)]"
+          contenteditable="false"
+          :data-block="block.id"
+          :aria-label="t('Table of contents')"
+          data-testid="contents"
+          @keydown.stop
+        >
+          <a
+            v-for="entry in block.entries ?? []"
+            :key="entry.target"
+            data-skip
+            class="toc-entry"
+            :class="`st-${entry.style}`"
+            :style="cssOf(entry.style)"
+            :href="`#${entry.target}`"
+            @click.prevent.stop="goTo(entry.target)"
+            ><span v-if="entry.number" class="toc-number">{{ entry.number }}</span>{{ entry.text }}</a
+          >
+          <p v-if="!block.entries?.length" data-skip class="toc-empty">{{ t('No headings yet: the table lists them as they are written.') }}</p>
+          <button type="button" data-skip class="toc-chip" data-testid="contents-chip" @click.stop="emit('contents', block.id)">
+            {{ chipOf(block) }} · {{ t('Options…') }}
+          </button>
+        </nav>
         <component
           :is="tagOf(block.style)"
-          v-for="(block, at) in state.blocks"
-          :key="`${block.id}:${tagOf(block.style)}`"
+          v-else
           class="para"
           :class="[`st-${block.style}`, { item: block.item, numbered: !block.item && block.label }, replayClass(block.id)]"
           :style="{ ...cssOf(block.style), ...layoutOf(at) }"
@@ -504,6 +545,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
           </template>
           <br v-if="!block.text && !hasOverlay(block)" data-skip >
         </component>
+        </template>
       </div>
       <TextContainers :session="session" :host="root" :tick="layoutTick" @leave="focus()" />
     </div>
@@ -581,6 +623,60 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint })
   white-space: nowrap;
   user-select: none;
   pointer-events: none;
+}
+
+/* a table of contents (E9.31): its entries are drawn in their Contents styles, as links; no pages in flow */
+.doc :deep(nav.toc) {
+  position: relative;
+  margin: 4px 0 12px;
+  padding: 6px 8px 34px;
+  border-radius: 6px;
+  outline: 1px dashed transparent;
+  user-select: none;
+}
+.doc :deep(nav.toc:hover),
+.doc :deep(nav.toc.picked) {
+  outline-color: color-mix(in srgb, var(--app) 55%, transparent);
+}
+.doc :deep(nav.toc.picked) {
+  background: color-mix(in srgb, var(--app) 7%, transparent);
+}
+.doc :deep(.toc-entry) {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.doc :deep(.toc-entry:hover),
+.doc :deep(.toc-entry:focus-visible) {
+  text-decoration: underline;
+}
+.doc :deep(.toc-number) {
+  display: inline-block;
+  min-width: 2.2em;
+  font-variant-numeric: tabular-nums;
+}
+.doc :deep(.toc-empty) {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+.doc :deep(.toc-chip) {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  font: inherit;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line-field); /* a control's edge: 3:1 (BITV 1.4.11) */
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+.doc :deep(.toc-chip:hover),
+.doc :deep(.toc-chip:focus-visible) {
+  color: var(--ink);
+  border-color: var(--app);
 }
 
 /* who wrote what */

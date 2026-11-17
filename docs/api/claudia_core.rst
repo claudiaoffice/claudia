@@ -120,6 +120,22 @@ Text structure
 .. autoclass:: claudia_core.LabelsChanged
 .. autoclass:: claudia_core.Emitter
 
+Tables of contents
+------------------
+
+.. automodule:: claudia_core.generated
+   :no-members:
+
+.. currentmodule:: claudia_core
+
+.. autoclass:: claudia_core.Toc
+.. autoclass:: claudia_core.ContentsEntry
+.. autoclass:: claudia_core.GeneratedChanged
+.. autoclass:: claudia_core.GeneratedHost
+.. autoclass:: claudia_core.SetGenerated
+.. autofunction:: claudia_core.generated_from_data
+.. autodata:: claudia_core.CONTENTS_STYLE
+
 Page setup and language
 -----------------------
 

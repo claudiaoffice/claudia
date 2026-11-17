@@ -7,26 +7,61 @@
 // A list item's marker or a numbered title's number (E9.21, E9.22) is drawn before the words, a marker gap away (the
 // layout library's MARKER_GAP_EM, as composes and the printed pages have it); an item's level moves the words in. The
 // marker is text a screen reader reads with the words, and never part of them: search marks count from the words.
+//
+// An agenda (E9.31) has no words of its own: `entries` are its lines, derived by the server from the slide titles, drawn
+// as a list, each with its number, the title and, a dot leader away, its slide number.
 import { computed } from 'vue'
 import { MARKER_GAP_EM } from '@claudia/layout'
 import { piecesOf, type Mark } from '~/lib/paragraph-pieces'
+import type { ContentsEntry, Leader } from '~/lib/contents'
 
-const props = withDefaults(defineProps<{ text: string; marks?: readonly Mark[]; marker?: string | null; indent?: number }>(), {
-  marks: () => [],
-  marker: null,
-  indent: 0,
-})
+const props = withDefaults(
+  defineProps<{ text: string; marks?: readonly Mark[]; marker?: string | null; indent?: number; entries?: readonly ContentsEntry[] | null; leader?: Leader }>(),
+  {
+    marks: () => [],
+    marker: null,
+    indent: 0,
+    entries: null,
+    leader: 'dots',
+  },
+)
 const pieces = computed(() => piecesOf(props.text, props.marks))
 const gap = `${MARKER_GAP_EM}em`
 </script>
 
 <template>
-  <span class="text" :style="indent ? { display: 'block', paddingLeft: `${indent}em` } : undefined"><span v-if="marker" class="marker" data-marker :style="{ marginRight: gap }">{{ marker }}</span><template v-for="(piece, i) in pieces" :key="i"><span v-if="piece.found" class="found" :class="{ now: piece.found === 'current' }" :data-found="piece.found">{{ piece.text }}</span><template v-else>{{ piece.text }}</template></template></span>
+  <span v-if="entries" class="agenda" role="list" data-agenda>
+    <span v-for="entry in entries" :key="entry.target" class="line" role="listitem"
+      ><span v-if="entry.number" class="marker" :style="{ marginRight: gap }">{{ entry.number }}</span><span class="title">{{ entry.text }}</span
+      ><span v-if="entry.place" class="leader" :class="leader" aria-hidden="true" /><span v-if="entry.place" class="place">{{ entry.place }}</span></span
+    >
+  </span>
+  <span v-else class="text" :style="indent ? { display: 'block', paddingLeft: `${indent}em` } : undefined"><span v-if="marker" class="marker" data-marker :style="{ marginRight: gap }">{{ marker }}</span><template v-for="(piece, i) in pieces" :key="i"><span v-if="piece.found" class="found" :class="{ now: piece.found === 'current' }" :data-found="piece.found">{{ piece.text }}</span><template v-else>{{ piece.text }}</template></template></span>
 </template>
 
 <style scoped>
 .marker {
   user-select: none;
+}
+.agenda {
+  display: block;
+}
+.line {
+  display: flex;
+  align-items: baseline;
+}
+.title {
+  min-width: 0;
+}
+.leader {
+  flex: 1;
+  margin: 0 0.3em;
+}
+.leader.dots {
+  border-bottom: 0.12em dotted currentColor;
+}
+.place {
+  font-variant-numeric: tabular-nums;
 }
 /* what a search found (E10.19, E9.28): a band and an underline, never colour alone; the one being looked at has an
    outline too */

@@ -6,6 +6,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- Tables of contents in docx and odt (E9.31): docx writes a TOC field in a content control with its entries and asks
+  Word to update the fields on opening; odt writes `text:table-of-content` with its entries, and lists the loss
+  `toc-pages` (the entries carry no page numbers). Both read a table back with its levels. The Contents styles are
+  Word's TOC Heading and toc 1 to 9, OpenDocument's Contents Heading and Contents 1 to 9. A kept file with a table of
+  contents is written afresh (`UnsupportedEdit`).
 - Numbering schemes and numbered headings in docx and odt (E9.22): a list is written with the levels of its scheme
   (Word's number format and level text, OpenDocument's list style), and read back with the document's scheme that draws
   it, or a new one; only a level the model cannot say is still reported as `list-look`. A numbered heading style is a

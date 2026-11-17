@@ -1,5 +1,5 @@
 {
- "version": "0.16.0",
+ "version": "0.17.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -222,11 +222,12 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None) -> None",
   "methods": {
    "check": "(self) -> 'None'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "with_generated": "(self, generated: 'Generated | None') -> 'Paragraph'",
    "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
@@ -536,6 +537,7 @@
    "containers": "(self) -> 'list[str]'",
    "delete_slide": "(self, slide: 'str') -> 'int'",
    "empty": "() -> 'Self'",
+   "generated_of": "(self, paragraph_id: 'str') -> 'Generated | None'",
    "get": "(self, object_id: 'str') -> 'SlideObject'",
    "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '') -> 'None'",
    "item_of": "(self, paragraph_id: 'str') -> 'ListItem | None'",
@@ -544,6 +546,7 @@
    "list_in_use": "(self, list_id: 'str') -> 'bool'",
    "named_things": "(self)",
    "notes_of": "(self, slide: 'str') -> 'str'",
+   "put_generated": "(self, paragraph_id: 'str', generated: 'Generated | None') -> 'object'",
    "put_item": "(self, paragraph_id: 'str', item: 'ListItem | None') -> 'object'",
    "reading_order": "(self) -> 'Iterator[Placed]'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",

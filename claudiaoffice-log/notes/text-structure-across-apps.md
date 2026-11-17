@@ -1,6 +1,6 @@
 # Text structure across the three apps — the entities, where they live, what moves (plan)
 
-**Status: plan of 2026-11-16; steps A to D built the same day (sections 8 to 10). Steps E–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
+**Status: plan of 2026-11-16; steps A to D built the same day (sections 8 to 10), step E on 2026-11-17 (section 11). Steps F–I are not built.** It widens `e9-composes-outline-references-toc.md` (the composes design
 of the same day) to creates, and replaces that note's section 11 ("Where the code goes"). The class diagram is
 `mockups/text-structure-architecture.svg`; it replaces `composes-toc-architecture.svg`. No decision numbers are taken.
 
@@ -355,3 +355,48 @@ Written first, as part of the steps above:
 
 - Step E (contents and agenda) and the rest of the plan (F–I); `ObjectLink` (section 4) with the alignment work.
 - creates' style editor does not offer the heading level or the numbering yet (Number All Slide Titles needs neither).
+
+## 11. Done: step E (2026-11-17, patch 8, branch `lists-anchors-toc`)
+
+### What was built
+
+- **Generated paragraphs** (`claudia_core.generated`): `Toc` (levels `first` to `last`, `numbers`, `places`, `leader`)
+  is all a table of contents stores; `Paragraph.generated` marks it, and such a paragraph holds no text.
+  `SetGenerated` (`core.SetGenerated`, through `GeneratedHost`) makes a paragraph one or plain again.
+  `TextStructure.outline()` lists the headings of levels 1–9 of the main text in reading order; `all_entries()` derives
+  each table's `ContentsEntry`s (target, level, number when shown, words, style `contents-<level>`, place) and `settle`
+  reports changes as `GeneratedChanged` (wire `generated`). Composes state schema 14, creates 15.
+- **Composes:** typing into a table and joining text into it are refused; Enter on it makes a paragraph after it. The
+  built-in styles Contents Title and Contents 1–9 (moved in by `margin-left`, which docx and odt keep). Server:
+  `insert_contents` (a "Contents" paragraph in the reader's language, then the table, one step), `remove_contents`
+  (the title stays), and in both apps `contents` and `set_contents`; `blocks` sends `generated` and `entries`.
+- **Creates:** `insert_agenda` puts a text box whose words are an agenda on a slide; its lines are the slide titles with
+  their slide numbers (the kernel knows them). `SetText` refuses words for it.
+- **Web:** Insert ▸ Table of Contents (creates: Agenda), Ctrl+Alt+Shift+I, before Container; on a table (or with an
+  agenda selected) it opens the options instead. The table is a `nav` landmark "Table of contents" of links (Enter or
+  click goes to the heading), not text; its chip opens `ContentsDialog.vue`, shared by both apps (levels, numbers, page
+  or slide numbers, leader, Looks, Shows, Remove; every change one step). Backspace after a table (Delete before it)
+  selects it, a second one removes it. An agenda is drawn by `ParagraphWords.vue` as a list with a dot leader, on the
+  slide, the thumbnails, the presenter and in print; double-click opens its options.
+- **Print:** a table of contents prints as one paragraph per entry in its Contents style, without pages (step F);
+  an agenda's places are right-aligned on their lines with a dot leader (`Agenda` in the layout, `LAYOUT_VERSION` 6).
+- **Files:** docx writes a `TOC` field in a content control with the entries and `w:updateFields`, and reads such a
+  field (in a content control or running over body paragraphs) back as a table with its levels; odt writes
+  `text:table-of-content` with its entries and reports `toc-pages`. pptx and odp write an agenda as its lines and report
+  `agenda`. A kept docx or odt with a table is written anew; a kept pptx rewrites an agenda whose lines changed, a kept
+  odp with a changed agenda is written anew.
+
+### Where the build differs from the plan or the mock-ups, and why
+
+- **The entries come with the paragraph** (`entries` in `blocks`, the event `generated`), not from a separate request:
+  a client never draws a table without them.
+- **Computes shows Insert ▸ Table of Contents, off**, as it shows List ▸: the menus are the same in every app.
+- **No page numbers anywhere yet**, including Page view and print: they need the page passes (step F). The dialog
+  already offers the option, as the mock-up does.
+- **The "Looks" line names the styles the entries are drawn in**, from what the server sends, so no client keeps a list
+  of style ids (the same rule as `test_one_source_of_headings.py`).
+
+### Left for later steps
+
+- Step F (pages in the contents, print and PDF bookmarks), G, H and I.
+- A table's context menu entry (the chip and Insert ▸ Table of Contents open the options today).

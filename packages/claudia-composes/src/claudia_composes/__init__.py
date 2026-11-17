@@ -50,7 +50,7 @@ from .commands import (
     SetStyle,
     SplitBlock,
 )
-from .events import ItemChanged
+from .events import BlockGenerated, ItemChanged
 from .language import LanguageError, normalize_language
 from .model import (
     BUILTIN_STYLES,
@@ -83,6 +83,7 @@ __all__ = [
     "ForgetShape",
     "InsertText",
     "ItemChanged",
+    "BlockGenerated",
     "JoinBlocks",
     "LanguageError",
     "LabelsChanged",

@@ -193,3 +193,32 @@ describe('the markers of text boxes on a printed slide (E9.21, E9.22)', () => {
     expect(deeper.x).toBeGreaterThan(number.x)
   })
 })
+
+describe('an agenda on a printed slide (E9.31)', () => {
+  const agenda = (leader: 'dots' | 'none'): SlideObject => {
+    const box = text('t1', 's1', '')
+    const lines = [
+      { words: '1 Why', place: '2' },
+      { words: '2 How we measured it', place: '13' },
+    ]
+    return { ...box, paragraph: { ...box.paragraph!, agenda: { lines, leader } } }
+  }
+  const items = (o: SlideObject) => {
+    const [slide] = slidesOf(layoutSlides({ ...deck(1), slides: [{ id: 's1', objects: [o] }] }, fonts, resolver).list.pages[0]!.items)
+    return [...walk(slide!.items)]
+  }
+  it('puts each line’s place right-aligned on the line of its words, the places ending together', () => {
+    const runs = items(agenda('none')).filter((i): i is GlyphRun => i.kind === 'glyphs')
+    const why = runs.find((r) => r.text === 'Why')!
+    const how = runs.find((r) => r.text === 'measured')!
+    const two = runs.find((r) => r.text === '2' && r.y === why.y)!
+    const thirteen = runs.find((r) => r.text === '13')!
+    expect(thirteen.y).toBe(how.y)
+    expect(two.x).toBeGreaterThan(thirteen.x) // right-aligned: the shorter number starts further right
+    expect(items(agenda('none')).some((i) => i.kind === 'path' && i.fill)).toBe(false)
+  })
+  it('draws a dot leader between the words and the place, and nothing for “none”', () => {
+    const dots = items(agenda('dots')).filter((i) => i.kind === 'path' && i.fill)
+    expect(dots).toHaveLength(2)
+  })
+})

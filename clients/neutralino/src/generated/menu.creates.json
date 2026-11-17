@@ -421,6 +421,20 @@
       "sections": [
         [
           {
+            "accelerators": [
+              "<Primary><Alt><Shift>i"
+            ],
+            "checkable": false,
+            "id": "insert.contents",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Agenda",
+            "role": null,
+            "start": false
+          }
+        ],
+        [
+          {
             "items": [
               {
                 "accelerators": [

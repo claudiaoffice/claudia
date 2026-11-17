@@ -26,6 +26,7 @@ import { describeShortcut } from '~/lib/descriptions'
 import { chordLabel, hintOf, searchShortcuts } from '~/lib/shortcuts'
 import { canTurn } from '~/lib/turning'
 import { formatItems, type ListMenu } from '~/lib/format-menu'
+import { looksOf, type ContentsHost } from '~/lib/contents'
 import { hasHeadingStyles, headingsNumbered, type NumberingHost } from '~/lib/numbering'
 import { useGrid } from '~/lib/grid'
 import { marksFor, slideSearchHost } from '~/lib/slide-search-host'
@@ -59,7 +60,7 @@ const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 const canvas = ref<InstanceType<typeof SlideCanvas> | null>(null)
 const showImageDialog = ref(false)
 /** The modal layer: creates had only the image dialog before the styles arrived. */
-const dialog = ref<null | 'styles' | 'colours' | 'rename' | 'list-start' | 'numbering'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'rename' | 'list-start' | 'numbering' | 'agenda'>(null)
 const EXPORT_FORMATS = [
   { value: 'pptx', get label() { return t('PowerPoint presentation (.pptx)') } },
   { value: 'odp', get label() { return t('OpenDocument presentation (.odp)') } },
@@ -245,6 +246,35 @@ const numberingHost = computed<NumberingHost>(() => ({
   removeScheme: (scheme) => session.removeScheme(scheme),
 }))
 
+/** The agenda whose options are open (E9.31), and what the dialog works with: no levels (the slide titles are one
+ * level) and slide numbers in place of page numbers. Remove takes the text box away. */
+const agendaOf = ref<string | null>(null)
+const agendaHost = computed<ContentsHost | null>(() => {
+  const id = agendaOf.value
+  const options = id ? state.objects[id]?.paragraph?.generated : null
+  if (!id || !options) return null
+  const entries = session.agendaOf(id) ?? []
+  return {
+    paragraph: id,
+    options,
+    entries,
+    looks: looksOf(entries, Object.values(state.styles)),
+    readOnly: readonly.value,
+    set: (next) => session.setContents(id, next),
+    remove: () => session.remove(id),
+  }
+})
+function openAgenda(id: string) {
+  agendaOf.value = id
+  dialog.value = 'agenda'
+}
+/** Insert ▸ Agenda: one on the slide shown; with an agenda selected, its options. */
+function insertAgenda() {
+  const selected = state.selected
+  if (selected && state.objects[selected]?.paragraph?.generated) openAgenda(selected)
+  else void session.insertAgenda()
+}
+
 const listStart = () => String(state.lists.find((l) => l.id === session.selectedItem()?.list)?.start ?? 1)
 function startListAt(value: string) {
   const start = Number.parseInt(value, 10)
@@ -343,7 +373,7 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }),
+    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Agenda'), add: insertAgenda, possible: !readonly.value && !!state.activeSlide }),
     {
       label: t('Format'),
       items: [
@@ -442,7 +472,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
     <div v-else-if="state.activeSlide" class="stage">
-      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="gridShown" :marks="searchMarks" @styles="dialog = 'styles'" />
+      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="gridShown" :marks="searchMarks" @styles="dialog = 'styles'" @agenda="openAgenda" />
       <SlideNotes v-if="notesShown" ref="notes" :session="session" :hint="presentHint('time', mac)" :t="t" @present="present" />
     </div>
     <div v-else class="noslide">{{ t('This presentation has no slide.') }}</div>
@@ -460,6 +490,15 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
       <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename slide')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
+      <ContentsDialog
+        v-if="dialog === 'agenda' && agendaHost"
+        :host="agendaHost"
+        :title="t('Agenda')"
+        :levels="false"
+        :places-label="t('Slide numbers')"
+        :places-note="t('after each title')"
+        @close="dialog = null"
+      />
       <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.selectedScheme() ?? undefined" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'list-start'" :title="t('Start numbering at')" :label="t('First number')" :ok="t('Start')" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />

@@ -30,6 +30,7 @@ import type { SlideObject, SlideSession } from '../slide-session'
 import type { Session } from '../session'
 import { plotlyPictures } from './chart-picture'
 import { chartSizes, loadForPrint, setupOf, sheetDocument, type ChartPictures, type SheetRequest } from './sheet-document'
+import { entryWords, type ContentsEntry } from '../contents'
 import { CONTENTS, describeSheets, SCALES, scaleId, withScale, type Contents } from './sheet'
 
 import { translate as t } from '../i18n'
@@ -151,12 +152,20 @@ export function textSource(session: TextSession): PrintSource {
 // ------------------------------------------------------------------------------ creates
 /** The objects of a slide as the layout library knows them. A rendered text container (D390) prints as the picture it
  * shows; one nothing has drawn a picture for yet is left out, as the office exports leave it out. The words of a list
- * item or a numbered title carry their marker, so the pages draw what the slide does (E9.21, E9.22). */
-function printable(objects: readonly SlideObject[], markOf: (id: string) => { marker: string; indent: number } | null = () => null): LayoutSlideObject[] {
+ * item or a numbered title carry their marker, and an agenda its lines (E9.31), so the pages draw what the slide does
+ * (E9.21, E9.22). */
+function printable(
+  objects: readonly SlideObject[],
+  markOf: (id: string) => { marker: string; indent: number } | null = () => null,
+  agendaOf: (id: string) => ContentsEntry[] | null = () => null,
+): LayoutSlideObject[] {
   return objects.flatMap((o) => {
     if (o.kind === 'rendered') return o.image ? [{ ...o, kind: 'image' as const } as LayoutSlideObject] : []
-    const mark = o.paragraph ? markOf(o.id) : null
-    return [(mark && o.paragraph ? { ...o, paragraph: { ...o.paragraph, mark } } : o) as LayoutSlideObject]
+    if (!o.paragraph) return [o as LayoutSlideObject]
+    const mark = markOf(o.id)
+    const entries = o.paragraph.generated ? agendaOf(o.id) : null
+    const agenda = entries ? { lines: entries.map((e) => ({ words: entryWords(e), place: e.place })), leader: o.paragraph.generated!.leader } : null
+    return [{ ...o, paragraph: { ...o.paragraph, ...(mark ? { mark } : {}), ...(agenda ? { agenda } : {}) } } as LayoutSlideObject]
   })
 }
 
@@ -164,7 +173,7 @@ function printable(objects: readonly SlideObject[], markOf: (id: string) => { ma
 export function slideDocument(session: SlideSession): SlideDocument {
   const state = session.state
   return {
-    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id)) })),
+    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id), (id) => session.agendaOf(id)) })),
     styles: Object.values(state.styles).map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved })),
     shapes: Object.values(state.shapes),
     // an SVG picture is drawn from its text (D914); the others from their bytes
@@ -194,7 +203,7 @@ export function slideSource(session: SlideSession): PrintSource {
     language: () => state.language,
     canSetLanguage: () => !session.readOnly && state.language !== undefined,
     setLanguage: (tag) => void session.setLanguage(tag),
-    watched: () => [state.slides, state.objects, state.order, state.styles, state.shapes, state.images, state.printSetup, state.language],
+    watched: () => [state.slides, state.objects, state.order, state.styles, state.shapes, state.images, state.printSetup, state.language, state.labels, state.agendas],
     prepare: async () => {},
     images: () => Object.values(state.images),
     async layOut(assets) {

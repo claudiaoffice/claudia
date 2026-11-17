@@ -84,8 +84,7 @@ def test_every_app_has_the_same_eight_menus_in_the_same_order(app: manifest.Mani
 def test_insert_offers_the_container_types_with_a_key_each(app: manifest.Manifest) -> None:
     """Insert ▸ Container ▸ LaTeX, Mermaid, Typst (D560): the same three in every app, each with its own key, listened
     for by the page like every other app command."""
-    (section,) = app.menu("Insert").sections
-    (container,) = section
+    _contents, (container,) = app.menu("Insert").sections
     assert isinstance(container, manifest.Submenu)
     assert container.label == "Container"
     assert [(a.id, a.label) for a in container.items] == [
@@ -99,6 +98,17 @@ def test_insert_offers_the_container_types_with_a_key_each(app: manifest.Manifes
         ("<Primary><Alt><Shift>y",),
     ]
     assert {a.key_owner for a in container.items} == {manifest.KeyOwner.PAGE}
+
+
+def test_insert_starts_with_the_table_of_contents_which_creates_calls_agenda(app: manifest.Manifest) -> None:
+    """Insert ▸ Table of Contents (E9.31), Ctrl+Alt+Shift+I, listened for by the page; in creates it is Agenda. Computes
+    shows it and the page reports it off, as it does List ▸."""
+    ((contents,), _containers) = app.menu("Insert").sections
+    assert isinstance(contents, manifest.Action)
+    assert contents.id == "insert.contents"
+    assert contents.label == ("Agenda" if app.app == "creates" else "Table of Contents")
+    assert contents.accelerators == ("<Primary><Alt><Shift>i",)
+    assert contents.key_owner == manifest.KeyOwner.PAGE
 
 
 def test_the_front_page_has_no_insert_menu(app: manifest.Manifest) -> None:

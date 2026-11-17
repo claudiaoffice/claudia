@@ -9,7 +9,7 @@
  *
  * @module
  */
-import { type DisplayItem, type DisplayPage, type GroupItem, type Rect, rectPath } from '../display/list'
+import { type DisplayItem, type DisplayPage, type GroupItem, type PathOp, type Rect, rectPath } from '../display/list'
 import { lineItems } from '../display/text'
 import { outlinePath, PathError } from '../display/svgpath'
 import type { PageGeometry } from '../flow/paper'
@@ -53,10 +53,16 @@ export interface VisualObject {
   style: string
   /** Its words; `mark` is what is drawn before them (a list item's marker or a numbered title's number, counted by the
    *  server, E9.21, E9.22) and how far their level moves them in, in em. */
-  paragraph: { style: string; text: string; mark?: ObjectMark | null } | null
+  paragraph: { style: string; text: string; mark?: ObjectMark | null; agenda?: Agenda | null } | null
   shape: string | null
   image: string | null
   rotation: number
+}
+/** The lines of an agenda (E9.31), derived by the server from the slide titles: each line's words (its number and the
+ *  title) and its place (the slide number, or `null`), drawn right-aligned a leader away from the words. */
+export interface Agenda {
+  lines: readonly { words: string; place: string | null }[]
+  leader: 'dots' | 'none'
 }
 /** What is drawn before the words of an object: the marker, and how far the level moves the words in (em). */
 export interface ObjectMark {
@@ -95,6 +101,54 @@ function wordsItems(fonts: FontSet, laid: ReturnType<typeof layoutBox>, marker: 
     const left = x + laid.content.x + first.x - Math.round(MARKER_GAP_EM * em) - mark.natural
     group.items.push(...lineItems(fonts, marker!, mark, left, y + laid.textTop + first.baseline - mark.baseline))
   }
+  return group
+}
+
+/** The gap between an agenda line's words and its leader, and between the leader and the place, in em. */
+const LEADER_GAP_EM = 0.4
+/** How far apart a dot leader's dots are, and how big one is, in em. */
+const DOT_STEP_EM = 0.5
+const DOT_EM = 0.09
+
+/** An agenda in its box (E9.31): its lines' words as one text, one line each, kept clear of the places on the right;
+ *  each place right-aligned on the last line its words take, with a dot leader between, as `ParagraphWords` draws it. */
+function agendaItems(fonts: FontSet, agenda: Agenda, style: ParagraphStyle, r: Rect, decoration: BoxDecoration, align: 'top' | 'middle' | 'bottom', options: ParagraphOptions, rotation: number): GroupItem {
+  const em = style.size
+  const plain: ParagraphStyle = { ...style, align: 'left', indentLeft: 0, indentRight: 0, firstLine: 0, whiteSpace: 'nowrap', hyphens: 'manual' }
+  const places = agenda.lines.map((line) => (line.place ? layoutParagraph(fonts, plain, line.place, r.w) : null))
+  const widest = Math.max(0, ...places.map((p) => p?.lines[0]?.natural ?? 0))
+  const room = widest ? widest + Math.round(LEADER_GAP_EM * em * 2) + Math.round(DOT_STEP_EM * em * 2) : 0
+  const texts = agenda.lines.map((line) => line.words.replace(/[\n\r]/g, ' '))
+  const text = texts.join('\n')
+  const laid = layoutBox(fonts, text, { ...style, indentRight: style.indentRight + room }, r.w, r.h, decoration, align, options)
+  const group = boxItems(fonts, laid, r.x, r.y, rotation)
+  const p = laid.paragraph
+  if (!p) return group
+  const right = r.x + laid.content.x + laid.content.w - style.indentRight
+  let start = 0
+  texts.forEach((words, k) => {
+    const end = start + words.length
+    // the laid line its words end on: the last that starts within them (an empty line has one starting where it does)
+    let at = -1
+    p.lines.forEach((l, i) => {
+      if (l.start >= start && (l.start < end || l.start === start)) at = i
+    })
+    start = end + 1
+    const place = places[k]?.lines[0]
+    const last = p.lines[at]
+    if (!place || !last || at >= laid.visibleLines) return
+    const top = r.y + laid.textTop + p.lines.slice(0, at).reduce((h, l) => h + l.height, 0)
+    const placeX = right - place.natural
+    group.items.push(...lineItems(fonts, places[k]!, place, placeX, top + last.baseline - place.baseline))
+    if (agenda.leader !== 'dots') return
+    const from = r.x + laid.content.x + last.x + last.natural + Math.round(LEADER_GAP_EM * em)
+    const to = placeX - Math.round(LEADER_GAP_EM * em)
+    const step = Math.max(1, Math.round(DOT_STEP_EM * em))
+    const size = Math.max(1, Math.round(DOT_EM * em))
+    const ops: PathOp[] = []
+    for (let x = to - size; x >= from; x -= step) ops.push(...rectPath({ x, y: top + last.baseline - size, w: size, h: size }))
+    if (ops.length) group.items.push({ kind: 'path', ops, fill: style.color, stroke: null, lineWidth: 0 })
+  })
   return group
 }
 
@@ -272,6 +326,7 @@ export function drawObject(o: VisualObject, r: Rect, ctx: ObjectContext): GroupI
   })
   if (o.kind === 'text') {
     const words = o.paragraph ? styles.paragraph(o.paragraph.style) : null
+    if (o.paragraph?.agenda && words) return agendaItems(fonts, o.paragraph.agenda, words.style, r, decoration, words.verticalAlign, ctx.paragraphOptions, o.rotation)
     if (o.paragraph && words) {
       const { laid, marker } = wordsBox(fonts, o.paragraph.text, words.style, o.paragraph.mark, r, decoration, words.verticalAlign, ctx.paragraphOptions)
       return wordsItems(fonts, laid, marker, r.x, r.y, o.rotation)

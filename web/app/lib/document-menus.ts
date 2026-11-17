@@ -152,18 +152,29 @@ export function searchItem(c: DocumentMenuContext, search: { open: () => void })
   return { id: 'edit.search-replace', label: t('Search & Replace…'), hint: chordLabel(SEARCH_CHORD), action: () => search.open() }
 }
 
-/** Insert ▸ Container ▸ LaTeX, Mermaid, Typst: the same in every app (D560). An entry is there for every kind, and
- * off for somebody who may only look, or while the server cannot make that kind (its tool is not set up). The ids are
- * written out, one by one: they are what the shells' manifest (`insert.container.*`, with its key) is checked against. */
+/** Insert ▸ Table of Contents (in creates: Agenda, E9.31), then Container ▸ LaTeX, Mermaid, Typst: the same in every
+ * app (D560). An entry is there for every kind, and off for somebody who may only look, or while the server cannot
+ * make that kind (its tool is not set up). The ids are written out, one by one: they are what the shells' manifest
+ * (`insert.contents`, `insert.container.*`, with their keys) is checked against. An app without `contents` (computes)
+ * shows the entry, off, as it shows List ▸. */
 export function insertMenu(
   c: DocumentMenuContext,
   container: { types: readonly RenderType[]; add: (type: string) => void },
+  contents?: { label: string; add: () => void; possible: boolean },
 ): Menu {
   const { t } = c
   const off = (type: string) => c.role === 'viewer' || !container.types.some((k) => k.type === type)
   return {
     label: t('Insert'),
     items: [
+      {
+        id: 'insert.contents',
+        label: contents?.label ?? t('Table of Contents'),
+        hint: hintOf('insert.contents'),
+        action: () => contents?.add(),
+        disabled: c.role === 'viewer' || !contents?.possible,
+      },
+      { label: '', separator: true },
       {
         label: t('Container'),
         items: [

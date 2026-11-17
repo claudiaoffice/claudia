@@ -715,13 +715,22 @@ def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
     )
 
 
-def _insert_menu() -> Menu:
-    """Insert ▸ Container ▸ LaTeX, Mermaid, Typst (D560): the same in every app. A container is a rendered text: the
-    person writes the text and the server draws it (D390). The keys are the weighty ones, Ctrl+Alt+Shift+F (formula),
-    G (graph) and Y (Typst), because the plain Ctrl+Alt letters are used up or belong to the desktop (see above)."""
+#: Insert ▸ Table of Contents as composes and computes call it; creates calls it Agenda (E9.31).
+CONTENTS_ENTRY = ("Table of Contents", "A list of the headings, each a link to its place; it follows them by itself")
+AGENDA_ENTRY = ("Agenda", "A text box listing the slide titles with their numbers; it follows them by itself")
+
+
+def _insert_menu(contents: tuple[str, str]) -> Menu:
+    """Insert ▸ Table of Contents (E9.31; in creates Agenda, ``contents`` is its label and tooltip), then Container ▸
+    LaTeX, Mermaid, Typst (D560): the same in every app. Computes shows Table of Contents and the page reports it off,
+    as it does List ▸. A container is a rendered text: the person writes the text and the server draws it (D390). The
+    keys are the weighty ones, Ctrl+Alt+Shift+I (index), F (formula), G (graph) and Y (Typst), because the plain
+    Ctrl+Alt letters are used up or belong to the desktop (see above)."""
+    label, tooltip = contents
     return Menu(
         "Insert",
         (
+            (_page("insert.contents", label, tooltip, accelerators=("<Primary><Alt><Shift>i",)),),
             (
                 Submenu(
                     "Container",
@@ -810,14 +819,22 @@ def _help_menu(title: str) -> Menu:
 
 
 def _manifest(
-    app: str, title: str, *, edit: Menu, format_menu: Menu, view: Menu, tools: Menu, prints: bool
+    app: str,
+    title: str,
+    *,
+    edit: Menu,
+    format_menu: Menu,
+    view: Menu,
+    tools: Menu,
+    prints: bool,
+    contents: tuple[str, str] = CONTENTS_ENTRY,
 ) -> Manifest:
     return Manifest(
         app,
         (
             _file_menu(title=title, prints=prints),
             edit,
-            _insert_menu(),
+            _insert_menu(contents),
             format_menu,
             view,
             tools,
@@ -1168,6 +1185,7 @@ def creates() -> Manifest:
         view=view_menu,
         tools=Menu("Tools", ((_tools_ask(),),)),
         prints=True,
+        contents=AGENDA_ENTRY,
     )
 
 

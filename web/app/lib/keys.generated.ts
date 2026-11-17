@@ -82,6 +82,7 @@ export const KEYS: Readonly<Record<string, ActionKey>> = {
   'insert.container.latex': { chord: { key: 'f', code: 'KeyF', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'insert.container.mermaid': { chord: { key: 'g', code: 'KeyG', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'insert.container.typst': { chord: { key: 'y', code: 'KeyY', ctrl: true, shift: true, alt: true }, owner: 'page' },
+  'insert.contents': { chord: { key: 'i', code: 'KeyI', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'tools.ask': { chord: { key: 'j', code: 'KeyJ', ctrl: true, alt: true }, owner: 'page' },
   'tools.follow': { chord: { key: 'f', code: 'KeyF', ctrl: true, alt: true }, owner: 'page' },
   'tools.names': { chord: { key: 'F3', ctrl: true }, owner: 'page' },

@@ -6,6 +6,7 @@ import type { ShowSlide } from './show'
 import type { ShapeDef, SlideInfo, SlideObject, SlideSession, SlideState } from './slide-session'
 import type { ImageAsset } from './images'
 import type { StyleDef, StyleModel } from './objects'
+import type { ContentsEntry } from './contents'
 
 export interface FrozenDeck {
   /** The revision the copy was taken at, `null` for a document that has none yet. */
@@ -21,22 +22,27 @@ export interface FrozenDeck {
   /** What is drawn before the words of an object (a list marker, a slide title's number) and how far they move in,
    *  by object id (E9.21, E9.22); absent in a copy from before lists. */
   marks?: Record<string, { marker: string; indent: number }>
+  /** The lines of each agenda, by object id (E9.31); absent in a copy from before agendas. */
+  agendas?: Record<string, ContentsEntry[]>
 }
 
 /** Copy what the show draws from out of the session. A JSON round trip, because the session's state is reactive and a
  * reactive object is a view of the live one, not a copy. */
-export function freeze(session: Pick<SlideSession, 'state' | 'objectsOn' | 'notesOf' | 'secondsOf'> & Partial<Pick<SlideSession, 'markOf'>>): FrozenDeck {
+export function freeze(session: Pick<SlideSession, 'state' | 'objectsOn' | 'notesOf' | 'secondsOf'> & Partial<Pick<SlideSession, 'markOf' | 'agendaOf'>>): FrozenDeck {
   const s: SlideState = session.state
   const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value ?? null)) as T
   const objects: Record<string, SlideObject[]> = {}
   const notes: Record<string, string> = {}
   const times: Record<string, number> = {}
   const marks: Record<string, { marker: string; indent: number }> = {}
+  const agendas: Record<string, ContentsEntry[]> = {}
   for (const slide of s.slides) {
     objects[slide.id] = copy(session.objectsOn(slide.id))
     for (const o of objects[slide.id]!) {
       const mark = session.markOf?.(o.id)
       if (mark) marks[o.id] = mark
+      const agenda = session.agendaOf?.(o.id)
+      if (agenda) agendas[o.id] = copy(agenda)
     }
     const note = session.notesOf(slide.id)
     if (note) notes[slide.id] = note
@@ -54,6 +60,7 @@ export function freeze(session: Pick<SlideSession, 'state' | 'objectsOn' | 'note
     images: copy(s.images),
     styleModel: copy(s.styleModel),
     marks,
+    agendas,
   }
 }
 

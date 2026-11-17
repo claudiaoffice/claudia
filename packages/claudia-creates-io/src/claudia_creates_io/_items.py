@@ -9,6 +9,9 @@ style; the markers are derived, never characters of the words. The two formats h
   number for (a trail such as ``2.1``, text around a number other than its few forms) is not written; it is reported
   as ``list-look``. Read back, a numbered box whose ``startAt`` goes on from the last box of the same look continues
   that list; any other starts a new one.
+* An **agenda** (a text box whose words are generated, E9.31) is written as the lines it shows, each "number title
+  slide"; neither format can derive it, so it no longer follows the slides once written: the loss ``agenda``. Read
+  back it is a text box with those words.
 * **odp** has lists that continue across text boxes as they do across paragraphs (``xml:id`` and
   ``text:continue-list``), and list styles that say every level (:mod:`claudia_odf_io.lists`). A box's paragraphs are
   the item of a ``text:list``, nested for its level.
@@ -80,6 +83,30 @@ def marks_of(model: SlideModel) -> dict[str, Mark]:
         scheme = model.schemes.get(model.lists.get(item.list).scheme)
         marks[paragraph] = Mark(item.list, item.level, scheme.level(item.level), labels[paragraph], scheme)
     return marks
+
+
+# -- agendas -------------------------------------------------------------------------------------------------------
+def agenda_lines(model: SlideModel, object_id: str) -> str:
+    """What an agenda shows, as lines of text: each entry's number, its words and, after a tab, its slide."""
+    toc = model.generated_of(object_id)
+    lines = []
+    for entry in model.structure.entries(object_id):
+        words = f"{entry.number} {entry.text}" if entry.number else entry.text
+        lines.append(f"{words}\t{entry.place}" if toc is not None and toc.places and entry.place else words)
+    return "\n".join(lines)
+
+
+def words_of(model: SlideModel, body: object) -> str:
+    """The words a format writes for an object: its own, or for an agenda the lines it shows."""
+    paragraph = getattr(body, "paragraph", None)
+    if paragraph is None:
+        return ""
+    return agenda_lines(model, body.id) if paragraph.generated is not None else paragraph.text  # type: ignore[attr-defined]
+
+
+def agendas(model: SlideModel) -> int:
+    """How many agendas the presentation has (each is written as text: the loss ``agenda``)."""
+    return sum(1 for obj in model.objects.values() if obj.body.paragraph is not None and obj.body.paragraph.generated)
 
 
 # -- pptx ------------------------------------------------------------------------------------------------------------

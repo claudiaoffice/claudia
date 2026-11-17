@@ -1,5 +1,5 @@
 {
- "version": "0.30.0",
+ "version": "0.31.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -95,6 +95,9 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "CONTENTS_STYLE": {
+  "value": "'contents-{level}'"
  },
  "CSS_VERSION": {
   "value": "4"
@@ -290,6 +293,16 @@
    "register": "(self, cls: 'type[Command]') -> 'type[Command]'",
    "schemas": "(self) -> 'dict[str, int]'",
    "upcaster": "(self, kind: 'str', from_schema: 'int') -> 'Callable'"
+  },
+  "properties": []
+ },
+ "ContentsEntry": {
+  "class": [
+   "object"
+  ],
+  "init": "(target: 'str', level: 'int', number: 'str | None', text: 'str', style: 'str', place: 'str | None' = None) -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -743,6 +756,31 @@
   },
   "properties": []
  },
+ "Generated": {
+  "value": "<TypeAliasType>"
+ },
+ "GeneratedChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(paragraph: 'str', entries: 'tuple[ContentsEntry, ...] | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "GeneratedHost": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "generated_of": "(self, paragraph_id: 'str') -> 'Generated | None'",
+   "item_regions": "(self, paragraph_id: 'str') -> 'tuple[Region, ...]'",
+   "put_generated": "(self, paragraph_id: 'str', generated: 'Generated | None') -> 'object'"
+  },
+  "properties": []
+ },
  "HeadingLevel": {
   "value": "<TypeAliasType>"
  },
@@ -1127,6 +1165,7 @@
    "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
    "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",
    "names_in_use": "(self) -> 'list[str]'",
+   "object_generated": "(self, object_id: 'str') -> 'Generated | None'",
    "object_item": "(self, object_id: 'str') -> 'ListItem | None'",
    "object_list_in_use": "(self, list_id: 'str') -> 'bool'",
    "objects_changed": "(self, container: 'str', *, changed: 'tuple[VisualObject[A], ...]' = (), removed: 'tuple[str, ...]' = ()) -> 'ObjectsChanged'",
@@ -1134,6 +1173,7 @@
    "objects_to_data": "(self) -> 'list[dict]'",
    "open_container": "(self, container: 'str') -> 'None'",
    "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
+   "put_object_generated": "(self, object_id: 'str', generated: 'Generated | None') -> 'ObjectsChanged'",
    "put_object_item": "(self, object_id: 'str', item: 'ListItem | None') -> 'ObjectsChanged'",
    "rename_thing": "(self, ctx: 'Context', thing_id: 'str', name: 'str') -> 'tuple[str, tuple[Command, ...]]'",
    "renderings_to_data": "(self) -> 'list[dict]'",
@@ -1254,11 +1294,12 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None) -> None",
+  "init": "(id: 'str', style: 'str', text: 'str' = '', runs: 'tuple[Run, ...]' = <factory>, item: 'ListItem | None' = None, generated: 'Generated | None' = None) -> None",
   "methods": {
    "check": "(self) -> 'None'",
    "from_data": "(data: 'dict') -> 'Paragraph'",
    "to_data": "(self) -> 'dict'",
+   "with_generated": "(self, generated: 'Generated | None') -> 'Paragraph'",
    "with_item": "(self, item: 'ListItem | None') -> 'Paragraph'",
    "with_style": "(self, style: 'str') -> 'Paragraph'",
    "with_text": "(self, text: 'str', runs: 'Iterable[Run]') -> 'Paragraph'",
@@ -1719,6 +1760,23 @@
   },
   "properties": []
  },
+ "SetGenerated": {
+  "class": [
+   "Command"
+  ],
+  "init": "(paragraph: 'str', generated: 'Generated | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetGenerated'",
+   "regions": "(self, model: 'object') -> 'tuple[Region, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetHeadingLevel": {
   "class": [
    "Command"
@@ -2063,9 +2121,13 @@
   ],
   "init": "(host: 'ParagraphHost') -> 'None'",
   "methods": {
+   "all_entries": "(self) -> 'dict[str, tuple[ContentsEntry, ...]]'",
    "effective_item": "(self, placed: 'Placed') -> 'ListItem | None'",
+   "entries": "(self, paragraph_id: 'str') -> 'tuple[ContentsEntry, ...]'",
+   "generated": "(self) -> 'dict[str, tuple[Placed, Generated]]'",
    "items": "(self) -> 'Iterator[tuple[str, ListItem | None]]'",
    "labels": "(self) -> 'dict[str, Label]'",
+   "outline": "(self) -> 'list[tuple[Placed, int]]'",
    "reading_order": "(self) -> 'Iterator[Placed]'",
    "settle": "(self, ctx: 'Emitter') -> 'None'"
   },
@@ -2077,6 +2139,19 @@
   ],
   "init": "(id: 'str', name: 'str') -> None",
   "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Toc": {
+  "class": [
+   "object"
+  ],
+  "init": "(first: 'int' = 1, last: 'int' = 3, numbers: 'bool' = True, places: 'bool' = True, leader: 'str' = 'dots') -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'Toc'",
+   "lists": "(self, level: 'int | None') -> 'bool'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
@@ -2214,6 +2289,9 @@
  },
  "free_name": {
   "function": "(label: 'str', taken: 'Iterable[str]') -> 'str'"
+ },
+ "generated_from_data": {
+  "function": "(data: 'dict') -> 'Generated'"
  },
  "insert_runs": {
   "function": "(runs: 'Iterable[Run]', offset: 'int', new: 'Iterable[Run]') -> 'list[Run]'"
