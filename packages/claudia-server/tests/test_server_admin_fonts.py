@@ -4,6 +4,7 @@ import json
 from urllib.parse import quote
 
 import pytest
+from fastapi import HTTPException
 from starlette.testclient import TestClient
 
 from claudia_core.testing import ListModel
@@ -11,6 +12,7 @@ from claudia_fonts import COLLECTION_FILE
 from claudia_fonts.testing import make_font
 from claudia_server.admin import AdminDirectory
 from claudia_server.admin_api import AdminContext, AiRuntime
+from claudia_server.admin_fonts import HOLD_SECONDS, FontUploads
 from claudia_server.admin_sessions import AdminSessions
 from claudia_server.app import create_app
 from claudia_server.auth import ScryptDirectory
@@ -31,7 +33,14 @@ def collection(folder, name, *, redistributable=True, fonts=(("Shipped Sans", "R
 
 
 @pytest.fixture
-def server(tmp_path):
+def admins():
+    directory = AdminDirectory(cost=2**4)
+    directory.add("anna", PASSWORD, added="2026-11-01T00:00:00Z")
+    return directory
+
+
+@pytest.fixture
+def server(tmp_path, admins):
     shipped = tmp_path / "shipped"
     collection(shipped / "inter", "Inter", fonts=(("Inter", "Regular"), ("Inter", "Bold")))
     collection(shipped / "arimo", "Arimo", fonts=(("Arimo", "Regular"),))
@@ -41,8 +50,6 @@ def server(tmp_path):
     make_font(operator / "House-Locked.ttf", "House", "Locked", fs_type=2)
     added = tmp_path / "state" / "fonts"
     fonts = FontService.from_folders([operator.parent], tmp_path / "webfonts", shipped=[shipped], added_root=added)
-    admins = AdminDirectory(cost=2**4)
-    admins.add("anna", PASSWORD, added="2026-11-01T00:00:00Z")
     admin = AdminContext(
         admins=admins,
         sessions=AdminSessions(),
@@ -184,3 +191,56 @@ def test_an_upload_of_another_kind_is_kept_and_checked_as_left_out(server):
 def test_the_page_says_whether_the_server_keeps_this_server_fonts_to_its_people(server):
     client, _, _ = server
     assert client.get("/api/admin/fonts").json()["access_secret_set"] is False
+
+
+def sign_in(client, admins, name):
+    """Another administrator's headers on the same server."""
+    admins.add(name, PASSWORD, added="2026-11-17T00:00:00Z")
+    token = client.post("/api/admin/login", json={"name": name, "password": PASSWORD}).json()["token"]
+    return {"authorization": f"Bearer {token}"}
+
+
+def test_the_page_says_how_much_may_wait_to_be_added(server):
+    client, _, _ = server
+    assert client.get("/api/admin/fonts").json()["limits"] == {"files": 64, "bytes": 128 * 1024 * 1024}
+
+
+def test_files_let_go_of_free_the_room_for_others(server, monkeypatch):
+    """CODE-49: files chosen and then given up (Cancel, Start again, a failed upload) are dropped by the dialog, and
+    the room is free again at once."""
+    client, _, tmp_path = server
+    monkeypatch.setattr("claudia_server.admin_fonts.MAX_FILES", 2)
+    font = made(tmp_path, "City-Regular.ttf")
+    tokens = [upload(client, font), upload(client, font)]
+    full = client.post("/api/admin/fonts/files", content=font.read_bytes(), headers={"x-claudia-name": "c.ttf"})
+    assert full.status_code == 503 and "let go" in full.json()["detail"]
+    dropped = client.request("DELETE", "/api/admin/fonts/files", json={"files": [*tokens, "unknown"]})
+    assert dropped.json() == {"dropped": 2}
+    assert client.post("/api/admin/fonts/check", json={"files": tokens}).status_code == 400
+    upload(client, font)
+
+
+def test_what_one_administrator_holds_neither_blocks_nor_serves_another(server, admins, monkeypatch):
+    client, _, tmp_path = server
+    monkeypatch.setattr("claudia_server.admin_fonts.MAX_FILES", 1)
+    font = made(tmp_path, "City-Regular.ttf")
+    anna = upload(client, font)
+    bob = sign_in(client, admins, "bob")
+    answer = client.post(
+        "/api/admin/fonts/files", content=font.read_bytes(), headers={"x-claudia-name": "c.ttf", **bob}
+    )
+    assert answer.status_code == 200
+    assert client.post("/api/admin/fonts/check", json={"files": [anna]}, headers=bob).status_code == 400
+    assert client.request("DELETE", "/api/admin/fonts/files", json={"files": [anna]}, headers=bob).json() == {
+        "dropped": 0
+    }
+
+
+def test_held_files_go_after_a_while():
+    clock = [0.0]
+    uploads = FontUploads(clock=lambda: clock[0])
+    token = uploads.put("anna", "a.ttf", b"x")
+    assert uploads.files("anna", [token]) == [("a.ttf", b"x")]
+    clock[0] = HOLD_SECONDS + 1
+    with pytest.raises(HTTPException):
+        uploads.files("anna", [token])

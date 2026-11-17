@@ -176,6 +176,7 @@ statement in the docs or on the website).
 | CODE-46 | P2 | Code / Import | The slides importers do not read text size and colour, so most boxes are a `look` loss | **new, open** |
 | CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | **new, open** |
 | CODE-48 | P3 | Code / Web | After naming the first administrator, the server settings stayed on the setup form | **fixed** 2026-11-17 |
+| CODE-49 | P2 | Code / Server | Add fonts… stayed blocked for 30 minutes after too many files were chosen | **fixed** 2026-11-17 |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1705,6 +1706,17 @@ server is set up this way.
 somebody signed in always sees the settings; once somebody is signed in, signing out asks who signs in instead of
 offering the setup again. Tests in `tests/admin-api.test.ts`; `e2e/admin-fonts.cjs` names the first administrator on
 a new server and goes on without a reload.
+
+### CODE-49 · Add fonts… stayed blocked for 30 minutes after too many files were chosen · P2 · fixed 2026-11-17
+**Measured** (by the owner on 2026-11-17, reported as bug E, size 2): the dialog sent the chosen files one by one,
+so choosing too many filled the server's room for waiting files (64 files or 128 MB) before the refusal came. Nothing
+let go of them: not "Start again", not Cancel, not closing the dialog. Every later try, even with one font, was
+refused with "too many fonts are waiting to be added" until they ran out after 30 minutes or the server restarted.
+**Fixed (2026-11-17, branch `font-server-ui`):** the page sends the limits (`limits`) and the dialog says them before
+anything is sent; a failed upload, "Start again", Cancel and closing let go of the held files
+(`DELETE /api/admin/fonts/files`); the server holds files per administrator, so one person's leftovers never block
+another; the refusal names the limits and what to do. Tests in `test_server_admin_fonts.py` and
+`tests/admin-fonts.test.ts`; `e2e/admin-fonts.cjs` chooses 65 files (refused before sending) and starts again (let go).
 
 ## Website
 

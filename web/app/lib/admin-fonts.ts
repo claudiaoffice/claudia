@@ -62,6 +62,13 @@ export interface FontsPage {
   problems: FontProblemView[]
   access_secret_set: boolean
   can_add: boolean
+  /** how much one administrator may have waiting to be added at once */
+  limits: FontLimits
+}
+
+export interface FontLimits {
+  files: number
+  bytes: number
 }
 
 export interface FileCheckView {
@@ -241,6 +248,18 @@ export function scopeSentences(
     if (!scope.accessSecretSet) lines.push(t('This server has no access secret, so everyone who can reach it counts as its people.'))
   }
   return lines
+}
+
+/** Why the files just chosen cannot be added with those chosen before (the server's limits, said before anything
+ *  is sent, CODE-49), or `''` when they fit. */
+export function tooMuchToAdd(held: { size: number }[], chosen: { size: number }[], limits: FontLimits, t: T): string {
+  const files = held.length + chosen.length
+  const bytes = [...held, ...chosen].reduce((sum, f) => sum + f.size, 0)
+  if (files <= limits.files && bytes <= limits.bytes) return ''
+  return t('At most {files} files or {mb} MB can be added at once. Choose fewer, or add them as two collections.', {
+    files: limits.files,
+    mb: Math.floor(limits.bytes / (1024 * 1024)),
+  })
 }
 
 /** The licence the checked fonts name, if they all name the same one. */

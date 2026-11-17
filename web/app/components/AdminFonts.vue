@@ -200,7 +200,7 @@ function menuKey(event: KeyboardEvent) {
       {{ t('A stand-in is used when a document asks for a family this server lacks. {fonts} have the same widths as the fonts they stand in for, so lines and pages break as in the original.', { fonts: sameWidths.join(', ') }) }}
     </p>
 
-    <AddFontsDialog v-if="adding" :token="token" :server="server" :access-secret-set="page.access_secret_set" @close="adding = false" @added="added" />
+    <AddFontsDialog v-if="adding" :token="token" :server="server" :access-secret-set="page.access_secret_set" :limits="page.limits" @close="adding = false" @added="added" />
     <PromptDialog v-if="renaming" :title="t('Rename collection')" :label="t('Name')" :ok="t('Rename')" :initial="renaming.name" required @ok="rename" @close="renaming = null" />
     <Modal v-if="removing" :title="t('Remove collection')" @close="removing = null">
       <p class="warning">

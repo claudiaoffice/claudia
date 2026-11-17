@@ -3,15 +3,18 @@
 // add. Step A: the files (TrueType, OpenType, or a .zip of them), the collection's name, who may receive the fonts and
 // the licence in words; choosing files already holds them on the server and checks them, which changes nothing but
 // fills in the licence the fonts name. Step B: one line per font, what it becomes, and what adding will do, said
-// before it happens. Only "Add" changes the server.
-import { computed, onMounted, ref } from 'vue'
+// before it happens. Only "Add" changes the server. Files given up are let go of on the server at once (Cancel,
+// Start again, closing, a failed upload), and the limits are said before anything is sent (CODE-49).
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { adminApi, AdminApiError } from '~/lib/admin-api'
 import {
   checkDescription,
   checkLine,
   scopeSentences,
   suggestedLicence,
+  tooMuchToAdd,
   type CheckAnswer,
+  type FontLimits,
   type FontsPage,
   type MayGo,
 } from '~/lib/admin-fonts'
@@ -19,11 +22,12 @@ import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 
-const props = defineProps<{ token: string; server: string; accessSecretSet: boolean }>()
+const props = defineProps<{ token: string; server: string; accessSecretSet: boolean; limits: FontLimits }>()
 const emit = defineEmits<{ close: []; added: [page: FontsPage] }>()
 
 const step = ref<'choose' | 'check'>('choose')
-const held = ref<{ token: string; name: string }[]>([])
+const held = ref<{ token: string; name: string; size: number }[]>([])
+let added = false
 const answer = ref<CheckAnswer | null>(null)
 const name = ref('')
 const licence = ref('')
@@ -35,6 +39,10 @@ const picker = ref<HTMLInputElement | null>(null)
 const nameField = ref<HTMLInputElement | null>(null)
 
 onMounted(() => picker.value?.focus())
+// Closing the dialog without adding lets go of what the server holds for it.
+onBeforeUnmount(() => {
+  if (!added) letGo(held.value.map((h) => h.token))
+})
 
 const ready = computed(() => held.value.length > 0 && answer.value !== null && !!name.value.trim() && !!licence.value.trim() && mayGo.value !== null && !busy.value)
 const lines = computed(() => (answer.value?.files ?? []).map((check) => ({ check, line: checkLine(check, t), description: checkDescription(check, t) })))
@@ -44,25 +52,48 @@ const scope = computed(() =>
     : [],
 )
 
+function tooMuch(): string {
+  return tooMuchToAdd([], [{ size: props.limits.bytes + 1 }], props.limits, t)
+}
+
 function failed(e: unknown) {
-  error.value = e instanceof AdminApiError ? e.message : t('Could not reach the server.')
+  if (e instanceof AdminApiError && e.status === 503) error.value = tooMuch()
+  else error.value = e instanceof AdminApiError ? e.message : t('Could not reach the server.')
+}
+
+/** Tells the server to let go of files that will not be added; nothing to wait for, and a failure only means they go
+ *  after a while on their own. */
+function letGo(tokens: string[]) {
+  if (tokens.length) void adminApi.dropFontFiles(props.token, tokens).catch(() => undefined)
 }
 
 async function take(files: FileList | File[] | null) {
   if (!files || !files.length) return
+  const chosen = Array.from(files)
+  error.value = tooMuchToAdd(held.value, chosen, props.limits, t)
+  if (error.value) return
   busy.value = true
-  error.value = ''
+  const batch: { token: string; name: string; size: number }[] = []
   try {
-    for (const file of Array.from(files)) held.value.push({ token: (await adminApi.holdFontFile(props.token, file, file.name)).token, name: file.name })
-    answer.value = await adminApi.checkFonts(props.token, held.value.map((h) => h.token))
+    for (const file of chosen) batch.push({ token: (await adminApi.holdFontFile(props.token, file, file.name)).token, name: file.name, size: file.size })
+    answer.value = await adminApi.checkFonts(props.token, [...held.value, ...batch].map((h) => h.token))
+    held.value = [...held.value, ...batch]
     if (!licence.value) licence.value = suggestedLicence(answer.value.files)
     if (licence.value && mayGo.value === null && /^(OFL|Apache|Ubuntu|LPPL)/.test(licence.value)) mayGo.value = 'anywhere'
     if (!name.value && answer.value.families.length === 1) name.value = answer.value.families[0]!
   } catch (e) {
+    letGo(batch.map((h) => h.token)) // a batch is held whole or not at all
     failed(e)
   } finally {
     busy.value = false
   }
+}
+
+function picked(event: Event) {
+  const input = event.target as HTMLInputElement
+  void take(input.files).then(() => {
+    input.value = '' // so the same files can be chosen again
+  })
 }
 
 function dropped(event: DragEvent) {
@@ -71,8 +102,10 @@ function dropped(event: DragEvent) {
 }
 
 function clear() {
+  letGo(held.value.map((h) => h.token))
   held.value = []
   answer.value = null
+  error.value = ''
 }
 
 async function add() {
@@ -80,7 +113,9 @@ async function add() {
   busy.value = true
   error.value = ''
   try {
-    emit('added', await adminApi.addFontCollection(props.token, { files: held.value.map((h) => h.token), name: name.value.trim(), licence: licence.value.trim(), may_go: mayGo.value }))
+    const page = await adminApi.addFontCollection(props.token, { files: held.value.map((h) => h.token), name: name.value.trim(), licence: licence.value.trim(), may_go: mayGo.value })
+    added = true // the server has used the files up
+    emit('added', page)
   } catch (e) {
     failed(e)
   } finally {
@@ -101,7 +136,7 @@ async function add() {
           </template>
           <label class="pick">
             {{ held.length ? t('Add more files…') : t('Choose files…') }}
-            <input ref="picker" type="file" multiple accept=".ttf,.otf,.zip,font/ttf,font/otf,application/zip" class="sr-only" @change="take(($event.target as HTMLInputElement).files)" >
+            <input ref="picker" type="file" multiple accept=".ttf,.otf,.zip,font/ttf,font/otf,application/zip" class="sr-only" @change="picked" >
           </label>
           <span class="or">{{ t('or drop them here: TrueType, OpenType, or a .zip of them') }}</span>
           <button v-if="held.length" type="button" class="link" @click="clear">{{ t('Start again') }}</button>

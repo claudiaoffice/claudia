@@ -9,6 +9,7 @@ import {
   previewStyle,
   scopeSentences,
   stylesLabel,
+  tooMuchToAdd,
   type FileCheckView,
   type FontsPage,
 } from '~/lib/admin-fonts'
@@ -47,6 +48,7 @@ const page: FontsPage = {
   ],
   access_secret_set: true,
   can_add: true,
+  limits: { files: 64, bytes: 128 * 1024 * 1024 },
 }
 
 describe('the families table', () => {
@@ -125,6 +127,20 @@ describe('Add fonts…', () => {
   })
 })
 
+describe('how much may be added at once (CODE-49)', () => {
+  const limits = { files: 3, bytes: 2 * 1024 * 1024 }
+
+  it('lets files through that fit with those already chosen', () => {
+    expect(tooMuchToAdd([{ size: 100 }], [{ size: 200 }, { size: 300 }], limits, t)).toBe('')
+  })
+
+  it('says the limit before anything is sent, by count and by size', () => {
+    const message = 'At most 3 files or 2 MB can be added at once. Choose fewer, or add them as two collections.'
+    expect(tooMuchToAdd([{ size: 1 }, { size: 1 }], [{ size: 1 }, { size: 1 }], limits, t)).toBe(message)
+    expect(tooMuchToAdd([], [{ size: 2 * 1024 * 1024 + 1 }], limits, t)).toBe(message)
+  })
+})
+
 describe('the admin API for fonts', () => {
   it('holds a file with its name in a header and the bytes as the body', async () => {
     let seen: { url: string; init?: RequestInit } = { url: '' }
@@ -139,6 +155,16 @@ describe('the admin API for fonts', () => {
     expect(headers['x-claudia-name']).toBe('a%20b.ttf')
     expect(headers.authorization).toBe('Bearer tok')
     expect(seen.init?.body).toBe(file)
+  })
+
+  it('lets go of held files by their tokens', async () => {
+    let seen: { url: string; init?: RequestInit } = { url: '' }
+    const api = createAdminApi((async (url: string, init?: RequestInit) => {
+      seen = { url: String(url), init }
+      return { status: 200, ok: true, json: async () => ({ dropped: 2 }) } as Response
+    }) as typeof fetch)
+    await expect(api.dropFontFiles('tok', ['a', 'b'])).resolves.toEqual({ dropped: 2 })
+    expect([seen.init?.method, seen.url, seen.init?.body]).toEqual(['DELETE', '/api/admin/fonts/files', JSON.stringify({ files: ['a', 'b'] })])
   })
 
   it('names a collection by its id in the address', async () => {

@@ -85,7 +85,7 @@ msgstr "[1 côlléctîôn~~~~~]"
 msgid "1 column"
 msgstr "[1 côlûmn~~~]"
 
-#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:182 web/app/lib/admin-fonts.ts:229
+#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:189 web/app/lib/admin-fonts.ts:236
 msgid "1 family"
 msgstr "[1 fàmîly~~~]"
 
@@ -93,7 +93,7 @@ msgstr "[1 fàmîly~~~]"
 msgid "1 file"
 msgstr "[1 fîlé~~]"
 
-#: web/app/components/AddFontsDialog.vue:99
+#: web/app/components/AddFontsDialog.vue:134
 msgid "1 file chosen"
 msgstr "[1 fîlé chôsén~~~~~]"
 
@@ -101,11 +101,11 @@ msgstr "[1 fîlé chôsén~~~~~]"
 msgid "1 file not usable"
 msgstr "[1 fîlé nôt ûsàblé~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:174
+#: web/app/lib/admin-fonts.ts:181
 msgid "1 file not used."
 msgstr "[1 fîlé nôt ûséd.~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:228
+#: web/app/lib/admin-fonts.ts:235
 msgid "1 font"
 msgstr "[1 fônt~~]"
 
@@ -241,7 +241,7 @@ msgstr "[À côlûmn fôr éàch mémbér ôf thé côlûmn fîéld; à néw mé
 msgid "A document has at most {count} tags."
 msgstr "[À dôcûmént hàs àt môst {count} tàgs.~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:201
+#: web/app/lib/admin-fonts.ts:208
 msgid "A file name with * or ? cannot be used; rename the file."
 msgstr "[À fîlé nàmé wîth * ôr ? cànnôt bé ûséd; rénàmé thé fîlé.~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -261,7 +261,7 @@ msgstr "[À grîd ôf nûmbérs thàt côûnt ûp frôm à stàrt by à stép: r
 msgid "A hyphen the line is never broken at"
 msgstr "[À hyphén thé lîné îs névér brôkén àt~~~~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:130
+#: web/app/components/AddFontsDialog.vue:165
 msgid "A licence for your organisation. Handed only to people who have this server’s access secret."
 msgstr "[À lîcéncé fôr yôûr ôrgànîsàtîôn. Hàndéd ônly tô péôplé whô hàvé thîs sérvér’s àccéss sécrét.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -413,7 +413,7 @@ msgstr "[Àct àt ôncé~~~~]"
 msgid "Add"
 msgstr "[Àdd~]"
 
-#: web/app/components/AddFontsDialog.vue:174
+#: web/app/components/AddFontsDialog.vue:209
 msgid "Add 1 font"
 msgstr "[Àdd 1 fônt~~~~]"
 
@@ -449,7 +449,7 @@ msgstr "[Àdd à tàg…~~~~]"
 msgid "Add a text box to the slide"
 msgstr "[Àdd à téxt bôx tô thé slîdé~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:93
+#: web/app/components/AddFontsDialog.vue:128
 msgid "Add fonts to {server}"
 msgstr "[Àdd fônts tô {server}~~~~~~~~]"
 
@@ -457,7 +457,7 @@ msgstr "[Àdd fônts tô {server}~~~~~~~~]"
 msgid "Add fonts…"
 msgstr "[Àdd fônts…~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:103
+#: web/app/components/AddFontsDialog.vue:138
 msgid "Add more files…"
 msgstr "[Àdd môré fîlés…~~~~~~]"
 
@@ -469,7 +469,7 @@ msgstr "[Àdd pérsôn~~~~]"
 msgid "Add tags, e.g. finance, 2027"
 msgstr "[Àdd tàgs, é.g. fînàncé, 2027~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:174
+#: web/app/components/AddFontsDialog.vue:209
 msgid "Add {n} fonts"
 msgstr "[Àdd {n} fônts~~~~~]"
 
@@ -477,11 +477,11 @@ msgstr "[Àdd {n} fônts~~~~~]"
 msgid "Add “{tag}” as a new tag"
 msgstr "[Àdd “{tag}” às à néw tàg~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:173
+#: web/app/lib/admin-fonts.ts:180
 msgid "Added by {by}, {date}."
 msgstr "[Àddéd by {by}, {date}.~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:173
+#: web/app/lib/admin-fonts.ts:180
 msgid "Added in the server settings."
 msgstr "[Àddéd în thé sérvér séttîngs.~~~~~~~~~~~~]"
 
@@ -497,7 +497,7 @@ msgstr "[Àdds thé nûmbérs ôf thé célls thàt méét thé crîtérîôn; s
 msgid "Adds the numbers of the sum range wherever all criteria are met (pairs of a range and its criterion)."
 msgstr "[Àdds thé nûmbérs ôf thé sûm ràngé whérévér àll crîtérîà àré mét (pàîrs ôf à ràngé ànd îts crîtérîôn).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:231
+#: web/app/lib/admin-fonts.ts:238
 msgid "Adds {fonts} in {families} to {server}. From now on every document here that asks for {names} is laid out, shown and printed with them."
 msgstr "[Àdds {fonts} în {families} tô {server}. Frôm nôw ôn évéry dôcûmént héré thàt àsks fôr {names} îs làîd ôût, shôwn ànd prîntéd wîth thém.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -565,7 +565,7 @@ msgstr "[Àlréàdy ûséd ôn {place}~~~~~~~~~]"
 msgid "Alt"
 msgstr "[Àlt~]"
 
-#: web/app/lib/admin-fonts.ts:171
+#: web/app/lib/admin-fonts.ts:178
 msgid "Always here. A font of the same family and style in another collection is used instead."
 msgstr "[Àlwàys héré. À fônt ôf thé sàmé fàmîly ànd stylé în ànôthér côlléctîôn îs ûséd înstéàd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -581,7 +581,7 @@ msgstr "[Àn ànglé în ràdîàns às dégréés.~~~~~~~~~~~~]"
 msgid "An object cannot be printed: {reason}."
 msgstr "[Àn ôbjéct cànnôt bé prîntéd: {reason}.~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:123
+#: web/app/components/AddFontsDialog.vue:158
 msgid "An open licence. Handed to everyone who opens a document here."
 msgstr "[Àn ôpén lîcéncé. Hàndéd tô évéryôné whô ôpéns à dôcûmént héré.~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -601,15 +601,15 @@ msgstr "[Ànôthér fônt…~~~~~]"
 msgid "Answers to what people often want to do"
 msgstr "[Ànswérs tô whàt péôplé ôftén wànt tô dô~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:122
+#: web/app/components/AddFontsDialog.vue:157
 msgid "Anyone"
 msgstr "[Ànyôné~~]"
 
-#: web/app/lib/admin-fonts.ts:238
+#: web/app/lib/admin-fonts.ts:245
 msgid "Anyone who opens a document here receives them."
 msgstr "[Ànyôné whô ôpéns à dôcûmént héré récéîvés thém.~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:144
+#: web/app/lib/admin-fonts.ts:151
 msgid "Anywhere"
 msgstr "[Ànywhéré~~~]"
 
@@ -677,6 +677,10 @@ msgstr "[Àt léàst 8 chàràctérs, wîth à càpîtàl léttér, à smàll l�
 msgid "At most"
 msgstr "[Àt môst~~~]"
 
+#: web/app/lib/admin-fonts.ts:259
+msgid "At most {files} files or {mb} MB can be added at once. Choose fewer, or add them as two collections."
+msgstr "[Àt môst {files} fîlés ôr {mb} MB càn bé àddéd àt ôncé. Chôôsé féwér, ôr àdd thém às twô côlléctîôns.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/components/ObjectDescriptionDialog.vue:29
 msgid "At most {max} characters."
 msgstr "[Àt môst {max} chàràctérs.~~~~~~~~~~]"
@@ -701,7 +705,7 @@ msgstr "[Àvéràgé ôf {field}~~~~~~~]"
 msgid "Average {value}"
 msgstr "[Àvéràgé {value}~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:172 web/app/components/OpenDialog.vue:1038
+#: web/app/components/AddFontsDialog.vue:207 web/app/components/OpenDialog.vue:1038
 msgid "Back"
 msgstr "[Bàck~~]"
 
@@ -833,7 +837,7 @@ msgstr "[Càlcûlàtîôn~~~~]"
 msgid "Calculation step"
 msgstr "[Càlcûlàtîôn stép~~~~~~]"
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:146 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
 msgid "Cancel"
 msgstr "[Càncél~~]"
 
@@ -937,11 +941,11 @@ msgstr "[Chàrt…~~]"
 msgid "Chat"
 msgstr "[Chàt~~]"
 
-#: web/app/components/AddFontsDialog.vue:147
+#: web/app/components/AddFontsDialog.vue:182
 msgid "Check files"
 msgstr "[Chéck fîlés~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:109
+#: web/app/components/AddFontsDialog.vue:144
 msgid "Checking the files…"
 msgstr "[Chéckîng thé fîlés…~~~~~~~~]"
 
@@ -969,7 +973,7 @@ msgstr "[Chôôsé à néw pàsswôrd ôf yôûr ôwn fôr thîs dôcûmént~~~~
 msgid "Choose a style for the selection, each drawn in its own look"
 msgstr "[Chôôsé à stylé fôr thé séléctîôn, éàch dràwn în îts ôwn lôôk~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:103
+#: web/app/components/AddFontsDialog.vue:138
 msgid "Choose files…"
 msgstr "[Chôôsé fîlés…~~~~~]"
 
@@ -1233,7 +1237,7 @@ msgstr "[Côûld nôt dràw ît: {message}~~~~~~~~~~~]"
 msgid "Could not place the chart."
 msgstr "[Côûld nôt plàcé thé chàrt.~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:48 web/app/components/AdminAccessDocuments.vue:125 web/app/components/AdminAccessDocuments.vue:142 web/app/components/AdminAccessDocuments.vue:158 web/app/components/AdminAccessDocuments.vue:178 web/app/components/AdminAccessDocuments.vue:32 web/app/components/AdminAccessDocuments.vue:59 web/app/components/AdminAccessDocuments.vue:74 web/app/components/AdminAccessDocuments.vue:97 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminFonts.vue:78 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:83 web/app/lib/admin-session.ts:98
+#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:125 web/app/components/AdminAccessDocuments.vue:142 web/app/components/AdminAccessDocuments.vue:158 web/app/components/AdminAccessDocuments.vue:178 web/app/components/AdminAccessDocuments.vue:32 web/app/components/AdminAccessDocuments.vue:59 web/app/components/AdminAccessDocuments.vue:74 web/app/components/AdminAccessDocuments.vue:97 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminFonts.vue:78 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:83 web/app/lib/admin-session.ts:98
 msgid "Could not reach the server."
 msgstr "[Côûld nôt réàch thé sérvér.~~~~~~~~~~~]"
 
@@ -1749,7 +1753,7 @@ msgstr "[Fîll în yôûr nàmé ànd à pàsswôrd.~~~~~~~~~~~~~]"
 msgid "Fill in your name and password."
 msgstr "[Fîll în yôûr nàmé ànd pàsswôrd.~~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:141
+#: web/app/components/AddFontsDialog.vue:176
 msgid "Filled in from what the fonts say about themselves; change it if it is not right."
 msgstr "[Fîlléd în frôm whàt thé fônts sày àbôût thémsélvés; chàngé ît îf ît îs nôt rîght.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -1937,7 +1941,7 @@ msgstr "[Fôrmûlàs~~~]"
 msgid "Friday 13 Nov 2026 + 1 = Monday 16 Nov"
 msgstr "[Frîdày 13 Nôv 2026 + 1 = Môndày 16 Nôv~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:96
+#: web/app/components/AddFontsDialog.vue:131
 msgid "From files"
 msgstr "[Frôm fîlés~~~~]"
 
@@ -2021,7 +2025,7 @@ msgstr "[Gô tô thé téxt bôx whéré yôûr cûrsôr îs tô chàngé thîs 
 msgid "Go to this"
 msgstr "[Gô tô thîs~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:141
+#: web/app/components/AddFontsDialog.vue:176
 msgid "Goes into the collection’s licence record, with your name and today’s date."
 msgstr "[Gôés întô thé côlléctîôn’s lîcéncé récôrd, wîth yôûr nàmé ànd tôdày’s dàté.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -2489,7 +2493,7 @@ msgstr "[Léàvé thîs dôcûmént~~~~~~~~]"
 msgid "Left"
 msgstr "[Léft~~]"
 
-#: web/app/lib/admin-fonts.ts:203
+#: web/app/lib/admin-fonts.ts:210
 msgid "Left out"
 msgstr "[Léft ôût~~~]"
 
@@ -2517,7 +2521,7 @@ msgstr "[Léss tîmé~~~~]"
 msgid "Let other people into the document"
 msgstr "[Lét ôthér péôplé întô thé dôcûmént~~~~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:139
+#: web/app/components/AddFontsDialog.vue:174
 msgid "Licence, in your words"
 msgstr "[Lîcéncé, în yôûr wôrds~~~~~~~~~]"
 
@@ -2789,7 +2793,7 @@ msgstr "[Nàmé în thé pîvôt tàblé~~~~~~~~~]"
 msgid "Name it"
 msgstr "[Nàmé ît~~~]"
 
-#: web/app/components/AddFontsDialog.vue:113 web/app/components/OpenDialog.vue:875
+#: web/app/components/AddFontsDialog.vue:148 web/app/components/OpenDialog.vue:875
 msgid "Name of the collection"
 msgstr "[Nàmé ôf thé côlléctîôn~~~~~~~~~]"
 
@@ -2945,7 +2949,7 @@ msgstr "[Nôn-bréàkîng Hyphén~~~~~~~~]"
 msgid "None"
 msgstr "[Nôné~~]"
 
-#: web/app/components/AddFontsDialog.vue:169
+#: web/app/components/AddFontsDialog.vue:204
 msgid "None of these files is a font this server can use."
 msgstr "[Nôné ôf thésé fîlés îs à fônt thîs sérvér càn ûsé.~~~~~~~~~~~~~~~~~~~~]"
 
@@ -2953,11 +2957,11 @@ msgstr "[Nôné ôf thésé fîlés îs à fônt thîs sérvér càn ûsé.~~~~~
 msgid "Normal"
 msgstr "[Nôrmàl~~]"
 
-#: web/app/lib/admin-fonts.ts:198
+#: web/app/lib/admin-fonts.ts:205
 msgid "Not a font file: TrueType or OpenType (.ttf, .otf), or a .zip of them."
 msgstr "[Nôt à fônt fîlé: TrûéTypé ôr ÔpénTypé (.ttf, .ôtf), ôr à .zîp ôf thém.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:203
+#: web/app/lib/admin-fonts.ts:210
 msgid "Not a font that can be read."
 msgstr "[Nôt à fônt thàt càn bé réàd.~~~~~~~~~~~]"
 
@@ -3161,7 +3165,7 @@ msgstr "[Ônly ôné côlûmn — nô rôôm fôr à héàdér théré; à làb�
 msgid "Only one row — no room for a header there either."
 msgstr "[Ônly ôné rôw — nô rôôm fôr à héàdér théré éîthér.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:240
+#: web/app/lib/admin-fonts.ts:247
 msgid "Only people using this server receive them."
 msgstr "[Ônly péôplé ûsîng thîs sérvér récéîvé thém.~~~~~~~~~~~~~~~~~]"
 
@@ -3245,7 +3249,7 @@ msgstr "[ÔpénDôcûmént spréàdshéét (.ôds)~~~~~~~~~~~~]"
 msgid "OpenDocument text (.odt)"
 msgstr "[ÔpénDôcûmént téxt (.ôdt)~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:219
+#: web/app/lib/admin-fonts.ts:226
 msgid "OpenType (CFF)"
 msgstr "[ÔpénTypé (CFF)~~~~~~]"
 
@@ -3377,7 +3381,7 @@ msgstr "[Pàsté Às~~~]"
 msgid "Pattern syntax: Python re"
 msgstr "[Pàttérn syntàx: Pythôn ré~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:129
+#: web/app/components/AddFontsDialog.vue:164
 msgid "People using this server"
 msgstr "[Péôplé ûsîng thîs sérvér~~~~~~~~~~]"
 
@@ -3801,7 +3805,7 @@ msgstr "[Réplàcéd în {count} célls. Ûndô brîngs thém bàck.~~~~~~~~~~~~
 msgid "Replaced in {count} texts. Undo brings them back."
 msgstr "[Réplàcéd în {count} téxts. Ûndô brîngs thém bàck.~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:207
+#: web/app/lib/admin-fonts.ts:214
 msgid "Replaces a font"
 msgstr "[Réplàcés à fônt~~~~~~]"
 
@@ -3813,7 +3817,7 @@ msgstr "[Réplàcés à nûmbér ôf chàràctérs ôf à téxt, frôm à pôsî
 msgid "Replaces old text by new text (all of it, or only the n-th occurrence)."
 msgstr "[Réplàcés ôld téxt by néw téxt (àll ôf ît, ôr ônly thé n-th ôccûrréncé).~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:209
+#: web/app/lib/admin-fonts.ts:216
 msgid "Replaces {family} {style} from {collection}, for every document on this server."
 msgstr "[Réplàcés {family} {style} frôm {collection}, fôr évéry dôcûmént ôn thîs sérvér.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4173,7 +4177,7 @@ msgstr "[Sét héîght~~~~]"
 msgid "Set seed"
 msgstr "[Sét sééd~~~]"
 
-#: web/app/lib/admin-fonts.ts:172
+#: web/app/lib/admin-fonts.ts:179
 msgid "Set up by whoever runs the server; changed on its disk only."
 msgstr "[Sét ûp by whôévér rûns thé sérvér; chàngéd ôn îts dîsk ônly.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4297,7 +4301,7 @@ msgstr "[Shôw thé téxt às pàgés înstéàd ôf à flôwîng téxt~~~~~~~~~
 msgid "Shown now. Choose it again, or Esc, to see all documents."
 msgstr "[Shôwn nôw. Chôôsé ît àgàîn, ôr Ésc, tô séé àll dôcûménts.~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:212
+#: web/app/lib/admin-fonts.ts:219
 msgid "Shown on screen; print and PDF cannot use its outlines yet and use a stand-in."
 msgstr "[Shôwn ôn scréén; prînt ànd PDF cànnôt ûsé îts ôûtlînés yét ànd ûsé à stànd-în.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4425,7 +4429,7 @@ msgstr "[Stàrt Àt…~~~~]"
 msgid "Start a new document"
 msgstr "[Stàrt à néw dôcûmént~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:107
+#: web/app/components/AddFontsDialog.vue:142
 msgid "Start again"
 msgstr "[Stàrt àgàîn~~~~]"
 
@@ -4937,7 +4941,7 @@ msgstr "[Thé fîéld hàs nô mémbérs.~~~~~~~~~~]"
 msgid "The file could not be saved: {reason}"
 msgstr "[Thé fîlé côûld nôt bé sàvéd: {reason}~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:196
+#: web/app/lib/admin-fonts.ts:203
 msgid "The file forbids embedding (fsType {fsType}), so no PDF could carry it."
 msgstr "[Thé fîlé fôrbîds émbéddîng (fsTypé {fsType}), sô nô PDF côûld càrry ît.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -4965,7 +4969,7 @@ msgstr "[Thé fîrst léttér ôf évéry wôrd în à càpîtàl, thé ôthérs
 msgid "The first rows show here as you type."
 msgstr "[Thé fîrst rôws shôw héré às yôû typé.~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:200
+#: web/app/lib/admin-fonts.ts:207
 msgid "The font has no family name."
 msgstr "[Thé fônt hàs nô fàmîly nàmé.~~~~~~~~~~~]"
 
@@ -5409,7 +5413,7 @@ msgstr "[Thé rôws ôf à ràngé fôr whîch thé côndîtîôn ràngé hôlds
 msgid "The same as CEILING.PRECISE: rounds up to a multiple of the significance; its sign is ignored."
 msgstr "[Thé sàmé às CÉÎLÎNG.PRÉCÎSÉ: rôûnds ûp tô à mûltîplé ôf thé sîgnîfîcàncé; îts sîgn îs îgnôréd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:197
+#: web/app/lib/admin-fonts.ts:204
 msgid "The same font as {file}: added once."
 msgstr "[Thé sàmé fônt às {file}: àddéd ôncé.~~~~~~~~~~~~~~]"
 
@@ -5813,7 +5817,7 @@ msgstr "[Thînnér~~~]"
 msgid "Thinner border"
 msgstr "[Thînnér bôrdér~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:199
+#: web/app/lib/admin-fonts.ts:206
 msgid "This .zip cannot be opened."
 msgstr "[Thîs .zîp cànnôt bé ôpénéd.~~~~~~~~~~~]"
 
@@ -5957,7 +5961,7 @@ msgstr "[Thîs sàvés thé cûrrént côntént ôf {doc} tô thîs cômpûtér,
 msgid "This section"
 msgstr "[Thîs séctîôn~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:144
+#: web/app/lib/admin-fonts.ts:151
 msgid "This server"
 msgstr "[Thîs sérvér~~~~]"
 
@@ -5965,11 +5969,11 @@ msgstr "[Thîs sérvér~~~~]"
 msgid "This server does not list its documents. Type the name of yours."
 msgstr "[Thîs sérvér dôés nôt lîst îts dôcûménts. Typé thé nàmé ôf yôûrs.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:241
+#: web/app/lib/admin-fonts.ts:248
 msgid "This server has no access secret, so everyone who can reach it counts as its people."
 msgstr "[Thîs sérvér hàs nô àccéss sécrét, sô évéryôné whô càn réàch ît côûnts às îts péôplé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:134
+#: web/app/components/AddFontsDialog.vue:169
 msgid "This server has no access secret, so everyone who can reach it counts as its people. Set one under Access & documents."
 msgstr "[Thîs sérvér hàs nô àccéss sécrét, sô évéryôné whô càn réàch ît côûnts às îts péôplé. Sét ôné ûndér Àccéss & dôcûménts.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6045,7 +6049,7 @@ msgstr "[Tôtàls~~]"
 msgid "Triangular"
 msgstr "[Trîàngûlàr~~~~]"
 
-#: web/app/lib/admin-fonts.ts:219
+#: web/app/lib/admin-fonts.ts:226
 msgid "TrueType"
 msgstr "[TrûéTypé~~~]"
 
@@ -6337,7 +6341,7 @@ msgstr "[Whîté~~]"
 msgid "Who may change these settings, who may create or list documents, and how many this server holds."
 msgstr "[Whô mày chàngé thésé séttîngs, whô mày créàté ôr lîst dôcûménts, ànd hôw màny thîs sérvér hôlds.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:118
+#: web/app/components/AddFontsDialog.vue:153
 msgid "Who may receive these fonts"
 msgstr "[Whô mày récéîvé thésé fônts~~~~~~~~~~~]"
 
@@ -6365,7 +6369,7 @@ msgstr "[Whôlé wôrkbôôk~~~~~~]"
 msgid "Width"
 msgstr "[Wîdth~~]"
 
-#: web/app/lib/admin-fonts.ts:213
+#: web/app/lib/admin-fonts.ts:220
 msgid "Will be added"
 msgstr "[Wîll bé àddéd~~~~~]"
 
@@ -7485,7 +7489,7 @@ msgstr "[ônly théîr bôx~~~~~~]"
 msgid "optional"
 msgstr "[ôptîônàl~~~]"
 
-#: web/app/components/AddFontsDialog.vue:106
+#: web/app/components/AddFontsDialog.vue:141
 msgid "or drop them here: TrueType, OpenType, or a .zip of them"
 msgstr "[ôr drôp thém héré: TrûéTypé, ÔpénTypé, ôr à .zîp ôf thém~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8257,7 +8261,7 @@ msgstr "[ûséd by {count} stylés~~~~~~~~~]"
 msgid "value"
 msgstr "[vàlûé~~]"
 
-#: web/app/lib/admin-fonts.ts:132
+#: web/app/lib/admin-fonts.ts:139
 msgid "variable · {n}"
 msgstr "[vàrîàblé · {n}~~~~~~]"
 
@@ -8473,27 +8477,27 @@ msgstr "[{field} wént bàck tô thé lîst: thîs vérsîôn hàs ôné rôw f�
 msgid "{field}: move, settings or remove"
 msgstr "[{field}: môvé, séttîngs ôr rémôvé~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:160
+#: web/app/lib/admin-fonts.ts:167
 msgid "{file} cannot be read on the server."
 msgstr "[{file} cànnôt bé réàd ôn thé sérvér.~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:158
+#: web/app/lib/admin-fonts.ts:165
 msgid "{file} has * or ? in its name; rename the file on the server."
 msgstr "[{file} hàs * ôr ? în îts nàmé; rénàmé thé fîlé ôn thé sérvér.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:156
+#: web/app/lib/admin-fonts.ts:163
 msgid "{file} has no family name."
 msgstr "[{file} hàs nô fàmîly nàmé.~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:162
+#: web/app/lib/admin-fonts.ts:169
 msgid "{file} has no usable collection.json, so none of its fonts are used."
 msgstr "[{file} hàs nô ûsàblé côlléctîôn.jsôn, sô nôné ôf îts fônts àré ûséd.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:154
+#: web/app/lib/admin-fonts.ts:161
 msgid "{file} is not a font that can be read."
 msgstr "[{file} îs nôt à fônt thàt càn bé réàd.~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:164
+#: web/app/lib/admin-fonts.ts:171
 msgid "{file} is not used."
 msgstr "[{file} îs nôt ûséd.~~~~~~~~]"
 
@@ -8513,7 +8517,7 @@ msgstr "[{first} ôr {next}~~~~~~~]"
 msgid "{first}, then {next}"
 msgstr "[{first}, thén {next}~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:152
+#: web/app/lib/admin-fonts.ts:159
 msgid "{font} is not used: the file forbids embedding (fsType {fsType}), so no PDF could carry it."
 msgstr "[{font} îs nôt ûséd: thé fîlé fôrbîds émbéddîng (fsTypé {fsType}), sô nô PDF côûld càrry ît.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8741,7 +8745,7 @@ msgstr "[{n} càlcûlàtîôns~~~~~~]"
 msgid "{n} collections"
 msgstr "[{n} côlléctîôns~~~~~~]"
 
-#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:182 web/app/lib/admin-fonts.ts:229
+#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:189 web/app/lib/admin-fonts.ts:236
 msgid "{n} families"
 msgstr "[{n} fàmîlîés~~~~~]"
 
@@ -8749,7 +8753,7 @@ msgstr "[{n} fàmîlîés~~~~~]"
 msgid "{n} files"
 msgstr "[{n} fîlés~~~~]"
 
-#: web/app/components/AddFontsDialog.vue:99
+#: web/app/components/AddFontsDialog.vue:134
 msgid "{n} files chosen"
 msgstr "[{n} fîlés chôsén~~~~~~]"
 
@@ -8757,11 +8761,11 @@ msgstr "[{n} fîlés chôsén~~~~~~]"
 msgid "{n} files not usable"
 msgstr "[{n} fîlés nôt ûsàblé~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:175
+#: web/app/lib/admin-fonts.ts:182
 msgid "{n} files not used."
 msgstr "[{n} fîlés nôt ûséd.~~~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:228
+#: web/app/lib/admin-fonts.ts:235
 msgid "{n} fonts"
 msgstr "[{n} fônts~~~~]"
 
@@ -8793,7 +8797,7 @@ msgstr "[{n} néwér chàngés by ôthérs~~~~~~~~~~~]"
 msgid "{n} of {count}"
 msgstr "[{n} ôf {count}~~~~~~]"
 
-#: web/app/lib/admin-fonts.ts:131
+#: web/app/lib/admin-fonts.ts:138
 msgid "{n} of {total}"
 msgstr "[{n} ôf {total}~~~~~~]"
 

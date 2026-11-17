@@ -167,6 +167,7 @@
   "At least": "Mindestens",
   "At least 8 characters, with a capital letter, a small letter and a digit.": "Mindestens 8 Zeichen, mit einem Groß- und einem Kleinbuchstaben und einer Ziffer.",
   "At most": "Höchstens",
+  "At most {files} files or {mb} MB can be added at once. Choose fewer, or add them as two collections.": "Höchstens {files} Dateien oder {mb} MB lassen sich auf einmal hinzufügen. Wählen Sie weniger aus, oder fügen Sie sie als zwei Sammlungen hinzu.",
   "At most {max} characters.": "Höchstens {max} Zeichen.",
   "Authors": "Autoren",
   "Auto": "Automatisch",

@@ -5,6 +5,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- Add fonts… no longer stays blocked after too many files were chosen (CODE-49): files waiting to be added are held per
+  administrator, `DELETE /api/admin/fonts/files` lets go of those given up, the refusal says the limits and what to
+  do, and `GET /api/admin/fonts` sends them as `limits` so the dialog says them before anything is sent.
+  `FontUploads.put`, `files` and `drop` take the administrator.
+
 ### Changed
 - Fonts whose collection may go to this server's people only (`redistributable: false`, "This server", D1041) are
   listed and served to a request with the access secret or an administrator's session; before, they were never handed

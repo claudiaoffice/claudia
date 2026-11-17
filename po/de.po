@@ -85,7 +85,7 @@ msgstr "1 Sammlung"
 msgid "1 column"
 msgstr "1 Spalte"
 
-#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:182 web/app/lib/admin-fonts.ts:229
+#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:189 web/app/lib/admin-fonts.ts:236
 msgid "1 family"
 msgstr "1 Familie"
 
@@ -93,7 +93,7 @@ msgstr "1 Familie"
 msgid "1 file"
 msgstr "1 Datei"
 
-#: web/app/components/AddFontsDialog.vue:99
+#: web/app/components/AddFontsDialog.vue:134
 msgid "1 file chosen"
 msgstr "1 Datei ausgewählt"
 
@@ -101,11 +101,11 @@ msgstr "1 Datei ausgewählt"
 msgid "1 file not usable"
 msgstr "1 Datei nicht nutzbar"
 
-#: web/app/lib/admin-fonts.ts:174
+#: web/app/lib/admin-fonts.ts:181
 msgid "1 file not used."
 msgstr "1 Datei wird nicht genutzt."
 
-#: web/app/lib/admin-fonts.ts:228
+#: web/app/lib/admin-fonts.ts:235
 msgid "1 font"
 msgstr "1 Schrift"
 
@@ -241,7 +241,7 @@ msgstr "Eine Spalte für jedes Element des Spaltenfelds; ein neues Element fügt
 msgid "A document has at most {count} tags."
 msgstr "Ein Dokument hat höchstens {count} Schlagwörter."
 
-#: web/app/lib/admin-fonts.ts:201
+#: web/app/lib/admin-fonts.ts:208
 msgid "A file name with * or ? cannot be used; rename the file."
 msgstr "Ein Dateiname mit * oder ? geht nicht; benennen Sie die Datei um."
 
@@ -261,7 +261,7 @@ msgstr "Ein Raster aus Zahlen, die von einem Start aus in einer Schrittweite hoc
 msgid "A hyphen the line is never broken at"
 msgstr "Ein Bindestrich, an dem die Zeile nie umbricht"
 
-#: web/app/components/AddFontsDialog.vue:130
+#: web/app/components/AddFontsDialog.vue:165
 msgid "A licence for your organisation. Handed only to people who have this server’s access secret."
 msgstr "Eine Lizenz für Ihre Organisation. Nur an Menschen ausgegeben, die den Zugangsschlüssel dieses Servers haben."
 
@@ -413,7 +413,7 @@ msgstr "Sofort ausführen"
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: web/app/components/AddFontsDialog.vue:174
+#: web/app/components/AddFontsDialog.vue:209
 msgid "Add 1 font"
 msgstr "1 Schrift hinzufügen"
 
@@ -449,7 +449,7 @@ msgstr "Schlagwort hinzufügen …"
 msgid "Add a text box to the slide"
 msgstr "Der Folie ein Textfeld hinzufügen"
 
-#: web/app/components/AddFontsDialog.vue:93
+#: web/app/components/AddFontsDialog.vue:128
 msgid "Add fonts to {server}"
 msgstr "Schriften zu {server} hinzufügen"
 
@@ -457,7 +457,7 @@ msgstr "Schriften zu {server} hinzufügen"
 msgid "Add fonts…"
 msgstr "Schriften hinzufügen …"
 
-#: web/app/components/AddFontsDialog.vue:103
+#: web/app/components/AddFontsDialog.vue:138
 msgid "Add more files…"
 msgstr "Weitere Dateien …"
 
@@ -469,7 +469,7 @@ msgstr "Person hinzufügen"
 msgid "Add tags, e.g. finance, 2027"
 msgstr "Schlagwörter hinzufügen, z. B. finanzen, 2027"
 
-#: web/app/components/AddFontsDialog.vue:174
+#: web/app/components/AddFontsDialog.vue:209
 msgid "Add {n} fonts"
 msgstr "{n} Schriften hinzufügen"
 
@@ -477,11 +477,11 @@ msgstr "{n} Schriften hinzufügen"
 msgid "Add “{tag}” as a new tag"
 msgstr "„{tag}“ als neues Schlagwort hinzufügen"
 
-#: web/app/lib/admin-fonts.ts:173
+#: web/app/lib/admin-fonts.ts:180
 msgid "Added by {by}, {date}."
 msgstr "Hinzugefügt von {by}, {date}."
 
-#: web/app/lib/admin-fonts.ts:173
+#: web/app/lib/admin-fonts.ts:180
 msgid "Added in the server settings."
 msgstr "In den Servereinstellungen hinzugefügt."
 
@@ -497,7 +497,7 @@ msgstr "Addiert die Zahlen der Zellen, die das Kriterium erfüllen; summiert den
 msgid "Adds the numbers of the sum range wherever all criteria are met (pairs of a range and its criterion)."
 msgstr "Addiert die Zahlen des Summenbereichs überall dort, wo alle Kriterien erfüllt sind (Paare aus einem Bereich und seinem Kriterium)."
 
-#: web/app/lib/admin-fonts.ts:231
+#: web/app/lib/admin-fonts.ts:238
 msgid "Adds {fonts} in {families} to {server}. From now on every document here that asks for {names} is laid out, shown and printed with them."
 msgstr "Fügt {fonts} in {families} zu {server} hinzu. Ab jetzt wird jedes Dokument hier, das {names} verlangt, damit gesetzt, angezeigt und gedruckt."
 
@@ -565,7 +565,7 @@ msgstr "Schon verwendet auf {place}"
 msgid "Alt"
 msgstr "Alt"
 
-#: web/app/lib/admin-fonts.ts:171
+#: web/app/lib/admin-fonts.ts:178
 msgid "Always here. A font of the same family and style in another collection is used instead."
 msgstr "Immer da. Eine Schrift derselben Familie und desselben Schnitts in einer anderen Sammlung wird stattdessen genutzt."
 
@@ -581,7 +581,7 @@ msgstr "Ein Winkel im Bogenmaß als Grad."
 msgid "An object cannot be printed: {reason}."
 msgstr "Ein Objekt kann nicht gedruckt werden: {reason}."
 
-#: web/app/components/AddFontsDialog.vue:123
+#: web/app/components/AddFontsDialog.vue:158
 msgid "An open licence. Handed to everyone who opens a document here."
 msgstr "Eine offene Lizenz. An alle ausgegeben, die hier ein Dokument öffnen."
 
@@ -601,15 +601,15 @@ msgstr "Andere Schrift…"
 msgid "Answers to what people often want to do"
 msgstr "Antworten auf das, was man oft tun möchte"
 
-#: web/app/components/AddFontsDialog.vue:122
+#: web/app/components/AddFontsDialog.vue:157
 msgid "Anyone"
 msgstr "Alle"
 
-#: web/app/lib/admin-fonts.ts:238
+#: web/app/lib/admin-fonts.ts:245
 msgid "Anyone who opens a document here receives them."
 msgstr "Alle, die hier ein Dokument öffnen, erhalten sie."
 
-#: web/app/lib/admin-fonts.ts:144
+#: web/app/lib/admin-fonts.ts:151
 msgid "Anywhere"
 msgstr "Überall"
 
@@ -677,6 +677,10 @@ msgstr "Mindestens 8 Zeichen, mit einem Groß- und einem Kleinbuchstaben und ein
 msgid "At most"
 msgstr "Höchstens"
 
+#: web/app/lib/admin-fonts.ts:259
+msgid "At most {files} files or {mb} MB can be added at once. Choose fewer, or add them as two collections."
+msgstr "Höchstens {files} Dateien oder {mb} MB lassen sich auf einmal hinzufügen. Wählen Sie weniger aus, oder fügen Sie sie als zwei Sammlungen hinzu."
+
 #: web/app/components/ObjectDescriptionDialog.vue:29
 msgid "At most {max} characters."
 msgstr "Höchstens {max} Zeichen."
@@ -701,7 +705,7 @@ msgstr "Mittelwert von {field}"
 msgid "Average {value}"
 msgstr "Mittelwert {value}"
 
-#: web/app/components/AddFontsDialog.vue:172 web/app/components/OpenDialog.vue:1038
+#: web/app/components/AddFontsDialog.vue:207 web/app/components/OpenDialog.vue:1038
 msgid "Back"
 msgstr "Zurück"
 
@@ -833,7 +837,7 @@ msgstr "Berechnung"
 msgid "Calculation step"
 msgstr "Rechenschritt"
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:146 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -937,11 +941,11 @@ msgstr "Diagramm…"
 msgid "Chat"
 msgstr "Chat"
 
-#: web/app/components/AddFontsDialog.vue:147
+#: web/app/components/AddFontsDialog.vue:182
 msgid "Check files"
 msgstr "Dateien prüfen"
 
-#: web/app/components/AddFontsDialog.vue:109
+#: web/app/components/AddFontsDialog.vue:144
 msgid "Checking the files…"
 msgstr "Die Dateien werden geprüft …"
 
@@ -969,7 +973,7 @@ msgstr "Ein neues eigenes Passwort für dieses Dokument wählen"
 msgid "Choose a style for the selection, each drawn in its own look"
 msgstr "Ein Format für die Auswahl wählen, jedes in seinem eigenen Aussehen"
 
-#: web/app/components/AddFontsDialog.vue:103
+#: web/app/components/AddFontsDialog.vue:138
 msgid "Choose files…"
 msgstr "Dateien auswählen …"
 
@@ -1233,7 +1237,7 @@ msgstr "Konnte nicht gezeichnet werden: {message}"
 msgid "Could not place the chart."
 msgstr "Das Diagramm konnte nicht eingefügt werden."
 
-#: web/app/components/AddFontsDialog.vue:48 web/app/components/AdminAccessDocuments.vue:125 web/app/components/AdminAccessDocuments.vue:142 web/app/components/AdminAccessDocuments.vue:158 web/app/components/AdminAccessDocuments.vue:178 web/app/components/AdminAccessDocuments.vue:32 web/app/components/AdminAccessDocuments.vue:59 web/app/components/AdminAccessDocuments.vue:74 web/app/components/AdminAccessDocuments.vue:97 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminFonts.vue:78 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:83 web/app/lib/admin-session.ts:98
+#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:125 web/app/components/AdminAccessDocuments.vue:142 web/app/components/AdminAccessDocuments.vue:158 web/app/components/AdminAccessDocuments.vue:178 web/app/components/AdminAccessDocuments.vue:32 web/app/components/AdminAccessDocuments.vue:59 web/app/components/AdminAccessDocuments.vue:74 web/app/components/AdminAccessDocuments.vue:97 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminFonts.vue:78 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:83 web/app/lib/admin-session.ts:98
 msgid "Could not reach the server."
 msgstr "Der Server ist nicht erreichbar."
 
@@ -1749,7 +1753,7 @@ msgstr "Geben Sie Ihren Namen und ein Passwort an."
 msgid "Fill in your name and password."
 msgstr "Geben Sie Ihren Namen und Ihr Passwort an."
 
-#: web/app/components/AddFontsDialog.vue:141
+#: web/app/components/AddFontsDialog.vue:176
 msgid "Filled in from what the fonts say about themselves; change it if it is not right."
 msgstr "Aus dem übernommen, was die Schriften über sich sagen; ändern Sie es, wenn es nicht stimmt."
 
@@ -1937,7 +1941,7 @@ msgstr "Formeln"
 msgid "Friday 13 Nov 2026 + 1 = Monday 16 Nov"
 msgstr "Freitag, 13. Nov 2026 + 1 = Montag, 16. Nov"
 
-#: web/app/components/AddFontsDialog.vue:96
+#: web/app/components/AddFontsDialog.vue:131
 msgid "From files"
 msgstr "Aus Dateien"
 
@@ -2021,7 +2025,7 @@ msgstr "Gehen Sie zum Textfeld, in dem Ihr Cursor steht, um nur dieses Textfeld 
 msgid "Go to this"
 msgstr "Hierhin gehen"
 
-#: web/app/components/AddFontsDialog.vue:141
+#: web/app/components/AddFontsDialog.vue:176
 msgid "Goes into the collection’s licence record, with your name and today’s date."
 msgstr "Kommt in den Lizenzeintrag der Sammlung, mit Ihrem Namen und dem heutigen Datum."
 
@@ -2489,7 +2493,7 @@ msgstr "Dieses Dokument verlassen"
 msgid "Left"
 msgstr "Links"
 
-#: web/app/lib/admin-fonts.ts:203
+#: web/app/lib/admin-fonts.ts:210
 msgid "Left out"
 msgstr "Ausgelassen"
 
@@ -2517,7 +2521,7 @@ msgstr "Weniger Zeit"
 msgid "Let other people into the document"
 msgstr "Anderen Personen Zugang zum Dokument gewähren"
 
-#: web/app/components/AddFontsDialog.vue:139
+#: web/app/components/AddFontsDialog.vue:174
 msgid "Licence, in your words"
 msgstr "Lizenz, in Ihren Worten"
 
@@ -2789,7 +2793,7 @@ msgstr "Name in der PivotTable"
 msgid "Name it"
 msgstr "Benennen"
 
-#: web/app/components/AddFontsDialog.vue:113 web/app/components/OpenDialog.vue:875
+#: web/app/components/AddFontsDialog.vue:148 web/app/components/OpenDialog.vue:875
 msgid "Name of the collection"
 msgstr "Name der Sammlung"
 
@@ -2945,7 +2949,7 @@ msgstr "Geschützter Bindestrich"
 msgid "None"
 msgstr "Keine"
 
-#: web/app/components/AddFontsDialog.vue:169
+#: web/app/components/AddFontsDialog.vue:204
 msgid "None of these files is a font this server can use."
 msgstr "Keine dieser Dateien ist eine Schrift, die dieser Server nutzen kann."
 
@@ -2953,11 +2957,11 @@ msgstr "Keine dieser Dateien ist eine Schrift, die dieser Server nutzen kann."
 msgid "Normal"
 msgstr "Normal"
 
-#: web/app/lib/admin-fonts.ts:198
+#: web/app/lib/admin-fonts.ts:205
 msgid "Not a font file: TrueType or OpenType (.ttf, .otf), or a .zip of them."
 msgstr "Keine Schriftdatei: TrueType oder OpenType (.ttf, .otf) oder ein .zip davon."
 
-#: web/app/lib/admin-fonts.ts:203
+#: web/app/lib/admin-fonts.ts:210
 msgid "Not a font that can be read."
 msgstr "Keine Schrift, die sich lesen lässt."
 
@@ -3161,7 +3165,7 @@ msgstr "Nur eine Spalte – dort ist kein Platz für eine Kopfzeile; eine Beschr
 msgid "Only one row — no room for a header there either."
 msgstr "Nur eine Zeile – auch dort ist kein Platz für eine Kopfzeile."
 
-#: web/app/lib/admin-fonts.ts:240
+#: web/app/lib/admin-fonts.ts:247
 msgid "Only people using this server receive them."
 msgstr "Nur Menschen, die diesen Server nutzen, erhalten sie."
 
@@ -3245,7 +3249,7 @@ msgstr "OpenDocument-Tabelle (.ods)"
 msgid "OpenDocument text (.odt)"
 msgstr "OpenDocument-Text (.odt)"
 
-#: web/app/lib/admin-fonts.ts:219
+#: web/app/lib/admin-fonts.ts:226
 msgid "OpenType (CFF)"
 msgstr "OpenType (CFF)"
 
@@ -3377,7 +3381,7 @@ msgstr "Einfügen als"
 msgid "Pattern syntax: Python re"
 msgstr "Muster-Syntax: Python „re“"
 
-#: web/app/components/AddFontsDialog.vue:129
+#: web/app/components/AddFontsDialog.vue:164
 msgid "People using this server"
 msgstr "Menschen, die diesen Server nutzen"
 
@@ -3801,7 +3805,7 @@ msgstr "In {count} Zellen ersetzt. Mit „Rückgängig“ ist alles wieder da."
 msgid "Replaced in {count} texts. Undo brings them back."
 msgstr "In {count} Texten ersetzt. Mit „Rückgängig“ ist alles wieder da."
 
-#: web/app/lib/admin-fonts.ts:207
+#: web/app/lib/admin-fonts.ts:214
 msgid "Replaces a font"
 msgstr "Ersetzt eine Schrift"
 
@@ -3813,7 +3817,7 @@ msgstr "Ersetzt eine Anzahl Zeichen eines Textes ab einer Position durch anderen
 msgid "Replaces old text by new text (all of it, or only the n-th occurrence)."
 msgstr "Ersetzt alten Text durch neuen Text (alle Vorkommen oder nur das n-te)."
 
-#: web/app/lib/admin-fonts.ts:209
+#: web/app/lib/admin-fonts.ts:216
 msgid "Replaces {family} {style} from {collection}, for every document on this server."
 msgstr "Ersetzt {family} {style} aus {collection}, für jedes Dokument auf diesem Server."
 
@@ -4173,7 +4177,7 @@ msgstr "Höhe festlegen"
 msgid "Set seed"
 msgstr "Startwert setzen"
 
-#: web/app/lib/admin-fonts.ts:172
+#: web/app/lib/admin-fonts.ts:179
 msgid "Set up by whoever runs the server; changed on its disk only."
 msgstr "Von dem eingerichtet, der den Server betreibt; nur auf seiner Festplatte zu ändern."
 
@@ -4297,7 +4301,7 @@ msgstr "Den Text als Seiten statt als Fließtext anzeigen"
 msgid "Shown now. Choose it again, or Esc, to see all documents."
 msgstr "Wird gerade angezeigt. Wählen Sie sie noch einmal oder drücken Sie Esc, um alle Dokumente zu sehen."
 
-#: web/app/lib/admin-fonts.ts:212
+#: web/app/lib/admin-fonts.ts:219
 msgid "Shown on screen; print and PDF cannot use its outlines yet and use a stand-in."
 msgstr "Auf dem Bildschirm zu sehen; Druck und PDF können ihre Umrisse noch nicht nutzen und nehmen einen Ersatz."
 
@@ -4425,7 +4429,7 @@ msgstr "Beginnen bei…"
 msgid "Start a new document"
 msgstr "Ein neues Dokument beginnen"
 
-#: web/app/components/AddFontsDialog.vue:107
+#: web/app/components/AddFontsDialog.vue:142
 msgid "Start again"
 msgstr "Neu beginnen"
 
@@ -4937,7 +4941,7 @@ msgstr "Das Feld hat keine Elemente."
 msgid "The file could not be saved: {reason}"
 msgstr "Die Datei konnte nicht gespeichert werden: {reason}"
 
-#: web/app/lib/admin-fonts.ts:196
+#: web/app/lib/admin-fonts.ts:203
 msgid "The file forbids embedding (fsType {fsType}), so no PDF could carry it."
 msgstr "Die Datei verbietet das Einbetten (fsType {fsType}), also könnte kein PDF sie enthalten."
 
@@ -4965,7 +4969,7 @@ msgstr "Der erste Buchstabe jedes Wortes groß, die anderen klein."
 msgid "The first rows show here as you type."
 msgstr "Die ersten Zeilen erscheinen hier beim Tippen."
 
-#: web/app/lib/admin-fonts.ts:200
+#: web/app/lib/admin-fonts.ts:207
 msgid "The font has no family name."
 msgstr "Die Schrift hat keinen Familiennamen."
 
@@ -5409,7 +5413,7 @@ msgstr "Die Zeilen eines Bereichs, für die die Bedingung gilt (eine Spalte aus 
 msgid "The same as CEILING.PRECISE: rounds up to a multiple of the significance; its sign is ignored."
 msgstr "Dasselbe wie CEILING.PRECISE: rundet auf ein Vielfaches der Schrittweite auf; ihr Vorzeichen wird ignoriert."
 
-#: web/app/lib/admin-fonts.ts:197
+#: web/app/lib/admin-fonts.ts:204
 msgid "The same font as {file}: added once."
 msgstr "Dieselbe Schrift wie {file}: einmal hinzugefügt."
 
@@ -5813,7 +5817,7 @@ msgstr "Dünner"
 msgid "Thinner border"
 msgstr "Dünnerer Rahmen"
 
-#: web/app/lib/admin-fonts.ts:199
+#: web/app/lib/admin-fonts.ts:206
 msgid "This .zip cannot be opened."
 msgstr "Diese .zip-Datei lässt sich nicht öffnen."
 
@@ -5957,7 +5961,7 @@ msgstr "Dadurch wird der aktuelle Inhalt von {doc} auf diesem Computer in dem Fo
 msgid "This section"
 msgstr "Dieser Abschnitt"
 
-#: web/app/lib/admin-fonts.ts:144
+#: web/app/lib/admin-fonts.ts:151
 msgid "This server"
 msgstr "Dieser Server"
 
@@ -5965,11 +5969,11 @@ msgstr "Dieser Server"
 msgid "This server does not list its documents. Type the name of yours."
 msgstr "Dieser Server listet seine Dokumente nicht auf. Geben Sie den Namen Ihres Dokuments ein."
 
-#: web/app/lib/admin-fonts.ts:241
+#: web/app/lib/admin-fonts.ts:248
 msgid "This server has no access secret, so everyone who can reach it counts as its people."
 msgstr "Dieser Server hat keinen Zugangsschlüssel, also zählen alle, die ihn erreichen, zu seinen Menschen."
 
-#: web/app/components/AddFontsDialog.vue:134
+#: web/app/components/AddFontsDialog.vue:169
 msgid "This server has no access secret, so everyone who can reach it counts as its people. Set one under Access & documents."
 msgstr "Dieser Server hat keinen Zugangsschlüssel, also zählen alle, die ihn erreichen, zu seinen Menschen. Legen Sie einen unter Zugang & Dokumente fest."
 
@@ -6045,7 +6049,7 @@ msgstr "Summen"
 msgid "Triangular"
 msgstr "Dreieck"
 
-#: web/app/lib/admin-fonts.ts:219
+#: web/app/lib/admin-fonts.ts:226
 msgid "TrueType"
 msgstr "TrueType"
 
@@ -6337,7 +6341,7 @@ msgstr "Weiß"
 msgid "Who may change these settings, who may create or list documents, and how many this server holds."
 msgstr "Wer diese Einstellungen ändern, Dokumente erstellen oder auflisten darf und wie viele dieser Server aufnimmt."
 
-#: web/app/components/AddFontsDialog.vue:118
+#: web/app/components/AddFontsDialog.vue:153
 msgid "Who may receive these fonts"
 msgstr "Wer diese Schriften erhalten darf"
 
@@ -6365,7 +6369,7 @@ msgstr "Ganze Arbeitsmappe"
 msgid "Width"
 msgstr "Breite"
 
-#: web/app/lib/admin-fonts.ts:213
+#: web/app/lib/admin-fonts.ts:220
 msgid "Will be added"
 msgstr "Wird hinzugefügt"
 
@@ -7485,7 +7489,7 @@ msgstr "nur ihre Box"
 msgid "optional"
 msgstr "optional"
 
-#: web/app/components/AddFontsDialog.vue:106
+#: web/app/components/AddFontsDialog.vue:141
 msgid "or drop them here: TrueType, OpenType, or a .zip of them"
 msgstr "oder hier ablegen: TrueType, OpenType oder ein .zip davon"
 
@@ -8257,7 +8261,7 @@ msgstr "von {count} Formaten verwendet"
 msgid "value"
 msgstr "Wert"
 
-#: web/app/lib/admin-fonts.ts:132
+#: web/app/lib/admin-fonts.ts:139
 msgid "variable · {n}"
 msgstr "variabel · {n}"
 
@@ -8473,27 +8477,27 @@ msgstr "{field} ging zurück in die Liste: Diese Version hat ein Zeilenfeld und 
 msgid "{field}: move, settings or remove"
 msgstr "{field}: verschieben, Einstellungen oder entfernen"
 
-#: web/app/lib/admin-fonts.ts:160
+#: web/app/lib/admin-fonts.ts:167
 msgid "{file} cannot be read on the server."
 msgstr "{file} lässt sich auf dem Server nicht lesen."
 
-#: web/app/lib/admin-fonts.ts:158
+#: web/app/lib/admin-fonts.ts:165
 msgid "{file} has * or ? in its name; rename the file on the server."
 msgstr "{file} hat * oder ? im Namen; benennen Sie die Datei auf dem Server um."
 
-#: web/app/lib/admin-fonts.ts:156
+#: web/app/lib/admin-fonts.ts:163
 msgid "{file} has no family name."
 msgstr "{file} hat keinen Familiennamen."
 
-#: web/app/lib/admin-fonts.ts:162
+#: web/app/lib/admin-fonts.ts:169
 msgid "{file} has no usable collection.json, so none of its fonts are used."
 msgstr "{file} hat keine nutzbare collection.json, also wird keine seiner Schriften genutzt."
 
-#: web/app/lib/admin-fonts.ts:154
+#: web/app/lib/admin-fonts.ts:161
 msgid "{file} is not a font that can be read."
 msgstr "{file} ist keine Schrift, die sich lesen lässt."
 
-#: web/app/lib/admin-fonts.ts:164
+#: web/app/lib/admin-fonts.ts:171
 msgid "{file} is not used."
 msgstr "{file} wird nicht genutzt."
 
@@ -8513,7 +8517,7 @@ msgstr "{first} oder {next}"
 msgid "{first}, then {next}"
 msgstr "{first}, dann {next}"
 
-#: web/app/lib/admin-fonts.ts:152
+#: web/app/lib/admin-fonts.ts:159
 msgid "{font} is not used: the file forbids embedding (fsType {fsType}), so no PDF could carry it."
 msgstr "{font} wird nicht genutzt: Die Datei verbietet das Einbetten (fsType {fsType}), also könnte kein PDF sie enthalten."
 
@@ -8741,7 +8745,7 @@ msgstr "{n} Berechnungen"
 msgid "{n} collections"
 msgstr "{n} Sammlungen"
 
-#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:182 web/app/lib/admin-fonts.ts:229
+#: web/app/components/AdminFonts.vue:50 web/app/lib/admin-fonts.ts:189 web/app/lib/admin-fonts.ts:236
 msgid "{n} families"
 msgstr "{n} Familien"
 
@@ -8749,7 +8753,7 @@ msgstr "{n} Familien"
 msgid "{n} files"
 msgstr "{n} Dateien"
 
-#: web/app/components/AddFontsDialog.vue:99
+#: web/app/components/AddFontsDialog.vue:134
 msgid "{n} files chosen"
 msgstr "{n} Dateien ausgewählt"
 
@@ -8757,11 +8761,11 @@ msgstr "{n} Dateien ausgewählt"
 msgid "{n} files not usable"
 msgstr "{n} Dateien nicht nutzbar"
 
-#: web/app/lib/admin-fonts.ts:175
+#: web/app/lib/admin-fonts.ts:182
 msgid "{n} files not used."
 msgstr "{n} Dateien werden nicht genutzt."
 
-#: web/app/lib/admin-fonts.ts:228
+#: web/app/lib/admin-fonts.ts:235
 msgid "{n} fonts"
 msgstr "{n} Schriften"
 
@@ -8793,7 +8797,7 @@ msgstr "{n} neuere Änderungen anderer"
 msgid "{n} of {count}"
 msgstr "{n} von {count}"
 
-#: web/app/lib/admin-fonts.ts:131
+#: web/app/lib/admin-fonts.ts:138
 msgid "{n} of {total}"
 msgstr "{n} von {total}"
 

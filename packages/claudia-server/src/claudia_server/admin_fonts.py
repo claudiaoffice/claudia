@@ -8,7 +8,9 @@ a collection's fonts (``may_go``) is ``anywhere`` or ``this-server`` (D1041).
 Adding is check first, then add, and nothing on the server changes before the second step:
 
 * ``POST /api/admin/fonts/files`` holds one file (the bytes as the body, its name in ``X-Claudia-Name``, as for
-  ``/api/uploads``) and answers a token. A file is held for :data:`HOLD_SECONDS` at most.
+  ``/api/uploads``) and answers a token. A file is held for :data:`HOLD_SECONDS` at most, for the administrator who
+  brought it; ``DELETE /api/admin/fonts/files`` ``{"files": [token...]}`` lets go of files given up (CODE-49).
+  ``limits`` in the page says how much one administrator may have waiting.
 * ``POST /api/admin/fonts/check`` ``{"files": [token...]}`` says what each font would become
   (:func:`claudia_fonts.check_files`).
 * ``POST /api/admin/fonts/collections`` ``{"files", "name", "licence", "may_go"}`` adds them as a collection under
@@ -59,14 +61,17 @@ _CHANGING = asyncio.Lock()
 
 @dataclass
 class _Held:
+    admin: str
     name: str
     data: bytes = field(repr=False)
     expires: float
 
 
 class FontUploads:
-    """The files brought for Add fonts…, held by token until they are added or :data:`HOLD_SECONDS` pass. At most
-    :data:`~claudia_fonts.adding.MAX_FILES` files and :data:`~claudia_fonts.adding.MAX_BYTES` bytes wait at once."""
+    """The files brought for Add fonts…, held by token for the administrator who brought them, until they are added,
+    let go of, or :data:`HOLD_SECONDS` pass. Each administrator may have at most
+    :data:`~claudia_fonts.adding.MAX_FILES` files and :data:`~claudia_fonts.adding.MAX_BYTES` bytes waiting, so what
+    one of them left behind never blocks another (CODE-49)."""
 
     def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
         self._clock = clock
@@ -77,29 +82,41 @@ class FontUploads:
         for token in [t for t, held in self._held.items() if held.expires <= now]:
             del self._held[token]
 
-    def put(self, name: str, data: bytes) -> str:
-        """Hold a file; its token. ``HTTPException(503)`` when too much is waiting."""
+    def _of(self, admin: str) -> list[_Held]:
+        return [held for held in self._held.values() if held.admin == admin]
+
+    def put(self, admin: str, name: str, data: bytes) -> str:
+        """Hold a file for ``admin``; its token. ``HTTPException(503)`` when too much of theirs is waiting."""
         self._expire()
-        if len(self._held) >= MAX_FILES or sum(len(h.data) for h in self._held.values()) + len(data) > MAX_BYTES:
-            raise HTTPException(503, "too many fonts are waiting to be added; add or drop them first")
+        waiting = self._of(admin)
+        if len(waiting) >= MAX_FILES or sum(len(h.data) for h in waiting) + len(data) > MAX_BYTES:
+            raise HTTPException(
+                503,
+                f"too many fonts are waiting to be added: at most {MAX_FILES} files or "
+                f"{MAX_BYTES // (1024 * 1024)} MB at once; close Add fonts… to let go of them",
+            )
         token = secrets.token_urlsafe(18)
-        self._held[token] = _Held(name, data, self._clock() + HOLD_SECONDS)
+        self._held[token] = _Held(admin, name, data, self._clock() + HOLD_SECONDS)
         return token
 
-    def files(self, tokens: object) -> list[tuple[str, bytes]]:
-        """The held files of ``tokens``, in order. ``HTTPException(400)`` for anything else."""
+    def files(self, admin: str, tokens: object) -> list[tuple[str, bytes]]:
+        """The files ``admin`` holds by ``tokens``, in order. ``HTTPException(400)`` for anything else."""
         self._expire()
         if not (isinstance(tokens, list) and tokens and all(isinstance(t, str) for t in tokens)):
             raise HTTPException(400, "files must be a list of tokens from /api/admin/fonts/files")
-        missing = [t for t in tokens if t not in self._held]
-        if missing:
+        if any(t not in self._held or self._held[t].admin != admin for t in tokens):
             raise HTTPException(400, "a file is no longer held; choose it again")
         return [(self._held[t].name, self._held[t].data) for t in tokens]
 
-    def drop(self, tokens: object) -> None:
-        """Let go of the files of ``tokens`` (those that were added)."""
+    def drop(self, admin: str, tokens: object) -> int:
+        """Let go of the files ``admin`` holds by ``tokens`` (added, or given up); how many there were. Other tokens
+        are ignored: a file that went after a while, or someone else's."""
+        dropped = 0
         for token in tokens if isinstance(tokens, list) else ():
-            self._held.pop(token, None)
+            if isinstance(token, str) and token in self._held and self._held[token].admin == admin:
+                del self._held[token]
+                dropped += 1
+        return dropped
 
 
 def _problem(problem: Problem) -> dict:
@@ -172,6 +189,7 @@ class _Page:
             "problems": [_problem(p) | {"collection": p.collection} for p in not_usable],
             "access_secret_set": access_secret_set,
             "can_add": self.service.added_root is not None,
+            "limits": {"files": MAX_FILES, "bytes": MAX_BYTES},
         }
 
     def cards(self) -> dict[str, list[Collection]]:
@@ -255,11 +273,15 @@ def _adding_routes(
     async def hold_file(request: Request, admin: Signedin):
         data = await read_body(request, MAX_BYTES)
         name = file_name(request.headers.get("x-claudia-name"))
-        return {"token": uploads.put(name, data), "name": name, "size": len(data)}
+        return {"token": uploads.put(admin, name, data), "name": name, "size": len(data)}
+
+    @router.delete("/fonts/files")
+    async def let_go(admin: Signedin, body: JsonBody):
+        return {"dropped": uploads.drop(admin, body.get("files"))}
 
     @router.post("/fonts/check")
     async def check(admin: Signedin, body: JsonBody):
-        files = uploads.files(body.get("files"))
+        files = uploads.files(admin, body.get("files"))
         try:
             checks = await asyncio.to_thread(check_files, files, service.catalogue)
         except AddRefused as exc:
@@ -284,7 +306,7 @@ def _adding_routes(
         if not (isinstance(name, str) and isinstance(licence, str)):
             raise HTTPException(400, "a collection needs a name and a licence")
         tokens = body.get("files")
-        files = uploads.files(tokens)
+        files = uploads.files(admin, tokens)
         async with _CHANGING:
             try:
                 await asyncio.to_thread(
@@ -300,7 +322,7 @@ def _adding_routes(
                 )
             except AddRefused as exc:
                 raise HTTPException(400, str(exc)) from exc
-            uploads.drop(tokens)
+            uploads.drop(admin, tokens)
             await asyncio.to_thread(service.reload)
         return page()
 

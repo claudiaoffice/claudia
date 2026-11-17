@@ -52,3 +52,6 @@ from a pinned list, Edit stand-ins… and Remove file… come in a second patch.
 - `e2e/admin-fonts.cjs` takes `CHROMIUM` for a browser of one's own when Playwright's is not installed.
 - After naming the first administrator, the settings page stayed on the setup form until reloaded: CODE-48, fixed
   2026-11-17; the e2e script goes on without a reload.
+- Files chosen in Add fonts… are held on the server per administrator until added, let go of (the dialog does so on
+  Cancel, Start again, closing and a failed upload) or 30 minutes pass; the limits come with the page (`limits`), so
+  the dialog says them before sending (CODE-49).

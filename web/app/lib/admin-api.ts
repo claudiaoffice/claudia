@@ -143,6 +143,8 @@ export function createAdminApi(fetchImpl: typeof fetch = fetch) {
     /** Holds one file for Add fonts… (the bytes as the body, as `/api/uploads` takes them); nothing is added yet. */
     holdFontFile: (token: string, data: Blob, name: string): Promise<{ token: string; name: string; size: number }> =>
       call('POST', '/fonts/files', undefined, token, { data, name }),
+    /** Lets go of held files that will not be added (Cancel, Start again, a failed upload), CODE-49. */
+    dropFontFiles: (token: string, files: string[]): Promise<{ dropped: number }> => call('DELETE', '/fonts/files', { files }, token),
     checkFonts: (token: string, files: string[]): Promise<CheckAnswer> => call('POST', '/fonts/check', { files }, token),
     addFontCollection: (token: string, collection: NewFontCollection): Promise<FontsPage> => call('POST', '/fonts/collections', collection, token),
     renameFontCollection: (token: string, id: string, name: string): Promise<FontsPage> =>

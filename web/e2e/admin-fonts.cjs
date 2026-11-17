@@ -48,6 +48,17 @@ async function main() {
   // Add fonts…: choose, check (nothing changes yet), add
   await page.click('text=Add fonts…')
   const files = fs.readdirSync(FONTS).filter((f) => /\.(ttf|otf|zip)$/i.test(f)).map((f) => path.join(FONTS, f))
+  // too many at once is said before anything is sent; files given up are let go of on the server (CODE-49)
+  const sent = []
+  page.on('request', (r) => r.url().includes('/api/admin/fonts/files') && sent.push(r.method()))
+  const one = { name: 'x.ttf', mimeType: 'font/ttf', buffer: fs.readFileSync(files[0]) }
+  await page.setInputFiles('.modal input[type=file]', Array.from({ length: 65 }, (_, i) => ({ ...one, name: `x${i}.ttf` })))
+  await page.waitForSelector('.modal [role=alert]:has-text("At most 64 files")')
+  assert.deepEqual(sent, [])
+  await page.setInputFiles('.modal input[type=file]', files)
+  await page.waitForSelector(`text=${files.length} files chosen`)
+  await Promise.all([page.waitForRequest((r) => r.method() === 'DELETE' && r.url().endsWith('/api/admin/fonts/files')), page.click('text=Start again')])
+  assert.equal(await page.locator('text=files chosen').count(), 0)
   await page.setInputFiles('.modal input[type=file]', files)
   await page.waitForSelector(`text=${files.length} files chosen`)
   await page.fill('.modal .field:has-text("Name of the collection") input', 'City house fonts')
