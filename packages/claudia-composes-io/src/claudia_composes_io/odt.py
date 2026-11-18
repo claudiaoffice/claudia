@@ -31,7 +31,16 @@ from zipfile import BadZipFile
 
 from lxml import etree
 
-from claudia_composes import BUILTIN_STYLES, DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel
+from claudia_composes import (
+    BUILTIN_STYLES,
+    DEFAULT_STYLE,
+    TABLE_STYLE_IDS,
+    Block,
+    BlockAnchor,
+    Run,
+    Suggestion,
+    TextModel,
+)
 from claudia_core import SHAPE_LABEL_STYLE, Rasterise, Toc, VisualObject, plain, primitive
 from claudia_odf_io import (
     MIME,
@@ -699,6 +708,16 @@ def _add_boxes(
     )
 
 
+def _style_and_table_losses(model: TextModel, names: StyleNames, losses: LossLog) -> None:
+    """What a paragraph style says that an odt style cannot, and the tables (not written yet, E9.32: a reader of the
+    file sees the text without them). The box properties of a table's looks are a table's, not a paragraph style's."""
+    for style_id, prop in _style_definitions(model, names)[1]:
+        if style_id not in TABLE_STYLE_IDS:
+            losses.add("style-property", f"{style_id}: {prop}")
+    if model.tables:
+        losses.add("table", count=len(model.tables))
+
+
 def odt_export_losses(
     model: TextModel, *, track_suggestions: bool = True, rasterised: bool = False
 ) -> tuple[Loss, ...]:
@@ -715,8 +734,7 @@ def odt_export_losses(
     for block in model.blocks:
         if block.style not in names:
             losses.add("style", block.style)
-    for style_id, prop in _style_definitions(model, names)[1]:
-        losses.add("style-property", f"{style_id}: {prop}")
+    _style_and_table_losses(model, names, losses)
     authored = sum(1 for block in model.blocks if any(run.author is not None for run in block.runs))
     if authored:
         losses.add("authorship", count=authored)

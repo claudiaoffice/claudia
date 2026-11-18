@@ -30,7 +30,16 @@ from docx.oxml.ns import qn
 from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.text.paragraph import Paragraph
 
-from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel, builtin_styles
+from claudia_composes import (
+    DEFAULT_STYLE,
+    TABLE_STYLE_IDS,
+    Block,
+    BlockAnchor,
+    Run,
+    Suggestion,
+    TextModel,
+    builtin_styles,
+)
 from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, VisualObject, plain, primitive
 from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
 from claudia_opc_io import owns, reconcile
@@ -542,7 +551,10 @@ def docx_export_losses(
         if block.style not in names:
             losses.add("style", block.style)
     for style_id, prop in _unsaid_properties(model):
-        losses.add("style-property", f"{style_id}: {prop}")
+        if style_id not in TABLE_STYLE_IDS:
+            losses.add("style-property", f"{style_id}: {prop}")
+    if model.tables:  # the tables are not written yet (E9.32): a docx reader sees the text without them
+        losses.add("table", count=len(model.tables))
     authored = sum(1 for block in model.blocks if any(run.author is not None for run in block.runs))
     if authored:
         losses.add("authorship", count=authored)

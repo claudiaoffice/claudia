@@ -54,7 +54,10 @@ from .events import BlockGenerated, FieldsPut, ItemChanged
 from .language import LanguageError, normalize_language
 from .model import (
     BUILTIN_STYLES,
+    DEFAULT_LOOK,
     DEFAULT_STYLE,
+    TABLE_LOOKS,
+    TABLE_STYLE_IDS,
     Block,
     Suggestion,
     TextModel,
@@ -74,6 +77,9 @@ __all__ = [
     "BlockAnchor",
     "builtin_styles",
     "BUILTIN_STYLES",
+    "DEFAULT_LOOK",
+    "TABLE_LOOKS",
+    "TABLE_STYLE_IDS",
     "DEFAULT_STYLE",
     "DefineImage",
     "DefineShape",

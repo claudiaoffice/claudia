@@ -40,6 +40,7 @@ from .names import clean_name, name_key, name_problem
 from .paragraphs import ListItem, Paragraph, Run
 from .renderings import RenderedDefinition
 from .shapes import ShapeDefinition
+from .tables import FILLER, TableDef, parse_entry_id
 
 if TYPE_CHECKING:
     from .context import Context
@@ -49,8 +50,8 @@ if TYPE_CHECKING:
 #: words; an image carries an asset; a diagram carries a :class:`DiagramDefinition` (E6.6) — what it draws is
 #: opaque to the kernel, the same way an anchor's own geometry is (see :class:`DiagramDefinition`); a rendered
 #: container carries a :class:`~claudia_core.RenderedDefinition` — text that something outside the document turns
-#: into a picture (D390).
-OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "diagram", "rendered")
+#: into a picture (D390); a table carries a :class:`~claudia_core.TableDef` (D1201).
+OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "diagram", "rendered", "table")
 
 MIN_OBJECT_SIZE = 20  # an object is at least this wide and this tall, in its app's own units
 MAX_OBJECTS_PER_CONTAINER = 500
@@ -71,6 +72,7 @@ _BODY_FIELDS = (
     "imported",
     "diagram",
     "rendered",
+    "table",
     "rotation",
     "snap",
     "description",
@@ -83,11 +85,14 @@ _NAME_FIELD = "name"
 _LATER_FIELDS = ("description", "decorative")
 #: The field of rendered containers (D390), later than the two above: bodies of each earlier generation still read.
 _RENDERED_FIELD = "rendered"
+#: The field of tables (D1201): bodies of each earlier generation still read, with no table.
+_TABLE_FIELD = "table"
 _FIELD_SETS = (
     frozenset(_BODY_FIELDS),
-    frozenset(_BODY_FIELDS) - {_NAME_FIELD},
-    frozenset(_BODY_FIELDS) - {_NAME_FIELD, _RENDERED_FIELD},
-    frozenset(_BODY_FIELDS) - {_NAME_FIELD, _RENDERED_FIELD, *_LATER_FIELDS},
+    frozenset(_BODY_FIELDS) - {_TABLE_FIELD},
+    frozenset(_BODY_FIELDS) - {_TABLE_FIELD, _NAME_FIELD},
+    frozenset(_BODY_FIELDS) - {_TABLE_FIELD, _NAME_FIELD, _RENDERED_FIELD},
+    frozenset(_BODY_FIELDS) - {_TABLE_FIELD, _NAME_FIELD, _RENDERED_FIELD, *_LATER_FIELDS},
 )
 
 
@@ -172,7 +177,8 @@ class ObjectBody:
     :class:`~claudia_core.ImageAsset` and ``imported`` the record of how that image got there. ``diagram`` is the
     id of a :class:`DiagramDefinition` the document knows (E6.6) — opaque to the kernel, the way an anchor is.
     ``rendered`` is the id of a :class:`~claudia_core.RenderedDefinition`: the text a rendered container is made
-    from and the picture last made of it (D390).
+    from and the picture last made of it (D390). ``table`` is the id of a :class:`~claudia_core.TableDef`: the columns,
+    rows and words of a table (D1201).
     ``rotation`` is whole degrees clockwise. ``snap`` is whether the object holds to its app's grid (E10.15,
     D214): the grid is a helper the view draws, but each object's own choice to follow it is real, persisted
     document state.
@@ -196,6 +202,7 @@ class ObjectBody:
     imported: ImageImport | None = None
     diagram: str | None = None
     rendered: str | None = None
+    table: str | None = None
     rotation: int = 0
     snap: bool = True
     description: str = ""
@@ -461,6 +468,7 @@ class ObjectModel[A: Anchor]:
         self.shapes: dict[str, ShapeDefinition] = {}
         self.diagrams: dict[str, DiagramDefinition] = {}
         self.renderings: dict[str, RenderedDefinition] = {}
+        self.tables: dict[str, TableDef] = {}
         self._stack: dict[str, list[str]] = {}  # container id -> object ids, bottom first
         #: Changes whenever the objects' paragraphs may be read in another order or be another list item. An object
         #: came, went or moved to another container, or its paragraph's item or style changed; typing in an object
@@ -652,10 +660,16 @@ class ObjectModel[A: Anchor]:
         """The ids of the objects that show this rendered container's definition."""
         return [obj.id for obj in self.objects.values() if obj.body.rendered == rendering_id]
 
+    def users_of_table(self, table_id: str) -> list[str]:
+        """The ids of the objects that show this table."""
+        return [obj.id for obj in self.objects.values() if obj.body.table == table_id]
+
     def style_in_use(self, style_id: str) -> bool:
-        """Does any object have this style, for itself or for its words? (Asked by the core style commands before
-        they take a style back.)"""
-        return any(style_id in object_styles(obj.body) for obj in self.objects.values())
+        """Does any object have this style, for itself or for its words, or does any box of a table? (Asked by the core
+        style commands before they take a style back.)"""
+        return any(style_id in object_styles(obj.body) for obj in self.objects.values()) or any(
+            p.style == style_id for table in self.tables.values() for p in table.all_paragraphs()
+        )
 
     def restyle_users(self, old: str, new: str) -> list[Command]:
         """The commands that put every object that has the style ``old`` (for itself or for its words) under ``new``
@@ -760,6 +774,8 @@ class ObjectModel[A: Anchor]:
                 if rendering.image is not None and rendering.image in self.images:
                     self.images[rendering.image] = self.images[rendering.image].blanked()
                 self.renderings[body.rendered] = rendering.redacted()
+            if body.table is not None and body.table in self.tables:
+                self.tables[body.table] = self.tables[body.table].blanked(keep_length=True)
             if body.diagram is not None and body.diagram in self.diagrams:
                 blank = self.blank_diagram(self.diagrams[body.diagram].to_data())
                 self.diagrams[body.diagram] = self.diagram_from_data(blank)
@@ -857,6 +873,72 @@ class ObjectModel[A: Anchor]:
         self.renderings[definition.id] = definition
         return old
 
+    # -- tables (D1201) ------------------------------------------------------------------------------------------
+    def define_table(self, definition: TableDef) -> None:
+        """Take a table's definition into the document; ``ValueError`` unless it holds together."""
+        if definition.id in self.tables:
+            raise ValueError(f"table {definition.id!r} is already defined in this document")
+        self.check_table(definition)
+        self.tables[definition.id] = definition
+
+    def forget_table(self, table_id: str) -> TableDef:
+        """Let go of a table nobody shows; returns it."""
+        if table_id not in self.tables:
+            raise ValueError(f"this document does not know the table {table_id!r}")
+        users = self.users_of_table(table_id)
+        if users:
+            raise ValueError(f"table {table_id!r} is shown by {users[0]!r}")
+        return self.tables.pop(table_id)
+
+    def get_table(self, table_id: str) -> TableDef:
+        """The table with this id; ``ValueError`` if the document has none."""
+        try:
+            return self.tables[table_id]
+        except KeyError:
+            raise ValueError(f"this document does not know the table {table_id!r}") from None
+
+    def replace_table(self, definition: TableDef) -> TableDef:
+        """Swap in a changed, checked version of a table that exists; returns the one it replaces. The words of a box
+        are not a change of the layout of the text around it, so nothing else is told."""
+        old = self.get_table(definition.id)
+        self.check_table(definition)
+        self.tables[definition.id] = definition
+        return old
+
+    def check_table(self, definition: TableDef) -> None:
+        """``ValueError`` with a sentence unless this table may be in this document. An app adds what only it knows
+        (composes: that the look exists and the styles it names fit); the table's own checks are always made."""
+        definition.check()
+
+    # -- the words of a table's boxes (D1210) ----------------------------------------------------------------------
+    def is_entry(self, paragraph_id: str) -> bool:
+        """Is this the id of a box of a table the document has (and is it a box that holds words of its own)?"""
+        found = parse_entry_id(paragraph_id)
+        if found is None or found[0] not in self.tables:
+            return False
+        table = self.tables[found[0]]
+        return found[1] in table.rows and found[2] in table.column_ids()
+
+    def entry_words(self, paragraph_id: str) -> Paragraph:
+        """The paragraph of a box: what is typed into, cut from and styled. ``ValueError`` if it names no box."""
+        if not self.is_entry(paragraph_id):
+            raise ValueError(f"no table box {paragraph_id!r}")
+        table, row, col = parse_entry_id(paragraph_id)  # type: ignore[misc]
+        return self.tables[table].paragraph(row, col)
+
+    def put_entry_words(self, paragraph_id: str, words: Paragraph) -> None:
+        """Put these words in a box; a box with no words and no style of its own is not kept (it follows the look)."""
+        table, row, col = parse_entry_id(paragraph_id)  # type: ignore[misc]
+        definition = self.tables[table]
+        empty = not words.text and not words.style and not words.fields
+        self.replace_table(definition.with_entries([(row, col, None if empty else words)]))
+
+    def check_entry_edit(self, paragraph_id: str) -> None:
+        """``ValueError`` unless words may be typed into this box: a box a merge covers takes none."""
+        table, row, col = parse_entry_id(paragraph_id)  # type: ignore[misc]
+        if self.tables[table].covered(row, col):
+            raise ValueError("a merged box holds its words in its top-left box")
+
     def _check_rendering_picture(self, definition: RenderedDefinition) -> None:
         if definition.image is not None and definition.image not in self.images:
             raise ValueError(f"this document does not know the image {definition.image!r}")
@@ -880,7 +962,7 @@ class ObjectModel[A: Anchor]:
             self._check_slot(styles, body.kind, 0, body.style)
         aspect = self._check_visual(body)
         self._check_size(body, aspect)
-        if body.kind in ("image", "diagram", "rendered"):
+        if body.kind in ("image", "diagram", "rendered", "table"):
             if body.paragraph is not None:
                 raise ValueError(f"a {body.kind} carries no text")
         else:
@@ -930,16 +1012,17 @@ class ObjectModel[A: Anchor]:
             "diagram": self._check_diagram_visual,
             "image": self._check_image_visual,
             "rendered": self._check_rendered_visual,
+            "table": self._check_table_visual,
         }
         return checks[body.kind](body)
 
     def _check_text_visual(self, body: ObjectBody) -> None:
-        if any((body.shape, body.image, body.imported, body.diagram, body.rendered)):
-            raise ValueError("a text box has no shape, image, diagram or rendering")
+        if any((body.shape, body.image, body.imported, body.diagram, body.rendered, body.table)):
+            raise ValueError("a text box has no shape, image, diagram, rendering or table")
 
     def _check_shape_visual(self, body: ObjectBody) -> float | None:
-        if any((body.image, body.imported, body.diagram, body.rendered)):
-            raise ValueError("a shape object has no image, diagram or rendering")
+        if any((body.image, body.imported, body.diagram, body.rendered, body.table)):
+            raise ValueError("a shape object has no image, diagram, rendering or table")
         if body.shape is None:
             raise ValueError("a shape object needs a shape")
         definition = self.shapes.get(body.shape)
@@ -948,8 +1031,8 @@ class ObjectModel[A: Anchor]:
         return definition.aspect
 
     def _check_diagram_visual(self, body: ObjectBody) -> None:
-        if any((body.shape, body.image, body.imported, body.rendered)):
-            raise ValueError("a diagram object has no shape, image or rendering")
+        if any((body.shape, body.image, body.imported, body.rendered, body.table)):
+            raise ValueError("a diagram object has no shape, image, rendering or table")
         if body.diagram is None:
             raise ValueError("a diagram object needs a diagram")
         if body.diagram not in self.diagrams:
@@ -957,17 +1040,26 @@ class ObjectModel[A: Anchor]:
         # a diagram keeps no fixed aspect ratio (falls through to the implicit ``None``)
 
     def _check_rendered_visual(self, body: ObjectBody) -> None:
-        if any((body.shape, body.image, body.imported, body.diagram)):
-            raise ValueError("a rendered object has no shape, image or diagram")
+        if any((body.shape, body.image, body.imported, body.diagram, body.table)):
+            raise ValueError("a rendered object has no shape, image, diagram or table")
         if body.rendered is None:
             raise ValueError("a rendered object needs a rendering")
         if body.rendered not in self.renderings:
             raise ValueError(f"this document does not know the rendering {body.rendered!r}")
         # the picture scales with the frame the person gives it, and keeps no fixed ratio of its own
 
+    def _check_table_visual(self, body: ObjectBody) -> None:
+        if any((body.shape, body.image, body.imported, body.diagram, body.rendered)):
+            raise ValueError("a table object has no shape, image, diagram or rendering")
+        if body.table is None:
+            raise ValueError("a table object needs a table")
+        if body.table not in self.tables:
+            raise ValueError(f"this document does not know the table {body.table!r}")
+        # the layout works out the height from the words: ``h`` is only what it was last found to be
+
     def _check_image_visual(self, body: ObjectBody) -> float | None:
-        if body.shape is not None or body.diagram is not None or body.rendered is not None:
-            raise ValueError("an image object has no shape, diagram or rendering")
+        if body.shape is not None or body.diagram is not None or body.rendered is not None or body.table is not None:
+            raise ValueError("an image object has no shape, diagram, rendering or table")
         if body.image is None or body.imported is None:
             raise ValueError("an image object needs an image and its import record")
         asset = self.images.get(body.image)
@@ -1060,6 +1152,10 @@ class ObjectModel[A: Anchor]:
         """Every rendered container's definition, by id: what ``serialize`` stores."""
         return [definition.to_data() for _, definition in sorted(self.renderings.items())]
 
+    def tables_to_data(self) -> list[dict]:
+        """Every table's definition, by id: what ``serialize`` stores."""
+        return [definition.to_data() for _, definition in sorted(self.tables.items())]
+
     def restore_objects(
         self,
         objects: Iterable[dict],
@@ -1067,8 +1163,12 @@ class ObjectModel[A: Anchor]:
         shapes: Iterable[dict] = (),
         diagrams: Iterable[dict] = (),
         renderings: Iterable[dict] = (),
+        tables: Iterable[dict] = (),
     ) -> None:
-        """Put back what the five ``*_to_data`` methods stored (the containers must already exist)."""
+        """Put back what the six ``*_to_data`` methods stored (the containers must already exist)."""
+        for data in tables:
+            definition = TableDef.from_data(data)
+            self.tables[definition.id] = definition
         for data in shapes:
             shape = ShapeDefinition.from_data(data)
             self.shapes[shape.id] = shape
@@ -1076,11 +1176,11 @@ class ObjectModel[A: Anchor]:
             image = ImageAsset.from_data(data)
             self.images[image.id] = image
         for data in diagrams:
-            definition = self.diagram_from_data(data)
-            self.diagrams[definition.id] = definition
+            diagram = self.diagram_from_data(data)
+            self.diagrams[diagram.id] = diagram
         for data in renderings:
-            definition = RenderedDefinition.from_data(data)
-            self.renderings[definition.id] = definition
+            rendering = RenderedDefinition.from_data(data)
+            self.renderings[rendering.id] = rendering
         for data in objects:
             obj = VisualObject.from_data(data, self.anchor_from_data)
             self.objects[obj.id] = obj
@@ -1089,8 +1189,8 @@ class ObjectModel[A: Anchor]:
 
 
 # --------------------------------------------------------------------------- redaction
-FILLER = "█"
-"""What a redacted character becomes (D720): one block per character, so that every later place in the text holds."""
+# FILLER, what a redacted character becomes (D720: one block per character, so that every later place in the text
+# holds), is defined with the tables, which are blanked the same way, and read from here as it always was.
 
 
 def blank_body(body: ObjectBody, *, keep_length: bool = False) -> ObjectBody:

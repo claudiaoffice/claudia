@@ -155,7 +155,7 @@ def test_a_snapshot_written_before_descriptions_existed_still_restores(doc):
     put_image(doc)
     state = doc.model.serialize()
     for body in state["objects"]:
-        del body["description"], body["decorative"], body["rendered"], body["name"]
+        del body["description"], body["decorative"], body["rendered"], body["name"], body["table"]
     restored = SlideModel.restore(state)
     assert restored.get("i1").body.description == "a sample picture"
     assert restored.get("i1").body.decorative is False

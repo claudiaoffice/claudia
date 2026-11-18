@@ -580,6 +580,7 @@ def test_a_slide_object_knows_what_it_is_made_of():
         "imported",
         "diagram",  # E6.6: opaque to the shared body, like shape/image — a text box never sets it
         "rendered",  # D390: the id of a rendered container's definition, likewise opaque to a text box
+        "table",  # D1201: the id of a table's definition, likewise opaque to a text box
         "rotation",
         "snap",
         "description",  # BITV 1.1.1: what the object says to someone who cannot see it

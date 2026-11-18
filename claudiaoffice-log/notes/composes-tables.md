@@ -41,36 +41,31 @@ typed and calculated and a text's cells are words with ids; they share **names, 
 sees, the keys, the slots a style fills, the Region idea and the protocol**. A table is **placed in the flow by
 default** and may be placed floating; both are the same object.
 
-## 3. The model
+## 3. The model (as built, D1201–D1210)
 
-Proposed in `claudia_core/tables.py` (new; the identifiers avoid the guarded words), because creates may want the same
-body later (D177's lesson), and to be tested without composes.
+In `claudia_core/tables.py` and `table_commands.py` (the identifiers avoid the guarded words), so that creates can use
+the same body later (D177's lesson) and the model is tested without composes.
 
 | Entity | Holds | Notes |
 |---|---|---|
-| `TableDef` | `id`, `columns`, `rows`, `entries` (a cell's `Paragraph` by (row id, column id)), `header`, `row_header`, `banded`, `grows`, `purpose`, `looks`, `groups` | The object's `name`, `description`, `decorative` and size are on the object body (D550) |
-| `Column` | `id`, `name`, `kind` (`text`, `number`), `purpose` (or the table's), `total` (`sum`, `mean`, `count`, `min`, `max` or none), `width` (a share of the line, or automatic) | A column name is unique in its table, compared like a thing's name; it is what `Sales[Harvest]` would say |
-| `Row` | `id` | Ids are server-made and never reused, like paragraph ids |
-| `HeaderGroup` | `label`, first and last column | A label spanning neighbouring columns above the header: the only spans a table has |
-| `TableLooks` | style ids for the slots `header`, `body`, `band`, `total` | New thing `table` in `SLOTS`; each slot reads the box and words facets (D311) |
-| `TableSource` | a protocol: `id`, `name`, `version`, `columns()`, `row_count()`, `text(r, c)`, `number(r, c)` | Implemented by `TableDef` and, in computes, by an adapter over `NamedRange` |
-| `TableRegion` | table, row ids, column ids | A `Region` (D17): locks and presence; shrinks when rows or columns go |
-| `ObjectBody.table` | the id of the definition | `OBJECT_KINDS` gets `"table"`; `check_object`, `blank_body` (redaction, D720: entries and caption are emptied, the shape is kept) |
+| `TableDef` | `id`, `columns`, `rows` (ids in order), `entries` (a box's `Paragraph` by (row id, column id)), `merges`, `header_rows`, `banded`, `look`, `placement`, `width`, and the counters `next_row`, `next_col` | At most 100 rows and 10 columns (D1207). The object's `name`, `description`, `decorative` and size are on the object body (D550) |
+| `Column` | `id`, `kind` (`text`, `number`), `total` (`sum`, `mean`, `count`, `min`, `max` or none), `width` | A column's name is the text of its last header box (what `Sales[Harvest]` would say) |
+| `Merge` | `row`, `col`, `rows`, `cols`: a rectangle from the box at (row, col) (D1205) | Grows and shrinks with inserted and deleted rows and columns; moving rows or columns that would tear one is refused |
+| `TableLook` | `id`, name, and four paragraph styles: header, body, band, total | Three built-in looks (D1206): Rules (default), Grid, Plain |
+| `TableSource` | a protocol: `source_id`, `column_count`, `row_count`, `header_rows()`, `text(row, col)` | Index-based, so the same reader serves a computes named range in patch 2 |
+| `TableRegion` | table, row ids or all, column ids or all | A `Region` (D17): locks and presence; typing in a box holds that box |
+| `ObjectBody.table` | the id of the definition | `OBJECT_KINDS` has `"table"`; redaction keeps the shape and the length of the words (D720) |
 
-**The caption** is the object's own paragraph (D181): a table object's words are its caption, in a caption style, above
-the table unless a table option says below. Numbering "Table 3" belongs to the anchors work (E9.30) and is not needed
-for the first version.
+**A box is one paragraph (D1203) with the id `<table>/<row>/<column>` (D1210).** Typing in it is the ordinary
+`core.InsertText` and `core.DeleteText`; a covered box takes no typing. **Numbers are text** read by the document's
+language. **The header** is the first `header_rows` rows of boxes. **The total row** is not stored: it is derived from the
+columns' `total`. **Placement** (`flow` or `float`), width, look and banding are fields of the definition, not of the
+anchor, so they cannot clash with the floating-objects branch.
 
-**Commands**, each with an exact inverse and per-author undo like every command (D603's lesson): `DefineTable`,
-`ForgetTable`, `SetEntries(table, [(row, column, Paragraph)])`, `InsertRows`, `DeleteRows`, `MoveRows`,
-`InsertColumns`, `DeleteColumns`, `MoveColumns`, `SortRows` (inverse: `RestoreRowOrder`), `SetColumn`,
-`SetTableOptions`, `SetTableLooks`. Typing inside a cell is the existing `core.InsertText` and `core.DeleteText` on the
-cell's `Paragraph`, so authorship, fields (a reference inside a cell) and the AI's words tools work unchanged.
-`SetEntries` is for paste, fill and clear. The name is `RenameThing`, the alt text `DescribeObject`, the place
-`MoveObject`. `AddObject` and the composes state go up one schema; the new commands start at schema 1.
-
-**What is not stored:** the total row (derived from the columns' `total`, like the entries of a table of contents,
-E9.31), a header row of cells (derived from the column names), column letters, row numbers.
+**Commands**, each with an exact inverse and per-author undo: `DefineTable`, `ForgetTable`, `SetEntries`,
+`InsertRows`, `DeleteRows`, `InsertColumns`, `DeleteColumns`, `SetRowOrder`, `SetColumnOrder`, `SetColumn`,
+`SetTableOptions`, `SetMerge`. Ids are never reused, so an undo cannot meet a colleague's new row. The composes state
+schema is 15 (`"tables"`; an older text reads as having none).
 
 ## 4. Computes and composes, concern by concern
 
@@ -245,6 +240,10 @@ paragraphs.
 
 ## 11. Slices, in order (TDD; each is a patch against `tables-in-composes`)
 
+**Status 2026-11-18:** S0 is built and tested; S1 has the text model (definition in the snapshot, typing, regions,
+redaction, looks) and its tests; the rest of S1 (events on the wire, the server module and its documented API,
+search and the AI lens), S2, S3, S4 and S6 are not built.
+
 | Slice | What | Needs |
 |---|---|---|
 | S0 | `claudia_core/tables.py`: entities, commands with inverses, `TableRegion`, `TableSource`, the `table` slots, `ObjectBody.table`, redaction; tests first: round trips, exact inverses, ids never reused, sorting and undo, region shrink, purity | the decision range |
@@ -269,46 +268,38 @@ S0 and S2 can be built in parallel by two agents: they meet only at the data the
 5. **A computes display format is not wanted in a text table** (§4.2), although the owner's list has "cell formats
    beyond style (%, €)" for computes: that is computes' own.
 
-## 13. Questions
+## 13. Decisions and what is still open
 
-1. **Placement.** In the flow by default, floating as the second placement, as a fifth value beside the four wrap
-   modes of D1061–D1064? Or floating only, as first described?
-2. **Where the kernel lives.** `claudia_core.tables` from the start (recommended; the body can later serve creates), or
-   `claudia_composes` first and move it when a second app wants it?
-3. **A cell** is one paragraph (recommended) or several blocks?
-4. **Numbers** are words read by the document's language (recommended), or typed values with display formats as in
-   computes?
-5. **Formulas:** none in the first version, a total per column only (recommended)?
-6. **Spans:** only header groups; a merged cell elsewhere exists only in a file we do not edit (recommended)?
-7. **Looks:** four role slots on the table (header, body, band, total), with the "Rules" (booktabs) look as the built-in
-   default, plus "Grid" and "Plain"? Or one named bundle that sets all four at once, as list schemes do for lists?
-8. **Limits:** how many rows and columns may an own table have (a first guess: 500 rows, 30 columns; more is a linked
-   or a computes table, E4.12)?
-9. **Ids:** which decision range for this branch (a block of 20, `ranges.md`)?
-10. **Keys.** Insert ▸ Table… and Table Options… need a key and none is free in the usual family: the manifest
-    uses every Ctrl+Alt and Ctrl+Shift+Alt letter except Ctrl+Shift+Alt+E (planned for Redact History in `redaction-ui.md`), and Ctrl+Alt+T is the Ubuntu
-    terminal (`test_no_key_is_one_a_browser_keeps_or_alt_gr_types`); D627 met the same wall. Free today are some
-    Ctrl+Shift+letter chords (checked against `manifest.composes/computes/creates`), not all of them sensible. Which
-    would you like? Row and Column use computes' keys (Shift+Alt+arrows, Ctrl+Alt+- and Ctrl+Alt+_, already in the
-    manifest); Sort Ctrl+Shift+Alt+↑ / ↓ is unused today, and is only a proposal. (My first mock had Ctrl+Alt+T and
-    Ctrl+Shift+Alt+E; both are wrong, and the mock is corrected.)
-11. **Linked tables:** is E12.2 (the link, the review dialog, the logged pull) to be built first as its own piece, with
-    tables as its first user (recommended), or inside E9.33?
+Decided by the owner on 2026-11-18 (decision ids D1201–D1210): placement in the flow by default and floating as the
+second placement (D1202); the kernel in `claudia_core` (D1201); a box is one paragraph and numbers are text (D1203);
+no formulas in the first version, totals and sorting instead (D1204); merged boxes are any rectangle of neighbouring
+boxes, for Word's sake, and not a prominent option (D1205); a look is a named bundle (D1206); 100 rows and 10 columns
+(D1207); keys are assigned and may change (D1208); linked tables are own tables with a source, built in a second patch
+(D1209).
+
+Still open:
+
+1. **Keys.** The keys of D1208 are provisional (Ctrl+Shift+F/L/G/H/X/Y); the owner will ask another agent about
+   cross-app consistency, and BITV for the new dialogs and the table markup is not settled.
+2. **Whether E12.2** (the link, the review dialog, the logged pull) is built first as its own piece, with tables as its
+   first user, or inside E9.33.
+3. **Custom looks**: a later decision, once the three built-in ones have been used.
 
 ## 14. Found on the way (size: 1 huge, 2 medium, 3 small)
 
-- **Size 3, a smell that grows with this work.** `ObjectBody` reads four generations of field sets (`_FIELD_SETS`) and
-  four mutually exclusive pointer fields (`shape`, `image`, `diagram`, `rendered`). `table` makes a fifth set and a
-  fifth pointer. It works; a single `content: (kind, id)` pointer would end the growth. Proposed: add `table` the same
-  way now and note it in the bugtracker.
+- **Size 3, a smell that grew with this work.** `ObjectBody` reads five generations of field sets (`_FIELD_SETS`) and
+  five mutually exclusive pointer fields (`shape`, `image`, `diagram`, `rendered`, `table`). `table` is the fifth of
+  each. It works; a single `content: (kind, id)` pointer would end the growth. Fix directly, or the bugtracker?
+- **Size 3.** The error messages of the object checks list the pointer fields by name, so every new kind changes the
+  wording and the tests of three apps (done: computes and creates tests updated). Same cure as above.
 - Nothing of size 1 or 2. (The docx import does report `table` today; `import-export-coverage-2026-11-14.md` still
   says "no loss list at all", which is out of date.)
 
 ## 15. Not verified
 
-- No code was written or run; the mock-ups were drawn and rendered with `rsvg-convert` (Inter is installed here,
-  Fraunces is not: the serif in the PNG is a stand-in).
-- The docx and odt element names in §9 are from memory.
-- That `core.InsertText` can address a cell's paragraph by an id of the shape (table, row, column) was not read in
-  `writing.py`; the `ParagraphHost` seam of `structure.py` suggests it can, and S0's first test settles it.
-- Firefox has not seen anything; the in-flow `<table>` in the flow view is a design, not a test.
+- The layout engine (TypeScript), the web client and the GTK shell have no table code yet; nothing has been looked at
+  in a browser or in GNOME.
+- The odt and docx element names for tables are from memory of the formats, not yet checked against real files; both
+  exports report `table` as a loss until the writers exist.
+- The mock-ups were drawn and rendered with `rsvg-convert` (Inter is installed here, Fraunces is not: the serif in the
+  PNG is a stand-in).

@@ -75,6 +75,7 @@ def test_kernel_has_no_third_party_imports():
         "collections",
         "contextlib",
         "dataclasses",
+        "decimal",  # tables.py: a total of boxes of words is exact, not a float
         "datetime",
         "enum",
         "hashlib",  # assets.py: content-addressing an image by its sha256

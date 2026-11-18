@@ -72,7 +72,7 @@ def test_the_fields_are_part_of_the_data_the_log_stores():
 # -- documents are forever -------------------------------------------------------------------------------------
 def test_a_body_written_before_the_fields_existed_still_reads():
     old = picture().to_data()
-    del old["description"], old["decorative"], old["rendered"], old["name"]  # a body of that time had none of the four
+    del old["description"], old["decorative"], old["rendered"], old["name"], old["table"]  # none of the five
     assert ObjectBody.from_data(old).description == "a red bicycle"
     assert ObjectBody.from_data(old).decorative is False
 

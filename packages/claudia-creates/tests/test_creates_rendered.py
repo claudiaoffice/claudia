@@ -87,7 +87,7 @@ def test_a_container_object_needs_its_definition_and_nothing_else_of_other_kinds
 
 def test_other_kinds_of_object_do_not_carry_a_rendering(doc):
     doc.execute(DefineRendering(definition().to_data()), author="ana")
-    with pytest.raises(ValueError, match="no shape, image, diagram or rendering"):
+    with pytest.raises(ValueError, match="no shape, image, diagram, rendering or table"):
         doc.execute(add(text_box("t1", rendered="r1")), author="ana")
 
 

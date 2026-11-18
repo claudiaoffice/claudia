@@ -37,6 +37,9 @@ from claudia_core import (
     SetLanguage,
     StyleBook,
     StyleDef,
+    TableDef,
+    TableLook,
+    TableRegion,
     TextStructure,
     VisualObject,
     builtin_palette,
@@ -44,6 +47,7 @@ from claudia_core import (
     fits,
     insert_runs,
     new_registry,
+    parse_entry_id,
     slice_runs,
 )
 
@@ -99,6 +103,103 @@ def _contents(level: int) -> StyleDef:
     if level == 1:
         css["font-weight"] = "600"
     return _style(f"contents-{level}", f"Contents {level}", f"an entry of a table of contents at level {level}", **css)
+
+
+def _table_style(look: str, role: str, purpose: str, **css: str) -> StyleDef:
+    """The style of one role of a table look (D1206): a paragraph style, so that it holds the words and the box of
+    the cells of that role in one bundle (D311), based on body text with no space around it."""
+    base = {
+        "margin-top": "0",
+        "margin-bottom": "0",
+        "line-height": "1.45",
+        "padding-top": "0.3em",
+        "padding-bottom": "0.3em",
+        "padding-left": "0.6em",
+        "padding-right": "0.6em",
+    }
+    return _style(f"table-{look}-{role}", f"Table {look} {role}", purpose, **{**base, **css})
+
+
+_HEAVY = "2px solid @text"
+_THIN = "1px solid @text/45"
+_HAIR = "1px solid @text/20"
+_TINT = "@accent/8"
+_TABLE_STYLES: tuple[StyleDef, ...] = (
+    # Rules: a heavy rule above the header and below the total, a thin one under the header and above the total.
+    _table_style(
+        "rules",
+        "header",
+        "the header of a table with rules",
+        **{"font-weight": "600", "border-top": _HEAVY, "border-bottom": _THIN},
+    ),
+    _table_style("rules", "body", "the body of a table with rules"),
+    _table_style("rules", "band", "every second row of a table with rules", **{"background-color": _TINT}),
+    _table_style(
+        "rules",
+        "total",
+        "the total row of a table with rules",
+        **{"font-weight": "600", "border-top": _THIN, "border-bottom": _HEAVY},
+    ),
+    # Grid: thin rules all round.
+    _table_style(
+        "grid",
+        "header",
+        "the header of a gridded table",
+        **{
+            "font-weight": "600",
+            "background-color": _TINT,
+            "border-top": _THIN,
+            "border-right": _THIN,
+            "border-bottom": _THIN,
+            "border-left": _THIN,
+        },
+    ),
+    _table_style(
+        "grid",
+        "body",
+        "the body of a gridded table",
+        **{"border-top": _THIN, "border-right": _THIN, "border-bottom": _THIN, "border-left": _THIN},
+    ),
+    _table_style(
+        "grid",
+        "band",
+        "every second row of a gridded table",
+        **{
+            "background-color": _TINT,
+            "border-top": _THIN,
+            "border-right": _THIN,
+            "border-bottom": _THIN,
+            "border-left": _THIN,
+        },
+    ),
+    _table_style(
+        "grid",
+        "total",
+        "the total row of a gridded table",
+        **{
+            "font-weight": "600",
+            "border-top": _THIN,
+            "border-right": _THIN,
+            "border-bottom": _THIN,
+            "border-left": _THIN,
+        },
+    ),
+    # Plain: no rules; the header and the total are bold, the band is a tint.
+    _table_style("plain", "header", "the header of a plain table", **{"font-weight": "600"}),
+    _table_style("plain", "body", "the body of a plain table"),
+    _table_style("plain", "band", "every second row of a plain table", **{"background-color": _TINT}),
+    _table_style("plain", "total", "the total row of a plain table", **{"font-weight": "600"}),
+)
+
+#: The looks a text starts with (D1206): three named bundles of four role styles. The first is the default.
+TABLE_LOOKS: tuple[TableLook, ...] = tuple(
+    TableLook(look, name, *(f"table-{look}-{role}" for role in ("header", "body", "band", "total")))
+    for look, name in (("rules", "Rules"), ("grid", "Grid"), ("plain", "Plain"))
+)
+DEFAULT_LOOK = TABLE_LOOKS[0].id
+#: The ids of the styles of the built-in looks. A file format that writes a table says their box properties (padding,
+#: borders, shading) with the table's cells, not with a paragraph style, so a style-by-style check leaves them out.
+TABLE_STYLE_IDS: frozenset[str] = frozenset(style for look in TABLE_LOOKS for style in look.styles())
 
 
 #: The styles every text starts with. The paragraph styles are all based on Body text (D73): a change to Body text
@@ -237,7 +338,10 @@ BUILTIN_STYLES: tuple[StyleDef, ...] = (
             "padding-right": "0.9em",
         },
     ),
+    # The roles of the looks of a table (D1206).
+    *_TABLE_STYLES,
 )
+
 _BUILTIN_IDS = frozenset(s.id for s in BUILTIN_STYLES)
 
 
@@ -299,7 +403,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 8: object bodies without a description; 9: no rendered containers; 12: styles carry heading levels (E9.22)
     # 13: the text holds its numbering schemes; styles may name a list that numbers them (E9.22)
     # 14: a paragraph may be generated (a table of contents, E9.31)
-    state_schema: ClassVar[int] = 14
+    # 15: the text holds tables, shown by objects of the kind table (D1201)
+    state_schema: ClassVar[int] = 15
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -367,6 +472,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "images": self.images_to_data(),
             "objects": self.objects_to_data(),
             "renderings": self.renderings_to_data(),
+            "tables": self.tables_to_data(),
             "names": dict(self.block_names),
             "last": dict(self._last),
         }
@@ -389,7 +495,12 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model.restore_objects(  # schema 3 and earlier had no objects
-            state.get("objects", ()), state.get("images", ()), state.get("shapes", ()), (), state.get("renderings", ())
+            state.get("objects", ()),
+            state.get("images", ()),
+            state.get("shapes", ()),
+            (),
+            state.get("renderings", ()),
+            state.get("tables", ()),  # schema 14 and earlier: no tables
         )
         model.block_names = dict(state.get("names", {}))  # schema 10 and earlier: no paragraph had a name
         model._last = dict(state.get("last", model._last))
@@ -422,8 +533,12 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """Read a region a client sent: a stretch of text, or a selection of floating objects."""
         if data.get("kind") == ObjectSet.kind:
             return ObjectSet.from_data(data)
+        if data.get("kind") == TableRegion.kind:
+            return TableRegion.from_data(data)
         if data.get("kind") != TextRange.kind:
-            raise ValueError(f"composes knows text regions and object selections, not {data.get('kind')!r}")
+            raise ValueError(
+                f"composes knows text regions, table regions and object selections, not {data.get('kind')!r}"
+            )
         block, start, end = data["block"], data["start"], data["end"]
         if not (isinstance(block, str) and isinstance(start, int) and isinstance(end, int) and 0 <= start <= end):
             raise ValueError("a text region names a paragraph and 0 <= start <= end")
@@ -465,6 +580,15 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
                 self.paragraph_order += 1
             moved.append(self.objects[obj.id].to_data())
         return moved
+
+    def check_table(self, definition: TableDef) -> None:
+        """A table of a text is drawn by one of the looks the text has, and the boxes that have a style of their own
+        have one that fits (D1206): a paragraph style, which holds both the words and the box of a cell."""
+        super().check_table(definition)
+        if definition.look not in {look.id for look in TABLE_LOOKS}:
+            raise ValueError(f"the text has no table look {definition.look!r}")
+        for style in {p.style for p in definition.all_paragraphs() if p.style}:
+            self.check_style(style)
 
     # -- names (D550, D554) ---------------------------------------------------------
     def heading_level(self, block: Block) -> int | None:
@@ -579,6 +703,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """Type into a paragraph of the text or the words of a floating object; the events that tell the clients."""
         if paragraph_id in self.objects:
             return (self.insert_object_text(paragraph_id, offset, text, runs, fields),)
+        if self.is_entry(paragraph_id):
+            return self._type_in_entry(paragraph_id, offset, text, runs, fields)
         self.insert(paragraph_id, offset, text, runs, fields)
         if not text:
             return ()
@@ -592,23 +718,54 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         if paragraph_id in self.objects:
             text, runs, fields, event = self.remove_object_text(paragraph_id, start, end)
             return text, runs, fields, (event,)
+        if self.is_entry(paragraph_id):
+            return self._cut_from_entry(paragraph_id, start, end)
         text, runs, fields = self.remove(paragraph_id, start, end)
         events: tuple[object, ...] = (TextChanged(paragraph_id, start, end - start, ""),) if end > start else ()
         if fields:
             events = (*events, FieldsPut(paragraph_id, self.block(paragraph_id).fields))
         return text, runs, fields, events
 
+    def _type_in_entry(
+        self, paragraph_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...]
+    ) -> tuple[object, ...]:
+        """Type into a box of a table (D1210): the words of the box are one paragraph, and it is the ordinary text event
+        that tells the clients, with the id of the box."""
+        self.check_entry_edit(paragraph_id)
+        self.put_entry_words(paragraph_id, self.entry_words(paragraph_id).typed(offset, text, runs, fields))
+        if not text:
+            return ()
+        changed = TextChanged(paragraph_id, offset, 0, text, tuple(runs))
+        return (changed, FieldsPut(paragraph_id, self.entry_words(paragraph_id).fields)) if fields else (changed,)
+
+    def _cut_from_entry(
+        self, paragraph_id: str, start: int, end: int
+    ) -> tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]:
+        """Cut characters out of a box of a table."""
+        self.check_entry_edit(paragraph_id)
+        kept, text, runs, fields = self.entry_words(paragraph_id).cut(start, end)
+        self.put_entry_words(paragraph_id, kept)
+        events: tuple[object, ...] = (TextChanged(paragraph_id, start, end - start, ""),) if end > start else ()
+        if fields:
+            events = (*events, FieldsPut(paragraph_id, kept.fields))
+        return text, runs, fields, events
+
     # -- fields (claudia_core.FieldHost, step H) ----------------------------------------------------------
     def fields_of(self, paragraph_id: str) -> tuple[Field, ...]:
-        """The fields of a paragraph of the text or in the words of a floating object."""
+        """The fields of a paragraph of the text, in the words of a floating object or in a box of a table."""
         if paragraph_id in self.objects:
             return self.object_fields(paragraph_id)
+        if self.is_entry(paragraph_id):
+            return self.entry_words(paragraph_id).fields
         return self.block(paragraph_id).fields
 
     def put_fields(self, paragraph_id: str, fields: tuple[Field, ...]) -> tuple[object, ...]:
         """Give a paragraph other fields at its U+FFFC; the event that tells the clients."""
         if paragraph_id in self.objects:
             return (self.put_object_fields(paragraph_id, fields),)
+        if self.is_entry(paragraph_id):
+            self.put_entry_words(paragraph_id, self.entry_words(paragraph_id).with_fields(fields))
+            return (FieldsPut(paragraph_id, fields),)
         self._put(self.block(paragraph_id).with_fields(fields))
         return (FieldsPut(paragraph_id, fields),)
 
@@ -616,6 +773,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """A stretch of a paragraph of the text, or the floating object whose words change."""
         if paragraph_id in self.objects:
             return self.selection_of(paragraph_id)
+        if (found := parse_entry_id(paragraph_id)) is not None:
+            return (TableRegion(found[0], frozenset({found[1]}), frozenset({found[2]})),)
         return (TextRange(paragraph_id, start, end),)
 
     def text_moved(self, command: TextCommand) -> tuple[object, ...]:
