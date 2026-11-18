@@ -1,7 +1,7 @@
 # Object interaction: one contract for creates, computes and composes
 
-Written 2026-11-18, the day it was asked for. **Status: proposal, screens and diagram first (project rule). Nothing in
-`web/` is changed by this patch.** The mock-ups are `notes/mockups/object-interaction-states.svg` (what a person sees and
+Written 2026-11-18, the day it was asked for. **Status 2026-11-18 (second patch): agreed with the owner; decisions D1221–D1226 written. Nothing in
+`web/` is changed yet.** The mock-ups are `notes/mockups/object-interaction-states.svg` (what a person sees and
 can do, in all three apps) and `notes/mockups/object-interaction-architecture.svg` (where the code goes, and why). No
 decision-log entries are written here: the proposals under "Decisions to write" become decisions once the screens are
 agreed, in the id range the owner hands out for the work.
@@ -17,14 +17,20 @@ agreed, in the id range the owner hands out for the work.
 
 Answers of the same day (the owner, 2026-11-18):
 
-1. **Stack order.** Text and cells are always at the bottom of the stack. An object lies over them, so a click on it
-   simply selects it; to reach what is under it, move the object. The one exception is composes' wrap *behind the text*
+1. **Stack order** (D1222). Text and cells are always at the bottom of the stack. An object lies over them, so a click on
+   it simply selects it; to reach what is under it, move the object. The one exception is composes' wrap *behind the text*
    (D1061), where words are above the object: there, and only there, **Ctrl+click** takes the object (D1063 stays for
    exactly that case).
-2. **Tables** are in-flow objects: select, move between paragraphs, scale the width, no rotation.
-3. **Object menu:** the same list in all three apps, **without** "Snap to grid" in composes and computes (they anchor to
-   text and to cells, not to a grid).
-4. **Target branch:** `object-interaction`.
+2. **Tables** (D1224) are in-flow objects: select, move between paragraphs, scale the width, no rotation. The faint frame
+   is always on for now. `Esc` in a cell leaves the table completely.
+3. **Holding** (D1223): all three apps hold a selected object, as creates does (D82).
+4. **Words round a turned object** (D1226): the bounding box.
+5. **Menus** (D1225): the object menu is the one the menus workbook v4 (`claudia-menus-4.xlsx`, Context menus) sets, with
+   the answers below. This replaces the first proposal of this note (90° entries, no grid entry outside creates).
+6. **Table menu:** Name & describe…, Table options…, Merge cells, Split cell, Sort ▸, Delete table (the commands Edit no
+   longer has). **Rotate by…** is not offered for a chart or a table. **Wrap text…** is a submenu of the four modes of
+   D1061 with a checkmark and *Gap…*, key Ctrl+Alt+R. **Edit text** is in all three apps.
+7. **Target branch** `object-interaction`; decision ids D1221–D1240.
 
 ## The contract
 
@@ -40,10 +46,10 @@ columns that differs from creates is a bug or a stated adaptation.
 | Drag the turn handle | Rotates about the centre, 3° snap near axes, Shift 15°, Alt free (D1024) | built | **missing** | **missing** |
 | Right press on an object | Selects it and opens the object menu at the pointer; the browser's menu, the paragraph menu, the cell menu and the row/column menu do not appear | built | **opens the cell menu** | **opens the paragraph style menu** |
 | Right press elsewhere | The app's own menu (cells, headers, paragraphs) as today; Shift+right button still gives the browser's menu there | built | built | built |
-| Double click, `Enter`, `F2` | Writes in a text box, a shape or a rendered container; a picture has no words | built | rendered only | rendered only |
+| Double click, `Enter`, `F2` | Writes in a text box, a shape or a rendered container; a picture or a chart has no words (D1225) | built | rendered only | rendered only |
 | `Delete` | Removes the selected object | built | built | built |
 | Arrow keys | Nudge the object (Shift: larger steps; the exact steps are for the shared module to fix). In composes up/down hang it from the previous or next paragraph (built), left/right change the offset | built (to be checked) | **missing** | partly |
-| `Esc` | Drops a drag or a turn in progress; otherwise deselects | built | deselects | deselects |
+| `Esc` | Drops a drag or a turn in progress; otherwise deselects; in a table cell it leaves the table for the text (D1224) | built | deselects | deselects |
 | Press elsewhere | Deselects | built | built | built |
 | `Tab`, Edit ▸ Select Next Object, Ctrl+Alt+PageUp/Down | Steps through the objects of the page, sheet or slide, so everything above works without a pointer (BITV) | to be checked | PageUp/Down only | Select Next Object |
 
@@ -68,7 +74,7 @@ columns that differs from creates is a bug or a stated adaptation.
 - The table's borders: the default look (`rules`) draws only the header rules, so the table's start and end are not
   visible while editing.
 - A rendered container keeps no fixed aspect (`_check_rendered_visual`), which is why "containers with LaTeX scale
-  properly". Their *initial* size is too large: the place that sets it still has to be found (open point 4).
+  properly". Their *initial* size is too large: the place that sets it still has to be found (open point 1).
 
 **computes**
 
@@ -92,8 +98,7 @@ anchor in `claudia_core`. The client has the same split waiting to be made. (Dia
   returns the preview frame and, on release, one `Commit` (`move`, `resize`, `turn`) or nothing. It reuses
   `moveFrame`, `resizeFrame`, `moveTurned`, `resizeTurned` and `turnFromPointer` (today in `geometry.ts`/`turning.ts`),
   which gain an explicit `Bounds` instead of the constants `SLIDE_W`/`SLIDE_H`. Creates passes the slide as bounds.
-- `object-menu.ts` (exists): the item list. Gains `snap` as optional so composes and computes leave it off, and `table`
-  entries for a table. One list, one order, one key per item (D321, D361).
+- `object-menu.ts` (exists): the item list. Built from the object's kind and two flags (grid, wrap), with the list of D1225 and the table menu of D1224. One list, one order, one key per item (D321, D361).
 - `ObjectFrame.vue` (new): the selection outline, the eight (or four) handles and the turn handle with their
   accessible names, drawn once for all three apps; creates' markup moves into it.
 - `useObjectInteraction(host)` (new composable): wires `object-gestures` to pointer events with capture, the object
@@ -122,7 +127,7 @@ code as well as in behaviour.
   never resizes on a structural edit, E6.17). The preview moves freely and snaps to the cell on release.
 - **composes:** the anchor becomes the paragraph and character nearest the drop point, and `dx`/`dy` the remainder (the
   free offset of D1023). Dropping on another page or column re-hangs it from that paragraph. A turned object is judged
-  by its outline, as in creates (D1022); how words flow round a turned object is open point 3.
+  by its outline, as in creates (D1022); the words go round its bounding box (D1226).
 
 ### Tables (D1201)
 
@@ -131,8 +136,8 @@ A table is an object of kind `table`, drawn once, in the flow. The layer stops d
 
 - **Selecting.** A click on the table's name tab (a small tab above its top-left corner, "Table 1", with a grip) or on its
   frame selects the table: one outline, in the table's own box, with a handle on the right edge. A click in a cell puts
-  the caret in that cell and does *not* select the table. `Options…` moves into the table's menu and stays on the tab as
-  a button above the outline, outside the layer, so nothing covers it.
+  the caret in that cell and does *not* select the table. `Options…` stays on the tab as
+  a button above the outline, outside the layer, so nothing covers it, and is also in the table menu.
 - **Moving.** Dragging the tab or the selected frame moves the table: a horizontal *drop line* shows between the
   paragraphs it would land after; on release it is one `move_object`. The anchor is a paragraph, so the table never
   floats.
@@ -140,19 +145,28 @@ A table is an object of kind `table`, drawn once, in the flow. The layer stops d
   already stored), shows the percentage while dragging, and snaps to 100 %. Height is the layout's (the kernel says `h`
   is only what was last found), so there is no bottom handle. No rotation: the turn handle and Rotate entries are not
   shown for a table.
-- **Right click** on the tab, the frame or inside a cell selects the table and opens the table menu: Row ▸, Column ▸,
-  Sort ▸, Merge Cells, Split Cell, Table Options…, then the common part (Style…, Name & describe…, Cut, Copy, Delete).
-  These are the Edit menu's table entries, with the same keys (`table-menu.ts`); nothing new is invented.
+- **Right click** on the tab, the frame or inside a cell selects the table and opens the table menu (D1224): *Name &
+  describe…, Table options…, Merge cells, Split cell, Sort ▸, Delete table*. Edit no longer carries these (menus
+  workbook v4), so the workbook needs these rows added to its Context menus sheet (see "For the workbook" below).
+  Insert/delete ▸ and Height/width… belong to the row and column headers; composes' tables have no header UI yet.
 - **Borders.** In the editor a table always shows a faint hairline frame and cell lines (a *non-printing editing aid*,
   like Word's gridlines), whatever its look. A look with real rules draws them on top; print and PDF show only the look.
-  Whether this needs a View switch is open point 5.
+  It may become a View switch when the menu structure has one (D1224).
 
-### The object menu
+### The object menu (D1225)
 
-Same list in all three apps, in this order: **Style…, Name & describe…** (the label the menu-structure draft gives
-"Describe…"), separator; for a picture: **Cut, Copy, Properties**; otherwise **Edit Text**; separator; **Rotate Right 90°, Rotate Left 90°, Rotate By…** (not for a chart or a table); separator;
-**Snap to grid** (creates only); separator; **Delete**. A table's menu is the one above. A chart in computes has the same
-menu minus the rotate entries. Every item has the key it has in the Edit/Format menus; the shortcut hints are shown.
+One list in all three apps, in the workbook's order and groups (Context menus rows 1–9):
+
+1. **Name & describe…** (Ctrl+Alt+D) · **Edit text** (Enter; not for a picture or a chart) · **Style…** (Ctrl+Alt+A; for a
+   picture it also holds what "Properties" did) · **Rotate by…** (Ctrl+Shift+Alt+Z; not for a chart or a table) ·
+   **Wrap text… ▸** (composes only)
+2. **Cut**, **Copy** (pictures only)
+3. **Release from grid** (creates only; swaps with "Snap to grid") · **Delete** (Del)
+
+No 90° entries; Rotate by… does them. **Wrap text…** is a submenu: ✓ Over the text, Around the object, Above and below the
+object, Behind the text, then Gap…; it shows Ctrl+Alt+R, which keeps cycling (D1064). The list is built in `object-menu.ts`
+from the object's kind and two flags (grid, wrap), so the apps cannot drift. A chart's menu is the same minus Rotate by…
+and Edit text.
 
 ## E2E tests: one spec, three apps, every kind
 
@@ -163,35 +177,41 @@ does). It creates one object of every kind the app offers and runs the contract'
    (the caret / active cell did not move);
 2. drag moves, with the preview during the move and one history entry after; `Esc` mid-drag restores;
 3. each handle scales; an image keeps its ratio (and the size does **not** snap back); a table scales its width only;
-4. the turn handle rotates; Rotate Right/Left/By… from the menu;
+4. the turn handle rotates; Rotate by… from the menu (and no Rotate entry for a chart or a table);
 5. right press selects and opens the object menu with exactly the contract's items; the cell menu, the header menu and
    the paragraph menu are **not** in the DOM;
 6. keyboard: Tab / Select Next Object reaches the object, arrows nudge, Delete removes, Enter edits;
 7. composes: a table's `Options…` opens the dialog; the table has exactly one frame (`[data-testid=object-frame]`
-   count is 1); dropping a table between two paragraphs changes the order; the wrap-behind exception needs Ctrl+click.
+   count is 1); dropping a table between two paragraphs changes the order; the wrap-behind exception needs Ctrl+click;
+   `Esc` in a cell leaves the table for the text;
+8. a second window sees the holder's outline and name tag while the object is selected, and no drag live, only its result
+   (D1223).
 
 A second, cheap guard keeps it honest as features arrive: `tests/test_object_kinds_agree.py` already pins that the kinds
 have one list (`claudia_core.OBJECT_KINDS`); it gains one check that every kind of that list appears in
 `web/e2e/objects.cjs`'s kind table, so a new kind cannot ship without its row. The same file lists `ObjectHost` members, so a new host member fails a unit test until the
 three adapters have it.
 
-## Open points (answers wanted before code)
+## For the workbook (`claudia-menus`), to settle with the other agent
 
-1. **Holding.** Creates holds an object while it is selected (D82: others see an outline and a name). Computes keeps
-   its selection local ("not shared", E6.17); composes' `session.selectObject` is shared. Should all three hold, as in
-   D82? Proposed: yes, as it is the same story as the lock in creates and E10.6, but it changes what colleagues see in
-   computes and composes, so it is yours to say.
-2. **The grid in computes and composes.** Nothing snaps there in this proposal (cells and characters are the grid). If
-   you would rather have free positioning in computes (an object between two cell edges), that is a new anchor field.
-3. **Words round a turned object in composes.** Wrap uses the object's box; creates judges a turned object by its
-   outline (D1022). Proposed: the wrap uses the turned object's bounding box, and the exact outline is a later story.
-4. **The initial size of a rendered container** (LaTeX) is too large; I have not yet found where it is set. Proposed:
-   the container is first drawn at its rendered size (the renderer returns `width × height`, `service.py`), capped at
-   the column width, then scaled by the person.
-5. **The editing frame of a table.** Always on, or switchable at View ▸ Table gridlines? The menu draft is under
-   review, so I would not add a menu entry without your word.
-6. **Selecting without a pointer inside a table.** Escape in a cell leaves the table for the text today; proposed:
-   a second Escape selects the table (frame and handle), a third gives the caret back.
+1. **Table context menu rows** (Context menus sheet, Table): add *Table options…, Merge cells, Split cell, Sort ▸, Delete
+   table* for composes (D1224). The sheet has only Name & describe….
+2. **Rotate by…** row: note "not for a chart or a table" (D1021).
+3. **Wrap text…** row: the options are the four modes plus Gap…, key Ctrl+Alt+R (today's `format.wrap-text`, which is
+   already in the composes manifest on `main`); the sheet's guess ("In line with text", "No wrap") does not exist in the
+   model. "To decide" #16 and #20 are answered by D1225.
+4. **Edit text** row: D/E/F = 1 is right; its Enter key is handled by the document view.
+5. **Name & describe…** (#12, still "discuss"): not decided here. This work calls the existing dialog for objects; the
+   dialog's name and description/note fields for other things follow your answer to #12.
+
+## Open points
+
+1. **The initial size of a rendered container** (LaTeX) is too large; I have not yet found where it is set. Proposed:
+   the container is first drawn at its rendered size (the renderer returns `width × height`), capped at the column
+   width, then scaled by the person.
+2. **Composes tables have no row and column headers**, so "Height / width…" and "Insert / delete ▸" on headers (workbook
+   rows 18, 19) need that UI first; it is not part of this work.
+3. **Keys of the table menu entries** stay those the Edit entries have today until the workbook assigns new ones.
 
 ## Build order
 

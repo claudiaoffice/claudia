@@ -60,8 +60,8 @@
 <rect x="50" y="466" width="7" height="130" rx="3.5" fill="#5b4bc4"/>
 <text x="70" y="490" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, monospace">object-menu.ts (exists)</text>
 <text x="70" y="512" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">one item list, one order, one key per item</text>
-<text x="70" y="529" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">snap is optional: creates passes it, the others leave it off</text>
-<text x="70" y="546" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">table entries added for kind table (from table-menu.ts)</text>
+<text x="70" y="529" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">built from kind + two flags (grid, wrap): D1225</text>
+<text x="70" y="546" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">table menu of D1224 beside it (table-menu.ts)</text>
 <rect x="480" y="466" width="360" height="130" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
 <rect x="480" y="466" width="7" height="130" rx="3.5" fill="#5b4bc4"/>
 <text x="500" y="490" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, monospace">ContextMenu.vue (exists)</text>
