@@ -32,7 +32,7 @@ The screen measures the character with a `Range` on the browser's own line; prin
 Those two can differ by a few pixels, so "what you see is what is printed" holds up to that difference. It is not
 tested against a rendered page: there was no browser in the session that built this.
 
-## Wrap: decided on 2026-11-17 (D1061–D1064), built on 2026-11-18 except the flowing editor (CODE-64)
+## Wrap: decided on 2026-11-17 (D1061–D1064), built on 2026-11-18 (the flowing editor: D1068, CODE-64)
 
 Four modes, kept in the anchor beside `dx`/`dy` (it is composes-only, and `MoveObject` already replaces the whole
 anchor): **over the text** (what a document with no wrap saved means, so no document changes; a new object starts as *above and below*, D1061), **around** the object, **above and below**,
@@ -59,7 +59,7 @@ The editor's lines are the browser's (contenteditable). Print and the print prev
    of the column wraps on its wider side in the flow view while print shows both sides; a test compares which lines get
    narrowed.
 
-*Decided (D1062):* option 3, stage 1 first, stage 2 when it is asked for. It keeps contenteditable, and it keeps the rule
+*Decided (D1062):* option 3, stage 1 first, stage 2 when it is asked for. *Stage 2 built (D1068)*; the offset of an object is written to DOCX and ODF (D1067, CODE-65). It keeps contenteditable, and it keeps the rule
 that the engine is the one place that decides how a document renders.
 
 ### Import and export

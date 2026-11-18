@@ -198,8 +198,8 @@ statement in the docs or on the website).
 | UX-44 | P3 | UX / BITV | The blinking dots of the side panel ignored `prefers-reduced-motion` (WCAG 2.3.3) | **fixed** 2026-11-17 |
 | CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |
 | CODE-63 | P3 | UX / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |
-| CODE-64 | P2 | composes | The browser editor does not draw the text wrap (the flowing view shows objects over the words; Page view and print wrap) | **new, open** |
-| CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **new, open** |
+| CODE-64 | P2 | composes | The browser editor does not draw the text wrap (the flowing view shows objects over the words; Page view and print wrap) | **fixed** 2026-11-18 (D1068) |
+| CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1931,17 +1931,19 @@ the trailing "custom" group of every document. Found while replacing the web's o
 not, send a flag with each style view (`"for": "entries"`) and leave them out; this is also the way to remove the
 three hand-written ids. **Acceptance.** A new text's Format ▸ Styles menu has no `Contents 1`.
 
-### CODE-64 · The browser editor does not draw the text wrap · P2 · new, open
+### CODE-64 · The browser editor does not draw the text wrap · P2 · fixed 2026-11-18
 The engine lays out the lines round the objects for print and View ▸ Page (D1062). The flowing editor view
 (`TextEditor.vue`, contenteditable) cannot: the browser lays out its lines. A new picture, shape or box defaults to
 *above and below* (D1061), so in the flowing view it overlaps words that print beside or around it.
 **Fix.** Stage 2 of D1062: either put the editor on the engine's rows in a mode of its own, or give the browser the
 same exclusions with a CSS `shape-outside` float per object. **Until then** decide whether new objects default to
 *over* in the flowing view. **Acceptance.** An object with *around* shows the same line breaks on screen as in the print preview.
+**Fixed** with one float per object (D1068), checked in a real Chrome (`npm run e2e:composes-wrap`). What the browser's floats cannot do is in D1068.
 
-### CODE-65 · `dx`/`dy` of an object is not exported · P2 · new, open
+### CODE-65 · `dx`/`dy` of an object is not exported · P2 · fixed 2026-11-18
 `composes_io` writes the anchor character and the wrap, not the offset an object has been moved by. **Fix.** DOCX
 `wp:posOffset`, ODF `svg:x`/`svg:y` with `text:anchor-type="char"`; import the same. **Acceptance.** Round trip keeps the offset within one pixel.
+**Fixed** (D1067): round trips for text boxes and pictures in every wrap mode, rotated pictures and a kept file's move; the positions were checked by rendering with LibreOffice.
 
 ### CODE-62 · A window that revives the shared server while the old one still holds the port starts it on a random port · P3 · new, open
 **Measured** (found while fixing the `deb.yml` job on 2026-11-17, reported to the owner as a size 3 bug): D445 says
