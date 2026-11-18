@@ -21,6 +21,7 @@ from weakref import WeakKeyDictionary
 from claudia_core import Document, DocumentModel, KernelError, ObjectModel, Revision
 
 from .i18n import msg
+from .planned import planned_state
 from .protocol import Context, MethodTable, RequestError
 
 #: The requests a view reads the document with, the same in every app; a replay may ask these, and nothing else.
@@ -106,7 +107,7 @@ class PastDocument:
 
 
 def add_replay_methods(table: MethodTable) -> None:
-    """Add ``as_of`` to an app's method table, answering from that table."""
+    """Add ``as_of`` and ``as_planned`` to an app's method table, answering from that table."""
 
     @table.method("as_of", "revision:revision method:str params:dict={}")
     def as_of(ctx: Context, *, revision: Revision, method: str, params: dict) -> Any:
@@ -122,6 +123,19 @@ def add_replay_methods(table: MethodTable) -> None:
         except KernelError as exc:
             raise RequestError("command_error", str(exc)) from exc
         past = replace(ctx, document=PastDocument(ctx.document, revision, model))  # type: ignore[arg-type]
+        return table.dispatch(past, method, params)
+
+    @table.method("as_planned", "plan:str method:str params:dict={}")
+    def as_planned(ctx: Context, *, plan: str, method: str, params: dict) -> Any:
+        """Answer one read request for the document as a redaction would leave it (D721): `plan` is the token
+        `redaction_plan` gave, `method` and `params` as for `as_of`. What the preview of a redaction is drawn with.
+        Nothing changes. `command_error` once the plan is no longer kept: ask for it again."""
+        if method not in VIEW_READS:
+            raise RequestError("forbidden", msg("{method} cannot be asked for an earlier step", method=method))
+        model = planned_state(ctx.document, plan)
+        if model is None:
+            raise RequestError("command_error", msg("this preview is no longer kept; work the redaction out again"))
+        past = replace(ctx, document=PastDocument(ctx.document, ctx.document.revision, model))  # type: ignore[arg-type]
         return table.dispatch(past, method, params)
 
     add_thing_history_method(table)

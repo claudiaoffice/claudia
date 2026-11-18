@@ -154,3 +154,27 @@ def test_a_step_that_is_not_there_is_a_command_error(deck):
     with pytest.raises(RequestError) as caught:
         call(deck, "changes_since", {"revision": "main:9"})
     assert caught.value.code == "command_error"
+
+
+# -- as_planned: the views read the state a redaction would leave, for its preview (D721) ----------------------------
+def test_a_preview_answers_the_cells_as_the_redaction_would_leave_them():
+    book = Document(WorkbookModel(), store=MemoryStore())
+    book.execute(AddSheet("s1", "Sheet1"), author="ann")
+    typed(book, "s1", [(0, 0, "4711")])  # main:2
+    plan = on_book(book, "redaction_plan", {"revisions": ["main:2"], "state": False})
+    assert plan["plan"] and "state" not in plan and plan["regions"]
+    window = {"sheet": "s1", "row0": 0, "row1": 3, "col0": 0, "col1": 3}
+    seen = on_book(book, "as_planned", {"plan": plan["plan"], "method": "cells", "params": window})
+    assert "4711" not in str(seen) and "4711" in str(on_book(book, "cells", window))
+    assert not book.log.get(book.log.path(book.revision)[1].rev).redacted
+
+
+def test_a_preview_that_is_gone_or_a_request_that_is_not_a_look_is_refused():
+    book = Document(WorkbookModel(), store=MemoryStore())
+    book.execute(AddSheet("s1", "Sheet1"), author="ann")
+    with pytest.raises(RequestError) as gone:
+        on_book(book, "as_planned", {"plan": "nonsense", "method": "cells", "params": {}})
+    assert gone.value.code == "command_error"
+    with pytest.raises(RequestError) as other:
+        on_book(book, "as_planned", {"plan": "nonsense", "method": "delete_document", "params": {}})
+    assert other.value.code == "forbidden"
