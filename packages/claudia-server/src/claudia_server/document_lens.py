@@ -19,10 +19,11 @@ from typing import Any
 
 from claudia_composes import TextModel, TextRange
 from claudia_composes.events import BlocksJoined, BlockSplit, ItemChanged, StyleChanged, SuggestionsChanged, TextChanged
-from claudia_core import Document
+from claudia_core import Document, TableDef, TablesChanged, parse_entry_id
 
 from .composes_words import paragraph_view
 from .lens import fence, shorten
+from .tables import table_view
 
 PREVIEW_PARAGRAPHS = 12  # paragraphs from the start shown at the beginning
 AROUND_ASKER = 2  # paragraphs before and after the asker's shown with it
@@ -33,12 +34,21 @@ MAX_READ_TEXT = 2000  # characters of one paragraph shown when the model asked t
 MAX_REPORTED = 25  # paragraphs of one change report shown
 MAX_PURPOSE = 60  # characters of a style's purpose shown
 MAX_SUGGESTIONS = 30  # open suggestions listed
+MAX_TABLES = 10  # tables named at the start
+MAX_TABLE_ROWS = 40  # rows of one table shown
+MAX_BOX = 60  # characters of one box shown
+MAX_REPORTED_TABLES = 3  # tables of one change report shown
 
 ORIENTATION = (
     "The text is a list of paragraphs. Each has an id (b1, b2, ...) and a paragraph style. Name a paragraph by its id "
     "and words in it by quoting them exactly as they are written (find); an empty find means the paragraph's whole "
     "text. Never count characters. A line break in new text starts a new paragraph. Read paragraphs before you change "
     "them: the start of the text below is only a part of it.{example}"
+)
+TABLES_HELP = (
+    "A table is made of boxes named by the ids of their row and column (r2, c3), never by place. Read tables with "
+    "tables; change boxes with set_entries, or some words in one box with replace_words and the box's id "
+    "(table/row/column)."
 )
 ACT_EXAMPLE = (
     ' A request looks like {"method": "replace_words", "params": {"block": "b3", "find": "in order to", "text": "to"}}.'
@@ -67,6 +77,41 @@ def describe_paragraph(view: dict, limit: int = MAX_TEXT) -> str:
     return f"{view['id']} ({style}): {shown}"
 
 
+def _count(count: int, one: str, many: str) -> str:
+    return f"{count} {one if count == 1 else many}"
+
+
+def describe_table(data: dict, name: str = "") -> str:
+    """One table for the model, boxes by the ids of their row and column: a header line of the column ids (a number
+    column with its total), a line per row (``r2: Roof | 8``), the totals as the text reads them and the merges. A
+    long table is cut at its 40th row and a long box at 60 characters; the whole is in ``tables``."""
+    table = TableDef.from_data(data)
+    totals = data.get("totals") or table.totals()
+    columns = []
+    for column in table.columns:
+        kinds = [column.kind] if column.kind != "text" else []
+        if column.total:
+            kinds.append(f"total {column.total}")
+        columns.append(column.id + (f" ({', '.join(kinds)})" if kinds else ""))
+    facts = [
+        f"{_count(len(table.rows), 'row', 'rows')}, {_count(len(table.columns), 'column', 'columns')}",
+        f"header: {_count(table.header_rows, 'row', 'rows')}",
+        f"look {table.look}",
+    ]
+    lines = [f"Table {table.id}" + (f' "{name}"' if name else "") + f" ({'; '.join(facts)})", " | ".join(columns)]
+    for row in table.rows[:MAX_TABLE_ROWS]:
+        boxes = [_flat(table.paragraph(row, col).text, MAX_BOX) for col in table.column_ids()]
+        lines.append(f"{row}: " + " | ".join(boxes))
+    if len(table.rows) > MAX_TABLE_ROWS:
+        lines.append(f"... and {len(table.rows) - MAX_TABLE_ROWS} more rows (the rest is in tables)")
+    lines += [f"total: {col} = {words}" for col, words in totals.items()]
+    lines += [
+        f"merged: {m.row}/{m.col} spans {_count(m.rows, 'row', 'rows')}, {_count(m.cols, 'column', 'columns')}"
+        for m in table.merges
+    ]
+    return "\n".join(lines)
+
+
 def describe_suggestion(item: dict) -> str:
     """One open suggestion: ``s2 by ai on b3: "in order to" -> "to" (shorter)``, a remark without the arrow."""
     original = '"' + _flat(item["original"], 80) + '"'
@@ -83,7 +128,7 @@ def describe_suggestion(item: dict) -> str:
 class DocumentLens:
     """The lens for composes."""
 
-    look_methods: tuple[str, ...] = ("paragraphs", "outline", "styles", "suggestions")
+    look_methods: tuple[str, ...] = ("paragraphs", "outline", "styles", "suggestions", "tables")
 
     # -- where the model starts
     def orient(
@@ -102,6 +147,7 @@ class DocumentLens:
         labels = model.labels()
         blocks = model.blocks
         text += f"\nThe text has {len(blocks)} paragraph{'s' if len(blocks) != 1 else ''}."
+        text += self._tables(model)
         text += "\nParagraph styles (id: name, what it is for):\n" + self._styles(model)
         headings = [at for at, block in enumerate(blocks) if model.block_kind(block) == "heading"]
         if headings:
@@ -129,6 +175,31 @@ class DocumentLens:
         if open_now:
             text += f"\n{open_now} suggestion{'s are' if open_now != 1 else ' is'} open (ask for the suggestions)."
         return text
+
+    @staticmethod
+    def _tables(model: TextModel) -> str:
+        """The tables of the text, one line each (id, name, size, header, where it hangs), and how boxes are named;
+        nothing for a text without a table."""
+        if not model.tables:
+            return ""
+        lines = []
+        for table_id, definition in sorted(model.tables.items())[:MAX_TABLES]:
+            users = model.users_of_table(table_id)
+            shown = model.get_object(users[0]) if users else None
+            name = f' "{_flat(shown.body.name, 40)}"' if shown is not None and shown.body.name else ""
+            where = f", hangs from {shown.anchor.block}" if shown is not None else ""
+            header = " | ".join(
+                _flat(definition.paragraph(definition.rows[definition.header_rows - 1], c).text, 20)
+                for c in definition.column_ids()
+            )
+            size = (
+                f"{_count(len(definition.rows), 'row', 'rows')}, {_count(len(definition.columns), 'column', 'columns')}"
+            )
+            lines.append(f"{table_id}{name}: {size}{where}; " + (f"header {header}" if definition.header_rows else ""))
+        if len(model.tables) > MAX_TABLES:
+            lines.append(f"... and {len(model.tables) - MAX_TABLES} more tables (ask for the tables)")
+        count = _count(len(model.tables), "table", "tables")
+        return f"\nThe text has {count}. {TABLES_HELP}\n" + fence("\n".join(lines))
 
     @staticmethod
     def _example(can_write: bool, writes: frozenset[str] | None) -> str:
@@ -185,6 +256,8 @@ class DocumentLens:
             return fence("\n".join(lines))
         if method == "styles":
             return fence(self._style_list(result))
+        if method == "tables":
+            return fence("\n\n".join(describe_table(item) for item in result) or "The text has no table.")
         return fence(json.dumps(result, separators=(",", ":"), ensure_ascii=False))
 
     @staticmethod
@@ -212,6 +285,7 @@ class TextRecorder:
         self._touched: list[str] = []
         self._joined: list[str] = []
         self._suggestions: dict[str, dict] = {}
+        self._tables: list[str] = []
         self._stop: Callable[[], None] | None = None
 
     def __enter__(self) -> TextRecorder:
@@ -226,8 +300,16 @@ class TextRecorder:
     def _touch(self, *blocks: str) -> None:
         self._touched += [block for block in blocks if block not in self._touched]
 
+    def _table_touched(self, table_id: str) -> None:
+        if table_id not in self._tables:
+            self._tables.append(table_id)
+
     def _hear(self, event: object) -> None:
-        if isinstance(event, (TextChanged, StyleChanged, ItemChanged)):
+        if isinstance(event, TablesChanged):
+            self._table_touched(event.table_id)
+        elif isinstance(event, (TextChanged, StyleChanged, ItemChanged)) and (box := parse_entry_id(event.block)):
+            self._table_touched(box[0])  # the words of a box, not a paragraph of the text
+        elif isinstance(event, (TextChanged, StyleChanged, ItemChanged)):
             self._touch(event.block)
         elif isinstance(event, BlockSplit):
             self._touch(event.block, event.new_id)
@@ -251,11 +333,27 @@ class TextRecorder:
         gone = [block for block in self._joined if block not in where]
         if gone:
             lines.append("Joined into the paragraph before them, so gone: " + ", ".join(gone))
+        lines += self._table_report(model)
         made = [item for item in self._suggestions.values() if item.get("state", "open") == "open"]
         if made:
             lines.append("Suggestions now open:")
             lines += [describe_suggestion(model.suggestion_data(model.suggestion(item["id"]))) for item in made]
         return fence("\n".join(lines) or "Nothing changed.")
 
+    def _table_report(self, model: TextModel) -> list[str]:
+        """The tables the request touched as they are now (the first three, in the order they were touched), and the
+        ones that are gone."""
+        lines: list[str] = []
+        for table_id in self._tables[:MAX_REPORTED_TABLES]:
+            if table_id not in model.tables:
+                lines.append(f"Table {table_id} is gone.")
+                continue
+            users = model.users_of_table(table_id)
+            name = model.get_object(users[0]).body.name if users else ""
+            lines.append(describe_table(table_view(model, table_id), name or ""))
+        if len(self._tables) > MAX_REPORTED_TABLES:
+            lines.append(f"... and {len(self._tables) - MAX_REPORTED_TABLES} more tables changed.")
+        return lines
 
-__all__ = ["DocumentLens", "TextRecorder", "describe_paragraph", "describe_suggestion"]
+
+__all__ = ["DocumentLens", "TextRecorder", "describe_paragraph", "describe_suggestion", "describe_table"]

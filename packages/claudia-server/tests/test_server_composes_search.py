@@ -3,7 +3,7 @@
 import pytest
 
 from claudia_composes import BlockAnchor, InsertText, SetStyle, SplitBlock, TextModel
-from claudia_core import Document, MemoryStore, ObjectBody, VisualObject, paragraph_for
+from claudia_core import Document, MemoryStore, ObjectBody, TableRegion, VisualObject, paragraph_for
 from claudia_server.apps import MODEL_METHODS
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
@@ -63,7 +63,7 @@ def test_a_search_names_every_match_by_its_paragraph_and_the_kind_of_text_it_is(
         ({"block": "b2"}, "text", 20),
         ({"block": "b3"}, "remark", 10),
     ]
-    assert found["counts"] == {"text": 1, "heading": 1, "remark": 1, "object": 0, "description": 0}
+    assert found["counts"] == {"text": 1, "heading": 1, "remark": 1, "object": 0, "description": 0, "table": 0}
 
 
 def test_by_default_only_the_text_is_searched(paper):
@@ -191,3 +191,79 @@ def test_a_place_that_is_not_one_is_a_bad_request(paper):
         with pytest.raises(RequestError) as caught:
             call(paper, "search_preview", {"query": text("red", "x"), "leave": [bad]})
         assert caught.value.code == "bad_request"
+
+
+# -- the boxes of a table (E9.32, D1210) ---------------------------------------------------------------------------
+def with_table(doc):
+    made = call(
+        doc,
+        "add_table",
+        {"block": "b2", "offset": 4, "cells": [["Site", "Red beds"], ["Roof", "the red one"], ["Yard", ""]]},
+        account=ANN,
+    )
+    return made["table"]
+
+
+def test_the_words_in_the_boxes_of_a_table_are_a_kind_of_text_to_search_row_by_row(paper):
+    table = with_table(paper)
+    found = search(paper, text("red"), kinds=["table"])
+    places = [(m["at"], m["kind"]) for m in found["matches"]]
+    assert places == [
+        ({"block": "b2", "table": table, "row": "r1", "col": "c2"}, "table"),
+        ({"block": "b2", "table": table, "row": "r2", "col": "c2"}, "table"),
+    ]
+    assert found["counts"]["table"] == 2 and found["counts"]["text"] == 0, "only the kinds asked for are looked in"
+    assert search(paper, text("red"))["counts"]["table"] == 0, "a table is not in the default kinds"
+
+
+def test_a_box_a_merge_covers_has_no_words_to_find(paper):
+    table = with_table(paper)
+    call(paper, "merge_cells", {"table": table, "row": "r1", "col": "c1", "rows": 1, "cols": 2}, account=ANN)
+    first, second = search(paper, text("red"), kinds=["table"])["matches"]
+    assert first["at"] == {"block": "b2", "table": table, "row": "r1", "col": "c1"}
+    assert first["text"] == "Site Red beds"
+    assert second["at"]["row"] == "r2"
+
+
+def test_a_selection_finds_a_table_only_if_it_hangs_from_inside_it(paper):
+    with_table(paper)
+    inside = {"range": {"from": {"block": "b2", "offset": 0}, "to": {"block": "b2", "offset": 10}}}
+    outside = {"range": {"from": {"block": "b2", "offset": 5}, "to": {"block": "b3", "offset": 3}}}
+    assert search(paper, text("red"), kinds=["table"], scope=inside)["total"] == 2
+    assert search(paper, text("red"), kinds=["table"], scope=outside)["total"] == 0
+
+
+def test_replacing_in_boxes_is_typing_in_them_and_the_words_around_keep_their_author(paper):
+    table = with_table(paper)
+    done = call(paper, "search_replace", {"query": text("red", "blue"), "kinds": ["table"]}, account=ANN)
+    assert done["replaced"] == 2 and done["skipped"] == []
+    boxes = paper.model.tables[table]
+    assert (
+        boxes.paragraph("r1", "c2").text == "Blue beds".replace("Blue", "blue")
+        or "blue" in boxes.paragraph("r1", "c2").text
+    )
+    assert boxes.paragraph("r2", "c2").text == "the blue one"
+    paper.undo("ann")
+    assert paper.model.tables[table].paragraph("r2", "c2").text == "the red one"
+
+
+def test_a_box_a_colleague_holds_is_skipped_by_a_replacement_and_named(paper):
+    table = with_table(paper)
+    paper.lock("ben", [TableRegion(table, frozenset({"r2"}), frozenset({"c2"}))], ttl=5)
+    done = call(paper, "search_replace", {"query": text("red", "blue"), "kinds": ["table"]}, account=ANN)
+    assert done["replaced"] == 1
+    assert [(s["reason"], s["by"]) for s in done["skipped"]] == [("locked", "ben")]
+    assert paper.model.tables[table].paragraph("r2", "c2").text == "the red one"
+
+
+def test_a_place_in_a_box_is_one_the_client_may_send_back_to_leave_a_match_alone(paper):
+    table = with_table(paper)
+    at = {"block": "b2", "table": table, "row": "r1", "col": "c2"}
+    done = call(
+        paper,
+        "search_replace",
+        {"query": text("red", "blue"), "kinds": ["table"], "leave": [{"at": at, "match": None}]},
+        account=ANN,
+    )
+    assert done["replaced"] == 1
+    assert paper.model.tables[table].paragraph("r1", "c2").text == "Red beds"

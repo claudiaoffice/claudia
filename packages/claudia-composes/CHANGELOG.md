@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- Search looks in the boxes of tables: the kind `table` (`KINDS`), the place `{block, table, row, col}`
+  (`table_at`, `table_of`); `scan_text` counts it; a replacement is typing and deleting in the box (E9.32, D1212).
 - Tables in a text (E9.32): the text holds table definitions (`TextModel.tables`, state schema 15), shows them with
   objects of the kind `table`, takes typing in a box with the ordinary text commands on the box's paragraph id, locks
   a typed-in box as a `TableRegion`, and has three built-in looks (`TABLE_LOOKS`, `DEFAULT_LOOK`) whose twelve styles

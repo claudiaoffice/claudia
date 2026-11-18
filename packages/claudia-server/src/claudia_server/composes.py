@@ -4,7 +4,8 @@
 
 * ``blocks`` and ``suggestions``: the document, to load it;
 * ``replace_text``: the one way people write. It replaces a range (it may span paragraphs) by some text, and a line
-  break in the text starts a new paragraph. A single request is a single step to undo;
+  break in the text starts a new paragraph. A single request is a single step to undo. With the id of a box of a
+  table (``<table>/<row>/<column>``) it types in the box, which is one paragraph: a line break is a space (D1212);
 * ``set_style``: give a paragraph a named style (D62);
 * ``page`` and ``set_page``: the page the text is printed on (paper, orientation, margins, page numbers; D904). The
   pages themselves are laid out in the client (D901);
@@ -16,8 +17,10 @@
 * ``styles``, ``change_style``, ``deviate_style``, ``rename_style`` and ``check_css``: the styles are CSS in the
   document (E1.10, D73). Changing a style changes every paragraph that has it; deviating makes a new style, with a
   provisional name, from an old one and applies it, in one step (D75); naming ends the invitation to name it;
-* ``search_find``, ``search_preview`` and ``search_replace``: search and replace in the text, its headings, remarks
-  and the objects floating over it (:mod:`claudia_server.composes_search`, E9.28);
+* ``tables``, ``add_table``, ``set_entries``, ``insert_rows``, ``merge_cells`` and the rest: tables, by the ids of
+  their rows and columns (:mod:`claudia_server.tables`, E9.32);
+* ``search_find``, ``search_preview`` and ``search_replace``: search and replace in the text, its headings, remarks,
+  the objects floating over it and the boxes of its tables (:mod:`claudia_server.composes_search`, E9.28, E9.32);
 * ``look`` and ``hold``: where my cursor is. ``hold`` also locks the ± n words around it for everybody else (D11);
 * ``move_object``, ``resize_object``, ``rotate_object`` and ``remove_object``: the floating objects. An object hangs
   from a character, floats at an offset from it and turns about its centre (rotation-ui);
@@ -86,6 +89,7 @@ from .replay import add_replay_methods
 from .structure_methods import add_structure_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
+from .tables import add_table_methods, one_line
 from .thing_names import add_name_methods
 from .wire import current_revision, done
 
@@ -252,7 +256,17 @@ def edit_plan(
     model: TextModel, first: str, start: int, *, last: str, end: int, text: str
 ) -> tuple[list[Command], tuple[str, int]]:
     """The commands that replace the text from ``first:start`` to ``last:end`` by ``text``, and where the cursor
-    ends up (``(paragraph, offset)``). Paragraphs in between go away; the last one's rest is joined to the first."""
+    ends up (``(paragraph, offset)``). Paragraphs in between go away; the last one's rest is joined to the first. In
+    the box of a table it is :func:`_box_plan`."""
+    if "/" in first or "/" in last or model.is_entry(first) or model.is_entry(last):
+        return _box_plan(model, first, start, last=last, end=end, text=text)
+    return _paragraph_plan(model, first, start, last=last, end=end, text=text)
+
+
+def _paragraph_plan(
+    model: TextModel, first: str, start: int, *, last: str, end: int, text: str
+) -> tuple[list[Command], tuple[str, int]]:
+    """:func:`edit_plan` in the paragraphs of the text."""
     i, j = model.index_of(first), model.index_of(last)
     if j < i or (i == j and end < start):
         raise RequestError("command_error", msg("the range ends before it starts"))
@@ -290,6 +304,34 @@ def edit_plan(
             commands.append(InsertText(cursor, offset, line))
             offset += len(line)
     return commands, (cursor, offset)
+
+
+def _box_plan(
+    model: TextModel, first: str, start: int, *, last: str, end: int, text: str
+) -> tuple[list[Command], tuple[str, int]]:
+    """:func:`edit_plan` inside the box of a table (D1210, D1212): a box is one paragraph, so a range stays in one box
+    and a line break in ``text`` is a space. A box a merge covers takes no words."""
+    if first != last:
+        raise RequestError("command_error", msg("a range stays inside one box of a table"))
+    if not model.is_entry(first):
+        raise RequestError("command_error", msg("there is no paragraph {block!r}", block=first))
+    try:
+        model.check_entry_edit(first)
+    except ValueError as error:
+        raise RequestError("command_error", str(error)) from None
+    length = len(model.entry_words(first).text)
+    for offset, what in ((start, "start"), (end, "end")):
+        if not 0 <= offset <= length:
+            raise RequestError("command_error", msg("{what} is outside the paragraph", what=what))
+    if end < start:
+        raise RequestError("command_error", msg("the range ends before it starts"))
+    line = one_line(text)
+    commands: list[Command] = []
+    if end > start:
+        commands.append(DeleteText(first, start, end - start))
+    if line:
+        commands.append(InsertText(first, start, line))
+    return commands, (first, start + len(line))
 
 
 add_word_methods(composes_methods, edit=edit_plan)
@@ -352,9 +394,11 @@ add_language_methods(composes_methods)
 @composes_methods.method("objects")
 def _objects(ctx):
     """The floating objects of the text, the one in front last, as `{revision, objects}`. An object is the shape all
-    three apps share (`{id, kind, w, h, style, paragraph, shape, image, imported, diagram, rotation, snap,
-    anchor}`), with `anchor` `{kind: "block", container: <paragraph id>, offset}`: the character it hangs from.
-    `w` and `h` are CSS pixels. `imported`'s `source_path` is only sent to the person who imported that image."""
+    three apps share (`{id, kind, w, h, style, paragraph, ref, imported, rotation, snap, anchor}`;
+    `ref` is the id of the definition the kind shows: a picture, a rendered container or a table, see `images`,
+    `renderings` and `tables`), with `anchor` `{kind: "block", container: <paragraph id>, offset}`: the character it
+    hangs from. `w` and `h` are CSS pixels. `imported`'s `source_path` is only sent to the person who imported that
+    image."""
     model = _text(ctx)
     objects = [obj.to_data_for(ctx.user) for block in model.blocks for obj in model.objects_on(block.id)]
     return {"revision": current_revision(ctx), "objects": objects}
@@ -511,3 +555,4 @@ IN_TEXT = Placement(
 )
 add_object_methods(composes_methods, model_of=_text, placement=IN_TEXT)
 add_rendering_methods(composes_methods, model_of=_text, placement=IN_TEXT)
+add_table_methods(composes_methods, model_of=_text, placement=IN_TEXT)

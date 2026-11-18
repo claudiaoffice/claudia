@@ -17,6 +17,7 @@ from claudia_server.apps import MODEL_METHODS, SUGGEST_METHODS
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.standin_text import TextEngine
+from claudia_server.tables import TABLE_METHODS
 
 
 def sheet_with_a1(person):
@@ -154,7 +155,9 @@ def test_in_a_text_act_mode_writes_and_suggest_mode_suggests():
 def test_in_a_text_the_ai_writes_through_its_allow_list_like_in_the_other_apps():
     assert set(SUGGEST_METHODS["composes"]) == {"suggest", "suggest_words"}
     direct = set(MODEL_METHODS["composes"]) - set(SUGGEST_METHODS["composes"])
-    assert direct == {"replace_text", "set_style", "replace_words", "add_paragraphs"}, "D640, and D681 for a model"
+    assert direct == {"replace_text", "set_style", "replace_words", "add_paragraphs", *TABLE_METHODS}, (
+        "D640, D681, E9.32"
+    )
 
 
 # -- the effective account

@@ -240,9 +240,9 @@ paragraphs.
 
 ## 11. Slices, in order (TDD; each is a patch against `tables-in-composes`)
 
-**Status 2026-11-18:** S0 is built and tested; S1 has the text model (definition in the snapshot, typing, regions,
-redaction, looks) and its tests; the rest of S1 (events on the wire, the server module and its documented API,
-search and the AI lens), S2, S3, S4 and S6 are not built.
+**Status 2026-11-18:** S0 and S1 are built and tested: the kernel, the text model, and the server (`claudia_server/tables.py`:
+the wire methods, box typing through `replace_text`, search kind `table`, the AI lens and allow-list; D1212). S2, S3, S4
+and S6 are not built; the owner's order is: layout and clients (S2, S3), then odt/docx (S4), then stop.
 
 | Slice | What | Needs |
 |---|---|---|
@@ -287,11 +287,13 @@ Still open:
 
 ## 14. Found on the way (size: 1 huge, 2 medium, 3 small)
 
-- **Size 3, a smell that grew with this work.** `ObjectBody` reads five generations of field sets (`_FIELD_SETS`) and
-  five mutually exclusive pointer fields (`shape`, `image`, `diagram`, `rendered`, `table`). `table` is the fifth of
-  each. It works; a single `content: (kind, id)` pointer would end the growth. Fix directly, or the bugtracker?
-- **Size 3.** The error messages of the object checks list the pointer fields by name, so every new kind changes the
-  wording and the tests of three apps (done: computes and creates tests updated). Same cure as above.
+- **Size 3, a smell that grew with this work: fixed (D1211).** `ObjectBody` had five generations of field sets and
+  five mutually exclusive pointer fields; it has one `ref` now, and the kind says where it is looked up. The error
+  messages of the object checks stopped changing with every new kind as well.
+- **Size 3, found in S1 (fixed in S1).** A rendered container on a slide was printed without its picture, because
+  `printable` looked for a wire `image` that never existed; it resolves the picture from the definition now.
+- **Size 3, open.** Boxes are not in `reading_order` (D1212): a box cannot be a list item or a heading. Nobody asked for
+  either; say so if a box should hold a list.
 - Nothing of size 1 or 2. (The docx import does report `table` today; `import-export-coverage-2026-11-14.md` still
   says "no loss list at all", which is out of date.)
 

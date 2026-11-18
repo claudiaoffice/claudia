@@ -541,7 +541,7 @@ msgstr "Danach"
 msgid "Agenda"
 msgstr "Agenda"
 
-#: web/app/components/SidePanel.vue:404
+#: web/app/components/SidePanel.vue:405
 msgid "Agree"
 msgstr "Zustimmen"
 
@@ -757,7 +757,7 @@ msgstr "Mittelwert {value}"
 msgid "Back"
 msgstr "Zurück"
 
-#: web/app/components/SidePanel.vue:413
+#: web/app/components/SidePanel.vue:414
 msgid "Back to now"
 msgstr "Zurück zur Gegenwart"
 
@@ -893,7 +893,7 @@ msgstr "CSS des Formats"
 msgid "Calculation"
 msgstr "Berechnung"
 
-#: web/app/components/SheetGrid.vue:285
+#: web/app/components/SheetGrid.vue:286
 msgid "Calculation step"
 msgstr "Rechenschritt"
 
@@ -985,7 +985,7 @@ msgstr "Ändern…"
 msgid "Characters from the middle of the text: where to start (from 1) and how many."
 msgstr "Zeichen aus der Mitte des Textes: wo es beginnt (ab 1) und wie viele."
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:21 web/app/components/SheetChartInsertDialog.vue:124 web/app/components/SheetChartInsertDialog.vue:30 web/app/components/SidePanel.vue:175 web/app/components/SidePanel.vue:179 web/app/lib/descriptions.ts:41
+#: packages/claudia-server/src/claudia_server/thing_names.py:21 web/app/components/SheetChartInsertDialog.vue:124 web/app/components/SheetChartInsertDialog.vue:30 web/app/components/SidePanel.vue:175 web/app/components/SidePanel.vue:180 web/app/lib/descriptions.ts:41
 msgid "Chart"
 msgstr "Diagramm"
 
@@ -997,7 +997,7 @@ msgstr "Diagramm: {name}"
 msgid "Chart…"
 msgstr "Diagramm…"
 
-#: web/app/components/SidePanel.vue:482 web/app/components/SidePanel.vue:77
+#: web/app/components/SidePanel.vue:483 web/app/components/SidePanel.vue:77
 msgid "Chat"
 msgstr "Chat"
 
@@ -1085,11 +1085,11 @@ msgstr "Die ausgewählten Zellen leeren"
 msgid "Click"
 msgstr "Klick"
 
-#: web/app/components/SidePanel.vue:553 web/app/components/SidePanel.vue:554
+#: web/app/components/SidePanel.vue:554 web/app/components/SidePanel.vue:555
 msgid "Click something in the document to write a tag for it."
 msgstr "Klicke etwas im Dokument an, um ein Tag dafür zu schreiben."
 
-#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:25 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ContentsDialog.vue:82 web/app/components/ImagePropertiesDialog.vue:93 web/app/components/NamesDialog.vue:101 web/app/components/NumberingDialog.vue:204 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:466 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:93
+#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:25 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ContentsDialog.vue:82 web/app/components/ImagePropertiesDialog.vue:94 web/app/components/NamesDialog.vue:101 web/app/components/NumberingDialog.vue:204 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:466 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:93
 msgid "Close"
 msgstr "Schließen"
 
@@ -1289,7 +1289,7 @@ msgstr "Verbindung nicht möglich"
 msgid "Could not connect."
 msgstr "Verbindung nicht möglich."
 
-#: web/app/lib/rendering.ts:118
+#: web/app/lib/rendering.ts:119
 msgid "Could not draw it: {message}"
 msgstr "Konnte nicht gezeichnet werden: {message}"
 
@@ -1417,11 +1417,11 @@ msgstr "Daten"
 msgid "Data from"
 msgstr "Daten aus"
 
-#: web/app/components/SidePanel.vue:405
+#: web/app/components/SidePanel.vue:406
 msgid "Decline"
 msgstr "Ablehnen"
 
-#: web/app/components/ImagePropertiesDialog.vue:48
+#: web/app/components/ImagePropertiesDialog.vue:49
 msgid "Decorative: a screen reader skips it"
 msgstr "Dekorativ: Ein Screenreader überspringt es"
 
@@ -1485,7 +1485,7 @@ msgstr "Die ausgewählten Zeilen löschen"
 msgid "Delete this document"
 msgstr "Dieses Dokument löschen"
 
-#: web/app/components/SidePanel.vue:498
+#: web/app/components/SidePanel.vue:499
 msgid "Deleted. Show the last moment it was there."
 msgstr "Gelöscht. Den letzten Moment zeigen, in dem es da war."
 
@@ -1553,7 +1553,7 @@ msgstr "Diagramm"
 msgid "Did you mean {word}?"
 msgstr "Meinten Sie {word}?"
 
-#: web/app/components/ImagePropertiesDialog.vue:59
+#: web/app/components/ImagePropertiesDialog.vue:60
 msgid "Dimensions"
 msgstr "Abmessungen"
 
@@ -1601,7 +1601,7 @@ msgstr "Punktdiagramm von {n} Ergebnissen, von {low} bis {high}, Median {median}
 msgid "Double-click to rename"
 msgstr "Doppelklick zum Umbenennen"
 
-#: web/app/components/SlideCanvas.vue:624
+#: web/app/components/SlideCanvas.vue:627
 msgid "Double-click to type"
 msgstr "Doppelklick zum Schreiben"
 
@@ -1629,7 +1629,7 @@ msgstr "Ziehen"
 msgid "Drag fields between the boxes, or use a chip’s ▾ menu."
 msgstr "Ziehen Sie Felder zwischen die Bereiche oder nutzen Sie das ▾-Menü eines Felds."
 
-#: web/app/components/TextContainers.vue:149
+#: web/app/components/TextContainers.vue:151
 msgid "Drag to resize"
 msgstr "Ziehen, um die Größe zu ändern"
 
@@ -1649,7 +1649,7 @@ msgstr "Ziehung {n}"
 msgid "Draw {n}: draw new random numbers"
 msgstr "Ziehung {n}: neue Zufallszahlen ziehen"
 
-#: web/app/lib/rendering.ts:114
+#: web/app/lib/rendering.ts:115
 msgid "Drawing…"
 msgstr "Wird gezeichnet …"
 
@@ -1693,7 +1693,7 @@ msgstr "{name} bearbeiten"
 msgid "Elapsed"
 msgstr "Vergangen"
 
-#: web/app/lib/rendering.ts:116
+#: web/app/lib/rendering.ts:117
 msgid "Empty {type} container: double-click to write"
 msgstr "Leerer {type}-Container: Doppelklicken, um zu schreiben"
 
@@ -1805,7 +1805,7 @@ msgstr "Felder der Quelle"
 msgid "File"
 msgstr "Datei"
 
-#: web/app/components/ImagePropertiesDialog.vue:63
+#: web/app/components/ImagePropertiesDialog.vue:64
 msgid "File size"
 msgstr "Dateigröße"
 
@@ -1933,7 +1933,7 @@ msgstr "Fließtext: Der Text läuft bis zur Fensterbreite"
 msgid "Follow Computation"
 msgstr "Berechnung verfolgen"
 
-#: web/app/components/SidePanel.vue:426
+#: web/app/components/SidePanel.vue:427
 msgid "Follow changes"
 msgstr "Änderungen folgen"
 
@@ -1997,11 +1997,11 @@ msgstr "Für {doc}, als {user}. Alle anderen behalten ihr eigenes Passwort."
 msgid "Forecast"
 msgstr "Prognose"
 
-#: web/app/components/SidePanel.vue:478
+#: web/app/components/SidePanel.vue:479
 msgid "Forget every hidden line"
 msgstr "Alle ausgeblendeten Linien vergessen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:55 web/app/components/SlideWorkspace.vue:403 web/app/components/TextWorkspace.vue:365 web/app/components/Workspace.vue:1091
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:56 web/app/components/SlideWorkspace.vue:403 web/app/components/TextWorkspace.vue:365 web/app/components/Workspace.vue:1091
 msgid "Format"
 msgstr "Format"
 
@@ -2025,7 +2025,7 @@ msgstr "Aus Dateien"
 msgid "From the styles it is based on"
 msgstr "Aus den Formaten, auf denen es beruht"
 
-#: web/app/components/ImagePropertiesDialog.vue:33
+#: web/app/components/ImagePropertiesDialog.vue:34
 msgid "GIF (animated)"
 msgstr "GIF (animiert)"
 
@@ -2045,7 +2045,7 @@ msgstr "Wieder anmelden"
 msgid "Give a colleague a name and a password for {doc}. They open the document with them, like you did. Tell them the password yourself: the server never shows it again."
 msgstr "Geben Sie einer Kollegin oder einem Kollegen einen Namen und ein Passwort für {doc}. Damit wird das Dokument geöffnet, so wie bei Ihnen. Teilen Sie das Passwort selbst mit: Der Server zeigt es nie wieder an."
 
-#: web/app/components/SidePanel.vue:527
+#: web/app/components/SidePanel.vue:528
 msgid "Give names to {n} things without one"
 msgstr "{n} Dingen ohne Namen einen Namen geben"
 
@@ -2105,7 +2105,7 @@ msgstr "Gehen Sie zur Form, in der Ihr Cursor steht, um nur diese Form zu änder
 msgid "Go to the text box where your cursor is to change this text box only"
 msgstr "Gehen Sie zum Textfeld, in dem Ihr Cursor steht, um nur dieses Textfeld zu ändern"
 
-#: web/app/components/SidePanel.vue:498
+#: web/app/components/SidePanel.vue:499
 msgid "Go to this"
 msgstr "Hierhin gehen"
 
@@ -2161,7 +2161,7 @@ msgstr "Handzettel"
 msgid "Hard to read"
 msgstr "Schwer lesbar"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:25 web/app/components/SidePanel.vue:181 web/app/components/StyleSpec.vue:210
+#: packages/claudia-server/src/claudia_server/thing_names.py:26 web/app/components/SidePanel.vue:182 web/app/components/StyleSpec.vue:210
 msgid "Heading"
 msgstr "Überschrift"
 
@@ -2173,7 +2173,7 @@ msgstr "Überschriften"
 msgid "Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …"
 msgstr "Überschriften, die in einer Liste nummeriert sind, zählen zusammen als eine Gliederung: 1, 1.1, 1.2, 2 …"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:394 web/app/lib/document-menus.ts:267
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:395 web/app/lib/document-menus.ts:267
 msgid "Help"
 msgstr "Hilfe"
 
@@ -2189,11 +2189,11 @@ msgstr "Ausblenden"
 msgid "Hide password"
 msgstr "Passwort verbergen"
 
-#: web/app/components/SidePanel.vue:412
+#: web/app/components/SidePanel.vue:413
 msgid "History"
 msgstr "Verlauf"
 
-#: web/app/components/SidePanel.vue:393
+#: web/app/components/SidePanel.vue:394
 msgid "History & Chat"
 msgstr "Verlauf & Chat"
 
@@ -2313,7 +2313,7 @@ msgstr "Wenn jemand sein Passwort vergisst, kann er mit dem Wiederherstellungssc
 msgid "Image"
 msgstr "Bild"
 
-#: web/app/components/ImagePropertiesDialog.vue:42
+#: web/app/components/ImagePropertiesDialog.vue:43
 msgid "Image properties"
 msgstr "Bildeigenschaften"
 
@@ -2321,15 +2321,15 @@ msgstr "Bildeigenschaften"
 msgid "Image…"
 msgstr "Bild…"
 
-#: web/app/components/ImagePropertiesDialog.vue:79
+#: web/app/components/ImagePropertiesDialog.vue:80
 msgid "Imported"
 msgstr "Importiert"
 
-#: web/app/components/ImagePropertiesDialog.vue:72
+#: web/app/components/ImagePropertiesDialog.vue:73
 msgid "Imported by"
 msgstr "Importiert von"
 
-#: web/app/components/ImagePropertiesDialog.vue:85
+#: web/app/components/ImagePropertiesDialog.vue:86
 msgid "Imported from disk"
 msgstr "Von der Festplatte importiert"
 
@@ -2369,7 +2369,7 @@ msgstr "Tinte"
 msgid "Input"
 msgstr "Eingabe"
 
-#: web/app/components/SheetGrid.vue:284
+#: web/app/components/SheetGrid.vue:285
 msgid "Input of the computation"
 msgstr "Eingabe der Berechnung"
 
@@ -2653,7 +2653,7 @@ msgstr "Die Zellen hervorheben, die an der Berechnung dieser Zelle beteiligt sin
 msgid "Line · soon"
 msgstr "Linie · bald"
 
-#: web/app/components/SidePanel.vue:462
+#: web/app/components/SidePanel.vue:463
 msgid "Lines"
 msgstr "Linien"
 
@@ -2661,7 +2661,7 @@ msgstr "Linien"
 msgid "List"
 msgstr "Liste"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:26 web/app/components/SidePanel.vue:182
+#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:183
 msgid "List item"
 msgstr "Listenpunkt"
 
@@ -2761,7 +2761,7 @@ msgstr "{server} verwalten…"
 msgid "Margins"
 msgstr "Ränder"
 
-#: web/app/components/SidePanel.vue:427
+#: web/app/components/SidePanel.vue:428
 msgid "Mark where the document changed after this step: solid outlines are what this step changed, dashed ones what changed later"
 msgstr "Markiert, wo sich das Dokument nach diesem Schritt geändert hat: durchgezogene Umrisse zeigen, was dieser Schritt geändert hat, gestrichelte, was später geändert wurde"
 
@@ -2817,7 +2817,7 @@ msgstr "Elemente von {field}"
 msgid "Mermaid"
 msgstr "Mermaid"
 
-#: web/app/components/SidePanel.vue:535
+#: web/app/components/SidePanel.vue:536
 msgid "Message everyone, or @ai …"
 msgstr "Allen schreiben oder @ai …"
 
@@ -2857,7 +2857,7 @@ msgstr "Mehr zu {name}"
 msgid "More padding"
 msgstr "Mehr Abstand"
 
-#: web/app/components/SidePanel.vue:322
+#: web/app/components/SidePanel.vue:323
 msgid "More than {n} places differ from now"
 msgstr "Mehr als {n} Stellen weichen von jetzt ab"
 
@@ -3165,7 +3165,7 @@ msgstr "Notizen"
 msgid "Nothing"
 msgstr "Nichts"
 
-#: web/app/components/SidePanel.vue:321
+#: web/app/components/SidePanel.vue:322
 msgid "Nothing differs from now"
 msgstr "Nichts weicht von jetzt ab"
 
@@ -3217,15 +3217,15 @@ msgstr "Es wurde nichts ersetzt."
 msgid "Nothing yet. Create the first document."
 msgstr "Noch nichts. Erstellen Sie das erste Dokument."
 
-#: web/app/components/SidePanel.vue:435
+#: web/app/components/SidePanel.vue:436
 msgid "Nothing yet. Put a text box on the slide."
 msgstr "Noch nichts. Legen Sie ein Textfeld auf die Folie."
 
-#: web/app/components/SidePanel.vue:435
+#: web/app/components/SidePanel.vue:436
 msgid "Nothing yet. Start writing."
 msgstr "Noch nichts. Fangen Sie an zu schreiben."
 
-#: web/app/components/SidePanel.vue:435
+#: web/app/components/SidePanel.vue:436
 msgid "Nothing yet. Type into a cell."
 msgstr "Noch nichts. Tippen Sie etwas in eine Zelle."
 
@@ -3285,7 +3285,7 @@ msgstr "Nummern"
 msgid "Object in paragraph {n}"
 msgstr "Objekt in Absatz {n}"
 
-#: web/app/components/ContextMenu.vue:22 web/app/components/ContextMenu.vue:23 web/app/components/SlideCanvas.vue:689
+#: web/app/components/ContextMenu.vue:22 web/app/components/ContextMenu.vue:23 web/app/components/SlideCanvas.vue:692
 msgid "Object menu"
 msgstr "Objektmenü"
 
@@ -3521,7 +3521,7 @@ msgstr "Übersicht (G)"
 msgid "PERT"
 msgstr "PERT"
 
-#: web/app/components/ImagePropertiesDialog.vue:34
+#: web/app/components/ImagePropertiesDialog.vue:35
 msgid "PNG (animated)"
 msgstr "PNG (animiert)"
 
@@ -3553,7 +3553,7 @@ msgstr "Paarweise nach Position"
 msgid "Paper"
 msgstr "Papier"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:183 web/app/components/StyleSpec.vue:193 web/app/components/StyleSpec.vue:194 web/app/lib/object-style-host.ts:51 web/app/lib/text-style-host.ts:10
+#: packages/claudia-server/src/claudia_server/thing_names.py:28 web/app/components/SidePanel.vue:184 web/app/components/StyleSpec.vue:193 web/app/components/StyleSpec.vue:194 web/app/lib/object-style-host.ts:51 web/app/lib/text-style-host.ts:10
 msgid "Paragraph"
 msgstr "Absatz"
 
@@ -3629,7 +3629,7 @@ msgstr "PivotTable als SQL"
 msgid "Place it"
 msgstr "Platzieren"
 
-#: web/app/components/SidePanel.vue:322
+#: web/app/components/SidePanel.vue:323
 msgid "Places that differ from now: {n}"
 msgstr "Stellen, die von jetzt abweichen: {n}"
 
@@ -3825,7 +3825,7 @@ msgstr "Zufallsgenerator…"
 msgid "Random generator"
 msgstr "Zufallsgenerator"
 
-#: web/app/components/SidePanel.vue:180
+#: web/app/components/SidePanel.vue:181
 msgid "Range"
 msgstr "Bereich"
 
@@ -4053,7 +4053,7 @@ msgstr "Ersetzt alten Text durch neuen Text (alle Vorkommen oder nur das n-te)."
 msgid "Replaces {family} {style} from {collection}, for every document on this server."
 msgstr "Ersetzt {family} {style} aus {collection}, für jedes Dokument auf diesem Server."
 
-#: web/app/components/SidePanel.vue:413
+#: web/app/components/SidePanel.vue:414
 msgid "Replay"
 msgstr "Wiedergabe"
 
@@ -4061,7 +4061,7 @@ msgstr "Wiedergabe"
 msgid "Replay History…"
 msgstr "Verlauf abspielen…"
 
-#: web/app/components/SidePanel.vue:413
+#: web/app/components/SidePanel.vue:414
 msgid "Replay the history: wheel over this panel, or Alt+Page Up"
 msgstr "Den Verlauf abspielen: Mausrad über diesem Bereich oder Alt+Bild auf"
 
@@ -4093,7 +4093,7 @@ msgstr "Ergebnis"
 msgid "Result name"
 msgstr "Ergebnisname"
 
-#: web/app/components/SheetGrid.vue:285
+#: web/app/components/SheetGrid.vue:286
 msgid "Result of the computation"
 msgstr "Ergebnis der Berechnung"
 
@@ -4125,7 +4125,7 @@ msgstr "90° nach links drehen"
 msgid "Rotate Right 90°"
 msgstr "90° nach rechts drehen"
 
-#: web/app/components/RotatePopover.vue:68 web/app/components/SlideCanvas.vue:664
+#: web/app/components/RotatePopover.vue:68 web/app/components/SlideCanvas.vue:667
 msgid "Rotate object"
 msgstr "Objekt drehen"
 
@@ -4233,7 +4233,7 @@ msgstr "SQL-Abfrage…"
 msgid "SQL editor"
 msgstr "SQL-Editor"
 
-#: web/app/components/ImagePropertiesDialog.vue:32
+#: web/app/components/ImagePropertiesDialog.vue:33
 msgid "SVG (vector)"
 msgstr "SVG (Vektor)"
 
@@ -4449,11 +4449,11 @@ msgstr "Dieses Dokument teilen"
 msgid "Share…"
 msgstr "Teilen…"
 
-#: web/app/components/SidePanel.vue:178 web/app/components/Workspace.vue:269
+#: web/app/components/SidePanel.vue:179 web/app/components/Workspace.vue:269
 msgid "Sheet"
 msgstr "Blatt"
 
-#: web/app/components/SheetGrid.vue:1009
+#: web/app/components/SheetGrid.vue:1012
 msgid "Sheet {name}"
 msgstr "Blatt {name}"
 
@@ -4509,7 +4509,7 @@ msgstr "Anzeigen als"
 msgid "Show as SQL…"
 msgstr "Als SQL anzeigen…"
 
-#: web/app/components/SidePanel.vue:427
+#: web/app/components/SidePanel.vue:428
 msgid "Show differences from now"
 msgstr "Unterschiede zu jetzt zeigen"
 
@@ -4533,7 +4533,7 @@ msgstr "Die Leiste mit den Feldern der PivotTable ein- oder ausblenden"
 msgid "Show password"
 msgstr "Passwort anzeigen"
 
-#: web/app/components/SidePanel.vue:496
+#: web/app/components/SidePanel.vue:497
 msgid "Show the document as it was at this message"
 msgstr "Das Dokument so zeigen, wie es bei dieser Nachricht war"
 
@@ -4593,7 +4593,7 @@ msgstr "Vorerst überspringen"
 msgid "Skipped {where}"
 msgstr "{where} übersprungen"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:23 web/app/components/SidePanel.vue:177
+#: packages/claudia-server/src/claudia_server/thing_names.py:24 web/app/components/SidePanel.vue:178
 msgid "Slide"
 msgstr "Folie"
 
@@ -4649,7 +4649,7 @@ msgstr "Sortiert einen Bereich nach den Werten anderer Bereiche gleicher Höhe: 
 msgid "Sorts the rows of a range by a column (the first unless given), up or down; with by_col TRUE it sorts the columns by a row."
 msgstr "Sortiert die Zeilen eines Bereichs nach einer Spalte (der ersten, wenn nichts angegeben), auf- oder absteigend; mit by_col TRUE werden die Spalten nach einer Zeile sortiert."
 
-#: web/app/components/ImagePropertiesDialog.vue:83 web/app/components/PivotPanel.vue:174 web/app/components/PivotPanel.vue:175
+#: web/app/components/ImagePropertiesDialog.vue:84 web/app/components/PivotPanel.vue:174 web/app/components/PivotPanel.vue:175
 msgid "Source"
 msgstr "Quelle"
 
@@ -4753,11 +4753,11 @@ msgstr "Format…"
 msgid "Suggest first"
 msgstr "Erst vorschlagen"
 
-#: web/app/components/SidePanel.vue:429
+#: web/app/components/SidePanel.vue:430
 msgid "Suggest going back to the document as it was after this step"
 msgstr "Vorschlagen, zum Dokument nach diesem Schritt zurückzugehen"
 
-#: web/app/components/SidePanel.vue:454
+#: web/app/components/SidePanel.vue:455
 msgid "Suggest going back to this checkpoint"
 msgstr "Vorschlagen, zu diesem Prüfpunkt zurückzukehren"
 
@@ -4833,7 +4833,7 @@ msgstr "TRUE, wenn der ganzzahlige Teil der Zahl ungerade ist."
 msgid "Tab / Shift + Tab"
 msgstr "Tab / Umschalt + Tab"
 
-#: web/app/components/OpenDialog.vue:101
+#: packages/claudia-server/src/claudia_server/thing_names.py:23 web/app/components/OpenDialog.vue:101 web/app/components/SidePanel.vue:177
 msgid "Table"
 msgstr "Tabelle"
 
@@ -6085,7 +6085,7 @@ msgstr "Dicker"
 msgid "Thicker border"
 msgstr "Dickerer Rahmen"
 
-#: web/app/components/SidePanel.vue:509
+#: web/app/components/SidePanel.vue:510
 msgid "Things to point at"
 msgstr "Dinge, auf die man verweisen kann"
 
@@ -6265,7 +6265,7 @@ msgstr "Dieser Server hat keinen Zugangsschlüssel, also zählen alle, die ihn e
 msgid "This server has no folder to add fonts to."
 msgstr "Dieser Server hat keinen Ordner, in den Schriften kommen könnten."
 
-#: web/app/lib/rendering.ts:120
+#: web/app/lib/rendering.ts:121
 msgid "This server has no tool set up to draw {type}."
 msgstr "Auf diesem Server ist kein Werkzeug eingerichtet, um {type} zu zeichnen."
 
@@ -6357,11 +6357,11 @@ msgstr "Das ausgewählte Objekt eine Vierteldrehung gegen den Uhrzeigersinn dreh
 msgid "Turn the object you have selected to an angle, in whole degrees"
 msgstr "Das ausgewählte Objekt auf einen Winkel in ganzen Grad drehen"
 
-#: web/app/components/SlideCanvas.vue:670
+#: web/app/components/SlideCanvas.vue:673
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr "Drehen: ziehen oder Pfeiltasten (mit Umschalt in 15°-Schritten)"
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SlideCanvas.vue:290 web/app/components/SlideCanvas.vue:313 web/app/components/SlideCanvas.vue:321 web/app/components/SlideCanvas.vue:343
+#: web/app/components/RotatePopover.vue:102 web/app/components/SlideCanvas.vue:293 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:324 web/app/components/SlideCanvas.vue:346
 msgid "Turned to {degrees}"
 msgstr "Gedreht auf {degrees}"
 
@@ -6505,7 +6505,7 @@ msgstr "Ansicht des Formats"
 msgid "Waiting for a name"
 msgstr "Wartet auf einen Namen"
 
-#: web/app/components/SidePanel.vue:401
+#: web/app/components/SidePanel.vue:402
 msgid "Waiting on {names}."
 msgstr "Wartet auf {names}."
 
@@ -6549,7 +6549,7 @@ msgstr "Was das Ergebnis am meisten bewegt"
 msgid "What regular payments (and a sum at the end) are worth today at a fixed rate."
 msgstr "Was regelmäßige Zahlungen (und eine Summe am Ende) heute bei festem Zins wert sind."
 
-#: web/app/components/SidePanel.vue:463
+#: web/app/components/SidePanel.vue:464
 msgid "What silence at a suggestion's deadline means"
 msgstr "Was Schweigen bei Ablauf der Frist eines Vorschlags bedeutet"
 
@@ -6577,7 +6577,7 @@ msgstr "So sehen {n} Ziehungen aus"
 msgid "What “{name}” sets itself. The rest comes from its parent."
 msgstr "Was „{name}“ selbst festlegt. Der Rest stammt vom übergeordneten Format."
 
-#: web/app/components/SidePanel.vue:377
+#: web/app/components/SidePanel.vue:378
 msgid "When I ask the AI, in this document:"
 msgstr "Wenn ich die KI bitte, in diesem Dokument:"
 
@@ -6617,7 +6617,7 @@ msgstr "Welcher Teil formatiert wird"
 msgid "Which side the border is on"
 msgstr "Auf welcher Seite der Rahmen liegt"
 
-#: web/app/components/SidePanel.vue:416
+#: web/app/components/SidePanel.vue:417
 msgid "Which steps the wheel visits"
 msgstr "Welche Schritte das Mausrad besucht"
 
@@ -6673,7 +6673,7 @@ msgstr "Breite"
 msgid "Will be added"
 msgstr "Wird hinzugefügt"
 
-#: web/app/components/SidePanel.vue:406
+#: web/app/components/SidePanel.vue:407
 msgid "Withdraw"
 msgstr "Zurückziehen"
 
@@ -6733,7 +6733,7 @@ msgstr "In das ausgewählte Textfeld schreiben"
 msgid "Write the pattern yourself…"
 msgstr "Muster selbst schreiben…"
 
-#: web/app/components/SidePanel.vue:484
+#: web/app/components/SidePanel.vue:485
 msgid "Write to everybody, or {ask} to ask the assistant. Say {help} to see what it can do."
 msgstr "Schreiben Sie allen, oder fragen Sie den Assistenten mit {ask}. Sagen Sie {help}, um zu sehen, was er kann."
 
@@ -6769,7 +6769,7 @@ msgstr "Sie sind jetzt Eigentümer von {doc}."
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "Sie können es trotzdem ändern – das ist eine Warnung, keine Ablehnung."
 
-#: web/app/components/SheetGrid.vue:444 web/app/components/SlideCanvas.vue:320 web/app/components/SlideCanvas.vue:329 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:489 web/app/components/TextContainers.vue:63 web/app/components/Workspace.vue:272 web/app/components/Workspace.vue:329 web/app/components/Workspace.vue:380 web/app/components/Workspace.vue:462 web/app/components/Workspace.vue:522 web/app/components/Workspace.vue:528 web/app/components/Workspace.vue:609 web/app/components/Workspace.vue:777 web/app/components/Workspace.vue:836 web/app/components/Workspace.vue:956 web/app/lib/base-session.ts:796 web/app/lib/text-session.ts:458
+#: web/app/components/SheetGrid.vue:445 web/app/components/SlideCanvas.vue:323 web/app/components/SlideCanvas.vue:332 web/app/components/SlideCanvas.vue:459 web/app/components/SlideCanvas.vue:492 web/app/components/TextContainers.vue:64 web/app/components/Workspace.vue:272 web/app/components/Workspace.vue:329 web/app/components/Workspace.vue:380 web/app/components/Workspace.vue:462 web/app/components/Workspace.vue:522 web/app/components/Workspace.vue:528 web/app/components/Workspace.vue:609 web/app/components/Workspace.vue:777 web/app/components/Workspace.vue:836 web/app/components/Workspace.vue:956 web/app/lib/base-session.ts:796 web/app/lib/text-session.ts:458
 msgid "You can only look at this document."
 msgstr "Sie können dieses Dokument nur ansehen."
 
@@ -6821,6 +6821,14 @@ msgstr "eine Claudia-Datei kommt so hinein, wie sie ist, nicht als neues Dokumen
 msgid "a cell reference"
 msgstr "ein Zellbezug"
 
+#: packages/claudia-server/src/claudia_server/tables.py:156
+msgid "a column cannot be moved in front of itself"
+msgstr "Eine Spalte kann nicht vor sich selbst verschoben werden"
+
+#: packages/claudia-server/src/claudia_server/tables.py:380
+msgid "a column has no setting {name!r}"
+msgstr "Eine Spalte hat keine Einstellung {name!r}"
+
 #: web/app/components/SearchPanel.vue:197 web/app/lib/search.ts:218
 msgid "a digit"
 msgstr "eine Ziffer"
@@ -6837,7 +6845,11 @@ msgstr "ein Raster aus Zufallszahlen (1 Zeile, 1 Spalte, von 0 bis 1 und keine g
 msgid "a letter"
 msgstr "ein Buchstabe"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:55
+#: packages/claudia-server/src/claudia_server/tables.py:419
+msgid "a merge is at least two boxes; split_cell undoes one"
+msgstr "Ein Verbund besteht aus mindestens zwei Feldern; split_cell hebt einen auf"
+
+#: packages/claudia-server/src/claudia_server/thing_names.py:56
 msgid "a name has at most {limit} characters"
 msgstr "Ein Name hat höchstens {limit} Zeichen"
 
@@ -6845,7 +6857,7 @@ msgstr "Ein Name hat höchstens {limit} Zeichen"
 msgid "a name has at most {max} characters"
 msgstr "Ein Name hat höchstens {max} Zeichen"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:53 web/app/lib/names.ts:82
+#: packages/claudia-server/src/claudia_server/thing_names.py:54 web/app/lib/names.ts:82
 msgid "a name needs some text"
 msgstr "Ein Name braucht etwas Text"
 
@@ -6877,11 +6889,15 @@ msgstr "Eine Palette enthält höchstens {limit} Farbrollen"
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 msgstr "eine Zufallszahl aus der genannten Verteilung, zum Beispiel RANDOM(\"normal\", 1000, 150). Ohne Argumente ist es RAND(). ``low`` und ``high`` schneiden die Verteilung ab (nur stetige). Verteilungen: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 
+#: packages/claudia-server/src/claudia_server/composes.py:315
+msgid "a range stays inside one box of a table"
+msgstr "Ein Bereich bleibt innerhalb eines Tabellenfelds"
+
 #: packages/claudia-server/src/claudia_server/app.py:340
 msgid "a recovery key, a name and a new password are needed"
 msgstr "Ein Wiederherstellungsschlüssel, ein Name und ein neues Passwort sind nötig"
 
-#: packages/claudia-server/src/claudia_server/composes.py:460
+#: packages/claudia-server/src/claudia_server/composes.py:504
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "Eine Bemerkung schlägt keine Änderung vor; weisen Sie sie stattdessen ab"
 
@@ -6897,11 +6913,15 @@ msgstr "Einer Rolle fehlt {key!r}"
 msgid "a role's id, name and colour are text"
 msgstr "ID, Name und Farbe einer Rolle sind Text"
 
+#: packages/claudia-server/src/claudia_server/tables.py:154
+msgid "a row cannot be moved in front of itself"
+msgstr "Eine Zeile kann nicht vor sich selbst verschoben werden"
+
 #: web/app/components/SearchPanel.vue:198 web/app/lib/search.ts:221
 msgid "a space"
 msgstr "ein Leerzeichen"
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:198
+#: packages/claudia-server/src/claudia_server/composes_words.py:201
 msgid "a suggestion stays inside its paragraph; remark on new paragraphs instead"
 msgstr "ein Vorschlag bleibt in seinem Absatz; zu neuen Absätzen ist eine Bemerkung möglich"
 
@@ -7097,7 +7117,7 @@ msgstr "abdunkeln"
 msgid "blocks must be a list of 1 to {limit} paragraph ids"
 msgstr "blocks muss eine Liste von 1 bis {limit} Absatz-IDs sein"
 
-#: packages/claudia-server/src/claudia_server/composes.py:384
+#: packages/claudia-server/src/claudia_server/composes.py:428
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr "blocks muss eine Liste von höchstens {limit} Absatz-IDs sein"
 
@@ -7129,6 +7149,10 @@ msgstr "cell_styles: Das Fenster darf nicht vor seinem Anfang enden"
 msgid "cells"
 msgstr "Zellen"
 
+#: packages/claudia-server/src/claudia_server/tables.py:195
+msgid "cells is a list of rows, each a list of words"
+msgstr "cells ist eine Liste von Zeilen, jede eine Liste von Texten"
+
 #: packages/claudia-server/src/claudia_server/computes.py:463
 msgid "cells: the window must not end before it starts"
 msgstr "cells: Das Fenster darf nicht vor seinem Anfang enden"
@@ -7149,7 +7173,7 @@ msgstr "Diagramm"
 msgid "chart type"
 msgstr "Diagrammtyp"
 
-#: web/app/components/SidePanel.vue:536
+#: web/app/components/SidePanel.vue:537
 msgid "chat message"
 msgstr "Chatnachricht"
 
@@ -7161,7 +7185,7 @@ msgstr "chat: {reason}"
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr "chat_log: limit muss von 1 bis {limit} gehen"
 
-#: web/app/components/SidePanel.vue:472
+#: web/app/components/SidePanel.vue:473
 msgid "close"
 msgstr "schließen"
 
@@ -7213,7 +7237,15 @@ msgstr "„{text}“ enthalten"
 msgid "copy, cut and paste, also from and to other programs"
 msgstr "kopieren, ausschneiden und einfügen, auch aus und in andere Programme"
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:108
+#: packages/claudia-server/src/claudia_server/tables.py:140
+msgid "count is from 1 to {limit} columns"
+msgstr "count liegt zwischen 1 und {limit} Spalten"
+
+#: packages/claudia-server/src/claudia_server/tables.py:138
+msgid "count is from 1 to {limit} rows"
+msgstr "count liegt zwischen 1 und {limit} Zeilen"
+
+#: packages/claudia-server/src/claudia_server/composes_words.py:111
 msgid "count must be from 1 to {limit}"
 msgstr "count muss zwischen 1 und {limit} liegen"
 
@@ -7289,7 +7321,7 @@ msgstr "nicht mit „{text}“ beginnen"
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "Dokument-IDs bestehen aus 1–64 Buchstaben, Ziffern, „-“ oder „_“"
 
-#: web/app/components/SidePanel.vue:371
+#: web/app/components/SidePanel.vue:372
 msgid "document panel"
 msgstr "Dokumentbereich"
 
@@ -7301,6 +7333,10 @@ msgstr "Dokument {doc}"
 msgid "e raised to a power."
 msgstr "e hoch einer Potenz."
 
+#: packages/claudia-server/src/claudia_server/tables.py:266 packages/claudia-server/src/claudia_server/tables.py:269
+msgid "each change is [row, column, text or null]"
+msgstr "Jede Änderung ist [Zeile, Spalte, Text oder null]"
+
 #: web/app/components/ShareDialog.vue:47
 msgid "edit"
 msgstr "bearbeiten"
@@ -7309,7 +7345,7 @@ msgstr "bearbeiten"
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr "eine Zelle bearbeiten (andere bleiben währenddessen ausgeschlossen)"
 
-#: web/app/components/SheetGrid.vue:1161
+#: web/app/components/SheetGrid.vue:1164
 msgid "editing cell"
 msgstr "Zelle wird bearbeitet"
 
@@ -7345,7 +7381,7 @@ msgstr "Fehler {value}: {why}"
 msgid "every role is an object with id, name, purpose and colour"
 msgstr "Jede Rolle ist ein Objekt mit id, name, purpose und colour"
 
-#: web/app/components/SidePanel.vue:434
+#: web/app/components/SidePanel.vue:435
 msgid "everything that was done to this document"
 msgstr "alles, was mit diesem Dokument gemacht wurde"
 
@@ -7357,7 +7393,7 @@ msgstr "genau"
 msgid "example.com:8420"
 msgstr "example.com:8420"
 
-#: packages/claudia-server/src/claudia_server/composes.py:203
+#: packages/claudia-server/src/claudia_server/composes.py:207
 msgid "export_office: format must be \"docx\" or \"odt\""
 msgstr "export_office: format muss „docx“ oder „odt“ sein"
 
@@ -7413,6 +7449,10 @@ msgstr "Werten Namen geben (spätere dürfen frühere verwenden) und damit rechn
 msgid "give the CSS as set properties or as text, not both"
 msgstr "Geben Sie das CSS als gesetzte Eigenschaften oder als Text an, nicht beides"
 
+#: packages/claudia-server/src/claudia_server/tables.py:192
+msgid "give the table's rows and cols, or the words as cells"
+msgstr "Geben Sie die Zeilen und Spalten (rows, cols) der Tabelle an oder die Texte als cells"
+
 #: web/app/components/OutcomePopover.vue:107
 msgid "greatest"
 msgstr "größter"
@@ -7433,7 +7473,7 @@ msgstr "hier"
 msgid "high"
 msgstr "hoch"
 
-#: web/app/components/SidePanel.vue:397
+#: web/app/components/SidePanel.vue:398
 msgid "history and chat"
 msgstr "Verlauf und Chat"
 
@@ -7493,7 +7533,7 @@ msgstr "Interner Serverfehler"
 msgid "invalid command: {reason!r}"
 msgstr "Ungültiger Befehl: {reason!r}"
 
-#: web/app/components/SidePanel.vue:502
+#: web/app/components/SidePanel.vue:503
 msgid "is working"
 msgstr "arbeitet"
 
@@ -7533,9 +7573,9 @@ msgstr "leave: höchstens {limit} auf einmal"
 msgid "leave: each is {at, match}, at being a cell {sheet, row, col} and match a number or null"
 msgstr "leave: jeder Eintrag ist {at, match}, at eine Zelle {sheet, row, col} und match eine Zahl oder null"
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:135
-msgid "leave: each is {at, match}, at being a place the search listed ({block} or {block, object, source}) and match a number or null"
-msgstr "leave: jeder Eintrag ist {at, match}, at ein Ort, den die Suche aufgelistet hat ({block} oder {block, object, source}), und match eine Zahl oder null"
+#: packages/claudia-server/src/claudia_server/composes_search.py:142
+msgid "leave: each is {at, match}, at being a place the search listed ({block}, {block, object, source} or {block, table, row, col}) and match a number or null"
+msgstr "leave: jedes ist {at, match}, at ist ein Ort, den die Suche genannt hat ({block}, {block, object, source} oder {block, table, row, col}), match eine Zahl oder null"
 
 #: packages/claudia-server/src/claudia_server/creates_search.py:117
 msgid "leave: each is {at, match}, at being a place the search listed ({slide, object, source} or {slide, source}) and match a number or null"
@@ -7709,6 +7749,10 @@ msgstr "Keine Funktion namens {name!r}"
 msgid "no help topic {id!r}"
 msgstr "Kein Hilfethema {id!r}"
 
+#: packages/claudia-server/src/claudia_server/tables.py:449
+msgid "no merged box starts at row {row!r}, column {col!r}"
+msgstr "In Zeile {row!r}, Spalte {col!r} beginnt kein verbundenes Feld"
+
 #: packages/claudia-server/src/claudia_server/protocol.py:401
 msgid "no method {name!r}"
 msgstr "Keine Methode {name!r}"
@@ -7769,11 +7813,11 @@ msgstr "Objekt"
 msgid "objects must be a list of at most {limit} object ids"
 msgstr "objects muss eine Liste von höchstens {limit} Objekt-IDs sein"
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:58
+#: packages/claudia-server/src/claudia_server/composes_words.py:61
 msgid "occurrence counts from 1"
 msgstr "occurrence zählt ab 1"
 
-#: packages/claudia-server/src/claudia_server/composes.py:484
+#: packages/claudia-server/src/claudia_server/composes.py:528
 msgid "offset is outside the paragraph"
 msgstr "Die Position liegt außerhalb des Absatzes"
 
@@ -7821,7 +7865,7 @@ msgstr "nur ansehen"
 msgid "only owners, and editors on their own work, redact"
 msgstr "Schwärzen dürfen nur Eigentümer, und Bearbeiter bei ihrer eigenen Arbeit"
 
-#: packages/claudia-server/src/claudia_server/composes.py:446 packages/claudia-server/src/claudia_server/composes_words.py:195
+#: packages/claudia-server/src/claudia_server/composes.py:490 packages/claudia-server/src/claudia_server/composes_words.py:198
 msgid "only the assistant makes suggestions"
 msgstr "Nur der Assistent macht Vorschläge"
 
@@ -7893,7 +7937,7 @@ msgstr "Teil eines Ergebnisses"
 msgid "pdftocairo"
 msgstr "pdftocairo"
 
-#: web/app/components/SidePanel.vue:472
+#: web/app/components/SidePanel.vue:473
 msgid "peek"
 msgstr "ansehen"
 
@@ -7949,7 +7993,7 @@ msgstr "Drucken erfordert eine sichere Verbindung (https oder dieser Computer)"
 msgid "purpose of {name}"
 msgstr "Zweck von {name}"
 
-#: web/app/components/SheetGrid.vue:1098
+#: web/app/components/SheetGrid.vue:1101
 msgid "purpose of {name} column {n}"
 msgstr "Zweck von {name} Spalte {n}"
 
@@ -8041,6 +8085,10 @@ msgstr "Zeile {n} ist {style}"
 msgid "row {n}’s style"
 msgstr "Format der Zeile {n}"
 
+#: packages/claudia-server/src/claudia_server/tables.py:125
+msgid "say after or before, not both"
+msgstr "Geben Sie after oder before an, nicht beides"
+
 #: web/app/components/RandomDialog.vue:130
 msgid "scale"
 msgstr "Skala"
@@ -8053,7 +8101,7 @@ msgstr "Hilfe durchsuchen"
 msgid "search_replace: that would change {count} cells, at most {limit} at a time: narrow the search"
 msgstr "search_replace: Das würde {count} Zellen ändern, höchstens {limit} auf einmal: Grenzen Sie die Suche ein"
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:130 packages/claudia-server/src/claudia_server/creates_search.py:112
+#: packages/claudia-server/src/claudia_server/composes_search.py:137 packages/claudia-server/src/claudia_server/creates_search.py:112
 msgid "search_replace: that would change {count} texts, at most {limit} at a time: narrow the search"
 msgstr "search_replace: Das würde {count} Texte ändern, höchstens {limit} auf einmal: Grenzen Sie die Suche ein"
 
@@ -8069,7 +8117,7 @@ msgstr "einen Block auswählen"
 msgid "select an object (colleagues cannot change it while you hold it)"
 msgstr "ein Objekt auswählen (Kolleginnen und Kollegen können es nicht ändern, solange Sie es halten)"
 
-#: web/app/components/SidePanel.vue:549
+#: web/app/components/SidePanel.vue:550
 msgid "send"
 msgstr "senden"
 
@@ -8105,11 +8153,11 @@ msgstr "Blätter"
 msgid "show must be one of {shows}"
 msgstr "show muss eines von {shows} sein"
 
-#: web/app/components/SidePanel.vue:465
+#: web/app/components/SidePanel.vue:466
 msgid "silence = agree"
 msgstr "Schweigen = Zustimmung"
 
-#: web/app/components/SidePanel.vue:464
+#: web/app/components/SidePanel.vue:465
 msgid "silence = decline"
 msgstr "Schweigen = Ablehnung"
 
@@ -8117,7 +8165,7 @@ msgstr "Schweigen = Ablehnung"
 msgid "skipped"
 msgstr "übersprungen"
 
-#: web/app/components/SlideCanvas.vue:579
+#: web/app/components/SlideCanvas.vue:582
 msgid "slide"
 msgstr "Folie"
 
@@ -8161,7 +8209,7 @@ msgstr "mit „{text}“ beginnen"
 msgid "structure: axis must be \"row\" or \"col\""
 msgstr "structure: axis muss „row“ oder „col“ sein"
 
-#: web/app/components/SidePanel.vue:473
+#: web/app/components/SidePanel.vue:474
 msgid "suggest switching here"
 msgstr "Wechsel hierher vorschlagen"
 
@@ -8197,7 +8245,7 @@ msgstr "Text"
 msgid "text box"
 msgstr "Textfeld"
 
-#: web/app/components/SlideCanvas.vue:632
+#: web/app/components/SlideCanvas.vue:635
 msgid "text of the object"
 msgstr "Text des Objekts"
 
@@ -8205,7 +8253,7 @@ msgstr "Text des Objekts"
 msgid "that is not your current password"
 msgstr "Das ist nicht Ihr aktuelles Passwort"
 
-#: packages/claudia-server/src/claudia_server/composes.py:263
+#: packages/claudia-server/src/claudia_server/composes.py:277
 msgid "that would make too many paragraphs"
 msgstr "Das ergäbe zu viele Absätze"
 
@@ -8248,6 +8296,10 @@ msgstr "die Zelle des Ergebnisbereichs, die neben dem Treffer im Suchbereich lie
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the cells ``rows`` down and ``columns`` across from the reference, with the reference's size unless a height and a width are given. Its dependencies are found while it runs."
 msgstr "die Zellen ``rows`` weiter unten und ``columns`` weiter rechts vom Bezug, in der Größe des Bezugs, wenn keine Höhe und Breite angegeben sind. Seine Abhängigkeiten werden beim Ausführen gefunden."
+
+#: packages/claudia-server/src/claudia_server/tables.py:199
+msgid "the cells are more than the table's rows and cols"
+msgstr "Die Texte (cells) sind mehr, als die Tabelle Zeilen und Spalten hat"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the cells that the text names (``\"B\"&A1``, ``\"Sheet2!A1:A5\"``). Its dependencies are found while it runs."
@@ -8317,7 +8369,7 @@ msgstr "der größte Wert"
 msgid "the mean of the values"
 msgstr "der Mittelwert der Werte"
 
-#: packages/claudia-server/src/claudia_server/composes.py:400 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:224
+#: packages/claudia-server/src/claudia_server/composes.py:444 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:224
 msgid "the new style would look just like “{name}”"
 msgstr "Der neue Stil sähe genauso aus wie „{name}“"
 
@@ -8341,7 +8393,7 @@ msgstr "die Position (ab 1) des Wertes in einer Zeile oder Spalte. Typ 0 ist ein
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr "die Position (ab 1) des Wertes. Vergleichsmodus 0 ist genau, -1 der genaue Wert oder sonst der nächstkleinere, 1 oder sonst der nächstgrößere, 2 genau mit Platzhaltern. Suchmodus 1 sucht vom ersten, -1 vom letzten. Nicht gefunden ergibt #N/A."
 
-#: packages/claudia-server/src/claudia_server/composes.py:258
+#: packages/claudia-server/src/claudia_server/composes.py:272 packages/claudia-server/src/claudia_server/composes.py:327
 msgid "the range ends before it starts"
 msgstr "Der Bereich endet vor seinem Anfang"
 
@@ -8381,7 +8433,7 @@ msgstr "der Server listet keine Schriften auf ({status})"
 msgid "the sheet is {style}"
 msgstr "das Blatt ist {style}"
 
-#: web/app/lib/print/source.ts:251
+#: web/app/lib/print/source.ts:256
 msgid "the sheets"
 msgstr "die Tabellen"
 
@@ -8389,7 +8441,7 @@ msgstr "die Tabellen"
 msgid "the sheet’s style"
 msgstr "das Format des Blatts"
 
-#: web/app/lib/print/source.ts:199
+#: web/app/lib/print/source.ts:204
 msgid "the slides"
 msgstr "die Folien"
 
@@ -8405,7 +8457,19 @@ msgstr "der Zellenanfang"
 msgid "the start of the text"
 msgstr "der Textanfang"
 
-#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:541 web/app/lib/print/source.ts:128
+#: packages/claudia-server/src/claudia_server/tables.py:423
+msgid "the table has no box where row {row!r} and column {col!r} cross"
+msgstr "Die Tabelle hat kein Feld, in dem sich Zeile {row!r} und Spalte {col!r} kreuzen"
+
+#: packages/claudia-server/src/claudia_server/tables.py:116
+msgid "the table has no column {id!r}"
+msgstr "Die Tabelle hat keine Spalte {id!r}"
+
+#: packages/claudia-server/src/claudia_server/tables.py:114
+msgid "the table has no row {id!r}"
+msgstr "Die Tabelle hat keine Zeile {id!r}"
+
+#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:541 web/app/lib/print/source.ts:130
 msgid "the text"
 msgstr "der Text"
 
@@ -8437,7 +8501,7 @@ msgstr "der Wert oder die Alternative, wenn der Wert ein Fehler irgendeiner Art 
 msgid "the whole table, header included"
 msgstr "die ganze Tabelle, einschließlich Kopfzeile"
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:67
+#: packages/claudia-server/src/claudia_server/composes_words.py:70
 msgid "the words {find!r} are not in paragraph {block}; read it again and quote it exactly"
 msgstr "die Wörter {find!r} stehen nicht in Absatz {block}; bitte erneut lesen und genau zitieren"
 
@@ -8461,7 +8525,7 @@ msgstr "Es gibt keine frühere Liste dieser Art, die sich fortsetzen ließe"
 msgid "there is no line called {line!r}"
 msgstr "Es gibt keine Linie namens {line!r}"
 
-#: packages/claudia-server/src/claudia_server/composes.py:482 packages/claudia-server/src/claudia_server/composes_words.py:112 packages/claudia-server/src/claudia_server/composes_words.py:49
+#: packages/claudia-server/src/claudia_server/composes.py:317 packages/claudia-server/src/claudia_server/composes.py:526 packages/claudia-server/src/claudia_server/composes_words.py:115 packages/claudia-server/src/claudia_server/composes_words.py:52
 msgid "there is no paragraph {block!r}"
 msgstr "Es gibt keinen Absatz {block!r}"
 
@@ -8477,11 +8541,11 @@ msgstr "Auf diesem Verlauf gibt es keinen Schritt {revision}"
 msgid "there is no such reference here"
 msgstr "hier gibt es keinen solchen Verweis"
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:165
+#: packages/claudia-server/src/claudia_server/composes_words.py:168
 msgid "there is no text to add"
 msgstr "es gibt keinen Text zum Hinzufügen"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:121
+#: packages/claudia-server/src/claudia_server/thing_names.py:122
 msgid "there is nothing called {id!r} in this document"
 msgstr "In diesem Dokument gibt es nichts mit der ID {id!r}"
 
@@ -8501,11 +8565,15 @@ msgstr "Dieses Dokument hat keine Palette"
 msgid "this document has no styles"
 msgstr "Dieses Dokument hat keine Stile"
 
+#: packages/claudia-server/src/claudia_server/tables.py:105
+msgid "this document has no table {id!r}"
+msgstr "Dieses Dokument hat keine Tabelle {id!r}"
+
 #: packages/claudia-server/src/claudia_server/rendered.py:174
 msgid "this document has nothing rendered with the id {id!r}"
 msgstr "Dieses Dokument enthält nichts Gerendertes mit der Kennung {id!r}"
 
-#: packages/claudia-server/src/claudia_server/replay.py:161 packages/claudia-server/src/claudia_server/thing_names.py:35
+#: packages/claudia-server/src/claudia_server/replay.py:161 packages/claudia-server/src/claudia_server/thing_names.py:36
 msgid "this document has nothing that can be named"
 msgstr "Dieses Dokument enthält nichts, was einen Namen haben kann"
 
@@ -8513,7 +8581,7 @@ msgstr "Dieses Dokument enthält nichts, was einen Namen haben kann"
 msgid "this document is not a presentation"
 msgstr "Dieses Dokument ist keine Präsentation"
 
-#: packages/claudia-server/src/claudia_server/composes.py:105 packages/claudia-server/src/claudia_server/composes_contents.py:28 packages/claudia-server/src/claudia_server/composes_search.py:81 packages/claudia-server/src/claudia_server/composes_words.py:41
+#: packages/claudia-server/src/claudia_server/composes.py:109 packages/claudia-server/src/claudia_server/composes_contents.py:28 packages/claudia-server/src/claudia_server/composes_search.py:84 packages/claudia-server/src/claudia_server/composes_words.py:41
 msgid "this document is not a text"
 msgstr "Dieses Dokument ist kein Text"
 
@@ -8585,7 +8653,7 @@ msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "dieser Server hält seine Dokumente nur im Speicher und kann keine Datei aufnehmen"
 
-#: packages/claudia-server/src/claudia_server/composes.py:471
+#: packages/claudia-server/src/claudia_server/composes.py:515
 msgid "this suggestion is not open any more"
 msgstr "Dieser Vorschlag ist nicht mehr offen"
 
@@ -8629,7 +8697,7 @@ msgstr "trace: Fenster zu groß (höchstens {limit} Positionen)"
 msgid "trials"
 msgstr "Versuche"
 
-#: web/app/components/SheetGrid.vue:1034
+#: web/app/components/SheetGrid.vue:1037
 msgid "type here to add a row"
 msgstr "hier tippen, um eine Zeile hinzuzufügen"
 
@@ -8693,7 +8761,7 @@ msgstr "Wort"
 msgid "words"
 msgstr "Wörter"
 
-#: packages/claudia-server/src/claudia_server/composes.py:414
+#: packages/claudia-server/src/claudia_server/composes.py:458
 msgid "words must be from 0 to {limit}"
 msgstr "words muss von 0 bis {limit} gehen"
 
@@ -8921,7 +8989,7 @@ msgstr "{file} ist keine Schrift, die sich lesen lässt."
 msgid "{file} is not used."
 msgstr "{file} wird nicht genutzt."
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:76
+#: packages/claudia-server/src/claudia_server/composes_words.py:79
 msgid "{find!r} is {count} times in paragraph {block}, not {occurrence}"
 msgstr "{find!r} steht {count}-mal in Absatz {block}, nicht {occurrence}-mal"
 
@@ -9089,7 +9157,7 @@ msgstr "{method}: Parameter {parameter!r} fehlt"
 msgid "{method}: {parameter} {reason}"
 msgstr "{method}: {parameter} {reason}"
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:89 packages/claudia-server/src/claudia_server/creates_search.py:80
+#: packages/claudia-server/src/claudia_server/composes_search.py:92 packages/claudia-server/src/claudia_server/creates_search.py:80
 msgid "{method}: {why}"
 msgstr "{method}: {why}"
 
@@ -9141,7 +9209,7 @@ msgstr "{name} gehört nicht zu den Methoden, die dieses Konto aufrufen darf"
 msgid "{name} needs the editor role"
 msgstr "{name} braucht die Rolle „editor“"
 
-#: web/app/components/SheetGrid.vue:1097
+#: web/app/components/SheetGrid.vue:1100
 msgid "{name} · {purpose} — change what this column is for"
 msgstr "{name} · {purpose} – ändern, wofür diese Spalte gedacht ist"
 
@@ -9209,7 +9277,7 @@ msgstr "{n} Min."
 msgid "{n} min ago"
 msgstr "vor {n} Min."
 
-#: web/app/components/SidePanel.vue:431
+#: web/app/components/SidePanel.vue:432
 msgid "{n} newer changes by others"
 msgstr "{n} neuere Änderungen anderer"
 
@@ -9249,7 +9317,7 @@ msgstr "{n} Stichproben"
 msgid "{n} samples were drawn, there are too many combinations to run all."
 msgstr "Es wurden {n} Stichproben gezogen, denn es gibt zu viele Kombinationen, um alle durchzurechnen."
 
-#: web/app/components/SidePanel.vue:237
+#: web/app/components/SidePanel.vue:238
 msgid "{n} things to point at. Use the arrow keys, then Enter."
 msgstr "{n} Dinge zum Verweisen. Mit den Pfeiltasten wählen, dann Eingabe."
 
@@ -9337,7 +9405,7 @@ msgstr "{type}-Container: {words}"
 msgid "{user} (you)"
 msgstr "{user} (Sie)"
 
-#: web/app/components/SlideCanvas.vue:649
+#: web/app/components/SlideCanvas.vue:652
 msgid "{user} is working on this"
 msgstr "{user} arbeitet daran"
 
@@ -9345,7 +9413,7 @@ msgstr "{user} arbeitet daran"
 msgid "{user} left this document."
 msgstr "{user} hat dieses Dokument verlassen."
 
-#: web/app/components/SlideCanvas.vue:649
+#: web/app/components/SlideCanvas.vue:652
 msgid "{user} selected this"
 msgstr "{user} hat dies ausgewählt"
 
@@ -9353,7 +9421,7 @@ msgstr "{user} hat dies ausgewählt"
 msgid "{what} (kept as “{name}”)"
 msgstr "{what} (behalten als „{name}“)"
 
-#: packages/claudia-server/src/claudia_server/composes.py:141
+#: packages/claudia-server/src/claudia_server/composes.py:145 packages/claudia-server/src/claudia_server/composes.py:325
 msgid "{what} is outside the paragraph"
 msgstr "{what} liegt außerhalb des Absatzes"
 
@@ -9433,15 +9501,15 @@ msgstr "{what}: {problem}"
 msgid "{who} has been asked to take over {doc}. Until they accept, you are still the owner. You will become an editor the moment they do."
 msgstr "{who} wurde gebeten, {doc} zu übernehmen. Bis die Person annimmt, bleiben Sie Eigentümer. Sobald sie annimmt, werden Sie Bearbeiter."
 
-#: web/app/components/SidePanel.vue:400
+#: web/app/components/SidePanel.vue:401
 msgid "{who} suggests going to {line}."
 msgstr "{who} schlägt vor, zu {line} zu gehen."
 
-#: web/app/components/ImagePropertiesDialog.vue:60
+#: web/app/components/ImagePropertiesDialog.vue:61
 msgid "{width} × {height} px"
 msgstr "{width} × {height} px"
 
-#: web/app/components/SheetGrid.vue:1146
+#: web/app/components/SheetGrid.vue:1149
 msgid "· editing"
 msgstr "· bearbeitet gerade"
 
@@ -9469,7 +9537,7 @@ msgstr "„{name}“ ist ein Stil für {kind} und passt nicht zu {where}"
 msgid "“{requested}” is not on this server; the preview and the PDF use {used} for it."
 msgstr "„{requested}“ ist nicht auf diesem Server; Vorschau und PDF verwenden dafür {used}."
 
-#: web/app/components/SidePanel.vue:507
+#: web/app/components/SidePanel.vue:508
 msgid "← Back where I was"
 msgstr "← Zurück, wo ich war"
 
@@ -9481,22 +9549,22 @@ msgstr "← Formate"
 msgid "↑↓ choose · Tab to “Show as” · Enter puts it in · Esc closes"
 msgstr "↑↓ auswählen · Tab zu „Anzeigen als“ · Eingabe setzt ein · Esc schließt"
 
-#: web/app/components/SidePanel.vue:454
+#: web/app/components/SidePanel.vue:455
 msgid "↺ restore"
 msgstr "↺ wiederherstellen"
 
-#: web/app/components/SidePanel.vue:429
+#: web/app/components/SidePanel.vue:430
 msgid "↺ restore this step"
 msgstr "↺ diesen Schritt wiederherstellen"
 
-#: web/app/components/SidePanel.vue:496
+#: web/app/components/SidePanel.vue:497
 msgid "▶ here"
 msgstr "▶ hier"
 
-#: web/app/components/SidePanel.vue:496
+#: web/app/components/SidePanel.vue:497
 msgid "▷ go here"
 msgstr "▷ hierher"
 
-#: web/app/components/SidePanel.vue:453
+#: web/app/components/SidePanel.vue:454
 msgid "◆ saved: {label}"
 msgstr "◆ gespeichert: {label}"

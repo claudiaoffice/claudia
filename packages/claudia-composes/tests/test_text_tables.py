@@ -439,3 +439,25 @@ def test_every_table_command_survives_the_log():
 
     for command in commands:
         assert registry.decode(encode(command)) == command, command.kind
+
+
+# -- a reference written in a box (step H, D1210) ---------------------------------------------------------------------
+def test_a_box_may_hold_a_reference_which_is_a_field_like_in_any_paragraph():
+    from claudia_core import FIELD_CHAR, RefField, SetField  # noqa: PLC0415
+
+    d = table_in_a_text()
+    seen = []
+    d.subscribe(seen.append)
+    d.execute(InsertText(box("r2", "c1"), 0, "see " + FIELD_CHAR, fields=(RefField("b1"),)), author="ann")
+    assert d.model.fields_of(box("r2", "c1")) == (RefField("b1"),)
+    assert any(e.to_data()["type"] == "block_fields" for e in seen if hasattr(e, "to_data"))
+    d.execute(SetField(box("r2", "c1"), 0, RefField("b1", "text")), author="ann")
+    assert d.model.fields_of(box("r2", "c1")) == (RefField("b1", "text"),)
+    seen.clear()
+    d.execute(DeleteText(box("r2", "c1"), 3, 2), author="ann")
+    assert d.model.fields_of(box("r2", "c1")) == () and words(d, "r2", "c1") == "see"
+    assert any(e.to_data()["type"] == "block_fields" for e in seen if hasattr(e, "to_data"))
+    d.undo("ann")
+    assert d.model.fields_of(box("r2", "c1")) == (RefField("b1", "text"),)
+    d.execute(SetField(box("r2", "c1"), 0, RefField("b1")), author="ann")
+    assert d.model.fields_of("b1") == ()
