@@ -162,7 +162,7 @@ describe('containers in a text', () => {
     expect(state.selectedObject).toBe('o9')
   })
   it('offers the shapes the server has, and keeps the ones the document uses apart', async () => {
-    const { session, state } = await opened()
+    const { state } = await opened()
     expect(state.library.map((s) => s.id)).toEqual(['circle', 'star'])
     expect(Object.keys(state.shapes)).toEqual(['circle'])
   })

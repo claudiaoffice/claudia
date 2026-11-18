@@ -237,11 +237,11 @@ def odf_place(element: etree._Element, w: int, h: int, rotation: int, *, dx: int
     if turn is None:
         element.set(x, _cm(dx))
         element.set(y, _cm(-dy))
-        element.attrib.pop(transform, None)
+        element.attrib.pop(transform, "")
     else:
         element.set(transform, turn)
-        element.attrib.pop(x, None)
-        element.attrib.pop(y, None)
+        element.attrib.pop(x, "")
+        element.attrib.pop(y, "")
 
 
 def odf_offset_of(element: etree._Element, properties: Mapping[str, str]) -> tuple[int, int]:

@@ -77,8 +77,6 @@ def picture_style_name(anchor: BlockAnchor) -> str:
     return odf_name(PICTURE_STYLE, anchor)
 
 
-#: The style of a picture that floats over the text, the one a picture of a file written before wrapping had.
-PICTURE_STYLE_XML = picture_style_xml(BlockAnchor("", 0))
 _EXTENSION = {"jpeg": "jpg"}
 _MEDIA_TYPE = {"svg": "image/svg+xml", "png": "image/png", "jpeg": "image/jpeg", "gif": "image/gif", "bmp": "image/bmp"}
 

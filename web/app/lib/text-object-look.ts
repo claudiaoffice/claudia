@@ -2,12 +2,10 @@
 // data the layer draws. The same facets are read as in creates' `SlideCanvas.vue` — a text box its box, a shape its
 // outline's paint, the words their text and paragraph (D304) — by the server's own `style_model`, so no list of
 // properties is kept here. At 1:1, a text is not scaled.
-import type { BlockAnchor, StyleDef, VisualObject } from './objects'
-import { wordsCssOf, cssOf, pointer } from './objects'
+import { cssOf, pointer, wordsCssOf, type BlockAnchor, type StyleDef, type StyleModel, type VisualObject } from './objects'
 import { imageDataUrl } from './images'
 import { facetCss } from './slide-style'
 import { withDisplayInk } from './style-css'
-import type { StyleModel } from './objects'
 
 type Css = Record<string, string>
 
