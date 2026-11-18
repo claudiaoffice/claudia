@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePointed } from '~/lib/pointed'
 import { lookOnly } from '~/lib/replay'
-import { replayTints } from '~/lib/replay-tint'
+import { viewTints } from '~/lib/replay-tint'
 // The slide on screen: its objects, and what people do to them. A click selects (and holds) an object, dragging moves
 // it, the handles resize it, a double click or Enter edits its text, Delete removes it, and a right click offers the
 // same "Edit text"/"Delete" at the point clicked rather than letting the browser's own menu show through. A handle above
@@ -36,7 +36,7 @@ const emit = defineEmits<{ styles: []; agenda: [id: string] }>()
 const session = props.session
 const state = session.state
 /** What a replay marks on this slide (D553): by object, what the step changed or what changed after it. */
-const tints = computed(() => replayTints(state.replay))
+const tints = computed(() => viewTints(state))
 const replayClass = (id: string) => {
   const tint = tints.value.object(id)
   return tint && `replay-${tint}`
