@@ -470,3 +470,9 @@ truth. No new decisions: proposals the code had built became current (D230, D246
 D503, D681), DOC-03's supersessions were made (D44 by D120, D84 by D430, D115 by D504), and notes were added where a
 decision's "not built" was no longer true. Method and the full list: `implementation-notes/log-audit-2026-11-17.md`.
 
+
+## Workflow, 2026-11-18 (branch `workflow`)
+
+The owner asked how Claudia could support deep work and the organisation and reflection of one's own working process. A round of mocks (focus and quiet mode, session intent, session timeline, corkboard in all three apps, binder) followed; the owner liked the quiet mode and the corkboard, dropped the heatmap and the end-of-session reflection, found the first binder too heavy and chose a reduced "Here / Everything" look that he wants to think about further. On the binder's storage he decided: a private drawer inside the document, deleted when the person leaves, never readable by owners (not even with a switch), and sharing as a copy. The feature is called **workflow**: a fluent flow of work with good focus and goal achievement. Backlog: E16.
+
+Decisions: D1101–D1116 (D1103, D1104, D1107, D1109 and D1115 are proposals still undecided).
