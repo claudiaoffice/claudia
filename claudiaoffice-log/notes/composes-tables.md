@@ -241,8 +241,8 @@ paragraphs.
 ## 11. Slices, in order (TDD; each is a patch against `tables-in-composes`)
 
 **Status 2026-11-18:** S0 and S1 are built and tested: the kernel, the text model, and the server (`claudia_server/tables.py`:
-the wire methods, box typing through `replace_text`, search kind `table`, the AI lens and allow-list; D1212). S2, S3, S4
-and S6 are not built; the owner's order is: layout and clients (S2, S3), then odt/docx (S4), then stop.
+the wire methods, box typing through `replace_text`, search kind `table`, the AI lens and allow-list; D1212). S2 and S3 are built
+and tested (layout, web, manifest and menus of the desktop clients, German; D1213, `implementation-notes/composes-tables-clients.md`); S4 (odt/docx) is next, then stop. S5 and S6 are not built.
 
 | Slice | What | Needs |
 |---|---|---|
@@ -294,13 +294,17 @@ Still open:
   `printable` looked for a wire `image` that never existed; it resolves the picture from the definition now.
 - **Size 3, open.** Boxes are not in `reading_order` (D1212): a box cannot be a list item or a heading. Nobody asked for
   either; say so if a box should hold a list.
+- **Size 3, open (found in S2/S3).** The Insert ▸ Table… dialog cannot yet make a table from selected text or from a
+  computes range (mock B shows both). Merge Cells works on the box and its neighbour only (D1213).
+- **Size 3, open.** `TableSource` (kernel protocol for linked tables) has no reader until E9.33.
 - Nothing of size 1 or 2. (The docx import does report `table` today; `import-export-coverage-2026-11-14.md` still
   says "no loss list at all", which is out of date.)
 
 ## 15. Not verified
 
-- The layout engine (TypeScript), the web client and the GTK shell have no table code yet; nothing has been looked at
-  in a browser or in GNOME.
+- The layout engine and the web client are tested with unit tests only; **nothing has been looked at in a browser or in
+  GNOME**: the focus between a box's field and the text editor, a menu opened with the mouse after typing in a box, and
+  the look of the island next to the printed pages are unverified. The GTK shell only has the new manifest entries.
 - The odt and docx element names for tables are from memory of the formats, not yet checked against real files; both
   exports report `table` as a loss until the writers exist.
 - The mock-ups were drawn and rendered with `rsvg-convert` (Inter is installed here, Fraunces is not: the serif in the

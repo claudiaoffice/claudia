@@ -34,6 +34,18 @@ describe('from a session to the layout library', () => {
     expect(doc).toMatchObject({ blocks: [{ id: 'b1', style: 'body', text: 'Hallo' }], styles: [{ id: 'body', resolved: { 'font-size': '12pt' } }], images: [{ id: 'i1', format: 'png' }], language: 'de' })
     expect([...fromBase64('aGk=')]).toEqual([104, 105])
   })
+  it('passes the tables the text shows with their totals, for the layout to set in the flow (E9.32)', () => {
+    const table = {
+      format: 1, id: 't1', columns: [{ id: 'c1', kind: 'number' as const, total: 'sum', width: null }], rows: ['r1', 'r2'],
+      entries: [['r1', 'c1', { style: '', text: 'kg' }], ['r2', 'c1', { style: '', text: '4' }]] as [string, string, { style: string; text: string }][],
+      merges: [], header_rows: 1, banded: false, look: 'rules', placement: 'flow' as const, width: null, next_row: 2, next_col: 1, used_by: ['o1'], totals: { c1: '4' },
+    }
+    const object = { id: 'o1', kind: 'table' as const, w: 480, h: 48, style: 'plain-box', paragraph: null, shape: null, image: null, rotation: 0, ref: 't1', anchor: { kind: 'block' as const, container: 'b1', offset: 0 } }
+    const doc = textDocument([{ id: 'b1', style: 'body', text: 'Hallo', runs: [] }], [], DEFAULT_PAGE, { objects: [object], shapes: [], images: [], tables: [table] }, 'de')
+    expect(doc.tables).toEqual([{ ...table, total_label: 'Total' }]) // the word the view shows in the total row
+    expect(doc.objects).toEqual([object])
+    expect(textDocument([], [], DEFAULT_PAGE, null).tables).toEqual([])
+  })
   it('passes the list items with the markers the server counted, and the lists and schemes they are drawn by (E9.21)', () => {
     const doc = textDocument(
       [

@@ -5,6 +5,9 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
+### Added (E9.32): the table entries of composes
+- The generated menu of Claudia Composes has Insert ▸ Table… and Edit ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell and Table Options…, with their Ctrl+… shortcuts.
+
 ### Added (D740, D741): what the Windows installer needs
 - `CLAUDIA_SERVER_EXE` starts a self-contained `claudia-server` program instead of Python (`findServerProgram`); it wins over `CLAUDIA_SERVER_PYTHON`.
 - Packaged mode: a `packaged.json` next to `package.json` points the client at the installed web frontend and server, and

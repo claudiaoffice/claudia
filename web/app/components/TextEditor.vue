@@ -14,6 +14,8 @@ import { FIELD_CHAR, fieldIndex, partsOf, type Shown } from '~/lib/references'
 import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
 import { usePointed } from '~/lib/pointed'
+import { pointer } from '~/lib/objects'
+import TableView from './TableView.vue'
 
 const { t } = useI18n()
 
@@ -23,6 +25,7 @@ const emit = defineEmits<{
   'style-menu': [at: { x: number; y: number }]
   contents: [block: string]
   'reference-menu': [at: { block: string; index: number; x: number; y: number }]
+  'table-options': [table: string]
 }>()
 
 const state = props.session.state
@@ -230,11 +233,25 @@ function domPoint(pos: Pos, afterOverlay: boolean): [Node, number] | null {
   return [found.firstChild!, Math.max(0, Math.min(pos.offset - Number(found.dataset.off), (found.textContent ?? '').length))]
 }
 
+/** The tables that hang from a paragraph, in the order of their anchors (E9.32). */
+function tablesAfter(block: string) {
+  return props.session
+    .objectsIn(block)
+    .filter((o) => o.kind === 'table')
+    .sort((a, b) => a.anchor.offset - b.anchor.offset)
+    .flatMap((object) => {
+      const id = pointer(object, 'table')
+      const table = id ? state.tables[id] : undefined
+      return table ? [{ object, table }] : []
+    })
+}
+
 function placeSelection() {
   const container = root.value
   const sel = document.getSelection()
   const mine = state.selection
   if (!container || !sel || !mine || composing) return
+  if (document.activeElement?.closest('[data-table]')) return // the caret is in a box of a table, not in the words
   if (document.activeElement !== container && !(sel.anchorNode && container.contains(sel.anchorNode))) return
   const same = mine.anchor.block === mine.focus.block && mine.anchor.offset === mine.focus.offset
   const a = domPoint(mine.anchor, false)
@@ -327,7 +344,11 @@ watch(renderKey, () => nextTick(() => {
 }))
 
 // ------------------------------------------------------------------------------ input
+/** Did the event start in a box of a table? Those are fields of their own (`TableView.vue`), not the words. */
+const fromTable = (event: Event): boolean => !!(event.target as Element | null)?.closest?.('[data-table]')
+
 function onBeforeInput(event: InputEvent) {
+  if (fromTable(event)) return
   if (composing || event.isComposing) return // the input method is at work: compositionend tells us what came of it
   event.preventDefault()
   adoptSelection() // the page may have moved the caret before it told us
@@ -372,17 +393,19 @@ function onBeforeInput(event: InputEvent) {
 
 /** Tab and Shift+Tab move a list item one level in or out; anywhere else they are the browser's (focus moves on). */
 function onKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Tab' || event.ctrlKey || event.altKey || event.metaKey || composing) return
+  if (fromTable(event) || event.key !== 'Tab' || event.ctrlKey || event.altKey || event.metaKey || composing) return
   adoptSelection()
   if (props.session.tab(event.shiftKey)) event.preventDefault()
 }
 
-function onCompositionStart() {
+function onCompositionStart(event: CompositionEvent) {
+  if (fromTable(event)) return
   void props.session.flush()
   composing = true
 }
 
 async function onCompositionEnd(event: CompositionEvent) {
+  if (fromTable(event)) return
   composing = false
   renderKey.value++ // throw away what the browser put on the page by itself
   await nextTick()
@@ -391,6 +414,7 @@ async function onCompositionEnd(event: CompositionEvent) {
 }
 
 function onPaste(event: ClipboardEvent) {
+  if (fromTable(event)) return
   event.preventDefault()
   adoptSelection()
   const text = event.clipboardData?.getData('text/plain')
@@ -405,6 +429,7 @@ function onPaste(event: ClipboardEvent) {
 }
 
 function onCut(event: ClipboardEvent) {
+  if (fromTable(event)) return
   event.preventDefault()
   adoptSelection()
   const text = props.session.cut()
@@ -412,6 +437,7 @@ function onCut(event: ClipboardEvent) {
 }
 
 function onCopy(event: ClipboardEvent) {
+  if (fromTable(event)) return
   adoptSelection()
   const text = props.session.selectedText()
   if (!text) return
@@ -629,6 +655,16 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
           </template>
           <br v-if="!block.text && !hasOverlay(block)" data-skip >
         </component>
+        <!-- the tables that hang from this paragraph, in the flow after it (E9.32): a real table, boxes edited in place -->
+        <TableView
+          v-for="shown in tablesAfter(block.id)"
+          :key="shown.object.id"
+          :session="session"
+          :object="shown.object"
+          :table="shown.table"
+          @options="emit('table-options', $event)"
+          @leave="focus()"
+        />
         </template>
       </div>
       <TextContainers :session="session" :host="root" :tick="layoutTick" @leave="focus()" />

@@ -13,7 +13,7 @@ D906, D918); computes prints through the same preview with an adapter of its own
 | Units | `units.ts` | Whole thousandths of a point (*mpt*), exact `mulDivRound`, CSS lengths and paper sizes to mpt |
 | Fonts | `fonts/` | Reads sfnt tables; shapes and subsets with pinned HarfBuzz WebAssembly (D903); a `FontSet` of faces by SHA-256 and variation; CSS font matching over a catalogue (`FontResolver`, D905, D911) |
 | Text | `text/` | A paragraph to lines (UAX #14 breaks, hyphenation by TeX's patterns, lines chosen for the whole paragraph by Knuth and Plass, alignment, justification); CSS to a paragraph style; boxes clipped at their border |
-| Flow | `flow/` | Paper sizes, page geometry, pagination with orphans, widows, keep-with-next and collapsing margins (D909) |
+| Flow | `flow/` | Paper sizes, page geometry, pagination with orphans, widows, keep-with-next and collapsing margins (D909); tables between rows with the header repeated (`table.ts`, E9.32, D1213) |
 | Display list | `display/` | Glyph runs, paths (colours, gradients), images and groups (clip rectangle or path, rotation, transform, opacity); deterministic trigonometry; shape outlines |
 | SVG | `svg/` | Any SVG picture as display items: an XML reader of its own, styles, transforms, paths, gradients, clip paths, text in the server's fonts (D914) |
 | Images | `image/` | PNG, JPEG, GIF and BMP decoders of its own |

@@ -61,6 +61,8 @@ export interface VisualObject {
   paragraph: { style: string; text: string; mark?: ObjectMark | null; agenda?: Agenda | null } | null
   shape: string | null
   image: string | null
+  /** the id of the definition the kind points at (a table's, E9.32); a text, a shape or an image object may not send it */
+  ref?: string | null
   rotation: number
 }
 /** The lines of an agenda (E9.31), derived by the server from the slide titles: each line's words (its number and the
