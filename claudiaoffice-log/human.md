@@ -1,4 +1,18 @@
 
+# public corpora
+
+## libreoffice on github
+
+- **composes**: sw/qa/extras/ooxmlexport/data
+  https://github.com/LibreOffice/core/tree/master/sw/qa/extras/ooxmlexport/data
+
+- **computes**
+  https://github.com/LibreOffice/core/tree/master/sc/qa/extras/testdocuments
+
+- **creates**: sd/qa/unit/data
+  https://github.com/LibreOffice/core/tree/master/sd/qa/unit/data
+
+
 # focus topics
  
 - [ ] use worker pool for real!
