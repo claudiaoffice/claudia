@@ -125,14 +125,6 @@ development tool that matches the globs of our own typedoc.json and never untrus
 latest, calls Minimatch.matchOne, which minimatch 11 no longer has, so it cannot be overridden. Remove when a TypeDoc
 release accepts minimatch 11."""
 
-[[tool.claudia.npm-audit-allow]]
-advisory = "GHSA-fc5q-39xc-vjpf"
-reason = """picomatch <=4.0.7 (denial of service by single-branch repeated extglobs) has no fixed release: 4.0.7, the latest,
-is affected, so there is nothing to update to or to override. It reaches web/, layout/ and clients/neutralino/ only
-through build and test tools (Vite, Vitest, tinyglobby, Nuxt's build, ESLint plugins), which match the globs of our own
-configuration against our own files, never a pattern or a path from an untrusted source; the built web app does not
-contain it. Remove when picomatch publishes a release above 4.0.7 and the lockfiles take it."""
-
 [tool.claudia.coverage-floors]
 # CODE-01: the least each package's tests must reach, statements and branches together, as a whole percentage. A floor
 # only goes up (`scripts/check_coverage.py --ratchet`, committed with the change that earned it); see that script.
