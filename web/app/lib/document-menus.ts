@@ -28,6 +28,7 @@ export type FrameDialog =
   | 'export'
   | 'export-format'
   | 'delete'
+  | 'redact'
   | 'open'
   | 'open-file'
 
@@ -70,6 +71,7 @@ export function fileMenu(c: DocumentMenuContext): Menu {
   const { t } = c
   const owner = c.role === 'owner'
   const viewer = c.role === 'viewer'
+  const redacts = owner || c.role === 'editor' // D727
   return {
     label: t('File'),
     items: [
@@ -92,6 +94,7 @@ export function fileMenu(c: DocumentMenuContext): Menu {
           { id: 'file.manage.accept-owner', label: t('Accept Ownership…'), action: () => c.open('accept-owner'), disabled: viewer },
           { id: 'file.manage.leave', label: t('Leave Document…'), action: () => c.open('leave') },
           { id: 'file.manage.export', label: t('Export…'), action: () => c.open('export-format') },
+          { id: 'file.manage.redact', label: t('Redact History…'), action: () => c.open('redact'), disabled: !redacts },
           { id: 'file.manage.delete', label: t('Delete From Server…'), action: () => c.open('delete'), disabled: !owner },
         ],
       },
@@ -156,12 +159,14 @@ export function searchItem(c: DocumentMenuContext, search: { open: () => void })
  * app (D560). An entry is there for every kind, and off for somebody who may only look, or while the server cannot
  * make that kind (its tool is not set up). The ids are written out, one by one: they are what the shells' manifest
  * (`insert.cross-reference`, `insert.contents`, `insert.container.*`, with their keys) is checked against. An app
- * without `contents` or `reference` (computes) shows the entries, off, as it shows List ▸. */
+ * without `contents` or `reference` (computes) shows the entries, off, as it shows List ▸. `own` is a group of entries
+ * only that app has, between the two and Container ▸. */
 export function insertMenu(
   c: DocumentMenuContext,
   container: { types: readonly RenderType[]; add: (type: string) => void },
   contents?: { label: string; add: () => void; possible: boolean },
   reference?: { add: () => void; possible: boolean },
+  own?: readonly MenuItem[],
 ): Menu {
   const { t } = c
   const off = (type: string) => c.role === 'viewer' || !container.types.some((k) => k.type === type)
@@ -183,6 +188,8 @@ export function insertMenu(
         disabled: c.role === 'viewer' || !contents?.possible,
       },
       { label: '', separator: true },
+      // What an app has of its own, as a group of its own (composes: Table…, E9.32; the other two have their grid).
+      ...(own?.length ? [...own, { label: '', separator: true }] : []),
       {
         label: t('Container'),
         items: [

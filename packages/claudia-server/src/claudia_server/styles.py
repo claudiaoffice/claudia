@@ -27,11 +27,14 @@ from claudia_core import (
     SetObjectStyle,
     SetParagraphStyle,
     SetRole,
+    SetStyleHidden,
     SetStyleNumbering,
     StyleBook,
     StyleDef,
+    assign_changes_look,
     format_css,
     parse_css,
+    plan_delete_style,
     validate_css,
 )
 
@@ -323,6 +326,8 @@ def add_style_methods(
             return {"revision": _rev(ctx)}
         return _changed(ctx, SetStyleNumbering(style, numbering), base)
 
+    _add_deletion_methods(table)
+
     @table.method("check_css", "text:text")
     def _check_css(ctx, *, text):
         """Check the CSS text of a style without changing anything (so viewers may ask, and a client can check
@@ -330,6 +335,120 @@ def add_style_methods(
         style is written in, and a problem `{line, property, message}` for each line that is not allowed."""
         css, problems = parse_css(text)
         return {"css": css, "text": format_css(css), "problems": [p.to_data() for p in problems]}
+
+
+def _deletion_targets(book: StyleBook, style_id: str, model: object) -> list[dict]:
+    """The styles that could take the place of ``style_id`` when it goes, each as
+    ``{id, name, changes_look, holds, reason}``: ``changes_look`` is whether *assigning* it would change how something
+    looks, ``holds`` is false, and ``reason`` says why in a sentence, when the look could not be kept by *re-basing* on
+    it (D226, D785). Only styles of its kind, and never itself or one based on it."""
+    style = book.get(style_id)
+    targets = []
+    for other in book:
+        if (
+            other.id == style_id
+            or other.kind != style.kind
+            or any(link.id == style_id for link in book.chain(other.id))
+        ):
+            continue
+        entry = {
+            "id": other.id,
+            "name": other.name,
+            "changes_look": assign_changes_look(model, style_id, other.id),
+            "holds": True,
+            "reason": None,
+        }
+        try:
+            plan_delete_style(model, style_id, how="rebase", target=other.id)
+        except ValueError as exc:
+            entry.update(holds=False, reason=str(exc))
+        targets.append(entry)
+    return targets
+
+
+def _add_deletion_methods(table: MethodTable) -> None:
+    """Deleting and hiding a style (E1.10, D226). Split out of :func:`add_style_methods` only to keep each under the
+    statement limit — they belong side by side."""
+
+    @table.method("style_deletion", "style:str")
+    def _style_deletion(ctx, *, style):
+        """What deleting a style would do, so that a dialog can say it in words before anything happens (D226):
+        `{style, name, protected, hidden, uses, children, suggested, targets}`.
+
+        `protected` is true for a built-in or template style, which can only be hidden (`hide_style`). `uses` is how
+        many places have the style itself (a paragraph, an object, a range of cells, one count each). `children`
+        are the styles based on it, each `{id, name}`. `suggested` is `{id, name}`: the plain style of its kind, what
+        "no style" reads as in a document where everything always has one, for the dialog to preselect (null for a
+        protected style, or if the book has no such style). `targets` are the styles that could take its place, each
+        `{id, name, changes_look, holds, reason}`: `changes_look` says whether assigning that style would change how
+        something looks, `holds` is false, with the reason in a sentence, when the look of what has the style could
+        not be kept by re-basing on it. Changes nothing, so viewers may ask. `command_error` if there is no such
+        style."""
+        book = _book(ctx)
+        model = ctx.document.model
+        try:
+            known = book.get(style)
+        except KeyError as exc:
+            raise RequestError("command_error", exc.args[0]) from None
+        restyle = getattr(model, "restyle_users", None)
+        in_use = getattr(model, "style_in_use", None)
+        uses = len(restyle(style, style)) if restyle is not None and in_use is not None and in_use(style) else 0
+        protected = known.origin != "document"
+        suggested = None if protected else book.fallback(style)
+        return {
+            "style": style,
+            "name": known.name,
+            "protected": protected,
+            "hidden": known.hidden,
+            "uses": uses,
+            "children": [{"id": child, "name": book.get(child).name} for child in book.children(style)],
+            "suggested": None if suggested is None else {"id": suggested.id, "name": suggested.name},
+            "targets": [] if protected else _deletion_targets(book, style, model),
+        }
+
+    @table.method("delete_style", "style:str how:str? target:str? base:revision?", write=True)
+    def _delete_style(ctx, *, style, how, target, base):
+        """Delete a style, as one step that is undone as one, so that nothing is left pointing at it (D226). `how` is
+        one of two (D785; `assign` when left out), and `target` is the id of a style of the same kind that takes the
+        deleted one's place:
+
+        - `assign`: assign another style. Everything that has the style itself has `target` instead, and what is based
+          on it is based on `target`. Looks change, which `style_deletion` says beforehand.
+        - `rebase`: build it on `target` and keep how it looks. What is based on the style moves under `target` and
+          says only what differs from it; what has the style itself goes to a new style named “<name> (kept)”, for
+          its maker to name (`to_name` is then true).
+
+        `target` may be left out only for a style that nothing has and nothing is based on. Returns
+        `{stand_in, revision}`: `stand_in` is the style that was made for what had the style itself (`rebase` only), or
+        null. `command_error` if there is no such style or target, if `how` is neither, if `target` is the style itself
+        or one based on it or of another kind, if the style is a built-in or template style (hide it instead), if
+        the look cannot be held (the sentence names the property), or if somebody began to use the style meanwhile;
+        nothing changes then."""
+        model = ctx.document.model
+        try:
+            plan = plan_delete_style(model, style, how=how or "assign", target=target)
+        except ValueError as exc:
+            raise RequestError("command_error", str(exc)) from None
+        made = next((step.style.id for step in plan.commands if isinstance(step, CreateStyle)), None)
+        try:
+            applied = ctx.document.execute(plan, author=ctx.user, base=base)
+        except ValueError as exc:
+            raise RequestError("command_error", str(exc)) from None
+        return {"stand_in": made, "revision": applied.revision.to_data()}
+
+    @table.method("hide_style", "style:str hidden:bool base:revision?", write=True)
+    def _hide_style(ctx, *, style, hidden, base):
+        """Hide a style from the menus a person picks a style from, or show it again (D226). A hidden style still
+        resolves, so nothing that has it looks any different; `styles` then says `hidden` for it. This is all that
+        can be done to a built-in or template style that is not wanted. A style that is as asked is no step
+        (`revision` is then the current one). `command_error` if there is no such style."""
+        try:
+            now = _book(ctx).get(style).hidden
+        except KeyError as exc:
+            raise RequestError("command_error", exc.args[0]) from None
+        if now == hidden:
+            return {"revision": _rev(ctx)}
+        return _changed(ctx, SetStyleHidden(style, hidden), base)
 
 
 def _palette_colours(ctx: Context) -> dict[str, str] | None:

@@ -32,6 +32,8 @@ import {
   type DocumentMenuContext,
 } from '~/lib/document-menus'
 import { chordLabel, chordOf, hintOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { insertTableItems, possible, tableItems, tableShortcuts, type TableAction, type TableMenuHost } from '~/lib/table-menu'
+import { columnPlace, mergeRect, rowPlace } from '~/lib/tables'
 import { marksFor, textSearchHost } from '~/lib/text-search-host'
 import { useSearch } from '~/lib/use-search'
 import { useI18n } from '~/lib/i18n'
@@ -56,7 +58,7 @@ const { t, locale, choose } = useI18n()
 
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 /** composes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering' | 'contents' | 'image'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering' | 'contents' | 'image' | 'table' | 'table-options'>(null)
 const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = textStyleHost(session)
 const active = ref<string | null>(null)
@@ -249,9 +251,23 @@ const HARD_HYPHEN: ShortcutDef = { id: 'edit.nonbreaking-hyphen', get label() { 
 // E9.21: bullets and numbers, on the keys of the digits (Google Docs' Ctrl+Shift+8 and 7), whatever they type.
 const BULLETS: ShortcutDef = { id: 'format.bulleted-list', get label() { return t('Bulleted List') }, chord: chordOf('format.bulleted-list'), run: () => makeList('bullets'), enabled: () => !readonly.value }
 const NUMBERS: ShortcutDef = { id: 'format.numbered-list', get label() { return t('Numbered List') }, chord: chordOf('format.numbered-list'), run: () => makeList('numbers'), enabled: () => !readonly.value }
+// E9.32: the keys of the table entries work in a box, which is a field of its own (`whileTyping`).
+const tableHost: TableMenuHost = {
+  get table() {
+    return session.boxTable()
+  },
+  get box() {
+    return state.box
+  },
+  get readonly() {
+    return readonly.value || printing.value
+  },
+  run: (action) => void runTable(action),
+}
 const extraShortcuts = [
   LOOK,
   WRAP_TEXT,
+  ...tableShortcuts({ t }, tableHost),
   PRINT,
   SOFT_HYPHEN,
   HARD_HYPHEN,
@@ -259,6 +275,64 @@ const extraShortcuts = [
   NUMBERS,
   ...searchShortcuts({ find: () => openSearch(), replace: () => openSearch(true), canReplace: () => !readonly.value && !printing.value }),
 ]
+
+// ------------------------------------------------------------------------------ tables (E9.32)
+/** The table whose options are open, and the column the caret was in. */
+const optionsFor = ref<{ table: string; column?: string } | null>(null)
+
+/** Insert ▸ Table…: the dialog asks how big; the table goes after the paragraph the caret is in. */
+const canInsertTable = () => !readonly.value && !!state.selection && !state.box
+async function insertTable(size: { rows: number; cols: number; headerRows: number }) {
+  dialog.value = null
+  const focus = state.selection?.focus
+  if (!focus) return
+  const made = await session.addTable({ block: focus.block, offset: focus.offset }, size)
+  if (!made) return
+  await nextTick()
+  document.querySelector<HTMLTextAreaElement>(`[data-object="${CSS.escape(made.object)}"] textarea`)?.focus()
+}
+function openTableOptions(table: string, column?: string) {
+  optionsFor.value = { table, column }
+  dialog.value = 'table-options'
+}
+
+/** What the table entries of Edit do, to the table and the box the caret is in. */
+async function runTable(action: TableAction) {
+  const table = session.boxTable()
+  const box = state.box
+  if (!table || !box || !possible(tableHost, action)) return
+  switch (action) {
+    case 'row-above':
+    case 'row-below':
+      await session.insertRows(table.id, rowPlace(box.row, action === 'row-above' ? 'above' : 'below'))
+      break
+    case 'row-delete':
+      await session.deleteRows(table.id, [box.row])
+      break
+    case 'column-left':
+    case 'column-right':
+      await session.insertColumns(table.id, columnPlace(box.col, action === 'column-left' ? 'left' : 'right'))
+      break
+    case 'column-delete':
+      await session.deleteColumns(table.id, [box.col])
+      break
+    case 'sort-ascending':
+    case 'sort-descending':
+      await session.sortRows(table.id, box.col, action === 'sort-descending')
+      break
+    case 'merge-cells': {
+      const joined = mergeRect(table, box)
+      if (joined) await session.mergeCells(table.id, joined.row, joined.col, joined.rows, joined.cols)
+      break
+    }
+    case 'split-cell':
+      await session.splitCell(table.id, box.row, box.col)
+      break
+    case 'options':
+      openTableOptions(table.id, box.col)
+      break
+  }
+}
 
 function makeList(scheme: 'bullets' | 'numbers') {
   void session.makeList(scheme)
@@ -410,9 +484,12 @@ const menus = computed<Menu[]>(() => {
             { id: 'edit.nonbreaking-hyphen', label: t('Non-breaking Hyphen'), disabled: !typing(), action: () => HARD_HYPHEN.run() },
           ],
         },
+        // the table the caret is in (E9.32): on only in one of its boxes
+        { label: '', separator: true },
+        ...tableItems(c, tableHost),
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }),
+    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }, insertTableItems(c, { add: () => (dialog.value = 'table'), possible: canInsertTable() })),
     {
       label: t('Format'),
       items: [
@@ -553,7 +630,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <StyleBar v-if="!printing" data-region="toolbar" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" :pages="pageNumbers" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" @reference-menu="refMenu = $event" />
+    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" :pages="pageNumbers" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" @reference-menu="refMenu = $event" @table-options="openTableOptions" />
     <template #footer>
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">
@@ -583,6 +660,8 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <ContentsDialog v-if="dialog === 'contents' && contentsHost" :host="contentsHost" :title="t('Table of contents')" @close="dialog = null" />
       <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.currentScheme() ?? undefined" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'list-start'" :title="t('Start numbering at')" :label="t('First number')" :ok="t('Start')" required :initial="listStart()" @ok="startListAt" @close="dialog = null" />
+      <TableDialog v-if="dialog === 'table'" @insert="insertTable" @close="dialog = null" />
+      <TableOptionsDialog v-if="dialog === 'table-options' && optionsFor" :session="session" :table="optionsFor.table" :start-column="optionsFor.column" @close="(dialog = null), (optionsFor = null)" />
       <PaletteDialog v-if="dialog === 'colours'" :host="styleHost" :builtin="state.palette?.builtin ?? []" @close="dialog = null" @reset="resetPalette" />
     </template>
   </DocumentFrame>

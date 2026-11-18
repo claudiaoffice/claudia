@@ -247,7 +247,7 @@ class _Probe:
         else:
             style, words = _default_styles(kind)
             body = ObjectBody(
-                "o0", kind, box[2], box[3], style, paragraph_for("o0", words, text), shape=shape, rotation=box[4]
+                "o0", kind, box[2], box[3], style, paragraph_for("o0", words, text), ref=shape, rotation=box[4]
             )
         try:
             self.model.check_object(VisualObject(body, SlideAnchor("probe", box[0], box[1])))
@@ -687,7 +687,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                 found.h,
                 style,
                 paragraph_for(found.id, words, found.text).with_item(_item_of(found, items)),
-                shape=shape,
+                ref=shape,
                 rotation=found.rotation,
             )
             model.insert_object(VisualObject(body, SlideAnchor(slide.id, found.x, found.y)))

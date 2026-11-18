@@ -75,7 +75,7 @@ def test_a_chart_tab_is_written_as_a_sheet_so_it_is_no_loss(unwritten):
 def test_a_chart_floating_on_a_sheet_is_written_so_it_is_no_loss(unwritten):
     after = a_workbook()
     after.define_diagram(a_chart_spec())
-    body = ObjectBody("o1", "diagram", 200, 100, "plain-image", diagram="spec")
+    body = ObjectBody("o1", "diagram", 200, 100, "plain-image", ref="spec")
     after.insert_object(VisualObject(body, CellAnchor(SheetId("s1"), 3, 3)))
     assert unwritten(after, a_workbook()) == ()
 

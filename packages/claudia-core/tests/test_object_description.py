@@ -7,6 +7,7 @@ import pytest
 
 from claudia_core import AddObject, ImageImport, ObjectBody, paragraph_for
 from claudia_core.commands import core_commands
+from claudia_core.testing import body_before_ref
 
 
 def picture_import(alt: str = "a red bicycle") -> ImageImport:
@@ -27,7 +28,7 @@ def picture(**changes) -> ObjectBody:
         "w": 40,
         "h": 20,
         "style": "plain-image",
-        "image": "a1",
+        "ref": "a1",
         "imported": picture_import(),
     }
     return ObjectBody(**{**fields, **changes})
@@ -71,8 +72,9 @@ def test_the_fields_are_part_of_the_data_the_log_stores():
 
 # -- documents are forever -------------------------------------------------------------------------------------
 def test_a_body_written_before_the_fields_existed_still_reads():
-    old = picture().to_data()
-    del old["description"], old["decorative"], old["rendered"], old["name"]  # a body of that time had none of the four
+    old = body_before_ref(
+        picture().to_data(), "description", "decorative", "rendered", "name", "table"
+    )  # none of the five
     assert ObjectBody.from_data(old).description == "a red bicycle"
     assert ObjectBody.from_data(old).decorative is False
 
@@ -90,9 +92,8 @@ def test_a_body_with_a_field_nobody_knows_is_refused():
 
 
 def test_adding_an_object_is_schema_5_and_schema_1_data_is_brought_up_to_date():
-    assert AddObject.schema == 5
-    old_body = picture().to_data()
-    del old_body["description"], old_body["decorative"], old_body["rendered"], old_body["name"]
+    assert AddObject.schema == 6
+    old_body = body_before_ref(picture().to_data(), "description", "decorative", "rendered", "name", "table")
     envelope = {"k": "core.AddObject", "s": 1, "d": {"body": old_body, "anchor": {"container": "s1"}, "at": None}}
     command = core_commands.decode(envelope)
     assert command.body.description == "a red bicycle" and command.body.decorative is False

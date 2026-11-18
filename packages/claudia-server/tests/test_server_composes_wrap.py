@@ -133,7 +133,7 @@ def test_a_shape_comes_into_the_document_with_the_first_object_that_uses_it_and_
     )
     assert [s["id"] for s in call(paper, "shapes")["document"]] == [shape]
     (obj,) = [o for o in call(paper, "objects")["objects"] if o["id"] == answer["object"]]
-    assert (obj["kind"], obj["shape"], obj["style"]) == ("shape", shape, "plain-shape")
+    assert (obj["kind"], obj["ref"], obj["style"]) == ("shape", shape, "plain-shape")
     assert obj["anchor"]["offset"] == 3
 
 

@@ -9,7 +9,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { FrozenDeck } from '~/lib/frozen'
 import { SLIDE_H, SLIDE_W, fitScale } from '~/lib/geometry'
 import { imageDataUrl } from '~/lib/images'
-import { cssOf as computedCss, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
+import { cssOf as computedCss, pointer, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
 import { facetCss, scaleCss } from '~/lib/slide-style'
 import type { SlideObject } from '~/lib/slide-session'
 
@@ -37,7 +37,7 @@ function boxStyle(o: SlideObject) {
   // A turned object is drawn turned about the centre of its frame (D1021), as on the canvas
   return { left: px(f.x), top: px(f.y), width: px(f.w), height: px(f.h), ...(o.rotation ? { transform: `rotate(${o.rotation}deg)` } : {}) }
 }
-const outline = (o: SlideObject) => (o.shape ? (props.deck.shapes[o.shape] ?? null) : null)
+const outline = (o: SlideObject) => (pointer(o, 'shape') ? (props.deck.shapes[pointer(o, 'shape')!] ?? null) : null)
 function textBox(o: SlideObject) {
   const area = outline(o)?.text_area ?? { x: 0, y: 0, w: 100, h: 100 }
   const pad = o.kind === 'text' ? 0 : 8 // a shape's text is not written right up to its edge
@@ -56,7 +56,8 @@ function wordsStyle(o: SlideObject): Record<string, string> {
 }
 const paintStyle = (o: SlideObject) => facetCss(scaleCss(computedCss(props.deck.styles, o), scale.value), facets.value, ['outline'])
 function pictureSrc(o: SlideObject): string {
-  const asset = o.image ? props.deck.images[o.image] : undefined
+  const image = pointer(o, 'image')
+  const asset = image ? props.deck.images[image] : undefined
   return asset ? imageDataUrl(asset) : ''
 }
 </script>

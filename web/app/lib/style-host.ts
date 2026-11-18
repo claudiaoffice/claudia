@@ -15,6 +15,7 @@ import {
   type StyleView,
 } from './style-css'
 import { stackFor } from './fonts'
+import { pickable, type StyleDeletionHost } from './style-deletion'
 import type { ColourRole, Reading, SlotView, StyleModel } from './objects'
 
 /** One slot of the thing being styled (D304), as the style menu shows it: the server's slot and the words a person
@@ -86,13 +87,17 @@ export interface StyleHost {
   /** What the use counts of All styles… count, where that is not `noun`: on a slide the counts are of every kind of
    * object, so “1 shape” beside Body text (used by a text box) was wrong whenever a shape was selected. */
   usesNoun?: string
+  /** Delete and hide a style from All styles… (D783, D785). Left out where the session cannot. */
+  deletion?: StyleDeletionHost
 }
 
 /** What a gallery offers for a slot (D316, `style-editor-two-slots.svg`): the styles of the slot's own kind, and
  * — for a box — the whole styles that also set a box, whose box part is what the slot would use. A whole style that
  * sets nothing the slot reads is not offered: putting it there would change nothing. */
-export function galleryFor(styles: StyleView[], slot: SlotView | undefined, model: StyleModel | null): { own: StyleView[]; bundles: StyleView[] } {
+export function galleryFor(styles: StyleView[], slot: SlotView | undefined, model: StyleModel | null, current?: string): { own: StyleView[]; bundles: StyleView[] } {
   if (!slot) return { own: [], bundles: [] }
+  // Hidden styles are not offered (D780), except the one the selection has: it must not vanish from where it is chosen.
+  styles = pickable(styles, current)
   const own = styles.filter((s) => s.kind === slot.kind)
   const read = new Set(slot.reads.flatMap((facet) => model?.facets[facet] ?? []))
   const bundles = styles.filter((s) => s.kind !== slot.kind && slot.takes.includes(s.kind) && Object.keys(s.computed).some((p) => read.has(p)))

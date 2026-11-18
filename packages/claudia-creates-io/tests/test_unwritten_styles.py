@@ -27,7 +27,7 @@ def a_shape(model: SlideModel, object_id: str) -> None:
     if model.shapes.get("circle") is None:
         model.define_shape(CIRCLE)
     body = ObjectBody(
-        object_id, "shape", 200, 200, "plain-shape", paragraph_for(object_id, "shape-label", "", "ana"), shape="circle"
+        object_id, "shape", 200, 200, "plain-shape", paragraph_for(object_id, "shape-label", "", "ana"), ref="circle"
     )
     model.insert_object(VisualObject(body, SlideAnchor("s1", 100, 100)))
 

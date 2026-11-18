@@ -1,0 +1,112 @@
+<svg viewBox="0 0 1464 1080" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1464" height="1080" rx="0" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — styles round: deleting and hiding a style (D226, D780–D785)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Proposal for review — nothing is built. The same dialog and the same entries in all three apps and both desktop shells; the host supplies the noun.</text>
+<rect x="40" y="96" width="560" height="500" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">A · All styles: Delete… and Hide beside Edit and Rename</text>
+<text x="62" y="144" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A document style can be deleted; a built-in one can only be hidden.</text>
+<rect x="63" y="165" width="520" height="330" rx="14" fill="#1f1a33" opacity="0.1"/>
+<rect x="60" y="160" width="520" height="330" rx="14" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="82" y="194" font-family="Fraunces, Georgia, serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="start">Styles</text>
+<text x="556" y="194" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="400" fill="#6e6880" text-anchor="end">✕</text>
+<line x1="60" y1="210" x2="580" y2="210" stroke="#e3dfee" stroke-width="1"/>
+<rect x="82" y="226" width="14" height="14" rx="3" fill="#fff" stroke="#8a8499" stroke-width="1"/>
+<text x="104" y="238" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Show hidden styles</text>
+<text x="82" y="282" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="500" fill="#1f1a33" text-anchor="start">Quote</text>
+<text x="82" y="301" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">the words of other people</text>
+<text x="253.5" y="301" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">14 paragraphs</text>
+<text x="556" y="301" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#c01c28" text-anchor="end">Delete…</text>
+<text x="491.8" y="301" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="end">Rename</text>
+<text x="434.20000000000005" y="301" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="end">Edit</text>
+<text x="82" y="334" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="500" fill="#1f1a33" text-anchor="start">Small quote</text>
+<text x="82" y="353" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">a short quote</text>
+<text x="177.89999999999998" y="353" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">2 paragraphs</text>
+<text x="556" y="353" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#c01c28" text-anchor="end">Delete…</text>
+<text x="491.8" y="353" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="end">Rename</text>
+<text x="434.20000000000005" y="353" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="end">Edit</text>
+<text x="82" y="386" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="500" fill="#1f1a33" text-anchor="start">Heading 1</text>
+<text x="82" y="405" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">a section</text>
+<text x="152.7" y="405" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">6 paragraphs</text>
+<text x="556" y="405" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="end">Hide</text>
+<text x="511.6" y="405" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="end">Edit</text>
+<text x="82" y="438" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="500" fill="#6e6880" text-anchor="start">Remark</text>
+<text x="82" y="457" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">an aside to the reader</text>
+<text x="234.6" y="457" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">hidden</text>
+<text x="556" y="457" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="end">Show</text>
+<text x="82" y="514" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Access keys: Alt+D delete · Alt+H hide · Alt+E edit (translated with the labels)</text>
+<rect x="632" y="96" width="792" height="530" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="654" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">B · “Delete…”: two ways, said in words before anything happens</text>
+<text x="654" y="144" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Assign another style is the default, with Body text preselected — that is what “no style” means. Undo puts everything back.</text>
+<rect x="663" y="165" width="740" height="450" rx="14" fill="#1f1a33" opacity="0.1"/>
+<rect x="660" y="160" width="740" height="450" rx="14" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="682" y="194" font-family="Fraunces, Georgia, serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="start">Delete the style “Quote”?</text>
+<text x="1376" y="194" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="400" fill="#6e6880" text-anchor="end">✕</text>
+<line x1="660" y1="210" x2="1400" y2="210" stroke="#e3dfee" stroke-width="1"/>
+<text x="684" y="226" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">14 paragraphs have this style. 1 style is based on it: Small quote.</text>
+<circle cx="692" cy="257" r="8" fill="#fff" stroke="#5b4bc4" stroke-width="1.5"/><circle cx="692" cy="257" r="4.2" fill="#5b4bc4"/>
+<text x="710" y="262" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Assign another style</text>
+<text x="710" y="282" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Everything that has “Quote” gets the style you choose instead, and looks like it.</text>
+<text x="710" y="299" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Small quote, which is based on Quote, is based on that style too, and loses what Quote said.</text>
+<rect x="710" y="314" width="260" height="28" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="724" y="333" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Body text</text>
+<text x="954" y="333" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">▾</text>
+<text x="710" y="362" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Body text is what “no style” means here: the plain paragraph.</text>
+<text x="710" y="382" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#9a5b00" text-anchor="start">14 paragraphs and 1 style will look different: no italic, no indent.</text>
+<circle cx="692" cy="425" r="8" fill="#fff" stroke="#8a8499" stroke-width="1.5"/>
+<text x="710" y="430" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Re-base on another style</text>
+<text x="710" y="450" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Everything that has “Quote” keeps looking exactly as it does now, but is built on</text>
+<text x="710" y="467" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">the style you choose: it follows that style from now on, except where Quote differed.</text>
+<text x="710" y="484" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Example: Quote is italic and indented. Re-based on Note it stays italic and indented,</text>
+<text x="710" y="501" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">and takes on any later change to Note’s font and size. It moves to “Quote (kept)”.</text>
+<rect x="710" y="524" width="260" height="26" rx="6" fill="#fff" stroke="#8a8499" stroke-width="1"/>
+<text x="724" y="542" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Choose a style…</text>
+<text x="954" y="542" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">▾</text>
+<line x1="660" y1="566" x2="1400" y2="566" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1262" y="574" width="120" height="28" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1322" y="593" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="1118" y="574" width="132" height="28" rx="8" fill="#c01c28"/>
+<text x="1184" y="593" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">Delete style</text>
+<text x="684" y="593" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">One step in the history.</text>
+<g transform="translate(0,90)">
+<rect x="40" y="540" width="720" height="420" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="570" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">C · “Re-base on…”: what cannot hold the look is greyed</text>
+<text x="62" y="588" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Only styles of the same kind, never the style itself or one based on it. Assign has no greyed entries.</text>
+<rect x="63" y="609" width="680" height="340" rx="14" fill="#1f1a33" opacity="0.1"/>
+<rect x="60" y="604" width="680" height="340" rx="14" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="82" y="638" font-family="Fraunces, Georgia, serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="start">Delete the style “Quote”?</text>
+<text x="716" y="638" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="400" fill="#6e6880" text-anchor="end">✕</text>
+<line x1="60" y1="654" x2="740" y2="654" stroke="#e3dfee" stroke-width="1"/>
+<rect x="84" y="672" width="260" height="30" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.5"/>
+<text x="98" y="692" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Re-base on: Note</text>
+<text x="330" y="692" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">▴</text>
+<rect x="84" y="704" width="260" height="176" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="98" y="724" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Body text</text>
+<rect x="86" y="737" width="256" height="24" rx="5" fill="#eeebf8"/>
+<text x="98" y="752" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Note</text>
+<text x="98" y="780" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Definition</text>
+<text x="98" y="808" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Heading 1</text>
+<text x="98" y="836" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#a39db3" text-anchor="start">Callout</text>
+<text x="364" y="734" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Quote and Small quote look exactly the same under Note.</text>
+<text x="364" y="770" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Assigning Note instead would change looks:</text>
+<text x="364" y="788" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">the dialog counts them first.</text>
+<text x="364" y="846" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Callout is greyed: it sets a colour that Quote</text>
+<text x="364" y="864" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">never set, and nothing says what “no colour” is</text>
+<text x="364" y="882" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">in every app (D781).</text>
+<rect x="792" y="540" width="632" height="420" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="814" y="570" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">D · Afterwards: the stand-in invites a name, Undo stays at hand</text>
+<text x="814" y="588" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Styles first, deviate second (E9.7): the new style is announced, not hidden.</text>
+<rect x="824" y="632" width="568" height="72" rx="12" fill="#1f1a33"/>
+<text x="846" y="662" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#fff" text-anchor="start">“Quote” deleted. 14 paragraphs now use “Quote (kept)”, built on Note.</text>
+<text x="846" y="684" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#cfc9e6" text-anchor="start">Give it a name that says what it is for.</text>
+<text x="1368" y="662" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#cfc3ff" text-anchor="end">Name it…</text>
+<text x="1368" y="684" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#cfc3ff" text-anchor="end">Undo</text>
+<text x="824" y="738" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">What changes in the lists:</text>
+<text x="824" y="760" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">All styles: “Quote (kept)” appears, marked “waiting for a name” — the existing filter</text>
+<text x="824" y="778" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">“Only the ones waiting for a name” finds it.</text>
+<text x="824" y="806" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">History &amp; Chat: one line, “deleted the style Quote”, grouped with its steps.</text>
+<text x="824" y="834" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A refusal reads as a sentence in the dialog: “Somebody began to use Quote while you were</text>
+<text x="824" y="852" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">deleting it. Nothing was changed.”</text>
+<text x="824" y="892" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Not offered here: the assistant does not delete styles (D782).</text>
+<text x="824" y="910" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A new style appears only when re-basing; assigning makes none.</text>
+</g>
+</svg>

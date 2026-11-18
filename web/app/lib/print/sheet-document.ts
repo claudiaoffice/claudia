@@ -2,6 +2,7 @@
 // their number formats and styles), the sizes of rows and columns, the floating pictures and charts, and how each
 // sheet prints. Everything comes from the session; what is not loaded yet is loaded first (`loadForPrint`).
 import { utf8Decode, type CellArea, type CellPurpose, type ImageInfo, type PrintedChart, type PrintedSheet, type SheetCell, type SheetDocument, type SheetPicture, type TextStyle } from '@claudia/layout'
+import { pointer } from '../objects'
 import { showFormatted } from '../cells'
 import { cellLook, DEFAULT_CELL_STYLE, styleAt, within, type CellLook, type CellRange } from '../cell-styles'
 import { formatCodeOf, inkOf, symbolsFor } from '../number-format'
@@ -51,7 +52,7 @@ export function chartSizes(session: Session, request: SheetRequest): Map<string,
       const spec = session.state.charts.find((c) => c.id === id)?.spec_id
       if (spec && !sizes.has(spec)) sizes.set(spec, [CHART_W, CHART_H])
     } else {
-      for (const o of session.objectsOn(id)) if (o.kind === 'diagram' && o.diagram && !sizes.has(o.diagram)) sizes.set(o.diagram, [o.w, o.h])
+      for (const o of session.objectsOn(id)) if (o.kind === 'diagram' && o.ref && !sizes.has(o.ref)) sizes.set(o.ref, [o.w, o.h])
     }
   }
   return sizes
@@ -141,8 +142,8 @@ function purposeOf(names: Session['state']['names'], sheet: string, row: number,
 function picturesOf(session: Session, sheet: string, pictures: ReadonlyMap<string, string>): SheetPicture[] {
   return session.objectsOn(sheet).flatMap((o): SheetPicture[] => {
     const anchor = { kind: 'cell' as const, row: o.anchor.row, col: o.anchor.col }
-    const base = { id: o.id, kind: o.kind, w: o.w, h: o.h, style: o.style, paragraph: o.paragraph ? { style: o.paragraph.style, text: o.paragraph.text } : null, shape: o.shape, image: o.image, rotation: o.rotation, anchor }
-    if (o.kind === 'diagram') return [{ ...base, kind: 'diagram', image: o.diagram && pictures.has(o.diagram) ? chartImage(o.diagram) : null }]
+    const base = { id: o.id, kind: o.kind, w: o.w, h: o.h, style: o.style, paragraph: o.paragraph ? { style: o.paragraph.style, text: o.paragraph.text } : null, shape: pointer(o, 'shape'), image: pointer(o, 'image'), rotation: o.rotation, anchor }
+    if (o.kind === 'diagram') return [{ ...base, kind: 'diagram', image: o.ref && pictures.has(o.ref) ? chartImage(o.ref) : null }]
     // a rendered text container (D390) is the layout's to print: as the picture it shows, or not at all
     return [base as SheetPicture]
   })

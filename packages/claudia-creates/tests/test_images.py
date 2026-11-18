@@ -78,18 +78,17 @@ def test_an_image_object_needs_a_known_asset_and_its_import_record(doc):
         doc.execute(add(image_object(asset=asset)), author="ana")  # asset never defined
 
 
-def test_an_image_object_has_no_shape_and_a_shape_object_has_no_image(doc):
+def test_an_image_object_cannot_point_at_a_shape_and_a_shape_object_not_at_an_image(doc):
     asset = image_asset()
     doc.execute(DefineImage(asset), author="ana")
-    with pytest.raises(ValueError, match="no shape"):
-        doc.execute(add(image_object(asset=asset, shape="rectangle")), author="ana")
-    with pytest.raises(ValueError, match="no image"):
-        doc.execute(add(shape_object(image=asset.id)), author="ana")
+    with pytest.raises(ValueError, match="does not know the image 'rectangle'"):
+        doc.execute(add(image_object(asset=asset, ref="rectangle")), author="ana")
+    with pytest.raises(ValueError, match="does not know the shape"):
+        doc.execute(add(shape_object(ref=asset.id)), author="ana")
 
 
-def test_a_text_box_has_no_shape_or_image(doc):
-    # The message also names "diagram" (E6.6) and "rendering" (D390): a text box carries none of the four.
-    with pytest.raises(ValueError, match="no shape, image, diagram or rendering"):
+def test_a_text_box_points_at_no_definition(doc):
+    with pytest.raises(ValueError, match="points at no definition"):
         doc.execute(add(text_box(image="deadbeef" * 8)), author="ana")
 
 

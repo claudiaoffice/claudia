@@ -108,7 +108,7 @@ describe('flow pagination', () => {
 
   it('has one empty page for an empty flow', () => {
     const g = pageGeometry(cm(10), cm(10), 'portrait', margins)
-    expect(paginate([], g)).toEqual([{ index: 0, lines: [], fragments: [] }])
+    expect(paginate([], g)).toEqual([{ index: 0, lines: [], fragments: [], tables: [] }])
   })
 })
 

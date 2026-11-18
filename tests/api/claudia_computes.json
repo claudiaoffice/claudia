@@ -76,7 +76,7 @@
   "properties": []
  },
  "BUILTIN_STYLES": {
-  "value": "(StyleDef(id='body-text', name='Body text', purpose='words in a floating text box or shape on a sheet', based_on=None, css={'color': '@text', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '13px', 'line-height': '1.4', 'text-align': 'left'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None), StyleDef(id='shape-label', name='Shape label', purpose='the words inside a shape on a sheet', based_on='body-text', css={'text-align': 'center'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that marks or annotates a part of the sheet, without drawing attention to itself', based_on=None, css={'fill': '@accent/14', 'stroke': '@accent', 'stroke-width': '2px'}, to_name=False, kind='outline', number_format=None, heading_level=None, numbering=None), StyleDef(id='plain-box', name='Plain box', purpose='the box of a text box on a sheet: no background and no border, so only its words show', based_on=None, css={}, to_name=False, kind='box', number_format=None, heading_level=None, numbering=None), StyleDef(id='header', name='Header', purpose='the labels at the top of a table or the start of a row', based_on='body-text', css={'font-weight': '600', 'background-color': '@accent/14', 'border-bottom': '1px solid @accent'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None), StyleDef(id='input', name='Input', purpose='a number someone is meant to change: an assumption of the model', based_on='body-text', css={'color': '@accent', 'background-color': '@highlight/14'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None), StyleDef(id='result', name='Result', purpose='a number the model works out and someone reads', based_on='body-text', css={'font-weight': '600', 'border-top': '1px solid @structure'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None), StyleDef(id='note', name='Note', purpose='a remark beside the numbers', based_on='body-text', css={'font-style': 'italic', 'color': '@muted'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the sheet; it carries its own colours, so no style properties apply to it', based_on=None, css={}, to_name=False, kind='box', number_format=None, heading_level=None, numbering=None))"
+  "value": "(StyleDef(id='body-text', name='Body text', purpose='words in a floating text box or shape on a sheet', based_on=None, css={'color': '@text', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '13px', 'line-height': '1.4', 'text-align': 'left'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='shape-label', name='Shape label', purpose='the words inside a shape on a sheet', based_on='body-text', css={'text-align': 'center'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that marks or annotates a part of the sheet, without drawing attention to itself', based_on=None, css={'fill': '@accent/14', 'stroke': '@accent', 'stroke-width': '2px'}, to_name=False, kind='outline', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='plain-box', name='Plain box', purpose='the box of a text box on a sheet: no background and no border, so only its words show', based_on=None, css={}, to_name=False, kind='box', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='header', name='Header', purpose='the labels at the top of a table or the start of a row', based_on='body-text', css={'font-weight': '600', 'background-color': '@accent/14', 'border-bottom': '1px solid @accent'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='input', name='Input', purpose='a number someone is meant to change: an assumption of the model', based_on='body-text', css={'color': '@accent', 'background-color': '@highlight/14'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='result', name='Result', purpose='a number the model works out and someone reads', based_on='body-text', css={'font-weight': '600', 'border-top': '1px solid @structure'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='note', name='Note', purpose='a remark beside the numbers', based_on='body-text', css={'font-style': 'italic', 'color': '@muted'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the sheet; it carries its own colours, so no style properties apply to it', based_on=None, css={}, to_name=False, kind='box', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False))"
  },
  "CELL_SLOTS": {
   "value": "('box', 'words')"
@@ -142,6 +142,7 @@
    "pieces": "(self, slot: 'str', layer: 'str', area: 'Area') -> 'tuple[Piece, ...]'",
    "plan": "(self, slot: 'str', area: 'Area', style: 'str | None') -> 'list[tuple[str, Area, tuple[Piece, ...]]]'",
    "ranges_in": "(self, window: 'Area') -> 'list[dict]'",
+   "ranges_named": "(self, style_id: 'str') -> 'list[tuple[str, str, Area]]'",
    "replace": "(self, slot: 'str', layer: 'str', area: 'Area', pieces: 'Iterable[Piece]') -> 'None'",
    "restructure": "(self, edit: 'StructuralEdit') -> 'list[tuple[str, str, Piece]]'",
    "style_at": "(self, row: 'int', col: 'int', slot: 'str') -> 'tuple[str, str]'",
@@ -531,19 +532,25 @@
   "properties": []
  },
  "OBJECT_KINDS": {
-  "value": "('text', 'shape', 'image', 'diagram', 'rendered')"
+  "value": "('text', 'shape', 'image', 'diagram', 'rendered', 'table')"
  },
  "ObjectBody": {
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, ref: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
-  "properties": []
+  "properties": [
+   "diagram",
+   "image",
+   "rendered",
+   "shape",
+   "table"
+  ]
  },
  "ObjectSet": {
   "class": [
@@ -1274,6 +1281,7 @@
    "rename_thing": "(self, ctx, thing_id: 'str', name: 'str')",
    "restore": "(state: 'dict') -> 'Self'",
    "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]], NameRestores]'",
+   "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",
    "serialize": "(self) -> 'dict'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "settle": "(self, ctx) -> 'None'",

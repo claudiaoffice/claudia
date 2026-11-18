@@ -5,6 +5,27 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Tables in a text over the wire (E9.32, D1212): `tables` (each definition with `used_by` and its derived `totals`),
+  `add_table`, `remove_table`, `set_entries`, `insert_rows`, `delete_rows`, `move_rows`, `sort_rows`,
+  `insert_columns`, `delete_columns`, `move_columns`, `set_column`, `set_table_options`, `merge_cells` and
+  `split_cell`, all by the ids of rows and columns (`claudia_server.tables`, `add_table_methods`, `TABLE_METHODS`).
+  Typing in a box is `replace_text` / `replace_words` with the box's id; a line break written into a box is a space.
+  The event of a table change is `{type: "table", id, definition}`.
+- Search looks in the boxes of tables: the kind `table`, with the place `{block, table, row, col}` (`search_find`,
+  `search_preview`, `search_replace`; a held box is skipped and the holder named).
+- The assistant reads tables (`tables`, the orientation, the report of a change) and, in act mode, makes and changes
+  them with the table methods (`apps.MODEL_METHODS`); none of them is a suggestion.
+- The preview of a redaction (D721, E3.14): `redaction_plan` keeps the planned state under a token (`plan`) and names
+  the places to mark (`regions`); `as_planned` answers a view's read requests from that state, as `as_of` does for an
+  earlier step. The views of the three apps draw the preview with what they already have.
+- The history view of a step (`log`, `steps` of a plan) says its `kind` and whether it is `redacted`.
+
+### Changed
+- `search_find` counts texts of the kind `table` too: `counts` has the key `table`.
+- `objects` (composes) gives an object's `ref` in place of `shape`, `image`, `diagram` and `rendered` (D1211).
+- A new object is named "Table 1", "Table 2", … in the language of the person who made it.
+
 ### Removed
 - `claudia_server.composes_lists`: its methods are `structure_methods`'.
 
@@ -43,6 +64,14 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   five, a temporary file name that two threads cannot share, and the pattern fetch is the one the fonts use.
 
 ### Added
+- Deleting and hiding styles (E1.10, D226, D785), in every app's table: `style_deletion` (read: how many places have
+  the style, what is based on it, `suggested`, the plain style of its kind for a dialog to preselect, and the styles
+  that could take its place, each with whether assigning it changes a look and whether re-basing on it can hold the
+  look), `delete_style` (`style`, `how` one of `assign` or `rebase`, `assign` when left out, `target` the style that
+  takes its place; returns `{stand_in, revision}`) and `hide_style` (`style`, `hidden`). Deleting is one undo step,
+  changes a look only when assigning, and is refused for a built-in or template style (hide it) and when somebody
+  began to use the style meanwhile. They are write methods and not on the assistant's list.
+- `styles` says `origin` (when it is not `document`) and `hidden` (when it is true) for a style.
 - References (step H) in composes and creates (`claudia_server.structure_methods`): `reference_targets(query?)`
   (headings with their numbers, numbered items, named things), `insert_reference(paragraph, offset, target, show?)`,
   `set_field(paragraph, index, show)` and `fields` (what every reference reads as; a `fields` event brings changes).

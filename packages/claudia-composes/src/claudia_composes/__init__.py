@@ -55,13 +55,20 @@ from .events import BlockGenerated, FieldsPut, ItemChanged
 from .language import LanguageError, normalize_language
 from .model import (
     BUILTIN_STYLES,
+    DEFAULT_LOOK,
     DEFAULT_STYLE,
+    TABLE_FRAME_STYLE,
+    TABLE_LOOKS,
+    TABLE_OBJECT_WIDTH,
+    TABLE_ROW_HEIGHT,
+    TABLE_STYLE_IDS,
     Block,
     Suggestion,
     TextModel,
     TextObject,
     builtin_styles,
     next_style,
+    table_body,
 )
 from .page import PAPERS, PageSetup, PageSetupError
 from .region import TextRange, word_window
@@ -75,6 +82,12 @@ __all__ = [
     "BlockAnchor",
     "builtin_styles",
     "BUILTIN_STYLES",
+    "DEFAULT_LOOK",
+    "TABLE_FRAME_STYLE",
+    "TABLE_LOOKS",
+    "TABLE_OBJECT_WIDTH",
+    "TABLE_ROW_HEIGHT",
+    "TABLE_STYLE_IDS",
     "DEFAULT_STYLE",
     "DefineImage",
     "DefineShape",
@@ -95,6 +108,7 @@ __all__ = [
     "WRAPS",
     "MoveObject",
     "next_style",
+    "table_body",
     "normalize_language",
     "ObjectBody",
     "ObjectSet",

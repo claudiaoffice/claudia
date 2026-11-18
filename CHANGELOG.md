@@ -11,6 +11,41 @@ While the major version is 0, a minor version may break the API; every break is 
 - Composes (D1061, D1065): `set_wrap`, `add_object` and `shapes` in a text; `wrap` and `gap` on a text's object anchor
   (`over`, `around`, `above-below`, `behind`), the command `SetObjectWrap`. **Breaking:** `shapes` of a text answers
   `{library, document}`, as in a presentation, not a list.
+- `MAX_WIDTH` and `MIN_WIDTH`, the limits of the width of a table and of a column (hundredths of a percent), are
+  exported from the package (E9.32).
+- Tables (E9.32, D1201–D1210): `TableDef` (rows, columns, boxes of one paragraph each with the id `table/row/column`,
+  merged rectangles, header rows, banding, a look, flow or float placement, at most `MAX_ROWS` × `MAX_COLUMNS`),
+  `Column`, `Merge`, `RowSpec`, `ColumnSpec`, `TableLook`, `TableRegion`, the protocol `TableSource`, and the commands
+  `DefineTable`, `ForgetTable`, `SetEntries`, `InsertRows`, `DeleteRows`, `InsertColumns`, `DeleteColumns`,
+  `SetRowOrder`, `SetColumnOrder`, `SetColumn`, `SetTableOptions` and `SetMerge`, with the event `TablesChanged`. An
+  undo is refused when a colleague typed into a box it would destroy. `ObjectModel` holds `tables` and the kind
+  `"table"` is one of `OBJECT_KINDS`; the facet slots have a `table` thing.
+
+### Changed
+- **Breaking:** `ObjectBody` points at its definition with one field, `ref`, whose table the kind names, instead of one
+  field per kind (`shape`, `image`, `diagram`, `rendered`, `table`). The five names stay as read-only properties
+  (`body.image` is `body.ref` for an image, else `None`), so readers keep working; code that builds a body or changes
+  one with `replace` says `ref=`. A new kind of object needs no new field. The plain data has `ref` and none of the
+  five; bodies written the old way still read (`ObjectBody.from_data`), and `core.AddObject` is schema 6 with an
+  upcaster. The checks say "a text box points at no definition" and "this document does not know the image 'x'" where
+  they said that another kind's field was set.
+
+### Added
+- Deleting and hiding styles (E1.10, D226, D785): `plan_delete_style(model, style_id, *, how="assign", target=None)`
+  plans a deletion as one `Batch` that is undone as one. `how` is one of `DELETE_HOWS`: `"assign"` (what has the style
+  and what is based on it goes to `target`, a style of the same kind; the one way that changes looks, which
+  `assign_changes_look` says beforehand; `StyleBook.fallback` is the plain style of the kind a dialog offers first) or
+  `"rebase"` (everything keeps its look, built on `target`; what had the style itself goes to a stand-in). `target`
+  may be left out only for a style nothing has and nothing is based on. `held_look` says what a style must set itself
+  to look the same under another parent, `INITIAL_CSS` gives the value of "nothing" for the properties where it is
+  the same in every app. New commands `RebaseStyle` (kind `core.RebaseStyle`) and `SetStyleHidden`
+  (`core.SetStyleHidden`).
+- `StyleDef.origin` (`"document"`, `"builtin"` or `"template"`, `ORIGINS`) and `StyleDef.hidden`; only a document
+  style can be deleted, the others only hidden. Both are written only when they are not the default, so a style
+  without them writes what it wrote before. `StyleBook.set_hidden`, `rebase` and `next_after`; `StyleBook.add` takes
+  `before`; `CreateStyle` takes `before`.
+- `ObjectModel.restyle_users(old, new)`: the commands that put the objects that have a style under another. An app's
+  model that has styles and `style_in_use` offers it too, or a style in use cannot be deleted.
 - `claudia_core.stand_ins` (E3.13, CODE-42): `GENERIC_FONTS` (the font of each CSS generic family and the fallback),
   `GENERIC_ALIASES` (every CSS name for a generic family), `SAME_WIDTHS` (open fonts that take exactly the room of a
   common office font), `generic_font` and `file_font` (the font an office file names for a `font-family` list). The
@@ -18,6 +53,22 @@ While the major version is 0, a minor version may break the API; every break is 
 - `claudia_core.stand_ins.css_family` (E3.13, bugs 1 and 2): the CSS `font-family` list for a font an office file
   names, with the generic family it falls back to (`'Times New Roman', serif`). The importers of all three apps use
   it; the serif and monospace lists of `claudia_computes_io` moved here.
+
+### Changed
+- `StyleBook.to_data` always writes a parent before its children, whatever order styles were re-based into.
+- The undo of `RemoveStyle` puts the style back where it was in the book, not last.
+
+## [0.36.0] - 2026-11-18
+
+The redaction screens (E3.14, D729).
+
+### Added
+- `RedactionPlan.regions`: the places on the line people see that the blanked steps touch, for a preview to mark
+  (empty when nothing people see changes).
+
+### Changed
+- `Document.plan_redaction`: a later step whose blank of the same shape still does not apply becomes a no-op tombstone
+  instead of stopping the redaction (D729). The last resort is a history that does not replay before any blanked step.
 
 ## [0.35.0] - 2026-11-17
 

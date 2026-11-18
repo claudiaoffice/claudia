@@ -55,15 +55,13 @@ export interface ObjectBody {
   /** The words in it: a paragraph, the same entity composes uses (E10.17, D181), with its own style and the
    * runs saying who wrote which part. `null` for an image or a diagram, neither of which carries text. */
   paragraph: Paragraph | null
-  shape: string | null
-  image: string | null
+  /** The id of the definition the kind points at, in the document's own table for that kind: the outline of a
+   * `shape`, the asset of an `image`, the `ChartSpec` of a `diagram` (E6.6, `lib/charts.ts`), the rendered text
+   * definition of a `rendered` container (D390, `renderings` on the wire) or the table definition of a `table`
+   * (D1201). `null` for a text box. A rendered container's picture is its definition's own. Read it with
+   * `pointer(object, kind)`, which is `null` unless the object is of that kind. */
+  ref: string | null
   imported: ImageImport | null
-  /** The id of a chart definition this object shows (E6.6, `lib/charts.ts`'s `ChartSpec`), or `null` for every
-   * other kind. A floating object keeps no fixed aspect for a diagram, unlike a shape or an image. */
-  diagram: string | null
-  /** The id of the rendered text definition this object shows (D390, `renderings` on the wire), or `null` for every
-   * other kind. Its picture is the object's `image`, or the definition's own. */
-  rendered: string | null
   /** Whole degrees clockwise about the centre of the frame, 0–359 (D1021). A chart never turns. */
   rotation: number
   /** Whether this object holds to the grid (E10.15, D214): the document's own state, set with `setSnap`. The
@@ -102,6 +100,12 @@ export interface Paragraph {
   fields?: RefField[]
 }
 
+/** The id of the definition `body` points at if it is of `kind` (an image's asset, a diagram's chart spec, a table's
+ * definition …), else `null`: the one `ref` field serves every kind, and the kind says what it is. */
+export function pointer(body: Pick<ObjectBody, 'kind' | 'ref'>, kind: ObjectKind): string | null {
+  return body.kind === kind ? body.ref : null
+}
+
 /** The words of an object, or `''` when it has none — the one place the client decides what an object with no
  * paragraph reads as, so no caller has to repeat the null check. */
 export function wordsOf(body: ObjectBody): string {
@@ -125,6 +129,10 @@ export interface StyleDef {
   based_on: string | null
   css: Record<string, string>
   to_name: boolean
+  /** `builtin` or `template` where it is not the document's own (D780); only the document's own can be deleted. */
+  origin?: 'builtin' | 'template'
+  /** Left out of the menus a style is picked from (D780). */
+  hidden?: boolean
   /** `paragraph`, `box` or `outline` (D305, D312). */
   kind: string
   computed: Record<string, string>

@@ -23,6 +23,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Manage ▸ Accept Ownership… | Ctrl+Shift+Alt+C |  |
 | File | Manage ▸ Leave Document… | Ctrl+Shift+Alt+L |  |
 | File | Manage ▸ Export… | Ctrl+Shift+Alt+X |  |
+| File | Manage ▸ Redact History… | Ctrl+Shift+F8 |  |
 | File | Manage ▸ Delete From Server… | Ctrl+Shift+Alt+R |  |
 | File | Close Document | Ctrl+Alt+W |  |
 | File | Quit | Ctrl+Q | the shell |
@@ -39,8 +40,20 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Text Box | Ctrl+Alt+B |  |
 | Edit | Insert ▸ Soft Hyphen | Ctrl+- |  |
 | Edit | Insert ▸ Non-breaking Hyphen | Ctrl+_ |  |
+| Edit | Row ▸ Insert Above | Shift+Alt+↑ |  |
+| Edit | Row ▸ Insert Below | Shift+Alt+↓ |  |
+| Edit | Row ▸ Delete | Ctrl+Alt+- |  |
+| Edit | Column ▸ Insert Left | Shift+Alt+← |  |
+| Edit | Column ▸ Insert Right | Shift+Alt+→ |  |
+| Edit | Column ▸ Delete | Ctrl+Alt+_ |  |
+| Edit | Sort ▸ Ascending | Ctrl+Shift+X |  |
+| Edit | Sort ▸ Descending | Ctrl+Shift+Y |  |
+| Edit | Merge Cells | Ctrl+Shift+G |  |
+| Edit | Split Cell | Ctrl+Shift+H |  |
+| Edit | Table Options… | Ctrl+Shift+L |  |
 | Insert | Cross-Reference… | Ctrl+F2 |  |
 | Insert | Table of Contents | Ctrl+Shift+Alt+I |  |
+| Insert | Table… | Ctrl+Shift+F |  |
 | Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
 | Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
 | Insert | Container ▸ Typst | Ctrl+Shift+Alt+Y |  |
@@ -88,6 +101,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Manage ▸ Accept Ownership… | Ctrl+Shift+Alt+C |  |
 | File | Manage ▸ Leave Document… | Ctrl+Shift+Alt+L |  |
 | File | Manage ▸ Export… | Ctrl+Shift+Alt+X |  |
+| File | Manage ▸ Redact History… | Ctrl+Shift+F8 |  |
 | File | Manage ▸ Delete From Server… | Ctrl+Shift+Alt+R |  |
 | File | Close Document | Ctrl+Alt+W |  |
 | File | Quit | Ctrl+Q | the shell |
@@ -171,6 +185,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Manage ▸ Accept Ownership… | Ctrl+Shift+Alt+C |  |
 | File | Manage ▸ Leave Document… | Ctrl+Shift+Alt+L |  |
 | File | Manage ▸ Export… | Ctrl+Shift+Alt+X |  |
+| File | Manage ▸ Redact History… | Ctrl+Shift+F8 |  |
 | File | Manage ▸ Delete From Server… | Ctrl+Shift+Alt+R |  |
 | File | Close Document | Ctrl+Alt+W |  |
 | File | Quit | Ctrl+Q | the shell |

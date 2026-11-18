@@ -43,7 +43,7 @@ def put_box(model: TextModel, object_id="o1", *, at=("b1", 5), size=(300, 100), 
         if shape not in model.shapes:
             model.define_shape(primitive(shape))
         paragraph = paragraph_for(object_id, changes.pop("words_style", "shape-label"), words)
-        body = ObjectBody(object_id, "shape", *size, "plain-shape", paragraph, shape=shape, **changes)
+        body = ObjectBody(object_id, "shape", *size, "plain-shape", paragraph, ref=shape, **changes)
     model.insert_object(VisualObject(body, BlockAnchor(*at)))
 
 
@@ -141,7 +141,7 @@ def test_a_shape_the_model_has_but_files_do_not_know_is_not_written_and_the_expo
     model.define_shape(
         replace(primitive("rectangle"), id="arrow", name="Arrow", path="M0 0 L100 50 L0 100 Z"),
     )
-    body = ObjectBody("o1", "shape", 100, 60, "plain-shape", paragraph_for("o1", "shape-label", "x"), shape="arrow")
+    body = ObjectBody("o1", "shape", 100, 60, "plain-shape", paragraph_for("o1", "shape-label", "x"), ref="arrow")
     model.insert_object(VisualObject(body, BlockAnchor("b1", 0)))
     data = text_to_docx(model)
     assert not docx_to_text(data).objects
@@ -385,7 +385,7 @@ def test_a_box_whose_outline_changes_is_drawn_anew_and_a_foreign_look_is_said_to
     def edit(model: TextModel) -> None:
         found = only(model)
         model.define_shape(primitive("triangle"))
-        model.replace_object(VisualObject(replace(found.body, shape="triangle"), found.anchor))
+        model.replace_object(VisualObject(replace(found.body, ref="triangle"), found.anchor))
 
     losses = LossLog()
     _, _, back = patched_docx(edit, original=data, losses=losses)
@@ -458,7 +458,7 @@ def test_a_text_box_and_a_shape_come_back_with_their_place_size_turn_and_descrip
 def test_a_shape_the_model_has_but_files_do_not_know_is_not_written_and_the_export_says_so_in_both(to_file, to_model):
     model = a_text("Hello world")
     model.define_shape(replace(primitive("rectangle"), id="arrow", name="Arrow", path="M0 0 L100 50 L0 100 Z"))
-    body = ObjectBody("o1", "shape", 100, 60, "plain-shape", paragraph_for("o1", "shape-label", "x"), shape="arrow")
+    body = ObjectBody("o1", "shape", 100, 60, "plain-shape", paragraph_for("o1", "shape-label", "x"), ref="arrow")
     model.insert_object(VisualObject(body, BlockAnchor("b1", 0)))
     assert not to_model(to_file(model)).objects
 
@@ -690,7 +690,7 @@ def test_an_odt_box_whose_outline_changes_is_drawn_anew_and_a_foreign_look_is_sa
     def edit(model: TextModel) -> None:
         found = only(model)
         model.define_shape(primitive("triangle"))
-        model.replace_object(VisualObject(replace(found.body, shape="triangle"), found.anchor))
+        model.replace_object(VisualObject(replace(found.body, ref="triangle"), found.anchor))
 
     losses = LossLog()
     _, _, back = patched_odt(edit, original=data, losses=losses)

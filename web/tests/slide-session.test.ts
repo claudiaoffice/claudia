@@ -52,8 +52,7 @@ const text = (id: string, extra: object = {}) => ({
   h: 120,
   style: 'body-text',
   paragraph: paragraph(id),
-  shape: null,
-  image: null,
+  ref: null,
   imported: null,
   rotation: 0,
   snap: true,
@@ -69,8 +68,7 @@ const image = (id: string, extra: object = {}) => ({
   h: 200,
   style: 'plain-image',
   paragraph: null,
-  shape: null,
-  image: ASSET.id,
+  ref: ASSET.id,
   imported: IMPORT,
   rotation: 0,
   snap: true,
@@ -180,7 +178,7 @@ describe('opening a presentation', () => {
     await session.open()
     expect(session.state.images[ASSET.id]).toEqual(ASSET)
     const o = session.objectsOn('s1')[0]!
-    expect(o.image).toBe(ASSET.id)
+    expect(o.ref).toBe(ASSET.id)
     expect(o.imported).toEqual(IMPORT)
   })
 })

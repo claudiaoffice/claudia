@@ -10,6 +10,7 @@
 // text wrap is "behind the text". The words are drawn above that one, so a press there goes to the words; while Ctrl
 // is held, the layer comes up over the words and takes the press, and the pointer shows a hand (`grabbable`).
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { pointer } from '~/lib/objects'
 import { descriptionOf } from '~/lib/text-container-names'
 import { objectName } from '~/lib/descriptions'
 import { imageDataUrl } from '~/lib/images'
@@ -99,7 +100,7 @@ const label = (id: string) => {
   const name =
     o.kind === 'rendered'
       ? descriptionOf(o, faceOf(id)?.label ?? '', t)
-      : objectName(o, { shape: o.shape ? state.shapes[o.shape]?.name : undefined, words: o.paragraph?.text })
+      : objectName(o, { shape: pointer(o, 'shape') ? state.shapes[pointer(o, 'shape')!]?.name : undefined, words: o.paragraph?.text })
   // a screen-reader user hears how the words go round it, where it matters (BITV 1.3.1)
   const wrap = wrapOfObject(id)
   return wrap === 'over' ? name : `${name}, ${wrapLabel(wrap)}`
@@ -122,7 +123,8 @@ function done() {
   nextTick(() => (layer.value?.querySelector(`[data-object="${CSS.escape(state.selectedObject ?? '')}"]`) as HTMLElement | null)?.focus({ preventScroll: true }))
 }
 async function commit(id: string, text: string) {
-  const rendering = state.objects[id]?.rendered
+  const object = state.objects[id]
+  const rendering = object ? pointer(object, 'rendered') : null
   done()
   if (rendering) await session.setRenderingSource(rendering, text)
 }

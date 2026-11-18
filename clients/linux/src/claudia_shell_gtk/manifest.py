@@ -379,6 +379,12 @@ def _file_menu(*, title: str, prints: bool) -> Menu:
                             accelerators=("<Primary><Alt><Shift>x",),
                         ),
                         _page(
+                            "file.manage.redact",
+                            "Redact History…",
+                            "Take content out of the document's history and chat for good",
+                            accelerators=("<Primary><Shift>F8",),
+                        ),
+                        _page(
                             "file.manage.delete",
                             "Delete From Server…",
                             "Remove this document from the server for good",
@@ -570,7 +576,7 @@ def _format_menu(
         _page(
             "format.all-styles",
             "All Styles…",
-            "List, rename and tidy the styles of this document",
+            "List, rename, delete and hide the styles of this document",
             accelerators=("<Primary><Alt><Shift>a",),
         ),
         Submenu(
@@ -740,14 +746,29 @@ CONTENTS_ENTRY = ("Table of Contents", "A list of the headings, each a link to i
 AGENDA_ENTRY = ("Agenda", "A text box listing the slide titles with their numbers; it follows them by itself")
 
 
-def _insert_menu(contents: tuple[str, str]) -> Menu:
+def _insert_menu(contents: tuple[str, str], *, tables: bool = False) -> Menu:
     """Insert ▸ Cross-Reference… (step H, Ctrl+F2, LibreOffice's Fields key; in computes off) and Table of Contents
     (E9.31; in creates Agenda, ``contents`` is its label and tooltip), then Container ▸
     LaTeX, Mermaid, Typst (D560): the same in every app. Computes shows Table of Contents and the page reports it off,
     as it does List ▸. A container is a rendered text: the person writes the text and the server draws it (D390). The
     keys are the weighty ones, Ctrl+Alt+Shift+I (index), F (formula), G (graph) and Y (Typst), because the plain
-    Ctrl+Alt letters are used up or belong to the desktop (see above)."""
+    Ctrl+Alt letters are used up or belong to the desktop (see above). Composes alone has Table… (E9.32, D1208,
+    ``tables``): the other two apps have their grid already."""
     label, tooltip = contents
+    table = (
+        (
+            (
+                _page(
+                    "insert.table",
+                    "Table…",
+                    "Put a table into the text at the caret",
+                    accelerators=("<Primary><Shift>f",),
+                ),
+            ),
+        )
+        if tables
+        else ()
+    )
     return Menu(
         "Insert",
         (
@@ -760,6 +781,7 @@ def _insert_menu(contents: tuple[str, str]) -> Menu:
                 ),
                 _page("insert.contents", label, tooltip, accelerators=("<Primary><Alt><Shift>i",)),
             ),
+            *table,
             (
                 Submenu(
                     "Container",
@@ -857,18 +879,117 @@ def _manifest(
     tools: Menu,
     prints: bool,
     contents: tuple[str, str] = CONTENTS_ENTRY,
+    tables: bool = False,
 ) -> Manifest:
     return Manifest(
         app,
         (
             _file_menu(title=title, prints=prints),
             edit,
-            _insert_menu(contents),
+            _insert_menu(contents, tables=tables),
             format_menu,
             view,
             tools,
             _config_menu(),
             _help_menu(title),
+        ),
+    )
+
+
+def _table_block() -> tuple[MenuEntry, ...]:
+    """Edit ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… (E9.32, D1208): composes only, and
+    on only while the caret is in a table box. Row and Column are computes' (same ids, words and keys); the others
+    take Ctrl+Shift with a letter nobody else has, F, L, G, H (Insert ▸ Table… is F), X and Y for the two sorts."""
+    return (
+        *_row_column_menus(),
+        Submenu(
+            "Sort",
+            (
+                _page(
+                    "edit.sort-ascending",
+                    "Ascending",
+                    "Order the rows of the table by the column the caret is in, smallest first",
+                    accelerators=("<Primary><Shift>x",),
+                ),
+                _page(
+                    "edit.sort-descending",
+                    "Descending",
+                    "Order the rows of the table by the column the caret is in, largest first",
+                    accelerators=("<Primary><Shift>y",),
+                ),
+            ),
+        ),
+        _page(
+            "edit.merge-cells",
+            "Merge Cells",
+            "Make this cell and the one next to it one cell",
+            accelerators=("<Primary><Shift>g",),
+        ),
+        _page(
+            "edit.split-cell",
+            "Split Cell",
+            "Make a merged cell into single cells again",
+            accelerators=("<Primary><Shift>h",),
+        ),
+        _page(
+            "edit.table-options",
+            "Table Options…",
+            "Header rows, banding, look, width and the columns of this table",
+            accelerators=("<Primary><Shift>l",),
+        ),
+    )
+
+
+def _row_column_menus() -> tuple[Submenu, Submenu]:
+    """Edit ▸ Row ▸ and Column ▸ (D130, confirmed by the owner 2026-11-10): grouped rather than six flat items. Computes
+    has them for the sheet; composes has them for the table the caret is in (E9.32, D1208) with the same ids, the same
+    words and the same keys, so that one action has one key in every app. The page reports them off outside a table."""
+    return (
+        Submenu(
+            "Row",
+            (
+                _page(
+                    "edit.row-insert-above",
+                    "Insert Above",
+                    "Insert a row above the selection",
+                    accelerators=("<Alt><Shift>Up",),
+                ),
+                _page(
+                    "edit.row-insert-below",
+                    "Insert Below",
+                    "Insert a row below the selection",
+                    accelerators=("<Alt><Shift>Down",),
+                ),
+                _page(
+                    "edit.row-delete",
+                    "Delete",
+                    "Delete the selected rows",
+                    accelerators=("<Primary><Alt>minus",),
+                ),
+            ),
+        ),
+        Submenu(
+            "Column",
+            (
+                _page(
+                    "edit.column-insert-left",
+                    "Insert Left",
+                    "Insert a column to the left of the selection",
+                    accelerators=("<Alt><Shift>Left",),
+                ),
+                _page(
+                    "edit.column-insert-right",
+                    "Insert Right",
+                    "Insert a column to the right of the selection",
+                    accelerators=("<Alt><Shift>Right",),
+                ),
+                _page(
+                    "edit.column-delete",
+                    "Delete",
+                    "Delete the selected columns",
+                    accelerators=("<Primary><Alt>underscore",),  # Shift+- types "_"
+                ),
+            ),
         ),
     )
 
@@ -908,6 +1029,7 @@ def composes() -> Manifest:
                     ),
                 ),
             ),
+            _table_block(),
         ),
     )
     view_menu = Menu(
@@ -934,6 +1056,7 @@ def composes() -> Manifest:
         view=view_menu,
         tools=Menu("Tools", ((_tools_ask(),),)),
         prints=True,
+        tables=True,
     )
 
 
@@ -957,55 +1080,7 @@ def computes() -> Manifest:
                 _page("edit.image", "Image…", "Put a picture on the sheet", accelerators=("<Primary><Alt>i",)),
                 _page("edit.chart", "Chart…", "Add a chart of the selected cells", accelerators=("<Primary><Alt>c",)),
             ),
-            (
-                # D130 (confirmed by the owner 2026-11-10): grouped into Row ▸ / Column ▸ rather than six flat items.
-                Submenu(
-                    "Row",
-                    (
-                        _page(
-                            "edit.row-insert-above",
-                            "Insert Above",
-                            "Insert a row above the selection",
-                            accelerators=("<Alt><Shift>Up",),
-                        ),
-                        _page(
-                            "edit.row-insert-below",
-                            "Insert Below",
-                            "Insert a row below the selection",
-                            accelerators=("<Alt><Shift>Down",),
-                        ),
-                        _page(
-                            "edit.row-delete",
-                            "Delete",
-                            "Delete the selected rows",
-                            accelerators=("<Primary><Alt>minus",),
-                        ),
-                    ),
-                ),
-                Submenu(
-                    "Column",
-                    (
-                        _page(
-                            "edit.column-insert-left",
-                            "Insert Left",
-                            "Insert a column to the left of the selection",
-                            accelerators=("<Alt><Shift>Left",),
-                        ),
-                        _page(
-                            "edit.column-insert-right",
-                            "Insert Right",
-                            "Insert a column to the right of the selection",
-                            accelerators=("<Alt><Shift>Right",),
-                        ),
-                        _page(
-                            "edit.column-delete",
-                            "Delete",
-                            "Delete the selected columns",
-                            accelerators=("<Primary><Alt>underscore",),  # Shift+- types "_"
-                        ),
-                    ),
-                ),
-            ),
+            _row_column_menus(),
             (
                 _page(
                     "edit.clear",

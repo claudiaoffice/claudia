@@ -61,7 +61,7 @@ def add_box(d, block="b1", offset=0, words="a red note", description="", kind="t
         80,
         style,
         paragraph_for(object_id, words_style, words),
-        shape=shape,
+        ref=shape,
         description=description,
     )
     d.model.insert_object(VisualObject(body, BlockAnchor(block, offset)))
@@ -187,7 +187,7 @@ def test_counts_say_how_many_texts_of_each_kind_hold_a_match():
     d = document(("heading-1", "red"), ("body", "red red"), ("body", "blue"))
     add_box(d, words="red", description="red")
     found = scan_text(d.model, search("red"), kinds=KINDS)
-    assert found.counts == {"text": 1, "heading": 1, "remark": 0, "object": 1, "description": 1}
+    assert found.counts == {"text": 1, "heading": 1, "remark": 0, "object": 1, "description": 1, "table": 0}
     assert found.total == 5
 
 

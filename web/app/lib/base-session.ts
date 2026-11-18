@@ -11,7 +11,9 @@ import { languageNow, onLanguageChange, translate as t } from './i18n'
 import type { Thing } from './tags'
 import type { SchemeInfo } from './numbering'
 import type { Toc } from './contents'
-import { nearest, PastLink, step as stepRow, timeline, type Filter, type Item } from './replay'
+import type { Deleted, DeleteHow, StyleDeletion } from './style-deletion'
+import { nearest, PastLink, PlannedLink, step as stepRow, timeline, type Filter, type Item } from './replay'
+import { requestOf, type Picked, type RedactionPlan } from './redaction'
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
 
@@ -43,6 +45,10 @@ export interface Entry {
   label: string
   summary: string
   of?: string | null
+  /** The command's kind (`core.Redaction` for the record of a redaction); absent from an older server. */
+  kind?: string
+  /** Its content was taken away (D720). */
+  redacted?: boolean
 }
 export interface ChatMessage {
   number: number
@@ -51,6 +57,8 @@ export interface ChatMessage {
   text: string
   time: string
   at: string | null
+  /** Its words were taken away (D724). */
+  redacted?: boolean
 }
 export interface CheckpointInfo {
   number: number
@@ -148,6 +156,8 @@ export interface BaseState {
   restorePolicy: 'consensus' | 'veto'
   /** The playhead, while the person looks at the document as it was; `null` in the present. */
   replay: ReplayState | null
+  /** The redaction being previewed (D721): the token the views read its state with, and the places to mark. */
+  preview: { plan: string; regions: Region[] } | null
   /** The names things were given since the document was loaded (`thing_renamed`), by id: a tag shows the name now. */
   renamed: Record<string, string>
   /** The thing a tag in the chat just took the view to, for the view to mark. */
@@ -197,6 +207,7 @@ function initialState(): BaseState {
     proposal: null,
     restorePolicy: 'consensus',
     replay: null,
+    preview: null,
     renamed: {},
     pointed: null,
     renderTypes: [],
@@ -221,6 +232,9 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   private stopLanguage: (() => void) | null = null
   private replayLink: PastLink | null = null
+  private previewLink: PlannedLink | null = null
+  /** A redaction was just heard of; the `rebuilt` that follows it is the same news. */
+  private redactionHeard = false
   private replayWanted: string | null = null
   private replayPump: Promise<void> | null = null
 
@@ -372,6 +386,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Everything the screen shows: the common parts and the app's. */
   protected async reload() {
     await this.stopReplay() // the present is what a reload is for
+    this.dropPreview()
     this.state.renamed = {}
     const link = this.need()
     const s = this.state
@@ -415,7 +430,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   // ------------------------------------------------------------------------------ events
   private onEvent(name: string, data: WireData) {
     const s = this.state
-    if (!s.replay && this.onAppEvent(name, data)) return // while looking at the past, the present does not disturb it
+    // while looking at the past or at a preview, the present does not disturb the views
+    if (!s.replay && !s.preview && this.onAppEvent(name, data)) return
     switch (name) {
       case 'command':
         s.revision = data.revision
@@ -464,9 +480,20 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         if (open) this.notice(this.resolvedText(open, data.outcome), data.outcome === 'declined' ? 'warning' : 'info')
         break
       }
-      case 'branch':
-      case 'rebuilt':
       case 'redacted':
+        this.redactionHeard = true
+        this.notice(t('Part of the history was redacted. The document was reloaded.'), 'info')
+        this.track(this.reload())
+        break
+      case 'rebuilt':
+        if (this.redactionHeard) {
+          this.redactionHeard = false // (the reload of the redaction shows the rebuilt state already)
+          break
+        }
+        this.notice(t('The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded.'), 'warning')
+        this.track(this.reload())
+        break
+      case 'branch':
         this.notice(t('The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded.'), 'warning')
         this.track(this.reload())
         break
@@ -513,6 +540,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   protected need(): LinkLike {
     if (!this.link) throw new ProtocolError('closed', 'not connected')
     if (this.state.replay) return (this.replayLink ??= new PastLink(this.link, () => this.replayShown))
+    if (this.state.preview) return (this.previewLink ??= new PlannedLink(this.link, () => this.state.preview?.plan ?? ''))
     return this.link
   }
 
@@ -535,7 +563,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Start looking at the document as it was, at `revision` or at its latest change. */
   async startReplay(revision?: string): Promise<void> {
     const s = this.state
-    if (s.replay || s.status !== 'open' || s.entries.length === 0) return
+    if (s.replay || s.preview || s.status !== 'open' || s.entries.length === 0) return
     const items = timeline(s.entries, s.chat, 'all')
     const at = revision ? nearest(items, revision) : items.findLastIndex((i) => i.kind === 'change')
     const latest = s.entries.at(-1)!.revision
@@ -607,6 +635,59 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     await this.stopReplay()
     this.state.renamed = {}
     await this.track(this.loadApp())
+  }
+
+  // ------------------------------------------------------------------------------ redacting (E3.14, D720–D728)
+  /** Work out what redacting `picked` would do (D721): nothing changes. A sentence instead of a plan when it cannot be,
+   * for the dialog to show in place (a notice would sit behind it). */
+  async planRedaction(picked: Picked): Promise<RedactionPlan | string> {
+    try {
+      return await this.need().request<RedactionPlan>('redaction_plan', { ...requestOf(picked), state: false })
+    } catch (error) {
+      if (error instanceof ProtocolError && error.code !== 'closed') return error.message
+      this.explain(error)
+      return t('Not connected to the server.')
+    }
+  }
+
+  /** Show the document as `plan` would leave it, with the places it changes marked, until `endPreview`. A plan that is
+   * not allowed, or changes nothing people see, shows the present. */
+  async previewRedaction(plan: RedactionPlan): Promise<void> {
+    const s = this.state
+    await this.stopReplay()
+    if (!plan.plan || !plan.changes_now) return this.endPreview()
+    s.preview = { plan: plan.plan, regions: plan.regions ?? [] }
+    this.previewLink = null
+    await this.track(this.loadApp())
+    if (s.preview?.plan === plan.plan) this.followReplay(s.preview.regions)
+  }
+
+  /** Back to the present after a preview. */
+  async endPreview(): Promise<void> {
+    if (!this.state.preview) return
+    this.dropPreview()
+    await this.track(this.loadApp())
+  }
+
+  /** For blanking part of an imported workbook (D723): the part a range the person wrote names, on the sheet on show;
+   * `null` where the app has no cells, or the text is not a range. */
+  redactionRangePart(_range: string): string | null {
+    return null
+  }
+
+  private dropPreview(): void {
+    this.state.preview = null
+    this.previewLink = null
+  }
+
+  /** Carry out the redaction `plan` showed for `picked` (D229): the dependents it named are the confirmation that they
+   * were shown. Afterwards `note`, if any, goes to the chat (D728). The views follow the `redacted` event. */
+  async redact(picked: Picked, plan: RedactionPlan, note = ''): Promise<boolean> {
+    await this.endPreview()
+    const done = await this.attempt('redact', { ...requestOf(picked), dependents: plan.dependents })
+    if (done === false) return false
+    if (note.trim()) await this.say(note.trim())
+    return true
   }
 
   // ------------------------------------------------------------------------------ tags (E5.20, D551)
@@ -882,6 +963,38 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Give a table of contents (in creates: an agenda) other options; the entries come back as a `generated` event. */
   async setContents(paragraph: string, options: Toc): Promise<boolean> {
     return (await this.attempt('set_contents', { paragraph, options, base: this.state.revision })) !== false
+  }
+
+  // ------------------------------------------------------------------------------ deleting and hiding styles (E1.10)
+  /** What deleting a style would do, so that the dialog can say it in words first (`style_deletion`, D226). A read: a
+   *  server that cannot say makes no noise, and the dialog then offers no Delete…. */
+  async styleDeletion(style: string): Promise<StyleDeletion | null> {
+    try {
+      return await this.need().request<StyleDeletion>('style_deletion', { style })
+    } catch {
+      return null
+    }
+  }
+
+  /** Delete a style in one step (D785): `how` and the style that `target`s its place (null only for a style that
+   *  nothing has). A refusal that is about this very deletion comes back as its sentence; anything else is told as a
+   *  notice, and is `false`. */
+  async deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
+    const params: Record<string, unknown> = { style, how, base: this.state.revision }
+    if (target) params.target = target
+    try {
+      const done = await this.need().request<{ stand_in: string | null }>('delete_style', params)
+      return { standIn: done.stand_in ?? null }
+    } catch (error) {
+      if (error instanceof ProtocolError && error.code === 'command_error') return { refused: error.message }
+      this.explain(error)
+      return false
+    }
+  }
+
+  /** Hide a style from the menus a style is picked from, or show it again (D780). */
+  async hideStyle(style: string, hidden: boolean): Promise<boolean> {
+    return (await this.attempt('hide_style', { style, hidden, base: this.state.revision })) !== false
   }
 
   async undo(): Promise<boolean> {

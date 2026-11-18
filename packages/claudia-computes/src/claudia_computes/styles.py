@@ -32,7 +32,7 @@ def _style(style_id: str, name: str, purpose: str, *, kind: str = "paragraph", *
     # A paragraph style is based on Body text, so a change to Body text reaches it (D73); a box or outline style is
     # a root of its own, because a style and its parent are always of the same kind (D305).
     parent = DEFAULT_STYLE if kind == "paragraph" and style_id != DEFAULT_STYLE else None
-    return StyleDef(style_id, name, purpose, parent, css, kind=kind)
+    return StyleDef(style_id, name, purpose, parent, css, kind=kind, origin="builtin")
 
 
 #: The styles every workbook starts with. The paragraph styles are based on Body text: a change to Body text

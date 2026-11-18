@@ -20,6 +20,7 @@ _KIND_LABELS = {
     "image": msg("Picture"),
     "diagram": msg("Chart"),
     "rendered": msg("Diagram"),
+    "table": msg("Table"),
     "slide": msg("Slide"),
     # the paragraphs of a text (D554): named one at a time, when somebody points at one
     "heading": msg("Heading"),

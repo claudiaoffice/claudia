@@ -34,6 +34,8 @@ WEB_SOURCES = {
 WEB_SHARED_MENUS = REPO / "web" / "app" / "lib" / "document-menus.ts"
 # The Format menu's four entries are built in one place for all three apps (D300).
 WEB_FORMAT_MENU = REPO / "web" / "app" / "lib" / "format-menu.ts"
+# Composes' table entries (E9.32), Edit ▸ Row ▸ … Table Options… and Insert ▸ Table…, are built in one place.
+WEB_TABLE_MENU = REPO / "web" / "app" / "lib" / "table-menu.ts"
 # Config ▸ App Language's ids are built from this list (`config.language.${tag}`), not written out one by one.
 WEB_LANGUAGES = REPO / "web" / "app" / "lib" / "i18n.ts"
 BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creates": manifest.creates}
@@ -84,7 +86,7 @@ def test_every_app_has_the_same_eight_menus_in_the_same_order(app: manifest.Mani
 def test_insert_offers_the_container_types_with_a_key_each(app: manifest.Manifest) -> None:
     """Insert ▸ Container ▸ LaTeX, Mermaid, Typst (D560): the same three in every app, each with its own key, listened
     for by the page like every other app command."""
-    _contents, (container,) = app.menu("Insert").sections
+    _contents, *_table, (container,) = app.menu("Insert").sections
     assert isinstance(container, manifest.Submenu)
     assert container.label == "Container"
     assert [(a.id, a.label) for a in container.items] == [
@@ -105,7 +107,7 @@ def test_insert_starts_with_the_cross_reference_and_the_table_of_contents_which_
 ) -> None:
     """Insert ▸ Table of Contents (E9.31), Ctrl+Alt+Shift+I, listened for by the page; in creates it is Agenda. Computes
     shows it and the page reports it off, as it does List ▸."""
-    ((reference, contents), _containers) = app.menu("Insert").sections
+    ((reference, contents), *_rest) = app.menu("Insert").sections
     assert isinstance(reference, manifest.Action) and isinstance(contents, manifest.Action)
     assert (reference.id, reference.label, reference.accelerators) == (
         "insert.cross-reference",
@@ -116,6 +118,47 @@ def test_insert_starts_with_the_cross_reference_and_the_table_of_contents_which_
     assert contents.label == ("Agenda" if app.app == "creates" else "Table of Contents")
     assert contents.accelerators == ("<Primary><Alt><Shift>i",)
     assert contents.key_owner == manifest.KeyOwner.PAGE
+
+
+def test_composes_alone_has_tables_in_insert_and_edit_with_the_keys_of_the_decision_log(app: manifest.Manifest) -> None:
+    """E9.32, D1208: Insert ▸ Table… and Edit ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… are
+    composes' own, because the other two apps have their grid. Row and Column are computes' entries (one action, one key
+    in every app, see test_one_action_has_one_key_in_every_app), the page reports them off outside a table."""
+    ids = {action.id for action in app.actions}
+    table_ids = {
+        "insert.table",
+        "edit.sort-ascending",
+        "edit.sort-descending",
+        "edit.merge-cells",
+        "edit.split-cell",
+        "edit.table-options",
+    }
+    if app.app != "composes":
+        assert not ids & table_ids
+        return
+    assert table_ids <= ids
+    keys = {
+        "insert.table": ("<Primary><Shift>f",),
+        "edit.table-options": ("<Primary><Shift>l",),
+        "edit.merge-cells": ("<Primary><Shift>g",),
+        "edit.split-cell": ("<Primary><Shift>h",),
+        "edit.sort-ascending": ("<Primary><Shift>x",),
+        "edit.sort-descending": ("<Primary><Shift>y",),
+        "edit.row-insert-above": ("<Alt><Shift>Up",),
+        "edit.column-insert-right": ("<Alt><Shift>Right",),
+    }
+    for action_id, accelerators in keys.items():
+        assert app.action(action_id).accelerators == accelerators, action_id
+        assert app.action(action_id).key_owner == manifest.KeyOwner.PAGE, action_id
+    assert [submenu.label for submenu in _submenus(app.menu("Edit")) if submenu.label in {"Row", "Column", "Sort"}] == [
+        "Row",
+        "Column",
+        "Sort",
+    ]
+
+
+def _submenus(menu: manifest.Menu) -> list[manifest.Submenu]:
+    return [entry for section in menu.sections for entry in section if isinstance(entry, manifest.Submenu)]
 
 
 def test_the_front_page_has_no_insert_menu(app: manifest.Manifest) -> None:
@@ -151,6 +194,7 @@ def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: mani
         "file.manage.accept-owner",
         "file.manage.leave",
         "file.manage.export",
+        "file.manage.redact",
         "file.manage.delete",
     ]
     assert [a.label for a in manage.items] == [
@@ -160,6 +204,7 @@ def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: mani
         "Accept Ownership…",
         "Leave Document…",
         "Export…",
+        "Redact History…",
         "Delete From Server…",
     ]
 
@@ -615,15 +660,21 @@ def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name
     """The guard against drift (see this module's docstring): if the web app renames or drops an id this shell
     still dispatches, this fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by
     design — the shell intercepts them before they would ever reach the page — so they are not checked here."""
-    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_LANGUAGES)
+    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_LANGUAGES, WEB_TABLE_MENU)
     if not all(path.exists() for path in sources):
         pytest.skip("the web sources are not next to the client")
-    app_source, shared_menus, format_menu, languages_source = (path.read_text(encoding="utf-8") for path in sources)
+    app_source, shared_menus, format_menu, languages_source, table_menu = (
+        path.read_text(encoding="utf-8") for path in sources
+    )
     assert "formatItems(" in app_source, "every app builds its Format menu with lib/format-menu.ts"
     shared_source = shared_menus + format_menu
+    # composes' table entries: the actions are named in one table (`TABLE_ACTION_IDS`), the menus and keys built from it
+    table_source = table_menu if app_name == "composes" else ""
 
     def in_web(action_id: str) -> bool:
         if f"id: '{action_id}'" in app_source or f"id: '{action_id}'" in shared_source:
+            return True
+        if f"'{action_id}'" in table_source:
             return True
         tag = action_id.removeprefix("config.language.")
         return (
@@ -856,8 +907,9 @@ def test_computes_tools_menu_has_the_pivot_table_entries_each_with_a_key(compute
 WEB_ONLY_PARENTS = {
     "file.manage": "File ▸ Manage ▸ is a Submenu here (no id, no action)",
     "edit.paste-as": "Edit ▸ Paste As ▸ is a Submenu here",
-    "edit.row": "computes' Edit ▸ Row ▸ is a Submenu here",
-    "edit.column": "computes' Edit ▸ Column ▸ is a Submenu here",
+    "edit.row": "Edit ▸ Row ▸ is a Submenu here",
+    "edit.column": "Edit ▸ Column ▸ is a Submenu here",
+    "edit.sort": "composes' Edit ▸ Sort ▸ is a Submenu here",
 }
 
 
@@ -866,12 +918,14 @@ def test_every_web_menu_entry_is_in_the_desktop_menus_too(app_name: str) -> None
     """At cfa2d91 File ▸ Print…, Image…, Chart…, Names…, SQL Query…, Show Grid and the List flyout were on the web
     only, and the desktop shells hide the web menu bar: on the desktop they could not be found. A menu item on the web
     is `{ id: '…', label: … }`; a keyboard shortcut (`get label()`) is not a menu item."""
-    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU)
+    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_TABLE_MENU)
     if not all(path.exists() for path in sources):
         pytest.skip("the web sources are not next to the client")
-    app_source, shared_menus, format_menu = (path.read_text(encoding="utf-8") for path in sources)
+    app_source, shared_menus, format_menu, table_menu = (path.read_text(encoding="utf-8") for path in sources)
     item = re.compile(r"\{\s*id: '([a-z.-]+)',\s*label:")
     ids = set(item.findall(app_source)) | set(item.findall(format_menu)) | set(item.findall(shared_menus))
+    if app_name == "composes":
+        ids |= set(item.findall(table_menu))
     ids |= {"file.manage", "edit.paste-as"} & set(re.findall(r"id: '([a-z.-]+)',\n", shared_menus))
     if "print: " not in app_source:  # File ▸ Print… is only in the apps that hand the shared File menu a `print`
         ids.discard("file.print")

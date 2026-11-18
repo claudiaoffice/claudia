@@ -13,6 +13,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
+from claudia_composes import TABLE_STYLE_IDS
 from claudia_core import StyleBook
 from claudia_core.css import resolve_css
 from claudia_core.stand_ins import file_font
@@ -250,7 +251,12 @@ def size_of(book: StyleBook, style_id: str, colours: dict[str, str]) -> float:
 
 
 def look_for(book: StyleBook, style_id: str, colours: dict[str, str]) -> Look:
-    """The look the style sets by itself: what differs from its parent, as a file says it."""
+    """The look the style sets by itself: what differs from its parent, as a file says it. The box of a style of a
+    table's look (its lines, fill and padding) is the cell's, which the table writes (E9.32): a file's paragraph in that
+    cell would draw it a second time."""
     style = book.get(style_id)
     parent = size_of(book, style.based_on, colours) if style.based_on else _ROOT_SIZE
-    return look_of(resolve_css(style.css, colours), font_size=size_of(book, style_id, colours), parent_size=parent)
+    look = look_of(resolve_css(style.css, colours), font_size=size_of(book, style_id, colours), parent_size=parent)
+    if style_id in TABLE_STYLE_IDS:
+        look.borders, look.background, look.padding = {}, None, {}
+    return look

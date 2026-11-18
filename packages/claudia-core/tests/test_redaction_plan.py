@@ -12,6 +12,7 @@ from claudia_core import (
     Document,
     Import,
     MemoryStore,
+    Redacted,
     RedactedEvent,
     Redaction,
     RedactionError,
@@ -158,9 +159,9 @@ def test_a_bare_list_of_steps_is_refused_when_others_would_have_to_go_too(naive_
     assert not doc.log.get(r(1)).redacted
 
 
-def test_a_redaction_nothing_can_make_replay_changes_nothing(make_doc):
-    """The last resort (D722): a later step that breaks even when blanked itself. ``Remove`` keeps its index when
-    redacted, so blanking it does not help once the item it removed was never inserted."""
+def test_a_later_step_that_breaks_even_blanked_becomes_a_tombstone(make_doc):
+    """D722 (2026-11-18): a later step whose same-shape blank still does not apply (``Remove`` keeps its index, but the
+    item it removed was never inserted) becomes a no-op tombstone instead of stopping the redaction."""
     registry = new_registry()
     registry.register(Remove)
     registry.register(NaiveInsert)
@@ -173,10 +174,21 @@ def test_a_redaction_nothing_can_make_replay_changes_nothing(make_doc):
     doc = Document(Stubborn(), clock=clock.time, store=MemoryStore())
     doc.execute(NaiveInsert(0, SECRET), author="ana")
     doc.execute(Remove(0), author="ana")
+    plan = doc.plan_redaction([r(1)])
+    assert plan.dependents == (r(2),)
+    doc.redact(plan, author="ana")
+    assert doc.log.get(r(2)).command == Redacted("list.Remove", {})
+    assert doc.model.items == []
+
+
+def test_a_history_that_does_not_replay_before_the_redaction_is_not_blanked_further(make_doc):
+    """The last resort: a step before every blanked one refuses, so the history was broken already. Nothing is
+    blanked to hide that."""
+    doc = secret_doc(make_doc)
+    doc.log.replace_command(r(1), Remove(5))  # a history broken from the start
     with pytest.raises(RedactionError) as caught:
-        doc.plan_redaction([r(1)])
-    assert "main:2" in str(caught.value)
-    assert not doc.log.get(r(1)).redacted
+        doc.plan_redaction([r(2)])
+    assert "does not replay" in str(caught.value)
 
 
 def test_a_plan_is_only_good_for_the_document_it_was_made_for(make_doc):

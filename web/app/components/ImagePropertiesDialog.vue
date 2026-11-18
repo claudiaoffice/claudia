@@ -8,6 +8,7 @@
 // other actions sat in the design mockup for this dialog but are not built (undecided, like most of the context
 // menu's own next steps) — this shows what the picture already carries, and closes.
 import { computed } from 'vue'
+import { pointer } from '~/lib/objects'
 import { formatByteSize, imageByteSize, imageDataUrl } from '~/lib/images'
 import { pictureAlt } from '~/lib/descriptions'
 import { ago, colorOf, inkOn, initial } from '~/lib/people'
@@ -20,7 +21,7 @@ const props = defineProps<{ session: SlideSession; object: SlideObject }>()
 const emit = defineEmits<{ close: [] }>()
 
 const state = props.session.state
-const asset = computed(() => (props.object.image ? state.images[props.object.image] : undefined))
+const asset = computed(() => (pointer(props.object, 'image') ? state.images[pointer(props.object, 'image')!] : undefined))
 const imported = computed(() => props.object.imported)
 /** What the picture says now (Format ▸ Describe Object… may have changed it since the import), not the import's own words. */
 const description = computed(() => pictureAlt(props.object))

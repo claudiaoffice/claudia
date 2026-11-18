@@ -14,8 +14,7 @@ const image = (id: string, extra: object = {}) => ({
   h: 200,
   style: 'plain-image',
   paragraph: null,
-  shape: null,
-  image: ASSET.id,
+  ref: ASSET.id,
   imported: IMPORT,
   rotation: 0,
   snap: true,
@@ -331,7 +330,7 @@ describe('floating objects (images, E6.17)', () => {
     expect(session.state.images[ASSET.id]).toEqual(ASSET)
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['i1'])
     const o = session.objectsOn('s1')[0]!
-    expect(o.image).toBe(ASSET.id)
+    expect(o.ref).toBe(ASSET.id)
     expect(o.imported).toEqual(IMPORT)
   })
 
@@ -522,7 +521,7 @@ describe('events', () => {
       await session.settled()
       expect(link.count('sheets')).toBe(2)
       expect(link.count('log')).toBe(2)
-      expect(session.state.notice?.text).toMatch(/changed/i)
+      expect(session.state.notice?.text).toMatch(name === 'redacted' ? /redacted/i : /changed/i)
     }
   })
 
@@ -1551,5 +1550,15 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
     link.push('names', { type: 'names' })
     await session.settled()
     expect(session.isGone('r1')).toBe(true)
+  })
+})
+
+describe('a range to blank in an imported workbook (D723)', () => {
+  it('names the cells on the sheet on show, and nothing for what is not a range', async () => {
+    const { session } = await opened()
+    expect(session.redactionRangePart(' a1:$b$5 ')).toBe('s1!A1:B5')
+    expect(session.redactionRangePart('C7')).toBe('s1!C7')
+    expect(session.redactionRangePart('Payments')).toBeNull()
+    expect(session.redactionRangePart('A0')).toBeNull()
   })
 })

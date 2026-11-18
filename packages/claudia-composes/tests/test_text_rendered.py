@@ -19,7 +19,7 @@ from claudia_core import (
 def text_with_a_formula(words: str = "Einstein wrote E = mc2 once") -> Document:
     d = Document(TextModel(), store=MemoryStore())
     d.execute(InsertText("b1", 0, words), author="ann")
-    body = ObjectBody("c1", "rendered", 120, 40, "plain-image", rendered="r1")
+    body = ObjectBody("c1", "rendered", 120, 40, "plain-image", ref="r1")
     definition = RenderedDefinition("r1", "latex", "E = mc^2")
     d.execute(
         Batch((DefineRendering(definition.to_data()), AddObject(body, BlockAnchor("b1", 15).to_data()))), author="ann"
@@ -38,7 +38,7 @@ def test_a_container_hangs_from_a_paragraph_and_follows_the_words_in_front_of_it
 def test_a_container_in_a_text_refuses_a_definition_nobody_knows():
     d = Document(TextModel(), store=MemoryStore())
     d.execute(InsertText("b1", 0, "hello"), author="ann")
-    body = ObjectBody("c1", "rendered", 120, 40, "plain-image", rendered="r1")
+    body = ObjectBody("c1", "rendered", 120, 40, "plain-image", ref="r1")
     with pytest.raises(ValueError, match="does not know the rendering"):
         d.execute(AddObject(body, BlockAnchor("b1", 2).to_data()), author="ann")
 

@@ -7,7 +7,8 @@
  *   lines chosen for the whole paragraph by Knuth and Plass, justification in whole mpt; CSS styles resolved to
  *   integers.
  * - **Box clipping** (`text/box`): text in a box of fixed size, cut at the border (D182).
- * - **Flow pagination** (`flow/`): paragraphs into pages of any paper size, with orphans, widows and keep-with-next.
+ * - **Flow pagination** (`flow/`): paragraphs and tables into pages of any paper size, with orphans, widows and
+ *   keep-with-next, tables by rows with their header on every page.
  * - **Display list** (`display/`) and **PDF writer** (`pdf/`): glyph runs, paths (colours and gradients) and
  *   images, transformed, clipped and made transparent in groups, drawn to a PDF.
  * - **SVG** (`svg/`): any SVG picture drawn as display items, for every app.
@@ -51,7 +52,9 @@ export type { ItemGeometry, ListItemRef, ListRef, SchemeGeometry } from './text/
 export { contentBox, MIN_CONTENT, MIN_PAGE, PAPER_SIZES, pageGeometry, paperById } from './flow/paper'
 export type { Margins, Orientation, PageGeometry, PaperSize } from './flow/paper'
 export { flowItems, locate, paginate } from './flow/paginate'
-export type { FlowBlock, FlowPage, Fragment, PlacedLine, Spot } from './flow/paginate'
+export type { FlowBlock, FlowItem, FlowPage, FlowTable, Fragment, PlacedLine, PlacedTable, Spot } from './flow/paginate'
+export { layoutTable, roleStyle, tableItems, tableStyleIds } from './flow/table'
+export type { PlacedRow, RowPart, RowRole, TableCell, TableColumnData, TableData, TableEntryData, TableLayout, TableRow, TableStyles } from './flow/table'
 export { bandOf, firstRowAt, MIN_SLOT_EM, slotsAt } from './flow/exclusions'
 export type { Area, Column, Exclusion, Slot, Wrap } from './flow/exclusions'
 

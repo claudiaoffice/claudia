@@ -5,11 +5,17 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 15.
+
 Describing objects (BITV 1.1.1); named number formats (D378). State schema 8 → 10 (9: an object's description, 10:
 the number formats). Search on claudia-search (SEC-18, CODE-18). Named ranges are things (D552) and a sheet can be renamed (E6.24):
 state schema 12 → 13.
 
 ### Added
+- `WorkbookModel.restyle_users(old, new)` and `CellStyles.ranges_named(style_id)`: the style ranges and objects that
+  have a style, as commands that put them under another (the deletion of a style, E1.10, D226). Its built-in styles
+  have `origin == "builtin"`.
 - The paragraphs of `claudia-core` 0.35 have `fields` (always empty here) and `typed`, `cut`, `with_fields`.
 - The paragraphs of `claudia-core` 0.33 have `generated` (always `None` here) and `with_generated`.
 - The cell styles are `StyleDef`s of `claudia-core` 0.32, which have a `numbering` (always `None` here); the built-in

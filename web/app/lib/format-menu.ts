@@ -12,6 +12,7 @@
 // (D301): that is the flyout parent's `action`. Each workspace says what fits and what to do; this file only builds.
 import type { MenuItem } from '../components/MenuBar.vue'
 import { menuCss, type StyleView } from './style-css'
+import { pickable } from './style-deletion'
 
 /** What the List entry does in this app (E9.21). */
 export interface ListMenu {
@@ -97,7 +98,8 @@ function listItem(t: (text: string) => string, list: ListMenu): MenuItem {
 
 /** The entries of the Format menu: the four of D300 and the list. `t` is the app's translation function. */
 export function formatItems(t: (text: string) => string, menu: FormatMenu): MenuItem[] {
-  const groups = menu.groups.filter((group) => group.length)
+  // Hidden styles are not offered here (D780), unless the selection has one: it must not vanish from where it is chosen.
+  const groups = menu.groups.map((group) => pickable(group, menu.current)).filter((group) => group.length)
   const flyout: MenuItem[] = []
   if (menu.heading) flyout.push({ label: menu.heading, disabled: true })
   groups.forEach((group, i) => {

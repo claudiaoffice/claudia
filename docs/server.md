@@ -138,7 +138,7 @@ sentence naming the one that is here, D535), and a server that keeps documents i
   `replace_text` (a range replaced by text; line breaks start paragraphs; one request is one history step),
   `set_style`, the style methods `styles`, `change_style`, `deviate_style`, `rename_style`, `set_heading_level` and
   `check_css` (a style is CSS from the kernel's allow-list; a change either alters the style for all its uses or deviates
-  into a new style that waits for its name; a paragraph style may give a heading level, E9.22), `look` and `hold` (where my cursor is, and locking the ± n words around it), `suggest` (assistant only)
+  into a new style that waits for its name; a paragraph style may give a heading level, E9.22), `style_deletion`, `delete_style` and `hide_style` (D226, D785: a deletion is one undo step; `how` is `assign` (another style takes its place, looks change) or `rebase` (looks held, with a stand-in that waits for its name); built-in and template styles can only be hidden), `look` and `hold` (where my cursor is, and locking the ± n words around it), `suggest` (assistant only)
   and `accept_suggestion` / `reject_suggestion`. The assistant writes a text as it writes a sheet or a slide (D640):
   for a person in *act* mode through `replace_text` and `set_style`, in *suggest* mode through `suggest`, and people
   accept (D262).

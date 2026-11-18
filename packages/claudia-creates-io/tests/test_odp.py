@@ -125,7 +125,7 @@ def an_object(object_id, slide, kind, x, y, w, h, style, text="", shape=None) ->
     """``style`` is the style of what a person sees as the object's look: a text box's words, a shape's outline; the
     other slot gets its default (D304, D310)."""
     box, words = ("plain-box", style) if kind == "text" else (style, "shape-label")
-    body = ObjectBody(object_id, kind, w, h, box, paragraph_for(object_id, words, text, "ana"), shape=shape)
+    body = ObjectBody(object_id, kind, w, h, box, paragraph_for(object_id, words, text, "ana"), ref=shape)
     return VisualObject(body, SlideAnchor(slide, x, y))
 
 
@@ -203,7 +203,7 @@ def test_an_image_is_a_picture_with_its_own_bytes_in_the_package():
     asset = a_gif()
     model = a_deck()
     model.define_image(asset)
-    body = ObjectBody("o9", "image", 400, 200, "plain-image", image=asset.id, imported=an_import(asset))
+    body = ObjectBody("o9", "image", 400, 200, "plain-image", ref=asset.id, imported=an_import(asset))
     model.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     data = slides_to_odp(model)
     frame = pages_of(data)[0][-1]
@@ -976,7 +976,7 @@ def a_deck_with_picture(**changes) -> SlideModel:
     deck = SlideModel.empty()
     asset = a_gif()
     deck.define_image(asset)
-    body = ObjectBody("o1", "image", 40, 20, "plain-image", image=asset.id, imported=an_import(asset), **changes)
+    body = ObjectBody("o1", "image", 40, 20, "plain-image", ref=asset.id, imported=an_import(asset), **changes)
     deck.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     return deck
 
@@ -1021,7 +1021,7 @@ def a_deck_with_container(*, pictured: bool = True, **changes) -> SlideModel:
     asset = decode_image(GLYPHS, checked_drawing=True)
     deck.define_image(asset)
     deck.define_rendering(RenderedDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
-    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", rendered="r1", **changes)
+    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", ref="r1", **changes)
     deck.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     return deck
 
@@ -1089,7 +1089,7 @@ def a_turned_deck(x: int, y: int, w: int, h: int, rotation: int, kind: str = "te
     if kind == "shape":
         shape = "rectangle"
         model.define_shape(ShapeLibrary.load().get(shape))
-    body = ObjectBody("o1", kind, w, h, style, paragraph_for("o1", words, "turned"), shape=shape, rotation=rotation)
+    body = ObjectBody("o1", kind, w, h, style, paragraph_for("o1", words, "turned"), ref=shape, rotation=rotation)
     model.insert_object(VisualObject(body, SlideAnchor("s1", x, y)))
     return model
 

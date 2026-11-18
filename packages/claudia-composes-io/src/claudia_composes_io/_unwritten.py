@@ -29,6 +29,7 @@ _WRITTEN_BY_BOTH = {
     "pictures",
     "boxes",
     "outlines",
+    "tables",
 }
 ODT_WRITTEN: frozenset[str] = frozenset(_WRITTEN_BY_BOTH)
 DOCX_WRITTEN: frozenset[str] = frozenset(_WRITTEN_BY_BOTH)
@@ -72,10 +73,11 @@ def text_unwritten_changes(
 def _objects(model: TextModel) -> dict[str, object]:
     """The objects of a text as the facets a converter writes or leaves out: the pictures (an image, a rendered text
     container, and what draws them), the boxes (a text box, a circle, a rectangle or a triangle, and their outlines),
-    and the other objects with the outlines that shape them."""
+    the tables (their objects and definitions, E9.32), and the other objects with the outlines that shape them."""
     data = model.serialize()
     picture_ids = {obj.id for obj in model.objects.values() if obj.body.kind in PICTURE_KINDS}
     box_ids = set(all_boxes(model))
+    table_ids = {obj.id for obj in model.objects.values() if obj.body.kind == "table"}
     return {
         "pictures": {
             "objects": [each for each in data["objects"] if each["id"] in picture_ids],
@@ -83,7 +85,8 @@ def _objects(model: TextModel) -> dict[str, object]:
             "renderings": data["renderings"],
         },
         "boxes": [each for each in data["objects"] if each["id"] in box_ids],
+        "tables": {"objects": [each for each in data["objects"] if each["id"] in table_ids], "tables": data["tables"]},
         "outlines": [each for each in data["shapes"] if each["id"] in PRIMITIVES],
-        "objects": [each for each in data["objects"] if each["id"] not in picture_ids | box_ids],
+        "objects": [each for each in data["objects"] if each["id"] not in picture_ids | box_ids | table_ids],
         "shapes": [each for each in data["shapes"] if each["id"] not in PRIMITIVES],
     }

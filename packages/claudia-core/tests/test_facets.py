@@ -110,6 +110,7 @@ def test_every_thing_that_can_be_styled_has_its_slots():
         "image": [("box", [], "box")],
         "diagram": [("box", ["box"], "box")],
         "rendered": [("box", ["box"], "box")],
+        "table": [("box", ["box"], "box")],
         "cell": [("box", ["box"], "box"), ("words", ["text", "paragraph"], "paragraph")],
     }
 

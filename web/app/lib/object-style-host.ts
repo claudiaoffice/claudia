@@ -8,11 +8,12 @@
 import { ref } from 'vue'
 import { translate as t } from './i18n'
 import type { HostSlot, StyleHost } from './style-host'
+import { deletionHost, type StyleDeletionSession } from './style-deletion'
 import type { ColourRole, ObjectBody, Reading, StyleModel, StyleTarget } from './objects'
 import type { CssCheck, CssEdit, StyleView } from './style-css'
 
 /** What this host needs of a session, so that creates and computes can both supply it. */
-export interface ObjectStyling {
+export interface ObjectStyling extends Partial<StyleDeletionSession> {
   readOnly: boolean
   styles: StyleView[]
   roles: ColourRole[]
@@ -69,7 +70,7 @@ export function slotsOf(model: StyleModel | null, kind: string | undefined): Hos
 
 /** What to call the selected object in a sentence: “shape”, “text box”, “picture”, “chart”. */
 export function nounOf(kind: string | undefined): string {
-  return { text: 'text box', shape: 'shape', image: 'picture', diagram: 'chart', rendered: 'rendered text' }[kind ?? ''] ?? 'object'
+  return { text: 'text box', shape: 'shape', image: 'picture', diagram: 'chart', rendered: 'rendered text', table: 'table' }[kind ?? ''] ?? 'object'
 }
 
 /** How many objects have each style — the counts beside the names in the style gallery. */
@@ -132,6 +133,7 @@ export function objectStyleHost(session: ObjectStyling, fixedSlot?: string): Sty
       return session.readings
     },
     uses: () => objectUses(session.bodies),
+    deletion: deletionHost(session),
     apply: async (style) => {
       const body = selected()
       const where = slot()

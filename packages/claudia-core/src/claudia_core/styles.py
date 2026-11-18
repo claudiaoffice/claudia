@@ -15,12 +15,12 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, ClassVar, Literal
 
-from .commands import Command, CommandRegistry, core_commands
-from .css import resolve_css, validate_css
+from .commands import Batch, Command, CommandRegistry, core_commands
+from .css import INITIAL_CSS, resolve_css, validate_css
 from .facets import check_kind
 
 if TYPE_CHECKING:
@@ -42,6 +42,10 @@ type HeadingLevel = int | Literal["body"] | None
 #: A style's own numbering that says "not numbered, whatever my parent is" (as ``"body"`` does for the heading level).
 #: No list can have this id.
 NO_NUMBERING = "none"
+
+#: Where a style can come from (:attr:`~claudia_core.StyleDef.origin`) and what to call it in a sentence. Only
+#: ``"document"`` styles can be deleted (D226).
+ORIGINS: Mapping[str, str] = {"document": "document", "builtin": "built-in", "template": "template"}
 
 
 def _check_heading_level(style: StyleDef) -> None:
@@ -74,7 +78,12 @@ class StyleDef:
     heading stays one. It is the one place that decides what a heading is: no app, layout or client keeps a list of
     heading styles. ``numbering`` is the id of a list (:class:`~claudia_core.ListDef`) that numbers the paragraphs of
     a heading style, at the list level below their heading level (heading 1 at the list's first level); ``None`` is
-    "as my parent", :data:`NO_NUMBERING` "not numbered"."""
+    "as my parent", :data:`NO_NUMBERING` "not numbered". ``origin`` says where the style comes from: ``"builtin"``
+    (the app made it, every document starts with it), ``"template"`` (a template put it there) or ``"document"`` (a
+    person made it, or a deviation did). Only a document style can be deleted; the other two can only be hidden
+    (D226). ``hidden`` keeps a style out of the menus a person picks from; it still resolves, so nothing that has it
+    looks any different. Neither is written when it has its default, so a style that has neither writes what it
+    wrote before."""
 
     id: str
     name: str
@@ -86,6 +95,8 @@ class StyleDef:
     number_format: str | None = None
     heading_level: HeadingLevel = None
     numbering: str | None = None
+    origin: str = "document"
+    hidden: bool = False
 
     def to_data(self) -> dict:
         """The plain-data form that goes into snapshots and commands; ``number_format``, ``heading_level`` and
@@ -105,6 +116,10 @@ class StyleDef:
             data["heading_level"] = self.heading_level
         if self.numbering is not None:
             data["numbering"] = self.numbering
+        if self.origin != "document":
+            data["origin"] = self.origin
+        if self.hidden:
+            data["hidden"] = True
         return data
 
     @classmethod
@@ -122,6 +137,8 @@ class StyleDef:
             data.get("number_format"),
             data.get("heading_level"),
             data.get("numbering"),
+            data.get("origin", "document"),
+            data.get("hidden", False),
         )
 
 
@@ -133,7 +150,9 @@ def _clean_name(name: str) -> str:
 
 
 class StyleBook:
-    """The styles of a document, in the order they were made (a parent always comes before its children)."""
+    """The styles of a document, in the order they were made. What is written (:meth:`to_data`) always has a parent
+    before its children; in memory the order is the one a person sees in a menu, and re-basing a style under a style
+    that was made later leaves it where it was."""
 
     def __init__(self, styles: Iterable[StyleDef] = ()):
         self._styles: dict[str, StyleDef] = {}
@@ -273,8 +292,21 @@ class StyleBook:
         ]
 
     def to_data(self) -> list[dict]:
-        """The book as plain data (for snapshots); ``from_data`` is the inverse."""
-        return [style.to_data() for style in self._styles.values()]
+        """The book as plain data (for snapshots); ``from_data`` is the inverse. A parent comes before its children,
+        whatever order the styles were re-based into, so that ``from_data`` can add them one by one."""
+        written: dict[str, StyleDef] = {}
+        waiting = list(self._styles.values())
+        while waiting:
+            later = []
+            for style in waiting:
+                if style.based_on is None or style.based_on in written:
+                    written[style.id] = style
+                else:
+                    later.append(style)
+            if len(later) == len(waiting):  # pragma: no cover - a cycle, which ``rebase`` and ``add`` do not allow
+                raise ValueError("the styles are based on each other in a circle")
+            waiting = later
+        return [style.to_data() for style in written.values()]
 
     @classmethod
     def from_data(cls, items: Iterable[dict]) -> StyleBook:
@@ -282,9 +314,10 @@ class StyleBook:
         return cls(StyleDef.from_data(item) for item in items)
 
     # -- changing (used by the commands) -----------------------------------------
-    def add(self, style: StyleDef) -> None:
+    def add(self, style: StyleDef, *, before: str | None = None) -> None:
         """Add a style: a new id and name, an existing parent of the same kind, CSS that is allowed and belongs to
-        the style's kind. Stores the cleaned CSS."""
+        the style's kind. Stores the cleaned CSS. It goes last, or in front of the style ``before`` when that is
+        there (which is how a style that was taken away returns to its place)."""
         if not _ID.fullmatch(style.id):
             raise ValueError(f"A style id is lower-case letters, digits and hyphens (up to 40), got {style.id!r}")
         if style.id in self._styles:
@@ -304,8 +337,44 @@ class StyleBook:
         if len(style.purpose) > _MAX_PURPOSE or "\n" in style.purpose:
             raise ValueError(f"The purpose of a style is one line of up to {_MAX_PURPOSE} characters")
         _check_numbering(style)
-        self._styles[style.id] = replace(style, name=name, css=validate_css(style.css))
+        if style.origin not in ORIGINS:
+            raise ValueError(f"A style's origin is one of {', '.join(ORIGINS)}, got {style.origin!r}")
+        cleaned = replace(style, name=name, css=validate_css(style.css))
+        if before is not None and before in self._styles:
+            items = list(self._styles.items())
+            at = next(i for i, (key, _) in enumerate(items) if key == before)
+            items.insert(at, (style.id, cleaned))
+            self._styles = dict(items)
+        else:
+            self._styles[style.id] = cleaned
         self.version += 1
+
+    def fallback(self, style_id: str) -> StyleDef | None:
+        """The plain style of a style's kind, which a dialog offers first to take its place when it is deleted: the
+        built-in root its own chain ends in (a style based on the plain image gets the plain image), else the first
+        built-in root of its kind. ``None`` if the book has none. In Claudia a thing always has a style, and this is
+        the one that says nothing of its own: the body style for text, the plain box, the plain shape (D785)."""
+        style = self.get(style_id)
+        root = self.chain(style_id)[0]
+        if root.id != style_id and root.origin == "builtin" and root.kind == style.kind:
+            return root
+        return next(
+            (
+                other
+                for other in self._styles.values()
+                if other.based_on is None
+                and other.origin == "builtin"
+                and other.kind == style.kind
+                and other.id != style_id
+            ),
+            None,
+        )
+
+    def next_after(self, style_id: str) -> str | None:
+        """The id of the style that comes right after this one in the book, if there is one."""
+        ids = list(self._styles)
+        at = ids.index(style_id)
+        return ids[at + 1] if at + 1 < len(ids) else None
 
     def set_css(self, style_id: str, css: dict[str, str]) -> None:
         """Give a style these own properties (instead of what it had); they must belong to its kind."""
@@ -343,6 +412,52 @@ class StyleBook:
             raise ValueError(f"There is already a style named “{clean}”")
         self._styles[style_id] = replace(style, name=clean, to_name=to_name)
         self.version += 1
+
+    def set_hidden(self, style_id: str, hidden: bool) -> None:
+        """Hide a style from the menus a person picks from, or show it again. It still resolves either way."""
+        self._styles[style_id] = replace(self.get(style_id), hidden=hidden)
+        self.version += 1
+
+    def rebase(
+        self,
+        style_id: str,
+        based_on: str | None,
+        css: dict[str, str],
+        number_format: str | None,
+        heading_level: HeadingLevel,
+        numbering: str | None,
+    ) -> StyleDef:
+        """Put a style under another parent of its kind, with these own properties (and own number format, heading
+        level and numbering) instead of the ones it had; returns what it was. The parent may not be the style itself
+        or one of the styles based on it, and has to be of the style's kind."""
+        style = self.get(style_id)
+        if based_on is not None:
+            parent = self.get(based_on)
+            if any(link.id == style_id for link in self.chain(based_on)):
+                raise ValueError(
+                    f"“{style.name}” cannot be based on itself"
+                    if based_on == style_id
+                    else f"“{style.name}” cannot be based on “{parent.name}”, which is based on it"
+                )
+            if parent.kind != style.kind:
+                raise ValueError(
+                    f"The {style.kind} style “{style.name}” cannot be based on “{parent.name}”, a {parent.kind} "
+                    "style: a style and its parent are of the same kind"
+                )
+        check_kind(style.kind, css)
+        changed = replace(
+            style,
+            based_on=based_on,
+            css=validate_css(css),
+            number_format=number_format,
+            heading_level=heading_level,
+            numbering=numbering,
+        )
+        _check_heading_level(changed)
+        _check_numbering(changed)
+        self._styles[style_id] = changed
+        self.version += 1
+        return style
 
     def remove(self, style_id: str) -> StyleDef:
         """Take a style out of the book and return it; refused while other styles are based on it."""
@@ -395,7 +510,7 @@ def _known(book: StyleBook, style_id: str) -> StyleDef:
 
 def _same_style_touched(other: Command, style_id: str) -> bool:
     """Did ``other`` change, name or build on the style ``style_id``?"""
-    if isinstance(other, ChangeStyle | RenameStyle | SetHeadingLevel):
+    if isinstance(other, ChangeStyle | RenameStyle | SetHeadingLevel | SetStyleNumbering | RebaseStyle):
         return other.style == style_id
     return isinstance(other, CreateStyle) and other.style.based_on == style_id
 
@@ -407,6 +522,9 @@ class CreateStyle(Command):
 
     kind: ClassVar[str] = "core.CreateStyle"
     style: StyleDef
+    #: The style that comes right after this one in the book, when it is put back where it was (the undo of a
+    #: removal); ``None`` for a new style, which goes last.
+    before: str | None = None
 
     @property
     def label(self) -> str:
@@ -418,23 +536,28 @@ class CreateStyle(Command):
 
     def apply(self, ctx: Context) -> Command:
         book = _book(ctx)
-        book.add(self.style)
+        book.add(self.style, before=self.before)
         _tell(ctx, book)
         return RemoveStyle(self.style.id)
 
     def to_data(self) -> dict:
-        return self.style.to_data()
+        data = self.style.to_data()
+        if self.before is not None:
+            data["before"] = self.before
+        return data
 
     @classmethod
     def from_data(cls, data: dict, registry: CommandRegistry) -> CreateStyle:
-        return cls(StyleDef.from_data(data))
+        return cls(StyleDef.from_data(data), data.get("before"))
 
 
 @core_commands.register
 @dataclass(frozen=True)
 class RemoveStyle(Command):
-    """Take a style out again. Only the undo of ``CreateStyle`` (the deletion rules of E1.10 are another story): it is
-    refused while another style is based on it or the app says something uses it."""
+    """Take a style out again. It is the undo of ``CreateStyle`` and the last step of a deletion
+    (:func:`~claudia_core.plan_delete_style`, which first moves everything off the style): it is refused while
+    another style is based on it or the app says something uses it, which is also what refuses a deletion whose
+    style somebody else began to use meanwhile (D226)."""
 
     kind: ClassVar[str] = "core.RemoveStyle"
     style: str
@@ -453,9 +576,10 @@ class RemoveStyle(Command):
         in_use = getattr(ctx.model, "style_in_use", None)
         if in_use is not None and in_use(self.style):
             raise ValueError(f"The style “{known.name}” is in use and cannot be taken back")
+        after = book.next_after(self.style)
         book.remove(self.style)
         _tell(ctx, book)
-        return CreateStyle(known)
+        return CreateStyle(known, after)
 
     def to_data(self) -> dict:
         return {"style": self.style}
@@ -632,3 +756,313 @@ class SetStyleNumbering(Command):
 
     def shifted_by(self, other: Command) -> Command | None:
         return None if isinstance(other, SetStyleNumbering) and other.style == self.style else self
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class RebaseStyle(Command):
+    """Put a style under another parent (or none) and give it exactly these own properties, number format, heading
+    level and numbering, in one step (D226). The properties are what the style must say itself so that it *looks the
+    same* under its new parent (:func:`held_look`): changing the parent is never a change of look. The inverse is the
+    same command with what the style had before."""
+
+    kind: ClassVar[str] = "core.RebaseStyle"
+    style: str
+    based_on: str | None
+    css: dict[str, str]
+    number_format: str | None
+    heading_level: HeadingLevel
+    numbering: str | None
+
+    @property
+    def label(self) -> str:
+        return "Change parent style"
+
+    @property
+    def summary(self) -> str:
+        return f"based the style {self.style} on {self.based_on or 'nothing'}"
+
+    def apply(self, ctx: Context) -> Command:
+        book = _book(ctx)
+        _known(book, self.style)
+        if self.numbering not in (None, NO_NUMBERING):
+            lists = getattr(ctx.model, "lists", None)
+            if lists is None or self.numbering not in lists:
+                raise ValueError(f"There is no list {self.numbering!r} to number the style {self.style!r} in")
+        was = book.rebase(self.style, self.based_on, self.css, self.number_format, self.heading_level, self.numbering)
+        _tell(ctx, book)
+        return RebaseStyle(self.style, was.based_on, dict(was.css), was.number_format, was.heading_level, was.numbering)
+
+    def to_data(self) -> dict:
+        return {
+            "style": self.style,
+            "based_on": self.based_on,
+            "css": dict(self.css),
+            "number_format": self.number_format,
+            "heading_level": self.heading_level,
+            "numbering": self.numbering,
+        }
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> RebaseStyle:
+        return cls(
+            data["style"],
+            data["based_on"],
+            dict(data["css"]),
+            data["number_format"],
+            data["heading_level"],
+            data["numbering"],
+        )
+
+    def shifted_by(self, other: Command) -> Command | None:
+        return None if _same_style_touched(other, self.style) else self
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class SetStyleHidden(Command):
+    """Hide a style from the menus a person picks a style from, or show it again (D226). A hidden style still
+    resolves, so nothing that has it looks any different; this is the one thing that can be done to a built-in or
+    template style that is not wanted."""
+
+    kind: ClassVar[str] = "core.SetStyleHidden"
+    style: str
+    hidden: bool
+
+    @property
+    def label(self) -> str:
+        return "Hide style" if self.hidden else "Show style"
+
+    @property
+    def summary(self) -> str:
+        return f"{'hid' if self.hidden else 'showed'} the style {self.style}"
+
+    def apply(self, ctx: Context) -> Command:
+        book = _book(ctx)
+        known = _known(book, self.style)
+        book.set_hidden(self.style, self.hidden)
+        _tell(ctx, book)
+        return SetStyleHidden(self.style, known.hidden)
+
+    def to_data(self) -> dict:
+        return {"style": self.style, "hidden": self.hidden}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> SetStyleHidden:
+        return cls(data["style"], data["hidden"])
+
+    def shifted_by(self, other: Command) -> Command | None:
+        return None if isinstance(other, SetStyleHidden) and other.style == self.style else self
+
+
+# --------------------------------------------------------------------------- deleting
+def held_look(old: Mapping[str, str], base: Mapping[str, str]) -> dict[str, str]:
+    """The properties a style must set itself to look as ``old`` says under a parent that looks as ``base`` says.
+
+    Only what differs: a property both say the same is left to the parent. A property the parent sets and the old
+    look did not gets the value of nothing (:data:`~claudia_core.css.INITIAL_CSS`), so that the new parent does not show
+    through. ``ValueError`` names a property for which there is no such value, because that is the one place a look
+    cannot be held without asking an app what "nothing" means there."""
+    held: dict[str, str] = {}
+    for prop in (*old, *(prop for prop in base if prop not in old)):
+        if prop in old:
+            wanted = old[prop]
+        elif prop in INITIAL_CSS:
+            wanted = INITIAL_CSS[prop]
+        else:
+            raise ValueError(
+                f"The look cannot be kept: the new parent sets “{prop}” and nothing says what a style "
+                "that does not set it looks like"
+            )
+        if base.get(prop) != wanted:
+            held[prop] = wanted
+    return held
+
+
+@dataclass(frozen=True)
+class _Look:
+    """What a style looks like, everything its parents say taken in: the CSS and the three inherited settings."""
+
+    css: dict[str, str]
+    number_format: str | None
+    heading_level: int | None
+    numbering: str | None
+
+    @classmethod
+    def of(cls, book: StyleBook, style_id: str | None) -> _Look:
+        if style_id is None:
+            return cls({}, None, None, None)
+        return cls(
+            book.computed(style_id),
+            book.number_format(style_id),
+            book.heading_level(style_id),
+            book.numbering(style_id),
+        )
+
+
+def _own_settings(old: _Look, base: _Look) -> tuple[dict[str, str], str | None, HeadingLevel, str | None]:
+    """What a style must say itself to look as ``old`` under a parent that looks as ``base``: its CSS, its number
+    format, heading level and numbering. A setting both agree on is left to the parent (``None``)."""
+    css = held_look(old.css, base.css)
+    number_format = None
+    if old.number_format != base.number_format:
+        if old.number_format is None:
+            raise ValueError("The look cannot be kept: the new parent shows numbers in a format this style does not")
+        number_format = old.number_format
+    heading: HeadingLevel = None
+    if old.heading_level != base.heading_level:
+        heading = "body" if old.heading_level is None else old.heading_level
+    numbering = None
+    if old.numbering != base.numbering:
+        numbering = NO_NUMBERING if old.numbering is None else old.numbering
+    return css, number_format, heading, numbering
+
+
+def _free_name(book: StyleBook, name: str) -> str:
+    """``name (kept)``, or ``name (kept 2)`` and so on, whichever no style has."""
+    candidate, number = f"{name} (kept)", 1
+    while book.name_taken(candidate):
+        number += 1
+        candidate = f"{name} (kept {number})"
+    return candidate
+
+
+#: How a style can be deleted (:func:`~claudia_core.plan_delete_style`), in the order a dialog offers them (D785).
+DELETE_HOWS: tuple[str, ...] = ("assign", "rebase")
+
+
+def assign_changes_look(model: object, style_id: str, target: str) -> bool:
+    """Whether deleting the style by *assigning* ``target`` would change how something looks: what has the style
+    itself would look like ``target`` instead, and what is based on it is based on ``target`` and loses what the style
+    said. ``False`` when nothing has it and nothing is based on it, or when what it said made no difference. Asked by
+    the dialog for each style on offer, which says so in words (D785)."""
+    book = getattr(model, "styles", None)
+    if not isinstance(book, StyleBook):
+        raise TypeError("This document has no style book")
+    _known(book, style_id)
+    _known(book, target)
+    in_use = getattr(model, "style_in_use", None)
+    if in_use is not None and in_use(style_id) and _Look.of(book, style_id) != _Look.of(book, target):
+        return True
+    children = book.children(style_id)
+    if not children:
+        return False
+    after = StyleBook.from_data(book.to_data())
+    for child in children:
+        own = after.get(child)
+        after.rebase(child, target, own.css, own.number_format, own.heading_level, own.numbering)
+    after.remove(style_id)
+    return any(_Look.of(book, child) != _Look.of(after, child) for child in _descendants(book, style_id))
+
+
+def _descendants(book: StyleBook, style_id: str) -> list[str]:
+    """The styles based on this one, directly or not."""
+    found: list[str] = []
+    for child in book.children(style_id):
+        found.append(child)
+        found.extend(_descendants(book, child))
+    return found
+
+
+def plan_delete_style(model: object, style_id: str, *, how: str = "assign", target: str | None = None) -> Batch:
+    """The commands that delete a style, as one step that is undone as one, and that never leave anything pointing
+    at it (D226). The person chooses ``how`` (:data:`~claudia_core.styles.DELETE_HOWS`, D785) and the style
+    ``target``, one of the same kind, never the style itself or one based on it:
+
+    - ``"assign"``: **assign another style.** Everything that has the style itself has ``target`` instead, and what is
+      based on the style is based on ``target``, each as it is. Looks change, and the dialog says so
+      (:func:`assign_changes_look`). The plain style of the kind, :meth:`StyleBook.fallback`, is what a dialog offers
+      first: it is how "no style" reads in a document where everything always has one.
+    - ``"rebase"``: **build it on another style, and keep how it looks.** What is based on the style moves under
+      ``target`` and says only what differs from it; what has the style itself goes to a *stand-in* style under
+      ``target``: a document style with the deleted style's purpose, named ``<name> (kept)`` and provisional until its
+      maker names it (E9.7). The *look* is held (:func:`held_look`), so later changes to ``target`` reach everything
+      that did not say otherwise. A deletion is refused (``ValueError``, nothing planned) if a look cannot be held.
+
+    ``target`` may be left out only when nothing has the style and nothing is based on it: then the style just goes.
+
+    The style goes last. If something else began to use it since the plan was made, that last step is refused, and so
+    the whole deletion, and nothing changes: nobody's work is moved without their knowing.
+
+    Built-in and template styles are refused: they can only be hidden (:class:`SetStyleHidden`).
+    """
+    if how not in DELETE_HOWS:
+        raise ValueError(f"A style is deleted by one of {', '.join(DELETE_HOWS)}, not {how!r}")
+    book = getattr(model, "styles", None)
+    if not isinstance(book, StyleBook):
+        raise TypeError("This document has no style book, so it cannot delete a style")
+    style = _known(book, style_id)
+    if style.origin != "document":
+        raise ValueError(f"“{style.name}” is a {ORIGINS[style.origin]} style and can only be hidden, not deleted")
+    in_use = getattr(model, "style_in_use", None)
+    used = in_use is not None and in_use(style_id)
+    restyle = getattr(model, "restyle_users", None)
+    if used and restyle is None:
+        raise ValueError(f"The app cannot move what has the style “{style.name}” to another style")
+    children = book.children(style_id)
+    if target is None:
+        if used or children:
+            raise ValueError(f"“{style.name}” is in use: say which style takes its place")
+        return Batch((RemoveStyle(style_id),), f"Delete style “{style.name}”")
+    parent = _checked_target(book, style, target, how)
+    steps: list[Command] = []
+    users: list[Command] = []
+    if how == "assign":
+        if used:
+            users = list(_restyler(restyle)(style_id, target))
+        for child_id in children:
+            child = book.get(child_id)
+            steps.append(
+                RebaseStyle(
+                    child_id, target, dict(child.css), child.number_format, child.heading_level, child.numbering
+                )
+            )
+    else:
+        base = _Look.of(book, target)
+        if used:
+            css, number_format, heading, numbering = _own_settings(_Look.of(book, style_id), base)
+            name = _free_name(book, style.name)
+            stand_in = StyleDef(
+                book.unique_id(name),
+                name,
+                style.purpose,
+                parent.id,
+                css,
+                to_name=True,
+                kind=style.kind,
+                number_format=number_format,
+                heading_level=heading,
+                numbering=numbering,
+            )
+            steps.append(CreateStyle(stand_in))
+            users = list(_restyler(restyle)(style_id, stand_in.id))
+        for child_id in children:
+            css, number_format, heading, numbering = _own_settings(_Look.of(book, child_id), base)
+            steps.append(RebaseStyle(child_id, target, css, number_format, heading, numbering))
+    steps.extend(users)
+    steps.append(RemoveStyle(style_id))
+    return Batch(tuple(steps), f"Delete style “{style.name}”")
+
+
+def _checked_target(book: StyleBook, style: StyleDef, target: str, how: str) -> StyleDef:
+    """The style that takes the deleted one's place, if it can: of the same kind, and neither the style itself nor
+    one based on it (that would be a cycle)."""
+    verb = "replaced by" if how == "assign" else "re-based on"
+    parent = _known(book, target)
+    if target == style.id:
+        raise ValueError(f"“{style.name}” cannot be {verb} itself")
+    if any(link.id == style.id for link in book.chain(target)):
+        raise ValueError(f"“{style.name}” cannot be {verb} “{parent.name}”, which is based on it")
+    if parent.kind != style.kind:
+        raise ValueError(
+            f"“{style.name}” is a {style.kind} style and “{parent.name}” a {parent.kind} style: "
+            "a style can only be taken over by one of the same kind"
+        )
+    return parent
+
+
+def _restyler(restyle: object) -> Callable[[str, str], list[Command]]:
+    """The model's ``restyle_users``, which is there whenever something uses the style (checked by the caller)."""
+    if not callable(restyle):
+        raise TypeError("The app cannot move what has the style to another style")
+    return restyle

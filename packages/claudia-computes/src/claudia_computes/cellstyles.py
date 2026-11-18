@@ -148,6 +148,15 @@ class CellStyles:
         """How many ranges name each style, one count per range and slot (a whole column counts once)."""
         return Counter(style for pieces in self._ranges.values() for _, style in pieces)
 
+    def ranges_named(self, style_id: str) -> list[tuple[str, str, Area]]:
+        """Every range that names this style, as ``(slot, layer, area)``: what a deletion of the style has to move."""
+        return [
+            (slot, layer, where)
+            for (slot, layer), pieces in self._ranges.items()
+            for where, style in pieces
+            if style == style_id
+        ]
+
     def names(self, style_id: str) -> bool:
         """Does any range name this style?"""
         return any(style == style_id for pieces in self._ranges.values() for _, style in pieces)

@@ -30,8 +30,17 @@ from docx.oxml.ns import qn
 from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.text.paragraph import Paragraph
 
-from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, Run, Suggestion, TextModel, builtin_styles
-from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, VisualObject, plain, primitive
+from claudia_composes import (
+    DEFAULT_STYLE,
+    TABLE_STYLE_IDS,
+    Block,
+    BlockAnchor,
+    Run,
+    Suggestion,
+    TextModel,
+    builtin_styles,
+)
+from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, TableDef, VisualObject, plain, primitive
 from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
 from claudia_opc_io import owns, reconcile
 
@@ -61,11 +70,13 @@ from ._docx_references import (
 )
 from ._docx_setup import read_setup, write_language, write_page
 from ._docx_styles import WORD_NAMES, WordNames, unsaid_of, write_styles
+from ._docx_tables import read_tables, write_table
 from ._fonts import take_fonts
 from ._pictures import picture_losses, pictures_of
 from ._references import ReadReference, with_references
 from ._style_look import look_for
 from ._suggestions import WhenMade, open_replacements, when_made
+from ._tables import put_tables, table_changes, table_styles, tables_after
 from ._unwritten import DOCX_WRITTEN, text_unwritten_changes
 
 #: Word's names of the built-in styles mapped back to them, for import: any other name (a custom style, or no style at
@@ -95,7 +106,8 @@ def text_to_docx(
     rendered text container) are written as anchored drawings in the paragraph they hang from, with their alt text;
     an SVG is shown by the picture ``rasterise`` draws of it, or else by an empty one (D464). The file says in its
     properties who made the document and when and who changed it last, from ``info``; what ``info`` does not know it
-    leaves out (D466)."""
+    leaves out (D466). The tables of the text are written as real tables after the paragraph they hang from (E9.32,
+    D1214)."""
     document = Document()
     write_page(document, None, model.page)
     write_language(document, model.language)
@@ -110,10 +122,12 @@ def text_to_docx(
     targets = _targets(model)
     bookmarks = count(1)
     boxes = BoxWriter(document, names, model, pictures)
+    style_ids = _style_ids(document, names)
     for block in model.blocks:
         paragraph = document.add_paragraph(style=names.of(block.style))
         if block.generated is not None:
-            write_contents(document, paragraph, block.generated, entries.get(block.id, ()), _style_ids(document, names))
+            write_contents(document, paragraph, block.generated, entries.get(block.id, ()), style_ids)
+            _write_tables(document, model, block.id, style_ids)
             continue
         if block.item is not None:
             lists.write(paragraph, block.item)
@@ -124,9 +138,24 @@ def text_to_docx(
             swap_fields(paragraph, [reference_runs(f, s, targets) for f, s in zip(block.fields, said, strict=True)])
         if block.id in targets:
             mark_targets(paragraph, bookmark_name(block.id), bookmarks)
+        _write_tables(document, model, block.id, style_ids)
     out = BytesIO()
     document.save(out)
     return stamp_office_meta(out.getvalue(), info)
+
+
+def _write_tables(
+    document: Any,  # noqa: ANN401
+    model: TextModel,
+    block_id: str,
+    style_ids: Callable[[str], str | None],
+) -> None:
+    """The tables that hang from the paragraph ``block_id``, one after the other right after it. Two tables with nothing
+    between them would be one table to Word, so an empty paragraph keeps them apart."""
+    for number, definition in enumerate(tables_after(model, block_id)):
+        if number:
+            document.add_paragraph()
+        write_table(document, model, definition, style_ids)
 
 
 def _floating_runs(model: TextModel, block_id: str, pictures: PictureWriter, boxes: BoxWriter) -> list[tuple[int, Any]]:
@@ -179,6 +208,41 @@ def _patch_setup(document: Any, baseline: TextModel, current: TextModel) -> tupl
     if _write_changed_styles(document, baseline, current, names):
         owned |= {"word/styles.xml", "word/settings.xml"}
     return names, owned
+
+
+def _kept_tables(document: Any, baseline: TextModel) -> dict[str, Any]:  # noqa: ANN401
+    """The ``w:tbl`` of each table the text had of ``document`` (by its id), when the file holds exactly the tables
+    ``baseline`` has; else :class:`UnsupportedEdit`."""
+    read = [(each.element, definition) for each, definition in read_tables(document, baseline.language) if definition]
+    found = {definition.id: element for element, definition in read}
+    if found.keys() != baseline.tables.keys() or any(baseline.tables[d.id] != d for _, d in read):
+        raise UnsupportedEdit("the text the edits are measured from is not what the file holds")
+    return found
+
+
+def _patch_tables(
+    document: Any,  # noqa: ANN401
+    baseline: TextModel,
+    current: TextModel,
+    file_tables: dict[str, Any],
+    elements: dict[str, Any],
+    style_ids: Callable[[str], str | None],
+) -> None:
+    """Keep the tables of a kept file in step (E9.32): where the tables of a paragraph changed, those it had leave the
+    file and those it has now are written right after it; every other table is left as it is, and so is each table of
+    the file that is not regular. What a table looks like is not compared: a table whose look alone changed stays as it
+    was written."""
+    for block_id, (before, after) in table_changes(baseline, current).items():
+        for definition in before:
+            element = file_tables[definition.id]
+            element.getparent().remove(element)
+        anchor = elements[block_id] if after else None
+        for number, definition in enumerate(after):
+            if number and anchor is not None:
+                separator = OxmlElement("w:p")
+                anchor.addnext(separator)
+                anchor = separator
+            anchor = write_table(document, current, definition, style_ids, after=anchor)
 
 
 class _BlockWriter:
@@ -359,7 +423,9 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
     the file gives it (E3.13: a style's own, the one it is based on, the document defaults, a theme font). A picture the
     model can show as it
     is (an image the app decodes, not cropped or flipped, in its own proportions) comes in as an image object hanging
-    from its paragraph, with its alt text (D464). A tracked change's own text
+    from its paragraph, with its alt text (D464). A regular table (E9.32, D1214: a rectangular grid of cells with at
+    most one paragraph of words each) is an own table that hangs from the paragraph it follows; any other table is left
+    in the file and listed by :func:`docx_import_losses`. A tracked change's own text
     is not seen here: python-docx's own ``paragraph.text`` already skips it (only runs that are direct children
     of the paragraph count), and re-importing an existing tracked change is not this slice's job."""
     document = Document(BytesIO(docx_bytes))
@@ -419,7 +485,19 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
                 BlockAnchor(f"b{each.block + 1}", each.offset, wrap=each.wrap, gap=each.gap, dx=each.dx, dy=each.dy),
             )
         )
+    put_tables(model, _file_tables(document, model, setup.language))
     return model
+
+
+def _file_tables(document: Any, model: TextModel, language: str | None) -> list[tuple[str, int, TableDef]]:  # noqa: ANN401
+    """The regular tables of the file with the paragraph each follows (E9.32): what the text holds of its tables."""
+    by_id = {block.id: block for block in model.blocks}
+    placed = []
+    for each, definition in read_tables(document, language):
+        if definition is not None and each.block is not None:
+            block = by_id[f"b{each.block + 1}"]
+            placed.append((block.id, len(block.text), definition))
+    return placed
 
 
 def _style_ids(document: Any, names: WordNames) -> Callable[[str], str | None]:
@@ -490,12 +568,20 @@ def docx_import_losses(docx_bytes: bytes) -> tuple[Loss, ...]:
         "picture": unheld_pictures(document, held),
         "frame": _frames(body, boxes),
         "look": sum(1 for box in boxes if not box.look.matches(look_of(plain, box.body))),
+        "table": _left_tables(document, body),
     }
     for code, tags in _IMPORT_LOSSES:
         number = counts[code] if code in counts else sum(1 for tag in tags for _ in body.iter(qn(tag)))
         if number:
             losses.add(code, count=number)
     return losses.result()
+
+
+def _left_tables(document: Any, body: Any) -> int:  # noqa: ANN401
+    """How many tables of ``body`` the model does not hold as tables: every ``w:tbl`` (a nested one too) but the regular
+    ones the import makes into tables of the text (E9.32)."""
+    shown = sum(1 for _, definition in read_tables(document, read_setup(document).language) if definition is not None)
+    return sum(1 for _ in body.iter(qn("w:tbl"))) - shown
 
 
 _FALLBACK = "{http://schemas.openxmlformats.org/markup-compatibility/2006}Fallback"
@@ -547,7 +633,8 @@ def docx_export_losses(
         if block.style not in names:
             losses.add("style", block.style)
     for style_id, prop in _unsaid_properties(model):
-        losses.add("style-property", f"{style_id}: {prop}")
+        if style_id not in TABLE_STYLE_IDS:
+            losses.add("style-property", f"{style_id}: {prop}")
     authored = sum(1 for block in model.blocks if any(run.author is not None for run in block.runs))
     if authored:
         losses.add("authorship", count=authored)
@@ -573,7 +660,10 @@ def _write_changed_styles(document: Any, baseline: TextModel, current: TextModel
     colours, before_colours = current.palette.colours(), baseline.palette.colours()
     known = {block.id: block.style for block in baseline.blocks}
     wanted = {block.style for block in current.blocks if known.get(block.id) != block.style}
-    wanted = (wanted | restyled_words(baseline, current)) - WORD_NAMES.keys()
+    wanted = wanted | restyled_words(baseline, current)
+    for _, written in table_changes(baseline, current).values():
+        wanted |= {style for definition in written for style in table_styles(definition)}
+    wanted -= WORD_NAMES.keys()
     changed = set()
     for style in current.styles:
         if style.kind != "paragraph":
@@ -684,6 +774,10 @@ def apply_edits_to_docx(
     picture's own bytes stay. A picture of the file that the model does not show (cropped, flipped, in a table) is not
     touched.
 
+    The tables of the text are kept in step (E9.32, D1214): where the tables of a paragraph changed, those it had leave
+    the file and those it has now are written right after it; every other table, and each table of the file that the
+    text does not hold, stays as it was.
+
     Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, blocks
     moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know), and
     a table of contents in either model (it is not a paragraph of the file; the file is written anew, E9.31)."""
@@ -711,19 +805,22 @@ def apply_edits_to_docx(
     boxes = BoxEdits(document, names, baseline, current, rewritten, pictures.writer, losses)
     for block_id, runs in boxes.marks.items():
         pictures.marks.setdefault(block_id, []).extend(runs)
+    file_tables = _kept_tables(document, baseline)
     for block in held:
         if block.id not in current_ids:
             _remove_block(paragraph_of[block.id]._p, losses)
     writer = _BlockWriter(document, names, lists, replacements, when_made(change_times), losses, pictures.marks)
     last: Any = None  # the element of the block before the one at hand, in the text
+    added: dict[str, Any] = {}
     for index, after in enumerate(current.blocks):
         before = baseline_by_id.get(after.id)
         if before is None:
             following = next((paragraph_of[b.id]._p for b in current.blocks[index + 1 :] if b.id in paragraph_of), None)
-            last = writer.add(after, last, following)
+            last = added[after.id] = writer.add(after, last, following)
         else:
             last = writer.edit(paragraph_of[after.id], before, after)
     elements = {block_id: paragraph._p for block_id, paragraph in paragraph_of.items()}
+    _patch_tables(document, baseline, current, file_tables, {**elements, **added}, _style_ids(document, names))
     pictures.settle(elements)
     boxes.settle(elements)
     patched = BytesIO()

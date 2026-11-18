@@ -636,7 +636,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                 h,
                 style,
                 paragraph_for(object_id, words, text).with_item(None if said is None else items.item(*said)),
-                shape=shape_id,
+                ref=shape_id,
                 rotation=rotation,
                 description="" if decorative else description[:MAX_ALT_CHARS],
                 decorative=decorative,

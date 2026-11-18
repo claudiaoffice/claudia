@@ -86,7 +86,7 @@ def add_shape_methods(
             steps.append(DefineShape(outline))
         object_id = fresh_id("o", model.objects)
         words = paragraph_for(object_id, words_styles[kind], text, ctx.user)
-        body = ObjectBody(object_id, kind, w, h, STYLE_OF_KIND[kind], words, shape=shape, name=default_name(ctx, kind))
+        body = ObjectBody(object_id, kind, w, h, STYLE_OF_KIND[kind], words, ref=shape, name=default_name(ctx, kind))
         steps.append(AddObject(body, anchor))
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
         return done(ctx, command, base, object=object_id)

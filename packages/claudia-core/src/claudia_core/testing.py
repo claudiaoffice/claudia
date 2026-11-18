@@ -17,6 +17,22 @@ from .model import DocumentModel
 from .region import Region
 
 
+def pointing_as_ref(fields: dict) -> dict:
+    """Flat test fields that name the pointer by its kind (``image=…``) with the one ``ref`` a body has."""
+    pointers = ("shape", "image", "diagram", "rendered", "table")
+    return {("ref" if name in pointers else name): value for name, value in fields.items()}
+
+
+def body_before_ref(data: dict, *without: str) -> dict:
+    """An object body's plain data as it was written with one pointer field per kind (``shape``, ``image``,
+    ``diagram``, ``rendered``, ``table``) instead of ``ref``, and without the fields named: for the tests of documents
+    that were written long ago."""
+    old = {name: value for name, value in data.items() if name != "ref"}
+    for pointer in ("shape", "image", "diagram", "rendered", "table"):
+        old[pointer] = data["ref"] if pointer == data["kind"] else None
+    return {name: value for name, value in old.items() if name not in without}
+
+
 class FakeClock:
     """Deterministic ISO times, one second apart, and a float clock for lock timeouts."""
 

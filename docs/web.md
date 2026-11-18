@@ -90,7 +90,13 @@ the paragraphs, the events that change them, where a caret or zone goes when som
   applied with Ctrl+Enter. A change goes to *This paragraph only* (the default: it makes a new style that is named
   later, `Body text (changed)`, flagged *to name*) or to *Every use of “X”* (changes the style). A style still
   waiting for its name is yours, so the next change goes into it, and the menu invites a name once. *All styles…*
-  lists styles with their use counts and renames them. Nothing outside the CSS allow-list of `claudia-core` can be
+  lists styles with their use counts, renames them, and deletes or hides them. *Delete…* (a style of the document's
+  own) offers two ways: *Assign another style* (the default, Body text preselected; the only way that can change a
+  look, and it says so first) and *Re-base on another style* (every look is held: what had the style itself moves to
+  a stand-in `<name> (kept)` that waits for its name). The deletion is announced in the dialog with *Undo* and
+  *Name it…*. Built-in and template styles cannot be deleted, only hidden (*Hide*/*Show*, *Show hidden styles*);
+  hidden styles leave the menus and pickers. Row access keys: Alt+E edit, Alt+R rename, Alt+D delete, Alt+H hide/show
+  (the first letter of each translated label). Nothing outside the CSS allow-list of `claudia-core` can be
   written (no `url()`, `var()`, `calc()`); see `CSS_VERSION`.
 * The menu is app-agnostic: `StyleMenu.vue`, `StyleSpec.vue`, `Popover.vue` and the pickers talk to a `StyleHost`
   (`lib/style-host.ts`; `lib/text-style-host.ts` is the text's) and `StyleEditor` holds the rules (where a change goes,
@@ -174,6 +180,7 @@ URL=http://127.0.0.1:8765/ npm run e2e:pointing   # picking cells with the mouse
 URL=http://127.0.0.1:8766/ npm run e2e:composes   # two people and the assistant in one text
 URL=http://127.0.0.1:8766/ npm run e2e:composes-wrap  # the lines go round a text box, a picture and a shape (set CHROME=/path/to/chrome to use an installed browser)
 URL=http://127.0.0.1:8766/ npm run e2e:styling    # the style menu, the colour roles and the CSS view
+URL=http://127.0.0.1:8766/ npm run e2e:style-delete # deleting and hiding styles: assign, re-base, Undo, Hide/Show
 URL=http://127.0.0.1:8767/ npm run e2e:slides     # two people on one slide
 npm run e2e:resilience       # starts its own server on 8766, restarts it, checks that both browsers come back
 npm run e2e:recovery         # starts its own server on 8767: the recovery key, shown once, and a new one

@@ -7,6 +7,7 @@ from io import BytesIO
 import docx
 import pytest
 from claudia_composes_io import UnsupportedEdit, apply_edits_to_docx, docx_to_text, text_to_docx
+from claudia_composes_io._tables import put_tables
 
 from claudia_composes import DEFAULT_STYLE, Block, Suggestion, TextModel, TextRange
 
@@ -150,6 +151,7 @@ def test_apply_edits_patches_only_the_changed_paragraph_and_preserves_a_table():
             Block("b2", baseline.blocks[1].style, baseline.blocks[1].text),
         ]
     )
+    put_tables(current, [("b1", len("Edited first paragraph."), d) for d in baseline.tables.values()])
 
     out = apply_edits_to_docx(original_bytes, baseline, current)
     reopened = docx.Document(BytesIO(out))

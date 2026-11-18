@@ -119,7 +119,7 @@ def add_object_methods(
             w,
             h,
             IMAGE_STYLE,
-            image=asset.id,
+            ref=asset.id,
             imported=imported,
             decorative=bool(decorative),
             name=default_name(ctx, "image"),

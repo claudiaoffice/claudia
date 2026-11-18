@@ -3,7 +3,7 @@ import struct
 import pytest
 
 from claudia_core import Batch, CommandLog, Document, ImageAsset, ImageImport, MemoryStore, decode_image
-from claudia_core.testing import FakeClock
+from claudia_core.testing import FakeClock, pointing_as_ref
 from claudia_creates import (
     AddObject,
     DefineImage,
@@ -46,7 +46,7 @@ def build(**fields) -> SlideObject:
         # style of their own kind, since a shape's own style is an outline (D310).
         words = fields.get("style", DEFAULT_STYLE) if fields.get("kind") == "text" else "shape-label"
         fields["paragraph"] = paragraph_for(fields["id"], words, text, author)
-    return VisualObject(ObjectBody(**fields), anchor)
+    return VisualObject(ObjectBody(**pointing_as_ref(fields)), anchor)
 
 
 def text_box(object_id: str = "t1", **changes) -> SlideObject:

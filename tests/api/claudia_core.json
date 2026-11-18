@@ -1,5 +1,5 @@
 {
- "version": "0.35.0",
+ "version": "0.36.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -225,6 +225,29 @@
   },
   "properties": []
  },
+ "Column": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', kind: 'str' = 'text', total: 'str | None' = None, width: 'int | None' = None) -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_data": "(data: 'dict') -> 'Column'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ColumnSpec": {
+  "class": [
+   "object"
+  ],
+  "init": "(column: 'Column', after: 'str | None' = None, entries: 'tuple[tuple[str, Paragraph], ...]' = ()) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ColumnSpec'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "Command": {
   "class": [
    "ABC"
@@ -354,7 +377,7 @@
   "class": [
    "Command"
   ],
-  "init": "(style: 'StyleDef') -> None",
+  "init": "(style: 'StyleDef', before: 'str | None' = None) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'CreateStyle'",
@@ -382,6 +405,9 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "DELETE_HOWS": {
+  "value": "('assign', 'rebase')"
  },
  "DefineDiagram": {
   "class": [
@@ -446,6 +472,61 @@
    "redacted": "(self) -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DefineTable": {
+  "class": [
+   "Command"
+  ],
+  "init": "(definition: 'dict') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineTable'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DeleteColumns": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', ids: 'tuple[str, ...]', merges: 'tuple[Merge, ...] | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DeleteColumns'",
+   "needs": "(self)",
+   "overwrites": "(self)",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'",
+   "touched": "(self)"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "DeleteRows": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', ids: 'tuple[str, ...]', merges: 'tuple[Merge, ...] | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DeleteRows'",
+   "needs": "(self)",
+   "overwrites": "(self)",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'",
+   "touched": "(self)"
   },
   "properties": [
    "label",
@@ -795,6 +876,22 @@
    "summary"
   ]
  },
+ "ForgetTable": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetTable'",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "FunctionInfo": {
   "class": [
    "object"
@@ -881,6 +978,9 @@
  "IMAGE_STYLE": {
   "value": "'plain-image'"
  },
+ "INITIAL_CSS": {
+  "value": "<mappingproxy>"
+ },
  "ImageAsset": {
   "class": [
    "object"
@@ -942,6 +1042,42 @@
   },
   "properties": [
    "label"
+  ]
+ },
+ "InsertColumns": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', columns: 'tuple[ColumnSpec, ...]', merges: 'tuple[Merge, ...] | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'InsertColumns'",
+   "needs": "(self)",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'",
+   "touched": "(self)"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "InsertRows": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', rows: 'tuple[RowSpec, ...]', merges: 'tuple[Merge, ...] | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'InsertRows'",
+   "needs": "(self)",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'",
+   "touched": "(self)"
+  },
+  "properties": [
+   "label",
+   "summary"
   ]
  },
  "InsertText": {
@@ -1110,6 +1246,9 @@
  "MAIN": {
   "value": "'main'"
  },
+ "MAX_COLUMNS": {
+  "value": "10"
+ },
  "MAX_HEADING_LEVEL": {
   "value": "9"
  },
@@ -1131,14 +1270,23 @@
  "MAX_ROLES": {
   "value": "64"
  },
+ "MAX_ROWS": {
+  "value": "100"
+ },
  "MAX_SELECTION": {
   "value": "64"
  },
  "MAX_THING_NAME": {
   "value": "60"
  },
+ "MAX_WIDTH": {
+  "value": "10000"
+ },
  "MIN_OBJECT_SIZE": {
   "value": "20"
+ },
+ "MIN_WIDTH": {
+  "value": "1000"
  },
  "Manifest": {
   "class": [
@@ -1163,6 +1311,17 @@
    "rewrite": "(self, log: 'CommandLog', chat: 'Sequence[ChatRecord]') -> 'None'",
    "write_branch": "(self, branch: 'Branch', active: 'bool') -> 'None'",
    "write_snapshot": "(self, snapshot: 'Snapshot') -> 'None'"
+  },
+  "properties": []
+ },
+ "Merge": {
+  "class": [
+   "object"
+  ],
+  "init": "(row: 'str', col: 'str', rows: 'int' = 1, cols: 'int' = 1) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Merge'",
+   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -1196,7 +1355,10 @@
   "value": "'none'"
  },
  "OBJECT_KINDS": {
-  "value": "('text', 'shape', 'image', 'diagram', 'rendered')"
+  "value": "('text', 'shape', 'image', 'diagram', 'rendered', 'table')"
+ },
+ "ORIGINS": {
+  "value": "{'document': 'document', 'builtin': 'built-in', 'template': 'template'}"
  },
  "OUTLINE_FACET": {
   "value": "<Facet>"
@@ -1205,13 +1367,19 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, ref: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
-  "properties": []
+  "properties": [
+   "diagram",
+   "image",
+   "rendered",
+   "shape",
+   "table"
+  ]
  },
  "ObjectModel": {
   "class": [
@@ -1224,8 +1392,10 @@
    "blank_objects": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "can_turn": "(self, body: 'ObjectBody') -> 'bool'",
    "check_anchor": "(self, anchor: 'A', body: 'ObjectBody') -> 'None'",
+   "check_entry_edit": "(self, paragraph_id: 'str') -> 'None'",
    "check_name_free": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'None'",
    "check_object": "(self, obj: 'VisualObject[A]', *, shared_names: 'bool' = True) -> 'None'",
+   "check_table": "(self, definition: 'TableDef') -> 'None'",
    "check_thing_name": "(self, thing_id: 'str', name: 'str', *, shared: 'bool' = True) -> 'None'",
    "close_container": "(self, container: 'str') -> 'None'",
    "containers": "(self) -> 'Iterable[str]'",
@@ -1233,18 +1403,23 @@
    "define_image": "(self, image: 'ImageAsset') -> 'None'",
    "define_rendering": "(self, definition: 'RenderedDefinition') -> 'None'",
    "define_shape": "(self, shape: 'ShapeDefinition') -> 'None'",
+   "define_table": "(self, definition: 'TableDef') -> 'None'",
    "delete_object": "(self, object_id: 'str') -> 'tuple[VisualObject[A], int]'",
    "diagram_from_data": "(self, data: 'dict') -> 'DiagramDefinition'",
    "diagrams_to_data": "(self) -> 'list[dict]'",
+   "entry_words": "(self, paragraph_id: 'str') -> 'Paragraph'",
    "forget_diagram": "(self, diagram_id: 'str') -> 'DiagramDefinition'",
    "forget_image": "(self, image_id: 'str') -> 'ImageAsset'",
    "forget_rendering": "(self, rendering_id: 'str') -> 'RenderedDefinition'",
    "forget_shape": "(self, shape_id: 'str') -> 'ShapeDefinition'",
+   "forget_table": "(self, table_id: 'str') -> 'TableDef'",
    "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
+   "get_table": "(self, table_id: 'str') -> 'TableDef'",
    "has_thing": "(self, thing_id: 'str') -> 'bool'",
    "images_to_data": "(self) -> 'list[dict]'",
    "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None, *, shared_names: 'bool' = True) -> 'None'",
    "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'ObjectsChanged'",
+   "is_entry": "(self, paragraph_id: 'str') -> 'bool'",
    "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
    "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",
    "names_in_use": "(self) -> 'list[str]'",
@@ -1257,6 +1432,7 @@
    "objects_to_data": "(self) -> 'list[dict]'",
    "open_container": "(self, container: 'str') -> 'None'",
    "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
+   "put_entry_words": "(self, paragraph_id: 'str', words: 'Paragraph') -> 'None'",
    "put_object_fields": "(self, object_id: 'str', fields: 'tuple[Field, ...]') -> 'ObjectsChanged'",
    "put_object_generated": "(self, object_id: 'str', generated: 'Generated | None') -> 'ObjectsChanged'",
    "put_object_item": "(self, object_id: 'str', item: 'ListItem | None') -> 'ObjectsChanged'",
@@ -1266,12 +1442,15 @@
    "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",
    "replace_object": "(self, obj: 'VisualObject[A]') -> 'VisualObject[A]'",
    "replace_rendering": "(self, definition: 'RenderedDefinition') -> 'RenderedDefinition'",
-   "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = (), renderings: 'Iterable[dict]' = ()) -> 'None'",
+   "replace_table": "(self, definition: 'TableDef') -> 'TableDef'",
+   "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = (), renderings: 'Iterable[dict]' = (), tables: 'Iterable[dict]' = ()) -> 'None'",
+   "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",
    "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "shapes_to_data": "(self) -> 'list[dict]'",
    "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
+   "tables_to_data": "(self) -> 'list[dict]'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "turn_command": "(self, object_id: 'str', rotation: 'int') -> 'RotateObject'",
    "turned_anchor": "(self, obj: 'VisualObject[A]', rotation: 'int') -> 'A'",
@@ -1279,7 +1458,8 @@
    "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
    "users_of_image": "(self, image_id: 'str') -> 'list[str]'",
    "users_of_rendering": "(self, rendering_id: 'str') -> 'list[str]'",
-   "users_of_shape": "(self, shape_id: 'str') -> 'list[str]'"
+   "users_of_shape": "(self, shape_id: 'str') -> 'list[str]'",
+   "users_of_table": "(self, table_id: 'str') -> 'list[str]'"
   },
   "properties": []
  },
@@ -1452,6 +1632,22 @@
    "words"
   ]
  },
+ "RebaseStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'str', based_on: 'str | None', css: 'dict[str, str]', number_format: 'str | None', heading_level: 'HeadingLevel', numbering: 'str | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RebaseStyle'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "Rebuilt": {
   "class": [
    "object"
@@ -1514,7 +1710,7 @@
   "class": [
    "object"
   ],
-  "init": "(targets: 'tuple[Revision, ...]', dependents: 'tuple[Revision, ...]', chat: 'tuple[int, ...]', imports: 'tuple[Revision, ...]', changes_now: 'bool', after: 'DocumentModel', replacements: 'Mapping[Revision, Command]', basis: 'tuple') -> None",
+  "init": "(targets: 'tuple[Revision, ...]', dependents: 'tuple[Revision, ...]', chat: 'tuple[int, ...]', imports: 'tuple[Revision, ...]', changes_now: 'bool', after: 'DocumentModel', replacements: 'Mapping[Revision, Command]', basis: 'tuple', regions: 'tuple[Region, ...]' = ()) -> None",
   "methods": {},
   "properties": [
    "revisions"
@@ -1805,6 +2001,17 @@
    "summary"
   ]
  },
+ "RowSpec": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', after: 'str | None' = None, entries: 'tuple[tuple[str, Paragraph], ...]' = ()) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'RowSpec'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "Run": {
   "class": [
    "object"
@@ -1883,6 +2090,61 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "SetColumn": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', column: 'Column') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetColumn'",
+   "needs": "(self)",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'",
+   "touched": "(self)"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetColumnOrder": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', order: 'tuple[str, ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetColumnOrder'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'",
+   "touched": "(self)"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetEntries": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', changes: 'tuple[tuple[str, str, dict | None], ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetEntries'",
+   "needs": "(self)",
+   "overwrites": "(self)",
+   "redacted": "(self) -> 'Command'",
+   "to_data": "(self) -> 'dict'",
+   "touched": "(self)"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "SetField": {
   "class": [
@@ -1966,6 +2228,25 @@
    "summary"
   ]
  },
+ "SetMerge": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', row: 'str', col: 'str', rows: 'int' = 1, cols: 'int' = 1) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetMerge'",
+   "needs": "(self)",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'",
+   "touched": "(self)"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetObjectStyle": {
   "class": [
    "Command"
@@ -2037,6 +2318,24 @@
    "summary"
   ]
  },
+ "SetRowOrder": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', order: 'tuple[str, ...]', sorted_by: 'str | None' = None) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetRowOrder'",
+   "redacted": "(self) -> 'Command'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'",
+   "touched": "(self)"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetSnap": {
   "class": [
    "Command"
@@ -2055,6 +2354,22 @@
    "summary"
   ]
  },
+ "SetStyleHidden": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'str', hidden: 'bool') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetStyleHidden'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetStyleNumbering": {
   "class": [
    "Command"
@@ -2064,6 +2379,22 @@
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetStyleNumbering'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetTableOptions": {
+  "class": [
+   "TableCommand"
+  ],
+  "init": "(table: 'str', options: 'tuple[tuple[str, object], ...]') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetTableOptions'",
+   "redacted": "(self) -> 'Command'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -2206,23 +2537,27 @@
   ],
   "init": "(styles: 'Iterable[StyleDef]' = ())",
   "methods": {
-   "add": "(self, style: 'StyleDef') -> 'None'",
+   "add": "(self, style: 'StyleDef', *, before: 'str | None' = None) -> 'None'",
    "chain": "(self, style_id: 'str') -> 'list[StyleDef]'",
    "children": "(self, style_id: 'str') -> 'list[str]'",
    "computed": "(self, style_id: 'str') -> 'dict[str, str]'",
+   "fallback": "(self, style_id: 'str') -> 'StyleDef | None'",
    "from_data": "(items: 'Iterable[dict]') -> 'StyleBook'",
    "get": "(self, style_id: 'str') -> 'StyleDef'",
    "heading_level": "(self, style_id: 'str') -> 'int | None'",
    "ids": "(self) -> 'list[str]'",
    "name_taken": "(self, name: 'str', *, besides: 'str | None' = None) -> 'bool'",
+   "next_after": "(self, style_id: 'str') -> 'str | None'",
    "number_format": "(self, style_id: 'str') -> 'str | None'",
    "numbering": "(self, style_id: 'str') -> 'str | None'",
    "provisional_name": "(self, parent_id: 'str') -> 'str'",
+   "rebase": "(self, style_id: 'str', based_on: 'str | None', css: 'dict[str, str]', number_format: 'str | None', heading_level: 'HeadingLevel', numbering: 'str | None') -> 'StyleDef'",
    "remove": "(self, style_id: 'str') -> 'StyleDef'",
    "rename": "(self, style_id: 'str', name: 'str', *, to_name: 'bool' = False) -> 'None'",
    "resolved": "(self, style_id: 'str', colours: 'Mapping[str, str] | None' = None) -> 'dict[str, str]'",
    "set_css": "(self, style_id: 'str', css: 'dict[str, str]') -> 'None'",
    "set_heading_level": "(self, style_id: 'str', level: 'HeadingLevel') -> 'None'",
+   "set_hidden": "(self, style_id: 'str', hidden: 'bool') -> 'None'",
    "set_number_format": "(self, style_id: 'str', format_id: 'str | None') -> 'None'",
    "set_numbering": "(self, style_id: 'str', numbering: 'str | None') -> 'None'",
    "to_data": "(self) -> 'list[dict]'",
@@ -2235,7 +2570,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph', number_format: 'str | None' = None, heading_level: 'HeadingLevel' = None, numbering: 'str | None' = None) -> None",
+  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph', number_format: 'str | None' = None, heading_level: 'HeadingLevel' = None, numbering: 'str | None' = None, origin: 'str' = 'document', hidden: 'bool' = False) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'StyleDef'",
    "to_data": "(self) -> 'dict'"
@@ -2275,6 +2610,97 @@
  },
  "TEXT_FLOOR": {
   "value": "4.5"
+ },
+ "TableDef": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', columns: 'tuple[Column, ...]', rows: 'tuple[str, ...]', entries: 'Mapping[tuple[str, str], Paragraph]' = <factory>, merges: 'tuple[Merge, ...]' = (), header_rows: 'int' = 1, banded: 'bool' = False, look: 'str' = 'rules', placement: 'str' = 'flow', width: 'int | None' = None, next_row: 'int' = 0, next_col: 'int' = 0) -> None",
+  "methods": {
+   "all_paragraphs": "(self) -> 'Iterable[Paragraph]'",
+   "blank": "(table_id: 'str', rows: 'int', cols: 'int', *, header_rows: 'int' = 1, **options) -> 'TableDef'",
+   "blanked": "(self, *, keep_length: 'bool' = False) -> 'TableDef'",
+   "check": "(self) -> 'None'",
+   "column": "(self, col: 'str') -> 'Column'",
+   "column_count": "(self) -> 'int'",
+   "column_ids": "(self) -> 'tuple[str, ...]'",
+   "column_name": "(self, col: 'str') -> 'str'",
+   "column_order": "(self, order: 'Iterable[str]') -> 'TableDef'",
+   "cover_of": "(self, row: 'str', col: 'str') -> 'Merge | None'",
+   "covered": "(self, row: 'str', col: 'str') -> 'bool'",
+   "delete_columns": "(self, ids: 'Iterable[str]') -> 'TableDef'",
+   "delete_rows": "(self, ids: 'Iterable[str]') -> 'TableDef'",
+   "entry": "(self, row: 'str', col: 'str') -> 'Paragraph | None'",
+   "from_data": "(data: 'dict') -> 'TableDef'",
+   "has_total": "(self) -> 'bool'",
+   "header_row_count": "(self) -> 'int'",
+   "insert_columns": "(self, specs: 'Iterable[ColumnSpec]', merges: 'Iterable[Merge] | None' = None) -> 'TableDef'",
+   "insert_rows": "(self, specs: 'Iterable[RowSpec]', merges: 'Iterable[Merge] | None' = None) -> 'TableDef'",
+   "paragraph": "(self, row: 'str', col: 'str') -> 'Paragraph'",
+   "role_of": "(self, row_index: 'int') -> 'str'",
+   "row_count": "(self) -> 'int'",
+   "row_order": "(self, order: 'Iterable[str]') -> 'TableDef'",
+   "sort_order": "(self, col: 'str', descending: 'bool' = False, language: 'str | None' = None) -> 'tuple[str, ...]'",
+   "text": "(self, row: 'int', col: 'int') -> 'str'",
+   "to_data": "(self) -> 'dict'",
+   "totals": "(self, language: 'str | None' = None) -> 'dict[str, str]'",
+   "with_column": "(self, column: 'Column') -> 'TableDef'",
+   "with_entries": "(self, changes: 'Iterable[tuple[str, str, Paragraph | None]]') -> 'TableDef'",
+   "with_merge": "(self, row: 'str', col: 'str', rows: 'int', cols: 'int') -> 'TableDef'",
+   "with_options": "(self, **changes: 'object') -> 'TableDef'"
+  },
+  "properties": [
+   "source_id"
+  ]
+ },
+ "TableLook": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', header: 'str', body: 'str', band: 'str', total: 'str') -> None",
+  "methods": {
+   "style_for": "(self, role: 'str') -> 'str'",
+   "styles": "(self) -> 'tuple[str, ...]'"
+  },
+  "properties": []
+ },
+ "TableRegion": {
+  "class": [
+   "object"
+  ],
+  "init": "(table: 'str', rows: 'frozenset[str] | None' = None, cols: 'frozenset[str] | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'TableRegion'",
+   "overlaps": "(self, other: 'object') -> 'bool'",
+   "to_data": "(self) -> 'dict'",
+   "transformed": "(self, command: 'Command') -> 'TableRegion | None'"
+  },
+  "properties": []
+ },
+ "TableSource": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "column_count": "(self) -> 'int'",
+   "header_rows": "(self) -> 'int'",
+   "row_count": "(self) -> 'int'",
+   "text": "(self, row: 'int', col: 'int') -> 'str'"
+  },
+  "properties": [
+   "source_id"
+  ]
+ },
+ "TablesChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(table_id: 'str', definition: 'TableDef | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "TextCommand": {
   "class": [
@@ -2427,6 +2853,9 @@
  "asset_of": {
   "function": "(data: 'bytes | None') -> 'ImageAsset | None'"
  },
+ "assign_changes_look": {
+  "function": "(model: 'object', style_id: 'str', target: 'str') -> 'bool'"
+ },
  "blank_png": {
   "function": "(width: int, height: int) -> bytes"
  },
@@ -2457,6 +2886,9 @@
  "contrast": {
   "function": "(one: 'str', other: 'str') -> 'float'"
  },
+ "decimal_comma": {
+  "function": "(language: 'str | None') -> 'bool'"
+ },
  "decode_image": {
   "function": "(data: 'bytes', *, checked_drawing: 'bool' = False) -> 'ImageAsset'"
  },
@@ -2468,6 +2900,12 @@
  },
  "encode": {
   "function": "(command: 'Command') -> 'dict'"
+ },
+ "entry_id": {
+  "function": "(table: 'str', row: 'str', col: 'str') -> 'str'"
+ },
+ "entry_paragraph": {
+  "function": "(table: 'str', row: 'str', col: 'str', text: 'str', style: 'str' = '', author: 'str | None' = None) -> 'dict'"
  },
  "environment_of": {
   "function": "(model_cls: 'type[DocumentModel]', *, functions=None, fonts=(), providable_fonts=()) -> 'Environment'"
@@ -2487,11 +2925,17 @@
  "format_css": {
   "function": "(css: 'Mapping[str, str]') -> 'str'"
  },
+ "format_number": {
+  "function": "(value: 'Decimal', language: 'str | None' = None) -> 'str'"
+ },
  "free_name": {
   "function": "(label: 'str', taken: 'Iterable[str]') -> 'str'"
  },
  "generated_from_data": {
   "function": "(data: 'dict') -> 'Generated'"
+ },
+ "held_look": {
+  "function": "(old: 'Mapping[str, str]', base: 'Mapping[str, str]') -> 'dict[str, str]'"
  },
  "insert_runs": {
   "function": "(runs: 'Iterable[Run]', offset: 'int', new: 'Iterable[Run]') -> 'list[Run]'"
@@ -2538,6 +2982,12 @@
  "parse_css": {
   "function": "(text: 'str') -> 'tuple[dict[str, str], list[CssProblem]]'"
  },
+ "parse_entry_id": {
+  "function": "(paragraph_id: 'str') -> 'tuple[str, str, str] | None'"
+ },
+ "parse_number": {
+  "function": "(text: 'str', language: 'str | None' = None) -> 'Decimal | None'"
+ },
  "parse_shape": {
   "function": "(text: 'str') -> 'ShapeDefinition'"
  },
@@ -2546,6 +2996,9 @@
  },
  "plain": {
   "function": "(text: 'str') -> 'str'"
+ },
+ "plan_delete_style": {
+  "function": "(model: 'object', style_id: 'str', *, how: 'str' = 'assign', target: 'str | None' = None) -> 'Batch'"
  },
  "points_of": {
   "function": "(css: 'dict[str, str]', prop: 'str', pt_per_unit: 'float') -> 'float | None'"

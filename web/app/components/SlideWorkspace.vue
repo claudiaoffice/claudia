@@ -195,7 +195,7 @@ const selectedKind = computed(() => (state.selected ? state.objects[state.select
 function styleItems() {
   if (session.styleViews().length === 0) return [{ label: t('No styles yet'), disabled: true }]
   const body = state.selected ? state.objects[state.selected] : undefined
-  const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel)
+  const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel, styleHost.current?.id)
   return formatItems(t, {
     groups: body ? [offered.own, offered.bundles] : [],
     heading: body ? undefined : t('Select an object to style it'),

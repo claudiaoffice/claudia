@@ -702,7 +702,7 @@ def _add_diagram_object(ctx, *, sheet, row, col, w, h, diagram, base):
         raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
     _diagram_definition(workbook, diagram, "add_diagram_object")
     object_id = fresh_id("o", workbook.objects)
-    body = ObjectBody(object_id, "diagram", w, h, "plain-image", diagram=diagram, name=default_name(ctx, "diagram"))
+    body = ObjectBody(object_id, "diagram", w, h, "plain-image", ref=diagram, name=default_name(ctx, "diagram"))
     command = AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data())
     return done(ctx, command, base, object=object_id)
 

@@ -36,7 +36,7 @@ nitpick_ignore_regex = [
     # (nor generics with several arguments in a signature: it cuts them at the first comma)
     (r"py:class", r"(Callable|dict|list|tuple)\[.*"),
     # standard library and FastAPI types in signatures (no network for intersphinx)
-    (r"py:class", r"(os|pathlib|ssl)\.\w+|(fastapi|starlette)\..*"),
+    (r"py:class", r"(os|pathlib|ssl|decimal)\.\w+|(fastapi|starlette)\..*"),
     # lxml's element type in the signatures of claudia-odf-io (no network for intersphinx)
     (r"py:class", r"lxml\..*"),
     # the `regex` package's compiled pattern in claudia-search, and the clock its deadlines are read on

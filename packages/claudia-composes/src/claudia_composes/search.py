@@ -10,11 +10,13 @@ A search looks in one or more *kinds* of text:
 ``remark``       a paragraph in the remark style, or in one based on it
 ``object``       the words in an object that floats over the text: a text box's paragraph, a shape's label
 ``description``  what an object says to somebody who cannot see it (BITV 1.1.1)
+``table``        the words in the boxes of a table (D1210), row by row; a box a merge covers has none
 
 All of them are stored text and may be replaced. A place (``at``) is ``{"block"}`` for a paragraph, with ``"offset"``
 when only the part of it from there on was searched (a selection starts or ends in it: the matches count from there),
-and ``{"block", "object", "source"}`` for the words or the description of an object, ``block`` being the paragraph it
-hangs from (so that a client can take a person there).
+``{"block", "object", "source"}`` for the words or the description of an object and ``{"block", "table", "row",
+"col"}`` for a box of a table, ``block`` being the paragraph the object hangs from (so that a client can take a person
+there).
 
 A search covers the whole text, one *section* (``{"section": paragraph}``: from the heading the paragraph is under to
 the next heading of the same or a higher level, subsections included) or a selection
@@ -30,14 +32,14 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 
-from claudia_core import Batch, Command, Region, edit_object_text, object_texts
+from claudia_core import Batch, Command, Region, edit_object_text, entry_id, object_texts
 from claudia_search import CompiledSearch, Location, Plan, Scan, SearchError, Skip, Text, plan, scan
 
 from .commands import DeleteText, InsertText
 from .model import Block, TextModel
 from .region import TextRange
 
-KINDS = ("text", "heading", "remark", "object", "description")
+KINDS = ("text", "heading", "remark", "object", "description", "table")
 EXTRA_PARTS: Mapping[str, str] = {
     # A word: letters and digits that are not part of a longer run of them
     "word": r"(?<!\w)\w+(?!\w)",
@@ -75,6 +77,19 @@ def object_of(at: Location) -> tuple[str, str, str]:
     if not ok or not all(isinstance(at[k], str) for k in at) or at["source"] not in _OBJECT_KIND:
         raise ValueError("a place in an object is {block, object, source}, the source being box, label or description")
     return at["block"], at["object"], at["source"]
+
+
+def table_at(block: str, table: str, row: str, col: str) -> Location:
+    """Where a box of a table is, and the paragraph the table hangs from."""
+    return {"block": block, "table": table, "row": row, "col": col}
+
+
+def table_of(at: Location) -> tuple[str, str, str, str]:
+    """``(paragraph, table, row, column)`` of a place a client sent back; ``ValueError`` if it is not a box's."""
+    ok = isinstance(at, Mapping) and set(at) == {"block", "table", "row", "col"}
+    if not ok or not all(isinstance(at[k], str) for k in at):
+        raise ValueError("a place in a box of a table is {block, table, row, col}")
+    return at["block"], at["table"], at["row"], at["col"]
 
 
 def _natural(value: object) -> bool:
@@ -181,12 +196,30 @@ def text_texts(model: TextModel, kinds: Sequence[str] = ("text",), scope: Mappin
     return _texts(model, wanted, sources, _stretches(model, scope))
 
 
+def _box_texts(model: TextModel, block: Block, start: int, stop: int | None) -> Iterator[Text]:
+    """The words of the boxes of the tables that hang from ``block`` (from a place inside the stretch), by row."""
+    for shown in model.objects_on(block.id):
+        table_id = shown.body.table
+        if table_id is None or table_id not in model.tables:
+            continue
+        if shown.anchor.offset < start or (stop is not None and shown.anchor.offset > stop):
+            continue  # hangs from a place outside the selection
+        definition = model.tables[table_id]
+        for row in definition.rows:
+            for col in definition.column_ids():
+                words = definition.paragraph(row, col).text
+                if words and not definition.covered(row, col):
+                    yield Text(table_at(block.id, table_id, row, col), "table", words)
+
+
 def _texts(model: TextModel, wanted: set[str], sources: list[str], stretches: list[Stretch]) -> Iterator[Text]:
     for block, start, stop, partial in stretches:
         kind = kind_of(model, block)
         text = block.text[start:stop]
         if kind in wanted and text:
             yield Text(block_at(block.id, start if partial else None), kind, text)
+        if "table" in wanted:
+            yield from _box_texts(model, block, start, stop)
         if not sources:
             continue
         for item in object_texts(model, [block.id], sources):
@@ -249,7 +282,10 @@ def plan_replacement(
 def _holder(model: TextModel, at: Location, edits: Sequence, conflicts: Conflicts) -> str | None:
     """Who holds what a change touches, if somebody else does."""
     regions: list[Region]
-    if "object" in at:
+    if "table" in at:
+        _, table, row, col = table_of(at)
+        regions = list(model.text_regions(entry_id(table, row, col), 0, 1))
+    elif "object" in at:
         regions = list(model.selection_of(object_of(at)[1]))
     else:
         block, origin = block_of(at)
@@ -258,12 +294,29 @@ def _holder(model: TextModel, at: Location, edits: Sequence, conflicts: Conflict
     return held[0][0] if held else None
 
 
+def _box_steps(box: str, edits: Sequence) -> list[Command]:
+    """The typing and deleting that make ``edits`` in one box, from the end; a box is one line, so a line break in what
+    is put in is a space (D1212)."""
+    steps: list[Command] = []
+    for e in sorted(edits, key=lambda e: e.start, reverse=True):
+        if e.end > e.start:
+            steps.append(DeleteText(box, e.start, e.end - e.start))
+        line = " ".join(e.after.replace("\r\n", "\n").replace("\r", "\n").split("\n"))
+        if line:
+            steps.append(InsertText(box, e.start, line))
+    return steps
+
+
 def replace_command(model: TextModel, made: Plan, author: str | None) -> Command | None:
     """The one command that makes the plan, from steps that type and delete (so the authors of what stays are kept)
     and rewrite object texts. ``None`` when nothing changes."""
     steps: list[Command] = []
     for change in made.changes:
         edits = [e for e in change.edits if e.before != e.after]
+        if "table" in change.at:
+            _, table, row, col = table_of(change.at)
+            steps += _box_steps(entry_id(table, row, col), [e for e in change.edits if e.before != e.after])
+            continue
         if "object" in change.at:
             _, object_id, source = object_of(change.at)
             steps.append(edit_object_text(model, object_id, source, [(e.start, e.end, e.after) for e in edits], author))
@@ -292,5 +345,7 @@ __all__ = [
     "plan_replacement",
     "replace_command",
     "scan_text",
+    "table_at",
+    "table_of",
     "text_texts",
 ]

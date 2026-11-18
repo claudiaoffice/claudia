@@ -110,7 +110,7 @@ def test_the_roles_resolve_to_exactly_the_colours_the_styles_used_to_hold(doc):
 
 def test_a_style_travels_as_plain_data():
     data = builtin_styles().get(DEFAULT_STYLE).to_data()
-    assert set(data) == {"id", "name", "purpose", "based_on", "css", "to_name", "kind"}
+    assert set(data) == {"id", "name", "purpose", "based_on", "css", "to_name", "kind", "origin"}
     assert data["css"]["font-family"]
 
 

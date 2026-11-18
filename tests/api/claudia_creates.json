@@ -47,7 +47,7 @@
   "value": "<Path>"
  },
  "BUILTIN_STYLES": {
-  "value": "(StyleDef(id='body-text', name='Body text', purpose='running text on a slide: sentences, short lists, captions', based_on=None, css={'color': '@text', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '40px', 'line-height': '1.3', 'text-align': 'left'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None), StyleDef(id='slide-title', name='Slide title', purpose='names the slide: what the audience should take from it, in a few words', based_on='body-text', css={'font-size': '64px', 'font-weight': '600', 'line-height': '1.15'}, to_name=False, kind='paragraph', number_format=None, heading_level=1, numbering=None), StyleDef(id='shape-label', name='Shape label', purpose='the words inside a shape on a slide', based_on='body-text', css={'font-size': '36px', 'line-height': '1.25', 'text-align': 'center'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that carries a thought or marks a part of the slide, without drawing attention to itself', based_on=None, css={'fill': '@accent/14', 'stroke': '@accent', 'stroke-width': '4px'}, to_name=False, kind='outline', number_format=None, heading_level=None, numbering=None), StyleDef(id='plain-box', name='Plain box', purpose='the box of a text box on a slide: no background and no border, so only its words show', based_on=None, css={}, to_name=False, kind='box', number_format=None, heading_level=None, numbering=None), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the slide; it carries its own colours, so no style properties apply to it', based_on=None, css={}, to_name=False, kind='box', number_format=None, heading_level=None, numbering=None))"
+  "value": "(StyleDef(id='body-text', name='Body text', purpose='running text on a slide: sentences, short lists, captions', based_on=None, css={'color': '@text', 'font-family': \"Inter, system-ui, 'Segoe UI', sans-serif\", 'font-size': '40px', 'line-height': '1.3', 'text-align': 'left'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='slide-title', name='Slide title', purpose='names the slide: what the audience should take from it, in a few words', based_on='body-text', css={'font-size': '64px', 'font-weight': '600', 'line-height': '1.15'}, to_name=False, kind='paragraph', number_format=None, heading_level=1, numbering=None, origin='builtin', hidden=False), StyleDef(id='shape-label', name='Shape label', purpose='the words inside a shape on a slide', based_on='body-text', css={'font-size': '36px', 'line-height': '1.25', 'text-align': 'center'}, to_name=False, kind='paragraph', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='plain-shape', name='Plain shape', purpose='a shape that carries a thought or marks a part of the slide, without drawing attention to itself', based_on=None, css={'fill': '@accent/14', 'stroke': '@accent', 'stroke-width': '4px'}, to_name=False, kind='outline', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='plain-box', name='Plain box', purpose='the box of a text box on a slide: no background and no border, so only its words show', based_on=None, css={}, to_name=False, kind='box', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False), StyleDef(id='plain-image', name='Plain image', purpose='a picture placed on the slide; it carries its own colours, so no style properties apply to it', based_on=None, css={}, to_name=False, kind='box', number_format=None, heading_level=None, numbering=None, origin='builtin', hidden=False))"
  },
  "DEFAULT_STYLE": {
   "value": "'body-text'"
@@ -186,13 +186,19 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, ref: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
-  "properties": []
+  "properties": [
+   "diagram",
+   "image",
+   "rendered",
+   "shape",
+   "table"
+  ]
  },
  "ObjectSet": {
   "class": [

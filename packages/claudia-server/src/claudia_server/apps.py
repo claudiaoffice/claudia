@@ -19,6 +19,7 @@ from .protocol import MethodTable, core_methods
 from .slide_lens import SlideLens
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
+from .tables import TABLE_METHODS
 from .workbook_lens import WorkbookLens
 
 _METHODS: dict[str, MethodTable] = {
@@ -58,7 +59,16 @@ MODEL_METHODS = {
     # D640: as in the other apps, the words and the paragraph styles; ``suggest`` for what it can only remark on. D681:
     # a model quotes words instead (``replace_words``, ``suggest_words``) and adds paragraphs; ``replace_text`` and
     # ``suggest`` (offsets) are the stand-in's and never described to a model (``NOT_FOR_A_MODEL``).
-    "composes": ("suggest", "replace_text", "set_style", "suggest_words", "replace_words", "add_paragraphs"),
+    # E9.32: tables, by the ids of their rows and columns; a change of a box is ``replace_words`` with the box's id.
+    "composes": (
+        "suggest",
+        "replace_text",
+        "set_style",
+        "suggest_words",
+        "replace_words",
+        "add_paragraphs",
+        *TABLE_METHODS,
+    ),
     # D265: slides and the objects that need no binary data, their words and their words' style; D342: the speaker
     # notes. Not images, export, snapping or rotation to begin with, and not the planned times (people plan).
     "creates": (

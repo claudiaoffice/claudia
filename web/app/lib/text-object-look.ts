@@ -3,7 +3,7 @@
 // outline's paint, the words their text and paragraph (D304) — by the server's own `style_model`, so no list of
 // properties is kept here. At 1:1, a text is not scaled.
 import type { BlockAnchor, StyleDef, VisualObject } from './objects'
-import { wordsCssOf, cssOf } from './objects'
+import { wordsCssOf, cssOf, pointer } from './objects'
 import { imageDataUrl } from './images'
 import { facetCss } from './slide-style'
 import { withDisplayInk } from './style-css'
@@ -39,10 +39,12 @@ export function lookOf(holder: LookHolder, o: VisualObject<BlockAnchor>): Object
   const styles = Object.fromEntries(holder.styles.map((s) => [s.id, s]))
   const facets = holder.styleModel?.facets
   const facet = (css: Css, names: string[]) => facetCss(css, facets, names)
-  const asset = o.image ? holder.images[o.image] : undefined
+  const imageId = pointer(o, 'image')
+  const asset = imageId ? holder.images[imageId] : undefined
   const look: ObjectLook = { picture: o.kind === 'image' && asset ? imageDataUrl(asset) : '', outline: null, words: null, rendered: o.kind === 'rendered', unsupported: o.kind === 'diagram' }
   if (o.kind === 'rendered' || o.kind === 'image' || o.kind === 'diagram') return look
-  const outline = o.shape ? (holder.shapes[o.shape] ?? null) : null
+  const shapeId = pointer(o, 'shape')
+  const outline = shapeId ? (holder.shapes[shapeId] ?? null) : null
   if (o.kind === 'shape' && outline) look.outline = { path: outline.path, paint: facet(withDisplayInk(cssOf(styles, o)), ['outline']) }
   if (o.paragraph) {
     const area = outline?.text_area ?? { x: 0, y: 0, w: 100, h: 100 }

@@ -180,7 +180,7 @@ Mock-up: `all-styles-edit.svg`.
   (mirror of composes' `deviate_style`, from the paragraph's style) makes it from the *words* style. Both give
   the provisional name and `to_name` (D75). The dialog says which slot is being changed in its header (“Plain box
   of this text box” / “Body text of this text box”).
-* Rename keeps its rules (`rename_style`); deleting styles is still **undecided** (D226). Do not build it.
+* Rename keeps its rules (`rename_style`); deleting and hiding styles are settled in D226 and D780–D783; see `implementation-notes-style-deletion.md`.
 
 Tests: `style-editor.test.ts` additions: the editor for a `paragraph` style in an `object words` slot shows Text and
 Paragraph sections and no Box section; Edit opens, Rename still works; the deviation target is the slot, not the
@@ -228,7 +228,7 @@ not: a cell opens the same menu through a `cellStyleHost`).
 
 * **Inline marks** (D306). The model leaves room (`kind` could grow `mark`, a slot `composes paragraph marks`) and
   nothing else is prepared. Do not add a `runs`-style styling array, and do not add “this word only”.
-* **Deleting styles** (D226). **Hiding** built-ins likewise.
+* **Deleting styles** (D226) and **hiding** built-ins: done afterwards, see `implementation-notes-style-deletion.md`.
 * **A second render target for Outline or Box** beyond what the exporters above need today.
 * **Migration** of old documents (D308): old snapshots without `kind` fail to load, on purpose. Record it in the
   changelog of each touched package (`docs/changelog.md` for the kernel, `docs/changelog-<package>.md` for the

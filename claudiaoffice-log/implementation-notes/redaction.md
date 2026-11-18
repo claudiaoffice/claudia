@@ -68,3 +68,24 @@ to steps and chat messages whose author is she (`command_error` otherwise, befor
 `allowed: false` and `others`, so that the dialog can say whose work is in the way (mock-up 5) and leaves out the
 preview; `redact` refuses. The restore-suggestion guard now holds for everybody, not only owners. The chat note of
 D728 is a plain `chat` call by the client after `redact`; the server does not post anything itself.
+
+## 2026-11-18: the screens (E3.14, D729)
+
+The preview reuses the replay's machinery instead of a second rendering: the server keeps the planned model under a
+token (`planned.py`, at most 4 per document, 15 minutes) and `as_planned` answers the same view reads `as_of` does, from
+it. In the client a session has `state.preview` beside `state.replay`; `need()` hands out a `PlannedLink` (a sibling of
+`PastLink`, both on a `LookingLink` base) while it is set, so the views draw the plan without knowing about it, and
+nothing that writes gets through. `lookOnly`/`roleNow` treat a preview like a replay. The views take their marks from
+`viewTints(state)` rather than `replayTints(state.replay)`.
+
+`redaction_plan` stays live in a replay and a preview (it changes nothing); `redact` ends the preview first. The chat
+note is an ordinary `chat` after `redact` succeeds. A `rebuilt` that follows a `redacted` is the same news and is not
+announced twice. The kernel's plan now also names the places that change (`regions`), and a dependent whose
+same-shape blank still fails becomes a tombstone (`commands.tombstone`, D729).
+
+```
+SidePanel.vue ──redact(picked)──▶ DocumentFrame.vue ──▶ RedactionDialog.vue
+     │  pick, menu, Shift+Del                              │ planRedaction / previewRedaction / redact
+     ▼                                                     ▼
+lib/redaction.ts (rules)                     BaseSession ──PlannedLink──▶ as_planned (server)
+```

@@ -17,8 +17,9 @@ import type { ParagraphStyle } from '../text/style'
 import { insets, lineItems } from '../display/text'
 import { type DisplayList, type DisplayPage, type PathOp, rectPath, walk } from '../display/list'
 import { type Exclusion, MIN_SLOT_EM, type Wrap } from '../flow/exclusions'
-import { type FlowBlock, type FlowPage, flowItems, locate, paginate } from '../flow/paginate'
+import { type FlowBlock, type FlowItem, type FlowPage, type FlowTable, flowItems, locate, paginate } from '../flow/paginate'
 import { Rows } from '../flow/rows'
+import { layoutTable, type TableData, tableStyleIds } from '../flow/table'
 import { contentBox, type PageGeometry, pageGeometry } from '../flow/paper'
 import type { FontSet } from '../fonts/fontset'
 import type { FontResolver } from '../fonts/resolve'
@@ -80,6 +81,9 @@ export interface TextObject extends VisualObject {
 
 export interface TextDocument {
   blocks: readonly TextBlock[]
+  /** the tables of the text as `tables` gives them (with `totals`); an object of kind `table` with `ref` the id of one
+   *  is where it hangs (E9.32) */
+  tables?: readonly TableData[]
   styles: readonly TextStyle[]
   page: PageSetupData
   objects?: readonly TextObject[]
@@ -148,6 +152,8 @@ function placeRoom(sheet: Styles, style: ParagraphStyle): number {
 /** For each flow block, the paragraph of the text it is (or the entry of a table of contents it draws). */
 interface Origin {
   block: number
+  /** set for a table: `block` is the paragraph it follows */
+  table?: true
   entry?: TextContents['entries'][number]
   contents?: TextContents
   room?: number
@@ -156,7 +162,7 @@ interface Origin {
 /** The page (from 1) each paragraph of the text starts on, by id. */
 function pagesOf(starts: ReadonlyMap<number, { page: number }>, origins: readonly Origin[], blocks: readonly TextBlock[]): Map<string, number> {
   const out = new Map<string, number>()
-  for (const [i, at] of starts) if (!origins[i]!.entry) out.set(blocks[origins[i]!.block]!.id, at.page + 1)
+  for (const [i, at] of starts) if (!origins[i]!.entry && !origins[i]!.table) out.set(blocks[origins[i]!.block]!.id, at.page + 1)
   return out
 }
 
@@ -174,9 +180,12 @@ function withPages(block: TextBlock, known: ReadonlyMap<string, number> | null):
 }
 
 /** Where each flow block starts: the page (from 0), and the top of its first line on it, in page coordinates. */
-function startsOf(flow: readonly FlowPage[], blocks: readonly FlowBlock[]): Map<number, { page: number; top: number }> {
+function startsOf(flow: readonly FlowPage[], blocks: readonly FlowItem[]): Map<number, { page: number; top: number }> {
   const out = new Map<number, { page: number; top: number }>()
-  for (const p of flow) for (const l of p.lines) if (l.line === 0 && !out.has(l.block)) out.set(l.block, { page: p.index, top: l.top })
+  for (const p of flow) {
+    for (const l of p.lines) if (l.line === 0 && !out.has(l.block)) out.set(l.block, { page: p.index, top: l.top })
+    for (const t of p.tables) if (!out.has(t.block)) out.set(t.block, { page: p.index, top: t.top })
+  }
   for (let i = 0; i < blocks.length; i++) if (!out.has(i)) out.set(i, { page: 0, top: 0 }) // an empty paragraph has a line too
   return out
 }
@@ -187,7 +196,7 @@ function contentsItems(
   fonts: FontSet,
   sheet: Styles,
   flow: readonly FlowPage[],
-  blocks: readonly FlowBlock[],
+  blocks: readonly FlowItem[],
   origins: readonly Origin[],
   pageOf: ReadonlyMap<string, number>,
   starts: ReadonlyMap<number, { page: number; top: number }>,
@@ -196,14 +205,14 @@ function contentsItems(
 ): void {
   const targets = new Map<string, number>()
   origins.forEach((o, i) => {
-    if (!o.entry) targets.set(blocks[i]!.id, i)
+    if (!o.entry && !o.table) targets.set(blocks[i]!.id, i)
   })
   for (const p of flow) {
     for (const l of p.lines) {
       const origin = origins[l.block]!
       const { entry, contents } = origin
       if (!entry?.target || !contents) continue
-      const b = blocks[l.block]!
+      const b = blocks[l.block] as FlowBlock
       const line = b.layout.lines[l.line]!
       const target = targets.get(entry.target)
       const to = target === undefined ? undefined : starts.get(target)
@@ -257,6 +266,17 @@ const MAX_WRAP_PASSES = 6
 /** composes' default style: what a paragraph with a style the text does not have is drawn in. */
 const BODY = DEFAULT_STYLE.composes
 
+/** The tables an object of the text shows, by the id of the object (E9.32). */
+function shownTables(doc: TextDocument): Map<string, TableData> {
+  const byId = new Map((doc.tables ?? []).map((t) => [t.id, t]))
+  const out = new Map<string, TableData>()
+  for (const o of doc.objects ?? []) {
+    const table = o.kind === 'table' && o.ref ? byId.get(o.ref) : undefined
+    if (table) out.set(o.id, table)
+  }
+  return out
+}
+
 /**
  * The SHA-256 of every font file laying out `doc` needs, as `resolver` picks them, so the caller can fetch them
  * before calling {@link layoutText}.
@@ -273,6 +293,12 @@ export function fontsNeeded(doc: TextDocument, resolver: FontResolver): string[]
     if (face) out.add(face)
   }
   for (const face of objectFonts(doc.objects ?? [], styles, doc.images ?? [], resolver, BODY)) out.add(face)
+  for (const table of shownTables(doc).values()) {
+    for (const id of tableStyleIds(table)) {
+      const face = styleFont(cssOf(styles, id, BODY), resolver)
+      if (face) out.add(face)
+    }
+  }
   return [...out].sort()
 }
 
@@ -302,10 +328,38 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
     wrapping.filter(({ at }) => at.page === page).map(({ o, at }) => ({ box: { x: at.x - left, y: at.y - top, w: at.w, h: at.h }, wrap: o.anchor.wrap as Wrap, gap: gapOf(o) }))
   /** The flow blocks of the text, with page references as `known` has them ("000" before they are known), and for
    *  each flow block the paragraph of the text it is (or the entry of a table of contents it draws). */
+  const shown = shownTables(doc)
+  const tableObjects = (doc.objects ?? []).filter((o) => o.kind === 'table')
+  for (const o of tableObjects) {
+    const table = shown.get(o.id)
+    if (!table) notes.push({ kind: 'object', object: o.id, reason: 'its table is missing' })
+    else if (table.placement === 'float') notes.push({ kind: 'object', object: o.id, reason: 'a floating table is printed in the flow, below its paragraph' })
+  }
+  /** The tables that hang from a paragraph, in the order of their anchors, as flow items. */
+  const spaceAfter = sheet.paragraph(BODY).style.spaceAfter
+  const laidTables = new Map<string, FlowTable>()
+  const tablesAfter = (paragraph: string): FlowTable[] =>
+    tableObjects
+      .filter((o) => o.anchor.container === paragraph && shown.has(o.id))
+      .sort((a, b) => a.anchor.offset - b.anchor.offset)
+      .map((o) => {
+        let laid = laidTables.get(o.id)
+        if (!laid) {
+          laid = { id: o.id, table: layoutTable(fonts, sheet, shown.get(o.id)!, box.w, paragraphOptions), spaceBefore: 0, spaceAfter }
+          laidTables.set(o.id, laid)
+        }
+        return laid
+      })
   const build = (known: ReadonlyMap<string, number> | null, around: ReadonlyMap<number, Start> | null = null) => {
     const origins: Origin[] = []
     const rows = new Map<number, Rows>()
-    const blocks: FlowBlock[] = doc.blocks.flatMap((b, index): FlowBlock[] => {
+    const withTables = (b: TextBlock, index: number, own: FlowBlock[]): FlowItem[] => {
+      const after = tablesAfter(b.id)
+      for (let k = 0; k < after.length; k++) origins.push({ block: index, table: true })
+      return [...own, ...after]
+    }
+    /** the flow blocks of a paragraph (the entries of a table of contents are one each) */
+    const paragraphsOf = (b: TextBlock, index: number): FlowBlock[] => {
       if (b.contents) {
         const contents = b.contents
         const entries = contents.entries.length ? contents.entries : [{ target: '', words: '', style: b.style }]
@@ -362,7 +416,8 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
           }
         : paragraphOptions
       return [{ id: b.id, layout: layoutParagraph(fonts, style, words, width, options), decoration: r.decoration, ...(marker ? { marker } : {}) }]
-    })
+    }
+    const blocks: FlowItem[] = doc.blocks.flatMap((b, index): FlowItem[] => withTables(b, index, paragraphsOf(b, index)))
     return { blocks, origins, rows }
   }
   // ---- at most three passes: a page reference can move a line, and the line a page break (mock-up D, D901)
@@ -387,7 +442,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   // ---- text round the objects that take room (D1061, D1062)
   /** An object's frame on the page its anchor character stands on in `at`, kept inside the margins across and above the
    *  bottom margin, or `null` when the character is nowhere. */
-  const standing = (o: TextObject, at: { flow: readonly FlowPage[]; blocks: readonly FlowBlock[] }): Standing | null => {
+  const standing = (o: TextObject, at: { flow: readonly FlowPage[]; blocks: readonly FlowItem[] }): Standing | null => {
     const index = at.blocks.findIndex((b) => b.id === o.anchor.container)
     const spot = index < 0 ? null : locate(at.flow, at.blocks, index, o.anchor.offset)
     if (!spot) return null
@@ -397,18 +452,20 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
     const y = Math.max(box.y, Math.min(spot.top + px(o.anchor.dy ?? 0), geometry.height - geometry.margin.bottom - h))
     return { page: spot.page, x, y, w, h }
   }
-  wrapping = (doc.objects ?? []).filter(takesRoom).flatMap((o) => {
+  wrapping = (doc.objects ?? []).filter((o) => o.kind !== 'table' && takesRoom(o)).flatMap((o) => {
     const at = standing(o, { flow, blocks: built.blocks })
     return at ? [{ o, at }] : []
   })
   if (wrapping.length) {
+    /** The paragraph a line stands in: a placed line belongs to a paragraph, never to a table. */
+    const paragraphAt = (index: number): FlowBlock => built.blocks[index] as FlowBlock
     /** The paragraphs the objects may reach, with where each starts (before a row was pushed down), by flow block. */
     const reached = (): Map<number, Start> => {
       const first = new Map<number, Start>()
       const last = new Map<number, number>()
       for (const pg of flow) {
         for (const l of pg.lines) {
-          if (l.line === 0 && !first.has(l.block)) first.set(l.block, { page: pg.index, top: l.top - (built.blocks[l.block]!.layout.lines[0]!.lead ?? 0) - box.y })
+          if (l.line === 0 && !first.has(l.block)) first.set(l.block, { page: pg.index, top: l.top - (paragraphAt(l.block).layout.lines[0]!.lead ?? 0) - box.y })
           last.set(l.block, pg.index)
         }
       }
@@ -462,6 +519,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   const embedded = new Map<string, Uint8Array>()
   const placed = new Map(wrapping.map(({ o, at }) => [o.id, at]))
   for (const o of doc.objects ?? []) {
+    if (o.kind === 'table') continue // in the flow, above
     const at = placed.get(o.id) ?? standing(o, { flow, blocks })
     if (!at) continue
     const group = drawObject(o, { x: at.x, y: at.y, w: at.w, h: at.h }, { fonts, resolver, styles: sheet, shapes, images, notes, embedded, paragraphOptions, diagramNote: 'charts cannot be printed from a text yet' })
@@ -477,6 +535,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
 
   const outline: OutlineEntry[] = []
   for (const [i, at] of starts) {
+    if (origins[i]!.table) continue
     const b = doc.blocks[origins[i]!.block]!
     const level = origins[i]!.entry ? null : styles.get(b.style)?.heading
     if (level !== null && level !== undefined && b.text.trim()) outline.push({ title: b.text.trim(), level, page: at.page, top: at.top })

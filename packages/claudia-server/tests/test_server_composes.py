@@ -230,7 +230,7 @@ def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing
     paper.execute(DefineImage(asset), author="ann")
     box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
     record = ImageImport(asset.id, "a picture", "ann", "2026-11-12T10:00:00Z", "disk", "rgb.png")
-    picture = ObjectBody("o2", "image", 70, 50, "plain-image", image=asset.id, imported=record)
+    picture = ObjectBody("o2", "image", 70, 50, "plain-image", ref=asset.id, imported=record)
     paper.model.insert_object(VisualObject(box, BlockAnchor("b1", 2)))
     paper.model.insert_object(VisualObject(picture, BlockAnchor("b1", 7)))
     objects = call(paper, "objects", account=VERA)["objects"]

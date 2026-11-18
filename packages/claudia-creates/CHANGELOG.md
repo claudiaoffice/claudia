@@ -3,6 +3,15 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Changed
+- An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 16.
+
+### Added
+- `SlideModel.restyle_users(old, new)` (from `ObjectModel`): the objects that have a style, as commands that put them
+  under another (the deletion of a style, E1.10, D226). Its built-in styles have `origin == "builtin"`.
+
 ## [0.20.0] - 2026-11-17
 
 References in text boxes (step H).

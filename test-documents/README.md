@@ -71,6 +71,41 @@ Exits non-zero if anything it ran failed. Every enabled entry also runs as part 
 (`tests/test_test_documents_catalogue.py`, Tiers 1-2 only, no write-back) -- the CLI is for a person running it
 on purpose and updating the catalogue's own record of how it went, not for CI's fast loop.
 
+## Running a folder of your own documents (a corpus)
+
+Real-world test files -- Apache POI's `test-data`, LibreOffice's QA documents -- are far too many to catalogue and
+are not ours to check in. Keep them anywhere on disk and point the runner at the folder; nothing is copied into
+`test-documents/` and `catalogue.json` is never touched:
+
+```
+uv run python scripts/run_test_documents.py --corpus ~/Dev/claudia/test-corpus
+uv run python scripts/run_test_documents.py --corpus ~/Dev/claudia/test-corpus --format xlsx --format docx
+uv run python scripts/run_test_documents.py --corpus ~/Dev/claudia/test-corpus --corpus-report /tmp/run1.json
+uv run python scripts/run_test_documents.py --corpus ~/Dev/claudia/test-corpus --fail-fast
+CLAUDIA_TEST_CORPUS=~/Dev/claudia/test-corpus uv run pytest tests/test_test_documents_corpus.py   # one test per file
+```
+
+Every `docx`, `xlsx`, `pptx`, `odt`, `ods` and `odp` file under the folder is found (other files, hidden folders such
+as `.git` and Office lock files `~$name.docx` are skipped; the old binary `.doc`/`.xls`/`.ppt` formats have no
+importer yet and are not run). A file with no `spec.py` has no known-correct content, so each one gets the three checks
+that hold for any document:
+
+1. **import** -- it reads into claudia's model without crashing;
+2. **round trip** -- an edit that changes nothing, written back through the format's own edit-and-reexport path and
+   read again, leaves the model exactly as it was; a failure names where the model first differs (`blocks[3].text`);
+3. **preserve** -- no package part of the original is missing from the re-exported file. Parts that were *rewritten*
+   are listed (`rewritten parts: ...`) but are not a failure.
+
+A file's result is `PASS`, `FAIL` (a check said so), `ERROR` (claudia's own reader or writer crashed on a readable
+file -- a bug worth a bugtracker entry) or `REJECTED` (not a readable package, or over the safety limits of SEC-15). A
+rejected file is correct behaviour, not a finding: real-world corpora contain truncated and fuzzed files on purpose.
+The command exits non-zero if any file failed or errored, and 1 if the folder holds no supported document at all.
+`--corpus-report FILE` also writes the results as JSON, without timings, so `diff run1.json run2.json` shows what a
+change fixed or broke.
+
+These are smoke-level checks (does claudia survive the file, and lose nothing it did not model), not fidelity
+assertions: for a feature you want pinned down, promote a small file to a catalogue case below.
+
 ## Adding a case
 
 1. Add a `build_<name>()` function to `_build_fixtures.py` (python-docx/python-pptx, or whichever library the

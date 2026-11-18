@@ -916,7 +916,7 @@ def _library_charts_through_libreoffice(to: str) -> bytes:
     second = ChartSpec(id="c2", kind="bar", range=whole, series_in="rows", legend=False)
     for spec, object_id, anchor in ((first, "o1", (6, 1)), (second, "o2", (6, 8))):
         model.define_diagram(spec)
-        body = ObjectBody(object_id, "diagram", 480, 300, "plain-image", diagram=spec.id)
+        body = ObjectBody(object_id, "diagram", 480, 300, "plain-image", ref=spec.id)
         model.insert_object(VisualObject(body, CellAnchor(sheet_id, *anchor)))
     with tempfile.TemporaryDirectory() as folder:
         source = Path(folder) / "in" / f"charts.{to}"
@@ -991,7 +991,7 @@ def _library_pictures_through_libreoffice(to: str) -> bytes:
             }
         )
         body = ObjectBody(
-            f"o{number}", "image", 180, 90, "plain-image", image=asset.id, imported=record, description=description
+            f"o{number}", "image", 180, 90, "plain-image", ref=asset.id, imported=record, description=description
         )
         model.insert_object(VisualObject(body, BlockAnchor(block, offset)))
     with tempfile.TemporaryDirectory() as folder:
@@ -1047,7 +1047,7 @@ def _library_boxes_through_libreoffice(to: str) -> bytes:
         paragraph = paragraph_for(f"o{number}", "body" if kind == "text" else "shape-label", words)
         style = "plain-box" if kind == "text" else "plain-shape"
         body = ObjectBody(
-            f"o{number}", kind, *size, style, paragraph, shape=shape, rotation=turn, description=description
+            f"o{number}", kind, *size, style, paragraph, ref=shape, rotation=turn, description=description
         )
         model.insert_object(VisualObject(body, BlockAnchor(block, offset)))
     with tempfile.TemporaryDirectory() as folder:

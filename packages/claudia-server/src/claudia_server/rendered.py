@@ -153,7 +153,7 @@ def _add(model_of: Callable[[Context], ObjectModel], placement: Placement):
             w,
             h,
             IMAGE_STYLE,
-            rendered=rendering_id,
+            ref=rendering_id,
             description=words,
             name=default_name(ctx, "rendered"),
         )

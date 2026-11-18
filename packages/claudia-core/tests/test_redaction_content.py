@@ -37,7 +37,7 @@ def test_an_import_record_keeps_who_and_when_but_not_what_was_written_or_where_i
 
 def test_a_redacted_object_loses_its_words_its_description_and_its_import_words():
     body = ObjectBody(
-        "i1", "image", 40, 30, "plain-image", image="ab" * 32, imported=picture_import(), description="the CEO's face"
+        "i1", "image", 40, 30, "plain-image", ref="ab" * 32, imported=picture_import(), description="the CEO's face"
     )
     command = AddObject(body, {"container": "s1"}).redacted()
     assert command.body.description == "" and command.body.imported.alt == ""
