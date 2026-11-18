@@ -124,9 +124,10 @@ def run_corpus(
     fail_fast: bool = False,
     adapters: dict[str, Adapter] | None = None,
 ) -> Iterator[CorpusResult]:
-    """:func:`run_file` over everything :func:`discover` finds, one result at a time so a caller can print as it
-    goes. ``fail_fast`` stops after the first ``"fail"`` or ``"error"`` -- a ``"rejected"`` file is not a problem
-    and does not stop it."""
+    """:func:`~claudia_test_documents.run_corpus_file` over everything
+    :func:`~claudia_test_documents.discover_corpus` finds, one result at a time so a caller can print as it goes.
+    ``fail_fast`` stops after the first ``"fail"`` or ``"error"`` -- a ``"rejected"`` file is not a problem and does
+    not stop it."""
     for path in discover(root, formats=formats, adapters=adapters):
         result = run_file(path, root, adapters=adapters)
         yield result
