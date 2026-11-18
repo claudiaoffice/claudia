@@ -636,10 +636,17 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     await this.track(this.loadApp())
   }
 
-  // ------------------------------------------------------------------------------ redacting (E3.13, D720–D728)
-  /** Work out what redacting `picked` would do (D721): nothing changes. `false` after saying why it cannot be. */
-  async planRedaction(picked: Picked): Promise<RedactionPlan | false> {
-    return (await this.attempt('redaction_plan', { ...requestOf(picked), state: false })) as RedactionPlan | false
+  // ------------------------------------------------------------------------------ redacting (E3.14, D720–D728)
+  /** Work out what redacting `picked` would do (D721): nothing changes. A sentence instead of a plan when it cannot be,
+   * for the dialog to show in place (a notice would sit behind it). */
+  async planRedaction(picked: Picked): Promise<RedactionPlan | string> {
+    try {
+      return await this.need().request<RedactionPlan>('redaction_plan', { ...requestOf(picked), state: false })
+    } catch (error) {
+      if (error instanceof ProtocolError && error.code !== 'closed') return error.message
+      this.explain(error)
+      return t('Not connected to the server.')
+    }
   }
 
   /** Show the document as `plan` would leave it, with the places it changes marked, until `endPreview`. A plan that is
@@ -659,6 +666,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     if (!this.state.preview) return
     this.dropPreview()
     await this.track(this.loadApp())
+  }
+
+  /** For blanking part of an imported workbook (D723): the part a range the person wrote names, on the sheet on show;
+   * `null` where the app has no cells, or the text is not a range. */
+  redactionRangePart(_range: string): string | null {
+    return null
   }
 
   private dropPreview(): void {

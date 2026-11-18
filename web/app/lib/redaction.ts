@@ -1,4 +1,4 @@
-// Redaction in the clients (E3.13; D720–D728): who may pick what, what the dialog says, the note to the people whose
+// Redaction in the clients (E3.14; D720–D728): who may pick what, what the dialog says, the note to the people whose
 // work goes. Plain functions over the session's own data, no Vue and no DOM, so every rule has a test; the dialog
 // (`RedactionDialog.vue`) and the panel (`SidePanel.vue`) only draw what these decide.
 

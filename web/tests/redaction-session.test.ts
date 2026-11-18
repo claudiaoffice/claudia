@@ -42,11 +42,13 @@ const PLAN: RedactionPlan = {
 class FakeLink implements LinkLike {
   calls: { method: string; params: any }[] = []
   events: EventHandler[] = []
+  refuse: ProtocolError | null = null
   async connect() {
     return WELCOME
   }
   async request(method: string, params: any = {}): Promise<any> {
     this.calls.push({ method, params })
+    if (method === 'redaction_plan' && this.refuse) throw this.refuse
     switch (method) {
       case 'log':
         return [entry(1, 'ana'), entry(2)]
@@ -125,6 +127,11 @@ describe('working a redaction out', () => {
     const plan = await session.planRedaction({ revisions: ['main:2'], chat: [1], parts: { 'main:2': ['t1'] } })
     expect(plan).toEqual(PLAN)
     expect(link.calls.at(-1)).toEqual({ method: 'redaction_plan', params: { revisions: ['main:2'], chat: [1], parts: { 'main:2': ['t1'] }, state: false } })
+  })
+  it('says why when it cannot be worked out, for the dialog to show', async () => {
+    const { link, session } = await opened()
+    link.refuse = new ProtocolError('command_error', 'the text has no paragraph b9')
+    expect(await session.planRedaction({ revisions: ['main:1'], chat: [] })).toBe('the text has no paragraph b9')
   })
 })
 

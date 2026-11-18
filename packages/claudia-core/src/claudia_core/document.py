@@ -19,7 +19,8 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field, replace
 
 from .clock import monotonic, utc_now
-from .commands import Checkpoint, Command, Import, Redaction, Restore, Switch
+from .commands import Checkpoint, Command, Import, Redaction, Restore, Switch, tombstone
+from .commands import Redacted as RedactedCommand
 from .context import Context
 from .errors import (
     KernelError,
@@ -687,10 +688,10 @@ class Document:
 
         A step may be on any line, a hidden one too (D724). Each is replaced by its blanked form (D720); ``parts``
         blanks only some things of an import (D723). Every line that holds a replaced step is replayed, and a later
-        step that no longer applies is blanked as well and named in ``dependents`` (D722), until every line replays.
-        ``RedactionError`` for a request that names nothing, something the document does not have, something that
-        holds no content or is redacted already, and for the last resort: a later step that does not apply even when
-        blanked itself."""
+        step that no longer applies is blanked as well and named in ``dependents`` (D722), until every line replays; one
+        whose blank of the same shape still does not apply becomes a no-op tombstone. ``RedactionError`` for a request
+        that names nothing, something the document does not have, something that holds no content or is redacted
+        already, and for the last resort: a history that does not replay before any blanked step."""
         targets = self._redactable(revisions)
         numbers = self._redactable_chat(chat)
         wanted = {rev: frozenset(things) for rev, things in (parts or {}).items()}
@@ -703,6 +704,10 @@ class Document:
         while (failing := self._first_failure(replacements)) is not None:
             rev, cause = failing
             entry = self.log.get(rev)
+            if rev in replacements and not isinstance(replacements[rev], RedactedCommand):
+                # its same-shape blank does not apply either: it becomes a no-op tombstone (D722)
+                replacements[rev] = tombstone(entry.command)
+                continue
             if rev in replacements or entry.redacted or entry.command.meta:
                 raise RedactionError(
                     f"Redacting this would stop step {rev} ({entry.command.label}) from working, even if it were "

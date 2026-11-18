@@ -58,6 +58,7 @@ describe('fileMenu: the same File menu in every app (D120, D141)', () => {
       'file.manage.accept-owner',
       'file.manage.leave',
       'file.manage.export',
+      'file.manage.redact',
       'file.manage.delete',
     ])
   })
@@ -97,6 +98,15 @@ describe('fileMenu: the same File menu in every app (D120, D141)', () => {
     expect([byId(owner, 'file.manage.accept-owner').disabled, byId(viewer, 'file.manage.accept-owner').disabled]).toEqual([false, true])
     expect([byId(editor, 'file.save').disabled, byId(viewer, 'file.save').disabled]).toEqual([false, true])
     expect(byId(viewer, 'file.manage.leave').disabled).toBeFalsy()
+  })
+
+  it('lets owners and editors redact, a viewer not (D727), and opens the pick for it', () => {
+    const roles = ['owner', 'editor', 'viewer'].map((role) => byId(fileMenu(context(role).c).items, 'file.manage.redact'))
+    expect(roles.map((item) => item.disabled)).toEqual([false, false, true])
+    expect(roles[0]!.label).toBe('Redact History…')
+    const { c, calls } = context()
+    byId(fileMenu(c).items, 'file.manage.redact').action!()
+    expect(calls).toEqual(['open:redact'])
   })
 })
 

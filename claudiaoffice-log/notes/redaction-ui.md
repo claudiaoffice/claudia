@@ -1,8 +1,8 @@
-# Redaction: the screens (E3.14), proposed
+# Redaction: the screens (E3.14)
 
-Status: **proposal; the open points are answered (D727, D728), the screens wait for the go-ahead.** The rules behind
-it are decided (D720–D728, superseding D229) and built in the kernel, the container and the server (E1.8, E2.6,
-SEC-05). This note is what the clients would show; no client code exists yet.
+Status: **built (2026-11-18, E3.14).** The rules behind it are decided (D720–D729, superseding D229) and built in the
+kernel, the container and the server (E1.8, E2.6, SEC-05). What was built differs from the mock-ups in a few places,
+listed at the end; the mock-ups stay as the record of what was agreed.
 
 ## The four screens
 
@@ -107,3 +107,20 @@ classDiagram
 2. **Confirmation:** the red button that names the scope, with Ctrl+Enter; no typed confirmation for now (D728).
 3. **Editors:** redact their own changes and messages; owners anything (D727).
 4. **Parts of an import:** whole objects; single words may come later (D728).
+
+## As built (2026-11-18)
+
+* **The panel is the real one**, dark, with History and Chat as two lists (the mock-ups drew a lighter combined dock).
+  Picking works the same: right-click a row (menu: "Redact… (n picked)", Shift+Del), Ctrl+click a row, or
+  File ▸ Manage ▸ Redact History… (Ctrl+Shift+F8) for pick boxes on every row and a bar with "Redact…".
+* **The dialog sits in the middle** like every dialog and can be dragged aside by its title; the document behind it is
+  the preview, with an Iris banner that says nothing has changed yet. The marks are the replay's (`viewTints`), drawn
+  from the places the plan names.
+* **The button is the rose of "Delete From Server…"**, not GNOME's red: `app.css` keeps `--danger` for the server
+  pages, and a document-level act that cannot be undone uses rose (DeleteDocumentDialog.vue). It reads "Redact (n)",
+  the title "Redact for good": the catalogue has no plural forms yet, so no "1 items".
+* **An import's parts** are picked by clicking paragraphs, slides, sheet tabs and objects while a bar at the bottom
+  counts them (the dialog steps aside); computes adds a field for a cell range on the sheet on show. Each part is shown
+  by its first words, read when it is picked.
+* **A plan that cannot be made** says why inside the dialog, since a notice would sit behind it.
+* **A dependent whose blank still fails becomes a tombstone** (D729), found with the editor case of mock-up 5.

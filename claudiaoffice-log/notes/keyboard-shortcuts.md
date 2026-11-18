@@ -23,6 +23,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Manage ▸ Accept Ownership… | Ctrl+Shift+Alt+C |  |
 | File | Manage ▸ Leave Document… | Ctrl+Shift+Alt+L |  |
 | File | Manage ▸ Export… | Ctrl+Shift+Alt+X |  |
+| File | Manage ▸ Redact History… | Ctrl+Shift+F8 |  |
 | File | Manage ▸ Delete From Server… | Ctrl+Shift+Alt+R |  |
 | File | Close Document | Ctrl+Alt+W |  |
 | File | Quit | Ctrl+Q | the shell |
@@ -85,6 +86,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Manage ▸ Accept Ownership… | Ctrl+Shift+Alt+C |  |
 | File | Manage ▸ Leave Document… | Ctrl+Shift+Alt+L |  |
 | File | Manage ▸ Export… | Ctrl+Shift+Alt+X |  |
+| File | Manage ▸ Redact History… | Ctrl+Shift+F8 |  |
 | File | Manage ▸ Delete From Server… | Ctrl+Shift+Alt+R |  |
 | File | Close Document | Ctrl+Alt+W |  |
 | File | Quit | Ctrl+Q | the shell |
@@ -168,6 +170,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | File | Manage ▸ Accept Ownership… | Ctrl+Shift+Alt+C |  |
 | File | Manage ▸ Leave Document… | Ctrl+Shift+Alt+L |  |
 | File | Manage ▸ Export… | Ctrl+Shift+Alt+X |  |
+| File | Manage ▸ Redact History… | Ctrl+Shift+F8 |  |
 | File | Manage ▸ Delete From Server… | Ctrl+Shift+Alt+R |  |
 | File | Close Document | Ctrl+Alt+W |  |
 | File | Quit | Ctrl+Q | the shell |
