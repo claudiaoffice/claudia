@@ -51,15 +51,26 @@ object's shape and image with `pointer(object, kind)`; `test_server_composes_wra
 **Lesson:** when one side moves code and the other changes it in place, git drops the change in silence. After such a
 merge, search the moved code for the names the other side changed.
 
-## What was red before this round, and stays so
+## What was red after the merges, and how it was made green (PR #41)
 
-Checked on `floating-objects` before the merge, not caused by it:
+CI on `main` after #40 failed in Python (Linux and Windows), Linux client, Web and Chromium e2e. Every cause, none of
+them in the merge conflicts themselves:
 
-* mypy: three `call-overload` errors in `claudia_composes_io/_wrap.py` (`element.attrib.pop(x, None)`).
-* vulture: `_set_wrap` in the server's `composes.py`, `PICTURE_STYLE_XML` in `_odt_pictures.py`.
-* ESLint: six errors in `web/e2e/composes-wrap.cjs`, `web/tests/text-containers.test.ts` and a duplicate import in
-  `text-object-look.ts`.
+| Check | Cause | Fix |
+|---|---|---|
+| mypy | `element.attrib.pop(x, None)` in `_wrap.py`: the lxml stubs want a string default | default `""` |
+| vulture | `PICTURE_STYLE_XML` had no user; `_set_wrap` is a registered wire method | constant removed; `_set_wrap` whitelisted like the other methods |
+| docs | `WRAPS`, `MAX_WRAP_GAP` had no `autodata`; a corpus docstring named `run_file`/`discover`, which the package exports as `run_corpus_file`/`discover_corpus` | `autodata` entries in `docs/api/apps.rst`; qualified references |
+| npm audit | allow-list entry `GHSA-fc5q-39xc-vjpf` matched no advisory any more | entry removed, as its own reason says |
+| web lint | six ESLint errors on `floating-objects` | fixed |
+| web tests | `text-object-look.test.ts` built objects with `shape`/`image` (before D1211's `ref`); hidden behind the lint failure | fixtures use `ref` |
+| Linux client | the composes Edit menu test took Image… and Text Box to be the last entries; the table entries now follow | checks the order where it stands |
+| e2e `pivots` | the SQL dialog opens at once and the query arrives later; the script read it once. It failed on `main` before this round too, and passes on a fast machine either way | waits for the text |
+| LibreOffice (cancelled) | installing LibreOffice from a slow mirror took 14 of the job's 15 minutes; the check itself takes 44 seconds | limit 30 minutes, apt retries |
 
-On `main`, CI was red before the first merge (Chromium end-to-end, Python on Windows), and a docs warning
-(`claudia_test_documents.corpus`: `run_file`, `discover` unresolved) and the npm-audit allow-list entry
-`GHSA-fc5q-39xc-vjpf` ("not needed any more") fail the Python job on Linux; none of the four branches touched those.
+**Lesson:** a gate that stops at its first failure hides the ones behind it. The web tests never ran because lint
+failed first, and the e2e steps after `pivots` (passwords, details, admin fonts, the two shell tests) had not run on
+`main` since `pivots` started failing (it was already failing before the first merge). After a gate is repaired, run everything behind it too.
+
+**Open:** `Python (macos-latest)` was never given a runner by GitHub ("capacity constraints, macOS arm64") in any run
+seen on 2026-11-18, on `main` or on the PR, a re-run included, so no macOS result exists for this round.
