@@ -6,6 +6,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- Tables in a text (E9.32): the text holds table definitions (`TextModel.tables`, state schema 15), shows them with
+  objects of the kind `table`, takes typing in a box with the ordinary text commands on the box's paragraph id, locks
+  a typed-in box as a `TableRegion`, and has three built-in looks (`TABLE_LOOKS`, `DEFAULT_LOOK`) whose twelve styles
+  are `BUILTIN_STYLES` (`TABLE_STYLE_IDS`).
+
+### Added
 - `TextModel.restyle_users(old, new)`: the commands that put the paragraphs and objects that have a style under another
   (the deletion of a style, E1.10, D226). Its built-in styles have `origin == "builtin"`.
 

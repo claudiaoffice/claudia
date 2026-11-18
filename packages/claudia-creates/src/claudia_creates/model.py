@@ -138,7 +138,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 13: the presentation holds lists, whose items are the words of text boxes and shapes (step C, E10.21)
     # 14: the presentation holds its numbering schemes; styles may name a list that numbers them (step D, E9.22)
     # 15: the words of a text box may be generated (an agenda, step E, E9.31)
-    state_schema: ClassVar[int] = 15
+    state_schema: ClassVar[int] = 16  # 16: an object body has one ``ref`` instead of a field per kind
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(

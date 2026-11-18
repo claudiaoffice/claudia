@@ -63,7 +63,7 @@ def put_chart(
 ):
     fields = {"id": spec_id, "kind": "bar", "range": a_range(), **spec}
     model.define_diagram(ChartSpec(**fields))
-    body = ObjectBody(object_id, "diagram", *size, "plain-image", diagram=spec_id, description=description)
+    body = ObjectBody(object_id, "diagram", *size, "plain-image", ref=spec_id, description=description)
     model.insert_object(VisualObject(body, CellAnchor(S1, *at)))
 
 
@@ -291,7 +291,7 @@ def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
     model = a_workbook()
     model.names.put(NamedRange("Sales", None, a_range(), header=True))
     model.define_diagram(ChartSpec(id="c1", kind="bar", source="Sales"))
-    body = ObjectBody("o1", "diagram", 480, 300, "plain-image", diagram="c1")
+    body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))
     back = ods_to_workbook(workbook_to_ods(model))
     spec, _ = the_chart(back)
@@ -303,7 +303,7 @@ def test_a_chart_that_reads_nothing_is_not_written_and_that_is_said():
     model = a_workbook()
     model.define_diagram(ChartSpec(id="c1", kind="bar", source="Gone"))
     model.insert_object(
-        VisualObject(ObjectBody("o1", "diagram", 480, 300, "plain-image", diagram="c1"), CellAnchor(S1, 5, 1))
+        VisualObject(ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1"), CellAnchor(S1, 5, 1))
     )
     data = workbook_to_ods(model)
     assert ods_to_workbook(data).diagrams == {} and not [n for n in read_parts(data) if n.startswith("Object")]
@@ -482,9 +482,7 @@ def test_a_chart_on_a_sheet_that_was_added_comes_with_the_sheet():
     current.open_container("s2")
     current.define_diagram(ChartSpec(id="c7", kind="bar", range=a_range()))
     current.insert_object(
-        VisualObject(
-            ObjectBody("o7", "diagram", 300, 200, "plain-image", diagram="c7"), CellAnchor(SheetId("s2"), 1, 1)
-        )
+        VisualObject(ObjectBody("o7", "diagram", 300, 200, "plain-image", ref="c7"), CellAnchor(SheetId("s2"), 1, 1))
     )
     back = ods_to_workbook(apply_edits_to_ods(original, baseline, current))
     assert [sheet.name for sheet in back.sheets.values()] == ["Data", "More"]

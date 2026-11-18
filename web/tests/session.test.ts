@@ -14,8 +14,7 @@ const image = (id: string, extra: object = {}) => ({
   h: 200,
   style: 'plain-image',
   paragraph: null,
-  shape: null,
-  image: ASSET.id,
+  ref: ASSET.id,
   imported: IMPORT,
   rotation: 0,
   snap: true,
@@ -331,7 +330,7 @@ describe('floating objects (images, E6.17)', () => {
     expect(session.state.images[ASSET.id]).toEqual(ASSET)
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['i1'])
     const o = session.objectsOn('s1')[0]!
-    expect(o.image).toBe(ASSET.id)
+    expect(o.ref).toBe(ASSET.id)
     expect(o.imported).toEqual(IMPORT)
   })
 

@@ -12,15 +12,14 @@ const text = (extra: object = {}): SlideObject => ({
   h: 100,
   style: 'body-text',
   text: 'hello',
-  shape: null,
-  image: null,
+  ref: null,
   imported: null,
   snap: true,
   rotation: 0,
   ...extra,
 })
-const shape = (extra: object = {}): SlideObject => ({ ...text(extra), id: 's1-shape', kind: 'shape', shape: 'circle' })
-const image = (extra: object = {}): SlideObject => ({ ...text(extra), id: 'i1', kind: 'image', shape: null, image: 'a'.repeat(64) })
+const shape = (extra: object = {}): SlideObject => ({ ...text(extra), id: 's1-shape', kind: 'shape', ref: 'circle' })
+const image = (extra: object = {}): SlideObject => ({ ...text(extra), id: 'i1', kind: 'image', ref: 'a'.repeat(64) })
 
 const actions = () => ({ edit: vi.fn(), remove: vi.fn(), cut: vi.fn(), copy: vi.fn(), properties: vi.fn(), setSnap: vi.fn(), style: vi.fn(), describe: vi.fn(), rotateRight: vi.fn(), rotateLeft: vi.fn(), rotateBy: vi.fn() })
 

@@ -3,6 +3,7 @@
 // over the page, so that the editing of the words is not touched. Click selects; double-click, Enter or F2 writes in
 // it; Delete removes it; the arrow keys up and down hang it from the previous or next paragraph; the corner sizes it.
 import { computed, nextTick, ref } from 'vue'
+import { pointer } from '~/lib/objects'
 import { descriptionOf } from '~/lib/text-container-names'
 import { imageDataUrl } from '~/lib/images'
 import { renderedView } from '~/lib/rendering'
@@ -69,7 +70,8 @@ function done() {
   nextTick(() => (layer.value?.querySelector(`[data-object="${CSS.escape(state.selectedObject ?? '')}"]`) as HTMLElement | null)?.focus({ preventScroll: true }))
 }
 async function commit(id: string, text: string) {
-  const rendering = state.objects[id]?.rendered
+  const object = state.objects[id]
+  const rendering = object ? pointer(object, 'rendered') : null
   done()
   if (rendering) await session.setRenderingSource(rendering, text)
 }

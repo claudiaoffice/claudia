@@ -31,7 +31,7 @@ def _object(object_id, slide, kind, x, y, w, h, style, text="", shape=None):
     """A slide object from the flat fields these tests have always used: an ``ObjectBody`` plus a
     ``SlideAnchor`` (E10.16), its words a paragraph of their own (E10.17)."""
     words = "shape-label" if kind == "shape" else style  # a shape's words have a style of their own (D310)
-    body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, words, text, "ana"), shape=shape)
+    body = ObjectBody(object_id, kind, w, h, style, paragraph_for(object_id, words, text, "ana"), ref=shape)
     return VisualObject(body, SlideAnchor(slide, x, y))
 
 
@@ -55,7 +55,7 @@ def _image_object(object_id, slide, x, y, w, h, asset: ImageAsset) -> VisualObje
             "source_path": None,
         }
     )
-    body = ObjectBody(object_id, "image", w, h, "plain-image", image=asset.id, imported=imported)
+    body = ObjectBody(object_id, "image", w, h, "plain-image", ref=asset.id, imported=imported)
     return VisualObject(body, SlideAnchor(slide, x, y))
 
 
@@ -610,7 +610,7 @@ def _deck_with_container(*, pictured: bool = True, **changes) -> SlideModel:
     asset = decode_image(_GLYPHS, checked_drawing=True)
     model.define_image(asset)
     model.define_rendering(RenderedDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
-    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", rendered="r1", **changes)
+    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", ref="r1", **changes)
     model.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     return model
 

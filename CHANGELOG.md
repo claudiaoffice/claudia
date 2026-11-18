@@ -7,6 +7,24 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- Tables (E9.32, D1201–D1210): `TableDef` (rows, columns, boxes of one paragraph each with the id `table/row/column`,
+  merged rectangles, header rows, banding, a look, flow or float placement, at most `MAX_ROWS` × `MAX_COLUMNS`),
+  `Column`, `Merge`, `RowSpec`, `ColumnSpec`, `TableLook`, `TableRegion`, the protocol `TableSource`, and the commands
+  `DefineTable`, `ForgetTable`, `SetEntries`, `InsertRows`, `DeleteRows`, `InsertColumns`, `DeleteColumns`,
+  `SetRowOrder`, `SetColumnOrder`, `SetColumn`, `SetTableOptions` and `SetMerge`, with the event `TablesChanged`. An
+  undo is refused when a colleague typed into a box it would destroy. `ObjectModel` holds `tables` and the kind
+  `"table"` is one of `OBJECT_KINDS`; the facet slots have a `table` thing.
+
+### Changed
+- **Breaking:** `ObjectBody` points at its definition with one field, `ref`, whose table the kind names, instead of one
+  field per kind (`shape`, `image`, `diagram`, `rendered`, `table`). The five names stay as read-only properties
+  (`body.image` is `body.ref` for an image, else `None`), so readers keep working; code that builds a body or changes
+  one with `replace` says `ref=`. A new kind of object needs no new field. The plain data has `ref` and none of the
+  five; bodies written the old way still read (`ObjectBody.from_data`), and `core.AddObject` is schema 6 with an
+  upcaster. The checks say "a text box points at no definition" and "this document does not know the image 'x'" where
+  they said that another kind's field was set.
+
+### Added
 - Deleting and hiding styles (E1.10, D226): `plan_delete_style(model, style_id, *, rebase_on=None)` plans a deletion
   that never changes a look (*keep their look*, or *re-base on* another style of the same kind) as one `Batch` that is
   undone as one; `held_look` says what a style must set itself to look the same under another parent, `INITIAL_CSS`

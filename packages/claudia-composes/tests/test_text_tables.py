@@ -14,10 +14,12 @@ from claudia_core import (
     DeleteRows,
     Document,
     ForgetTable,
+    ImageImport,
     InsertColumns,
     InsertRows,
     MemoryStore,
     ObjectBody,
+    Paragraph,
     RegionHeld,
     RemoveObject,
     RowSpec,
@@ -40,7 +42,7 @@ def table_in_a_text(rows: int = 4, cols: int = 3, **options) -> Document:
     d = Document(TextModel(), store=MemoryStore())
     d.execute(InsertText("b1", 0, SENTENCE), author="ann")
     table = TableDef.blank("t1", rows, cols, **options)
-    body = ObjectBody("tb1", "table", 480, 120, "plain-box", table="t1", name="Harvest")
+    body = ObjectBody("tb1", "table", 480, 120, "plain-box", ref="t1", name="Harvest")
     d.execute(Batch((DefineTable(table.to_data()), AddObject(body, BlockAnchor("b1", 9).to_data()))), author="ann")
     return d
 
@@ -78,7 +80,7 @@ def test_a_table_is_an_object_that_hangs_from_a_paragraph_and_follows_the_words_
 
 def test_a_table_object_needs_a_definition_the_document_has():
     d = Document(TextModel(), store=MemoryStore())
-    body = ObjectBody("tb1", "table", 480, 120, "plain-box", table="t1")
+    body = ObjectBody("tb1", "table", 480, 120, "plain-box", ref="t1")
     with pytest.raises(ValueError, match="does not know the table"):
         d.execute(AddObject(body, BlockAnchor("b1", 0).to_data()), author="ann")
     with pytest.raises(ValueError, match="needs a table"):
@@ -87,14 +89,23 @@ def test_a_table_object_needs_a_definition_the_document_has():
         )
 
 
-def test_a_table_object_has_no_other_content_and_no_words_of_its_own():
+def test_a_table_object_has_no_import_record_and_no_words_of_its_own():
     d = Document(TextModel(), store=MemoryStore())
     d.execute(DefineTable(TableDef.blank("t1", 2, 2).to_data()), author="ann")
-    with pytest.raises(ValueError, match="no shape, image, diagram or rendering"):
+    record = ImageImport("a" * 64, "", "ana", "2026-11-18T10:00:00.000Z", "disk", "plan.png")
+    with pytest.raises(ValueError, match="no import record"):
         d.execute(
             AddObject(
-                ObjectBody("tb1", "table", 480, 120, "plain-box", table="t1", image="a" * 64),
+                ObjectBody("tb1", "table", 480, 120, "plain-box", ref="t1", imported=record),
                 BlockAnchor("b1", 0).to_data(),
+            ),
+            author="ann",
+        )
+    words = Paragraph("tb1", "plain", "x")
+    with pytest.raises(ValueError, match="carries no text"):
+        d.execute(
+            AddObject(
+                ObjectBody("tb1", "table", 480, 120, "plain-box", words, ref="t1"), BlockAnchor("b1", 0).to_data()
             ),
             author="ann",
         )
@@ -129,7 +140,7 @@ def test_a_table_is_a_named_thing_in_the_shared_namespace():
     with pytest.raises(ValueError, match="already a"):
         d.execute(
             AddObject(
-                ObjectBody("tb2", "table", 480, 120, "plain-box", table="t1", name="harvest"),
+                ObjectBody("tb2", "table", 480, 120, "plain-box", ref="t1", name="harvest"),
                 BlockAnchor("b1", 0).to_data(),
             ),
             author="ann",

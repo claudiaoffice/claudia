@@ -532,19 +532,25 @@
   "properties": []
  },
  "OBJECT_KINDS": {
-  "value": "('text', 'shape', 'image', 'diagram', 'rendered')"
+  "value": "('text', 'shape', 'image', 'diagram', 'rendered', 'table')"
  },
  "ObjectBody": {
   "class": [
    "object"
   ],
-  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, shape: 'str | None' = None, image: 'str | None' = None, imported: 'ImageImport | None' = None, diagram: 'str | None' = None, rendered: 'str | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
+  "init": "(id: 'str', kind: 'str', w: 'int', h: 'int', style: 'str', paragraph: 'Paragraph | None' = None, ref: 'str | None' = None, imported: 'ImageImport | None' = None, rotation: 'int' = 0, snap: 'bool' = True, description: 'str' = '', decorative: 'bool' = False, name: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectBody'",
    "to_data": "(self) -> 'dict'",
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
-  "properties": []
+  "properties": [
+   "diagram",
+   "image",
+   "rendered",
+   "shape",
+   "table"
+  ]
  },
  "ObjectSet": {
   "class": [

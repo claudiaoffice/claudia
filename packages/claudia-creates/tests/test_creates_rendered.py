@@ -87,8 +87,8 @@ def test_a_container_object_needs_its_definition_and_nothing_else_of_other_kinds
 
 def test_other_kinds_of_object_do_not_carry_a_rendering(doc):
     doc.execute(DefineRendering(definition().to_data()), author="ana")
-    with pytest.raises(ValueError, match="no shape, image, diagram, rendering or table"):
-        doc.execute(add(text_box("t1", rendered="r1")), author="ana")
+    with pytest.raises(ValueError, match="points at no definition"):
+        doc.execute(add(text_box("t1", ref="r1")), author="ana")
 
 
 # -- editing the text -----------------------------------------------------------------------------------------------
@@ -210,7 +210,7 @@ def test_a_snapshot_from_before_rendered_objects_still_restores(doc):
 
 def test_the_wire_form_of_an_object_names_its_definition(doc):
     put_container(doc)
-    assert doc.model.get("c1").to_data()["rendered"] == "r1"
+    assert doc.model.get("c1").to_data()["ref"] == "r1"
 
 
 def test_a_redacted_definition_keeps_its_place_but_not_its_words(doc):
@@ -236,5 +236,5 @@ def test_a_container_is_drawn_by_the_picture_made_from_its_text_and_by_none_befo
 def test_a_plain_picture_is_drawn_by_its_own_image(doc):
     from claudia_core import ObjectBody
 
-    body = ObjectBody("i1", "image", 100, 50, "plain-image", image="a" * 64)
+    body = ObjectBody("i1", "image", 100, 50, "plain-image", ref="a" * 64)
     assert doc.model.picture_of(body) == "a" * 64

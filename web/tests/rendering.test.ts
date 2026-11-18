@@ -38,11 +38,10 @@ describe('fences', () => {
 })
 
 describe('the picture of a container', () => {
-  it('is the object\'s own, else the definition\'s, else none', () => {
-    expect(pictureOf({ image: 'i1' }, def({ image: 'i2' }))).toBe('i1')
-    expect(pictureOf({ image: null }, def({ image: 'i2' }))).toBe('i2')
-    expect(pictureOf({ image: null }, def())).toBeNull()
-    expect(pictureOf({ image: null }, undefined)).toBeNull()
+  it('is the one the definition last made, else none', () => {
+    expect(pictureOf(def({ image: 'i2' }))).toBe('i2')
+    expect(pictureOf(def())).toBeNull()
+    expect(pictureOf(undefined)).toBeNull()
   })
 })
 
@@ -102,21 +101,21 @@ describe('what a face is drawn from', () => {
   })
   const url = (a: { data: string }) => `u:${a.data}`
   it('has the picture, the type\'s name and a ready status', () => {
-    const v = renderedView(holder(), { image: null, rendered: 'r1' }, url)!
+    const v = renderedView(holder(), { kind: 'rendered', ref: 'r1' }, url)!
     expect(v).toMatchObject({ src: 'u:AA==', label: 'LaTeX', status: { kind: 'ready' } })
   })
   it('has no picture while the asset has not come, and says it is being drawn', () => {
     const h = holder()
     h.images = {}
-    expect(renderedView(h, { image: null, rendered: 'r1' }, url)).toMatchObject({ src: '', status: { kind: 'drawing' } })
+    expect(renderedView(h, { kind: 'rendered', ref: 'r1' }, url)).toMatchObject({ src: '', status: { kind: 'drawing' } })
   })
   it('is nothing for an object whose definition is not known', () => {
-    expect(renderedView(holder(), { image: null, rendered: 'nope' }, url)).toBeNull()
-    expect(renderedView(holder(), { image: null, rendered: null }, url)).toBeNull()
+    expect(renderedView(holder(), { kind: 'rendered', ref: 'nope' }, url)).toBeNull()
+    expect(renderedView(holder(), { kind: 'rendered', ref: null }, url)).toBeNull()
   })
   it('names an unknown type by its id', () => {
     const h = holder()
     h.renderTypes = []
-    expect(renderedView(h, { image: null, rendered: 'r1' }, url)!.label).toBe('latex')
+    expect(renderedView(h, { kind: 'rendered', ref: 'r1' }, url)!.label).toBe('latex')
   })
 })

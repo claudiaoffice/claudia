@@ -69,7 +69,7 @@ export function slotsOf(model: StyleModel | null, kind: string | undefined): Hos
 
 /** What to call the selected object in a sentence: “shape”, “text box”, “picture”, “chart”. */
 export function nounOf(kind: string | undefined): string {
-  return { text: 'text box', shape: 'shape', image: 'picture', diagram: 'chart', rendered: 'rendered text' }[kind ?? ''] ?? 'object'
+  return { text: 'text box', shape: 'shape', image: 'picture', diagram: 'chart', rendered: 'rendered text', table: 'table' }[kind ?? ''] ?? 'object'
 }
 
 /** How many objects have each style — the counts beside the names in the style gallery. */

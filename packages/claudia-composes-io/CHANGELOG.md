@@ -5,6 +5,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- The docx and odt exports report a table of the text as a loss (`table`) until their writers exist (E9.32), and leave the box properties of the table looks out of the style-by-style check (`TABLE_STYLE_IDS`). Objects are built with `ref=` (see `claudia-core`).
+
 ### Added
 - References in docx and odt (step H): a docx gets a bookmark at each target and Word's `REF`/`PAGEREF` field for each
   reference, an odt a `text:bookmark` and a `text:bookmark-ref`, each with what it reads as now; both are read back as

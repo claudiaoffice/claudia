@@ -7,6 +7,7 @@ import pytest
 from conftest import add, image_asset, image_import, image_object, move, put, put_image, reopen, shape_object, text_box
 
 from claudia_core import CommandLog, Document, UndoConflict, encode
+from claudia_core.testing import body_before_ref
 from claudia_creates import DescribeObject, RemoveObject, SlideModel
 
 
@@ -154,8 +155,9 @@ def test_a_description_survives_the_log_and_a_model_survives_its_snapshot(doc):
 def test_a_snapshot_written_before_descriptions_existed_still_restores(doc):
     put_image(doc)
     state = doc.model.serialize()
-    for body in state["objects"]:
-        del body["description"], body["decorative"], body["rendered"], body["name"], body["table"]
+    state["objects"] = [
+        body_before_ref(body, "description", "decorative", "rendered", "name", "table") for body in state["objects"]
+    ]
     restored = SlideModel.restore(state)
     assert restored.get("i1").body.description == "a sample picture"
     assert restored.get("i1").body.decorative is False
@@ -180,7 +182,9 @@ def test_a_log_written_before_descriptions_existed_still_replays(doc):
     assert old, "the log has the picture's AddObject (the test would prove nothing without it)"
     for envelope in old:
         envelope["s"] = 1
-        del envelope["d"]["body"]["description"], envelope["d"]["body"]["decorative"]
+        envelope["d"]["body"] = body_before_ref(
+            envelope["d"]["body"], "description", "decorative", "rendered", "name", "table"
+        )
     replayed = Document.open(SlideModel, CommandLog.from_data(log, SlideModel.registry))
     assert replayed.model.get("i1").body.description == "a sample picture"
 

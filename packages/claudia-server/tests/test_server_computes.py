@@ -405,9 +405,9 @@ def test_an_image_is_imported_and_anchored_to_a_cell(book):
     (obj,) = objects(book)
     assert obj["id"] == added
     assert (obj["kind"], obj["anchor"]["row"], obj["anchor"]["col"], obj["w"], obj["h"]) == ("image", 2, 2, 400, 200)
-    assert obj["image"] is not None
+    assert obj["ref"] is not None
     assert obj["imported"]["alt"] == "a sample picture" and obj["imported"]["source"] == "disk"
-    assert [i["id"] for i in call(book, "images")] == [obj["image"]]
+    assert [i["id"] for i in call(book, "images")] == [obj["ref"]]
 
 
 def test_the_asset_is_shared_between_two_objects_using_the_same_picture(book):
@@ -651,7 +651,7 @@ def test_a_diagram_is_placed_as_a_floating_object_and_behaves_like_any_other_obj
         book, "add_diagram_object", {"sheet": "s1", "row": 1, "col": 1, "w": 300, "h": 200, "diagram": diagram_id}
     )
     (obj,) = objects(book)
-    assert obj["id"] == added["object"] and obj["kind"] == "diagram" and obj["diagram"] == diagram_id
+    assert obj["id"] == added["object"] and obj["kind"] == "diagram" and obj["ref"] == diagram_id
     assert (obj["anchor"]["row"], obj["anchor"]["col"], obj["w"], obj["h"]) == (1, 1, 300, 200)
     call(book, "resize_object", {"id": obj["id"], "row": 1, "col": 1, "w": 500, "h": 150})  # no fixed aspect
     (obj,) = objects(book)

@@ -5,6 +5,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 15.
+
 Describing objects (BITV 1.1.1); named number formats (D378). State schema 8 → 10 (9: an object's description, 10:
 the number formats). Search on claudia-search (SEC-18, CODE-18). Named ranges are things (D552) and a sheet can be renamed (E6.24):
 state schema 12 → 13.

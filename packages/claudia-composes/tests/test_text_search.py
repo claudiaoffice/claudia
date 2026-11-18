@@ -61,7 +61,7 @@ def add_box(d, block="b1", offset=0, words="a red note", description="", kind="t
         80,
         style,
         paragraph_for(object_id, words_style, words),
-        shape=shape,
+        ref=shape,
         description=description,
     )
     d.model.insert_object(VisualObject(body, BlockAnchor(block, offset)))

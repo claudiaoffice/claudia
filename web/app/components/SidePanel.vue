@@ -174,6 +174,7 @@ const kindLabels: Record<ThingKind, string> = {
   image: t('Picture'),
   diagram: t('Chart'),
   rendered: t('Diagram'),
+  table: t('Table'),
   slide: t('Slide'),
   sheet: t('Sheet'),
   chart: t('Chart'),

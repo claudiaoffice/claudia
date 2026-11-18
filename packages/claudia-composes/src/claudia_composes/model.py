@@ -403,7 +403,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 8: object bodies without a description; 9: no rendered containers; 12: styles carry heading levels (E9.22)
     # 13: the text holds its numbering schemes; styles may name a list that numbers them (E9.22)
     # 14: a paragraph may be generated (a table of contents, E9.31)
-    # 15: the text holds tables, shown by objects of the kind table (D1201)
+    # 15: the text holds tables, shown by objects of the kind table (D1201); an object body has one ``ref`` (see core)
     state_schema: ClassVar[int] = 15
     registry: ClassVar[CommandRegistry] = new_registry()
 

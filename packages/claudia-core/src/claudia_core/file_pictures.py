@@ -56,7 +56,7 @@ def picture_body(
         size[0],
         size[1],
         IMAGE_STYLE,
-        image=asset.id,
+        ref=asset.id,
         imported=record,
         rotation=rotation,
         description=alt,

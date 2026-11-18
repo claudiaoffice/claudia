@@ -120,18 +120,15 @@ def test_a_diagram_object_needs_a_known_definition(doc):
         doc.execute(add(diagram_object(spec_id="ghost")), author="ana")
 
 
-def test_a_diagram_object_rejects_a_shape_or_image_alongside_the_diagram(doc):
-    spec = put_chart_spec(doc)
-    with pytest.raises(ValueError, match="no shape, image, rendering or table"):
-        doc.execute(add(diagram_object(spec_id=spec.id, shape="circle")), author="ana")
-
-
-def test_a_shape_or_image_object_rejects_a_diagram(doc):
+def test_a_diagram_object_cannot_point_at_a_shape_and_an_image_object_not_at_a_diagram(doc):
+    """One ``ref`` serves every kind, and the kind says where it is looked up: another kind's id finds nothing."""
     put_chart_spec(doc)
+    with pytest.raises(ValueError, match="does not know the diagram 'circle'"):
+        doc.execute(add(diagram_object(spec_id="circle")), author="ana")
     asset = image_asset()
     doc.execute(DefineImage(asset), author="ana")
-    bad = image_object(asset=asset, diagram="c1")
-    with pytest.raises(ValueError, match="no shape, diagram, rendering or table"):
+    bad = image_object(asset=asset, ref="c1")
+    with pytest.raises(ValueError, match="does not know the image 'c1'"):
         doc.execute(add(bad), author="ana")
 
 

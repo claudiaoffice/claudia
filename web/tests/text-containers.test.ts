@@ -50,8 +50,8 @@ class FakeLink implements LinkLike {
 const BODY = { id: 'body', name: 'Body text', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }
 const TYPES = { types: [{ type: 'latex', title: 'LaTeX', example: 'x^2' }] }
 const object = (id: string, block = 'b1', offset = 0, extra: object = {}) => ({
-  id, kind: 'rendered', w: 400, h: 200, style: 'plain-image', paragraph: null, shape: null, image: null, imported: null,
-  diagram: null, rendered: 'r1', rotation: 0, snap: false, anchor: { kind: 'block', container: block, offset }, ...extra,
+  id, kind: 'rendered', w: 400, h: 200, style: 'plain-image', paragraph: null, ref: 'r1', imported: null,
+  rotation: 0, snap: false, anchor: { kind: 'block', container: block, offset }, ...extra,
 })
 
 async function opened(objects: object[] = [], text = 'a😀b') {
