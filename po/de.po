@@ -6869,7 +6869,7 @@ msgstr "eine Zahl von 0 bis ausschließlich 1. Neue Zahlen gibt es mit Werkzeuge
 msgid "a page"
 msgstr "eine Seite"
 
-#: packages/claudia-server/src/claudia_server/styles.py:95
+#: packages/claudia-server/src/claudia_server/styles.py:97
 msgid "a palette holds at most {limit} colour roles"
 msgstr "Eine Palette enthält höchstens {limit} Farbrollen"
 
@@ -6889,11 +6889,11 @@ msgstr "Eine Bemerkung schlägt keine Änderung vor; weisen Sie sie stattdessen 
 msgid "a request must be a JSON object"
 msgstr "Eine Anfrage muss ein JSON-Objekt sein"
 
-#: packages/claudia-server/src/claudia_server/styles.py:91
+#: packages/claudia-server/src/claudia_server/styles.py:93
 msgid "a role is missing {key!r}"
 msgstr "Einer Rolle fehlt {key!r}"
 
-#: packages/claudia-server/src/claudia_server/styles.py:93
+#: packages/claudia-server/src/claudia_server/styles.py:95
 msgid "a role's id, name and colour are text"
 msgstr "ID, Name und Farbe einer Rolle sind Text"
 
@@ -7341,7 +7341,7 @@ msgstr "Fehler {value}"
 msgid "error {value}: {why}"
 msgstr "Fehler {value}: {why}"
 
-#: packages/claudia-server/src/claudia_server/styles.py:87
+#: packages/claudia-server/src/claudia_server/styles.py:89
 msgid "every role is an object with id, name, purpose and colour"
 msgstr "Jede Rolle ist ein Objekt mit id, name, purpose und colour"
 
@@ -7409,7 +7409,7 @@ msgstr "Vollbild"
 msgid "give names to values (later ones may use earlier ones) and calculate with them."
 msgstr "Werten Namen geben (spätere dürfen frühere verwenden) und damit rechnen."
 
-#: packages/claudia-server/src/claudia_server/styles.py:73
+#: packages/claudia-server/src/claudia_server/styles.py:75
 msgid "give the CSS as set properties or as text, not both"
 msgstr "Geben Sie das CSS als gesetzte Eigenschaften oder als Text an, nicht beides"
 
@@ -7765,7 +7765,7 @@ msgstr "Nummern"
 msgid "object"
 msgstr "Objekt"
 
-#: packages/claudia-server/src/claudia_server/styles.py:207
+#: packages/claudia-server/src/claudia_server/styles.py:209
 msgid "objects must be a list of at most {limit} object ids"
 msgstr "objects muss eine Liste von höchstens {limit} Objekt-IDs sein"
 
@@ -8317,7 +8317,7 @@ msgstr "der größte Wert"
 msgid "the mean of the values"
 msgstr "der Mittelwert der Werte"
 
-#: packages/claudia-server/src/claudia_server/composes.py:400 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:222
+#: packages/claudia-server/src/claudia_server/composes.py:400 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:224
 msgid "the new style would look just like “{name}”"
 msgstr "Der neue Stil sähe genauso aus wie „{name}“"
 
@@ -8493,11 +8493,11 @@ msgstr "das eigene Format dieser Zellen"
 msgid "this document has no lists"
 msgstr "dieses Dokument hat keine Listen"
 
-#: packages/claudia-server/src/claudia_server/styles.py:63
+#: packages/claudia-server/src/claudia_server/styles.py:65
 msgid "this document has no palette"
 msgstr "Dieses Dokument hat keine Palette"
 
-#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:56
+#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:58
 msgid "this document has no styles"
 msgstr "Dieses Dokument hat keine Stile"
 
@@ -8649,7 +8649,7 @@ msgstr "Unbekanntes Blatt {sheet!r}"
 msgid "unknown slide {slide!r}"
 msgstr "Unbekannte Folie {slide!r}"
 
-#: packages/claudia-server/src/claudia_server/styles.py:282
+#: packages/claudia-server/src/claudia_server/styles.py:284
 msgid "unset must be a list of property names"
 msgstr "unset muss eine Liste von Eigenschaftsnamen sein"
 

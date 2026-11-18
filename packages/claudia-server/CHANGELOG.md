@@ -43,6 +43,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   five, a temporary file name that two threads cannot share, and the pattern fetch is the one the fonts use.
 
 ### Added
+- Deleting and hiding styles (E1.10, D226), in every app's table: `style_deletion` (read: how many places have the
+  style, what is based on it, and the styles it could be re-based on, each with whether its look can be held),
+  `delete_style` (`style`, optional `rebase_on`; returns `{stand_in, revision}`) and `hide_style` (`style`, `hidden`).
+  Deleting is one undo step, never changes a look, and is refused for a built-in or template style (hide it) and when
+  somebody began to use the style meanwhile. They are write methods and not on the assistant's list.
+- `styles` says `origin` (when it is not `document`) and `hidden` (when it is true) for a style.
 - References (step H) in composes and creates (`claudia_server.structure_methods`): `reference_targets(query?)`
   (headings with their numbers, numbered items, named things), `insert_reference(paragraph, offset, target, show?)`,
   `set_field(paragraph, index, show)` and `fields` (what every reference reads as; a `fields` event brings changes).

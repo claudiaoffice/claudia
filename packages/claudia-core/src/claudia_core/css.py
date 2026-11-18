@@ -27,6 +27,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from .facets import FACET_PROPERTIES
 from .stand_ins import GENERIC_ALIASES
@@ -407,6 +408,38 @@ _CHECKS: dict[str, Callable[[str], str]] = {
 
 if set(_CHECKS) != FACET_PROPERTIES:  # pragma: no cover - a mistake in this file or in facets.py
     raise RuntimeError(f"the value checks and the facets disagree: {sorted(set(_CHECKS) ^ FACET_PROPERTIES)}")
+
+#: What a property is when nothing sets it, for the properties where that is the same in every app (D226). Deleting
+#: a style *holds the look* of what was based on it by writing a value where a new parent would otherwise change the
+#: look; for a property the old look never set, that value is the one here. Left out on purpose are the properties
+#: whose "nothing" differs by app: the font, its size and colour are what an app's body style says, ``text-align``
+#: is by content in a cell (D318), ``hyphens`` and ``vertical-align`` are the app's, and a shape's paint
+#: (``fill``, ``stroke``, ``stroke-width``) is the outline style's. A look that would need one of those cannot be
+#: held, and the deletion says which property is the reason.
+INITIAL_CSS: Mapping[str, str] = MappingProxyType(
+    {
+        "font-weight": "normal",
+        "font-style": "normal",
+        "text-decoration": "none",
+        "letter-spacing": "normal",
+        "word-spacing": "normal",
+        "line-height": "normal",
+        "margin-top": "0",
+        "margin-right": "0",
+        "margin-bottom": "0",
+        "margin-left": "0",
+        "background-color": "transparent",
+        "padding-top": "0",
+        "padding-right": "0",
+        "padding-bottom": "0",
+        "padding-left": "0",
+        "border-top": "none",
+        "border-right": "none",
+        "border-bottom": "none",
+        "border-left": "none",
+        "white-space": "normal",
+    }
+)
 
 #: The CSS properties a style may set (``CSS_VERSION``): those of the four facets.
 ALLOWED_CSS = FACET_PROPERTIES

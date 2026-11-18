@@ -3,6 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Added
+- `TextModel.restyle_users(old, new)`: the commands that put the paragraphs and objects that have a style under another
+  (the deletion of a style, E1.10, D226). Its built-in styles have `origin == "builtin"`.
+
 ## [0.18.0] - 2026-11-17
 
 References (step H).

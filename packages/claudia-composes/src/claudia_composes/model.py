@@ -70,7 +70,7 @@ def _style(style_id: str, name: str, purpose: str, *, kind: str = "paragraph", *
     # A paragraph style is based on Body text, so a change to Body text reaches it (D73); a box or outline style is
     # a root of its own, because a style and its parent are always of the same kind (D305).
     parent = DEFAULT_STYLE if kind == "paragraph" and style_id != DEFAULT_STYLE else None
-    return StyleDef(style_id, name, purpose, parent, css, kind=kind)
+    return StyleDef(style_id, name, purpose, parent, css, kind=kind, origin="builtin")
 
 
 def _at_level(level: int, style: StyleDef) -> StyleDef:
@@ -542,6 +542,14 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """Does any paragraph, or any object in the text (itself or its words), have this style? (Asked by the
         style commands before they take a style back.)"""
         return any(b.style == style_id for b in self.blocks) or ObjectModel.style_in_use(self, style_id)
+
+    def restyle_users(self, old: str, new: str) -> list[Command]:
+        """The commands that put every paragraph, and every object (itself or its words), that has the style ``old``
+        under ``new`` instead (asked by the deletion of a style, D226)."""
+        from .commands import SetStyle  # noqa: PLC0415  (commands import this module)
+
+        paragraphs: list[Command] = [SetStyle(b.id, new) for b in self.blocks if b.style == old]
+        return [*paragraphs, *ObjectModel.restyle_users(self, old, new)]
 
     def list_in_use(self, list_id: str) -> bool:
         """Is any paragraph, or the words of any object, an item of this list? (Asked by the list commands before

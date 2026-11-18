@@ -657,6 +657,17 @@ class ObjectModel[A: Anchor]:
         they take a style back.)"""
         return any(style_id in object_styles(obj.body) for obj in self.objects.values())
 
+    def restyle_users(self, old: str, new: str) -> list[Command]:
+        """The commands that put every object that has the style ``old`` (for itself or for its words) under ``new``
+        instead, in object order (asked by the deletion of a style, D226)."""
+        commands: list[Command] = []
+        for obj in self.objects.values():
+            if obj.body.style == old:
+                commands.append(SetObjectStyle(obj.id, new))
+            if obj.body.paragraph is not None and obj.body.paragraph.style == old:
+                commands.append(SetParagraphStyle(obj.id, new))
+        return commands
+
     # -- list items (E9.21, step D): the words of an object may be an item of a list ------------------
     def _words(self, object_id: str) -> Paragraph:
         paragraph = self.get_object(object_id).body.paragraph

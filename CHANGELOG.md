@@ -7,6 +7,17 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- Deleting and hiding styles (E1.10, D226): `plan_delete_style(model, style_id, *, rebase_on=None)` plans a deletion
+  that never changes a look (*keep their look*, or *re-base on* another style of the same kind) as one `Batch` that is
+  undone as one; `held_look` says what a style must set itself to look the same under another parent, `INITIAL_CSS`
+  gives the value of "nothing" for the properties where it is the same in every app. New commands `RebaseStyle` (kind
+  `core.RebaseStyle`) and `SetStyleHidden` (`core.SetStyleHidden`).
+- `StyleDef.origin` (`"document"`, `"builtin"` or `"template"`, `ORIGINS`) and `StyleDef.hidden`; only a document
+  style can be deleted, the others only hidden. Both are written only when they are not the default, so a style
+  without them writes what it wrote before. `StyleBook.set_hidden`, `rebase` and `next_after`; `StyleBook.add` takes
+  `before`; `CreateStyle` takes `before`.
+- `ObjectModel.restyle_users(old, new)`: the commands that put the objects that have a style under another. An app's
+  model that has styles and `style_in_use` offers it too, or a style in use cannot be deleted.
 - `claudia_core.stand_ins` (E3.13, CODE-42): `GENERIC_FONTS` (the font of each CSS generic family and the fallback),
   `GENERIC_ALIASES` (every CSS name for a generic family), `SAME_WIDTHS` (open fonts that take exactly the room of a
   common office font), `generic_font` and `file_font` (the font an office file names for a `font-family` list). The
@@ -14,6 +25,10 @@ While the major version is 0, a minor version may break the API; every break is 
 - `claudia_core.stand_ins.css_family` (E3.13, bugs 1 and 2): the CSS `font-family` list for a font an office file
   names, with the generic family it falls back to (`'Times New Roman', serif`). The importers of all three apps use
   it; the serif and monospace lists of `claudia_computes_io` moved here.
+
+### Changed
+- `StyleBook.to_data` always writes a parent before its children, whatever order styles were re-based into.
+- The undo of `RemoveStyle` puts the style back where it was in the book, not last.
 
 ## [0.35.0] - 2026-11-17
 

@@ -354,7 +354,7 @@
   "class": [
    "Command"
   ],
-  "init": "(style: 'StyleDef') -> None",
+  "init": "(style: 'StyleDef', before: 'str | None' = None) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'CreateStyle'",
@@ -881,6 +881,9 @@
  "IMAGE_STYLE": {
   "value": "'plain-image'"
  },
+ "INITIAL_CSS": {
+  "value": "<mappingproxy>"
+ },
  "ImageAsset": {
   "class": [
    "object"
@@ -1198,6 +1201,9 @@
  "OBJECT_KINDS": {
   "value": "('text', 'shape', 'image', 'diagram', 'rendered')"
  },
+ "ORIGINS": {
+  "value": "{'document': 'document', 'builtin': 'built-in', 'template': 'template'}"
+ },
  "OUTLINE_FACET": {
   "value": "<Facet>"
  },
@@ -1267,6 +1273,7 @@
    "replace_object": "(self, obj: 'VisualObject[A]') -> 'VisualObject[A]'",
    "replace_rendering": "(self, definition: 'RenderedDefinition') -> 'RenderedDefinition'",
    "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = (), renderings: 'Iterable[dict]' = ()) -> 'None'",
+   "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",
    "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "shapes_to_data": "(self) -> 'list[dict]'",
@@ -1450,6 +1457,22 @@
   "properties": [
    "ok",
    "words"
+  ]
+ },
+ "RebaseStyle": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'str', based_on: 'str | None', css: 'dict[str, str]', number_format: 'str | None', heading_level: 'HeadingLevel', numbering: 'str | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'RebaseStyle'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
   ]
  },
  "Rebuilt": {
@@ -2055,6 +2078,22 @@
    "summary"
   ]
  },
+ "SetStyleHidden": {
+  "class": [
+   "Command"
+  ],
+  "init": "(style: 'str', hidden: 'bool') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetStyleHidden'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetStyleNumbering": {
   "class": [
    "Command"
@@ -2206,7 +2245,7 @@
   ],
   "init": "(styles: 'Iterable[StyleDef]' = ())",
   "methods": {
-   "add": "(self, style: 'StyleDef') -> 'None'",
+   "add": "(self, style: 'StyleDef', *, before: 'str | None' = None) -> 'None'",
    "chain": "(self, style_id: 'str') -> 'list[StyleDef]'",
    "children": "(self, style_id: 'str') -> 'list[str]'",
    "computed": "(self, style_id: 'str') -> 'dict[str, str]'",
@@ -2215,14 +2254,17 @@
    "heading_level": "(self, style_id: 'str') -> 'int | None'",
    "ids": "(self) -> 'list[str]'",
    "name_taken": "(self, name: 'str', *, besides: 'str | None' = None) -> 'bool'",
+   "next_after": "(self, style_id: 'str') -> 'str | None'",
    "number_format": "(self, style_id: 'str') -> 'str | None'",
    "numbering": "(self, style_id: 'str') -> 'str | None'",
    "provisional_name": "(self, parent_id: 'str') -> 'str'",
+   "rebase": "(self, style_id: 'str', based_on: 'str | None', css: 'dict[str, str]', number_format: 'str | None', heading_level: 'HeadingLevel', numbering: 'str | None') -> 'StyleDef'",
    "remove": "(self, style_id: 'str') -> 'StyleDef'",
    "rename": "(self, style_id: 'str', name: 'str', *, to_name: 'bool' = False) -> 'None'",
    "resolved": "(self, style_id: 'str', colours: 'Mapping[str, str] | None' = None) -> 'dict[str, str]'",
    "set_css": "(self, style_id: 'str', css: 'dict[str, str]') -> 'None'",
    "set_heading_level": "(self, style_id: 'str', level: 'HeadingLevel') -> 'None'",
+   "set_hidden": "(self, style_id: 'str', hidden: 'bool') -> 'None'",
    "set_number_format": "(self, style_id: 'str', format_id: 'str | None') -> 'None'",
    "set_numbering": "(self, style_id: 'str', numbering: 'str | None') -> 'None'",
    "to_data": "(self) -> 'list[dict]'",
@@ -2235,7 +2277,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph', number_format: 'str | None' = None, heading_level: 'HeadingLevel' = None, numbering: 'str | None' = None) -> None",
+  "init": "(id: 'str', name: 'str', purpose: 'str', based_on: 'str | None', css: 'dict[str, str]', to_name: 'bool' = False, kind: 'str' = 'paragraph', number_format: 'str | None' = None, heading_level: 'HeadingLevel' = None, numbering: 'str | None' = None, origin: 'str' = 'document', hidden: 'bool' = False) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'StyleDef'",
    "to_data": "(self) -> 'dict'"
@@ -2493,6 +2535,9 @@
  "generated_from_data": {
   "function": "(data: 'dict') -> 'Generated'"
  },
+ "held_look": {
+  "function": "(old: 'Mapping[str, str]', base: 'Mapping[str, str]') -> 'dict[str, str]'"
+ },
  "insert_runs": {
   "function": "(runs: 'Iterable[Run]', offset: 'int', new: 'Iterable[Run]') -> 'list[Run]'"
  },
@@ -2546,6 +2591,9 @@
  },
  "plain": {
   "function": "(text: 'str') -> 'str'"
+ },
+ "plan_delete_style": {
+  "function": "(model: 'object', style_id: 'str', *, rebase_on: 'str | None' = None) -> 'Batch'"
  },
  "points_of": {
   "function": "(css: 'dict[str, str]', prop: 'str', pt_per_unit: 'float') -> 'float | None'"

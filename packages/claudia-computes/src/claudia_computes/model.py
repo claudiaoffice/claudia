@@ -595,6 +595,18 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         in_cells = any(sheet.cell_styles.names(style_id) for sheet in self.sheets.values())
         return in_cells or ObjectModel.style_in_use(self, style_id)
 
+    def restyle_users(self, old: str, new: str) -> list[Command]:
+        """The commands that put every style range of any sheet, and every object (itself or its words), that has
+        the style ``old`` under ``new`` instead, range by range (asked by the deletion of a style, D226)."""
+        from .commands import SetCellStyle  # noqa: PLC0415  (commands import this module)
+
+        ranges: list[Command] = [
+            SetCellStyle(sheet_id, slot, layer, area, ((area, new),))
+            for sheet_id, sheet in self.sheets.items()
+            for slot, layer, area in sheet.cell_styles.ranges_named(old)
+        ]
+        return [*ranges, *ObjectModel.restyle_users(self, old, new)]
+
     def containers(self) -> list[str]:
         """The sheets objects may sit on, in order."""
         return [str(sheet) for sheet in self.sheets]

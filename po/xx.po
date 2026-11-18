@@ -6869,7 +6869,7 @@ msgstr "[à nûmbér frôm 0 ûp tô, nôt înclûdîng, 1. Frésh nûmbérs cô
 msgid "a page"
 msgstr "[à pàgé~~]"
 
-#: packages/claudia-server/src/claudia_server/styles.py:95
+#: packages/claudia-server/src/claudia_server/styles.py:97
 msgid "a palette holds at most {limit} colour roles"
 msgstr "[à pàlétté hôlds àt môst {limit} côlôûr rôlés~~~~~~~~~~~~~~~~~~]"
 
@@ -6889,11 +6889,11 @@ msgstr "[à rémàrk sûggésts nô chàngé; dîsmîss ît înstéàd~~~~~~~~~~
 msgid "a request must be a JSON object"
 msgstr "[à réqûést mûst bé à JSÔN ôbjéct~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/styles.py:91
+#: packages/claudia-server/src/claudia_server/styles.py:93
 msgid "a role is missing {key!r}"
 msgstr "[à rôlé îs mîssîng {kéy!r}~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/styles.py:93
+#: packages/claudia-server/src/claudia_server/styles.py:95
 msgid "a role's id, name and colour are text"
 msgstr "[à rôlé's îd, nàmé ànd côlôûr àré téxt~~~~~~~~~~~~~~~]"
 
@@ -7341,7 +7341,7 @@ msgstr "[érrôr {value}~~~~~]"
 msgid "error {value}: {why}"
 msgstr "[érrôr {value}: {why}~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/styles.py:87
+#: packages/claudia-server/src/claudia_server/styles.py:89
 msgid "every role is an object with id, name, purpose and colour"
 msgstr "[évéry rôlé îs àn ôbjéct wîth îd, nàmé, pûrpôsé ànd côlôûr~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7409,7 +7409,7 @@ msgstr "[fûll scréén~~~~]"
 msgid "give names to values (later ones may use earlier ones) and calculate with them."
 msgstr "[gîvé nàmés tô vàlûés (làtér ônés mày ûsé éàrlîér ônés) ànd càlcûlàté wîth thém.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/styles.py:73
+#: packages/claudia-server/src/claudia_server/styles.py:75
 msgid "give the CSS as set properties or as text, not both"
 msgstr "[gîvé thé CSS às sét prôpértîés ôr às téxt, nôt bôth~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7765,7 +7765,7 @@ msgstr "[nûmbérs~~~]"
 msgid "object"
 msgstr "[ôbjéct~~]"
 
-#: packages/claudia-server/src/claudia_server/styles.py:207
+#: packages/claudia-server/src/claudia_server/styles.py:209
 msgid "objects must be a list of at most {limit} object ids"
 msgstr "[ôbjécts mûst bé à lîst ôf àt môst {limit} ôbjéct îds~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8317,7 +8317,7 @@ msgstr "[thé làrgést vàlûé~~~~~~~]"
 msgid "the mean of the values"
 msgstr "[thé méàn ôf thé vàlûés~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:400 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:222
+#: packages/claudia-server/src/claudia_server/composes.py:400 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:224
 msgid "the new style would look just like “{name}”"
 msgstr "[thé néw stylé wôûld lôôk jûst lîké “{name}”~~~~~~~~~~~~~~~~~]"
 
@@ -8493,11 +8493,11 @@ msgstr "[thésé célls’ ôwn stylé~~~~~~~~~]"
 msgid "this document has no lists"
 msgstr "[thîs dôcûmént hàs nô lîsts~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/styles.py:63
+#: packages/claudia-server/src/claudia_server/styles.py:65
 msgid "this document has no palette"
 msgstr "[thîs dôcûmént hàs nô pàlétté~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:56
+#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:58
 msgid "this document has no styles"
 msgstr "[thîs dôcûmént hàs nô stylés~~~~~~~~~~~]"
 
@@ -8649,7 +8649,7 @@ msgstr "[ûnknôwn shéét {shéét!r}~~~~~~~~~]"
 msgid "unknown slide {slide!r}"
 msgstr "[ûnknôwn slîdé {slîdé!r}~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/styles.py:282
+#: packages/claudia-server/src/claudia_server/styles.py:284
 msgid "unset must be a list of property names"
 msgstr "[ûnsét mûst bé à lîst ôf prôpérty nàmés~~~~~~~~~~~~~~~]"
 

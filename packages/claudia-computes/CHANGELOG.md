@@ -10,6 +10,9 @@ the number formats). Search on claudia-search (SEC-18, CODE-18). Named ranges ar
 state schema 12 → 13.
 
 ### Added
+- `WorkbookModel.restyle_users(old, new)` and `CellStyles.ranges_named(style_id)`: the style ranges and objects that
+  have a style, as commands that put them under another (the deletion of a style, E1.10, D226). Its built-in styles
+  have `origin == "builtin"`.
 - The paragraphs of `claudia-core` 0.35 have `fields` (always empty here) and `typed`, `cut`, `with_fields`.
 - The paragraphs of `claudia-core` 0.33 have `generated` (always `None` here) and `with_generated`.
 - The cell styles are `StyleDef`s of `claudia-core` 0.32, which have a `numbering` (always `None` here); the built-in

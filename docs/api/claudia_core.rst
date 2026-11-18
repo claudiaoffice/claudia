@@ -352,6 +352,8 @@ reaches a browser is always literal.
 
 .. autodata:: claudia_core.CSS_VERSION
 .. autodata:: claudia_core.ALLOWED_CSS
+.. autodata:: claudia_core.css.INITIAL_CSS
+   :no-value:
 .. autofunction:: claudia_core.validate_css
 .. autofunction:: claudia_core.parse_css
 .. autofunction:: claudia_core.format_css
@@ -367,10 +369,16 @@ reaches a browser is always literal.
 .. autoclass:: claudia_core.ChangeStyle
 .. autoclass:: claudia_core.RenameStyle
 .. autoclass:: claudia_core.RemoveStyle
+.. autoclass:: claudia_core.RebaseStyle
+.. autoclass:: claudia_core.SetStyleHidden
 .. autoclass:: claudia_core.SetHeadingLevel
 .. autodata:: claudia_core.MAX_HEADING_LEVEL
 .. autoclass:: claudia_core.SetStyleNumbering
 .. autodata:: claudia_core.NO_NUMBERING
+.. autodata:: claudia_core.styles.ORIGINS
+   :no-value:
+.. autofunction:: claudia_core.plan_delete_style
+.. autofunction:: claudia_core.held_look
 
 Facets, kinds and slots
 -----------------------
