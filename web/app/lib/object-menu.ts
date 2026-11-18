@@ -1,67 +1,86 @@
-// Right-click on a slide object (bug report, 2026-11-07): "Edit text" and "Delete" already exist on the Edit menu
-// and on the keyboard (Enter/F2, Del) — what was missing was a *context* menu offering the same actions where the
-// person actually clicked, so the browser's own menu (Back, Inspect, …) stops showing up over an object instead.
-// An image's menu was later asked to add Cut, Copy and Properties too (2026-11-07 follow-up) — Cut/Copy exactly as
-// the Edit menu's own `cutSelection`/`copySelection` already behave, Properties opening `ImagePropertiesDialog.vue`.
-// Left for a shape/text object, and left off an image, for now: anything beyond this exact set is undecided.
-// Pure here on purpose: SlideCanvas.vue supplies the live callbacks (never duplicated logic) and renders the result
-// with the generic `ContextMenu.vue`, which composes and computes can reuse for their own objects the same way.
+// The right-click menu of an object: one list for all three apps (D1225), as the menus workbook (`claudia-menus`,
+// Context menus, rows 1–9) sets it. The list is built here from the object's kind and what the app has (a flag for the
+// grid, a block for wrap), so creates, composes and computes cannot drift apart: each app supplies its live callbacks
+// and renders the result with the generic `ContextMenu.vue`.
+//
+//   Describe… · Edit text · Style… · Rotate by… · Wrap text… ▸ (composes) · — · Cut · Copy (pictures) · — ·
+//   Release from grid (creates) · Delete
+//
+// There are no 90° entries (Rotate by… does them), Rotate by… is not offered for a chart (D1021), a picture has no text
+// to edit and neither has a chart, and for a picture "Style…" also holds what "Properties" was (`properties`). A table
+// has a menu of its own (`table-menu.ts`, D1224) and is not offered here. "Describe…" becomes "Name & describe…" with the
+// name field the dialog does not have yet (open point in the workbook, #12).
 import type { MenuItem } from '../components/MenuBar.vue'
-import type { SlideObject } from './slide-session'
-
 import { translate as t } from './i18n'
 import { hintOf } from './shortcuts'
 import { canTurn } from './turning'
+import { WRAPS, wrapLabel, type Wrap } from './wrap'
+
+/** What the menu needs to know of an object: any app's object has these. */
+export interface MenuSubject {
+  kind: string
+  /** Does it follow the layout grid? Only creates has one. */
+  snap?: boolean
+}
+
 export interface ObjectMenuActions {
+  /** Say what the object shows to someone who cannot see it, or mark it as decoration (BITV 1.1.1). */
+  describe: () => void
   edit: () => void
-  /** Open the style menu on this object: its fill, its border, and the style its words follow (E9.7, D203). */
+  /** Open the style menu on this object: its fill, its border, and the style its words follow (E9.7, D203). For a
+   * picture the style menu also offers its properties. */
   style: () => void
+  /** The Rotate By… popover (D1024). */
+  rotateBy: () => void
   remove: () => void
   cut: () => void
   copy: () => void
-  properties: () => void
-  /** Say what the object shows to someone who cannot see it, or mark it as decoration (BITV 1.1.1). */
-  describe: () => void
   setSnap: (snap: boolean) => void
-  /** A quarter turn clockwise, a quarter turn back, and the Rotate By… popover (D1024). */
-  rotateRight: () => void
-  rotateLeft: () => void
-  rotateBy: () => void
+  /** composes only: the four modes of D1061, the gap, and what Ctrl+Alt+R cycles. */
+  setWrap?: (wrap: Wrap) => void
+  setGap?: () => void
 }
 
-export function contextMenuItems(o: SlideObject, readonly: boolean, actions: ObjectMenuActions): MenuItem[] {
-  const items: MenuItem[] = []
-  // "Style…" first and for every kind: a picture has no fill and no words, but it does have a border and a place
-  // in the stacking order, so the menu has something to offer for all four kinds (D178, D181).
-  items.push({ label: t('Style…'), action: actions.style, disabled: readonly })
-  items.push({ label: t('Describe…'), hint: t('Ctrl+Alt+D'), action: actions.describe, disabled: readonly })
-  items.push({ label: '', separator: true })
-  if (o.kind === 'image') {
-    // Cut/Copy: the very same `cutSelection`/`copySelection` the Edit menu's own items call — not a second,
-    // image-specific clipboard. Copy never needs write access, same as `edit.copy` is never disabled either.
-    items.push({ label: t('Cut'), hint: t('Ctrl+X'), action: actions.cut, disabled: readonly })
-    items.push({ label: t('Copy'), hint: t('Ctrl+C'), action: actions.copy })
-    items.push({ label: '', separator: true })
-    items.push({ label: t('Properties'), action: actions.properties })
-    items.push({ label: '', separator: true })
-  } else {
-    // A picture has no text to write — `SlideCanvas.vue`'s own `beginEdit` already refuses it for the same reason
-    // (Enter/F2 does nothing on an image either), so the item is left off entirely rather than shown disabled.
-    items.push({ label: t('Edit Text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
-    items.push({ label: '', separator: true })
+/** What an app has: `grid` is creates', `wrap` is composes' (the object's current mode). */
+export interface ObjectMenuApp {
+  grid?: boolean
+  wrap?: Wrap
+}
+
+const separator: MenuItem = { label: '', separator: true }
+
+export function contextMenuItems(o: MenuSubject, readonly: boolean, actions: ObjectMenuActions, app: ObjectMenuApp = {}): MenuItem[] {
+  const picture = o.kind === 'image'
+  const groups: MenuItem[][] = []
+
+  const top: MenuItem[] = [{ label: t('Describe…'), hint: hintOf('format.describe'), action: actions.describe, disabled: readonly }]
+  // A picture has no text to write and a chart has none either: the entry is left off rather than shown disabled.
+  if (!picture && o.kind !== 'diagram') top.push({ label: t('Edit Text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
+  top.push({ label: t('Style…'), hint: hintOf('format.apply-style'), action: actions.style, disabled: readonly })
+  if (canTurn(o.kind)) top.push({ label: t('Rotate By…'), hint: hintOf('format.rotate-by'), action: actions.rotateBy, disabled: readonly })
+  if (app.wrap !== undefined && actions.setWrap) {
+    const setWrap = actions.setWrap
+    top.push({
+      label: t('Wrap Text…'),
+      hint: hintOf('format.wrap-text'),
+      disabled: readonly,
+      items: [
+        ...WRAPS.map((wrap): MenuItem => ({ label: wrapLabel(wrap), checked: wrap === app.wrap, action: () => setWrap(wrap), disabled: readonly })),
+        separator,
+        { label: t('Gap…'), action: actions.setGap, disabled: readonly || !actions.setGap },
+      ],
+    })
   }
-  // The same three turns as Format ▸ Rotate ▸ (D1024), for everything but a chart, which does not turn (D1021).
-  if (canTurn(o.kind)) {
-    items.push({ label: t('Rotate Right 90°'), hint: hintOf('format.rotate-right'), action: actions.rotateRight, disabled: readonly })
-    items.push({ label: t('Rotate Left 90°'), hint: hintOf('format.rotate-left'), action: actions.rotateLeft, disabled: readonly })
-    items.push({ label: t('Rotate By…'), hint: hintOf('format.rotate-by'), action: actions.rotateBy, disabled: readonly })
-    items.push({ label: '', separator: true })
-  }
+  groups.push(top)
+
+  // Cut/Copy: the very same `cutSelection`/`copySelection` the Edit menu's own items call. Copy only reads.
+  if (picture) groups.push([{ label: t('Cut'), hint: t('Ctrl+X'), action: actions.cut, disabled: readonly }, { label: t('Copy'), hint: t('Ctrl+C'), action: actions.copy }])
+
   // The grid is only a helper the view draws; whether this object follows it is real document state (E10.15).
-  // One item whose label swaps, like "Undo <label>" does, rather than a checkbox: ContextMenu.vue renders a
-  // label and a hint only, and a swapping label needs no change there.
-  items.push({ label: o.snap ? t('Release from grid') : t('Snap to grid'), action: () => actions.setSnap(!o.snap), disabled: readonly })
-  items.push({ label: '', separator: true })
-  items.push({ label: t('Delete'), hint: t('Del'), action: actions.remove, disabled: readonly })
-  return items
+  // One entry whose label swaps, like "Undo <label>" does, rather than a checkbox.
+  if (app.grid) groups.push([{ label: o.snap ? t('Release from grid') : t('Snap to grid'), action: () => actions.setSnap(!o.snap), disabled: readonly }])
+
+  groups.push([{ label: t('Delete'), hint: t('Del'), action: actions.remove, disabled: readonly }])
+
+  return groups.flatMap((group, i) => (i === 0 ? group : [separator, ...group]))
 }

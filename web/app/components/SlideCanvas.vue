@@ -9,9 +9,11 @@ import { viewTints } from '~/lib/replay-tint'
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { cutSelection, copySelection } from '~/lib/clipboard'
-import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, besideRect, fitScale, moveFrame, resizeFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { CORNERS, GRID_SIZE, HANDLES, SLIDE_BOUNDS, SLIDE_H, SLIDE_W, besideRect, fitScale, moveFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { gridOf } from '~/lib/object-gestures'
+import { useObjectInteraction } from '~/lib/object-interaction'
 import { objectName, pictureAlt } from '~/lib/descriptions'
-import { canTurn, degreesText, moveTurned, quarterTurn, resizeTurned, stepTurn, turnFromPointer, SHIFT_STEP } from '~/lib/turning'
+import { canTurn, degreesText, moveTurned, quarterTurn, stepTurn, SHIFT_STEP } from '~/lib/turning'
 import { imageDataUrl } from '~/lib/images'
 import { cssOf as computedCss, pointer, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
@@ -45,7 +47,6 @@ const replayClass = (id: string) => {
 const MARGIN = 24
 /** Screen pixels from the top edge of an object to the middle of its turn handle (the stem is 22, the hit area 32). */
 const HANDLE_REACH = 38
-const DRAG_START = 3 // screen pixels the pointer must travel before a click becomes a drag
 
 const area = ref<HTMLElement | null>(null)
 const slideEl = ref<HTMLElement | null>(null)
@@ -80,11 +81,11 @@ const gridStyle = computed(() => (props.showGrid ? { backgroundSize: `${px(GRID_
 
 /** Where an object is on the screen; a frame being dragged replaces the one the server knows. */
 function frameOf(o: SlideObject): Frame {
-  return drag.value?.id === o.id ? drag.value.frame : slideFrame(o)
+  return interaction.frameOf(o.id) ?? slideFrame(o)
 }
 /** How far an object is turned on the screen: the turn being tried while the handle or Rotate By… is at work, else its own. */
 function rotationOf(o: SlideObject): number {
-  return turning.value?.id === o.id ? turning.value.turn : o.rotation
+  return interaction.rotationOf(o.id) ?? o.rotation
 }
 const turnCss = (degrees: number) => (degrees ? { transform: `rotate(${degrees}deg)` } : {})
 function boxStyle(o: SlideObject) {
@@ -163,11 +164,31 @@ function cancelContainer() {
 const label = (o: SlideObject) => objectName(o, { shape: outline(o)?.name, words: wordsOf(o) })
 
 // ------------------------------------------------------------------------------ selection, dragging, resizing
-type Drag = { id: string; handle: Handle | 'move'; from: { x: number; y: number }; start: Frame; frame: Frame; moved: boolean }
-const drag = ref<Drag | null>(null)
-/** A turn being tried, not yet sent: from the handle (pointer down to up) or from Rotate By… (open to Done). */
-type Turn = { id: string; from: number; turn: number; centre: { x: number; y: number } }
-const turning = ref<Turn | null>(null)
+/** What a press and a drag do is `lib/object-interaction.ts`'s, the same in all three apps (D1221); this is what
+ * creates tells it about its slide. */
+const interaction = useObjectInteraction({
+  get bounds() {
+    return SLIDE_BOUNDS
+  },
+  get scale() {
+    return scale.value
+  },
+  get readonly() {
+    return readonly.value
+  },
+  toUnits: (event) => point(event),
+  subject(id) {
+    const o = state.objects[id]
+    return o ? { id, frame: slideFrame(o), rotation: o.rotation, aspect: aspectOf(o), grid: gridOf(o.snap) } : null
+  },
+  async commit(change) {
+    if (change.kind === 'move') return session.move(change.id, change.x, change.y)
+    if (change.kind === 'resize') return session.resize(change.id, change.frame)
+    return session.rotate(change.id, change.rotation)
+  },
+})
+/** A turn being tried from Rotate By… (open to Done): a ref, so the template unwraps it. */
+const { rotatePreview } = interaction
 /** What a screen reader is told about a turn: the angle it has now. */
 const turnSaid = ref('')
 
@@ -206,7 +227,7 @@ const handles = computed<Handle[]>(() => {
   return aspectOf(o) !== null ? CORNERS : HANDLES
 })
 
-function point(event: PointerEvent) {
+function point(event: { clientX: number; clientY: number }) {
   const box = slideEl.value!.getBoundingClientRect()
   return toSlide(event.clientX, event.clientY, box, scale.value)
 }
@@ -216,11 +237,10 @@ async function onObjectDown(event: PointerEvent, o: SlideObject) {
   event.stopPropagation()
   if (editing.value && editing.value.id === o.id) return
   const target = event.currentTarget as HTMLElement
-  const where = point(event)
   target.setPointerCapture(event.pointerId)
   await commitEdit()
   area.value?.focus({ preventScroll: true })
-  drag.value = { id: o.id, handle: 'move', from: where, start: slideFrame(o), frame: slideFrame(o), moved: false }
+  interaction.begin(o.id, 'move', event)
   session.select(o.id)
 }
 
@@ -229,77 +249,32 @@ function onHandleDown(event: PointerEvent, handle: Handle) {
   if (!o || event.button !== 0) return
   event.stopPropagation()
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
-  drag.value = { id: o.id, handle, from: point(event), start: slideFrame(o), frame: slideFrame(o), moved: false }
+  interaction.begin(o.id, handle, event)
 }
 
 function onPointerMove(event: PointerEvent) {
-  const turn = turning.value
-  if (turn && pointerTurn && !readonly.value) {
-    turn.turn = turnFromPointer(turn.centre, point(event), { shift: event.shiftKey, alt: event.altKey })
-    return
-  }
-  const d = drag.value
-  if (!d || readonly.value) return
-  const here = point(event)
-  const [dx, dy] = [here.x - d.from.x, here.y - d.from.y]
-  if (!d.moved && Math.hypot(dx, dy) * scale.value < DRAG_START) return
-  d.moved = true
-  const o = state.objects[d.id]
-  if (!o) return
-  const grid = o.snap ? GRID_SIZE : null
-  if (o.rotation) {
-    // A turned frame is kept where its *outline* stays on the slide, and a handle pulls along the object's own axes (D1022)
-    d.frame = d.handle === 'move' ? moveTurned(d.start, o.rotation, dx, dy, grid) : (resizeTurned(d.start, o.rotation, d.handle, dx, dy, aspectOf(o)) ?? d.frame)
-    return
-  }
-  d.frame = d.handle === 'move' ? moveFrame(d.start, dx, dy, grid) : resizeFrame(d.start, d.handle, dx, dy, aspectOf(o), grid)
+  interaction.move(event)
 }
 
+/** The release: one change (a move, a resize or a turn) is sent, and what was tried stays on screen until the answer is in. */
 async function onPointerUp() {
-  if (pointerTurn) return void (await finishTurn())
-  const d = drag.value
-  if (!d) return
-  const changed = d.moved && (d.frame.x !== d.start.x || d.frame.y !== d.start.y || d.frame.w !== d.start.w || d.frame.h !== d.start.h)
-  if (changed && !readonly.value) {
-    if (d.handle === 'move') await session.move(d.id, d.frame.x, d.frame.y)
-    else await session.resize(d.id, d.frame)
-  }
-  if (drag.value === d) drag.value = null // the server's answer is in the state by now; a refusal snaps the object back
+  const change = await interaction.release()
+  if (change?.kind === 'rotate') turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(change.rotation) })
 }
 
 // ------------------------------------------------------------------------------ turning (D1021, D1024)
-/** True between the press on the handle and its release; Rotate By… also has a `turning`, but it is the popover that ends it. */
-let pointerTurn = false
-
-function startTurn(o: SlideObject): Turn {
-  const f = slideFrame(o)
-  return { id: o.id, from: o.rotation, turn: o.rotation, centre: { x: f.x + f.w / 2, y: f.y + f.h / 2 } }
-}
 function onTurnDown(event: PointerEvent) {
   const o = selected.value
   if (!o || !turnable.value || event.button !== 0) return
   event.stopPropagation()
   event.preventDefault() // the handle keeps no focus of its own from the mouse; the slide keeps it, so Esc reaches it
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
-  pointerTurn = true
-  turning.value = startTurn(o)
+  interaction.begin(o.id, 'turn', event)
 }
-/** The release of the handle: one turn, and the object is shown turned until the server's answer is in the state. */
-async function finishTurn() {
-  const t0 = turning.value
-  pointerTurn = false
-  if (!t0) return
-  if (t0.turn !== t0.from && !readonly.value) {
-    turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(t0.turn) })
-    await session.rotate(t0.id, t0.turn)
-  }
-  if (turning.value === t0) turning.value = null // a refusal, or a nudge, shows in what the server says next
-}
-/** Esc: drop the turn that is being tried, and the object is as it was. */
-function cancelTurn() {
-  pointerTurn = false
-  turning.value = null
+/** Esc: drop the turn or drag that is being tried, and the object is as it was. */
+function cancelTurn(): boolean {
   rotating.value = null
+  return interaction.cancel()
 }
 
 /** The arrow keys on the handle: a degree, with Shift 15° (and the same keys turn it back). */
@@ -333,20 +308,16 @@ function openRotateBy(id: string | null = state.selected, at?: { x: number; y: n
   const el = area.value?.querySelector(`[data-id="${CSS.escape(o.id)}"]`)
   const where = at ?? (el ? besideRect(el.getBoundingClientRect(), 264, window.innerWidth) : { x: 120, y: 160 })
   session.select(o.id)
-  turning.value = startTurn(o)
+  if (!interaction.startRotateBy(o.id)) return
   rotating.value = { id: o.id, ...where }
 }
 function previewTurn(angle: number) {
-  if (turning.value && rotating.value) turning.value.turn = angle
+  if (rotating.value) interaction.previewRotateBy(angle)
 }
 async function doneRotateBy(angle: number) {
-  const t0 = turning.value
   rotating.value = null
-  if (t0 && angle !== t0.from) {
-    turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(angle) })
-    await session.rotate(t0.id, angle)
-  }
-  turning.value = null
+  const change = await interaction.finishRotateBy(angle)
+  if (change?.kind === 'rotate') turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(angle) })
   area.value?.focus({ preventScroll: true })
 }
 function cancelRotateBy() {
@@ -368,35 +339,34 @@ async function onSlideDown(event: PointerEvent) {
 const contextMenu = ref<{ x: number; y: number; id: string } | null>(null)
 const contextItems = computed<MenuItem[]>(() => {
   const o = contextMenu.value ? state.objects[contextMenu.value.id] : null
-  return o
-    ? contextMenuItems(o, readonly.value, {
-        edit: () => beginEdit(o.id),
-        remove: () => session.remove(o.id),
-        cut: () => cutSelection(),
-        copy: () => copySelection(),
-        properties: () => {
-          contextMenu.value = null
-          propertiesFor.value = o.id
-        },
-        describe: () => {
-          contextMenu.value = null
-          openDescribe(o.id)
-        },
-        setSnap: (snap) => session.setSnap(o.id, snap),
-        rotateRight: () => void quarter(1, o.id),
-        rotateLeft: () => void quarter(-1, o.id),
-        rotateBy: () => {
-          const at = contextMenu.value
-          contextMenu.value = null
-          openRotateBy(o.id, at ? { x: at.x, y: at.y } : undefined)
-        },
-        style: () => {
-          const at = contextMenu.value
-          contextMenu.value = null
-          styleMenu.value = at ? { x: at.x, y: at.y } : { x: 120, y: 160 }
-        },
-      })
-    : []
+  if (!o) return []
+  // The list is `lib/object-menu.ts`'s, one for all three apps (D1225); creates has the grid and no wrap.
+  return contextMenuItems(
+    o,
+    readonly.value,
+    {
+      describe: () => {
+        contextMenu.value = null
+        openDescribe(o.id)
+      },
+      edit: () => beginEdit(o.id),
+      style: () => {
+        const at = contextMenu.value
+        contextMenu.value = null
+        styleMenu.value = at ? { x: at.x, y: at.y } : { x: 120, y: 160 }
+      },
+      rotateBy: () => {
+        const at = contextMenu.value
+        contextMenu.value = null
+        openRotateBy(o.id, at ? { x: at.x, y: at.y } : undefined)
+      },
+      remove: () => session.remove(o.id),
+      cut: () => cutSelection(),
+      copy: () => copySelection(),
+      setSnap: (snap) => session.setSnap(o.id, snap),
+    },
+    { grid: true },
+  )
 })
 
 // ------------------------------------------------------------------------------ the style menu (E9.7, D203)
@@ -440,6 +410,16 @@ function openStyleMenu(at?: { x: number; y: number }, mode: 'edit' | 'apply' = '
   const where = at ?? (el ? besideRect(el.getBoundingClientRect(), mode === 'apply' ? 280 : 360, window.innerWidth) : { x: 120, y: 160 })
   styleMenu.value = { ...where, mode }
 }
+/** A picture's properties are reached from its Style… (D1225, workbook "To decide" #13), not from an entry of their own. */
+const pictureProperties = computed(() => {
+  const o = selected.value
+  return o?.kind === 'image'
+    ? () => {
+        styleMenu.value = null
+        propertiesFor.value = o.id
+      }
+    : undefined
+})
 function closeContextMenu() {
   contextMenu.value = null
 }
@@ -544,7 +524,7 @@ async function onKey(event: KeyboardEvent) {
   const o = selected.value
   if (editing.value || containerEditing.value) return
   if (event.key === 'Escape') {
-    if (turning.value) return void cancelTurn()
+    if (cancelTurn()) return
     return void session.select(null)
   }
   if (!o) return
@@ -675,7 +655,7 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
             @keydown="onTurnKey"
           />
         </template>
-        <span v-if="turning && turning.id === selected.id" class="chip" :style="{ transform: `translateX(-50%) rotate(${-selectedTurn}deg)` }" aria-hidden="true">{{ degreesText(selectedTurn) }}</span>
+        <span v-if="interaction.turningNow(selected.id)" class="chip" :style="{ transform: `translateX(-50%) rotate(${-selectedTurn}deg)` }" aria-hidden="true">{{ degreesText(selectedTurn) }}</span>
         <span
           v-for="h in handles"
           :key="h"
@@ -688,9 +668,9 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
     </div>
 
     <p class="sr" role="status" aria-live="polite">{{ turnSaid }}</p>
-    <RotatePopover v-if="rotating && turning" :x="rotating.x" :y="rotating.y" :rotation="turning.from" @preview="previewTurn" @done="doneRotateBy" @cancel="cancelRotateBy" />
+    <RotatePopover v-if="rotating && rotatePreview" :x="rotating.x" :y="rotating.y" :rotation="rotatePreview.from" @preview="previewTurn" @done="doneRotateBy" @cancel="cancelRotateBy" />
     <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" :label="t('Object menu')" @close="closeContextMenu" />
-    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
+    <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" :properties="pictureProperties" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
     <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="closeDescribe" />
     <ImagePropertiesDialog v-if="propertiesObject" :session="session" :object="propertiesObject" @close="propertiesFor = null" />
   </div>

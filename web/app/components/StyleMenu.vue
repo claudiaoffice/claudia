@@ -15,7 +15,7 @@ import { clearStyle, nounName } from '~/lib/noun-phrases'
 
 const { t } = useI18n()
 
-const props = withDefaults(defineProps<{ host: StyleHost; x: number; y: number; mode?: 'edit' | 'apply' }>(), { mode: 'edit' })
+const props = withDefaults(defineProps<{ host: StyleHost; x: number; y: number; mode?: 'edit' | 'apply'; properties?: () => void }>(), { mode: 'edit', properties: undefined })
 const emit = defineEmits<{ close: []; styles: [] }>()
 
 const uses = computed(() => props.host.uses())
@@ -46,6 +46,7 @@ async function clicked(id: string) {
     <div class="menu" :data-mode="mode" data-testid="style-menu">
       <header>
         <h3>{{ mode === 'apply' ? t('Apply style') : title }}</h3>
+        <button v-if="properties" class="all" type="button" data-testid="picture-properties" @click="properties()">{{ t('Picture properties…') }}</button>
         <button class="all" type="button" data-testid="all-styles" @click="emit('styles')">{{ t('All Styles…') }}</button>
       </header>
       <div v-if="mode === 'edit' && host.origin?.length" class="origin" data-testid="style-origin">

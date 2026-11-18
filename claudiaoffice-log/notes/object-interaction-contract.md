@@ -107,15 +107,13 @@ anchor in `claudia_core`. The client has the same split waiting to be made. (Dia
 
 **Per app, small, behind one interface `ObjectHost`:**
 
-| `ObjectHost` member | creates | computes | composes |
+| `ObjectHost` member (as built, `web/app/lib/object-interaction.ts`) | creates | computes | composes |
 |---|---|---|---|
 | `toUnits(event)` | slide units | sheet px | page px |
-| `frameOf(object)` | slide frame | the cell's top left plus `w × h` | the character's spot plus offset (`floatBox`) |
-| `bounds()` | the slide | the sheet's used area | the text column and the page |
-| `commitMove(id, frame)` | `move_object(x, y)` | `move_object(row, col)` | `move_object(block, offset, dx, dy)` |
-| `commitResize`, `commitTurn` | `resize_object`, `rotate_object` | the same | the same |
-| `grid()` | 50 units if the object snaps | `null` | `null` |
-| `aspectOf(object)` | shape aspect, image ratio | image ratio | image ratio |
+| `subject(id)`: frame, angle, aspect, grid | slide frame; shape aspect or image ratio; 50 units if the object snaps | the cell's top left plus `w × h`; image ratio; no grid | the character's spot plus offset (`floatBox`); image ratio; no grid |
+| `bounds` | the slide | the sheet's used area | the text column and the page |
+| `scale`, `readonly` | screen scale; look-only | the same | the same |
+| `commit(change)`: one `move`, `resize` or `rotate` | `move_object(x, y)`, `resize_object`, `rotate_object` | `move_object(row, col)` and the same two | `move_object(block, offset, dx, dy)` and the same two |
 
 A new app, or a new kind of object, touches the host and nothing else. That is the consistency the owner asked for, in
 code as well as in behaviour.
@@ -218,8 +216,13 @@ three adapters have it.
 Each patch assumes the earlier ones are applied; the last step of each is a merge of the latest `main`.
 
 1. **This patch:** the note and the two mock-ups.
-2. **Shared module** (`object-gestures`, `Bounds` in `geometry`/`turning`, `ObjectFrame`, `useObjectInteraction`,
-   `object-menu` changes) with vitest, creates moved onto it with its behaviour unchanged (its e2e stays green).
+2. **Shared module — built:** `web/app/lib/object-gestures.ts` (the state machine), `web/app/lib/object-interaction.ts`
+   (`ObjectHost` and the composable), an explicit `Bounds` in `web/app/lib/geometry.ts` and `web/app/lib/turning.ts`, the
+   object menu of D1225 in `web/app/lib/object-menu.ts` (with submenus and ticks in `web/app/components/ContextMenu.vue`),
+   all with vitest, and creates (`web/app/components/SlideCanvas.vue`) moved onto it with its behaviour unchanged except
+   that Esc now drops a drag in progress (D1227). `ObjectFrame.vue` (outline and handles drawn once) is **not** in this
+   patch: it moves out of creates when composes is its second user (patch 3 below), where its markup can be checked
+   against two apps at once.
 3. **composes:** stop drawing tables in the layer, table frame/tab/drop line/width handle, host adapter, object menu, the
    `contextmenu` rule in `TextEditor.vue`, aspect lock, turn handle, the LaTeX initial size.
 4. **computes:** host adapter, handles, turn, menu, the `contextmenu` rule in `SheetGrid.vue`.

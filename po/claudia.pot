@@ -597,7 +597,7 @@ msgstr ""
 msgid "All Numbering…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleMenu.vue:49 web/app/lib/format-menu.ts:122
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleMenu.vue:50 web/app/lib/format-menu.ts:122
 msgid "All Styles…"
 msgstr ""
 
@@ -1357,7 +1357,7 @@ msgstr ""
 msgid "Copies, downloads, exports and backups made before keep it."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/RecoveryKeyDialog.vue:48 web/app/lib/document-menus.ts:136 web/app/lib/object-menu.ts:43
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/RecoveryKeyDialog.vue:48 web/app/lib/document-menus.ts:136 web/app/lib/object-menu.ts:77
 msgid "Copy"
 msgstr ""
 
@@ -1457,11 +1457,7 @@ msgstr ""
 msgid "Ctrl + arrows"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:37
-msgid "Ctrl+Alt+D"
-msgstr ""
-
-#: web/app/lib/object-menu.ts:43
+#: web/app/lib/object-menu.ts:77
 msgid "Ctrl+C"
 msgstr ""
 
@@ -1473,7 +1469,7 @@ msgstr ""
 msgid "Ctrl+Enter draws it, Escape leaves it as it was"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:42
+#: web/app/lib/object-menu.ts:77
 msgid "Ctrl+X"
 msgstr ""
 
@@ -1493,7 +1489,7 @@ msgstr ""
 msgid "Custom…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:137 web/app/lib/object-menu.ts:42
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:137 web/app/lib/object-menu.ts:77
 msgid "Cut"
 msgstr ""
 
@@ -1533,11 +1529,11 @@ msgstr ""
 msgid "Define"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:65
+#: web/app/lib/object-menu.ts:83
 msgid "Del"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/PivotDeleteDialog.vue:31 web/app/components/SlideWorkspace.vue:399 web/app/components/Workspace.vue:1076 web/app/components/Workspace.vue:1086 web/app/lib/object-menu.ts:65 web/app/lib/table-menu.ts:89 web/app/lib/table-menu.ts:95
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/PivotDeleteDialog.vue:31 web/app/components/SlideWorkspace.vue:399 web/app/components/Workspace.vue:1076 web/app/components/Workspace.vue:1086 web/app/lib/object-menu.ts:83 web/app/lib/table-menu.ts:89 web/app/lib/table-menu.ts:95
 msgid "Delete"
 msgstr ""
 
@@ -1625,7 +1621,7 @@ msgstr ""
 msgid "Describe the picture, or tick \"Decorative\" if it adds nothing a reader would miss."
 msgstr ""
 
-#: web/app/lib/object-menu.ts:37
+#: web/app/lib/object-menu.ts:56
 msgid "Describe…"
 msgstr ""
 
@@ -1725,7 +1721,7 @@ msgstr ""
 msgid "Double-click to rename"
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:627
+#: web/app/components/SlideCanvas.vue:607
 msgid "Double-click to type"
 msgstr ""
 
@@ -1793,7 +1789,7 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:393 web/app/lib/object-menu.ts:50
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:393 web/app/lib/object-menu.ts:58
 msgid "Edit Text"
 msgstr ""
 
@@ -1833,7 +1829,7 @@ msgstr ""
 msgid "End the show (Esc)"
 msgstr ""
 
-#: web/app/components/TextWorkspace.vue:608 web/app/lib/object-menu.ts:50
+#: web/app/components/TextWorkspace.vue:608 web/app/lib/object-menu.ts:58
 msgid "Enter"
 msgstr ""
 
@@ -2179,6 +2175,10 @@ msgstr ""
 
 #: web/app/components/NumberingDialog.vue:187
 msgid "Gap between items"
+msgstr ""
+
+#: web/app/lib/object-menu.ts:70
+msgid "Gap…"
 msgstr ""
 
 #: web/app/components/OpenDialog.vue:1037
@@ -3525,7 +3525,7 @@ msgstr ""
 msgid "Object in paragraph {n}"
 msgstr ""
 
-#: web/app/components/ContextMenu.vue:22 web/app/components/ContextMenu.vue:23 web/app/components/SlideCanvas.vue:692
+#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SlideCanvas.vue:672
 msgid "Object menu"
 msgstr ""
 
@@ -3901,6 +3901,10 @@ msgstr ""
 msgid "Picture"
 msgstr ""
 
+#: web/app/components/StyleMenu.vue:49
+msgid "Picture properties…"
+msgstr ""
+
 #: web/app/components/PivotCreateDialog.vue:60 web/app/lib/pivots.ts:290 web/app/lib/pivots.ts:290
 msgid "Pivot"
 msgstr ""
@@ -4051,10 +4055,6 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue:345 web/app/lib/document-menus.ts:85 web/app/lib/print/use-print.ts:33
 msgid "Print…"
-msgstr ""
-
-#: web/app/lib/object-menu.ts:45
-msgid "Properties"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -4249,7 +4249,7 @@ msgstr ""
 msgid "Reject"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:63
+#: web/app/lib/object-menu.ts:81
 msgid "Release from grid"
 msgstr ""
 
@@ -4465,19 +4465,19 @@ msgstr ""
 msgid "Rotate"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:139 web/app/lib/object-menu.ts:57
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:139 web/app/lib/object-menu.ts:60
 msgid "Rotate By…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:138 web/app/lib/object-menu.ts:56
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:138
 msgid "Rotate Left 90°"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:137 web/app/lib/object-menu.ts:55
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:137
 msgid "Rotate Right 90°"
 msgstr ""
 
-#: web/app/components/RotatePopover.vue:68 web/app/components/SlideCanvas.vue:667
+#: web/app/components/RotatePopover.vue:68 web/app/components/SlideCanvas.vue:647
 msgid "Rotate object"
 msgstr ""
 
@@ -4993,7 +4993,7 @@ msgstr ""
 msgid "Smallest"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:63
+#: web/app/lib/object-menu.ts:81
 msgid "Snap to grid"
 msgstr ""
 
@@ -5133,11 +5133,11 @@ msgstr ""
 msgid "Style: mark text by what it is for"
 msgstr ""
 
-#: web/app/components/StyleBar.vue:73 web/app/components/StyleBar.vue:74 web/app/components/StyleMenu.vue:67 web/app/components/StylePicker.vue:61 web/app/components/StylePicker.vue:62 web/app/components/StylesDialog.vue:90
+#: web/app/components/StyleBar.vue:73 web/app/components/StyleBar.vue:74 web/app/components/StyleMenu.vue:68 web/app/components/StylePicker.vue:61 web/app/components/StylePicker.vue:62 web/app/components/StylesDialog.vue:90
 msgid "Styles"
 msgstr ""
 
-#: web/app/lib/object-menu.ts:36
+#: web/app/lib/object-menu.ts:59
 msgid "Style…"
 msgstr ""
 
@@ -6625,7 +6625,7 @@ msgstr ""
 msgid "This is the only way back into {doc} for somebody who has forgotten their password."
 msgstr ""
 
-#: web/app/components/StyleMenu.vue:72
+#: web/app/components/StyleMenu.vue:73
 msgid "This is the style of what you selected"
 msgstr ""
 
@@ -6813,11 +6813,11 @@ msgstr ""
 msgid "Turn the object you have selected to an angle, in whole degrees"
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:673
+#: web/app/components/SlideCanvas.vue:653
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr ""
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SlideCanvas.vue:293 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:324 web/app/components/SlideCanvas.vue:346
+#: web/app/components/RotatePopover.vue:102 web/app/components/SlideCanvas.vue:262 web/app/components/SlideCanvas.vue:291 web/app/components/SlideCanvas.vue:299 web/app/components/SlideCanvas.vue:320
 msgid "Turned to {degrees}"
 msgstr ""
 
@@ -6961,7 +6961,7 @@ msgstr ""
 msgid "View of the style"
 msgstr ""
 
-#: web/app/components/StyleMenu.vue:71
+#: web/app/components/StyleMenu.vue:72
 msgid "Waiting for a name"
 msgstr ""
 
@@ -7081,7 +7081,7 @@ msgstr ""
 msgid "Which apps"
 msgstr ""
 
-#: web/app/components/StyleMenu.vue:54
+#: web/app/components/StyleMenu.vue:55
 msgid "Which part is styled"
 msgstr ""
 
@@ -7121,7 +7121,7 @@ msgstr ""
 msgid "Whole cell"
 msgstr ""
 
-#: web/app/components/StyleMenu.vue:77
+#: web/app/components/StyleMenu.vue:78
 msgid "Whole styles that also set a {slot} — their {slot} part:"
 msgstr ""
 
@@ -7205,6 +7205,10 @@ msgstr ""
 msgid "Wrap Text: {mode}"
 msgstr ""
 
+#: web/app/lib/object-menu.ts:64
+msgid "Wrap Text…"
+msgstr ""
+
 #: web/app/components/StyleSpec.vue:249
 msgid "Wrap long text"
 msgstr ""
@@ -7277,7 +7281,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:445 web/app/components/SlideCanvas.vue:323 web/app/components/SlideCanvas.vue:332 web/app/components/SlideCanvas.vue:459 web/app/components/SlideCanvas.vue:492 web/app/components/TextContainers.vue:117 web/app/components/Workspace.vue:273 web/app/components/Workspace.vue:330 web/app/components/Workspace.vue:381 web/app/components/Workspace.vue:463 web/app/components/Workspace.vue:523 web/app/components/Workspace.vue:529 web/app/components/Workspace.vue:610 web/app/components/Workspace.vue:778 web/app/components/Workspace.vue:837 web/app/components/Workspace.vue:957 web/app/lib/base-session.ts:877 web/app/lib/text-session.ts:683
+#: web/app/components/SheetGrid.vue:445 web/app/components/SlideCanvas.vue:298 web/app/components/SlideCanvas.vue:307 web/app/components/SlideCanvas.vue:439 web/app/components/SlideCanvas.vue:472 web/app/components/TextContainers.vue:117 web/app/components/Workspace.vue:273 web/app/components/Workspace.vue:330 web/app/components/Workspace.vue:381 web/app/components/Workspace.vue:463 web/app/components/Workspace.vue:523 web/app/components/Workspace.vue:529 web/app/components/Workspace.vue:610 web/app/components/Workspace.vue:778 web/app/components/Workspace.vue:837 web/app/components/Workspace.vue:957 web/app/lib/base-session.ts:877 web/app/lib/text-session.ts:683
 msgid "You can only look at this document."
 msgstr ""
 
@@ -8013,7 +8017,7 @@ msgstr ""
 msgid "height in millimetres"
 msgstr ""
 
-#: web/app/components/StyleMenu.vue:72 web/app/components/StyleMenu.vue:81
+#: web/app/components/StyleMenu.vue:73 web/app/components/StyleMenu.vue:82
 msgid "here"
 msgstr ""
 
@@ -8741,7 +8745,7 @@ msgstr ""
 msgid "skipped"
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:582
+#: web/app/components/SlideCanvas.vue:562
 msgid "slide"
 msgstr ""
 
@@ -8829,7 +8833,7 @@ msgstr ""
 msgid "text box"
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:635
+#: web/app/components/SlideCanvas.vue:615
 msgid "text of the object"
 msgstr ""
 
@@ -9257,7 +9261,7 @@ msgstr ""
 msgid "to"
 msgstr ""
 
-#: web/app/components/StyleMenu.vue:71 web/app/components/StylesDialog.vue:118
+#: web/app/components/StyleMenu.vue:72 web/app/components/StylesDialog.vue:118
 msgid "to name"
 msgstr ""
 
@@ -10017,7 +10021,7 @@ msgstr ""
 msgid "{user} (you)"
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:652
+#: web/app/components/SlideCanvas.vue:632
 msgid "{user} is working on this"
 msgstr ""
 
@@ -10025,7 +10029,7 @@ msgstr ""
 msgid "{user} left this document."
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:652
+#: web/app/components/SlideCanvas.vue:632
 msgid "{user} selected this"
 msgstr ""
 
