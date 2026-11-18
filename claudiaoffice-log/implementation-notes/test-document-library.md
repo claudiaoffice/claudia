@@ -106,3 +106,29 @@ generator ships alongside so nobody has to hand-edit a `.docx` to change or exte
   feature set but outside both the real app *and* claudia's model, as opposed to "beyond claudia" alone) is not
   separately represented yet -- the two `beyond-claudia` fixtures cover "claudia cannot model this", not yet
   "nor can any format converter get it wrong in a specific, known way".
+
+## Running a corpus outside the repository (2026-11-18)
+
+The owner downloaded Apache POI's and LibreOffice's test documents and wanted to run import/export tests and round
+trips on them without importing them into `test-documents/`. The catalogue cannot do that -- each entry needs a
+hand-written `spec.py` -- so a second mode sits beside it, built on the same adapters:
+
+- `claudia_test_documents.corpus` (`discover_corpus`, `run_corpus`, `run_corpus_file`, `summarize_corpus`,
+  `write_corpus_report`; package version 0.3.0). With no spec there is nothing known about the file's content, so the
+  checks are the ones true of any document: it imports; a no-op edit through `apply_edits_fn` and a re-import leave
+  `model.serialize()` unchanged; no package part goes missing. Rewritten parts are reported, not failed (docx
+  re-saves `word/document.xml` every time; xlsx and pptx on the sample came back with nothing rewritten).
+- Four statuses: `pass`, `fail`, `error` (claudia crashed on a readable file) and `rejected` (`BadZipFile` or
+  `PackageRefused` on import). `rejected` is deliberate: POI's corpus holds fuzzer files, and refusing them is right,
+  so they neither fail the run nor hide among real failures.
+- Entry points: `scripts/run_test_documents.py --corpus DIR [--format F] [--fail-fast] [--corpus-report FILE]`, and
+  `CLAUDIA_TEST_CORPUS=DIR pytest tests/test_test_documents_corpus.py` (one test per file, skipped when unset so the
+  gate never needs a corpus). `--corpus` refuses the catalogue-only options (`--id`, `--feature`, `--tag`, `--visual`,
+  `--report`, `--no-write`) instead of silently ignoring them. The environment variable is read only by the pytest
+  entry point, never by the script, so a person with it set does not get a corpus run when they meant the catalogue.
+- The corpus is never copied, and the catalogue is never written; a corpus has no `last_run`.
+
+Not done, on purpose: no known-failures baseline (a POI-sized corpus will have a standing set of failures; the JSON
+report diff is the stopgap, a baseline file is the next step if it gets noisy); the legacy binary `.doc`/`.xls`/`.ppt`
+files in the POI corpus (about 720 of its 1,850 files) have no importer; Tier 3 (`--visual`) is not offered for a
+corpus.

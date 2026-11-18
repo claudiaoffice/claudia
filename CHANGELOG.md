@@ -34,6 +34,18 @@ While the major version is 0, a minor version may break the API; every break is 
 - `StyleBook.to_data` always writes a parent before its children, whatever order styles were re-based into.
 - The undo of `RemoveStyle` puts the style back where it was in the book, not last.
 
+## [0.36.0] - 2026-11-18
+
+The redaction screens (E3.14, D729).
+
+### Added
+- `RedactionPlan.regions`: the places on the line people see that the blanked steps touch, for a preview to mark
+  (empty when nothing people see changes).
+
+### Changed
+- `Document.plan_redaction`: a later step whose blank of the same shape still does not apply becomes a no-op tombstone
+  instead of stopping the redaction (D729). The last resort is a history that does not replay before any blanked step.
+
 ## [0.35.0] - 2026-11-17
 
 References (step H of `claudiaoffice-log/notes/text-structure-across-apps.md`).

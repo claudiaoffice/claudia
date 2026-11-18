@@ -33,7 +33,7 @@ import { chipsOf, dotFractions, outcomeCaption, type Alt, type Summary } from '~
 import { colorOf, inkOn } from '~/lib/people'
 import { ROLE_SHAPE, roleAt, type Role } from '~/lib/follow'
 import { REFERENCE_COLORS, referencesIn } from '~/lib/pointing'
-import { replayTints } from '~/lib/replay-tint'
+import { viewTints } from '~/lib/replay-tint'
 import { bounds, parseTsv, toTsv, type Sel } from '~/lib/selection'
 import type { Session, SheetObject } from '~/lib/session'
 import type { StyleHost } from '~/lib/style-host'
@@ -404,7 +404,7 @@ const outlines = computed(() => {
 })
 
 /** The places a replay marks on this sheet: what the step on show changed, and what changed after it (D553). */
-const tints = computed(() => replayTints(state.replay))
+const tints = computed(() => viewTints(state))
 const replayBoxes = computed(() =>
   tints.value.cells(props.sheet).map((c, i) => ({ id: `${c.tint}:${i}`, tint: c.tint, style: box(c.r0, c.c0, c.r1, c.c1) })),
 )

@@ -65,6 +65,7 @@ from .auth import (
 )
 from .help import default_library
 from .i18n import localized, msg
+from .planned import keep_plan
 from .restore import POLICIES, RestoreCoordinator, RestoreError
 
 if TYPE_CHECKING:
@@ -761,12 +762,14 @@ def _redaction_plan(ctx, revisions, chat, parts, state):
     some things of an imported document: `{"main:1": ["b4", "s1!A1:B9", "t2"]}` (paragraph, sheet or range, slide,
     object).
 
-    Returns `{targets, dependents, chat, imports, changes_now, allowed, others, steps, app, state_schema, state}`:
-    `dependents` are later steps that stop working without the content and are blanked with it (D722), `imports` the
-    targets whose kept original goes too, `steps` every step that is blanked as `log` gives it, `state` the document as
-    it will look (left out when `state` is false or the plan is not allowed). `allowed` is false when an editor's plan
-    would blank later steps by somebody else, named in `others`: an owner has to do it. Nothing changes.
-    `command_error` for something the document does not have, or that cannot be redacted."""
+    Returns `{targets, dependents, chat, imports, changes_now, allowed, others, steps, app, plan, regions,
+    state_schema, state}`: `dependents` are later steps that stop working without the content and are blanked with it
+    (D722), `imports` the targets whose kept original goes too, `steps` every step that is blanked as `log` gives it,
+    `state` the document as it will look (left out when `state` is false or the plan is not allowed). `plan` is a token
+    for that state: the views read it through `as_planned` to draw the preview, and `regions` are the places in it to
+    mark. `allowed` is false when an editor's plan would blank later steps by somebody else, named in `others`: an
+    owner has to do it. Nothing changes. `command_error` for something the document does not have, or that cannot be
+    redacted."""
     plan = _planned(ctx, revisions, chat, parts)
     out = {
         "targets": [rev.to_data() for rev in plan.targets],
@@ -779,6 +782,9 @@ def _redaction_plan(ctx, revisions, chat, parts, state):
     }
     out["others"] = _others_reached(ctx, plan)
     out["allowed"] = not out["others"]
+    if out["allowed"]:
+        out["plan"] = keep_plan(ctx.document, plan.after)
+        out["regions"] = [region.to_data() for region in plan.regions]
     if state and out["allowed"]:
         out["state_schema"] = plan.after.state_schema
         out["state"] = plan.after.serialize()
@@ -848,7 +854,9 @@ def _log(ctx, limit):
 
 
 def _entry_view(entry) -> dict:
-    """One step of the history as a history panel shows it: `{revision, author, origin, time, label, summary, of}`."""
+    """One step of the history as a history panel shows it: `{revision, author, origin, time, label, summary, of, kind,
+    redacted}`; `kind` is the command's (`core.Redaction` for the record of a redaction), `redacted` whether its content
+    was taken away (D720)."""
     return {
         "revision": entry.rev.to_data(),
         "author": entry.author,
@@ -857,6 +865,8 @@ def _entry_view(entry) -> dict:
         "label": entry.command.label,
         "summary": entry.command.summary,
         "of": None if entry.of is None else entry.of.to_data(),
+        "kind": entry.command.kind,
+        "redacted": entry.redacted,
     }
 
 

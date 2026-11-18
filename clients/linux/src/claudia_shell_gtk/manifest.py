@@ -379,6 +379,12 @@ def _file_menu(*, title: str, prints: bool) -> Menu:
                             accelerators=("<Primary><Alt><Shift>x",),
                         ),
                         _page(
+                            "file.manage.redact",
+                            "Redact History…",
+                            "Take content out of the document's history and chat for good",
+                            accelerators=("<Primary><Shift>F8",),
+                        ),
+                        _page(
                             "file.manage.delete",
                             "Delete From Server…",
                             "Remove this document from the server for good",

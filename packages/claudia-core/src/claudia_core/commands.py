@@ -105,7 +105,7 @@ class Command(ABC):
         after it still apply. A command whose later steps refer to what it created (a sheet, an object, the length
         of a text) overrides this and blanks in place; the default is a no-op tombstone, and a step that then no
         longer applies is blanked too (D722)."""
-        return Redacted(self.kind, self.stub())
+        return tombstone(self)
 
     def redacted_in(self, model: type[DocumentModel]) -> Command:
         """:meth:`redacted` for a command whose content only the app can blank (an import, a diagram): ``model`` is
@@ -115,6 +115,12 @@ class Command(ABC):
     def stub(self) -> dict:
         """The non-secret identifying data that survives redaction (ids only, no content)."""
         return {}
+
+
+def tombstone(command: Command) -> Command:
+    """The content-free no-op a step becomes when nothing of its shape can be kept (D720, D722): its kind and the ids
+    of ``stub`` only."""
+    return Redacted(command.kind, command.stub())
 
 
 def encode(command: Command) -> dict:

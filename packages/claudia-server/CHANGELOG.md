@@ -5,6 +5,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- The preview of a redaction (D721, E3.14): `redaction_plan` keeps the planned state under a token (`plan`) and names
+  the places to mark (`regions`); `as_planned` answers a view's read requests from that state, as `as_of` does for an
+  earlier step. The views of the three apps draw the preview with what they already have.
+- The history view of a step (`log`, `steps` of a plan) says its `kind` and whether it is `redacted`.
+
 ### Removed
 - `claudia_server.composes_lists`: its methods are `structure_methods`'.
 

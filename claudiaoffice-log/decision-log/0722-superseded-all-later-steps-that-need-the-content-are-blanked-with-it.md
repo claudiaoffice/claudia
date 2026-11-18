@@ -1,12 +1,12 @@
 ---
 id: D722
 title: "Later steps that need the redacted content are blanked with it, named first"
-status: current
+status: superseded
 applies-to: all
 date: 2026-11-16
 round: "The redaction contract (D229), 2026-11-16"
 supersedes: [D229]
-superseded-by: []
+superseded-by: [D729]
 ---
 
 # D722 · Later steps that need the redacted content are blanked with it, named first
@@ -18,3 +18,5 @@ A request that names bare steps (no plan) is refused if it would take others wit
 without being shown; over the wire the client confirms by repeating the dependents it showed.
 
 **Notes.** The owner's choice of 2026-11-16 between refusing, offering the dependents, and squashing the history.
+
+*Superseded on 2026-11-18 by D729: a dependent whose blank still fails becomes a tombstone instead of stopping the redaction.*

@@ -1,5 +1,5 @@
 {
- "version": "0.2.0",
+ "version": "0.3.0",
  "ADAPTERS": {
   "value": "{'docx': Adapter(import_fn=<function docx_to_text>, apply_edits_fn=<function apply_edits_to_docx>), 'odt': Adapter(import_fn=<function odt_to_text>, apply_edits_fn=<function apply_edits_to_odt>), 'odp': Adapter(import_fn=<function odp_to_slides>, apply_edits_fn=<function apply_edits_to_odp>), 'ods': Adapter(import_fn=<function ods_to_workbook>, apply_edits_fn=<function apply_edits_to_ods>), 'pptx': Adapter(import_fn=<function pptx_to_slides>, apply_edits_fn=<function apply_edits_to_pptx>), 'xlsx': Adapter(import_fn=<function xlsx_to_workbook>, apply_edits_fn=<function apply_edits_to_xlsx>)}"
  },
@@ -17,6 +17,16 @@
   ],
   "init": "(import_checks: 'Callable[[Model], None] | None' = None, modify: 'Callable[[Model], Model] | None' = None, after_checks: 'Callable[[Model], None] | None' = None, export_checks: 'Callable[[bytes], None] | None' = None, preserve_parts: 'list[str]' = <factory>, preserve_elements: 'Callable[[bytes, bytes], None] | None' = None, visual: 'bool' = False) -> None",
   "methods": {},
+  "properties": []
+ },
+ "CorpusResult": {
+  "class": [
+   "object"
+  ],
+  "init": "(path: 'str', format: 'str', status: 'Status', stages: 'dict[str, Status]', duration_s: 'float', detail: 'str | None' = None, changed_parts: 'list[str]' = <factory>, dropped_parts: 'list[str]' = <factory>) -> None",
+  "methods": {
+   "as_report_entry": "(self) -> 'dict[str, Any]'"
+  },
   "properties": []
  },
  "Entry": {
@@ -40,6 +50,9 @@
   },
   "properties": []
  },
+ "discover_corpus": {
+  "function": "(root: 'Path', *, formats: 'set[str] | None' = None, adapters: 'dict[str, Adapter] | None' = None) -> 'list[Path]'"
+ },
  "load_case": {
   "function": "(spec_path: 'Path', entry_id: 'str') -> 'Case'"
  },
@@ -52,10 +65,22 @@
  "run_case": {
   "function": "(entry: 'dict', library_root: 'Path', *, visual: 'bool' = False, adapters: 'dict[str, Adapter] | None' = None) -> 'RunResult'"
  },
+ "run_corpus": {
+  "function": "(root: 'Path', *, formats: 'set[str] | None' = None, fail_fast: 'bool' = False, adapters: 'dict[str, Adapter] | None' = None) -> 'Iterator[CorpusResult]'"
+ },
+ "run_corpus_file": {
+  "function": "(path: 'Path', root: 'Path', *, adapters: 'dict[str, Adapter] | None' = None) -> 'CorpusResult'"
+ },
  "save_catalogue": {
   "function": "(path: 'Path', entries: 'list[Entry]') -> 'None'"
  },
  "select": {
   "function": "(entries: 'list[Entry]', *, formats: 'set[str] | None' = None, features: 'set[str] | None' = None, ids: 'set[str] | None' = None, tags: 'set[str] | None' = None, include_disabled: 'bool' = False) -> 'list[Entry]'"
+ },
+ "summarize_corpus": {
+  "function": "(results: 'list[CorpusResult]') -> 'dict[str, Any]'"
+ },
+ "write_corpus_report": {
+  "function": "(path: 'Path', root: 'Path', results: 'list[CorpusResult]') -> 'None'"
  }
 }

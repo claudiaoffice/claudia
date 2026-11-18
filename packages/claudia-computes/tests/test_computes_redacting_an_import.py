@@ -78,3 +78,18 @@ def test_a_chart_keeps_what_it_reads_but_not_its_titles():
     )
     assert (blank["title"], blank["x_title"], blank["y_title"]) == ("", "", "")
     assert blank["range"]["last"]["row"] == 2
+
+
+def test_a_plan_names_the_places_that_change_now():
+    """What a preview marks (D721): the cells the blanked step touched, on the line people see."""
+    doc = Document(WorkbookModel(), store=MemoryStore())
+    doc.execute(AddSheet("s1", "Pay"), author="ana")
+    doc.execute(SetCells("s1", ((1, 0, text(SECRET)),)), author="ben")
+    plan = doc.plan_redaction([Revision("main", 2)])
+    cells = [r.to_data() for r in plan.regions if r.to_data()["kind"] == "cells"]
+    assert cells and cells[0]["range"]["first"]["row"] == 1
+    gone = Document(WorkbookModel(), store=MemoryStore())
+    gone.execute(AddSheet("s1", "Pay"), author="ana")
+    gone.execute(SetCells("s1", ((1, 0, text(SECRET)),)), author="ben")
+    gone.execute(SetCells("s1", ((1, 0, None),)), author="ben")
+    assert gone.plan_redaction([Revision("main", 2)]).regions == ()  # nothing people see changes
