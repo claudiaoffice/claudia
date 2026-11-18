@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { descriptionOf } from '~/lib/text-container-names'
-import { columnOf, floatBox, letsGoOfObject, MIN_SIDE, neighbour, resizedBy } from '~/lib/text-containers'
+import { columnOf, floatBox, letsGoOfObject, neighbour } from '~/lib/text-containers'
 
 describe('where a container floats', () => {
   const layer = { left: 10, top: 20, width: 900, height: 900 }
@@ -36,11 +36,7 @@ describe('what lets go of a selected object', () => {
     expect(letsGoOfObject({})).toBe(true)
   })
 })
-describe('sizing and stepping', () => {
-  it('follows the corner but keeps a size that can be grabbed', () => {
-    expect(resizedBy(300, 200, 20.4, -30)).toEqual({ w: 320, h: 170 })
-    expect(resizedBy(100, 100, -500, -500)).toEqual({ w: MIN_SIDE, h: MIN_SIDE })
-  })
+describe('stepping', () => {
   it('steps to the next or previous paragraph and stays at the ends', () => {
     expect(neighbour(['a', 'b', 'c'], 'b', 1)).toBe('c')
     expect(neighbour(['a', 'b', 'c'], 'c', 1)).toBe('c')

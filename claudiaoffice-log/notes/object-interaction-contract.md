@@ -204,7 +204,10 @@ three adapters have it.
 
 ## Open points
 
-1. **The initial size of a rendered container** (LaTeX) is too large; I have not yet found where it is set. Proposed:
+1. **The initial size of a rendered container** (LaTeX) is too large. Found: every container starts at 420 × 240
+   (`CONTAINER_WIDTH` and `CONTAINER_HEIGHT` in `web/app/components/TextWorkspace.vue`, and the same two numbers in
+   `web/app/lib/text-session.ts` for a pasted fence), whatever it will draw. Not changed, because it needs a decision:
+   Proposed:
    the container is first drawn at its rendered size (the renderer returns `width × height`), capped at the column
    width, then scaled by the person.
 2. **Composes tables have no row and column headers**, so "Height / width…" and "Insert / delete ▸" on headers (workbook
@@ -223,8 +226,14 @@ Each patch assumes the earlier ones are applied; the last step of each is a merg
    that Esc now drops a drag in progress (D1227). `ObjectFrame.vue` (outline and handles drawn once) is **not** in this
    patch: it moves out of creates when composes is its second user (patch 3 below), where its markup can be checked
    against two apps at once.
-3. **composes:** stop drawing tables in the layer, table frame/tab/drop line/width handle, host adapter, object menu, the
-   `contextmenu` rule in `TextEditor.vue`, aspect lock, turn handle, the LaTeX initial size.
+3. **composes — built (D1228):** the layer no longer draws tables (`web/app/components/TextContainers.vue`), the table has its
+   faint frame, name tab, drag with a drop line and menu (`web/app/components/TableView.vue`), objects are dragged, sized
+   with the aspect kept, turned and menued through the shared module (`web/app/lib/text-object-host.ts` turns a drop into the
+   paragraph and offset), the right button never reaches the words (`web/app/components/TextEditor.vue`), the object menu and
+   its dialogs are in `web/app/components/TextObjectMenu.vue`, and `web/app/components/ObjectFrame.vue` is the handles for
+   creates and composes. **Not built:** the table's width handle (a table's width is set in its options); the
+   bounding-box wrap of a turned object (D1226); Edit text for a text box or shape in a text and Cut/Copy of a picture (the
+   server and the clipboard have no step for them); the LaTeX initial size (see open point 1).
 4. **computes:** host adapter, handles, turn, menu, the `contextmenu` rule in `SheetGrid.vue`.
 5. **`objects.cjs`** and its guard test, wired into `npm run e2e:objects` and CI as the other specs are.
 

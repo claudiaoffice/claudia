@@ -549,9 +549,6 @@ async function onKey(event: KeyboardEvent) {
 
 defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe, quarter, openRotateBy, referencePlace })
 
-const HANDLE_CURSOR: Record<Handle, string> = { nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize', n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize' }
-const HANDLE_AT: Record<Handle, [number, number]> = { nw: [0, 0], n: [0.5, 0], ne: [1, 0], e: [1, 0.5], se: [1, 1], s: [0.5, 1], sw: [0, 1], w: [0, 0.5] }
-const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `${HANDLE_AT[h][1] * 100}%`, cursor: HANDLE_CURSOR[h] })
 </script>
 
 <template>
@@ -636,34 +633,8 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
       </template>
 
       <!-- my selection and its handles -->
-      <div v-if="selected && selectedFrame" class="mine" :class="{ below: handleBelow }" :style="{ left: px(selectedFrame.x), top: px(selectedFrame.y), width: px(selectedFrame.w), height: px(selectedFrame.h), ...turnCss(selectedTurn) }">
-        <template v-if="turnable">
-          <span class="stem" aria-hidden="true" />
-          <span
-            class="turn"
-            role="slider"
-            tabindex="0"
-            data-handle="turn"
-            :aria-label="t('Rotate object')"
-            aria-orientation="horizontal"
-            aria-valuemin="0"
-            aria-valuemax="359"
-            :aria-valuenow="selectedTurn"
-            :aria-valuetext="degreesText(selectedTurn)"
-            :title="t('Turn: drag, or arrow keys (Shift for 15°)')"
-            @pointerdown="onTurnDown"
-            @keydown="onTurnKey"
-          />
-        </template>
-        <span v-if="interaction.turningNow(selected.id)" class="chip" :style="{ transform: `translateX(-50%) rotate(${-selectedTurn}deg)` }" aria-hidden="true">{{ degreesText(selectedTurn) }}</span>
-        <span
-          v-for="h in handles"
-          :key="h"
-          class="handle"
-          :data-handle="h"
-          :style="handleStyle(h)"
-          @pointerdown="onHandleDown($event, h)"
-        />
+      <div v-if="selected && selectedFrame" class="mine" :style="{ left: px(selectedFrame.x), top: px(selectedFrame.y), width: px(selectedFrame.w), height: px(selectedFrame.h), ...turnCss(selectedTurn) }">
+        <ObjectFrame :handles="handles" :turnable="turnable" :turn="selectedTurn" :turning="interaction.turningNow(selected.id)" :below="handleBelow" @handle="onHandleDown" @turn-down="onTurnDown" @turn-key="onTurnKey" />
       </div>
     </div>
 
@@ -754,77 +725,6 @@ const handleStyle = (h: Handle) => ({ left: `${HANDLE_AT[h][0] * 100}%`, top: `$
 .mine {
   position: absolute;
   outline: 2px solid var(--iris);
-  pointer-events: none;
-}
-.handle {
-  position: absolute;
-  width: 11px;
-  height: 11px;
-  margin: -6px 0 0 -6px;
-  background: #fff;
-  border: 2px solid var(--iris);
-  border-radius: 3px;
-  pointer-events: auto;
-}
-/* The turn handle (D1024): 19 px to see on a stem, in a 32 px square to hit; the stem and the angle chip turn with the object. */
-.stem {
-  position: absolute;
-  left: 50%;
-  top: -22px;
-  width: 2px;
-  height: 22px;
-  margin-left: -1px;
-  background: var(--iris);
-}
-.turn {
-  position: absolute;
-  left: 50%;
-  top: -54px;
-  width: 32px;
-  height: 32px;
-  margin-left: -16px;
-  display: grid;
-  place-items: center;
-  cursor: grab;
-  pointer-events: auto;
-  border-radius: 50%;
-}
-.turn::before {
-  content: '';
-  width: 19px;
-  height: 19px;
-  box-sizing: border-box;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid var(--iris);
-}
-.below .stem {
-  top: auto;
-  bottom: -22px;
-}
-.below .turn {
-  top: auto;
-  bottom: -54px;
-}
-.below .chip {
-  top: auto;
-  bottom: -88px;
-}
-.turn:focus-visible {
-  outline: 3px solid var(--iris);
-  outline-offset: 1px;
-}
-.chip {
-  position: absolute;
-  left: 50%;
-  top: -88px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
   pointer-events: none;
 }
 .sr {

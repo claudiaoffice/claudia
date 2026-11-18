@@ -22,8 +22,6 @@ export interface Away {
   dy?: number
 }
 
-export const MIN_SIDE = 60
-
 /**
  * The box of an object `w` by `h` anchored at `spot` and moved by `away`, in the coordinates of the layer `layer` is
  * the box of. It is kept inside the text `column` across (the page's margins in print), the left edge winning when the
@@ -46,11 +44,6 @@ export function columnOf(box: Box, left: number, right: number): Box {
  */
 export function letsGoOfObject(target: { closest?: (selector: string) => unknown } | null): boolean {
   return !target?.closest?.('[data-object]')
-}
-
-/** A size after the corner was dragged by (dx, dy), never smaller than the least that can be seen and grabbed. */
-export function resizedBy(w: number, h: number, dx: number, dy: number): { w: number; h: number } {
-  return { w: Math.max(MIN_SIDE, Math.round(w + dx)), h: Math.max(MIN_SIDE, Math.round(h + dy)) }
 }
 
 /** The paragraph to hang from after a step with the arrow keys: the next or the previous, staying at the ends. */

@@ -6,6 +6,8 @@
 //   Describe… · Edit text · Style… · Rotate by… · Wrap text… ▸ (composes) · — · Cut · Copy (pictures) · — ·
 //   Release from grid (creates) · Delete
 //
+// An app leaves out what it cannot do yet (`ObjectMenuApp`): the entry is not shown rather than shown and dead.
+//
 // There are no 90° entries (Rotate by… does them), Rotate by… is not offered for a chart (D1021), a picture has no text
 // to edit and neither has a chart, and for a picture "Style…" also holds what "Properties" was (`properties`). A table
 // has a menu of its own (`table-menu.ts`, D1224) and is not offered here. "Describe…" becomes "Name & describe…" with the
@@ -41,10 +43,15 @@ export interface ObjectMenuActions {
   setGap?: () => void
 }
 
-/** What an app has: `grid` is creates', `wrap` is composes' (the object's current mode). */
+/** What an app has: `grid` is creates', `wrap` is composes' (the object's current mode). `edit` and `clipboard` are on
+ * unless the app says no: composes can write in a rendered container only, and has no clipboard for objects yet. */
 export interface ObjectMenuApp {
   grid?: boolean
   wrap?: Wrap
+  /** The words of this object can be written from here (default: yes, unless it is a picture or a chart). */
+  edit?: boolean
+  /** Cut and Copy of a picture work (default: yes). */
+  clipboard?: boolean
 }
 
 const separator: MenuItem = { label: '', separator: true }
@@ -55,7 +62,7 @@ export function contextMenuItems(o: MenuSubject, readonly: boolean, actions: Obj
 
   const top: MenuItem[] = [{ label: t('Describe…'), hint: hintOf('format.describe'), action: actions.describe, disabled: readonly }]
   // A picture has no text to write and a chart has none either: the entry is left off rather than shown disabled.
-  if (!picture && o.kind !== 'diagram') top.push({ label: t('Edit Text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
+  if (!picture && o.kind !== 'diagram' && app.edit !== false) top.push({ label: t('Edit Text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
   top.push({ label: t('Style…'), hint: hintOf('format.apply-style'), action: actions.style, disabled: readonly })
   if (canTurn(o.kind)) top.push({ label: t('Rotate By…'), hint: hintOf('format.rotate-by'), action: actions.rotateBy, disabled: readonly })
   if (app.wrap !== undefined && actions.setWrap) {
@@ -74,7 +81,7 @@ export function contextMenuItems(o: MenuSubject, readonly: boolean, actions: Obj
   groups.push(top)
 
   // Cut/Copy: the very same `cutSelection`/`copySelection` the Edit menu's own items call. Copy only reads.
-  if (picture) groups.push([{ label: t('Cut'), hint: t('Ctrl+X'), action: actions.cut, disabled: readonly }, { label: t('Copy'), hint: t('Ctrl+C'), action: actions.copy }])
+  if (picture && app.clipboard !== false) groups.push([{ label: t('Cut'), hint: t('Ctrl+X'), action: actions.cut, disabled: readonly }, { label: t('Copy'), hint: t('Ctrl+C'), action: actions.copy }])
 
   // The grid is only a helper the view draws; whether this object follows it is real document state (E10.15).
   // One entry whose label swaps, like "Undo <label>" does, rather than a checkbox.

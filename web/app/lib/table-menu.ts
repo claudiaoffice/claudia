@@ -106,6 +106,23 @@ export function tableItems(c: { t: Translate }, h: TableMenuHost): MenuItem[] {
   ]
 }
 
+/** The table's own menu, on the right button on its tab, its frame or a box (D1224, D1225): Describe…, Table Options…,
+ *  Merge Cells, Split Cell, Sort ▸, then Delete Table. The same actions and keys as Edit's table entries, which work on
+ *  the box the caret is in: the right button puts it under the pointer first. */
+export function tableContextItems(c: { t: Translate }, h: TableMenuHost, a: { describe: () => void; remove: () => void }): MenuItem[] {
+  const { t } = c
+  const item = (action: TableAction, label: string): MenuItem => ({ label, hint: hintOf(TABLE_ACTION_IDS[action]), action: () => h.run(action), disabled: !possible(h, action) })
+  return [
+    { label: t('Describe…'), hint: hintOf('format.describe'), action: a.describe, disabled: h.readonly },
+    item('options', t('Table Options…')),
+    item('merge-cells', t('Merge Cells')),
+    item('split-cell', t('Split Cell')),
+    { label: t('Sort'), disabled: !possible(h, 'sort-ascending'), items: [item('sort-ascending', t('Ascending')), item('sort-descending', t('Descending'))] },
+    { label: '', separator: true },
+    { label: t('Delete Table'), hint: t('Del'), action: a.remove, disabled: h.readonly },
+  ]
+}
+
 /** The keys of those entries, which work in the box the caret is in: a box is a field of its own, and the window leaves
  *  a field its keys unless a shortcut says `whileTyping`. */
 export function tableShortcuts(c: { t: Translate }, h: TableMenuHost): ShortcutDef[] {

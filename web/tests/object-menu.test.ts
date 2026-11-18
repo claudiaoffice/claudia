@@ -142,3 +142,16 @@ describe('Wrap text… (composes only, D1061)', () => {
     expect(labels(contextMenuItems(chart(), false, actions(), { wrap: 'over' }))).toContain('Wrap Text…')
   })
 })
+
+describe('what an app leaves out (composes, for now)', () => {
+  it('leaves Edit text off where the words cannot be written from here, and keeps it for a container', () => {
+    expect(labels(contextMenuItems(text(), false, actions(), { edit: false }))).not.toContain('Edit Text')
+    expect(labels(contextMenuItems(container(), false, actions(), { edit: true }))).toContain('Edit Text')
+  })
+  it('leaves Cut and Copy off a picture where there is no clipboard for objects, with their group', () => {
+    const items = contextMenuItems(image(), false, actions(), { clipboard: false })
+    expect(labels(items)).not.toContain('Cut')
+    expect(labels(items)).not.toContain('Copy')
+    expect(groups(items)).toEqual([['Describe…', 'Style…', 'Rotate By…'], ['Delete']])
+  })
+})

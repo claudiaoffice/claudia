@@ -15,6 +15,7 @@ import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
 import { usePointed } from '~/lib/pointed'
 import { columnOf, letsGoOfObject } from '~/lib/text-containers'
+import { nearestBlock } from '~/lib/text-object-host'
 import { wrapOf } from '~/lib/wrap'
 import { floatStyle, measureFloats, takesRoom, type Hung, type WrapFloat, type WrapPage } from '~/lib/wrap-flow'
 import { pointer } from '~/lib/objects'
@@ -22,13 +23,24 @@ import TableView from './TableView.vue'
 
 const { t } = useI18n()
 
-const props = defineProps<{ session: TextSession; view: 'flow' | 'page'; authors: boolean; active: string | null; marks?: TextMark[]; pages?: ReadonlyMap<string, number> | null }>()
+const props = defineProps<{
+  session: TextSession
+  view: 'flow' | 'page'
+  authors: boolean
+  active: string | null
+  marks?: TextMark[]
+  pages?: ReadonlyMap<string, number> | null
+  /** A turn being tried from Rotate By… (nothing is sent until Done): the object is drawn at this angle meanwhile. */
+  turning?: { id: string; turn: number } | null
+}>()
 const emit = defineEmits<{
   suggestion: [id: string]
   'style-menu': [at: { x: number; y: number }]
   contents: [block: string]
   'reference-menu': [at: { block: string; index: number; x: number; y: number }]
   'table-options': [table: string]
+  /** The right button on a floating object or on a table: its menu opens there (D1225, D1224). */
+  'object-menu': [at: { id: string; x: number; y: number }]
 }>()
 
 const state = props.session.state
@@ -570,6 +582,9 @@ function focus() {
 /** The right button or the menu key: the style menu opens where the person pointed, or at the caret. */
 function onContextMenu(event: MouseEvent) {
   if (event.shiftKey && event.clientX !== 0) return // Shift + right button: the browser's own menu (spelling, copy link…), as everywhere
+  // A floating object and a table have a menu of their own (D1225, D1224): the press is theirs, it never reaches the
+  // words below, so no paragraph menu opens here. They take it from here: this capture handler only steps aside.
+  if ((event.target as Element | null)?.closest?.('[data-object]')) return
   event.preventDefault()
   const atom = (event.target as HTMLElement).closest<HTMLElement>('[data-atom]')
   const at = atom?.closest<HTMLElement>('[data-block]')?.dataset.block
@@ -583,6 +598,34 @@ function onContextMenu(event: MouseEvent) {
   const keyboard = event.clientX === 0 && event.clientY === 0
   const rect = keyboard ? document.getSelection()?.rangeCount ? document.getSelection()!.getRangeAt(0).getClientRects()[0] : undefined : undefined
   emit('style-menu', rect ? { x: rect.left, y: rect.bottom + 6 } : { x: event.clientX, y: event.clientY })
+}
+
+/** The place of the text nearest a point of the screen (where a dropped object hangs, D1023): the paragraph by its
+ * height, and within it the character the browser says the point is over; the start of the paragraph where the point
+ * is not over its words. The object layers are let through for a moment, so that the words under a dragged object answer. */
+function placeAt(x: number, y: number): Pos | null {
+  const blocks = [...(root.value?.querySelectorAll<HTMLElement>('[data-block]') ?? [])].map((el) => {
+    const r = el.getBoundingClientRect()
+    return { id: el.dataset.block!, top: r.top, bottom: r.bottom }
+  })
+  const id = nearestBlock(blocks, y)
+  const el = id ? blockEl(id) : null
+  if (!id || !el) return null
+  const r = el.getBoundingClientRect()
+  if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+    const layers = [...(scroller.value?.querySelectorAll<HTMLElement>('[data-testid^="containers"]') ?? [])]
+    const kept = layers.map((l) => l.style.visibility)
+    layers.forEach((l) => (l.style.visibility = 'hidden'))
+    try {
+      const hit = document.caretPositionFromPoint?.(x, y)
+      const found = hit ? ([hit.offsetNode, hit.offset] as const) : null
+      const pos = found && el.contains(found[0]) ? posFromDom(found[0], found[1]) : null
+      if (pos && pos.block === id) return pos
+    } finally {
+      layers.forEach((l, i) => (l.style.visibility = kept[i]!))
+    }
+  }
+  return { block: id, offset: 0 }
 }
 
 /** Where the caret is on the window (to open the style menu from the keyboard or a menu). */
@@ -668,7 +711,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
 <template>
   <div ref="scroller" class="scroller" :class="view" data-testid="text-scroller" @contextmenu.capture="onContextMenu" @pointerdown.capture="letGoOfObject" @focusin="letGoOfObject">
     <div class="sheet">
-      <TextContainers behind :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" @leave="focus()" />
+      <TextContainers behind :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
       <div
         :key="renderKey"
         ref="root"
@@ -787,11 +830,12 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
           :object="shown.object"
           :table="shown.table"
           @options="emit('table-options', $event)"
+          @menu="emit('object-menu', $event)"
           @leave="focus()"
         />
         </template>
       </div>
-      <TextContainers :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" @leave="focus()" />
+      <TextContainers :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
     </div>
   </div>
 </template>

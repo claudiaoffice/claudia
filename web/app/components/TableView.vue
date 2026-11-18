@@ -7,16 +7,22 @@
 // Keys: Tab and Shift+Tab move to the next and previous box (Tab in the last box adds a row, as the table grows with
 // its last row, D603); the arrow keys move between boxes, left and right where the caret is at the edge of the words;
 // Enter commits and goes down; Esc gives back what was there and leaves the table for the text.
+//
+// The table is an object of the text, in the flow (D1201, D1224): drawn here and nowhere else, with a faint frame that is
+// always on, so that it is clear where it starts and ends. Its name tab selects it; dragging the tab moves it, to after
+// the paragraph a line shows; the right button on the tab, the frame or a box selects it and opens its menu (D1225) and
+// never the paragraph menu of the words; Esc, in a box or on the tab, leaves it for the text.
 import { computed, nextTick, ref, watch } from 'vue'
 import { paragraphCss } from '~/lib/style-css'
 import { columnName, gridOf, stepBox, type Box, type Step, type TableInfo } from '~/lib/tables'
+import { nearestGap } from '~/lib/text-object-host'
 import type { BlockAnchor, VisualObject } from '~/lib/objects'
 import type { TextSession } from '~/lib/text-session'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 const props = defineProps<{ session: TextSession; object: VisualObject<BlockAnchor>; table: TableInfo }>()
-const emit = defineEmits<{ options: [table: string]; leave: [] }>()
+const emit = defineEmits<{ options: [table: string]; menu: [at: { id: string; x: number; y: number }]; leave: [] }>()
 const state = props.session.state
 
 const grid = computed(() => gridOf(props.table))
@@ -126,6 +132,70 @@ async function onBlur(box: Box, event: FocusEvent) {
 
 /** The words of the total row: derived, so they are read, not typed (D1203). */
 const totalLabel = computed(() => t('Total'))
+
+// ------------------------------------------------------------------------------ the object: select, move, menu
+const DRAG_START = 3 // screen pixels the pointer must travel before a press on the tab becomes a drag
+/** A press on the tab, and where it was; the paragraph the table would go after, and the line that shows it. */
+const dragging = ref<{ x: number; y: number; moved: boolean; after: string | null; line: { left: number; top: number; width: number } | null } | null>(null)
+
+const select = () => props.session.selectObject(props.object.id)
+
+function paragraphs(): { id: string; bottom: number; left: number; width: number }[] {
+  const doc = root.value?.closest('.doc')
+  return [...(doc?.querySelectorAll<HTMLElement>('[data-block]') ?? [])].map((el) => {
+    const r = el.getBoundingClientRect()
+    return { id: el.dataset.block!, bottom: r.bottom, left: r.left, width: r.width }
+  })
+}
+
+function onTabDown(event: PointerEvent) {
+  if (event.button !== 0) return
+  select()
+  if (readonly.value) return
+  ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+  dragging.value = { x: event.clientX, y: event.clientY, moved: false, after: null, line: null }
+}
+function onTabMove(event: PointerEvent) {
+  const d = dragging.value
+  if (!d) return
+  if (!d.moved && Math.hypot(event.clientX - d.x, event.clientY - d.y) < DRAG_START) return
+  d.moved = true
+  const all = paragraphs()
+  const id = nearestGap(all, event.clientY)
+  const at = all.find((p) => p.id === id)
+  d.after = id
+  d.line = at ? { left: at.left, top: at.bottom, width: at.width } : null
+}
+async function onTabUp() {
+  const d = dragging.value
+  dragging.value = null
+  if (d?.moved && d.after && d.after !== props.object.anchor.container && !readonly.value) await props.session.moveObject(props.object.id, { block: d.after, offset: 0 })
+}
+function onTabKey(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    if (dragging.value) return void (dragging.value = null) // what was being tried is dropped
+    props.session.selectObject(null)
+    return emit('leave')
+  }
+  if ((event.key === 'Delete' || event.key === 'Backspace') && !readonly.value) {
+    event.preventDefault()
+    void props.session.removeTable(props.table.id)
+  }
+}
+
+/** The right button on the tab, the frame or a box: the table is selected, its menu opens where it was pressed, and
+ * the box under the pointer takes the caret, so that Merge, Split and Sort work on it (D1224). */
+function onContext(event: MouseEvent) {
+  if (event.shiftKey && event.clientX !== 0) return // Shift + right button: the browser's own menu, as everywhere
+  event.preventDefault()
+  event.stopPropagation()
+  select()
+  ;(event.target as HTMLElement).closest('textarea')?.focus()
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  const keyboard = event.clientX === 0 && event.clientY === 0
+  emit('menu', { id: props.object.id, x: keyboard ? rect.left + 24 : event.clientX, y: keyboard ? rect.top + 12 : event.clientY })
+}
 defineExpose({ focusBox })
 </script>
 
@@ -138,10 +208,21 @@ defineExpose({ focusBox })
     data-table
     :data-object="object.id"
     data-testid="table"
+    @contextmenu="onContext"
   >
     <table :class="`look-${table.look}`" :style="tableCss">
       <caption>
-        <span class="name">{{ title }}</span>
+        <button
+          type="button"
+          class="tab"
+          data-testid="table-tab"
+          :title="t('Drag to move the table')"
+          @pointerdown="onTabDown"
+          @pointermove="onTabMove"
+          @pointerup="onTabUp"
+          @pointercancel="onTabUp"
+          @keydown="onTabKey"
+        >{{ title }}</button>
         <span v-if="description" class="sr-only"> — {{ description }}</span>
         <button type="button" class="chip" data-testid="table-options" @click="emit('options', table.id)">{{ t('Options…') }}</button>
       </caption>
@@ -192,6 +273,7 @@ defineExpose({ focusBox })
         </tr>
       </tfoot>
     </table>
+    <div v-if="dragging?.moved && dragging.line" class="drop" data-testid="table-drop-line" :style="{ left: `${dragging.line.left}px`, top: `${dragging.line.top}px`, width: `${dragging.line.width}px` }" aria-hidden="true" />
   </div>
 </template>
 
@@ -199,6 +281,10 @@ defineExpose({ focusBox })
 .table-island {
   margin: 0.4em 0 0.9em;
   overflow-x: auto;
+  /* the faint frame, always on: where the table starts and ends, whatever its look draws (D1224) */
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 3px;
+  padding: 0 4px 4px;
 }
 .table-island.selected {
   outline: 2px solid var(--app);
@@ -215,8 +301,30 @@ caption {
   color: var(--muted);
   padding: 0 0 4px;
 }
-.name {
+.tab {
   margin-right: 8px;
+  border: 0;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 3px 3px 0 0;
+  padding: 1px 8px;
+  font: inherit;
+  color: var(--app-text);
+  cursor: grab;
+}
+.tab:active {
+  cursor: grabbing;
+}
+.tab:focus-visible {
+  outline: 2px solid var(--app);
+  outline-offset: 1px;
+}
+/* where a dragged table goes: a line under the paragraph it would follow */
+.drop {
+  position: fixed;
+  height: 3px;
+  background: var(--app);
+  pointer-events: none;
+  z-index: 5;
 }
 .chip {
   border: 1px solid var(--line);
