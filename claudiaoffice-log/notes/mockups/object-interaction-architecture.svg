@@ -1,0 +1,146 @@
+<svg viewBox="0 0 1760 1180" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia — object interaction: where the code goes, and why</title>
+<desc id="d">Layers from the core model and the server methods, through the shared client modules and the ObjectHost interface, to the three per-app adapters and components, with the tests that pin the contract.</desc>
+<defs><filter id="sh" x="-10%" y="-10%" width="125%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1f1a33" flood-opacity="0.18"/></filter><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#5b4bc4"/></marker></defs>
+<rect width="1760" height="1180" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">claudia — object interaction: where the code goes, and why</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Architecture for review. Solid: exists today. Dashed: proposed in notes/object-interaction-contract.md. The rule from D177 (shared body, app-specific anchor) is carried to the client.</text>
+<rect x="30" y="88" width="1700" height="150" rx="14" fill="#ece9f6" fill-opacity="0.55"/>
+<text x="46" y="110" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">MODEL AND SERVER — already shared (D177), nothing to change</text>
+<rect x="50" y="118" width="520" height="108" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="50" y="118" width="7" height="108" rx="3.5" fill="#5b4bc4"/>
+<text x="70" y="142" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_core: ObjectBody + Anchor</text>
+<text x="70" y="164" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">ObjectBody(id, kind, w, h, rotation, snap, …): one dataclass for all</text>
+<text x="70" y="181" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Anchor → SlideAnchor · CellAnchor · BlockAnchor(block, offset, dx, dy)</text>
+<text x="70" y="198" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">kinds: text · shape · image · rendered · diagram · table</text>
+<rect x="600" y="118" width="520" height="108" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="600" y="118" width="7" height="108" rx="3.5" fill="#5b4bc4"/>
+<text x="620" y="142" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">one command family: core.MoveObject / ResizeObject / RotateObject</text>
+<text x="620" y="164" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">server methods move_object · resize_object · rotate_object in every app</text>
+<text x="620" y="181" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">_check_visual refuses a resize that breaks an image’s aspect → the client must keep it</text>
+<text x="620" y="198" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">each gesture is one history entry, for everybody (D82)</text>
+<rect x="1150" y="118" width="560" height="108" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="1150" y="118" width="7" height="108" rx="3.5" fill="#5b4bc4"/>
+<text x="1170" y="142" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">kernel tables (D1201) and renderings (D390)</text>
+<text x="1170" y="164" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">a table object points at a TableDef; its h is only what layout found</text>
+<text x="1170" y="181" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">a rendered container keeps no aspect; its size is set at insertion (too large today)</text>
+<rect x="30" y="256" width="1700" height="360" rx="14" fill="#ece9f6" fill-opacity="0.55"/>
+<text x="46" y="278" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">SHARED CLIENT CODE — web/app/lib and components, written once</text>
+<rect x="50" y="286" width="400" height="160" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="50" y="286" width="7" height="160" rx="3.5" fill="#5b4bc4"/>
+<text x="70" y="310" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, monospace">object-gestures.ts</text>
+<text x="70" y="332" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">press → threshold(3 px) → move | handle | turn → release | Esc</text>
+<text x="70" y="349" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">pure: positions in, preview frame + one Commit out</text>
+<text x="70" y="366" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">reuses moveFrame, resizeFrame, moveTurned, …</text>
+<text x="70" y="383" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Bounds passed in, not SLIDE_W/SLIDE_H</text>
+<text x="70" y="400" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">aspect + grid are inputs</text>
+<rect x="480" y="286" width="360" height="160" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="480" y="286" width="7" height="160" rx="3.5" fill="#5b4bc4"/>
+<text x="500" y="310" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, monospace">geometry.ts · turning.ts</text>
+<text x="500" y="332" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">today: written for the slide (SLIDE_W, SLIDE_H, slide units)</text>
+<text x="500" y="349" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">change: take a Bounds { w, h } and the unit from the host</text>
+<text x="500" y="366" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">each app passes its own bounds</text>
+<text x="500" y="383" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">behaviour of creates is unchanged</text>
+<rect x="870" y="286" width="400" height="160" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="870" y="286" width="7" height="160" rx="3.5" fill="#5b4bc4"/>
+<text x="890" y="310" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, monospace">useObjectInteraction(host)</text>
+<text x="890" y="332" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">wires gestures to pointer events with capture</text>
+<text x="890" y="349" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">press: stopPropagation; contextmenu: preventDefault + select</text>
+<text x="890" y="366" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">keys: Esc · Del · Enter/F2 · arrows · Tab · Select Next Object</text>
+<text x="890" y="383" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">focus rules; the Ctrl+click exception (wrap behind text)</text>
+<text x="890" y="400" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">one place that says nothing passes through</text>
+<rect x="1300" y="286" width="410" height="160" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="1300" y="286" width="7" height="160" rx="3.5" fill="#5b4bc4"/>
+<text x="1320" y="310" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, monospace">ObjectFrame.vue</text>
+<text x="1320" y="332" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">outline + 8 (or 4) handles + turn handle + names for assistive tech</text>
+<text x="1320" y="349" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">moved out of SlideCanvas.vue; used by all three apps</text>
+<text x="1320" y="366" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">a table gets the same component with the right-edge handle only</text>
+<text x="1320" y="383" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">exactly one frame per selected object (the e2e counts it)</text>
+<rect x="50" y="466" width="400" height="130" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="50" y="466" width="7" height="130" rx="3.5" fill="#5b4bc4"/>
+<text x="70" y="490" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, monospace">object-menu.ts (exists)</text>
+<text x="70" y="512" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">one item list, one order, one key per item</text>
+<text x="70" y="529" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">snap is optional: creates passes it, the others leave it off</text>
+<text x="70" y="546" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">table entries added for kind table (from table-menu.ts)</text>
+<rect x="480" y="466" width="360" height="130" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="480" y="466" width="7" height="130" rx="3.5" fill="#5b4bc4"/>
+<text x="500" y="490" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, monospace">ContextMenu.vue (exists)</text>
+<text x="500" y="512" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">the generic menu creates already uses</text>
+<text x="500" y="529" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">composes and computes use it the same way</text>
+<text x="500" y="546" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">replaces the paragraph and cell menus on objects</text>
+<rect x="870" y="466" width="400" height="130" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="870" y="466" width="7" height="130" rx="3.5" fill="#5b4bc4"/>
+<text x="890" y="490" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, monospace">interface ObjectHost  (the only seam)</text>
+<text x="890" y="512" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">toUnits(event) · frameOf(o) · bounds() · grid()</text>
+<text x="890" y="529" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">aspectOf(o) · commitMove · commitResize · commitTurn</text>
+<text x="890" y="546" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">objects() · select(id) · menuActions(o)</text>
+<rect x="1300" y="466" width="410" height="130" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="1300" y="466" width="7" height="130" rx="3.5" fill="#5b4bc4"/>
+<text x="1320" y="490" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">table specifics (composes only)</text>
+<text x="1320" y="512" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">drop line between paragraphs · width handle in 1/100 %</text>
+<text x="1320" y="529" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">no turn handle · no height handle</text>
+<text x="1320" y="546" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">name tab + Options… live outside the object layer</text>
+<rect x="30" y="646" width="1700" height="300" rx="14" fill="#ece9f6" fill-opacity="0.55"/>
+<text x="46" y="668" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">PER APP — a host adapter + its component</text>
+<rect x="50" y="676" width="520" height="140" rx="10" fill="#fff" stroke="#d9812f" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="50" y="676" width="7" height="140" rx="3.5" fill="#d9812f"/>
+<text x="70" y="700" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">creates: slide-object-host.ts + SlideCanvas.vue</text>
+<text x="70" y="722" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">frameOf → slide frame · commitMove → move_object(x, y) · grid 50 if snap</text>
+<text x="70" y="739" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">SlideCanvas keeps editing text, the style menu, presence and tints</text>
+<text x="70" y="756" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">behaviour unchanged: its e2e (slides.cjs) stays green after the move</text>
+<rect x="600" y="676" width="520" height="140" rx="10" fill="#fff" stroke="#13917f" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="600" y="676" width="7" height="140" rx="3.5" fill="#13917f"/>
+<text x="620" y="700" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">computes: sheet-object-host.ts + SheetGrid.vue</text>
+<text x="620" y="722" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">frameOf → cell top-left + w×h · commitMove → move_object(row, col)</text>
+<text x="620" y="739" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">the viewport’s contextmenu.capture yields to an object under the pointer</text>
+<text x="620" y="756" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">mouse events → pointer events; handles, turn and the menu are new</text>
+<rect x="1150" y="676" width="560" height="140" rx="10" fill="#fff" stroke="#c9446b" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="1150" y="676" width="7" height="140" rx="3.5" fill="#c9446b"/>
+<text x="1170" y="700" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">composes: text-object-host.ts + TextContainers.vue</text>
+<text x="1170" y="722" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">frameOf → character spot + offset (floatBox) · commitMove → move_object(block, offset, dx, dy)</text>
+<text x="1170" y="739" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">the layer skips kind=table (TableView is the one body); aspect lock; turn handle</text>
+<text x="1170" y="756" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">TextEditor.onContextMenu yields on [data-object]; behind-text layer: Ctrl+click</text>
+<rect x="50" y="836" width="520" height="90" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="50" y="836" width="7" height="90" rx="3.5" fill="#1f1a33"/>
+<text x="70" y="860" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">why one adapter each and not three copies</text>
+<text x="70" y="882" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">the three differ in three things only: units, where the frame is, what move commits</text>
+<text x="70" y="899" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">everything else is the contract, and a contract is written once</text>
+<rect x="600" y="836" width="520" height="90" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="600" y="836" width="7" height="90" rx="3.5" fill="#1f1a33"/>
+<text x="620" y="860" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">what we do not share</text>
+<text x="620" y="882" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">selection holding (open point 1), wrap (composes), cells (computes)</text>
+<text x="620" y="899" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">they stay in the app; the host exposes only what gestures need</text>
+<rect x="1150" y="836" width="560" height="90" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="1150" y="836" width="7" height="90" rx="3.5" fill="#1f1a33"/>
+<text x="1170" y="860" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">dependency rule</text>
+<text x="1170" y="882" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">components → useObjectInteraction → object-gestures → geometry</text>
+<text x="1170" y="899" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">nothing in lib/ imports a component or an app’s session</text>
+<rect x="30" y="976" width="1700" height="170" rx="14" fill="#ece9f6" fill-opacity="0.55"/>
+<text x="46" y="998" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">TESTS — the contract is checked with every new feature</text>
+<rect x="50" y="1004" width="520" height="120" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="50" y="1004" width="7" height="120" rx="3.5" fill="#5b4bc4"/>
+<text x="70" y="1028" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">vitest: object-gestures.test.ts, object-menu.test.ts</text>
+<text x="70" y="1050" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">thresholds, preview, commit, Esc, aspect, bounds, turned frames</text>
+<text x="70" y="1067" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">the menu list per kind and per app (no Snap outside creates)</text>
+<text x="70" y="1084" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">a host with a missing member fails to type-check</text>
+<rect x="600" y="1004" width="520" height="120" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="600" y="1004" width="7" height="120" rx="3.5" fill="#5b4bc4"/>
+<text x="620" y="1028" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">e2e: web/e2e/objects.cjs  (npm run e2e:objects)</text>
+<text x="620" y="1050" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">one spec, three apps, one object of every kind</text>
+<text x="620" y="1067" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">press · drag · Esc · scale (image keeps ratio) · turn · right press · keys</text>
+<text x="620" y="1084" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">nothing below received the press · one frame · no paragraph/cell menu</text>
+<rect x="1150" y="1004" width="560" height="120" rx="10" fill="#fff" stroke="#5b4bc4" stroke-width="1.8" stroke-dasharray="6 4" filter="url(#sh)"/>
+<rect x="1150" y="1004" width="7" height="120" rx="3.5" fill="#5b4bc4"/>
+<text x="1170" y="1028" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">guard: tests/test_object_kinds_agree.py (exists, extended)</text>
+<text x="1170" y="1050" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">every kind of the three apps has a row in objects.cjs’s kind table</text>
+<text x="1170" y="1067" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">a new kind cannot ship without its interaction row</text>
+<text x="1170" y="1084" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">CI runs e2e:objects beside the other specs</text>
+<line x1="250" y1="446" x2="250" y2="464" stroke="#5b4bc4" stroke-width="1.6" marker-end="url(#ar)"/>
+<line x1="660" y1="446" x2="660" y2="464" stroke="#5b4bc4" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+<line x1="1070" y1="446" x2="1070" y2="464" stroke="#5b4bc4" stroke-width="1.6" marker-end="url(#ar)"/>
+<line x1="450" y1="366" x2="478" y2="366" stroke="#5b4bc4" stroke-width="1.6" marker-end="url(#ar)"/>
+<line x1="870" y1="366" x2="842" y2="366" stroke="#5b4bc4" stroke-width="1.6" marker-end="url(#ar)"/>
+<line x1="1070" y1="596" x2="810" y2="674" stroke="#5b4bc4" stroke-width="1.6" marker-end="url(#ar)"/>
+<line x1="1070" y1="596" x2="1410" y2="674" stroke="#5b4bc4" stroke-width="1.6" marker-end="url(#ar)"/>
+<line x1="1070" y1="596" x2="520" y2="674" stroke="#5b4bc4" stroke-width="1.6" marker-end="url(#ar)"/>
+</svg>
