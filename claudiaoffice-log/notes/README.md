@@ -34,6 +34,7 @@ renumbering table), `bugtracker.md` (SEC/PERF/UX/CODE/PROC/DOC items) and `qa-re
 | `bitv-grid-and-alt-text-2026-11-13.md` | The accessible grid (UX-02) and alt text with decorative objects (UX-31) built on `bitv`: structure, focus, the live region, what axe found, the model and export for descriptions, what was not verified; mock-up `mockups/describe-object-and-grid-structure.svg` (built before it was agreed) | 2026-11-13 |
 | `code-map.md` | The narrative map of the repository, **stale**: written at `842d739`, six packages | 2026-11-02 |
 | `code-review-2026-11-15.md` | Review for duplication, separation of concerns, naming and convoluted code at `7994b00`: the picture, measurements, order of work and open questions; items CODE-27 to CODE-41 in `bugtracker.md` | 2026-11-15 |
+| `composes-tables.md` | Proposal (nothing built, no decision numbers): tables in composes as an object whose body points at a `TableDef` in `claudia_core`, the `TableSource` protocol shared with computes named ranges, computes-versus-composes comparison, in-flow default with floating as a second placement, cells as paragraphs, numbers as text, no formulas, totals, sorting, collaboration, linked tables, files, layout, slices S0–S6, disagreements and open questions (E9.32, E9.33); mock-ups `composes-table-screens.svg`, `composes-table-architecture.svg` | 2026-11-18 |
 
 ## Three documents were deliberately not copied
 

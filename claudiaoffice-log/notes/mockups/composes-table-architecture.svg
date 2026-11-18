@@ -1,0 +1,230 @@
+<svg viewBox="0 0 1464 1480" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+<rect x="0" y="0" width="1464" height="1480" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia composes — tables: where the code goes</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Proposal for review — nothing is built (E9.32, E9.33). Shared kernel in claudia_core, anchors per app, the engine in TypeScript.</text>
+<rect x="860" y="0" width="0" height="0" rx="0" fill="none"/>
+<rect x="1000" y="0" width="0" height="0" rx="0" fill="none"/>
+<rect x="0" y="0" width="0" height="0" rx="0" fill="none"/>
+<rect x="0" y="0" width="0" height="0" rx="0" fill="none"/>
+<rect x="1000" y="30" width="22" height="14" rx="3" fill="#f3effb" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="1030" y="41" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#4f4a62" text-anchor="start">new</text>
+<rect x="1100" y="30" width="22" height="14" rx="3" fill="#ffffff" stroke="#5b4bc4" stroke-width="1"/>
+<text x="1130" y="41" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#4f4a62" text-anchor="start">changed</text>
+<rect x="1200" y="30" width="22" height="14" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1230" y="41" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#4f4a62" text-anchor="start">built</text>
+<rect x="1300" y="30" width="22" height="14" rx="3" fill="#ffffff" stroke="#6e6880" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1330" y="41" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#4f4a62" text-anchor="start">later</text>
+<rect x="40" y="96" width="900" height="592" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_core  (standard library only; no sheet, cell, slide or formula words)</text>
+<rect x="62" y="150" width="280" height="244" rx="8" fill="#f3effb" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="74" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">TableDef</text>
+<text x="330" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="end">tables.py</text>
+<line x1="70" y1="178" x2="334" y2="178" stroke="#e3dfee" stroke-width="1"/>
+<text x="74" y="196.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">id: str         # the object&#x27;s id</text>
+<text x="74" y="211.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">columns: tuple[Column]</text>
+<text x="74" y="227.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">rows: tuple[Row]</text>
+<text x="74" y="242.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">entries: {(row, col): Paragraph}</text>
+<text x="74" y="258.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">header: bool     # names the columns</text>
+<text x="74" y="273.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">row_header: bool</text>
+<text x="74" y="289.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">banded: bool</text>
+<text x="74" y="304.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">grows: bool      # D603</text>
+<text x="74" y="320.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">purpose: str     # D604</text>
+<text x="74" y="335.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">looks: TableLooks</text>
+<text x="74" y="351.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">groups: tuple[HeaderGroup]</text>
+<text x="74" y="366.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve"># source: Link | None   (E12.2)</text>
+<rect x="354" y="150" width="280" height="134" rx="8" fill="#f3effb" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="366" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Column · Row · HeaderGroup</text>
+<line x1="362" y1="178" x2="626" y2="178" stroke="#e3dfee" stroke-width="1"/>
+<text x="366" y="196.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">Column(id, name, kind, purpose,</text>
+<text x="366" y="211.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">       total, width)</text>
+<text x="366" y="227.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  kind: text | number</text>
+<text x="366" y="242.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  total: sum|mean|count|min|max</text>
+<text x="366" y="258.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">Row(id)            # never reused</text>
+<text x="366" y="273.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">HeaderGroup(label, first, last)</text>
+<rect x="354" y="296" width="280" height="98" rx="8" fill="#f3effb" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="366" y="316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">TableLooks</text>
+<line x1="362" y1="324" x2="626" y2="324" stroke="#e3dfee" stroke-width="1"/>
+<text x="366" y="342.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">header, body, band, total: style ids</text>
+<text x="366" y="357.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">(slots of the thing “table”, D311)</text>
+<rect x="646" y="150" width="280" height="134" rx="8" fill="#f3effb" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="658" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">TableSource  (Protocol)</text>
+<line x1="654" y1="178" x2="918" y2="178" stroke="#e3dfee" stroke-width="1"/>
+<text x="658" y="196.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">id, name, version</text>
+<text x="658" y="211.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">columns() -&gt; ColumnInfo[]</text>
+<text x="658" y="227.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">row_count() -&gt; int</text>
+<text x="658" y="242.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">text(r, c) -&gt; str</text>
+<text x="658" y="258.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">number(r, c) -&gt; Decimal | None</text>
+<rect x="646" y="296" width="280" height="98" rx="8" fill="#f3effb" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="658" y="316" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">TableRegion  (a Region, D17)</text>
+<line x1="654" y1="324" x2="918" y2="324" stroke="#e3dfee" stroke-width="1"/>
+<text x="658" y="342.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">table, rows: ids, columns: ids</text>
+<text x="658" y="357.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">locks and presence; shrinks when</text>
+<text x="658" y="373.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">rows go, by id, not by position</text>
+<rect x="62" y="408" width="572" height="120" rx="8" fill="#f3effb" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="74" y="428" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Commands: each with an exact inverse, per-author undo</text>
+<line x1="70" y1="436" x2="626" y2="436" stroke="#e3dfee" stroke-width="1"/>
+<text x="74" y="454.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">DefineTable  ForgetTable           SetEntries(table, [(row, col, Paragraph)])</text>
+<text x="74" y="469.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">InsertRows  DeleteRows  MoveRows   InsertColumns  DeleteColumns  MoveColumns</text>
+<text x="74" y="485.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">SortRows(table, column, descending) → inverse: RestoreRowOrder</text>
+<text x="74" y="500.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">SetColumn(name, kind, purpose, total, width)   SetTableOptions   SetTableLooks</text>
+<text x="74" y="516.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">typing in a cell: the existing core.InsertText / DeleteText on its Paragraph</text>
+<rect x="646" y="408" width="280" height="120" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1"/>
+<text x="658" y="428" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">objects.py</text>
+<line x1="654" y1="436" x2="918" y2="436" stroke="#e3dfee" stroke-width="1"/>
+<text x="658" y="454.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">OBJECT_KINDS += &quot;table&quot;</text>
+<text x="658" y="469.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">ObjectBody.table: str | None</text>
+<text x="658" y="485.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">ObjectModel.tables (like renderings)</text>
+<text x="658" y="500.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">check_object, blank_body (D720:</text>
+<text x="658" y="516.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">redaction blanks entries, keeps shape)</text>
+<rect x="62" y="542" width="572" height="126" rx="8" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="74" y="562" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Used as they are</text>
+<line x1="70" y1="570" x2="626" y2="570" stroke="#e3dfee" stroke-width="1"/>
+<text x="74" y="588.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">Paragraph: a cell&#x27;s words (runs, authors, fields)</text>
+<text x="74" y="603.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">names.py: one name space (D550); RenameThing, DescribeObject</text>
+<text x="74" y="619.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">facets.py SLOTS += &quot;table&quot;: header, body, band, total  [changed]</text>
+<text x="74" y="634.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">structure.py: reading_order yields a cell&#x27;s paragraph  [changed]</text>
+<rect x="646" y="542" width="280" height="126" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1"/>
+<text x="658" y="562" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">object_texts / search / AI lens</text>
+<line x1="654" y1="570" x2="918" y2="570" stroke="#e3dfee" stroke-width="1"/>
+<text x="658" y="588.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">cells are found by search (the app</text>
+<text x="658" y="603.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">names the containers) and read by</text>
+<text x="658" y="619.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">the AI by column name and row,</text>
+<text x="658" y="634.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">never by offsets (D681)</text>
+<rect x="956" y="96" width="468" height="592" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="978" y="126" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">The apps: only anchors differ</text>
+<rect x="978" y="150" width="424" height="176" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1"/>
+<text x="990" y="170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_composes</text>
+<line x1="986" y1="178" x2="1394" y2="178" stroke="#e3dfee" stroke-width="1"/>
+<text x="990" y="196.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">anchors.py   BlockAnchor(block, offset, dx, dy)</text>
+<text x="990" y="211.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">             + placement: flow | floating</text>
+<text x="990" y="227.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">             (flow is new; floating wraps by</text>
+<text x="990" y="242.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">              D1061–D1064, floating-objects)</text>
+<text x="990" y="258.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">model.py     TextModel holds the tables;</text>
+<text x="990" y="273.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">             carry_objects keeps them with text</text>
+<text x="990" y="289.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">spans.py     follow: the anchor moves with edits</text>
+<rect x="978" y="340" width="424" height="160" rx="8" fill="#f3effb" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="990" y="360" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_computes</text>
+<line x1="986" y1="368" x2="1394" y2="368" stroke="#e3dfee" stroke-width="1"/>
+<text x="990" y="386.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">names.py     NamedRange  — unchanged (D600)</text>
+<text x="990" y="401.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">table_source.py   NamedRangeSource  [new]</text>
+<text x="990" y="417.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">             implements TableSource: header</text>
+<text x="990" y="432.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">             row, kinds read from the values</text>
+<text x="990" y="448.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">region.py    CellRegion — unchanged, by position</text>
+<text x="990" y="463.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">The sheet keeps owning its cells.</text>
+<rect x="978" y="514" width="424" height="120" rx="8" fill="#ffffff" stroke="#6e6880" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="990" y="534" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_creates</text>
+<line x1="986" y1="542" x2="1394" y2="542" stroke="#e3dfee" stroke-width="1"/>
+<text x="990" y="560.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">a table on a slide: the same body,</text>
+<text x="990" y="575.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">a SlideAnchor; the same commands.</text>
+<text x="990" y="591.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">Not planned; the kernel does not stand</text>
+<text x="990" y="606.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">in its way (D177).</text>
+<path d="M978,420 H952 V216 H926" stroke="#5b4bc4" stroke-width="1.4" fill="none" stroke-dasharray="5 3"/>
+<path d="M926,216 l8,-4 v8 z" stroke="#5b4bc4" stroke-width="1" fill="#5b4bc4"/>
+<text transform="rotate(-90 947 330)" x="947" y="330" font-family="Inter, sans-serif" font-size="10.5" fill="#5b4bc4" text-anchor="middle">implements</text>
+<path d="M342,250 H354" stroke="#5b4bc4" stroke-width="1.2" fill="none"/>
+<rect x="40" y="708" width="1384" height="300" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="738" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">Server, layout, client and files</text>
+<rect x="62" y="762" width="322" height="224" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1"/>
+<text x="74" y="782" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia_server</text>
+<line x1="70" y1="790" x2="376" y2="790" stroke="#e3dfee" stroke-width="1"/>
+<text x="74" y="808.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">composes_tables.py  [new]</text>
+<text x="74" y="823.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  insert_table, set_table_entries,</text>
+<text x="74" y="839.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  rows and columns, sort_table,</text>
+<text x="74" y="854.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  table_options, detach_link</text>
+<text x="74" y="870.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">apps.py: AI allow-list += table (read),</text>
+<text x="74" y="885.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  set_table_entries (words only, D640)</text>
+<text x="74" y="901.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">document_lens.py: table(name)</text>
+<text x="74" y="916.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">pull from computes: the client opens</text>
+<text x="74" y="932.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  both documents (D72); no server</text>
+<text x="74" y="947.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  reads the other one.   [E12.2]</text>
+<rect x="396" y="762" width="322" height="224" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1"/>
+<text x="408" y="782" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">layout/  (TypeScript, D901)</text>
+<line x1="404" y1="790" x2="710" y2="790" stroke="#e3dfee" stroke-width="1"/>
+<text x="408" y="808.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">flow/table.ts   [new]</text>
+<text x="408" y="823.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  column widths from the words, integer</text>
+<text x="408" y="839.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  arithmetic (detmath); rows → blocks</text>
+<text x="408" y="854.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">flow/paginate.ts   [changed]</text>
+<text x="408" y="870.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  a block is made of items that do not</text>
+<text x="408" y="885.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  split: lines of a paragraph, rows of</text>
+<text x="408" y="901.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  a table; header rows repeat; a row</text>
+<text x="408" y="916.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  taller than a page splits by line</text>
+<text x="408" y="932.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">apps/composes.ts   [changed]</text>
+<text x="408" y="947.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">pdf: tagged header cells, footer row</text>
+<rect x="730" y="762" width="322" height="224" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1"/>
+<text x="742" y="782" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">web/</text>
+<line x1="738" y1="790" x2="1044" y2="790" stroke="#e3dfee" stroke-width="1"/>
+<text x="742" y="808.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">TextTables.vue   [new]</text>
+<text x="742" y="823.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  a real &lt;table&gt; with &lt;caption&gt;, &lt;th scope&gt;</text>
+<text x="742" y="839.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  editing in place; Tab, arrows, Enter</text>
+<text x="742" y="854.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  cell lock zone (TableRegion)</text>
+<text x="742" y="870.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">TableOptions.vue, InsertTableDialog.vue</text>
+<text x="742" y="885.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">lib/text-tables.ts   [new]</text>
+<text x="742" y="901.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">manifest.py: Insert ▸ Table… (key open);</text>
+<text x="742" y="916.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  Edit ▸ Row, Column, Sort when the caret</text>
+<text x="742" y="932.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  is in a table; the keys are computes’</text>
+<text x="742" y="947.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">i18n: .po first (D320)</text>
+<rect x="1064" y="762" width="340" height="224" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="1"/>
+<text x="1076" y="782" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">claudia-odf-io · claudia-composes-io</text>
+<line x1="1072" y1="790" x2="1396" y2="790" stroke="#e3dfee" stroke-width="1"/>
+<text x="1076" y="808.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">odt: table:table, its name, header</text>
+<text x="1076" y="823.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  rows, rows that do not split</text>
+<text x="1076" y="839.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">docx: w:tbl, a repeating header row,</text>
+<text x="1076" y="854.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  title and description</text>
+<text x="1076" y="870.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">A table that is regular is read as an</text>
+<text x="1076" y="885.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  own table; merged cells, nested</text>
+<text x="1076" y="901.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  tables and cell colours stay in the</text>
+<text x="1076" y="916.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  file and are listed as not understood</text>
+<text x="1076" y="932.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  (as every table is today).</text>
+<text x="1076" y="947.5" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">Element names to check against real</text>
+<text x="1076" y="963.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10.5" font-weight="400" fill="#4f4a62" text-anchor="start" xml:space="preserve">  files before code (test-corpus).</text>
+<rect x="40" y="1028" width="1384" height="398" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="1058" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">Where computes and composes meet, and where they part</text>
+<text x="250" y="1090" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#4f4a62" text-anchor="start">computes · a name over cells of a sheet</text>
+<text x="590" y="1090" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#4f4a62" text-anchor="start">composes · an own table</text>
+<text x="930" y="1090" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="600" fill="#4f4a62" text-anchor="start">what they share</text>
+<rect x="54" y="1095" width="1356" height="28" rx="4" fill="#f4f1fa"/>
+<text x="62" y="1112" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Identity</text>
+<text x="250" y="1112" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">NamedRange, id r…, name in the shared space (D552)</text>
+<text x="590" y="1112" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">the table object: id, name in the same space (D550)</text>
+<text x="930" y="1112" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">one name space, one # list, one rename rule</text>
+<text x="62" y="1141" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Storage</text>
+<text x="250" y="1141" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">cells of the sheet; the name is a rectangle</text>
+<text x="590" y="1141" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">TableDef owns its entries by (row id, column id)</text>
+<text x="930" y="1141" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">TableSource: columns, rows, text, number</text>
+<rect x="54" y="1153" width="1356" height="28" rx="4" fill="#f4f1fa"/>
+<text x="62" y="1170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Columns</text>
+<text x="250" y="1170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">a column of the sheet; header = first row</text>
+<text x="590" y="1170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">Column(id, name, kind, purpose, total)</text>
+<text x="930" y="1170" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">names and purposes (input, data, calc, result)</text>
+<text x="62" y="1199" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Cell</text>
+<text x="250" y="1199" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">typed content: number, text, formula</text>
+<text x="590" y="1199" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">a Paragraph: words, one style, authors, fields</text>
+<text x="930" y="1199" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">number formats stay computes’; text is the truth here</text>
+<rect x="54" y="1211" width="1356" height="28" rx="4" fill="#f4f1fa"/>
+<text x="62" y="1228" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Formulas</text>
+<text x="250" y="1228" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">the whole engine (calc.py, functions)</text>
+<text x="590" y="1228" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">none: a total per column; derived, never stored</text>
+<text x="930" y="1228" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">calculated columns live in computes and arrive linked</text>
+<text x="62" y="1257" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Edits</text>
+<text x="250" y="1257" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">StructuralEdit maps positions (D603)</text>
+<text x="590" y="1257" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">commands on ids; row and column ids never reused</text>
+<text x="930" y="1257" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">same menu entries, same keys, exact inverses</text>
+<rect x="54" y="1269" width="1356" height="28" rx="4" fill="#f4f1fa"/>
+<text x="62" y="1286" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Look</text>
+<text x="250" y="1286" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">style ranges in layers (D307), cell slots</text>
+<text x="590" y="1286" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">three role styles on the table; no cell formatting</text>
+<text x="930" y="1286" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">slots box + words (D311); purposes tint (D604)</text>
+<text x="62" y="1315" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Region</text>
+<text x="250" y="1315" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">CellRegion, by position</text>
+<text x="590" y="1315" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">TableRegion, by id</text>
+<text x="930" y="1315" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">both are Regions (D17): lock and presence</text>
+<rect x="54" y="1327" width="1356" height="28" rx="4" fill="#f4f1fa"/>
+<text x="62" y="1344" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Size</text>
+<text x="250" y="1344" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">a sheet: a million rows (E4.12)</text>
+<text x="590" y="1344" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">a page: tens of rows; a limit, then linked</text>
+<text x="930" y="1344" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">a long table belongs in computes</text>
+<text x="62" y="1373" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Placement</text>
+<text x="250" y="1373" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">a sheet owns the grid</text>
+<text x="590" y="1373" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#4f4a62" text-anchor="start">in the flow (default) or floating (wrap)</text>
+<text x="930" y="1373" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="start">object layer: anchor, name, alt text, history</text>
+</svg>
