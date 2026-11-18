@@ -25,7 +25,7 @@ def test_the_ranges_that_name_a_deleted_style_move_to_its_stand_in_and_undo_puts
     before = doc.model.sheet(S1).cell_styles.to_data()
     book_before = doc.model.styles.to_data()
 
-    plan = plan_delete_style(doc.model, "tint")
+    plan = plan_delete_style(doc.model, "tint", how="rebase", target="plain-box")
     doc.execute(plan, author="ana")
 
     stand_in = doc.model.styles.get("tint-kept")
@@ -43,3 +43,15 @@ def test_a_built_in_cell_style_can_only_be_hidden(doc):
     assert ids
     with pytest.raises(ValueError, match="built-in style and can only be hidden"):
         plan_delete_style(doc.model, ids[0])
+
+
+def test_assigning_the_plain_box_puts_the_ranges_under_it(doc):
+    doc.execute(
+        CreateStyle(StyleDef("tint", "Tint", "a pale cell", None, {"background-color": "#eeeeee"}, kind="box")),
+        author="ana",
+    )
+    doc.execute(SetCellStyle.put(S1, "box", (0, 0, 1, 1), "tint"), author="ana")
+    doc.execute(plan_delete_style(doc.model, "tint", how="assign", target="plain-box"), author="ana")
+    assert doc.model.sheet(S1).cell_styles.style_at(0, 0, "box")[0] == "plain-box"
+    doc.undo("ana")
+    assert doc.model.sheet(S1).cell_styles.style_at(0, 0, "box")[0] == "tint"

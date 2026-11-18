@@ -6869,7 +6869,7 @@ msgstr ""
 msgid "a page"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:97
+#: packages/claudia-server/src/claudia_server/styles.py:98
 msgid "a palette holds at most {limit} colour roles"
 msgstr ""
 
@@ -6889,11 +6889,11 @@ msgstr ""
 msgid "a request must be a JSON object"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:93
+#: packages/claudia-server/src/claudia_server/styles.py:94
 msgid "a role is missing {key!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:95
+#: packages/claudia-server/src/claudia_server/styles.py:96
 msgid "a role's id, name and colour are text"
 msgstr ""
 
@@ -7341,7 +7341,7 @@ msgstr ""
 msgid "error {value}: {why}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:89
+#: packages/claudia-server/src/claudia_server/styles.py:90
 msgid "every role is an object with id, name, purpose and colour"
 msgstr ""
 
@@ -7409,7 +7409,7 @@ msgstr ""
 msgid "give names to values (later ones may use earlier ones) and calculate with them."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:75
+#: packages/claudia-server/src/claudia_server/styles.py:76
 msgid "give the CSS as set properties or as text, not both"
 msgstr ""
 
@@ -7765,7 +7765,7 @@ msgstr ""
 msgid "object"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:209
+#: packages/claudia-server/src/claudia_server/styles.py:210
 msgid "objects must be a list of at most {limit} object ids"
 msgstr ""
 
@@ -8317,7 +8317,7 @@ msgstr ""
 msgid "the mean of the values"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:400 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:224
+#: packages/claudia-server/src/claudia_server/composes.py:400 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:225
 msgid "the new style would look just like “{name}”"
 msgstr ""
 
@@ -8493,11 +8493,11 @@ msgstr ""
 msgid "this document has no lists"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:65
+#: packages/claudia-server/src/claudia_server/styles.py:66
 msgid "this document has no palette"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:58
+#: packages/claudia-server/src/claudia_server/style_targets.py:176 packages/claudia-server/src/claudia_server/styles.py:59
 msgid "this document has no styles"
 msgstr ""
 
@@ -8649,7 +8649,7 @@ msgstr ""
 msgid "unknown slide {slide!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/styles.py:284
+#: packages/claudia-server/src/claudia_server/styles.py:285
 msgid "unset must be a list of property names"
 msgstr ""
 

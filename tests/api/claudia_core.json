@@ -383,6 +383,9 @@
   },
   "properties": []
  },
+ "DELETE_HOWS": {
+  "value": "('assign', 'rebase')"
+ },
  "DefineDiagram": {
   "class": [
    "Command"
@@ -2249,6 +2252,7 @@
    "chain": "(self, style_id: 'str') -> 'list[StyleDef]'",
    "children": "(self, style_id: 'str') -> 'list[str]'",
    "computed": "(self, style_id: 'str') -> 'dict[str, str]'",
+   "fallback": "(self, style_id: 'str') -> 'StyleDef | None'",
    "from_data": "(items: 'Iterable[dict]') -> 'StyleBook'",
    "get": "(self, style_id: 'str') -> 'StyleDef'",
    "heading_level": "(self, style_id: 'str') -> 'int | None'",
@@ -2469,6 +2473,9 @@
  "asset_of": {
   "function": "(data: 'bytes | None') -> 'ImageAsset | None'"
  },
+ "assign_changes_look": {
+  "function": "(model: 'object', style_id: 'str', target: 'str') -> 'bool'"
+ },
  "blank_png": {
   "function": "(width: int, height: int) -> bytes"
  },
@@ -2593,7 +2600,7 @@
   "function": "(text: 'str') -> 'str'"
  },
  "plan_delete_style": {
-  "function": "(model: 'object', style_id: 'str', *, rebase_on: 'str | None' = None) -> 'Batch'"
+  "function": "(model: 'object', style_id: 'str', *, how: 'str' = 'assign', target: 'str | None' = None) -> 'Batch'"
  },
  "points_of": {
   "function": "(css: 'dict[str, str]', prop: 'str', pt_per_unit: 'float') -> 'float | None'"
