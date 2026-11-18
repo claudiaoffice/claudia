@@ -63,3 +63,13 @@ const NONE = tintsOf([], [])
 export function replayTints(replay: { focus: Region[]; differences: boolean; changed: Region[] } | null): Tints {
   return replay ? tintsOf(replay.focus, replay.differences ? replay.changed : []) : NONE
 }
+
+/** The tints of what the views show: a replay's, or the places a redaction would change while it is previewed (D721),
+ * marked as what "this step" changed. */
+export function viewTints(state: {
+  replay: { focus: Region[]; differences: boolean; changed: Region[] } | null
+  preview?: { regions: Region[] } | null
+}): Tints {
+  if (state.replay) return replayTints(state.replay)
+  return state.preview ? tintsOf(state.preview.regions, []) : NONE
+}

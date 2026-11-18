@@ -1,5 +1,5 @@
 {
- "version": "0.35.0",
+ "version": "0.36.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -1537,7 +1537,7 @@
   "class": [
    "object"
   ],
-  "init": "(targets: 'tuple[Revision, ...]', dependents: 'tuple[Revision, ...]', chat: 'tuple[int, ...]', imports: 'tuple[Revision, ...]', changes_now: 'bool', after: 'DocumentModel', replacements: 'Mapping[Revision, Command]', basis: 'tuple') -> None",
+  "init": "(targets: 'tuple[Revision, ...]', dependents: 'tuple[Revision, ...]', chat: 'tuple[int, ...]', imports: 'tuple[Revision, ...]', changes_now: 'bool', after: 'DocumentModel', replacements: 'Mapping[Revision, Command]', basis: 'tuple', regions: 'tuple[Region, ...]' = ()) -> None",
   "methods": {},
   "properties": [
    "revisions"

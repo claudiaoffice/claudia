@@ -19,7 +19,8 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field, replace
 
 from .clock import monotonic, utc_now
-from .commands import Checkpoint, Command, Import, Redaction, Restore, Switch
+from .commands import Checkpoint, Command, Import, Redaction, Restore, Switch, tombstone
+from .commands import Redacted as RedactedCommand
 from .context import Context
 from .errors import (
     KernelError,
@@ -104,6 +105,10 @@ class CheckpointInfo:
     time: str
 
 
+#: The most places a redaction plan names for a preview to mark.
+REDACTION_PLACES = 500
+
+
 @dataclass(frozen=True)
 class RedactionPlan:
     """What a redaction does, worked out before anything changes (``Document.plan_redaction``, D721).
@@ -111,7 +116,8 @@ class RedactionPlan:
     ``targets`` are the steps asked for, ``dependents`` the later steps that stop working without the content and are
     blanked with it (D722), ``chat`` the numbers of the chat messages. ``imports`` are the targets that imported a
     file, whose kept original the server forgets too (D723). ``changes_now`` says whether the document as people see
-    it changes (D721: it may, and is shown first); ``after`` is that state, on a scratch model."""
+    it changes (D721: it may, and is shown first); ``after`` is that state, on a scratch model, and ``regions`` the
+    places in it that the blanked steps touch, for a preview to mark (empty when nothing people see changes)."""
 
     targets: tuple[Revision, ...]
     dependents: tuple[Revision, ...]
@@ -121,6 +127,7 @@ class RedactionPlan:
     after: DocumentModel = field(repr=False, compare=False)
     replacements: Mapping[Revision, Command] = field(repr=False, compare=False)
     basis: tuple = field(repr=False, compare=False)
+    regions: tuple[Region, ...] = ()
 
     @property
     def revisions(self) -> tuple[Revision, ...]:
@@ -681,10 +688,10 @@ class Document:
 
         A step may be on any line, a hidden one too (D724). Each is replaced by its blanked form (D720); ``parts``
         blanks only some things of an import (D723). Every line that holds a replaced step is replayed, and a later
-        step that no longer applies is blanked as well and named in ``dependents`` (D722), until every line replays.
-        ``RedactionError`` for a request that names nothing, something the document does not have, something that
-        holds no content or is redacted already, and for the last resort: a later step that does not apply even when
-        blanked itself."""
+        step that no longer applies is blanked as well and named in ``dependents`` (D722), until every line replays; one
+        whose blank of the same shape still does not apply becomes a no-op tombstone. ``RedactionError`` for a request
+        that names nothing, something the document does not have, something that holds no content or is redacted
+        already, and for the last resort: a history that does not replay before any blanked step."""
         targets = self._redactable(revisions)
         numbers = self._redactable_chat(chat)
         wanted = {rev: frozenset(things) for rev, things in (parts or {}).items()}
@@ -697,6 +704,10 @@ class Document:
         while (failing := self._first_failure(replacements)) is not None:
             rev, cause = failing
             entry = self.log.get(rev)
+            if rev in replacements and not isinstance(replacements[rev], RedactedCommand):
+                # its same-shape blank does not apply either: it becomes a no-op tombstone (D722)
+                replacements[rev] = tombstone(entry.command)
+                continue
             if rev in replacements or entry.redacted or entry.command.meta:
                 raise RedactionError(
                     f"Redacting this would stop step {rev} ({entry.command.label}) from working, even if it were "
@@ -704,17 +715,19 @@ class Document:
                 )
             replacements[rev] = self._blanked(rev, None)
             dependents.append(rev)
-        after = self._replayed(replacements, self.revision)
+        after, places = self._replayed(replacements, self.revision)
         imports = tuple(rev for rev in targets if isinstance(self.log.get(rev).command, Import))
+        changes_now = after.serialize() != self.model.serialize()
         return RedactionPlan(
             targets,
             tuple(dependents),
             numbers,
             imports,
-            after.serialize() != self.model.serialize(),
+            changes_now,
             after,
             dict(replacements),
             self._redaction_basis(),
+            places if changes_now else (),
         )
 
     def redact(self, what: RedactionPlan | Iterable[Revision], *, author: str | None = None) -> Applied:
@@ -808,8 +821,27 @@ class Document:
             for e in self.log.path(head)
         ]
 
-    def _replayed(self, replacements: Mapping[Revision, Command], head: Revision | None) -> DocumentModel:
-        return replay(type(self.model).empty(), self._with(replacements, head))
+    def _replayed(
+        self, replacements: Mapping[Revision, Command], head: Revision | None
+    ) -> tuple[DocumentModel, tuple[Region, ...]]:
+        """The state at ``head`` with the replacements, and the places the blanked steps on that line touch, read as
+        ``changes_since`` reads them: each step's own regions against the state after it, once each, at most 500."""
+        model = type(self.model).empty()
+        places: dict[str, Region] = {}
+
+        def look(entry: Entry, _inverse: Command) -> None:
+            if entry.rev not in replacements or len(places) >= REDACTION_PLACES:
+                return
+            for command in (entry.command, self.log.get(entry.rev).command):
+                try:
+                    found = command.regions(model)
+                except (KeyError, ValueError, IndexError, TypeError):
+                    continue
+                for region in found:
+                    places.setdefault(json.dumps(region.to_data(), sort_keys=True), region)
+
+        replay(model, self._with(replacements, head), look)
+        return model, tuple(places.values())[:REDACTION_PLACES]
 
     def _first_failure(self, replacements: Mapping[Revision, Command]) -> tuple[Revision, Exception] | None:
         """The first step that no longer applies on a line that holds one of the replaced steps, and why."""
