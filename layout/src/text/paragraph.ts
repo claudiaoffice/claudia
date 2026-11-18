@@ -57,6 +57,12 @@ export interface Line {
   /** distance from the line's top to its baseline, and the line's height (the style's line height) */
   baseline: number
   height: number
+  /** Only in a paragraph laid out beside objects ({@link ParagraphOptions.slots}): the space above the line's row
+   *  that an object took (a row pushed down), and how far the next row is below this line's top. Two lines of
+   *  one row (text on both sides of an object) share a top: the first advances 0. Without them a line advances
+   *  `height` and has no lead. */
+  lead?: number
+  advance?: number
   words: PlacedWord[]
   text: string
   /** the line ends in a hyphen the layout added (a word broken at a soft hyphen or a hyphenation point) */
@@ -74,9 +80,27 @@ export interface ParagraphLayout {
   overflows: boolean
 }
 
-/** What a paragraph needs besides its style: the hyphenation patterns of its language, if any. */
+/** A stretch of a row that a line may fill, in the paragraph's own coordinates (`x` 0 is the left edge of its content
+ *  box, `x + w` at most its width). `row` tells rows apart: slots with one `row` are on one row, left to right.
+ *  `lead` is the space a row was pushed down by an object, from where the row above ended (D1061). */
+export interface Slot {
+  x: number
+  w: number
+  row: number
+  lead: number
+}
+
+/** The slots lines go into, in order: line `i` goes into `at(i)`. It must be defined for every `i >= 0`. */
+export interface SlotSource {
+  at(line: number): Slot
+}
+
+/** What a paragraph needs besides its style: the hyphenation patterns of its language, if any, and, for a paragraph
+ *  beside floating objects (D1061), where its lines go. `slots` is given the width of the widest word, so that it
+ *  can keep out stretches no word fits in, and answers a source; without it every line is as wide as the paragraph. */
 export interface ParagraphOptions {
   hyphenator?: Hyphenator | null
+  slots?: (widest: number) => SlotSource
 }
 
 interface Piece {
@@ -304,9 +328,21 @@ export function layoutParagraph(fonts: FontSet, style: ParagraphStyle, text: str
   }
   if (items.length === 0) items.push({ word: null, spaces: 0, forced: false, offset: 0, end: 0, manual: [], auto: [], explicit: false, soft: false, glued: false })
 
-  const availFor = (i: number) => width - style.indentLeft - style.indentRight - (i === 0 ? style.firstLine : 0)
-  const startFor = (i: number) => style.indentLeft + (i === 0 ? style.firstLine : 0)
-  const narrowest = Math.min(availFor(0), availFor(1))
+  let widest = 0
+  for (const it of items) if (it.word) widest = Math.max(widest, it.word.w)
+  const source = options.slots ? options.slots(widest) : null
+  // a slot touching a side of the paragraph keeps that side's indent; one beside an object does not
+  const availFor = source
+    ? (i: number) => {
+        const s = source.at(i)
+        return s.w - (s.x <= 0 ? style.indentLeft : 0) - (s.x + s.w >= width ? style.indentRight : 0) - (i === 0 ? style.firstLine : 0)
+      }
+    : (i: number) => width - style.indentLeft - style.indentRight - (i === 0 ? style.firstLine : 0)
+  const startFor = source
+    ? (i: number) => source.at(i).x + (source.at(i).x <= 0 ? style.indentLeft : 0) + (i === 0 ? style.firstLine : 0)
+    : (i: number) => style.indentLeft + (i === 0 ? style.firstLine : 0)
+  let narrowest = Math.min(availFor(0), availFor(1))
+  if (source) for (let i = 2; i <= items.length; i++) narrowest = Math.min(narrowest, availFor(i))
 
   // ---- choose the breaks
   let breaks: El[] | null = null
@@ -319,7 +355,7 @@ export function layoutParagraph(fonts: FontSet, style: ParagraphStyle, text: str
       els = elements(items, spaceW, justify, hyphenW, narrowest, pass.auto, false)
       // ragged lines may fall 3 em short at little cost; justified ones only get the emergency stretch
       const slack = justify ? (pass.stretch ? Math.round(style.size * EMERGENCY_EM) : 0) : style.size * RAGGED_EM
-      breaks = choose(els, availFor, slack, pass.tolerance, pass.emergency)
+      breaks = choose(els, availFor, slack, pass.tolerance, pass.emergency, source !== null)
       if (breaks) break
     }
   }
@@ -428,6 +464,16 @@ export function layoutParagraph(fonts: FontSet, style: ParagraphStyle, text: str
     from = nextStart(els, to)
   }
   if (lines.length === 0) lines.push({ start: text.length, end: text.length, x: startFor(0), natural: 0, baseline, height: style.lineHeight, words: [], text: '', hyphenated: false })
+  if (source) {
+    let height = 0
+    lines.forEach((line, i) => {
+      const slot = source.at(i)
+      line.lead = i === 0 || source.at(i - 1).row !== slot.row ? slot.lead : 0
+      line.advance = i + 1 < lines.length && source.at(i + 1).row === slot.row ? 0 : style.lineHeight
+      height += line.lead + line.advance
+    })
+    return { style, width, lines, height, overflows }
+  }
   return { style, width, lines, height: lines.length * style.lineHeight, overflows }
 
   function placeWord(w: Piece, g0: number, g1: number, x: number): PlacedWord {
@@ -545,7 +591,7 @@ interface Node {
  * width; `ragged` is the slack a ragged line may have at no cost (0 for justified text). With `emergency`, a line
  * that cannot be made to fit is taken anyway rather than giving up.
  */
-function choose(els: readonly El[], availFor: (line: number) => number, ragged: number, tolerance: number, emergency: boolean): El[] | null {
+function choose(els: readonly El[], availFor: (line: number) => number, ragged: number, tolerance: number, emergency: boolean, varying: boolean): El[] | null {
   // running sums before each element
   const n = els.length
   const W = new Array<number>(n + 1).fill(0)
@@ -603,8 +649,9 @@ function choose(els: readonly El[], availFor: (line: number) => number, ragged: 
       if (Math.abs(fitness - a.fitness) > 1) d += ADJACENT_DEMERITS
       const total = a.demerits + d
       const hyphens = flagged ? a.hyphens + 1 : 0
-      // every line after the first has the same width, so nodes differing only in their line number are alike
-      const key = `${fitness}:${hyphens}:${drawsHyphen ? 1 : 0}`
+      // every line after the first has the same width, so nodes differing only in their line number are alike; beside
+      // an object lines differ in width, and the line number tells them apart
+      const key = `${fitness}:${hyphens}:${drawsHyphen ? 1 : 0}${varying ? `:${a.line}` : ''}`
       const known = best.get(key)
       if (!known || total < known.demerits) {
         best.set(key, { at: i, start: nextStart(els, i), line: a.line + 1, fitness, hyphens, hyphenated: drawsHyphen, flagged, demerits: total, prev: a })

@@ -85,8 +85,6 @@ from ._odt_lists import (
     scheme_of,
 )
 from ._odt_pictures import (
-    PICTURE_STYLE,
-    PICTURE_STYLE_XML,
     FilePicture,
     PicturePlan,
     PictureWriter,
@@ -113,6 +111,7 @@ from ._references import ReadReference, with_references
 from ._suggestions import WhenMade, open_replacements, when_made
 from ._tables import put_tables, table_changes, tables_after
 from ._unwritten import ODT_WRITTEN, text_unwritten_changes
+from ._wrap import WrapStyles
 from .docx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -412,7 +411,12 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
                 model.define_shape(primitive(each.body.shape))
         elif each.asset.id not in model.images:
             model.define_image(each.asset)
-        model.insert_object(VisualObject(each.body, BlockAnchor(f"b{each.block + 1}", each.offset)))
+        model.insert_object(
+            VisualObject(
+                each.body,
+                BlockAnchor(f"b{each.block + 1}", each.offset, wrap=each.wrap, gap=each.gap, dx=each.dx, dy=each.dy),
+            )
+        )
     put_tables(model, _placed_tables(scan, root, _styles_root(parts), model))
     return model
 
@@ -715,8 +719,7 @@ def text_to_odt(
         automatic.extend(etree.fromstring(style) for style in names.new_styles)
         automatic.extend(etree.fromstring(style) for style in tables.styles.new)
         automatic.extend(etree.fromstring(style) for style in box_styles.new)
-        if pictures.parts:
-            automatic.append(etree.fromstring(PICTURE_STYLE_XML))
+        automatic.extend(etree.fromstring(xml) for xml in pictures.styles.values())
     if regions:
         tracked = _element("text", "tracked-changes", track_changes="false")
         tracked.extend(regions)
@@ -902,7 +905,8 @@ class _Patch:
         self.paragraphs = paragraphs
         self.element_of = {block.id: element for block, element in zip(held, paragraphs, strict=True)}
         graphics = graphic_styles(*roots)
-        self.has_picture_style = PICTURE_STYLE in graphics
+        self.graphic_names = set(graphics)
+        self.wraps = WrapStyles(self.graphic_names)  # (what a frame whose wrapping changed needs, pictures and boxes)
         self.pictures = PicturePlan(
             file_pictures(paragraphs, graphics, self.parts),
             [block.id for block in held],
@@ -911,6 +915,7 @@ class _Patch:
             rasterise,
             set(self.parts),
             losses,
+            self.wraps,
         )
         self.box_styles = BoxStyles(graphic_style_names(*roots))
         self.boxes = BoxPlan(
@@ -920,6 +925,7 @@ class _Patch:
             current,
             BoxWriter(current, self.box_styles, self._words_paragraph),
             losses,
+            self.wraps,
         )
         self.before = {block.id: block for block in held}
         self.reading = read_lists(paragraphs, [self.part.root, self.styles.root if self.styles else self.part.root])
@@ -1208,8 +1214,8 @@ class _Patch:
     def _finish_lists(self) -> None:
         """The list styles the text needs and the ``xml:id`` that the lists after a list of the file continue."""
         styles = [*self.names.new_styles, *self.box_styles.new]
-        if self.pictures.written and not self.has_picture_style:
-            styles.append(PICTURE_STYLE_XML.encode())
+        styles.extend(xml for name, xml in self.pictures.writer.styles.items() if name not in self.graphic_names)
+        styles.extend(self.wraps.new.values())
         if styles:
             automatic = self.part.root.find("office:automatic-styles", NS)
             if automatic is None:

@@ -350,6 +350,32 @@
         ],
         [
           {
+            "accelerators": [
+              "<Primary><Alt>i"
+            ],
+            "checkable": false,
+            "id": "edit.image",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Image\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Alt>b"
+            ],
+            "checkable": false,
+            "id": "edit.text-box",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Text Box",
+            "role": null,
+            "start": false
+          }
+        ],
+        [
+          {
             "items": [
               {
                 "accelerators": [
@@ -770,6 +796,20 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Colours\u2026",
+            "role": null,
+            "start": false
+          }
+        ],
+        [
+          {
+            "accelerators": [
+              "<Primary><Alt>r"
+            ],
+            "checkable": false,
+            "id": "format.wrap-text",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Wrap Text",
             "role": null,
             "start": false
           }

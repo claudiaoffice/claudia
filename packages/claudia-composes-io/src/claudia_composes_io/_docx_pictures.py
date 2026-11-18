@@ -24,7 +24,7 @@ from docx.oxml import parse_xml
 from docx.oxml.ns import qn
 from lxml import etree
 
-from claudia_composes import TextModel
+from claudia_composes import DEFAULT_WRAP_GAP, TextModel
 from claudia_core import (
     MIN_OBJECT_SIZE,
     ImageAsset,
@@ -39,6 +39,15 @@ from claudia_core import (
 from claudia_odf_io import LossLog
 
 from ._pictures import all_pictures
+from ._wrap import (
+    docx_frame_open,
+    docx_offset_of,
+    docx_position,
+    docx_set_position,
+    docx_set_wrap,
+    docx_wrap_element,
+    docx_wrap_of,
+)
 
 #: English Metric Units in a pixel (the model's units are pixels at 96 to the inch).
 EMU = 9525
@@ -93,6 +102,10 @@ class FilePicture:
     description: str
     decorative: bool
     name: str
+    wrap: str = "over"  # how the text flows round it (D1061) ...
+    gap: int = DEFAULT_WRAP_GAP  # ... and how far the words keep from it
+    dx: int = 0  # how far off its character it sits, to the right ...
+    dy: int = 0  # ... and down (D1067)
 
     @property
     def body(self) -> ObjectBody:
@@ -217,6 +230,8 @@ def file_pictures(document: Any) -> list[FilePicture]:  # noqa: ANN401
                     description,
                     decorative,
                     name,
+                    *docx_wrap_of(_FRAME(drawings[0])[0]),
+                    *docx_offset_of(_FRAME(drawings[0])[0]),
                 )
             )
     return found
@@ -268,12 +283,11 @@ class PictureWriter:
         xml = (
             f'<w:r xmlns:w="{_NS["w"]}" xmlns:wp="{_NS["wp"]}" xmlns:a="{_NS["a"]}" xmlns:pic="{_NS["pic"]}" '
             f'xmlns:r="{_NS["r"]}"><w:drawing>'
-            f'<wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="{number}" '
-            'behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">'
+            f"{docx_frame_open(obj.anchor, number)}"
             '<wp:simplePos x="0" y="0"/>'
-            '<wp:positionH relativeFrom="column"><wp:posOffset>0</wp:posOffset></wp:positionH>'
-            '<wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV>'
-            f'<wp:extent cx="{width}" cy="{height}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/>'
+            f"{docx_position(obj.anchor)}"
+            f'<wp:extent cx="{width}" cy="{height}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>'
+            f"{docx_wrap_element(obj.anchor)}"
             f'<wp:docPr id="{number}" name="{title}" descr="{alt}">{decorative}</wp:docPr>'
             '<wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr>'
             f'<a:graphic><a:graphicData uri="{_PICTURE_URI}"><pic:pic>'
@@ -471,6 +485,10 @@ class PictureEdits:
             self.changed = True
             return
         restyle(picture, before.body, obj.body)
+        if (obj.anchor.wrap, obj.anchor.gap) != (before.anchor.wrap, before.anchor.gap):
+            docx_set_wrap(_FRAME(picture.drawing)[0], obj.anchor)
+        if (obj.anchor.dx, obj.anchor.dy) != (before.anchor.dx, before.anchor.dy):
+            docx_set_position(_FRAME(picture.drawing)[0], obj.anchor)
         if obj.anchor.block in self.rewritten or obj.anchor != before.anchor:
             picture.run.getparent().remove(picture.run)
             self._route(obj, picture.run)

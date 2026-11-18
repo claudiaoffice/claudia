@@ -22,7 +22,7 @@ from docx.oxml.ns import qn
 from docx.text.paragraph import Paragraph
 from lxml import etree
 
-from claudia_composes import BUILTIN_STYLES, DEFAULT_STYLE, TextModel
+from claudia_composes import BUILTIN_STYLES, DEFAULT_STYLE, DEFAULT_WRAP_GAP, TextModel
 from claudia_core import (
     ASPECT_TOLERANCE,
     MIN_OBJECT_SIZE,
@@ -46,6 +46,15 @@ from ._docx_pictures import (
     pixels,
 )
 from ._docx_styles import WORD_NAMES, WordNames
+from ._wrap import (
+    docx_frame_open,
+    docx_offset_of,
+    docx_position,
+    docx_set_position,
+    docx_set_wrap,
+    docx_wrap_element,
+    docx_wrap_of,
+)
 
 _BOX_URI = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
 _MC = "http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -99,6 +108,10 @@ class FileBox:
     drawing: Any  # the ``w:drawing``
     body: ObjectBody
     look: BoxLook
+    wrap: str = "over"  # how the text flows round it (D1061) ...
+    gap: int = DEFAULT_WRAP_GAP  # ... and how far the words keep from it
+    dx: int = 0  # how far off its character it sits, to the right ...
+    dy: int = 0  # ... and down (D1067)
 
 
 def _first(found: list[Any]) -> Any:  # noqa: ANN401
@@ -242,7 +255,10 @@ def file_boxes(document: Any) -> list[FileBox]:  # noqa: ANN401
                 decorative=decorative,
                 rotation=rotation,
             )
-            found.append(FileBox(object_id, index, offset_of(paragraph._p, run), run, holder, drawings[0], body, look))
+            wrap = (*docx_wrap_of(_FRAME(drawings[0])[0]), *docx_offset_of(_FRAME(drawings[0])[0]))
+            found.append(
+                FileBox(object_id, index, offset_of(paragraph._p, run), run, holder, drawings[0], body, look, *wrap)
+            )
     return found
 
 
@@ -278,12 +294,11 @@ class BoxWriter:
         xml = (
             f'<w:r xmlns:w="{_NS["w"]}" xmlns:wp="{_NS["wp"]}" xmlns:a="{_NS["a"]}" xmlns:r="{_NS["r"]}" '
             f'xmlns:wps="{_SPACE["wps"]}"><w:drawing>'
-            f'<wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="{number}" '
-            'behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">'
+            f"{docx_frame_open(obj.anchor, number)}"
             '<wp:simplePos x="0" y="0"/>'
-            '<wp:positionH relativeFrom="column"><wp:posOffset>0</wp:posOffset></wp:positionH>'
-            '<wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV>'
-            f'<wp:extent cx="{width}" cy="{height}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/>'
+            f"{docx_position(obj.anchor)}"
+            f'<wp:extent cx="{width}" cy="{height}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>'
+            f"{docx_wrap_element(obj.anchor)}"
             f'<wp:docPr id="{number}" name="{title}" descr="{alt}">{decorative}</wp:docPr><wp:cNvGraphicFramePr/>'
             f'<a:graphic><a:graphicData uri="{_BOX_URI}"><wps:wsp><wps:cNvSpPr{box}/>'
             f'<wps:spPr><a:xfrm{turn}><a:off x="0" y="0"/><a:ext cx="{width}" cy="{height}"/></a:xfrm>'
@@ -433,6 +448,10 @@ class BoxEdits:
                 self.losses.add("look")
             return
         restyle(box, before.body, now.body, self.document, self.names)
+        if (now.anchor.wrap, now.anchor.gap) != (before.anchor.wrap, before.anchor.gap):
+            docx_set_wrap(_FRAME(box.drawing)[0], now.anchor)
+        if (now.anchor.dx, now.anchor.dy) != (before.anchor.dx, before.anchor.dy):
+            docx_set_position(_FRAME(box.drawing)[0], now.anchor)
         if now.anchor.block in self.rewritten or now.anchor != before.anchor:
             box.run.getparent().remove(box.run)
             self._route(now, box.run)

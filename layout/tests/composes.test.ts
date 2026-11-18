@@ -116,6 +116,20 @@ describe('a composes text on pages', () => {
     expect(text.kind === 'group' && text.clip).toMatchObject({ w: 150000, h: 30000 })
   })
 
+  it('moves an object off its anchor character by the offset the model keeps (D1023)', () => {
+    const at = (anchor: object) => {
+      const d = doc(1, {
+        objects: [{ id: 'o1', kind: 'text', w: 200, h: 40, style: 'plain-box', paragraph: { style: 'body', text: 'Kasten' }, shape: null, image: null, rotation: 0, anchor: { kind: 'block', container: 'b1', offset: 0, ...anchor } }],
+      })
+      const g = layoutText(d, fonts, resolver, GERMAN).list.pages[0]!.items.find((i) => i.kind === 'group')
+      return g && g.kind === 'group' ? g.clip! : null
+    }
+    const home = at({})!
+    const moved = at({ dx: 20, dy: 30 })!
+    expect(moved.x - home.x).toBe(20 * 750)
+    expect(moved.y - home.y).toBe(30 * 750)
+  })
+
   it('gives the same display list and the same PDF every time, read back by pdf.js', async () => {
     const a = layoutText(doc(12), fonts, resolver, GERMAN)
     const b = layoutText(doc(12), fonts, resolver, GERMAN)

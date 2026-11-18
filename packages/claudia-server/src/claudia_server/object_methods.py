@@ -60,7 +60,7 @@ class Placement:
         return " ".join(part for part in (text, self.says.get(method, "")) if part)
 
 
-def _spec(*parts: str) -> str:
+def spec(*parts: str) -> str:
     return " ".join(part for part in parts if part)
 
 
@@ -128,7 +128,7 @@ def add_object_methods(
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add image")
         return done(ctx, command, base, object=object_id)
 
-    table.method("add_image", _spec(placement.new, PICTURE, "base:revision?"), write=True)(
+    table.method("add_image", spec(placement.new, PICTURE, "base:revision?"), write=True)(
         _documented(
             add_image,
             say(
@@ -164,7 +164,7 @@ def add_object_methods(
         anchor = placement.anchor(model, model.get_object(id).anchor, **where)
         return done(ctx, MoveObject(id, anchor), base)
 
-    table.method("move_object", _spec("id:str", placement.move, "base:revision?"), write=True)(
+    table.method("move_object", spec("id:str", placement.move, "base:revision?"), write=True)(
         _documented(move_object, say("move_object", "Move an object; its size stays."))
     )
 
@@ -174,7 +174,7 @@ def add_object_methods(
         anchor = placement.anchor(model, held, **frame) if placement.frame else held.to_data()
         return done(ctx, ResizeObject(id, anchor, w, h), base)
 
-    table.method("resize_object", _spec("id:str", placement.frame, "w:int h:int base:revision?"), write=True)(
+    table.method("resize_object", spec("id:str", placement.frame, "w:int h:int base:revision?"), write=True)(
         _documented(
             resize_object,
             say(
@@ -212,4 +212,4 @@ def add_object_methods(
     )
 
 
-__all__ = ["Placement", "add_object_methods"]
+__all__ = ["Placement", "add_object_methods", "spec"]

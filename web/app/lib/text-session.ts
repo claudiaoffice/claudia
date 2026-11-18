@@ -26,6 +26,7 @@ import {
 } from './blocks'
 import type { ImageAsset } from './images'
 import type { BlockAnchor, ObjectsEvent, PaletteEvent, StyleModel, VisualObject } from './objects'
+import { nextWrap, wrapOf, wrapParams, type Wrap } from './wrap'
 import { DEFAULT_STYLE, type PageSetupData, type ShapeOutline, type TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
 import type { ListInfo, SchemeInfo } from './numbering'
@@ -86,6 +87,10 @@ export interface TextState extends BaseState {
   objects: Record<string, VisualObject<BlockAnchor>>
   /** The decoded pictures the document holds, by id: what its containers are drawn with. */
   images: Record<string, ImageAsset>
+  /** The outlines the shapes among the objects are drawn with, by id (the server's `shapes`). */
+  shapes: Record<string, TextShape>
+  /** The outlines the server offers for insertion (Edit ▸ the shapes), as creates has them. */
+  library: TextShape[]
   /** The object a person has selected here; this is not shared with colleagues. */
   selectedObject: string | null
   /** The tables of the text by id (E9.32): what the objects of kind `table` point at with `ref`. */
@@ -93,6 +98,28 @@ export interface TextState extends BaseState {
   /** The box of a table the caret is in, or `null`; not shared with colleagues. Edit ▸ Row, Column, Sort and the
    *  other table entries are only there while it is set. */
   box: { table: string; row: string; col: string } | null
+}
+
+/** An outline as the server sends it (`shapes`): `path` is an SVG path in a box of 100 by 100, `aspect` is width / height
+ * when it must be kept. The same as creates' `ShapeDef`. */
+export interface TextShape {
+  format: number
+  id: string
+  name: string
+  path: string
+  aspect: number | null
+  text_area: { x: number; y: number; w: number; h: number }
+}
+
+/** What `shapes` answers: the outlines the server offers and the ones this document has taken in, as in creates. */
+interface ShapeAnswer {
+  library: TextShape[]
+  document: TextShape[]
+}
+
+/** A server from before the texts had a library answered `shapes` with the list of the document's outlines alone. */
+function shapesOf(answer: ShapeAnswer | TextShape[]): ShapeAnswer {
+  return Array.isArray(answer) ? { library: [], document: answer } : answer
 }
 
 /** An image of the text as the server sends it (`images`): base64 data. */
@@ -131,7 +158,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, images: {}, selectedObject: null, tables: {}, box: null })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, shapes: {}, library: [], images: {}, selectedObject: null, tables: {}, box: null })
   }
 
   get readOnly(): boolean {
@@ -148,6 +175,13 @@ export class TextSession extends BaseSession<TextState> {
   private placeOnWire(place: { block: string; offset: number }): { block: string; offset: number } {
     const block = this.state.blocks.find((b) => b.id === place.block)
     return { block: place.block, offset: block ? pointOf(block.text, place.offset) : place.offset }
+  }
+
+  /** Where an object hangs, in the units of the screen (the server counts characters, the page UTF-16 units), or `null`
+   * while its paragraph is not known here. */
+  placeOf(o: VisualObject<BlockAnchor>): { block: string; offset: number } | null {
+    const block = this.state.blocks.find((b) => b.id === o.anchor.container)
+    return block ? { block: block.id, offset: Math.min(unitOf(block.text, o.anchor.offset), block.text.length) } : null
   }
 
   selectObject(id: string | null): void {
@@ -172,6 +206,80 @@ export class TextSession extends BaseSession<TextState> {
     const id = await this.addRendering(fenced.type, this.placeOnWire(place), { w: 420, h: 240 }, fenced.source)
     if (id) this.state.selectedObject = id
     return id
+  }
+
+  /**
+   * Import a picture from disk and hang it from `place` (a paragraph and a place in it, in screen units); its id, or
+   * `null` after telling the person why not. It is selected. `data` is the file's bytes, base64 (`lib/images.ts`'s
+   * `fileToBase64`); `sourcePath` is the file's full path if the caller could get one — a plain web browser cannot,
+   * for its own security — and `null` if not. The same request as creates' (`add_image`), with a place in the text.
+   */
+  async addImage(
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean },
+    place: { block: string; offset: number },
+    size: { w: number; h: number },
+    wrap?: Wrap,
+  ): Promise<string | null> {
+    await this.flush()
+    const done = await this.attempt('add_image', {
+      ...this.placeOnWire(place),
+      ...(wrap ? wrapParams(wrap) : {}),
+      ...size,
+      data: picture.data,
+      alt: picture.alt,
+      source_name: picture.sourceName,
+      source_path: picture.sourcePath,
+      ...(picture.decorative ? { decorative: true } : {}),
+      base: this.state.revision,
+    })
+    if (done === false) return null
+    this.state.selectedObject = done.object as string
+    return done.object as string
+  }
+
+  /** Hang a text box (`kind` `text`) or a shape (with the id of its outline, from the library or the document) from
+   * `place`; its id, or `null` after telling the person why not. It is selected. `wrap` says how the text flows round it. */
+  private async addBox(
+    kind: { kind: 'text' } | { kind: 'shape'; shape: string },
+    place: { block: string; offset: number },
+    size: { w: number; h: number },
+    wrap?: Wrap,
+  ): Promise<string | null> {
+    await this.flush()
+    const done = await this.attempt('add_object', {
+      ...this.placeOnWire(place),
+      ...(wrap ? wrapParams(wrap) : {}),
+      ...kind,
+      ...size,
+      base: this.state.revision,
+    })
+    if (done === false) return null
+    this.state.selectedObject = done.object as string
+    return done.object as string
+  }
+
+  /** Edit ▸ Text Box: an empty text box, written in as a rendered container is not (its words are a paragraph). */
+  addTextBox(place: { block: string; offset: number }, size: { w: number; h: number }, wrap?: Wrap): Promise<string | null> {
+    return this.addBox({ kind: 'text' }, place, size, wrap)
+  }
+
+  /** Edit ▸ a shape of the library. */
+  addShape(shape: string, place: { block: string; offset: number }, size: { w: number; h: number }, wrap?: Wrap): Promise<string | null> {
+    return this.addBox({ kind: 'shape', shape }, place, size, wrap)
+  }
+
+  /** How the text flows round an object (D1061); `gap` is how far it keeps from it (left out: the object's own). */
+  async setWrap(id: string, wrap: Wrap, gap?: number): Promise<boolean> {
+    return (await this.attempt('set_wrap', { id, ...wrapParams(wrap, gap), base: this.state.revision })) !== false
+  }
+
+  /** What the key of Format ▸ Wrap Text does (D1064): the object `id` goes on to the next mode; the mode it has now, or
+   * `null` when there is no such object or the server would not. */
+  async cycleWrap(id: string): Promise<Wrap | null> {
+    const o = this.state.objects[id]
+    if (!o) return null
+    const next = nextWrap(wrapOf(o.anchor).wrap)
+    return (await this.setWrap(id, next)) ? next : null
   }
 
   /** Hang an object from another place of the text. */
@@ -273,7 +381,7 @@ export class TextSession extends BaseSession<TextState> {
   // ------------------------------------------------------------------------------ loading
   protected async loadApp() {
     const link = this.need()
-    const [answer, suggestions, palette, styleModel, page, objects, images, tables] = await Promise.all([
+    const [answer, suggestions, palette, styleModel, page, objects, images, shapes, tables] = await Promise.all([
       link.request<{ styles: StyleView[]; blocks: Block[]; lists: ListInfo[]; schemes: SchemeInfo[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
       link.request<PaletteEvent>('palette'),
@@ -283,6 +391,7 @@ export class TextSession extends BaseSession<TextState> {
       // an older server shows no floating objects
       link.request<{ objects: VisualObject<BlockAnchor>[] }>('objects').then((a) => a.objects).catch(() => []),
       link.request<ImageAsset[]>('images').catch(() => []),
+      link.request<ShapeAnswer | TextShape[]>('shapes').then(shapesOf).catch(() => shapesOf([])),
       // an older server has no tables
       link.request<TableInfo[]>('tables').catch(() => []),
     ])
@@ -296,6 +405,8 @@ export class TextSession extends BaseSession<TextState> {
     s.language = language
     s.objects = Object.fromEntries(objects.map((o) => [o.id, o]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
+    s.shapes = Object.fromEntries(shapes.document.map((x) => [x.id, x]))
+    s.library = shapes.library
     s.tables = Object.fromEntries(tables.map((x) => [x.id, x]))
     if (s.box && !s.tables[s.box.table]) s.box = null
     if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
@@ -401,6 +512,10 @@ export class TextSession extends BaseSession<TextState> {
       case 'image':
         if (data.asset) s.images[data.id] = data.asset as ImageAsset
         else delete s.images[data.id]
+        return true
+      case 'shape':
+        if (data.definition) s.shapes[data.id] = data.definition as TextShape
+        else delete s.shapes[data.id]
         return true
       case 'lists':
         s.lists = data.lists as ListInfo[]
@@ -830,7 +945,7 @@ export class TextSession extends BaseSession<TextState> {
     const link = this.need()
     const [objects, shapes, images, tables] = await Promise.all([
       link.request<{ objects: TextObject[] }>('objects').then((a) => a.objects).catch(() => []),
-      link.request<ShapeOutline[]>('shapes').catch(() => []),
+      link.request<ShapeAnswer | TextShape[]>('shapes').then((a) => shapesOf(a).document as ShapeOutline[]).catch(() => []),
       link.request<TextImage[]>('images').catch(() => []),
       link.request<TableInfo[]>('tables').catch(() => []),
     ])

@@ -195,6 +195,7 @@ jobs:
           URL=http://127.0.0.1:8765/ npm run e2e:describe
           URL=http://127.0.0.1:8765/ TEXT_URL=http://127.0.0.1:8766/ npm run e2e:redaction # pick, plan, preview, redact (E3.14)
           URL=http://127.0.0.1:8766/ npm run e2e:composes
+          URL=http://127.0.0.1:8766/ npm run e2e:composes-wrap # the lines go round a text box, a picture, a shape (CODE-64, D1068)
           URL=http://127.0.0.1:8766/ npm run e2e:styling
           URL=http://127.0.0.1:8766/ npm run e2e:style-delete
           URL=http://127.0.0.1:8766/ npm run e2e:print

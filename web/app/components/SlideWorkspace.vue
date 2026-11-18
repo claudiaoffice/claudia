@@ -2,7 +2,8 @@
 import { lookOnly, roleNow } from '~/lib/replay'
 // A presentation: the slide, the tool bar to put things on it, the slides along the bottom and the panel.
 import { computed, nextTick, ref } from 'vue'
-import { insertFrame, type Frame } from '~/lib/geometry'
+import { insertFrame } from '~/lib/geometry'
+import type { PictureImport } from '~/lib/images'
 import type { SlideSession } from '~/lib/slide-session'
 import { pasteAsPlainText } from '~/lib/clipboard'
 import {
@@ -326,8 +327,8 @@ async function addShape(id: string) {
 async function addContainer(type: string) {
   if (await session.addContainer(type, insertFrame('image', 16 / 9, count.value))) canvas.value?.focus()
 }
-function imageFrame(aspect: number): Frame {
-  return insertFrame('image', aspect, count.value)
+function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
+  return session.addImage(picture, insertFrame('image', aspect, count.value))
 }
 function imageInserted() {
   showImageDialog.value = false
@@ -512,7 +513,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         @help="frame?.openHelp('how-to', searchHost.helpTopic)"
       />
       <PresentShow v-if="presenting" :session="session" :from="presenting.from" view="audience" :t="t" @close="endShow" />
-      <ImageImportDialog v-if="showImageDialog" :session="session" :frame-for="imageFrame" @close="showImageDialog = false" @inserted="imageInserted" />
+      <ImageImportDialog v-if="showImageDialog" :add="addPicture" @close="showImageDialog = false" @inserted="imageInserted" />
       <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename slide')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <ReferencePicker v-if="picker" :x="picker.x" :y="picker.y" :targets="(q) => session.referenceTargets(q)" @choose="putReference" @close="picker = null" />

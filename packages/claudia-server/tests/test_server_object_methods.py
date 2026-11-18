@@ -25,6 +25,8 @@ SAME_EVERYWHERE = {
     "rotate_object": "id:str rotation:int base:revision?",
     "remove_object": "id:str base:revision?",
 }
+# Text boxes and shapes are put with the same words wherever a person can put them; the app says where.
+ADD_OBJECT = "{where} kind:str w:int h:int shape:str? text:text? base:revision?"
 # The words of each app: where a new object goes, where one is moved to, what a new frame is besides its size.
 WORDS = {
     "computes": {
@@ -37,18 +39,31 @@ WORDS = {
     "creates": {
         "add_image": f"slide:str x:int y:int {PICTURE}",
         "add_rendering": "slide:str x:int y:int w:int h:int type:str source:text params:dict? alt:text? base:revision?",
+        "add_object": ADD_OBJECT.format(where="slide:str x:int y:int"),
         "move_object": "id:str x:int y:int base:revision?",
         "resize_object": "id:str x:int y:int w:int h:int base:revision?",
     },
     "composes": {
-        "add_image": f"block:str offset:int {PICTURE}",
-        "add_rendering": "block:str offset:int w:int h:int type:str source:text params:dict? alt:text? base:revision?",
+        "add_image": f"block:str offset:int wrap:str? gap:int? {PICTURE}",
+        "add_rendering": "block:str offset:int wrap:str? gap:int? w:int h:int type:str source:text params:dict? "
+        "alt:text? base:revision?",
+        "add_object": ADD_OBJECT.format(where="block:str offset:int wrap:str? gap:int?"),
+        "set_wrap": "id:str wrap:str gap:int? base:revision?",
         "move_object": "id:str block:str offset:int dx:int? dy:int? base:revision?",
         "resize_object": "id:str w:int h:int base:revision?",
     },
 }
 TABLES = {"computes": computes_methods, "creates": creates_methods, "composes": composes_methods}
-WRITES = {"add_image", "add_rendering", "describe_object", "move_object", "resize_object", "rotate_object"}
+WRITES = {
+    "add_image",
+    "add_rendering",
+    "add_object",
+    "set_wrap",
+    "describe_object",
+    "move_object",
+    "resize_object",
+    "rotate_object",
+}
 
 
 def words_of(table: MethodTable, name: str) -> str:

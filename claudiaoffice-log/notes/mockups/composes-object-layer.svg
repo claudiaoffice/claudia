@@ -1,0 +1,293 @@
+<svg viewBox="0 0 1760 1290" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia composes — the floating object layer: every kind of object, held and let go, and Edit ▸ Image…</title>
+<desc id="d">A text with a LaTeX container, a picture, a shape with words and a text box hanging at their characters; the held object's tether and chip; the held and let-go states; Edit ▸ Image… with the shared import dialog; the rule for where an object hangs; what the numbers mean and the open points.</desc>
+<defs><filter id="sh" x="-10%" y="-10%" width="125%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1f1a33" flood-opacity="0.22"/></filter><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#5b4bc4"/></marker></defs>
+<rect x="0" y="0" width="1760" height="1290" rx="0" fill="#f3f1ea" />
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >claudia composes — the floating object layer</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start" >For review before the wrap work. Content is invented. What you see in A is built on this branch (every kind of object drawn, at its character plus offset, let go on a click into the words); wrap is in the next mock-up.</text>
+<rect x="40" y="96" width="1100" height="800" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="62" y="126" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >A · Everything that floats, hanging at its character</text>
+<text x="62" y="144" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >Flow view. Each object hangs at the character it is anchored to, moved by the offset the model keeps, and floats over the words without pushing any aside (D179).</text>
+<text x="62" y="159" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >Only the held object shows its ring and tether, so reading is quiet.</text>
+<rect x="62" y="172" width="1056" height="700" rx="0" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<rect x="62" y="172" width="1056" height="46" rx="0" fill="#fff" />
+<line x1="62" y1="218" x2="1118" y2="218" stroke="#e3dfee" stroke-width="1" />
+<rect x="74" y="181" width="28" height="28" rx="7" fill="#d6477a" />
+<path d="M88,186 L94,197 L88,203 L82,197 Z" fill="#fff" />
+<text x="114" y="201" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start" >Quarterly report</text>
+<text x="252" y="200" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >File</text>
+<rect x="296" y="182" width="46" height="26" rx="6" fill="#e7e1f4" />
+<text x="304" y="200" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >Edit</text>
+<text x="356" y="200" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >Format</text>
+<text x="423" y="200" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >View</text>
+<text x="475" y="200" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >Tools</text>
+<text x="534" y="200" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >Config</text>
+<text x="601" y="200" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start" >Help</text>
+<circle cx="864" cy="195" r="10" fill="#d6477a" />
+<text x="864" y="199" font-size="9.5" font-weight="600" fill="#fff" text-anchor="middle" >A</text>
+<circle cx="886" cy="195" r="10" fill="#13917f" />
+<text x="886" y="199" font-size="9.5" font-weight="600" fill="#fff" text-anchor="middle" >T</text>
+<circle cx="908" cy="195" r="10" fill="#5b4bc4" />
+<text x="908" y="199" font-size="9.5" font-weight="600" fill="#fff" text-anchor="middle" >ai</text>
+<circle cx="940" cy="195" r="3.5" fill="#13917f" />
+<text x="948" y="199" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start" >demo.claudia-office.de</text>
+<rect x="62" y="219" width="1056" height="44" rx="0" fill="#faf8f4" />
+<line x1="62" y1="263" x2="1118" y2="263" stroke="#e3dfee" stroke-width="1" />
+<rect x="74" y="227" width="50" height="28" rx="7" fill="#fff" stroke="#e3dfee" stroke-width="1" />
+<text x="99.0" y="245.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle" >Undo</text>
+<rect x="132" y="227" width="50" height="28" rx="7" fill="#fff" stroke="#e3dfee" stroke-width="1" />
+<text x="157.0" y="245.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle" >Redo</text>
+<text x="202" y="245" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" >Style</text>
+<rect x="242" y="227" width="126" height="28" rx="7" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<text x="305" y="245.5" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle" >Body text  ▾</text>
+<rect x="882" y="264" width="236" height="608" rx="0" fill="#f6f3fb" />
+<line x1="882" y1="264" x2="882" y2="872" stroke="#e3dfee" stroke-width="1" />
+<rect x="894" y="276" width="100" height="24" rx="12" fill="#fff" stroke="#e3dfee" stroke-width="1" />
+<text x="944" y="292" font-size="10.5" font-weight="500" fill="#1f1a33" text-anchor="middle" >History &amp; Chat</text>
+<text x="1030" y="292" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="middle" >Help</text>
+<circle cx="902" cy="326" r="3.5" fill="#13917f" />
+<text x="912" y="330" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">tobi · Insert picture</text>
+<text x="912" y="343" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="start" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">Picture 1</text>
+<circle cx="902" cy="366" r="3.5" fill="#d6477a" />
+<text x="912" y="370" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">anna · Insert shape</text>
+<text x="912" y="383" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="start" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">Shape 1</text>
+<circle cx="902" cy="406" r="3.5" fill="#d6477a" />
+<text x="912" y="410" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">anna · Insert text box</text>
+<text x="912" y="423" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="start" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">Text box 1</text>
+<circle cx="902" cy="446" r="3.5" fill="#13917f" />
+<text x="912" y="450" font-size="10.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">tobi · Insert container</text>
+<text x="912" y="463" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="start" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">LaTeX 1</text>
+<text x="900" y="520" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start" >Hanging an object somewhere else,</text>
+<text x="900" y="534" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start" >or giving it a new offset, is one</text>
+<text x="900" y="548" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start" >step in the history.</text>
+<rect x="62" y="264" width="820" height="608" rx="0" fill="#f7f3ec" />
+<line x1="132" y1="272" x2="132" y2="862" stroke="#e3dfee" stroke-width="1" stroke-dasharray="2 4" />
+<line x1="780" y1="272" x2="780" y2="862" stroke="#e3dfee" stroke-width="1" stroke-dasharray="2 4" />
+<text x="784" y="284" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="start" >column</text>
+<text x="132" y="330" font-size="26" font-weight="500" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Findings</text>
+<text x="132" y="372" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >The second quarter closed with a surplus of 4.1 percent, mostly from lower travel</text>
+<text x="132" y="394" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >costs. Two items stand out: the software licences, which are paid once a year, and</text>
+<text x="132" y="416" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >the exchange rates used for foreign invoices, which were fixed in January and</text>
+<text x="132" y="438" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >have not been looked at since.</text>
+<text x="132" y="474" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >Travel was cheaper because the autumn conference moved online. We expect the</text>
+<text x="132" y="496" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >saving to hold for one more quarter and then to disappear, since two of the three</text>
+<text x="132" y="518" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >teams plan to meet in person again in the spring.</text>
+<text x="132" y="554" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >The next step is a review of the rates before the half-year close. Tobi will collect</text>
+<text x="132" y="576" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >the invoices, and Anna will check the figures in the table against the sources.</text>
+<text x="132" y="612" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start" >Questions go to the finance desk.</text>
+<text x="106" y="330" font-size="10" font-weight="500" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">¶1</text>
+<text x="106" y="372" font-size="10" font-weight="500" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">¶2</text>
+<text x="106" y="474" font-size="10" font-weight="500" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">¶3</text>
+<text x="106" y="554" font-size="10" font-weight="500" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">¶4</text>
+<text x="106" y="612" font-size="10" font-weight="500" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace">¶5</text>
+<rect x="330.6" y="424" width="200" height="44" rx="0" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="430.6" y="453" font-size="19" font-weight="500" fill="#1f1a33" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-style="italic">x̄ = ∑ xᵢ / n</text>
+<text x="525.6" y="463" font-size="9" font-weight="600" fill="#5b4bc4" text-anchor="end" >LaTeX</text>
+<circle cx="543.6" cy="426" r="10" fill="#5b4bc4" />
+<text x="543.6" y="430" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >1</text>
+<rect x="617.6" y="296" width="120" height="70" rx="0" fill="#d9d3f0" filter="url(#sh)"/>
+<path d="M617.6,366 L653.6,324 L679.6,348 L699.6,332 L737.6,366 Z" fill="#b4a8e6" />
+<circle cx="639.6" cy="314" r="6" fill="#e8943a" />
+<circle cx="750.6" cy="298" r="10" fill="#5b4bc4" />
+<text x="750.6" y="302" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >2</text>
+<path d="M575.38,512 A95.0,42.0 0 1 1 575.38,596 A95.0,42.0 0 1 1 575.38,512 Z" fill="#fff" stroke="#d6477a" stroke-width="1.5" filter="url(#sh)"/>
+<text x="575.38" y="552.0" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" >Check the rates</text>
+<text x="575.38" y="570.0" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="middle" >before June</text>
+<rect x="479.38" y="511" width="192" height="86" rx="0" fill="none" stroke="#5b4bc4" stroke-width="2" />
+<rect x="665.38" y="591" width="11" height="11" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="2" />
+<circle cx="456.38" cy="514" r="4.5" fill="none" stroke="#d6477a" stroke-width="1.6" />
+<line x1="459.38" y1="511" x2="480.38" y2="512" stroke="#d6477a" stroke-width="1.4" stroke-dasharray="4 3" />
+<rect x="685.38" y="506" width="150" height="22" rx="11" fill="#d6477a" />
+<text x="760.38" y="521" font-size="10.5" font-weight="600" fill="#fff" text-anchor="middle" >hangs from ¶3 · +24, +8</text>
+<circle cx="466.38" cy="526" r="10" fill="#5b4bc4" />
+<text x="466.38" y="530" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >3</text>
+<circle cx="442.38" cy="496" r="10" fill="#d6477a" />
+<text x="442.38" y="500" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >5</text>
+<rect x="390.46000000000004" y="598" width="210" height="50" rx="0" fill="#fff4e6" stroke="#e8943a" stroke-width="1" />
+<text x="400.46000000000004" y="619" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >Anna: check these figures</text>
+<text x="400.46000000000004" y="635" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" >against the sources.</text>
+<circle cx="613.46" cy="600" r="10" fill="#5b4bc4" />
+<text x="613.46" y="604" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >4</text>
+<rect x="150" y="664" width="190" height="44" rx="0" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="245" y="684" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle" >A chart is not shown</text>
+<text x="245" y="699" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle" >in a text yet.</text>
+<circle cx="137" cy="666" r="10" fill="#5b4bc4" />
+<text x="137" y="670" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >7</text>
+<rect x="1160" y="96" width="560" height="400" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="1182" y="126" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >B · Held, and let go again</text>
+<text x="1182" y="144" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >Clicking an object holds it; clicking into the words, or tabbing back into them, lets go.</text>
+<text x="1182" y="159" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >The outline used to stay for good: nothing cleared the selection.</text>
+<rect x="1182" y="176" width="160" height="130" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="1194" y="190" width="136" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1194" y="208" width="116" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1194" y="226" width="96" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1194" y="244" width="136" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1194" y="262" width="116" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1194" y="280" width="96" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1222" y="222" width="82" height="54" rx="0" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="1263" y="254" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-style="italic">x̄ = ∑ xᵢ</text>
+<rect x="1221" y="221" width="84" height="56" rx="0" fill="none" stroke="#5b4bc4" stroke-width="2" />
+<rect x="1299" y="271" width="11" height="11" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="2" />
+<text x="1262" y="326" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="middle" >held</text>
+<rect x="1362" y="176" width="160" height="130" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="1374" y="190" width="136" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1374" y="208" width="116" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1374" y="226" width="96" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1374" y="244" width="136" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1374" y="262" width="116" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1374" y="280" width="96" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1402" y="222" width="82" height="54" rx="0" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="1443" y="254" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-style="italic">x̄ = ∑ xᵢ</text>
+<rect x="1480" y="259" width="2" height="14" rx="0" fill="#d6477a" />
+<text x="1442" y="326" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="middle" >caret in the words</text>
+<rect x="1542" y="176" width="160" height="130" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="1554" y="190" width="136" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1554" y="208" width="116" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1554" y="226" width="96" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1554" y="244" width="136" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1554" y="262" width="116" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1554" y="280" width="96" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1582" y="222" width="82" height="54" rx="0" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="1623" y="254" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-style="italic">x̄ = ∑ xᵢ</text>
+<text x="1622" y="326" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="middle" >let go: no outline</text>
+<path d="M1348,241 l12,0 m-5,-5 l5,5 l-5,5" fill="none" stroke="#5b4bc4" stroke-width="1.6" />
+<path d="M1528,241 l12,0 m-5,-5 l5,5 l-5,5" fill="none" stroke="#5b4bc4" stroke-width="1.6" />
+<circle cx="1175" cy="176" r="10" fill="#5b4bc4" />
+<text x="1175" y="180" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >6</text>
+<rect x="1182" y="354" width="520" height="124" rx="10" fill="#fff" stroke="#e3dfee" stroke-width="1" />
+<text x="1198" y="378" font-size="11" font-weight="600" fill="#1f1a33" text-anchor="start" >Click on an object</text>
+<text x="1400" y="378" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >→ holds it: ring, tether and grip appear</text>
+<text x="1198" y="396" font-size="11" font-weight="600" fill="#1f1a33" text-anchor="start" >Click or Tab into the words</text>
+<text x="1400" y="396" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >→ lets go; the caret is where it was put</text>
+<text x="1198" y="414" font-size="11" font-weight="600" fill="#1f1a33" text-anchor="start" >Esc on a held object</text>
+<text x="1400" y="414" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >→ lets go; the caret comes back where it was</text>
+<text x="1198" y="432" font-size="11" font-weight="600" fill="#1f1a33" text-anchor="start" >Delete / Backspace on it</text>
+<text x="1400" y="432" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >→ removes it (one step, one undo)</text>
+<text x="1198" y="450" font-size="11" font-weight="600" fill="#1f1a33" text-anchor="start" >↑ / ↓ on it</text>
+<text x="1400" y="450" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >→ hangs it from the previous / next paragraph</text>
+<text x="1198" y="468" font-size="11" font-weight="600" fill="#1f1a33" text-anchor="start" >Enter / F2 / double-click</text>
+<text x="1400" y="468" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >→ write in a rendered container</text>
+<rect x="1160" y="516" width="560" height="380" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="1182" y="546" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >C · Edit ▸ Image…, and the one dialog</text>
+<text x="1182" y="564" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >composes could not take a picture in. Now Edit ▸ Image… (Ctrl+Alt+I), as in creates</text>
+<text x="1182" y="579" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >and computes. The picture hangs from the caret's character, at most 240 high</text>
+<text x="1182" y="594" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >and no wider than a container.</text>
+<rect x="1182" y="616" width="250" height="262" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="1198" y="641" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start" >Undo</text>
+<text x="1418" y="641" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end" >Ctrl+Z</text>
+<text x="1198" y="668" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start" >Redo</text>
+<text x="1418" y="668" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end" >Ctrl+Shift+Z</text>
+<line x1="1190" y1="684" x2="1424" y2="684" stroke="#e3dfee" stroke-width="1" />
+<text x="1198" y="705" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start" >Search &amp; Replace…</text>
+<text x="1418" y="705" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end" >Ctrl+F</text>
+<text x="1198" y="732" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start" >Reference in Chat</text>
+<text x="1418" y="732" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end" >Ctrl+Alt+X</text>
+<text x="1198" y="759" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start" >Go to Target</text>
+<text x="1418" y="759" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end" >Ctrl+Alt+Enter</text>
+<line x1="1190" y1="775" x2="1424" y2="775" stroke="#e3dfee" stroke-width="1" />
+<rect x="1187" y="778" width="240" height="26" rx="6" fill="#e7e1f4" />
+<text x="1198" y="796" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Image…</text>
+<text x="1418" y="796" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end" >Ctrl+Alt+I</text>
+<line x1="1190" y1="812" x2="1424" y2="812" stroke="#e3dfee" stroke-width="1" />
+<text x="1198" y="833" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start" >Insert</text>
+<text x="1418" y="833" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end" >▸</text>
+<circle cx="1444" cy="798" r="10" fill="#5b4bc4" />
+<text x="1444" y="802" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >8</text>
+<rect x="1452" y="616" width="250" height="268" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="1468" y="644" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start" >Insert image</text>
+<rect x="1468" y="658" width="128" height="28" rx="7" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<text x="1532" y="676" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="middle" >Choose a file…</text>
+<text x="1606" y="676" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >cat.png</text>
+<rect x="1468" y="696" width="218" height="66" rx="6" fill="#f6f3fb" stroke="#e3dfee" stroke-width="1" />
+<path d="M1552,766 L1576,728 L1594,750 L1610,736 L1626,766 Z" fill="#b4a8e6" />
+<circle cx="1566" cy="714" r="5" fill="#e8943a" />
+<text x="1468" y="792" font-size="9.5" font-weight="400" fill="#6e6880" text-anchor="start" >Description (read aloud to someone who cannot see)</text>
+<rect x="1468" y="798" width="218" height="26" rx="6" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<text x="1476" y="815" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >A tabby cat asleep on a keyboard</text>
+<rect x="1468" y="834" width="13" height="13" rx="3" fill="#fff" stroke="#1f1a33" stroke-width="1.2" />
+<text x="1488" y="845" font-size="9.5" font-weight="400" fill="#1f1a33" text-anchor="start" >Decorative: only for looks, skipped by readers</text>
+<rect x="1468" y="850" width="80" height="28" rx="7" fill="#5b4bc4" />
+<text x="1508" y="868" font-size="12.5" font-weight="600" fill="#fff" text-anchor="middle" >Insert</text>
+<rect x="1558" y="850" width="80" height="28" rx="7" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<text x="1598" y="868" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle" >Cancel</text>
+<circle cx="1714" cy="626" r="10" fill="#5b4bc4" />
+<text x="1714" y="630" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >9</text>
+<rect x="40" y="916" width="560" height="340" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="62" y="946" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >D · Where an object hangs, on the screen and in print</text>
+<text x="62" y="964" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >One rule for both, so that what is seen is what is printed, up to the small</text>
+<text x="62" y="979" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >differences between the browser's lines and the layout engine's.</text>
+<rect x="62" y="990" width="516" height="140" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<line x1="102" y1="990" x2="102" y2="1130" stroke="#6e6880" stroke-width="1" stroke-dasharray="2 3" />
+<line x1="538" y1="990" x2="538" y2="1130" stroke="#6e6880" stroke-width="1" stroke-dasharray="2 3" />
+<text x="104" y="1002" font-size="9" font-weight="400" fill="#6e6880" text-anchor="start" >column left</text>
+<text x="536" y="1002" font-size="9" font-weight="400" fill="#6e6880" text-anchor="end" >column right</text>
+<rect x="102" y="1012" width="436" height="4" rx="2" fill="#cfc9e2" />
+<rect x="102" y="1030" width="346" height="4" rx="2" fill="#cfc9e2" />
+<rect x="102" y="1048" width="436" height="4" rx="2" fill="#cfc9e2" />
+<rect x="252" y="1018" width="6" height="16" rx="0" fill="#f6c9d8" />
+<circle cx="253" cy="1026" r="4" fill="none" stroke="#d6477a" stroke-width="1.5" />
+<text x="248" y="1052" font-size="9.5" font-weight="600" fill="#d6477a" text-anchor="end" >anchor character</text>
+<path d="M253,1026 L313,1026" fill="none" stroke="#5b4bc4" stroke-width="1.4" marker-end="url(#ar)"/>
+<path d="M313,1026 L313,1062" fill="none" stroke="#5b4bc4" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="282" y="1020" font-size="10" font-weight="600" fill="#5b4bc4" text-anchor="middle" >dx</text>
+<text x="319" y="1044" font-size="10" font-weight="600" fill="#5b4bc4" text-anchor="start" >dy</text>
+<rect x="313" y="1062" width="120" height="40" rx="0" fill="#fff" stroke="#5b4bc4" stroke-width="1.5" filter="url(#sh)"/>
+<text x="373" y="1086" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="middle" >the object</text>
+<text x="62" y="1152" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >left = the character's left + dx, then kept between the column's left edge and its right</text>
+<text x="62" y="1167" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >edge minus the object's width. top = the character's top + dy, never above the top of the</text>
+<text x="62" y="1182" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >text. Print adds what the screen does not need: the bottom margin (an object is moved up</text>
+<text x="62" y="1197" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >to stay on its page).</text>
+<text x="62" y="1217" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >A paragraph with nothing to measure (no words) gives its own corner. dx and dy are in the</text>
+<text x="62" y="1232" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >units of w and h (D1023).</text>
+<rect x="620" y="916" width="560" height="340" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="642" y="946" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >What the numbers mean</text>
+<circle cx="642" cy="967" r="10" fill="#5b4bc4" />
+<text x="642" y="971" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >1</text>
+<text x="662" y="970" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >A LaTeX container hangs at its character. It used to be pushed against the</text>
+<text x="662" y="984" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >paragraph's right edge, whichever its anchor.</text>
+<circle cx="642" cy="1002" r="10" fill="#5b4bc4" />
+<text x="642" y="1006" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >2</text>
+<text x="662" y="1005" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >A picture, hung from the heading's last character and moved 380 across, into the</text>
+<text x="662" y="1019" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >empty part of that line. No frame of its own.</text>
+<circle cx="642" cy="1037" r="10" fill="#5b4bc4" />
+<text x="642" y="1041" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >3</text>
+<text x="662" y="1040" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >A shape with words, held: the outline, the grip, the ring on the character, the</text>
+<text x="662" y="1054" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >tether and the chip appear only while held.</text>
+<circle cx="642" cy="1072" r="10" fill="#5b4bc4" />
+<text x="642" y="1076" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >4</text>
+<text x="662" y="1075" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >A text box: its own box (fill, border) from its style, its words from the</text>
+<text x="662" y="1089" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >paragraph style inside it. Not drawn at all before.</text>
+<circle cx="642" cy="1107" r="10" fill="#5b4bc4" />
+<text x="642" y="1111" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >5</text>
+<text x="662" y="1110" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >The anchor ring: the character the object hangs from. It follows the text through</text>
+<text x="662" y="1124" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >other people's edits (D179).</text>
+<circle cx="642" cy="1142" r="10" fill="#5b4bc4" />
+<text x="642" y="1146" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >6</text>
+<text x="662" y="1145" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Held, then let go: a click into the words (or Tab into them) clears the selection;</text>
+<text x="662" y="1159" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Esc lets go too, and the caret comes back where it was.</text>
+<circle cx="642" cy="1177" r="10" fill="#5b4bc4" />
+<text x="642" y="1181" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >7</text>
+<text x="662" y="1180" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >A chart: not drawn in a text yet, so it says so instead of leaving a gap (print</text>
+<text x="662" y="1194" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >says the same in its notes, D907).</text>
+<circle cx="642" cy="1212" r="10" fill="#5b4bc4" />
+<text x="642" y="1216" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >8</text>
+<text x="662" y="1215" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Edit ▸ Image… (Ctrl+Alt+I): the same entry and key as in creates and computes.</text>
+<circle cx="642" cy="1233" r="10" fill="#5b4bc4" />
+<text x="642" y="1237" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >9</text>
+<text x="662" y="1236" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >The dialog is the one of all three apps; each app only says where the picture goes</text>
+<text x="662" y="1250" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >(a frame, a cell, a caret).</text>
+<rect x="1200" y="916" width="520" height="340" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="1222" y="946" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Open points</text>
+<text x="1222" y="970" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start" >1 Moving by dragging</text>
+<text x="1222" y="986" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >The offset exists but nothing sets it by hand yet. Recommended: drag the</text>
+<text x="1222" y="1000" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >held object; the ring stays and the offset follows the pointer, snapped to</text>
+<text x="1222" y="1014" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >the object's own grid (D214), one step per drag. The arrow keys keep</text>
+<text x="1222" y="1028" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >re-hanging by paragraph.</text>
+<text x="1222" y="1056" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start" >2 Menu home of Image…</text>
+<text x="1222" y="1072" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >The earlier mock put it under Insert. Edit ▸ Image… is built, because</text>
+<text x="1222" y="1086" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >creates and computes have it there and one entry has one key in all three</text>
+<text x="1222" y="1100" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >apps; Insert holds what only composes has.</text>
+<text x="1222" y="1128" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start" >3 One drawing for all three</text>
+<text x="1222" y="1144" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >creates' SlideCanvas still draws pictures, shapes and boxes itself.</text>
+<text x="1222" y="1158" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Recommended: move it onto the same look (lookOf) later; not touched here.</text>
+</svg>

@@ -299,7 +299,28 @@ def test_helps_shared_shape_is_identical_in_every_app(app: manifest.Manifest) ->
 def test_composes_format_offers_the_style_actions_the_lists_and_the_document_colours(
     composes: manifest.Manifest,
 ) -> None:
-    assert labels(composes.menu("Format")) == ["Apply Style…", "Edit This Style…", "All Styles…", "List", "Colours…"]
+    assert labels(composes.menu("Format")) == [
+        "Apply Style…",
+        "Edit This Style…",
+        "All Styles…",
+        "List",
+        "Colours…",
+        "Wrap Text",
+    ]
+
+
+def test_composes_format_has_one_wrap_text_entry_with_one_key_that_no_system_keeps(composes: manifest.Manifest) -> None:
+    """D1064: one entry, one key that cycles the modes of the selected object.
+
+    Ctrl+Alt+L is Ubuntu's lock screen, Ctrl+Alt+E, M and Q are AltGr keys and Ctrl+Alt+Shift+W is Change Password.
+    """
+    (wrap,) = [a for a in composes.menu("Format").all_actions() if a.id == "format.wrap-text"]
+    assert wrap.kind is Kind.PAGE and wrap.accelerators == ("<Primary><Alt>r",)
+
+
+def test_only_composes_has_wrap_text(app: manifest.Manifest) -> None:
+    ids = {a.id for a in app.menu("Format").all_actions()}
+    assert ("format.wrap-text" in ids) == (app.app == "composes")
 
 
 def test_every_app_has_the_list_flyout_of_the_web(app: manifest.Manifest) -> None:
@@ -431,6 +452,30 @@ def test_search_and_replace_is_a_page_action_with_ctrl_f_in_every_app(
     (search,) = [a for a in app.menu("Edit").all_actions() if a.id == "edit.search-replace"]
     assert search.kind is Kind.PAGE
     assert search.accelerators == ("<Primary>f",)
+
+
+@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
+def test_image_is_a_page_action_with_the_same_key_in_every_app(app_name: str, request: pytest.FixtureRequest) -> None:
+    """E10.16: a picture goes into a text as it does onto a slide and into a sheet, and one action has one key in all
+    three apps (UX-35)."""
+    app = request.getfixturevalue(app_name)
+    (image,) = [a for a in app.menu("Edit").all_actions() if a.id == "edit.image"]
+    assert image.kind is Kind.PAGE and image.label == "Image…"
+    assert image.accelerators == ("<Primary><Alt>i",)
+
+
+def test_composes_edit_puts_image_between_the_references_and_the_hyphens(composes: manifest.Manifest) -> None:
+    """E10.16: not in a new Insert entry — that menu is the page's own, and the key is Edit ▸ Image…'s everywhere."""
+    labels = [e.label for e in entries(composes.menu("Edit"))[6:]]
+    assert labels[-4:] == ["Go to Target", "Image…", "Text Box", "Insert"]
+
+
+def test_composes_text_box_has_the_key_it_has_in_creates(
+    composes: manifest.Manifest, creates: manifest.Manifest
+) -> None:
+    (here,) = [a for a in composes.menu("Edit").all_actions() if a.id == "edit.text-box"]
+    (there,) = [a for a in creates.menu("Edit").all_actions() if a.id == "edit.text-box"]
+    assert here.accelerators == there.accelerators == ("<Primary><Alt>b",)
 
 
 def test_creates_edit_has_search_new_slide_edit_text_text_box_then_delete(creates: manifest.Manifest) -> None:

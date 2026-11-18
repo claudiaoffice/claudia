@@ -36,6 +36,8 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Search & Replace… | Ctrl+F |  |
 | Edit | Reference in Chat | Ctrl+Alt+X |  |
 | Edit | Go to Target | Ctrl+Alt+Enter |  |
+| Edit | Image… | Ctrl+Alt+I |  |
+| Edit | Text Box | Ctrl+Alt+B |  |
 | Edit | Insert ▸ Soft Hyphen | Ctrl+- |  |
 | Edit | Insert ▸ Non-breaking Hyphen | Ctrl+_ |  |
 | Edit | Row ▸ Insert Above | Shift+Alt+↑ |  |
@@ -67,6 +69,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Number Headings | Ctrl+Shift+Alt+B |  |
 | Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
+| Format | Wrap Text | Ctrl+Alt+R |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
 | View | Replay History… | Ctrl+Alt+Z |  |

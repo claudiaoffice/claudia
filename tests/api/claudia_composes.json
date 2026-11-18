@@ -67,10 +67,11 @@
   "class": [
    "object"
   ],
-  "init": "(block: 'str', offset: 'int' = 0, dx: 'int' = 0, dy: 'int' = 0) -> None",
+  "init": "(block: 'str', offset: 'int' = 0, dx: 'int' = 0, dy: 'int' = 0, wrap: 'str' = 'over', gap: 'int' = 8) -> None",
   "methods": {
    "carried_to": "(self, block: 'str', shift: 'int') -> 'BlockAnchor'",
    "check_floating": "(self) -> 'None'",
+   "check_wrap": "(self) -> 'None'",
    "followed": "(self, span: 'Span') -> 'BlockAnchor'",
    "from_data": "(data: 'dict') -> 'BlockAnchor'",
    "to_data": "(self) -> 'dict'"
@@ -95,6 +96,9 @@
  },
  "DEFAULT_STYLE": {
   "value": "'body'"
+ },
+ "DEFAULT_WRAP_GAP": {
+  "value": "8"
  },
  "DefineImage": {
   "class": [
@@ -282,6 +286,9 @@
  },
  "MAX_ANCHOR_OFFSET": {
   "value": "10000"
+ },
+ "MAX_WRAP_GAP": {
+  "value": "200"
  },
  "MoveObject": {
   "class": [
@@ -482,6 +489,24 @@
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'SetLanguage'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetObjectWrap": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', wrap: 'str', gap: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetObjectWrap'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -729,6 +754,9 @@
    "container",
    "id"
   ]
+ },
+ "WRAPS": {
+  "value": "('over', 'around', 'above-below', 'behind')"
  },
  "builtin_styles": {
   "function": "() -> 'StyleBook'"

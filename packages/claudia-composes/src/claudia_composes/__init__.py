@@ -37,7 +37,7 @@ from claudia_core import (  # noqa: F401
 
 from . import commands  # noqa: F401  (registers the commands)
 from ._version import __version__
-from .anchors import MAX_ANCHOR_OFFSET, BlockAnchor
+from .anchors import DEFAULT_WRAP_GAP, MAX_ANCHOR_OFFSET, MAX_WRAP_GAP, WRAPS, BlockAnchor
 from .commands import (
     AcceptSuggestion,
     DeleteText,
@@ -46,6 +46,7 @@ from .commands import (
     ProposeSuggestion,
     ResolveSuggestion,
     SetLanguage,
+    SetObjectWrap,
     SetPageSetup,
     SetStyle,
     SplitBlock,
@@ -101,7 +102,10 @@ __all__ = [
     "JoinBlocks",
     "LanguageError",
     "LabelsChanged",
+    "DEFAULT_WRAP_GAP",
     "MAX_ANCHOR_OFFSET",
+    "MAX_WRAP_GAP",
+    "WRAPS",
     "MoveObject",
     "next_style",
     "table_body",
@@ -120,6 +124,7 @@ __all__ = [
     "RotateObject",
     "Run",
     "SetLanguage",
+    "SetObjectWrap",
     "SetPageSetup",
     "SetParagraphStyle",
     "SetSnap",

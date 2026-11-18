@@ -27,6 +27,7 @@ import { pivotAt, roleAt, roleLabel, valueIndexFor } from '~/lib/pivots'
 import { pointTo, refOf, sheetPrefix, slotAt } from '~/lib/pointing'
 import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection'
 import type { Session } from '~/lib/session'
+import type { PictureImport } from '~/lib/images'
 import {
   askItem,
   authorsItemUnavailable,
@@ -967,6 +968,9 @@ const IMAGE_HEIGHT = 240 // pixels; an image is sized to this height and whateve
 function anchorForImage(aspect: number) {
   return { row: b.value.r0, col: b.value.c0, w: Math.round(IMAGE_HEIGHT * aspect), h: IMAGE_HEIGHT }
 }
+function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
+  return session.addImage(picture, anchorForImage(aspect))
+}
 
 const CONTAINER_WIDTH = 480
 const CONTAINER_HEIGHT = 270
@@ -1270,7 +1274,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename sheet')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'sheet'" :title="t('New sheet')" :label="t('Name')" :ok="t('Add Sheet')" required :placeholder="t('Forecast')" @ok="addSheet" @close="dialog = null" />
       <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="closeDescribe" />
-      <SheetImageImportDialog v-if="dialog === 'image'" :session="session" :anchor-for="anchorForImage" @close="dialog = null" @inserted="imageInserted" />
+      <ImageImportDialog v-if="dialog === 'image'" :add="addPicture" @close="dialog = null" @inserted="imageInserted" />
       <SheetChartInsertDialog
         v-if="dialog === 'chart'"
         :session="session"

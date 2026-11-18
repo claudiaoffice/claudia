@@ -1,0 +1,255 @@
+<svg viewBox="0 0 1760 1320" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia composes — the object layer: where the code goes, and why</title>
+<desc id="d">Layers from the core model through the server wire, the web client's session, pure helpers and components, the layout library, the desktop shell manifest and import/export, each with what is built, what this patch adds and what wrap would add; and the three ways of laying out lines around an object.</desc>
+<defs><filter id="sh" x="-10%" y="-10%" width="125%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1f1a33" flood-opacity="0.18"/></filter><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#5b4bc4"/></marker><marker id="al" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M8,0 L0,4 L8,8 Z" fill="#13917f"/></marker></defs>
+<rect x="0" y="0" width="1760" height="1320" rx="0" fill="#f3f1ea" />
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >claudia composes — the object layer: where the code goes, and why</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start" >Architecture for review. Solid: built, on the branch floating-objects. Dashed: decided on 2026-11-17 for the wrap work (D1061–D1064), not built. File names are the repo's.</text>
+<rect x="40" y="96" width="1000" height="126" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="40" y="96" width="8" height="126" rx="4" fill="#5b4bc4" />
+<circle cx="70" cy="120" r="10" fill="#5b4bc4" />
+<text x="70" y="124" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >1</text>
+<text x="90" y="125" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Core: the one object model</text>
+<text x="1020" y="125" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" >packages/claudia-core/src/claudia_core/objects.py</text>
+<rect x="66" y="137" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="148" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="148" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >ObjectBody (kind, size, style, words, rotation) + a per-app anchor; BlockAnchor(block, offset, dx, dy) since D1023; the commands</text>
+<text x="116.5" y="162" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >AddObject, MoveObject, ResizeObject, RotateObject, DefineImage; the stacking order.</text>
+<rect x="66" y="171" width="54.699999999999996" height="15" rx="7.5" fill="#fff" stroke="#d6477a" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="93.35" y="182" font-size="9" font-weight="600" fill="#d6477a" text-anchor="middle" >planned</text>
+<text x="128.7" y="182" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >BlockAnchor gains wrap ('over' | 'around' | 'above-below' | 'behind', gap). A document with no wrap saved reads as 'over'; a new</text>
+<text x="128.7" y="196" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >object starts as 'above-below' (D1061). Move already replaces the whole anchor, so no new command.</text>
+<rect x="40" y="242" width="1000" height="126" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="40" y="242" width="8" height="126" rx="4" fill="#5b4bc4" />
+<circle cx="70" cy="266" r="10" fill="#5b4bc4" />
+<text x="70" y="270" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >2</text>
+<text x="90" y="271" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Server: composes' wire</text>
+<text x="1020" y="271" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" >packages/claudia-server/src/claudia_server/composes.py, object_methods.py</text>
+<rect x="66" y="283" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="294" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="294" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >add_image, add_rendering, move_object(block, offset, dx?, dy?), resize_object, rotate_object, remove_object; reads objects,</text>
+<text x="116.5" y="308" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >images, shapes; events objects, image, shape. IN_TEXT is the placement: a block id and a character.</text>
+<rect x="66" y="317" width="54.699999999999996" height="15" rx="7.5" fill="#fff" stroke="#d6477a" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="93.35" y="328" font-size="9" font-weight="600" fill="#d6477a" text-anchor="middle" >planned</text>
+<text x="128.7" y="328" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >set_wrap(id, wrap, gap) → MoveObject with the old anchor and the new wrap, so the history reads 'Wrap text around Picture 1'.</text>
+<text x="128.7" y="342" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Import/export read and write it.</text>
+<line x1="540" y1="372" x2="540" y2="388" stroke="#5b4bc4" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="560" y1="388" x2="560" y2="372" stroke="#13917f" stroke-width="1.4" marker-start="url(#al)"/>
+<text x="576" y="382" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start" >methods down, events up (JSON over the document's link)</text>
+<rect x="40" y="388" width="1000" height="208" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="40" y="388" width="8" height="208" rx="4" fill="#13917f" />
+<circle cx="70" cy="412" r="10" fill="#5b4bc4" />
+<text x="70" y="416" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >3</text>
+<text x="90" y="417" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Web client: session and the pure parts</text>
+<text x="1020" y="417" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" >web/app/lib/</text>
+<rect x="66" y="429" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="440" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="440" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >text-session.ts: shapes (loaded, and kept by the 'shape' event); placeOf (the server counts characters, the page UTF-16 units);</text>
+<text x="116.5" y="454" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >addImage (creates' add_image with a place in the text).</text>
+<rect x="66" y="463" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="474" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="474" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >text-containers.ts: floatBox (anchor character + dx/dy, kept in the column), columnOf, letsGoOfObject. text-object-look.ts:</text>
+<text x="116.5" y="488" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >lookOf, what any kind of object looks like as plain data. images.ts: PictureImport, pictureSize (the server allows one unit of</text>
+<text x="116.5" y="502" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >aspect error).</text>
+<rect x="66" y="511" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="522" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="522" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >objects.ts shared types (BlockAnchor now has dx, dy); descriptions.ts (what a screen reader says); rendering.ts; neighbour,</text>
+<text x="116.5" y="536" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >resizedBy.</text>
+<rect x="66" y="545" width="54.699999999999996" height="15" rx="7.5" fill="#fff" stroke="#d6477a" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="93.35" y="556" font-size="9" font-weight="600" fill="#d6477a" text-anchor="middle" >planned</text>
+<text x="128.7" y="556" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >text-wrap.ts: which side of the column an object is on and the float box for the flow view (stage 2 below); pure and tested like</text>
+<text x="128.7" y="570" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >the rest.</text>
+<rect x="40" y="616" width="1000" height="180" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="40" y="616" width="8" height="180" rx="4" fill="#13917f" />
+<circle cx="70" cy="640" r="10" fill="#5b4bc4" />
+<text x="70" y="644" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >4</text>
+<text x="90" y="645" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Web client: components</text>
+<text x="1020" y="645" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" >web/app/components/</text>
+<rect x="66" y="657" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="668" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="668" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >TextContainers.vue: draws every kind (lookOf) at floatBox; selection, keys, grip. TextEditor.vue: spotOf (the rect of the anchor</text>
+<text x="116.5" y="682" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >character via a Range), and a capture handler that lets go of the selection on any press or focus outside an object.</text>
+<rect x="66" y="691" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="702" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="702" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >ImageImportDialog.vue: one dialog for all three apps; it takes an add(picture, aspect) function. SheetImageImportDialog.vue is</text>
+<text x="116.5" y="716" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >gone. TextWorkspace.vue: Edit ▸ Image… (Ctrl+Alt+I), addPicture.</text>
+<rect x="66" y="725" width="54.699999999999996" height="15" rx="7.5" fill="#fff" stroke="#d6477a" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="93.35" y="736" font-size="9" font-weight="600" fill="#d6477a" text-anchor="middle" >planned</text>
+<text x="128.7" y="736" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >A 'wrap band' hint on the held object in the editor the Ctrl-held grab cursor over an object's area, so one behind the text can</text>
+<text x="128.7" y="750" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >be taken (D1063), and Format ▸ Wrap Text. Dragging to set dx/dy (open point 1 of the layer mock-up).</text>
+<rect x="66" y="759" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="770" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="770" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >RenderedFace / RenderedEditor (containers), the dock, the menus (document-menus.ts), keys.generated.ts.</text>
+<rect x="40" y="816" width="1000" height="174" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="40" y="816" width="8" height="174" rx="4" fill="#d6477a" />
+<circle cx="70" cy="840" r="10" fill="#5b4bc4" />
+<text x="70" y="844" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >5</text>
+<text x="90" y="845" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Layout library: one deterministic engine</text>
+<text x="1020" y="845" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" >layout/src/</text>
+<rect x="66" y="857" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="868" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="868" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >apps/composes.ts layoutText: an object's place is its character's spot plus px(dx), px(dy), kept inside the margins and above</text>
+<text x="116.5" y="882" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >the bottom margin. Before, dx/dy were ignored in print.</text>
+<rect x="66" y="891" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="902" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="902" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >apps/objects.ts drawObject (box, picture, shape, words, rotation); flow/paginate.ts (paginate, locate); text/* (layoutParagraph:</text>
+<text x="116.5" y="916" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >a fixed width per paragraph).</text>
+<rect x="66" y="925" width="54.699999999999996" height="15" rx="7.5" fill="#fff" stroke="#d6477a" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="93.35" y="936" font-size="9" font-weight="600" fill="#d6477a" text-anchor="middle" >planned</text>
+<text x="128.7" y="936" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >flow/exclusions.ts: bands from object boxes plus the gap, in the order of the text. layoutParagraph takes widthAt(lineTop,</text>
+<text x="128.7" y="950" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >lineHeight) instead of one width; paginate hands it the bands that reach its page. Pure, integers in mpt, so the same</text>
+<text x="128.7" y="964" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >everywhere.</text>
+<rect x="40" y="1010" width="1000" height="140" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="40" y="1010" width="8" height="140" rx="4" fill="#e8943a" />
+<circle cx="70" cy="1034" r="10" fill="#5b4bc4" />
+<text x="70" y="1038" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >6</text>
+<text x="90" y="1039" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Desktop shells and the key table</text>
+<text x="1020" y="1039" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" >clients/linux/src/claudia_shell_gtk/manifest.py, scripts/generate_keys.py</text>
+<rect x="66" y="1051" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="1062" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="1062" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >edit.image in composes' Edit menu (the same id and key in all three apps); keys.generated.ts and keyboard-shortcuts.md</text>
+<text x="116.5" y="1076" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >regenerated; test_manifest's web-parity test caught the missing entry. The i18n catalogs (po/claudia.pot, de.po,</text>
+<text x="116.5" y="1090" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >public/i18n/de.json) take the one new label.</text>
+<rect x="66" y="1099" width="54.699999999999996" height="15" rx="7.5" fill="#fff" stroke="#d6477a" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="93.35" y="1110" font-size="9" font-weight="600" fill="#d6477a" text-anchor="middle" >planned</text>
+<text x="128.7" y="1110" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >format.wrap-text (Ctrl+Alt+L, free in the three manifests): one key that cycles the four modes (D1064); Windows and macOS</text>
+<text x="128.7" y="1124" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >generate their menus from the manifest.</text>
+<rect x="40" y="1170" width="1000" height="126" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<rect x="40" y="1170" width="8" height="126" rx="4" fill="#e8943a" />
+<circle cx="70" cy="1194" r="10" fill="#5b4bc4" />
+<text x="70" y="1198" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >7</text>
+<text x="90" y="1199" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Import and export</text>
+<text x="1020" y="1199" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end" font-family="JetBrains Mono, DejaVu Sans Mono, monospace" >Word (docx) and OpenDocument (odt)</text>
+<rect x="66" y="1211" width="42.5" height="15" rx="7.5" fill="#13917f" />
+<text x="87.25" y="1222" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" >built</text>
+<text x="116.5" y="1222" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Pictures and text boxes arrive by import as objects (D907). The importers were not read for this sheet, so what they keep of a</text>
+<text x="116.5" y="1236" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >wrap, or of an offset, is not known yet.</text>
+<rect x="66" y="1245" width="54.699999999999996" height="15" rx="7.5" fill="#fff" stroke="#d6477a" stroke-width="1" stroke-dasharray="3 2"/>
+<text x="93.35" y="1256" font-size="9" font-weight="600" fill="#d6477a" text-anchor="middle" >planned</text>
+<text x="128.7" y="1256" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >wrap ↔ wrapNone / wrapSquare / wrapTopAndBottom + behindDoc ↔ style:wrap; what Claudia does not model (tight, through) is kept</text>
+<text x="128.7" y="1270" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >and written back.</text>
+<text x="1020" y="118" font-size="10" font-weight="400" fill="#1f1a33" text-anchor="start" ></text>
+<rect x="1070" y="96" width="650" height="1120" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
+<text x="1092" y="126" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >The decision: who lays out the lines round an object</text>
+<text x="1092" y="148" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >Wrap changes where lines break, and lines are laid out twice today: by the browser in the</text>
+<text x="1092" y="163" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >editor and by the engine in print and the print preview. Everything else in this layer is</text>
+<text x="1092" y="178" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >the same for all three options.</text>
+<rect x="1092" y="204" width="606" height="240" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<circle cx="1114" cy="228" r="10" fill="#5b4bc4" />
+<text x="1114" y="232" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >1</text>
+<text x="1134" y="233" font-size="14.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Wrap in print only</text>
+<text x="1676" y="233" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="end" >least work; the editor lies</text>
+<rect x="1112" y="250" width="96" height="120" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="1122" y="262" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="274" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="286" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="298" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="310" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="322" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="334" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="346" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1172" y="276" width="26" height="34" rx="0" fill="#d9d3f0" />
+<text x="1160.0" y="384" font-size="9.5" font-weight="600" fill="#6e6880" text-anchor="middle" >editor: browser</text>
+<rect x="1224" y="250" width="96" height="120" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="1234" y="262" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="274" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="286" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="298" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="310" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="322" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="334" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="346" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1284" y="276" width="26" height="34" rx="0" fill="#d9d3f0" />
+<text x="1272.0" y="384" font-size="9.5" font-weight="600" fill="#6e6880" text-anchor="middle" >print: engine</text>
+<text x="1216" y="320" font-size="22" font-weight="600" fill="#d6477a" text-anchor="middle" >≠</text>
+<text x="1346" y="250" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >The engine wraps (exclusions in layoutParagraph); the</text>
+<text x="1346" y="264" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >editor keeps showing objects over the words.</text>
+<text x="1346" y="285" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >A held object shows a dashed band where the words will</text>
+<text x="1346" y="299" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >make room.</text>
+<text x="1346" y="320" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Cost: small. Risk: what you see is not what prints, for</text>
+<text x="1346" y="334" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >exactly the objects that matter.</text>
+<rect x="1092" y="460" width="606" height="240" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<circle cx="1114" cy="484" r="10" fill="#5b4bc4" />
+<text x="1114" y="488" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >2</text>
+<text x="1134" y="489" font-size="14.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >The engine lays out the editor too</text>
+<text x="1676" y="489" font-size="10.5" font-weight="600" fill="#6e6880" text-anchor="end" >exact; a rewrite</text>
+<rect x="1112" y="506" width="96" height="120" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="1122" y="518" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="530" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="542" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="554" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="566" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="578" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="590" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="602" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1172" y="532" width="26" height="34" rx="0" fill="#d9d3f0" />
+<text x="1160.0" y="640" font-size="9.5" font-weight="600" fill="#6e6880" text-anchor="middle" >editor: engine</text>
+<rect x="1224" y="506" width="96" height="120" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="1234" y="518" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="530" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="542" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="554" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="566" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="578" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="590" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="602" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1284" y="532" width="26" height="34" rx="0" fill="#d9d3f0" />
+<text x="1272.0" y="640" font-size="9.5" font-weight="600" fill="#6e6880" text-anchor="middle" >print: engine</text>
+<text x="1216" y="576" font-size="22" font-weight="600" fill="#13917f" text-anchor="middle" >=</text>
+<text x="1346" y="506" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >The page view draws the engine's display list; a caret,</text>
+<text x="1346" y="520" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >a selection, input methods, spell checking and the</text>
+<text x="1346" y="534" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >screen-reader tree are rebuilt on top of it.</text>
+<text x="1346" y="555" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Cost: months, and the risk is in accessibility (BITV)</text>
+<text x="1346" y="569" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >and in typing with an input method.</text>
+<text x="1346" y="590" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Gain: one set of lines, everywhere, as the vision</text>
+<text x="1346" y="604" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >statement asks.</text>
+<rect x="1092" y="716" width="606" height="240" rx="12" fill="#fff" stroke="#d6477a" stroke-width="2" />
+<circle cx="1114" cy="740" r="10" fill="#d6477a" />
+<text x="1114" y="744" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" >3</text>
+<text x="1134" y="745" font-size="14.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Engine exact, floats in the editor — in two stages</text>
+<text x="1676" y="745" font-size="10.5" font-weight="600" fill="#d6477a" text-anchor="end" >chosen · D1062</text>
+<rect x="1112" y="762" width="96" height="120" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="1122" y="774" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="786" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="798" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="810" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="822" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="834" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="846" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1122" y="858" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1172" y="788" width="26" height="34" rx="0" fill="#d9d3f0" />
+<text x="1160.0" y="896" font-size="9.5" font-weight="600" fill="#6e6880" text-anchor="middle" >editor: floats</text>
+<rect x="1224" y="762" width="96" height="120" rx="0" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1" />
+<rect x="1234" y="774" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="786" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="798" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="810" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="822" width="46" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="834" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="846" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1234" y="858" width="76" height="4" rx="2" fill="#cfc9e2" />
+<rect x="1284" y="788" width="26" height="34" rx="0" fill="#d9d3f0" />
+<text x="1272.0" y="896" font-size="9.5" font-weight="600" fill="#6e6880" text-anchor="middle" >print + preview: engine</text>
+<text x="1216" y="832" font-size="22" font-weight="600" fill="#5b4bc4" text-anchor="middle" >≈</text>
+<text x="1346" y="762" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Stage 1 as option 1 (print and the print preview are</text>
+<text x="1346" y="776" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >exact).</text>
+<text x="1346" y="797" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >Stage 2: a non-editable float of the object's size sits</text>
+<text x="1346" y="811" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >at the anchor's line in the editor (the editor already</text>
+<text x="1346" y="825" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >has such nodes: peer carets, replies). CSS floats wrap</text>
+<text x="1346" y="839" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >on one side only, so an object in the middle of the</text>
+<text x="1346" y="853" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >column wraps on its wider side in the flow view; print</text>
+<text x="1346" y="867" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >and the preview show both sides.</text>
+<text x="1346" y="888" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >A test feeds the same text and objects to both and</text>
+<text x="1346" y="902" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >compares which lines are narrowed.</text>
+<rect x="1092" y="972" width="606" height="232" rx="12" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
+<text x="1112" y="1000" font-size="14.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >Why option 3 (chosen 2026-11-17)</text>
+<text x="1112" y="1020" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >· The owner's rule is that a document renders identically wherever the engine renders it; the</text>
+<text x="1112" y="1034" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >  browser's editor has never been that, and does not have to be as long as it is honest about</text>
+<text x="1112" y="1048" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >  it.</text>
+<text x="1112" y="1068" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >· It keeps contenteditable, which is where typing, input methods, spell checking and the</text>
+<text x="1112" y="1082" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >  screen-reader reading order come from.</text>
+<text x="1112" y="1102" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >· Wrap that is only in print (stage 1) is already worth having for Word and LibreOffice files</text>
+<text x="1112" y="1116" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >  that arrive with wrapped pictures.</text>
+<text x="1112" y="1136" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >· Open: whether stage 2 is wanted before people complain. Stage 1 first, as decided; stage 2</text>
+<text x="1112" y="1150" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" >  when it is asked for.</text>
+</svg>

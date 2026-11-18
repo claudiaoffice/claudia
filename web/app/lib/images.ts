@@ -76,3 +76,25 @@ export function formatByteSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
+
+/** What the person told the importer about a picture they chose (`ImageImportDialog.vue`): the file's bytes, base64
+ * (`fileToBase64`), what it shows, and where it came from. `sourcePath` is `null` from a plain web browser, which
+ * cannot know a file's full path. */
+export interface PictureImport {
+  data: string
+  alt: string
+  sourceName: string
+  sourcePath: string | null
+  decorative?: boolean
+}
+
+/** The size to put a picture of `aspect` (width / height) at: `height` high, or narrower if that would be wider than
+ * `maxWidth`. A picture keeps its own proportions — the server turns down any other size, within one pixel. */
+export function pictureSize(aspect: number, height: number, maxWidth: number): { w: number; h: number } {
+  const w = Math.round(height * aspect)
+  if (w <= maxWidth) return { w, h: height }
+  // narrowed: the height is rounded *down* and the width then follows it, so that it is the width that is off by at most
+  // half a unit (rounding the height off the width could leave a wide picture several units out)
+  const h = Math.max(1, Math.floor(maxWidth / aspect))
+  return { w: Math.min(maxWidth, Math.round(h * aspect)), h }
+}

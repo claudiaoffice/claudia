@@ -5,6 +5,8 @@ import { roleNow } from '~/lib/replay'
 import { computed, nextTick, ref, watch } from 'vue'
 import { DEFAULT_STYLE, SHAPE_LABEL_STYLE } from '@claudia/layout'
 import { countWords } from '~/lib/blocks'
+import { pictureSize, type PictureImport } from '~/lib/images'
+import { NEW_OBJECT_WRAP, wrapAnnouncement, wrapLabel, wrapOf } from '~/lib/wrap'
 import { toMarkdown } from '~/lib/markdown'
 import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
@@ -39,6 +41,7 @@ import { useTheme } from '~/lib/theme'
 import DocumentFrame from './DocumentFrame.vue'
 import SearchPanel from './SearchPanel.vue'
 import PrintPreview from './PrintPreview.vue'
+import ImageImportDialog from './ImageImportDialog.vue'
 import { textSource } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
 import type { Menu, MenuItem } from './MenuBar.vue'
@@ -55,7 +58,7 @@ const { t, locale, choose } = useI18n()
 
 const frame = ref<InstanceType<typeof DocumentFrame> | null>(null)
 /** composes' own dialogs; the window's (save, share, export, …) are DocumentFrame's. */
-const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering' | 'contents' | 'table' | 'table-options'>(null)
+const dialog = ref<null | 'styles' | 'colours' | 'list-start' | 'numbering' | 'contents' | 'image' | 'table' | 'table-options'>(null)
 const styleMenu = ref<{ x: number; y: number; mode?: 'edit' | 'apply' } | null>(null)
 const styleHost = textStyleHost(session)
 const active = ref<string | null>(null)
@@ -164,6 +167,48 @@ async function addContainer(type: string) {
   await session.addContainer(type, at, { w: CONTAINER_WIDTH, h: CONTAINER_HEIGHT })
 }
 
+const PICTURE_HEIGHT = 240 // as high as this, unless that would be wider than a container may be
+/** Where the caret is, or the start of the text: what a new object hangs from. */
+const hangFrom = () => state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
+/** Edit ▸ Image…: a picture hangs from the character the caret is at, as a container does (E10.8, E10.16). It keeps its
+ * own proportions, and is no wider than a container is by default. The text stops above it and goes on below (D1061). */
+function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
+  const at = hangFrom()
+  if (!at) return Promise.resolve(null)
+  return session.addImage(picture, at, pictureSize(aspect, PICTURE_HEIGHT, CONTAINER_WIDTH), NEW_OBJECT_WRAP)
+}
+
+const SHAPE_HEIGHT = 160
+const TEXT_BOX = { w: 260, h: 100 }
+/** Edit ▸ Text Box: an empty text box where the caret is (the same entry and key as in creates). */
+async function addTextBox() {
+  const at = hangFrom()
+  if (at) await session.addTextBox(at, TEXT_BOX, NEW_OBJECT_WRAP)
+}
+/** Edit ▸ a shape of the library: it keeps its outline's proportions (a circle stays a circle). */
+async function addShape(id: string) {
+  const at = hangFrom()
+  if (!at) return
+  const aspect = (state.library.find((s) => s.id === id) ?? state.shapes[id])?.aspect ?? null
+  await session.addShape(id, at, { w: Math.round(SHAPE_HEIGHT * (aspect ?? 1)), h: SHAPE_HEIGHT }, NEW_OBJECT_WRAP)
+}
+
+/** Format ▸ Wrap Text, Ctrl+Alt+R (D1064): the object selected goes on to the next way of letting the text flow round it,
+ * and the status line says which one it is now, for those who cannot see the page. */
+async function cycleWrap() {
+  const id = state.selectedObject
+  if (!id || readonly.value) return
+  const now = await session.cycleWrap(id)
+  if (now) session.notice(wrapAnnouncement(now), 'info')
+}
+const WRAP_TEXT: ShortcutDef = { id: 'format.wrap-text', get label() { return t('Wrap Text') }, chord: chordOf('format.wrap-text'), run: () => void cycleWrap(), enabled: () => !!state.selectedObject && !readonly.value && !printing.value }
+/** What Wrap Text shows beside its name: the mode the selected object has now. */
+const currentWrap = computed(() => (state.selectedObject && state.objects[state.selectedObject] ? wrapOf(state.objects[state.selectedObject]!.anchor).wrap : null))
+function pictureInserted() {
+  dialog.value = null
+  nextTick(() => editor.value?.focus())
+}
+
 async function pasteFromClipboard() {
   let text: string
   try {
@@ -221,6 +266,7 @@ const tableHost: TableMenuHost = {
 }
 const extraShortcuts = [
   LOOK,
+  WRAP_TEXT,
   ...tableShortcuts({ t }, tableHost),
   PRINT,
   SOFT_HYPHEN,
@@ -423,6 +469,12 @@ const menus = computed<Menu[]>(() => {
         referenceItem(c, { run: () => void frame.value?.referenceThing(session.state.selection?.focus.block ?? ''), possible: () => !!session.state.selection }),
         goToTargetItem(c, { run: () => goToTarget(), possible: () => !!referenceAtCaret() }),
         { label: '', separator: true },
+        // a picture hangs from the caret's character, like a container (E10.16); its key is the same in all three apps
+        { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value || !state.selection },
+        { id: 'edit.text-box', label: t('Text Box'), action: () => void addTextBox(), disabled: readonly.value || !state.selection },
+        // the outlines the server offers, as in creates; they hang from the caret's character like a picture
+        ...state.library.map((s) => ({ label: s.name, action: () => void addShape(s.id), disabled: readonly.value || !state.selection })),
+        { label: '', separator: true },
         // The two characters that had keys and no menu entry (UX-35/UX-36): where a word may break, and where never.
         {
           label: t('Insert'),
@@ -440,8 +492,8 @@ const menus = computed<Menu[]>(() => {
     insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }, insertTableItems(c, { add: () => (dialog.value = 'table'), possible: canInsertTable() })),
     {
       label: t('Format'),
-      items:
-        state.styles.length === 0
+      items: [
+        ...(state.styles.length === 0
           ? [{ label: t('No styles yet'), disabled: true }]
           : formatItems(t, {
               // D127's groups — structure · running text · called-out blocks — and then any style of the text's own.
@@ -479,7 +531,16 @@ const menus = computed<Menu[]>(() => {
                 },
                 allNumbering: () => (dialog.value = 'numbering'),
               },
-            }),
+            })),
+        { label: '', separator: true },
+        // one entry and one key that cycles the four modes (D1064); it says which mode the selected object has now
+        {
+          id: 'format.wrap-text',
+          label: currentWrap.value ? t('Wrap Text: {mode}', { mode: wrapLabel(currentWrap.value) }) : t('Wrap Text'),
+          action: () => void cycleWrap(),
+          disabled: readonly.value || !state.selectedObject,
+        },
+      ],
     },
     {
       label: t('View'),
@@ -592,6 +653,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       />
       <SuggestionPopover v-if="opened" :id="opened.id" :key="opened.id" :session="session" :x="opened.x" :y="opened.y" @close="closeSuggestion" @next="pickNext(opened.id)" />
       <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="closeStyleMenu" @styles="(styleMenu = null), (dialog = 'styles')" />
+      <ImageImportDialog v-if="dialog === 'image'" :add="addPicture" @close="dialog = null" @inserted="pictureInserted" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <ReferencePicker v-if="picker" :x="picker.x" :y="picker.y" :targets="(q) => session.referenceTargets(q)" @choose="putReference" @close="(picker = null), editor?.focus()" />
       <ContextMenu v-if="refMenu" :x="refMenu.x" :y="refMenu.y" :items="refMenuItems" :width="260" :label="t('Reference menu')" @close="refMenu = null" />

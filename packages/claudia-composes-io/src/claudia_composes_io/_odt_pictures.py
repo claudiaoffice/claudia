@@ -18,7 +18,7 @@ from itertools import count
 
 from lxml import etree
 
-from claudia_composes import TextModel
+from claudia_composes import DEFAULT_WRAP_GAP, BlockAnchor, TextModel
 from claudia_core import (
     MIN_OBJECT_SIZE,
     ImageAsset,
@@ -40,23 +40,45 @@ from claudia_odf_io import (
     name_of,
     offset_of,
     picture_of,
-    transform_of,
     turned_box,
     xml_safe,
 )
 
 from ._pictures import all_pictures, pictures_of
+from ._wrap import (
+    ODF_POSITION,
+    WrapStyles,
+    odf_attributes,
+    odf_name,
+    odf_offset_of,
+    odf_place,
+    odf_properties,
+    odf_wrap_of,
+)
 
 _PX_PER_INCH = 96
 _CM_PER_INCH = 2.54
-#: The name of the style of the frame of a picture: no wrapping, in front of the text, at the top left of its paragraph.
+#: The name of the style of the frame of a picture: no wrapping, in front of the text, where its character is.
 PICTURE_STYLE = "Claudia_20_picture"
-PICTURE_STYLE_XML = (
-    f'<style:style xmlns:style="{NS["style"]}" xmlns:text="{NS["text"]}" style:name="{PICTURE_STYLE}" '
-    'style:family="graphic"><style:graphic-properties style:wrap="none" style:run-through="foreground" '
-    'style:horizontal-pos="from-left" style:horizontal-rel="paragraph" '
-    'style:vertical-pos="from-top" style:vertical-rel="paragraph"/></style:style>'
-)
+
+
+def picture_style_xml(anchor: BlockAnchor) -> str:
+    """The graphic style of a picture that has the text flow round it as ``anchor`` says, its place measured from its
+    character and its line; its name is :func:`picture_style_name`."""
+    return (
+        f'<style:style xmlns:style="{NS["style"]}" xmlns:text="{NS["text"]}" xmlns:fo="{NS["fo"]}" '
+        f'style:name="{picture_style_name(anchor)}" style:family="graphic"><style:graphic-properties '
+        f"{odf_attributes(anchor)} {ODF_POSITION}/></style:style>"
+    )
+
+
+def picture_style_name(anchor: BlockAnchor) -> str:
+    """The name of the graphic style of a picture that has the text flow round it as ``anchor`` says."""
+    return odf_name(PICTURE_STYLE, anchor)
+
+
+#: The style of a picture that floats over the text, the one a picture of a file written before wrapping had.
+PICTURE_STYLE_XML = picture_style_xml(BlockAnchor("", 0))
 _EXTENSION = {"jpeg": "jpg"}
 _MEDIA_TYPE = {"svg": "image/svg+xml", "png": "image/png", "jpeg": "image/jpeg", "gif": "image/gif", "bmp": "image/bmp"}
 
@@ -92,6 +114,10 @@ class FilePicture:
     description: str
     name: str
     href: str
+    wrap: str = "over"  # how the text flows round it (D1061) ...
+    gap: int = DEFAULT_WRAP_GAP  # ... and how far the words keep from it
+    dx: int = 0  # how far off its character it sits, to the right ...
+    dy: int = 0  # ... and down (D1067)
 
     @property
     def body(self) -> ObjectBody:
@@ -158,6 +184,8 @@ def file_pictures(
                     description_of(frame),
                     name_of(frame),
                     href,
+                    *odf_wrap_of(odf_properties(frame, graphics)),
+                    *odf_offset_of(frame, odf_properties(frame, graphics)),
                 )
             )
     return found
@@ -182,12 +210,6 @@ def frames_not_pictures(paragraph: etree._Element) -> int:
 
 
 # ------------------------------------------------------------------------------------------------------ writing
-def _cm(pixels: float) -> str:
-    """A length in pixels as centimetres, to four places."""
-    text = f"{pixels / _PX_PER_INCH * _CM_PER_INCH:.4f}".rstrip("0").rstrip(".")
-    return f"{text or '0'}cm"
-
-
 class PictureWriter:
     """Writes the frames of image objects; collects the pictures' own bytes for the package."""
 
@@ -198,6 +220,7 @@ class PictureWriter:
         self._hrefs: dict[str, str] = {}
         self._taken = taken if taken is not None else set()
         self._numbers = count(1)
+        self.styles: dict[str, bytes] = {}  # the graphic styles the frames written use, by name
 
     def frame(self, obj: VisualObject, asset: ImageAsset) -> etree._Element:
         """The ``draw:frame`` that shows ``asset`` for ``obj``."""
@@ -206,20 +229,13 @@ class PictureWriter:
         frame = etree.Element(
             _q("draw", "frame"), nsmap={prefix: NS[prefix] for prefix in ("draw", "svg", "xlink", "text")}
         )
-        frame.set(_q("draw", "style-name"), PICTURE_STYLE)
+        name = picture_style_name(obj.anchor)
+        self.styles.setdefault(name, picture_style_xml(obj.anchor).encode())
+        frame.set(_q("draw", "style-name"), name)
         frame.set(_q("draw", "name"), f"Picture {number}")
         frame.set(_q("text", "anchor-type"), "char")
         frame.set(_q("draw", "z-index"), str(number))
-        frame.set(_q("svg", "width"), _cm(body.w))
-        frame.set(_q("svg", "height"), _cm(body.h))
-        turn = transform_of(
-            body.rotation, (0.0, 0.0, body.w / _PX_PER_INCH * _CM_PER_INCH, body.h / _PX_PER_INCH * _CM_PER_INCH)
-        )
-        if turn is None:
-            frame.set(_q("svg", "x"), "0cm")
-            frame.set(_q("svg", "y"), "0cm")
-        else:
-            frame.set(_q("draw", "transform"), turn)
+        odf_place(frame, body.w, body.h, body.rotation, dx=obj.anchor.dx, dy=obj.anchor.dy)
         image = etree.SubElement(frame, _q("draw", "image"))
         for name, value in (
             ("href", self._href(asset, body)),
@@ -266,27 +282,11 @@ def restyle(picture: FilePicture, before: ObjectBody, after: ObjectBody) -> None
         elif found is not None:
             frame.remove(found)
     if (before.w, before.h) != (after.w, after.h) or before.rotation != after.rotation:
-        frame.set(_q("svg", "width"), _cm(after.w))
-        frame.set(_q("svg", "height"), _cm(after.h))
-        turn = transform_of(
-            after.rotation, (0.0, 0.0, after.w / _PX_PER_INCH * _CM_PER_INCH, after.h / _PX_PER_INCH * _CM_PER_INCH)
-        )
-        x = frame.get(_q("svg", "x"))
-        if turn is None:
-            _drop(frame, _q("draw", "transform"))
-            if x is None:
-                frame.set(_q("svg", "x"), "0cm")
-                frame.set(_q("svg", "y"), "0cm")
-        else:
-            frame.set(_q("draw", "transform"), turn)
-            _drop(frame, _q("svg", "x"))
-            _drop(frame, _q("svg", "y"))
-
-
-def _drop(element: etree._Element, name: str) -> None:
-    """Take the attribute ``name`` off ``element`` when it has it."""
-    if name in element.attrib:
-        del element.attrib[name]
+        x, y = frame.get(_q("svg", "x")), frame.get(_q("svg", "y"))
+        odf_place(frame, after.w, after.h, after.rotation, dx=picture.dx, dy=picture.dy)
+        if after.rotation % 360 == 0 and x is not None and y is not None:  # (a place the file has stays as it is)
+            frame.set(_q("svg", "x"), x)
+            frame.set(_q("svg", "y"), y)
 
 
 def _look(body: ObjectBody) -> tuple[str, bool, int, int, int]:
@@ -311,8 +311,10 @@ class PicturePlan:
         rasterise: Rasterise | None,
         taken: set[str],
         losses: LossLog | None = None,
+        wraps: WrapStyles | None = None,
     ) -> None:
         self.baseline, self.current, self.losses, self.rasterised = baseline, current, losses, rasterise is not None
+        self.wraps = wraps if wraps is not None else WrapStyles()  # (the styles for pictures whose wrapping changed)
         self.writer = PictureWriter(rasterise, taken)
         self.written = 0  # how many frames were drawn anew
         self.in_file: dict[str, list[FilePicture]] = {}
@@ -356,6 +358,14 @@ class PicturePlan:
                 frame = copy.deepcopy(picture.frame)
                 frame.tail = None
                 restyle(replace(picture, frame=frame), self.baseline.get_object(obj.id).body, obj.body)
+                before = self.baseline.get_object(obj.id).anchor
+                wrapped = (obj.anchor.wrap, obj.anchor.gap) != (before.wrap, before.gap)
+                moved = (obj.anchor.dx, obj.anchor.dy) != (before.dx, before.dy)
+                if wrapped or moved:
+                    self.wraps.give(frame, obj.anchor, wrap=wrapped, position=moved)
+                if moved:
+                    body = obj.body
+                    odf_place(frame, body.w, body.h, body.rotation, dx=obj.anchor.dx, dy=obj.anchor.dy)
             else:
                 frame = self.writer.frame(obj, asset)
                 self.written += 1

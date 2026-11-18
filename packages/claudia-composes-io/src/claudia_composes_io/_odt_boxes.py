@@ -18,7 +18,7 @@ from typing import cast
 
 from lxml import etree
 
-from claudia_composes import TextModel
+from claudia_composes import DEFAULT_WRAP_GAP, BlockAnchor, TextModel
 from claudia_core import (
     ASPECT_TOLERANCE,
     MIN_OBJECT_SIZE,
@@ -39,13 +39,13 @@ from claudia_odf_io import (
     offset_of,
     read_text,
     shapes_of,
-    transform_of,
     turned_box,
     xml_safe,
 )
 
 from ._boxes import EMU_PER_POINT, UNKNOWN, BoxLook, all_boxes, boxes_of, look_of, shown_words
-from ._odt_pictures import _cm, _drop, _pixels, _q
+from ._odt_pictures import _pixels, _q
+from ._wrap import ODF_POSITION, WrapStyles, odf_attributes, odf_offset_of, odf_place, odf_properties, odf_wrap_of
 
 #: The name an odt gives the outline of each shape of the model (an ellipse and a rectangle are elements of their own).
 _TRIANGLE = "isosceles-triangle"
@@ -59,12 +59,9 @@ _TRIANGLE_GEOMETRY = (
 _NAME = "Claudia_box_"
 _POINTS_PER_INCH = 72
 _WORDS = ("p", "h")
-#: The graphic style properties of every box (as of every picture): nothing wraps round it, it stands in front of the
-#: text at the top left of its paragraph.
-_PLACE = (
-    'style:wrap="none" style:run-through="foreground" style:horizontal-pos="from-left" '
-    'style:horizontal-rel="paragraph" style:vertical-pos="from-top" style:vertical-rel="paragraph"'
-)
+#: Where every box (as every picture) stands: its place is measured from its character and line. How the text flows
+#: round it is not here but the box's own (:func:`claudia_composes_io._wrap.odf_attributes`).
+_PLACE = ODF_POSITION
 
 
 @dataclass(frozen=True)
@@ -77,6 +74,10 @@ class FileBox:
     element: etree._Element
     body: ObjectBody
     look: BoxLook
+    wrap: str = "over"  # how the text flows round it (D1061) ...
+    gap: int = DEFAULT_WRAP_GAP  # ... and how far the words keep from it
+    dx: int = 0  # how far off its character it sits, to the right ...
+    dy: int = 0  # ... and down (D1067)
 
 
 def _hex(value: str | None) -> tuple[int, int, int] | None:
@@ -91,19 +92,7 @@ def _hex(value: str | None) -> tuple[int, int, int] | None:
 
 def _properties(element: etree._Element, graphics: Mapping[str, etree._Element]) -> dict[str, str]:
     """What the graphic style of ``element`` (and the styles it is based on) says, by ``prefix:name``."""
-    found: dict[str, str] = {}
-    name: str | None = element.get(_q("draw", "style-name"))
-    seen: set[str] = set()
-    while name and name in graphics and name not in seen:
-        seen.add(name)
-        style = graphics[name]
-        for properties in style.findall("style:graphic-properties", NS):
-            for key, value in properties.attrib.items():
-                prefix, local = etree.QName(key).namespace, etree.QName(key).localname
-                short = next((each for each, uri in NS.items() if uri == prefix), "")
-                found.setdefault(f"{short}:{local}", str(value))
-        name = style.get(_q("style", "parent-style-name"))
-    return found
+    return odf_properties(element, graphics)
 
 
 def _looks(element: etree._Element, graphics: Mapping[str, etree._Element]) -> BoxLook:
@@ -246,7 +235,9 @@ def file_boxes(
             if held is None or offset is None:
                 continue
             object_id = f"x{len(found) + 1}"
-            found.append(FileBox(object_id, index, offset, element, replace(held[0], id=object_id), held[1]))
+            properties = _properties(element, graphics)
+            wrap = (*odf_wrap_of(properties), *odf_offset_of(element, properties))
+            found.append(FileBox(object_id, index, offset, element, replace(held[0], id=object_id), held[1], *wrap))
     return found
 
 
@@ -256,12 +247,14 @@ class BoxStyles:
 
     def __init__(self, taken: set[str] | None = None) -> None:
         self._taken = taken if taken is not None else set()
-        self._by_look: dict[tuple[str, BoxLook], str] = {}
+        self._by_look: dict[tuple[str, BoxLook, str, int], str] = {}
         self.new: list[bytes] = []  # the styles to add to the file, as XML
 
-    def name_of(self, kind: str, look: BoxLook) -> str:
-        """The name of the style of a box of ``kind`` (``"text"`` or ``"shape"``) that looks like ``look``."""
-        key = (kind, look)
+    def name_of(self, kind: str, look: BoxLook, anchor: BlockAnchor | None = None) -> str:
+        """The name of the style of a box of ``kind`` (``"text"`` or ``"shape"``) that looks like ``look`` and has
+        the text flow round it as ``anchor`` says (over it, when there is none)."""
+        anchor = anchor if anchor is not None else BlockAnchor("", 0)
+        key = (kind, look, anchor.wrap, anchor.gap)
         if key not in self._by_look:
             number = len(self._by_look) + 1
             while f"{_NAME}{number}" in self._taken:
@@ -269,11 +262,11 @@ class BoxStyles:
             name = f"{_NAME}{number}"
             self._taken.add(name)
             self._by_look[key] = name
-            self.new.append(self._xml(name, kind, look).encode())
+            self.new.append(self._xml(name, kind, look, anchor).encode())
         return self._by_look[key]
 
     @staticmethod
-    def _xml(name: str, kind: str, look: BoxLook) -> str:
+    def _xml(name: str, kind: str, look: BoxLook, anchor: BlockAnchor) -> str:
         fill = f'draw:fill="solid" draw:fill-color="{_colour(look.fill)}"' if look.fill else 'draw:fill="none"'
         if look.line:
             width = f"{look.width / EMU_PER_POINT:.4g}pt"
@@ -289,7 +282,7 @@ class BoxStyles:
         return (
             f'<style:style xmlns:style="{NS["style"]}" xmlns:draw="{NS["draw"]}" xmlns:svg="{NS["svg"]}" '
             f'xmlns:fo="{NS["fo"]}" style:name="{name}" style:family="graphic">'
-            f"<style:graphic-properties {fill} {line} {inside} {_PLACE}/></style:style>"
+            f"<style:graphic-properties {fill} {line} {inside} {_PLACE} {odf_attributes(anchor)}/></style:style>"
         )
 
 
@@ -315,11 +308,11 @@ class BoxWriter:
         element = etree.Element(
             _q("draw", tag), nsmap={prefix: NS[prefix] for prefix in ("draw", "svg", "xlink", "text")}
         )
-        element.set(_q("draw", "style-name"), self.styles.name_of(body.kind, look_of(self.model, body)))
+        element.set(_q("draw", "style-name"), self.styles.name_of(body.kind, look_of(self.model, body), obj.anchor))
         element.set(_q("draw", "name"), f"{'Text box' if is_box else 'Shape'} {self._number}")
         element.set(_q("text", "anchor-type"), "char")
         element.set(_q("draw", "z-index"), str(self._number))
-        _place(element, body.w, body.h, body.rotation)
+        odf_place(element, body.w, body.h, body.rotation, dx=obj.anchor.dx, dy=obj.anchor.dy)
         words = body.paragraph
         inner = self.paragraph_of(words.style, xml_safe(shown_words(self.model, words))) if words is not None else None
         if is_box:
@@ -335,21 +328,6 @@ class BoxWriter:
         if body.description and not body.decorative:  # (ODF 1.3 has no mark for decoration: see the losses)
             etree.SubElement(element, _q("svg", "desc")).text = xml_safe(body.description)
         return element
-
-
-def _place(element: etree._Element, w: int, h: int, rotation: int) -> None:
-    """Give ``element`` its size and turn (and the place at the top left of its paragraph that an unturned one has)."""
-    element.set(_q("svg", "width"), _cm(w))
-    element.set(_q("svg", "height"), _cm(h))
-    turn = transform_of(rotation, (0.0, 0.0, w / 96 * 2.54, h / 96 * 2.54))
-    if turn is None:
-        element.set(_q("svg", "x"), "0cm")
-        element.set(_q("svg", "y"), "0cm")
-        _drop(element, _q("draw", "transform"))
-    else:
-        element.set(_q("draw", "transform"), turn)
-        _drop(element, _q("svg", "x"))
-        _drop(element, _q("svg", "y"))
 
 
 # ------------------------------------------------------------------------------------------------------ changing
@@ -377,7 +355,7 @@ def restyle(
         elif found is not None:
             element.remove(found)
     if (before.w, before.h, before.rotation) != (after.w, after.h, after.rotation):
-        _place(element, after.w, after.h, after.rotation)
+        odf_place(element, after.w, after.h, after.rotation, dx=box.dx, dy=box.dy)
     if before.paragraph != after.paragraph and after.paragraph is not None:
         holder = element.find("draw:text-box", NS) if after.kind == "text" else element
         assert holder is not None
@@ -410,8 +388,10 @@ class BoxPlan:
         current: TextModel,
         writer: BoxWriter,
         losses: LossLog | None = None,
+        wraps: WrapStyles | None = None,
     ) -> None:
         self.baseline, self.current, self.losses, self.writer = baseline, current, losses, writer
+        self.wraps = wraps if wraps is not None else WrapStyles()  # (the styles for boxes whose wrapping changed)
         self.written = 0  # how many elements were drawn anew
         self.in_file: dict[str, list[FileBox]] = {}
         self.kept: dict[str, FileBox] = {}
@@ -455,6 +435,14 @@ class BoxPlan:
                 element = copy.deepcopy(box.element)
                 element.tail = None
                 restyle(box, element, self.baseline.get_object(obj.id).body, obj.body, self.writer.paragraph_of)
+                before = self.baseline.get_object(obj.id).anchor
+                wrapped = (obj.anchor.wrap, obj.anchor.gap) != (before.wrap, before.gap)
+                moved = (obj.anchor.dx, obj.anchor.dy) != (before.dx, before.dy)
+                if wrapped or moved:
+                    self.wraps.give(element, obj.anchor, wrap=wrapped, position=moved)
+                if moved:
+                    body = obj.body
+                    odf_place(element, body.w, body.h, body.rotation, dx=obj.anchor.dx, dy=obj.anchor.dy)
             else:
                 element = self.writer.element(obj)
                 self.written += 1

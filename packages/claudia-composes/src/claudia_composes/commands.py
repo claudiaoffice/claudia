@@ -11,7 +11,19 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import Batch, Command, Context, DeleteText, InsertText, PageSetup, Region, SetLanguage, SetListItem
+from claudia_core import (
+    Batch,
+    Command,
+    Context,
+    DeleteText,
+    InsertText,
+    ObjectSet,
+    PageSetup,
+    Region,
+    RemoveObject,
+    SetLanguage,
+    SetListItem,
+)
 
 from .events import (
     BlocksJoined,
@@ -454,3 +466,57 @@ class AcceptSuggestion(TextCommand):
 def _paragraph_by_id(data: dict) -> dict:
     """Schema 1 named the paragraph by its number. The only paragraph there ever was is ``b1``."""
     return {**data, "block": "b1" if data["block"] == 0 else f"b{data['block'] + 1}"}
+
+
+_WRAP_SUMMARY = {
+    "over": "put an object over the text",
+    "around": "let the text flow around an object",
+    "above-below": "put an object above and below the text",
+    "behind": "put an object behind the text",
+}
+
+
+@register
+@dataclass(frozen=True)
+class SetObjectWrap(Command):
+    """How the text flows round an object, and how far it keeps from it (D1061, D1064); where the object hangs and
+    its size do not change. It is one step, so one undo takes back one press of the key that cycles the modes."""
+
+    kind: ClassVar[str] = "composes.SetObjectWrap"
+    id: str
+    wrap: str
+    gap: int
+
+    @property
+    def label(self) -> str:
+        return "Wrap text"
+
+    @property
+    def summary(self) -> str:
+        return _WRAP_SUMMARY.get(self.wrap, "changed how the text flows round an object").capitalize()
+
+    def apply(self, ctx: Context[TextModel]) -> Command:
+        model = ctx.model
+        old = model.get_object(self.id)
+        anchor = replace(old.anchor, wrap=self.wrap, gap=self.gap)
+        anchor.check_wrap()
+        new = replace(old, anchor=anchor)
+        model.replace_object(new)
+        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        return SetObjectWrap(self.id, old.anchor.wrap, old.anchor.gap)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "wrap": self.wrap, "gap": self.gap}
+
+    @classmethod
+    def from_data(cls, data, registry) -> SetObjectWrap:
+        return cls(data["id"], data["wrap"], data["gap"])
+
+    def regions(self, model: object) -> tuple[ObjectSet, ...]:
+        return model.selection_of(self.id) if isinstance(model, TextModel) else ()
+
+    def shifted_by(self, other: Command) -> Command | None:
+        return None if isinstance(other, RemoveObject) and other.id == self.id else self
+
+    def redacted(self) -> Command:
+        return self

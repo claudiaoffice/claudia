@@ -10,7 +10,9 @@
 * ``page`` and ``set_page``: the page the text is printed on (paper, orientation, margins, page numbers; D904). The
   pages themselves are laid out in the client (D901);
 * ``objects``, ``images`` and ``shapes``: the floating objects of the text and what they are drawn with, for the
-  print preview, which draws them where they hang (D907);
+  print preview, which draws them where they hang (D907); ``shapes`` also says which outlines the server offers;
+* ``add_image`` and ``add_object`` (a text box or a shape, :mod:`claudia_server.shape_methods`) and ``set_wrap``: put an
+  object where it hangs, and say how the text flows round it (D1061, D1064);
 * ``lists``, ``make_list``, ``indent_item``, ``continue_list``, ``list_start``, ``number_headings`` and the scheme
   methods: bullets, numbers, their levels, numbered headings and the numbering manager, the same as in creates
   (:mod:`claudia_server.structure_methods`, E9.21, E9.22);
@@ -36,6 +38,7 @@ the page is set up is people's, as in the other apps (:func:`claudia_server.prin
 from __future__ import annotations
 
 from collections import Counter
+from dataclasses import replace
 
 from claudia_composes_io import (
     apply_edits_to_docx,
@@ -50,6 +53,7 @@ from claudia_composes_io import (
 )
 
 from claudia_composes import (
+    DEFAULT_STYLE,
     AcceptSuggestion,
     BlockAnchor,
     DeleteText,
@@ -59,6 +63,7 @@ from claudia_composes import (
     PageSetupError,
     ProposeSuggestion,
     ResolveSuggestion,
+    SetObjectWrap,
     SetPageSetup,
     SetStyle,
     SplitBlock,
@@ -75,6 +80,7 @@ from claudia_core import (
     plain,
     validate_css,
 )
+from claudia_creates import ShapeLibrary
 
 from .composes_contents import add_contents_methods
 from .composes_search import add_search_methods
@@ -83,9 +89,10 @@ from .i18n import msg
 from .object_methods import Placement, add_object_methods
 from .office_export import export_with_original, office_export
 from .printing import add_language_methods, people_only
-from .protocol import Context, RequestError, core_methods
+from .protocol import Context, MethodTable, RequestError, core_methods
 from .rendered import add_rendering_methods
 from .replay import add_replay_methods
+from .shape_methods import add_shape_methods
 from .structure_methods import add_structure_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
@@ -404,14 +411,6 @@ def _objects(ctx):
     return {"revision": current_revision(ctx), "objects": objects}
 
 
-@composes_methods.method("shapes")
-def _shapes(ctx):
-    """The shape outlines the text's objects use, each as `{format, id, name, path, aspect, text_area}`: an SVG
-    path in a box of 100 by 100."""
-    model = _text(ctx)
-    return [shape.to_data() for _, shape in sorted(model.shapes.items())]
-
-
 # ------------------------------------------------------------------------------ styles (E1.10, E9.7)
 # ``styles``, ``change_style``, ``rename_style``, ``check_css``, the palette and ``set_object_style`` are the
 # same in every app and come from ``.styles``. Only the one that names paragraphs stays here.
@@ -528,24 +527,49 @@ def _paragraph_has(model: TextModel, *, block: str, offset: int) -> None:
         raise RequestError("command_error", msg("offset is outside the paragraph"))
 
 
-def _at_character(model: TextModel, held, *, block: str, offset: int, dx: int | None = None, dy: int | None = None):
+def _at_character(
+    model: TextModel,
+    held: BlockAnchor | None,
+    *,
+    block: str,
+    offset: int,
+    dx: int | None = None,
+    dy: int | None = None,
+    wrap: str | None = None,
+    gap: int | None = None,
+):
     """Where an object of a text is: character ``offset`` of the paragraph ``block``, floating ``dx`` to the right and
-    ``dy`` down from it. What a move leaves out it keeps from where the object floats now (nothing, for a new one)."""
+    ``dy`` down from it, and how the text flows round it (D1061). What a move leaves out it keeps from where the object
+    floats now; a new object floats over the text, as objects did before wrapping, unless it says otherwise."""
     _paragraph_has(model, block=block, offset=offset)
-    if dx is None:
-        dx = 0 if held is None else held.dx
-    if dy is None:
-        dy = 0 if held is None else held.dy
-    return BlockAnchor(block, offset, dx, dy).to_data()
+    base = held if held is not None else BlockAnchor(block, offset)
+    try:
+        anchor = replace(
+            base,
+            block=block,
+            offset=offset,
+            dx=base.dx if dx is None else dx,
+            dy=base.dy if dy is None else dy,
+            wrap=base.wrap if wrap is None else wrap,
+            gap=base.gap if gap is None else gap,
+        )
+        anchor.check_wrap()
+    except ValueError as caught:
+        raise RequestError("bad_request", str(caught)) from None
+    return anchor.to_data()
 
 
 IN_TEXT = Placement(
-    new="block:str offset:int",
+    new="block:str offset:int wrap:str? gap:int?",
     move="block:str offset:int dx:int? dy:int?",
     frame="",
     anchor=_at_character,
     says={
-        "add_image": "It hangs from character `offset` of the paragraph `block`.",
+        "add_image": "It hangs from character `offset` of the paragraph `block`. `wrap` says how the text flows round "
+        "it (`over`, `around`, `above-below` or `behind`; it floats `over` the text when left out) and `gap` how far "
+        "the text keeps from it, in CSS pixels.",
+        "add_object": "It hangs from character `offset` of the paragraph `block`; `wrap` and `gap` say how the text "
+        "flows round it, as for `add_image`.",
         "move_object": "Hang it from another character: `offset` of the paragraph `block`, and float it at `dx` to the "
         "right and `dy` down from there (CSS pixels; negative goes left and up). Leave `dx` or `dy` out and the object "
         "keeps the offset it has.",
@@ -553,6 +577,38 @@ IN_TEXT = Placement(
         "rotate_object": "The character it hangs from and the offset from it stay.",
     },
 )
+
+
+#: The style the words of a new text box and a new shape start in: the text's body style, and a shape's label.
+BOX_WORDS = {"text": DEFAULT_STYLE, "shape": "shape-label"}
 add_object_methods(composes_methods, model_of=_text, placement=IN_TEXT)
 add_rendering_methods(composes_methods, model_of=_text, placement=IN_TEXT)
+add_shape_methods(
+    composes_methods, model_of=_text, library=ShapeLibrary.load(), placement=IN_TEXT, words_styles=BOX_WORDS
+)
+
+
+@composes_methods.method("set_wrap", "id:str wrap:str gap:int? base:revision?", write=True)
+def _set_wrap(ctx, *, id, wrap, gap, base):  # noqa: A002 - the wire name
+    """How the text flows round an object (D1061, D1064): `over` (the words do not give way), `around` (they
+    keep to the sides), `above-below` (they stop above it and go on below) or `behind` (the object is drawn
+    under the words). `gap` is how far the words keep from it, in CSS pixels, 0 to 200; leave it out to keep
+    the gap the object has (8 for a new one). Where the object hangs and its size do not change. One step, so
+    one undo takes back one press of the key that cycles the modes."""
+    held = _text(ctx).get_object(id).anchor
+    anchor = replace(held, wrap=wrap, gap=held.gap if gap is None else gap)
+    try:
+        anchor.check_wrap()
+    except ValueError as caught:
+        raise RequestError("bad_request", str(caught)) from None
+    return done(ctx, SetObjectWrap(id, anchor.wrap, anchor.gap), base)
+
+
 add_table_methods(composes_methods, model_of=_text, placement=IN_TEXT)
+
+
+def composes_methods_with(library: ShapeLibrary) -> MethodTable:
+    """The method table of texts on a server whose shape library is ``library``."""
+    table = composes_methods.extended()
+    add_shape_methods(table, model_of=_text, library=library, placement=IN_TEXT, words_styles=BOX_WORDS)
+    return table

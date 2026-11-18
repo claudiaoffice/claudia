@@ -7,6 +7,10 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- Composes: an object's offset (`dx`, `dy`) is written to and read from DOCX and ODT (D1067, CODE-65); the flowing editor goes round the objects that take room (D1068, CODE-64). No API change.
+- Composes (D1061, D1065): `set_wrap`, `add_object` and `shapes` in a text; `wrap` and `gap` on a text's object anchor
+  (`over`, `around`, `above-below`, `behind`), the command `SetObjectWrap`. **Breaking:** `shapes` of a text answers
+  `{library, document}`, as in a presentation, not a list.
 - `MAX_WIDTH` and `MIN_WIDTH`, the limits of the width of a table and of a column (hundredths of a percent), are
   exported from the package (E9.32).
 - Tables (E9.32, D1201–D1210): `TableDef` (rows, columns, boxes of one paragraph each with the id `table/row/column`,

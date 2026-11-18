@@ -15,6 +15,7 @@
     "lint": "eslint . --max-warnings 0",
     "e2e": "node e2e/demo.cjs",
     "e2e:composes": "node e2e/composes.cjs",
+    "e2e:composes-wrap": "node e2e/composes-wrap.cjs",
     "e2e:lists": "node e2e/lists.cjs",
     "e2e:redaction": "node e2e/redaction.cjs",
     "e2e:regions": "node e2e/regions.cjs",
