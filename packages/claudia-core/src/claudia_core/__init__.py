@@ -309,6 +309,8 @@ from .table_commands import (
 from .tables import (
     MAX_COLUMNS,
     MAX_ROWS,
+    MAX_WIDTH,
+    MIN_WIDTH,
     Column,
     ColumnSpec,
     Merge,
@@ -552,6 +554,8 @@ __all__ = [
     "entry_paragraph",
     "MAX_COLUMNS",
     "MAX_ROWS",
+    "MAX_WIDTH",
+    "MIN_WIDTH",
     "Column",
     "ColumnSpec",
     "Merge",

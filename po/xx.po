@@ -6957,11 +6957,11 @@ msgstr "[à Clàûdîà fîlé gôés în às ît îs, nôt às à néw dôcûm�
 msgid "a cell reference"
 msgstr "[à céll référéncé~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:156
+#: packages/claudia-server/src/claudia_server/tables.py:152
 msgid "a column cannot be moved in front of itself"
 msgstr "[à côlûmn cànnôt bé môvéd în frônt ôf îtsélf~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:380
+#: packages/claudia-server/src/claudia_server/tables.py:368
 msgid "a column has no setting {name!r}"
 msgstr "[à côlûmn hàs nô séttîng {nàmé!r}~~~~~~~~~~~~~]"
 
@@ -6981,7 +6981,7 @@ msgstr "[à grîd ôf ràndôm nûmbérs (1 rôw, 1 côlûmn, frôm 0 tô 1 ànd
 msgid "a letter"
 msgstr "[à léttér~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:419
+#: packages/claudia-server/src/claudia_server/tables.py:407
 msgid "a merge is at least two boxes; split_cell undoes one"
 msgstr "[à mérgé îs àt léàst twô bôxés; splît_céll ûndôés ôné~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7049,7 +7049,7 @@ msgstr "[à rôlé îs mîssîng {kéy!r}~~~~~~~~~~]"
 msgid "a role's id, name and colour are text"
 msgstr "[à rôlé's îd, nàmé ànd côlôûr àré téxt~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:154
+#: packages/claudia-server/src/claudia_server/tables.py:150
 msgid "a row cannot be moved in front of itself"
 msgstr "[à rôw cànnôt bé môvéd în frônt ôf îtsélf~~~~~~~~~~~~~~~~]"
 
@@ -7285,7 +7285,7 @@ msgstr "[céll_stylés: thé wîndôw mûst nôt énd béfôré ît stàrts~~~~~
 msgid "cells"
 msgstr "[célls~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:195
+#: packages/claudia-server/src/claudia_server/tables.py:191
 msgid "cells is a list of rows, each a list of words"
 msgstr "[célls îs à lîst ôf rôws, éàch à lîst ôf wôrds~~~~~~~~~~~~~~~~~~]"
 
@@ -7373,11 +7373,11 @@ msgstr "[côntàîn “{text}”~~~~~~]"
 msgid "copy, cut and paste, also from and to other programs"
 msgstr "[côpy, cût ànd pàsté, àlsô frôm ànd tô ôthér prôgràms~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:140
+#: packages/claudia-server/src/claudia_server/tables.py:136
 msgid "count is from 1 to {limit} columns"
 msgstr "[côûnt îs frôm 1 tô {limit} côlûmns~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:138
+#: packages/claudia-server/src/claudia_server/tables.py:134
 msgid "count is from 1 to {limit} rows"
 msgstr "[côûnt îs frôm 1 tô {limit} rôws~~~~~~~~~~~~]"
 
@@ -7469,7 +7469,7 @@ msgstr "[dôcûmént {doc}~~~~~~]"
 msgid "e raised to a power."
 msgstr "[é ràîséd tô à pôwér.~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:266 packages/claudia-server/src/claudia_server/tables.py:269
+#: packages/claudia-server/src/claudia_server/tables.py:254 packages/claudia-server/src/claudia_server/tables.py:257
 msgid "each change is [row, column, text or null]"
 msgstr "[éàch chàngé îs [rôw, côlûmn, téxt ôr nûll]~~~~~~~~~~~~~~~~~]"
 
@@ -7585,7 +7585,7 @@ msgstr "[gîvé nàmés tô vàlûés (làtér ônés mày ûsé éàrlîér ôn
 msgid "give the CSS as set properties or as text, not both"
 msgstr "[gîvé thé CSS às sét prôpértîés ôr às téxt, nôt bôth~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:192
+#: packages/claudia-server/src/claudia_server/tables.py:188
 msgid "give the table's rows and cols, or the words as cells"
 msgstr "[gîvé thé tàblé's rôws ànd côls, ôr thé wôrds às célls~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7885,7 +7885,7 @@ msgstr "[nô fûnctîôn nàméd {nàmé!r}~~~~~~~~~~]"
 msgid "no help topic {id!r}"
 msgstr "[nô hélp tôpîc {îd!r}~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:449
+#: packages/claudia-server/src/claudia_server/tables.py:437
 msgid "no merged box starts at row {row!r}, column {col!r}"
 msgstr "[nô mérgéd bôx stàrts àt rôw {rôw!r}, côlûmn {côl!r}~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8221,7 +8221,7 @@ msgstr "[rôw {n} îs {style}~~~~~~~]"
 msgid "row {n}’s style"
 msgstr "[rôw {n}’s stylé~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:125
+#: packages/claudia-server/src/claudia_server/tables.py:121
 msgid "say after or before, not both"
 msgstr "[sày àftér ôr béfôré, nôt bôth~~~~~~~~~~~~]"
 
@@ -8433,7 +8433,7 @@ msgstr "[thé céll ôf thé résûlt ràngé thàt lîés bésîdé thé màtch
 msgid "the cells ``rows`` down and ``columns`` across from the reference, with the reference's size unless a height and a width are given. Its dependencies are found while it runs."
 msgstr "[thé célls ``rôws`` dôwn ànd ``côlûmns`` àcrôss frôm thé référéncé, wîth thé référéncé's sîzé ûnléss à héîght ànd à wîdth àré gîvén. Îts dépéndéncîés àré fôûnd whîlé ît rûns.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:199
+#: packages/claudia-server/src/claudia_server/tables.py:195
 msgid "the cells are more than the table's rows and cols"
 msgstr "[thé célls àré môré thàn thé tàblé's rôws ànd côls~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8593,15 +8593,15 @@ msgstr "[thé stàrt ôf thé céll~~~~~~~~]"
 msgid "the start of the text"
 msgstr "[thé stàrt ôf thé téxt~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:423
+#: packages/claudia-server/src/claudia_server/tables.py:411
 msgid "the table has no box where row {row!r} and column {col!r} cross"
 msgstr "[thé tàblé hàs nô bôx whéré rôw {rôw!r} ànd côlûmn {côl!r} crôss~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:116
+#: packages/claudia-server/src/claudia_server/tables.py:112
 msgid "the table has no column {id!r}"
 msgstr "[thé tàblé hàs nô côlûmn {îd!r}~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:114
+#: packages/claudia-server/src/claudia_server/tables.py:110
 msgid "the table has no row {id!r}"
 msgstr "[thé tàblé hàs nô rôw {îd!r}~~~~~~~~~~~]"
 
@@ -8701,7 +8701,7 @@ msgstr "[thîs dôcûmént hàs nô pàlétté~~~~~~~~~~~]"
 msgid "this document has no styles"
 msgstr "[thîs dôcûmént hàs nô stylés~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/tables.py:105
+#: packages/claudia-server/src/claudia_server/tables.py:101
 msgid "this document has no table {id!r}"
 msgstr "[thîs dôcûmént hàs nô tàblé {îd!r}~~~~~~~~~~~~~]"
 

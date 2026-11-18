@@ -6,9 +6,24 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Changed
-- The docx and odt exports report a table of the text as a loss (`table`) until their writers exist (E9.32), and leave the box properties of the table looks out of the style-by-style check (`TABLE_STYLE_IDS`). Objects are built with `ref=` (see `claudia-core`).
+- The docx and odt exports leave the box properties of the table looks out of the style-by-style check
+  (`TABLE_STYLE_IDS`), and the paragraph styles of the table roles are written **without** their lines, fill and
+  padding: a table writes them as the properties of its cells (E9.32, D1214). Objects are built with `ref=` (see
+  `claudia-core`).
+- `docx_import_losses` and `odt_import_losses` count as `table` only the tables the text does not hold (nested ones
+  included); a regular table is an own table now. `docx_export_losses` and `odt_export_losses` have no `table` loss and
+  `docx_unwritten_changes`/`odt_unwritten_changes` no `tables` facet: tables are written.
+- `apply_edits_to_odt` raises `UnsupportedEdit` for a text whose tables changed (the file is written anew);
+  unchanged tables stay in the file as they are.
 
 ### Added
+- Tables in docx and odt (E9.32, D1214): a regular table (1–100 rows, 1–10 columns, a rectangular grid, cells of one
+  paragraph of plain words, merges that make rectangles, a place after a paragraph of the flow) is read as an own table
+  with its header rows, number columns, column widths, table width and merges; every other table stays in the file and
+  is counted as the loss `table`. The tables of the text are written as real tables (`w:tbl` with `w:gridSpan`,
+  `w:vMerge`, `w:tblHeader`; `table:table` with spans, covered cells and `table:table-header-rows`), the look on the
+  cells, numbers aligned right, the total row as words. `apply_edits_to_docx` replaces, removes and adds the tables
+  that changed in place.
 - References in docx and odt (step H): a docx gets a bookmark at each target and Word's `REF`/`PAGEREF` field for each
   reference, an odt a `text:bookmark` and a `text:bookmark-ref`, each with what it reads as now; both are read back as
   references to the same paragraphs (one whose bookmark starts no paragraph comes in as its words). A kept file with a

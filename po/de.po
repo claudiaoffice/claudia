@@ -6957,11 +6957,11 @@ msgstr "eine Claudia-Datei kommt so hinein, wie sie ist, nicht als neues Dokumen
 msgid "a cell reference"
 msgstr "ein Zellbezug"
 
-#: packages/claudia-server/src/claudia_server/tables.py:156
+#: packages/claudia-server/src/claudia_server/tables.py:152
 msgid "a column cannot be moved in front of itself"
 msgstr "Eine Spalte kann nicht vor sich selbst verschoben werden"
 
-#: packages/claudia-server/src/claudia_server/tables.py:380
+#: packages/claudia-server/src/claudia_server/tables.py:368
 msgid "a column has no setting {name!r}"
 msgstr "Eine Spalte hat keine Einstellung {name!r}"
 
@@ -6981,7 +6981,7 @@ msgstr "ein Raster aus Zufallszahlen (1 Zeile, 1 Spalte, von 0 bis 1 und keine g
 msgid "a letter"
 msgstr "ein Buchstabe"
 
-#: packages/claudia-server/src/claudia_server/tables.py:419
+#: packages/claudia-server/src/claudia_server/tables.py:407
 msgid "a merge is at least two boxes; split_cell undoes one"
 msgstr "Ein Verbund besteht aus mindestens zwei Feldern; split_cell hebt einen auf"
 
@@ -7049,7 +7049,7 @@ msgstr "Einer Rolle fehlt {key!r}"
 msgid "a role's id, name and colour are text"
 msgstr "ID, Name und Farbe einer Rolle sind Text"
 
-#: packages/claudia-server/src/claudia_server/tables.py:154
+#: packages/claudia-server/src/claudia_server/tables.py:150
 msgid "a row cannot be moved in front of itself"
 msgstr "Eine Zeile kann nicht vor sich selbst verschoben werden"
 
@@ -7285,7 +7285,7 @@ msgstr "cell_styles: Das Fenster darf nicht vor seinem Anfang enden"
 msgid "cells"
 msgstr "Zellen"
 
-#: packages/claudia-server/src/claudia_server/tables.py:195
+#: packages/claudia-server/src/claudia_server/tables.py:191
 msgid "cells is a list of rows, each a list of words"
 msgstr "cells ist eine Liste von Zeilen, jede eine Liste von Texten"
 
@@ -7373,11 +7373,11 @@ msgstr "„{text}“ enthalten"
 msgid "copy, cut and paste, also from and to other programs"
 msgstr "kopieren, ausschneiden und einfügen, auch aus und in andere Programme"
 
-#: packages/claudia-server/src/claudia_server/tables.py:140
+#: packages/claudia-server/src/claudia_server/tables.py:136
 msgid "count is from 1 to {limit} columns"
 msgstr "count liegt zwischen 1 und {limit} Spalten"
 
-#: packages/claudia-server/src/claudia_server/tables.py:138
+#: packages/claudia-server/src/claudia_server/tables.py:134
 msgid "count is from 1 to {limit} rows"
 msgstr "count liegt zwischen 1 und {limit} Zeilen"
 
@@ -7469,7 +7469,7 @@ msgstr "Dokument {doc}"
 msgid "e raised to a power."
 msgstr "e hoch einer Potenz."
 
-#: packages/claudia-server/src/claudia_server/tables.py:266 packages/claudia-server/src/claudia_server/tables.py:269
+#: packages/claudia-server/src/claudia_server/tables.py:254 packages/claudia-server/src/claudia_server/tables.py:257
 msgid "each change is [row, column, text or null]"
 msgstr "Jede Änderung ist [Zeile, Spalte, Text oder null]"
 
@@ -7585,7 +7585,7 @@ msgstr "Werten Namen geben (spätere dürfen frühere verwenden) und damit rechn
 msgid "give the CSS as set properties or as text, not both"
 msgstr "Geben Sie das CSS als gesetzte Eigenschaften oder als Text an, nicht beides"
 
-#: packages/claudia-server/src/claudia_server/tables.py:192
+#: packages/claudia-server/src/claudia_server/tables.py:188
 msgid "give the table's rows and cols, or the words as cells"
 msgstr "Geben Sie die Zeilen und Spalten (rows, cols) der Tabelle an oder die Texte als cells"
 
@@ -7885,7 +7885,7 @@ msgstr "Keine Funktion namens {name!r}"
 msgid "no help topic {id!r}"
 msgstr "Kein Hilfethema {id!r}"
 
-#: packages/claudia-server/src/claudia_server/tables.py:449
+#: packages/claudia-server/src/claudia_server/tables.py:437
 msgid "no merged box starts at row {row!r}, column {col!r}"
 msgstr "In Zeile {row!r}, Spalte {col!r} beginnt kein verbundenes Feld"
 
@@ -8221,7 +8221,7 @@ msgstr "Zeile {n} ist {style}"
 msgid "row {n}’s style"
 msgstr "Format der Zeile {n}"
 
-#: packages/claudia-server/src/claudia_server/tables.py:125
+#: packages/claudia-server/src/claudia_server/tables.py:121
 msgid "say after or before, not both"
 msgstr "Geben Sie after oder before an, nicht beides"
 
@@ -8433,7 +8433,7 @@ msgstr "die Zelle des Ergebnisbereichs, die neben dem Treffer im Suchbereich lie
 msgid "the cells ``rows`` down and ``columns`` across from the reference, with the reference's size unless a height and a width are given. Its dependencies are found while it runs."
 msgstr "die Zellen ``rows`` weiter unten und ``columns`` weiter rechts vom Bezug, in der Größe des Bezugs, wenn keine Höhe und Breite angegeben sind. Seine Abhängigkeiten werden beim Ausführen gefunden."
 
-#: packages/claudia-server/src/claudia_server/tables.py:199
+#: packages/claudia-server/src/claudia_server/tables.py:195
 msgid "the cells are more than the table's rows and cols"
 msgstr "Die Texte (cells) sind mehr, als die Tabelle Zeilen und Spalten hat"
 
@@ -8593,15 +8593,15 @@ msgstr "der Zellenanfang"
 msgid "the start of the text"
 msgstr "der Textanfang"
 
-#: packages/claudia-server/src/claudia_server/tables.py:423
+#: packages/claudia-server/src/claudia_server/tables.py:411
 msgid "the table has no box where row {row!r} and column {col!r} cross"
 msgstr "Die Tabelle hat kein Feld, in dem sich Zeile {row!r} und Spalte {col!r} kreuzen"
 
-#: packages/claudia-server/src/claudia_server/tables.py:116
+#: packages/claudia-server/src/claudia_server/tables.py:112
 msgid "the table has no column {id!r}"
 msgstr "Die Tabelle hat keine Spalte {id!r}"
 
-#: packages/claudia-server/src/claudia_server/tables.py:114
+#: packages/claudia-server/src/claudia_server/tables.py:110
 msgid "the table has no row {id!r}"
 msgstr "Die Tabelle hat keine Zeile {id!r}"
 
@@ -8701,7 +8701,7 @@ msgstr "Dieses Dokument hat keine Palette"
 msgid "this document has no styles"
 msgstr "Dieses Dokument hat keine Stile"
 
-#: packages/claudia-server/src/claudia_server/tables.py:105
+#: packages/claudia-server/src/claudia_server/tables.py:101
 msgid "this document has no table {id!r}"
 msgstr "Dieses Dokument hat keine Tabelle {id!r}"
 

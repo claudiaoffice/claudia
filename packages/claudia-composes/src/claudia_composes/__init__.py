@@ -56,7 +56,10 @@ from .model import (
     BUILTIN_STYLES,
     DEFAULT_LOOK,
     DEFAULT_STYLE,
+    TABLE_FRAME_STYLE,
     TABLE_LOOKS,
+    TABLE_OBJECT_WIDTH,
+    TABLE_ROW_HEIGHT,
     TABLE_STYLE_IDS,
     Block,
     Suggestion,
@@ -64,6 +67,7 @@ from .model import (
     TextObject,
     builtin_styles,
     next_style,
+    table_body,
 )
 from .page import PAPERS, PageSetup, PageSetupError
 from .region import TextRange, word_window
@@ -78,7 +82,10 @@ __all__ = [
     "builtin_styles",
     "BUILTIN_STYLES",
     "DEFAULT_LOOK",
+    "TABLE_FRAME_STYLE",
     "TABLE_LOOKS",
+    "TABLE_OBJECT_WIDTH",
+    "TABLE_ROW_HEIGHT",
     "TABLE_STYLE_IDS",
     "DEFAULT_STYLE",
     "DefineImage",
@@ -97,6 +104,7 @@ __all__ = [
     "MAX_ANCHOR_OFFSET",
     "MoveObject",
     "next_style",
+    "table_body",
     "normalize_language",
     "ObjectBody",
     "ObjectSet",

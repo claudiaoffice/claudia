@@ -24,6 +24,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 
+from claudia_composes import table_body
 from claudia_core import (
     AddObject,
     Batch,
@@ -35,7 +36,6 @@ from claudia_core import (
     ForgetTable,
     InsertColumns,
     InsertRows,
-    ObjectBody,
     ObjectModel,
     Paragraph,
     RemoveObject,
@@ -58,10 +58,6 @@ from .protocol import Context, MethodTable, RequestError
 from .thing_names import default_name
 from .wire import done, fresh_id
 
-#: The frame a table's object has; a table is drawn by its look (D1206), the frame only says how big it is.
-TABLE_STYLE = "plain-box"
-DEFAULT_WIDTH = 480  # CSS pixels: the nominal width of a new table's object (a flow table takes the line)
-ROW_HEIGHT = 24  # CSS pixels per row of a new table's object, until a client has measured it
 COLUMN_SETTINGS = ("kind", "total", "width")
 #: The methods that change a table. The assistant may call them (``apps.MODEL_METHODS``): a table is read by ids, not
 #: by counting, so a model can work in it; they are changes, so in *suggest* mode it makes none of them.
@@ -226,15 +222,7 @@ def _add(model_of: Callable[[Context], ObjectModel], placement: Placement):
         except ValueError as error:
             raise _refused(error) from None
         object_id = fresh_id("o", model.objects)
-        body = ObjectBody(
-            object_id,
-            "table",
-            w or DEFAULT_WIDTH,
-            ROW_HEIGHT * rows,
-            TABLE_STYLE,
-            ref=table_id,
-            name=default_name(ctx, "table"),
-        )
+        body = table_body(object_id, definition, default_name(ctx, "table"), width=w)
         command = Batch((DefineTable(definition.to_data()), AddObject(body, anchor)), name="Add table")
         return done(ctx, command, base, object=object_id, table=table_id)
 

@@ -603,8 +603,17 @@
   "methods": {},
   "properties": []
  },
+ "TABLE_FRAME_STYLE": {
+  "value": "'plain-box'"
+ },
  "TABLE_LOOKS": {
   "value": "(TableLook(id='rules', name='Rules', header='table-rules-header', body='table-rules-body', band='table-rules-band', total='table-rules-total'), TableLook(id='grid', name='Grid', header='table-grid-header', body='table-grid-body', band='table-grid-band', total='table-grid-total'), TableLook(id='plain', name='Plain', header='table-plain-header', body='table-plain-body', band='table-plain-band', total='table-plain-total'))"
+ },
+ "TABLE_OBJECT_WIDTH": {
+  "value": "480"
+ },
+ "TABLE_ROW_HEIGHT": {
+  "value": "24"
  },
  "TABLE_STYLE_IDS": {
   "value": "<frozenset>"
@@ -732,6 +741,9 @@
  },
  "paragraph_for": {
   "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"
+ },
+ "table_body": {
+  "function": "(object_id: 'str', definition: 'TableDef', name: 'str', *, width: 'int | None' = None) -> 'ObjectBody'"
  },
  "word_window": {
   "function": "(text: 'str', cursor: 'int', n: 'int', block: 'str' = 'b1') -> 'TextRange'"

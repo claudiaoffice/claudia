@@ -1276,8 +1276,14 @@
  "MAX_THING_NAME": {
   "value": "60"
  },
+ "MAX_WIDTH": {
+  "value": "10000"
+ },
  "MIN_OBJECT_SIZE": {
   "value": "20"
+ },
+ "MIN_WIDTH": {
+  "value": "1000"
  },
  "Manifest": {
   "class": [

@@ -201,6 +201,25 @@ DEFAULT_LOOK = TABLE_LOOKS[0].id
 #: borders, shading) with the table's cells, not with a paragraph style, so a style-by-style check leaves them out.
 TABLE_STYLE_IDS: frozenset[str] = frozenset(style for look in TABLE_LOOKS for style in look.styles())
 
+#: The frame a table's object has; a table is drawn by its look (D1206), the frame only says how big it is.
+TABLE_FRAME_STYLE = "plain-box"
+TABLE_OBJECT_WIDTH = 480  # CSS pixels: the nominal width of a new table's object (a flow table takes the line)
+TABLE_ROW_HEIGHT = 24  # CSS pixels per row of a new table's object, until a client has measured it
+
+
+def table_body(object_id: str, definition: TableDef, name: str, *, width: int | None = None) -> ObjectBody:
+    """The body of the object that shows ``definition`` in a text: sized for its rows until a client has measured it,
+    and named ``name`` (D550). The server's ``add_table`` and the converters that read a file's tables make it so."""
+    return ObjectBody(
+        object_id,
+        "table",
+        width or TABLE_OBJECT_WIDTH,
+        TABLE_ROW_HEIGHT * len(definition.rows),
+        TABLE_FRAME_STYLE,
+        ref=definition.id,
+        name=name,
+    )
+
 
 #: The styles every text starts with. The paragraph styles are all based on Body text (D73): a change to Body text
 #: reaches the others where they have not set the property themselves. The outline and the picture's box are styles

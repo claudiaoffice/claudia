@@ -191,6 +191,41 @@ The page a document prints on and the language it is written in, shared by the a
 .. autoclass:: claudia_core.SetLanguage
 .. autoclass:: claudia_core.LanguageChanged
 
+Tables
+------
+
+A table is plain data (columns and rows with ids, the words of each box, merges, a look) that an object of the kind
+``table`` points at (E9.32, D1201–D1214); the commands change it, and a converter or a client reads it.
+
+.. autoclass:: claudia_core.TableDef
+.. autoclass:: claudia_core.Column
+.. autoclass:: claudia_core.Merge
+.. autoclass:: claudia_core.RowSpec
+.. autoclass:: claudia_core.ColumnSpec
+.. autoclass:: claudia_core.TableLook
+.. autoclass:: claudia_core.TableRegion
+.. autoclass:: claudia_core.TableSource
+.. autofunction:: claudia_core.entry_id
+.. autofunction:: claudia_core.parse_entry_id
+.. autofunction:: claudia_core.entry_paragraph
+.. autofunction:: claudia_core.parse_number
+.. autofunction:: claudia_core.format_number
+.. autofunction:: claudia_core.decimal_comma
+.. autoclass:: claudia_core.TablesChanged
+.. autoclass:: claudia_core.table_commands.TableCommand
+.. autoclass:: claudia_core.DefineTable
+.. autoclass:: claudia_core.ForgetTable
+.. autoclass:: claudia_core.SetEntries
+.. autoclass:: claudia_core.InsertRows
+.. autoclass:: claudia_core.DeleteRows
+.. autoclass:: claudia_core.InsertColumns
+.. autoclass:: claudia_core.DeleteColumns
+.. autoclass:: claudia_core.SetRowOrder
+.. autoclass:: claudia_core.SetColumnOrder
+.. autoclass:: claudia_core.SetColumn
+.. autoclass:: claudia_core.SetTableOptions
+.. autoclass:: claudia_core.SetMerge
+
 Objects: shapes, images and text boxes
 --------------------------------------
 

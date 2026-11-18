@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `table_body(object_id, definition, name, *, width=None)` makes the object that shows a table (the one place that
+  knows its frame style, `TABLE_FRAME_STYLE`, and its default size, `TABLE_OBJECT_WIDTH` and `TABLE_ROW_HEIGHT`); the
+  server and the file converters make a table's object with it (E9.32).
 - Search looks in the boxes of tables: the kind `table` (`KINDS`), the place `{block, table, row, col}`
   (`table_at`, `table_of`); `scan_text` counts it; a replacement is typing and deleting in the box (E9.32, D1212).
 - Tables in a text (E9.32): the text holds table definitions (`TextModel.tables`, state schema 15), shows them with

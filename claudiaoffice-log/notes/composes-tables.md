@@ -297,15 +297,22 @@ Still open:
 - **Size 3, open (found in S2/S3).** The Insert ▸ Table… dialog cannot yet make a table from selected text or from a
   computes range (mock B shows both). Merge Cells works on the box and its neighbour only (D1213).
 - **Size 3, open.** `TableSource` (kernel protocol for linked tables) has no reader until E9.33.
-- Nothing of size 1 or 2. (The docx import does report `table` today; `import-export-coverage-2026-11-14.md` still
-  says "no loss list at all", which is out of date.)
+- **Size 3, open (found in S4).** A table's name and alt text are not written to a file and a file's look is not read
+  (D1214); BITV would like a caption or description on a table in an exported file.
+- **Size 3, found in S4 and fixed there.** The paragraph styles of the table looks carried the lines and the fill of
+  the look into a docx or odt paragraph style, so that a cell was drawn twice in LibreOffice; the box is the cell's
+  now (`look_for`, D1214).
+- Nothing of size 1 or 2. (`import-export-coverage-2026-11-14.md` still says "no loss list at all", which is out of
+  date.)
 
 ## 15. Not verified
 
 - The layout engine and the web client are tested with unit tests only; **nothing has been looked at in a browser or in
   GNOME**: the focus between a box's field and the text editor, a menu opened with the mouse after typing in a box, and
   the look of the island next to the printed pages are unverified. The GTK shell only has the new manifest entries.
-- The odt and docx element names for tables are from memory of the formats, not yet checked against real files; both
-  exports report `table` as a loss until the writers exist.
+- The odt and docx tables were checked with LibreOffice 7 only: it opens what is written (merges, borders, fill, header,
+  right-aligned numbers rendered as expected) and the files it saves from them read back as the same tables. **Word was
+  not available**: that a docx opens in Word without a repair message, and how Word draws `w:tblW` percentages and the
+  fixed layout, is unverified. No real documents from the corpus were tried.
 - The mock-ups were drawn and rendered with `rsvg-convert` (Inter is installed here, Fraunces is not: the serif in the
   PNG is a stand-in).

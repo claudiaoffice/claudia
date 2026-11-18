@@ -6957,11 +6957,11 @@ msgstr ""
 msgid "a cell reference"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:156
+#: packages/claudia-server/src/claudia_server/tables.py:152
 msgid "a column cannot be moved in front of itself"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:380
+#: packages/claudia-server/src/claudia_server/tables.py:368
 msgid "a column has no setting {name!r}"
 msgstr ""
 
@@ -6981,7 +6981,7 @@ msgstr ""
 msgid "a letter"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:419
+#: packages/claudia-server/src/claudia_server/tables.py:407
 msgid "a merge is at least two boxes; split_cell undoes one"
 msgstr ""
 
@@ -7049,7 +7049,7 @@ msgstr ""
 msgid "a role's id, name and colour are text"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:154
+#: packages/claudia-server/src/claudia_server/tables.py:150
 msgid "a row cannot be moved in front of itself"
 msgstr ""
 
@@ -7285,7 +7285,7 @@ msgstr ""
 msgid "cells"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:195
+#: packages/claudia-server/src/claudia_server/tables.py:191
 msgid "cells is a list of rows, each a list of words"
 msgstr ""
 
@@ -7373,11 +7373,11 @@ msgstr ""
 msgid "copy, cut and paste, also from and to other programs"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:140
+#: packages/claudia-server/src/claudia_server/tables.py:136
 msgid "count is from 1 to {limit} columns"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:138
+#: packages/claudia-server/src/claudia_server/tables.py:134
 msgid "count is from 1 to {limit} rows"
 msgstr ""
 
@@ -7469,7 +7469,7 @@ msgstr ""
 msgid "e raised to a power."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:266 packages/claudia-server/src/claudia_server/tables.py:269
+#: packages/claudia-server/src/claudia_server/tables.py:254 packages/claudia-server/src/claudia_server/tables.py:257
 msgid "each change is [row, column, text or null]"
 msgstr ""
 
@@ -7585,7 +7585,7 @@ msgstr ""
 msgid "give the CSS as set properties or as text, not both"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:192
+#: packages/claudia-server/src/claudia_server/tables.py:188
 msgid "give the table's rows and cols, or the words as cells"
 msgstr ""
 
@@ -7885,7 +7885,7 @@ msgstr ""
 msgid "no help topic {id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:449
+#: packages/claudia-server/src/claudia_server/tables.py:437
 msgid "no merged box starts at row {row!r}, column {col!r}"
 msgstr ""
 
@@ -8221,7 +8221,7 @@ msgstr ""
 msgid "row {n}’s style"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:125
+#: packages/claudia-server/src/claudia_server/tables.py:121
 msgid "say after or before, not both"
 msgstr ""
 
@@ -8433,7 +8433,7 @@ msgstr ""
 msgid "the cells ``rows`` down and ``columns`` across from the reference, with the reference's size unless a height and a width are given. Its dependencies are found while it runs."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:199
+#: packages/claudia-server/src/claudia_server/tables.py:195
 msgid "the cells are more than the table's rows and cols"
 msgstr ""
 
@@ -8593,15 +8593,15 @@ msgstr ""
 msgid "the start of the text"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:423
+#: packages/claudia-server/src/claudia_server/tables.py:411
 msgid "the table has no box where row {row!r} and column {col!r} cross"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:116
+#: packages/claudia-server/src/claudia_server/tables.py:112
 msgid "the table has no column {id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:114
+#: packages/claudia-server/src/claudia_server/tables.py:110
 msgid "the table has no row {id!r}"
 msgstr ""
 
@@ -8701,7 +8701,7 @@ msgstr ""
 msgid "this document has no styles"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/tables.py:105
+#: packages/claudia-server/src/claudia_server/tables.py:101
 msgid "this document has no table {id!r}"
 msgstr ""
 

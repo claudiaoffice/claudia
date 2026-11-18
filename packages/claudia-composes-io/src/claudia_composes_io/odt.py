@@ -41,7 +41,7 @@ from claudia_composes import (
     Suggestion,
     TextModel,
 )
-from claudia_core import SHAPE_LABEL_STYLE, Rasterise, Toc, VisualObject, plain, primitive
+from claudia_core import SHAPE_LABEL_STYLE, PageSetup, Rasterise, TableDef, Toc, VisualObject, plain, primitive
 from claudia_odf_io import (
     MIME,
     NS,
@@ -106,9 +106,12 @@ from ._odt_setup import (
     read_setup,
 )
 from ._odt_styles import BUILTIN_NAMES, StyleNames, style_xml
+from ._odt_tables import TableStyles, file_table, read_tables, styles_of, text_width_in
+from ._odt_tables import write_table as write_odt_table
 from ._pictures import picture_losses, pictures_of
 from ._references import ReadReference, with_references
 from ._suggestions import WhenMade, open_replacements, when_made
+from ._tables import put_tables, table_changes, tables_after
 from ._unwritten import ODT_WRITTEN, text_unwritten_changes
 from .docx import UnsupportedEdit
 
@@ -200,27 +203,34 @@ class _Scan:
     paragraphs: list[etree._Element]
     #: The tables of contents, each with the number of paragraphs of the flow before it.
     contents: list[tuple[int, Toc]] = field(default_factory=list)
-    tables: int = 0
+    #: The tables of the flow, each with the index of the paragraph it follows (``None`` at the start of the text and
+    #: after a table of contents).
+    tables: list[tuple[etree._Element, int | None]] = field(default_factory=list)
     indexes: int = 0
     frames: int = 0
 
 
 def _scan(body: etree._Element) -> _Scan:
     found = _Scan([])
+    after_contents = False  # (no paragraph since a table of contents)
 
     def visit(parent: etree._Element) -> None:
+        nonlocal after_contents
         for child in parent:
             tag = child.tag
             if not isinstance(tag, str):
                 continue
             if tag in (_P, _H):
                 found.paragraphs.append(child)
+                after_contents = False
             elif tag in _FLOW:
                 visit(child)
             elif tag == _TABLE:
-                found.tables += 1
+                follows = len(found.paragraphs) - 1
+                found.tables.append((child, follows if follows >= 0 and not after_contents else None))
             elif tag == TABLE_OF_CONTENT:
                 found.contents.append((len(found.paragraphs), read_contents(child)))
+                after_contents = True
             elif tag in _INDEXES:
                 found.indexes += 1
             elif tag.startswith(f"{{{NS['draw']}}}"):
@@ -351,7 +361,8 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     of that list (the scheme, start and name of the list from its list style, ``_odt_lists``), at the level of its
     place in the nest. A picture (a ``draw:frame`` with an image in it) that the model shows as it is -- an image the
     app decodes, not cropped, in its own proportions -- is an image object hanging from the character it stands at,
-    with its description (D464). What the model does not show is in :func:`odt_import_losses`. Raises
+    with its description (D464). A regular table is an own table hanging from the paragraph it follows (E9.32, D1214).
+    What the model does not show is in :func:`odt_import_losses`. Raises
     :class:`~claudia_odf_io.OdfError` for a file that is not an odt."""
     parts, body, scan, parents = _document(odt_bytes)
     lists = _lists_of(parts, body, scan)
@@ -402,7 +413,30 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
         elif each.asset.id not in model.images:
             model.define_image(each.asset)
         model.insert_object(VisualObject(each.body, BlockAnchor(f"b{each.block + 1}", each.offset)))
+    put_tables(model, _placed_tables(scan, root, _styles_root(parts), model))
     return model
+
+
+def _file_tables(
+    scan: _Scan, content: etree._Element, styles: etree._Element | None, language: str | None, page: PageSetup | None
+):  # noqa: ANN202
+    """The tables of the flow with the definition the text holds for each (``None``: not a regular table)."""
+    known = styles_of(content, styles)
+    wide = text_width_in(page)
+    return read_tables([file_table(element, block, known, wide) for element, block in scan.tables], language)
+
+
+def _placed_tables(
+    scan: _Scan, content: etree._Element, styles: etree._Element | None, model: TextModel
+) -> list[tuple[str, int, TableDef]]:
+    """The regular tables of the file with the paragraph each follows (E9.32): what the text holds of its tables."""
+    by_id = {block.id: block for block in model.blocks}
+    placed = []
+    for each, definition in _file_tables(scan, content, styles, model.language, model.page):
+        if definition is not None and each.block is not None:
+            block = by_id[f"b{each.block + 1}"]
+            placed.append((block.id, len(block.text), definition))
+    return placed
 
 
 def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
@@ -438,8 +472,16 @@ def odt_import_losses(odt_bytes: bytes) -> tuple[Loss, ...]:
             del hidden["frame"]
     if unheld:
         hidden["picture"] = unheld
+    held_tables = sum(
+        1
+        for _, found in _file_tables(
+            scan, body.getroottree().getroot(), _styles_root(parts), setup.language, setup.page
+        )
+        if found
+    )
+    tables = sum(1 for _ in body.iter(_TABLE)) - held_tables  # (the nested ones too)
     for code, number in (
-        ("table", scan.tables),
+        ("table", tables),
         ("list-look", reading.odd_looks),
         ("list-depth", reading.too_deep),
         ("page", int(setup.odd_page)),
@@ -626,7 +668,8 @@ def text_to_odt(
     time for is dated by ``info.modified`` (the suggestion is not younger than that), and one with neither by the
     earliest date there is (D411). A picture floating over the text (an image, a rendered text container) is a frame in
     the paragraph it hangs from, at its character, with its description; a rendered container is drawn as a PNG by
-    ``rasterise`` when there is one (D464)."""
+    ``rasterise`` when there is one (D464). The tables of the text are written as ``table:table`` after the paragraph
+    they hang from (E9.32, D1214)."""
     when = when_made(change_times, info.modified if info else None)
     by_block = open_replacements(model, track=track_suggestions)
     ids = _ids(set())
@@ -649,10 +692,12 @@ def text_to_odt(
     boxes = BoxWriter(
         model, box_styles, lambda style_id, words: _new_paragraph(style_id, words, [], ids, when, styles)[0]
     )
+    tables = _TableWriter(model, flow, ids, when, styles)
     for number, block in enumerate(model.blocks, start=1):
         if block.generated is not None:
             name = f"Table of Contents{number}"
             flow.add(contents_element(block.generated, entries.get(block.id, ()), name, styles.of), None)
+            tables.after(block.id)
             continue
         paragraph, found = _new_paragraph(block.style, block.text, by_block.get(block.id, []), ids, when, styles)
         _add_pictures(paragraph, model, block, by_block.get(block.id, []), pictures)
@@ -664,9 +709,11 @@ def text_to_odt(
             mark_target(paragraph, bookmark_name(block.id))
         flow.add(paragraph, block.item)
         regions += found
+        tables.after(block.id)
     automatic = root.find("office:automatic-styles", NS)
     if automatic is not None:
         automatic.extend(etree.fromstring(style) for style in names.new_styles)
+        automatic.extend(etree.fromstring(style) for style in tables.styles.new)
         automatic.extend(etree.fromstring(style) for style in box_styles.new)
         if pictures.parts:
             automatic.append(etree.fromstring(PICTURE_STYLE_XML))
@@ -682,6 +729,28 @@ def text_to_odt(
         meta=new_meta(info or DocumentInfo()),
         extra={name: (data, pictures.media_types[name]) for name, data in pictures.parts.items()},
     )
+
+
+class _TableWriter:
+    """Puts the tables of the model into the flow of a new file, each after the paragraph it hangs from."""
+
+    def __init__(self, model: TextModel, flow: ListFlow, ids: Iterator[str], when: WhenMade, names: StyleNames) -> None:
+        self.model, self.flow, self.ids, self.when, self.names = model, flow, ids, when, names
+        self.styles = TableStyles()
+        self.drawn = count(1)
+
+    def _paragraph(self, style_id: str, words: str) -> etree._Element:
+        return _new_paragraph(style_id, words, [], self.ids, self.when, self.names)[0]
+
+    def after(self, block_id: str) -> None:
+        """The tables that hang from the paragraph ``block_id``, one after the other."""
+        for number, definition in enumerate(tables_after(self.model, block_id)):
+            if number:  # (two tables with nothing between them are one to most programs)
+                self.flow.add(self._paragraph(DEFAULT_STYLE, ""), None)
+            table = write_odt_table(
+                self.model, definition, self.styles, self._paragraph, self.names.of, f"Table{next(self.drawn)}"
+            )
+            self.flow.add(table, None)
 
 
 def _add_pictures(
@@ -708,14 +777,12 @@ def _add_boxes(
     )
 
 
-def _style_and_table_losses(model: TextModel, names: StyleNames, losses: LossLog) -> None:
-    """What a paragraph style says that an odt style cannot, and the tables (not written yet, E9.32: a reader of the
-    file sees the text without them). The box properties of a table's looks are a table's, not a paragraph style's."""
+def _style_losses(model: TextModel, names: StyleNames, losses: LossLog) -> None:
+    """What a paragraph style says that an odt style cannot. The box properties of a table's looks are a table's, not a
+    paragraph style's: the table writes them as the properties of its cells (E9.32)."""
     for style_id, prop in _style_definitions(model, names)[1]:
         if style_id not in TABLE_STYLE_IDS:
             losses.add("style-property", f"{style_id}: {prop}")
-    if model.tables:
-        losses.add("table", count=len(model.tables))
 
 
 def odt_export_losses(
@@ -734,7 +801,7 @@ def odt_export_losses(
     for block in model.blocks:
         if block.style not in names:
             losses.add("style", block.style)
-    _style_and_table_losses(model, names, losses)
+    _style_losses(model, names, losses)
     authored = sum(1 for block in model.blocks if any(run.author is not None for run in block.runs))
     if authored:
         losses.add("authorship", count=authored)
@@ -1290,14 +1357,17 @@ def apply_edits_to_odt(
     metadata is left alone (D411).
 
     Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, blocks
-    moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know), and
-    a table of contents or a reference in either model (the file is written anew, E9.31, step H)."""
+    moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know), a
+    table of contents or a reference in either model (the file is written anew, E9.31, step H) and a table that was
+    changed, moved, added or removed (E9.32: a table that nobody touched stays in the file as it is)."""
     if any(block.generated is not None for model in (baseline, current) for block in model.blocks):
         raise UnsupportedEdit("a text with a table of contents is written anew, not patched")
     if any(block.fields for model in (baseline, current) for block in model.blocks) or any(
         map(has_box_references, (baseline, current))
     ):
         raise UnsupportedEdit("a text with references is written anew, not patched")
+    if table_changes(baseline, current):
+        raise UnsupportedEdit("a text whose tables changed is written anew, not patched")
     when = when_made(change_times, info.modified if info else None)
     return _Patch(
         original_bytes,

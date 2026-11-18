@@ -7,6 +7,8 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- `MAX_WIDTH` and `MIN_WIDTH`, the limits of the width of a table and of a column (hundredths of a percent), are
+  exported from the package (E9.32).
 - Tables (E9.32, D1201–D1210): `TableDef` (rows, columns, boxes of one paragraph each with the id `table/row/column`,
   merged rectangles, header rows, banding, a look, flow or float placement, at most `MAX_ROWS` × `MAX_COLUMNS`),
   `Column`, `Merge`, `RowSpec`, `ColumnSpec`, `TableLook`, `TableRegion`, the protocol `TableSource`, and the commands
