@@ -1397,7 +1397,7 @@ msgstr "[Ctrl+Éntér dràws ît, Éscàpé léàvés ît às ît wàs~~~~~~~~~~
 msgid "Ctrl+X"
 msgstr "[Ctrl+X~~]"
 
-#: web/app/components/TextEditor.vue:490 web/app/components/TextEditor.vue:491
+#: web/app/components/TextEditor.vue:578 web/app/components/TextEditor.vue:579
 msgid "Ctrl+click to go there"
 msgstr "[Ctrl+clîck tô gô théré~~~~~~~~~]"
 
@@ -3069,7 +3069,7 @@ msgstr "[Nô héàdîng~~~~]"
 msgid "No heading (no parent)"
 msgstr "[Nô héàdîng (nô pàrént)~~~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:607
+#: web/app/components/TextEditor.vue:696
 msgid "No headings yet: the table lists them as they are written."
 msgstr "[Nô héàdîngs yét: thé tàblé lîsts thém às théy àré wrîttén.~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -3493,7 +3493,7 @@ msgstr "[Ôpénîng {name}~~~~~~]"
 msgid "Open…"
 msgstr "[Ôpén…~~]"
 
-#: web/app/components/TextEditor.vue:609
+#: web/app/components/TextEditor.vue:698
 msgid "Options…"
 msgstr "[Ôptîôns…~~~]"
 
@@ -3917,7 +3917,7 @@ msgstr "[Référéncé în Chàt~~~~~~~]"
 msgid "Reference menu"
 msgstr "[Référéncé ménû~~~~~~]"
 
-#: web/app/components/TextEditor.vue:486
+#: web/app/components/TextEditor.vue:574
 msgid "Reference to {what}"
 msgstr "[Référéncé tô {what}~~~~~~~~]"
 
@@ -4873,7 +4873,7 @@ msgstr "[Tàblé~~]"
 msgid "Table of Contents"
 msgstr "[Tàblé ôf Cônténts~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:518 web/app/components/TextEditor.vue:589 web/app/components/TextWorkspace.vue:583
+#: web/app/components/TextEditor.vue:606 web/app/components/TextEditor.vue:678 web/app/components/TextWorkspace.vue:583
 msgid "Table of contents"
 msgstr "[Tàblé ôf cônténts~~~~~~~]"
 
@@ -5593,7 +5593,7 @@ msgstr "[Thé ôûtcômés~~~~~]"
 msgid "The page could not be loaded"
 msgstr "[Thé pàgé côûld nôt bé lôàdéd~~~~~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:490
+#: web/app/components/TextEditor.vue:578
 msgid "The page is known in Page view and when printing"
 msgstr "[Thé pàgé îs knôwn în Pàgé vîéw ànd whén prîntîng~~~~~~~~~~~~~~~~~~~]"
 
@@ -6589,7 +6589,7 @@ msgstr "[Whàt régûlàr pàyménts (ànd à sûm àt thé énd) àré wôrth t
 msgid "What silence at a suggestion's deadline means"
 msgstr "[Whàt sîléncé àt à sûggéstîôn's déàdlîné méàns~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:489
+#: web/app/components/TextEditor.vue:577
 msgid "What this reference points at was deleted"
 msgstr "[Whàt thîs référéncé pôînts àt wàs délétéd~~~~~~~~~~~~~~~~]"
 
@@ -6909,7 +6909,7 @@ msgstr "[à nûmbér às ît îs, TRÛÉ às 1, FÀLSÉ às 0, à dàté às ît
 msgid "a number from 0 up to, not including, 1. Fresh numbers come with Tools > Resample (F9)."
 msgstr "[à nûmbér frôm 0 ûp tô, nôt înclûdîng, 1. Frésh nûmbérs cômé wîth Tôôls > Résàmplé (F9).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:486
+#: web/app/components/TextEditor.vue:574
 msgid "a page"
 msgstr "[à pàgé~~]"
 
@@ -7593,11 +7593,11 @@ msgstr "[léàvé: màtch îs thé nûmbér ôf à màtch àt thàt plàcé, ôr
 msgid "leave: said is the text the match had when it was shown"
 msgstr "[léàvé: sàîd îs thé téxt thé màtch hàd whén ît wàs shôwn~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:517
+#: web/app/components/TextEditor.vue:605
 msgid "level {n}"
 msgstr "[lévél {n}~~~~]"
 
-#: web/app/components/TextEditor.vue:517
+#: web/app/components/TextEditor.vue:605
 msgid "levels {first}–{last}"
 msgstr "[lévéls {first}–{last}~~~~~~~~]"
 
@@ -7669,7 +7669,7 @@ msgstr "[méthôd mûst bé à strîng~~~~~~~~~]"
 msgid "missing or wrong credentials"
 msgstr "[mîssîng ôr wrông crédéntîàls~~~~~~~~~~~]"
 
-#: web/app/components/ParagraphWords.vue:51 web/app/components/TextEditor.vue:485 web/app/components/TextEditor.vue:648
+#: web/app/components/ParagraphWords.vue:51 web/app/components/TextEditor.vue:573 web/app/components/TextEditor.vue:748
 msgid "missing reference"
 msgstr "[mîssîng référéncé~~~~~~~]"
 
@@ -8169,7 +8169,7 @@ msgstr "[slîdé~~]"
 msgid "slides"
 msgstr "[slîdés~~]"
 
-#: web/app/components/TextEditor.vue:176
+#: web/app/components/TextEditor.vue:178
 msgid "someone"
 msgstr "[sôméôné~~~]"
 
@@ -8449,7 +8449,7 @@ msgstr "[thé stàrt ôf thé céll~~~~~~~~]"
 msgid "the start of the text"
 msgstr "[thé stàrt ôf thé téxt~~~~~~~~]"
 
-#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:565 web/app/lib/print/source.ts:128
+#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:654 web/app/lib/print/source.ts:128
 msgid "the text"
 msgstr "[thé téxt~~~]"
 
@@ -8757,7 +8757,7 @@ msgstr "[wrîté în ît; Éntér kééps thé téxt, Shîft+Éntér stàrts à 
 msgid "write; a word is sent when it ends, and the others see where you are"
 msgstr "[wrîté; à wôrd îs sént whén ît énds, ànd thé ôthérs séé whéré yôû àré~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:177
+#: web/app/components/TextEditor.vue:179
 msgid "written by {author}"
 msgstr "[wrîttén by {author}~~~~~~~~]"
 
@@ -8789,7 +8789,7 @@ msgstr "[{app} côûld nôt stàrt îts sérvér~~~~~~~~~~~~~]"
 msgid "{app} for the Linux desktop"
 msgstr "[{app} fôr thé Lînûx désktôp~~~~~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:178
+#: web/app/components/TextEditor.vue:180
 msgid "{author} is writing here"
 msgstr "[{author} îs wrîtîng héré~~~~~~~~~~]"
 
@@ -8797,7 +8797,7 @@ msgstr "[{author} îs wrîtîng héré~~~~~~~~~~]"
 msgid "{author} suggests"
 msgstr "[{author} sûggésts~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:176
+#: web/app/components/TextEditor.vue:178
 msgid "{author}, from a suggestion of {via}"
 msgstr "[{author}, frôm à sûggéstîôn ôf {via}~~~~~~~~~~~~~~]"
 

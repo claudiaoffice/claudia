@@ -1397,7 +1397,7 @@ msgstr ""
 msgid "Ctrl+X"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:490 web/app/components/TextEditor.vue:491
+#: web/app/components/TextEditor.vue:578 web/app/components/TextEditor.vue:579
 msgid "Ctrl+click to go there"
 msgstr ""
 
@@ -3069,7 +3069,7 @@ msgstr ""
 msgid "No heading (no parent)"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:607
+#: web/app/components/TextEditor.vue:696
 msgid "No headings yet: the table lists them as they are written."
 msgstr ""
 
@@ -3493,7 +3493,7 @@ msgstr ""
 msgid "Open…"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:609
+#: web/app/components/TextEditor.vue:698
 msgid "Options…"
 msgstr ""
 
@@ -3917,7 +3917,7 @@ msgstr ""
 msgid "Reference menu"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:486
+#: web/app/components/TextEditor.vue:574
 msgid "Reference to {what}"
 msgstr ""
 
@@ -4873,7 +4873,7 @@ msgstr ""
 msgid "Table of Contents"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:518 web/app/components/TextEditor.vue:589 web/app/components/TextWorkspace.vue:583
+#: web/app/components/TextEditor.vue:606 web/app/components/TextEditor.vue:678 web/app/components/TextWorkspace.vue:583
 msgid "Table of contents"
 msgstr ""
 
@@ -5593,7 +5593,7 @@ msgstr ""
 msgid "The page could not be loaded"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:490
+#: web/app/components/TextEditor.vue:578
 msgid "The page is known in Page view and when printing"
 msgstr ""
 
@@ -6589,7 +6589,7 @@ msgstr ""
 msgid "What silence at a suggestion's deadline means"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:489
+#: web/app/components/TextEditor.vue:577
 msgid "What this reference points at was deleted"
 msgstr ""
 
@@ -6909,7 +6909,7 @@ msgstr ""
 msgid "a number from 0 up to, not including, 1. Fresh numbers come with Tools > Resample (F9)."
 msgstr ""
 
-#: web/app/components/TextEditor.vue:486
+#: web/app/components/TextEditor.vue:574
 msgid "a page"
 msgstr ""
 
@@ -7593,11 +7593,11 @@ msgstr ""
 msgid "leave: said is the text the match had when it was shown"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:517
+#: web/app/components/TextEditor.vue:605
 msgid "level {n}"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:517
+#: web/app/components/TextEditor.vue:605
 msgid "levels {first}–{last}"
 msgstr ""
 
@@ -7669,7 +7669,7 @@ msgstr ""
 msgid "missing or wrong credentials"
 msgstr ""
 
-#: web/app/components/ParagraphWords.vue:51 web/app/components/TextEditor.vue:485 web/app/components/TextEditor.vue:648
+#: web/app/components/ParagraphWords.vue:51 web/app/components/TextEditor.vue:573 web/app/components/TextEditor.vue:748
 msgid "missing reference"
 msgstr ""
 
@@ -8169,7 +8169,7 @@ msgstr ""
 msgid "slides"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:176
+#: web/app/components/TextEditor.vue:178
 msgid "someone"
 msgstr ""
 
@@ -8449,7 +8449,7 @@ msgstr ""
 msgid "the start of the text"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:565 web/app/lib/print/source.ts:128
+#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:654 web/app/lib/print/source.ts:128
 msgid "the text"
 msgstr ""
 
@@ -8757,7 +8757,7 @@ msgstr ""
 msgid "write; a word is sent when it ends, and the others see where you are"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:177
+#: web/app/components/TextEditor.vue:179
 msgid "written by {author}"
 msgstr ""
 
@@ -8789,7 +8789,7 @@ msgstr ""
 msgid "{app} for the Linux desktop"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:178
+#: web/app/components/TextEditor.vue:180
 msgid "{author} is writing here"
 msgstr ""
 
@@ -8797,7 +8797,7 @@ msgstr ""
 msgid "{author} suggests"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:176
+#: web/app/components/TextEditor.vue:178
 msgid "{author}, from a suggestion of {via}"
 msgstr ""
 

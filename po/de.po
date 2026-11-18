@@ -1397,7 +1397,7 @@ msgstr "Strg+Eingabe zeichnet es, Escape lässt es unverändert"
 msgid "Ctrl+X"
 msgstr "Strg+X"
 
-#: web/app/components/TextEditor.vue:490 web/app/components/TextEditor.vue:491
+#: web/app/components/TextEditor.vue:578 web/app/components/TextEditor.vue:579
 msgid "Ctrl+click to go there"
 msgstr "Strg+Klick führt dorthin"
 
@@ -3069,7 +3069,7 @@ msgstr "Keine Überschrift"
 msgid "No heading (no parent)"
 msgstr "Keine Überschrift (ohne übergeordneten Stil)"
 
-#: web/app/components/TextEditor.vue:607
+#: web/app/components/TextEditor.vue:696
 msgid "No headings yet: the table lists them as they are written."
 msgstr "Noch keine Überschriften: Das Verzeichnis führt sie auf, sobald sie geschrieben sind."
 
@@ -3493,7 +3493,7 @@ msgstr "{name} wird geöffnet"
 msgid "Open…"
 msgstr "Öffnen…"
 
-#: web/app/components/TextEditor.vue:609
+#: web/app/components/TextEditor.vue:698
 msgid "Options…"
 msgstr "Optionen…"
 
@@ -3917,7 +3917,7 @@ msgstr "Im Chat verweisen"
 msgid "Reference menu"
 msgstr "Verweismenü"
 
-#: web/app/components/TextEditor.vue:486
+#: web/app/components/TextEditor.vue:574
 msgid "Reference to {what}"
 msgstr "Verweis auf {what}"
 
@@ -4873,7 +4873,7 @@ msgstr "Tabelle"
 msgid "Table of Contents"
 msgstr "Inhaltsverzeichnis"
 
-#: web/app/components/TextEditor.vue:518 web/app/components/TextEditor.vue:589 web/app/components/TextWorkspace.vue:583
+#: web/app/components/TextEditor.vue:606 web/app/components/TextEditor.vue:678 web/app/components/TextWorkspace.vue:583
 msgid "Table of contents"
 msgstr "Inhaltsverzeichnis"
 
@@ -5593,7 +5593,7 @@ msgstr "Die Ergebnisse"
 msgid "The page could not be loaded"
 msgstr "Die Seite konnte nicht geladen werden"
 
-#: web/app/components/TextEditor.vue:490
+#: web/app/components/TextEditor.vue:578
 msgid "The page is known in Page view and when printing"
 msgstr "Die Seite steht in der Seitenansicht und beim Drucken fest"
 
@@ -6589,7 +6589,7 @@ msgstr "Was regelmäßige Zahlungen (und eine Summe am Ende) heute bei festem Zi
 msgid "What silence at a suggestion's deadline means"
 msgstr "Was Schweigen bei Ablauf der Frist eines Vorschlags bedeutet"
 
-#: web/app/components/TextEditor.vue:489
+#: web/app/components/TextEditor.vue:577
 msgid "What this reference points at was deleted"
 msgstr "Worauf dieser Verweis zeigt, wurde gelöscht"
 
@@ -6909,7 +6909,7 @@ msgstr "eine Zahl, wie sie ist, TRUE als 1, FALSE als 0, ein Datum als seine Zah
 msgid "a number from 0 up to, not including, 1. Fresh numbers come with Tools > Resample (F9)."
 msgstr "eine Zahl von 0 bis ausschließlich 1. Neue Zahlen gibt es mit Werkzeuge > Zufallszahlen neu ziehen (F9)."
 
-#: web/app/components/TextEditor.vue:486
+#: web/app/components/TextEditor.vue:574
 msgid "a page"
 msgstr "eine Seite"
 
@@ -7593,11 +7593,11 @@ msgstr "leave: match ist die Nummer eines Treffers an diesem Ort, oder null für
 msgid "leave: said is the text the match had when it was shown"
 msgstr "leave: said ist der Text, den der Treffer hatte, als er angezeigt wurde"
 
-#: web/app/components/TextEditor.vue:517
+#: web/app/components/TextEditor.vue:605
 msgid "level {n}"
 msgstr "Ebene {n}"
 
-#: web/app/components/TextEditor.vue:517
+#: web/app/components/TextEditor.vue:605
 msgid "levels {first}–{last}"
 msgstr "Ebenen {first}–{last}"
 
@@ -7669,7 +7669,7 @@ msgstr "method muss ein Text sein"
 msgid "missing or wrong credentials"
 msgstr "Anmeldedaten fehlen oder sind falsch"
 
-#: web/app/components/ParagraphWords.vue:51 web/app/components/TextEditor.vue:485 web/app/components/TextEditor.vue:648
+#: web/app/components/ParagraphWords.vue:51 web/app/components/TextEditor.vue:573 web/app/components/TextEditor.vue:748
 msgid "missing reference"
 msgstr "fehlender Verweis"
 
@@ -8169,7 +8169,7 @@ msgstr "Folie"
 msgid "slides"
 msgstr "Folien"
 
-#: web/app/components/TextEditor.vue:176
+#: web/app/components/TextEditor.vue:178
 msgid "someone"
 msgstr "jemand"
 
@@ -8449,7 +8449,7 @@ msgstr "der Zellenanfang"
 msgid "the start of the text"
 msgstr "der Textanfang"
 
-#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:565 web/app/lib/print/source.ts:128
+#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:654 web/app/lib/print/source.ts:128
 msgid "the text"
 msgstr "der Text"
 
@@ -8757,7 +8757,7 @@ msgstr "darin schreiben; Eingabe behält den Text, Umschalt+Eingabe beginnt eine
 msgid "write; a word is sent when it ends, and the others see where you are"
 msgstr "schreiben; ein Wort wird gesendet, wenn es endet, und die anderen sehen, wo Sie sind"
 
-#: web/app/components/TextEditor.vue:177
+#: web/app/components/TextEditor.vue:179
 msgid "written by {author}"
 msgstr "geschrieben von {author}"
 
@@ -8789,7 +8789,7 @@ msgstr "{app} konnte seinen Server nicht starten"
 msgid "{app} for the Linux desktop"
 msgstr "{app} für den Linux-Desktop"
 
-#: web/app/components/TextEditor.vue:178
+#: web/app/components/TextEditor.vue:180
 msgid "{author} is writing here"
 msgstr "{author} schreibt hier"
 
@@ -8797,7 +8797,7 @@ msgstr "{author} schreibt hier"
 msgid "{author} suggests"
 msgstr "{author} schlägt vor"
 
-#: web/app/components/TextEditor.vue:176
+#: web/app/components/TextEditor.vue:178
 msgid "{author}, from a suggestion of {via}"
 msgstr "{author}, aus einem Vorschlag von {via}"
 

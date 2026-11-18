@@ -2,7 +2,7 @@
 // The text, drawn from the session's replica. The browser never changes it: every input is caught (`beforeinput`), turned
 // into a request, and the text appears when the server's events arrive. What is typed but not yet sent is drawn at the
 // caret as an overlay. Selections are translated between the page and the model (paragraph, offset).
-import { computed, nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, shallowRef, watch } from 'vue'
 import { leaderCss } from '@claudia/layout'
 import { replayTints } from '~/lib/replay-tint'
 import { colorOf } from '~/lib/people'
@@ -14,7 +14,9 @@ import { FIELD_CHAR, fieldIndex, partsOf, type Shown } from '~/lib/references'
 import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
 import { usePointed } from '~/lib/pointed'
-import { letsGoOfObject } from '~/lib/text-containers'
+import { columnOf, letsGoOfObject } from '~/lib/text-containers'
+import { wrapOf } from '~/lib/wrap'
+import { floatStyle, measureFloats, takesRoom, type Hung, type WrapFloat, type WrapPage } from '~/lib/wrap-flow'
 
 const { t } = useI18n()
 
@@ -433,7 +435,7 @@ function letGoOfObject(event: Event) {
 
 /** The top-left corner, on the screen, of the character `place` is in front of: where an object anchored there
  * hangs (D907 prints it at the same place). A paragraph with nothing to measure — no words — gives its own corner. */
-function spotOf(place: Pos): { left: number; top: number } | null {
+function liveSpot(place: Pos): { left: number; top: number } | null {
   const el = blockEl(place.block)
   if (!el) return null
   const at = domPoint(place, false)
@@ -447,6 +449,92 @@ function spotOf(place: Pos): { left: number; top: number } | null {
   const box = el.getBoundingClientRect()
   return { left: box.left, top: box.top }
 }
+
+/** Where an object hangs: the place measured when the words were made to go round the objects (below), for an object
+ * the words go round, else the place the words have now. */
+function spotOf(place: Pos): { left: number; top: number } | null {
+  const kept = wrapSpots.get(`${place.block}:${place.offset}`)
+  if (!kept || !root.value) return liveSpot(place)
+  const at = root.value.getBoundingClientRect() // (kept from the top left of the text, which the page scrolls)
+  return { left: at.left + kept.left, top: at.top + kept.top }
+}
+
+// ------------------------------------------------------------------------------ the words go round an object
+// The browser makes the lines, so an object that takes room from them (*around*, *above and below*, D1061) is told to it
+// by a box that floats in the paragraph the object hangs from, as large as the room it takes (CODE-64, D1068; the
+// printed pages are laid out by the engine instead, D1062). The boxes are measured one after the other, in the order of
+// the text, each with those before it in place and itself out of it, so that nothing is measured against its own box
+// and the same text always gives the same boxes.
+/** The objects the words go round, in the order of the text. */
+const hung = computed<Hung[]>(() => {
+  const order = new Map(state.blocks.map((b, at) => [b.id, at]))
+  const out: Hung[] = []
+  for (const o of Object.values(state.objects)) {
+    if (!('container' in o.anchor) || !takesRoom(wrapOf(o.anchor).wrap)) continue
+    const place = props.session.placeOf(o)
+    if (place) out.push({ id: o.id, block: place.block, offset: place.offset, ...wrapOf(o.anchor), dx: o.anchor.dx, dy: o.anchor.dy, w: o.w, h: o.h })
+  }
+  return out.sort((a, b) => (order.get(a.block) ?? 0) - (order.get(b.block) ?? 0) || a.offset - b.offset || a.id.localeCompare(b.id))
+})
+const wrapSlots = (block: string) => hung.value.filter((h) => h.block === block).map((h) => h.id)
+const wrapFloats = shallowRef<Record<string, WrapFloat>>({})
+/** Where each object the words go round hangs, from the top left of the text (the page scrolls; this does not). */
+const wrapSpots = new Map<string, { left: number; top: number }>()
+const wrapVersion = ref(0)
+const floatOf = (id: string) => floatStyle(wrapFloats.value[id])
+/** What decides how the words go round the objects; when it changes, they are measured again. */
+const wrapKey = computed(() => JSON.stringify(hung.value))
+
+/** The page as the lines are now, for `measureFloats`: the paragraphs and the boxes of the floats in the DOM. */
+function pageOfWords(host: HTMLElement): WrapPage {
+  const origin = () => {
+    const r = host.getBoundingClientRect()
+    return { left: r.left, top: r.top }
+  }
+  const boxes = new Map([...host.querySelectorAll<HTMLElement>('[data-wrap-float]')].map((el) => [el.dataset.for ?? '', el]))
+  const length = (css: CSSStyleDeclaration, ...names: string[]) => names.reduce((sum, name) => sum + (parseFloat(css.getPropertyValue(name)) || 0), 0)
+  return {
+    clear: () => boxes.forEach((el) => (el.style.display = 'none')),
+    origin,
+    column: () => {
+      const r = host.getBoundingClientRect()
+      const css = getComputedStyle(host)
+      return columnOf({ left: r.left, top: r.top, width: r.width, height: r.height }, parseFloat(css.paddingLeft) || 0, parseFloat(css.paddingRight) || 0)
+    },
+    spotOf: (block, offset) => liveSpot({ block, offset }),
+    paragraphOf: (block) => {
+      const el = blockEl(block)
+      if (!el) return null
+      const r = el.getBoundingClientRect()
+      const css = getComputedStyle(el)
+      return {
+        left: r.left + length(css, 'padding-left', 'border-left-width'),
+        top: r.top + length(css, 'padding-top', 'border-top-width'),
+        width: r.width - length(css, 'padding-left', 'padding-right', 'border-left-width', 'border-right-width'),
+      }
+    },
+    put: (id, f) => {
+      const el = boxes.get(id)
+      if (!el) return
+      el.style.display = ''
+      if (f) Object.assign(el.style, floatStyle(f))
+    },
+  }
+}
+
+function measureWrap() {
+  const host = root.value
+  if (!host) return
+  const { floats, spots } = measureFloats(hung.value, pageOfWords(host))
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  if (same(floats, wrapFloats.value) && same([...wrapSpots.entries()], [...spots.entries()])) return
+  wrapSpots.clear()
+  for (const [key, spot] of spots) wrapSpots.set(key, spot)
+  wrapFloats.value = floats
+  wrapVersion.value++
+}
+watch(wrapKey, () => nextTick(() => layoutTick.value++))
+watch(layoutTick, measureWrap, { flush: 'post' })
 
 function focus() {
   root.value?.focus()
@@ -554,6 +642,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
 <template>
   <div ref="scroller" class="scroller" :class="view" data-testid="text-scroller" @contextmenu.capture="onContextMenu" @pointerdown.capture="letGoOfObject" @focusin="letGoOfObject">
     <div class="sheet">
+      <TextContainers behind :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" @leave="focus()" />
       <div
         :key="renderKey"
         ref="root"
@@ -619,6 +708,17 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
           :data-block="block.id"
           :data-marker="block.label?.marker"
         >
+          <span
+            v-for="id in wrapSlots(block.id)"
+            :key="`float-${id}`"
+            data-skip
+            data-wrap-float
+            :data-for="id"
+            contenteditable="false"
+            aria-hidden="true"
+            class="wrap-float"
+            :style="floatOf(id)"
+          />
           <template v-for="seg in segmentsOf(block)" :key="seg.key">
             <span
               v-if="seg.kind === 'text'"
@@ -655,7 +755,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
         </component>
         </template>
       </div>
-      <TextContainers :session="session" :host="root" :tick="layoutTick" :spot-of="spotOf" @leave="focus()" />
+      <TextContainers :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" @leave="focus()" />
     </div>
   </div>
 </template>
@@ -697,6 +797,16 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
 }
 .doc :deep(.para) {
   margin: 0 0 0.9em;
+}
+
+/* the room an object takes from the lines (CODE-64): a box that only the lines notice. It floats to a side of its
+   paragraph, its size and place come inline from `measureWrap`. */
+.doc :deep(.wrap-float) {
+  display: block;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* a list item: the marker is drawn, not typed, in the gutter before the text (E9.21). It is not part of the text, so
