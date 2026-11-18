@@ -5,7 +5,11 @@
 // shape and a text box are all drawn (`lookOf`). Click selects (and a click into the words lets go again, in
 // `TextEditor.vue`); double-click, Enter or F2 writes in a rendered container; Delete removes an object; the arrow keys
 // up and down hang it from the previous or next paragraph; the corner sizes it.
-import { computed, nextTick, ref } from 'vue'
+//
+// Two of these layers stand in a text (D1063): the one over the words, and one under them for the objects whose
+// text wrap is "behind the text". The words are drawn above that one, so a press there goes to the words; while Ctrl
+// is held, the layer comes up over the words and takes the press, and the pointer shows a hand (`grabbable`).
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { descriptionOf } from '~/lib/text-container-names'
 import { objectName } from '~/lib/descriptions'
 import { imageDataUrl } from '~/lib/images'
@@ -14,10 +18,14 @@ import { columnOf, floatBox, neighbour, resizedBy } from '~/lib/text-containers'
 import { lookOf, type ObjectLook } from '~/lib/text-object-look'
 import { useI18n } from '~/lib/i18n'
 import type { TextSession } from '~/lib/text-session'
+import { grabbable, wrapLabel, wrapOf } from '~/lib/wrap'
+import type { BlockAnchor } from '~/lib/objects'
 
 const props = defineProps<{
   session: TextSession
   host: HTMLElement | null
+  /** The layer under the words, for the objects that lie behind them; absent: the one over the words. */
+  behind?: boolean
   tick: number
   /** Where, on the screen, the character at a place of the text is (`TextEditor.vue`'s `spotOf`). */
   spotOf: (place: { block: string; offset: number }) => { left: number; top: number } | null
@@ -31,6 +39,28 @@ const layer = ref<HTMLElement | null>(null)
 const editing = ref<string | null>(null)
 const sizing = ref<{ id: string; from: { x: number; y: number }; w: number; h: number; now: { w: number; h: number } } | null>(null)
 const readonly = computed(() => state.me.role === 'viewer')
+
+/** Is Ctrl held? Then an object behind the words can be taken hold of (D1063). */
+const ctrl = ref(false)
+const onModifier = (event: KeyboardEvent) => (ctrl.value = event.ctrlKey || event.metaKey)
+const onBlur = () => (ctrl.value = false)
+onMounted(() => {
+  if (!props.behind) return
+  window.addEventListener('keydown', onModifier)
+  window.addEventListener('keyup', onModifier)
+  window.addEventListener('blur', onBlur)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onModifier)
+  window.removeEventListener('keyup', onModifier)
+  window.removeEventListener('blur', onBlur)
+})
+/** The wrap an object says it has: only an object hung in the words has one; a slide's or a cell's is never behind. */
+const wrapOfObject = (id: string) => {
+  const a = state.objects[id]?.anchor as Partial<BlockAnchor> | undefined
+  return a && 'container' in a ? wrapOf(a).wrap : 'over'
+}
+const mine = (id: string) => (wrapOfObject(id) === 'behind') === !!props.behind
 
 interface Placed {
   id: string
@@ -46,12 +76,13 @@ const placed = computed<Placed[]>(() => {
   const column = columnOf({ left: r.left, top: r.top, width: r.width, height: r.height }, parseFloat(css.paddingLeft) || 0, parseFloat(css.paddingRight) || 0)
   const out: Placed[] = []
   for (const o of Object.values(state.objects)) {
+    if (!mine(o.id)) continue
     const place = session.placeOf(o)
     const spot = place && props.spotOf(place)
     if (!spot) continue
     const size = sizing.value?.id === o.id ? sizing.value.now : { w: o.w, h: o.h }
     const f = floatBox(box, spot, o.anchor, size.w, size.h, column)
-    const turn = o.rotation ? { transform: `rotate(${o.rotation}deg)` } : {}
+    const turn: Record<string, string> = o.rotation ? { transform: `rotate(${o.rotation}deg)` } : {}
     out.push({ id: o.id, style: { left: `${f.left}px`, top: `${f.top}px`, width: `${f.width}px`, height: `${f.height}px`, ...turn } })
   }
   return out
@@ -65,8 +96,13 @@ const looks = computed<Record<string, ObjectLook>>(() => Object.fromEntries(Obje
 const label = (id: string) => {
   const o = state.objects[id]
   if (!o) return ''
-  if (o.kind === 'rendered') return descriptionOf(o, faceOf(id)?.label ?? '', t)
-  return objectName(o, { shape: o.shape ? state.shapes[o.shape]?.name : undefined, words: o.paragraph?.text })
+  const name =
+    o.kind === 'rendered'
+      ? descriptionOf(o, faceOf(id)?.label ?? '', t)
+      : objectName(o, { shape: o.shape ? state.shapes[o.shape]?.name : undefined, words: o.paragraph?.text })
+  // a screen-reader user hears how the words go round it, where it matters (BITV 1.3.1)
+  const wrap = wrapOfObject(id)
+  return wrap === 'over' ? name : `${name}, ${wrapLabel(wrap)}`
 }
 
 function select(id: string, event?: Event) {
@@ -135,7 +171,12 @@ async function endSizing() {
 </script>
 
 <template>
-  <div ref="layer" class="layer" data-testid="containers">
+  <div
+    ref="layer"
+    class="layer"
+    :class="{ behind, grab: behind && grabbable('behind', ctrl) }"
+    :data-testid="behind ? 'containers-behind' : 'containers'"
+  >
     <div
       v-for="p in placed"
       :key="p.id"
@@ -189,6 +230,7 @@ async function endSizing() {
 .layer {
   position: absolute;
   inset: 0;
+  z-index: 2; /* over the words (`.doc` is 1); the layer under them is 0 */
   pointer-events: none;
 }
 .object {
@@ -196,6 +238,25 @@ async function endSizing() {
   pointer-events: auto;
   cursor: default;
 }
+/* the layer under the words: the words are above it, so it takes no press, until Ctrl is held; then it comes up over
+   the words, the object shows a hand, and the rest of the page still answers to the words (D1063) */
+.layer.behind {
+  z-index: 0;
+}
+.layer.behind .object {
+  pointer-events: none;
+}
+.layer.behind.grab {
+  z-index: 3;
+}
+.layer.behind.grab .object {
+  pointer-events: auto;
+  cursor: grab;
+}
+.layer.behind.grab .object:active {
+  cursor: grabbing;
+}
+
 /* only a rendered container is a framed card; a picture, a shape and a text box bring their own look */
 .object.kind-rendered {
   background: var(--paper);

@@ -169,12 +169,12 @@ export interface ImageInfo {
  * not all of it), words that are not hyphenated because the language is not known or has no patterns.
  */
 export interface Note {
-  kind: 'font' | 'object' | 'hyphenation' | 'sheet' | 'pages'
+  kind: 'font' | 'object' | 'hyphenation' | 'sheet' | 'pages' | 'wrap'
   /** for `font`: the family the style asked for and the one used */
   requested?: string
   used?: string
   /** for `object`: its id and why; for `hyphenation`, `sheet` (a scale that had to be raised, a sheet with nothing
-   *  to print) and `pages` (page references that did not settle): why */
+   *  to print), `pages` (page references that did not settle) and `wrap` (text round objects that did not settle): why */
   object?: string
   reason?: string
   /** for `object`: the object is printed, only this part of it is not (an SVG picture's filters, say) */

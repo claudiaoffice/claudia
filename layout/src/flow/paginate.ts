@@ -73,7 +73,16 @@ export function paginate(blocks: readonly FlowBlock[], geometry: PageGeometry): 
 
   const geom = blocks.map((b) => {
     const inset = insets(b.decoration ?? NO_DECORATION)
-    return { inset, heights: b.layout.lines.map((l) => l.height), style: b.layout.style }
+    // a line beside an object (D1061) may have a lead (space an object took above its row) and advance the page by less
+    // than its height (the first of two lines on one row); every other line advances by its height
+    const lines = b.layout.lines
+    return {
+      inset,
+      heights: lines.map((l) => l.advance ?? l.height),
+      leads: lines.map((l) => l.lead ?? 0),
+      boxes: lines.map((l) => l.height),
+      style: b.layout.style,
+    }
   })
   /** Lines of block `i`, starting at line `from`, that fit below `top` (with the bottom inset if they are the last). */
   const fitting = (i: number, from: number, top: number): number => {
@@ -81,9 +90,9 @@ export function paginate(blocks: readonly FlowBlock[], geometry: PageGeometry): 
     let used = top
     let k = 0
     for (let l = from; l < g.heights.length; l++) {
-      used += g.heights[l]!
       const bottom = l === g.heights.length - 1 ? g.inset.bottom : 0
-      if (used + bottom > box.h) break
+      if (used + g.leads[l]! + g.boxes[l]! + bottom > box.h) break
+      used += g.leads[l]! + g.heights[l]!
       k++
     }
     return k
@@ -92,7 +101,7 @@ export function paginate(blocks: readonly FlowBlock[], geometry: PageGeometry): 
   const headHeight = (i: number, lines: number): number => {
     const g = geom[i]!
     let h = g.inset.top
-    for (let l = 0; l < Math.min(lines, g.heights.length); l++) h += g.heights[l]!
+    for (let l = 0; l < Math.min(lines, g.heights.length); l++) h += g.leads[l]! + g.heights[l]!
     return h + (lines >= g.heights.length ? g.inset.bottom : 0)
   }
 
@@ -112,7 +121,7 @@ export function paginate(blocks: readonly FlowBlock[], geometry: PageGeometry): 
         // keep with next: the next paragraph's first lines must fit beside this one
         if (first && g.style.keepWithNext && i + 1 < blocks.length && !empty()) {
           const next = geom[i + 1]!
-          const after = top + g.heights.reduce((s, h) => s + h, 0) + g.inset.bottom
+          const after = top + g.heights.reduce((s, h, l) => s + h + g.leads[l]!, 0) + g.inset.bottom
           const need = Math.max(g.style.spaceAfter, next.style.spaceBefore) + headHeight(i + 1, Math.min(next.style.orphans, next.heights.length))
           if (after + need > box.h) {
             newPage()
@@ -135,6 +144,7 @@ export function paginate(blocks: readonly FlowBlock[], geometry: PageGeometry): 
       let lineTop = box.y + top
       const fragTop = lineTop - (first ? g.inset.top : 0)
       for (let l = from; l < from + k; l++) {
+        lineTop += g.leads[l]!
         page.lines.push({ block: i, line: l, x, top: lineTop })
         lineTop += g.heights[l]!
       }

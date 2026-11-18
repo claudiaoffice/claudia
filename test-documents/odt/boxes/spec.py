@@ -28,11 +28,15 @@ def import_checks(model: TextModel) -> None:
     ]
     first, circle, _, turned = (model.get_object(f"x{number}") for number in range(1, 5))
     assert (first.anchor, first.body.description, words(model, "x1")) == (
-        BlockAnchor("b2", 22),
+        BlockAnchor("b2", 22, wrap="above-below", gap=0),
         "A note about the boxes",
         "A note in a box",
     )
-    assert (circle.anchor, circle.body.description, words(model, "x2")) == (BlockAnchor("b3", 0), "A dot", "Dot")
+    assert (circle.anchor, circle.body.description, words(model, "x2")) == (
+        BlockAnchor("b3", 0, wrap="above-below", gap=0),
+        "A dot",
+        "Dot",
+    )
     assert (turned.body.rotation, words(model, "x4")) == (20, "Turned")
 
 
@@ -51,7 +55,10 @@ def after_checks(model: TextModel) -> None:
     assert [obj.body.shape for obj in model.objects.values()] == [None, "circle", "triangle"]
     assert words(model, "x1") == "Other words in the box"
     circle = model.get_object("x2")
-    assert ((circle.body.w, circle.body.h), circle.anchor) == ((150, 150), BlockAnchor("b3", 0))
+    assert ((circle.body.w, circle.body.h), circle.anchor) == (
+        (150, 150),
+        BlockAnchor("b3", 0, wrap="above-below", gap=0),
+    )
     assert words(model, "x3") == "Up"
     assert model.blocks[2].text == "Nothing here changes."
 

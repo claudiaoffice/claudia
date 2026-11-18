@@ -27,13 +27,17 @@ export interface CellAnchor {
   col: number
 }
 /** A character of a paragraph, plus how far the object is moved off it (D1023): both are in the units of `w` and `h`,
- * and absent for an object that sits exactly at its character. */
+ * and absent for an object that sits exactly at its character. `wrap` says how the text flows round the object (D1061:
+ * absent is `over`, the words do not give way) and `gap` how far the words keep from it, in the same units (absent is
+ * the usual 8). */
 export interface BlockAnchor {
   kind: 'block'
   container: string
   offset: number
   dx?: number
   dy?: number
+  wrap?: 'over' | 'around' | 'above-below' | 'behind'
+  gap?: number
 }
 export type Anchor = SlideAnchor | CellAnchor | BlockAnchor
 

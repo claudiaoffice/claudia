@@ -7,6 +7,9 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- Composes (D1061, D1065): `set_wrap`, `add_object` and `shapes` in a text; `wrap` and `gap` on a text's object anchor
+  (`over`, `around`, `above-below`, `behind`), the command `SetObjectWrap`. **Breaking:** `shapes` of a text answers
+  `{library, document}`, as in a presentation, not a list.
 - `claudia_core.stand_ins` (E3.13, CODE-42): `GENERIC_FONTS` (the font of each CSS generic family and the fallback),
   `GENERIC_ALIASES` (every CSS name for a generic family), `SAME_WIDTHS` (open fonts that take exactly the room of a
   common office font), `generic_font` and `file_font` (the font an office file names for a `font-family` list). The

@@ -6,6 +6,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { DEFAULT_STYLE, SHAPE_LABEL_STYLE } from '@claudia/layout'
 import { countWords } from '~/lib/blocks'
 import { pictureSize, type PictureImport } from '~/lib/images'
+import { NEW_OBJECT_WRAP, wrapAnnouncement, wrapLabel, wrapOf } from '~/lib/wrap'
 import { toMarkdown } from '~/lib/markdown'
 import { textStyleHost } from '~/lib/text-style-host'
 import type { TextSession } from '~/lib/text-session'
@@ -165,13 +166,42 @@ async function addContainer(type: string) {
 }
 
 const PICTURE_HEIGHT = 240 // as high as this, unless that would be wider than a container may be
+/** Where the caret is, or the start of the text: what a new object hangs from. */
+const hangFrom = () => state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
 /** Edit ▸ Image…: a picture hangs from the character the caret is at, as a container does (E10.8, E10.16). It keeps its
- * own proportions, and is no wider than a container is by default. */
+ * own proportions, and is no wider than a container is by default. The text stops above it and goes on below (D1061). */
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
-  const at = state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
+  const at = hangFrom()
   if (!at) return Promise.resolve(null)
-  return session.addImage(picture, at, pictureSize(aspect, PICTURE_HEIGHT, CONTAINER_WIDTH))
+  return session.addImage(picture, at, pictureSize(aspect, PICTURE_HEIGHT, CONTAINER_WIDTH), NEW_OBJECT_WRAP)
 }
+
+const SHAPE_HEIGHT = 160
+const TEXT_BOX = { w: 260, h: 100 }
+/** Edit ▸ Text Box: an empty text box where the caret is (the same entry and key as in creates). */
+async function addTextBox() {
+  const at = hangFrom()
+  if (at) await session.addTextBox(at, TEXT_BOX, NEW_OBJECT_WRAP)
+}
+/** Edit ▸ a shape of the library: it keeps its outline's proportions (a circle stays a circle). */
+async function addShape(id: string) {
+  const at = hangFrom()
+  if (!at) return
+  const aspect = (state.library.find((s) => s.id === id) ?? state.shapes[id])?.aspect ?? null
+  await session.addShape(id, at, { w: Math.round(SHAPE_HEIGHT * (aspect ?? 1)), h: SHAPE_HEIGHT }, NEW_OBJECT_WRAP)
+}
+
+/** Format ▸ Wrap Text, Ctrl+Alt+R (D1064): the object selected goes on to the next way of letting the text flow round it,
+ * and the status line says which one it is now, for those who cannot see the page. */
+async function cycleWrap() {
+  const id = state.selectedObject
+  if (!id || readonly.value) return
+  const now = await session.cycleWrap(id)
+  if (now) session.notice(wrapAnnouncement(now), 'info')
+}
+const WRAP_TEXT: ShortcutDef = { id: 'format.wrap-text', get label() { return t('Wrap Text') }, chord: chordOf('format.wrap-text'), run: () => void cycleWrap(), enabled: () => !!state.selectedObject && !readonly.value && !printing.value }
+/** What Wrap Text shows beside its name: the mode the selected object has now. */
+const currentWrap = computed(() => (state.selectedObject && state.objects[state.selectedObject] ? wrapOf(state.objects[state.selectedObject]!.anchor).wrap : null))
 function pictureInserted() {
   dialog.value = null
   nextTick(() => editor.value?.focus())
@@ -221,6 +251,7 @@ const BULLETS: ShortcutDef = { id: 'format.bulleted-list', get label() { return 
 const NUMBERS: ShortcutDef = { id: 'format.numbered-list', get label() { return t('Numbered List') }, chord: chordOf('format.numbered-list'), run: () => makeList('numbers'), enabled: () => !readonly.value }
 const extraShortcuts = [
   LOOK,
+  WRAP_TEXT,
   PRINT,
   SOFT_HYPHEN,
   HARD_HYPHEN,
@@ -366,6 +397,9 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         // a picture hangs from the caret's character, like a container (E10.16); its key is the same in all three apps
         { id: 'edit.image', label: t('Image…'), action: () => (dialog.value = 'image'), disabled: readonly.value || !state.selection },
+        { id: 'edit.text-box', label: t('Text Box'), action: () => void addTextBox(), disabled: readonly.value || !state.selection },
+        // the outlines the server offers, as in creates; they hang from the caret's character like a picture
+        ...state.library.map((s) => ({ label: s.name, action: () => void addShape(s.id), disabled: readonly.value || !state.selection })),
         { label: '', separator: true },
         // The two characters that had keys and no menu entry (UX-35/UX-36): where a word may break, and where never.
         {
@@ -381,8 +415,8 @@ const menus = computed<Menu[]>(() => {
     insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }),
     {
       label: t('Format'),
-      items:
-        state.styles.length === 0
+      items: [
+        ...(state.styles.length === 0
           ? [{ label: t('No styles yet'), disabled: true }]
           : formatItems(t, {
               // D127's groups — structure · running text · called-out blocks — and then any style of the text's own.
@@ -420,7 +454,16 @@ const menus = computed<Menu[]>(() => {
                 },
                 allNumbering: () => (dialog.value = 'numbering'),
               },
-            }),
+            })),
+        { label: '', separator: true },
+        // one entry and one key that cycles the four modes (D1064); it says which mode the selected object has now
+        {
+          id: 'format.wrap-text',
+          label: currentWrap.value ? t('Wrap Text: {mode}', { mode: wrapLabel(currentWrap.value) }) : t('Wrap Text'),
+          action: () => void cycleWrap(),
+          disabled: readonly.value || !state.selectedObject,
+        },
+      ],
     },
     {
       label: t('View'),

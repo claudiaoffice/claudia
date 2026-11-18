@@ -115,12 +115,12 @@
 <path d="M656,280 L666,280" fill="none" stroke="#d6477a" stroke-width="1.2" />
 <text x="628" y="272" font-size="9.5" font-weight="600" fill="#d6477a" text-anchor="end" >distance</text>
 <rect x="40" y="586" width="560" height="340" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1" />
-<text x="62" y="616" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >B · One key: Format ▸ Wrap Text, Ctrl+Alt+L</text>
+<text x="62" y="616" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif" >B · One key: Format ▸ Wrap Text, Ctrl+Alt+R</text>
 <text x="62" y="634" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >Each press moves the held object to the next mode and is one step in the history.</text>
 <text x="62" y="649" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start" >The menu entry shows the current mode and a screen reader announces it.</text>
 <rect x="62" y="660" width="516" height="26" rx="6" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
 <text x="74" y="677" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start" >Format ▸ Wrap Text: Around</text>
-<text x="566" y="677" font-size="11" font-weight="500" fill="#6e6880" text-anchor="end" >Ctrl+Alt+L</text>
+<text x="566" y="677" font-size="11" font-weight="500" fill="#6e6880" text-anchor="end" >Ctrl+Alt+R</text>
 <rect x="82" y="702" width="66" height="58" rx="8" fill="#fff" stroke="#d8d2e6" stroke-width="1" />
 <rect x="90" y="710" width="50" height="3" rx="1.5" fill="#bdb5d8" />
 <rect x="90" y="718" width="50" height="3" rx="1.5" fill="#bdb5d8" />
@@ -277,7 +277,7 @@
 <text x="1174" y="1043" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >line' makes the object a character, so imported ones keep their original and 'in</text>
 <text x="1174" y="1057" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >line' comes later as an anchor kind of its own.</text>
 <text x="62" y="1104" font-size="12" font-weight="600" fill="#13917f" text-anchor="start" >4 One key, cycling (D1064)</text>
-<text x="62" y="1121" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Decided: one entry, Wrap Text, Ctrl+Alt+L, each press goes to the next mode.</text>
+<text x="62" y="1121" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Decided: one entry, Wrap Text, Ctrl+Alt+R, each press goes to the next mode.</text>
 <text x="62" y="1135" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >Free in all three manifests; no digit keys, which German AltGr uses. Where the</text>
 <text x="62" y="1149" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start" >distance is set is open.</text>
 <text x="618" y="1104" font-size="12" font-weight="600" fill="#d6477a" text-anchor="start" >5 Where the wrap is kept</text>

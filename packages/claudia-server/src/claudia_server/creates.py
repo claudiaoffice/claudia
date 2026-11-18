@@ -32,7 +32,6 @@ from claudia_creates_io import (
 from claudia_core import (
     AddObject,
     Batch,
-    DefineShape,
     ObjectBody,
     PageSetupError,
     SetSnap,
@@ -61,36 +60,11 @@ from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .rendered import add_rendering_methods
 from .replay import add_replay_methods
+from .shape_methods import PARAGRAPH_STYLE_OF_KIND, STYLE_OF_KIND, add_shape_methods
 from .structure_methods import add_structure_methods
 from .styles import add_style_methods
 from .thing_names import add_name_methods, default_name
 from .wire import current_revision, done, fresh_id
-
-#: The style a new object of each kind starts with: its container's slot (D304). A text box's box is a box style
-#: of its own (D310), so a change to it never has to deviate from Body text.
-STYLE_OF_KIND = {"text": "plain-box", "shape": "plain-shape"}
-#: The style a new object's words start with: its words' slot. A shape's outline and its words are two styles of
-#: two kinds (D310).
-PARAGRAPH_STYLE_OF_KIND = {"text": "body-text", "shape": "shape-label"}
-#: What `add_object` makes; a picture, a container and a chart each come from their own request.
-ADDABLE_KINDS = tuple(PARAGRAPH_STYLE_OF_KIND)
-
-
-def _check_addable(kind: str, shape: str | None) -> None:
-    """Refuse, saying where to go instead, a kind that `add_object` does not make: a picture, a container and a chart
-    each come from a definition of their own."""
-    if kind == "image":
-        raise RequestError("bad_request", msg("add_object: use add_image to put a picture on a slide"))
-    if kind == "rendered":
-        raise RequestError("bad_request", msg("add_object: use add_rendering to put a container on a slide"))
-    if kind == "diagram":
-        raise RequestError("bad_request", msg("add_object: a chart is made in computes, not on a slide"))
-    if kind not in ADDABLE_KINDS:
-        raise RequestError(
-            "bad_request", msg("add_object: kind must be one of {kinds}", kinds=", ".join(ADDABLE_KINDS))
-        )
-    if kind == "shape" and shape is None:
-        raise RequestError("bad_request", msg("add_object: a shape needs the id of its outline"))
 
 
 def _deck(ctx: Context) -> SlideModel:
@@ -215,6 +189,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     """The method table of presentations on a server whose shape library is ``library``."""
     table = core_methods.extended()
     _add_shared_methods(table)
+    add_shape_methods(table, model_of=_deck, library=library, placement=ON_SLIDE)
 
     @table.method("slides")
     def _slides(ctx):
@@ -253,17 +228,6 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
             "objects": objects,
             "notes": deck.notes_of(slide),
             "seconds": deck.time_of(slide),
-        }
-
-    @table.method("shapes")
-    def _shapes(ctx):
-        """The outlines: `{library, document}`. `library` is what the server offers for insertion, `document` what
-        this document has taken in (and what its objects are drawn with). An outline is `{format, id, name, path,
-        aspect, text_area}` where path is an SVG path in a box of 100 by 100."""
-        deck = _deck(ctx)
-        return {
-            "library": [shape.to_data() for shape in library],
-            "document": [shape.to_data() for _, shape in sorted(deck.shapes.items())],
         }
 
     @table.method("export_office", "format:str")
@@ -311,30 +275,6 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         """Add an empty slide at the end. Returns its id and the revision."""
         slide = fresh_id("s", _deck(ctx).slides)
         return done(ctx, AddSlide(slide, name=default_name(ctx, "slide")), base, slide=slide)
-
-    @table.method(
-        "add_object", 'slide:str kind:str x:int y:int w:int h:int shape:str? text:text="" base:revision?', write=True
-    )
-    def _add_object(ctx, *, slide, kind, x, y, w, h, shape, text, base):
-        """Put a text box (`kind` "text") or a shape (`kind` "shape" with the `shape` id) on a slide. Its words
-        are a paragraph (E10.17): it starts under the object's own style, and `set_paragraph_style` points it at
-        another. It gets the
-        style of its kind. Returns the new object's id and the revision. A circle must keep its proportions."""
-        deck = _deck(ctx)
-        _check_addable(kind, shape)
-        steps: list = []
-        if shape is not None and shape not in deck.shapes:
-            outline = library.get(shape)
-            if outline is None:
-                raise RequestError("bad_request", msg("add_object: this server has no shape {shape!r}", shape=shape))
-            steps.append(DefineShape(outline))
-        object_id = fresh_id("o", deck.objects)
-        style = STYLE_OF_KIND[kind]
-        words = paragraph_for(object_id, PARAGRAPH_STYLE_OF_KIND[kind], text, ctx.user)
-        body = ObjectBody(object_id, kind, w, h, style, words, shape=shape, name=default_name(ctx, kind))
-        steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
-        command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
-        return done(ctx, command, base, object=object_id)
 
     @table.method("insert_agenda", "slide:str base:revision?", write=True)
     def _insert_agenda(ctx, *, slide, base):

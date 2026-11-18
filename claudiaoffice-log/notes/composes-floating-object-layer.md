@@ -32,7 +32,7 @@ The screen measures the character with a `Range` on the browser's own line; prin
 Those two can differ by a few pixels, so "what you see is what is printed" holds up to that difference. It is not
 tested against a rendered page: there was no browser in the session that built this.
 
-## Wrap: decided on 2026-11-17 (D1061–D1064), nothing of it is built
+## Wrap: decided on 2026-11-17 (D1061–D1064), built on 2026-11-18 except the flowing editor (CODE-64)
 
 Four modes, kept in the anchor beside `dx`/`dy` (it is composes-only, and `MoveObject` already replaces the whole
 anchor): **over the text** (what a document with no wrap saved means, so no document changes; a new object starts as *above and below*, D1061), **around** the object, **above and below**,
@@ -44,7 +44,7 @@ The full list is on the mock-up.
 Where it would go: `layout/src/flow/exclusions.ts` (new, pure, integers), `layoutParagraph` taking a width per line
 instead of one width, `paginate` handing it the bands that reach its page; the model field and a `set_wrap` method
 (`MoveObject` with the old anchor and the new wrap, so the history says what happened); `format.wrap-text`
-(Ctrl+Alt+L, free in the three manifests), one key that cycles the four modes.
+(Ctrl+Alt+R, free in the three manifests), one key that cycles the four modes.
 
 ### The decision that shapes it: who lays out the lines
 
@@ -81,7 +81,7 @@ before any import code is written (as with rotation). The importers were not rea
 2. **A behind object.** Decided (D1063): Ctrl held while the pointer is over the object's area turns the cursor into a
    hand, and a click takes the object. Without Ctrl a click in the words places the caret. Tab and Edit ▸ Select Next
    Object reach it without a pointer.
-3. **One key.** Decided (D1064): Format ▸ Wrap Text, `format.wrap-text`, Ctrl+Alt+L; each press moves to the next of
+3. **One key.** Decided (D1064): Format ▸ Wrap Text, `format.wrap-text`, Ctrl+Alt+R; each press moves to the next of
    the four modes and back to *over*. Where the distance is set is **open** (the key does not carry it).
 4. **Default wrap for a new object.** Decided (D1061): *above and below*, for what the person puts in. A document with
    no wrap saved stays *over*; imported objects keep the file's wrap. **Proposed, not confirmed:** switch the default on
@@ -94,6 +94,23 @@ before any import code is written (as with rotation). The importers were not rea
 7. **Technical debt:** `SlideCanvas.vue` still draws pictures, shapes and boxes itself. `lookOf` is the same facets in
    plain data; moving creates onto it is a later, small change and was not done here, since it cannot be checked
    without a browser.
+
+## What was built (2026-11-18)
+
+- **Engine** (`layout/src/flow/exclusions.ts`): a paragraph is laid out in *rows*; a row's width is the free stretches
+  of its band, an exclusion is the object's box plus the gap, on both sides of an object (the text goes on at the right
+  of a left-hand object and at the left of a right-hand one), a stretch under 3 em is not used. No widow/orphan rule
+  is applied beside an object. An object's rotation is ignored for its exclusion (its unrotated box is used).
+- **Model, server, files.** `BlockAnchor.wrap/gap`, `SetObjectWrap` (one undo step, "Wrap text"), `set_wrap`,
+  `add_object` and `shapes` from the module shared with creates (D1065), ODF/DOCX mapping (D1066).
+- **Web.** Edit ▸ Image…, Text Box and Shape; Format ▸ Wrap Text (Ctrl+Alt+R) cycles the modes; a second object layer
+  under the words for *behind*, and Ctrl brings it up with a hand cursor (D1063); the accessible name says the wrap.
+
+## Reuse across the three apps (checked 2026-11-18)
+
+Shared: `ObjectBody`, the commands, `Placement`, `add_object_methods`, `add_shape_methods`, `lookOf` and the layer
+component for pictures, shapes and boxes. Per app: the anchor and its placement. Not shared yet: `SlideCanvas.vue`
+draws creates' objects itself; computes has no shapes or text boxes.
 
 ## Not verified
 

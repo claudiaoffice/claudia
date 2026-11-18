@@ -441,11 +441,12 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     def check_anchor(self, anchor: BlockAnchor, body: ObjectBody) -> None:
         """An object hangs from a character of its paragraph, so the offset must lie inside that paragraph.
 
-        A text has no edge an object could fall off, unlike a slide: only the offset and how far it floats from there
-        are checked, never the size."""
+        A text has no edge an object could fall off, unlike a slide: only the offset, how far it floats from there and
+        how the text flows round it are checked, never the size."""
         if not 0 <= anchor.offset <= len(self.block(anchor.block).text):
             raise IndexError("an object must hang from a place inside its paragraph")
         anchor.check_floating()
+        anchor.check_wrap()
 
     def move_objects(self, command: TextCommand) -> list[dict]:
         """Let the objects follow ``command`` (see ``claudia_composes.anchors``); returns the ones that moved,

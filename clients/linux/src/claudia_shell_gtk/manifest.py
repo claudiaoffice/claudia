@@ -530,10 +530,12 @@ def _format_menu(
     clear_cell_style: bool = False,
     describe: bool = False,
     rotate: bool = False,
+    wrap: bool = False,
     headings: tuple[str, str] = ("Number Headings", "Number every heading style: 1, 1.1, 1.2, 2 …"),
 ) -> Menu:
     """The Format menu, one shape in every app (D300): Apply Style…, Edit This Style…, All Styles…, List ▸ · Colours… ·
-    and where there are objects, Describe Object… (BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024). List ▸
+    and where there are objects, Describe Object… (BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024) and,
+    where text flows round them, Wrap Text, one key that cycles the modes (D1064). List ▸
     is in every app as on the web; outside a text the page reports its entries disabled. Computes adds Clear Cell
     Style, which the web has in Apply Style's flyout. ``headings`` is what Number Headings is called and says in this
     app (creates: Number All Slide Titles, E9.22)."""
@@ -655,6 +657,18 @@ def _format_menu(
         )
     if rotate:
         sections = (*sections, (_rotate_submenu(),))
+    if wrap:
+        sections = (
+            *sections,
+            (
+                _page(
+                    "format.wrap-text",
+                    "Wrap Text",
+                    "Move the object you have selected to the next way of letting the text flow round it",
+                    accelerators=("<Primary><Alt>r",),
+                ),
+            ),
+        )
     return Menu("Format", sections)
 
 
@@ -871,7 +885,10 @@ def composes() -> Manifest:
             _shared_clipboard_block(native=True),
             _search_block("Find words, headings, remarks and what is said in objects, and replace them"),
             _reference_block(),
-            (_page("edit.image", "Image…", "Put a picture in the text", accelerators=("<Primary><Alt>i",)),),
+            (
+                _page("edit.image", "Image…", "Put a picture in the text", accelerators=("<Primary><Alt>i",)),
+                _page("edit.text-box", "Text Box", "Add a text box to the text", accelerators=("<Primary><Alt>b",)),
+            ),
             (
                 Submenu(
                     "Insert",
@@ -913,7 +930,7 @@ def composes() -> Manifest:
         "composes",
         "Claudia Composes",
         edit=edit_menu,
-        format_menu=_format_menu(look="Change how this kind of paragraph looks"),
+        format_menu=_format_menu(look="Change how this kind of paragraph looks", wrap=True),
         view=view_menu,
         tools=Menu("Tools", ((_tools_ask(),),)),
         prints=True,

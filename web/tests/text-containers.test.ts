@@ -48,6 +48,8 @@ class FakeLink implements LinkLike {
 }
 
 const BODY = { id: 'body', name: 'Body text', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }
+const CIRCLE = { format: 1, id: 'circle', name: 'Circle', path: 'M0 0Z', aspect: 1, text_area: { x: 0, y: 0, w: 100, h: 100 } }
+const STAR = { ...CIRCLE, id: 'star', name: 'Star', aspect: null }
 const TYPES = { types: [{ type: 'latex', title: 'LaTeX', example: 'x^2' }] }
 const object = (id: string, block = 'b1', offset = 0, extra: object = {}) => ({
   id, kind: 'rendered', w: 400, h: 200, style: 'plain-image', paragraph: null, shape: null, image: null, imported: null,
@@ -70,7 +72,9 @@ async function opened(objects: object[] = [], text = 'a😀b') {
     rendering_types: () => TYPES,
     renderings: () => [{ format: 1, id: 'r1', type: 'latex', source: 'x', params: {}, image: null, renderer: '' }],
     objects: () => ({ revision: 'main:2', objects }),
-    shapes: () => [{ format: 1, id: 'circle', name: 'Circle', path: 'M0 0Z', aspect: 1, text_area: { x: 0, y: 0, w: 100, h: 100 } }],
+    shapes: () => ({ library: [CIRCLE, STAR], document: [CIRCLE] }),
+    add_object: () => ({ object: 'o8', revision: 'main:3' }),
+    set_wrap: () => ({ revision: 'main:3' }),
     add_image: () => ({ object: 'o7', revision: 'main:3' }),
     images: () => [{ id: 'i1', format: 'svg', width: 3, height: 2, animated: false, data: 'AA==', first_frame: null }],
     add_rendering: () => ({ object: 'o9', rendering: 'r9', revision: 'main:3' }),
@@ -156,6 +160,61 @@ describe('containers in a text', () => {
     expect(await session.addContainer('latex', { block: 'b1', offset: 3 }, { w: 300, h: 100 })).toBe('o9')
     expect(link.last('add_rendering')).toMatchObject({ block: 'b1', offset: 2, w: 300, h: 100, type: 'latex', source: 'x^2' })
     expect(state.selectedObject).toBe('o9')
+  })
+  it('offers the shapes the server has, and keeps the ones the document uses apart', async () => {
+    const { session, state } = await opened()
+    expect(state.library.map((s) => s.id)).toEqual(['circle', 'star'])
+    expect(Object.keys(state.shapes)).toEqual(['circle'])
+  })
+  it('still opens with a server whose `shapes` is only the list of the outlines the document uses', async () => {
+    const { link: full } = await opened()
+    const link = new FakeLink()
+    link.handlers = { ...full.handlers, shapes: () => [CIRCLE] }
+    const session = new TextSession(() => link, { retryDelays: [0] })
+    await session.open()
+    expect(Object.keys(session.state.shapes)).toEqual(['circle'])
+    expect(session.state.library).toEqual([])
+  })
+  it('puts a shape and a text box where the caret is, as the server counts, and selects them', async () => {
+    const { link, session, state } = await opened()
+    expect(await session.addShape('circle', { block: 'b1', offset: 3 }, { w: 120, h: 120 })).toBe('o8')
+    expect(link.last('add_object')).toEqual({ block: 'b1', offset: 2, kind: 'shape', shape: 'circle', w: 120, h: 120, base: 'main:2' })
+    expect(state.selectedObject).toBe('o8')
+    expect(await session.addTextBox({ block: 'b2', offset: 1 }, { w: 200, h: 80 })).toBe('o8')
+    expect(link.last('add_object')).toEqual({ block: 'b2', offset: 1, kind: 'text', w: 200, h: 80, base: 'main:2' })
+  })
+  it('says how the text flows round a new picture, shape or text box when it is asked to', async () => {
+    const { link, session } = await opened()
+    await session.addShape('circle', { block: 'b1', offset: 0 }, { w: 100, h: 100 }, 'above-below')
+    expect(link.last('add_object')).toMatchObject({ wrap: 'above-below' })
+    await session.addTextBox({ block: 'b1', offset: 0 }, { w: 100, h: 100 }, 'around')
+    expect(link.last('add_object')).toMatchObject({ wrap: 'around' })
+    await session.addImage({ data: 'AAAA', alt: 'a cat', sourceName: 'cat.png', sourcePath: null }, { block: 'b1', offset: 0 }, { w: 100, h: 100 }, 'above-below')
+    expect(link.last('add_image')).toMatchObject({ wrap: 'above-below' })
+  })
+  it('sets how the text flows round an object, keeping the gap when none is given', async () => {
+    const { link, session } = await opened([object('o1')])
+    expect(await session.setWrap('o1', 'around')).toBe(true)
+    expect(link.last('set_wrap')).toEqual({ id: 'o1', wrap: 'around', base: 'main:2' })
+    expect(await session.setWrap('o1', 'around', 24)).toBe(true)
+    expect(link.last('set_wrap')).toMatchObject({ gap: 24 })
+  })
+  it('lets one key move an object through the four modes and back, one step each press (D1064)', async () => {
+    const { link, session, state } = await opened([object('o1')])
+    const seen: string[] = []
+    for (let press = 0; press < 5; press++) {
+      const now = await session.cycleWrap('o1')
+      seen.push(now!)
+      // the server tells everyone (this window too) what the object is now
+      link.push('objects', { type: 'objects', container: 'b1', changed: [object('o1', 'b1', 0, { anchor: { kind: 'block', container: 'b1', offset: 0, wrap: now } })], removed: [], order: ['o1'] })
+    }
+    expect(seen).toEqual(['around', 'above-below', 'behind', 'over', 'around'])
+    expect(state.objects.o1!.anchor.wrap).toBe('around')
+  })
+  it('cycles nothing for an object that is not there', async () => {
+    const { link, session } = await opened()
+    expect(await session.cycleWrap('nope')).toBeNull()
+    expect(link.last('set_wrap')).toBeUndefined()
   })
   it('moves, sizes and removes an object', async () => {
     const { link, session } = await opened([object('o1')])

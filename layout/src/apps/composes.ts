@@ -9,14 +9,16 @@
  * @module
  */
 import { DEFAULT_STYLE } from '../styles.generated'
-import { layoutParagraph } from '../text/paragraph'
+import { layoutParagraph, type ParagraphOptions } from '../text/paragraph'
 import { DOT_EM, DOT_STEP_EM, LEADER_GAP_EM } from '../text/leader'
 import { itemGeometry, type ListItemRef, type ListRef, MARKER_GAP_EM, markerCss, type SchemeGeometry } from '../text/list-geometry'
 import type { Hyphenator } from '../text/hyphenate'
 import type { ParagraphStyle } from '../text/style'
 import { insets, lineItems } from '../display/text'
 import { type DisplayList, type DisplayPage, type PathOp, rectPath, walk } from '../display/list'
+import { type Exclusion, MIN_SLOT_EM, type Wrap } from '../flow/exclusions'
 import { type FlowBlock, type FlowPage, flowItems, locate, paginate } from '../flow/paginate'
+import { Rows } from '../flow/rows'
 import { contentBox, type PageGeometry, pageGeometry } from '../flow/paper'
 import type { FontSet } from '../fonts/fontset'
 import type { FontResolver } from '../fonts/resolve'
@@ -71,8 +73,9 @@ export interface OutlineEntry {
 }
 /** A floating object as the server sends it (the shape all three apps share), anchored to a character. */
 export interface TextObject extends VisualObject {
-  /** `dx`/`dy` move the object off its anchor character, in the same units as `w`/`h` (D1023). */
-  anchor: { kind: 'block'; container: string; offset: number; dx?: number; dy?: number }
+  /** `dx`/`dy` move the object off its anchor character, in the same units as `w`/`h` (D1023). `wrap` says how the text
+   *  flows round it (D1061; none saved: over the text) and `gap` how far from it, in the same units. */
+  anchor: { kind: 'block'; container: string; offset: number; dx?: number; dy?: number; wrap?: Wrap; gap?: number }
 }
 
 export interface TextDocument {
@@ -229,6 +232,28 @@ function contentsItems(
   }
 }
 
+/** The distance the text keeps from an object that gives none, CSS pixels (the model's default). */
+const DEFAULT_GAP = 8
+
+/** Whether text gives way to an object: *around* and *above and below* take room, *over* and *behind* do not. */
+const takesRoom = (o: TextObject): boolean => o.anchor.wrap === 'around' || o.anchor.wrap === 'above-below'
+
+/** An object as it stands on a page: the page (from 0) and its frame in page coordinates. */
+interface Standing {
+  page: number
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+/** Where a paragraph's first line would stand: a page (from 0) and a top in that page's content box. */
+type Start = { page: number; top: number }
+
+/** How often text beside objects is laid out again before it is taken as it is: the first pass places the paragraphs
+ *  by the rows of the text without them, and every later one by where the paragraphs then stand. */
+const MAX_WRAP_PASSES = 6
+
 /** composes' default style: what a paragraph with a style the text does not have is drawn in. */
 const BODY = DEFAULT_STYLE.composes
 
@@ -268,10 +293,18 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   let wantsHyphens = false
   const lists = doc.lists ?? []
   const schemes = doc.schemes ?? []
+  /** The objects text gives way to, where the text without them put them (D1061). */
+  let wrapping: { o: TextObject; at: Standing }[] = []
+  const gapOf = (o: TextObject): number => px(o.anchor.gap ?? DEFAULT_GAP)
+  /** The bands the objects of a page keep free, in the coordinates of a paragraph whose content box starts at
+   *  (`left`, `top`) of the page. */
+  const exclusionsOn = (page: number, left: number, top: number): Exclusion[] =>
+    wrapping.filter(({ at }) => at.page === page).map(({ o, at }) => ({ box: { x: at.x - left, y: at.y - top, w: at.w, h: at.h }, wrap: o.anchor.wrap as Wrap, gap: gapOf(o) }))
   /** The flow blocks of the text, with page references as `known` has them ("000" before they are known), and for
    *  each flow block the paragraph of the text it is (or the entry of a table of contents it draws). */
-  const build = (known: ReadonlyMap<string, number> | null) => {
+  const build = (known: ReadonlyMap<string, number> | null, around: ReadonlyMap<number, Start> | null = null) => {
     const origins: Origin[] = []
+    const rows = new Map<number, Rows>()
     const blocks: FlowBlock[] = doc.blocks.flatMap((b, index): FlowBlock[] => {
       if (b.contents) {
         const contents = b.contents
@@ -288,11 +321,15 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
         })
       }
       origins.push({ block: index })
+      const flowIndex = origins.length - 1
       const r = sheet.paragraph(b.style)
       const item = itemGeometry(doc.blocks, index, lists, schemes)
       const em = r.style.size
+      const start = around?.get(flowIndex)
       const style: ParagraphStyle = {
         ...r.style,
+        // beside an object a page break is where the rows say (D1062), so there is no room for widow and orphan control
+        ...(start ? { orphans: 1, widows: 1 } : {}),
         keepWithNext: keepsWithNext(b.style, styles),
         // a list item's text starts after its marker's box; the gap to the next item of its list replaces its space after
         ...(item ? { indentLeft: r.style.indentLeft + Math.round(item.pad * em) } : {}),
@@ -307,9 +344,26 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
           ? markerOf(sheet, b.style, b.label.marker, r.style.indentLeft, item.left, item.step, em)
           : headingNumberOf(sheet, r.style, b.label.marker, em)
       const words = withPages(b, known)
-      return [{ id: b.id, layout: layoutParagraph(fonts, style, words, width, paragraphOptions), decoration: r.decoration, ...(marker ? { marker } : {}) }]
+      const options: ParagraphOptions = start
+        ? {
+            hyphenator,
+            slots: (widest) => {
+              const made = new Rows({
+                start,
+                lineHeight: style.lineHeight,
+                pageHeight: box.h,
+                column: { left: 0, right: width },
+                exclusions: (page) => exclusionsOn(page, box.x + inset.left, box.y),
+                minWidth: Math.max(Math.round(MIN_SLOT_EM * em), Math.min(widest, Math.floor(width / 2))),
+              })
+              rows.set(flowIndex, made)
+              return made
+            },
+          }
+        : paragraphOptions
+      return [{ id: b.id, layout: layoutParagraph(fonts, style, words, width, options), decoration: r.decoration, ...(marker ? { marker } : {}) }]
     })
-    return { blocks, origins }
+    return { blocks, origins, rows }
   }
   // ---- at most three passes: a page reference can move a line, and the line a page break (mock-up D, D901)
   const referring = doc.blocks.some((b) => b.pageRefs?.length)
@@ -330,6 +384,66 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
       notes.push({ kind: 'pages', reason: 'the page references did not settle in three passes; some may be one page off' })
     }
   }
+  // ---- text round the objects that take room (D1061, D1062)
+  /** An object's frame on the page its anchor character stands on in `at`, kept inside the margins across and above the
+   *  bottom margin, or `null` when the character is nowhere. */
+  const standing = (o: TextObject, at: { flow: readonly FlowPage[]; blocks: readonly FlowBlock[] }): Standing | null => {
+    const index = at.blocks.findIndex((b) => b.id === o.anchor.container)
+    const spot = index < 0 ? null : locate(at.flow, at.blocks, index, o.anchor.offset)
+    if (!spot) return null
+    const w = px(o.w)
+    const h = px(o.h)
+    const x = Math.max(box.x, Math.min(spot.x + px(o.anchor.dx ?? 0), box.x + box.w - w))
+    const y = Math.max(box.y, Math.min(spot.top + px(o.anchor.dy ?? 0), geometry.height - geometry.margin.bottom - h))
+    return { page: spot.page, x, y, w, h }
+  }
+  wrapping = (doc.objects ?? []).filter(takesRoom).flatMap((o) => {
+    const at = standing(o, { flow, blocks: built.blocks })
+    return at ? [{ o, at }] : []
+  })
+  if (wrapping.length) {
+    /** The paragraphs the objects may reach, with where each starts (before a row was pushed down), by flow block. */
+    const reached = (): Map<number, Start> => {
+      const first = new Map<number, Start>()
+      const last = new Map<number, number>()
+      for (const pg of flow) {
+        for (const l of pg.lines) {
+          if (l.line === 0 && !first.has(l.block)) first.set(l.block, { page: pg.index, top: l.top - (built.blocks[l.block]!.layout.lines[0]!.lead ?? 0) - box.y })
+          last.set(l.block, pg.index)
+        }
+      }
+      const out = new Map<number, Start>()
+      for (const [i, at] of first) {
+        if (built.origins[i]!.entry) continue
+        const end = last.get(i)!
+        if (wrapping.some(({ o, at: s }) => s.page >= at.page && s.page <= end + 1 && (s.page > at.page || s.y - box.y + s.h + gapOf(o) > at.top))) out.set(i, at)
+      }
+      return out
+    }
+    /** Every line of a wrapped paragraph stands where its row said it would. */
+    const agree = (): boolean => {
+      for (const pg of flow) {
+        for (const l of pg.lines) {
+          const r = built.rows.get(l.block)?.place(l.line)
+          if (r && (r.page !== pg.index || r.y !== l.top - box.y)) return false
+        }
+      }
+      return true
+    }
+    let from = reached()
+    let settled = from.size === 0
+    for (let pass = 0; !settled && pass < MAX_WRAP_PASSES; pass++) {
+      const using = referring ? pageOf : null
+      built = build(using, from)
+      flow = paginate(built.blocks, geometry)
+      starts = startsOf(flow, built.blocks)
+      pageOf = pagesOf(starts, built.origins, doc.blocks)
+      const next = reached()
+      settled = next.size === from.size && [...next].every(([i, at]) => from.get(i)?.page === at.page && from.get(i)?.top === at.top) && agree() && (!using || [...wanted].every((t) => using.get(t) === pageOf.get(t)))
+      from = next
+    }
+    if (!settled) notes.push({ kind: 'wrap', reason: 'the text round the objects did not settle in six passes; a line may be a page off' })
+  }
   const { blocks, origins } = built
   if (wantsHyphens && !hyphenator) {
     notes.push({
@@ -340,25 +454,22 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   const pages: DisplayPage[] = flowItems(fonts, flow, blocks, geometry)
   contentsItems(fonts, sheet, flow, blocks, origins, pageOf, starts, pages, box)
 
-  // ---- floating objects, where they hang (D179: over the text, which does not wrap around them)
-  const blockIndex = new Map(blocks.map((b, i) => [b.id, i]))
+  // ---- floating objects, where they hang: the ones text gave way to where the text without them put them, the others
+  // where their character stands now (over or behind the text, which does not give way)
   const shapes = new Map((doc.shapes ?? []).map((s) => [s.id, s]))
   const images = new Map((doc.images ?? []).map((i) => [i.id, i]))
   const usedImages: string[] = []
   const embedded = new Map<string, Uint8Array>()
+  const placed = new Map(wrapping.map(({ o, at }) => [o.id, at]))
   for (const o of doc.objects ?? []) {
-    const index = blockIndex.get(o.anchor.container)
-    const spot = index === undefined ? null : locate(flow, blocks, index, o.anchor.offset)
-    if (!spot) continue
-    const w = px(o.w)
-    const h = px(o.h)
-    // keep the object on its page: inside the margins across, and above the bottom margin
-    const x = Math.max(box.x, Math.min(spot.x + px(o.anchor.dx ?? 0), box.x + box.w - w))
-    const y = Math.max(box.y, Math.min(spot.top + px(o.anchor.dy ?? 0), geometry.height - geometry.margin.bottom - h))
-    const group = drawObject(o, { x, y, w, h }, { fonts, resolver, styles: sheet, shapes, images, notes, embedded, paragraphOptions, diagramNote: 'charts cannot be printed from a text yet' })
+    const at = placed.get(o.id) ?? standing(o, { flow, blocks })
+    if (!at) continue
+    const group = drawObject(o, { x: at.x, y: at.y, w: at.w, h: at.h }, { fonts, resolver, styles: sheet, shapes, images, notes, embedded, paragraphOptions, diagramNote: 'charts cannot be printed from a text yet' })
     if (!group) continue
     for (const it of walk(group.items)) if (it.kind === 'image' && !usedImages.includes(it.image)) usedImages.push(it.image)
-    pages[spot.page]!.items.push(group)
+    // behind the text it is drawn first, so the words lie over it
+    if (o.anchor.wrap === 'behind') pages[at.page]!.items.unshift(group)
+    else pages[at.page]!.items.push(group)
   }
 
   // ---- page numbers, centred in the bottom margin (the same in every app)

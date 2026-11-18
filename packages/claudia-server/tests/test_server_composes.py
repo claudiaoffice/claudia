@@ -241,7 +241,7 @@ def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing
     assert objects[0]["paragraph"]["text"] == "a note"
     images = call(paper, "images", account=VERA)
     assert [(i["id"], i["format"]) for i in images] == [(asset.id, "png")]
-    assert call(paper, "shapes") == []
+    assert call(paper, "shapes")["document"] == []
 
 
 # ----------------------------------------------------------------------------- cursors and zones

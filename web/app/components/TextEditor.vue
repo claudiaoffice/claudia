@@ -685,6 +685,8 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
   border-radius: 2px;
 }
 .doc {
+  position: relative; /* over the layer of the objects behind the words, under the one over them (TextContainers.vue) */
+  z-index: 1;
   outline: none;
   font: 400 16.5px/1.75 var(--font-ui);
   color: var(--text);

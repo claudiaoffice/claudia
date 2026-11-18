@@ -18,7 +18,7 @@ from itertools import count
 
 from lxml import etree
 
-from claudia_composes import TextModel
+from claudia_composes import DEFAULT_WRAP_GAP, BlockAnchor, TextModel
 from claudia_core import (
     MIN_OBJECT_SIZE,
     ImageAsset,
@@ -46,17 +46,32 @@ from claudia_odf_io import (
 )
 
 from ._pictures import all_pictures, pictures_of
+from ._wrap import WrapStyles, odf_attributes, odf_name, odf_properties, odf_wrap_of
 
 _PX_PER_INCH = 96
 _CM_PER_INCH = 2.54
 #: The name of the style of the frame of a picture: no wrapping, in front of the text, at the top left of its paragraph.
 PICTURE_STYLE = "Claudia_20_picture"
-PICTURE_STYLE_XML = (
-    f'<style:style xmlns:style="{NS["style"]}" xmlns:text="{NS["text"]}" style:name="{PICTURE_STYLE}" '
-    'style:family="graphic"><style:graphic-properties style:wrap="none" style:run-through="foreground" '
-    'style:horizontal-pos="from-left" style:horizontal-rel="paragraph" '
-    'style:vertical-pos="from-top" style:vertical-rel="paragraph"/></style:style>'
-)
+
+
+def picture_style_xml(anchor: BlockAnchor) -> str:
+    """The graphic style of a picture that has the text flow round it as ``anchor`` says, at the top left of its
+    paragraph; its name is :func:`picture_style_name`."""
+    return (
+        f'<style:style xmlns:style="{NS["style"]}" xmlns:text="{NS["text"]}" xmlns:fo="{NS["fo"]}" '
+        f'style:name="{picture_style_name(anchor)}" style:family="graphic"><style:graphic-properties '
+        f'{odf_attributes(anchor)} style:horizontal-pos="from-left" style:horizontal-rel="paragraph" '
+        'style:vertical-pos="from-top" style:vertical-rel="paragraph"/></style:style>'
+    )
+
+
+def picture_style_name(anchor: BlockAnchor) -> str:
+    """The name of the graphic style of a picture that has the text flow round it as ``anchor`` says."""
+    return odf_name(PICTURE_STYLE, anchor)
+
+
+#: The style of a picture that floats over the text, the one a picture of a file written before wrapping had.
+PICTURE_STYLE_XML = picture_style_xml(BlockAnchor("", 0))
 _EXTENSION = {"jpeg": "jpg"}
 _MEDIA_TYPE = {"svg": "image/svg+xml", "png": "image/png", "jpeg": "image/jpeg", "gif": "image/gif", "bmp": "image/bmp"}
 
@@ -92,6 +107,8 @@ class FilePicture:
     description: str
     name: str
     href: str
+    wrap: str = "over"  # how the text flows round it (D1061) ...
+    gap: int = DEFAULT_WRAP_GAP  # ... and how far the words keep from it
 
     @property
     def body(self) -> ObjectBody:
@@ -158,6 +175,7 @@ def file_pictures(
                     description_of(frame),
                     name_of(frame),
                     href,
+                    *odf_wrap_of(odf_properties(frame, graphics)),
                 )
             )
     return found
@@ -198,6 +216,7 @@ class PictureWriter:
         self._hrefs: dict[str, str] = {}
         self._taken = taken if taken is not None else set()
         self._numbers = count(1)
+        self.styles: dict[str, bytes] = {}  # the graphic styles the frames written use, by name
 
     def frame(self, obj: VisualObject, asset: ImageAsset) -> etree._Element:
         """The ``draw:frame`` that shows ``asset`` for ``obj``."""
@@ -206,7 +225,9 @@ class PictureWriter:
         frame = etree.Element(
             _q("draw", "frame"), nsmap={prefix: NS[prefix] for prefix in ("draw", "svg", "xlink", "text")}
         )
-        frame.set(_q("draw", "style-name"), PICTURE_STYLE)
+        name = picture_style_name(obj.anchor)
+        self.styles.setdefault(name, picture_style_xml(obj.anchor).encode())
+        frame.set(_q("draw", "style-name"), name)
         frame.set(_q("draw", "name"), f"Picture {number}")
         frame.set(_q("text", "anchor-type"), "char")
         frame.set(_q("draw", "z-index"), str(number))
@@ -311,8 +332,10 @@ class PicturePlan:
         rasterise: Rasterise | None,
         taken: set[str],
         losses: LossLog | None = None,
+        wraps: WrapStyles | None = None,
     ) -> None:
         self.baseline, self.current, self.losses, self.rasterised = baseline, current, losses, rasterise is not None
+        self.wraps = wraps if wraps is not None else WrapStyles()  # (the styles for pictures whose wrapping changed)
         self.writer = PictureWriter(rasterise, taken)
         self.written = 0  # how many frames were drawn anew
         self.in_file: dict[str, list[FilePicture]] = {}
@@ -356,6 +379,9 @@ class PicturePlan:
                 frame = copy.deepcopy(picture.frame)
                 frame.tail = None
                 restyle(replace(picture, frame=frame), self.baseline.get_object(obj.id).body, obj.body)
+                before = self.baseline.get_object(obj.id).anchor
+                if (obj.anchor.wrap, obj.anchor.gap) != (before.wrap, before.gap):
+                    self.wraps.give(frame, obj.anchor)
             else:
                 frame = self.writer.frame(obj, asset)
                 self.written += 1

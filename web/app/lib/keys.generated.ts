@@ -76,6 +76,7 @@ export const KEYS: Readonly<Record<string, ActionKey>> = {
   'format.rotate-by': { chord: { key: 'z', code: 'KeyZ', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'format.rotate-left': { chord: { key: ',', code: 'Comma', ctrl: true, alt: true }, owner: 'page' },
   'format.rotate-right': { chord: { key: '.', code: 'Period', ctrl: true, alt: true }, owner: 'page' },
+  'format.wrap-text': { chord: { key: 'r', code: 'KeyR', ctrl: true, alt: true }, owner: 'page' },
   'help.about': { chord: { key: 'F1', ctrl: true, shift: true }, owner: 'shell' },
   'help.ask': { chord: { key: 'F1', ctrl: true }, owner: 'page' },
   'help.docs': { chord: { key: 'F1', shift: true }, owner: 'page' },

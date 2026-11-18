@@ -20,11 +20,11 @@ PICTURES = [
 def import_checks(model: TextModel) -> None:
     first, second = model.get_object("o1"), model.get_object("o2")
     assert (first.anchor, first.body.description, (first.body.w, first.body.h)) == (
-        BlockAnchor("b2", 22),
+        BlockAnchor("b2", 22, wrap="above-below", gap=0),
         "Two cyclists on a hill",
         (180, 90),
     )
-    assert (second.anchor, second.body.description) == (BlockAnchor("b3", 0), "A small mark")
+    assert (second.anchor, second.body.description) == (BlockAnchor("b3", 0, wrap="above-below", gap=0), "A small mark")
     assert [block.text for block in model.blocks][0] == "Pictures"
 
 
@@ -42,7 +42,11 @@ def after_checks(model: TextModel) -> None:
         (360, 180),
         90,
     )
-    assert (second.anchor, second.body.description, second.body.rotation) == (BlockAnchor("b3", 0), "A small mark", 0)
+    assert (second.anchor, second.body.description, second.body.rotation) == (
+        BlockAnchor("b3", 0, wrap="above-below", gap=0),
+        "A small mark",
+        0,
+    )
     assert model.blocks[2].text == "Nothing here changes."
 
 
