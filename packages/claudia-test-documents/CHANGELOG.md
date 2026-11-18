@@ -3,6 +3,17 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.3.0] - 2026-11-18
+
+### Added
+- Running a folder of documents that have no `spec.py` -- a corpus kept outside the repository, such as Apache POI's
+  or LibreOffice's own test files. `discover_corpus` finds every file of a supported format; `run_corpus_file` and
+  `run_corpus` check each one the same three generic ways (it imports; a no-op edit re-exported and re-imported leaves
+  the model as it was; no package part goes missing), giving a `CorpusResult` with the status `pass`, `fail`,
+  `error` or `rejected` (not a readable package, or over the safety limits: correct, not a finding);
+  `summarize_corpus` counts them and `write_corpus_report` writes a JSON file that two runs can be diffed by.
+  `scripts/run_test_documents.py --corpus DIR` is the command line for it.
+
 ## [0.2.0] - 2026-11-11
 
 ### Added
