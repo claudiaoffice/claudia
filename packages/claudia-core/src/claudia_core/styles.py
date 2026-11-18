@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, ClassVar, Literal
 
@@ -348,6 +348,27 @@ class StyleBook:
         else:
             self._styles[style.id] = cleaned
         self.version += 1
+
+    def fallback(self, style_id: str) -> StyleDef | None:
+        """The plain style of a style's kind, which a dialog offers first to take its place when it is deleted: the
+        built-in root its own chain ends in (a style based on the plain image gets the plain image), else the first
+        built-in root of its kind. ``None`` if the book has none. In Claudia a thing always has a style, and this is
+        the one that says nothing of its own: the body style for text, the plain box, the plain shape (D785)."""
+        style = self.get(style_id)
+        root = self.chain(style_id)[0]
+        if root.id != style_id and root.origin == "builtin" and root.kind == style.kind:
+            return root
+        return next(
+            (
+                other
+                for other in self._styles.values()
+                if other.based_on is None
+                and other.origin == "builtin"
+                and other.kind == style.kind
+                and other.id != style_id
+            ),
+            None,
+        )
 
     def next_after(self, style_id: str) -> str | None:
         """The id of the style that comes right after this one in the book, if there is one."""
@@ -906,70 +927,142 @@ def _free_name(book: StyleBook, name: str) -> str:
     return candidate
 
 
-def plan_delete_style(model: object, style_id: str, *, rebase_on: str | None = None) -> Batch:
-    """The commands that delete a style so that nothing looks different afterwards and nothing is left pointing at it
-    (D226), as one step that is undone as one.
+#: How a style can be deleted (:func:`~claudia_core.plan_delete_style`), in the order a dialog offers them (D785).
+DELETE_HOWS: tuple[str, ...] = ("assign", "rebase")
 
-    The person chose how: **keep their look** (``rebase_on`` is ``None``: what was based on the style moves up under
-    its parent), or **re-base on another style** (``rebase_on``: it moves under that one). Either way the *look* is
-    held (:func:`held_look`), so a re-based style says what differs, and a deletion is refused (``ValueError``, and
-    nothing is planned) if a look could not be held.
 
-    - Styles based on it move to the new parent, keeping their own properties and the ones they had from it.
-    - Things that have the style itself (the app's own ``restyle_users``) go to one *stand-in* style, which is a
-      document style with the provisional name ``<name> (kept)`` for its maker to name (E9.7), has the style's
-      purpose and looks exactly as it did. There is none when nothing has the style.
-    - Then the style goes. If something else began to use it since the plan was made, that last step is refused,
-      and so the whole deletion, and nothing changes: nobody's work is moved without their knowing.
+def assign_changes_look(model: object, style_id: str, target: str) -> bool:
+    """Whether deleting the style by *assigning* ``target`` would change how something looks: what has the style
+    itself would look like ``target`` instead, and what is based on it is based on ``target`` and loses what the style
+    said. ``False`` when nothing has it and nothing is based on it, or when what it said made no difference. Asked by
+    the dialog for each style on offer, which says so in words (D785)."""
+    book = getattr(model, "styles", None)
+    if not isinstance(book, StyleBook):
+        raise TypeError("This document has no style book")
+    _known(book, style_id)
+    _known(book, target)
+    in_use = getattr(model, "style_in_use", None)
+    if in_use is not None and in_use(style_id) and _Look.of(book, style_id) != _Look.of(book, target):
+        return True
+    children = book.children(style_id)
+    if not children:
+        return False
+    after = StyleBook.from_data(book.to_data())
+    for child in children:
+        own = after.get(child)
+        after.rebase(child, target, own.css, own.number_format, own.heading_level, own.numbering)
+    after.remove(style_id)
+    return any(_Look.of(book, child) != _Look.of(after, child) for child in _descendants(book, style_id))
+
+
+def _descendants(book: StyleBook, style_id: str) -> list[str]:
+    """The styles based on this one, directly or not."""
+    found: list[str] = []
+    for child in book.children(style_id):
+        found.append(child)
+        found.extend(_descendants(book, child))
+    return found
+
+
+def plan_delete_style(model: object, style_id: str, *, how: str = "assign", target: str | None = None) -> Batch:
+    """The commands that delete a style, as one step that is undone as one, and that never leave anything pointing
+    at it (D226). The person chooses ``how`` (:data:`~claudia_core.styles.DELETE_HOWS`, D785) and the style
+    ``target``, one of the same kind, never the style itself or one based on it:
+
+    - ``"assign"``: **assign another style.** Everything that has the style itself has ``target`` instead, and what is
+      based on the style is based on ``target``, each as it is. Looks change, and the dialog says so
+      (:func:`assign_changes_look`). The plain style of the kind, :meth:`StyleBook.fallback`, is what a dialog offers
+      first: it is how "no style" reads in a document where everything always has one.
+    - ``"rebase"``: **build it on another style, and keep how it looks.** What is based on the style moves under
+      ``target`` and says only what differs from it; what has the style itself goes to a *stand-in* style under
+      ``target``: a document style with the deleted style's purpose, named ``<name> (kept)`` and provisional until its
+      maker names it (E9.7). The *look* is held (:func:`held_look`), so later changes to ``target`` reach everything
+      that did not say otherwise. A deletion is refused (``ValueError``, nothing planned) if a look cannot be held.
+
+    ``target`` may be left out only when nothing has the style and nothing is based on it: then the style just goes.
+
+    The style goes last. If something else began to use it since the plan was made, that last step is refused, and so
+    the whole deletion, and nothing changes: nobody's work is moved without their knowing.
 
     Built-in and template styles are refused: they can only be hidden (:class:`SetStyleHidden`).
     """
+    if how not in DELETE_HOWS:
+        raise ValueError(f"A style is deleted by one of {', '.join(DELETE_HOWS)}, not {how!r}")
     book = getattr(model, "styles", None)
     if not isinstance(book, StyleBook):
         raise TypeError("This document has no style book, so it cannot delete a style")
     style = _known(book, style_id)
     if style.origin != "document":
         raise ValueError(f"“{style.name}” is a {ORIGINS[style.origin]} style and can only be hidden, not deleted")
-    base_id = style.based_on if rebase_on is None else rebase_on
-    if rebase_on is not None:
-        parent = _known(book, rebase_on)
-        if rebase_on == style_id:
-            raise ValueError(f"“{style.name}” cannot be re-based on itself")
-        if any(link.id == style_id for link in book.chain(rebase_on)):
-            raise ValueError(f"“{style.name}” cannot be re-based on “{parent.name}”, which is based on it")
-        if parent.kind != style.kind:
-            raise ValueError(
-                f"“{style.name}” is a {style.kind} style and “{parent.name}” a {parent.kind} style: "
-                "a style can be re-based only on one of the same kind"
-            )
-    base = _Look.of(book, base_id)
-
+    in_use = getattr(model, "style_in_use", None)
+    used = in_use is not None and in_use(style_id)
+    restyle = getattr(model, "restyle_users", None)
+    if used and restyle is None:
+        raise ValueError(f"The app cannot move what has the style “{style.name}” to another style")
+    children = book.children(style_id)
+    if target is None:
+        if used or children:
+            raise ValueError(f"“{style.name}” is in use: say which style takes its place")
+        return Batch((RemoveStyle(style_id),), f"Delete style “{style.name}”")
+    parent = _checked_target(book, style, target, how)
     steps: list[Command] = []
     users: list[Command] = []
-    in_use = getattr(model, "style_in_use", None)
-    if in_use is not None and in_use(style_id):
-        restyle = getattr(model, "restyle_users", None)
-        if restyle is None:
-            raise ValueError(f"The app cannot move what has the style “{style.name}” to another style")
-        css, number_format, heading, numbering = _own_settings(_Look.of(book, style_id), base)
-        name = _free_name(book, style.name)
-        stand_in = StyleDef(
-            book.unique_id(name),
-            name,
-            style.purpose,
-            base_id,
-            css,
-            to_name=True,
-            kind=style.kind,
-            number_format=number_format,
-            heading_level=heading,
-            numbering=numbering,
-        )
-        steps.append(CreateStyle(stand_in))
-        users = list(restyle(style_id, stand_in.id))
-    for child_id in book.children(style_id):
-        css, number_format, heading, numbering = _own_settings(_Look.of(book, child_id), base)
-        steps.append(RebaseStyle(child_id, base_id, css, number_format, heading, numbering))
+    if how == "assign":
+        if used:
+            users = list(_restyler(restyle)(style_id, target))
+        for child_id in children:
+            child = book.get(child_id)
+            steps.append(
+                RebaseStyle(
+                    child_id, target, dict(child.css), child.number_format, child.heading_level, child.numbering
+                )
+            )
+    else:
+        base = _Look.of(book, target)
+        if used:
+            css, number_format, heading, numbering = _own_settings(_Look.of(book, style_id), base)
+            name = _free_name(book, style.name)
+            stand_in = StyleDef(
+                book.unique_id(name),
+                name,
+                style.purpose,
+                parent.id,
+                css,
+                to_name=True,
+                kind=style.kind,
+                number_format=number_format,
+                heading_level=heading,
+                numbering=numbering,
+            )
+            steps.append(CreateStyle(stand_in))
+            users = list(_restyler(restyle)(style_id, stand_in.id))
+        for child_id in children:
+            css, number_format, heading, numbering = _own_settings(_Look.of(book, child_id), base)
+            steps.append(RebaseStyle(child_id, target, css, number_format, heading, numbering))
     steps.extend(users)
     steps.append(RemoveStyle(style_id))
     return Batch(tuple(steps), f"Delete style “{style.name}”")
+
+
+def _checked_target(book: StyleBook, style: StyleDef, target: str, how: str) -> StyleDef:
+    """The style that takes the deleted one's place, if it can: of the same kind, and neither the style itself nor
+    one based on it (that would be a cycle)."""
+    verb = "replaced by" if how == "assign" else "re-based on"
+    parent = _known(book, target)
+    if target == style.id:
+        raise ValueError(f"“{style.name}” cannot be {verb} itself")
+    if any(link.id == style.id for link in book.chain(target)):
+        raise ValueError(f"“{style.name}” cannot be {verb} “{parent.name}”, which is based on it")
+    if parent.kind != style.kind:
+        raise ValueError(
+            f"“{style.name}” is a {style.kind} style and “{parent.name}” a {parent.kind} style: "
+            "a style can only be taken over by one of the same kind"
+        )
+    return parent
+
+
+def _restyler(restyle: object) -> Callable[[str, str], list[Command]]:
+    """The model's ``restyle_users``, which is there whenever something uses the style (checked by the caller)."""
+    if not callable(restyle):
+        raise TypeError("The app cannot move what has the style to another style")
+    return restyle

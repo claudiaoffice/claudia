@@ -272,6 +272,7 @@ from .shapes import BOX, FORMAT, PRIMITIVES, ShapeDefinition, ShapeError, parse_
 from .store import DocumentStore, MemoryStore
 from .structure import Emitter, LabelsChanged, ParagraphHost, Placed, TextStructure
 from .styles import (
+    DELETE_HOWS,
     MAX_HEADING_LEVEL,
     NO_NUMBERING,
     ORIGINS,
@@ -287,6 +288,7 @@ from .styles import (
     StyleBook,
     StyleDef,
     StylesChanged,
+    assign_changes_look,
     held_look,
     plan_delete_style,
 )
@@ -385,6 +387,7 @@ __all__ = [
     "HeadingLevel",
     "MAX_HEADING_LEVEL",
     "CSS_VERSION",
+    "DELETE_HOWS",
     "INITIAL_CSS",
     "CssError",
     "CssProblem",
@@ -459,6 +462,7 @@ __all__ = [
     "MoveObject",
     "new_registry",
     "normalized",
+    "assign_changes_look",
     "held_look",
     "nudge_into",
     "object_texts",

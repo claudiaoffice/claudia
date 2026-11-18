@@ -20,7 +20,7 @@ const emit = defineEmits<{ look: []; styled: [] }>()
 
 const at = ref<{ x: number; y: number } | null>(null)
 const button = ref<HTMLElement | null>(null)
-const offered = computed(() => galleryFor(props.host.styles, props.host.slot, props.host.model))
+const offered = computed(() => galleryFor(props.host.styles, props.host.slot, props.host.model, props.host.current?.id))
 const current = computed(() => props.host.current)
 const off = computed(() => props.host.readOnly || !current.value)
 

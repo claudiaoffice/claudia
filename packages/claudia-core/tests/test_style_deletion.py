@@ -1,6 +1,6 @@
-"""Deleting and hiding styles (E1.10, D226): a deletion never changes how anything looks and never leaves a dangling
-reference; the person chooses "keep their look" or "re-base on another style"; built-in, root and template styles can
-only be hidden."""
+"""Deleting and hiding styles (E1.10, D226, D785): a deletion never leaves a dangling reference; the person chooses
+to assign another style (looks change) or to re-base on another style (looks held); built-in, root and template
+styles can only be hidden."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from typing import ClassVar, Self
 import pytest
 
 from claudia_core import (
+    DELETE_HOWS,
     INITIAL_CSS,
     Batch,
     Command,
@@ -23,6 +24,7 @@ from claudia_core import (
     SetStyleHidden,
     StyleBook,
     StyleDef,
+    assign_changes_look,
     held_look,
     new_registry,
     plan_delete_style,
@@ -142,7 +144,7 @@ def test_held_look_refuses_what_it_cannot_hold_and_names_the_property():
         held_look({}, {"color": "red"})
 
 
-# ------------------------------------------------------------------------------------ keeping the look
+# ------------------------------------------------------------------------------------ holding the look
 def test_deleting_a_style_nothing_uses_just_removes_it_and_undo_brings_it_back(doc):
     before = doc.model.styles.to_data()
     doc.model.uses.clear()
@@ -153,19 +155,19 @@ def test_deleting_a_style_nothing_uses_just_removes_it_and_undo_brings_it_back(d
     assert doc.model.styles.to_data() == before
 
 
-def test_children_of_a_deleted_style_keep_their_look_and_move_up_to_its_parent(doc):
+def test_children_of_a_deleted_style_keep_their_look_when_it_is_rebased_on_its_own_parent(doc):
     before = child_looks(doc.model)
     doc.model.uses.clear()
-    doc.execute(plan_delete_style(doc.model, "quote"), author="ann")
+    doc.execute(plan_delete_style(doc.model, "quote", how="rebase", target="body"), author="ann")
     assert "quote" not in doc.model.styles
     assert doc.model.styles.get("small-quote").based_on == "body"
     assert doc.model.styles.computed("small-quote") == before["small-quote"]
     assert not any(s.to_name for s in doc.model.styles)  # nothing needed a stand-in
 
 
-def test_things_that_use_a_deleted_style_keep_their_look_through_a_stand_in_style_to_be_named(doc):
+def test_things_that_use_a_rebased_style_keep_their_look_through_a_stand_in_style_to_be_named(doc):
     before = looks(doc.model)
-    doc.execute(plan_delete_style(doc.model, "quote"), author="ann")
+    doc.execute(plan_delete_style(doc.model, "quote", how="rebase", target="body"), author="ann")
     assert "quote" not in doc.model.styles
     stand_in = doc.model.uses["a"]
     assert doc.model.uses["b"] == stand_in != "quote"
@@ -182,14 +184,14 @@ def test_things_that_use_a_deleted_style_keep_their_look_through_a_stand_in_styl
 
 def test_the_whole_deletion_is_one_undo_step_that_puts_everything_back(doc):
     before_book, before_uses = doc.model.styles.to_data(), dict(doc.model.uses)
-    revision = doc.execute(plan_delete_style(doc.model, "quote"), author="ann")
+    revision = doc.execute(plan_delete_style(doc.model, "quote", how="rebase", target="body"), author="ann")
     assert revision is not None
     doc.undo("ann")
     assert (doc.model.styles.to_data(), doc.model.uses) == (before_book, before_uses)
 
 
-def test_the_stand_in_is_a_batch_the_history_names_in_words(doc):
-    plan = plan_delete_style(doc.model, "quote")
+def test_the_deletion_is_a_batch_the_history_names_in_words(doc):
+    plan = plan_delete_style(doc.model, "quote", how="assign", target="plain")
     assert isinstance(plan, Batch)
     assert plan.label.startswith("Delete style")
     assert "Quote" in plan.summary
@@ -198,7 +200,7 @@ def test_the_stand_in_is_a_batch_the_history_names_in_words(doc):
 # ------------------------------------------------------------------------------------ re-basing
 def test_rebasing_holds_the_look_of_children_and_users_and_moves_them_under_the_new_style(doc):
     before_children, before_users = child_looks(doc.model), looks(doc.model)
-    doc.execute(plan_delete_style(doc.model, "quote", rebase_on="plain"), author="ann")
+    doc.execute(plan_delete_style(doc.model, "quote", how="rebase", target="plain"), author="ann")
     small = doc.model.styles.get("small-quote")
     assert small.based_on == "plain"
     # "plain" is bold and the old chain never said so: the child says "normal" to keep what it looked like
@@ -214,7 +216,7 @@ def test_rebasing_holds_the_look_of_children_and_users_and_moves_them_under_the_
 
 def test_rebasing_on_a_style_that_does_not_exist_is_refused(doc):
     with pytest.raises(ValueError, match="no style"):
-        plan_delete_style(doc.model, "quote", rebase_on="nope")
+        plan_delete_style(doc.model, "quote", how="rebase", target="nope")
 
 
 def test_a_look_that_cannot_be_held_refuses_the_deletion_and_changes_nothing(doc):
@@ -224,24 +226,24 @@ def test_a_look_that_cannot_be_held_refuses_the_deletion_and_changes_nothing(doc
     doc.model.styles.add(StyleDef("loud", "Loud", "", None, {"color": "red"}))
     before = doc.model.styles.to_data()
     with pytest.raises(ValueError, match="“color”"):
-        plan_delete_style(doc.model, "naked", rebase_on="loud")
+        plan_delete_style(doc.model, "naked", how="rebase", target="loud")
     assert doc.model.styles.to_data() == before
 
 
 def test_a_style_cannot_be_rebased_on_itself_on_one_of_its_descendants_or_on_another_kind(doc):
     for target in ("quote", "small-quote"):
         with pytest.raises(ValueError, match="based on it|itself"):
-            plan_delete_style(doc.model, "quote", rebase_on=target)
+            plan_delete_style(doc.model, "quote", how="rebase", target=target)
     doc.model.styles.add(StyleDef("frame", "Frame", "a box", None, {"padding-top": "4px"}, kind="box"))
     with pytest.raises(ValueError, match="same kind"):
-        plan_delete_style(doc.model, "quote", rebase_on="frame")
+        plan_delete_style(doc.model, "quote", how="rebase", target="frame")
 
 
 def test_heading_level_and_numbering_are_held_too(doc):
     doc.model.styles.set_heading_level("quote", 1)  # the children are headings of level 1 by inheritance
     assert doc.model.styles.heading_level("small-quote") == 1
     doc.model.uses.clear()
-    doc.execute(plan_delete_style(doc.model, "quote"), author="ann")
+    doc.execute(plan_delete_style(doc.model, "quote", how="rebase", target="body"), author="ann")
     assert doc.model.styles.heading_level("small-quote") == 1
     assert doc.model.styles.get("small-quote").heading_level == 1  # now its own
 
@@ -249,7 +251,7 @@ def test_heading_level_and_numbering_are_held_too(doc):
 def test_rebasing_a_heading_onto_body_text_says_body_to_stay_one_if_it_was_not(doc):
     doc.model.styles.set_heading_level("plain", 2)
     doc.model.uses.clear()
-    doc.execute(plan_delete_style(doc.model, "quote", rebase_on="plain"), author="ann")
+    doc.execute(plan_delete_style(doc.model, "quote", how="rebase", target="plain"), author="ann")
     assert doc.model.styles.heading_level("small-quote") is None
     assert doc.model.styles.get("small-quote").heading_level == "body"
 
@@ -283,7 +285,7 @@ def test_a_model_that_cannot_repoint_its_users_cannot_delete_a_style_in_use(doc)
 
 # ------------------------------------------------------------------------------------ two authors
 def test_somebody_using_the_style_while_it_is_deleted_refuses_the_deletion_and_changes_nothing(doc):
-    plan = plan_delete_style(doc.model, "plain")
+    plan = plan_delete_style(doc.model, "plain", how="rebase", target="body")
     doc.execute(Use("late", "plain"), author="bob")  # arrives between the plan and the deletion
     before_book, before_uses = doc.model.styles.to_data(), dict(doc.model.uses)
     with pytest.raises(ValueError, match="in use"):
@@ -349,3 +351,101 @@ def test_rebasing_cannot_make_a_cycle_or_cross_kinds(doc):
 def test_set_heading_level_is_untouched_by_all_of_this(doc):
     doc.execute(SetHeadingLevel("plain", 3), author="ann")
     assert doc.model.styles.heading_level("plain") == 3
+
+
+# ------------------------------------------------------------------------------------ assigning (D785)
+def test_the_two_ways_come_in_the_order_a_dialog_offers_them():
+    assert DELETE_HOWS == ("assign", "rebase")
+
+
+def test_assigning_puts_what_has_the_style_and_what_is_based_on_it_under_the_other_style(doc):
+    doc.execute(plan_delete_style(doc.model, "quote", how="assign", target="plain"), author="ann")
+    assert "quote" not in doc.model.styles
+    assert doc.model.uses == {"a": "plain", "b": "plain", "c": "plain"}
+    small = doc.model.styles.get("small-quote")
+    assert small.based_on == "plain" and small.css == {"font-size": "9pt"}  # as it was: it just lost what Quote said
+    assert "font-style" not in doc.model.styles.computed("small-quote")
+    assert doc.model.styles.computed("small-quote")["font-weight"] == "bold"  # and took on what Plain says
+    assert not any(s.to_name for s in doc.model.styles)  # no stand-in: nothing needs a name
+
+
+def test_the_plain_style_of_the_kind_is_a_style_like_any_other_to_assign(doc):
+    doc.execute(plan_delete_style(doc.model, "quote", how="assign", target="body"), author="ann")
+    assert doc.model.uses == {"a": "body", "b": "body", "c": "plain"}
+    assert doc.model.styles.get("small-quote").based_on == "body"
+
+
+def test_assigning_is_one_undo_step_that_puts_everything_back(doc):
+    before_book, before_uses = doc.model.styles.to_data(), dict(doc.model.uses)
+    doc.execute(plan_delete_style(doc.model, "quote", how="assign", target="plain"), author="ann")
+    doc.undo("ann")
+    assert (doc.model.styles.to_data(), doc.model.uses) == (before_book, before_uses)
+
+
+def test_a_style_has_to_say_which_style_takes_its_place_unless_nothing_needs_one(doc):
+    with pytest.raises(ValueError, match="say which style"):
+        plan_delete_style(doc.model, "quote")  # users and a child
+    doc.model.uses.clear()
+    with pytest.raises(ValueError, match="say which style"):
+        plan_delete_style(doc.model, "quote", how="rebase")  # still a child
+    doc.execute(plan_delete_style(doc.model, "small-quote"), author="ann")
+    assert "small-quote" not in doc.model.styles
+
+
+def test_a_style_cannot_be_replaced_by_itself_by_a_descendant_by_one_that_is_not_there_or_of_another_kind(doc):
+    for target, message in (("quote", "itself"), ("small-quote", "based on it"), ("nope", "no style")):
+        with pytest.raises(ValueError, match=message):
+            plan_delete_style(doc.model, "quote", how="assign", target=target)
+    doc.model.styles.add(StyleDef("frame", "Frame", "a box", None, {"padding-top": "4px"}, kind="box"))
+    with pytest.raises(ValueError, match="same kind"):
+        plan_delete_style(doc.model, "quote", how="assign", target="frame")
+
+
+def test_assigning_says_whether_a_look_changes(doc):
+    assert assign_changes_look(doc.model, "quote", "plain") is True  # it has users, and Quote is italic
+    doc.model.uses.clear()
+    assert assign_changes_look(doc.model, "quote", "body") is True  # Small quote loses the italic
+    assert assign_changes_look(doc.model, "small-quote", "body") is False  # nothing has it, nothing is based on it
+    doc.model.styles.add(StyleDef("same", "Same", "", "body", {}))
+    doc.model.uses["x"] = "same"
+    assert assign_changes_look(doc.model, "same", "body") is False  # it said nothing of its own
+    assert assign_changes_look(doc.model, "same", "plain") is True  # but Plain does
+
+
+def test_a_box_style_has_a_plain_style_of_its_own_chain_to_go_back_to():
+    class Boxes(Used):
+        pass
+
+    model = Boxes()
+    model.styles.add(StyleDef("plain-box", "Plain box", "", None, {"padding-top": "0"}, kind="box", origin="builtin"))
+    model.styles.add(StyleDef("plain-image", "Plain image", "", None, {}, kind="box", origin="builtin"))
+    model.styles.add(StyleDef("framed", "Framed", "", "plain-image", {"border-top": "1px solid #000000"}, kind="box"))
+    model.styles.add(StyleDef("loose", "Loose", "", None, {}, kind="box"))
+    assert model.styles.fallback("framed").id == "plain-image"
+    assert model.styles.fallback("loose").id == "plain-box"  # the first built-in root of its kind
+    assert model.styles.fallback("quote").id == "body"
+
+
+def test_a_book_without_a_built_in_root_of_the_kind_suggests_nothing():
+    model = Used()
+    model.styles.add(StyleDef("loose", "Loose", "", None, {}, kind="box"))
+    assert model.styles.fallback("loose") is None
+
+
+def test_a_built_in_style_cannot_be_deleted_by_assigning_either(doc):
+    with pytest.raises(ValueError, match="built-in.*hidden"):
+        plan_delete_style(doc.model, "body", how="assign", target="plain")
+
+
+def test_the_way_has_to_be_one_of_the_two(doc):
+    for how in ("sideways", "keep", "fall_back"):
+        with pytest.raises(ValueError, match="one of"):
+            plan_delete_style(doc.model, "quote", how=how, target="plain")
+
+
+def test_somebody_using_the_style_meanwhile_refuses_an_assignment_too(doc):
+    plan = plan_delete_style(doc.model, "plain", how="assign", target="body")
+    doc.execute(Use("late", "plain"), author="bob")
+    with pytest.raises(ValueError, match="in use"):
+        doc.execute(plan, author="ann")
+    assert "plain" in doc.model.styles

@@ -574,7 +574,7 @@ def _format_menu(
         _page(
             "format.all-styles",
             "All Styles…",
-            "List, rename and tidy the styles of this document",
+            "List, rename, delete and hide the styles of this document",
             accelerators=("<Primary><Alt><Shift>a",),
         ),
         Submenu(
