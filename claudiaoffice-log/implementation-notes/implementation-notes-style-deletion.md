@@ -1,6 +1,6 @@
-# Deleting and hiding styles (E1.10, D226, D780–D785)
+# Deleting and hiding styles (E1.10, D226, D780–D786)
 
-What was built, where, and why it looks like this. Branch `style-delete`. The client screens are **not** built: they wait for the owner's approval of `notes/mockups/style-delete-and-hide.svg` (D783).
+What was built, where, and why it looks like this. Branch `style-delete`. Kernel, server and the web client are built (D783, D786); the desktop shells open the page's own dialog.
 
 ## The rule
 
@@ -32,12 +32,22 @@ A deletion never leaves a dangling reference (D226). There are two ways (`DELETE
 
 Tests: `packages/claudia-core/tests/test_style_deletion.py` (the algorithm, hiding, two authors), one file per app for what has a style, `packages/claudia-server/tests/test_server_style_deletion.py` (the wire).
 
+## Web client (`web/`)
+
+* `lib/style-deletion.ts`: the logic without a view (`DeletionChoice`: which way, which target, whether it may go; the sentences; the row access keys). Tested in `web/tests/style-deletion.test.ts`.
+* `StyleHost.deletion` (optional): a host without it shows no Delete/Hide. The three hosts (text, cell, object) get it from their session (`deletionHost`); `BaseSession` has `styleDeletion`, `deleteStyle` and `hideStyle`; `TextSession` adds the document's step handling.
+* `components/DeleteStyleDialog.vue` (the confirmation) and `StylesDialog.vue` (buttons, *Show hidden styles*, the announcement). `galleryFor(..., current)` and `formatItems` drop hidden styles (`pickable`).
+* Browser check: `npm run e2e:style-delete` (needs the composes server on 8766).
+
+## Desktop shells
+
+Nothing to build: *All Styles…* is a page action (D301). Only its description in `clients/linux/.../manifest.py` changed; the neutralino menu files are generated and did not change.
+
 ## Not done, on purpose
 
-* The screens (D783): Delete… and Hide in All styles for the web and the desktop shells, the confirmation, the "Re-base on" list, the announcement with *Name it…* and *Undo*; their i18n, access keys and BITV pass. Mock first.
 * Upcasting of dropped properties: not wanted before the first release (D308).
 * A command to define a colour role of one's own: it belongs to the colour axis (D200–D202), not to the style model; to be its own story.
-* Hidden styles are carried in `styles` (`hidden`) but no menu filters them yet; that is the client work above.
+* Re-basing is refused when the look needs font, size, colour, alignment and the like: there is no neutral value to write (D781). Open question to the owner.
 
 ## For the next agent
 

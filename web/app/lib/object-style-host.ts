@@ -8,11 +8,12 @@
 import { ref } from 'vue'
 import { translate as t } from './i18n'
 import type { HostSlot, StyleHost } from './style-host'
+import { deletionHost, type StyleDeletionSession } from './style-deletion'
 import type { ColourRole, ObjectBody, Reading, StyleModel, StyleTarget } from './objects'
 import type { CssCheck, CssEdit, StyleView } from './style-css'
 
 /** What this host needs of a session, so that creates and computes can both supply it. */
-export interface ObjectStyling {
+export interface ObjectStyling extends Partial<StyleDeletionSession> {
   readOnly: boolean
   styles: StyleView[]
   roles: ColourRole[]
@@ -132,6 +133,7 @@ export function objectStyleHost(session: ObjectStyling, fixedSlot?: string): Sty
       return session.readings
     },
     uses: () => objectUses(session.bodies),
+    deletion: deletionHost(session),
     apply: async (style) => {
       const body = selected()
       const where = slot()

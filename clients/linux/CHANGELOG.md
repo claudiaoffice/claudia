@@ -4,6 +4,9 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Changed (E1.10, D783, D786)
+- Format ▸ All Styles… says in its description that styles can be deleted and hidden there. No new entry and no key: the page's own dialog does the work (D301), in the macOS and Windows client as well.
+
 ### Added (step H)
 - Insert ▸ Cross-Reference… (Ctrl+F2) and Edit ▸ Go to Target (Ctrl+Alt+Enter), in every app; computes shows them
   off.

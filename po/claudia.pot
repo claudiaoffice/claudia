@@ -137,6 +137,10 @@ msgstr ""
 msgid "1 slide on {pages}"
 msgstr ""
 
+#: web/app/lib/style-deletion.ts:150
+msgid "1 style"
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "1,000 a year for 10 years"
 msgstr ""
@@ -353,7 +357,7 @@ msgstr ""
 msgid "A table always has its header row."
 msgstr ""
 
-#: web/app/lib/text-session.ts:488
+#: web/app/lib/text-session.ts:489
 msgid "A table of contents takes no typing: its entries come from the headings."
 msgstr ""
 
@@ -557,11 +561,11 @@ msgstr ""
 msgid "All Numbering"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts:93
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts:94
 msgid "All Numbering…"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleMenu.vue:49 web/app/lib/format-menu.ts:120
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleMenu.vue:49 web/app/lib/format-menu.ts:122
 msgid "All Styles…"
 msgstr ""
 
@@ -603,6 +607,10 @@ msgstr ""
 
 #: web/app/lib/shortcuts.ts:122
 msgid "Alt"
+msgstr ""
+
+#: web/app/components/StylesDialog.vue:144
+msgid "Alt + the underlined letter acts on the style the focus is on."
 msgstr ""
 
 #: web/app/lib/admin-fonts.ts:178
@@ -661,7 +669,7 @@ msgstr ""
 msgid "Apply"
 msgstr ""
 
-#: web/app/lib/format-menu.ts:118
+#: web/app/lib/format-menu.ts:120
 msgid "Apply Style"
 msgstr ""
 
@@ -711,6 +719,10 @@ msgstr ""
 
 #: web/app/components/AssignOwnerDialog.vue:36
 msgid "Assign a new owner"
+msgstr ""
+
+#: web/app/components/DeleteStyleDialog.vue:94
+msgid "Assign another style"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue:529
@@ -805,6 +817,14 @@ msgstr ""
 msgid "Bar chart over {rows} rows × {columns} columns."
 msgstr ""
 
+#: web/app/lib/style-deletion.ts:143
+msgid "Based on it: 1 style ({names})"
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:143
+msgid "Based on it: {count} styles ({names})"
+msgstr ""
+
 #: web/app/components/NumberingDialog.vue:142
 msgid "Before"
 msgstr ""
@@ -833,7 +853,7 @@ msgstr ""
 msgid "Border"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:223 web/app/components/StyleSpec.vue:224 web/app/lib/object-style-host.ts:39
+#: web/app/components/StyleSpec.vue:223 web/app/components/StyleSpec.vue:224 web/app/lib/object-style-host.ts:40
 msgid "Box"
 msgstr ""
 
@@ -857,7 +877,7 @@ msgstr ""
 msgid "Bullet of level {level}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:205 web/app/lib/format-menu.ts:77
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:205 web/app/lib/format-menu.ts:78
 msgid "Bulleted List"
 msgstr ""
 
@@ -897,11 +917,11 @@ msgstr ""
 msgid "Calculation step"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/ExportDialog.vue:53 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:107 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SheetImageImportDialog.vue:104 web/app/components/SqlEditor.vue:164
 msgid "Cancel"
 msgstr ""
 
-#: web/app/lib/cell-style-host.ts:50
+#: web/app/lib/cell-style-host.ts:51
 msgid "Cell"
 msgstr ""
 
@@ -909,11 +929,11 @@ msgstr ""
 msgid "Cell menu"
 msgstr ""
 
-#: web/app/lib/cell-style-host.ts:80
+#: web/app/lib/cell-style-host.ts:81
 msgid "Cell {range}"
 msgstr ""
 
-#: web/app/lib/cell-style-host.ts:78
+#: web/app/lib/cell-style-host.ts:79
 msgid "Cells"
 msgstr ""
 
@@ -929,7 +949,7 @@ msgstr ""
 msgid "Cells that are worked out from others"
 msgstr ""
 
-#: web/app/lib/cell-style-host.ts:80
+#: web/app/lib/cell-style-host.ts:81
 msgid "Cells {range}"
 msgstr ""
 
@@ -1033,6 +1053,10 @@ msgstr ""
 msgid "Choose a style for the selection, each drawn in its own look"
 msgstr ""
 
+#: web/app/components/DeleteStyleDialog.vue:115 web/app/components/DeleteStyleDialog.vue:98
+msgid "Choose a style…"
+msgstr ""
+
 #: web/app/components/AddFontsDialog.vue:138
 msgid "Choose files…"
 msgstr ""
@@ -1089,7 +1113,7 @@ msgstr ""
 msgid "Click something in the document to write a tag for it."
 msgstr ""
 
-#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:25 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ContentsDialog.vue:82 web/app/components/ImagePropertiesDialog.vue:93 web/app/components/NamesDialog.vue:101 web/app/components/NumberingDialog.vue:204 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:466 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:93
+#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:25 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ContentsDialog.vue:82 web/app/components/ImagePropertiesDialog.vue:93 web/app/components/NamesDialog.vue:101 web/app/components/NumberingDialog.vue:204 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:466 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:145
 msgid "Close"
 msgstr ""
 
@@ -1153,7 +1177,7 @@ msgstr ""
 msgid "Colours"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts:123
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts:125
 msgid "Colours…"
 msgstr ""
 
@@ -1233,7 +1257,7 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts:80
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts:81
 msgid "Continue Previous List"
 msgstr ""
 
@@ -1465,6 +1489,10 @@ msgstr ""
 msgid "Delete pivot table"
 msgstr ""
 
+#: web/app/components/DeleteStyleDialog.vue:135
+msgid "Delete style"
+msgstr ""
+
 #: web/app/components/PivotDeleteDialog.vue:28
 msgid "Delete the pivot table {name}? Its cells go empty and the table it reads is not touched. You can undo it."
 msgstr ""
@@ -1481,12 +1509,20 @@ msgstr ""
 msgid "Delete the selected rows"
 msgstr ""
 
+#: web/app/components/DeleteStyleDialog.vue:79
+msgid "Delete the style “{name}”?"
+msgstr ""
+
 #: web/app/components/DeleteDocumentDialog.vue:24
 msgid "Delete this document"
 msgstr ""
 
 #: web/app/components/SidePanel.vue:498
 msgid "Deleted. Show the last moment it was there."
+msgstr ""
+
+#: web/app/components/StylesDialog.vue:70
+msgid "Delete…"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:407 web/app/components/Workspace.vue:1095 web/app/lib/descriptions.ts:63
@@ -1665,7 +1701,7 @@ msgstr ""
 msgid "Easy to see"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:364 web/app/components/StylesDialog.vue:74 web/app/components/TextWorkspace.vue:333 web/app/components/Workspace.vue:1040
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:364 web/app/components/StylesDialog.vue:70 web/app/components/TextWorkspace.vue:333 web/app/components/Workspace.vue:1040
 msgid "Edit"
 msgstr ""
 
@@ -1673,7 +1709,7 @@ msgstr ""
 msgid "Edit Text"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylePicker.vue:71 web/app/components/TextWorkspace.vue:198 web/app/components/Workspace.vue:693 web/app/lib/format-menu.ts:119
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylePicker.vue:71 web/app/components/TextWorkspace.vue:198 web/app/components/Workspace.vue:693 web/app/lib/format-menu.ts:121
 msgid "Edit This Style…"
 msgstr ""
 
@@ -1685,7 +1721,7 @@ msgstr ""
 msgid "Edit these styles in All Styles…"
 msgstr ""
 
-#: web/app/components/NumberingDialog.vue:132 web/app/components/StylesDialog.vue:81
+#: web/app/components/NumberingDialog.vue:132 web/app/components/StylesDialog.vue:132
 msgid "Edit {name}"
 msgstr ""
 
@@ -1737,12 +1773,20 @@ msgstr ""
 msgid "Every use of “{name}”"
 msgstr ""
 
-#: web/app/lib/base-session.ts:319
+#: web/app/lib/base-session.ts:320
 msgid "Everybody agreed: now at {label}."
 msgstr ""
 
 #: web/app/lib/search.ts:540
 msgid "Everything ({count})"
+msgstr ""
+
+#: web/app/components/DeleteStyleDialog.vue:96
+msgid "Everything that has “{name}” gets the style you choose instead, and looks like it. What is based on “{name}” is based on that style too, and loses what “{name}” said."
+msgstr ""
+
+#: web/app/components/DeleteStyleDialog.vue:113
+msgid "Everything that has “{name}” keeps looking exactly as it does now, but is built on the style you choose: it follows that style from now on, except where “{name}” differed. What had “{name}” itself moves to a new style, “{name} (kept)”, that waits for a name."
 msgstr ""
 
 #: web/app/components/RandomDialog.vue:210
@@ -2181,7 +2225,7 @@ msgstr ""
 msgid "Hex"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:239
+#: web/app/components/AdminAccessDocuments.vue:239 web/app/components/StylesDialog.vue:70
 msgid "Hide"
 msgstr ""
 
@@ -2289,6 +2333,10 @@ msgstr ""
 msgid "How this style looks: font, size, colour, CSS (right-click in the text does the same)"
 msgstr ""
 
+#: web/app/components/DeleteStyleDialog.vue:89
+msgid "How to delete the style"
+msgstr ""
+
 #: web/app/components/StyleSpec.vue:207
 msgid "Hyphenate"
 msgstr ""
@@ -2349,7 +2397,7 @@ msgstr ""
 msgid "In {name}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:102 web/app/lib/format-menu.ts:83
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:102 web/app/lib/format-menu.ts:84
 msgid "Indent"
 msgstr ""
 
@@ -2545,7 +2593,7 @@ msgstr ""
 msgid "LaTeX"
 msgstr ""
 
-#: web/app/components/SlideWorkspace.vue:495 web/app/lib/object-style-host.ts:48
+#: web/app/components/SlideWorkspace.vue:495 web/app/lib/object-style-host.ts:49
 msgid "Label"
 msgstr ""
 
@@ -2657,7 +2705,7 @@ msgstr ""
 msgid "Lines"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:86 web/app/lib/format-menu.ts:95
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:86 web/app/lib/format-menu.ts:96
 msgid "List"
 msgstr ""
 
@@ -2666,7 +2714,7 @@ msgid "List item"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
-msgid "List, rename and tidy the styles of this document"
+msgid "List, rename, delete and hide the styles of this document"
 msgstr ""
 
 #: web/app/components/AdminApp.vue:73
@@ -2691,6 +2739,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:478 web/app/components/SearchPanel.vue:479 web/app/components/SearchPanel.vue:606
 msgid "Look in"
+msgstr ""
+
+#: web/app/components/DeleteStyleDialog.vue:81
+msgid "Looking up what deleting it does…"
 msgstr ""
 
 #: web/app/components/PivotMembersDialog.vue:56
@@ -2913,8 +2965,12 @@ msgstr ""
 msgid "Name in the pivot table"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:294 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88
+#: web/app/components/StyleSpec.vue:294 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139
 msgid "Name it"
+msgstr ""
+
+#: web/app/components/StylesDialog.vue:96
+msgid "Name it…"
 msgstr ""
 
 #: web/app/components/AddFontsDialog.vue:148 web/app/components/OpenDialog.vue:875
@@ -2977,7 +3033,7 @@ msgstr ""
 msgid "New collection…"
 msgstr ""
 
-#: web/app/components/StylesDialog.vue:65
+#: web/app/components/StylesDialog.vue:113
 msgid "New name of {name}"
 msgstr ""
 
@@ -3073,7 +3129,7 @@ msgstr ""
 msgid "No shell access, no network, no files outside the job — always on, whichever installation you point to."
 msgstr ""
 
-#: web/app/lib/format-menu.ts:115
+#: web/app/lib/format-menu.ts:117
 msgid "No styles fit what is selected"
 msgstr ""
 
@@ -3117,7 +3173,7 @@ msgstr ""
 msgid "Not available yet"
 msgstr ""
 
-#: web/app/lib/base-session.ts:798
+#: web/app/lib/base-session.ts:799
 msgid "Not connected to the server."
 msgstr ""
 
@@ -3169,8 +3225,16 @@ msgstr ""
 msgid "Nothing differs from now"
 msgstr ""
 
-#: web/app/lib/base-session.ts:904
+#: web/app/lib/base-session.ts:937
 msgid "Nothing has changed since the last checkpoint."
+msgstr ""
+
+#: web/app/components/DeleteStyleDialog.vue:127
+msgid "Nothing has this style and nothing is based on it, so it just goes."
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:137
+msgid "Nothing has this style."
 msgstr ""
 
 #: web/app/components/OpenDialog.vue:909
@@ -3237,7 +3301,7 @@ msgstr ""
 msgid "Number All Slide Titles"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:398 web/app/lib/format-menu.ts:88
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:398 web/app/lib/format-menu.ts:89
 msgid "Number Headings"
 msgstr ""
 
@@ -3257,7 +3321,7 @@ msgstr ""
 msgid "Number the title of every slide: 1, 2, 3 …"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:206 web/app/lib/format-menu.ts:78
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:206 web/app/lib/format-menu.ts:79
 msgid "Numbered List"
 msgstr ""
 
@@ -3333,6 +3397,10 @@ msgstr ""
 msgid "One step in the history. Undo brings it back."
 msgstr ""
 
+#: web/app/components/DeleteStyleDialog.vue:132
+msgid "One step in the history. Undo puts everything back."
+msgstr ""
+
 #: web/app/components/DetailsDialog.vue:45
 msgid "Only an editor or an owner of the document can change this."
 msgstr ""
@@ -3377,7 +3445,7 @@ msgstr ""
 msgid "Only the first {count} matches are listed."
 msgstr ""
 
-#: web/app/components/StylesDialog.vue:53
+#: web/app/components/StylesDialog.vue:101
 msgid "Only the {unnamed} waiting for a name"
 msgstr ""
 
@@ -3497,7 +3565,7 @@ msgstr ""
 msgid "Outcomes of {cell}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:98 web/app/lib/format-menu.ts:84
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:98 web/app/lib/format-menu.ts:85
 msgid "Outdent"
 msgstr ""
 
@@ -3505,7 +3573,7 @@ msgstr ""
 msgid "Outdent (Shift+Tab)"
 msgstr ""
 
-#: web/app/components/StyleSpec.vue:265 web/app/components/StyleSpec.vue:266 web/app/lib/object-style-host.ts:45
+#: web/app/components/StyleSpec.vue:265 web/app/components/StyleSpec.vue:266 web/app/lib/object-style-host.ts:46
 msgid "Outline"
 msgstr ""
 
@@ -3553,7 +3621,7 @@ msgstr ""
 msgid "Paper"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:183 web/app/components/StyleSpec.vue:193 web/app/components/StyleSpec.vue:194 web/app/lib/object-style-host.ts:51 web/app/lib/text-style-host.ts:10
+#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:183 web/app/components/StyleSpec.vue:193 web/app/components/StyleSpec.vue:194 web/app/lib/object-style-host.ts:52 web/app/lib/text-style-host.ts:11
 msgid "Paragraph"
 msgstr ""
 
@@ -3829,6 +3897,10 @@ msgstr ""
 msgid "Range"
 msgstr ""
 
+#: web/app/components/DeleteStyleDialog.vue:111
+msgid "Re-base on another style"
+msgstr ""
+
 #: web/app/components/PaletteDialog.vue:119
 msgid "Read against"
 msgstr ""
@@ -3961,7 +4033,7 @@ msgstr ""
 msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
 msgstr ""
 
-#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:826 web/app/components/SlideWorkspace.vue:516 web/app/components/StylesDialog.vue:73 web/app/components/StylesDialog.vue:88 web/app/components/Workspace.vue:1270
+#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:826 web/app/components/SlideWorkspace.vue:516 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139 web/app/components/StylesDialog.vue:70 web/app/components/Workspace.vue:1270
 msgid "Rename"
 msgstr ""
 
@@ -4253,7 +4325,7 @@ msgstr ""
 msgid "Sandboxed execution"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/files.py:217 clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:204 web/app/components/DocumentFrame.vue:173 web/app/components/ObjectDescriptionDialog.vue:64 web/app/components/StylesDialog.vue:66 web/app/lib/document-menus.ts:80 web/app/lib/shortcuts.ts:68
+#: clients/linux/src/claudia_shell_gtk/files.py:217 clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:204 web/app/components/DocumentFrame.vue:173 web/app/components/ObjectDescriptionDialog.vue:64 web/app/components/StylesDialog.vue:114 web/app/lib/document-menus.ts:80 web/app/lib/shortcuts.ts:68
 msgid "Save"
 msgstr ""
 
@@ -4477,7 +4549,7 @@ msgstr ""
 msgid "Shortcuts"
 msgstr ""
 
-#: web/app/components/AdminFonts.vue:154
+#: web/app/components/AdminFonts.vue:154 web/app/components/StylesDialog.vue:70
 msgid "Show"
 msgstr ""
 
@@ -4511,6 +4583,10 @@ msgstr ""
 
 #: web/app/components/SidePanel.vue:427
 msgid "Show differences from now"
+msgstr ""
+
+#: web/app/components/StylesDialog.vue:100
+msgid "Show hidden styles"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue:674
@@ -4637,7 +4713,7 @@ msgstr ""
 msgid "Something is repeated that is not there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:787 web/app/lib/base-session.ts:946 web/app/lib/session.ts:646
+#: web/app/lib/base-session.ts:788 web/app/lib/base-session.ts:979 web/app/lib/session.ts:646
 msgid "Something went wrong."
 msgstr ""
 
@@ -4685,7 +4761,7 @@ msgstr ""
 msgid "Start"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts:81
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/format-menu.ts:82
 msgid "Start At…"
 msgstr ""
 
@@ -4737,11 +4813,19 @@ msgstr ""
 msgid "Style"
 msgstr ""
 
+#: web/app/components/DeleteStyleDialog.vue:97
+msgid "Style to assign"
+msgstr ""
+
+#: web/app/components/DeleteStyleDialog.vue:114
+msgid "Style to re-base on"
+msgstr ""
+
 #: web/app/components/StyleBar.vue:65
 msgid "Style: mark text by what it is for"
 msgstr ""
 
-#: web/app/components/StyleBar.vue:73 web/app/components/StyleBar.vue:74 web/app/components/StyleMenu.vue:67 web/app/components/StylePicker.vue:61 web/app/components/StylePicker.vue:62 web/app/components/StylesDialog.vue:50
+#: web/app/components/StyleBar.vue:73 web/app/components/StyleBar.vue:74 web/app/components/StyleMenu.vue:67 web/app/components/StylePicker.vue:61 web/app/components/StylePicker.vue:62 web/app/components/StylesDialog.vue:90
 msgid "Styles"
 msgstr ""
 
@@ -4969,7 +5053,7 @@ msgstr ""
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:718
+#: web/app/lib/base-session.ts:719
 msgid "That was deleted. This is the last moment it was there."
 msgstr ""
 
@@ -5169,7 +5253,7 @@ msgstr ""
 msgid "The different rows of a range in order of first appearance (columns with by_col TRUE); with exactly_once TRUE only those that occur once."
 msgstr ""
 
-#: web/app/lib/base-session.ts:470
+#: web/app/lib/base-session.ts:471
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
 msgstr ""
 
@@ -5845,11 +5929,11 @@ msgstr ""
 msgid "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
 msgstr ""
 
-#: web/app/lib/base-session.ts:320
+#: web/app/lib/base-session.ts:321
 msgid "The suggestion to go to {label} was declined."
 msgstr ""
 
-#: web/app/lib/base-session.ts:321
+#: web/app/lib/base-session.ts:322
 msgid "The suggestion to go to {label} was withdrawn."
 msgstr ""
 
@@ -6049,7 +6133,7 @@ msgstr ""
 msgid "There is no table to analyse yet. Select cells with a header row, type a word in the box left of the formula bar and press Enter — then it can be a pivot table’s source."
 msgstr ""
 
-#: web/app/lib/base-session.ts:715
+#: web/app/lib/base-session.ts:716
 msgid "There is nothing like that in this document."
 msgstr ""
 
@@ -6065,11 +6149,15 @@ msgstr ""
 msgid "These settings are for administrators only. Sign in with your name and password to continue."
 msgstr ""
 
+#: web/app/components/DeleteStyleDialog.vue:120
+msgid "These styles cannot be chosen, because the look could not be kept under them:"
+msgstr ""
+
 #: web/app/components/StyleSpec.vue:88
 msgid "These words will be hard to read."
 msgstr ""
 
-#: web/app/lib/cell-style-host.ts:84
+#: web/app/lib/cell-style-host.ts:85
 msgid "These {count} cells only"
 msgstr ""
 
@@ -6121,7 +6209,7 @@ msgstr ""
 msgid "This cell is not part of a computation."
 msgstr ""
 
-#: web/app/lib/cell-style-host.ts:84 web/app/lib/noun-phrases.ts:38
+#: web/app/lib/cell-style-host.ts:85 web/app/lib/noun-phrases.ts:38
 msgid "This cell only"
 msgstr ""
 
@@ -6141,6 +6229,10 @@ msgstr ""
 msgid "This computer"
 msgstr ""
 
+#: web/app/components/DeleteStyleDialog.vue:80
+msgid "This document cannot say what deleting the style would do."
+msgstr ""
+
 #: web/app/components/Workspace.vue:1245
 msgid "This document has no sheet yet."
 msgstr ""
@@ -6149,7 +6241,7 @@ msgstr ""
 msgid "This document is on this server already, as “{id}”. It cannot be added a second time."
 msgstr ""
 
-#: web/app/lib/base-session.ts:503
+#: web/app/lib/base-session.ts:504
 msgid "This document was deleted by its owner."
 msgstr ""
 
@@ -6189,7 +6281,7 @@ msgstr ""
 msgid "This page is not allowed to use that server."
 msgstr ""
 
-#: web/app/lib/text-session.ts:693
+#: web/app/lib/text-session.ts:694
 msgid "This paragraph"
 msgstr ""
 
@@ -6409,7 +6501,7 @@ msgstr ""
 msgid "Underline"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:113 web/app/lib/shortcuts.ts:66
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylesDialog.vue:97 web/app/lib/document-menus.ts:113 web/app/lib/shortcuts.ts:66
 msgid "Undo"
 msgstr ""
 
@@ -6447,6 +6539,10 @@ msgstr ""
 
 #: web/app/components/NumberingDialog.vue:194
 msgid "Used by {lists} lists and the styles {styles}. A change renumbers them for everybody, as one step in the history."
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:137
+msgid "Used by: {uses}"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue:590
@@ -6531,6 +6627,10 @@ msgstr ""
 
 #: web/app/components/PaletteDialog.vue:129
 msgid "What changes with it"
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:187
+msgid "What differs: {what}"
 msgstr ""
 
 #: web/app/components/PrintPreview.vue:305
@@ -6625,11 +6725,11 @@ msgstr ""
 msgid "Which tags"
 msgstr ""
 
-#: web/app/lib/base-session.ts:313
+#: web/app/lib/base-session.ts:314
 msgid "While you were away, {by} restored to {label} (agreed: {agreed})."
 msgstr ""
 
-#: web/app/lib/base-session.ts:314
+#: web/app/lib/base-session.ts:315
 msgid "While you were away, {by} switched to {label} (agreed: {agreed})."
 msgstr ""
 
@@ -6673,6 +6773,10 @@ msgstr ""
 msgid "Will be added"
 msgstr ""
 
+#: web/app/lib/style-deletion.ts:151
+msgid "Will look different: {what}"
+msgstr ""
+
 #: web/app/components/SidePanel.vue:406
 msgid "Withdraw"
 msgstr ""
@@ -6693,7 +6797,7 @@ msgstr ""
 msgid "Word, OpenDocument or Claudia texts, or drop one anywhere on this page."
 msgstr ""
 
-#: web/app/lib/object-style-host.ts:42
+#: web/app/lib/object-style-host.ts:43
 msgid "Words"
 msgstr ""
 
@@ -6769,7 +6873,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:444 web/app/components/SlideCanvas.vue:320 web/app/components/SlideCanvas.vue:329 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:489 web/app/components/TextContainers.vue:63 web/app/components/Workspace.vue:272 web/app/components/Workspace.vue:329 web/app/components/Workspace.vue:380 web/app/components/Workspace.vue:462 web/app/components/Workspace.vue:522 web/app/components/Workspace.vue:528 web/app/components/Workspace.vue:609 web/app/components/Workspace.vue:777 web/app/components/Workspace.vue:836 web/app/components/Workspace.vue:956 web/app/lib/base-session.ts:796 web/app/lib/text-session.ts:458
+#: web/app/components/SheetGrid.vue:444 web/app/components/SlideCanvas.vue:320 web/app/components/SlideCanvas.vue:329 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:489 web/app/components/TextContainers.vue:63 web/app/components/Workspace.vue:272 web/app/components/Workspace.vue:329 web/app/components/Workspace.vue:380 web/app/components/Workspace.vue:462 web/app/components/Workspace.vue:522 web/app/components/Workspace.vue:528 web/app/components/Workspace.vue:609 web/app/components/Workspace.vue:777 web/app/components/Workspace.vue:836 web/app/components/Workspace.vue:956 web/app/lib/base-session.ts:797 web/app/lib/text-session.ts:459
 msgid "You can only look at this document."
 msgstr ""
 
@@ -6781,7 +6885,7 @@ msgstr ""
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr ""
 
-#: web/app/lib/base-session.ts:793
+#: web/app/lib/base-session.ts:794
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr ""
 
@@ -6985,6 +7089,10 @@ msgstr ""
 msgid "after each title"
 msgstr ""
 
+#: web/app/lib/style-deletion.ts:165
+msgid "alignment"
+msgstr ""
+
 #: web/app/components/OpenDialog.vue:976
 msgid "all apps"
 msgstr ""
@@ -7077,6 +7185,10 @@ msgstr ""
 msgid "authorship colours"
 msgstr ""
 
+#: web/app/lib/style-deletion.ts:162
+msgid "background"
+msgstr ""
+
 #: web/app/components/DocumentFrame.vue:174
 msgid "before the review"
 msgstr ""
@@ -7099,6 +7211,14 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes.py:384
 msgid "blocks must be a list of at most {limit} paragraph ids"
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:157
+msgid "bold"
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:164
+msgid "border"
 msgstr ""
 
 #: web/app/components/OpenDialog.vue:1025
@@ -7163,6 +7283,10 @@ msgstr ""
 
 #: web/app/components/SidePanel.vue:472
 msgid "close"
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:161
+msgid "colour"
 msgstr ""
 
 #: web/app/lib/cell-styles.ts:91
@@ -7385,6 +7509,10 @@ msgstr ""
 msgid "first {length} shown"
 msgstr ""
 
+#: web/app/lib/style-deletion.ts:159
+msgid "font"
+msgstr ""
+
 #: web/app/lib/print/assets.ts:77
 msgid "font {hash}… is not in the server's catalogue"
 msgstr ""
@@ -7427,6 +7555,10 @@ msgstr ""
 
 #: web/app/components/StyleMenu.vue:72 web/app/components/StyleMenu.vue:81
 msgid "here"
+msgstr ""
+
+#: web/app/components/StylesDialog.vue:117
+msgid "hidden"
 msgstr ""
 
 #: web/app/components/RandomDialog.vue:122
@@ -7497,6 +7629,10 @@ msgstr ""
 msgid "is working"
 msgstr ""
 
+#: web/app/lib/style-deletion.ts:156
+msgid "italic"
+msgstr ""
+
 #: web/app/components/Workspace.vue:1136
 msgid "jump to the edge of a block of data"
 msgstr ""
@@ -7563,6 +7699,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "like SUBTOTAL with more functions (1-13 as SUBTOTAL but with 12 MEDIAN and 13 MODE.SNGL; 14 LARGE, 15 SMALL, 16 PERCENTILE.INC, 17 QUARTILE.INC, 18 PERCENTILE.EXC, 19 QUARTILE.EXC take a range and k) and a choice what to skip: options 2, 3, 6 and 7 skip errors, 4 skips nothing but the other subtotals."
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:166
+msgid "line height"
 msgstr ""
 
 #: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:556 web/app/components/TextWorkspace.vue:503
@@ -7809,7 +7949,7 @@ msgstr ""
 msgid "only an owner of a document may delete it"
 msgstr ""
 
-#: web/app/lib/cell-style-host.ts:88
+#: web/app/lib/cell-style-host.ts:89
 msgid "only its box"
 msgstr ""
 
@@ -7849,7 +7989,7 @@ msgstr ""
 msgid "only the owner of a document sets this"
 msgstr ""
 
-#: web/app/lib/cell-style-host.ts:88
+#: web/app/lib/cell-style-host.ts:89
 msgid "only their box"
 msgstr ""
 
@@ -7859,6 +7999,10 @@ msgstr ""
 
 #: web/app/components/AddFontsDialog.vue:141
 msgid "or drop them here: TrueType, OpenType, or a .zip of them"
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:179
+msgid "other settings"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py:416
@@ -8113,6 +8257,10 @@ msgstr ""
 msgid "silence = decline"
 msgstr ""
 
+#: web/app/lib/style-deletion.ts:160
+msgid "size"
+msgstr ""
+
 #: web/app/components/SearchPanel.vue:672
 msgid "skipped"
 msgstr ""
@@ -8131,6 +8279,10 @@ msgstr ""
 
 #: web/app/components/PivotPanel.vue:183
 msgid "source of the pivot table"
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:163
+msgid "spacing"
 msgstr ""
 
 #: web/app/components/RandomDialog.vue:125
@@ -8597,7 +8749,7 @@ msgstr ""
 msgid "to"
 msgstr ""
 
-#: web/app/components/StyleMenu.vue:71 web/app/components/StylesDialog.vue:69
+#: web/app/components/StyleMenu.vue:71 web/app/components/StylesDialog.vue:118
 msgid "to name"
 msgstr ""
 
@@ -8631,6 +8783,10 @@ msgstr ""
 
 #: web/app/components/SheetGrid.vue:1034
 msgid "type here to add a row"
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:158
+msgid "underline"
 msgstr ""
 
 #: web/app/components/FormulaBar.vue:95 web/app/components/InsertBar.vue:47
@@ -8883,6 +9039,10 @@ msgstr ""
 
 #: web/app/lib/print/setup.ts:105
 msgid "{count} slides on {pages}"
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:150
+msgid "{count} styles"
 msgstr ""
 
 #: web/app/components/PivotMembersDialog.vue:57
@@ -9257,7 +9417,7 @@ msgstr ""
 msgid "{n} without a time"
 msgstr ""
 
-#: web/app/lib/base-session.ts:500
+#: web/app/lib/base-session.ts:501
 msgid "{owner} is now the owner of this document."
 msgstr ""
 
@@ -9341,7 +9501,7 @@ msgstr ""
 msgid "{user} is working on this"
 msgstr ""
 
-#: web/app/lib/base-session.ts:498
+#: web/app/lib/base-session.ts:499
 msgid "{user} left this document."
 msgstr ""
 
@@ -9461,8 +9621,28 @@ msgstr ""
 msgid "— other sheets can have a name of their own"
 msgstr ""
 
+#: web/app/lib/style-deletion.ts:193
+msgid "“{name}” deleted."
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:192
+msgid "“{name}” deleted. What had it now has “{standIn}”, built on “{target}”."
+msgstr ""
+
+#: web/app/lib/style-deletion.ts:193
+msgid "“{name}” deleted. What had it now has “{target}”."
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/style_targets.py:162
 msgid "“{name}” is a {kind} style and does not fit {where}"
+msgstr ""
+
+#: web/app/components/DeleteStyleDialog.vue:101
+msgid "“{name}” is what “no style” means here: the plain one of its kind."
+msgstr ""
+
+#: web/app/components/DeleteStyleDialog.vue:118
+msgid "“{name}” sets {what} itself, and that stays. Everything else follows “{target}”, now and whenever it changes."
 msgstr ""
 
 #: web/app/components/PrintPreview.vue:275
@@ -9473,7 +9653,7 @@ msgstr ""
 msgid "← Back where I was"
 msgstr ""
 
-#: web/app/components/StylesDialog.vue:82
+#: web/app/components/StylesDialog.vue:133
 msgid "← Styles"
 msgstr ""
 

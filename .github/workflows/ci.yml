@@ -195,6 +195,7 @@ jobs:
           URL=http://127.0.0.1:8765/ npm run e2e:describe
           URL=http://127.0.0.1:8766/ npm run e2e:composes
           URL=http://127.0.0.1:8766/ npm run e2e:styling
+          URL=http://127.0.0.1:8766/ npm run e2e:style-delete
           URL=http://127.0.0.1:8766/ npm run e2e:print
           URL=http://127.0.0.1:8766/ npm run e2e:lists
           URL=http://127.0.0.1:8766/ npm run e2e:dock-text # paragraphs as things: a tag to a heading (D554)

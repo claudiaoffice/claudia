@@ -117,6 +117,10 @@ export interface StyleDef {
   based_on: string | null
   css: Record<string, string>
   to_name: boolean
+  /** `builtin` or `template` where it is not the document's own (D780); only the document's own can be deleted. */
+  origin?: 'builtin' | 'template'
+  /** Left out of the menus a style is picked from (D780). */
+  hidden?: boolean
   /** `paragraph`, `box` or `outline` (D305, D312). */
   kind: string
   computed: Record<string, string>

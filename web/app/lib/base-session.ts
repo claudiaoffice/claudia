@@ -11,6 +11,7 @@ import { languageNow, onLanguageChange, translate as t } from './i18n'
 import type { Thing } from './tags'
 import type { SchemeInfo } from './numbering'
 import type { Toc } from './contents'
+import type { Deleted, DeleteHow, StyleDeletion } from './style-deletion'
 import { nearest, PastLink, step as stepRow, timeline, type Filter, type Item } from './replay'
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
@@ -882,6 +883,38 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Give a table of contents (in creates: an agenda) other options; the entries come back as a `generated` event. */
   async setContents(paragraph: string, options: Toc): Promise<boolean> {
     return (await this.attempt('set_contents', { paragraph, options, base: this.state.revision })) !== false
+  }
+
+  // ------------------------------------------------------------------------------ deleting and hiding styles (E1.10)
+  /** What deleting a style would do, so that the dialog can say it in words first (`style_deletion`, D226). A read: a
+   *  server that cannot say makes no noise, and the dialog then offers no Delete…. */
+  async styleDeletion(style: string): Promise<StyleDeletion | null> {
+    try {
+      return await this.need().request<StyleDeletion>('style_deletion', { style })
+    } catch {
+      return null
+    }
+  }
+
+  /** Delete a style in one step (D785): `how` and the style that `target`s its place (null only for a style that
+   *  nothing has). A refusal that is about this very deletion comes back as its sentence; anything else is told as a
+   *  notice, and is `false`. */
+  async deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
+    const params: Record<string, unknown> = { style, how, base: this.state.revision }
+    if (target) params.target = target
+    try {
+      const done = await this.need().request<{ stand_in: string | null }>('delete_style', params)
+      return { standIn: done.stand_in ?? null }
+    } catch (error) {
+      if (error instanceof ProtocolError && error.code === 'command_error') return { refused: error.message }
+      this.explain(error)
+      return false
+    }
+  }
+
+  /** Hide a style from the menus a style is picked from, or show it again (D780). */
+  async hideStyle(style: string, hidden: boolean): Promise<boolean> {
+    return (await this.attempt('hide_style', { style, hidden, base: this.state.revision })) !== false
   }
 
   async undo(): Promise<boolean> {

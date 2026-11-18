@@ -11,11 +11,12 @@ import { translate as t } from './i18n'
 import { currentLocale } from './locale'
 import { alignOf, styleAt, whereFrom, type Area, type CellRange } from './cell-styles'
 import type { HostSlot, StyleHost } from './style-host'
+import { deletionHost, type StyleDeletionSession } from './style-deletion'
 import type { ColourRole, Reading, StyleModel, StyleTarget } from './objects'
 import type { CssCheck, CssEdit, StyleView } from './style-css'
 
 /** What this host needs of a session (computes'). */
-export interface CellStyling {
+export interface CellStyling extends Partial<StyleDeletionSession> {
   readOnly: boolean
   styles: StyleView[]
   roles: ColourRole[]
@@ -121,6 +122,7 @@ export function cellStyleHost(session: CellStyling): StyleHost {
       return session.readings
     },
     uses: () => session.uses(),
+    deletion: deletionHost(session),
     apply: async (style) => (session.area ? session.applyStyle(target(), style) : false),
     change: (style, edit) => session.changeStyle(style, edit),
     deviate: async (edit) => {

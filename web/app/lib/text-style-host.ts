@@ -2,6 +2,7 @@
 // paragraph and box (D304), so there is no switcher.
 import type { HostSlot, StyleHost } from './style-host'
 import type { TextSession } from './text-session'
+import { deletionHost } from './style-deletion'
 
 import { translate as t } from './i18n'
 export function textStyleHost(session: TextSession): StyleHost {
@@ -38,6 +39,7 @@ export function textStyleHost(session: TextSession): StyleHost {
       return session.state.palette?.readings ?? []
     },
     uses: () => session.uses(),
+    deletion: deletionHost(session),
     apply: async (style) => (await session.setStyle(style)) ?? false,
     change: (style, edit) => session.changeStyle(style, edit),
     deviate: (edit) => session.deviateStyle(edit),
