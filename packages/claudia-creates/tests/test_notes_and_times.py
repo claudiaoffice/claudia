@@ -134,7 +134,8 @@ def test_a_snapshot_of_schema_7_opens_without_notes_or_times(doc):
     old = SlideModel.restore(state)
     assert (old.notes_of("s1"), old.time_of("s1"), old.total_time()) == ("", None, 0)
     # 9: notes, times; 10: rendered containers; 11: names; 12: headings; 13: lists; 14: schemes; 15: agendas
-    assert SlideModel.state_schema == 15
+    # 16: one ``ref``
+    assert SlideModel.state_schema == 16
 
 
 def test_undoing_my_notes_after_a_colleague_changed_them_is_refused(doc):

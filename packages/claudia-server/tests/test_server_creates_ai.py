@@ -123,7 +123,7 @@ def test_an_object_is_described_with_its_id_place_size_and_words():
     data = {
         "id": "o1",
         "kind": "shape",
-        "shape": "circle",
+        "ref": "circle",
         "w": 300,
         "h": 300,
         "style": "plain-shape",

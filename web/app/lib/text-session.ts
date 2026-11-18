@@ -33,6 +33,7 @@ import { FIELD_CHAR, fieldIndex, plain, type ReferenceTarget, type RefField, typ
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
 import type { Deleted, DeleteHow } from './style-deletion'
 import { headingLevel, styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
+import { isBoxId, oneLine, type TableEvent, type TableInfo, withEvent } from './tables'
 
 import { translate as t } from './i18n'
 import { lookOnly } from './replay'
@@ -87,6 +88,11 @@ export interface TextState extends BaseState {
   images: Record<string, ImageAsset>
   /** The object a person has selected here; this is not shared with colleagues. */
   selectedObject: string | null
+  /** The tables of the text by id (E9.32): what the objects of kind `table` point at with `ref`. */
+  tables: Record<string, TableInfo>
+  /** The box of a table the caret is in, or `null`; not shared with colleagues. Edit ▸ Row, Column, Sort and the
+   *  other table entries are only there while it is set. */
+  box: { table: string; row: string; col: string } | null
 }
 
 /** An image of the text as the server sends it (`images`): base64 data. */
@@ -100,6 +106,8 @@ export interface PrintExtras {
   objects: TextObject[]
   shapes: ShapeOutline[]
   images: TextImage[]
+  /** the tables, with their total rows (E9.32); none from a server that has no tables */
+  tables?: TableInfo[]
 }
 
 export const IDLE_FLUSH_MS = 700
@@ -123,7 +131,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, images: {}, selectedObject: null })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, images: {}, selectedObject: null, tables: {}, box: null })
   }
 
   get readOnly(): boolean {
@@ -179,10 +187,93 @@ export class TextSession extends BaseSession<TextState> {
     return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
   }
 
+  // ------------------------------------------------------------------------------ tables (E9.32)
+  /** Ask for the tables again: the words of a box changed, or a total did. */
+  private async reloadTables(): Promise<void> {
+    const found = await this.need().request<TableInfo[]>('tables').catch(() => null)
+    if (!found) return
+    this.state.tables = Object.fromEntries(found.map((x) => [x.id, x]))
+    const { box } = this.state
+    const own = box ? this.state.tables[box.table] : undefined
+    // the box went with its table, its row or its column
+    if (box && !(own?.rows.includes(box.row) && own.columns.some((c) => c.id === box.col))) this.state.box = null
+  }
+
+  /** The box the caret is in; `null` when it is not in a table. */
+  focusBox(box: TextState['box']): void {
+    this.state.box = box
+  }
+  /** The table the caret is in, or `null`. */
+  boxTable(): TableInfo | null {
+    const box = this.state.box
+    return (box && this.state.tables[box.table]) || null
+  }
+
+  /** Put a table after the paragraph `place` is in: `rows` by `cols` boxes, the first `headerRows` the header. Its
+   *  object's and its own id, or `null` when the server refused (the person is told why). */
+  async addTable(place: { block: string; offset: number }, size: { rows: number; cols: number; headerRows: number }): Promise<{ object: string; table: string } | null> {
+    if (this.denied()) return null
+    const done = await this.act(() => this.attempt('add_table', { ...this.placeOnWire(place), rows: size.rows, cols: size.cols, header_rows: size.headerRows, base: this.state.revision }))
+    if (done === false) return null
+    return { object: done.object as string, table: done.table as string }
+  }
+
+  /** Type `text` into a box, in place of the words it has. One line: a line break becomes a space (D1212). */
+  async setBox(table: string, row: string, col: string, text: string): Promise<boolean> {
+    if (this.denied()) return false
+    const old = this.state.tables[table]?.entries.find(([r, c]) => r === row && c === col)?.[2].text ?? ''
+    const words = oneLine(text)
+    if (words === old) return true
+    const block = `${table}/${row}/${col}`
+    const params = { block, start: 0, end_block: block, end: [...old].length, text: words, base: this.state.revision }
+    return this.act(async () => (await this.attempt('replace_text', params)) !== false)
+  }
+
+  /** One of the server's table methods for table `table`: false when it was refused or the person may not. */
+  private async changeTable(method: string, table: string, params: Record<string, unknown> = {}): Promise<boolean> {
+    if (this.denied()) return false
+    return this.act(async () => (await this.attempt(method, { table, ...params, base: this.state.revision })) !== false)
+  }
+  /** `place` is `{ after: id }` or `{ before: id }`. */
+  insertRows(table: string, place: { after: string } | { before: string }, count = 1): Promise<boolean> {
+    return this.changeTable('insert_rows', table, { count, ...place })
+  }
+  deleteRows(table: string, ids: string[]): Promise<boolean> {
+    return this.changeTable('delete_rows', table, { ids })
+  }
+  insertColumns(table: string, place: { after: string } | { before: string }, count = 1): Promise<boolean> {
+    return this.changeTable('insert_columns', table, { count, ...place })
+  }
+  deleteColumns(table: string, ids: string[]): Promise<boolean> {
+    return this.changeTable('delete_columns', table, { ids })
+  }
+  sortRows(table: string, column: string, descending = false): Promise<boolean> {
+    return this.changeTable('sort_rows', table, { column, descending })
+  }
+  /** `options` has any of `header_rows`, `banded`, `look`, `placement`, `width` (the server's `set_table_options`). */
+  setTableOptions(table: string, options: Record<string, unknown>): Promise<boolean> {
+    return this.changeTable('set_table_options', table, { options })
+  }
+  /** `changes` has any of `kind`, `total`, `width` (the server's `set_column`). */
+  setColumn(table: string, column: string, changes: Record<string, unknown>): Promise<boolean> {
+    return this.changeTable('set_column', table, { column, changes })
+  }
+  mergeCells(table: string, row: string, col: string, rows: number, cols: number): Promise<boolean> {
+    return this.changeTable('merge_cells', table, { row, col, rows, cols })
+  }
+  splitCell(table: string, row: string, col: string): Promise<boolean> {
+    return this.changeTable('split_cell', table, { row, col })
+  }
+  /** Take a table away with the object that shows it; undo brings it back. */
+  async removeTable(table: string): Promise<boolean> {
+    if (this.denied()) return false
+    return this.act(async () => (await this.attempt('remove_table', { id: table, base: this.state.revision })) !== false)
+  }
+
   // ------------------------------------------------------------------------------ loading
   protected async loadApp() {
     const link = this.need()
-    const [answer, suggestions, palette, styleModel, page, objects, images] = await Promise.all([
+    const [answer, suggestions, palette, styleModel, page, objects, images, tables] = await Promise.all([
       link.request<{ styles: StyleView[]; blocks: Block[]; lists: ListInfo[]; schemes: SchemeInfo[] }>('blocks'),
       link.request<SuggestionInfo[]>('suggestions'),
       link.request<PaletteEvent>('palette'),
@@ -192,6 +283,8 @@ export class TextSession extends BaseSession<TextState> {
       // an older server shows no floating objects
       link.request<{ objects: VisualObject<BlockAnchor>[] }>('objects').then((a) => a.objects).catch(() => []),
       link.request<ImageAsset[]>('images').catch(() => []),
+      // an older server has no tables
+      link.request<TableInfo[]>('tables').catch(() => []),
     ])
     // an older server has no language either; the preview then hyphenates nothing and offers no choice
     const language = await link
@@ -203,6 +296,8 @@ export class TextSession extends BaseSession<TextState> {
     s.language = language
     s.objects = Object.fromEntries(objects.map((o) => [o.id, o]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
+    s.tables = Object.fromEntries(tables.map((x) => [x.id, x]))
+    if (s.box && !s.tables[s.box.table]) s.box = null
     if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
     s.styles = answer.styles
     s.lists = answer.lists
@@ -269,6 +364,12 @@ export class TextSession extends BaseSession<TextState> {
       case 'generated':
       case 'block_fields':
       case 'fields': {
+        // the words of a box of a table: not a paragraph of the text, so the tables are asked for again (E9.32)
+        const at = (data.block ?? data.paragraph) as string | undefined
+        if (at && isBoxId(at)) {
+          this.track(this.reloadTables())
+          return true
+        }
         const event = eventInUnits(s.blocks, data as TextEvent)
         if (!applyEvent(s.blocks, event)) this.track(this.reload())
         else this.follow(event)
@@ -288,6 +389,13 @@ export class TextSession extends BaseSession<TextState> {
         for (const o of e.changed as VisualObject<BlockAnchor>[]) s.objects[o.id] = o
         for (const id of e.removed) delete s.objects[id]
         if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
+        return true
+      }
+      case 'table': {
+        withEvent(s.tables, data as unknown as TableEvent)
+        const table = s.tables[data.id as string]
+        if (s.box && !s.tables[s.box.table]) s.box = null
+        else if (table?.columns.some((c) => c.total !== null)) this.track(this.reloadTables()) // the totals are derived
         return true
       }
       case 'image':
@@ -345,6 +453,7 @@ export class TextSession extends BaseSession<TextState> {
   /** The caret or selection as the person sees it moved (clicks, arrow keys). */
   setSelection(anchor: Pos, focus: Pos = anchor) {
     const s = this.state
+    s.box = null // the caret is in the words now, not in a box of a table
     const now = s.selection
     if (now && same(now.anchor, anchor) && same(now.focus, focus)) return
     this.flushNow()
@@ -719,12 +828,13 @@ export class TextSession extends BaseSession<TextState> {
   /** The floating objects, their outlines and their images, for printing (D907). Read when the preview opens. */
   async printExtras(): Promise<PrintExtras> {
     const link = this.need()
-    const [objects, shapes, images] = await Promise.all([
+    const [objects, shapes, images, tables] = await Promise.all([
       link.request<{ objects: TextObject[] }>('objects').then((a) => a.objects).catch(() => []),
       link.request<ShapeOutline[]>('shapes').catch(() => []),
       link.request<TextImage[]>('images').catch(() => []),
+      link.request<TableInfo[]>('tables').catch(() => []),
     ])
-    return { objects, shapes, images }
+    return { objects, shapes, images, tables }
   }
 
   // -- lists (E9.21). The numbering is the server's: what is asked for is structure, and the markers arrive as events.

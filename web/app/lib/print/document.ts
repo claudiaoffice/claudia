@@ -3,6 +3,7 @@
 import { utf8Decode, type TextDocument } from '@claudia/layout'
 import type { Block } from '../blocks'
 import { entryWords } from '../contents'
+import { translate as t } from '../i18n'
 import { FIELD_CHAR, partsOf, readAs } from '../references'
 import type { StyleView } from '../style-css'
 import type { ListInfo, PrintExtras, SchemeInfo } from '../text-session'
@@ -60,6 +61,8 @@ export function textDocument(
     styles: styles.map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved, heading: s.heading ?? null })),
     page,
     objects: extras?.objects ?? [],
+    // the total row starts with the word the view shows there
+    tables: extras?.tables?.map((table) => ({ ...table, total_label: t('Total') })) ?? [],
     shapes: extras?.shapes ?? [],
     // an SVG picture is drawn from its text (D914); the others from their bytes
     images: extras?.images.map((i) => ({ id: i.id, format: i.format, ...(i.format === 'svg' ? { svg: utf8Decode(fromBase64(i.data)) } : {}) })) ?? [],

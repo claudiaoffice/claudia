@@ -32,6 +32,8 @@ import type { Session } from '../session'
 import { plotlyPictures } from './chart-picture'
 import { chartSizes, loadForPrint, setupOf, sheetDocument, type ChartPictures, type SheetRequest } from './sheet-document'
 import { entryWords, type ContentsEntry } from '../contents'
+import { pointer } from '../objects'
+import { pictureOf } from '../rendering'
 import { readAs, type Shown } from '../references'
 import { CONTENTS, describeSheets, SCALES, scaleId, withScale, type Contents } from './sheet'
 
@@ -165,14 +167,17 @@ function printable(
   markOf: (id: string) => { marker: string; indent: number } | null = () => null,
   agendaOf: (id: string) => ContentsEntry[] | null = () => null,
   shownOf: (id: string) => Shown[] | undefined = () => undefined,
+  pictureOf: (o: SlideObject) => string | null = () => null,
 ): LayoutSlideObject[] {
   return objects.flatMap((o) => {
-    if (!o.paragraph) return [o as LayoutSlideObject]
+    // the layout is told the outline and the picture, whatever kind of object points at them
+    const drawn = { ...o, shape: pointer(o, 'shape'), image: pictureOf(o) }
+    if (!o.paragraph) return [drawn as LayoutSlideObject]
     const mark = markOf(o.id)
     const entries = o.paragraph.generated ? agendaOf(o.id) : null
     const agenda = entries ? { lines: entries.map((e) => ({ words: entryWords(e), place: e.place })), leader: o.paragraph.generated!.leader } : null
     const text = o.paragraph.fields?.length ? readAs(o.paragraph.text, shownOf(o.id)) : o.paragraph.text // a reference: what it reads as
-    return [{ ...o, paragraph: { ...o.paragraph, text, ...(mark ? { mark } : {}), ...(agenda ? { agenda } : {}) } } as LayoutSlideObject]
+    return [{ ...drawn, paragraph: { ...o.paragraph, text, ...(mark ? { mark } : {}), ...(agenda ? { agenda } : {}) } } as LayoutSlideObject]
   })
 }
 
@@ -180,7 +185,7 @@ function printable(
 export function slideDocument(session: SlideSession): SlideDocument {
   const state = session.state
   return {
-    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id), (id) => session.agendaOf(id), (id) => state.referenced[id]) })),
+    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id), (id) => session.agendaOf(id), (id) => state.referenced[id], (o) => pointer(o, 'image') ?? pictureOf(state.renderings[pointer(o, 'rendered') ?? '']) ) })),
     styles: Object.values(state.styles).map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved })),
     shapes: Object.values(state.shapes),
     // an SVG picture is drawn from its text (D914); the others from their bytes

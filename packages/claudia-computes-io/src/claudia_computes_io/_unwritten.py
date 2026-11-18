@@ -47,7 +47,7 @@ def facets(model: WorkbookModel) -> dict[str, object]:
         "charts": _charts(data),
         "pivots": _pivots(model),
         "objects": [
-            *(each for each in data["objects"] if each.get("diagram") is None),
+            *(each for each in data["objects"] if each["kind"] != "diagram"),
             *(("image", each) for each in data["images"]),
             *(("shape", each) for each in data["shapes"]),
             *(("rendering", each) for each in data["renderings"]),
@@ -66,8 +66,8 @@ def _charts(data: dict) -> dict[str, object]:
     definitions = {each["id"]: each for each in data["diagrams"]}
     shown: dict[str, object] = {f"tab {tab['id']}": (tab, definitions.get(tab["spec_id"])) for tab in data["charts"]}
     for each in data["objects"]:
-        if each.get("diagram") is not None:
-            shown[f"object {each['id']}"] = (each, definitions.get(each["diagram"]))
+        if each["kind"] == "diagram":
+            shown[f"object {each['id']}"] = (each, definitions.get(each["ref"]))
     return shown
 
 

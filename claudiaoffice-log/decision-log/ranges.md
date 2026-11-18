@@ -55,6 +55,7 @@ Unused numbers in a closed block stay unused.
 | D1041–D1060 | font management: who may receive a server's fonts, Server settings ▸ Fonts, fonts kept honest from import to export (E3.13; branch `font-server-ui`; D1041 used) | 2026-11-16 | open |
 | D1101–D1120 | workflow: focus and quiet mode, corkboard, binder and its private drawer, open points, session intent and timeline (E16; branch `workflow`; D1101–D1116 used) | 2026-11-18 | open |
 | D780–D799 | deleting and hiding styles: origin, hidden, the held look, the stand-in, collisions, the screens (E1.10; branch `style-delete`; D226 settled, D780–D786 used) | 2026-11-17 | open |
+| D1201–D1220 | tables in composes: own tables, linked tables, merged cells, looks, keys (E9.32, E9.33; branch `tables-in-composes`; D1201–D1214 used) | 2026-11-18 | open |
 
 ## Never to be used
 

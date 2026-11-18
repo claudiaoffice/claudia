@@ -20,7 +20,7 @@ from claudia_computes import (
     WorkbookModel,
 )
 from claudia_core import Batch, CommandLog, Document, ImageAsset, ImageImport, MemoryStore, decode_image
-from claudia_core.testing import FakeClock
+from claudia_core.testing import FakeClock, pointing_as_ref
 
 S1 = "s1"
 
@@ -87,7 +87,7 @@ def build(**fields) -> SheetObject:
     anchor. The helpers keep the flat signatures the tests have always used, while the model holds the two
     halves apart (E10.16)."""
     anchor = CellAnchor(SheetId(fields.pop("sheet", S1)), fields.pop("row", 0), fields.pop("col", 0))
-    return VisualObject(ObjectBody(**fields), anchor)
+    return VisualObject(ObjectBody(**pointing_as_ref(fields)), anchor)
 
 
 # -- the shared commands, built the way a client does: a body, and the anchor as plain data -------------------

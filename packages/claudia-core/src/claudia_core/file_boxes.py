@@ -40,7 +40,7 @@ def box_body(  # noqa: PLR0913 (what a file says of a box is this much)
         size[1],
         TEXT_BOX_STYLE if shape is None else SHAPE_STYLE,
         paragraph=paragraph_for(object_id, words, text),
-        shape=shape,
+        ref=shape,
         rotation=rotation,
         description="" if decorative else description[:MAX_ALT_CHARS],
         decorative=decorative,

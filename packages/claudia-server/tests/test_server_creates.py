@@ -81,7 +81,7 @@ def test_a_text_box_is_added_with_a_plain_box_and_body_text_words(deck):
     assert box["id"] == added["object"]
     assert (box["kind"], box["anchor"]["x"], box["anchor"]["y"], box["w"], box["h"]) == ("text", 100, 80, 400, 120)
     assert box["style"] == "plain-box" and box["paragraph"]["style"] == "body-text"  # two slots (D304, D310)
-    assert box["paragraph"]["text"] == "" and box["shape"] is None
+    assert box["paragraph"]["text"] == "" and box["ref"] is None
     assert call(deck, "slides") == [{"id": "s1", "name": "", "objects": 1, "seconds": None, "has_notes": False}]
 
 
@@ -391,9 +391,9 @@ def test_an_image_is_imported_with_the_plain_image_style(deck):
     (obj,) = objects(deck)
     assert obj["id"] == added
     assert (obj["kind"], obj["style"]) == ("image", "plain-image")
-    assert obj["image"] is not None and obj["shape"] is None
+    assert obj["ref"] is not None and obj["kind"] == "image"
     assert obj["imported"]["alt"] == "a sample picture" and obj["imported"]["source"] == "disk"
-    assert [i["id"] for i in call(deck, "images")] == [obj["image"]]
+    assert [i["id"] for i in call(deck, "images")] == [obj["ref"]]
 
 
 def test_the_asset_is_shared_between_two_objects_using_the_same_picture(deck):

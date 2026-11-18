@@ -433,7 +433,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 11: rendered text containers (D390)
     # 12: how it is printed, and its language (E6.19, D1001)
     # 13: names have ids (D552)
-    state_schema: ClassVar[int] = 14  # 14: the workbook carries its pivot tables (E6.30, D620)
+    state_schema: ClassVar[int] = (
+        15  # 15: an object body has one ``ref``; 14: the workbook carries its pivot tables (E6.30, D620)
+    )
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS

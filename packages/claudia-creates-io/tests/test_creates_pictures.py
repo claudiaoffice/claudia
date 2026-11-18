@@ -38,7 +38,7 @@ def a_deck(**changes) -> SlideModel:
     deck = SlideModel.empty()
     asset = a_picture()
     deck.define_image(asset)
-    body = ObjectBody("o1", "image", 400, 200, "plain-image", image=asset.id, imported=an_import(asset), **changes)
+    body = ObjectBody("o1", "image", 400, 200, "plain-image", ref=asset.id, imported=an_import(asset), **changes)
     deck.insert_object(VisualObject(body, SlideAnchor("s1", 100, 150)))
     return deck
 

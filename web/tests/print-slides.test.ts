@@ -87,7 +87,7 @@ class FakeLink implements LinkLike {
 const STYLE = { id: 'body-text', name: 'Body text', purpose: '', based_on: null, to_name: false, kind: 'paragraph', css: {}, computed: {}, resolved: { color: '#1f1a33' } }
 const SVG = { id: 'v'.repeat(64), format: 'svg', width: 10, height: 10, animated: false, data: btoa('<svg/>'), first_frame: null }
 const PNG = { id: 'p'.repeat(64), format: 'png', width: 10, height: 10, animated: false, data: 'iVBO', first_frame: null }
-const box = (id: string, slide: string) => ({ id, kind: 'text', w: 400, h: 100, style: 'plain-box', paragraph: { style: 'body-text', text: id, runs: [] }, shape: null, image: null, imported: null, rotation: 0, snap: true, anchor: { kind: 'slide', container: slide, x: 0, y: 0 } })
+const box = (id: string, slide: string) => ({ id, kind: 'text', w: 400, h: 100, style: 'plain-box', paragraph: { style: 'body-text', text: id, runs: [] }, ref: null, imported: null, rotation: 0, snap: true, anchor: { kind: 'slide', container: slide, x: 0, y: 0 } })
 const HANDOUTS: PrintSetupData = { layout: 'handouts-6', page: { ...DEFAULT_PAGE, margins: [36000, 36000, 36000, 36000] } }
 
 function server(link: FakeLink, extra: Record<string, (params: any) => any> = {}) {
@@ -219,11 +219,13 @@ describe('printing a presentation: its print source', () => {
     session.close()
   })
   it('hands a rendered text container to the layout as it is: the layout prints it as the picture it shows (D390)', async () => {
-    const rendered = (id: string, image: string | null) => ({ ...box(id, 's1'), kind: 'rendered', paragraph: null, rendered: 'r1', image })
-    const { session } = await opened({
+    const rendered = (id: string, definition: string) => ({ ...box(id, 's1'), kind: 'rendered', paragraph: null, ref: definition })
+    const { session, state } = await opened({
       ...PRINTING,
-      slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? [rendered('drawn', PNG.id), rendered('pending', null)] : [] }),
+      slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? [rendered('drawn', 'r1'), rendered('pending', 'r2')] : [] }),
     })
+    const definition = (id: string, image: string | null) => ({ format: 1, id, type: 'latex', source: 'x', params: {}, image, renderer: '' })
+    state.renderings = { r1: definition('r1', PNG.id), r2: definition('r2', null) } // the picture is the definition's: the object only points at it
     const [first] = slideDocument(session).slides
     expect(first!.objects.map((o) => [o.id, o.kind, o.image])).toEqual([
       ['drawn', 'rendered', PNG.id],

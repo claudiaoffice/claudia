@@ -13,7 +13,7 @@ import { CORNERS, GRID_SIZE, HANDLES, SLIDE_H, SLIDE_W, besideRect, fitScale, mo
 import { objectName, pictureAlt } from '~/lib/descriptions'
 import { canTurn, degreesText, moveTurned, quarterTurn, resizeTurned, stepTurn, turnFromPointer, SHIFT_STEP } from '~/lib/turning'
 import { imageDataUrl } from '~/lib/images'
-import { cssOf as computedCss, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
+import { cssOf as computedCss, pointer, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
 import { contextMenuItems } from '~/lib/object-menu'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { colorOf, inkOn } from '~/lib/people'
@@ -101,7 +101,8 @@ function wordsCss(o: SlideObject) {
   return withDisplayInk(scaleCss(wordsCssOf(state.styles, o), scale.value))
 }
 function outline(o: SlideObject) {
-  return o.shape ? (state.shapes[o.shape] ?? null) : null
+  const shape = pointer(o, 'shape')
+  return shape ? (state.shapes[shape] ?? null) : null
 }
 function textBox(o: SlideObject) {
   const area = outline(o)?.text_area ?? { x: 0, y: 0, w: 100, h: 100 }
@@ -135,7 +136,8 @@ function editorStyle(o: SlideObject): Record<string, string> {
   return { ...words(o), ...frameCss(o), ...textBox(o) }
 }
 function pictureOf(o: SlideObject) {
-  return o.image ? (state.images[o.image] ?? null) : null
+  const image = pointer(o, 'image')
+  return image ? (state.images[image] ?? null) : null
 }
 /** The `<img>` source for an image object's picture, or '' before the asset has loaded (`images`/`objects`'s own
  * event may arrive in either order on first load). */
@@ -150,7 +152,8 @@ const containerEditing = ref<string | null>(null)
 async function commitContainer(o: SlideObject, text: string) {
   containerEditing.value = null
   area.value?.focus({ preventScroll: true })
-  if (o.rendered) await session.setRenderingSource(o.rendered, text)
+  const rendering = pointer(o, 'rendered')
+  if (rendering) await session.setRenderingSource(rendering, text)
 }
 function cancelContainer() {
   containerEditing.value = null

@@ -38,8 +38,20 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Go to Target | Ctrl+Alt+Enter |  |
 | Edit | Insert ▸ Soft Hyphen | Ctrl+- |  |
 | Edit | Insert ▸ Non-breaking Hyphen | Ctrl+_ |  |
+| Edit | Row ▸ Insert Above | Shift+Alt+↑ |  |
+| Edit | Row ▸ Insert Below | Shift+Alt+↓ |  |
+| Edit | Row ▸ Delete | Ctrl+Alt+- |  |
+| Edit | Column ▸ Insert Left | Shift+Alt+← |  |
+| Edit | Column ▸ Insert Right | Shift+Alt+→ |  |
+| Edit | Column ▸ Delete | Ctrl+Alt+_ |  |
+| Edit | Sort ▸ Ascending | Ctrl+Shift+X |  |
+| Edit | Sort ▸ Descending | Ctrl+Shift+Y |  |
+| Edit | Merge Cells | Ctrl+Shift+G |  |
+| Edit | Split Cell | Ctrl+Shift+H |  |
+| Edit | Table Options… | Ctrl+Shift+L |  |
 | Insert | Cross-Reference… | Ctrl+F2 |  |
 | Insert | Table of Contents | Ctrl+Shift+Alt+I |  |
+| Insert | Table… | Ctrl+Shift+F |  |
 | Insert | Container ▸ LaTeX | Ctrl+Shift+Alt+F |  |
 | Insert | Container ▸ Mermaid | Ctrl+Shift+Alt+G |  |
 | Insert | Container ▸ Typst | Ctrl+Shift+Alt+Y |  |

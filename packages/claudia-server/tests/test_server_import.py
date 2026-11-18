@@ -339,7 +339,7 @@ def test_a_picture_of_a_file_is_an_object_of_the_text_and_its_new_description_is
     start.define_image(asset)
     start.insert_object(
         VisualObject(
-            ObjectBody("o1", "image", 200, 100, "plain-image", image=asset.id, imported=made_by_ann(asset)),
+            ObjectBody("o1", "image", 200, 100, "plain-image", ref=asset.id, imported=made_by_ann(asset)),
             BlockAnchor("b1", 5),
         )
     )
@@ -488,7 +488,7 @@ def test_a_deck_with_a_picture_comes_back_patched_with_the_picture_turned_and_de
             "source_path": None,
         }
     )
-    body = ObjectBody("o1", "image", 400, 200, "plain-image", image=asset.id, imported=record, description="before")
+    body = ObjectBody("o1", "image", 400, 200, "plain-image", ref=asset.id, imported=record, description="before")
     deck.insert_object(VisualObject(body, SlideAnchor("s1", 100, 150)))
     data = slides_to_pptx(deck) if fmt == "pptx" else slides_to_odp(deck)
     app = FORMATS[fmt][0]

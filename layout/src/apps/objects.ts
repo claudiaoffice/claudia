@@ -47,7 +47,7 @@ export interface PageSetupData {
 
 /** The kinds of floating object, as `claudia_core.OBJECT_KINDS` names them (`tests/test_object_kinds_agree.py` keeps the
  *  two lists the same). A `rendered` object is a text container that shows a picture once somebody drew one. */
-export type ObjectKind = 'text' | 'shape' | 'image' | 'diagram' | 'rendered'
+export type ObjectKind = 'text' | 'shape' | 'image' | 'diagram' | 'rendered' | 'table'
 
 /** A floating object, the shape all three apps share (without its app's anchor). Lengths in CSS pixels. */
 export interface VisualObject {
@@ -61,6 +61,8 @@ export interface VisualObject {
   paragraph: { style: string; text: string; mark?: ObjectMark | null; agenda?: Agenda | null } | null
   shape: string | null
   image: string | null
+  /** the id of the definition the kind points at (a table's, E9.32); a text, a shape or an image object may not send it */
+  ref?: string | null
   rotation: number
 }
 /** The lines of an agenda (E9.31), derived by the server from the slide titles: each line's words (its number and the

@@ -11,6 +11,12 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 ### Changed (E1.10, D783, D786)
 - Format ▸ All Styles… says in its description that styles can be deleted and hidden there. No new entry and no key: the page's own dialog does the work (D301), in the macOS and Windows client as well.
 
+### Added (E9.32, D1208, D1213)
+- Claudia Composes: Insert ▸ Table… (Ctrl+Shift+F) and, in Edit, Row ▸ and Column ▸ (the keys computes has), Sort ▸
+  Ascending (Ctrl+Shift+X) and Descending (Ctrl+Shift+Y), Merge Cells (Ctrl+Shift+G), Split Cell (Ctrl+Shift+H) and Table
+  Options… (Ctrl+Shift+L); the page reports them off while the caret is not in a table. Row ▸ and Column ▸ are one helper
+  for computes and composes.
+
 ### Added (step H)
 - Insert ▸ Cross-Reference… (Ctrl+F2) and Edit ▸ Go to Target (Ctrl+Alt+Enter), in every app; computes shows them
   off.
@@ -96,7 +102,6 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
   the web), Edit ▸ Insert ▸ Soft Hyphen / Non-breaking Hyphen (composes), Edit ▸ Image… and Chart…, Format ▸ Clear Cell
   Style, Tools ▸ Names… and SQL Query… (computes), Edit ▸ Image… and View ▸ Show Grid (creates). New page actions: the
   contract version is unchanged.
-
 
 First slice of the native Linux client (epic 5).
 

@@ -43,6 +43,9 @@ def _text(ctx: Context) -> TextModel:
 
 
 def _paragraph(model: TextModel, block: str) -> str:
+    """The words of the paragraph ``block``, or of the box of a table if that is its id."""
+    if model.is_entry(block):
+        return model.entry_words(block).text
     try:
         return model.block(block).text
     except KeyError:

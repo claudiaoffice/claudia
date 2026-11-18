@@ -331,7 +331,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         object_id = fresh_id("o", deck.objects)
         style = STYLE_OF_KIND[kind]
         words = paragraph_for(object_id, PARAGRAPH_STYLE_OF_KIND[kind], text, ctx.user)
-        body = ObjectBody(object_id, kind, w, h, style, words, shape=shape, name=default_name(ctx, kind))
+        body = ObjectBody(object_id, kind, w, h, style, words, ref=shape, name=default_name(ctx, kind))
         steps.append(AddObject(body, SlideAnchor(slide, x, y).to_data()))
         command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Add shape")
         return done(ctx, command, base, object=object_id)

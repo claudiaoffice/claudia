@@ -83,7 +83,7 @@ def test_an_object_written_before_names_reads_as_unnamed():
 
     assert isinstance(command, AddObject)
     assert command.body.name == ""
-    assert AddObject.schema == 5
+    assert AddObject.schema == 6
 
 
 def test_an_object_written_before_ranges_shared_names_replays_under_the_old_rule():

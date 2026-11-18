@@ -286,7 +286,7 @@ def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
     model = a_workbook()
     model.names.put(NamedRange("Sales", None, a_range(), header=True))
     model.define_diagram(ChartSpec(id="c1", kind="bar", source="Sales"))
-    body = ObjectBody("o1", "diagram", 480, 300, "plain-image", diagram="c1")
+    body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))
     spec, _ = the_chart(xlsx_to_workbook(workbook_to_xlsx(model)))
     assert (spec.range, spec.source) == (a_range(), "")
@@ -298,7 +298,7 @@ def test_a_chart_that_reads_nothing_is_not_written_and_that_is_said():
     model.sheets[S1] = Sheet(S1, "Data")
     model.open_container("s1")
     model.define_diagram(ChartSpec(id="c1", kind="bar", source="Gone"))
-    body = ObjectBody("o1", "diagram", 480, 300, "plain-image", diagram="c1")
+    body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))
     data = workbook_to_xlsx(model)
     assert xlsx_to_workbook(data).diagrams == {}

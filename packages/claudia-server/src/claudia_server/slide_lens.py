@@ -51,8 +51,8 @@ def describe_object(data: dict) -> str:
     kind = KINDS.get(data.get("kind", ""), data.get("kind", "object"))
     anchor = data.get("anchor") or {}
     line = f"{data['id']} {kind}"
-    if data.get("shape"):
-        line += f" ({data['shape']})"
+    if data.get("kind") == "shape" and data.get("ref"):
+        line += f" ({data['ref']})"
     line += f" at ({anchor.get('x')}, {anchor.get('y')}) {data.get('w')}×{data.get('h')}, style {data.get('style')}"
     words = data.get("paragraph")
     if words is not None:

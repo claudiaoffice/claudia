@@ -1,5 +1,6 @@
 // Rendered text containers, client side (D390–D396, D560): the definitions the server keeps, what it says of making
 // their pictures, and the Markdown-like fences a text block can be turned into a container from.
+import { pointer, type ObjectBody } from './objects'
 
 /** One container's definition as the server sends it (`renderings`, event `rendering`). */
 export interface RenderingDef {
@@ -61,9 +62,9 @@ export type RenderStatus =
   | { kind: 'failed'; message: string; diagnostics: Diagnostic[] }
   | { kind: 'unavailable'; tool: string; message: string }
 
-/** The id of the picture to show: the object's own, else the definition's. */
-export function pictureOf(object: { image: string | null }, definition: RenderingDef | undefined): string | null {
-  return object.image ?? definition?.image ?? null
+/** The id of the picture to show: the one the definition last made, if any. */
+export function pictureOf(definition: RenderingDef | undefined): string | null {
+  return definition?.image ?? null
 }
 
 /** What to tell about a container now: whether its text, its picture and the last outcome agree. */
@@ -135,12 +136,13 @@ export interface RenderingHolder {
  * name, and the status. `null` for an object that shows no definition (yet). */
 export function renderedView(
   holder: RenderingHolder,
-  object: { image: string | null; rendered: string | null },
+  object: Pick<ObjectBody, 'kind' | 'ref'>,
   toUrl: (asset: { format: string; data: string }) => string,
 ): { definition: RenderingDef; src: string; label: string; status: RenderStatus } | null {
-  const definition = object.rendered ? holder.renderings[object.rendered] : undefined
+  const id = pointer(object, 'rendered')
+  const definition = id ? holder.renderings[id] : undefined
   if (!definition) return null
-  const picture = pictureOf(object, definition)
+  const picture = pictureOf(definition)
   const asset = picture ? holder.images[picture] : undefined
   const label = holder.renderTypes.find((k) => k.type === definition.type)?.title ?? definition.type
   // "Ready" means a picture the page can show: one that is named but has not arrived yet is still being drawn

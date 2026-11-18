@@ -31,10 +31,9 @@ def test_what_the_model_does_not_show_is_listed_with_how_many():
     document.add_paragraph("words", style="List Bullet")  # a style the model does not have, and a list it draws its own
     bold = document.add_paragraph().add_run("bold")
     bold.bold = True
-    document.add_table(rows=1, cols=2)
+    document.add_table(rows=1, cols=2)  # a regular table: the text holds it (E9.32)
     assert docx_import_losses(saved(document)) == (
         Loss("style", "List Bullet", 1),
-        Loss("table", "", 1),
         Loss("list-look", "", 1),
         Loss("formatting", "", 1),
     )

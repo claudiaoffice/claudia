@@ -57,7 +57,7 @@ def a_text(*texts: str) -> TextModel:
 def put_picture(model: TextModel, object_id="o1", *, at=("b1", 5), size=(200, 100), shade=0, **changes) -> ImageAsset:
     asset = a_picture(shade=shade)
     model.define_image(asset)
-    body = ObjectBody(object_id, "image", *size, "plain-image", image=asset.id, imported=an_import(asset), **changes)
+    body = ObjectBody(object_id, "image", *size, "plain-image", ref=asset.id, imported=an_import(asset), **changes)
     model.insert_object(VisualObject(body, BlockAnchor(*at)))
     return asset
 
@@ -146,7 +146,7 @@ def test_a_picture_is_not_a_loss_of_the_export(to_file, to_model):
 def test_the_same_picture_twice_is_one_file_in_the_package(to_file, to_model):
     model = a_text("Hello world")
     asset = put_picture(model, "o1", at=("b1", 1))
-    body = ObjectBody("o2", "image", 100, 50, "plain-image", image=asset.id, imported=an_import(asset))
+    body = ObjectBody("o2", "image", 100, 50, "plain-image", ref=asset.id, imported=an_import(asset))
     model.insert_object(VisualObject(body, BlockAnchor("b1", 3)))
     data = to_file(model)
     media = [name for name in read_parts(data) if name.startswith(("word/media/", "Pictures/"))]
@@ -531,7 +531,7 @@ def test_an_svg_added_to_a_kept_docx_says_its_fallback_picture_is_empty():
         model.define_image(asset)
         model.insert_object(
             VisualObject(
-                ObjectBody("o1", "image", 80, 40, "plain-image", image=asset.id, imported=an_import(asset)),
+                ObjectBody("o1", "image", 80, 40, "plain-image", ref=asset.id, imported=an_import(asset)),
                 BlockAnchor("b1", 1),
             )
         )
@@ -553,7 +553,7 @@ def a_container_text(*, pictured: bool = True, svg: bool = True) -> TextModel:
         model.define_image(asset)
         image = asset.id
     model.define_rendering(RenderedDefinition("r1", "typst", "= Hi", image=image))
-    body = ObjectBody("c1", "rendered", 200, 100, "plain-image", rendered="r1")
+    body = ObjectBody("c1", "rendered", 200, 100, "plain-image", ref="r1")
     model.insert_object(VisualObject(body, BlockAnchor("b1", 3)))
     return model
 
@@ -600,7 +600,7 @@ def test_two_rendered_containers_of_one_picture_share_one_png():
 
     model.define_rendering(RenderedDefinition("r2", "typst", "= Hi", image=next(iter(model.images))))
     model.insert_object(
-        VisualObject(ObjectBody("c2", "rendered", 200, 100, "plain-image", rendered="r2"), BlockAnchor("b2", 1))
+        VisualObject(ObjectBody("c2", "rendered", 200, 100, "plain-image", ref="r2"), BlockAnchor("b2", 1))
     )
     data = text_to_odt(model, rasterise=draw)
     assert len([name for name in read_parts(data) if name.startswith("Pictures/")]) == 1
@@ -795,7 +795,7 @@ def test_a_picture_swapped_for_another_in_a_kept_docx_leaves_one_picture():
         found = only(model)
         other = a_picture(shade=9)
         model.define_image(other)
-        body = replace(found.body, image=other.id, imported=an_import(other))
+        body = replace(found.body, ref=other.id, imported=an_import(other))
         model.replace_object(VisualObject(body, found.anchor))
 
     original, data, back = patched_docx(edit)
@@ -833,7 +833,7 @@ def test_two_svg_pictures_of_one_asset_share_the_svg_part_of_a_docx():
     asset = an_svg_asset()
     model.define_image(asset)
     for number, offset in ((1, 1), (2, 5)):
-        body = ObjectBody(f"o{number}", "image", 80, 40, "plain-image", image=asset.id, imported=an_import(asset))
+        body = ObjectBody(f"o{number}", "image", 80, 40, "plain-image", ref=asset.id, imported=an_import(asset))
         model.insert_object(VisualObject(body, BlockAnchor("b1", offset)))
     parts = read_parts(text_to_docx(model))
     assert len([name for name in parts if name.endswith(".svg")]) == 1

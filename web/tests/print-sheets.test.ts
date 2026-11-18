@@ -84,7 +84,7 @@ const PAGE = { paper: 'a4', width: 595276, height: 841890, orientation: 'portrai
 const LANDSCAPE: SheetPrintData = { ...DEFAULT_SHEET_PRINT_DATA, orientation: 'landscape' }
 const style = (id: string, css: Record<string, string>, extra: object = {}) => ({ id, name: id, purpose: '', based_on: null, css, computed: css, resolved: css, to_name: false, kind: 'paragraph', ...extra })
 const OBJECT = (id: string, extra: object = {}) => ({
-  id, kind: 'image', w: 120, h: 80, style: 'plain-image', paragraph: null, shape: null, image: 'pic', imported: null, diagram: null, rendered: null, rotation: 0, snap: true, description: 'a picture', decorative: false,
+  id, kind: 'image', w: 120, h: 80, style: 'plain-image', paragraph: null, ref: 'pic', imported: null, rotation: 0, snap: true, description: 'a picture', decorative: false,
   anchor: { kind: 'cell', container: 's1', row: 2, col: 1 }, ...extra,
 })
 const CELLS: Record<string, [number, number, any]> = {
@@ -111,7 +111,7 @@ function server(link: FakeLink, extra: Record<string, (p: any) => any> = {}) {
     ],
     style_model: () => ({ ...STYLE_MODEL, facets: { box: ['background', 'border', 'padding'], text: ['font-family', 'font-size', 'font-weight', 'color'] } }),
     palette: () => ({ type: 'palette', roles: [], readings: [] }),
-    objects: (p: any) => ({ revision: 'main:3', sheet: p.sheet, objects: p.sheet === 's1' ? [OBJECT('o1'), OBJECT('o2', { kind: 'diagram', image: null, diagram: 'd1', w: 300, h: 200 })] : [] }),
+    objects: (p: any) => ({ revision: 'main:3', sheet: p.sheet, objects: p.sheet === 's1' ? [OBJECT('o1'), OBJECT('o2', { kind: 'diagram', ref: 'd1', w: 300, h: 200 })] : [] }),
     diagrams: () => [{ id: 'd1', format: 1, kind: 'bar' }],
     charts: () => [{ id: 'c1', name: 'Rent chart', spec_id: 'd1' }],
     names: () => ({ revision: 'main:3', names: [{ name: 'Rents', scope: null, kind: 'range', purpose: 'input', column_purposes: [], sheet: 's1', sheet_name: 'Budget', region: { sheet: 's1', row0: 1, col0: 1, row1: 1, col1: 1 } }] }),

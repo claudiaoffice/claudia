@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { pointer } from '~/lib/objects'
 import { usePointed } from '~/lib/pointed'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { cellLabel, columnName, inputOf, showFormatted, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
@@ -448,14 +449,16 @@ function beginContainerEdit(o: SheetObject | undefined) {
 async function commitContainer(o: SheetObject, text: string) {
   containerEditing.value = null
   viewport.value?.focus()
-  if (o.rendered) await props.session.setRenderingSource(o.rendered, text)
+  const rendering = pointer(o, 'rendered')
+  if (rendering) await props.session.setRenderingSource(rendering, text)
 }
 function cancelContainer() {
   containerEditing.value = null
   viewport.value?.focus()
 }
 function pictureSrc(o: SheetObject): string | null {
-  const asset = o.image ? state.images[o.image] : null
+  const image = pointer(o, 'image')
+  const asset = image ? state.images[image] : null
   return asset ? imageDataUrl(asset) : null
 }
 
@@ -1137,7 +1140,7 @@ defineExpose({
             />
             <RenderedFace v-else :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
           </template>
-          <ChartView v-else-if="o.kind === 'diagram' && o.diagram" :session="session" :diagram-id="o.diagram" :width="o.w" :height="o.h" />
+          <ChartView v-else-if="o.kind === 'diagram' && o.ref" :session="session" :diagram-id="o.ref" :width="o.w" :height="o.h" />
           <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="''" draggable="false" >
         </div>
 
