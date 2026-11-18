@@ -379,6 +379,12 @@ def _file_menu(*, title: str, prints: bool) -> Menu:
                             accelerators=("<Primary><Alt><Shift>x",),
                         ),
                         _page(
+                            "file.manage.redact",
+                            "Redact History…",
+                            "Take content out of the document's history and chat for good",
+                            accelerators=("<Primary><Shift>F8",),
+                        ),
+                        _page(
                             "file.manage.delete",
                             "Delete From Server…",
                             "Remove this document from the server for good",
@@ -568,7 +574,7 @@ def _format_menu(
         _page(
             "format.all-styles",
             "All Styles…",
-            "List, rename and tidy the styles of this document",
+            "List, rename, delete and hide the styles of this document",
             accelerators=("<Primary><Alt><Shift>a",),
         ),
         Submenu(

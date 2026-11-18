@@ -195,3 +195,12 @@ def test_what_cannot_be_redacted_is_a_command_error(people):
     for params in ({"revisions": ["main:99"]}, {}, {"revisions": ["nonsense"]}, {"parts": {"main:2": ["0"]}}):
         reply = ana.request("redaction_plan", params)
         assert reply["error"]["code"] in ("command_error", "bad_request"), params
+
+
+# --------------------------------------------------------------------------- the preview (D721)
+def test_the_history_says_which_steps_are_redacted_and_which_is_the_record(people):
+    _, ana, _ = people
+    ana.request("redact", {"revisions": ["main:2"], "dependents": []})
+    log = ana.request("log")["result"]
+    assert [(e["revision"], e["redacted"]) for e in log[:2]] == [("main:1", False), ("main:2", True)]
+    assert log[-1]["kind"] == "core.Redaction" and log[0]["kind"] == "list.Insert"

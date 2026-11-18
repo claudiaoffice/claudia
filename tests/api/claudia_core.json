@@ -1,5 +1,5 @@
 {
- "version": "0.35.0",
+ "version": "0.36.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -405,6 +405,9 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
+ },
+ "DELETE_HOWS": {
+  "value": "('assign', 'rebase')"
  },
  "DefineDiagram": {
   "class": [
@@ -1707,7 +1710,7 @@
   "class": [
    "object"
   ],
-  "init": "(targets: 'tuple[Revision, ...]', dependents: 'tuple[Revision, ...]', chat: 'tuple[int, ...]', imports: 'tuple[Revision, ...]', changes_now: 'bool', after: 'DocumentModel', replacements: 'Mapping[Revision, Command]', basis: 'tuple') -> None",
+  "init": "(targets: 'tuple[Revision, ...]', dependents: 'tuple[Revision, ...]', chat: 'tuple[int, ...]', imports: 'tuple[Revision, ...]', changes_now: 'bool', after: 'DocumentModel', replacements: 'Mapping[Revision, Command]', basis: 'tuple', regions: 'tuple[Region, ...]' = ()) -> None",
   "methods": {},
   "properties": [
    "revisions"
@@ -2538,6 +2541,7 @@
    "chain": "(self, style_id: 'str') -> 'list[StyleDef]'",
    "children": "(self, style_id: 'str') -> 'list[str]'",
    "computed": "(self, style_id: 'str') -> 'dict[str, str]'",
+   "fallback": "(self, style_id: 'str') -> 'StyleDef | None'",
    "from_data": "(items: 'Iterable[dict]') -> 'StyleBook'",
    "get": "(self, style_id: 'str') -> 'StyleDef'",
    "heading_level": "(self, style_id: 'str') -> 'int | None'",
@@ -2849,6 +2853,9 @@
  "asset_of": {
   "function": "(data: 'bytes | None') -> 'ImageAsset | None'"
  },
+ "assign_changes_look": {
+  "function": "(model: 'object', style_id: 'str', target: 'str') -> 'bool'"
+ },
  "blank_png": {
   "function": "(width: int, height: int) -> bytes"
  },
@@ -2991,7 +2998,7 @@
   "function": "(text: 'str') -> 'str'"
  },
  "plan_delete_style": {
-  "function": "(model: 'object', style_id: 'str', *, rebase_on: 'str | None' = None) -> 'Batch'"
+  "function": "(model: 'object', style_id: 'str', *, how: 'str' = 'assign', target: 'str | None' = None) -> 'Batch'"
  },
  "points_of": {
   "function": "(css: 'dict[str, str]', prop: 'str', pt_per_unit: 'float') -> 'float | None'"

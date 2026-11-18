@@ -4,7 +4,7 @@
 // caret as an overlay. Selections are translated between the page and the model (paragraph, offset).
 import { computed, nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, ref, watch } from 'vue'
 import { leaderCss } from '@claudia/layout'
-import { replayTints } from '~/lib/replay-tint'
+import { viewTints } from '~/lib/replay-tint'
 import { colorOf } from '~/lib/people'
 import type { Block, Pos } from '~/lib/blocks'
 import { headingNumberLayout, itemLayout } from '~/lib/list-layout'
@@ -30,7 +30,7 @@ const emit = defineEmits<{
 
 const state = props.session.state
 /** What a replay marks (D553): a paragraph as a whole, whichever stretch of it changed. */
-const tints = computed(() => replayTints(state.replay))
+const tints = computed(() => viewTints(state))
 const replayClass = (id: string) => {
   const tint = tints.value.block(id)
   return tint && `replay-${tint}`

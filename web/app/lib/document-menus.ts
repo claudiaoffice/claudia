@@ -28,6 +28,7 @@ export type FrameDialog =
   | 'export'
   | 'export-format'
   | 'delete'
+  | 'redact'
   | 'open'
   | 'open-file'
 
@@ -70,6 +71,7 @@ export function fileMenu(c: DocumentMenuContext): Menu {
   const { t } = c
   const owner = c.role === 'owner'
   const viewer = c.role === 'viewer'
+  const redacts = owner || c.role === 'editor' // D727
   return {
     label: t('File'),
     items: [
@@ -92,6 +94,7 @@ export function fileMenu(c: DocumentMenuContext): Menu {
           { id: 'file.manage.accept-owner', label: t('Accept Ownership…'), action: () => c.open('accept-owner'), disabled: viewer },
           { id: 'file.manage.leave', label: t('Leave Document…'), action: () => c.open('leave') },
           { id: 'file.manage.export', label: t('Export…'), action: () => c.open('export-format') },
+          { id: 'file.manage.redact', label: t('Redact History…'), action: () => c.open('redact'), disabled: !redacts },
           { id: 'file.manage.delete', label: t('Delete From Server…'), action: () => c.open('delete'), disabled: !owner },
         ],
       },

@@ -194,6 +194,7 @@ def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: mani
         "file.manage.accept-owner",
         "file.manage.leave",
         "file.manage.export",
+        "file.manage.redact",
         "file.manage.delete",
     ]
     assert [a.label for a in manage.items] == [
@@ -203,6 +204,7 @@ def test_file_manage_offers_share_assign_owner_leave_export_and_delete(app: mani
         "Accept Ownership…",
         "Leave Document…",
         "Export…",
+        "Redact History…",
         "Delete From Server…",
     ]
 

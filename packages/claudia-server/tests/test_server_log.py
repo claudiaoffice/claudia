@@ -17,7 +17,7 @@ def test_the_log_lists_the_visible_history_with_sentences(doc):
     entries = call(doc, "log")
     assert [e["revision"] for e in entries] == ["main:1", "main:2"]
     assert entries[1]["author"] == "ben" and entries[1]["summary"] == "Insert 2" and entries[1]["origin"] == "do"
-    assert set(entries[0]) == {"revision", "author", "origin", "time", "label", "summary", "of"}
+    assert set(entries[0]) == {"revision", "author", "origin", "time", "label", "summary", "of", "kind", "redacted"}
 
 
 def test_undo_entries_say_what_they_reverse(doc):

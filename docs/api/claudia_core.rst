@@ -412,7 +412,10 @@ reaches a browser is always literal.
 .. autodata:: claudia_core.NO_NUMBERING
 .. autodata:: claudia_core.styles.ORIGINS
    :no-value:
+.. autodata:: claudia_core.styles.DELETE_HOWS
+   :no-value:
 .. autofunction:: claudia_core.plan_delete_style
+.. autofunction:: claudia_core.assign_changes_look
 .. autofunction:: claudia_core.held_look
 
 Facets, kinds and slots

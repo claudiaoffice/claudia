@@ -20,7 +20,7 @@ const emit = defineEmits<{ close: []; styles: [] }>()
 
 const uses = computed(() => props.host.uses())
 const editor = reactive(new StyleEditor(props.host)) as StyleEditor
-const gallery = computed(() => galleryFor(props.host.styles, props.host.slot, props.host.model))
+const gallery = computed(() => galleryFor(props.host.styles, props.host.slot, props.host.model, props.host.current?.id))
 const title = computed(() => props.host.title ?? nounName(props.host.noun))
 
 // "Only their box" is a choice for this one change, not a setting: the next popover starts on the whole cell again.

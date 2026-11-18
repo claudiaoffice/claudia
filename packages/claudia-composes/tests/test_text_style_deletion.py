@@ -11,7 +11,7 @@ def test_paragraphs_with_a_deleted_style_keep_their_look_through_a_stand_in_and_
     look = d.model.styles.computed("note")
     before = d.model.styles.to_data()
 
-    d.execute(plan_delete_style(d.model, "note"), author="ann")
+    d.execute(plan_delete_style(d.model, "note", how="rebase", target="body"), author="ann")
 
     stand_in = d.model.block("b1").style
     assert "note" not in d.model.styles and stand_in != "note"
@@ -27,3 +27,12 @@ def test_a_built_in_style_of_a_text_can_only_be_hidden():
     with pytest.raises(ValueError, match="built-in style and can only be hidden"):
         plan_delete_style(model, "quote")
     assert all(style.origin == "builtin" for style in model.styles)
+
+
+def test_assigning_body_text_puts_paragraphs_under_it():
+    d = Document(TextModel(), store=MemoryStore())
+    d.execute(CreateStyle(StyleDef("note", "Note", "a small note", "body", {"font-size": "9pt"})), author="ann")
+    d.execute(SetStyle("b1", "note"), author="ann")
+    d.execute(plan_delete_style(d.model, "note", how="assign", target="body"), author="ann")
+    assert d.model.block("b1").style == "body"
+    assert not any(style.to_name for style in d.model.styles)

@@ -156,6 +156,13 @@ export interface SearchScope {
 export type { SearchLeave } from './search'
 
 export class Session extends BaseSession<State> {
+  /** A range like `A1:B5` (or one cell) on the sheet on show, as the part of an imported workbook to blank (D723). */
+  override redactionRangePart(range: string): string | null {
+    const text = range.trim().toUpperCase().replace(/\$/g, '')
+    if (!this.state.activeSheet || !/^[A-Z]{1,3}[1-9]\d*(:[A-Z]{1,3}[1-9]\d*)?$/.test(text)) return null
+    return `${this.state.activeSheet}!${text}`
+  }
+
   private loaded = new Set<string>()
   private inflight = new Map<string, Promise<void>>()
   private sizesLoaded = new Set<string>()

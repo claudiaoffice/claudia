@@ -3,15 +3,31 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ChatInput from './ChatInput.vue'
 import { clock, colorOf, inkOn } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
-import type { BaseSession } from '~/lib/base-session'
+import type { BaseSession, ChatMessage, Entry } from '~/lib/base-session'
 import type { AiMode } from '~/lib/ai-mode'
 import { rowKey } from '~/lib/base-session'
 import { keyStep, WheelStepper, wheelDelta, type Filter } from '~/lib/replay'
 import { tintsOf } from '~/lib/replay-tint'
 import { ChatPick, POINTER_EVENTS, type PointerKind } from '~/lib/chat-pick'
 import { hashAt, insertTag, matches, splitTags, withCurrentNames, withTag, type Thing, type ThingKind } from '~/lib/tags'
+import {
+  REDACTION_KIND,
+  mayRedact,
+  mayRedactEntry,
+  mayRedactMessage,
+  nothingPicked,
+  pickedCount,
+  spokenFiller,
+  togglingEntry,
+  togglingMessage,
+  type Picked,
+} from '~/lib/redaction'
+import ContextMenu from './ContextMenu.vue'
+import type { MenuItem } from './MenuBar.vue'
 
 const props = defineProps<{ session: BaseSession }>()
+/** `redact`: the person asked to redact what is picked (E3.14); the window opens the dialog for it. */
+const emit = defineEmits<{ redact: [picked: Picked] }>()
 const state = props.session.state
 // `t` stays this bare (never `i18n.t`): `scripts/extract_i18n.py`'s own regex only recognises an unqualified
 // `t(...)` call (`obj.t(...)` is deliberately excluded, the same way `format(...)` is) -- see its docstring. Only
@@ -153,7 +169,89 @@ function startReplay() {
   tab.value = 'history'
   void props.session.startReplay()
 }
-defineExpose({ ask, openHelp, replay: startReplay, reference: referenceThing })
+defineExpose({ ask, openHelp, replay: startReplay, reference: referenceThing, pickToRedact, clearRedactionPick })
+
+// ------------------------------------------------------------------------------ picking what to redact (E3.14, D727)
+const me = computed(() => ({ user: state.me.user, role: state.me.role }))
+const redacts = computed(() => mayRedact(me.value) && !state.replay && !state.preview)
+/** Pick boxes on every row: File ▸ Manage ▸ Redact History…, or a Ctrl+click on a row. */
+const picking = ref(false)
+const picked = ref<Picked>(nothingPicked())
+const pickCount = computed(() => pickedCount(picked.value))
+const menu = ref<{ x: number; y: number } | null>(null)
+
+const isPickedEntry = (revision: string) => picked.value.revisions.includes(revision)
+const isPickedMessage = (number: number) => picked.value.chat.includes(number)
+const canPickEntry = (entry: Entry) => redacts.value && mayRedactEntry(entry, me.value)
+const canPickMessage = (message: ChatMessage) => redacts.value && mayRedactMessage(message, me.value)
+const notYours = computed(() => (state.me.role === 'owner' ? t('There is nothing in this to redact.') : t('You can redact only your own work.')))
+
+/** File ▸ Manage ▸ Redact History…: the history tab, with a pick box on every row. */
+function pickToRedact() {
+  tab.value = 'history'
+  picking.value = true
+}
+/** After a redaction, or when the person gives up picking. */
+function clearRedactionPick() {
+  picked.value = nothingPicked()
+  picking.value = false
+  menu.value = null
+}
+function pickEntry(entry: Entry) {
+  if (canPickEntry(entry)) picked.value = togglingEntry(picked.value, entry.revision)
+}
+function pickMessage(message: ChatMessage) {
+  if (canPickMessage(message)) picked.value = togglingMessage(picked.value, message.number)
+}
+/** Ctrl+click (Cmd+click) picks a row and shows the pick boxes; a plain click in a replay still visits. */
+function onEntryClick(event: MouseEvent, entry: Entry) {
+  if ((event.ctrlKey || event.metaKey) && canPickEntry(entry)) {
+    event.preventDefault()
+    picking.value = true
+    pickEntry(entry)
+  } else if (replay.value) visit('c:' + entry.revision)
+}
+function onMessageClick(event: MouseEvent, message: ChatMessage) {
+  if (!(event.ctrlKey || event.metaKey) || !canPickMessage(message)) return
+  event.preventDefault()
+  picking.value = true
+  pickMessage(message)
+}
+/** The right-click menu of a row: the row joins the pick, and "Redact n items…" is offered. */
+function onEntryMenu(event: MouseEvent, entry: Entry) {
+  if (!canPickEntry(entry)) return
+  event.preventDefault()
+  if (!isPickedEntry(entry.revision)) pickEntry(entry)
+  menu.value = { x: event.clientX, y: event.clientY }
+}
+function onMessageMenu(event: MouseEvent, message: ChatMessage) {
+  if (!canPickMessage(message)) return
+  event.preventDefault()
+  if (!isPickedMessage(message.number)) pickMessage(message)
+  menu.value = { x: event.clientX, y: event.clientY }
+}
+const menuItems = computed<MenuItem[]>(() => [
+  { label: t('Redact… ({n} picked)', { n: pickCount.value }), hint: 'Shift+Del', action: askToRedact },
+  { label: t('Pick more…'), action: () => (picking.value = true) },
+  { label: '', separator: true },
+  { label: t('Clear the pick'), action: clearRedactionPick },
+])
+function askToRedact() {
+  menu.value = null
+  if (pickCount.value) emit('redact', picked.value)
+}
+/** Shift+Delete anywhere in History & Chat redacts what is picked. */
+function onPickKey(event: KeyboardEvent) {
+  if (event.key !== 'Delete' || !event.shiftKey || !pickCount.value) return
+  if ((event.target as HTMLElement | null)?.closest('textarea, input:not([type=checkbox])')) return
+  event.preventDefault()
+  askToRedact()
+}
+const isRecord = (entry: Entry) => entry.kind === REDACTION_KIND
+/** What a redacted row says to a screen reader: who and when, and the filler as lengths. */
+function redactedLabel(entry: Entry): string {
+  return t('Redacted: {what}, by {who} at {time}', { what: spokenFiller(entry.summary, t), who: entry.author ?? '?', time: clock(entry.time) })
+}
 
 // ------------------------------------------------------------------------------ tags: `#` in the chat (E5.20, D551)
 const caret = ref(0)
@@ -369,7 +467,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
 </script>
 
 <template>
-  <aside class="panel" :class="{ replaying: replay }" :aria-label="t('document panel')" @keydown="onKey">
+  <aside class="panel" :class="{ replaying: replay }" :aria-label="t('document panel')" @keydown="onKey($event), onPickKey($event)">
     <slot name="top" />
 
     <!-- How the AI treats my requests here (D262): directly above the tabs, so it reads as a setting of the whole
@@ -432,19 +530,36 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
         <span v-if="replay.newer" class="newer">{{ t('{n} newer changes by others', { n: replay.newer }) }}</span>
         <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</p>
       </div>
+      <div v-if="redacts && (picking || pickCount)" class="pickBar" data-testid="redaction-pick">
+        <span role="status">{{ pickCount ? t('Picked to redact: {n}', { n: pickCount }) : t('Pick the changes and messages to redact.') }}</span>
+        <button type="button" class="redactBtn" :disabled="!pickCount" :title="t('Shift+Del')" @click="askToRedact">{{ t('Redact…') }}</button>
+        <button type="button" class="cancelPick" @click="clearRedactionPick">{{ t('Cancel') }}</button>
+      </div>
       <ol ref="history" class="log mono" :aria-label="t('everything that was done to this document')">
         <li v-if="!rows.length" class="empty">{{ state.app === 'composes' ? t('Nothing yet. Start writing.') : state.app === 'creates' ? t('Nothing yet. Put a text box on the slide.') : t('Nothing yet. Type into a cell.') }}</li>
         <template v-for="(row, i) in rows" :key="i">
           <li
             v-if="row.kind === 'entry'"
             class="entry"
-            :class="{ undo: row.entry.origin !== 'do', current: isCurrent('c:' + row.entry.revision), later: afterPlayhead(row.entry.revision), skipped: replay && !visited.has('c:' + row.entry.revision) }"
+            :class="{ undo: row.entry.origin !== 'do', current: isCurrent('c:' + row.entry.revision), later: afterPlayhead(row.entry.revision), skipped: replay && !visited.has('c:' + row.entry.revision), redacted: row.entry.redacted, record: isRecord(row.entry), picked: isPickedEntry(row.entry.revision), picking: redacts && picking }"
             :data-row="'c:' + row.entry.revision"
+            @contextmenu="onEntryMenu($event, row.entry)"
           >
-            <component :is="replay ? 'button' : 'div'" class="entryRow" :type="replay ? 'button' : undefined" :aria-current="isCurrent('c:' + row.entry.revision) ? 'step' : undefined" @click="replay && visit('c:' + row.entry.revision)">
-              <span class="dot" :style="{ background: colorOf(state, row.entry.author ?? '') }" />
+            <input
+              v-if="redacts && picking"
+              type="checkbox"
+              class="pick"
+              :checked="isPickedEntry(row.entry.revision)"
+              :disabled="!canPickEntry(row.entry)"
+              :title="canPickEntry(row.entry) ? t('Pick for redaction') : notYours"
+              :aria-label="t('Pick for redaction: {what}', { what: row.entry.redacted ? redactedLabel(row.entry) : row.entry.summary })"
+              @change="pickEntry(row.entry)"
+            >
+            <component :is="replay ? 'button' : 'div'" class="entryRow" :type="replay ? 'button' : undefined" :aria-current="isCurrent('c:' + row.entry.revision) ? 'step' : undefined" :aria-label="row.entry.redacted ? redactedLabel(row.entry) : undefined" @click="onEntryClick($event, row.entry)">
+              <span v-if="isRecord(row.entry)" class="eraser" aria-hidden="true"><svg viewBox="0 0 12 12" width="10" height="10"><path d="M1 8.5 6 3.5l4 4-2.5 2.5h-4z M3.5 6l4 4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" /></svg></span>
+              <span v-else class="dot" :class="{ hatched: row.entry.redacted }" :style="row.entry.redacted ? undefined : { background: colorOf(state, row.entry.author ?? '') }" />
               <span class="who">{{ row.entry.author ?? '?' }}</span>
-              <span class="what" :title="row.entry.label">
+              <span class="what" :title="row.entry.redacted ? t('Redacted: the content of this change was taken away.') : row.entry.label">
                 <em v-if="row.entry.origin !== 'do'">{{ row.entry.origin }} · </em>{{ row.entry.summary }}
               </span>
               <time>{{ clock(row.entry.time) }}</time>
@@ -487,16 +602,30 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
           v-for="m in state.chat"
           :key="m.number"
           class="msg"
-          :class="{ ai: isAi(m.author), mine: m.author === state.me.user, current: isCurrent('m:' + m.number), skipped: replay && !visited.has('m:' + m.number) }"
+          :class="{ ai: isAi(m.author), mine: m.author === state.me.user, current: isCurrent('m:' + m.number), skipped: replay && !visited.has('m:' + m.number), redacted: m.redacted, picked: isPickedMessage(m.number) }"
           :data-row="'m:' + m.number"
+          @contextmenu="onMessageMenu($event, m)"
+          @click="onMessageClick($event, m)"
         >
           <header>
+            <input
+              v-if="redacts && picking"
+              type="checkbox"
+              class="pick"
+              :checked="isPickedMessage(m.number)"
+              :disabled="!canPickMessage(m)"
+              :title="canPickMessage(m) ? t('Pick for redaction') : notYours"
+              :aria-label="t('Pick for redaction: message by {who} at {time}', { who: m.author, time: clock(m.time) })"
+              @click.stop
+              @change="pickMessage(m)"
+            >
             <span class="author" :style="{ background: colorOf(state, m.author), color: inkOn(colorOf(state, m.author)) }">{{ m.author }}</span>
             <span v-if="m.to" class="to">→ {{ m.to }}</span>
             <time>{{ clock(m.time) }}</time>
             <button v-if="replay" type="button" class="visit" :aria-current="isCurrent('m:' + m.number) ? 'step' : undefined" :aria-label="t('Show the document as it was at this message')" @click="visit('m:' + m.number)">{{ isCurrent('m:' + m.number) ? t('▶ here') : t('▷ go here') }}</button>
           </header>
-          <p><template v-for="(seg, k) in segmentsOf(m.text)" :key="k"><template v-if="seg.type === 'text'">{{ seg.text }}</template><button v-else type="button" class="tag" :class="{ gone: session.isGone(seg.id) }" :title="session.isGone(seg.id) ? t('Deleted. Show the last moment it was there.') : t('Go to this')" @click="goTo(seg.id)">#{{ tagName(seg.id, seg.name) }}</button></template></p>
+          <p v-if="m.redacted" class="gone">{{ t('Message redacted') }}</p>
+          <p v-else><template v-for="(seg, k) in segmentsOf(m.text)" :key="k"><template v-if="seg.type === 'text'">{{ seg.text }}</template><button v-else type="button" class="tag" :class="{ gone: session.isGone(seg.id) }" :title="session.isGone(seg.id) ? t('Deleted. Show the last moment it was there.') : t('Go to this')" @click="goTo(seg.id)">#{{ tagName(seg.id, seg.name) }}</button></template></p>
         </li>
         <li v-if="others.length" class="typing">
           <span class="author" :style="{ background: colorOf(state, others[0]!), color: inkOn(colorOf(state, others[0]!)) }">{{ others[0] }}</span>
@@ -557,6 +686,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     </div>
 
     <HelpPanel v-show="tab === 'help'" ref="helpPanel" class="helpTab" :session="session" />
+    <ContextMenu v-if="menu" :x="menu.x" :y="menu.y" :items="menuItems" :label="t('Redaction menu')" :width="230" @close="menu = null" />
   </aside>
 </template>
 
@@ -797,6 +927,80 @@ time {
 }
 .mark .suggest:hover {
   background: rgb(242 160 87 / 14%);
+}
+
+/* -------------------------------------------------------------- picking what to redact, and what was (E3.14) */
+.pickBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  background: rgb(255 255 255 / 6%);
+  font-size: 11.5px;
+}
+.pickBar .redactBtn {
+  margin-left: auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--rose);
+  color: #fff;
+  font: 600 11px var(--font-ui);
+  cursor: pointer;
+}
+.pickBar .redactBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pickBar .cancelPick {
+  border: 0;
+  background: none;
+  color: rgb(230 224 245 / 80%);
+  font: 11px var(--font-ui);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.entry.picking {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  align-items: baseline;
+  gap: 4px;
+}
+.pick {
+  margin: 0;
+  accent-color: var(--iris);
+}
+/* What is picked: a bar at the left as well as the tint, not a colour alone (BITV). */
+.entry.picked,
+.msg.picked {
+  box-shadow: inset 3px 0 0 var(--iris);
+  background: rgb(91 75 196 / 22%);
+}
+.entry.redacted .what,
+.entry.redacted .who {
+  color: rgb(230 224 245 / 55%);
+}
+.dot.hatched {
+  background: repeating-linear-gradient(45deg, rgb(230 224 245 / 70%) 0 1.5px, transparent 1.5px 3.5px);
+  box-shadow: 0 0 0 1px rgb(230 224 245 / 45%);
+}
+.entry.record {
+  color: rgb(230 224 245 / 85%);
+}
+.eraser {
+  display: inline-flex;
+  align-self: center;
+  color: rgb(230 224 245 / 75%);
+}
+.msg.redacted p.gone {
+  font-style: italic;
+  color: rgb(230 224 245 / 60%);
+  border: 1px dashed rgb(230 224 245 / 30%);
+  border-radius: 8px;
+  padding: 4px 8px;
 }
 
 /* -------------------------------------------------------------- the open suggestion to restore or switch (E3.7) */

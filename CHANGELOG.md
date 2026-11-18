@@ -27,11 +27,15 @@ While the major version is 0, a minor version may break the API; every break is 
   they said that another kind's field was set.
 
 ### Added
-- Deleting and hiding styles (E1.10, D226): `plan_delete_style(model, style_id, *, rebase_on=None)` plans a deletion
-  that never changes a look (*keep their look*, or *re-base on* another style of the same kind) as one `Batch` that is
-  undone as one; `held_look` says what a style must set itself to look the same under another parent, `INITIAL_CSS`
-  gives the value of "nothing" for the properties where it is the same in every app. New commands `RebaseStyle` (kind
-  `core.RebaseStyle`) and `SetStyleHidden` (`core.SetStyleHidden`).
+- Deleting and hiding styles (E1.10, D226, D785): `plan_delete_style(model, style_id, *, how="assign", target=None)`
+  plans a deletion as one `Batch` that is undone as one. `how` is one of `DELETE_HOWS`: `"assign"` (what has the style
+  and what is based on it goes to `target`, a style of the same kind; the one way that changes looks, which
+  `assign_changes_look` says beforehand; `StyleBook.fallback` is the plain style of the kind a dialog offers first) or
+  `"rebase"` (everything keeps its look, built on `target`; what had the style itself goes to a stand-in). `target`
+  may be left out only for a style nothing has and nothing is based on. `held_look` says what a style must set itself
+  to look the same under another parent, `INITIAL_CSS` gives the value of "nothing" for the properties where it is
+  the same in every app. New commands `RebaseStyle` (kind `core.RebaseStyle`) and `SetStyleHidden`
+  (`core.SetStyleHidden`).
 - `StyleDef.origin` (`"document"`, `"builtin"` or `"template"`, `ORIGINS`) and `StyleDef.hidden`; only a document
   style can be deleted, the others only hidden. Both are written only when they are not the default, so a style
   without them writes what it wrote before. `StyleBook.set_hidden`, `rebase` and `next_after`; `StyleBook.add` takes
@@ -49,6 +53,18 @@ While the major version is 0, a minor version may break the API; every break is 
 ### Changed
 - `StyleBook.to_data` always writes a parent before its children, whatever order styles were re-based into.
 - The undo of `RemoveStyle` puts the style back where it was in the book, not last.
+
+## [0.36.0] - 2026-11-18
+
+The redaction screens (E3.14, D729).
+
+### Added
+- `RedactionPlan.regions`: the places on the line people see that the blanked steps touch, for a preview to mark
+  (empty when nothing people see changes).
+
+### Changed
+- `Document.plan_redaction`: a later step whose blank of the same shape still does not apply becomes a no-op tombstone
+  instead of stopping the redaction (D729). The last resort is a history that does not replay before any blanked step.
 
 ## [0.35.0] - 2026-11-17
 

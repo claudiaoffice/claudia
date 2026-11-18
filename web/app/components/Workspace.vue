@@ -902,7 +902,7 @@ function styleItems() {
     list: noLists(t('Cells hold no lists')),
   }
   if (body) {
-    const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel)
+    const offered = galleryFor(styleHost.styles, styleHost.slot, state.styleModel, styleHost.current?.id)
     return formatItems(t, {
       ...common,
       groups: [offered.own, offered.bundles],
@@ -913,7 +913,7 @@ function styleItems() {
       look: { ...look, disabled: false },
     })
   }
-  const offered = galleryFor(cellHost.styles, cellHost.slot, state.styleModel)
+  const offered = galleryFor(cellHost.styles, cellHost.slot, state.styleModel, cellHost.current?.id)
   const [r0, c0, r1, c1] = sheetArea([b.value.r0, b.value.c0, b.value.r1, b.value.c1], SIZE)
   const cells = (r1 - r0 + 1) * (c1 - c0 + 1)
   const some = !!state.activeSheet && !activeChart.value

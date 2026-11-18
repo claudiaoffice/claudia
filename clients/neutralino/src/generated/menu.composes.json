@@ -170,6 +170,18 @@
               },
               {
                 "accelerators": [
+                  "<Primary><Shift>F8"
+                ],
+                "checkable": false,
+                "id": "file.manage.redact",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Redact History\u2026",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
                   "<Primary><Alt><Shift>r"
                 ],
                 "checkable": false,

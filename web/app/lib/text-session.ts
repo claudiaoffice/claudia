@@ -31,6 +31,7 @@ import type { LinkLike, Region, WireData } from './protocol'
 import type { ListInfo, SchemeInfo } from './numbering'
 import { FIELD_CHAR, fieldIndex, plain, type ReferenceTarget, type RefField, type Show, type Shown } from './references'
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
+import type { Deleted, DeleteHow } from './style-deletion'
 import { headingLevel, styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
 import { isBoxId, oneLine, type TableEvent, type TableInfo, withEvent } from './tables'
 
@@ -1045,6 +1046,17 @@ export class TextSession extends BaseSession<TextState> {
   replacePalette(roles: unknown[]): Promise<boolean> {
     if (this.denied()) return Promise.resolve(false)
     return this.act(async () => (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false)
+  }
+
+  /** A deletion or a hiding goes after whatever was typed before it, like every change that is not typing. */
+  override deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(() => super.deleteStyle(style, how, target))
+  }
+
+  override hideStyle(style: string, hidden: boolean): Promise<boolean> {
+    if (this.denied()) return Promise.resolve(false)
+    return this.act(() => super.hideStyle(style, hidden))
   }
 
   renameStyle(style: string, name: string): Promise<boolean> {

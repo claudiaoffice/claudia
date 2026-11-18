@@ -4,6 +4,13 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (E3.14)
+- File ▸ Manage ▸ Redact History… (Ctrl+Shift+F8), in every app: owners and editors pick what to redact in History
+  & Chat (D727); viewers see it off.
+
+### Changed (E1.10, D783, D786)
+- Format ▸ All Styles… says in its description that styles can be deleted and hidden there. No new entry and no key: the page's own dialog does the work (D301), in the macOS and Windows client as well.
+
 ### Added (E9.32, D1208, D1213)
 - Claudia Composes: Insert ▸ Table… (Ctrl+Shift+F) and, in Edit, Row ▸ and Column ▸ (the keys computes has), Sort ▸
   Ascending (Ctrl+Shift+X) and Descending (Ctrl+Shift+Y), Merge Cells (Ctrl+Shift+G), Split Cell (Ctrl+Shift+H) and Table
@@ -19,7 +26,7 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ### Added (E9.22)
 - Format ▸ List ▸ Number Headings (creates: Number All Slide Titles, Ctrl+Alt+Shift+B, ticked while they are numbered)
-  and All Numbering… (Ctrl+Alt+Shift+J). The mock-up's keys were taken: Ctrl+Alt+Shift+H is Present from This Slide's,
+  and All Numbering… (Ctrl+Alt+Shift+J). The mock-up's keys were taken: Ctrl+Shift+F8 is Present from This Slide's,
   and Ctrl+Alt+E is AltGr+E (€) on Windows.
 
 ### Added (D1024)
@@ -110,7 +117,7 @@ First slice of the native Linux client (epic 5).
 
 ### Added (presenter mode, E10.2)
 - Creates' menu manifest: View ▸ Present from the First Slide (`F5`, `Ctrl+Alt+P`), Present from This Slide
-  (`Shift+F5`, `Ctrl+Alt+Shift+H`), Speaker Notes (`Ctrl+Alt+V`, checkable); Edit ▸ Plan the Time of This Slide…
+  (`Shift+F5`, `Ctrl+Shift+F8`), Speaker Notes (`Ctrl+Alt+V`, checkable); Edit ▸ Plan the Time of This Slide…
   (`Ctrl+Alt+Shift+T`). Page actions, no contract change; the German texts are in the catalog. The two-window show and
   fullscreen from the shell (a `create` handler for new windows) wait for the spike's runs (D345).
 

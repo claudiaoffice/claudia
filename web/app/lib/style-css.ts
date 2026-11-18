@@ -18,6 +18,11 @@ export interface StyleView {
   resolved: Css
   /** Made by deviating and still carrying the name it was given: it invites a name (E9.7). */
   to_name: boolean
+  /** Where the style comes from: absent for the document's own, which are the only ones that can be deleted; a built-in or
+   * template style can only be hidden (D780). */
+  origin?: 'builtin' | 'template'
+  /** Left out of the menus a style is picked from; it still looks as it does wherever it is used (D780). */
+  hidden?: boolean
   /** Which facets the style may hold, and so which slots it fits: `paragraph`, `box` or `outline` (D305, D312). */
   kind: string
   /** The heading level the style gives a paragraph, its parents taken in: 0 the title, 1 to 9 a section, `null` none

@@ -9,6 +9,7 @@ import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import type { Thing } from '~/lib/tags'
 import type { FrameDialog } from '~/lib/document-menus'
+import type { Picked } from '~/lib/redaction'
 import { applyAction, collectStates } from '~/lib/menu-dispatch'
 import { cycleRegions, windowRegions } from '~/lib/regions'
 import { chordLabel, installWindowShortcuts, menuShortcuts, regionShortcuts, sharedShortcuts, type ShortcutDef } from '~/lib/shortcuts'
@@ -39,7 +40,16 @@ const emit = defineEmits<{ leave: [opts?: { startFresh?: boolean }]; saved: [] }
 const state = props.session.state
 const panelOpen = ref(true)
 const dialog = ref<FrameDialog | null>(null)
-const panel = ref<{ ask: (text?: string) => void; openHelp: (mode?: 'how-to' | 'docs', topic?: string) => void; replay: () => void; reference: (thing: Thing) => void } | null>(null)
+const panel = ref<{
+  ask: (text?: string) => void
+  openHelp: (mode?: 'how-to' | 'docs', topic?: string) => void
+  replay: () => void
+  reference: (thing: Thing) => void
+  pickToRedact: () => void
+  clearRedactionPick: () => void
+} | null>(null)
+/** What the person picked to redact, while the dialog for it is open (E3.14). */
+const redaction = ref<Picked | null>(null)
 const readonly = computed(() => lookOnly(state))
 const frame = ref<HTMLElement | null>(null)
 
@@ -60,7 +70,23 @@ async function checkpoint(label: string | null) {
  * still being typed is sent first. */
 async function openDialog(name: FrameDialog) {
   if (name === 'export' || name === 'export-format') await props.session.flush()
+  if (name === 'redact') return pickToRedact()
   dialog.value = name
+}
+
+/** File ▸ Manage ▸ Redact History…: the panel opens with a pick box on every row it may redact (E3.14, D727); the
+ * dialog opens once something is picked. */
+function pickToRedact() {
+  panelOpen.value = true
+  setTimeout(() => panel.value?.pickToRedact(), 0)
+}
+async function redact(picked: Picked) {
+  await props.session.flush() // what is still being typed belongs to the history that is planned
+  redaction.value = picked
+}
+function redacted() {
+  redaction.value = null
+  panel.value?.clearRedactionPick()
 }
 
 /** File ▸ Open… opened another document: the window shows it in place of this one (`app.vue`). */
@@ -155,12 +181,13 @@ onBeforeUnmount(() => clearTimeout(timer))
 <template>
   <div ref="frame" class="frame" :class="{ wide: !panelOpen }">
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
+    <div v-if="state.preview" class="banner preview" role="status" data-testid="redaction-preview">{{ t('Preview of the redaction: the marked places as they would be. Nothing has changed yet.') }}</div>
     <div v-if="state.status === 'reconnecting'" class="banner" role="alert">{{ t('The connection was lost. Trying to get back… what you do now is not saved.') }}</div>
     <MenuBar data-region="menus" :class="{ hidden: shell.nativeMenu }" :menus="menus" />
     <slot name="toolbar" />
     <div class="main" :class="{ wide: !panelOpen }">
       <slot />
-      <SidePanel v-show="panelOpen" ref="panel" data-region="panel" :session="session">
+      <SidePanel v-show="panelOpen" ref="panel" data-region="panel" :session="session" @redact="redact">
         <template #top><slot name="side-top" /></template>
       </SidePanel>
     </div>
@@ -187,6 +214,7 @@ onBeforeUnmount(() => clearTimeout(timer))
     <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
     <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
     <ExportFormatDialog v-if="dialog === 'export-format'" :session="session" :formats="exportFormats" @close="dialog = null" />
+    <RedactionDialog v-if="redaction" :session="session" :picked="redaction" @close="redaction = null" @done="redacted" />
     <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />
     <ShortcutsDialog
       v-if="dialog === 'shortcuts'"
@@ -244,6 +272,11 @@ onBeforeUnmount(() => clearTimeout(timer))
   color: var(--ink);
   padding: 6px 16px;
   font-weight: 500;
+}
+/* The preview of a redaction (D721): the colour of the marks, and words that say nothing has changed yet. */
+.banner.preview {
+  background: var(--iris);
+  color: #fff;
 }
 .toast {
   position: absolute;

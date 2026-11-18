@@ -56,6 +56,7 @@ export const KEYS: Readonly<Record<string, ActionKey>> = {
   'file.manage.delete': { chord: { key: 'r', code: 'KeyR', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.manage.export': { chord: { key: 'x', code: 'KeyX', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.manage.leave': { chord: { key: 'l', code: 'KeyL', ctrl: true, shift: true, alt: true }, owner: 'page' },
+  'file.manage.redact': { chord: { key: 'F8', ctrl: true, shift: true }, owner: 'page' },
   'file.manage.share': { chord: { key: 's', code: 'KeyS', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'file.new': { chord: { key: 'n', code: 'KeyN', ctrl: true, alt: true }, owner: 'page' },
   'file.open': { chord: { key: 'o', code: 'KeyO', ctrl: true }, owner: 'page' },

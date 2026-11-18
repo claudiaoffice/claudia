@@ -139,6 +139,8 @@ export const LIVE_REQUESTS: ReadonlySet<string> = new Set([
   'ping',
   'peek_revision',
   'thing_last_seen',
+  // working a redaction out changes nothing (D721)
+  'redaction_plan',
   'changes_since',
   // a suggestion changes nothing until everybody has agreed: it may be made, answered and taken back from the past
   'propose_restore_step',
@@ -179,20 +181,20 @@ export const VIEW_READS: ReadonlySet<string> = new Set([
   'suggestions',
 ])
 
-/** The link of a session that is looking at the past: reads of the document are answered as of one step, the
- * conversation stays live, and anything that would change the document is refused before it leaves the page. */
-export class PastLink implements LinkLike {
-  constructor(
-    private inner: LinkLike,
-    private revision: () => string,
-  ) {}
+/** A link whose reads of the document are answered for a document other than the live one, while the conversation
+ * stays live and anything that would change the document is refused before it leaves the page. */
+abstract class LookingLink implements LinkLike {
+  constructor(private inner: LinkLike) {}
+
+  /** The request a view's read becomes. */
+  protected abstract looked(method: string, params: Record<string, unknown>): [string, Record<string, unknown>]
 
   connect() {
     return this.inner.connect()
   }
   async request<T = WireData>(method: string, params: Record<string, unknown> = {}): Promise<T> {
     if (LIVE_REQUESTS.has(method)) return this.inner.request<T>(method, params)
-    if (VIEW_READS.has(method)) return this.inner.request<T>('as_of', { revision: this.revision(), method, params })
+    if (VIEW_READS.has(method)) return this.inner.request<T>(...this.looked(method, params))
     throw new ProtocolError('forbidden', method)
   }
   onEvent(handler: EventHandler) {
@@ -206,14 +208,42 @@ export class PastLink implements LinkLike {
   }
 }
 
-/** Can this person only look at the document right now: they are a viewer, or they are looking at the past. */
-export function lookOnly(state: { me: { role: string }; replay?: unknown }): boolean {
-  return state.me.role === 'viewer' || state.replay != null
+/** The link of a session that is looking at the past: reads are answered as of one step (`as_of`). */
+export class PastLink extends LookingLink {
+  constructor(
+    inner: LinkLike,
+    private revision: () => string,
+  ) {
+    super(inner)
+  }
+  protected looked(method: string, params: Record<string, unknown>): [string, Record<string, unknown>] {
+    return ['as_of', { revision: this.revision(), method, params }]
+  }
 }
 
-/** The role the menus go by: while looking at the past, nothing can be changed, as for a viewer. */
-export function roleNow(state: { me: { role: string }; replay?: unknown }): string {
-  return state.replay != null ? 'viewer' : state.me.role
+/** The link of a session that is previewing a redaction (D721): reads are answered from the state the redaction would
+ * leave (`as_planned`), by the token of its plan. */
+export class PlannedLink extends LookingLink {
+  constructor(
+    inner: LinkLike,
+    private plan: () => string,
+  ) {
+    super(inner)
+  }
+  protected looked(method: string, params: Record<string, unknown>): [string, Record<string, unknown>] {
+    return ['as_planned', { plan: this.plan(), method, params }]
+  }
+}
+
+/** Can this person only look at the document right now: they are a viewer, or they are looking at the past or at
+ * the preview of a redaction. */
+export function lookOnly(state: { me: { role: string }; replay?: unknown; preview?: unknown }): boolean {
+  return state.me.role === 'viewer' || state.replay != null || state.preview != null
+}
+
+/** The role the menus go by: while looking at the past or at a preview, nothing can be changed, as for a viewer. */
+export function roleNow(state: { me: { role: string }; replay?: unknown; preview?: unknown }): string {
+  return state.replay != null || state.preview != null ? 'viewer' : state.me.role
 }
 
 /** What a wheel event moved, in pixels whatever the unit it was reported in (lines and pages count as 40 and 800). */

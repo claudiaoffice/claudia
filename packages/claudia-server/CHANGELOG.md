@@ -16,6 +16,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   `search_preview`, `search_replace`; a held box is skipped and the holder named).
 - The assistant reads tables (`tables`, the orientation, the report of a change) and, in act mode, makes and changes
   them with the table methods (`apps.MODEL_METHODS`); none of them is a suggestion.
+- The preview of a redaction (D721, E3.14): `redaction_plan` keeps the planned state under a token (`plan`) and names
+  the places to mark (`regions`); `as_planned` answers a view's read requests from that state, as `as_of` does for an
+  earlier step. The views of the three apps draw the preview with what they already have.
+- The history view of a step (`log`, `steps` of a plan) says its `kind` and whether it is `redacted`.
 
 ### Changed
 - `search_find` counts texts of the kind `table` too: `counts` has the key `table`.
@@ -60,11 +64,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   five, a temporary file name that two threads cannot share, and the pattern fetch is the one the fonts use.
 
 ### Added
-- Deleting and hiding styles (E1.10, D226), in every app's table: `style_deletion` (read: how many places have the
-  style, what is based on it, and the styles it could be re-based on, each with whether its look can be held),
-  `delete_style` (`style`, optional `rebase_on`; returns `{stand_in, revision}`) and `hide_style` (`style`, `hidden`).
-  Deleting is one undo step, never changes a look, and is refused for a built-in or template style (hide it) and when
-  somebody began to use the style meanwhile. They are write methods and not on the assistant's list.
+- Deleting and hiding styles (E1.10, D226, D785), in every app's table: `style_deletion` (read: how many places have
+  the style, what is based on it, `suggested`, the plain style of its kind for a dialog to preselect, and the styles
+  that could take its place, each with whether assigning it changes a look and whether re-basing on it can hold the
+  look), `delete_style` (`style`, `how` one of `assign` or `rebase`, `assign` when left out, `target` the style that
+  takes its place; returns `{stand_in, revision}`) and `hide_style` (`style`, `hidden`). Deleting is one undo step,
+  changes a look only when assigning, and is refused for a built-in or template style (hide it) and when somebody
+  began to use the style meanwhile. They are write methods and not on the assistant's list.
 - `styles` says `origin` (when it is not `document`) and `hidden` (when it is true) for a style.
 - References (step H) in composes and creates (`claudia_server.structure_methods`): `reference_targets(query?)`
   (headings with their numbers, numbered items, named things), `insert_reference(paragraph, offset, target, show?)`,
