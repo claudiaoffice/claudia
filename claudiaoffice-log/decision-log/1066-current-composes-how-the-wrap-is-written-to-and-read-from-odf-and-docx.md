@@ -15,4 +15,4 @@ superseded-by: []
 
 **Why.** The earlier ODT export wrote `wrap="none"` for every object, which LibreOffice reads as above and below: a bug (found 2026-11-18, fixed). A kept file's edit of the wrap goes into a derived graphic style with `style:parent-style-name`, so the other objects that share the style do not change.
 
-**Not covered.** `dx`/`dy` is not written to the files yet (the offset of an object off its anchor character); an imported object lands at its anchor.
+**Not covered here.** The offset of an object off its anchor character is D1067.

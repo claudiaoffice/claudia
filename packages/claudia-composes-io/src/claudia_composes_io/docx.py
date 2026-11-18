@@ -414,7 +414,10 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
         elif each.asset.id not in model.images:
             model.define_image(each.asset)
         model.insert_object(
-            VisualObject(each.body, BlockAnchor(f"b{each.block + 1}", each.offset, wrap=each.wrap, gap=each.gap))
+            VisualObject(
+                each.body,
+                BlockAnchor(f"b{each.block + 1}", each.offset, wrap=each.wrap, gap=each.gap, dx=each.dx, dy=each.dy),
+            )
         )
     return model
 

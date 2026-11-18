@@ -40,28 +40,35 @@ from claudia_odf_io import (
     name_of,
     offset_of,
     picture_of,
-    transform_of,
     turned_box,
     xml_safe,
 )
 
 from ._pictures import all_pictures, pictures_of
-from ._wrap import WrapStyles, odf_attributes, odf_name, odf_properties, odf_wrap_of
+from ._wrap import (
+    ODF_POSITION,
+    WrapStyles,
+    odf_attributes,
+    odf_name,
+    odf_offset_of,
+    odf_place,
+    odf_properties,
+    odf_wrap_of,
+)
 
 _PX_PER_INCH = 96
 _CM_PER_INCH = 2.54
-#: The name of the style of the frame of a picture: no wrapping, in front of the text, at the top left of its paragraph.
+#: The name of the style of the frame of a picture: no wrapping, in front of the text, where its character is.
 PICTURE_STYLE = "Claudia_20_picture"
 
 
 def picture_style_xml(anchor: BlockAnchor) -> str:
-    """The graphic style of a picture that has the text flow round it as ``anchor`` says, at the top left of its
-    paragraph; its name is :func:`picture_style_name`."""
+    """The graphic style of a picture that has the text flow round it as ``anchor`` says, its place measured from its
+    character and its line; its name is :func:`picture_style_name`."""
     return (
         f'<style:style xmlns:style="{NS["style"]}" xmlns:text="{NS["text"]}" xmlns:fo="{NS["fo"]}" '
         f'style:name="{picture_style_name(anchor)}" style:family="graphic"><style:graphic-properties '
-        f'{odf_attributes(anchor)} style:horizontal-pos="from-left" style:horizontal-rel="paragraph" '
-        'style:vertical-pos="from-top" style:vertical-rel="paragraph"/></style:style>'
+        f"{odf_attributes(anchor)} {ODF_POSITION}/></style:style>"
     )
 
 
@@ -109,6 +116,8 @@ class FilePicture:
     href: str
     wrap: str = "over"  # how the text flows round it (D1061) ...
     gap: int = DEFAULT_WRAP_GAP  # ... and how far the words keep from it
+    dx: int = 0  # how far off its character it sits, to the right ...
+    dy: int = 0  # ... and down (D1067)
 
     @property
     def body(self) -> ObjectBody:
@@ -176,6 +185,7 @@ def file_pictures(
                     name_of(frame),
                     href,
                     *odf_wrap_of(odf_properties(frame, graphics)),
+                    *odf_offset_of(frame, odf_properties(frame, graphics)),
                 )
             )
     return found
@@ -200,12 +210,6 @@ def frames_not_pictures(paragraph: etree._Element) -> int:
 
 
 # ------------------------------------------------------------------------------------------------------ writing
-def _cm(pixels: float) -> str:
-    """A length in pixels as centimetres, to four places."""
-    text = f"{pixels / _PX_PER_INCH * _CM_PER_INCH:.4f}".rstrip("0").rstrip(".")
-    return f"{text or '0'}cm"
-
-
 class PictureWriter:
     """Writes the frames of image objects; collects the pictures' own bytes for the package."""
 
@@ -231,16 +235,7 @@ class PictureWriter:
         frame.set(_q("draw", "name"), f"Picture {number}")
         frame.set(_q("text", "anchor-type"), "char")
         frame.set(_q("draw", "z-index"), str(number))
-        frame.set(_q("svg", "width"), _cm(body.w))
-        frame.set(_q("svg", "height"), _cm(body.h))
-        turn = transform_of(
-            body.rotation, (0.0, 0.0, body.w / _PX_PER_INCH * _CM_PER_INCH, body.h / _PX_PER_INCH * _CM_PER_INCH)
-        )
-        if turn is None:
-            frame.set(_q("svg", "x"), "0cm")
-            frame.set(_q("svg", "y"), "0cm")
-        else:
-            frame.set(_q("draw", "transform"), turn)
+        odf_place(frame, body.w, body.h, body.rotation, dx=obj.anchor.dx, dy=obj.anchor.dy)
         image = etree.SubElement(frame, _q("draw", "image"))
         for name, value in (
             ("href", self._href(asset, body)),
@@ -287,27 +282,11 @@ def restyle(picture: FilePicture, before: ObjectBody, after: ObjectBody) -> None
         elif found is not None:
             frame.remove(found)
     if (before.w, before.h) != (after.w, after.h) or before.rotation != after.rotation:
-        frame.set(_q("svg", "width"), _cm(after.w))
-        frame.set(_q("svg", "height"), _cm(after.h))
-        turn = transform_of(
-            after.rotation, (0.0, 0.0, after.w / _PX_PER_INCH * _CM_PER_INCH, after.h / _PX_PER_INCH * _CM_PER_INCH)
-        )
-        x = frame.get(_q("svg", "x"))
-        if turn is None:
-            _drop(frame, _q("draw", "transform"))
-            if x is None:
-                frame.set(_q("svg", "x"), "0cm")
-                frame.set(_q("svg", "y"), "0cm")
-        else:
-            frame.set(_q("draw", "transform"), turn)
-            _drop(frame, _q("svg", "x"))
-            _drop(frame, _q("svg", "y"))
-
-
-def _drop(element: etree._Element, name: str) -> None:
-    """Take the attribute ``name`` off ``element`` when it has it."""
-    if name in element.attrib:
-        del element.attrib[name]
+        x, y = frame.get(_q("svg", "x")), frame.get(_q("svg", "y"))
+        odf_place(frame, after.w, after.h, after.rotation, dx=picture.dx, dy=picture.dy)
+        if after.rotation % 360 == 0 and x is not None and y is not None:  # (a place the file has stays as it is)
+            frame.set(_q("svg", "x"), x)
+            frame.set(_q("svg", "y"), y)
 
 
 def _look(body: ObjectBody) -> tuple[str, bool, int, int, int]:
@@ -380,8 +359,13 @@ class PicturePlan:
                 frame.tail = None
                 restyle(replace(picture, frame=frame), self.baseline.get_object(obj.id).body, obj.body)
                 before = self.baseline.get_object(obj.id).anchor
-                if (obj.anchor.wrap, obj.anchor.gap) != (before.wrap, before.gap):
-                    self.wraps.give(frame, obj.anchor)
+                wrapped = (obj.anchor.wrap, obj.anchor.gap) != (before.wrap, before.gap)
+                moved = (obj.anchor.dx, obj.anchor.dy) != (before.dx, before.dy)
+                if wrapped or moved:
+                    self.wraps.give(frame, obj.anchor, wrap=wrapped, position=moved)
+                if moved:
+                    body = obj.body
+                    odf_place(frame, body.w, body.h, body.rotation, dx=obj.anchor.dx, dy=obj.anchor.dy)
             else:
                 frame = self.writer.frame(obj, asset)
                 self.written += 1

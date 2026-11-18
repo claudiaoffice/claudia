@@ -46,7 +46,15 @@ from ._docx_pictures import (
     pixels,
 )
 from ._docx_styles import WORD_NAMES, WordNames
-from ._wrap import docx_frame_open, docx_set_wrap, docx_wrap_element, docx_wrap_of
+from ._wrap import (
+    docx_frame_open,
+    docx_offset_of,
+    docx_position,
+    docx_set_position,
+    docx_set_wrap,
+    docx_wrap_element,
+    docx_wrap_of,
+)
 
 _BOX_URI = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
 _MC = "http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -102,6 +110,8 @@ class FileBox:
     look: BoxLook
     wrap: str = "over"  # how the text flows round it (D1061) ...
     gap: int = DEFAULT_WRAP_GAP  # ... and how far the words keep from it
+    dx: int = 0  # how far off its character it sits, to the right ...
+    dy: int = 0  # ... and down (D1067)
 
 
 def _first(found: list[Any]) -> Any:  # noqa: ANN401
@@ -245,7 +255,7 @@ def file_boxes(document: Any) -> list[FileBox]:  # noqa: ANN401
                 decorative=decorative,
                 rotation=rotation,
             )
-            wrap = docx_wrap_of(_FRAME(drawings[0])[0])
+            wrap = (*docx_wrap_of(_FRAME(drawings[0])[0]), *docx_offset_of(_FRAME(drawings[0])[0]))
             found.append(
                 FileBox(object_id, index, offset_of(paragraph._p, run), run, holder, drawings[0], body, look, *wrap)
             )
@@ -286,8 +296,7 @@ class BoxWriter:
             f'xmlns:wps="{_SPACE["wps"]}"><w:drawing>'
             f"{docx_frame_open(obj.anchor, number)}"
             '<wp:simplePos x="0" y="0"/>'
-            '<wp:positionH relativeFrom="column"><wp:posOffset>0</wp:posOffset></wp:positionH>'
-            '<wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV>'
+            f"{docx_position(obj.anchor)}"
             f'<wp:extent cx="{width}" cy="{height}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>'
             f"{docx_wrap_element(obj.anchor)}"
             f'<wp:docPr id="{number}" name="{title}" descr="{alt}">{decorative}</wp:docPr><wp:cNvGraphicFramePr/>'
@@ -441,6 +450,8 @@ class BoxEdits:
         restyle(box, before.body, now.body, self.document, self.names)
         if (now.anchor.wrap, now.anchor.gap) != (before.anchor.wrap, before.anchor.gap):
             docx_set_wrap(_FRAME(box.drawing)[0], now.anchor)
+        if (now.anchor.dx, now.anchor.dy) != (before.anchor.dx, before.anchor.dy):
+            docx_set_position(_FRAME(box.drawing)[0], now.anchor)
         if now.anchor.block in self.rewritten or now.anchor != before.anchor:
             box.run.getparent().remove(box.run)
             self._route(now, box.run)

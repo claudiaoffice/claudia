@@ -23,6 +23,7 @@ from lxml import etree
 
 from claudia_composes import DEFAULT_WRAP_GAP, MAX_WRAP_GAP, BlockAnchor
 from claudia_odf_io import NS
+from claudia_odf_io.transform import transform_of, turned_box
 
 EMU = 9525  # one CSS pixel
 _NS_WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
@@ -64,6 +65,46 @@ def docx_frame_open(anchor: BlockAnchor, number: int) -> str:
         f'<wp:anchor {distances} simplePos="0" relativeHeight="{number}" '
         f'behindDoc="{behind}" locked="0" layoutInCell="1" allowOverlap="1">'
     )
+
+
+def docx_position(anchor: BlockAnchor) -> str:
+    """The ``wp:positionH`` and ``wp:positionV`` of a ``wp:anchor``: the object's top left corner sits ``dx`` to the
+    right of its character and ``dy`` below its line (D1067)."""
+    return (
+        f'<wp:positionH relativeFrom="character"><wp:posOffset>{anchor.dx * EMU}</wp:posOffset></wp:positionH>'
+        f'<wp:positionV relativeFrom="line"><wp:posOffset>{anchor.dy * EMU}</wp:posOffset></wp:positionV>'
+    )
+
+
+def _offset(frame: etree._Element, name: str, relative_from: str) -> int:
+    """The ``wp:posOffset`` (pixels) of ``wp:positionH``/``V`` ``name`` when it is measured from ``relative_from``; an
+    offset measured from the column, the page or a margin is not one of ours, and reads as none."""
+    found = frame.find(_wp(name))
+    if found is None or found.get("relativeFrom") != relative_from:
+        return 0
+    offset = found.find(_wp("posOffset"))
+    return round(_int(offset.text if offset is not None else None) / EMU)
+
+
+def docx_offset_of(frame: etree._Element) -> tuple[int, int]:
+    """``(dx, dy)`` a ``wp:anchor`` says: how far its top left corner is from its character, to the right, and from
+    its line, down. A ``wp:inline`` has none."""
+    if frame.tag != _wp("anchor"):
+        return 0, 0
+    return _offset(frame, "positionH", "character"), _offset(frame, "positionV", "line")
+
+
+def docx_set_position(frame: etree._Element, anchor: BlockAnchor) -> None:
+    """Make an existing ``wp:anchor`` measure its place from the character and the line, as ``anchor`` says."""
+    if frame.tag != _wp("anchor"):
+        return
+    fresh = etree.fromstring(f'<wp:x xmlns:wp="{_NS_WP}">{docx_position(anchor)}</wp:x>')
+    old = [child for child in frame if child.tag in (_wp("positionH"), _wp("positionV"))]
+    at = list(frame).index(old[0]) if old else (1 if frame.find(_wp("simplePos")) is not None else 0)
+    for each in old:
+        frame.remove(each)
+    for number, element in enumerate(fresh):
+        frame.insert(at + number, element)
 
 
 def docx_wrap_of(frame: etree._Element) -> tuple[str, int]:
@@ -167,6 +208,58 @@ def _length_px(text: str | None) -> float:
     return 0.0
 
 
+#: Where a frame of ours stands: ``svg:x`` right of its character and ``svg:y`` measured from its line. LibreOffice
+#: (and so every file it writes) counts ``svg:y`` against a *line* **upwards**: an object 40 px below its line has
+#: ``svg:y="-0.4165in"`` there (checked with LibreOffice 24.2, which also draws ours this way and writes it back
+#: unchanged), so :func:`odf_place` writes ``-dy`` and :func:`odf_offset_of` reads it back (D1067).
+ODF_POSITION = (
+    'style:horizontal-pos="from-left" style:horizontal-rel="char" style:vertical-pos="from-top" '
+    'style:vertical-rel="line"'
+)
+_PX = 96
+_CM = 2.54
+
+
+def _cm(pixels: float) -> str:
+    """A length in pixels as centimetres, to four places."""
+    text = f"{pixels / _PX * _CM:.4f}".rstrip("0").rstrip(".")
+    return f"{text or '0'}cm"
+
+
+def odf_place(element: etree._Element, w: int, h: int, rotation: int, *, dx: int = 0, dy: int = 0) -> None:
+    """Give a frame or a shape its size, its turn and its place ``(dx, dy)`` off the character it hangs from, in the
+    attributes where the format keeps them: ``svg:x`` and ``svg:y`` for one that is not turned, a ``draw:transform``
+    for one that is. ``svg:y`` is counted upwards from the line, see :data:`ODF_POSITION`."""
+    element.set(f"{{{NS['svg']}}}width", _cm(w))
+    element.set(f"{{{NS['svg']}}}height", _cm(h))
+    turn = transform_of(rotation, (dx / _PX * _CM, -dy / _PX * _CM, w / _PX * _CM, h / _PX * _CM))
+    transform, x, y = (f"{{{NS['draw']}}}transform", f"{{{NS['svg']}}}x", f"{{{NS['svg']}}}y")
+    if turn is None:
+        element.set(x, _cm(dx))
+        element.set(y, _cm(-dy))
+        element.attrib.pop(transform, None)
+    else:
+        element.set(transform, turn)
+        element.attrib.pop(x, None)
+        element.attrib.pop(y, None)
+
+
+def odf_offset_of(element: etree._Element, properties: Mapping[str, str]) -> tuple[int, int]:
+    """``(dx, dy)`` of a frame or a shape: its top left corner (before it is turned) from its character and its line.
+    A place measured from anything else (the paragraph, the page) is not one of ours, and reads as none."""
+    width, height = (_length_px(element.get(f"{{{NS['svg']}}}{name}")) for name in ("width", "height"))
+    transform = element.get(f"{{{NS['draw']}}}transform")
+    if transform:
+        turned = turned_box(transform, width / _PX * _CM, height / _PX * _CM)
+        x, y = (0.0, 0.0) if turned is None else (turned[1] / _CM * _PX, turned[2] / _CM * _PX)
+    else:
+        x, y = (_length_px(element.get(f"{{{NS['svg']}}}{name}")) for name in ("x", "y"))
+    horizontal = (properties.get("style:horizontal-pos"), properties.get("style:horizontal-rel"))
+    vertical = (properties.get("style:vertical-pos"), properties.get("style:vertical-rel"))
+    from_char, from_line = horizontal == ("from-left", "char"), vertical == ("from-top", "line")
+    return (round(x) if from_char else 0), (-round(y) if from_line else 0)
+
+
 def odf_properties(element: etree._Element, graphics: Mapping[str, etree._Element]) -> dict[str, str]:
     """What the graphic style of ``element`` (and the styles it is based on) says, by ``prefix:name``; what the
     element's own style says wins over what its parents say."""
@@ -185,13 +278,17 @@ def odf_properties(element: etree._Element, graphics: Mapping[str, etree._Elemen
     return found
 
 
-def odf_wrap_style_xml(name: str, anchor: BlockAnchor, parent: str | None = None) -> str:
-    """A graphic style called ``name`` that says only how the words flow round a frame as ``anchor`` says, on top of
-    its ``parent``'s look (a file's own style for a frame it has, kept as it is)."""
+def odf_wrap_style_xml(
+    name: str, anchor: BlockAnchor, parent: str | None = None, *, wrap: bool = True, position: bool = False
+) -> str:
+    """A graphic style called ``name`` that says only how the words flow round a frame as ``anchor`` says (when
+    ``wrap``) and that its place is measured from its character and line (when ``position``), on top of its
+    ``parent``'s look (a file's own style for a frame it has, kept as it is)."""
     inherits = f' style:parent-style-name="{parent}"' if parent else ""
+    said = " ".join(part for part in (odf_attributes(anchor) if wrap else "", ODF_POSITION if position else "") if part)
     return (
         f'<style:style xmlns:style="{NS["style"]}" xmlns:fo="{NS["fo"]}" style:name="{name}" '
-        f'style:family="graphic"{inherits}><style:graphic-properties {odf_attributes(anchor)}/></style:style>'
+        f'style:family="graphic"{inherits}><style:graphic-properties {said}/></style:style>'
     )
 
 
@@ -203,26 +300,34 @@ class WrapStyles:
         self.taken = taken if taken is not None else set()
         self.new: dict[str, bytes] = {}  # by name
 
-    def give(self, element: etree._Element, anchor: BlockAnchor) -> None:
-        """Make ``element`` (a frame or a shape, a copy of the file's) wrap as ``anchor`` says."""
+    def give(self, element: etree._Element, anchor: BlockAnchor, *, wrap: bool = True, position: bool = False) -> None:
+        """Make ``element`` (a frame or a shape, a copy of the file's) wrap as ``anchor`` says (when ``wrap``) and have
+        its place measured from its character and line (when ``position``, D1067)."""
         key = f"{{{NS['draw']}}}style-name"
         parent = element.get(key)
-        name = f"{parent or 'Claudia_20_wrap'}_{anchor.wrap.replace('-', '_')}_{anchor.gap}"
+        said = ([f"{anchor.wrap.replace('-', '_')}_{anchor.gap}"] if wrap else []) + (["at"] if position else [])
+        name = f"{parent or 'Claudia_20_wrap'}_{'_'.join(said)}"
         if name not in self.taken:
             self.taken.add(name)
-            self.new[name] = odf_wrap_style_xml(name, anchor, parent).encode()
+            self.new[name] = odf_wrap_style_xml(name, anchor, parent, wrap=wrap, position=position).encode()
         element.set(key, name)
 
 
 __all__ = [
     "clamped",
     "docx_frame_open",
+    "docx_offset_of",
+    "docx_position",
+    "docx_set_position",
     "docx_set_wrap",
     "docx_wrap_element",
     "docx_wrap_of",
+    "ODF_POSITION",
     "WrapStyles",
     "odf_attributes",
     "odf_name",
+    "odf_offset_of",
+    "odf_place",
     "odf_properties",
     "odf_wrap_of",
     "odf_wrap_style_xml",
