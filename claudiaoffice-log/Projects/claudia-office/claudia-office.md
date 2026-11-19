@@ -18,7 +18,7 @@ customFields:
 teamMembers: []
 savedViews: []
 createdAt: "2026-11-04T19:44:45.821Z"
-updatedAt: "2026-11-17T21:52:13.530Z"
+updatedAt: "2026-11-19T14:05:41.042Z"
 ---
 
 # lucide-file-heart claudia-office
