@@ -216,6 +216,16 @@ function initialState(): BaseState {
   }
 }
 
+/** What `download_claudia` returns: the sealed Claudia file as base64, and what it holds (`content`, and for an owner
+ * or an editor `history` and `chat`). */
+export interface SealedFile {
+  format: 'claudia'
+  filename: string
+  content_type: string
+  data: string
+  parts: string[]
+}
+
 export abstract class BaseSession<S extends BaseState = BaseState> {
   readonly state: S
   /** Was this document made by the very opening that led here? Then its owner is shown the recovery key. */
@@ -1097,6 +1107,13 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    * or the chat): `{format, app, exported_at, state_schema, state}`, ready to be saved to a file. */
   async exportContent(): Promise<Record<string, unknown> | false> {
     return await this.attempt('export_content')
+  }
+
+  /** The document as Claudia's own sealed file, for File ▸ Download (D110): the whole file for an owner, the file
+   * with only your own key slot for an editor, and for a viewer only what the content key opens. `data` is base64.
+   * Confirmed with your own current password, which is also what finds your slot. `false` after saying why not. */
+  async downloadClaudia(password: string): Promise<SealedFile | false> {
+    return (await this.attempt('download_claudia', { password })) as SealedFile | false
   }
 
   /** The document's current content as bytes of a Word, Excel, PowerPoint or OpenDocument file (`format` is one of

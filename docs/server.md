@@ -234,7 +234,7 @@ WebSocket must also be the server itself or be named with `--allow-origin`; clie
 
 **Encryption (SEC-07).** Passwords travel in the first frame, and they also open the sealed documents, so plain text is
 only for this computer: `--no-tls` on any other address is refused. A proxy that encrypts in front of the server is the
-exception, and `--behind-proxy` says so (the start-up report keeps a warning). `scripts/start.py` needs `--tls` for a
+exception, and `--behind-proxy` says so (the start-up report keeps a warning). Behind a proxy, a person is counted by the `X-Forwarded-For` entry that the nearest trusted proxy appended, not by the proxy's own address, so per-address caps and waits do not hit everybody: `--proxy-hops N` says how many proxies set the header (default 1; 0 counts by the socket and ignores the header; the start-up report says which, D1275). `scripts/start.py` needs `--tls` for a
 `--host` other than this computer's.
 
 **Limits (SEC-02).** `--max-documents N` (default 1000), all apps together (D432): past it nobody can make a document,

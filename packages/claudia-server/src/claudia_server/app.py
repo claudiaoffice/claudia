@@ -79,6 +79,7 @@ from claudia_fonts import DEFAULT_SUBSTITUTIONS
 from ._version import __version__
 from .admin_api import AdminContext, admin_router
 from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
+from .client_address import ClientAddress
 from .fonts import FontService, font_router
 from .formats import CLAUDIA, import_state
 from .hosts import AllowedHosts, HostGuard
@@ -246,6 +247,7 @@ class Gateway:
         access_secret: str | None = None,
         max_waiting: int = DEFAULT_MAX_WAITING,
         max_waiting_per_address: int = DEFAULT_MAX_WAITING_PER_ADDRESS,
+        proxy_hops: int = 0,
     ):
         if access_secret is not None and len(access_secret) < MIN_ACCESS_SECRET:
             raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
@@ -256,6 +258,7 @@ class Gateway:
         self._creating = asyncio.Lock()  # one new document at a time: the first person to ask becomes its owner
         self._hashing = asyncio.Semaphore(max_hashing)
         self._waiting = _Waiting(max_waiting, max_waiting_per_address)
+        self.client_address = ClientAddress(proxy_hops)  # who a connection is, behind a proxy too (D1275)
 
     def accepts_secret(self, candidate: object) -> bool:
         """Did the person give the server's access secret? Always ``True`` for a server that has none."""
@@ -350,7 +353,7 @@ class Gateway:
         if not origin_allowed(websocket.headers.get("origin"), websocket.headers.get("host"), self.allowed):
             await websocket.close(code=4403)  # refused during the handshake (HTTP 403)
             return
-        address = websocket.client.host if websocket.client else ""
+        address = self.client_address.of(websocket)
         if not self._waiting.enter(address):  # taken before the accept, so a client that was let on has its place
             await websocket.accept()  # (a refusal before the accept carries no close code)
             await websocket.close(code=1013)
@@ -624,6 +627,7 @@ def create_app(
     access_secret: str | None = None,
     max_waiting: int = DEFAULT_MAX_WAITING,
     max_waiting_per_address: int = DEFAULT_MAX_WAITING_PER_ADDRESS,
+    proxy_hops: int = 0,
     web_dir: str | Path | None = None,
     list_documents: bool = True,
     admin: AdminContext | None = None,
@@ -649,6 +653,10 @@ def create_app(
     it can make documents or read the list. ``max_waiting`` and ``max_waiting_per_address`` bound the connections that
     wait to be let in (SEC-02).
 
+    With ``proxy_hops`` reverse proxies in front of the server that set ``X-Forwarded-For``, a connection is counted
+    by the address the nearest proxy appended, not by the proxy's own (D1275, ``client_address.py``); 0, the default,
+    counts by the socket and ignores the header.
+
     With ``admin`` (``admin_api.AdminContext``), the server also serves ``/api/admin/*``: the settings pages, signed
     in to separately from any document (``admin.py``). Without it — the default, and every use before this existed
     — none of those routes exist at all, which keeps every other caller of this function unaffected."""
@@ -661,6 +669,7 @@ def create_app(
         access_secret=access_secret,
         max_waiting=max_waiting,
         max_waiting_per_address=max_waiting_per_address,
+        proxy_hops=proxy_hops,
     )
 
     presence = _Presence(gateway, max_waiting)
@@ -758,7 +767,7 @@ def _fixed_routes(app: FastAPI, suite: Suite, gateway: Gateway, presence: _Prese
             it), a few times a minute from one address. A uid that is not one and a uid nobody here has get the same
             answer, and nothing about the document is told beyond what the list tells."""
             _may_list(gateway, request)
-            address = request.client.host if request.client else ""
+            address = gateway.client_address.of(request)
             if not throttle.allow(address):
                 raise HTTPException(429, "too many questions; try again in a minute", headers={"Retry-After": "60"})
             try:
@@ -807,7 +816,7 @@ def _upload_routes(app: FastAPI, suite: Suite, gateway: Gateway) -> None:
     @app.post("/api/uploads")
     async def upload(request: Request):
         may_make(request)
-        address = request.client.host if request.client else ""
+        address = gateway.client_address.of(request)
         try:
             gateway.uploads.room_for(address)
             data = await read_body(request, gateway.uploads.max_bytes)

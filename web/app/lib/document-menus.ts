@@ -25,7 +25,7 @@ export type FrameDialog =
   | 'accept-owner'
   | 'leave'
   | 'change-password'
-  | 'export'
+  | 'download'
   | 'export-format'
   | 'delete'
   | 'redact'
@@ -81,7 +81,7 @@ export function fileMenu(c: DocumentMenuContext): Menu {
       separator,
       { id: 'file.save', label: t('Save'), hint: SHARED_HINTS['file.save'], action: () => c.save(), disabled: viewer },
       { id: 'file.save-as', label: t('Save New Checkpoint…'), action: () => c.open('checkpoint'), disabled: viewer },
-      { id: 'file.download', label: t('Download'), action: () => c.open('export') },
+      { id: 'file.download', label: t('Download'), action: () => c.open('download') },
       ...(c.print ? [{ id: 'file.print', label: t('Print…'), hint: chordLabel(PRINT_CHORD), action: c.print }] : []),
       separator,
       {

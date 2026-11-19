@@ -69,7 +69,7 @@ describe('fileMenu: the same File menu in every app (D120, D141)', () => {
     for (const id of ['file.new', 'file.open', 'file.open-file', 'file.save', 'file.save-as', 'file.download', 'file.manage.change-password', 'file.manage.export', 'file.close']) {
       byId(file.items, id).action!()
     }
-    expect(calls).toEqual(['leave:fresh', 'open:open', 'open:open-file', 'save', 'open:checkpoint', 'open:export', 'open:change-password', 'open:export-format', 'leave'])
+    expect(calls).toEqual(['leave:fresh', 'open:open', 'open:open-file', 'save', 'open:checkpoint', 'open:download', 'open:change-password', 'open:export-format', 'leave'])
   })
 
   it('has Print… after Download only in an app that can print (composes, D906), with its shortcut', () => {

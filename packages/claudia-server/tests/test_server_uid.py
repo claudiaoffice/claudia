@@ -147,6 +147,26 @@ def test_one_address_cannot_ask_without_end(tmp_path):
         assert statuses[throttle.limit :] == [429] * 3
 
 
+def test_behind_a_proxy_people_are_asked_for_by_the_address_the_proxy_appended(tmp_path):
+    """D1275: with a trusted proxy one person asking without end does not stop the next one (SEC-02)."""
+    with server(tmp_path, proxy_hops=1) as client:
+        limit = client.app.state.lookup_throttle.limit
+        loud = {"x-forwarded-for": "203.0.113.7"}
+        statuses = [lookup(client, str(uuid.uuid4()), **loud).status_code for _ in range(limit + 2)]
+        assert statuses[limit:] == [429] * 2
+        assert lookup(client, str(uuid.uuid4()), **{"x-forwarded-for": "203.0.113.8"}).status_code == 404
+
+
+def test_without_a_proxy_a_header_written_by_the_client_buys_no_new_address(tmp_path):
+    with server(tmp_path) as client:
+        limit = client.app.state.lookup_throttle.limit
+        statuses = [
+            lookup(client, str(uuid.uuid4()), **{"x-forwarded-for": f"203.0.113.{n}"}).status_code
+            for n in range(limit + 2)
+        ]
+        assert statuses[limit:] == [429] * 2
+
+
 # --- placing ---------------------------------------------------------------------------------------------------------
 def test_a_file_placed_on_another_server_keeps_its_uid_and_is_found_there(tmp_path):
     home, away = tmp_path / "home", tmp_path / "away"

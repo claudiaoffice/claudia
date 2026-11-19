@@ -30,6 +30,22 @@ version 1).
 | Network attacker | — | TLS; see SEC-01, SEC-06, SEC-07 |
 | Somebody who sends a **malicious file** | Try to exploit the reader: zip bombs, path tricks, huge counts | Reader limits are part of E2.1 |
 
+### Round two (2026-11-19, branch `e2-document-sec`; proposals, nothing built yet)
+
+Rows added by D1261–D1275. Design in `notes/e2-document-sec-architecture.md`.
+
+| Who | Can do | Cannot do / not claimed |
+|---|---|---|
+| Viewer, in a live session | Receive content events, the names and who is present (D1261) | Receive history, chat, restore proposals or the log; ask for them with any method (each method declares what it reads). A viewer **can** keep everything she has seen or copied, as in D20 |
+| Removed or downgraded person | Keep every copy of the file and every key she held before the change | Open anything written after the renewal (D1263); read the new blocks of a domain she lost. Old copies stay readable by her; that is not claimed |
+| Person who stays through a renewal | Get her new keys at her next login through the sealed inbox (D1274) | Receive keys sealed for somebody else; her inbox entry is useless without her slot's private key |
+| Guesser over the network | Try names and passwords at the rate the back-off allows: free tries, then 1, 2, 4, 8, 16 s, capped at 30 s per address and 10 s per (document, name) (D1266) | Be locked out of anything: nothing is blocked, so a stranger cannot lock the owner out. **Not claimed:** protection against many addresses (a botnet); the back-off is in memory and a restart forgets it |
+| Anyone behind a shared proxy | — | Be told apart by address unless `--behind-proxy` trusts the right-most `X-Forwarded-For` entry (D1275) |
+| Co-editor or owner who exports, prints or saves a PDF | Take the content out of the system | Do it unrecorded: the audit chain keeps who, when, format and parts (D1271). **Not claimed:** print and PDF are client-reported, so a modified client or a screenshot is not recorded; the record is a deterrent and a trace, not a lock. Owners cannot erase it |
+| Somebody who imports an unencrypted export | Create a new document of which she is the owner (D1272) | Inject authors with accounts: imported authors become names without accounts. The zip is checked with the container's reader limits; hashes in it prove integrity, not who made it |
+| Anybody who changes the cost setting | (Administrator) lower or raise the target within floor and ceiling (D1267) | Weaken existing documents: a lower setting affects new documents only; the floor is the old default |
+| Outsider with a file and a lot of hardware | Guess passwords offline; a 0.75 s target costs about twice as much per guess as the old default | Be stopped by it: password strength decides (D100) |
+
 Out of scope: malware on the client, shoulder surfing, side channels, quantum attackers (the algorithm ids allow a
 later change).
 

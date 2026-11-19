@@ -41,13 +41,13 @@ statement in the docs or on the website).
 | SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` in CI since 2026-11-17 (job `pip-audit`; clean when run by hand) |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |
 | SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |
-| SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12) |
+| SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12); decided 2026-11-19 (D1266), to be built on branch `e2-document-sec` |
 | SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **new, open** |
 | SEC-13 | P2 | Security | The web app is served without CSP, frame-ancestors, nosniff or referrer headers | **fixed** 2026-11-12 |
 | SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |
 | SEC-15 | P2 | Security | Office import reads every zip part whole and parses some XML with default parsers | **fixed** 2026-11-17 (`claudia_opc_io.check_package`, `parse_xml`) |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |
-| SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05, **now tracked** |
+| SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05, **now tracked**; decided 2026-11-19 (D1261), to be built on branch `e2-document-sec` |
 | PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |
 | PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |
 | PERF-03 | P3 | Performance | `users.json` rewritten and fsynced in full on every user added | superseded by the container |
@@ -221,6 +221,13 @@ statement in the docs or on the website).
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |
 | PROC-32 | P3 | Process / docs | `claudiaoffice-log/notes/claudia-menus.xlsx` is not in the repo: the keys of this round are only in the generated key table, and the rows the contract note lists "for the workbook" are not settled | **new, open** |
 | PROC-33 | P3 | Process / gate | Patches 9–11 had ruff failures (lines over 120 characters in three files) that only the gate on the merged tree found | **fixed** 2026-11-19 (patch 12) |
+| SEC-20 | P2 | Security | Behind `--behind-proxy` every client had the proxy's address, so the per-address caps (waiting sockets, lookups, uploads) were one cap for everybody | **fixed** 2026-11-19 (D1275, branch `e2-document-sec`) |
+| SEC-21 | P2 | Security / performance | Methods that confirm a password (`set_details`, `delete_document`, `leave`, `change_password`, `propose_owner`, `download_claudia`) hash on the event loop, in `Connection.handle`, not in a thread: at 0.75 s (D1267) each stops every connection of the server for that long | **new, open** (read) |
+| CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |
+| DOC-04 | P3 | Docs | `docs/versioning.md` said the protocol version is "now 1"; the code says 2 | **fixed** 2026-11-19, with a test that compares them |
+| PROC-34 | P3 | Process / backlog | The `backlog` branch had renamed `e0.3-shells-gtk-with-webkitgtk-6-0.md` (an Obsidian plugin does that when a title changes) so the story and its epic no longer named each other and `tests/test_backlog.py` failed | **fixed** 2026-11-19 (file name restored) |
+| CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |
+| PROC-35 | P3 | Process / e2e | `uv run pytest tests/e2e` as one run fails three tests ("Playwright Sync API inside the asyncio loop") that each pass alone: an earlier test leaves an event loop running | **new, open** (measured 2026-11-19, not compared with `main`) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -2145,6 +2152,46 @@ The last step of the series, the gate on the merged tree, found `ruff` errors (l
 for. Fixed in patch 12. **Lesson, kept as the rule:** `scripts/check_debt.py` runs on the final tree of every series, not per patch.
 
 ---
+
+## Round of 2026-11-19 (E2 second round, branch `e2-document-sec`)
+
+### SEC-20 · Behind a proxy every client had the proxy's address · P2 · fixed 2026-11-19
+**Evidence (read, then tested).** `Gateway.serve`, the lookup throttle and the upload desk took `client.host` from the socket.
+With `--behind-proxy` that is the proxy. **Fix.** D1275: the `X-Forwarded-For` entry the nearest trusted proxy appended
+(`--proxy-hops`, default 1). Tests: `test_server_client_address.py`, `test_server_cli.py`, `test_server_uid.py`.
+**Not run:** a real proxy in front of a real server.
+
+### SEC-21 · Password-confirming methods hash on the event loop · P2 · new, open (read)
+**Evidence (read).** `Connection.handle` is synchronous and runs in the loop; `SealedDocuments.set_details`,
+`delete_document`, `leave`, `change_password`, the owner transfer and the new `sealed_copy` call `unlock` (one Argon2id run)
+inside it. Logins are different: `Gateway._hello` runs `verify` in a thread behind the hashing cap (SEC-03). Today a run takes
+0.1 to 0.4 s, at the 0.75 s of D1267 every one of these calls stops every connection of the server for that long, and a
+person with a password can do it in a loop.
+**Fix (proposal).** Make the handlers that take a password asynchronous, or move their hashing to the same thread pool and
+cap as the login; with D1266's back-off for wrong passwords. Acceptance: while one of them runs, another connection's
+`ping` is answered within 50 ms.
+
+### CODE-72 · `KdfParams`' docstring was wrong · P3 · fixed 2026-11-19
+Words only; D1267 says what is true.
+
+### DOC-04 · The versioning page named protocol version 1 · P3 · fixed 2026-11-19
+`tests/test_docs_versioning.py` fails when the page and `PROTOCOL_VERSION` differ.
+
+### PROC-34 · The backlog branch broke the story/epic check · P3 · fixed 2026-11-19
+The Obsidian project-manager plugin renamed the file after a title change (`e0.3-shells--gtk-with-webkitgtk-6.0-and-neutralino.md`).
+The epic names `e0.3-shells-gtk-with-webkitgtk-6-0`; the file name is restored. It will happen again whenever a story title
+is edited in Obsidian: `tests/test_backlog.py` is what finds it.
+
+### CODE-73 · File ▸ Download did not write the sealed file · P2 · fixed 2026-11-19
+D110 (current since 2026-11-02) and the workbook say Download is the sealed `.claudia` file; the code wrote the
+unencrypted content JSON. Built as E2.12. The unencrypted export is now missing from the menus until E2.9 (owner accepted).
+
+### PROC-35 · The e2e tests fail together and pass alone · P3 · new, open (measured)
+**Evidence.** `CLAUDIA_CHROMIUM=/usr/bin/google-chrome uv run pytest tests/e2e` (one process): `test_greeting.py` (2 tests) and
+`test_computes_grid.py` fail with "It looks like you are using Playwright Sync API inside the asyncio loop"; run one file at
+a time, all pass (greeting 2, grid 1, names 7). The new `tests/e2e/specs` run on their own (3 passed, 3 skipped).
+**Likely cause (read).** `test_documents_between_servers.py` runs first and leaves a running loop. **Acceptance:** the
+whole directory passes in one run, as CI runs it (`uv run pytest tests/e2e`). Check on `main` first: it may not be new.
 
 ## Verified positives (so nobody "fixes" them)
 

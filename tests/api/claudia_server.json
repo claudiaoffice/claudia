@@ -1,5 +1,5 @@
 {
- "version": "0.37.0",
+ "version": "0.38.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -260,7 +260,7 @@
   "class": [
    "object"
   ],
-  "init": "(suite: 'Suite', allowed: 'set[str]', *, max_hashing: 'int' = 2, access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64)",
+  "init": "(suite: 'Suite', allowed: 'set[str]', *, max_hashing: 'int' = 2, access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0)",
   "methods": {
    "accepts_secret": "(self, candidate: 'object') -> 'bool'",
    "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool', access: 'object' = None, *, app: 'str | None' = None) -> 'Account | None'",
@@ -575,6 +575,7 @@
    "recover": "(self, doc_id: 'str', recovery_key: 'str', name: 'str', new_password: 'str') -> 'Account | None'",
    "release": "(self, doc_id: 'str') -> 'None'",
    "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
+   "sealed_copy": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'bytes | None'",
    "set_details": "(self, doc_id: 'str', owner: 'str', owner_password: 'str', description: 'str', tags: 'Sequence[str]') -> 'bool'",
    "uid_of": "(self, doc_id: 'str') -> 'str | None'",
    "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
@@ -701,7 +702,7 @@
   "value": "<MethodTable>"
  },
  "create_app": {
-  "function": "(hub: 'Hub | Suite', directory: 'UserDirectory | None' = None, *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None, idle: 'IdleWatch | None' = None) -> 'FastAPI'"
+  "function": "(hub: 'Hub | Suite', directory: 'UserDirectory | None' = None, *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None, idle: 'IdleWatch | None' = None) -> 'FastAPI'"
  },
  "creates_methods": {
   "value": "<MethodTable>"

@@ -30,6 +30,7 @@ This module has no web framework in it, so it is tested without sockets.
 
 from __future__ import annotations
 
+import base64
 import json
 import math
 import re
@@ -60,6 +61,7 @@ from .auth import (
     PasswordDirectory,
     RecoverableDirectory,
     RosterDirectory,
+    SealedCopyDirectory,
     TransferableDirectory,
     UserDirectory,
 )
@@ -1153,6 +1155,33 @@ def _export_content(ctx):
         "exported_at": exported_at,
         "state_schema": model.state_schema,
         "state": model.serialize(),
+    }
+
+
+@core_methods.method("download_claudia", "password:str")
+def _download_claudia(ctx, password):
+    """File ▸ Download (D110, D1270): the document as Claudia's own sealed file, to keep on your computer. An owner
+    gets the whole file; an editor gets it with only her own key slot; a viewer gets only what the content key opens
+    (no history, no chat) and her own slot. It opens with your name and password, as a copy of its own and not as the
+    live document. You confirm it is really you with your own current password: it is also what finds your slot.
+    Returns `{format: "claudia", filename, content_type, data (base64), parts}` with `parts` naming what the file
+    holds (`content`, and for an owner or an editor `history` and `chat`); `unauthorized` if the password is wrong;
+    `unavailable` on a server that keeps no Claudia files."""
+    if not isinstance(ctx.directory, SealedCopyDirectory):
+        raise RequestError("unavailable", msg("this server does not keep documents as files you can download"))
+    try:
+        data = ctx.directory.sealed_copy(ctx.doc_id, ctx.user, password)
+    except ValueError as error:
+        raise RequestError("command_error", str(error)) from error
+    if data is None:
+        raise RequestError("unauthorized", msg("that is not your current password"))
+    parts = ["content"] if ctx.account.role == "viewer" else ["content", "history", "chat"]
+    return {
+        "format": "claudia",
+        "filename": f"{ctx.doc_id}.claudia",
+        "content_type": "application/x-claudia-document",
+        "data": base64.b64encode(data).decode("ascii"),
+        "parts": parts,
     }
 
 

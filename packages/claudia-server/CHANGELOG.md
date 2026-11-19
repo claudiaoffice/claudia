@@ -5,6 +5,24 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-11-19
+
+### Added
+- `download_claudia` (D110, D1270, E2.12), for every role: the document as Claudia's own sealed file, for File ▸ Download.
+  `{password}` is the person's own current password, which also finds their slot; the answer is
+  `{format: "claudia", filename, content_type, data (base64), parts}`. An owner gets the whole file, an editor the file with
+  only her own slot, a viewer only what the content key opens. `unauthorized` for a wrong password, `unavailable` on a
+  server without Claudia files. `SealedCopyDirectory` is the protocol a directory implements for it (`SealedDocuments`
+  does, with `sealed_copy`, which packs an open document first so the file has what was said so far).
+- `--proxy-hops N` and `create_app(proxy_hops=N)` (D1275, SEC-02): with `--behind-proxy`, a connection is counted by the
+  `X-Forwarded-For` entry that many places from the right (default 1: the one the nearest proxy appended), not by the
+  proxy's own address. `claudia_server.client_address` (`ClientAddress`, `forwarded_address`). The banner says how people
+  are counted, and the log says once if a trusted proxy sends no usable header.
+
+### Fixed
+- Behind `--behind-proxy` every client had the proxy's address, so the per-address caps (waiting sockets, lookups,
+  uploads) were one cap for everybody (D1275).
+
 ### Changed
 - `rotate_object` refuses a table (D1232, D1224): "A table does not turn", as it refuses a chart. A table in a text never
   had a rotation in the file formats or the clients, so no document holds one; a client that sent it got a turned table

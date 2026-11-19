@@ -237,6 +237,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="with --no-tls: a proxy in front of this server encrypts the traffic; needed to listen on any address "
         "other than this computer's",
     )
+    tls.add_argument(
+        "--proxy-hops",
+        type=int,
+        metavar="N",
+        help="with --behind-proxy: how many proxies in front of this server set X-Forwarded-For (default 1). A "
+        "person is counted by the address the nearest of them appended, not by the proxy's own, so a wait or a cap "
+        "for one address does not hit everybody. 0 counts by the socket and ignores the header",
+    )
     tls.add_argument("--tls-cert", metavar="FILE")
     tls.add_argument("--tls-key", metavar="FILE")
     tls.add_argument(
@@ -260,6 +268,10 @@ def load_model(spec: str) -> type[DocumentModel]:
 def _tls(args: argparse.Namespace) -> tuple[Certificate | None, dict[str, str]]:
     if args.no_tls and (args.tls_cert or args.tls_key):
         raise UsageError("--no-tls and --tls-cert/--tls-key contradict each other")
+    if args.proxy_hops is not None and not args.behind_proxy:
+        raise UsageError("--proxy-hops goes with --behind-proxy: without a proxy there is no header to trust")
+    if args.proxy_hops is not None and args.proxy_hops < 0:
+        raise UsageError("--proxy-hops cannot be negative")
     if args.behind_proxy and not args.no_tls:
         raise UsageError("--behind-proxy says that a proxy encrypts instead of this server, so it goes with --no-tls")
     if args.no_tls:
@@ -528,6 +540,24 @@ def _administrator_banner_line(admins: AdminDirectory, exposed: bool) -> str | N
     return None
 
 
+def _proxy_hops(args: argparse.Namespace) -> int:
+    """How many proxies in front of the server set ``X-Forwarded-For`` (D1275): none without ``--behind-proxy``, one by
+    default with it."""
+    if not args.behind_proxy:
+        return 0
+    return 1 if args.proxy_hops is None else args.proxy_hops
+
+
+def _proxy_banner_lines(args: argparse.Namespace) -> list[str]:
+    """Say how people are counted behind a proxy, so that nobody wonders why one wait hits everybody."""
+    if not args.behind_proxy:
+        return []
+    hops = _proxy_hops(args)
+    if hops:
+        return [f"people are counted by the X-Forwarded-For entry of the nearest of {hops} proxy(ies)"]
+    return ["people are counted by the proxy's address (--proxy-hops 0): one wait or cap for everybody"]
+
+
 def _tls_banner_lines(certificate: Certificate | None, *, behind_proxy: bool) -> list[str]:
     """What the start-up banner says about encryption."""
     if certificate is None:
@@ -628,6 +658,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         access_secret=secret,
         max_waiting=args.max_waiting,
         max_waiting_per_address=args.max_waiting_per_address,
+        proxy_hops=_proxy_hops(args),
         web_dir=args.web,
         list_documents=not args.no_list,
         admin=admin,
@@ -641,6 +672,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         f"serving {', '.join(suite.apps)} on {ws_scheme}://{args.host}:{args.port}/api/<app>/docs/<id>/ws",
     ]
     banner += _tls_banner_lines(certificate, behind_proxy=args.behind_proxy)
+    banner += _proxy_banner_lines(args)
     banner.append(f"answers to {', '.join(hosts.names)} and IP addresses; more names with --allow-host NAME")
     if secret:
         banner.append("access secret set: making documents and reading the list need it")

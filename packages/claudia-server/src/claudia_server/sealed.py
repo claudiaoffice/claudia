@@ -72,6 +72,7 @@ from claudia_container import (
     recover_access,
     remove_user,
     rewrite_journal,
+    sealed_copy,
     set_details,
     set_recovery_key,
     transfer_owner,
@@ -469,6 +470,19 @@ class SealedDocuments:
         with self._lock:
             set_details(path, unlocked.keys, description, tags)
         return True
+
+    def sealed_copy(self, doc_id: str, name: str, password: str) -> bytes | None:
+        """The document as a sealed file for ``name`` to keep (D110; see ``claudia_container.sealed_copy`` for what
+        each role gets). An open document is packed first, so the file holds what has been said so far, and has a
+        fresh snapshot for a viewer's copy. ``None`` for a wrong name or password."""
+        with self._lock:
+            held = self._open.get(doc_id)
+        if held is not None:
+            self._pack(doc_id, held)
+        try:
+            return sealed_copy(self._file(doc_id), name, password)
+        except (ContainerError, OSError) as error:
+            raise ValueError(f"the document cannot be copied: {error}") from error
 
     def describe(self, doc_id: str, description: str, tags: Sequence[str]) -> None:
         """Give a document its maker has just made (whose keys are still held) a description and tags: the one

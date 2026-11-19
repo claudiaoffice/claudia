@@ -5,7 +5,17 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-19
+
+### Added
+- `sealed_copy(path, name, password)` (D110, D1270, E2.12): the document as a file for one person to keep, still sealed.
+  An owner gets the whole file; anybody else gets it with only their own key slot (so nobody can attack the other
+  people's passwords offline with it), and a viewer's file has only what the content key opens: no history, chat or head,
+  but the snapshot. `None` for a wrong name or password. The file at `path` is not changed.
+
 ### Changed
+- `KdfParams`' docstring no longer says that the cost can be raised "at the next login": it cannot for a document with
+  several people, since every slot is sealed with a key from its own person's password (D1267). Words only.
 - The document file and the journal are written with `claudia_file_writer.atomic_file` (CODE-34, D701); the retry on
   Windows and the message naming a handle of our own that still holds the file moved there with it.
 

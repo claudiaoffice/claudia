@@ -1,0 +1,102 @@
+<svg viewBox="0 0 1400 780" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1400" height="780" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — waiting after failed logins and the hashing cost in the server settings, proposed (E2.7; D1266, D1267)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">The login of the web app and the desktop clients, and a card in Server settings ▸ Security. Nothing is built until it is agreed.</text>
+<rect x="40" y="96" width="420" height="644" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">A · The login, when it has to wait</text>
+<text x="62" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A wait shows a countdown; it never says whether the name or</text>
+<text x="62" y="166" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">the document exists (D1266).</text>
+<text x="62" y="196" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">After four wrong tries</text>
+<rect x="62" y="206" width="376" height="300" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="80" y="236" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Open “plan”</text>
+<line x1="62" y1="250" x2="438" y2="250" stroke="#e3dfee" stroke-width="1"/>
+<text x="80" y="266" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">Your name</text>
+<rect x="80" y="274" width="340" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="92" y="293.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">tobi</text>
+<text x="80" y="318" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">Password</text>
+<rect x="80" y="326" width="340" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="92" y="345.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">••••••••</text>
+<rect x="80" y="372" width="340" height="32" rx="8" fill="#fdf0f1" stroke="#f0c6ca" stroke-width="1"/>
+<text x="94" y="392" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#c01c28" text-anchor="start">Too many tries. Try again in 8 seconds.</text>
+<rect x="244" y="460" width="78" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="283.0" y="479.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="330" y="460" width="90" height="30" rx="6" fill="#e9e5f3"/>
+<text x="375" y="479.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#6e6880" text-anchor="middle">Open (8)</text>
+<text x="62" y="548" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">While it checks the password</text>
+<rect x="62" y="558" width="376" height="160" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="80" y="588" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Open “plan”</text>
+<line x1="62" y1="602" x2="438" y2="602" stroke="#e3dfee" stroke-width="1"/>
+<circle cx="92" cy="628" r="9" fill="none" stroke="#e3dfee" stroke-width="2.5"/>
+<path d="M 92 619 a 9 9 0 0 1 9 9" fill="none" stroke="#5b4bc4" stroke-width="2.5" stroke-linecap="round"/>
+<text x="112" y="633" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Checking…</text>
+<text x="80" y="664" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">About a second: the password is checked slowly on</text>
+<text x="80" y="680" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">purpose.</text>
+<rect x="490" y="96" width="420" height="644" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="512" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">B · Server settings ▸ Security</text>
+<text x="512" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A new card on the settings page. The measurement is the</text>
+<text x="512" y="166" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">server's own (D1267).</text>
+<rect x="512" y="176" width="376" height="560" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="512" y="176" width="376" height="34" rx="12" fill="#1f1a33"/>
+<rect x="512" y="196" width="376" height="14" rx="0" fill="#1f1a33"/>
+<text x="530" y="198" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#f7f3ec" text-anchor="start">Server: demo.claudia-office.de</text>
+<text x="870" y="198" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#a9a3bd" text-anchor="end">Settings</text>
+<text x="530" y="244" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">Password protection</text>
+<text x="530" y="266" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">How slowly a password is checked. Slower means harder</text>
+<text x="530" y="282" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">to guess from a stolen file, and a longer wait for</text>
+<text x="530" y="298" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">everybody who logs in.</text>
+<text x="530" y="322" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">Time one login may take</text>
+<rect x="530" y="330" width="160" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="542" y="349.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">0.75 s</text>
+<text x="530" y="372" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">between 0.25 and 2 seconds</text>
+<text x="710" y="322" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">Memory one login may use</text>
+<rect x="710" y="330" width="160" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="722" y="349.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">256 MiB</text>
+<text x="710" y="372" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">at most; the rest is paid in passes</text>
+<rect x="530" y="392" width="340" height="100" rx="8" fill="#f4f1fa" stroke="#e3dfee" stroke-width="1"/>
+<text x="544" y="414" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#1f1a33" text-anchor="start">Measured on this server</text>
+<text x="544" y="434" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">One login takes 0.74 s with 256 MiB and 4 passes.</text>
+<text x="544" y="452" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">This server checks about 1 login a second.</text>
+<text x="544" y="474" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Measured when the server started, 14:03.</text>
+<rect x="530" y="506" width="120" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="590.0" y="525.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="middle">Measure again</text>
+<text x="530" y="560" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">New documents get this cost. Documents that exist keep</text>
+<text x="530" y="576" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">theirs.</text>
+<line x1="530" y1="590" x2="870" y2="590" stroke="#e3dfee" stroke-width="1"/>
+<text x="530" y="616" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">After wrong passwords</text>
+<text x="530" y="636" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The first three tries are free, then the wait grows:</text>
+<text x="530" y="652" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">1, 2, 4, 8 and 16 seconds. Nobody is ever locked out.</text>
+<text x="530" y="672" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">Longest wait</text>
+<rect x="530" y="680" width="100" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="542" y="699.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">30 s</text>
+<text x="650" y="672" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">For one name</text>
+<rect x="650" y="680" width="100" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="662" y="699.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">10 s</text>
+<text x="770" y="672" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#1f1a33" text-anchor="start">Free tries</text>
+<rect x="770" y="680" width="100" height="30" rx="6" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="782" y="699.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">3</text>
+<rect x="940" y="96" width="420" height="644" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="962" y="130" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start">C · What it does to a server</text>
+<text x="962" y="150" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The same numbers, read as someone who runs one.</text>
+<text x="962" y="190" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">One login</text>
+<text x="962" y="208" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">about 0.75 s, on the server's own hardware</text>
+<text x="962" y="238" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Many people at once</text>
+<text x="962" y="256" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">about 1 login a second, so 30 people opening one document</text>
+<text x="962" y="272" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">wait up to half a minute</text>
+<text x="962" y="302" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">A guesser</text>
+<text x="962" y="320" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">refused before any hashing once the wait begins, so it costs</text>
+<text x="962" y="336" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">the server nothing</text>
+<text x="962" y="366" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">A person behind a shared address</text>
+<text x="962" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">a success from that address resets the count; the wait is</text>
+<text x="962" y="400" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">raised for it if it still bites</text>
+<text x="962" y="430" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">A small server (a NAS)</text>
+<text x="962" y="448" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">the memory ceiling keeps one login within 256 MiB; the cost</text>
+<text x="962" y="464" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">is paid in passes, the login takes the same time</text>
+<text x="962" y="494" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">A document made earlier</text>
+<text x="962" y="512" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">keeps the cost it was made with</text>
+<line x1="962" y1="542" x2="1338" y2="542" stroke="#e3dfee" stroke-width="1"/>
+<text x="962" y="568" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">To check before the cost is final</text>
+<text x="962" y="588" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Whether hashing with one lane can run in parallel (the</text>
+<text x="962" y="604" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">deadlock was with several lanes): on a two-core machine, two</text>
+<text x="962" y="620" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">single-lane hashes took no longer than one. If it holds on a</text>
+<text x="962" y="636" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">server, the throughput goes up without lowering the cost.</text>
+</svg>
