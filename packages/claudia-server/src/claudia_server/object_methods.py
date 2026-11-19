@@ -193,7 +193,7 @@ def add_object_methods(
             say(
                 "rotate_object",
                 "Turn an object about its centre to `rotation` whole degrees clockwise; any whole number does (-20 is "
-                "340). A chart does not turn.",
+                "340). A chart and a table do not turn.",
             ),
         )
     )

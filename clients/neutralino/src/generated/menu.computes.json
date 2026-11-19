@@ -753,6 +753,49 @@
             "role": null,
             "start": false
           }
+        ],
+        [
+          {
+            "items": [
+              {
+                "accelerators": [
+                  "<Primary><Alt>period"
+                ],
+                "checkable": false,
+                "id": "format.rotate-right",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Rotate Right 90\u00b0",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt>comma"
+                ],
+                "checkable": false,
+                "id": "format.rotate-left",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Rotate Left 90\u00b0",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>z"
+                ],
+                "checkable": false,
+                "id": "format.rotate-by",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Rotate By\u2026",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Rotate"
+          }
         ]
       ]
     },

@@ -1,7 +1,7 @@
 ---
 id: D1232
-title: "Turning an object and writing in a text box or shape are the same in all three apps (proposal, tests first)"
-status: undecided
+title: "Turning an object and writing in a text box or shape are the same in all three apps"
+status: current
 applies-to: all
 date: 2026-11-19
 round: "Object interaction in the three apps (branch object-interaction)"
@@ -11,9 +11,11 @@ superseded-by: []
 
 # D1232 · Turning an object and writing in a text box or shape are the same in all three apps
 
-**Proposal. The server's work is shared and already there; what is missing is the same few entries in the clients.** The tests
-come first (`web/e2e/objects.cjs` with `D1232=1`, `packages/claudia-server/tests/test_server_object_words_and_turns.py`,
-`xfail(strict)`), and are reviewed before any of this is built.
+**Decided by the owner 2026-11-19 ("Tables and Charts cannot be rotated, that decision stands. Please fix."), built in patches 9 and 10.**
+The server's work is shared and was already there; what was missing was the same few entries in the clients. The scenarios are
+in `specs/object-words.md` and `specs/object-turning.md`, the tests in `web/e2e/objects.cjs`,
+`packages/claudia-server/tests/test_server_object_words_and_turns.py`, `web/tests/rotate-menu.test.ts` and
+`clients/linux/tests/test_manifest.py`.
 
 **Turning.**
 - *Server.* `rotate_object` is one implementation for all three apps (`object_methods.py`, `turn_command` in the kernel). It
@@ -34,7 +36,9 @@ that stay keep their writer. Computes has no text boxes or shapes; a container i
 
 **Not in this decision.** The key of *Delete* (a selected object or table) in composes and computes: logged as UX-47.
 
-**State 2026-11-19.** Writing in a box is built (patch 9: server, editor, E2E step, specs in `specs/object-words.md`); turning
-(table refused, Format ▸ Rotate in composes and computes) follows in the next patch.
+**State 2026-11-19.** Both built. Turning: `turn_command` refuses a table with "A table does not turn" (`_NOT_TURNED` in
+`claudia_core/objects.py`), Format ▸ Rotate ▸ is in the composes and computes manifests (so in both desktop menus, the key
+table and `keyboard-shortcuts.md`) and in the web menus through one module (`web/app/lib/rotate-menu.ts`, which creates uses
+too); composes and computes turn through `TextObjectMenu.vue` and `SheetGrid.vue`. Writing in a box: see above.
 
 **Notes.** Applies D181, D1024, D1221, D1224, D1225.

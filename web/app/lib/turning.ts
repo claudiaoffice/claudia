@@ -159,9 +159,10 @@ export function resizeTurned(start: Frame, rotation: number, handle: Handle, dx:
   return fitsOnSlide(frame.x, frame.y, frame.w, frame.h, rotation, bounds) ? frame : null
 }
 
-/** Does an object of this kind turn? Charts (kind `diagram`) do not (D1021); text boxes, shapes, pictures and rendered
- * text do. The server decides for itself — this only keeps the handle and the menu entries off what it would refuse. */
-export const canTurn = (kind: string): boolean => kind !== 'diagram'
+/** Does an object of this kind turn? Charts (kind `diagram`, D1021) and tables (D1224) do not; text boxes, shapes,
+ * pictures and rendered text do. The server decides for itself (`turn_command`) — this only keeps the handle and the
+ * menu entries off what it would refuse. */
+export const canTurn = (kind: string): boolean => kind !== 'diagram' && kind !== 'table'
 
 /** The words a screen reader says for a turn: "30°". */
 export const degreesText = (rotation: number): string => `${rotation}°`

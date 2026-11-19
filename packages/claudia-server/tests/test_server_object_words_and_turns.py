@@ -19,7 +19,6 @@ from claudia_server.protocol import Context, Limits, RequestError
 
 ANN = Account("ann", "owner")
 BEN = Account("ben", "editor")
-NOT_BUILT = pytest.mark.xfail(strict=True, reason="D1232 is not built yet")
 
 
 @pytest.fixture
@@ -77,7 +76,6 @@ def test_a_picture_in_a_text_has_no_words_to_write(paper):
         call(paper, "write_words", {"id": picture, "text": "x"})
 
 
-@NOT_BUILT
 def test_a_table_does_not_turn_on_the_server_either(paper):
     table = call(paper, "add_table", {"block": "b1", "offset": 4, "cells": [["a", "b"], ["c", "d"]]})["object"]
     with pytest.raises(RequestError, match="table does not turn"):

@@ -175,7 +175,7 @@ does). It creates one object of every kind the app offers and runs the contract'
    (the caret / active cell did not move);
 2. drag moves, with the preview during the move and one history entry after; `Esc` mid-drag restores;
 3. each handle scales; an image keeps its ratio (and the size does **not** snap back); a table scales its width only;
-4. the turn handle rotates; Rotate by… from the menu (and no Rotate entry for a chart or a table);
+4. the turn handle rotates; Rotate by… from the menu (and no Rotate entry for a chart or a table; built in D1232: `rotate-menu.ts`, server refuses a table);
 5. right press selects and opens the object menu with exactly the contract's items; the cell menu, the header menu and
    the paragraph menu are **not** in the DOM;
 6. keyboard: Tab / Select Next Object reaches the object, arrows nudge, Delete removes, Enter edits;

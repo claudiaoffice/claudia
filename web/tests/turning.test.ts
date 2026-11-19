@@ -164,9 +164,10 @@ describe('resizeTurned', () => {
 })
 
 describe('what turns', () => {
-  it('turns everything but a chart', () => {
+  it('turns everything but a chart and a table (D1021, D1224)', () => {
     expect(['text', 'shape', 'image', 'rendered'].every(canTurn)).toBe(true)
     expect(canTurn('diagram')).toBe(false)
+    expect(canTurn('table')).toBe(false)
   })
   it('says a turn in degrees', () => {
     expect(degreesText(30)).toBe('30°')

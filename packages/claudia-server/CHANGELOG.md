@@ -5,6 +5,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- `rotate_object` refuses a table (D1232, D1224): "A table does not turn", as it refuses a chart. A table in a text never
+  had a rotation in the file formats or the clients, so no document holds one; a client that sent it got a turned table
+  nobody could see turned back.
+
 ### Added
 - `set_text` and `write_words` in composes (D1232): the words of a text box or a shape in a text, written as a person types
   them. They moved from `creates` to `claudia_server.shape_methods`, next to `add_object`, so both apps have them; their

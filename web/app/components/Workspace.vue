@@ -64,6 +64,7 @@ import type { Axis } from '~/lib/line-sizes'
 import DocumentFrame from './DocumentFrame.vue'
 import PrintPreview from './PrintPreview.vue'
 import SearchPanel from './SearchPanel.vue'
+import { rotateItem } from '~/lib/rotate-menu'
 import type { Menu } from './MenuBar.vue'
 import type { EditState } from './SheetGrid.vue'
 
@@ -107,6 +108,8 @@ const grid = ref<{
   openStyleMenu: (at?: { x: number; y: number }, mode?: 'edit' | 'apply') => void
   selectedObject: () => string | null
   stepObject: (step: 1 | -1) => void
+  quarter: (direction: 1 | -1) => Promise<void>
+  openRotateBy: () => void
   paste: () => Promise<boolean>
   anchorPoint: (row: number, col: number) => { x: number; y: number } | null
   centre: (row: number, col: number) => void
@@ -1095,6 +1098,16 @@ const menus = computed<Menu[]>(() => {
         ...styleItems(),
         { label: '', separator: true },
         { id: 'format.describe', label: t('Describe Object…'), hint: chordLabel(DESCRIBE.chord), action: () => openDescribe(), disabled: readonly.value || !grid.value?.selectedObject() },
+        // a quarter turn each way and any angle, for what turns (a chart and a table do not, D1021, D1224)
+        rotateItem(t, {
+          kind: () => {
+            const id = grid.value?.selectedObject()
+            return id ? (state.objects[id]?.kind ?? null) : null
+          },
+          readonly: () => readonly.value,
+          quarter: (direction) => void grid.value?.quarter(direction),
+          by: () => grid.value?.openRotateBy(),
+        }),
       ],
     },
     {

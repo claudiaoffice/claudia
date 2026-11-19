@@ -45,6 +45,7 @@ import PrintPreview from './PrintPreview.vue'
 import ImageImportDialog from './ImageImportDialog.vue'
 import { textSource } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
+import { rotateItem } from '~/lib/rotate-menu'
 import type { Menu, MenuItem } from './MenuBar.vue'
 
 const props = defineProps<{ session: TextSession }>()
@@ -293,6 +294,7 @@ const extraShortcuts = [
 /** Where the menu of an object or a table is open (D1225, D1224), and a turn being tried from its Rotate By…. */
 const objectMenu = ref<{ id: string; x: number; y: number } | null>(null)
 const turning = ref<{ id: string; turn: number } | null>(null)
+const objectMenuHost = ref<{ quarter: (direction: 1 | -1) => Promise<void>; openRotateBy: () => void } | null>(null)
 
 /** The table whose options are open, and the column the caret was in. */
 const optionsFor = ref<{ table: string; column?: string } | null>(null)
@@ -547,6 +549,14 @@ const menus = computed<Menu[]>(() => {
               },
             })),
         { label: '', separator: true },
+        // a quarter turn each way and any angle, for what turns (a chart and a table do not, D1021, D1224)
+        rotateItem(t, {
+          kind: () => (state.selectedObject ? (state.objects[state.selectedObject]?.kind ?? null) : null),
+          readonly: () => readonly.value || printing.value,
+          quarter: (direction) => void objectMenuHost.value?.quarter(direction),
+          by: () => objectMenuHost.value?.openRotateBy(),
+        }),
+        { label: '', separator: true },
         // one entry and one key that cycles the four modes (D1064); it says which mode the selected object has now
         {
           id: 'format.wrap-text',
@@ -674,7 +684,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <ImageImportDialog v-if="dialog === 'image'" :add="addPicture" @close="dialog = null" @inserted="pictureInserted" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <ReferencePicker v-if="picker" :x="picker.x" :y="picker.y" :targets="(q) => session.referenceTargets(q)" @choose="putReference" @close="(picker = null), editor?.focus()" />
-      <TextObjectMenu :session="session" :menu="objectMenu" :table-host="tableHost" :clipboard="objectClip" @close="objectMenu = null" @turning="turning = $event" @styles="dialog = 'styles'" />
+      <TextObjectMenu ref="objectMenuHost" :session="session" :menu="objectMenu" :table-host="tableHost" :clipboard="objectClip" @close="objectMenu = null" @turning="turning = $event" @styles="dialog = 'styles'" />
       <ContextMenu v-if="refMenu" :x="refMenu.x" :y="refMenu.y" :items="refMenuItems" :width="260" :label="t('Reference menu')" @close="refMenu = null" />
       <ContentsDialog v-if="dialog === 'contents' && contentsHost" :host="contentsHost" :title="t('Table of contents')" @close="dialog = null" />
       <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.currentScheme() ?? undefined" @close="dialog = null" />

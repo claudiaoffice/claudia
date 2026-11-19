@@ -10,6 +10,8 @@ import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
 import { tableContextItems, type TableMenuHost } from '~/lib/table-menu'
 import type { TextSession } from '~/lib/text-session'
 import { pointer } from '~/lib/objects'
+import { besideRect } from '~/lib/geometry'
+import { canTurn, degreesText, quarterTurn } from '~/lib/turning'
 import { wrapOf, MAX_WRAP_GAP, DEFAULT_WRAP_GAP, type Wrap } from '~/lib/wrap'
 import { useI18n } from '~/lib/i18n'
 import type { MenuItem } from './MenuBar.vue'
@@ -107,6 +109,24 @@ function cancelRotate() {
   rotating.value = null
   emit('turning', null)
 }
+/** Format ▸ Rotate ▸ Rotate Right 90° / Rotate Left 90° (D1024, D1232): a quarter turn of the selected object. */
+async function quarter(direction: 1 | -1, id: string | null = state.selectedObject) {
+  const o = id ? objectOf(id) : null
+  if (!o || !canTurn(o.kind)) return
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  const rotation = quarterTurn(o.rotation, direction)
+  if (await session.rotateObject(o.id, rotation)) session.notice(t('Turned to {degrees}', { degrees: degreesText(rotation) }), 'info')
+}
+/** Format ▸ Rotate ▸ Rotate By…: the popover, beside the object unless a place is given. */
+function openRotateBy(id: string | null = state.selectedObject, at?: { x: number; y: number }) {
+  const o = id ? objectOf(id) : null
+  if (!o || !canTurn(o.kind)) return
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  const el = document.querySelector(`[data-object="${CSS.escape(o.id)}"]`)
+  const where = at ?? (el ? besideRect(el.getBoundingClientRect(), 264, window.innerWidth) : { x: 160, y: 180 })
+  rotating.value = { id: o.id, from: o.rotation, ...where }
+}
+defineExpose({ quarter, openRotateBy })
 
 // ------------------------------------------------------------------------------ the style of the object (E9.7, D203)
 const styling = ref<{ x: number; y: number } | null>(null)

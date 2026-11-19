@@ -11,9 +11,9 @@
 //   server 2: ... --model claudia_composes:TextModel --port 8766 ...      server 3: ... --model claudia_creates:SlideModel --port 8767 ...
 //   node e2e/objects.cjs                       (APP=computes|composes|creates for one; CHROME=/path/to/chrome; SHOTS=dir)
 //
-// D1232: Edit text writes the words of a text box and a shape in composes as it does in creates (built), and Format ▸
-// Rotate (Rotate Right 90°, Rotate Left 90°, Rotate By…, with their keys) is in composes and computes as in creates
-// (tests first, not built yet: its steps run with D1232=1 and are not in CI until it is).
+// D1232: Edit text writes the words of a text box and a shape in composes as it does in creates, and Format ▸ Rotate
+// (Rotate Right 90°, Rotate Left 90°, Rotate By…, with their keys) is in composes and computes as in creates; neither a
+// chart nor a table turns (D1021, D1224), in the menu as on the server.
 //
 // `tests/test_object_kinds_agree.py` fails when a kind of object (`claudia_core.OBJECT_KINDS`) has no row in KINDS below:
 // a new kind of object comes with its row here, or says in its row why an app cannot have it.
@@ -27,7 +27,6 @@ const STAMP = Date.now() % 100000
 const ANN = ['ann', 'Ann-has-a-Password-1']
 const BEN = ['ben', 'Ben-has-a-Password-1']
 const log = (...a) => console.log(...a)
-const D1232 = process.env.D1232 === '1'
 
 // -- a picture that is big enough to hold with a pointer: 200 x 100, a gradient so that it can be told from a hole
 function png(w, h) {
@@ -234,7 +233,7 @@ async function battery(app, kind, ann, ben) {
   const where = `${app} ${kind}`
   const a = APPS[app]
   const obj = ann.locator(a.objects)
-  const turns = kind !== 'diagram'
+  const turns = kind !== 'diagram' && kind !== 'table'
   const hist0 = await entries(ann)
   assert.equal(await count(ann, app), 1, `${where}: one object was made`)
   if (ben) await ben.waitForFunction(([sel]) => document.querySelectorAll(sel).length === 1, [a.objects], { timeout: 8000 })
@@ -324,7 +323,7 @@ async function battery(app, kind, ann, ben) {
   }
 
   // 5b. Format ▸ Rotate, with its keys, in every app that turns objects (D1024, D1232)
-  if (D1232) await rotateMenu(ann, where, turns, obj)
+  await rotateMenu(ann, where, turns, obj)
 
   // 6. the keyboard: arrows nudge, Esc deselects, Delete deletes (and Undo brings it back)
   await obj.click()
@@ -470,6 +469,8 @@ async function tables(ann, ben) {
   assert.deepEqual(await menusOpen(ann), ['Object menu'], `${where}: not the menu of a paragraph beside it`)
   await ann.keyboard.press('Escape')
   await ann.waitForSelector('[role=menu][aria-label="Object menu"]', { state: 'detached' })
+  // a table does not turn: no Rotate by… in its menu above, and Format ▸ Rotate is off with it selected (D1224)
+  await rotateOff(ann, `${where}: a table`)
 
   // drag the tab below the last paragraph: a drop line while held, one entry on release, Esc leaves the table
   const first = await box(table)
@@ -512,7 +513,7 @@ async function run(browser, app) {
       await ann.waitForTimeout(500)
       await ann.keyboard.press('Control+Home')
     }
-    if (D1232) await rotateOff(ann, `${app}: nothing is selected`)
+    await rotateOff(ann, `${app}: nothing is selected`)
     for (const [kind, row] of Object.entries(KINDS)) {
       const make = row[app]
       if (typeof make === 'string') {

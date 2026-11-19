@@ -12,7 +12,7 @@ import { useObjectInteraction } from '~/lib/object-interaction'
 import { contextMenuItems } from '~/lib/object-menu'
 import { pictureOf as clippedImport, useObjectClipboard } from '~/lib/object-clipboard'
 import { nearestLine, stepFor } from '~/lib/sheet-object-host'
-import { canTurn, degreesText, SHIFT_STEP, stepTurn } from '~/lib/turning'
+import { canTurn, degreesText, quarterTurn, SHIFT_STEP, stepTurn } from '~/lib/turning'
 import type { MenuItem } from './MenuBar.vue'
 import { renderedView } from '~/lib/rendering'
 import {
@@ -575,6 +575,15 @@ function onPointerMove(event: PointerEvent) {
 async function onPointerUp() {
   const change = await interaction.release()
   if (change?.kind === 'rotate') turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(change.rotation) })
+}
+
+/** Format ▸ Rotate ▸ Rotate Right 90° / Rotate Left 90° (D1024, D1232): a quarter turn of the selected object. */
+async function quarter(direction: 1 | -1, id: string | null = selectedObject.value) {
+  const o = id ? state.objects[id] : null
+  if (!o || !canTurn(o.kind)) return
+  if (readonlyHere()) return props.session.notice(t('You can only look at this document.'), 'warning')
+  const to = quarterTurn(o.rotation, direction)
+  if (await props.session.rotateObject(o.id, to)) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? to) })
 }
 
 /** Rotate by…: the popover, beside the object. Its angles are previews on the sheet until Done. */
@@ -1165,6 +1174,7 @@ defineExpose({
   focus: () => viewport.value?.focus(),
   selectObject: (id: string) => (selectedObject.value = id),
   openRotateBy,
+  quarter,
   /** Paste a picture that was cut or copied (false: there is none, the cells are pasted instead). */
   paste: () => clip.paste(),
   beginContainerEdit: () => beginContainerEdit(selectedObject.value ? state.objects[selectedObject.value] : undefined),

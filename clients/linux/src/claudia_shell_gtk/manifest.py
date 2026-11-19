@@ -1052,7 +1052,7 @@ def composes() -> Manifest:
         "composes",
         "Claudia Composes",
         edit=edit_menu,
-        format_menu=_format_menu(look="Change how this kind of paragraph looks", wrap=True),
+        format_menu=_format_menu(look="Change how this kind of paragraph looks", wrap=True, rotate=True),
         view=view_menu,
         tools=Menu("Tools", ((_tools_ask(),), _table_block())),
         prints=True,
@@ -1182,7 +1182,7 @@ def computes() -> Manifest:
         "Claudia Computes",
         edit=edit_menu,
         format_menu=_format_menu(
-            look="Change how the object you have selected looks", clear_cell_style=True, describe=True
+            look="Change how the object you have selected looks", clear_cell_style=True, describe=True, rotate=True
         ),
         view=Menu("View", (_shared_view_block(authors=False),)),
         tools=tools_menu,
