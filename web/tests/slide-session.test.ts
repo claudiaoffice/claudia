@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { SlideSession } from '~/lib/slide-session'
+import { POINT_MS } from '~/lib/base-session'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -259,6 +260,31 @@ describe('renaming a slide (D550)', () => {
     expect(link.last('rename_thing')).toEqual({ id: 's1', name: 'Agenda', base: 'main:0' })
   })
 
+  it('asks what the dialog shows about a thing, and gives name and description in one request (D1317)', async () => {
+    const { link, session } = await opened()
+    const details = { id: 't1', kind: 'text', name: 'Title', name_fixed: false, description: '', drawn: true, decorative: false }
+    link.handlers.thing_details = () => details
+    expect(await session.thingDetails('t1')).toEqual(details)
+    expect(link.last('thing_details')).toEqual({ id: 't1' })
+    link.handlers.name_and_describe = () => ({ revision: 'main:1', name: 'Headline', description: 'The title', decorative: false })
+    expect(await session.nameAndDescribe({ id: 't1', name: 'Headline', description: 'The title', decorative: false })).toBe(true)
+    expect(link.last('name_and_describe')).toEqual({ id: 't1', name: 'Headline', description: 'The title', decorative: false, base: 'main:0' })
+  })
+  it('asks which fonts the document lacks, and takes a server that cannot say as having nothing to report', async () => {
+    const { link, session } = await opened()
+    link.handlers.font_report = () => ({ checked: true, missing: [{ family: 'Calibri', stand_in: 'Carlito', closeness: 'same-widths' }] })
+    expect((await session.fontReport()).missing.map((m) => m.family)).toEqual(['Calibri'])
+    delete link.handlers.font_report
+    expect(await session.fontReport()).toEqual({ checked: false, missing: [] })
+  })
+  it('says no, with the server\'s words, when it refuses a name', async () => {
+    const { link, session } = await opened()
+    link.handlers.name_and_describe = () => {
+      throw new ProtocolError('command_error', 'somebody else has that name')
+    }
+    expect(await session.nameAndDescribe({ id: 't1', name: 'Title', description: '', decorative: false })).toBe(false)
+    expect(session.state.notice?.text).toMatch(/somebody else/)
+  })
   it('labels a slide by its name, or by its place while it has none', async () => {
     const { link, session } = await opened()
     expect(session.slideLabel('s1', 0)).toBe('Slide 1')
@@ -558,9 +584,75 @@ describe('tags to things on slides (E5.20, D551)', () => {
     expect(session.state.activeSlide).toBe('s1')
     await session.goToThing('t9')
     expect(session.state.activeSlide).toBe('s2')
-    expect(session.state.pointed).toEqual({ id: 't9', container: 's2', from: 's1' })
+    expect(session.state.pointed).toEqual({ id: 't9', container: 's2' })
+    expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
     session.goBack()
     expect(session.state.activeSlide).toBe('s1')
+    expect(session.state.wayBack).toBeNull()
+  })
+
+  describe('the way back (D1312)', () => {
+    const two = async () => {
+      const link = new FakeLink()
+      server(link, [named('t1', 'Title'), named('t9', 'Chart on two', 's2')])
+      link.handlers.slides = () => [
+        { id: 's1', objects: 1, name: 'One' },
+        { id: 's2', objects: 1, name: 'Two' },
+      ]
+      link.handlers.slide = ({ slide }: any) => ({
+        revision: 'main:0',
+        slide,
+        objects: slide === 's1' ? [named('t1', 'Title')] : [named('t9', 'Chart on two', 's2')],
+      })
+      const session = new SlideSession(() => link)
+      await session.open()
+      return session
+    }
+    beforeEach(() => vi.useFakeTimers())
+    afterEach(() => vi.useRealTimers())
+
+    it('outlives the mark on the thing, and goes only when it is used', async () => {
+      const session = await two()
+      await session.goToThing('t9')
+      vi.advanceTimersByTime(POINT_MS + 10)
+      expect(session.state.pointed).toBeNull()
+      expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
+    })
+    it('is kept even when the view does not move, with the place the view reports', async () => {
+      const session = await two()
+      session.setAnchorProvider(() => 'top-of-s1')
+      await session.goToThing('t1')
+      expect(session.state.wayBack).toEqual({ container: 's1', anchor: 'top-of-s1' })
+    })
+    it('is taken afresh by the next jump, so that it leads to where the person was last', async () => {
+      const session = await two()
+      await session.goToThing('t9')
+      await session.goToThing('t1')
+      expect(session.state.wayBack).toEqual({ container: 's2', anchor: null })
+    })
+    it('asks the view to scroll to the place it was, once, when used', async () => {
+      const session = await two()
+      session.setAnchorProvider(() => 'top-of-s1')
+      await session.goToThing('t9')
+      session.goBack()
+      expect(session.state.scrollBack).toEqual({ anchor: 'top-of-s1', nonce: 1 })
+      await session.goToThing('t9')
+      session.goBack()
+      expect(session.state.scrollBack?.nonce).toBe(2)
+    })
+    it('goes when the person starts to type or clicks into the text', async () => {
+      const session = await two()
+      await session.goToThing('t9')
+      session.clearBack()
+      expect(session.state.wayBack).toBeNull()
+      expect(session.state.activeSlide).toBe('s2')
+    })
+    it('does nothing when there is no way back', async () => {
+      const session = await two()
+      session.goBack()
+      expect(session.state.activeSlide).toBe('s1')
+      expect(session.state.scrollBack).toBeNull()
+    })
   })
   it('shows the name a thing has now, and knows a thing that is gone', async () => {
     const { link, session } = await opened([named('t1', 'Title')])

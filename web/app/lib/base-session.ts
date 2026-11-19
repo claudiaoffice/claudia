@@ -9,6 +9,8 @@ import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region,
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
 import type { Thing } from './tags'
+import type { FontReport } from './font-report'
+import type { ThingDetails } from './name-and-describe'
 import type { SchemeInfo } from './numbering'
 import type { Toc } from './contents'
 import type { Deleted, DeleteHow, StyleDeletion } from './style-deletion'
@@ -110,14 +112,28 @@ export interface ReplayState {
   changedMore: boolean
 }
 
-/** What a tag has just taken the view to (E5.20, D551): the thing, the slide, sheet or paragraph it is on, and where to
- * go back to (`null` when the view did not move). The view marks the thing for a moment. */
+/** What a tag has just taken the view to (E5.20, D551): the thing, and the slide, sheet or paragraph it is on. The view
+ * marks the thing for a moment (`POINT_MS`); the way back (`WayBack`) lives longer. */
 export interface Pointed {
   id: string
   container: string | null
-  from: string | null
 }
 export const POINT_MS = 3000
+
+/** Where the person was before a jump (D1312): the slide, sheet or paragraph in view, and the place the view said it
+ * was showing at the top (a paragraph id, a cell, a slide id: the view's own words; `null` if it said none). It lasts
+ * until it is used, the person types or clicks into the text, or the next jump takes its place. */
+export interface WayBack {
+  container: string | null
+  anchor: string | null
+}
+
+/** A request to the view to scroll to a place it reported earlier; `nonce` changes with every request, so that asking
+ * for the same place twice is seen twice. */
+export interface ScrollBack {
+  anchor: string
+  nonce: number
+}
 
 export const rowKey = (item: Item): string => (item.kind === 'change' ? `c:${item.revision}` : `m:${item.number}`)
 
@@ -162,6 +178,10 @@ export interface BaseState {
   renamed: Record<string, string>
   /** The thing a tag in the chat just took the view to, for the view to mark. */
   pointed: Pointed | null
+  /** The way back after a jump (D1312), `null` when there is none. */
+  wayBack: WayBack | null
+  /** Set by `goBack`: the place the view is asked to scroll to. */
+  scrollBack: ScrollBack | null
   /** What the server can make as a rendered container (`rendering_types`); empty for a server that makes none (D560). */
   renderTypes: RenderType[]
   /** The definitions of the rendered containers the document holds, by id; the text is the truth (D390). */
@@ -210,6 +230,8 @@ function initialState(): BaseState {
     preview: null,
     renamed: {},
     pointed: null,
+    wayBack: null,
+    scrollBack: null,
     renderTypes: [],
     renderings: {},
     renderOutcomes: {},
@@ -769,6 +791,37 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return (await this.attempt('rename_thing', { id, name, base: this.state.revision })) !== false
   }
 
+  /** The fonts this document asks for that the server does not have (D1306); an answer that says nothing when the server
+   * does not know the request (an older one) or fails, because a banner is no reason to bother anybody. */
+  async fontReport(): Promise<FontReport> {
+    try {
+      return (await this.need().request('font_report', {})) as unknown as FontReport
+    } catch {
+      return { checked: false, missing: [] }
+    }
+  }
+
+  /** How many paragraphs have a description an export could write as a review comment (A4): none for an app that has no
+   * such option, or a server that does not know the request. The export dialog shows its tick only above zero. */
+  async exportDescriptions(): Promise<number> {
+    try {
+      return ((await this.need().request('export_choices', {})) as unknown as { descriptions: number }).descriptions ?? 0
+    } catch {
+      return 0
+    }
+  }
+
+  /** What the Name & describe… dialog shows about a thing (D1317); `false` (with the reason shown) when it is gone. */
+  async thingDetails(id: string): Promise<ThingDetails | false> {
+    return (await this.attempt('thing_details', { id })) as unknown as ThingDetails | false
+  }
+
+  /** The one dialog of Name & describe… (D1317): name and description together, one step in the history, so one Undo
+   * takes both back. The server refuses a name somebody else has with a sentence that is shown here. */
+  async nameAndDescribe(params: { id: string; name: string; description: string; decorative: boolean }): Promise<boolean> {
+    return (await this.attempt('name_and_describe', { ...params, base: this.state.revision })) !== false
+  }
+
   /** Name everything that has no name (a document from before names) in one step of the history; how many were named. */
   async nameUnnamed(): Promise<number> {
     const done = await this.attempt('name_unnamed', { base: this.state.revision })
@@ -781,21 +834,36 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const s = this.state
     const found = await this.locate(id)
     if (!found) return this.goToMissing(id, retry)
-    const from = this.currentContainer()
-    const moved = found.container !== null && found.container !== from
-    if (moved) this.showContainer(found.container!)
-    const pointed: Pointed = { id, container: found.container, from: moved ? from : null }
-    s.pointed = pointed
+    const before = { container: this.currentContainer(), anchor: this.anchorProvider?.() ?? null }
+    s.wayBack = before.container === null && before.anchor === null ? null : before // nothing to go back to: no chip
+    if (found.container !== null && found.container !== before.container) this.showContainer(found.container)
+    s.pointed = { id, container: found.container }
+    const pointed = s.pointed // as the reactive state hands it out: the raw object would never equal what is read back
     setTimeout(() => {
       if (s.pointed === pointed) s.pointed = null
     }, POINT_MS)
   }
 
-  /** The way back after a tag took the view elsewhere. */
+  private anchorProvider: (() => string | null) | null = null
+  /** The view says where it is showing the top of the document, in its own words, when asked (D1312). */
+  setAnchorProvider(provider: (() => string | null) | null): void {
+    this.anchorProvider = provider
+  }
+
+  /** "Back where I was" (D1312): show the container the person was in, and ask the view for the place it was at. */
   goBack(): void {
-    const p = this.state.pointed
-    if (p?.from) this.showContainer(p.from)
-    this.state.pointed = null
+    const s = this.state
+    const back = s.wayBack
+    if (!back) return
+    s.wayBack = null
+    s.pointed = null
+    if (back.container) this.showContainer(back.container)
+    if (back.anchor) s.scrollBack = { anchor: back.anchor, nonce: (s.scrollBack?.nonce ?? 0) + 1 }
+  }
+
+  /** The person went on from where the jump took them (typed, clicked into the text): the way back is let go. */
+  clearBack(): void {
+    this.state.wayBack = null
   }
 
   private async goToMissing(id: string, retry: boolean): Promise<void> {
@@ -1122,8 +1190,11 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    * open suggestions as tracked changes, dated and signed (D411); the parameter is only sent when asked for, because
    * the other apps do not know it. An OpenDocument answer also has `losses`: what the file could not hold, as
    * `{kind, detail, count}` codes (nothing shows them yet: the screen for that is designed first). */
-  async exportOffice(format: string, options: { trackedChanges?: boolean } = {}): Promise<ExportedFile | false> {
-    return await this.attempt('export_office', options.trackedChanges ? { format, tracked_changes: true } : { format })
+  async exportOffice(format: string, options: { trackedChanges?: boolean; descriptionComments?: boolean } = {}): Promise<ExportedFile | false> {
+    const params: Record<string, unknown> = { format }
+    if (options.trackedChanges) params.tracked_changes = true
+    if (options.descriptionComments) params.description_comments = true
+    return await this.attempt('export_office', params)
   }
 
   // ------------------------------------------------------------------------------ help (E13.1, E13.3, E13.5)

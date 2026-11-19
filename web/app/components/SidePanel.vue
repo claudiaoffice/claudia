@@ -633,9 +633,6 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
         </li>
       </ol>
       <form class="write" @submit.prevent="send">
-        <div v-if="session.state.pointed?.from" class="backChip">
-          <button type="button" @click="session.goBack()">{{ t('← Back where I was') }}</button>
-        </div>
         <ul v-if="listOpen" id="tag-list" class="tagList" role="listbox" :aria-label="t('Things to point at')">
           <li
             v-for="(thing, i) in suggestions"
@@ -1302,20 +1299,6 @@ time {
   border-top: 1px dashed rgb(231 225 244 / 25%);
   border-radius: 0 0 6px 6px;
   color: var(--apricot);
-}
-.backChip {
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 0;
-}
-.backChip button {
-  border: 1px solid rgb(242 160 87 / 55%);
-  border-radius: 999px;
-  background: #2a2342;
-  color: var(--apricot);
-  font: 500 11px var(--font-ui);
-  padding: 3px 10px;
-  cursor: pointer;
 }
 .tag {
   display: inline;

@@ -226,6 +226,13 @@ export function replayItem(c: DocumentMenuContext, replay: { start: () => void; 
   return { id: 'view.replay', label: t('Replay History…'), action: () => replay.start(), disabled: !replay.possible() }
 }
 
+/** View ▸ Back where I was: after a tag in the chat took the view elsewhere, go back (D1312). Off while there is no way
+ * back; it is the keyboard's way to what the chip over the view offers the mouse. */
+export function backItem(c: DocumentMenuContext, back: { go: () => void; possible: () => boolean }): MenuItem {
+  const { t } = c
+  return { id: 'view.back', label: t('Back where I was'), hint: hintOf('view.back'), action: () => back.go(), disabled: !back.possible() }
+}
+
 /** View ▸ Dark mode. */
 export function darkItem(c: DocumentMenuContext, theme: { on: () => boolean; toggle: () => void }): MenuItem {
   const { t } = c

@@ -7,12 +7,13 @@ import { viewTints } from '~/lib/replay-tint'
 // same "Edit text"/"Delete" at the point clicked rather than letting the browser's own menu show through. A handle above
 // the selection turns it (D1024); a turned object is drawn turned about the centre of its frame. Nothing is
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { pictureOf as clippedImport, useObjectClipboard } from '~/lib/object-clipboard'
 import { CORNERS, GRID_SIZE, HANDLES, SLIDE_BOUNDS, SLIDE_H, SLIDE_W, besideRect, insertFrame, fitScale, moveFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { gridOf } from '~/lib/object-gestures'
 import { useObjectInteraction } from '~/lib/object-interaction'
-import { objectName, pictureAlt } from '~/lib/descriptions'
+import { objectName } from '~/lib/descriptions'
+import { useNameAndDescribe } from '~/lib/use-name-and-describe'
 import { canTurn, degreesText, moveTurned, quarterTurn, stepTurn, SHIFT_STEP } from '~/lib/turning'
 import { imageDataUrl } from '~/lib/images'
 import { cssOf as computedCss, pointer, slideFrame, wordsCssOf, wordsOf } from '~/lib/objects'
@@ -447,24 +448,13 @@ function closeContextMenu() {
 const propertiesFor = ref<string | null>(null)
 const propertiesObject = computed(() => (propertiesFor.value ? state.objects[propertiesFor.value] ?? null : null))
 // ------------------------------------------------------------------------------ describing an object (BITV 1.1.1)
-/** The object whose description is being written: Format ▸ Describe Object…, Ctrl+Alt+D, or the context menu's
- * "Describe…". Tracked on its own, like `propertiesFor`, since the context menu has closed by the time it shows. */
-const describing = ref<string | null>(null)
-const describingObject = computed(() => (describing.value ? state.objects[describing.value] ?? null : null))
+/** Name & describe… (D1317): Format ▸ Name & describe…, Ctrl+Alt+D, or the context menu's "Name & describe…". The state
+ * is kept here, since the context menu has closed by the time the dialog shows. */
+const nameDialog = useNameAndDescribe(session, () => area.value?.focus({ preventScroll: true }))
 function openDescribe(id: string | null = state.selected) {
   if (!id || !state.objects[id]) return
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
-  describing.value = id
-}
-async function saveDescription(params: { description: string; decorative: boolean }) {
-  const id = describing.value
-  describing.value = null
-  if (id) await session.describe(id, params.description, params.decorative)
-  area.value?.focus({ preventScroll: true })
-}
-function closeDescribe() {
-  describing.value = null
-  area.value?.focus({ preventScroll: true })
+  void nameDialog.open(id)
 }
 
 /** Was showing the browser's own menu here (Back, Inspect, …) over a shape, a text box or a picture — the bug
@@ -537,6 +527,13 @@ function cancelEdit() {
 // ------------------------------------------------------------------------------ keys
 const STEP = 10
 
+// Writing into a text box is a person going on from where a tag took them (D1312); a click on the slide is the same.
+watch(
+  () => editing.value || containerEditing.value,
+  (now) => {
+    if (now) session.clearBack()
+  },
+)
 async function onKey(event: KeyboardEvent) {
   const o = selected.value
   if (editing.value || containerEditing.value) return
@@ -574,6 +571,7 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
     class="area"
     tabindex="0"
     :aria-label="t('slide')"
+    @pointerdown.capture="session.clearBack()"
     @keydown="onKey"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"
@@ -659,7 +657,7 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
     <RotatePopover v-if="rotating && rotatePreview" :x="rotating.x" :y="rotating.y" :rotation="rotatePreview.from" @preview="previewTurn" @done="doneRotateBy" @cancel="cancelRotateBy" />
     <ContextMenu v-if="contextMenu" :x="contextMenu.x" :y="contextMenu.y" :items="contextItems" :label="t('Object menu')" @close="closeContextMenu" />
     <StyleMenu v-if="styleMenu" :host="styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" :properties="pictureProperties" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
-    <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="closeDescribe" />
+    <NameAndDescribeDialog v-if="nameDialog.details.value" :details="nameDialog.details.value" @save="nameDialog.save" @close="nameDialog.close" />
     <ImagePropertiesDialog v-if="propertiesObject" :session="session" :object="propertiesObject" @close="propertiesFor = null" />
   </div>
 </template>

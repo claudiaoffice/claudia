@@ -127,10 +127,11 @@ describe('paragraphs as things (D554)', () => {
     expect(session.nameOf('b2')).toBe('Start')
   })
 
-  it('goes to a paragraph a tag points at (the editor scrolls there; the caret stays, so no way back is offered)', async () => {
+  it('goes to a paragraph a tag points at (the editor scrolls there; the caret stays; with no place reported there is no way back to offer)', async () => {
     const { session } = await opened()
     session.state.selection = { anchor: { block: 'b5', offset: 0 }, focus: { block: 'b5', offset: 0 } }
     await session.goToThing('b2')
-    expect(session.state.pointed).toMatchObject({ id: 'b2', container: 'b2', from: null })
+    expect(session.state.pointed).toMatchObject({ id: 'b2', container: 'b2' })
+    expect(session.state.wayBack).toBeNull()
   })
 })

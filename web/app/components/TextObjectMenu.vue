@@ -4,7 +4,7 @@
 // `lib/object-menu.ts`'s, the one all three apps use; this is only composes' callbacks for it. It stays mounted, so a
 // dialog goes on after the menu has closed, and the parent only says where a menu is to open.
 import { computed, ref, watch } from 'vue'
-import { pictureAlt } from '~/lib/descriptions'
+import { useNameAndDescribe } from '~/lib/use-name-and-describe'
 import { contextMenuItems } from '~/lib/object-menu'
 import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
 import { tableContextItems, type TableMenuHost } from '~/lib/table-menu'
@@ -45,7 +45,7 @@ const items = computed<MenuItem[]>(() => {
   if (!at || !o) return []
   const describe = () => {
     shown.value = null
-    describing.value = o.id
+    void nameDialog.open(o.id)
   }
   if (o.kind === 'table') {
     const id = pointer(o, 'table')
@@ -86,13 +86,7 @@ const items = computed<MenuItem[]>(() => {
 })
 
 // ------------------------------------------------------------------------------ describing (BITV 1.1.1)
-const describing = ref<string | null>(null)
-const describingObject = computed(() => (describing.value ? objectOf(describing.value) : null))
-async function saveDescription(params: { description: string; decorative: boolean }) {
-  const id = describing.value
-  describing.value = null
-  if (id) await session.describeObject(id, params.description, params.decorative)
-}
+const nameDialog = useNameAndDescribe(session)
 
 // ------------------------------------------------------------------------------ Rotate By… (D1024)
 const rotating = ref<{ id: string; from: number; x: number; y: number } | null>(null)
@@ -177,7 +171,7 @@ async function setGap(text: string) {
 <template>
   <div class="object-menu-host">
     <ContextMenu v-if="shown" :x="shown.x" :y="shown.y" :items="items" :label="state.objects[shown.id]?.kind === 'table' ? t('Table menu') : t('Object menu')" @close="closeMenu" />
-    <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="describing = null" />
+    <NameAndDescribeDialog v-if="nameDialog.details.value" :details="nameDialog.details.value" @save="nameDialog.save" @close="nameDialog.close" />
     <RotatePopover v-if="rotating" :x="rotating.x" :y="rotating.y" :rotation="rotating.from" @preview="preview" @done="doneRotate" @cancel="cancelRotate" />
     <StyleMenu v-if="styling" :host="styleHost" :x="styling.x" :y="styling.y" @close="styling = null" @styles="((styling = null), emit('styles'))" />
     <PromptDialog

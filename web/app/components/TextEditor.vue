@@ -340,6 +340,7 @@ const layoutTick = ref(0)
 let watcher: ResizeObserver | null = null
 onMounted(() => {
   document.addEventListener('selectionchange', onSelectionChange)
+  props.session.setAnchorProvider(firstVisibleBlock)
   if (typeof ResizeObserver === 'undefined') return
   watcher = new ResizeObserver(() => layoutTick.value++)
   if (root.value) watcher.observe(root.value)
@@ -347,6 +348,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   document.removeEventListener('selectionchange', onSelectionChange)
+  props.session.setAnchorProvider(null)
   watcher?.disconnect()
 })
 watch(
@@ -363,6 +365,7 @@ watch(renderKey, () => nextTick(() => {
 const fromTable = (event: Event): boolean => !!(event.target as Element | null)?.closest?.('[data-table]')
 
 function onBeforeInput(event: InputEvent) {
+  props.session.clearBack() // the person went on from where a tag took them (D1312)
   if (fromTable(event)) return
   if (composing || event.isComposing) return // the input method is at work: compositionend tells us what came of it
   event.preventDefault()
@@ -461,6 +464,7 @@ function onCopy(event: ClipboardEvent) {
 }
 
 function onClick(event: MouseEvent) {
+  props.session.clearBack() // a click in the text is a person going on from here (D1312)
   const mark = (event.target as HTMLElement).closest<HTMLElement>('[data-sug]')
   if (mark?.dataset.sug) emit('suggestion', mark.dataset.sug)
 }
@@ -679,6 +683,21 @@ function chipOf(block: Block): string {
 function scrollToBlock(id: string) {
   blockEl(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
+
+/** The paragraph at the top of what is in sight: where the person was, for "Back where I was" (D1312). */
+function firstVisibleBlock(): string | null {
+  const top = scroller.value?.getBoundingClientRect().top ?? 0
+  for (const el of root.value?.querySelectorAll<HTMLElement>('[data-block]') ?? []) {
+    if (el.getBoundingClientRect().bottom > top) return el.dataset.block ?? null
+  }
+  return null
+}
+watch(
+  () => props.session.state.scrollBack,
+  (back) => {
+    if (back) blockEl(back.anchor)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  },
+)
 
 // A tag in the chat that points at a paragraph marks it (D554); one that points at something hanging from a paragraph
 // brings the paragraph into view.

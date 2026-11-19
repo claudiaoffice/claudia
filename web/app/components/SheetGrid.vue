@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { pointer } from '~/lib/objects'
+import { cellAnchor, parseCellAnchor } from '~/lib/view-anchor'
 import { usePointed } from '~/lib/pointed'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { cellLabel, columnName, inputOf, showFormatted, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
@@ -1167,7 +1168,22 @@ function anchorPoint(row: number, col: number): { x: number; y: number } | null 
   return { x: at.left + x(col), y: at.top + y(row) + rowHeightAt(row) + 4 }
 }
 
+/** The cell at the top left of what is in sight: where the person was, for "Back where I was" (D1312). */
+function viewAnchor(): string {
+  return cellAnchor(range.value.r0, range.value.c0)
+}
+/** Scroll so that the cell an anchor names is at the top left again. */
+function scrollToAnchor(anchor: string) {
+  const at = parseCellAnchor(anchor)
+  const el = viewport.value
+  if (!at || !el) return
+  el.scrollLeft = lineStart(colTable.value, W, at.col)
+  el.scrollTop = lineStart(rowTable.value, H, at.row)
+}
+
 defineExpose({
+  viewAnchor,
+  scrollToAnchor,
   anchorPoint,
   /** Bring a cell into sight, in the middle of the grid if it was out of it (a replay shows what a step touched, D551). */
   centre,

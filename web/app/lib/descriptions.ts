@@ -58,9 +58,9 @@ export function describeParams(text: string, decorative: boolean): { description
   return { description: decorative ? '' : text.trim(), decorative }
 }
 
-/** Format ▸ Describe Object…, Ctrl+Alt+D, the same key in every app (and the shells' `format.describe`). */
+/** Format ▸ Name & describe…, Ctrl+Alt+D, the same key in every app (and the shells' `format.describe`). */
 export function describeShortcut(run: () => void, enabled: () => boolean): ShortcutDef {
-  return { id: 'format.describe', get label() { return t('Describe Object…') }, chord: chordOf('format.describe'), run, enabled }
+  return { id: 'format.describe', get label() { return t('Name & describe…') }, chord: chordOf('format.describe'), run, enabled }
 }
 
 /** The object a keyboard user reaches by stepping through the floating objects (Ctrl+Alt+PageDown / PageUp), in the

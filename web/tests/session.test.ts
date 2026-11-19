@@ -935,6 +935,25 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     expect(seen).toEqual([{ format: 'odt', tracked_changes: true }, { format: 'odt' }])
   })
 
+  it('asks for the descriptions as comments only when told to, and asks how many there are (A4)', async () => {
+    const link = new FakeLink()
+    server(link)
+    const seen: unknown[] = []
+    link.handlers.export_office = (params) => {
+      seen.push(params)
+      return { format: 'docx', content_type: 'x', data: 'AAAA' }
+    }
+    link.handlers.export_choices = () => ({ descriptions: 2 })
+    const session = new Session(() => link)
+    await session.open()
+    await session.exportOffice('docx', { descriptionComments: true })
+    await session.exportOffice('docx')
+    expect(seen).toEqual([{ format: 'docx', description_comments: true }, { format: 'docx' }])
+    expect(await session.exportDescriptions()).toBe(2)
+    delete link.handlers.export_choices
+    expect(await session.exportDescriptions()).toBe(0) // an app or server without the option: nothing to offer
+  })
+
   it('tells us when somebody else leaves', async () => {
     const { session, link } = await opened()
     link.push('ephemeral', { kind: 'person_left', sender: 'ben', data: { user: 'ben' } })
@@ -1135,6 +1154,20 @@ describe('names, tables and queries (E6.5)', () => {
     expect(link.last('remove_name')).toMatchObject({ name: 'Revenue', scope: null })
   })
 
+  it('names and describes cells that have no name yet, in one request (D1317)', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.name_and_describe_range = () => ({ revision: 'main:4', id: 'r9', name: 'Costs' })
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    const region = { sheet: 's1', row0: 1, col0: 1, row1: 2, col1: 2 }
+    expect(await session.nameAndDescribeRange(region, 'Costs', 'What we spend')).toBe('r9')
+    expect(link.last('name_and_describe_range')).toEqual({ range: region, name: 'Costs', description: 'What we spend', base: 'main:3' })
+    link.handlers.name_and_describe_range = () => {
+      throw new ProtocolError('command_error', 'somebody else has that name')
+    }
+    expect(await session.nameAndDescribeRange(region, 'Costs', '')).toBe(false)
+  })
   it('says why a name was refused and answers false', async () => {
     const { session, link } = await opened()
     link.handlers.define_name = () => {
@@ -1528,7 +1561,8 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
     expect((await session.taggableThings()).map((t) => t.name).sort()).toEqual(['Budget', 'Logo s1', 'Revenue'])
     await session.goToThing('s2-pic')
     expect(session.state.activeSheet).toBe('s2')
-    expect(session.state.pointed).toMatchObject({ id: 's2-pic', container: 's2', from: 's1' })
+    expect(session.state.pointed).toMatchObject({ id: 's2-pic', container: 's2' })
+    expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
   })
 
   it('offers the named ranges on the sheet in sight, and goes to one on another sheet (D552)', async () => {
@@ -1562,7 +1596,8 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
     expect(offered.filter((t) => t.kind === 'range')).toEqual([{ id: 'r1', name: 'Revenue', kind: 'range' }])
     await session.goToThing('r2')
     expect(session.state.activeSheet).toBe('s2')
-    expect(session.state.pointed).toMatchObject({ id: 'r2', container: 's2', from: 's1' })
+    expect(session.state.pointed).toMatchObject({ id: 'r2', container: 's2' })
+    expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
   })
 
   it('knows a range is gone once its name is, and keeps the name a tag was written with current', async () => {

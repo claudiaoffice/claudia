@@ -183,6 +183,7 @@ onBeforeUnmount(() => clearTimeout(timer))
     <TopBar :session="session" :panel-open="panelOpen" @toggle-panel="panelOpen = !panelOpen" />
     <div v-if="state.preview" class="banner preview" role="status" data-testid="redaction-preview">{{ t('Preview of the redaction: the marked places as they would be. Nothing has changed yet.') }}</div>
     <div v-if="state.status === 'reconnecting'" class="banner" role="alert">{{ t('The connection was lost. Trying to get back… what you do now is not saved.') }}</div>
+    <FontReportBanner :session="session" />
     <MenuBar data-region="menus" :class="{ hidden: shell.nativeMenu }" :menus="menus" />
     <slot name="toolbar" />
     <div class="main" :class="{ wide: !panelOpen }">
@@ -191,6 +192,7 @@ onBeforeUnmount(() => clearTimeout(timer))
         <template #top><slot name="side-top" /></template>
       </SidePanel>
     </div>
+    <BackChip :session="session" />
     <slot name="footer" />
 
     <PromptDialog

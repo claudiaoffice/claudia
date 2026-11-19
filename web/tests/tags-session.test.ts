@@ -129,16 +129,20 @@ describe('going to what a tag points at', () => {
     const { session, state } = await opened()
     await session.goToThing('o2')
     expect(state.here).toBe('s2')
-    expect(state.pointed).toEqual({ id: 'o2', container: 's2', from: 's1' })
+    expect(state.pointed).toEqual({ id: 'o2', container: 's2' })
+    expect(state.wayBack).toEqual({ container: 's1', anchor: null })
     session.goBack()
     expect(state.here).toBe('s1')
     expect(state.pointed).toBeNull()
+    expect(state.wayBack).toBeNull()
   })
-  it('marks a thing that is in sight without moving, and offers no way back', async () => {
+  it('marks a thing that is in sight without moving; the way back is where the view was, scrolled or not (D1312)', async () => {
     const { session, state } = await opened()
+    session.setAnchorProvider(() => 'top')
     await session.goToThing('o1')
     expect(state.here).toBe('s1')
-    expect(state.pointed).toEqual({ id: 'o1', container: 's1', from: null })
+    expect(state.pointed).toEqual({ id: 'o1', container: 's1' })
+    expect(state.wayBack).toEqual({ container: 's1', anchor: 'top' })
   })
   it('takes a tag to something deleted to the last step it was there, in a replay', async () => {
     const { session, state } = await opened()

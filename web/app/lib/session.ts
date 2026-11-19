@@ -15,7 +15,7 @@ import type { CssCheck, CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
 import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
 import { rangeTouchedBy } from './charts'
-import type { NameDraft, NameInfo } from './names'
+import type { NameDraft, NameInfo, NameRegion } from './names'
 import type { PivotDefinition, PivotInfo, PivotLabels } from './pivots'
 import type { OutcomeTable } from './outcomes'
 import type { Reach, Trace, Window } from './follow'
@@ -823,6 +823,13 @@ export class Session extends BaseSession<State> {
   /** Give cells a name (or point an existing one, same scope, somewhere else); `false` after telling the person why not. */
   async defineName(draft: NameDraft): Promise<boolean> {
     return (await this.attempt('define_name', { definition: draft, base: this.state.revision })) !== false
+  }
+
+  /** Name cells that have no name and describe them, one step in the history (D1317): the id they have from then on, or
+   * `false` after telling the person why not. */
+  async nameAndDescribeRange(range: NameRegion, name: string, description: string): Promise<string | false> {
+    const done = await this.attempt('name_and_describe_range', { range, name, description, base: this.state.revision })
+    return done === false ? false : (done.id as string)
   }
 
   /** Call a name something else; the formulas that use it are rewritten. */

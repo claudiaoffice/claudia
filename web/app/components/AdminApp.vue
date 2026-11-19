@@ -26,7 +26,8 @@ const exposed = ref(false)
 // refreshed below once this visit's own `/api/admin/status` call resolves — `friendlyLabel`/`upsert` read and
 // write localStorage, which gives Vue nothing to react to on its own.
 const label = ref(friendlyLabel(origin, host))
-const active = ref<'ai' | 'typeset' | 'fonts' | 'access'>('ai')
+// `/admin/#fonts` opens on the fonts page: where the banner of a document that lacks a font sends an administrator.
+const active = ref<'ai' | 'typeset' | 'fonts' | 'access'>(location.hash === '#fonts' ? 'fonts' : 'ai')
 const session = useAdminSession()
 const screen = computed(() => adminScreen(noAdministrator.value, session.name.value))
 // Once somebody is signed in, the server has an administrator: signing out later asks who signs in, rather than

@@ -10,8 +10,8 @@
 //
 // There are no 90° entries (Rotate by… does them), Rotate by… is not offered for a chart (D1021), a picture has no text
 // to edit and neither has a chart, and for a picture "Style…" also holds what "Properties" was (`properties`). A table
-// has a menu of its own (`table-menu.ts`, D1224) and is not offered here. "Describe…" becomes "Name & describe…" with the
-// name field the dialog does not have yet (open point in the workbook, #12).
+// has a menu of its own (`table-menu.ts`, D1224) and is not offered here. "Name & describe…" opens the one dialog with the
+// name field (D1317).
 import type { MenuItem } from '../components/MenuBar.vue'
 import { translate as t } from './i18n'
 import { hintOf } from './shortcuts'

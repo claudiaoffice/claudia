@@ -16,7 +16,7 @@ import {
   helpMenu,
   insertMenu,
   goToTargetItem,
-  panelItem, referenceItem, replayItem,
+  backItem, panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
   type DocumentMenuContext,
@@ -401,7 +401,7 @@ const menus = computed<Menu[]>(() => {
       items: [
         ...styleItems(),
         { label: '', separator: true },
-        { id: 'format.describe', label: t('Describe Object…'), hint: chordLabel(describeSelected.chord), action: () => canvas.value?.openDescribe(), disabled: readonly.value || !state.selected },
+        { id: 'format.describe', label: t('Name & describe…'), hint: chordLabel(describeSelected.chord), action: () => canvas.value?.openDescribe(), disabled: readonly.value || !state.selected },
         { label: '', separator: true },
         rotateMenu(),
       ],
@@ -412,6 +412,7 @@ const menus = computed<Menu[]>(() => {
         authorsItemUnavailable(c), // creates tracks no per-object authorship yet
         panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
         replayItem(c, { start: () => frame.value?.replayHistory(), possible: () => state.entries.length > 0 && state.status === 'open' }),
+        backItem(c, { go: () => session.goBack(), possible: () => !!state.wayBack }),
         darkItem(c, { on: dark, toggle: toggleDark }),
         // After the shared block, as composes' Page is (the same order in every app and every client)
         { label: '', separator: true },

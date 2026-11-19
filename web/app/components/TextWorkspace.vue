@@ -27,12 +27,14 @@ import {
   goToTargetItem,
   helpMenu,
   insertMenu,
-  panelItem, referenceItem, replayItem,
+  backItem, panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
   type DocumentMenuContext,
 } from '~/lib/document-menus'
 import { chordLabel, chordOf, hintOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
+import { describeShortcut } from '~/lib/descriptions'
+import { useNameAndDescribe } from '~/lib/use-name-and-describe'
 import { insertTableItems, possible, tableItems, tableShortcuts, type TableAction, type TableMenuHost } from '~/lib/table-menu'
 import { columnPlace, mergeRect, rowPlace } from '~/lib/tables'
 import { marksFor, textSearchHost } from '~/lib/text-search-host'
@@ -257,6 +259,14 @@ const openSearch = (replace = false) => search.openSearch(replace, session.selec
 
 // ------------------------------------------------------------------------------ menus and shortcuts
 // D122: composes' one shortcut of its own, on top of the window's Undo, Redo and Save.
+/** Format ▸ Name & describe…, Ctrl+Alt+D (D1317): the object selected, else the paragraph the caret is in. */
+const nameDialog = useNameAndDescribe(session, () => editor.value?.focus())
+function openDescribe() {
+  if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
+  const id = state.selectedObject ?? state.selection?.focus.block
+  if (id) void nameDialog.open(id)
+}
+const DESCRIBE = describeShortcut(openDescribe, () => !readonly.value && !!(state.selectedObject ?? state.selection))
 const LOOK: ShortcutDef = { id: 'format.look', get label() { return t('Edit This Style…') }, chord: chordOf('format.look'), run: () => openStyleMenu() }
 // D912: a soft hyphen says where a word may be broken, a non-breaking hyphen where it may not (as in Word and
 // LibreOffice). Both are invisible in the text unless the pages break there.
@@ -281,6 +291,7 @@ const tableHost: TableMenuHost = {
 }
 const extraShortcuts = [
   LOOK,
+  DESCRIBE,
   WRAP_TEXT,
   ...tableShortcuts({ t }, tableHost),
   PRINT,
@@ -560,6 +571,8 @@ const menus = computed<Menu[]>(() => {
               },
             })),
         { label: '', separator: true },
+        { id: 'format.describe', label: t('Name & describe…'), hint: chordLabel(DESCRIBE.chord), action: () => openDescribe(), disabled: readonly.value || !(state.selectedObject ?? state.selection) },
+        { label: '', separator: true },
         // a quarter turn each way and any angle, for what turns (a chart and a table do not, D1021, D1224)
         rotateItem(t, {
           kind: () => (state.selectedObject ? (state.objects[state.selectedObject]?.kind ?? null) : null),
@@ -583,6 +596,7 @@ const menus = computed<Menu[]>(() => {
         { id: 'view.authors', label: t('Show Who Wrote What'), checked: authors.value, action: (x) => (authors.value = x ? x === 'on' : !authors.value) },
         panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
         replayItem(c, { start: () => frame.value?.replayHistory(), possible: () => state.entries.length > 0 && state.status === 'open' }),
+        backItem(c, { go: () => session.goBack(), possible: () => !!state.wayBack }),
         darkItem(c, { on: dark, toggle: toggleDark }),
         { label: '', separator: true },
         { label: t('Flow'), checked: view.value === 'flow', action: () => (view.value = 'flow') },
@@ -695,6 +709,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <ImageImportDialog v-if="dialog === 'image'" :add="addPicture" @close="dialog = null" @inserted="pictureInserted" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <ReferencePicker v-if="picker" :x="picker.x" :y="picker.y" :targets="(q) => session.referenceTargets(q)" @choose="putReference" @close="(picker = null), editor?.focus()" />
+      <NameAndDescribeDialog v-if="nameDialog.details.value" :details="nameDialog.details.value" @save="nameDialog.save" @close="nameDialog.close" />
       <TextObjectMenu ref="objectMenuHost" :session="session" :menu="objectMenu" :table-host="tableHost" :clipboard="objectClip" @close="objectMenu = null" @turning="turning = $event" @styles="dialog = 'styles'" />
       <ContextMenu v-if="refMenu" :x="refMenu.x" :y="refMenu.y" :items="refMenuItems" :width="260" :label="t('Reference menu')" @close="refMenu = null" />
       <ContentsDialog v-if="dialog === 'contents' && contentsHost" :host="contentsHost" :title="t('Table of contents')" @close="dialog = null" />

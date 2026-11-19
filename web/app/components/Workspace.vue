@@ -38,7 +38,7 @@ import {
   helpMenu,
   insertMenu,
   goToTargetItem,
-  panelItem, referenceItem, replayItem,
+  backItem, panelItem, referenceItem, replayItem,
   searchItem,
   undoRedoItems,
   type DocumentMenuContext,
@@ -49,7 +49,8 @@ import { forThe } from '~/lib/noun-phrases'
 import { objectStyleHost } from '~/lib/object-style-host'
 import { cellStyleHost } from '~/lib/cell-style-host'
 import { sheetArea } from '~/lib/cell-styles'
-import { describeShortcut, objectName, pictureAlt } from '~/lib/descriptions'
+import { describeShortcut, objectName } from '~/lib/descriptions'
+import { useNameAndDescribe } from '~/lib/use-name-and-describe'
 import { selectionAnnouncement } from '~/lib/grid-a11y'
 import { chordLabel, chordOf, hintOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import type { PreviewAnswer, SearchMatch } from '~/lib/search'
@@ -113,7 +114,21 @@ const grid = ref<{
   paste: () => Promise<boolean>
   anchorPoint: (row: number, col: number) => { x: number; y: number } | null
   centre: (row: number, col: number) => void
+  viewAnchor: () => string
+  scrollToAnchor: (anchor: string) => void
 } | null>(null)
+// "Back where I was" (D1312): the grid says which cell it shows at the top left, and scrolls back to it.
+session.setAnchorProvider(() => grid.value?.viewAnchor() ?? null)
+onBeforeUnmount(() => session.setAnchorProvider(null))
+watch(
+  () => state.scrollBack,
+  (back) => {
+    if (back) void nextTick(() => grid.value?.scrollToAnchor(back.anchor))
+  },
+)
+watch(edit, (now) => {
+  if (now) session.clearBack() // typing in a cell: the person went on from where a tag took them
+})
 const headerMenu = ref<{ axis: Axis; index: number; x: number; y: number } | null>(null)
 
 const readonly = computed(() => lookOnly(state))
@@ -773,27 +788,20 @@ watch([sel, objectSelected], () => {
 })
 onBeforeUnmount(() => clearTimeout(announceTimer))
 
-// ------------------------------------------------------------------------------ describing a floating object (BITV 1.1.1)
-/** The object whose description is being written; the dialog is the one slides use. */
-const describing = ref<string | null>(null)
-const describingObject = computed(() => (describing.value ? state.objects[describing.value] ?? null : null))
+// ------------------------------------------------------------------------------ Name & describe (D1317, BITV 1.1.1)
+/** Format ▸ Name & describe…, Ctrl+Alt+D: for the selected floating object, or for the cells selected: a named range is
+ * described under its name, cells that have none are asked for one first. */
+const nameDialog = useNameAndDescribe(session, () => grid.value?.focus())
 function openDescribe() {
-  const id = grid.value?.selectedObject()
-  if (!id || !state.objects[id]) return
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
-  describing.value = id
+  const id = grid.value?.selectedObject()
+  if (id && state.objects[id]) return void nameDialog.open(id)
+  const { r0, c0, r1, c1 } = b.value
+  const named = nameAt(state.names, state.activeSheet, r0, c0, r1, c1)
+  if (named) return void nameDialog.open(named.id)
+  nameDialog.openRange({ sheet: state.activeSheet, row0: r0, col0: c0, row1: r1, col1: c1 })
 }
-async function saveDescription(params: { description: string; decorative: boolean }) {
-  const id = describing.value
-  describing.value = null
-  if (id) await session.describeObject(id, params.description, params.decorative)
-  grid.value?.focus()
-}
-function closeDescribe() {
-  describing.value = null
-  grid.value?.focus()
-}
-const DESCRIBE = describeShortcut(openDescribe, () => !!grid.value?.selectedObject() && !readonly.value)
+const DESCRIBE = describeShortcut(openDescribe, () => !readonly.value)
 /** Ctrl+Alt+PageDown / PageUp: the keyboard's way to a floating object, which only the mouse reached before. */
 const NEXT_OBJECT: ShortcutDef = { id: 'view.nextObject', get label() { return t('Next Object') }, chord: { key: 'PageDown', ctrl: true, alt: true }, run: () => grid.value?.stepObject(1) }
 const PREVIOUS_OBJECT: ShortcutDef = { id: 'view.previousObject', get label() { return t('Previous Object') }, chord: { key: 'PageUp', ctrl: true, alt: true }, run: () => grid.value?.stepObject(-1) }
@@ -1097,7 +1105,7 @@ const menus = computed<Menu[]>(() => {
       items: [
         ...styleItems(),
         { label: '', separator: true },
-        { id: 'format.describe', label: t('Describe Object…'), hint: chordLabel(DESCRIBE.chord), action: () => openDescribe(), disabled: readonly.value || !grid.value?.selectedObject() },
+        { id: 'format.describe', label: t('Name & describe…'), hint: chordLabel(DESCRIBE.chord), action: () => openDescribe(), disabled: readonly.value },
         // a quarter turn each way and any angle, for what turns (a chart and a table do not, D1021, D1224)
         rotateItem(t, {
           kind: () => {
@@ -1116,6 +1124,7 @@ const menus = computed<Menu[]>(() => {
         authorsItemUnavailable(c), // computes tracks no per-cell authorship yet
         panelItem(c, { open: () => frame.value?.isPanelOpen() ?? true, toggle: () => frame.value?.togglePanel() }),
         replayItem(c, { start: () => frame.value?.replayHistory(), possible: () => state.entries.length > 0 && state.status === 'open' }),
+        backItem(c, { go: () => session.goBack(), possible: () => !!state.wayBack }),
         darkItem(c, { on: dark, toggle: toggleDark }),
       ],
     },
@@ -1239,6 +1248,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       :anchored="pointed"
       :cell-host="cellHost"
       :marks="searchMarks"
+      @pointerdown.capture="session.clearBack()"
       @object="objectSelected = $event"
       @describe="openDescribe"
       @styles="dialog = 'styles'"
@@ -1285,7 +1295,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <ContextMenu v-if="cellMenu" :x="cellMenu.x" :y="cellMenu.y" :items="cellMenuItems" :width="290" :label="t('Cell menu')" @close="cellMenu = null" />
       <PromptDialog v-if="dialog === 'rename' && renaming" :title="t('Rename sheet')" :label="t('Name')" :ok="t('Rename')" required :initial="renaming.name" @ok="rename" @close="dialog = null" />
       <PromptDialog v-if="dialog === 'sheet'" :title="t('New sheet')" :label="t('Name')" :ok="t('Add Sheet')" required :placeholder="t('Forecast')" @ok="addSheet" @close="dialog = null" />
-      <ObjectDescriptionDialog v-if="describingObject" :object="describingObject" :current="pictureAlt(describingObject)" @save="saveDescription" @close="closeDescribe" />
+      <NameAndDescribeDialog v-if="nameDialog.details.value" :details="nameDialog.details.value" @save="nameDialog.save" @close="nameDialog.close" />
       <ImageImportDialog v-if="dialog === 'image'" :add="addPicture" @close="dialog = null" @inserted="imageInserted" />
       <SheetChartInsertDialog
         v-if="dialog === 'chart'"

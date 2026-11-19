@@ -106,6 +106,7 @@ export const KEYS: Readonly<Record<string, ActionKey>> = {
   'tools.sql': { chord: { key: 'y', code: 'KeyY', ctrl: true, alt: true }, owner: 'page' },
   'tools.table-options': { chord: { key: 'l', code: 'KeyL', ctrl: true, shift: true }, owner: 'page' },
   'view.authors': { chord: { key: 'u', code: 'KeyU', ctrl: true, alt: true }, owner: 'page' },
+  'view.back': { chord: { key: 'b', code: 'KeyB', ctrl: true, shift: true }, owner: 'page' },
   'view.dark': { chord: { key: 'd', code: 'KeyD', ctrl: true, shift: true, alt: true }, owner: 'page' },
   'view.grid': { chord: { key: 'g', code: 'KeyG', ctrl: true, alt: true }, owner: 'page' },
   'view.page': { chord: { key: 'p', code: 'KeyP', ctrl: true, alt: true }, owner: 'page' },
