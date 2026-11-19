@@ -466,8 +466,9 @@ def test_image_is_a_page_action_with_the_same_key_in_every_app(app_name: str, re
 
 def test_composes_edit_puts_image_between_the_references_and_the_hyphens(composes: manifest.Manifest) -> None:
     """E10.16: not in a new Insert entry — that menu is the page's own, and the key is Edit ▸ Image…'s everywhere."""
-    labels = [e.label for e in entries(composes.menu("Edit"))[6:]]
-    assert labels[-4:] == ["Go to Target", "Image…", "Text Box", "Insert"]
+    labels = [e.label for e in entries(composes.menu("Edit"))]
+    start = labels.index("Go to Target")  # what follows (the table entries, E9.32) is not this test's business
+    assert labels[start : start + 4] == ["Go to Target", "Image…", "Text Box", "Insert"]
 
 
 def test_composes_text_box_has_the_key_it_has_in_creates(

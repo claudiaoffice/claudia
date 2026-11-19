@@ -12,20 +12,20 @@ const holder = (extra: Partial<LookHolder> = {}): LookHolder => ({
   ...extra,
 })
 const object = (extra: object): VisualObject<BlockAnchor> =>
-  ({ id: 'o1', kind: 'image', w: 100, h: 50, style: 'plain-image', paragraph: null, shape: null, image: null, imported: null, diagram: null, rendered: null, rotation: 0, snap: false, description: '', decorative: false, anchor: { kind: 'block', container: 'b1', offset: 0 }, ...extra }) as VisualObject<BlockAnchor>
+  ({ id: 'o1', kind: 'image', w: 100, h: 50, style: 'plain-image', paragraph: null, ref: null, imported: null, rotation: 0, snap: false, description: '', decorative: false, anchor: { kind: 'block', container: 'b1', offset: 0 }, ...extra }) as VisualObject<BlockAnchor>
 
 describe('how an object in a text looks', () => {
   it('shows a picture by its data URL, and nothing before the asset has arrived', () => {
-    expect(lookOf(holder(), object({ image: 'i1' })).picture).toBe('data:image/svg+xml;base64,AA==')
-    expect(lookOf(holder(), object({ image: 'later' })).picture).toBe('')
+    expect(lookOf(holder(), object({ ref: 'i1' })).picture).toBe('data:image/svg+xml;base64,AA==')
+    expect(lookOf(holder(), object({ ref: 'later' })).picture).toBe('')
   })
   it('draws a shape by its outline, painted by the facets of its own style', () => {
-    const look = lookOf(holder(), object({ kind: 'shape', shape: 'circle', style: 'plain-shape' }))
+    const look = lookOf(holder(), object({ kind: 'shape', ref: 'circle', style: 'plain-shape' }))
     expect(look.outline).toEqual({ path: 'M0 0Z', paint: { fill: '#eee', stroke: '#333' } })
     expect(look.words).toBeNull()
   })
   it('puts the words of a shape in the outline’s text area, centred, in the style of the words and not of the shape', () => {
-    const look = lookOf(holder(), object({ kind: 'shape', shape: 'circle', style: 'plain-shape', paragraph: { id: 'p', style: 'body', text: 'Hi', runs: [] } }))
+    const look = lookOf(holder(), object({ kind: 'shape', ref: 'circle', style: 'plain-shape', paragraph: { id: 'p', style: 'body', text: 'Hi', runs: [] } }))
     expect(look.words?.text).toBe('Hi')
     expect(look.words?.area).toMatchObject({ left: '10%', top: '20%', width: '80%', height: '60%', 'justify-content': 'center' })
     expect(look.words?.css).toMatchObject({ color: '#123456', 'font-size': '16px', 'text-align': 'center' })

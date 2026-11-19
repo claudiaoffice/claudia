@@ -180,6 +180,8 @@ const tick = (page, field) => page.locator(`[data-testid=pivot-panel] .fields li
     // 7. Show as SQL…
     await page.click('[data-testid=pivot-panel] button:text-is("Show as SQL…")')
     await page.waitForSelector('[data-testid=pivot-sql]')
+    // the dialog opens at once and the query follows when the server has answered: wait for it, do not read it once
+    await page.waitForFunction(() => /SELECT/.test(document.querySelector('[data-testid=pivot-sql] .code')?.textContent ?? ''))
     assert.match(await page.locator('[data-testid=pivot-sql] .code').textContent(), /SELECT/)
     await page.screenshot({ path: path.join(SHOTS, 'pivot-sql.png') })
     await page.click('[data-testid=pivot-sql] button:text-is("Close")')

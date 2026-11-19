@@ -111,6 +111,7 @@ used._pivot_to_sql  # computes_methods.method("pivot_to_sql") (E6.30)
 used._blocks  # composes_methods.method("blocks")
 used._suggestions  # composes_methods.method("suggestions")
 used._replace_text  # composes_methods.method("replace_text")
+used._set_wrap  # composes_methods.method("set_wrap") (D1061)
 used._set_style  # composes_methods.method("set_style")
 used._set_page  # composes_methods.method("set_page")
 used._language  # table.method("language") in printing.add_language_methods

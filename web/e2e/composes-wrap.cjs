@@ -6,9 +6,6 @@ const URL = process.env.URL ?? 'http://127.0.0.1:8766/'
 const SHOTS = process.env.SHOTS ?? '/tmp/shots'
 const DOC = `essay-${Date.now() % 100000}`
 const ANN = ['ann', 'Ann has a password 1']
-const BEN = ['ben', 'Ben has a password 1']
-
-const log = (...a) => console.log(...a)
 
 async function open(browser, [user, password], create) {
   const context = await browser.newContext({ viewport: { width: 1360, height: 800 } })
@@ -43,7 +40,6 @@ const textOf = () =>
   })
 const paragraphs = (page) => page.evaluate(textOf)
 const INIT = `window.__text = ${textOf.toString()}`
-const styles = (page) => page.$$eval('[data-testid=text] [data-block]', (els) => els.map((e) => e.className.replace(/.*st-(\S+).*/, '$1')))
 
 const log2 = (...a) => console.log(...a)
 const WORDS = Array.from({ length: 90 }, (_, i) => `word${(i * 7) % 97}`).join(' ')

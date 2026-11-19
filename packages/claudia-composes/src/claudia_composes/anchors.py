@@ -54,7 +54,8 @@ def _is_whole(value: object) -> TypeIs[int]:
 class BlockAnchor:
     """Where an object hangs in a text: character ``offset`` of the paragraph ``block``, and where its top-left
     corner floats relative to that character: ``dx`` to the right and ``dy`` down (negative: left and up). ``wrap``
-    is how the text flows round it (one of :data:`WRAPS`) and ``gap`` how far it keeps from it."""
+    is how the text flows round it (one of :data:`~claudia_composes.anchors.WRAPS`) and ``gap`` how far it keeps from
+    it."""
 
     kind: ClassVar[str] = "block"
     block: str
@@ -123,8 +124,8 @@ class BlockAnchor:
                 )
 
     def check_wrap(self) -> None:
-        """``ValueError`` with a sentence unless ``wrap`` is one of :data:`WRAPS` and ``gap`` a whole number from 0 to
-        :data:`MAX_WRAP_GAP`."""
+        """``ValueError`` with a sentence unless ``wrap`` is one of :data:`~claudia_composes.anchors.WRAPS` and ``gap``
+        a whole number from 0 to :data:`~claudia_composes.anchors.MAX_WRAP_GAP`."""
         if self.wrap not in WRAPS:
             raise ValueError(f"the wrap of an object is one of {', '.join(WRAPS)}, not {self.wrap!r}")
         if not _is_whole(self.gap) or not 0 <= self.gap <= MAX_WRAP_GAP:

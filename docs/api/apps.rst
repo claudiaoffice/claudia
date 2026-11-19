@@ -164,6 +164,10 @@ composes
 .. automodule:: claudia_composes.anchors
    :no-members:
 
+.. autodata:: claudia_composes.anchors.WRAPS
+.. autodata:: claudia_composes.anchors.DEFAULT_WRAP_GAP
+.. autodata:: claudia_composes.anchors.MAX_WRAP_GAP
+
 .. currentmodule:: claudia_composes
 
 The page setup and the language (``PageSetup``, ``SetLanguage`` and the rest) are :doc:`claudia_core`'s and
