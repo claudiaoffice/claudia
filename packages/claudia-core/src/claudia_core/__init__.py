@@ -173,7 +173,7 @@ from .manifest import (
 )
 from .messages import ChatRecord, Ephemeral, parse_chat
 from .model import DocumentModel, Snapshot
-from .names import MAX_THING_NAME, clean_name, free_name, name_key, name_problem
+from .names import MAX_THING_NAME, clean_name, distinct_name, free_name, free_names, name_key, name_problem
 from .object_texts import ObjectText, edit_object_text, object_texts
 from .objects import (
     ASPECT_TOLERANCE,
@@ -189,6 +189,7 @@ from .objects import (
     DefineRendering,
     DefineShape,
     DescribeObject,
+    DescribeThing,
     DiagramDefinition,
     DiagramsChanged,
     ForgetDiagram,
@@ -212,6 +213,7 @@ from .objects import (
     SetSnap,
     SetText,
     ShapesChanged,
+    ThingDescribed,
     ThingRenamed,
     UpdateDiagram,
     UpdateRendering,
@@ -427,12 +429,15 @@ __all__ = [
     "CssError",
     "CssProblem",
     "decode_image",
+    "distinct_name",
     "free_name",
+    "free_names",
     "DefineDiagram",
     "DefineImage",
     "DefineRendering",
     "DefineShape",
     "DescribeObject",
+    "DescribeThing",
     "delete_runs",
     "edit_object_text",
     "DiagramDefinition",
@@ -608,6 +613,7 @@ __all__ = [
     "ShapeDefinition",
     "ShapeError",
     "ShapesChanged",
+    "ThingDescribed",
     "ThingRenamed",
     "slice_runs",
     "Slot",

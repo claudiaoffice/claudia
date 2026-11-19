@@ -388,6 +388,18 @@ class ThingRenamed:
 
 
 @dataclass(frozen=True)
+class ThingDescribed:
+    """A thing was given another description (D1317, D1318): its id and the new words (``""``: none)."""
+
+    id: str
+    description: str
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "thing_described", "id": self.id, "description": self.description}
+
+
+@dataclass(frozen=True)
 class ObjectsChanged:
     """Objects of one container changed. ``changed`` are their new state (added or altered), ``removed`` their
     ids, and ``order`` is the stacking order of the whole container afterwards (bottom first), so a view needs
@@ -626,6 +638,23 @@ class ObjectModel[A: Anchor]:
         old = self.get_object(thing_id)
         self.replace_object(old.with_body(name=name))
         return old.body.name
+
+    def name_is_fixed(self, thing_id: str) -> bool:
+        """Is the name of this thing worked out, so that nobody can change it? (A heading is called by its title.)"""
+        return False
+
+    def thing_description(self, thing_id: str) -> str:
+        """What the thing with this id says to someone who cannot see it, or the note a person made on it (D1317),
+        ``""`` if it has none; ``ValueError`` if there is no such thing. The apps answer for what they name beyond
+        the objects (a paragraph, a slide, a sheet) by overriding this and :meth:`set_thing_description`."""
+        return self.get_object(thing_id).body.description
+
+    def set_thing_description(self, thing_id: str, description: str) -> str:
+        """Give the thing these words (``""``: none); returns the ones it had. An object is described by
+        :class:`DescribeObject`, which also says whether it is decoration, so it is refused here; an app that
+        describes more than its objects overrides this for its own things and hands the rest on."""
+        self.get_object(thing_id)
+        raise ValueError("an object is described with DescribeObject, which also says whether it is decoration")
 
     def rename_thing(self, ctx: Context, thing_id: str, name: str) -> tuple[str, tuple[Command, ...]]:
         """Give the thing this (checked) name; returns the one it had and the commands that, done after the old name
@@ -2380,6 +2409,62 @@ class DescribeObject(Command):
 
     def redacted(self) -> Command:
         return DescribeObject(self.id, "", self.decorative)
+
+    def stub(self) -> dict:
+        return {"id": self.id}
+
+
+@core_commands.register
+@dataclass(frozen=True)
+class DescribeThing(Command):
+    """Describe a thing that is not drawn: a paragraph, a slide, a sheet, a range (D1317, D1318). The description is a
+    plain string beside the thing's name, changed by this command and undone with it, as an object's is by
+    :class:`DescribeObject` (which stays for drawn things, because only they can be decoration)."""
+
+    kind: ClassVar[str] = "core.DescribeThing"
+    id: str
+    description: str
+
+    @property
+    def label(self) -> str:
+        return "Describe"
+
+    @property
+    def summary(self) -> str:
+        if self.description.strip():
+            return f"Described something: {_quote(self.description)}"
+        return "Removed a description"
+
+    def apply(self, ctx: Context) -> Command:
+        model = _host(ctx)
+        if not isinstance(self.description, str) or len(self.description) > MAX_ALT_CHARS:
+            raise ValueError(f"the description is text of at most {MAX_ALT_CHARS} characters")
+        if not model.has_thing(self.id):
+            raise ValueError(f"there is nothing with the id {self.id!r}")
+        old = model.set_thing_description(self.id, self.description)
+        ctx.emit(ThingDescribed(self.id, self.description))
+        return DescribeThing(self.id, old)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "description": self.description}
+
+    @classmethod
+    def from_data(cls, data: dict, registry: CommandRegistry) -> DescribeThing:
+        return cls(data["id"], data["description"])
+
+    def regions(self, model: object) -> tuple[ObjectSet, ...]:
+        return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()
+
+    def shifted_by(self, other: Command) -> Command | None:
+        """A description undoes cleanly unless the thing was described again, removed or made again since."""
+        if isinstance(other, DescribeThing):
+            return None if other.id == self.id else self
+        return (
+            None if isinstance(other, DescribeObject | RemoveObject | AddObject) and _target(other) == self.id else self
+        )
+
+    def redacted(self) -> Command:
+        return DescribeThing(self.id, "")
 
     def stub(self) -> dict:
         return {"id": self.id}

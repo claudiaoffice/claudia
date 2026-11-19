@@ -572,6 +572,25 @@
    "summary"
   ]
  },
+ "DescribeThing": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', description: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context') -> 'Command'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DescribeThing'",
+   "redacted": "(self) -> 'Command'",
+   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "stub": "(self) -> 'dict'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "DiagramDefinition": {
   "class": [
    "Protocol"
@@ -1421,6 +1440,7 @@
    "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'ObjectsChanged'",
    "is_entry": "(self, paragraph_id: 'str') -> 'bool'",
    "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
+   "name_is_fixed": "(self, thing_id: 'str') -> 'bool'",
    "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",
    "names_in_use": "(self) -> 'list[str]'",
    "object_fields": "(self, object_id: 'str') -> 'tuple[Field, ...]'",
@@ -1446,11 +1466,13 @@
    "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = (), renderings: 'Iterable[dict]' = (), tables: 'Iterable[dict]' = ()) -> 'None'",
    "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",
    "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
+   "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "shapes_to_data": "(self) -> 'list[dict]'",
    "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "tables_to_data": "(self) -> 'list[dict]'",
+   "thing_description": "(self, thing_id: 'str') -> 'str'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "turn_command": "(self, object_id: 'str', rotation: 'int') -> 'RotateObject'",
    "turned_anchor": "(self, obj: 'VisualObject[A]', rotation: 'int') -> 'A'",
@@ -2733,6 +2755,16 @@
   },
   "properties": []
  },
+ "ThingDescribed": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', description: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
  "ThingRenamed": {
   "class": [
    "object"
@@ -2895,6 +2927,9 @@
  "delete_runs": {
   "function": "(runs: 'Iterable[Run]', start: 'int', end: 'int') -> 'list[Run]'"
  },
+ "distinct_name": {
+  "function": "(name: 'str', taken: 'Iterable[str]') -> 'str'"
+ },
  "edit_object_text": {
   "function": "(model: 'ObjectModel', object_id: 'str', source: 'str', edits: 'Iterable[tuple[int, int, str]]', author: 'str | None') -> 'Command'"
  },
@@ -2930,6 +2965,9 @@
  },
  "free_name": {
   "function": "(label: 'str', taken: 'Iterable[str]') -> 'str'"
+ },
+ "free_names": {
+  "function": "(label: 'str', taken: 'Iterable[str]', count: 'int') -> 'list[str]'"
  },
  "generated_from_data": {
   "function": "(data: 'dict') -> 'Generated'"

@@ -63,6 +63,8 @@ class SplitBlock(TextCommand):
     offset: int
     new_id: str
     style: str
+    #: What the new paragraph is called (D1310); ``""`` for what an older log wrote, which gave it none.
+    name: str = ""
 
     @property
     def label(self) -> str:
@@ -73,17 +75,20 @@ class SplitBlock(TextCommand):
         return "new paragraph"
 
     def apply(self, ctx: Context[TextModel]) -> Command:
-        ctx.model.split(self.block, self.offset, self.new_id, self.style)
+        ctx.model.split(self.block, self.offset, self.new_id, self.style, self.name)
         ctx.emit(BlockSplit(self.block, self.offset, self.new_id, self.style))
         _moved(ctx, self)
         return JoinBlocks(self.new_id, self.block, self.offset)
 
     def to_data(self) -> dict:
-        return {"block": self.block, "offset": self.offset, "new_id": self.new_id, "style": self.style}
+        data = {"block": self.block, "offset": self.offset, "new_id": self.new_id, "style": self.style}
+        if self.name:
+            data["name"] = self.name
+        return data
 
     @classmethod
     def from_data(cls, data, registry) -> SplitBlock:
-        return cls(data["block"], data["offset"], data["new_id"], data["style"])
+        return cls(data["block"], data["offset"], data["new_id"], data["style"], data.get("name", ""))
 
     def regions(self, model) -> tuple[Region, ...]:
         return (TextRange(self.block, self.offset, self.offset + 1),)

@@ -15,6 +15,7 @@ from typing import ClassVar, Self
 
 from claudia_core import (
     FILLER,
+    MAX_THING_NAME,
     SLOTS,
     Command,
     CommandRegistry,
@@ -43,9 +44,13 @@ from claudia_core import (
     TextStructure,
     VisualObject,
     builtin_palette,
+    clean_name,
+    distinct_name,
     fields_before,
     fits,
     insert_runs,
+    name_key,
+    name_problem,
     new_registry,
     parse_entry_id,
     slice_runs,
@@ -455,6 +460,12 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         #: paragraph through every edit; one whose paragraph was joined away is kept, unused, until undo brings the
         #: paragraph back.
         self.block_names: dict[str, str] = {}
+        #: What was written about a paragraph, by id (D1317, D1318): the same pattern as the description of an object,
+        #: a plain string beside the name. Kept like a name when the paragraph is joined away, for undo.
+        self.block_descriptions: dict[str, str] = {}
+        #: ``name_key`` of every stored name of a paragraph that is in the text, worked out when first needed and kept
+        #: up as paragraphs are made: a paste of two thousand lines would otherwise read every name for each.
+        self._stored_keys: set[str] | None = None
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
         for block in self.blocks:
             self.open_container(block.id)
@@ -493,6 +504,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "renderings": self.renderings_to_data(),
             "tables": self.tables_to_data(),
             "names": dict(self.block_names),
+            "descriptions": dict(self.block_descriptions),
             "last": dict(self._last),
         }
 
@@ -522,6 +534,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             state.get("tables", ()),  # schema 14 and earlier: no tables
         )
         model.block_names = dict(state.get("names", {}))  # schema 10 and earlier: no paragraph had a name
+        model.block_descriptions = dict(state.get("descriptions", {}))  # schema 15 and earlier: nothing was written
         model._last = dict(state.get("last", model._last))
         model.structure = TextStructure(model)  # with the objects in: the clients learn the labels with the document
         return model
@@ -626,15 +639,52 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             return "heading"
         return "item" if block.item is not None else "paragraph"
 
+    def _title_of(self, block: Block) -> str:
+        """What a heading is called by: its words, tidied and cut to the longest name; ``""`` when they make no name
+        (a heading with no words yet)."""
+        words = clean_name(block.text)[:MAX_THING_NAME].strip()
+        return words if words and name_problem(words) is None else ""
+
+    def _names_of_paragraphs(self) -> dict[str, str]:
+        """The name each paragraph that has one is called by now, by id. A heading with a title is called by it (D1311),
+        worked out here each time, so it cannot go stale; a number in brackets tells apart two with one title and one
+        a person named a paragraph by, the earlier in the text keeping the plain words. Every other paragraph has the
+        name it was given."""
+        names: dict[str, str] = {}
+        titled: list[tuple[str, str]] = []
+        for block in self.blocks:
+            title = self._title_of(block) if self.heading_level(block) is not None else ""
+            if title:
+                titled.append((block.id, title))
+            elif stored := self.block_names.get(block.id):
+                names[block.id] = stored
+        taken = [name for _kind, _id, name in super().named_things()]
+        taken.extend(names.values())
+        for block_id, title in titled:
+            names[block_id] = distinct_name(title, taken)
+            taken.append(names[block_id])
+        return names
+
     def named_things(self):
         """The objects with names, then the paragraphs with names, in the order of the text: one namespace."""
         yield from super().named_things()
+        names = self._names_of_paragraphs()
         for block in self.blocks:
-            name = self.block_names.get(block.id)
+            name = names.get(block.id)
             if name:
                 yield self.block_kind(block), block.id, name
 
-    # (``unnamed_things`` stays the objects': paragraphs are named one at a time, when somebody points at one.)
+    def unnamed_things(self):
+        """The objects without a name, then the paragraphs without one: what a text from before paragraphs had names
+        holds (D1310). A heading with a title has its title for a name, and a table of contents is not a paragraph a
+        person points at."""
+        yield from super().unnamed_things()
+        for block in self.blocks:
+            if block.generated is not None or self.block_names.get(block.id):
+                continue
+            if self.heading_level(block) is not None and self._title_of(block):
+                continue
+            yield self.block_kind(block), block.id
 
     def _has_block(self, block_id: str) -> bool:
         return any(block.id == block_id for block in self.blocks)
@@ -646,11 +696,14 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     def thing_name(self, thing_id: str) -> str:
         """The name of a paragraph or an object, ``""`` if it has none; ``ValueError`` if there is neither."""
         if self._has_block(thing_id):
+            if self.name_is_fixed(thing_id):
+                return self._names_of_paragraphs()[thing_id]
             return self.block_names.get(thing_id, "")
         return super().thing_name(thing_id)
 
     def set_thing_name(self, thing_id: str, name: str) -> str:
-        """Name a paragraph or an object (``""``: no name); returns the name it had."""
+        """Name a paragraph or an object (``""``: no name); returns the name it had. A heading keeps the name it is
+        given for when it is a paragraph again; it is called by its title meanwhile."""
         if not self._has_block(thing_id):
             return super().set_thing_name(thing_id, name)
         old = self.block_names.get(thing_id, "")
@@ -658,7 +711,42 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             self.block_names[thing_id] = name
         else:
             self.block_names.pop(thing_id, None)
+        self._stored_keys = None
         return old
+
+    def name_is_fixed(self, thing_id: str) -> bool:
+        """A heading with a title is called by it, and so cannot be renamed (D1311)."""
+        if not self._has_block(thing_id):
+            return super().name_is_fixed(thing_id)
+        block = self.block(thing_id)
+        return self.heading_level(block) is not None and bool(self._title_of(block))
+
+    def thing_description(self, thing_id: str) -> str:
+        """What is written about a paragraph or an object, ``""`` if nothing; ``ValueError`` if there is neither."""
+        if self._has_block(thing_id):
+            return self.block_descriptions.get(thing_id, "")
+        return super().thing_description(thing_id)
+
+    def set_thing_description(self, thing_id: str, description: str) -> str:
+        """Write something about a paragraph (``""``: nothing); returns what was written. An object is described by
+        :class:`~claudia_core.DescribeObject`."""
+        if not self._has_block(thing_id):
+            return super().set_thing_description(thing_id, description)
+        old = self.block_descriptions.get(thing_id, "")
+        if description:
+            self.block_descriptions[thing_id] = description
+        else:
+            self.block_descriptions.pop(thing_id, None)
+        return old
+
+    def _taken_keys(self) -> set[str]:
+        """``name_key`` of every name a paragraph of the text was given, and of every object: what a new name must
+        differ from. The headings' titles are not in it: a title gives way to a name, not the other way round."""
+        if self._stored_keys is None:
+            here = {block.id for block in self.blocks}
+            self._stored_keys = {name_key(name) for block_id, name in self.block_names.items() if block_id in here}
+        objects = {name_key(name) for _kind, _id, name in super().named_things()}
+        return self._stored_keys | objects
 
     # -- reading -----------------------------------------------------------------
     def block(self, block_id: str) -> Block:
@@ -936,15 +1024,22 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self._put(kept)
         return text, runs, fields
 
-    def split(self, block_id: str, offset: int, new_id: str, style: str) -> None:
+    def split(self, block_id: str, offset: int, new_id: str, style: str, name: str = "") -> None:
         """Cut a paragraph at ``offset``; the rest becomes the paragraph ``new_id`` right behind it, in ``style``
-        and, if the paragraph is a list item, an item of the same list at the same level."""
+        and, if the paragraph is a list item, an item of the same list at the same level.
+
+        ``name`` is what the new paragraph is called (D1310): the first free "Paragraph N" in the language of its
+        maker, made by the server. Another that is called that already (somebody made one at the same moment, or a
+        name kept for a paragraph that came back) gives way with a number in brackets. Without a name the paragraph
+        has the one it had before, if any."""
         block = self.block(block_id)
         if not 0 <= offset <= len(block.text):
             raise IndexError("split outside the text")
         if any(b.id == new_id for b in self.blocks):
             raise ValueError(f"the paragraph {new_id!r} exists already")
         self.check_style(style)
+        wanted = name or self.block_names.get(new_id, "")
+        made = distinct_name(wanted, self._taken_keys()) if wanted else ""  # before the paragraph is among them
         at = fields_before(block.text, offset)
         rest = Block(
             new_id,
@@ -961,6 +1056,10 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self.open_container(new_id)
         self._note_id(new_id)
         self._structure += 1
+        if made:
+            self.block_names[new_id] = made
+            if self._stored_keys is not None:
+                self._stored_keys.add(name_key(made))
 
     def join(self, block_id: str, into: str, at: int) -> Block:
         """Put paragraph ``block_id`` at the end of ``into`` (the one right before it, ``at`` characters long).
@@ -982,6 +1081,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self.blocks.remove(second)
         self.close_container(block_id)
         self._structure += 1
+        self._stored_keys = None
         return second
 
     def carry_objects(self, source: str, target: str, *, shift: int) -> None:

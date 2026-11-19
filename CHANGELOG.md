@@ -7,6 +7,11 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- Names and descriptions of every thing (E1.13, D1310, D1317, D1318): the command **`DescribeThing`** and the event
+  **`ThingDescribed`** for what is not drawn; `ObjectModel.thing_description`, `set_thing_description` and
+  `name_is_fixed` as the hooks the apps override beside `thing_name` (`DescribeObject` stays for drawn things, which can be
+  decoration); and the functions **`distinct_name`** (a name that is taken, made different with "(2)") and
+  **`free_names`** (several free generic names at once).
 - Composes: an object's offset (`dx`, `dy`) is written to and read from DOCX and ODT (D1067, CODE-65); the flowing editor goes round the objects that take room (D1068, CODE-64). No API change.
 - Composes (D1061, D1065): `set_wrap`, `add_object` and `shapes` in a text; `wrap` and `gap` on a text's object anchor
   (`over`, `around`, `above-below`, `behind`), the command `SetObjectWrap`. **Breaking:** `shapes` of a text answers

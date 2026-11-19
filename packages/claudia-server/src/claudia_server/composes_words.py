@@ -26,6 +26,7 @@ from claudia_core import Batch, Command
 
 from .i18n import msg
 from .protocol import Context, MethodTable, RequestError
+from .thing_names import is_generic_name, paragraph_label
 from .wire import current_revision, done
 
 MAX_READ = 50  # paragraphs one ``paragraphs`` answer holds at most
@@ -90,14 +91,15 @@ def locate(text: str, find: str, occurrence: int, block: str) -> tuple[int, int]
 
 def paragraph_view(model: TextModel, index: int, labels: dict) -> dict:
     """One paragraph as the reading methods give it: `{id, index, style, text}`, `label` (the marker drawn in front
-    of a list item) and `name` when it has them."""
+    of a list item) and `name` when a person gave one: a heading is called by its words, and a name a paragraph got by
+    being made says nothing."""
     block = model.blocks[index]
     view: dict = {"id": block.id, "index": index, "style": block.style, "text": block.text}
     if block.id in labels:
         view["label"] = labels[block.id].marker
-    name = model.block_names.get(block.id)
-    if name:
-        view["name"] = name
+    name = model.thing_name(block.id)
+    if name and not model.name_is_fixed(block.id) and not is_generic_name(name):
+        view["name"] = name  # one a person gave: a heading's is its words and a made one says nothing
     return view
 
 
@@ -150,7 +152,7 @@ def _replace_words(ctx, *, edit, block, find, text, occurrence, base):
     are not there; `locked` where a colleague holds the text."""
     model = _text(ctx)
     start, end = locate(_paragraph(model, block), find, occurrence, block)
-    commands, (cursor, offset) = edit(model, block, start, last=block, end=end, text=text)
+    commands, (cursor, offset) = edit(model, block, start, last=block, end=end, text=text, label=paragraph_label(ctx))
     if not commands:
         return {"revision": current_revision(ctx), "block": cursor, "offset": offset}
     named = "replaced words" if "\n" not in text else "rewrote paragraphs"
@@ -173,12 +175,12 @@ def _add_paragraphs(ctx, *, edit, text, after, style, base):
             raise RequestError("command_error", str(exc)) from None
     if after is None:
         first = model.blocks[0].id
-        commands, _ = edit(model, first, 0, last=first, end=0, text=text + "\n")
+        commands, _ = edit(model, first, 0, last=first, end=0, text=text + "\n", label=paragraph_label(ctx))
         splits = [c.new_id for c in commands if isinstance(c, SplitBlock)]
         added = [first, *splits[:-1]]  # the last split carries what the first paragraph held before
     else:
         length = len(_paragraph(model, after))
-        commands, _ = edit(model, after, length, last=after, end=length, text="\n" + text)
+        commands, _ = edit(model, after, length, last=after, end=length, text="\n" + text, label=paragraph_label(ctx))
         added = [c.new_id for c in commands if isinstance(c, SplitBlock)]
         if style is not None:
             commands = [replace(c, style=style) if isinstance(c, SplitBlock) else c for c in commands]

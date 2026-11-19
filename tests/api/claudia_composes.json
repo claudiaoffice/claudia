@@ -605,7 +605,7 @@
   "class": [
    "TextCommand"
   ],
-  "init": "(block: 'str', offset: 'int', new_id: 'str', style: 'str') -> None",
+  "init": "(block: 'str', offset: 'int', new_id: 'str', style: 'str', name: 'str' = '') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
    "breaks": "(self, span: 'Span') -> 'bool'",
@@ -691,6 +691,7 @@
    "list_in_use": "(self, list_id: 'str') -> 'bool'",
    "move_objects": "(self, command: 'TextCommand') -> 'list[dict]'",
    "move_suggestions": "(self, command: 'TextCommand') -> 'list[dict]'",
+   "name_is_fixed": "(self, thing_id: 'str') -> 'bool'",
    "named_things": "(self)",
    "put_fields": "(self, paragraph_id: 'str', fields: 'tuple[Field, ...]') -> 'tuple[object, ...]'",
    "put_generated": "(self, paragraph_id: 'str', generated: 'Generated | None') -> 'object'",
@@ -705,17 +706,20 @@
    "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",
    "serialize": "(self) -> 'dict'",
    "set_item": "(self, block_id: 'str', item: 'ListItem | None') -> 'None'",
+   "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "settle": "(self, ctx: 'Context') -> 'None'",
    "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
-   "split": "(self, block_id: 'str', offset: 'int', new_id: 'str', style: 'str') -> 'None'",
+   "split": "(self, block_id: 'str', offset: 'int', new_id: 'str', style: 'str', name: 'str' = '') -> 'None'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "style_uses": "(self) -> 'dict[str, int]'",
    "suggestion": "(self, suggestion_id: 'str') -> 'Suggestion'",
    "suggestion_data": "(self, suggestion: 'Suggestion', *, with_state: 'bool' = False) -> 'dict'",
    "text_moved": "(self, command: 'TextCommand') -> 'tuple[object, ...]'",
    "text_regions": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[Region, ...]'",
+   "thing_description": "(self, thing_id: 'str') -> 'str'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
+   "unnamed_things": "(self)",
    "visible_suggestions": "(self) -> 'list[dict]'"
   },
   "properties": [

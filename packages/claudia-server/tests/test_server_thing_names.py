@@ -246,10 +246,10 @@ def on_text(doc, name, params=None, account=ANN, locale="en"):
     return composes_methods.dispatch(ctx, name, params)
 
 
-def test_a_heading_pointed_at_is_named_by_its_words(text):
+def test_a_heading_is_called_by_its_words_and_pointing_at_it_writes_nothing(text):
+    revision = text.revision
     answer = on_text(text, "name_thing", {"id": "b1"})
-    assert answer["name"] == "Introduction" and answer["revision"] is not None
-    assert name_of(text, "b1") == "Introduction"
+    assert answer == {"name": "Introduction", "revision": revision.to_data()}
 
 
 def test_a_paragraph_pointed_at_is_named_by_what_it_is_in_the_language_of_the_one_who_points(text):
@@ -257,14 +257,20 @@ def test_a_paragraph_pointed_at_is_named_by_what_it_is_in_the_language_of_the_on
 
 
 def test_a_thing_that_has_a_name_keeps_it_and_nothing_is_written(text):
-    on_text(text, "rename_thing", {"id": "b1", "name": "Intro"})
+    on_text(text, "rename_thing", {"id": "b2", "name": "Fox"})
     revision = text.revision
-    assert on_text(text, "name_thing", {"id": "b1"}) == {"name": "Intro", "revision": revision.to_data()}
+    assert on_text(text, "name_thing", {"id": "b2"}) == {"name": "Fox", "revision": revision.to_data()}
 
 
-def test_a_heading_whose_words_are_taken_gets_a_numbered_name(text):
-    on_text(text, "rename_thing", {"id": "b2", "name": "introduction"})
-    assert on_text(text, "name_thing", {"id": "b1"})["name"] == translate("Heading", "en") + " 1"
+def test_a_paragraph_cannot_take_the_words_of_a_heading_for_a_name(text):
+    with pytest.raises(RequestError, match="already a heading called"):
+        on_text(text, "rename_thing", {"id": "b2", "name": "introduction"})
+
+
+def test_a_heading_cannot_be_renamed_because_its_words_are_its_name(text):
+    with pytest.raises(RequestError, match="called by its words"):
+        on_text(text, "rename_thing", {"id": "b1", "name": "Intro"})
+    assert name_of(text, "b1") == "Introduction"
 
 
 def test_naming_something_that_is_not_there_is_refused(text):
@@ -276,16 +282,164 @@ def test_naming_something_that_is_not_there_is_refused(text):
 def test_the_paragraphs_say_their_names(text):
     on_text(text, "rename_thing", {"id": "b2", "name": "Fox"})
     blocks = {b["id"]: b for b in on_text(text, "blocks")["blocks"]}
-    assert blocks["b2"]["name"] == "Fox" and "name" not in blocks["b1"]
+    assert blocks["b2"]["name"] == "Fox" and blocks["b1"]["name"] == "Introduction"
 
 
 def test_a_viewer_cannot_name_a_paragraph(text):
     with pytest.raises(RequestError):
-        on_text(text, "name_thing", {"id": "b1"}, account=VERA)
-    assert name_of(text, "b1") == ""
+        on_text(text, "name_thing", {"id": "b2"}, account=VERA)
+    assert name_of(text, "b2") == ""
 
 
 def test_name_thing_names_an_object_too(deck):
     box = add_text(deck)
     deck.execute(RenameThing(box, ""), author="ann")
     assert call(deck, "name_thing", {"id": box})["name"] == "Text box 1"
+
+
+# -- a new paragraph has a name from the start (D1310) ---------------------------------------------------------------
+def test_a_paragraph_made_by_typing_enter_has_a_name_at_once(text):
+    answer = on_text(text, "replace_text", {"block": "b2", "start": 20, "end_block": "b2", "end": 20, "text": "\n"})
+    assert name_of(text, answer["block"]) == "Paragraph 1"
+
+
+def test_a_paste_of_lines_names_each_new_paragraph_with_the_next_free_number(text):
+    on_text(text, "rename_thing", {"id": "b2", "name": "Paragraph 2"})
+    answer = on_text(
+        text, "replace_text", {"block": "b2", "start": 20, "end_block": "b2", "end": 20, "text": "\nA\nB\nC"}
+    )
+    names = [name_of(text, b.id) for b in text.model.blocks if b.id != "b1"]
+    assert names == ["Paragraph 2", "Paragraph 1", "Paragraph 3", "Paragraph 4"]
+    assert answer["block"] == text.model.blocks[-1].id
+
+
+def test_added_paragraphs_have_names_in_the_language_of_the_one_who_adds_them(text):
+    on_text(text, "add_paragraphs", {"text": "one\ntwo", "after": "b2"}, locale="de")
+    names = [name_of(text, b.id) for b in text.model.blocks[2:]]
+    assert names == [translate("Paragraph", "de") + " 1", translate("Paragraph", "de") + " 2"]
+
+
+def test_a_list_item_made_by_typing_enter_is_a_paragraph_by_name(text):
+    from claudia_core import CreateList, ListDef, ListItem, SetListItem
+
+    text.execute(CreateList(ListDef("l1", "bullets")), author="ann")
+    text.execute(SetListItem("b2", ListItem("l1")), author="ann")
+    answer = on_text(text, "replace_text", {"block": "b2", "start": 20, "end_block": "b2", "end": 20, "text": "\n"})
+    assert name_of(text, answer["block"]) == "Paragraph 1"
+
+
+def test_the_name_of_a_paragraph_that_is_made_is_part_of_the_one_step(text):
+    on_text(text, "replace_text", {"block": "b2", "start": 20, "end_block": "b2", "end": 20, "text": "\n"})
+    text.undo("ann")
+    assert text.model.names_in_use() == ["Introduction"]
+
+
+def test_name_unnamed_names_the_paragraphs_a_text_from_before_names_holds(text):
+    answer = on_text(text, "name_unnamed")
+    assert answer["named"] == 1 and name_of(text, "b2") == "Paragraph 1"
+    assert name_of(text, "b1") == "Introduction", "a heading is called by its words, which is a name"
+
+
+# -- Name & describe… is one step (D1317, D1318) -----------------------------------------------------------------------
+def test_the_details_of_a_paragraph_are_its_name_its_words_and_that_it_cannot_be_decoration(text):
+    on_text(text, "name_and_describe", {"id": "b2", "name": "Fox", "description": "Check this"})
+    assert on_text(text, "thing_details", {"id": "b2"}) == {
+        "id": "b2",
+        "kind": "paragraph",
+        "name": "Fox",
+        "name_fixed": False,
+        "description": "Check this",
+        "drawn": False,
+        "decorative": False,
+    }
+
+
+def test_the_details_of_a_heading_say_that_its_name_is_fixed(text):
+    details = on_text(text, "thing_details", {"id": "b1"})
+    assert (details["kind"], details["name"], details["name_fixed"]) == ("heading", "Introduction", True)
+
+
+def test_name_and_describe_changes_both_in_one_step_and_one_undo_takes_both_back(text):
+    answer = on_text(text, "name_and_describe", {"id": "b2", "name": "Fox", "description": "Check the date"})
+    assert answer["name"] == "Fox" and answer["description"] == "Check the date"
+    assert text.model.thing_description("b2") == "Check the date" and name_of(text, "b2") == "Fox"
+    text.undo("ann")
+    assert text.model.thing_description("b2") == "" and name_of(text, "b2") == ""
+
+
+def test_name_and_describe_with_nothing_changed_writes_nothing(text):
+    on_text(text, "name_and_describe", {"id": "b2", "name": "Fox", "description": ""})
+    revision = text.revision
+    answer = on_text(text, "name_and_describe", {"id": "b2", "name": "Fox", "description": ""})
+    assert text.revision == revision and answer["revision"] == revision.to_data()
+
+
+def test_only_the_description_changes_when_the_name_is_the_same(text):
+    on_text(text, "name_and_describe", {"id": "b2", "name": "Fox", "description": ""})
+    on_text(text, "name_and_describe", {"id": "b2", "name": "fox", "description": "note"})
+    assert name_of(text, "b2") == "fox", "capitals a person changes are hers to change"
+
+
+def test_a_heading_is_described_but_not_renamed(text):
+    on_text(text, "name_and_describe", {"id": "b1", "name": "Introduction", "description": "Opening"})
+    assert text.model.thing_description("b1") == "Opening"
+    with pytest.raises(RequestError, match="called by its words"):
+        on_text(text, "name_and_describe", {"id": "b1", "name": "Intro", "description": "Opening"})
+
+
+def test_a_refused_name_stops_the_description_too(text):
+    with pytest.raises(RequestError):
+        on_text(text, "name_and_describe", {"id": "b2", "name": "introduction", "description": "x"})
+    assert text.model.thing_description("b2") == ""
+
+
+def test_a_thing_that_has_a_name_cannot_lose_it_in_the_dialog(text):
+    on_text(text, "rename_thing", {"id": "b2", "name": "Fox"})
+    with pytest.raises(RequestError, match="needs some text"):
+        on_text(text, "name_and_describe", {"id": "b2", "name": "", "description": ""})
+
+
+def test_a_viewer_cannot_name_and_describe(text):
+    with pytest.raises(RequestError):
+        on_text(text, "name_and_describe", {"id": "b2", "name": "Fox", "description": "x"}, account=VERA)
+
+
+def test_a_picture_is_described_with_the_decoration_tick_and_a_paragraph_is_not(deck):
+    picture = add_image(deck)
+    call(deck, "name_and_describe", {"id": picture, "name": "Logo", "description": "", "decorative": True})
+    assert call(deck, "thing_details", {"id": picture})["decorative"] is True
+    assert call(deck, "thing_details", {"id": picture})["drawn"] is True
+
+
+def test_a_picture_needs_words_or_the_tick(deck):
+    picture = add_image(deck)
+    with pytest.raises(RequestError):
+        call(deck, "name_and_describe", {"id": picture, "name": "Logo", "description": "", "decorative": False})
+
+
+def test_the_tick_is_refused_for_something_that_is_not_drawn(text):
+    with pytest.raises(RequestError, match="decorat"):
+        on_text(text, "name_and_describe", {"id": "b2", "name": "Fox", "description": "", "decorative": True})
+
+
+# -- a name a person chose and a name a thing got by being made (D1311) ------------------------------------------------
+@pytest.mark.parametrize("name", ["Paragraph 12", "paragraph 3", "Slide 1", "Text box 7", "Picture 2"])
+def test_a_name_made_with_the_thing_is_generic(name):
+    from claudia_server.thing_names import is_generic_name
+
+    assert is_generic_name(name)
+
+
+def test_a_name_in_another_language_is_generic_too():
+    from claudia_server.thing_names import is_generic_name
+
+    assert is_generic_name(translate("Paragraph", "de") + " 12")
+
+
+@pytest.mark.parametrize(
+    "name", ["Terms", "Paragraph", "Paragraph 1a", "Terms 12", "My Paragraph 3", "Paragraph 3 (2)"]
+)
+def test_a_name_a_person_chose_is_not(name):
+    from claudia_server.thing_names import is_generic_name
+
+    assert not is_generic_name(name)

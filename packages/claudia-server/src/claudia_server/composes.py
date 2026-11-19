@@ -77,6 +77,7 @@ from claudia_core import (
     Command,
     CreateStyle,
     StyleDef,
+    free_names,
     plain,
     validate_css,
 )
@@ -97,7 +98,7 @@ from .structure_methods import add_structure_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
 from .tables import add_table_methods, one_line
-from .thing_names import add_name_methods
+from .thing_names import add_name_methods, paragraph_label
 from .wire import current_revision, done
 
 MAX_ZONE_WORDS = 10  # the widest ± n words zone a cursor may ask for
@@ -187,9 +188,12 @@ def _block_view(model, block, labels, entries, shown) -> dict:
         view["label"] = labels[block.id].to_data()
     if block.id in entries:
         view["entries"] = [entry.to_data() for entry in entries[block.id]]
-    name = model.block_names.get(block.id)
+    name = model.thing_name(block.id)
     if name:
         view["name"] = name
+    description = model.block_descriptions.get(block.id)
+    if description:
+        view["description"] = description
     return view
 
 
@@ -260,18 +264,22 @@ def _export_office(ctx, *, format, tracked_changes):
 
 # ------------------------------------------------------------------------------ writing
 def edit_plan(
-    model: TextModel, first: str, start: int, *, last: str, end: int, text: str
+    model: TextModel, first: str, start: int, *, last: str, end: int, text: str, label: str = ""
 ) -> tuple[list[Command], tuple[str, int]]:
     """The commands that replace the text from ``first:start`` to ``last:end`` by ``text``, and where the cursor
     ends up (``(paragraph, offset)``). Paragraphs in between go away; the last one's rest is joined to the first. In
-    the box of a table it is :func:`_box_plan`."""
+    the box of a table it is :func:`_box_plan`.
+
+    A paragraph that this makes is called ``label`` and the first free number (D1310), in the language of the person
+    who makes it; without a ``label`` it has no name, as in a log from before paragraphs had names. A box of a
+    table is no paragraph a person points at, so it gets none."""
     if "/" in first or "/" in last or model.is_entry(first) or model.is_entry(last):
         return _box_plan(model, first, start, last=last, end=end, text=text)
-    return _paragraph_plan(model, first, start, last=last, end=end, text=text)
+    return _paragraph_plan(model, first, start, last=last, end=end, text=text, label=label)
 
 
 def _paragraph_plan(
-    model: TextModel, first: str, start: int, *, last: str, end: int, text: str
+    model: TextModel, first: str, start: int, *, last: str, end: int, text: str, label: str = ""
 ) -> tuple[list[Command], tuple[str, int]]:
     """:func:`edit_plan` in the paragraphs of the text."""
     i, j = model.index_of(first), model.index_of(last)
@@ -301,11 +309,12 @@ def _paragraph_plan(
         commands.append(JoinBlocks(last, first, start))
     cursor, offset, style = first, start, blocks[i].style
     fresh = iter(model.fresh_ids(len(lines) - 1))
+    made = iter(free_names(label, model.names_in_use(), len(lines) - 1) if label and len(lines) > 1 else ())
     for n, line in enumerate(lines):
         if n:
             style = next_style(model.styles, style) if tail == 0 else style
             new = next(fresh)
-            commands.append(SplitBlock(cursor, offset, new, style))
+            commands.append(SplitBlock(cursor, offset, new, style, next(made, "")))
             cursor, offset = new, 0
         if line:
             commands.append(InsertText(cursor, offset, line))
@@ -358,7 +367,9 @@ def _replace_text(ctx, *, block, start, end_block, end, text, base):
     break in `text` starts a new paragraph; a range that spans paragraphs joins what is left of them. Typing is an
     empty range, deleting is empty text. One request is one step in the history. Returns the revision and where the
     cursor ends up: `{revision, block, offset}`. Refused with `locked` where a colleague holds the text."""
-    commands, (cursor, offset) = edit_plan(_text(ctx), block, start, last=end_block, end=end, text=text)
+    commands, (cursor, offset) = edit_plan(
+        _text(ctx), block, start, last=end_block, end=end, text=text, label=paragraph_label(ctx)
+    )
     result = {"block": cursor, "offset": offset}
     if not commands:
         return {"revision": current_revision(ctx), **result}

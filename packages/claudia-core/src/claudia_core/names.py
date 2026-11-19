@@ -47,3 +47,37 @@ def free_name(label: str, taken: Iterable[str]) -> str:
     while name_key(f"{label} {number}") in used:
         number += 1
     return f"{label} {number}"
+
+
+def distinct_name(name: str, taken: Iterable[str]) -> str:
+    """``name`` itself when nobody has it (by :func:`name_key`), else the first free ``"<name> (<n>)"`` from 2.
+
+    Used where a name is *worked out* rather than chosen (a heading is called by its title, D1311, A3 of the E1
+    architecture; a generic name that two people made at once): the same state always gives the same answer. The
+    number fits inside :data:`MAX_THING_NAME` by shortening ``name``."""
+    used = {name_key(other) for other in taken}
+    if name_key(name) not in used:
+        return name
+    number = 2
+    while True:
+        suffix = f" ({number})"
+        candidate = clean_name(name[: MAX_THING_NAME - len(suffix)]) + suffix
+        if name_key(candidate) not in used:
+            return candidate
+        number += 1
+
+
+def free_names(label: str, taken: Iterable[str], count: int) -> list[str]:
+    """``count`` names for new things of kind ``label``: what :func:`free_name` gives, one after the other, each
+    counting the ones before it as taken. Reads ``taken`` once, so a paste of two thousand paragraphs into a text of
+    fifty thousand does not read every name two thousand times."""
+    used = {name_key(name) for name in taken}
+    made: list[str] = []
+    number = 1
+    while len(made) < count:
+        candidate = f"{label} {number}"
+        number += 1
+        if name_key(candidate) not in used:
+            used.add(name_key(candidate))
+            made.append(candidate)
+    return made

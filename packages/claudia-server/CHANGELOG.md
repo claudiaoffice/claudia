@@ -6,6 +6,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- **`thing_details`** (`id`) and **`name_and_describe`** (`id`, `name`, `description`, `decorative`): the two methods behind
+  the one *Name & describe…* dialog for every thing (D1317, D1318). The second writes name and description as one step
+  of the history, so one Undo takes both back, and writes nothing when nothing changes. `blocks` says each paragraph's
+  `description` when it has one.
+- `thing_names.is_generic_name`: whether a name is the one a thing got by being made, in any language; only a name a
+  person chose is written to a Word or OpenDocument file as a bookmark (D1311).
 - CPU-bound work off the event loop (E3.5, D37, D134, D1314, D1316). **`workers.WorkerPool.max_waiting`** bounds how many
   submissions may be in flight at once across every document the server holds, as `Assistant.max_waiting` bounds one
   document's question queue. Past the bound `submit` raises the new **`PoolBusy`** at once, before anything reaches the
@@ -19,6 +25,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - **`heavy_dispatch.Submittable`**: the `submit(fn, *args, **kwargs)` shape `HeavyDispatcher` needs from a pool, so a
   test can stand in a fake one.
 
+
+### Changed
+- A paragraph a person makes (typing Enter, pasting lines, `replace_text`, `replace_words`, `add_paragraphs`) is named
+  when it is made, with the first free "Paragraph N" in the language of the connection (D1310). `name_unnamed` names the
+  paragraphs of a text from before that. **`rename_thing`** is refused for a heading, which is called by its words
+  (D1311). `paragraphs` leaves out `name` for a heading and for a name a paragraph got by being made.
 ## [0.38.0] - 2026-11-19
 
 ### Added

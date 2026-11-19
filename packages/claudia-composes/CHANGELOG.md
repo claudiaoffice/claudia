@@ -6,6 +6,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- Paragraphs have names from the start and can be described (E1.13, D1310, D1311, D1317, D1318): **`SplitBlock.name`**
+  gives the new paragraph its name (an older log gave none); `TextModel.block_descriptions` keeps what is written about a
+  paragraph, the same way as an object's description; `thing_description`, `set_thing_description` and `name_is_fixed`.
+  `unnamed_things` now lists the paragraphs that have no name. State schema: `descriptions` is new (absent: none).
 - `table_body(object_id, definition, name, *, width=None)` makes the object that shows a table (the one place that
   knows its frame style, `TABLE_FRAME_STYLE`, and its default size, `TABLE_OBJECT_WIDTH` and `TABLE_ROW_HEIGHT`); the
   server and the file converters make a table's object with it (E9.32).
@@ -16,6 +20,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   a typed-in box as a `TableRegion`, and has three built-in looks (`TABLE_LOOKS`, `DEFAULT_LOOK`) whose twelve styles
   are `BUILTIN_STYLES` (`TABLE_STYLE_IDS`).
 
+
+### Changed
+- A heading is called by its title (D1311): `thing_name` and `named_things` work it out each time, with "(2)" on a
+  second heading that has the same words, so it cannot go stale; a name given to a heading is kept for when it is a
+  paragraph again. `split` hands a name that is taken on with a number in brackets.
 ### Added
 - `TextModel.restyle_users(old, new)`: the commands that put the paragraphs and objects that have a style under another
   (the deletion of a style, E1.10, D226). Its built-in styles have `origin == "builtin"`.

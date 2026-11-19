@@ -5,7 +5,17 @@ capitals or runs of spaces, and a thing that has no name yet is given the first 
 
 import pytest
 
-from claudia_core import MAX_THING_NAME, ObjectBody, clean_name, free_name, name_key, name_problem, paragraph_for
+from claudia_core import (
+    MAX_THING_NAME,
+    ObjectBody,
+    clean_name,
+    distinct_name,
+    free_name,
+    free_names,
+    name_key,
+    name_problem,
+    paragraph_for,
+)
 
 
 # -- what a name is -------------------------------------------------------------------------------------------
@@ -95,3 +105,25 @@ def test_an_object_written_before_ranges_shared_names_replays_under_the_old_rule
     assert command.legacy_names
     assert command.to_data()["legacy_names"] is True
     assert "legacy_names" not in AddObject(command.body, command.anchor).to_data()
+
+
+# -- a name that is taken, made different (D1310, D1311) --------------------------------------------------------
+def test_a_name_that_is_free_stays_as_it_is():
+    assert distinct_name("Introduction", ["Summary"]) == "Introduction"
+
+
+def test_a_name_that_is_taken_gets_the_first_free_number_in_brackets():
+    assert distinct_name("Introduction", ["introduction"]) == "Introduction (2)"
+    assert distinct_name("Introduction", ["Introduction", "Introduction (2)"]) == "Introduction (3)"
+
+
+def test_the_number_fits_inside_the_longest_name():
+    long = "x" * MAX_THING_NAME
+    made = distinct_name(long, [long])
+    assert made.endswith(" (2)") and len(made) == MAX_THING_NAME and name_problem(made) is None
+
+
+def test_many_names_at_once_are_the_ones_one_after_the_other_would_be():
+    taken = ["Paragraph 2"]
+    assert free_names("Paragraph", taken, 3) == ["Paragraph 1", "Paragraph 3", "Paragraph 4"]
+    assert free_names("Paragraph", taken, 0) == []
