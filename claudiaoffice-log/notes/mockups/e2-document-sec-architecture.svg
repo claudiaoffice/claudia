@@ -1,0 +1,160 @@
+<svg viewBox="0 0 1500 1120" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<rect x="0" y="0" width="1500" height="1120" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia — E2 round two: where each change goes (class diagram, proposed)</text>
+<text x="40" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Branch e2-document-sec, on main at 518a7bf. Violet edge = new file or class, plain edge = changed. Nothing is built; this is for the architecture discussion.</text>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6e6880"/></marker></defs>
+<rect x="40" y="90" width="440" height="980" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="60" y="118" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">claudia-container (the file)</text>
+<rect x="530" y="90" width="440" height="980" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="550" y="118" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">claudia-server (the live document)</text>
+<rect x="1020" y="90" width="440" height="980" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1040" y="118" font-family="Fraunces, Georgia, serif" font-size="15" font-weight="600" fill="#1f1a33" text-anchor="start">web, desktop shells (clients)</text>
+<rect x="60" y="136" width="400" height="66" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="60" y="136" width="5" height="66" rx="2" fill="#5b4bc4"/>
+<rect x="416" y="144" width="34" height="16" rx="8" fill="#5b4bc4"/>
+<text x="433" y="156" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#f7f3ec" text-anchor="middle">new</text>
+<text x="76" y="158" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">kdf.py</text>
+<text x="76" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ calibrate(target_s, max_memory_kib, floor) -&gt; KdfParams</text>
+<text x="76" y="194" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">KdfParams.default() stays as the floor</text>
+<rect x="60" y="232" width="400" height="98" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="60" y="232" width="5" height="98" rx="2" fill="#5b4bc4"/>
+<rect x="416" y="240" width="34" height="16" rx="8" fill="#5b4bc4"/>
+<text x="433" y="252" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#f7f3ec" text-anchor="middle">new</text>
+<text x="76" y="254" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">slots.py   inbox.py</text>
+<text x="76" y="274" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ a key pair per slot and for the recovery key</text>
+<text x="76" y="290" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ seal_to(public_key, keys) / open_inbox(private_key, blob)</text>
+<text x="76" y="306" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ PrivateDomain(id): a key only in its person's slot</text>
+<text x="76" y="322" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Role -&gt; domains table unchanged (D101)</text>
+<rect x="60" y="372" width="400" height="130" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="76" y="394" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">container.py</text>
+<text x="76" y="414" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ set_role(path, keys, name, role)</text>
+<text x="76" y="430" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ renew_keys(path, keys, domains) -&gt; new keys, inbox entries</text>
+<text x="76" y="446" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ delete_private(path, keys, domain_id)</text>
+<text x="76" y="462" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ chains: history, chat, audit, private/&lt;id&gt;</text>
+<text x="76" y="478" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">people list holds each person's public key</text>
+<text x="76" y="494" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">remove_user, rewrite_journal reuse the rewrite (D725)</text>
+<rect x="60" y="548" width="400" height="82" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="60" y="548" width="5" height="82" rx="2" fill="#5b4bc4"/>
+<rect x="416" y="556" width="34" height="16" rx="8" fill="#5b4bc4"/>
+<text x="433" y="568" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#f7f3ec" text-anchor="middle">new</text>
+<text x="76" y="570" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">audit.py</text>
+<text x="76" y="590" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ AuditRecord(kind, who, when, format, parts, pages)</text>
+<text x="76" y="606" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ append / read the audit chain (history key, own blocks)</text>
+<text x="76" y="622" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">not redactable; never part of the command log</text>
+<rect x="60" y="646" width="400" height="82" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="60" y="646" width="5" height="82" rx="2" fill="#5b4bc4"/>
+<rect x="416" y="654" width="34" height="16" rx="8" fill="#5b4bc4"/>
+<text x="433" y="666" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#f7f3ec" text-anchor="middle">new</text>
+<text x="76" y="668" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">export_file.py</text>
+<text x="76" y="688" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ write_export(state, history?, chat?, who, parts) -&gt; bytes</text>
+<text x="76" y="704" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ read_export(bytes) -&gt; ExportContents  (reader limits of E2.1)</text>
+<text x="76" y="720" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">zip: format, export.json, content.json, history.jsonl, chat.jsonl</text>
+<rect x="60" y="744" width="400" height="66" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="60" y="744" width="5" height="66" rx="2" fill="#5b4bc4"/>
+<rect x="416" y="752" width="34" height="16" rx="8" fill="#5b4bc4"/>
+<text x="433" y="764" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#f7f3ec" text-anchor="middle">new</text>
+<text x="76" y="766" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">docs/container-format.md</text>
+<text x="76" y="786" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ the format specification (E2.1): manifest, slots, inbox,</text>
+<text x="76" y="802" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">chains, audit, private domains, limits; what is not detected (D1268)</text>
+<rect x="550" y="136" width="400" height="82" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="550" y="136" width="5" height="82" rx="2" fill="#5b4bc4"/>
+<rect x="906" y="144" width="34" height="16" rx="8" fill="#5b4bc4"/>
+<text x="923" y="156" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#f7f3ec" text-anchor="middle">new</text>
+<text x="566" y="158" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">throttle.py   LoginThrottle</text>
+<text x="566" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ check(address, doc, name) -&gt; seconds to wait (0 = go on)</text>
+<text x="566" y="194" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ failed(address, doc, name) / succeeded(address)</text>
+<text x="566" y="210" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">clock injected; memory only; forgets after 15 min (D1266)</text>
+<rect x="550" y="252" width="400" height="82" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="550" y="252" width="5" height="82" rx="2" fill="#5b4bc4"/>
+<rect x="906" y="260" width="34" height="16" rx="8" fill="#5b4bc4"/>
+<text x="923" y="272" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#f7f3ec" text-anchor="middle">new</text>
+<text x="566" y="274" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">kdf_policy.py   KdfPolicy</text>
+<text x="566" y="294" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ params() -&gt; KdfParams measured at start (D1267)</text>
+<text x="566" y="310" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ measure_again(); target and ceiling from server settings</text>
+<text x="566" y="326" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">decoy hash uses params() too (SEC-04)</text>
+<rect x="550" y="368" width="400" height="98" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="550" y="368" width="5" height="98" rx="2" fill="#5b4bc4"/>
+<rect x="906" y="376" width="34" height="16" rx="8" fill="#5b4bc4"/>
+<text x="923" y="388" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#f7f3ec" text-anchor="middle">new</text>
+<text x="566" y="390" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">audience.py   Audience</text>
+<text x="566" y="410" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ EVENT_DOMAINS: every event type -&gt; content/history/chat</text>
+<text x="566" y="426" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ delivery(event, role) -&gt; full | revision_only | drop</text>
+<text x="566" y="442" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">unknown event type -&gt; editors and owners only</text>
+<text x="566" y="458" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">test: every `"type"` literal in the tree is classified</text>
+<rect x="550" y="502" width="400" height="114" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="566" y="524" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">protocol.py   MethodTable</text>
+<text x="566" y="544" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ method(..., reads="content"|"history"|"chat")</text>
+<text x="566" y="560" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">dispatch refuses a viewer for history/chat -&gt; forbidden</text>
+<text x="566" y="576" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ audit_log (reads history), report_output (print/pdf)</text>
+<text x="566" y="592" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ set_role, export_claudia; export_content stays for Download</text>
+<text x="566" y="608" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">test: every method states what it reads</text>
+<rect x="550" y="650" width="400" height="98" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="566" y="672" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">hub.py   app.py Gateway</text>
+<text x="566" y="692" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">_audience() asks Audience; welcome() is role-aware</text>
+<text x="566" y="708" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Gateway._hello asks LoginThrottle before any hashing</text>
+<text x="566" y="724" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ retry_after on refusal; client address per D1275</text>
+<text x="566" y="740" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">admin_api.py: the same throttle for the admin sign-in</text>
+<rect x="550" y="786" width="400" height="98" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="566" y="808" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">sealed.py   SealedDocuments</text>
+<text x="566" y="828" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ set_role, remove_user -&gt; renew_keys, inbox taken at login</text>
+<text x="566" y="844" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ record(AuditRecord) for exports (server) and prints (client report)</text>
+<text x="566" y="860" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ export_claudia / import_claudia via export_file.py</text>
+<text x="566" y="876" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">creates documents with KdfPolicy.params()</text>
+<rect x="550" y="922" width="400" height="66" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="566" y="944" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">server_settings.py   admin_api.py</text>
+<text x="566" y="964" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ security: kdf target, memory ceiling, throttle numbers</text>
+<text x="566" y="980" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ GET/PUT /api/admin/security, POST .../measure</text>
+<rect x="1040" y="136" width="400" height="50" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1056" y="158" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">OpenDialog.vue</text>
+<text x="1056" y="178" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ wait state: message, countdown, disabled button (D1266)</text>
+<rect x="1040" y="214" width="400" height="82" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1056" y="236" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">SidePanel.vue   ChatInput.vue</text>
+<text x="1056" y="256" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ viewer: one sentence instead of History &amp; Chat</text>
+<text x="1056" y="272" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ audit rows, muted, one line each (D1271)</text>
+<text x="1056" y="288" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">authorship view hidden for viewers (E9.10)</text>
+<rect x="1040" y="330" width="400" height="82" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1056" y="352" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">ShareDialog.vue   RemoveDialog</text>
+<text x="1056" y="372" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ role select per person; notice before a change</text>
+<text x="1056" y="388" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ remove confirmation: keys renewed, private notes deleted</text>
+<text x="1056" y="404" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ progress while keys are renewed</text>
+<rect x="1040" y="454" width="400" height="82" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1056" y="476" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">ExportFormatDialog.vue</text>
+<text x="1056" y="496" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ format "Claudia, unencrypted (JSON in a zip)"</text>
+<text x="1056" y="512" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ owner-only checkbox: history and chat</text>
+<text x="1056" y="528" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ confirmation step in plain words (D1270)</text>
+<rect x="1040" y="576" width="400" height="66" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1056" y="598" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">ImportDialog.vue</text>
+<text x="1056" y="618" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ recognises the export zip, says so, takes name and password</text>
+<text x="1056" y="634" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">authors of its history shown as former people (D1272)</text>
+<rect x="1040" y="672" width="400" height="66" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1056" y="694" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">print preview, shells</text>
+<text x="1056" y="714" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ Print… and Save PDF… call report_output when the</text>
+<text x="1056" y="730" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">file is saved or the page sent (D1271)</text>
+<rect x="1040" y="752" width="400" height="66" rx="8" fill="#ffffff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="1056" y="774" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">base-session.ts</text>
+<text x="1056" y="794" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ role-aware: viewer gets no history/chat state; `sealed` text</text>
+<text x="1056" y="810" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ `retry_after` handling for login and admin login</text>
+<rect x="1040" y="922" width="400" height="50" rx="8" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="1040" y="922" width="5" height="50" rx="2" fill="#5b4bc4"/>
+<rect x="1396" y="930" width="34" height="16" rx="8" fill="#5b4bc4"/>
+<text x="1413" y="942" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#f7f3ec" text-anchor="middle">new</text>
+<text x="1056" y="944" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">SecuritySettings.vue</text>
+<text x="1056" y="964" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ time, memory ceiling, measured, Measure again, wait numbers</text>
+<line x1="550" y1="293.0" x2="460" y2="169.0" stroke="#6e6880" stroke-width="1.2" marker-end="url(#a)"/>
+<text x="505.0" y="226.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="middle">calibrate</text>
+<line x1="550" y1="835.0" x2="460" y2="437.0" stroke="#6e6880" stroke-width="1.2" marker-end="url(#a)"/>
+<text x="505.0" y="631.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="middle">uses all of these</text>
+<line x1="1040" y1="161.0" x2="950" y2="177.0" stroke="#6e6880" stroke-width="1.2" marker-end="url(#a)"/>
+<line x1="1040" y1="947.0" x2="950" y2="955.0" stroke="#6e6880" stroke-width="1.2" marker-end="url(#a)"/>
+<line x1="1040" y1="255.0" x2="950" y2="529.0" stroke="#6e6880" stroke-width="1.2" marker-end="url(#a)"/>
+<line x1="1040" y1="371.0" x2="950" y2="549.0" stroke="#6e6880" stroke-width="1.2" marker-end="url(#a)"/>
+<line x1="1040" y1="495.0" x2="950" y2="573.0" stroke="#6e6880" stroke-width="1.2" marker-end="url(#a)"/>
+<line x1="1040" y1="705.0" x2="950" y2="589.0" stroke="#6e6880" stroke-width="1.2" marker-end="url(#a)"/>
+<text x="995" y="520" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="middle">protocol</text>
+<text x="995" y="532" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="middle">methods</text>
+<rect x="40" y="1086" width="16" height="12" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="2"/>
+<text x="62" y="1096" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">new</text>
+<rect x="110" y="1086" width="16" height="12" rx="3" fill="#fff" stroke="#c9c2dc" stroke-width="1"/>
+<text x="132" y="1096" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">changed</text>
+<text x="220" y="1096" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">claudia-core is not touched: the kernel stays free of roles and network code, so the audience table is in the server.</text>
+</svg>

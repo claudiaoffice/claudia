@@ -41,13 +41,13 @@ statement in the docs or on the website).
 | SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` in CI since 2026-11-17 (job `pip-audit`; clean when run by hand) |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |
 | SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |
-| SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12) |
+| SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12); decided 2026-11-19 (D1266), to be built on branch `e2-document-sec` |
 | SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **new, open** |
 | SEC-13 | P2 | Security | The web app is served without CSP, frame-ancestors, nosniff or referrer headers | **fixed** 2026-11-12 |
 | SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |
 | SEC-15 | P2 | Security | Office import reads every zip part whole and parses some XML with default parsers | **fixed** 2026-11-17 (`claudia_opc_io.check_package`, `parse_xml`) |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |
-| SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05, **now tracked** |
+| SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05, **now tracked**; decided 2026-11-19 (D1261), to be built on branch `e2-document-sec` |
 | PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |
 | PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |
 | PERF-03 | P3 | Performance | `users.json` rewritten and fsynced in full on every user added | superseded by the container |
