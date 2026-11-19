@@ -208,6 +208,7 @@ jobs:
           URL=http://127.0.0.1:8767/ npm run e2e:present
           URL=http://127.0.0.1:8767/ npm run e2e:dock # names, a tag in the chat, replay (D550, D551)
           npm run e2e:keys # all three servers: one key table, every menu entry, nothing to undo in a new document
+          npm run e2e:objects # all three servers: press, drag, scale, turn, menu, keys for every kind of object, and composes' tables (D1221-D1230)
           pkill -f claudia_server || true
       # These two start (and restart) a server of their own, on ports the step above has freed.
       - name: Losing the server, and the recovery key

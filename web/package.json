@@ -36,6 +36,7 @@
     "e2e:grid-a11y": "node e2e/grid-a11y.cjs",
     "e2e:describe": "node e2e/describe.cjs",
     "e2e:describe-creates": "node e2e/describe-creates.cjs",
+    "e2e:objects": "node e2e/objects.cjs",
     "e2e:keys": "node e2e/keys.cjs",
     "e2e:details": "node e2e/details.cjs",
     "e2e:dock": "node e2e/dock.cjs",

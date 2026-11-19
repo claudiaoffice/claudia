@@ -42,3 +42,20 @@ def test_no_client_spells_out_the_list_of_kinds_again():
                     if len(union & own) >= 4
                 )
     assert not offenders, "write `ObjectKind` (from @claudia/layout), not the list: " + "; ".join(offenders)
+
+
+E2E_OBJECTS = ROOT / "web" / "e2e" / "objects.cjs"
+
+
+def test_the_browser_test_of_objects_has_a_row_for_every_kind():
+    """``web/e2e/objects.cjs`` does the same things to every kind of object in every app (D1230). A kind that is added
+    to ``OBJECT_KINDS`` has to be given a row in its ``KINDS`` table: a way to make one in each app, or the reason an
+    app cannot have it. Otherwise a new kind is an object nobody has pressed, dragged, turned or right-clicked."""
+    text = E2E_OBJECTS.read_text(encoding="utf-8")
+    start, end = text.index("const KINDS = {"), text.index("// end of KINDS")
+    rows = set(re.findall(r"^  ([a-z]+): ", text[start:end], flags=re.MULTILINE))
+    assert rows == set(OBJECT_KINDS), f"web/e2e/objects.cjs KINDS has {sorted(rows)}, OBJECT_KINDS has {sorted(OBJECT_KINDS)}"
+    for app in ("computes", "composes", "creates"):
+        for kind in OBJECT_KINDS:
+            row = re.search(rf"^  {kind}: \{{(.*?)^  \}},?$|^  {kind}: \{{(.*?)\}},?$", text[start:end], flags=re.MULTILINE | re.DOTALL)
+            assert row and app in (row.group(1) or row.group(2)), f"objects.cjs: the row of {kind} says nothing about {app}"

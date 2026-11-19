@@ -237,7 +237,8 @@ Each patch assumes the earlier ones are applied; the last step of each is a merg
    turn handle, *Rotate by…*, the object menu and the `contextmenu` rule in `web/app/components/SheetGrid.vue` (the viewport's
    capture handler now yields to `[data-object]`), pointer events with capture, the picture clipboard pasting into the selected
    cell. **Not built:** wrap and *Release from grid* (do not apply in a cell grid).
-5. **`objects.cjs`** and its guard test, wired into `npm run e2e:objects` and CI as the other specs are.
+5. **`objects.cjs` — written (D1231), not yet run:** `web/e2e/objects.cjs` with its guard test (`tests/test_object_kinds_agree.py`),
+   wired into `npm run e2e:objects` and the CI job as the other specs are. Its first run on a machine with a browser is the proof.
 
 ## What I could not do here
 
