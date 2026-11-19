@@ -11,9 +11,12 @@ the name *and* the password, so a wrong name and a wrong password are the same r
 """
 
 import hashlib
+import hmac
 import os
 import threading
+import time
 import unicodedata
+from collections import OrderedDict
 from dataclasses import dataclass, field
 
 from cryptography.exceptions import InvalidTag
@@ -146,12 +149,84 @@ def _normalise_name(name: str) -> str:
     return unicodedata.normalize("NFKC", name).casefold().strip()
 
 
+WARM_SECONDS = 30.0
+"""How long a login hashed ahead of time (:func:`warm_login_material`) waits to be used before it is forgotten."""
+WARM_MOST = 64
+"""Most logins kept hashed ahead of time at once: the oldest are forgotten first."""
+
+_WARM_LOCK = threading.Lock()
+_WARM_KEY = os.urandom(32)  # lives and dies with the process: nothing kept under it can be matched elsewhere
+_warm: OrderedDict[bytes, tuple[float, LoginMaterial]] = OrderedDict()
+
+
+def _now() -> float:
+    return time.monotonic()
+
+
+def _warm_key(password: str, name: str, doc_salt: bytes, params: KdfParams) -> bytes:
+    """Names the inputs of a derivation without keeping them: a keyed hash, so neither password nor name is stored."""
+    parts = (
+        unicodedata.normalize("NFKC", password).encode(),
+        _normalise_name(name).encode(),
+        doc_salt,
+        f"{params.iterations}/{params.memory_kib}/{params.lanes}".encode(),
+    )
+    mac = hmac.new(_WARM_KEY, digestmod=hashlib.sha256)
+    for part in parts:
+        mac.update(len(part).to_bytes(4, "big") + part)
+    return mac.digest()
+
+
+def _take_warm(key: bytes) -> LoginMaterial | None:
+    with _WARM_LOCK:
+        entry = _warm.pop(key, None)
+    if entry is None or entry[0] < _now():
+        return None
+    return entry[1]
+
+
+def warm_login_material(password: str, name: str, doc_salt: bytes, params: KdfParams) -> None:
+    """Do the slow hashing of a login now, so that the next :func:`derive_login_material` for it is instant (SEC-21).
+
+    A server hashes in a worker thread with this, then handles the request on its event loop, where hashing would
+    stall every other window. The result is **one-shot** (the next derivation takes it away), expires after
+    ``WARM_SECONDS``, is bounded to ``WARM_MOST`` entries, and is filed under a keyed hash, never under the
+    password or the name.
+    """
+    material = _derive(password, name, doc_salt, params)
+    key = _warm_key(password, name, doc_salt, params)
+    with _WARM_LOCK:
+        _warm[key] = (_now() + WARM_SECONDS, material)
+        _warm.move_to_end(key)
+        while len(_warm) > WARM_MOST:
+            _warm.popitem(last=False)
+
+
+def warm_material_count() -> int:
+    """How many logins are waiting hashed (for tests and the threat model's bound)."""
+    with _WARM_LOCK:
+        return len(_warm)
+
+
+def forget_warm_material() -> None:
+    """Drop everything hashed ahead of time."""
+    with _WARM_LOCK:
+        _warm.clear()
+
+
 def derive_login_material(password: str, name: str, doc_salt: bytes, params: KdfParams) -> LoginMaterial:
     """Turn a name and a password into the locator and the key-encryption key of that person's slot (D102).
 
     The Argon2id salt depends on the document's salt *and* the name, so the same password gives unrelated results for
     two people and for two documents. Whoever holds only the file must guess name and password together.
+
+    If the very same login was hashed ahead of time with :func:`warm_login_material`, that result is taken (once).
     """
+    warm = _take_warm(_warm_key(password, name, doc_salt, params))
+    return warm if warm is not None else _derive(password, name, doc_salt, params)
+
+
+def _derive(password: str, name: str, doc_salt: bytes, params: KdfParams) -> LoginMaterial:
     name_bytes = _normalise_name(name).encode()
     salt = hashlib.sha256(b"claudia/login-salt/1" + len(doc_salt).to_bytes(4, "big") + doc_salt + name_bytes).digest()
     secret = argon2id(unicodedata.normalize("NFKC", password).encode(), salt, params, KEY_SIZE)

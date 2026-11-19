@@ -48,6 +48,7 @@ from .container import (
     transfer_owner,
     unlock,
     unlock_with_recovery,
+    warm,
     write_original,
 )
 from .crypto import (
@@ -59,8 +60,10 @@ from .crypto import (
     open_sealed,
     random_key,
     seal,
+    warm_login_material,
 )
 from .journal import JournalError, JournalRecord, JournalWriter, journal_generation, read_journal
+from .kdf import calibrate
 from .passwords import MIN_PASSWORD_LENGTH, WeakPassword, password_problems, require_strong_password
 from .slots import (
     ROLE_DOMAINS,
@@ -111,6 +114,7 @@ __all__ = [
     "clean_details",
     "create_document",
     "derive_login_material",
+    "warm_login_material",
     "derive_recovery_material",
     "format_recovery_key",
     "has_recovery_key",
@@ -144,7 +148,9 @@ __all__ = [
     "sealed_copy",
     "set_recovery_key",
     "transfer_owner",
+    "calibrate",
     "unlock",
+    "warm",
     "unlock_with_recovery",
     "write_original",
 ]

@@ -1,5 +1,5 @@
 {
- "version": "0.9.0",
+ "version": "0.10.0",
  "ContainerError": {
   "class": [
    "Exception"
@@ -204,6 +204,9 @@
  "begin": {
   "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes]) -> claudia_container.journal.JournalWriter"
  },
+ "calibrate": {
+  "function": "(target_seconds: float = 0.75, *, max_memory_kib: int = 262144, floor: claudia_container.crypto.KdfParams | None = None, measure: collections.abc.Callable[[claudia_container.crypto.KdfParams], float] = <function measure_once>) -> claudia_container.crypto.KdfParams"
+ },
  "change_password": {
   "function": "(path: pathlib.Path, name: str, old_password: str, new_password: str) -> bool"
  },
@@ -320,6 +323,12 @@
  },
  "unlock_with_recovery": {
   "function": "(path: pathlib.Path, recovery_key: bytes) -> claudia_container.slots.Unlocked | None"
+ },
+ "warm": {
+  "function": "(path: pathlib.Path, name: str, password: str) -> None"
+ },
+ "warm_login_material": {
+  "function": "(password: str, name: str, doc_salt: bytes, params: claudia_container.crypto.KdfParams) -> None"
  },
  "write_original": {
   "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_container.slots.Domain, bytes], data: bytes) -> None"

@@ -5,6 +5,17 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-19
+
+### Added
+- `warm_login_material(password, name, doc_salt, params)` and `warm(path, name, password)` (SEC-21): do the slow hashing
+  of a login ahead of time, so that the next `derive_login_material` (and so `unlock`, `sealed_copy`, `change_password`,
+  `add_user` and the like) for the very same inputs takes the result. One-shot, expires after 30 s, at most 64 kept, filed
+  under a keyed hash of the inputs and never under the password or the name. A server calls it in a worker thread so that
+  its event loop does not stand still for a hash.
+- `calibrate(target_seconds, max_memory_kib, floor, measure)` (D1267): the Argon2id cost that takes about the target on
+  this machine: all the memory allowed, then the passes that fill the time, never weaker than the floor.
+
 ## [0.9.0] - 2026-11-19
 
 ### Added

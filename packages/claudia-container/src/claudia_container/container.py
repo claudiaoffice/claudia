@@ -37,7 +37,15 @@ from claudia_file_writer import atomic_file
 
 from . import blocks
 from .blocks import GENESIS, BlockError, Chain, Head, Place, block_hash, open_block, open_head, seal_block, seal_head
-from .crypto import DecryptionError, KdfParams, derive_login_material, derive_recovery_material, open_sealed, seal
+from .crypto import (
+    DecryptionError,
+    KdfParams,
+    derive_login_material,
+    derive_recovery_material,
+    open_sealed,
+    seal,
+    warm_login_material,
+)
 from .journal import JournalWriter, journal_generation, read_journal
 from .passwords import require_strong_password
 from .slots import Domain, KeySlot, Role, Unlocked, make_slot, new_domain_keys, open_slot
@@ -339,6 +347,18 @@ def unlock(path: Path, name: str, password: str) -> Unlocked | None:
     manifest = _manifest_of(entries, path)
     material = derive_login_material(password, name, manifest.salt, manifest.kdf)
     return open_slot(_slots_of(entries, path), material, manifest.binding)
+
+
+def warm(path: Path, name: str, password: str) -> None:
+    """Do the slow password hashing for ``name`` in this document now (SEC-21).
+
+    Whatever ``unlock``, ``sealed_copy``, ``change_password``, ``add_user`` and the like do next with
+    the same name and password takes the result instead of hashing again, once (see ``crypto.warm_login_material``). A
+    server calls this in a worker thread and then runs the real call on its event loop, which must not stand still for
+    the length of a hash. The file is only read; a file that cannot be read raises as ``read_manifest`` does.
+    """
+    manifest = read_manifest(path)
+    warm_login_material(password, name, manifest.salt, manifest.kdf)
 
 
 def sealed_copy(path: Path, name: str, password: str) -> bytes | None:

@@ -21,6 +21,8 @@ Cryptographic primitives
    :members:
 .. autoclass:: claudia_container.LoginMaterial
 .. autofunction:: claudia_container.derive_login_material
+.. autofunction:: claudia_container.warm_login_material
+.. autofunction:: claudia_container.calibrate
 .. autofunction:: claudia_container.derive_recovery_material
 .. autofunction:: claudia_container.random_key
 .. autofunction:: claudia_container.seal
@@ -63,6 +65,7 @@ history and chat as blocks. Every change replaces the file atomically.
 .. autofunction:: claudia_container.read_manifest
 .. autofunction:: claudia_container.unlock
 .. autofunction:: claudia_container.unlock_with_recovery
+.. autofunction:: claudia_container.warm
 .. autofunction:: claudia_container.read_people
 .. autofunction:: claudia_container.add_user
 .. autofunction:: claudia_container.remove_user
