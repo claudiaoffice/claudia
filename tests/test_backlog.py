@@ -25,13 +25,24 @@ def front_matter(path: Path) -> dict[str, str]:
     text = path.read_text(encoding="utf-8")
     match = re.match(r"---\n(.*?)\n---\n", text, re.S)
     assert match, f"{path.name}: no front matter"
-    fields = {}
-    for line in match.group(1).splitlines():
+    return parse_fields(match.group(1))
+
+
+def parse_fields(block: str) -> dict[str, str]:
+    """The top-level ``key: value`` lines of a front matter. A list may be written inline (``[[a]], [[b]]``) or as a
+    block (``key:`` and then ``  - "[[a]]"`` lines, as Obsidian writes it after the file was edited there); a block is
+    joined into one string, so the readers below see the same thing either way."""
+    fields: dict[str, str] = {}
+    key = None
+    for line in block.splitlines():
         if line.startswith(" "):
-            continue  # customFields' own entries
-        key, sep, value = line.partition(":")
+            if key and line.strip().startswith("- "):
+                fields[key] = (fields[key] + " " + line.strip()[2:].strip()).strip()
+            continue  # (customFields' own entries are skipped)
+        name, sep, value = line.partition(":")
         if sep:
-            fields[key.strip()] = value.strip()
+            key = name.strip()
+            fields[key] = value.strip()
     return fields
 
 
@@ -45,6 +56,14 @@ def links(value: str) -> list[str]:
 
 def tasks() -> dict[str, dict[str, str]]:
     return {path.stem: front_matter(path) for path in sorted(TASKS.glob("*.md"))}
+
+
+def test_a_list_written_as_a_block_reads_like_one_written_inline():
+    inline = parse_fields('subtaskIds: ["[[a|A]]", "[[b|B]]"]\ntitle: E1')
+    block = parse_fields('subtaskIds:\n  - "[[a|A]]"\n  - "[[b|B]]"\ntitle: E1')
+    assert links(inline["subtaskIds"]) == links(block["subtaskIds"]) == ["a", "b"]
+    assert block["title"] == "E1"
+    assert parse_fields("customFields:\n  p4t0: D1, D2\nid: x") == {"customFields": "", "id": "x"}
 
 
 def test_every_task_file_is_a_dotpm_task_with_known_values():
