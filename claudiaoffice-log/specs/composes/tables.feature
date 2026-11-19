@@ -2,7 +2,10 @@ Feature: Tables in a composes text (E9.32)
   As a writer, I want to put a table in my text, fill it, and change its shape, so that I do not have to leave my
   text for a small table. What every object must do (be there once, reload, undo, colleagues, files) is in
   `specs/invariants/objects-in-composes.feature` and is not repeated here. `Q<n>` points to a question in
-  `tables.review.md`; a scenario tagged `@needs-decision` says what I propose and waits for the answer.
+  `tables.review.md`; a scenario tagged `@needs-decision` says what I propose and waits for the answer, and one tagged
+  `@after:object-interaction` is decided (D1221-D1226) but lives on a branch that is not merged yet. Selecting, moving,
+  scaling and the object menu as such are the contract of D1221 and its own E2E (`web/e2e/objects.cjs`, planned);
+  they are not repeated here, only what is particular to a table.
 
   Background:
     Given a new composes document "report" in which I am Ann, an owner
@@ -152,23 +155,27 @@ Feature: Tables in a composes text (E9.32)
       Then the first body box is empty
 
   @extended @needs-decision
-  Rule: What happens to words that are not committed yet (Q8)
-
-    Background:
-      Given I have inserted a table of 2 columns and 2 rows
-      And I have typed "Roof 1" in the first body box without leaving it
+  Rule: Words not committed yet when the page is left (Q8, the table's own part)
 
     Scenario: I reload the page while I am still in the box
+      Given I have inserted a table of 2 columns and 2 rows
+      And I have typed "Roof 1" in the first body box without leaving it
       When I reload the page and open "report" again
-      # proposal: kept; today it would be lost
+      # proposal: kept, by committing when the page is hidden; today it would be lost
       Then the first body box reads "Roof 1"
 
-    Scenario: The connection is lost while I am still in the box
+  @extended
+  Rule: A lost connection is the one concept of the whole app: a banner, and nothing is saved meanwhile (Q8)
+
+    Scenario: What I type while the banner is shown is not saved, as the banner says
+      Given I have inserted a table of 2 columns and 2 rows
+      And the first body box reads "Roof 1"
       When the connection to the server is lost
-      And I press Tab
-      Then I am told that the words are not saved yet
-      When the connection comes back
-      Then the first body box reads "Roof 1" for me and for Ben
+      Then I see the banner "The connection was lost. Trying to get back… what you do now is not saved."
+      When I type "Kale" in the second body box and press Tab
+      And the connection comes back
+      Then the banner is gone
+      And the table is as the server had it: "Roof 1" in the first body box, and the second body box is empty
 
   @extended
   Rule: Words in a box behave
@@ -196,18 +203,30 @@ Feature: Tables in a composes text (E9.32)
 
   # ================================================================ changing the shape
 
-  @core @firefox
-  Rule: Row, Column and Sort are offered while the caret is in the table, and only then
+  @core @after:object-interaction
+  Rule: The table menu is the right-hand click, and holds what the Edit menu no longer has (D1224, D1225)
 
-    Scenario: The entries come and go with the caret
+    Scenario: A right press in a box selects the table and opens its menu
       Given I have inserted a table of 2 columns and 2 rows
-      When my caret is in a box
-      Then the Edit menu has Row, Column, Sort, Table Options… and Merge Cells
-      When my caret is in the paragraph "After"
-      Then the Edit menu has none of them
-      And the same holds for the context menu
+      When I press the right mouse button in a box
+      Then the table is selected
+      And a menu opens that holds, in this order: Name & describe…, Table options…, Merge cells, Split cell, Sort ▸, Delete table
+      And it does not hold Rotate by…
+      And neither the paragraph menu nor the browser's menu opens
 
-  @core @firefox
+    Scenario: The Edit menu does not carry them any more
+      Given my caret is in a box
+      Then the Edit menu has none of Table options…, Merge cells, Split cell and Sort
+
+    Scenario: The editing aids are shown while I edit and are not printed
+      Given I have inserted a table of 2 columns and 2 rows in the look "Plain"
+      Then a faint frame and the lines between the boxes are shown in the editor
+      When I open the print preview
+      Then the preview shows the look "Plain" only, without the faint frame and lines
+
+  # N2: D1224 leaves "Insert/delete" to the row and column headers, and composes' tables have no header UI yet; the
+  # words below say what a person does, not where she does it. Tab in the last box (above) adds a row either way.
+  @core @needs-decision
   Rule: I add and take away rows and columns
 
     Background:
@@ -253,7 +272,7 @@ Feature: Tables in a composes text (E9.32)
         | Ctrl+Alt+_       | the column is deleted           |
 
   @extended @needs-decision
-  Rule: The edges of what can be deleted and added (Q10, Q11)
+  Rule: The edges of what can be deleted and added (Q10, Q11, N1)
 
     Scenario: The 101st row is refused, with a reason
       Given I have inserted a table of 2 columns and 100 rows
@@ -267,17 +286,22 @@ Feature: Tables in a composes text (E9.32)
       Then no column is added
       And I am told that a table has at most 10 columns
 
-    Scenario: The last body row cannot be deleted away into nothing
+    # Q10 (answered 2026-11-19): deleting the last row or the only column removes the table. This replaces the
+    # sentence of D1213 that says those entries are off. N1: with a header, the last *body* row is meant (a table needs
+    # a body), so Q11 and Q10 do not collide.
+    Scenario: Deleting the only body row removes the table
       Given I have inserted a table of 2 columns and 2 rows with a header
       When I delete the only body row
-      # proposal; Q10
-      Then the table still has one empty body row
+      Then the table is gone and the text around it is as it was
+      And the history shows one entry, "Removed a table"
+      When I undo
+      Then the table is back as it was
 
-    Scenario: The only column cannot be deleted away into nothing
-      Given I have inserted a table of 1 column and 2 rows
+    Scenario: Deleting the only column removes the table
+      Given I have inserted a table of 1 column and 3 rows
       When I delete the column
-      # proposal; Q10
-      Then the table still has one column
+      Then the table is gone and the text around it is as it was
+      And the history shows one entry, "Removed a table"
 
     Scenario: The header row is not deleted like a body row
       Given my caret is in a header box
@@ -420,16 +444,22 @@ Feature: Tables in a composes text (E9.32)
       When I set the total of "Kilos" to none
       Then the total row is gone and the boxes are as they were
 
-  @extended
-  Rule: Taking a table away
+  @extended @after:object-interaction
+  Rule: Taking a table away (Q13: not asked first, one entry in the history, one undo)
 
-    Scenario: Remove table in Table Options…
+    Scenario Outline: The ways to take a table away
       Given I have inserted a table of 2 columns and 2 rows and worked in it
-      # Q13: with or without being asked first?
-      When I choose Remove table in Table Options…
+      When I <way>
       Then the table is gone and the text around it is as it was
+      And I was not asked anything first
+      And the history shows one entry, "Removed a table"
       When I undo
       Then the table is back with what I had written
+
+      Examples:
+        | way                                        |
+        | choose Delete table in the table menu      |
+        | select the table and press Del             |
 
   # ================================================================ name, description, references
 
@@ -483,10 +513,13 @@ Feature: Tables in a composes text (E9.32)
       When I press Backspace at the start of "After"
       Then the table is not deleted, and "After" is not joined into a box
 
-    # Q15
+    # Q15, changed: see the review file, B-list N4
+    @needs-decision
     Scenario: Selecting text across the table and deleting it
       When I select from the middle of "Before" to the middle of "After" and delete
-      Then I am asked, or the table is kept; it is not deleted without my knowing
+      # proposal changed to match Q13 and D1225 (Del removes an object without a question): no question, one undo
+      Then the table is deleted with the text between, and I was not asked
+      And one undo brings back the text and the table together
 
   @core @firefox
   Rule: A long table runs over the pages
@@ -616,13 +649,19 @@ Feature: Tables in a composes text (E9.32)
         | OpenDocument |
         | Word         |
 
-    Scenario: A table made in another program
-      # Q17: which real documents?
-      Given the file "test-documents/.../regular-table.docx"
+    Scenario Outline: A table made in another program
+      # Q17, chosen: the library's existing regular table in each format
+      Given the file "<file>"
       When I open it
-      Then its regular table is one table of ours, shown once, that I can type in
+      Then its table is one table of ours, shown once, between its two paragraphs, and I can type in it
+
+      Examples:
+        | file                                                 |
+        | test-documents/docx/beyond-claudia/table/source.docx |
+        | test-documents/odt/beyond-claudia/table/source.odt   |
 
     Scenario: A table we do not understand is kept and listed, not lost
-      Given a file with a table that has merged cells in its body and a table inside a table
+      # Q17, chosen: a new fixture "tables-irregular" in test-documents/_build_fixtures.py, to be built with the tests
+      Given the file "test-documents/docx/tables-irregular/source.docx" with a table inside a table and a merge that is not a rectangle
       When I open it and download it again
       Then those tables are still in the downloaded file, and the import said they were not understood

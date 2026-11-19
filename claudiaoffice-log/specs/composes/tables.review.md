@@ -71,3 +71,76 @@ failing scenarios first, then the fix, TDD), or (c) hand them to the other agent
   gets a line "Specs: `specs/composes/tables.feature`" under its acceptance. I did not touch the stories yet.
 
 I agree with all of these proposals. Please remind me / write me a file how I can run the e2e tests on my local computer; best would be a simple start script with parameters like "core-only" and "extended" etc. Script should explain itself on the command line.
+
+## D. Second round (2026-11-19): your answers, what I checked, and what blocks
+
+You answered all 17 and agreed with all of section C. Section A (B1–B4, Question 0) is still open; see below.
+
+### D1. What I checked for your notes
+
+- **Q8 (lost connection).** You are right: the web client already has the one concept, a banner for the whole page
+  ("The connection was lost. Trying to get back… what you do now is not saved.", `DocumentFrame.vue`). **My per-box "not
+  saved yet" is withdrawn**; no decision is needed for that part. The scenario now says: the banner is shown, what I type
+  meanwhile is not saved, and after the return the table is as the server has it. What stays is the table's own small
+  part, **N3**: commit what is in a box when the page is hidden (a reload while typing). Proposal: yes, as it costs
+  nothing. (`@needs-decision`)
+- **Q10 (last row or column removes the table).** This **contradicts D1213**, which says those entries are off ("no last
+  row or column deleted"). It needs a decision that amends D1213: *deleting the last body row, or the only column, removes
+  the table; one history entry "Removed a table"; one undo; no question.* **N1:** with a header row I mean the last
+  *body* row (a table needs a body), so Q11 (header rows are not deleted as rows) and Q10 do not collide. Please confirm
+  N1. I suggest the other agent writes the decision in its range D1201–D1220 (D1215–D1220 are free), because D1213 is its
+  file and it is working on it now; I give it the two scenarios as acceptance.
+- **Q13.** Consistent with D1225: `Del` removes the selected object without a question. The scenarios say "Delete table"
+  in the table menu and `Del` on the selected table both give "Removed a table", one undo.
+- **Q15 (checked against D1221–D1226 as I said I would).** They say nothing about a text selection that contains a table;
+  they say `Del` on a selected object asks nothing. So "asked once" for a selection would be the one place that asks.
+  **N4, a changed proposal:** a selection that contains the table deletes it with the text, no question, one undo brings
+  all back. Please confirm or keep the question. (Backspace after the table stays as agreed.)
+- **Q7** is now also D1224: `Esc` in a cell leaves the table completely, for the text.
+- **Q17, chosen.** *Regular:* `test-documents/docx/beyond-claudia/table/source.docx` and its twin
+  `odt/beyond-claudia/table/source.odt` (one table of two rows, no merges, two paragraphs around it). *Irregular:* a new
+  fixture `tables-irregular` (a table inside a table, and a merge that is not a rectangle), to be added to
+  `_build_fixtures.py` when we build the tests. Note: `docx/beyond-claudia/table/spec.py` still says claudia has no model
+  for tables ("invisible"); since D1214 that is out of date, and the other agent presumably knows.
+- **Section C.** Recorded as agreed. The runner script is in this patch (`./run-e2e.sh`, `scripts/run_e2e.py`,
+  `specs/running.md`).
+- **Decision ids.** `ranges.md` has D1201–D1220 (tables) and D1221–D1240 (object interaction, on its own branch). My
+  proposal for this branch: **D1241–D1260**, "spec-first E2E: the working agreement, the shared invariants, decisions the
+  table specs force". I have not written any decision yet. To be recorded in `ranges.md` in the commit of the first one.
+
+### D2. What I found on the way, and what it does to the specs
+
+1. **The other agent has found my symptoms.** D1224 says the object layer drew the table a second time over its own
+   caption (the two frames, the dead "Options…" button), and that the default look drew no borders; its fix is a faint
+   frame and cell lines always shown in the editor (B3 and "drawn twice"). **But the branch `object-interaction` holds only
+   decisions, notes and mocks so far (`614cf6a`), no code**, so none of that can be seen yet. I built that branch and ran my
+   throwaway script on it: B1 (words typed twice with Tab or Enter) and B2 (table after the wrong paragraph; D1213 says
+   after the paragraph the caret is in) are there too, and the notes do not mention them. So B1, B2 and B4 are not on
+   anybody's list that I can see.
+2. **Scenarios that now wait for that branch** carry `@after:object-interaction` (the table menu, the editing aids, Delete
+   table / `Del`). The Edit menu no longer carries Table options, Merge, Split and Sort (D1224).
+3. **N2, a real gap.** D1224 says "Insert/delete and Height/width… stay on the row and column headers", and the note says
+   composes' tables have *no header UI yet*. The old Edit ▸ Row and Column entries and their keys (D1208) are not
+   mentioned. So today nobody has said where a person adds or deletes a row or a column in a composes table (Tab in the
+   last box adds a row; that is all). The scenarios say what a person does, not where; that rule is `@needs-decision`.
+4. **Overlap with `objects.cjs`.** The object-interaction note plans `web/e2e/objects.cjs`, one script for select, move,
+   scale, the object menu and `Del`, for every kind of object. My invariants file overlaps a little ("I can work in it",
+   "once"). Proposal: the Gherkin invariants own *being there once, reload, reconnect, undo, colleagues, files, names*;
+   `objects.cjs` owns the pointer contract; the runner runs both.
+
+### D3. Blocking items
+
+**Blocking the first tests (needs you):**
+
+| # | Item | What it blocks | Proposal |
+|---|---|---|---|
+| 1 | **N2** where row and column commands live in composes tables | the `@core` rule "I add and take away rows and columns" (5 scenarios) | decide with the other agent; the rest of the table specs does not wait for it |
+| 2 | **Question 0** who owns B1, B2, B4 | nothing in the specs, but the tests will fail until somebody fixes them | the other agent gets them as acceptance tests, as soon as it is back; B1 is the one that matters most |
+| 3 | **N1 + the amendment of D1213** (Q10) | two scenarios | confirm N1; the other agent writes the decision |
+| 4 | **N4** selection delete: no question | one scenario | confirm |
+
+**Waiting for the other agent's work, not for you:** everything tagged `@after:object-interaction`, and the code of D1224.
+
+**Not blocking:** N3 (small), Q16 (the stand-in assistant needs a table lens first; those scenarios stay deferred), the
+`tables-irregular` fixture (I build it with the tests), and the decision-id range (I only need it before I write the
+first decision).

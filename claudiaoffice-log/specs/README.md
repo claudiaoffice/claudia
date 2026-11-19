@@ -33,6 +33,8 @@ A feature file belongs to a story in `Projects/claudia-office/_tasks`; the story
   - `@desktop`: also to be driven through the GTK client (AT-SPI), later.
   - `@needs-decision`: the expected behaviour is a proposal; the scenario is not automated until the question in
     the review file is answered.
+  - `@after:<branch>`: the behaviour is decided, but it lives on a branch that is not merged yet; the scenario is
+    automated when that branch is in main.
 - **Defaults I propose are marked in the review file**, so that a reviewer only has to veto.
 
 ## What every scenario run checks without being asked (the "always" steps)
@@ -45,7 +47,11 @@ Built into the step code, not repeated in the files, so that nobody can forget t
    by something else. ("Four rows in the page" is not enough if only one can be seen.)
 4. A screenshot is kept at the end of each scenario (and on failure), so that the person who reviews the run can look.
 
-## Tooling (proposal, see the review file for the question)
+## Running them
+
+`./run-e2e.sh --help` explains itself; `claudiaoffice-log/specs/running.md` has the same in a page.
+
+## Tooling (agreed 2026-11-19)
 
 `pytest-bdd` with Python Playwright in `tests/e2e/`, next to `live.py` (which already starts real servers) and
 `test_greeting.py` (which already skips with a reason when the web app or a browser is missing). The existing
