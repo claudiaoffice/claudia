@@ -12,7 +12,7 @@ the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-che
 (`qa-recommendations.md`). Fifth round 2026-11-13 at `cfa2d91` (all feature branches merged: printing, lists, search, random numbers and
 scenarios, i18n, BITV): new items SEC-18, PERF-09 to PERF-11, UX-33 to UX-37, PROC-18 to PROC-22, CODE-17 to CODE-21,
 DOC-02; the `bitv` items re-checked as merged. Sixth round 2026-11-17 at `f150f0d` (stabilisation of `main`, no features): new items
-PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below).
+PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45, UX-46.
 
 ## How to add a bug
 
@@ -200,6 +200,8 @@ statement in the docs or on the website).
 | CODE-63 | P3 | UX / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |
 | CODE-64 | P2 | composes | The browser editor does not draw the text wrap (the flowing view shows objects over the words; Page view and print wrap) | **fixed** 2026-11-18 (D1068) |
 | CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |
+| UX-45 | P3 | UX / composes | Resizing an object from its top or left handle is two history entries, not one (`resize_object` takes no offset in a text) | **new, open** |
+| UX-46 | P3 | UX / computes, composes | Edit ▸ Select Next Object (D1063, D1222) is not built: computes reaches an object only by Ctrl+Alt+PageDown/PageUp, which has no menu entry | **new, open** |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1968,6 +1970,27 @@ many small nodes is refused with a sentence and the server stays up.
 
 ### UX-44 · Blinking dots ignored reduced motion · P3 · fixed 2026-11-17
 `SidePanel.vue` `.dots i` now stops animating under `prefers-reduced-motion: reduce` (WCAG 2.3.3).
+
+---
+
+## Round of 2026-11-19 (object interaction, branch `object-interaction`, D1221–D1231)
+
+### UX-45 · A resize from the top or left handle is two history entries in composes · P3 · new, open
+An object in a text hangs from a character and an offset (`dx`, `dy`); `resize_object` in composes takes only `w` and
+`h` (`Placement.frame` is empty for `IN_TEXT`), so a handle that moves the top left corner has to send `move_object`
+and `resize_object`, which are two entries and two undo steps (creates sends both in one, `x`/`y` come with the size).
+**Fix.** Give `IN_TEXT.frame` the offset (`dx:int? dy:int?`) as `move` has it, and let the client send one call.
+**Acceptance.** A drag of a top left handle changes the history by one entry and one Undo takes it all back (`objects.cjs`, composes, any kind; the check in step 4 of the battery says one entry for the size).
+Found while building D1228.
+
+### UX-46 · Edit ▸ Select Next Object is not built in computes (and composes) · P3 · new, open
+D1063 and D1222 decide that **Tab and Edit ▸ Select Next Object (Ctrl+Alt+Shift+B) reach an object without a pointer** in
+composes and computes (`notes/rotation-ui-and-the-composes-object-layer.md`). In computes Tab belongs to the cells and the
+only way is Ctrl+Alt+PageDown/PageUp, which has no menu entry and so no key in the key table; in composes the objects
+take Tab (`tabindex`) but the menu entry does not exist either. **Fix.** Add `edit.select-next-object` to the composes and
+computes manifests with the decided key and make the computes grid step through its objects with it.
+**Acceptance.** A person who uses no pointer can select, move (arrows), turn (Rotate By…) and delete an object in computes
+and composes (`objects.cjs`). Found while building D1230.
 
 ---
 

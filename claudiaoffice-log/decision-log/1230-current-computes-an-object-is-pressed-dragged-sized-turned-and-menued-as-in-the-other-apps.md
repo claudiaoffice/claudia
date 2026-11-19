@@ -30,7 +30,7 @@ superseded-by: []
   `onHeaderContext` now returns at once for anything inside `[data-object]`, and so does the menu key.
 - **Keyboard:** Ctrl+Alt+PageDown / PageUp step through the objects (as before); on the selected object arrows move it by
   one cell (Shift: five), Enter or F2 edits a container, Delete removes it, Esc drops what is in progress. Tab stays with
-  the cells; *Select Next Object* is the way in without a pointer.
+  the cells (Edit ▸ Select Next Object, decided in D1063 and D1222, is not built yet: UX-46).
 - **The object clipboard (D1229) pastes a picture into the selected cell** (`SheetGrid.paste`, tried first by
   `Workspace.pasteFromClipboard`), so Edit ▸ Paste and Ctrl+V do the same here as in the other two apps.
 - **A change is announced to screen readers** (*Turned to {degrees}*, the existing msgids), and a selected object has its

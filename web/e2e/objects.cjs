@@ -11,6 +11,10 @@
 //   server 2: ... --model claudia_composes:TextModel --port 8766 ...      server 3: ... --model claudia_creates:SlideModel --port 8767 ...
 //   node e2e/objects.cjs                       (APP=computes|composes|creates for one; CHROME=/path/to/chrome; SHOTS=dir)
 //
+// D1232 (tests first, not built yet): Edit text for the words of a text box and a shape in composes, and Format ▸ Rotate
+// (Rotate Right 90°, Rotate Left 90°, Rotate By…, with their keys) in composes and computes as in creates. Their steps
+// run with D1232=1 and are not in CI until the features are built; then the gate goes and they are the contract.
+//
 // `tests/test_object_kinds_agree.py` fails when a kind of object (`claudia_core.OBJECT_KINDS`) has no row in KINDS below:
 // a new kind of object comes with its row here, or says in its row why an app cannot have it.
 const { chromium } = require('playwright')
@@ -23,6 +27,7 @@ const STAMP = Date.now() % 100000
 const ANN = ['ann', 'Ann-has-a-Password-1']
 const BEN = ['ben', 'Ben-has-a-Password-1']
 const log = (...a) => console.log(...a)
+const D1232 = process.env.D1232 === '1'
 
 // -- a picture that is big enough to hold with a pointer: 200 x 100, a gradient so that it can be told from a hole
 function png(w, h) {
@@ -85,7 +90,8 @@ const APPS = {
         const block = s?.anchorNode && (s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement)?.closest('[data-block]')
         return JSON.stringify([block ? [...document.querySelectorAll('[data-block]')].indexOf(block) : -1, s?.anchorOffset ?? -1])
       }),
-    editable: (kind) => kind === 'rendered', // the server has no step for the words of a box or a shape in a text
+    // D1232: the words of a box or a shape are written as typed (`write_words`), as in creates
+    editable: (kind) => kind === 'rendered' || (D1232 && kind !== 'image' && kind !== 'diagram'),
     wrap: true,
     grid: false,
   },
@@ -257,6 +263,9 @@ async function battery(app, kind, ann, ben) {
   await ann.waitForSelector('[role=menu][aria-label="Object menu"]', { state: 'detached' })
   log(`${where}: right press menu`)
 
+  // 2b. Edit text: the editor opens from the menu, Enter and a double press; what is typed is one entry; Esc takes it back
+  if (a.editable(kind)) await editText(app, kind, ann, ben, obj)
+
   // 3. a drag moves a preview, the document changes once on release, and Esc takes a drag back
   await obj.click()
   const start = await box(obj)
@@ -314,6 +323,9 @@ async function battery(app, kind, ann, ben) {
     assert.equal(await ann.getByRole('menuitem', { name: /^Rotate by…/ }).count(), 0, `${where}: a chart is not turned`)
   }
 
+  // 5b. Format ▸ Rotate, with its keys, in every app that turns objects (D1024, D1232)
+  if (D1232) await rotateMenu(ann, where, turns, obj)
+
   // 6. the keyboard: arrows nudge, Esc deselects, Delete deletes (and Undo brings it back)
   await obj.click()
   const resting = await box(obj)
@@ -337,6 +349,88 @@ async function battery(app, kind, ann, ben) {
   await ann.waitForFunction(([sel]) => document.querySelectorAll(sel).length === 0, [a.objects], { timeout: 8000 })
   assert.ok((await entries(ann)) > hist0, `${where}: all of it is in the history`)
   log(`${where}: keyboard, delete, undo, and ben saw it all`)
+}
+
+// -- Edit text: one editor, whatever the app (creates' paragraph editor, composes' box, a container's source)
+async function editText(app, kind, ann, ben, obj) {
+  const where = `${app} ${kind}`
+  const rendered = kind === 'rendered'
+  const editor = obj.locator(rendered ? '[data-testid=rendered-editor] textarea' : '[role=textbox]')
+  const accept = rendered ? 'Control+Enter' : 'Enter'
+  const words = rendered ? 'x^2 + y^2' : 'words by ann'
+  const h = await entries(ann)
+  // from the object's menu
+  await obj.click({ button: 'right' })
+  await ann.getByRole('menuitem', { name: /^Edit text/ }).click()
+  await editor.waitFor()
+  assert.equal(await editor.evaluate((e) => e === document.activeElement), true, `${where}: the editor has the keyboard`)
+  await ann.keyboard.type(words)
+  await ann.keyboard.press(accept)
+  await editor.waitFor({ state: 'detached' })
+  await waitEntries(ann, h + 1, `${where}: one entry for the words`)
+  if (!rendered) {
+    assert.ok((await obj.innerText()).includes(words), `${where}: the words are on the object`)
+    if (ben) await ben.waitForFunction(([sel, text]) => document.querySelector(sel)?.textContent.includes(text), [APPS[app].objects, words])
+  }
+  // Enter on the selected object, and Esc leaves it as it was
+  await obj.click()
+  await ann.keyboard.press('Enter')
+  await editor.waitFor()
+  await ann.keyboard.type(' not kept')
+  await ann.keyboard.press('Escape')
+  await editor.waitFor({ state: 'detached' })
+  await ann.waitForTimeout(300)
+  assert.equal(await entries(ann), h + 1, `${where}: Esc leaves nothing in the history`)
+  if (!rendered) assert.ok(!(await obj.innerText()).includes('not kept'), `${where}: and the words as they were`)
+  // a double press opens it, too
+  await obj.dblclick()
+  await editor.waitFor()
+  await ann.keyboard.press('Escape')
+  await editor.waitFor({ state: 'detached' })
+  log(`${where}: edit text`)
+}
+
+// -- Format ▸ Rotate: the same three entries and keys in every app; not for a chart, not for nothing selected
+async function rotateEntries(page) {
+  await page.click('.menus .title:text-is("Format")')
+  await page.click('.menus .drop [role=menuitem]:has-text("Rotate")')
+}
+async function rotateOff(page, where) {
+  await rotateEntries(page)
+  for (const name of ['Rotate Right 90°', 'Rotate Left 90°', 'Rotate By…'])
+    assert.equal(await page.locator(`.menus .drop [role=menuitem]:has-text("${name}")`).isDisabled(), true, `${where}: ${name} is off`)
+  await page.keyboard.press('Escape')
+}
+async function rotateMenu(ann, where, turns, obj) {
+  await obj.click()
+  if (!turns) {
+    await rotateOff(ann, `${where}: a chart`)
+    return
+  }
+  const angle = await turnAngle(ann)
+  const h = await entries(ann)
+  const turnedTo = (degrees) => ann.waitForFunction((d) => Number(document.querySelector('[data-handle=turn]')?.getAttribute('aria-valuenow')) === d, degrees, { timeout: 8000 })
+  await menu(ann, 'Format', 'Rotate', 'Rotate Right 90°')
+  await turnedTo((angle + 90) % 360)
+  await menu(ann, 'Format', 'Rotate', 'Rotate Left 90°')
+  await turnedTo(angle)
+  await ann.keyboard.press('Control+Alt+Period')
+  await turnedTo((angle + 90) % 360)
+  await ann.keyboard.press('Control+Alt+Comma')
+  await turnedTo(angle)
+  await waitEntries(ann, h + 4, `${where}: one entry for each quarter turn`)
+  await menu(ann, 'Format', 'Rotate', 'Rotate By…')
+  await ann.waitForSelector('form.rotate input[type=text]')
+  await ann.fill('form.rotate input[type=text]', '45')
+  await ann.keyboard.press('Enter')
+  await turnedTo(45)
+  await waitEntries(ann, h + 5, `${where}: one entry for Rotate By…`)
+  await ann.keyboard.press('Control+Shift+Alt+Z')
+  await ann.waitForSelector('form.rotate input[type=text]')
+  await ann.keyboard.press('Escape')
+  await ann.waitForSelector('form.rotate', { state: 'detached' })
+  assert.equal(await entries(ann), h + 5, `${where}: Rotate By… left with Esc changes nothing`)
+  log(`${where}: Format ▸ Rotate and its keys`)
 }
 
 // -- composes' tables: in the flow, a name tab to hold, a drop line between paragraphs, a menu of their own
@@ -418,6 +512,7 @@ async function run(browser, app) {
       await ann.waitForTimeout(500)
       await ann.keyboard.press('Control+Home')
     }
+    if (D1232) await rotateOff(ann, `${app}: nothing is selected`)
     for (const [kind, row] of Object.entries(KINDS)) {
       const make = row[app]
       if (typeof make === 'string') {
