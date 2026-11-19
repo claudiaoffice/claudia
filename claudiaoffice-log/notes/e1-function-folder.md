@@ -1,3 +1,5 @@
+> **PARKED 2026-11-19 by the owner** (D1313): "we keep the functions folder parked for now to get started, I need to think about it". Read this as the proposal it is; nothing in it is built or planned, and its questions (§9) are not asked until the owner takes it up again. It belongs together with the parked macro and `UserFunction` topic (D1309): the heavy-function dispatch salvaged from `worker-pool` (D1314) is waiting for the same first user.
+
 # The function folder and what a document says it needs (E1.9; proposal D1313)
 
 *Design for the owner's review, 2026-11-19, branch `e1-core`. The owner asked for the function folder to be designed in

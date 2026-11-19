@@ -1,0 +1,58 @@
+<svg viewBox="0 0 1400 760" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia — Name &amp; describe… for a paragraph, a heading and a range of cells</title><desc id="d">Three dialogs: a paragraph with a generic name, a heading whose name is its title and locked, and an unnamed range of cells.</desc>
+<defs><filter id="sh" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1f1a33" flood-opacity="0.18"/></filter></defs>
+<rect width="1400" height="760" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">claudia — the same dialog for a paragraph, a heading and a cell range (D1310, D1311, D1317)</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Everything that has a name can be described; only the pieces that make sense change. Composes: paragraph and heading. Computes: a range.</text>
+<rect x="40" y="100" width="420" height="470" rx="14" fill="#fff" stroke="#8d86a8" stroke-width="1.5"/>
+<text x="62" y="134" font-size="18" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">Name &amp; describe</text>
+<text x="62" y="154" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">composes · the caret is in a paragraph</text>
+<text x="62" y="180" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Name</text>
+<rect x="62" y="190" width="376" height="40" rx="8" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="74" y="214" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Paragraph 3</text>
+<text x="62" y="250" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Called automatically. Type another name to make it your own.</text>
+<text x="62" y="286" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Description (read aloud to someone who cannot see it)</text>
+<rect x="62" y="296" width="376" height="110" rx="8" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="62" y="426" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">0 of 300 characters</text>
+<text x="62" y="460" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">No “Decorative”: a paragraph is never only for looks.</text>
+<rect x="62" y="508" width="90" height="36" rx="18.0" fill="#4b3fb0"/>
+<text x="107.0" y="531.0" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">Save</text>
+<rect x="164" y="508" width="90" height="36" rx="18.0" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="209.0" y="531.0" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="490" y="100" width="420" height="470" rx="14" fill="#fff" stroke="#8d86a8" stroke-width="1.5"/>
+<text x="512" y="134" font-size="18" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">Name &amp; describe</text>
+<text x="512" y="154" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">composes · the caret is in a heading</text>
+<text x="512" y="180" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Name</text>
+<rect x="512" y="190" width="376" height="40" rx="8" fill="#efecf6" stroke="#8d86a8" stroke-width="1"/>
+<text x="524" y="214" font-size="13" font-weight="400" fill="#6e6880" text-anchor="start">Introduction</text>
+<rect x="852" y="209" width="14" height="10" rx="2" fill="#6e6880"/>
+<path d="M855,209 V207 a4,4 0 0 1 8,0 V209" fill="none" stroke="#6e6880" stroke-width="1.6"/>
+<text x="512" y="250" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A heading is called by its title. Change the title in the text.</text>
+<text x="512" y="268" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A second heading “Introduction” is shown as “Introduction (2)”.</text>
+<text x="512" y="304" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Description (read aloud to someone who cannot see it)</text>
+<rect x="512" y="314" width="376" height="92" rx="8" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="512" y="426" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">0 of 300 characters</text>
+<rect x="512" y="508" width="90" height="36" rx="18.0" fill="#4b3fb0"/>
+<text x="557.0" y="531.0" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">Save</text>
+<rect x="614" y="508" width="90" height="36" rx="18.0" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="659.0" y="531.0" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="940" y="100" width="420" height="470" rx="14" fill="#fff" stroke="#8d86a8" stroke-width="1.5"/>
+<text x="962" y="134" font-size="18" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">Name &amp; describe</text>
+<text x="962" y="154" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">computes · B2:B40 is selected, no name yet</text>
+<text x="962" y="180" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Name</text>
+<rect x="962" y="190" width="376" height="40" rx="8" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="1000" y="216" font-size="13" font-weight="400" fill="#a39db8" text-anchor="start">e.g. Sales</text>
+<text x="962" y="250" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A range needs a name to be described. It joins the</text>
+<text x="962" y="268" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">named ranges (Tools ▸ Names…) and can be pointed at.</text>
+<text x="962" y="304" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Description (read aloud to someone who cannot see it)</text>
+<rect x="962" y="314" width="376" height="92" rx="8" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="962" y="426" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">0 of 300 characters</text>
+<rect x="962" y="508" width="90" height="36" rx="18.0" fill="#4b3fb0"/>
+<text x="1007.0" y="531.0" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">Save</text>
+<rect x="1064" y="508" width="90" height="36" rx="18.0" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="1109.0" y="531.0" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<text x="40" y="620" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Questions this mock puts to you (the proposal is what is drawn):</text>
+<text x="40" y="644" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">1.  The description field says “read aloud to someone who cannot see it” for everything, as today. When the corkboard comes (E16.5) it may split into that and a note of your own (D1317); until then one field and one label.</text>
+<text x="40" y="668" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">2.  A range or a table that has no name: should Name &amp; describe… ask for a name (drawn), or should it make a generic one (“Range 1”) so that the dialog always opens filled?</text>
+<text x="40" y="692" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">3.  Paragraph descriptions are not exported to Word or OpenDocument (no field for it that is not a comment). Say if you want them written as comments.</text>
+</svg>

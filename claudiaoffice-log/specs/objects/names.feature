@@ -1,5 +1,6 @@
-# Every thing has a name (D550, D554, D1303–D1305, D1310, D1312)
-Feature: A person can point at anything by its name, change the name, and come back to where she was
+# Every thing has a name and can be described; a tag leaves a way back
+# (D550, D551, D554, D1303–D1305, D1310–D1312, D1317). Answers: names.review.md, 2026-11-19.
+Feature: A person can point at anything by its name, change the name, describe it, and come back to where she was
 
   # -- a name from the start ------------------------------------------------------------------------------
   @core @app:composes @pending:e1.13
@@ -16,6 +17,12 @@ Feature: A person can point at anything by its name, change the name, and come b
     Then each has a name like "Text box 1", "Slide 2", "Sheet 2", "Chart 1"
     And two things never have the same name
 
+  @extended @app:composes @pending:e1.13
+  Scenario: A paragraph inserted between two others takes the first free number
+    Given paragraphs called "Paragraph 1", "Paragraph 2" and "Paragraph 3" in this order
+    When I insert a paragraph between the first and the second
+    Then it is called "Paragraph 4" and the others keep their names
+
   @core @app:composes @app:creates @pending:e1.13
   Scenario: Importing a file names everything that the file does not name
     Given a presentation or a text file whose slides, objects and paragraphs have no names
@@ -23,7 +30,20 @@ Feature: A person can point at anything by its name, change the name, and come b
     Then every slide, object and paragraph has a name like "Slide 1", "Picture 2", "Paragraph 7"
     And what the file does name keeps its name; a name that occurs twice gets "(2)" on the later one
 
-  # -- the dialog -----------------------------------------------------------------------------------------
+  @core @app:composes @pending:e1.13
+  Scenario: A bookmark around one paragraph becomes its name on import
+    Given a Word file with a bookmark "Terms" around exactly one paragraph
+    When I import it
+    Then that paragraph is called "Terms"
+
+  @core @app:composes @pending:e1.13
+  Scenario: Export writes a bookmark only for a name a person gave
+    Given a text with 500 paragraphs of which one was renamed "Terms" by a person
+    When I export it as a Word file
+    Then the file holds one bookmark, "Terms", around that paragraph
+    And no bookmark for the paragraphs that still have their generic names
+
+  # -- the dialog ----------------------------------------------------------------------------------------
   @core @app:composes @app:computes @app:creates @pending:e1.13
   Scenario: Name & describe… has a name field
     Given a picture is selected
@@ -57,25 +77,59 @@ Feature: A person can point at anything by its name, change the name, and come b
     When ann renames a picture to "Logo"
     Then ben sees "Logo" in his # list, and a tag ann wrote earlier now reads "Logo"
 
-  @core @app:composes @needs-decision
-  Scenario: A paragraph is renamed in the same dialog, without a description
-    Given the caret is in a paragraph
-    When I choose Edit ▸ Name & describe…
-    Then the dialog has the name field and no description and no "Decorative"
+  @core @app:composes @pending:e1.13
+  Scenario: A person gives a paragraph a name of her own
+    Given the caret is in a paragraph called "Paragraph 3"
+    When I choose Edit ▸ Name & describe…, change the name to "Terms" and save
+    Then the paragraph is called "Terms"
+    And an older tag in the chat to that paragraph reads "Terms", and so does the history
 
-  @extended @app:composes @needs-decision
+  @core @app:composes @app:computes @app:creates @pending:e1.13
+  Scenario: Everything can be described, a paragraph and a range too
+    Given the caret is in a paragraph (or a range of cells is selected)
+    When I choose Edit ▸ Name & describe…
+    Then the dialog has a name field and a description field
+    And it has no "Decorative" tick, which only a picture, chart, shape or text box has
+    When I type a description and save
+    Then the dialog shows it again the next time I open it
+
+  @extended @app:composes @pending:e1.13
   Scenario: A heading is called by its title
     Given a heading "Introduction"
     When I open Name & describe… on it
     Then the name is "Introduction" and cannot be changed there
+    And the description can
 
-  @extended @app:composes @needs-decision
+  @extended @app:composes @pending:e1.13
+  Scenario: Two headings with the same title
+    Given two headings that both read "Introduction"
+    Then the second is shown as "Introduction (2)" in the # list
+    And the text of the heading is unchanged
+
+  @extended @app:composes @pending:e1.13
   Scenario: Splitting and joining paragraphs
     Given a paragraph called "Paragraph 3"
     When I split it in the middle
     Then the first part is still "Paragraph 3" and the second has a new name
     When I join them again
     Then the paragraph is "Paragraph 3", and Undo brings the second name back
+
+  # -- pointing -------------------------------------------------------------------------------------------
+  @core @app:composes @pending:e1.13
+  Scenario: The # list in a long text
+    Given a text of 300 paragraphs of which one is renamed "Terms", and a heading "Introduction"
+    When I type # in the chat
+    Then the list offers the paragraphs in my view as "Paragraph 12 · first words of the text"
+    And always "Terms" and "Introduction", wherever they are
+    When I type "ter"
+    Then the list is filtered across the whole document
+
+  @core @app:composes @pending:e1.13
+  Scenario: A tag to a paragraph that has been deleted shows the document as it was
+    Given a tag in the chat to a paragraph that a colleague has since deleted
+    When I click the tag
+    Then I see the text as it was when the paragraph last existed, as a replay, with the paragraph marked
+    And nothing in the document has changed
 
   # -- the way back ---------------------------------------------------------------------------------------
   @core @app:composes @pending:e1.13
@@ -95,7 +149,13 @@ Feature: A person can point at anything by its name, change the name, and come b
     When I click the tag and then "← Back where I was"
     Then I see the top of the sheet again
 
-  @extended @app:composes @app:computes @app:creates @needs-decision
+  @core @app:creates @pending:e1.13
+  Scenario: The same between slides
+    Given I am on slide 2
+    When I click a tag that points at an object on slide 9, and then "← Back where I was"
+    Then I am on slide 2 again
+
+  @core @app:composes @app:computes @app:creates @pending:e1.13
   Scenario: The way back stays until I use it or start working
     Given a tag took the view away
     When I wait a minute
@@ -103,8 +163,14 @@ Feature: A person can point at anything by its name, change the name, and come b
     When I type, or click into the document
     Then it is gone
 
-  @extended @app:composes @app:computes @app:creates @needs-decision
+  @extended @app:composes @app:computes @app:creates @pending:e1.13
+  Scenario: Jumping again replaces the way back
+    Given a tag took the view from place A to place B, and I have not used the way back
+    When I click a second tag that takes me to place C
+    Then "Back where I was" leads to place B, not to A
+
+  @core @app:composes @app:computes @app:creates @pending:e1.13
   Scenario: The way back is reachable when the History & Chat panel is folded away
     Given the panel is hidden and a tag has taken the view away
-    When I choose View ▸ Back where I was
+    When I choose View ▸ Back where I was, or press Ctrl+Shift+B
     Then the view returns to where I was

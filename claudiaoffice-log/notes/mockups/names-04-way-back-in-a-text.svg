@@ -1,0 +1,58 @@
+<svg viewBox="0 0 1400 820" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia — the way back after a tag has moved the view, inside one text</title><desc id="d">Three states: reading page 2; after clicking a tag to page 41, with Back where I was floating over the view; after using it.</desc>
+<defs><filter id="sh" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1f1a33" flood-opacity="0.18"/></filter></defs>
+<rect width="1400" height="820" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">claudia — a tag always leaves a way back, also inside one text (D1312)</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">The chip floats over the document view, bottom left, as in dock-05. It no longer sits in the chat box, so it is there when the History &amp; Chat panel is folded away.</text>
+<text x="40" y="100" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">1  Reading page 2</text>
+<rect x="40" y="116" width="420" height="340" rx="4" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="66" y="150" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Both parties keep a copy of this agreement</text>
+<text x="66" y="168" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">and of every change made to it.</text>
+<text x="66" y="206" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">The terms apply from the day both parties have</text>
+<text x="66" y="224" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">signed and run for twelve months.</text>
+<rect x="126" y="194" width="2" height="16" rx="0" fill="#1f1a33"/>
+<text x="66" y="262" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Payment is due within thirty days of the invoice.</text>
+<text x="66" y="280" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Interest on late payment is charged at 5 %.</text>
+<rect x="40" y="456" width="420" height="24" rx="0" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="52" y="472" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Page 2 of 41 · Paragraph 12</text>
+<text x="490" y="100" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">2  After clicking the tag</text>
+<rect x="490" y="116" width="420" height="340" rx="4" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="516" y="150" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Termination needs written notice of three months</text>
+<text x="516" y="168" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">to the end of a calendar quarter.</text>
+<rect x="504" y="188" width="392" height="60" rx="6" fill="#5B4BC4" opacity="0.12"/>
+<rect x="502" y="186" width="396" height="64" rx="8" fill="none" stroke="#5B4BC4" stroke-width="2.5"/>
+<text x="516" y="206" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Cancellation: the licence ends when either party</text>
+<text x="516" y="224" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">gives three months' notice in writing.</text>
+<text x="516" y="262" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Either party may end this agreement at once</text>
+<text x="516" y="280" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">for an important reason.</text>
+<rect x="490" y="456" width="420" height="24" rx="0" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="502" y="472" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Page 41 · centred on “Cancellation”</text>
+<rect x="506" y="410" width="176" height="32" rx="16" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="594.0" y="431" font-size="12.5" font-weight="600" fill="#3f31a0" text-anchor="middle">← Back where I was</text>
+<text x="940" y="100" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">3  After “Back where I was”</text>
+<rect x="940" y="116" width="420" height="340" rx="4" fill="#fff" stroke="#d8d2e6" stroke-width="1" filter="url(#sh)"/>
+<text x="966" y="150" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Both parties keep a copy of this agreement</text>
+<text x="966" y="168" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">and of every change made to it.</text>
+<text x="966" y="206" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">The terms apply from the day both parties have</text>
+<text x="966" y="224" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">signed and run for twelve months.</text>
+<rect x="1026" y="194" width="2" height="16" rx="0" fill="#1f1a33"/>
+<text x="966" y="262" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Payment is due within thirty days of the invoice.</text>
+<text x="966" y="280" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Interest on late payment is charged at 5 %.</text>
+<rect x="940" y="456" width="420" height="24" rx="0" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="952" y="472" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Page 2 of 41 · Paragraph 12</text>
+<line x1="470" y1="286" x2="490" y2="286" stroke="#6e6880" stroke-width="1.5"/>
+<line x1="920" y1="286" x2="940" y2="286" stroke="#6e6880" stroke-width="1.5"/>
+<text x="480" y="278" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">▶</text>
+<text x="930" y="278" font-size="12" font-weight="400" fill="#6e6880" text-anchor="middle">▶</text>
+<text x="40" y="540" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">The rules (all three apps):</text>
+<text x="40" y="563" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  A tag that moves the view leaves the way back, inside a text, a sheet or a slide as well as between them. It remembers the container and the top visible place in it</text>
+<text x="56" y="582" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">(paragraph, row and column, slide). The caret and the selection are never moved by a jump, so they need no restoring.</text>
+<text x="40" y="605" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  The chip stays until it is used, until the person types or clicks into the document, or until she jumps again, which replaces it (Back then leads to where she was</text>
+<text x="56" y="624" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">before the second jump). It no longer disappears after three seconds.</text>
+<text x="40" y="647" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  The chip is drawn over the view, not in the chat box. Today it is in the chat box and gone after the marking fades (the same timer): reported as bugs of size 3 in the</text>
+<text x="56" y="666" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">names review, N2 and N3.</text>
+<text x="40" y="689" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  View ▸ Back where I was (Ctrl+Shift+B) does the same from the keyboard; see names-05. The chip is a button with the same words, reachable by Tab from the document, and</text>
+<text x="56" y="708" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">announced to a screen reader: “Back where I was, button”.</text>
+<text x="40" y="731" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  A tag whose thing was deleted does not move the view: it opens a replay of the document as it was when the thing last existed (D551), and Esc leaves the replay; there</text>
+<text x="56" y="750" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">is nothing to go back to.</text>
+</svg>

@@ -60,7 +60,7 @@ Unused numbers in a closed block stay unused.
 | D1221–D1240 | object interaction in the three apps: one contract for select, move, scale, turn and the object menu, tables as in-flow objects, holding, E2E (branch `object-interaction`; D1221–D1233 used) | 2026-11-18 | open |
 | D1241–D1260 | spec-first E2E tests: the specs as Gherkin, the runner, the first table decisions and fixes (branch `main`; D1241–D1243 used) | 2026-11-19 | open |
 | D1261–D1280 | the document container and its security, second round: what a viewer receives, role changes and key rotation, failed-login waits, the password-hashing cost, unencrypted export and import and the record of what leaves (E2, SEC-11, SEC-17; branch `e2-document-sec`; D1261–D1276 used) | 2026-11-19 | open |
-| D1300–D1329 | E1 core, closing out the open stories: the style model's last points, names of things, the manifest, the what-if API and the macro and worker design (E1.9, E1.10, E1.13, D235, D236, D239; branch `e1-core`; D1300–D1316 used, D1314–D1316 being the worker-pool decisions salvaged from D177–D179 and D291–D293) | 2026-11-19 | open |
+| D1300–D1329 | E1 core, closing out the open stories: the style model's last points, names of things, the manifest, the what-if API and the macro and worker design (E1.9, E1.10, E1.13, D235, D236, D239; branch `e1-core`; D1300–D1317 used, D1314–D1316 being the worker-pool decisions salvaged from D177–D179 and D291–D293) | 2026-11-19 | open |
 
 ## Never to be used
 

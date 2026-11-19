@@ -1,0 +1,76 @@
+<svg viewBox="0 0 1400 820" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia — Name &amp; describe…: one dialog for every thing</title><desc id="d">The Edit menu entry and the right-click entry, the dialog for a picture with its name field, and the refusal when a name is taken.</desc>
+<defs><filter id="sh" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1f1a33" flood-opacity="0.18"/></filter></defs>
+<rect width="1400" height="820" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">claudia — Name &amp; describe…: one dialog, with a name field, in all three apps (E1.13, D1304, D1317)</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">For your review. Same entry, key (Ctrl+Alt+D), words and dialog in composes, computes and creates, in the web app and in both desktop clients. Fixes the bug of size 2: today's dialog has no name field.</text>
+<rect x="40" y="100" width="300" height="250" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="58" y="126" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">Edit</text>
+<text x="58" y="154" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Undo</text>
+<text x="322" y="154" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Z</text>
+<text x="58" y="180" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Redo</text>
+<text x="322" y="180" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Z</text>
+<text x="58" y="206" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Search &amp; Replace…</text>
+<text x="322" y="206" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+F</text>
+<text x="58" y="232" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Reference in Chat</text>
+<text x="322" y="232" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+X</text>
+<text x="58" y="258" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Go to Target</text>
+<text x="322" y="258" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+Enter</text>
+<line x1="50" y1="274" x2="330" y2="274" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="46" y="284" width="288" height="30" rx="6" fill="#ece8f8"/>
+<text x="58" y="304" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Name &amp; describe…</text>
+<text x="322" y="304" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+D</text>
+<text x="58" y="338" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Disabled with nothing selected, and for a viewer.</text>
+<rect x="40" y="380" width="300" height="150" rx="10" fill="#fff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="58" y="406" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">right button on a picture</text>
+<text x="58" y="432" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Cut</text>
+<text x="58" y="456" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Copy</text>
+<text x="58" y="480" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Reference in Chat</text>
+<line x1="50" y1="496" x2="330" y2="496" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="46" y="470" width="288" height="28" rx="6" fill="#ece8f8"/>
+<text x="58" y="489" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Name &amp; describe…</text>
+<text x="322" y="489" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="end">Ctrl+Alt+D</text>
+<text x="58" y="522" font-size="11.5" font-weight="400" fill="#9a2f4a" text-anchor="start">Today the entry opens “Describe object”: no name.</text>
+<rect x="380" y="100" width="470" height="430" rx="14" fill="#fff" stroke="#8d86a8" stroke-width="1.5"/>
+<text x="404" y="134" font-size="18" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">Name &amp; describe</text>
+<text x="404" y="160" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Name</text>
+<rect x="404" y="170" width="422" height="40" rx="8" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="416" y="194" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Logo</text>
+<text x="404" y="230" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">4 of 60 characters · free</text>
+<text x="404" y="266" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Description (read aloud to someone who cannot see it)</text>
+<rect x="404" y="276" width="422" height="96" rx="8" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="416" y="300" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">The logo of the club: a red hawk over</text>
+<text x="416" y="318" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">two blue waves</text>
+<text x="404" y="392" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">52 of 300 characters</text>
+<rect x="404" y="408" width="16" height="16" rx="3" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="430" y="421" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Decorative: only for looks, a screen reader skips it</text>
+<rect x="404" y="468" width="90" height="36" rx="18.0" fill="#4b3fb0"/>
+<text x="449.0" y="491.0" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">Save</text>
+<rect x="506" y="468" width="90" height="36" rx="18.0" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="551.0" y="491.0" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<text x="620" y="486" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Enter saves · Esc cancels</text>
+<rect x="890" y="100" width="470" height="430" rx="14" fill="#fff" stroke="#8d86a8" stroke-width="1.5"/>
+<text x="914" y="134" font-size="18" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">Name &amp; describe</text>
+<text x="914" y="160" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Name</text>
+<rect x="914" y="170" width="422" height="40" rx="8" fill="#fff" stroke="#9a2f4a" stroke-width="2"/>
+<text x="926" y="194" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">intro</text>
+<text x="914" y="230" font-size="12" font-weight="500" fill="#9a2f4a" text-anchor="start">There is already a text called “Intro”.</text>
+<text x="914" y="248" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Your entry stays. Save is available again when the name is free.</text>
+<text x="914" y="286" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">Description (read aloud to someone who cannot see it)</text>
+<rect x="914" y="296" width="422" height="76" rx="8" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="914" y="392" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">0 of 300 characters</text>
+<rect x="914" y="408" width="16" height="16" rx="3" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="940" y="421" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="start">Decorative: only for looks, a screen reader skips it</text>
+<rect x="914" y="468" width="90" height="36" rx="18.0" fill="#4b3fb0"/>
+<text x="959.0" y="491.0" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">Save</text>
+<rect x="1016" y="468" width="90" height="36" rx="18.0" fill="#fff" stroke="#8d86a8" stroke-width="1"/>
+<text x="1061.0" y="491.0" font-size="13" font-weight="400" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="914" y="468" width="90" height="36" rx="18" fill="#fff" opacity="0.55"/>
+<text x="40" y="570" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">What changes against today's dialog:</text>
+<text x="40" y="594" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  The title is “Name &amp; describe” (it was “Describe object”) and the name field is new; it is filled with the current name, selected, and has the focus.</text>
+<text x="40" y="618" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  The name follows the rules of D550: cleaned and compared without capitals, 1 to 60 characters, one namespace per document. The check runs as you type.</text>
+<text x="40" y="642" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  A name that is taken is refused in words and says who has it (a text, a picture, a slide…); nothing is lost. An empty name is refused: “A name needs at least one character.”</text>
+<text x="40" y="666" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  A rename is one step in the history, “Rename”, and one undo gives the old name back. A colleague sees the new name at once, in the # list and in tags written earlier.</text>
+<text x="40" y="690" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  The same dialog opens from the Edit menu, from the right-click menu of the thing, and from F2 on a sheet or chart tab and on a slide in the filmstrip (those keep their quick rename).</text>
+<text x="40" y="714" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">•  “Decorative” is only offered for things that are drawn: pictures, charts, shapes, rendered text and text boxes. A slide, a sheet, a paragraph or a range has name and description only (D1317).</text>
+</svg>
