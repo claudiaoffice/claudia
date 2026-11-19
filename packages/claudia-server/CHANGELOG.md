@@ -5,6 +5,20 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- CPU-bound work off the event loop (E3.5, D37, D134, D1314, D1316). **`workers.WorkerPool.max_waiting`** bounds how many
+  submissions may be in flight at once across every document the server holds, as `Assistant.max_waiting` bounds one
+  document's question queue. Past the bound `submit` raises the new **`PoolBusy`** at once, before anything reaches the
+  executor: never queued, never run inline instead. `Hub` takes `max_waiting` too (`DEFAULT_MAX_WAITING`).
+- **`heavy_dispatch.HeavyDispatcher`**: one per workbook document (`Hub.open` attaches it, `HostedDocument
+  .heavy_dispatch`). It watches `claudia_computes.calc.Calculator.pending_heavy`, runs what it can safely resolve on the
+  hub's `WorkerPool`, and applies the answer through the `computes.ApplyCalculated` command, or discards it when the
+  document moved on while the worker ran (D37: "a worker computes on a copy at revision r and its result is discarded
+  if the inputs changed"). Only a deferred call that *is* the whole formula (`=HEAVY(...)`, not `=HEAVY(...)+1`) is
+  resolved, a deliberate limit of this first slice (D1314).
+- **`heavy_dispatch.Submittable`**: the `submit(fn, *args, **kwargs)` shape `HeavyDispatcher` needs from a pool, so a
+  test can stand in a fake one.
+
 ## [0.38.0] - 2026-11-19
 
 ### Added

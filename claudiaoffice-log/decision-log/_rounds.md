@@ -278,6 +278,35 @@ Decisions: D168, D169, D170, D171, D172, D173, D174, D175, D176
 
 Decisions: D177, D178, D179
 
+## Worker pool limits and heavy-call dispatch (thirty-first round)
+
+Branch `worker-pool`, written 2026-11-08. Its decisions were D177–D179, renumbered to D291–D293 on 2026-11-13 (those
+numbers had meanwhile gone to the shared object layer, a shape's SVG style vocabulary and composes objects). The branch
+never reached `main`, and D291–D299 went to random numbers in computes; on 2026-11-19 the work was salvaged onto
+`e1-core` and became **D1314–D1316** (`implementation-notes/worker-pool-salvage.md`).
+
+D37's "worker tier is not [built]" gap, closed for its first real case. The scope was settled with the owner in advance
+via two `AskUserQuestion`s: heavy-formula dispatch is **backend only**, with no new "calculating" UI state (that needs
+its own screens-first round, per this project's own rule for new frontend work); and `claudia_core.replay()` gets
+**groundwork only** (made cleanly separable from the live `Document`), not an actual worker dispatch —
+`DocumentProvider.open` stays synchronous this round.
+
+Decisions: D1314, D1315, D1316
+
+**Think ahead, not built this round:** two more candidates for the same `WorkerPool`, noted here so a future round does
+not have to rediscover them. **Office import/export** (`.xlsx`/`.docx`/`.pptx` parsing, D97–D99's additive extensions):
+parsing an untrusted, possibly large uploaded file is exactly the same "CPU-bound, event-loop-blocking" shape D37 named,
+and today runs inline like every other app-server call. **Image decode and thumbnailing** (`ImageAsset`/`ImageImport`,
+D31, E10.8): decoding a large image or building a thumbnail is likewise CPU-bound and currently synchronous in
+whichever app server handles the import. Neither is designed here — picklability (`WorkerPool.submit`'s own
+constraint) and, for import, where a half-parsed/invalid file's error surfaces are open questions for whoever picks
+either up.
+
+**Worker pool, next steps (D37, D1314–D1316):** offloading part of an expression, not just a whole formula that is one
+bare heavy call (`HeavyDispatcher`'s deliberate limitation, D1314); a visible "calculating" cell state, which needs its
+own screens-first design round before any code; actually dispatching `replay_collecting` (D1315) to a worker for opening
+a large document, rather than just being ready to; and the two further offload candidates noted above.
+
 ## PNG, and an object's words as a paragraph (thirty-second round)
 
 Decisions: D180, D181, D182

@@ -3,6 +3,7 @@
 refs      CellRef / RangeRef / structural edits (from the demo)
 model     WorkbookModel, CellAnchor, SheetObject, Chart: sheets, typed cells, and this app's own part of an object
 commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines, SetCellStyle, AddChart, RemoveChart (rest: core)
+heavy     ApplyCalculated, in commands: a worker's result for a deferred heavy call (E4.4, D37, D1314)
 cellstyles CellStyles: a sheet's style ranges, in layers, for the box and the words of its cells (E6.13, D307)
 name_commands  DefineName, RemoveName, RenameName, RestoreNames: named ranges and tables (E6.5)
 names     NamedRange, Names: what a name is, where it is looked up, and which cells ``Sales[Amount]`` means
@@ -65,6 +66,7 @@ from .charts import CHART_KINDS, ChartError, ChartSpec
 from .commands import (
     AddChart,
     AddSheet,
+    ApplyCalculated,
     RemoveChart,
     RemoveSheet,
     Resample,
@@ -163,6 +165,7 @@ __all__ = [
     "AddChart",
     "AddObject",
     "AddSheet",
+    "ApplyCalculated",
     "builtin_styles",
     "BUILTIN_STYLES",
     "CELL_SLOTS",

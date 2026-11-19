@@ -6641,7 +6641,7 @@ msgstr "Dieses Dokument kann nicht sagen, was das Löschen des Formats bewirken 
 msgid "This document has no sheet yet."
 msgstr "Dieses Dokument hat noch kein Blatt."
 
-#: packages/claudia-server/src/claudia_server/hub.py:106
+#: packages/claudia-server/src/claudia_server/hub.py:108
 msgid "This document is on this server already, as “{id}”. It cannot be added a second time."
 msgstr "Dieses Dokument ist auf diesem Server bereits vorhanden, als „{id}“. Es kann nicht ein zweites Mal hinzugefügt werden."
 
@@ -7921,7 +7921,7 @@ msgstr "nicht zum Muster für Texte passen"
 msgid "do not start with “{text}”"
 msgstr "nicht mit „{text}“ beginnen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:665
+#: packages/claudia-server/src/claudia_server/hub.py:678
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "Dokument-IDs bestehen aus 1–64 Buchstaben, Ziffern, „-“ oder „_“"
 
@@ -8137,7 +8137,7 @@ msgstr "in {source}"
 msgid "insert"
 msgstr "einfügen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:294
+#: packages/claudia-server/src/claudia_server/hub.py:296
 msgid "internal server error"
 msgstr "Interner Serverfehler"
 
@@ -8357,7 +8357,7 @@ msgstr "keine Zellen"
 msgid "no checkpoint number {checkpoint}"
 msgstr "Es gibt keinen Prüfpunkt mit der Nummer {checkpoint}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:813
+#: packages/claudia-server/src/claudia_server/hub.py:826
 msgid "no document {id!r}"
 msgstr "Kein Dokument {id!r}"
 
@@ -9301,11 +9301,11 @@ msgstr "Dieser Server unterstützt die Übergabe des Eigentums nicht"
 msgid "this server does not support leaving a document"
 msgstr "Dieser Server unterstützt das Verlassen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/hub.py:607
+#: packages/claudia-server/src/claudia_server/hub.py:616
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
 
-#: packages/claudia-server/src/claudia_server/hub.py:740
+#: packages/claudia-server/src/claudia_server/hub.py:753
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "dieser Server hält seine Dokumente nur im Speicher und kann keine Datei aufnehmen"
 
@@ -9705,27 +9705,27 @@ msgstr "{host} ist jetzt von außerhalb dieses Computers erreichbar. Legen Sie e
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr "{host} ist über diesen Computer hinaus noch nicht erreichbar, daher ist das nicht erforderlich – legen Sie aber jetzt einen Namen und ein Passwort fest, wenn Sie die Einstellungen verwalten möchten oder bevor Sie ihn später für andere öffnen."
 
-#: packages/claudia-server/src/claudia_server/hub.py:415
+#: packages/claudia-server/src/claudia_server/hub.py:424
 msgid "{id} already has {limit} connections"
 msgstr "{id} hat schon {limit} Verbindungen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:801
+#: packages/claudia-server/src/claudia_server/hub.py:814
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "{id} lässt sich noch nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:804
+#: packages/claudia-server/src/claudia_server/hub.py:817
 msgid "{id} cannot be opened: {reason}"
 msgstr "{id} lässt sich nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:808
+#: packages/claudia-server/src/claudia_server/hub.py:821
 msgid "{id} cannot be read"
 msgstr "{id} lässt sich nicht lesen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:752
+#: packages/claudia-server/src/claudia_server/hub.py:765
 msgid "{id} cannot be taken in: {reason}"
 msgstr "{id} kann nicht aufgenommen werden: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:743 packages/claudia-server/src/claudia_server/hub.py:748
+#: packages/claudia-server/src/claudia_server/hub.py:756 packages/claudia-server/src/claudia_server/hub.py:761
 msgid "{id} is here already"
 msgstr "{id} ist schon hier"
 

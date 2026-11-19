@@ -8,7 +8,7 @@
     region       Region: presence, locks and AI edits written once
     presence     holds that move with the edits
     log          Entry and CommandLog: the source of truth
-    replay       apply a log to a model, deterministically
+    replay       apply a log to a model, deterministically; replay_collecting for a Document-free call site
     history      per-author undo built from the log
     messages     chat records and ephemeral messages (the three message classes)
     manifest     what a document requires from a server
@@ -254,7 +254,7 @@ from .presence import Hold, Presence
 from .raster import FALLBACK_SIDE, Rasterise, blank_png
 from .region import Region, transform
 from .renderings import MAX_RENDERING_SOURCE, RenderedDefinition
-from .replay import replay
+from .replay import replay, replay_collecting
 from .revision import MAIN, Branch, Revision
 from .schemes import (
     FORMATS,
@@ -579,6 +579,7 @@ __all__ = [
     "RenameStyle",
     "ReplacePalette",
     "replay",
+    "replay_collecting",
     "ReplayError",
     "RequirementReport",
     "Requirements",

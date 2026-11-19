@@ -6641,7 +6641,7 @@ msgstr ""
 msgid "This document has no sheet yet."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:106
+#: packages/claudia-server/src/claudia_server/hub.py:108
 msgid "This document is on this server already, as “{id}”. It cannot be added a second time."
 msgstr ""
 
@@ -7921,7 +7921,7 @@ msgstr ""
 msgid "do not start with “{text}”"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:665
+#: packages/claudia-server/src/claudia_server/hub.py:678
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr ""
 
@@ -8137,7 +8137,7 @@ msgstr ""
 msgid "insert"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:294
+#: packages/claudia-server/src/claudia_server/hub.py:296
 msgid "internal server error"
 msgstr ""
 
@@ -8357,7 +8357,7 @@ msgstr ""
 msgid "no checkpoint number {checkpoint}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:813
+#: packages/claudia-server/src/claudia_server/hub.py:826
 msgid "no document {id!r}"
 msgstr ""
 
@@ -9301,11 +9301,11 @@ msgstr ""
 msgid "this server does not support leaving a document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:607
+#: packages/claudia-server/src/claudia_server/hub.py:616
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:740
+#: packages/claudia-server/src/claudia_server/hub.py:753
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr ""
 
@@ -9705,27 +9705,27 @@ msgstr ""
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:415
+#: packages/claudia-server/src/claudia_server/hub.py:424
 msgid "{id} already has {limit} connections"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:801
+#: packages/claudia-server/src/claudia_server/hub.py:814
 msgid "{id} cannot be opened yet: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:804
+#: packages/claudia-server/src/claudia_server/hub.py:817
 msgid "{id} cannot be opened: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:808
+#: packages/claudia-server/src/claudia_server/hub.py:821
 msgid "{id} cannot be read"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:752
+#: packages/claudia-server/src/claudia_server/hub.py:765
 msgid "{id} cannot be taken in: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:743 packages/claudia-server/src/claudia_server/hub.py:748
+#: packages/claudia-server/src/claudia_server/hub.py:756 packages/claudia-server/src/claudia_server/hub.py:761
 msgid "{id} is here already"
 msgstr ""
 

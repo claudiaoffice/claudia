@@ -5,6 +5,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+Heavy functions in worker processes (E4.4, D37, D1314).
+
+### Added
+- The command **`ApplyCalculated`** (kind `computes.ApplyCalculated`, not undoable): a worker's result for a heavy call
+  that was deferred, applied like any other change (recalculated readers, an event, a log entry). It does nothing when
+  the cell is no longer waiting for that call, so a result computed from a stale snapshot never lands.
+- A `UserFunction` may declare `heavy = True`, and `heavy_above = N` to defer only once its range arguments hold more
+  than N present cells. A call past that threshold is deferred instead of run inline, with its arguments frozen as a
+  copy at that moment, and the cell keeps showing what it showed before.
+
 ### Changed
 - An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 15.
 

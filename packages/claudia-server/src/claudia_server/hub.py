@@ -29,6 +29,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
+from claudia_computes import WorkbookModel
 from claudia_core import (
     ChatPosted,
     CommandLog,
@@ -45,6 +46,7 @@ from claudia_core.clock import utc_now
 from claudia_render import RenderFailed, ToolUnavailable
 
 from .auth import AI_COLOR, ROLES, Account, UserDirectory
+from .heavy_dispatch import HeavyDispatcher
 from .i18n import localized, msg
 from .protocol import (
     DEFAULT_LOCALE,
@@ -58,7 +60,7 @@ from .protocol import (
     parse_request,
 )
 from .restore import Resolution, RestoreCoordinator
-from .workers import DEFAULT_WORKERS, WorkerPool
+from .workers import DEFAULT_MAX_WAITING, DEFAULT_WORKERS, WorkerPool
 
 if TYPE_CHECKING:
     from .assistant import Assistant
@@ -337,6 +339,7 @@ class HostedDocument:
         renderings: RenderDesk | None = None,
         original: Callable[[], bytes | None] = lambda: None,
         uid: Callable[[], str | None] = lambda: None,
+        workers: WorkerPool | None = None,
     ):
         self.id = doc_id
         self.document = document
@@ -360,6 +363,12 @@ class HostedDocument:
         self._locked: set[str] = set()  # who held a lock at the last look, to tell the others when one lapses
         self.restore = RestoreCoordinator(self._apply_proposal, clock=clock)
         self._ai_modes: dict[str, str] = {}  # the mode of a person's next request to the AI (D262), until it is heard
+        # Only a workbook has heavy formula calls to dispatch (D37, D1314); any other app's document gets none.
+        self.heavy_dispatch = (
+            HeavyDispatcher(document, workers)
+            if workers is not None and isinstance(document.model, WorkbookModel)
+            else None
+        )
         document.subscribe(self._on_event)
 
     # -- how a person wants the AI to treat her request (D262) --------------------------------
@@ -614,7 +623,10 @@ class Hub:
     ``max_documents`` is the most documents the server holds: past it nobody can make another (``ensure_room``), so that
     whoever can reach the server cannot fill its disk; on a server with several apps it counts them all (``Room``).
     ``workers`` is the pool slow or CPU-bound request handling can offload to, off the one thread every document here
-    is otherwise served from (D134); it starts no process until something is first submitted to it."""
+    is otherwise served from (D134); it starts no process until something is first submitted to it. ``max_waiting``
+    bounds that pool's own queue (``WorkerPool``, D37): every document this server holds shares the one pool, so past
+    that many submissions in flight the pool refuses the next one at once (``PoolBusy``) rather than queuing behind
+    it, the same way ``Assistant.max_waiting`` bounds its own queue of questions."""
 
     def __init__(
         self,
@@ -633,13 +645,14 @@ class Hub:
         clock: Callable[[], float] = time.monotonic,
         max_workers: int = DEFAULT_WORKERS,
         renderings: RenderDesk | None = None,
+        max_waiting: int | None = DEFAULT_MAX_WAITING,
     ):
         self.provider = provider
         self.renderings = renderings  # what makes rendered containers (D395); ``None``: this server makes none
         self.methods = methods
         self.limits = limits or Limits()
         self.allow_create = allow_create
-        self.workers = WorkerPool(max_workers=max_workers)
+        self.workers = WorkerPool(max_workers=max_workers, max_waiting=max_waiting)
         self._known: set[str] = (
             set()
         )  # the ids of the stored documents: found when first asked, and every one opened since
@@ -823,6 +836,7 @@ class Hub:
                 renderings=self.renderings,
                 original=lambda: self.original(doc_id),
                 uid=lambda: self.uid_of(doc_id),
+                workers=self.workers,
             )
             if self.assistant is not None:
                 self.assistant().attach(hosted)

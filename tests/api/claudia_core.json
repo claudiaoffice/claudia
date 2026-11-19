@@ -3012,6 +3012,9 @@
  "replay": {
   "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"
  },
+ "replay_collecting": {
+  "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]') -> 'list[tuple[Entry, Command]]'"
+ },
  "resolve_css": {
   "function": "(css: 'Mapping[str, str]', colours: 'Mapping[str, str]') -> 'dict[str, str]'"
  },

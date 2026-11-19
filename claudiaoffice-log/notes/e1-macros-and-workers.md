@@ -16,6 +16,12 @@
 > different meanings** (the very thing `ranges.md` exists to prevent). Merging it would need renumbering and resolving
 > five conflicting files. It is 208 commits behind `main`. Whether it is abandoned is the owner's call; its design is the
 > only record of how heavy functions were meant to work, so it should not be deleted unread.
+>
+> **Salvaged 2026-11-19 (branch `e1-core`).** The owner asked for what is not on `main` and can be carried over to be
+> carried over. It was: the heavy-function slice is now on `e1-core` with the five conflicts resolved by hand, and its
+> three decisions are **D1314–D1316** (they were D177–D179, then D291–D293; see `implementation-notes/worker-pool-salvage.md`).
+> Everywhere below, "D291–D293" means those three. The branch `worker-pool` itself can now be deleted once the owner
+> has merged `e1-core`.
 
 *Analysis and proposal for the owner's review, 2026-11-19, branch `e1-core`. Nothing here is built. D239 is the open
 "macro API for composes and creates"; the owner remembers worker-pool work done for computes and wants it properly
@@ -36,8 +42,8 @@ The search engine does not offload: it stops at a time budget on the `regex` pac
 
 ### What was built for computes, and where it is
 
-The owner is right: there is a first slice, but it is **not on `main`**. Branch `worker-pool` (3 commits, last one
-2026-11-13) holds D291–D293:
+The owner is right: there is a first slice, but it was **not on `main`** (it is on `e1-core` since 2026-11-19). Branch `worker-pool` (3 commits, last one
+2026-11-13) held D291–D293, now D1314–D1316 (salvaged):
 
 * `UserFunction.heavy` and `heavy_above`; `Bound.__call__` raises `Deferred` instead of running a call that is over its
   threshold (`functions/base.py`).
@@ -47,8 +53,8 @@ The owner is right: there is a first slice, but it is **not on `main`**. Branch 
   `Redacted`), so replay never recomputes it (kernel rule: commands carry final values).
 * `HeavyDispatcher` in `claudia_server/heavy_dispatch.py`: one per workbook document, shaped like `Assistant`; runs
   deferred calls on the pool, applies the answer if the inputs did not change, otherwise discards it and retries.
-* `WorkerPool.max_waiting` and `PoolBusy` (D293), mirroring `Assistant.max_waiting`.
-* `replay_collecting` in the kernel (D292): replay as a pure function of a model and plain entries.
+* `WorkerPool.max_waiting` and `PoolBusy` (D1316), mirroring `Assistant.max_waiting`.
+* `replay_collecting` in the kernel (D1315): replay as a pure function of a model and plain entries.
 
 What it does **not** do (by its own notes): it resolves a heavy call only when the call *is* the whole formula
 (`=HEAVY(A1:A5)`, not `=HEAVY(A1:A5)+1`); no "calculating" cell state (E4.3); no digests (E4.5); its 30-second timeout
@@ -111,7 +117,7 @@ flowchart TB
 
 **Layer 0, the runner.** Keep `WorkerPool`'s surface (`submit(fn, *args)`, D134: in `claudia-server`, not the kernel) and
 make what is behind it safe, taking the E0.2 design: dedicated worker processes (not `ProcessPoolExecutor`) so a task
-can be **killed on timeout**, **cancel**, **`max_waiting` / `PoolBusy`** (D293), a **memory cap** (SEC-19; POSIX
+can be **killed on timeout**, **cancel**, **`max_waiting` / `PoolBusy`** (D1316; built), a **memory cap** (SEC-19; POSIX
 rlimits, Windows Job Objects reused from `claudia_typeset/_windows.py`), the lifetime protocol, and **metrics** (E3.5's
 acceptance). One `Limits` dataclass is shared with the subprocess sandbox (seconds, memory, output), so the pool and the
 render tools are configured the same way by the administrator. The sandbox keeps its job (external programs); it is not
@@ -167,8 +173,7 @@ class Macro:                       # claudia_core.macros, api: 1
 
 ### Order of work
 
-1. **Bring `worker-pool` onto `main`.** Resolve the five conflicts; keep D291–D293. Needs the owner's word that nobody is
-   still working on the branch.
+1. ~~**Bring `worker-pool` onto `main`.**~~ **Done 2026-11-19** on `e1-core` (D1314–D1316).
 2. **Harden the runner** (kill on timeout, cancel, memory cap, shared `Limits`, metrics): E3.5, SEC-19.
 3. **`Proposal` / `apply_proposal` / `Entry.via` in the kernel**, which the what-if API needs anyway.
 4. **`DocumentJobs`:** move `HeavyDispatcher` onto it with no change in behaviour (its tests are the safety net).

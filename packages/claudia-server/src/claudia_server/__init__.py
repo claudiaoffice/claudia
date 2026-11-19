@@ -19,6 +19,7 @@ from .computes import computes_methods
 from .creates import creates_methods, creates_methods_with
 from .filestore import FileDirectory, FileProvider
 from .folder_lock import FolderLock, FolderLocked
+from .heavy_dispatch import DEFAULT_TIMEOUT, HeavyDispatcher, Submittable
 from .help import HelpContentError, HelpLibrary, Topic, default_library, parse_topic
 from .hub import Connection, DocumentProvider, HostedDocument, Hub, HubError, MemoryProvider, Room, StoredInfo
 from .idle import IdleWatch
@@ -49,11 +50,13 @@ from .server_settings import (
 from .standin import ScriptedEngine
 from .standin_text import TextEngine
 from .suite import APP_MODELS, Module, Suite
-from .workers import DEFAULT_WORKERS, WorkerPool
+from .workers import DEFAULT_MAX_WAITING, DEFAULT_WORKERS, PoolBusy, WorkerPool
 
 __all__ = [
     "AI_USER",
     "APP_MODELS",
+    "DEFAULT_MAX_WAITING",
+    "DEFAULT_TIMEOUT",
     "DEFAULT_WORKERS",
     "ERROR_CODES",
     "EVENTS",
@@ -82,6 +85,7 @@ __all__ = [
     "FolderLock",
     "FolderLocked",
     "Gateway",
+    "HeavyDispatcher",
     "HelpContentError",
     "HelpLibrary",
     "HostedDocument",
@@ -94,6 +98,7 @@ __all__ = [
     "MethodTable",
     "ModelEngine",
     "Module",
+    "PoolBusy",
     "Proposal",
     "RequestError",
     "Resolution",
@@ -108,6 +113,7 @@ __all__ = [
     "ScryptDirectory",
     "StoredInfo",
     "Suite",
+    "Submittable",
     "Task",
     "TextEngine",
     "Topic",

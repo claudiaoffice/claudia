@@ -20,6 +20,13 @@ where they actually looked is recorded, to wait for the formulas they read and t
 
 Nothing is calculated while commands apply; ``settle`` does it once after the whole command (a batch of several
 changes calculates once). A rolled back command leaves the same cells marked and settles to the same state as before.
+
+A heavy call (a ``UserFunction`` with ``heavy``/``heavy_above``, see ``functions.base``) is not calculated here at
+all: ``Bound.__call__`` raises :class:`~.functions.base.Deferred` instead of running it, and this module lets it
+through rather than treating it as an error. The cell keeps showing whatever it showed before -- there is no
+"calculating" state yet (PERF review 2026-11-08, D37, D1314) -- and the deferral is kept in
+``Calculator.pending_heavy`` for the caller (``claudia-server``) to run on a worker and apply later with
+``resolve_heavy``, or drop with ``discard_heavy`` if the inputs moved on before the worker finished.
 """
 
 from __future__ import annotations
@@ -38,7 +45,8 @@ from .formula.forms.alternatives import labels_of
 from .formula.nodes import Call, Str, shape_only_refs, walk
 from .formula.operators import single
 from .formula.scope import Scope
-from .functions.range import Range
+from .functions.base import Deferred
+from .functions.range import Range, freeze
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS
 from .outcomes import Outcomes
@@ -323,19 +331,37 @@ class Round:
 
     def _calculate(self, key: Key, frame: Frame) -> list[Key] | None:
         """Calculate one formula and store its value. Returns the waiting formulas it turned out to read (a function
-        that looks where it likes), when it must wait for them."""
+        that looks where it likes), when it must wait for them.
+
+        A heavy call past its threshold defers instead of running: nothing is stored for ``key`` this round (it
+        keeps showing whatever it showed before), and the deferral is kept in ``calc.pending_heavy`` for the
+        caller to dispatch. ``key`` still counts as done for this round -- it is not waited for again until the
+        deferral resolves and touches it.
+
+        A deferred formula goes through the rest of this method like any other: what it read is recorded, and when
+        that turns out to be cells that still wait it waits for them first, so the arguments it defers with are
+        the final ones.
+
+        The deferral's arguments are frozen at the end, before anything returns to the caller: the next command may
+        change the very cells a deferred ``Range`` argument points at, and the worker must run on a copy from
+        this instant (D37), not whatever the live sheet happens to hold when it gets around to it."""
         calc, scope = self.calc, self.scope
         compiled = calc.formulas[key]
         scope.enter(*key)
         scope.reads = [] if compiled.dynamic or compiled.records else None
         scope.mentioned.clear()
-        value = calc._evaluate(compiled, scope)
+        deferred: Deferred | None = None
+        try:
+            value = calc._evaluate(compiled, scope)
+        except Deferred as call:
+            value, deferred = None, call
         if scope.mentioned:
             calc._mention(key, compiled, scope.mentioned)
-        if value.__class__ is Table or value.__class__ is Matrix:
-            value = self._spill(key, value, scope)
-        elif key in calc.spills:
-            self._unspill(key)
+        if deferred is None:
+            if value.__class__ is Table or value.__class__ is Matrix:
+                value = self._spill(key, value, scope)
+            elif key in calc.spills:
+                self._unspill(key)
         if (
             compiled.dynamic or compiled.records or scope.reads or compiled.reads
         ):  # (a result that is blocked reads the cells in its way)
@@ -353,10 +379,15 @@ class Round:
             ]
             if blockers:
                 if frame.attempts >= MAX_BLOCKS or key in blockers or any(self.state.get(o) == 1 for o in blockers):
-                    value = ErrorValue(CIRC, "this formula reads cells that depend on it")
+                    value, deferred = ErrorValue(CIRC, "this formula reads cells that depend on it"), None
                     self.circular.add(key)
                 else:
                     return blockers
+        if deferred is not None:
+            deferred.call_args = [freeze(arg) for arg in deferred.call_args]
+            calc.pending_heavy[key] = deferred
+            return None
+        calc.pending_heavy.pop(key, None)
         self._store(key, value)
         return None
 
@@ -447,6 +478,7 @@ class Calculator:
         self.touched: set[Key] = set()  # cells whose value changed since the last settle
         self.forced: set[Key] = set()  # formulas that must be calculated: new, rewritten or moved
         self.everything = False  # calculate every formula (after structure changed)
+        self.pending_heavy: dict[Key, Deferred] = {}  # heavy calls waiting on a worker, by the cell that called them
 
     # ------------------------------------------------------------------ making formulas
     def compile(self, home: SheetId, text: str, at: Position | None = None) -> Compiled:
@@ -587,6 +619,7 @@ class Calculator:
                     del self._name_users[text]
         self._leave_rects(key, compiled.ranges + compiled.reads)
         self.forced.discard(key)
+        self.pending_heavy.pop(key, None)
         return compiled
 
     def _enter_rects(self, key: Key, rects: Iterable[Rect]) -> None:
@@ -677,6 +710,7 @@ class Calculator:
         self.orphaned.clear()
         self.touched.clear()
         self.forced.clear()
+        self.pending_heavy.clear()
 
     def redraw(self) -> None:
         """The seed or the draw number changed: every formula that draws random numbers is calculated again."""
@@ -739,6 +773,35 @@ class Calculator:
         self.forced.clear()
         self.everything = False
 
+    # ------------------------------------------------------------------ heavy calls
+    def resolve_heavy(self, key: Key, value: Value) -> None:
+        """A worker finished the heavy call deferred at ``key``: store its result and mark ``key`` touched, so the
+        next ``settle`` recalculates whatever reads it, the same as any other change.
+
+        A no-op if ``key`` is not (or is no longer) in ``pending_heavy`` -- the cell was edited again, its
+        formula removed, or this answer already lost to a faster one -- so a result that arrives late can never
+        overwrite work that has moved on. The caller is additionally responsible for checking the call is not
+        stale by revision (nothing the formula read has changed since the snapshot the worker computed from)
+        before calling this -- ``calc.py`` does not know about revisions, only about which cell it is still
+        waiting on."""
+        if key not in self.pending_heavy:
+            return
+        self.pending_heavy.pop(key, None)
+        sheet = self.model.sheets.get(key[0])
+        if sheet is not None and sheet.set_value((key[1], key[2]), value):
+            self.touch(key)
+
+    def discard_heavy(self, key: Key) -> None:
+        """A deferred call's result arrived too late to use (the inputs moved on since the snapshot): drop it
+        without storing anything, and force the formula to be tried again on the next ``settle`` -- inline if it
+        no longer qualifies as heavy, deferred again otherwise. A no-op if ``key`` is not pending any more, the
+        same as ``resolve_heavy``."""
+        if key not in self.pending_heavy:
+            return
+        self.pending_heavy.pop(key, None)
+        if key in self.formulas:
+            self.forced.add(key)
+
     def _scope(self) -> Scope:
         scope = Scope(self.model.sheets, self.model.sheet_id_of)
         scope.indexes = self._lookup_indexes
@@ -793,6 +856,8 @@ class Calculator:
                 value = single(value)
             elif value.__class__ is Matrix and value.height * value.width == 1:
                 value = value.value_at(0, 0)  # (one cell is a value, not a result that fills cells)
+        except Deferred:  # a heavy call, past its threshold: let it through, not an error (see Round._calculate)
+            raise
         except FormulaError as problem:
             return problem.value()
         except RecursionError:

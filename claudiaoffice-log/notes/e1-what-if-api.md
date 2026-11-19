@@ -17,7 +17,7 @@ about each other.
 | `claudia_server/replay.py` `state_at` (`as_of`) | answers a view's dozen read requests for one past step | bare model | 6 states, 30 s |
 | `claudia_server/planned.py` (`as_planned`) | the state a redaction would leave, by an opaque token | bare model | 4 plans per document, 15 min |
 | `claudia_server/office_export.py` | `model_cls.restore(imported.state)`: the baseline an export patches against | bare model | no |
-| `Calculator` / `FrozenGrid` on branch `worker-pool` (D291) | "a worker computes on a copy at revision r" | frozen inputs of one call | until the answer lands |
+| `Calculator` / `FrozenGrid` (D1314) | "a worker computes on a copy at revision r" | frozen inputs of one call | until the answer lands |
 
 Findings:
 

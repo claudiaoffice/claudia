@@ -42,6 +42,18 @@ Worker pool
 
 .. autoclass:: claudia_server.WorkerPool
 .. autodata:: claudia_server.DEFAULT_WORKERS
+.. autodata:: claudia_server.DEFAULT_MAX_WAITING
+.. autoexception:: claudia_server.PoolBusy
+
+Heavy-call dispatch
+--------------------
+
+Resolves a document's deferred heavy formula calls (``Calculator.pending_heavy``) on the worker pool above
+(decisions D37, D1314).
+
+.. autoclass:: claudia_server.HeavyDispatcher
+.. autoclass:: claudia_server.Submittable
+.. autodata:: claudia_server.DEFAULT_TIMEOUT
 
 Protocol
 --------

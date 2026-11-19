@@ -17,6 +17,6 @@ superseded-by: []
 * **Whether macros belong in the document is open.** If they are installed on a server only, "there will be constant incompatibilities between servers when people send docs around". That question decides the design (where the code lives, what a document declares, what travels) and has to be answered first.
 * **The `UserFunction` topic is parked with it**, except the *function folder* of E1.9, which is designed on its own (D1313).
 
-**What stays true from the analysis** (checked again 2026-11-19, see the note): the pool on `main` runs only Office imports; the heavy-function work for computes (D291–D293 on branch `worker-pool`) is **not on `main`** and its decision numbers collide with `random-in-computes`'s; the macro API for composes and creates does not exist (D239).
+**What stays true from the analysis** (checked again 2026-11-19, see the note): the pool on `main` runs only Office imports; the heavy-function work for computes was **not on `main`** and its decision numbers collided with `random-in-computes`'s; it was salvaged onto `e1-core` on 2026-11-19 as D1314–D1316; the macro API for composes and creates does not exist (D239).
 
-**Notes.** Nothing here is built or planned. Until it is decided, D239 stays open and E4.4 (heavy functions in workers) stays `todo`.
+**Notes.** Nothing here is built or planned. Until it is decided, D239 stays open. E4.4 (heavy functions in workers) is no longer `todo`: its first slice came in with D1314–D1316.

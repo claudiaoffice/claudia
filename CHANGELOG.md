@@ -53,10 +53,16 @@ While the major version is 0, a minor version may break the API; every break is 
 - `claudia_core.stand_ins.css_family` (E3.13, bugs 1 and 2): the CSS `font-family` list for a font an office file
   names, with the generic family it falls back to (`'Times New Roman', serif`). The importers of all three apps use
   it; the serif and monospace lists of `claudia_computes_io` moved here.
+- `replay_collecting(model, entries)` (D1315): like `replay`, but returns the `(entry, inverse)` pairs instead of
+  taking an `on_applied` callback. Unlike handing `replay` a bound method such as `document._record_history`, it is a
+  pure function of plain data with no dependency on a live `Document`: groundwork for running the expensive part of
+  opening a document somewhere other than the caller's own thread (D37). Nothing dispatches it yet.
 
 ### Changed
 - `StyleBook.to_data` always writes a parent before its children, whatever order styles were re-based into.
 - The undo of `RemoveStyle` puts the style back where it was in the book, not last.
+- `Document.open` and `Document._rebuild` call `replay_collecting` and do their own (cheap) undo-stack bookkeeping
+  afterwards, instead of passing `replay` a bound method. Behaviour is unchanged; it is a refactor of the call sites.
 
 ## [0.36.0] - 2026-11-18
 
