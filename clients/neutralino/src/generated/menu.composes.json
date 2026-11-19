@@ -653,6 +653,20 @@
         ],
         [
           {
+            "accelerators": [
+              "<Primary><Alt>d"
+            ],
+            "checkable": false,
+            "id": "format.describe",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Name & describe\u2026",
+            "role": null,
+            "start": false
+          }
+        ],
+        [
+          {
             "items": [
               {
                 "accelerators": [
@@ -747,6 +761,18 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Replay History\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Shift>b"
+            ],
+            "checkable": false,
+            "id": "view.back",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Back where I was",
             "role": null,
             "start": false
           },

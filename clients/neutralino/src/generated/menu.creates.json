@@ -679,7 +679,7 @@
             "id": "format.describe",
             "key_owner": "page",
             "kind": "page",
-            "label": "Describe Object\u2026",
+            "label": "Name & describe\u2026",
             "role": null,
             "start": false
           }
@@ -766,6 +766,18 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Replay History\u2026",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Shift>b"
+            ],
+            "checkable": false,
+            "id": "view.back",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Back where I was",
             "role": null,
             "start": false
           },

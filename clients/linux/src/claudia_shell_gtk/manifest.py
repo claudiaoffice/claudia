@@ -540,7 +540,7 @@ def _format_menu(
     headings: tuple[str, str] = ("Number Headings", "Number every heading style: 1, 1.1, 1.2, 2 …"),
 ) -> Menu:
     """The Format menu, one shape in every app (D300): Apply Style…, Edit This Style…, All Styles…, List ▸ · Colours… ·
-    and where there are objects, Describe Object… (BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024) and,
+    and Name & describe… (D1317, BITV 1.1.1) and, where they can be turned, Rotate ▸ (D1024) and,
     where text flows round them, Wrap Text, one key that cycles the modes (D1064). List ▸
     is in every app as on the web; outside a text the page reports its entries disabled. Computes adds Clear Cell
     Style, which the web has in Apply Style's flyout. ``headings`` is what Number Headings is called and says in this
@@ -655,8 +655,8 @@ def _format_menu(
             (
                 _page(
                     "format.describe",
-                    "Describe Object…",
-                    "Say what the object you have selected shows to someone who cannot see it",
+                    "Name & describe…",
+                    "Give the thing you have selected a name, and say what it shows to someone who cannot see it",
                     accelerators=("<Primary><Alt>d",),
                 ),
             ),
@@ -730,6 +730,12 @@ def _shared_view_block(*, authors: bool) -> tuple[Action, ...]:
             "Replay History…",
             "Look at the document as it was, step by step (the mouse wheel over the history does the same)",
             accelerators=("<Primary><Alt>z",),
+        ),
+        _page(
+            "view.back",
+            "Back where I was",
+            "Go back to where you were before a tag in the chat took you somewhere else",
+            accelerators=("<Primary><Shift>b",),
         ),
         _page(
             "view.dark",
@@ -1052,7 +1058,7 @@ def composes() -> Manifest:
         "composes",
         "Claudia Composes",
         edit=edit_menu,
-        format_menu=_format_menu(look="Change how this kind of paragraph looks", wrap=True, rotate=True),
+        format_menu=_format_menu(look="Change how this kind of paragraph looks", describe=True, wrap=True, rotate=True),
         view=view_menu,
         tools=Menu("Tools", ((_tools_ask(),), _table_block())),
         prints=True,

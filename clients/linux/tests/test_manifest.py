@@ -257,7 +257,8 @@ def test_only_the_shared_edit_block_carries_a_macos_role(app: manifest.Manifest)
 
 
 def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) -> None:
-    """Show who wrote what, History and chat, Replay history, Dark mode — D120's shared block, verbatim in every app
+    """Show who wrote what, History and chat, Replay history, Back where I was (D1312), Dark mode — D120's shared
+    block, verbatim in every app
     (even where, per D125, "Show who wrote what" starts permanently disabled: computes and creates track no authorship
     yet)."""
     section = app.menu("View").sections[0]
@@ -266,6 +267,7 @@ def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) ->
         "view.authors",
         "view.panel",
         "view.replay",
+        "view.back",
         "view.dark",
     ]
 
@@ -311,6 +313,7 @@ def test_composes_format_offers_the_style_actions_the_lists_and_the_document_col
         "All Styles…",
         "List",
         "Colours…",
+        "Name & describe…",
         "Rotate",
         "Wrap Text",
     ]
@@ -375,14 +378,14 @@ def test_every_app_offers_the_same_three_format_actions(app_name: str, request: 
     ]
 
 
-@pytest.mark.parametrize("app_name", ["computes", "creates"])
-def test_describe_object_is_a_page_action_with_its_own_key(app_name: str, request: pytest.FixtureRequest) -> None:
-    """Every menu entry has a key (project rule): Ctrl+Alt+D, the chord the page binds to the same action."""
+@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
+def test_name_and_describe_is_a_page_action_with_its_own_key(app_name: str, request: pytest.FixtureRequest) -> None:
+    """Every menu entry has a key (project rule): Ctrl+Alt+D, the chord the page binds to the same action. Everything
+    can be named and described (D1317), so the entry is in all three apps."""
     m = request.getfixturevalue(app_name)
     describe = m.action("format.describe")
-    assert describe.kind is Kind.PAGE and describe.label == "Describe Object…"
+    assert describe.kind is Kind.PAGE and describe.label == "Name & describe…"
     assert describe.accelerators == ("<Primary><Alt>d",)
-    assert "format.describe" not in action_ids(request.getfixturevalue("composes").menu("Format"))
 
 
 def test_rotate_is_a_flyout_of_three_page_actions_with_keys_of_their_own(creates: manifest.Manifest) -> None:
