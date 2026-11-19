@@ -125,8 +125,9 @@ def test_composes_alone_has_tables_in_insert_and_tools_with_the_keys_of_the_deci
     app: manifest.Manifest,
 ) -> None:
     """E9.32, D1208: Insert ▸ Table… and Tools ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… are
-    composes' own (in Tools since D1229, as computes has its pivot table there), because the other two apps have their grid. Row and Column are computes' entries (one action, one key
-    in every app, see test_one_action_has_one_key_in_every_app), the page reports them off outside a table."""
+    composes' own (in Tools since D1229, as computes has its pivot table there), because the other two apps have
+    their grid. Row and Column are computes' entries (one action, one key in every app, see
+    test_one_action_has_one_key_in_every_app), the page reports them off outside a table."""
     ids = {action.id for action in app.actions}
     table_ids = {
         "insert.table",

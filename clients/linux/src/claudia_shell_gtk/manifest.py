@@ -897,9 +897,9 @@ def _manifest(
 
 
 def _table_block() -> tuple[MenuEntry, ...]:
-    """Tools ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… (E9.32, D1208; moved from Edit to Tools by
-    the owner, 2026-11-19, as computes has its pivot table there): composes only, and on only while the caret is in a
-    table box. Row and Column are computes' (same ids, words and keys); the others
+    """Tools ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… (E9.32, D1208; moved from Edit to Tools
+    by the owner, 2026-11-19, as computes has its pivot table there): composes only, and on only while the caret is in
+    a table box. Row and Column are computes' (same ids, words and keys); the others
     take Ctrl+Shift with a letter nobody else has, F, L, G, H (Insert ▸ Table… is F), X and Y for the two sorts."""
     return (
         *_row_column_menus(),
