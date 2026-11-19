@@ -16,6 +16,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   with its stand-in (`{checked, missing: [{family, stand_in, closeness}]}`). A read for anybody; it never blocks, and
   getting a font stays the administrator's (Server settings ▸ Fonts). `Context.font_catalogue` and the hub option of
   the same name carry the catalogue.
+- **`export_choices`** in a text (E1.13 A4): `{descriptions}`, how many paragraphs have a description that `export_office`
+  could write as a review comment. The export dialog shows its tick only above zero. A read for anybody.
 - **`export_office`** of a text takes `description_comments` (default off, E1.13 A4-A6): what a person wrote about a
   paragraph is written as a review comment by the person who exports, dated that day. A name a person gave is always
   written as a bookmark; a generic or worked-out one is not. A file that an import kept cannot be patched with

@@ -465,8 +465,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         self.charts: dict[str, Chart] = {}
         #: Named ranges, tables and the results of ``SQL()`` formulas (E6.5): see :class:`~claudia_computes.Names`.
         self.names = Names()
-        #: What was written about a sheet, a chart tab or a named range, by its id (D1317, D1318): a plain string beside
-        #: the name, as an object's description is. Kept when the thing is removed, for the undo.
+        #: What was written about a sheet, a chart tab or a named range, by its id (see D1317 and D1318). It is a plain
+        #: string beside the name, as an object's description is. Kept when the thing is removed, for the undo.
         self.thing_descriptions: dict[str, str] = {}
         #: The pivot tables of the workbook, as :class:`~claudia_computes.Pivots` (E6.30).
         self.pivots = Pivots()

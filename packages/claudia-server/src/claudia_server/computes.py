@@ -137,18 +137,18 @@ from claudia_core import (
 )
 
 from .computes_search import add_search_methods
+from .font_report import add_font_report_method
 from .i18n import msg, translate
 from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, RequestError, core_methods
 from .rendered import add_rendering_methods
-from .font_report import add_font_report_method
 from .replay import add_replay_methods
-from .what_if import add_what_if_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods
 from .thing_names import add_name_methods, default_name
+from .what_if import add_what_if_methods
 from .wire import current_revision, done, fresh_id
 
 MAX_WINDOW_CELLS = 50_000  # positions in one ``cells`` window

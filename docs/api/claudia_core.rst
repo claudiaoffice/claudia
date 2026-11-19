@@ -19,6 +19,18 @@ Documents
    :members: revisions
 .. autodata:: claudia_core.FILLER
 
+What-if
+-------
+
+Try something on a private copy and carry it out as one step if nobody has worked on the same places since (D236,
+D1308).
+
+.. autoclass:: claudia_core.WhatIf
+   :members:
+.. autoclass:: claudia_core.Proposal
+   :members:
+.. autoexception:: claudia_core.ProposalOutdated
+
 Names of things
 ---------------
 

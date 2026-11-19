@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 from .commands import Batch, Command, CommandRegistry, core_commands
 from .css import INITIAL_CSS, resolve_css, validate_css
 from .css import _split_families as split_families
-from .stand_ins import GENERIC_ALIASES
 from .facets import check_kind
+from .stand_ins import GENERIC_ALIASES
 
 if TYPE_CHECKING:
     from .context import Context

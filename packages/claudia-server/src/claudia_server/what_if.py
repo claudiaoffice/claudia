@@ -1,10 +1,12 @@
-"""The what-if desk (D236, D263, D1308): try something on a private copy of the document, through the app's own methods,
-look at it with the views the app already has, and carry it out as one step if nobody has worked on the same places since.
+"""The what-if desk (D236, D263, D1308): try something on a private copy of the document, through the app's own
+methods, look at it with the views the app already has, and carry it out as one step if nobody has worked on the same
+places since.
 
-One :class:`WhatIfDesk` per hosted document keeps what people are trying. It is **private**: a token belongs to the person
-who started it, and nobody else can read, change, commit or drop it. Limits: :data:`MAX_PER_PERSON` for a person,
-:data:`MAX_PER_DOCUMENT` for the document, :data:`IDLE_SECONDS` without use, and everything of a person goes when their last
-window closes. A what-if is built when first asked for, never in advance (building the copy costs the size of the state).
+One :class:`WhatIfDesk` per hosted document keeps what people are trying. It is **private**: a token belongs to the
+person who started it, and nobody else can read, change, commit or drop it. Limits: :data:`MAX_PER_PERSON` for a
+person, :data:`MAX_PER_DOCUMENT` for the document, :data:`IDLE_SECONDS` without use, and everything of a person goes
+when their last window closes. A what-if is built when first asked for, never in advance (building the copy costs the
+size of the state).
 
 A write on the copy is a request of the app's own method table, answered with the person's own rights (the rule of
 D251), with the copy in the place of the live document: what a what-if does it does exactly as the document would. What
@@ -94,7 +96,7 @@ class WhatIfDesk:
         return token, idea
 
     def get(self, owner: str, token: str) -> WhatIf:
-        """``owner``'s what-if ``token``; ``command_error`` when there is none of theirs (nobody else's is ever told)."""
+        """``owner``'s what-if ``token``; ``command_error`` when there is none of theirs (nobody else's is told)."""
         now = time.monotonic()
         self._expire(now)
         kept = self._kept.get(token)
@@ -140,7 +142,7 @@ class _Copy(PastDocument):
         self._idea = idea
 
     def execute(self, command: Command, **_ignored: Any) -> Any:
-        """Do ``command`` to the copy. Author, time, base and via are the what-if's own: a person's copy has one author."""
+        """Do ``command`` to the copy. Author, time, base and via are the what-if's own: a copy has one author."""
         return self._idea.apply(command)
 
     def __getattr__(self, name: str) -> Any:
@@ -172,8 +174,8 @@ def add_what_if_methods(table: MethodTable) -> None:
 
     @table.method("as_what_if", "token:str method:str params:dict={}")
     def as_what_if(ctx: Context, *, token: str, method: str, params: dict) -> Any:
-        """Answer one read request for the what-if `token`, exactly as without `as_what_if` but for the copy: the views an
-        app already has draw it. `method` is one of the requests a view reads with; nothing else can be asked
+        """Answer one read request for the what-if `token`, exactly as without `as_what_if` but for the copy: the
+        views an app already has draw it. `method` is one of the requests a view reads with; nothing else can be asked
         (`forbidden`). `command_error` when the what-if is gone."""
         idea = desk_of(ctx.document).get(ctx.user, token)
         if method not in VIEW_READS:
@@ -202,7 +204,8 @@ def add_what_if_methods(table: MethodTable) -> None:
             applied = ctx.document.apply_proposal(idea.proposal(), author=ctx.user, via=via)
         except ProposalOutdated as exc:
             reason = msg("the document has changed where this preview acts since it was made")
-            return {"applied": False, "reason": reason, "conflicts": [r.to_data() for r in exc.conflicts]}
+            conflicts = [r.to_data() for r in exc.conflicts]  # type: ignore[attr-defined]
+            return {"applied": False, "reason": reason, "conflicts": conflicts}
         desk.drop(ctx.user, token)
         return {"applied": True, "revision": applied.revision.to_data()}
 

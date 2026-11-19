@@ -167,9 +167,8 @@ def test_the_what_if_methods_are_in_every_apps_table():
     from claudia_server.creates import creates_methods
 
     for table in (composes_methods, computes_methods, creates_methods):
-        assert {"what_if_start", "what_if_apply", "as_what_if", "what_if_changes", "what_if_commit", "what_if_drop"} <= (
-            table.names()
-        )
+        names = {"what_if_start", "what_if_apply", "as_what_if", "what_if_changes", "what_if_commit", "what_if_drop"}
+        assert names <= table.names()
 
 
 def test_the_context_of_a_what_if_cannot_reach_the_other_windows(paper):

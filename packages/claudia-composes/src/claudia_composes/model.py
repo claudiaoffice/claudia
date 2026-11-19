@@ -463,8 +463,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         #: paragraph through every edit; one whose paragraph was joined away is kept, unused, until undo brings the
         #: paragraph back.
         self.block_names: dict[str, str] = {}
-        #: What was written about a paragraph, by id (D1317, D1318): the same pattern as the description of an object,
-        #: a plain string beside the name. Kept like a name when the paragraph is joined away, for undo.
+        #: What was written about a paragraph, by id (see D1317 and D1318). It has the same pattern as the description
+        #: of an object, a plain string beside the name. Kept like a name when the paragraph is joined away, for undo.
         self.block_descriptions: dict[str, str] = {}
         #: ``name_key`` of every stored name of a paragraph that is in the text, worked out when first needed and kept
         #: up as paragraphs are made: a paste of two thousand lines would otherwise read every name for each.

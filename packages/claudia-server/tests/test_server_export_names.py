@@ -106,3 +106,12 @@ def test_a_heading_description_is_a_comment_too_and_its_title_is_no_bookmark(tex
 def test_the_box_with_nothing_described_writes_no_comments(text):
     data, _ = exported(text, comments=True)
     assert "word/comments.xml" not in zipfile.ZipFile(io.BytesIO(data)).namelist()
+
+
+def test_the_export_dialog_is_told_how_many_descriptions_it_could_write_as_comments(text):
+    """The tick is shown only when there is something to write (A4): the dialog asks how many there are."""
+    assert on_text(text, "export_choices", {}) == {"descriptions": 0}
+    describe(text, "b2", "Budget summary", "What we spend")
+    assert on_text(text, "export_choices", {}) == {"descriptions": 1}
+    describe(text, "b1", "Introduction", "Why we write")
+    assert on_text(text, "export_choices", {}) == {"descriptions": 2}

@@ -109,3 +109,9 @@ def test_redacting_an_import_takes_the_words_written_about_a_blanked_paragraph(t
     assert (text.model.thing_description("b2"), text.model.thing_description("b1")) == ("", "kept")
     text.model.blank(None)
     assert text.model.thing_description("b1") == ""
+
+
+def test_only_a_heading_with_words_has_a_name_that_is_worked_out(text):
+    """Any other paragraph, and anything that is not a paragraph, can be renamed by a person."""
+    assert text.model.name_is_fixed("b2") is False
+    assert text.model.name_is_fixed("no-such-thing") is False

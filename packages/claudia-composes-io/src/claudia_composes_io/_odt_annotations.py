@@ -81,7 +81,7 @@ def bookmarks_around(paragraph: etree._Element) -> list[str]:
             open_.add(name)
         elif child.tag == _Q["end"] and seen_words and name in open_:
             ended.add(name)
-        elif child.tag not in _NO_WORDS and "".join(child.itertext()).strip():
+        elif child.tag not in _NO_WORDS and "".join(map(str, child.itertext())).strip():
             seen_words = True
             ended.clear()
         if (child.tail or "").strip():

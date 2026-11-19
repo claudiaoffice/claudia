@@ -1,9 +1,10 @@
 """The font report (E1.9, D1306): what a document asks for that this server does not have.
 
-Said when a document is opened, for the banner. It never blocks anything (a document opens and is edited with the fonts it
-lacks shown in their stand-ins), and it only *says*: getting a font is the administrator's, through Server settings ▸ Fonts,
-which refuses everybody else whatever a page sent (``admin_fonts``, the rule of D251). What the report adds to the
-catalogue's own answer is the one list a document needs: its fonts, each with what it will be shown in.
+Said when a document is opened, for the banner. It never blocks anything (a document opens and is edited with the
+fonts it lacks shown in their stand-ins), and it only *says*: getting a font is the administrator's, through Server
+settings ▸ Fonts, which refuses everybody else whatever a page sent (``admin_fonts``, the rule of D251). What the
+report adds to the catalogue's own answer is the one list a document needs: its fonts, each with what it will be shown
+in.
 """
 
 from __future__ import annotations

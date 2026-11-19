@@ -1,7 +1,7 @@
 """The fonts a computes document asks for are its requirements (E1.9, D1306)."""
 
-from claudia_core import FontRequirement, StyleDef
 from claudia_computes import WorkbookModel
+from claudia_core import FontRequirement, StyleDef
 
 
 def test_a_font_named_by_a_style_is_a_requirement_and_a_generic_one_is_not():

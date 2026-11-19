@@ -87,21 +87,21 @@ from .composes_annotations import export_annotations
 from .composes_contents import add_contents_methods
 from .composes_search import add_search_methods
 from .composes_words import add_word_methods
+from .font_report import add_font_report_method
 from .i18n import msg
 from .object_methods import Placement, add_object_methods
 from .office_export import export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .rendered import add_rendering_methods
-from .font_report import add_font_report_method
 from .replay import add_replay_methods
-from .what_if import add_what_if_methods
 from .shape_methods import add_shape_methods
 from .structure_methods import add_structure_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods, own_css
 from .tables import add_table_methods, one_line
 from .thing_names import add_name_methods, paragraph_label
+from .what_if import add_what_if_methods
 from .wire import current_revision, done
 
 MAX_ZONE_WORDS = 10  # the widest ± n words zone a cursor may ask for
@@ -207,6 +207,14 @@ def _suggestions(ctx):
     """The suggestions that are still open, as `{id, author, block, start, end, original, replacement, reason,
     state, outdated}`. `replacement` is null for a remark. An outdated one cannot be accepted any more."""
     return _text(ctx).visible_suggestions()
+
+
+@composes_methods.method("export_choices")
+def _export_choices(ctx):
+    """What the export dialog may offer besides the format: `{descriptions}`, how many paragraphs have a description
+    that `export_office` could write as a review comment (`description_comments`). The tick is shown only when it is
+    above zero (A4). A read for anybody."""
+    return {"descriptions": len(export_annotations(_text(ctx), ctx.user, comments=True).comments)}
 
 
 @composes_methods.method("export_office", "format:str tracked_changes:bool=false description_comments:bool=false")
