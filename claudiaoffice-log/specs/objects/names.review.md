@@ -51,3 +51,18 @@ In `notes/mockups/` (SVG, with a PNG next to each), drawn in the same language a
 | `names-04-way-back-in-a-text`                        | reading page 2, the jump to page 41 with the chip, and back                                             | the chip floats over the view (as in dock-05) instead of sitting in the chat box => approved                                                                                                                                                           |
 | `names-05-way-back-menu`                             | View ▸ Back where I was (Ctrl+Shift+B), enabled and greyed, with the panel folded away                  | as proposed                                                                                                                                                                                                                                            |
 | `requirements-01-font-banner`                        | the banner when a font is missing: can be fetched, cannot, two fonts; and the details list              | who may press "Get": administrators only (drawn) or the document's owner too<br><br>only administrators                                                                                                                                                |
+
+
+## E. Your answers of 2026-11-19, and the architecture (draft)
+
+You agreed with all mock-ups and said paragraph descriptions are stored "in the same pattern as the description for any object". What changed:
+
+| What you said | What changed |
+| --- | --- |
+| Paragraph description is stored like any object's; every object has a name and a description for now | **D1318** (new); D1317's two open assumptions are struck and point to it. Architecture: `notes/e1-architecture.md`, diagram 2 |
+| Offered **as a comment on export** to Word and OpenDocument | D1318; three scenarios in `names.feature` (the option, its default, no option without descriptions). Neither writer writes comments today, so this is new code on both sides |
+| An unnamed range or table: Name & describe… asks for a name | scenario added (core) |
+| Chip over the view, Back where I was (Ctrl+Shift+B), as drawn | already in D1312; architecture diagram 3 |
+| Font "Get": administrators only | `requirements.feature`: the scenario is split in two and no longer `@needs-decision` |
+
+The architecture questions, each with my default, are at the end of `notes/e1-architecture.md` (A1–A8); answer them there or here.

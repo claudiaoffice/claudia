@@ -23,11 +23,19 @@ Feature: A document opened on a server that lacks or changed something it needs 
     When a viewer opens the workbook
     Then she sees the banner and no "Keep this version"
 
-  @core @needs-decision @pending:e1.9 @app:composes @app:computes @app:creates
-  Scenario: A font the server lacks but can fetch is offered, and never blocks
+  @core @pending:e1.9 @app:composes @app:computes @app:creates
+  Scenario: A font the server lacks but can fetch is offered to an administrator, and never blocks
     Given a document that uses a font this server does not have but can provide
-    When I open it
+    When I, an administrator, open it
     Then it opens, and a banner offers to get the font with one click
+
+  @core @pending:e1.9 @app:composes @app:computes @app:creates
+  Scenario: Anyone else sees the banner without the button (owner's answer, 2026-11-19)
+    Given the same document and a person who is not an administrator
+    When she opens it
+    Then it opens, and the banner says which font is missing and to ask an administrator
+    And there is no "Get" button
+    And the server refuses a "Get" request from her even if her page sent one
 
   @extended @needs-decision @pending:e1.9
   Scenario: The list of documents never shows what a document needs

@@ -1,0 +1,90 @@
+<svg viewBox="0 0 1400 980" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia - E1 architecture 2: names and descriptions of every thing</title><desc id="d">Class diagram: ObjectModel gets thing_description hooks next to thing_name; TextModel stores block_descriptions beside block_names; DescribeThing and RenameThing are commands; one server method saves name and description as one history step; the export option writes paragraph descriptions as comments.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6e6880"/></marker></defs>
+<rect width="1400" height="980" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">E1 architecture 2 — every thing has a name and a description, stored the same way (D1317, D1318)</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">A paragraph&#x27;s description is stored like an image&#x27;s: a plain string next to its name, changed by a logged command, one history step with the name.</text>
+<rect x="30" y="90" width="560" height="410" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="44" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">claudia_core</text>
+<rect x="610" y="90" width="760" height="410" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="624" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">apps: claudia_composes, claudia_computes, claudia_creates</text>
+<rect x="30" y="520" width="560" height="280" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="44" y="542" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">claudia_server</text>
+<rect x="610" y="520" width="760" height="280" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="624" y="542" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">claudia_composes_io (docx, odt)  +  claudia_computes_io, claudia_creates_io</text>
+<rect x="40" y="820" width="26" height="12" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="74" y="830" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">exists today</text>
+<rect x="170" y="820" width="26" height="12" rx="3" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="204" y="830" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">new in E1 (dashed)</text>
+<text x="350" y="830" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">bold coloured line = new member of an existing class</text>
+<rect x="50" y="126" width="530" height="154" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M50 132 a6 6 0 0 1 6 -6 h518 a6 6 0 0 1 6 6 v24 h-530 z" fill="#5b4bc4"/>
+<text x="315.0" y="146" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ObjectModel  (the hooks every app overrides)</text>
+<text x="62" y="177" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">named_things() -&gt; (id, kind, name)</text>
+<text x="62" y="195" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">thing_name(id) / set_thing_name(id, name)</text>
+<text x="62" y="213" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">thing_description(id) -&gt; str</text>
+<text x="62" y="231" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">set_thing_description(id, text) -&gt; old</text>
+<text x="62" y="249" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">name_unnamed(…)   # generic names at creation</text>
+<text x="62" y="267" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  # one namespace, cleaned + casefolded, 1-60 chars</text>
+<rect x="50" y="292" width="530" height="190" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 298 a6 6 0 0 1 6 -6 h518 a6 6 0 0 1 6 6 v24 h-530 z" fill="#d6477a"/>
+<text x="315.0" y="312" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">commands</text>
+<text x="62" y="343" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">RenameThing(id, name)               exists (D554)</text>
+<text x="62" y="361" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">DescribeObject(id, description, decorative)</text>
+<text x="62" y="379" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  exists: drawn things only (Decorative)</text>
+<text x="62" y="397" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">DescribeThing(id, description)</text>
+<text x="62" y="415" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  everything else: paragraph, heading, list,</text>
+<text x="62" y="433" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  table, range, sheet, slide, chart tab</text>
+<text x="62" y="451" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">NameAndDescribe(id, name, description)</text>
+<text x="62" y="469" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  = Batch of the two: ONE history step</text>
+<rect x="630" y="126" width="360" height="154" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M630 132 a6 6 0 0 1 6 -6 h348 a6 6 0 0 1 6 6 v24 h-360 z" fill="#5b4bc4"/>
+<text x="810.0" y="146" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">TextModel  (composes)</text>
+<text x="642" y="177" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">block_names: dict[id, str]</text>
+<text x="642" y="195" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">block_descriptions: dict[id, str]</text>
+<text x="642" y="213" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">state schema +1, absent = no description</text>
+<text x="642" y="231" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">named_things()  # paragraphs, headings, lists</text>
+<text x="642" y="249" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">thing_description / set_thing_description</text>
+<text x="642" y="267" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">heading name := its title, &#x27;(2)&#x27; on duplicate</text>
+<rect x="1010" y="126" width="340" height="154" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M1010 132 a6 6 0 0 1 6 -6 h328 a6 6 0 0 1 6 6 v24 h-340 z" fill="#5b4bc4"/>
+<text x="1180.0" y="146" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">WorkbookModel (computes) / DeckModel (creates)</text>
+<text x="1022" y="177" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">sheet, chart tab, range names</text>
+<text x="1022" y="195" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">descriptions beside the names</text>
+<text x="1022" y="213" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">slide: &#x27;Slide N&#x27; generic name</text>
+<text x="1022" y="231" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">slide / sheet / range description</text>
+<text x="1022" y="249" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ObjectBody.description / .decorative</text>
+<text x="1022" y="267" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  unchanged for drawn objects</text>
+<rect x="630" y="322" width="720" height="100" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M630 328 a6 6 0 0 1 6 -6 h708 a6 6 0 0 1 6 6 v24 h-720 z" fill="#d6477a"/>
+<text x="990.0" y="342" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">unnamed range or table  (names-02)</text>
+<text x="642" y="373" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">Name &amp; describe… opens WITHOUT a name yet and ASKS for one:</text>
+<text x="642" y="391" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">the field is empty, &#x27;Name&#x27; is required, OK stays off until a legal name is typed;</text>
+<text x="642" y="409" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">the same dialog, the same single history step as every other thing.</text>
+<rect x="50" y="556" width="530" height="154" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 562 a6 6 0 0 1 6 -6 h518 a6 6 0 0 1 6 6 v24 h-530 z" fill="#d6477a"/>
+<text x="315.0" y="576" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">claudia_server</text>
+<text x="62" y="607" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">thing_names.py: names + the # list data</text>
+<text x="62" y="625" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">object_methods.describe_object  (drawn things)</text>
+<text x="62" y="643" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">name_and_describe(id, name, description)</text>
+<text x="62" y="661" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">one method for the one dialog, one step</text>
+<text x="62" y="679" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">describe_things(ids) for the # list preview</text>
+<text x="62" y="697" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">versioned wire API v1: additive, documented</text>
+<rect x="630" y="556" width="720" height="136" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M630 562 a6 6 0 0 1 6 -6 h708 a6 6 0 0 1 6 6 v24 h-720 z" fill="#d6477a"/>
+<text x="990.0" y="576" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">export options  (new: ExportOptions.comments_from_descriptions)</text>
+<text x="642" y="607" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">File ▸ Export ▸ Word / OpenDocument asks: &#x27;Write paragraph descriptions as comments&#x27;</text>
+<text x="642" y="625" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">docx: comments.xml + w:commentRangeStart/End/Reference around the paragraph</text>
+<text x="642" y="643" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">odt: office:annotation on the paragraph      (neither writer writes comments today: only reads)</text>
+<text x="642" y="661" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">bookmarks: only for person-given names (D1311); generic &#x27;Paragraph 12&#x27; never leaves</text>
+<text x="642" y="679" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">import: names from file become names; comments are NOT read back as descriptions</text>
+<line x1="315" y1="280" x2="315" y2="292" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<line x1="580" y1="190" x2="630" y2="190" stroke="#6e6880" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+<line x1="990" y1="190" x2="1010" y2="190" stroke="#6e6880" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+<line x1="315" y1="484" x2="315" y2="556" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="325" y="526" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">save</text>
+<line x1="630" y1="640" x2="580" y2="640" stroke="#6e6880" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+<text x="40" y="874" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Why here: hooks sit on ObjectModel because every app already answers named_things there (E1.13), so the dialog, the # list and the exporters ask one question</text>
+<text x="40" y="892" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">and never learn which app they talk to. DescribeObject stays for drawn things: it carries &#x27;Decorative&#x27;, which a paragraph cannot be.</text>
+<text x="40" y="916" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Open point (E16.5, corkboard): the one description may later split into alt text and a note. The storage pattern allows it without a migration.</text>
+</svg>

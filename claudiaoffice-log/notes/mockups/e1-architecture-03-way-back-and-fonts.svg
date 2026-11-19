@@ -1,0 +1,95 @@
+<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia - E1 architecture 3: the way back, the shared menu entry and the font banner</title><desc id="d">Component diagram: the web session remembers where a jump started; a chip over the view and the View menu entry both call goBack; desktop shells send the action through the shell contract; the font report banner shows Get only to administrators.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6e6880"/></marker></defs>
+<rect width="1400" height="900" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" font-family="Fraunces, Georgia, serif">E1 architecture 3 — the way back (D1312) and the font report banner (E1.9)</text>
+<text x="40" y="66" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">The state is in the web session, once; the chip, the menu entry and the shells&#x27; menus are three ways of asking it to go back.</text>
+<rect x="30" y="90" width="850" height="400" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="44" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">web app  (web/app)</text>
+<rect x="900" y="90" width="470" height="400" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="914" y="112" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">desktop shells  (clients/linux GTK, clients/neutralino)</text>
+<rect x="30" y="510" width="850" height="300" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="44" y="532" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">font banner  (E1.9, font half only, D1306)</text>
+<rect x="900" y="510" width="470" height="300" rx="10" fill="#f7f3ec" stroke="#d8d2e6" stroke-width="1"/>
+<text x="914" y="532" font-size="12" font-weight="600" fill="#6e6880" text-anchor="start">server</text>
+<rect x="40" y="830" width="26" height="12" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<text x="74" y="840" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">exists today</text>
+<rect x="170" y="830" width="26" height="12" rx="3" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="204" y="840" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">new in E1 (dashed)</text>
+<text x="350" y="840" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">bold coloured line = new member of an existing class</text>
+<rect x="50" y="126" width="400" height="154" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M50 132 a6 6 0 0 1 6 -6 h388 a6 6 0 0 1 6 6 v24 h-400 z" fill="#5b4bc4"/>
+<text x="250.0" y="146" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">base-session.ts</text>
+<text x="62" y="177" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">goToThing(id)  # remembers before it jumps</text>
+<text x="62" y="195" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">pointed: {id, container, from: WayBack}</text>
+<text x="62" y="213" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">WayBack = {container, topVisiblePlace}</text>
+<text x="62" y="231" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">goBack() -&gt; restores container + place</text>
+<text x="62" y="249" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">clearBack()  on use / typing / click / other jump</text>
+<text x="62" y="267" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">POINT_MS = 3000   # now the highlight only</text>
+<rect x="480" y="126" width="380" height="154" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M480 132 a6 6 0 0 1 6 -6 h368 a6 6 0 0 1 6 6 v24 h-380 z" fill="#d6477a"/>
+<text x="670.0" y="146" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">BackChip.vue</text>
+<text x="492" y="177" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">floats over the view, bottom centre</text>
+<text x="492" y="195" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">persists: not tied to POINT_MS</text>
+<text x="492" y="213" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">shows while pointed.from is set</text>
+<text x="492" y="231" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">role=status, focusable, Esc dismisses</text>
+<text x="492" y="249" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  moved OUT of SidePanel.vue (N3)</text>
+<text x="492" y="267" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  so it works with the panel folded away</text>
+<rect x="50" y="310" width="400" height="118" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 316 a6 6 0 0 1 6 -6 h388 a6 6 0 0 1 6 6 v24 h-400 z" fill="#d6477a"/>
+<text x="250.0" y="330" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">menu items  (MenuBar.vue / manifest)</text>
+<text x="62" y="361" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">view.back  &#x27;Back where I was&#x27;</text>
+<text x="62" y="379" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">key Ctrl+Shift+B  /  Cmd+Shift+B</text>
+<text x="62" y="397" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">enabled only while a way back exists</text>
+<text x="62" y="415" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">row in claudia-menus.xlsx, translated</text>
+<rect x="480" y="310" width="380" height="118" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M480 316 a6 6 0 0 1 6 -6 h368 a6 6 0 0 1 6 6 v24 h-380 z" fill="#5b4bc4"/>
+<text x="670.0" y="330" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">everything that jumps</text>
+<text x="492" y="361" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace"># list, search hit, reference click,</text>
+<text x="492" y="379" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  History panel &#x27;show me&#x27;, comment link</text>
+<text x="492" y="397" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">all go through goToThing</text>
+<text x="492" y="415" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">one place sets the way back</text>
+<rect x="920" y="126" width="430" height="136" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M920 132 a6 6 0 0 1 6 -6 h418 a6 6 0 0 1 6 6 v24 h-430 z" fill="#5b4bc4"/>
+<text x="1135.0" y="146" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">shell contract v1 (clients/contract)</text>
+<text x="932" y="177" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">&#x27;actions&#x27;: the shell sends action &#x27;view.back&#x27;</text>
+<text x="932" y="195" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  from its native menu, the page answers</text>
+<text x="932" y="213" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">native-menu shells draw File, Edit, Tools, Help;</text>
+<text x="932" y="231" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  View stays in the page: key Ctrl+Shift+B</text>
+<text x="932" y="249" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  is handled by the page in all three clients</text>
+<rect x="920" y="310" width="430" height="100" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M920 316 a6 6 0 0 1 6 -6 h418 a6 6 0 0 1 6 6 v24 h-430 z" fill="#d6477a"/>
+<text x="1135.0" y="330" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">GTK / Neutralino</text>
+<text x="932" y="361" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">no new native code: the menu is the page&#x27;s</text>
+<text x="932" y="379" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">check: Ctrl+Shift+B is free in Chrome,</text>
+<text x="932" y="397" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">Firefox, WebKitGTK, WebView2 (verify first)</text>
+<rect x="50" y="546" width="400" height="118" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 552 a6 6 0 0 1 6 -6 h388 a6 6 0 0 1 6 6 v24 h-400 z" fill="#d6477a"/>
+<text x="250.0" y="566" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">FontReportBanner.vue</text>
+<text x="62" y="597" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">&#x27;N fonts missing for this document&#x27;</text>
+<text x="62" y="615" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">[Get]  shown only if person is administrator</text>
+<text x="62" y="633" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">others: banner without the button + &#x27;ask your</text>
+<text x="62" y="651" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">administrator&#x27;  (no dead control)</text>
+<rect x="480" y="546" width="380" height="100" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M480 552 a6 6 0 0 1 6 -6 h368 a6 6 0 0 1 6 6 v24 h-380 z" fill="#5b4bc4"/>
+<text x="670.0" y="566" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">AdminFonts.vue / AddFontsDialog</text>
+<text x="492" y="597" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">exists: the administrator&#x27;s font page</text>
+<text x="492" y="615" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">Get opens it pre-filled with the missing</text>
+<text x="492" y="633" font-size="11.5" font-weight="600" fill="#5b4bc4" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">families (no new dialog)</text>
+<rect x="920" y="546" width="430" height="118" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M920 552 a6 6 0 0 1 6 -6 h418 a6 6 0 0 1 6 6 v24 h-430 z" fill="#d6477a"/>
+<text x="1135.0" y="566" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">claudia_server fonts</text>
+<text x="932" y="597" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">font report (exists, E3.3)</text>
+<text x="932" y="615" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">&#x27;is_admin&#x27; read from the session, never</text>
+<text x="932" y="633" font-size="11.5" font-weight="600" fill="#d6477a" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">trusted from the page (rule of D251-253)</text>
+<text x="932" y="651" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">the server refuses a Get from a non-admin</text>
+<line x1="480" y1="170" x2="450" y2="170" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="452" y="162" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">calls</text>
+<line x1="250" y1="310" x2="250" y2="280" stroke="#6e6880" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="260" y="300" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">calls</text>
+<line x1="520" y1="310" x2="430" y2="280" stroke="#6e6880" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+<text x="500" y="296" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">sets the way back</text>
+<line x1="860" y1="590" x2="920" y2="590" stroke="#6e6880" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+<text x="864" y="582" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">asks</text>
+<line x1="450" y1="590" x2="480" y2="590" stroke="#6e6880" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+</svg>

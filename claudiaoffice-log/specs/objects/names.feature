@@ -93,6 +93,40 @@ Feature: A person can point at anything by its name, change the name, describe i
     When I type a description and save
     Then the dialog shows it again the next time I open it
 
+  @core @app:composes @app:computes @pending:e1.13
+  Scenario: An unnamed range or table asks for a name when I describe it (D1318)
+    Given a range of cells or a table that has no name yet
+    When I choose Edit ▸ Name & describe…
+    Then the name field is empty and marked as required
+    And the OK button stays off until I have typed a name that is free
+    When I type a name and a description and save
+    Then both are saved as one history step
+    And one Undo takes both back
+
+  @core @app:composes @pending:e1.13
+  Scenario: A description is stored the way an object's is (D1318)
+    Given a paragraph with the description "Check the date with legal"
+    When another person opens the same document
+    Then she sees the same description in Name & describe…
+    And Undo takes my description back, as it does for a picture's
+
+  @core @app:composes @pending:e1.13
+  Scenario: Export offers a paragraph's description as a comment (D1318)
+    Given two paragraphs have a description and the rest have none
+    When I export to Word, or to OpenDocument
+    Then the export dialog offers "Write paragraph descriptions as comments", off by default
+    When I tick it
+    Then the file has two comments, each on its paragraph, saying the description
+    And the comments are by me and dated today
+    When I leave it off
+    Then the file has no comment from Claudia
+
+  @extended @app:composes @pending:e1.13
+  Scenario: A document without descriptions does not offer the option (D1318)
+    Given no paragraph has a description
+    When I open the export dialog for Word
+    Then the option about comments is not there
+
   @extended @app:composes @pending:e1.13
   Scenario: A heading is called by its title
     Given a heading "Introduction"

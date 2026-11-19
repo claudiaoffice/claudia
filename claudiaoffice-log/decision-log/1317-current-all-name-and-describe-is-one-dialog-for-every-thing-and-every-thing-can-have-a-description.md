@@ -20,7 +20,7 @@ superseded-by: []
 **Assumptions, for the owner to correct** (they are not in the answer):
 
 * **Decorative** (the tick that says "this picture needs no alternative text") stays only for things that are drawn: pictures, charts, shapes, rendered text and text boxes. A paragraph or a range cannot be "decorative".
-* A paragraph's description does not change how the text is exported: it is a note on the paragraph, not alternative text, and an Office file gets none of it (docx and odt have no field for it that is not a comment).
-* **How a description of a paragraph, list, table or range is stored** (the object's `DescribeObject` is for objects only) is not decided here; it belongs to the architecture round, before any code.
+* ~~A paragraph's description does not change how the text is exported.~~ **Corrected by the owner (2026-11-19, D1318):** it is offered as a comment on export to Word and OpenDocument.
+* ~~How a description of a paragraph, list, table or range is stored is not decided here.~~ **Decided in D1318:** the same way as the description of any other object.
 
 **Notes.** Replaces the "name only" default of D1311's first proposal. The dialog without a name field is the bug of size 2 in the names review (N1); this decision says what the dialog is, not only that the field is missing.
