@@ -314,6 +314,32 @@ def test_behind_a_proxy_plain_text_is_allowed_on_any_address_and_the_banner_warn
     assert any(line.startswith("WARNING: no TLS") and "proxy" in line for line in result.banner)
 
 
+# ------------------------------------------------------------ D1275: who a person is behind a proxy
+def test_one_proxy_is_trusted_by_default_behind_a_proxy_and_the_banner_says_how_people_are_counted(tmp_path):
+    result = plan("--no-tls", "--host", "0.0.0.0", "--behind-proxy", tmp_path=tmp_path)
+    assert any("X-Forwarded-For" in line and "1 proxy" in line for line in result.banner)
+
+
+def test_the_number_of_trusted_proxies_can_be_set(tmp_path):
+    result = plan("--no-tls", "--host", "0.0.0.0", "--behind-proxy", "--proxy-hops", "2", tmp_path=tmp_path)
+    assert any("X-Forwarded-For" in line and "2 proxy" in line for line in result.banner)
+
+
+def test_zero_trusted_proxies_says_that_everybody_is_one_address(tmp_path):
+    result = plan("--no-tls", "--host", "0.0.0.0", "--behind-proxy", "--proxy-hops", "0", tmp_path=tmp_path)
+    assert any("one wait or cap for everybody" in line for line in result.banner)
+
+
+def test_without_a_proxy_there_is_no_header_to_trust(tmp_path):
+    with pytest.raises(UsageError, match="--proxy-hops"):
+        plan("--proxy-hops", "1", tmp_path=tmp_path)
+
+
+def test_a_negative_number_of_proxies_is_refused(tmp_path):
+    with pytest.raises(UsageError, match="negative"):
+        plan("--no-tls", "--host", "0.0.0.0", "--behind-proxy", "--proxy-hops", "-1", tmp_path=tmp_path)
+
+
 def test_behind_proxy_means_nothing_when_the_server_encrypts(tmp_path):
     with pytest.raises(UsageError, match="--behind-proxy"):
         plan("--behind-proxy", tmp_path=tmp_path)

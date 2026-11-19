@@ -875,6 +875,38 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     expect(await session.exportContent()).toEqual(exported)
   })
 
+  it('downloads the document as a sealed Claudia file, confirming it with the person\'s own password', async () => {
+    const link = new FakeLink()
+    server(link)
+    const file = {
+      format: 'claudia',
+      filename: 'plan.claudia',
+      content_type: 'application/x-claudia-document',
+      data: 'UEsDBA==',
+      parts: ['content', 'history', 'chat'],
+    }
+    let asked: unknown = null
+    link.handlers.download_claudia = (params) => {
+      asked = params
+      return file
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.downloadClaudia('Correct-Horse-9')).toEqual(file)
+    expect(asked).toEqual({ password: 'Correct-Horse-9' })
+  })
+
+  it('says why a download did not work and gives no file', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.download_claudia = () => {
+      throw new ProtocolError('unauthorized', 'that is not your current password')
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.downloadClaudia('wrong')).toBe(false)
+  })
+
   it('exports the current content as a Word, Excel or PowerPoint file', async () => {
     const link = new FakeLink()
     server(link)

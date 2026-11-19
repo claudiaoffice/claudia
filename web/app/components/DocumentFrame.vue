@@ -69,7 +69,7 @@ async function checkpoint(label: string | null) {
 /** Open one of the window's own dialogs. An export reads the document as it stands this instant, so whatever is
  * still being typed is sent first. */
 async function openDialog(name: FrameDialog) {
-  if (name === 'export' || name === 'export-format') await props.session.flush()
+  if (name === 'download' || name === 'export-format') await props.session.flush()
   if (name === 'redact') return pickToRedact()
   dialog.value = name
 }
@@ -212,7 +212,7 @@ onBeforeUnmount(() => clearTimeout(timer))
       @changed="((dialog = null), session.notice(t('Your password for {doc} is changed.', { doc: session.state.doc }), 'info'))"
     />
     <LeaveDocumentDialog v-if="dialog === 'leave'" :session="session" @close="dialog = null" @left="((dialog = null), emit('leave'))" />
-    <ExportDialog v-if="dialog === 'export'" :session="session" @close="dialog = null" />
+    <DownloadDialog v-if="dialog === 'download'" :session="session" @close="dialog = null" />
     <ExportFormatDialog v-if="dialog === 'export-format'" :session="session" :formats="exportFormats" @close="dialog = null" />
     <RedactionDialog v-if="redaction" :session="session" :picked="redaction" @close="redaction = null" @done="redacted" />
     <DeleteDocumentDialog v-if="dialog === 'delete'" :session="session" @close="dialog = null" @deleted="((dialog = null), emit('leave'))" />

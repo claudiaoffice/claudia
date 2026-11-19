@@ -18,6 +18,8 @@ compression ratios (:class:`ReaderLimitExceeded`), and the cost of the password 
 
 import base64
 import binascii
+import hmac
+import io
 import json
 import os
 import re
@@ -339,6 +341,36 @@ def unlock(path: Path, name: str, password: str) -> Unlocked | None:
     return open_slot(_slots_of(entries, path), material, manifest.binding)
 
 
+def sealed_copy(path: Path, name: str, password: str) -> bytes | None:
+    """The document as a file for one person to keep (D110, D1270): the bytes of a complete, still sealed document.
+
+    An owner gets the whole file. Anybody else gets the file with **only their own key slot**, so nobody can attack
+    the other people's passwords offline with it, and a viewer's file has only the parts the content key opens: the
+    history, the chat and the head (sealed with keys a viewer does not hold) are left out; the snapshot stays. It opens
+    with the same name and password, as a copy of its own and not as the live document.
+
+    ``None`` for a wrong name or password, as :func:`unlock` (D50). The file at ``path`` is not changed. It holds what
+    is in the blocks; a journal that has not been folded in yet is not part of it, so an open document is packed first.
+    """
+    entries = _read_entries(path)
+    manifest = _manifest_of(entries, path)
+    slots = _slots_of(entries, path)
+    material = derive_login_material(password, name, manifest.salt, manifest.kdf)  # one hash: it is the slow part
+    unlocked = open_slot(slots, material, manifest.binding)
+    if unlocked is None:
+        return None
+    kept = slots
+    others = _carried(entries)
+    if unlocked.role is not Role.OWNER:
+        kept = [slot for slot in slots if hmac.compare_digest(slot.locator, material.locator)]
+    if Domain.HISTORY not in unlocked.keys:
+        others = {n: data for n, data in others.items() if n != _HEAD and not n.startswith(("history/", "chat/"))}
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        _fill_zip(archive, manifest, kept, entries["people.bin"], others)
+    return buffer.getvalue()
+
+
 def unlock_with_recovery(path: Path, recovery_key: bytes) -> Unlocked | None:
     """Open with the recovery key (D105): an owner with all keys, or ``None`` if it is not the document's key."""
     entries = _read_entries(path)
@@ -397,6 +429,27 @@ def _carried(entries: Mapping[str, bytes]) -> dict[str, bytes]:
     return {name: data for name, data in entries.items() if name not in _CORE_ENTRIES}
 
 
+def _fill_zip(
+    archive: zipfile.ZipFile,
+    manifest: Manifest,
+    slots: Sequence[KeySlot],
+    people_blob: bytes,
+    others: Mapping[str, bytes],
+) -> None:
+    """Put the entries of a document into ``archive``: the format name first, then the four that every document has,
+    then ``others`` (the head, the blocks and the snapshot) in name order."""
+    archive.writestr("format", FORMAT_TEXT, compress_type=zipfile.ZIP_STORED)
+    archive.writestr("manifest.json", json.dumps(manifest.to_dict()), compress_type=zipfile.ZIP_DEFLATED)
+    archive.writestr(
+        "slots.json",
+        json.dumps({"slots": [slot.to_dict() for slot in slots]}),
+        compress_type=zipfile.ZIP_DEFLATED,
+    )
+    archive.writestr("people.bin", people_blob, compress_type=zipfile.ZIP_STORED)
+    for name in sorted(others):
+        archive.writestr(name, others[name], compress_type=zipfile.ZIP_STORED)
+
+
 def _write_zip(
     path: Path,
     manifest: Manifest,
@@ -411,16 +464,7 @@ def _write_zip(
     if exclusive and path.exists():
         raise FileExistsError(path)
     with atomic_file(path, durable=True) as handle, zipfile.ZipFile(handle, "w") as archive:
-        archive.writestr("format", FORMAT_TEXT, compress_type=zipfile.ZIP_STORED)
-        archive.writestr("manifest.json", json.dumps(manifest.to_dict()), compress_type=zipfile.ZIP_DEFLATED)
-        archive.writestr(
-            "slots.json",
-            json.dumps({"slots": [slot.to_dict() for slot in slots]}),
-            compress_type=zipfile.ZIP_DEFLATED,
-        )
-        archive.writestr("people.bin", people_blob, compress_type=zipfile.ZIP_STORED)
-        for name in sorted(others):
-            archive.writestr(name, others[name], compress_type=zipfile.ZIP_STORED)
+        _fill_zip(archive, manifest, slots, people_blob, others)
 
 
 def create_document(

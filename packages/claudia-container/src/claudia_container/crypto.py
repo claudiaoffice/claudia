@@ -48,7 +48,9 @@ class DecryptionError(Exception):
 class KdfParams:
     """The cost of turning a password into a key. They are written into the document's manifest (D103).
 
-    Raising them later is a matter of re-deriving each slot at the next login. Values read from a file are checked
+    A document keeps the cost it was made with. Every person's slot is sealed with a key derived from their own name and
+    password, so raising the cost of an existing document would need each person's password, one at a time, and
+    nothing does that: a new cost applies to the documents made after it (D1267). Values read from a file are checked
     against limits so that a hostile file cannot demand absurd amounts of memory or time.
     """
 

@@ -38,7 +38,7 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
 * **Files in a desktop window** (D501, D502, D503): a shell that offers `files` chooses and saves files with its own
   dialogs. `lib/local-files.ts` (`chooseLocalFile`) asks it for Open a File… and Insert Image (the file input's dialog
   in a browser tab), `lib/download.ts` (`saveBlob`) hands it every file the page saves and says what became of it
-  (`saved` with the path, `cancelled`, or `downloaded` in a tab); the export dialogs show "Saved as …". Print… in the
+  (`saved` with the path, `cancelled`, or `downloaded` in a tab); the export dialogs show "Saved as …". File ▸ Download (`DownloadDialog.vue`, D110) saves the document's own sealed file through `download_claudia`: the person's password is asked again, an owner gets the whole file, an editor her own slot, a viewer the content only. Print… in the
   preview hands the PDF to the shell, which opens it in the computer's PDF viewer. `currentShell()` is the bridge of the
   page shown now. On the front page File ▸ New empties and focuses the Document field and marks the "start a new one"
   part; Open… focuses the search field. A file the shell offers (`offer_file`, D505: dropped on a Linux window, whose web

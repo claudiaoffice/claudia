@@ -210,6 +210,16 @@ class DetailsDirectory(Protocol):
         the text is too long or a tag is not acceptable."""
 
 
+@runtime_checkable
+class SealedCopyDirectory(Protocol):
+    """A directory that keeps its documents as Claudia files and can hand one person a copy of theirs (D110)."""
+
+    def sealed_copy(self, doc_id: str, name: str, password: str) -> bytes | None:
+        """The document as a still sealed file for ``name`` to keep: the whole file for an owner, the file with only
+        their own key slot and the parts their keys open for anybody else. ``None`` if the password is wrong (the same
+        refusal for a wrong name)."""
+
+
 @dataclass(frozen=True)
 class _Record:
     account: Account
