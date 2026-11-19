@@ -18,7 +18,7 @@ comes before, or with, the new cost.
 
 - **What is counted.** Failures per *address*, which a success from that address resets, and per *(document id, name as
   typed)*, counted whether or not the document or the name exists, so the answer still tells nothing (D50, SEC-04). Kept
-  in memory only and forgotten after fifteen minutes without a failure.
+  in memory only (D1276: a restart forgets them) and forgotten after fifteen minutes without a failure.
 - **The wait.** The first three failures are free; then 1, 2, 4, 8 and 16 seconds, and never more than 30 seconds for an
   address and **10 seconds for a (document, name)**, so that a stranger who keeps guessing a colleague's name can delay
   her by 10 seconds at most. These are starting values; they are server settings and are tuned with the back-off scenario.
@@ -28,8 +28,7 @@ comes before, or with, the new cost.
 - **Where it applies.** The document `hello` (password and recovery key) and the administrator's sign-in
   (`POST /api/admin/login`).
 - **No lock-out, ever.** Nothing locks a document or a name for good, because that would let anybody lock the owner out.
-- **Which address.** The socket's, or behind a proxy the one the proxy appended (D1275, undecided); until that is decided
-  the wait is only safe on a server that is not behind a proxy.
+- **Which address.** The socket's, or behind a proxy the one the proxy appended, found as D1275 says (the entry `--proxy-hops` places from the right of `X-Forwarded-For`).
 - **Shared addresses** (a school, an office behind one address) get the benefit of the reset on success; if they still
   run into it the server setting is raised for them.
 

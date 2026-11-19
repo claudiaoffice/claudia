@@ -20,7 +20,7 @@ as not done, and E2.3 lists changing editor↔viewer without removing and re-add
 - **Removing a person, or downgrading an editor to viewer, renews the domain keys that person held** (removal: all of
   them; downgrade: history and chat). The blocks of those domains, the people list, the snapshot and the head are sealed
   again under the new keys, in one atomic replacement of the file. It uses the rewrite that redaction made (D725). **How
-  the people who stay, and the recovery key, get the new keys is D1274** (undecided): a slot is opened by its person's
+  the people who stay, and the recovery key, get the new keys is D1274** (decided: a sealed inbox): a slot is opened by its person's
   password, which nobody else has, so the owner cannot rewrite it.
 - **What this protects, and what not,** is said in the dialog in words: the person keeps what she has already seen and
   every copy of the file she holds, which her old keys still open (D20). The new keys protect what is written *from now

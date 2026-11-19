@@ -1,7 +1,7 @@
 # E2 round two — architecture proposal (viewers, back-off, hashing cost, key renewal, exports and their record)
 
 **Status: proposal of 2026-11-19, with the owner's answers of the same day (§6) and the first built parts (§8).** Branch `e2-document-sec`, written against `main` at `518a7bf`.
-Decisions: D1261–D1276 (D1274 and D1276 are proposals that wait for the owner). Mock-ups in `notes/mockups/`:
+Decisions: D1261–D1276 (D1274 and D1276 decided by the owner on 2026-11-19). Mock-ups in `notes/mockups/`:
 
 | File | Shows |
 |---|---|
@@ -67,7 +67,7 @@ client code says so (§1); a scenario with two windows proves it.
 or 0, `failed(...)` and `succeeded(address)` update two counters (per address, per document-and-name), `forget` drops
 anything quiet for fifteen minutes. It lives in memory; a restart forgets, which is fine for a delay (nothing is locked). The owner asked whether writing it to
 disk would be safer: a little, in one narrow case (a restart or a crash resets the wait), at the cost of keeping hashed
-addresses on disk; D1276 proposes how, and waits for the answer.
+addresses on disk. **Decided (D1276): it stays in memory**; the threat model states the gap.
 
 `Gateway._hello` asks it **before** `_hello` reaches the hashing semaphore, so a refused guesser costs nothing. The document
 `hello` (also with a recovery key) and `POST /api/admin/login` use the same instance. The counters count a name whether or
@@ -193,13 +193,13 @@ goes to the first control of every dialog and returns to the one that opened it.
 
 | # | Question | Answer |
 |---|---|---|
-| 1 | D1274, the inbox with a key pair per person | **Open.** The owner asked for a plainer explanation; it is now at the top of D1274 ("In plain words"). Still undecided |
+| 1 | D1274, the inbox with a key pair per person | **Yes, as proposed** after the plain-words explanation at the top of D1274; built in slice C |
 | 2 | D1275, the address behind a proxy | **Yes** (built, §8) |
 | 3 | The record is not redactable (D1271) | **Yes, not by the owner either** |
 | 4 | File ▸ Download and D110 (D1270, E2.12) | **Download is the sealed file**; decisions and code updated (built, §8) |
 | 5 | Protocol version | **Stays 2** |
 | 6 | Slice order | **A, B, C** |
-| new | D1276: the back-off state on disk | Proposed, waits for the answer |
+| new | D1276: the back-off state on disk | **No: it stays in memory** (decided) |
 
 ## 7. Findings while reading (all four fixed 2026-11-19; the owner asked for it)
 
