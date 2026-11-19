@@ -1,6 +1,4 @@
 # Turning an object in every app (D1021, D1024, D1224, D1232)
-
-```gherkin
 @e2e:objects.cjs
 Feature: Every app that has floating objects turns them the same way, and a chart and a table never turn
 
@@ -39,4 +37,3 @@ Feature: Every app that has floating objects turns them the same way, and a char
   Scenario: The three apps' menus (web, GTK, Neutralino) carry the same entries and keys
     Given the manifest
     Then composes, computes and creates each have Format ▸ Rotate ▸ with the same three entries and keys
-```

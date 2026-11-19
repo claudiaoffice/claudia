@@ -144,3 +144,24 @@ You answered all 17 and agreed with all of section C. Section A (B1–B4, Questi
 **Not blocking:** N3 (small), Q16 (the stand-in assistant needs a table lens first; those scenarios stay deferred), the
 `tables-irregular` fixture (I build it with the tests), and the decision-id range (I only need it before I write the
 first decision).
+
+## E. Third round (2026-11-19, later): everything is merged, the owner answered, and it is built
+
+**Answers (decided, recorded in D1241 to D1243):**
+
+| # | Answer | Where it is now |
+|---|---|---|
+| Layout | "We'll take your own version": `specs/<app>/<feature>.feature`, `specs/objects/`, `specs/invariants/`. The flat `.md` files of the object-interaction branch were converted. | `specs/README.md` |
+| Main | Work on main and push directly; nobody else is working. `@after:object-interaction` is gone. | tags in `tables.feature` |
+| **N2** | The test comes first and fails; somebody else builds the header UI. | rule is `@pending:N2` (xfail, strict); keys of D1208 |
+| **Q0** | B1, B2 and B4 are fixed in this work. | D1243; scenarios in "A table goes where my caret is…" and "I fill a table with the keyboard…" |
+| **Q10** | D1213 stays: deleting the last body row or the only column does **not** remove the table. The owner wants to use it first. | two scenarios say "cannot be deleted"; rule is still `@needs-decision` for Q11 and the 100 and 10 limits |
+| **N4** | Yes: a selection with a table in it is deleted without a question, one undo. | scenario no longer `@needs-decision`; no step code yet, so it skips |
+| N1 | Not asked again: with a header, "the last body row" is meant. | the Q10 scenario |
+
+**Still open for the owner:** Q11 (the header row is not deleted like a body row), N3, Q16, and what the "Options…" chip
+and the faint frame should look like once you have used the table yourself.
+
+**What runs:** `./run-e2e.sh core` runs the `@core` scenarios of this file that have step code; the others skip with the
+missing step named. B3 ("drawn twice") is fixed on main (D1228): the "between" step looks again after a moment, and the
+screenshots of every run are there to look at.

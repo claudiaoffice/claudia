@@ -13,7 +13,7 @@ superseded-by: []
 
 **Decided by the owner 2026-11-19 ("Tables and Charts cannot be rotated, that decision stands. Please fix."), built in patches 9 and 10.**
 The server's work is shared and was already there; what was missing was the same few entries in the clients. The scenarios are
-in `specs/object-words.md` and `specs/object-turning.md`, the tests in `web/e2e/objects.cjs`,
+in `specs/objects/words.feature` and `specs/objects/turning.feature`, the tests in `web/e2e/objects.cjs`,
 `packages/claudia-server/tests/test_server_object_words_and_turns.py`, `web/tests/rotate-menu.test.ts` and
 `clients/linux/tests/test_manifest.py`.
 

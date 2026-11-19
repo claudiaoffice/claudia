@@ -705,7 +705,13 @@ function scrollToSuggestion(id: string) {
   mark?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
-defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo })
+/** Take over where the caret is on the page right now. The page tells us of a move only a moment later (`selectionchange`
+ *  is queued), so a command that works at the caret and opens a dialog first asks for this before the dialog takes the
+ *  focus away: otherwise it acts where the caret was a moment ago. */
+function syncCaret() {
+  adoptSelection(true)
+}
+defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncCaret })
 </script>
 
 <template>

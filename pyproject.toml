@@ -47,6 +47,7 @@ dev = [
     # `playwright install chromium`, and the test skips, saying so, where it is missing.
     "playwright>=1.47",
     "pytest-cov>=6",
+    "pytest-bdd>=9.0.1",
 ]
 
 [tool.pytest.ini_options]

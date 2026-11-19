@@ -3,9 +3,9 @@ Feature: Tables in a composes text (E9.32)
   text for a small table. What every object must do (be there once, reload, undo, colleagues, files) is in
   `specs/invariants/objects-in-composes.feature` and is not repeated here. `Q<n>` points to a question in
   `tables.review.md`; a scenario tagged `@needs-decision` says what I propose and waits for the answer, and one tagged
-  `@after:object-interaction` is decided (D1221-D1226) but lives on a branch that is not merged yet. Selecting, moving,
-  scaling and the object menu as such are the contract of D1221 and its own E2E (`web/e2e/objects.cjs`, planned);
-  they are not repeated here, only what is particular to a table.
+  `@pending:<id>` is written and fails until the work behind <id> is done. Selecting, moving, scaling and the object
+  menu as such are the contract of D1221-D1233 and its own E2E (`web/e2e/objects.cjs`); they are not repeated here,
+  only what is particular to a table.
 
   Background:
     Given a new composes document "report" in which I am Ann, an owner
@@ -40,6 +40,15 @@ Feature: Tables in a composes text (E9.32)
       When I insert a table of 2 columns and 2 rows without a header
       Then the table has no header row and 2 body rows
       And the columns are called "Column 1" and "Column 2"
+
+  # B2 (2026-11-19, size 2): the table landed after "After" when the key came straight after the click that put the
+  # caret in "Before", because the page tells the app about a caret move a moment late.
+  @core @firefox
+  Rule: A table goes where my caret is, also when my hands are quick
+
+    Scenario: The key comes straight after the caret move
+      When I press Ctrl+Shift+F and insert a table of 2 columns and 2 rows with a header at once
+      Then the table is between "Before" and "After"
 
   @extended
   Rule: The dialog keeps me inside the limits (100 rows, 10 columns)
@@ -108,6 +117,12 @@ Feature: Tables in a composes text (E9.32)
       Then the caret is in the first box of the second body row
       And the first body row reads exactly "Roof 1", "Kale", "12", each once
       And the history shows one entry for each of the three boxes
+
+    # B1 and B4 (2026-11-19, size 1 and 2): "A" came out "AA", and the next word began in the box before it.
+    Scenario: Typing without pauses puts every word in its own box, once
+      When I type "Roof 1", "Kale" and "12" into the first body row as fast as the keyboard allows, a Tab after each
+      Then the first body row reads exactly "Roof 1", "Kale", "12", each once
+      And the caret is in the first box of the second body row
 
     Scenario: Shift+Tab goes back
       Given the caret is in the first box of the second body row
@@ -203,7 +218,7 @@ Feature: Tables in a composes text (E9.32)
 
   # ================================================================ changing the shape
 
-  @core @after:object-interaction
+  @core
   Rule: The table menu is the right-hand click, and holds what the Edit menu no longer has (D1224, D1225)
 
     Scenario: A right press in a box selects the table and opens its menu
@@ -226,7 +241,9 @@ Feature: Tables in a composes text (E9.32)
 
   # N2: D1224 leaves "Insert/delete" to the row and column headers, and composes' tables have no header UI yet; the
   # words below say what a person does, not where she does it. Tab in the last box (above) adds a row either way.
-  @core @needs-decision
+  # The owner (2026-11-19): the test comes first and fails; somebody else builds the header UI. The steps use the keys
+  # of D1208, which are what stays when the UI is added.
+  @core @pending:N2
   Rule: I add and take away rows and columns
 
     Background:
@@ -286,22 +303,17 @@ Feature: Tables in a composes text (E9.32)
       Then no column is added
       And I am told that a table has at most 10 columns
 
-    # Q10 (answered 2026-11-19): deleting the last row or the only column removes the table. This replaces the
-    # sentence of D1213 that says those entries are off. N1: with a header, the last *body* row is meant (a table needs
-    # a body), so Q11 and Q10 do not collide.
-    Scenario: Deleting the only body row removes the table
+    # Q10 (answered 2026-11-19): D1213 stays. The last body row and the only column cannot be deleted; the entries
+    # are off. The owner wants to use it before judging whether a table should go the way a computes sheet cannot.
+    Scenario: The only body row cannot be deleted
       Given I have inserted a table of 2 columns and 2 rows with a header
-      When I delete the only body row
-      Then the table is gone and the text around it is as it was
-      And the history shows one entry, "Removed a table"
-      When I undo
-      Then the table is back as it was
+      When I look for a way to delete the only body row
+      Then there is none: the entry is off and the key does nothing, and the table is as it was
 
-    Scenario: Deleting the only column removes the table
+    Scenario: The only column cannot be deleted
       Given I have inserted a table of 1 column and 3 rows
-      When I delete the column
-      Then the table is gone and the text around it is as it was
-      And the history shows one entry, "Removed a table"
+      When I look for a way to delete the column
+      Then there is none: the entry is off and the key does nothing, and the table is as it was
 
     Scenario: The header row is not deleted like a body row
       Given my caret is in a header box
@@ -444,7 +456,7 @@ Feature: Tables in a composes text (E9.32)
       When I set the total of "Kilos" to none
       Then the total row is gone and the boxes are as they were
 
-  @extended @after:object-interaction
+  @extended
   Rule: Taking a table away (Q13: not asked first, one entry in the history, one undo)
 
     Scenario Outline: The ways to take a table away
@@ -513,8 +525,7 @@ Feature: Tables in a composes text (E9.32)
       When I press Backspace at the start of "After"
       Then the table is not deleted, and "After" is not joined into a box
 
-    # Q15, changed: see the review file, B-list N4
-    @needs-decision
+    # Q15, changed (N4, answered 2026-11-19: yes): no question, one undo, as Q13 and D1225
     Scenario: Selecting text across the table and deleting it
       When I select from the middle of "Before" to the middle of "After" and delete
       # proposal changed to match Q13 and D1225 (Del removes an object without a question): no question, one undo

@@ -90,7 +90,7 @@ async function opened() {
     hold: () => ({}),
     look: () => ({}),
     objects: () => ({ objects: [OBJECT] }),
-    tables: () => [TABLE],
+    tables: () => [structuredClone(TABLE)], // a copy each time, as the wire gives one: the session may change what it holds
     replace_text: () => ({ revision: 'main:3', block: 't1/r2/c1', offset: 0 }),
     add_table: () => ({ revision: 'main:3', object: 'o2', table: 't2' }),
   }
@@ -147,6 +147,16 @@ describe('the tables of a text', () => {
     expect(calls(link, 'replace_text')).toHaveLength(0)
     await session.setBox('t1', 'r2', 'c2', '1\n2')
     expect(calls(link, 'replace_text').at(-1)!.params.text).toBe('1 2')
+  })
+
+  // B1: Enter and then leaving the box both put the same words in; the second came before the first's echo and doubled them
+  it('does not put the same words in twice when two commits come close together', async () => {
+    const { link, session } = await opened()
+    await Promise.all([session.setBox('t1', 'r1', 'c1', 'A'), session.setBox('t1', 'r1', 'c1', 'A')])
+    expect(calls(link, 'replace_text')).toHaveLength(1)
+    expect(calls(link, 'replace_text')[0]!.params).toMatchObject({ block: 't1/r1/c1', end: 4, text: 'A' })
+    await session.setBox('t1', 'r1', 'c1', 'AB')
+    expect(calls(link, 'replace_text').at(-1)!.params).toMatchObject({ end: 1, text: 'AB' }) // it knows what the box has now
   })
 
   it('counts a box in characters, as the server does', async () => {

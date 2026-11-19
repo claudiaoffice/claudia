@@ -35,7 +35,7 @@ import { FIELD_CHAR, fieldIndex, plain, type ReferenceTarget, type RefField, typ
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
 import type { Deleted, DeleteHow } from './style-deletion'
 import { headingLevel, styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
-import { isBoxId, oneLine, type TableEvent, type TableInfo, withEvent } from './tables'
+import { isBoxId, oneLine, type TableEntry, type TableEvent, type TableInfo, withEvent } from './tables'
 
 import { translate as t } from './i18n'
 import { lookOnly } from './replay'
@@ -367,12 +367,31 @@ export class TextSession extends BaseSession<TextState> {
   /** Type `text` into a box, in place of the words it has. One line: a line break becomes a space (D1212). */
   async setBox(table: string, row: string, col: string, text: string): Promise<boolean> {
     if (this.denied()) return false
-    const old = this.state.tables[table]?.entries.find(([r, c]) => r === row && c === col)?.[2].text ?? ''
     const words = oneLine(text)
-    if (words === old) return true
-    const block = `${table}/${row}/${col}`
-    const params = { block, start: 0, end_block: block, end: [...old].length, text: words, base: this.state.revision }
-    return this.act(async () => (await this.attempt('replace_text', params)) !== false)
+    // What the box has is looked at when this job runs, after the ones before it: a commit by Enter and the one by
+    // leaving the box come close together, and the second must see what the first did (B1: the words were doubled).
+    return this.act(async () => {
+      const old = this.boxText(table, row, col)
+      if (words === old) return true
+      const block = `${table}/${row}/${col}`
+      const params = { block, start: 0, end_block: block, end: [...old].length, text: words, base: this.state.revision }
+      if ((await this.attempt('replace_text', params)) === false) return false
+      this.rememberBox(table, row, col, words) // the server's events bring the box's words only after a round trip
+      return true
+    })
+  }
+
+  private boxText(table: string, row: string, col: string): string {
+    return this.state.tables[table]?.entries.find(([r, c]) => r === row && c === col)?.[2].text ?? ''
+  }
+
+  /** Show `words` in the box at once; `reloadTables` confirms it a moment later. */
+  private rememberBox(table: string, row: string, col: string, words: string): void {
+    const shown = this.state.tables[table]
+    if (!shown) return
+    const entry = shown.entries.find(([r, c]) => r === row && c === col)
+    if (entry) entry[2].text = words
+    else if (words) shown.entries.push([row, col, { text: words, style: '' }] as TableEntry)
   }
 
   /** One of the server's table methods for table `table`: false when it was refused or the person may not. */

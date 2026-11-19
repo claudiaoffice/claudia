@@ -70,6 +70,7 @@ const editor = ref<{
   scrollToBlock: (id: string) => void
   caretPoint: () => { x: number; y: number }
   goTo: (target: string) => void
+  syncCaret: () => void
 } | null>(null)
 
 // How I look at the text is mine alone (and is remembered in this browser).
@@ -301,11 +302,21 @@ const optionsFor = ref<{ table: string; column?: string } | null>(null)
 
 /** Insert ▸ Table…: the dialog asks how big; the table goes after the paragraph the caret is in. */
 const canInsertTable = () => !readonly.value && !!state.selection && !state.box
+/** Where the table goes: the caret as it was when the menu entry was chosen (the dialog takes the focus, and a click
+ *  into its fields must not move the place). */
+let tablePlace: { block: string; offset: number } | null = null
+function openTableDialog() {
+  editor.value?.syncCaret()
+  const focus = state.selection?.focus
+  tablePlace = focus ? { block: focus.block, offset: focus.offset } : null
+  dialog.value = 'table'
+}
 async function insertTable(size: { rows: number; cols: number; headerRows: number }) {
   dialog.value = null
-  const focus = state.selection?.focus
-  if (!focus) return
-  const made = await session.addTable({ block: focus.block, offset: focus.offset }, size)
+  const place = tablePlace
+  tablePlace = null
+  if (!place) return
+  const made = await session.addTable(place, size)
   if (!made) return
   await nextTick()
   document.querySelector<HTMLTextAreaElement>(`[data-object="${CSS.escape(made.object)}"] textarea`)?.focus()
@@ -505,7 +516,7 @@ const menus = computed<Menu[]>(() => {
         },
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }, insertTableItems(c, { add: () => (dialog.value = 'table'), possible: canInsertTable() })),
+    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }, insertTableItems(c, { add: openTableDialog, possible: canInsertTable() })),
     {
       label: t('Format'),
       items: [

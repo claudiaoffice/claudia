@@ -12,7 +12,7 @@
 // always on, so that it is clear where it starts and ends. Its name tab selects it; dragging the tab moves it, to after
 // the paragraph a line shows; the right button on the tab, the frame or a box selects it and opens its menu (D1225) and
 // never the paragraph menu of the words; Esc, in a box or on the tab, leaves it for the text.
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { paragraphCss } from '~/lib/style-css'
 import { columnName, gridOf, stepBox, type Box, type Step, type TableInfo } from '~/lib/tables'
 import { nearestGap } from '~/lib/text-object-host'
@@ -54,14 +54,38 @@ function focusBox(at: { row: string; col: string } | null) {
   el?.select()
 }
 
+/** What was typed into a box and is not in the table yet, by the box's `row/col`. A box is drawn from this, not from
+ *  the table, until its words are in: the table is drawn again whenever anything arrives (the words of the box typed
+ *  before, a total, another person), and that must not wipe words typed since (B4). */
+const drafts = reactive<Record<string, string>>({})
+const keyOf = (box: Box) => `${box.row}/${box.col}`
+const shown = (box: Box) => drafts[keyOf(box)] ?? box.text
+function onInput(box: Box, event: Event) {
+  drafts[keyOf(box)] = (event.target as HTMLTextAreaElement).value
+}
+function dropDraft(box: Box, words?: string) {
+  if (words === undefined || drafts[keyOf(box)] === words) delete drafts[keyOf(box)]
+}
+
 /** Put the words of a box in, when they are not what the table has. */
 async function commit(box: Box, el: HTMLTextAreaElement): Promise<boolean> {
   if (readonly.value) {
     el.value = box.text
+    dropDraft(box)
     return false
   }
-  if (el.value === box.text) return true
-  return props.session.setBox(props.table.id, box.row, box.col, el.value)
+  const words = el.value
+  if (words === box.text) {
+    dropDraft(box, words)
+    return true
+  }
+  const done = await props.session.setBox(props.table.id, box.row, box.col, words)
+  if (done) dropDraft(box, words) // typed more meanwhile: that stays until it is put in too
+  else {
+    dropDraft(box) // refused: the box shows what the table has
+    el.value = props.table.entries.find(([r, c]) => r === box.row && c === box.col)?.[2].text ?? ''
+  }
+  return done
 }
 
 /** Rows that were there before a row was added, to find the new one and put the caret in it. */
@@ -90,7 +114,9 @@ async function go(box: Box, el: HTMLTextAreaElement, step: Step) {
     return
   }
   if (!target || target === 'end') return
-  await commit(box, el)
+  // The caret moves at once and the words follow to the server: the person goes on typing in the next box, and
+  // waiting for the answer would put those words into this one (B4). The session takes the commits one after the other.
+  void commit(box, el)
   focusBox(target)
 }
 
@@ -119,6 +145,7 @@ function onKey(event: KeyboardEvent, box: Box) {
     case 'Escape':
       event.preventDefault()
       el.value = box.text
+      dropDraft(box)
       return emit('leave')
   }
 }
@@ -258,11 +285,12 @@ defineExpose({ focusBox })
               rows="1"
               class="box"
               :data-box="`${box.row}/${box.col}`"
-              :value="box.text"
+              :value="shown(box)"
               :readonly="readonly"
               :aria-label="label(box)"
               spellcheck="true"
               @focus="onFocus(box)"
+              @input="onInput(box, $event)"
               @blur="onBlur(box, $event)"
               @keydown="onKey($event, box)"
             />
@@ -276,11 +304,12 @@ defineExpose({ focusBox })
               rows="1"
               class="box"
               :data-box="`${box.row}/${box.col}`"
-              :value="box.text"
+              :value="shown(box)"
               :readonly="readonly"
               :aria-label="label(box)"
               spellcheck="true"
               @focus="onFocus(box)"
+              @input="onInput(box, $event)"
               @blur="onBlur(box, $event)"
               @keydown="onKey($event, box)"
             />

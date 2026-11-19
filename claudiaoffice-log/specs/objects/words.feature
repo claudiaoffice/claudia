@@ -1,6 +1,4 @@
 # Writing in a text box or a shape (D1232)
-
-```gherkin
 @e2e:objects.cjs
 Feature: The words of a text box and of a shape are written the same way in every app that has them
 
@@ -37,4 +35,3 @@ Feature: The words of a text box and of a shape are written the same way in ever
     Given a text with a text box in it
     When the words are written as typed
     Then the server changes only what differs, and writes nothing for the same words
-```

@@ -1,7 +1,7 @@
 # Specs: what a person can do, written before it is built
 
-**Status: draft of 2026-11-19, pilot on branch `e2e` (composes tables). Not yet agreed.** The working agreement is in
-the project instructions: before a feature is coded, its most important user behaviour is written here as Gherkin,
+**Status: in use since 2026-11-19 (D1241); pilot: the tables of composes.** The working agreement is in the project
+instructions: before a feature is coded, its most important user behaviour is written here as Gherkin,
 reviewed and approved by the owner, and only then are tests and code written against it.
 
 ## Why
@@ -14,61 +14,59 @@ is the contract. The owner reviews scenarios, not code.
 
 | Path | What |
 |---|---|
+| `specs/<app>/<feature>.feature` | Scenarios of one feature (`composes`, `computes`, `creates`), in the words of a person using it. |
+| `specs/objects/*.feature` | What all objects do alike in all three apps (turning, words in a box, …). |
 | `specs/invariants/*.feature` | Scenarios every object of a kind of thing must pass (a new kind of object adds one row to the `Examples`). |
-| `specs/<app>/<feature>.feature` | Scenarios of one feature, in the words of a person using it. |
 | `specs/<app>/<feature>.review.md` | The questions the draft raises, each with a proposed default; the owner answers by crossing out or changing. Deleted when the questions are answered and the answers are in the feature file or the decision log. |
+| `tests/e2e/specs/` | The step code (pytest-bdd, Python Playwright): `conftest.py` and one `test_<feature>.py` per feature file. |
 
-A feature file belongs to a story in `Projects/claudia-office/_tasks`; the story's acceptance lists the file.
+A feature file starts with a `# title` comment line, then `Feature:`. Which test checks a scenario is said by a tag
+(below), not by the place it lives.
 
 ## How to write a scenario
 
 - **Behaviour in a person's words.** "I press Tab in the last box", not "the `<textarea data-box>` fires keydown".
   No selectors, ids, wire methods or timing in a scenario; those live in the step code.
 - **One reason to fail per scenario.** Short, with `Then` steps a person could check by looking.
-- **Tags**
-  - `@core`: the journeys that must always work; automated first, run on every push.
-  - `@extended`: edge cases and rarer paths; automated after `@core` is green.
+- **Comments** (`# …`) go on their own line, never behind a step.
+- **Tags**, one vocabulary for all files:
+  - `@core`: the journeys that must always work; run on every delivery.
+  - `@extended`: edge cases and rarer paths; run before delivery and nightly.
   - `@firefox`: also run in Firefox (all `@core` should be). Chromium is the default.
   - `@two-users`: needs two browser windows.
   - `@desktop`: also to be driven through the GTK client (AT-SPI), later.
-  - `@needs-decision`: the expected behaviour is a proposal; the scenario is not automated until the question in
-    the review file is answered.
-  - `@after:<branch>`: the behaviour is decided, but it lives on a branch that is not merged yet; the scenario is
-    automated when that branch is in main.
+  - `@needs-decision`: the expected behaviour is a proposal; the scenario is skipped until the question in the review
+    file is answered.
+  - `@pending:<id>`: the behaviour is decided but not built (or somebody else builds it); the scenario is written and
+    **expected to fail**. It is strict: when it passes, the run fails until the tag is taken off.
+  - `@app:computes|composes|creates`: the apps a scenario runs in; none means all that the file's folder says.
+  - `@e2e:<file>`: the browser test is a script in `web/e2e/`; `@unit:<path>` and `@io:<path>`: the scenario is tested
+    by a unit or a file-format test because no browser is needed. These are not run by `tests/e2e/specs`.
 - **Defaults I propose are marked in the review file**, so that a reviewer only has to veto.
+- **A step that has no code skips its scenario**, with its words. The list of skips is the list of what the specs
+  promise and the tests do not yet check; it is shown in every run.
 
 ## What every scenario run checks without being asked (the "always" steps)
 
-Built into the step code, not repeated in the files, so that nobody can forget them:
+Built into the step code (`tests/e2e/specs/conftest.py`), not repeated in the files, so that nobody can forget them:
 
-1. No error or warning in the browser console, no uncaught exception, no error toast.
-2. No connection error or `command_error` from the server that the scenario did not expect.
-3. Everything a scenario names is really visible: it has a size, it lies inside the visible area, it is not covered
-   by something else. ("Four rows in the page" is not enough if only one can be seen.)
-4. A screenshot is kept at the end of each scenario (and on failure), so that the person who reviews the run can look.
+1. No error in the browser's console, no uncaught exception.
+2. A screenshot is kept at the end of each scenario (`.claudia/e2e/shots`), so that the person who reviews the run
+   can look.
+3. Where a scenario names things on the page, its step checks that they are really visible: they have a size and lie
+   inside the text area.
+
+Not built yet: errors of the server that the scenario did not expect, and "not covered by something else".
 
 ## Running them
 
-`./run-e2e.sh --help` explains itself; `claudiaoffice-log/specs/running.md` has the same in a page.
+`./run-e2e.sh --help` explains itself; `claudiaoffice-log/specs/running.md` has the same in a page. In short:
+`./run-e2e.sh core` before every delivery, `./run-e2e.sh extended` for everything that is not waiting for a decision.
 
-## Tooling (agreed 2026-11-19)
+## Tooling (agreed 2026-11-19, D1241)
 
-`pytest-bdd` with Python Playwright in `tests/e2e/`, next to `live.py` (which already starts real servers) and
-`test_greeting.py` (which already skips with a reason when the web app or a browser is missing). The existing
+`pytest-bdd` with Python Playwright in `tests/e2e/specs/`, next to `live.py` (which starts real servers) and
+`test_greeting.py` (which skips with a reason when the web app or a browser is missing). The existing
 `web/e2e/*.cjs` scripts stay as they are; they are not rewritten.
 
-## Tags and files of the object-interaction specs
-
-The object-interaction branch (D1221 to D1240) wrote its scenarios as flat files in `specs/` (for example `object-words.md`, `object-turning.md`, `computes-pictures-in-files.md`) with the tags below. They are kept as they are and sit next to the layout above.
-
-The scenarios the owner reviews before a feature is coded, and the ones every bug fix starts with (a failing scenario
-first). One file per feature, in Gherkin (`Feature`, `Scenario`, `Given/When/Then`), in plain language.
-
-* **`@core`**: the behaviours a person would stop using the product over; they run in CI on every push.
-* **`@extended`**: the rest of what the feature promises; they run in the nightly job and before delivery.
-* **`@app:computes`, `@app:composes`, `@app:creates`**: the apps a scenario runs in; none means all three.
-* **`@e2e:<file>`**: where the browser test is (`web/e2e/`), or `@unit:<path>` / `@io:<path>` where the scenario is
-  tested by a unit or a file-format test because no browser is needed.
-
-A scenario that is not built yet says `@pending:<decision>`; the test behind it is written, gated, and the gate goes with
-the feature.
+Every bug fix starts with a scenario that fails; the commit that fixes it makes it pass.

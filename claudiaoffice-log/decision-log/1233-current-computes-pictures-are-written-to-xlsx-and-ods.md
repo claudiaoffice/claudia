@@ -34,4 +34,4 @@ and survive an edit; tracker CODE-67).
 
 **Notes.** Applies D390, D462, D463, D1232. Code: `claudia_computes_io/_pictures.py` (what both formats take from the model),
 `xlsx_pictures.py`, `ods_pictures.py`; tests `packages/claudia-computes-io/tests/test_pictures.py`; scenarios
-`specs/computes-pictures-in-files.md`.
+`specs/computes/pictures-in-files.feature`.

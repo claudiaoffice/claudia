@@ -27,8 +27,10 @@ Options: `--browser chromium|firefox|both` (default chromium; the specs only, th
 `--feature tables` (spec files whose name contains it), `--only composes` (older scripts, repeatable), `--headed` (show the
 browser), `--no-setup`, `--rebuild`, `--shots DIR`.
 
-**Today** the specs are written and reviewed but their step code does not exist yet, so `core` and `extended` say so and
-stop. `regression` works.
+**Today** the `@core` and `@extended` scenarios of `composes/tables.feature` that have step code run (11 of 97: inserting, the
+keyboard, rows and columns by key); the others skip and say which step is missing. Scenarios
+tagged `@pending:<id>` are expected to fail, and are reported as `xfailed`. `./run-e2e.sh --list` shows the counts.
+`$CLAUDIA_CHROMIUM` points at a Chromium that is already installed (a machine that cannot download Playwright's).
 
 ## Where the results are
 
