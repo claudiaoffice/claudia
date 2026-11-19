@@ -6,13 +6,13 @@
 // only body (D1201). Click selects (and a click into the words lets go again, in `TextEditor.vue`); dragging moves the
 // object, to where it is dropped (the paragraph nearest and the offset left over, D1023); the handles size it and the
 // handle above turns it (`ObjectFrame.vue`, the same in all three apps, D1221); the right button selects it and opens its
-// menu (D1225); double-click, Enter or F2 writes in a rendered container; Delete removes an object; the arrow keys up and
+// menu (D1225); double-click, Enter or F2 writes in a text box, a shape or a rendered container (D1232); Delete removes an object; the arrow keys up and
 // down hang it from the previous or next paragraph; Esc drops what is being tried.
 //
 // Two of these layers stand in a text (D1063): the one over the words, and one under them for the objects whose
 // text wrap is "behind the text". The words are drawn above that one, so a press there goes to the words; while Ctrl
 // is held, the layer comes up over the words and takes the press, and the pointer shows a hand (`grabbable`).
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { pointer, type BlockAnchor } from '~/lib/objects'
 import { descriptionOf } from '~/lib/text-container-names'
 import { objectName } from '~/lib/descriptions'
@@ -203,11 +203,30 @@ function select(id: string, event?: Event) {
   nextTick(() => (layer.value?.querySelector(`[data-object="${CSS.escape(id)}"]`) as HTMLElement | null)?.focus({ preventScroll: true }))
 }
 
+/** The words of a text box or a shape are written in an editor like the one on a slide (D1232); a rendered container has
+ * its own, for its definition. A picture, a chart and a table have no words (a table is written in its boxes). */
+const WRITTEN_IN = ['rendered', 'text', 'shape']
 function beginEdit(id: string) {
-  if (state.objects[id]?.kind !== 'rendered') return // only a rendered container is written in, here
+  if (!WRITTEN_IN.includes(state.objects[id]?.kind ?? '')) return
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   select(id)
   editing.value = id
+}
+const wordsEditor = ref<{ focus(): void } | null>(null)
+const setWordsEditor = (el: unknown) => {
+  wordsEditor.value = (el as { focus(): void } | null) ?? null
+}
+// the editor of words takes the keyboard whether it was asked for here or by the object's menu (Edit text)
+watch(editing, async (id) => {
+  if (!id || state.objects[id]?.kind === 'rendered') return
+  await nextTick()
+  wordsEditor.value?.focus()
+})
+/** Take the words of the editor as typing: only what differs from the box's words is written (step G). */
+async function commitWords(id: string, text: string) {
+  const current = state.objects[id]
+  done()
+  if (current?.paragraph && text !== current.paragraph.text) await session.writeWords(id, text)
 }
 function done() {
   editing.value = null
@@ -345,8 +364,16 @@ const turnable = (id: string) => !!state.objects[id] && canTurn(state.objects[id
         <svg v-if="looks[p.id]!.outline" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <path :d="looks[p.id]!.outline!.path" vector-effect="non-scaling-stroke" :style="looks[p.id]!.outline!.paint" />
         </svg>
-        <div v-if="looks[p.id]!.words" class="words" :style="{ ...looks[p.id]!.words!.css, ...looks[p.id]!.words!.area }">
-          <ParagraphWords :text="looks[p.id]!.words!.text" />
+        <div v-if="looks[p.id]!.words" class="words" :class="{ writing: editing === p.id }" :style="{ ...looks[p.id]!.words!.css, ...looks[p.id]!.words!.area }">
+          <ParagraphEditor
+            v-if="editing === p.id"
+            :ref="setWordsEditor"
+            :text="looks[p.id]!.words!.text"
+            :label="t('text of the object')"
+            @commit="commitWords(p.id, $event)"
+            @cancel="done"
+          />
+          <ParagraphWords v-else :text="looks[p.id]!.words!.text" />
         </div>
       </template>
       <ObjectFrame
@@ -430,6 +457,9 @@ const turnable = (id: string) => !!state.objects[id] && canTurn(state.objects[id
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   pointer-events: none;
+}
+.words.writing {
+  pointer-events: auto;
 }
 .unsupported {
   position: absolute;

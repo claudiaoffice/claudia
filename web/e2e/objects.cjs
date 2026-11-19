@@ -11,9 +11,9 @@
 //   server 2: ... --model claudia_composes:TextModel --port 8766 ...      server 3: ... --model claudia_creates:SlideModel --port 8767 ...
 //   node e2e/objects.cjs                       (APP=computes|composes|creates for one; CHROME=/path/to/chrome; SHOTS=dir)
 //
-// D1232 (tests first, not built yet): Edit text for the words of a text box and a shape in composes, and Format ▸ Rotate
-// (Rotate Right 90°, Rotate Left 90°, Rotate By…, with their keys) in composes and computes as in creates. Their steps
-// run with D1232=1 and are not in CI until the features are built; then the gate goes and they are the contract.
+// D1232: Edit text writes the words of a text box and a shape in composes as it does in creates (built), and Format ▸
+// Rotate (Rotate Right 90°, Rotate Left 90°, Rotate By…, with their keys) is in composes and computes as in creates
+// (tests first, not built yet: its steps run with D1232=1 and are not in CI until it is).
 //
 // `tests/test_object_kinds_agree.py` fails when a kind of object (`claudia_core.OBJECT_KINDS`) has no row in KINDS below:
 // a new kind of object comes with its row here, or says in its row why an app cannot have it.
@@ -91,7 +91,7 @@ const APPS = {
         return JSON.stringify([block ? [...document.querySelectorAll('[data-block]')].indexOf(block) : -1, s?.anchorOffset ?? -1])
       }),
     // D1232: the words of a box or a shape are written as typed (`write_words`), as in creates
-    editable: (kind) => kind === 'rendered' || (D1232 && kind !== 'image' && kind !== 'diagram'),
+    editable: (kind) => kind !== 'image' && kind !== 'diagram',
     wrap: true,
     grid: false,
   },

@@ -78,8 +78,8 @@ const items = computed<MenuItem[]>(() => {
         gapping.value = o.id
       },
     },
-    // only a rendered container is written in, here (the server has no step for the words of a box or a shape in a text)
-    { wrap, edit: o.kind === 'rendered' },
+    // a picture and a chart carry no words (D1232: the words of a box or a shape are written with `write_words`)
+    { wrap, edit: o.kind !== 'image' && o.kind !== 'diagram' },
   )
 })
 

@@ -229,7 +229,7 @@ Each patch assumes the earlier ones are applied; the last step of each is a merg
    paragraph and offset), the right button never reaches the words (`web/app/components/TextEditor.vue`), the object menu and
    its dialogs are in `web/app/components/TextObjectMenu.vue`, and `web/app/components/ObjectFrame.vue` is the handles for
    creates and composes. **Not built:** the table's width handle (a table's width is set in its options); the
-   bounding-box wrap of a turned object (D1226); Edit text for a text box or shape in a text (the server has no step for it).
+   bounding-box wrap of a turned object (D1226); (Edit text for a text box or shape in a text is built, D1232: `set_text`/`write_words` live in `shape_methods`, the editor is `ParagraphEditor.vue` in `TextContainers.vue`.)
    Follow-up of 2026-11-19 (D1229): the size cap, the table commands in Tools (`clients/linux/src/claudia_shell_gtk/manifest.py`),
    the workbook's wording, Delete on a selected table, and the object clipboard for pictures in all three apps
    (`web/app/lib/object-clipboard.ts`).

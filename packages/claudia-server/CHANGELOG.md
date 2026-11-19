@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `set_text` and `write_words` in composes (D1232): the words of a text box or a shape in a text, written as a person types
+  them. They moved from `creates` to `claudia_server.shape_methods`, next to `add_object`, so both apps have them; their
+  behaviour in creates is unchanged.
 - `add_rendering` takes `fit` (D1229): `w` and `h` are then only the most the container may take, and its first
   picture is shown at its own size if that is smaller (never below 20 units a side). Without it nothing changes.
 - Tables in a text over the wire (E9.32, D1212): `tables` (each definition with `used_by` and its derived `totals`),

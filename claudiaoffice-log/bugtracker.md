@@ -12,7 +12,7 @@ the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-che
 (`qa-recommendations.md`). Fifth round 2026-11-13 at `cfa2d91` (all feature branches merged: printing, lists, search, random numbers and
 scenarios, i18n, BITV): new items SEC-18, PERF-09 to PERF-11, UX-33 to UX-37, PROC-18 to PROC-22, CODE-17 to CODE-21,
 DOC-02; the `bitv` items re-checked as merged. Sixth round 2026-11-17 at `f150f0d` (stabilisation of `main`, no features): new items
-PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45, UX-46.
+PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45 to UX-47.
 
 ## How to add a bug
 
@@ -202,6 +202,7 @@ statement in the docs or on the website).
 | CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |
 | UX-45 | P3 | UX / composes | Resizing an object from its top or left handle is two history entries, not one (`resize_object` takes no offset in a text) | **new, open** |
 | UX-46 | P3 | UX / computes, composes | Edit ▸ Select Next Object (D1063, D1222) is not built: computes reaches an object only by Ctrl+Alt+PageDown/PageUp, which has no menu entry | **new, open** |
+| UX-47 | P3 | UX / computes, composes | Delete on a selected object or table works, but has no menu entry and no key in the key table in composes and computes (the hint "Del" is typed into the context menu) | **new, open** |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1991,6 +1992,19 @@ take Tab (`tabindex`) but the menu entry does not exist either. **Fix.** Add `ed
 computes manifests with the decided key and make the computes grid step through its objects with it.
 **Acceptance.** A person who uses no pointer can select, move (arrows), turn (Rotate By…) and delete an object in computes
 and composes (`objects.cjs`). Found while building D1230.
+
+### UX-47 · Delete of a selected object or table has no menu entry and no key in the key table · P3 · new, open
+In composes and computes, Delete on a selected object (and, in composes, a selected table) deletes it, and the context menu
+shows the hint "Del" (`web/app/lib/object-menu.ts`, written by hand). The manifest has no entry for it, so the key is in
+no key table (`keys.generated.ts`, `keyboard-shortcuts.md`), the desktop menus do not show it, and BITV ("every menu entry
+has a key") cannot be checked for it. Creates has `edit.delete` (`KeyOwner.VIEW`, Delete).
+**Fix.** Composes: `edit.delete` as in creates, acting on the selected object or table. Computes: Delete already clears
+cells, so either a second entry with the same key that acts on what is selected (object, else cells), or the cell entry
+is named *Clear Cells* and Delete *Delete Object* is a separate entry; the owner decides. The context menu takes its hint
+from the manifest instead of a typed string.
+**Acceptance.** Edit ▸ Delete (composes) / Edit ▸ Delete Object (computes) is in the web menu and both desktop menus,
+Delete is in the generated key table, and selecting an object and pressing it removes the object in one history entry
+(`objects.cjs`, step "delete"). Found while auditing rotation and key coverage 2026-11-19.
 
 ---
 

@@ -32,7 +32,9 @@ editor creates uses (`ParagraphEditor.vue`):** Edit text in the object's menu, E
 press; Enter keeps the words, Shift+Enter breaks the line, Esc leaves them; one history entry "Edit text", and the words
 that stay keep their writer. Computes has no text boxes or shapes; a container is written in with its own editor in all three.
 
-**Not in this decision.** The key of *Delete* (a selected object or table) in composes and computes: see the question in
-the chat of 2026-11-19.
+**Not in this decision.** The key of *Delete* (a selected object or table) in composes and computes: logged as UX-47.
+
+**State 2026-11-19.** Writing in a box is built (patch 9: server, editor, E2E step, specs in `specs/object-words.md`); turning
+(table refused, Format ▸ Rotate in composes and computes) follows in the next patch.
 
 **Notes.** Applies D181, D1024, D1221, D1224, D1225.

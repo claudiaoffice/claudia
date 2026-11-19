@@ -742,6 +742,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   protected tracksThings(): boolean {
     return false
   }
+  /** Write the words of an object (a text box or a shape on a slide or in a text) as a person typed them (step G): the
+   * server changes only what differs, so the words that stay keep who wrote them. One step in the history (D1232). */
+  async writeWords(id: string, text: string): Promise<boolean> {
+    return (await this.attempt('write_words', { id, text, base: this.state.revision })) !== false
+  }
+
   /** Is this thing known to be gone from the document as shown (a tag to it then says so)? */
   isGone(id: string): boolean {
     return this.tracksThings() && this.nameOf(id) === undefined

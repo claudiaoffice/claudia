@@ -46,7 +46,6 @@ def words_of(doc, object_id):
     return found["paragraph"]
 
 
-@NOT_BUILT
 @pytest.mark.parametrize("kind", ["text", "shape"])
 def test_the_words_of_a_box_in_a_text_are_written_as_typed_so_the_words_that_stay_keep_their_writer(paper, kind):
     box = add_box(paper, kind, **({"shape": "rectangle"} if kind == "shape" else {}))
@@ -60,7 +59,6 @@ def test_the_words_of_a_box_in_a_text_are_written_as_typed_so_the_words_that_sta
     assert paper.history_for("ben").undo_label == "Edit text"
 
 
-@NOT_BUILT
 def test_a_picture_in_a_text_has_no_words_to_write(paper):
     picture = call(
         paper,
@@ -68,8 +66,8 @@ def test_a_picture_in_a_text_has_no_words_to_write(paper):
         {
             "block": "b1",
             "offset": 1,
-            "w": 4,
-            "h": 4,
+            "w": 40,
+            "h": 40,
             "data": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
             "alt": "a dot",
             "source_name": "dot.gif",
