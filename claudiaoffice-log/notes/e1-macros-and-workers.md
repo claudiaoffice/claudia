@@ -1,4 +1,21 @@
-# The macro API and the worker pool (D239, D29, D37, D134, D436; proposal D1309)
+# The macro API and the worker pool (D239, D29, D37, D134, D436; parked as D1309)
+
+> **PARKED 2026-11-19.** The owner is not convinced by §3 and §4 and wants to think about what a macro is. Read it as
+> an analysis of the current state (§1), which stands, and a proposal that was **not accepted**. The owner's reading:
+> a macro, like a `UserFunction`, **extends the Claudia apps themselves**; it is not necessarily an automation tool
+> (which is also a good idea, as its own thing); and whether it should live **in the document**, so that documents
+> sent between servers do not meet missing code, is open. §3's idea of a macro as "a function that returns commands from a
+> snapshot, installed only on a server" would be wrong if the answer is "in the document". Decision: D1309.
+>
+> **Correction to §1 (re-checked 2026-11-19, by symbol, not by commit).** The owner's memory that `worker-pool` went into
+> `main` is half right. Pull request #7 (2026-11-06) brought the **pool itself** (`WorkerPool`, `Hub.workers`, D134,
+> E3.5's first slice). The **three commits of 2026-11-13** (heavy functions, `Deferred`, `FrozenGrid`,
+> `ApplyCalculated`, `HeavyDispatcher`, `replay_collecting`, `PoolBusy`) are **not in `main`**: none of those names occurs
+> anywhere in `packages/` on `main`, and `main`'s story E4.4 is still `todo`. The branch's decisions D291–D293 were
+> numbered on 2026-11-13, when `random-in-computes` already held D291–D299 on `main`, so the two **share numbers with
+> different meanings** (the very thing `ranges.md` exists to prevent). Merging it would need renumbering and resolving
+> five conflicting files. It is 208 commits behind `main`. Whether it is abandoned is the owner's call; its design is the
+> only record of how heavy functions were meant to work, so it should not be deleted unread.
 
 *Analysis and proposal for the owner's review, 2026-11-19, branch `e1-core`. Nothing here is built. D239 is the open
 "macro API for composes and creates"; the owner remembers worker-pool work done for computes and wants it properly

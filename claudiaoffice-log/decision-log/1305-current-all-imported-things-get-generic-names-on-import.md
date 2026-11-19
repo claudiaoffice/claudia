@@ -15,4 +15,4 @@ superseded-by: []
 
 Whatever the imported file does not name (D1303) is named **as part of the import**, in the language of the person who imports, with the same generic names new things get (D550): "Slide 4", "Text box 1", "Picture 2", "Chart 3". So an imported document has no thing without a name, and a tag in the chat can point at any of them at once; `name_unnamed` is then needed only for documents from before names.
 
-**Notes.** *Assumption (to be confirmed):* this covers slides, sheets, chart tabs and objects, **not paragraphs**: D554 keeps naming a paragraph when somebody first points at it, because a text has hundreds and a name for each would be noise in every list. The names are part of the one `core.Import` entry (D438), so redacting an import blanks them with the rest.
+**Notes.** *Amended 2026-11-19 by D1310:* paragraphs are included too ("Paragraph 1" and on), since every paragraph now has a name from the start; D554's "named when first pointed at" is replaced. The names are part of the one `core.Import` entry (D438), so redacting an import blanks them with the rest.

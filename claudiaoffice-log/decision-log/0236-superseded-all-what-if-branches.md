@@ -1,12 +1,12 @@
 ---
 id: D236
 title: "Branching what-ifs and scrubbing back in time: revision ids allow branches, but there is no API for free what-if branches, only the restore fork"
-status: undecided
+status: superseded
 applies-to: all
 date: 2026-11-10
 round: "Open design questions"
 supersedes: []
-superseded-by: []
+superseded-by: [D1308]
 ---
 
 # D236 · Branching what-ifs and scrubbing back in time: revision ids allow branches, but there is no API for free what-if branches, only the restore fork

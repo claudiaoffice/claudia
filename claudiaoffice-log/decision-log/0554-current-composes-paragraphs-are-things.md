@@ -11,6 +11,8 @@ superseded-by: []
 
 # D554 · A paragraph is a thing
 
+**Amended 2026-11-19 by D1310:** a paragraph is now named *when it is made*, generically ("Paragraph 1"), no longer when somebody first points at it; the rest stands. The way back (not built, below) is D1312.
+
 **Every paragraph of a text can have a name in the document's one namespace (D550), so that a tag in the chat can
 point at it, as named ranges became things in computes (D552). Its kind is what it is: `heading` (its style is the
 title or a heading, or is based on one), `item` (of a list) or `paragraph`. A paragraph is named when somebody first

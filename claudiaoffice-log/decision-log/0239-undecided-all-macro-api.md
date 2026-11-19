@@ -15,4 +15,5 @@ Macro API for composes and creates.
 
 *Carried over on 2026-11-10 from the decision log's "Open design questions" section, which had no numbers. Nothing here is decided yet.*
 
-*2026-11-19: the owner asked for an analysis and a suggestion; the proposal is D1309 (`notes/e1-macros-and-workers.md`). It touches the unfinished worker pool (D134, D291–D293, D436).*
+*2026-11-19: the owner asked for an analysis; the first proposal (`notes/e1-macros-and-workers.md`) was not accepted.*
+*2026-11-19: parked by the owner, who wants to think about what a macro is and whether it belongs in the document; see D1309.*
