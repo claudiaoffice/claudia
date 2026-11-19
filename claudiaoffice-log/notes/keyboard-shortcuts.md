@@ -58,6 +58,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Number Headings | Ctrl+Shift+Alt+B |  |
 | Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
+| Format | Name & describe… | Ctrl+Alt+D |  |
 | Format | Rotate ▸ Rotate Right 90° | Ctrl+Alt+. |  |
 | Format | Rotate ▸ Rotate Left 90° | Ctrl+Alt+, |  |
 | Format | Rotate ▸ Rotate By… | Ctrl+Shift+Alt+Z |  |
@@ -65,6 +66,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
 | View | Replay History… | Ctrl+Alt+Z |  |
+| View | Back where I was | Ctrl+Shift+B |  |
 | View | Dark Mode | Ctrl+Shift+Alt+D |  |
 | View | Page | Ctrl+Alt+P |  |
 | Tools | Ask the Assistant… | Ctrl+Alt+J |  |
@@ -146,13 +148,14 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Number Headings | Ctrl+Shift+Alt+B |  |
 | Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
-| Format | Describe Object… | Ctrl+Alt+D |  |
+| Format | Name & describe… | Ctrl+Alt+D |  |
 | Format | Rotate ▸ Rotate Right 90° | Ctrl+Alt+. |  |
 | Format | Rotate ▸ Rotate Left 90° | Ctrl+Alt+, |  |
 | Format | Rotate ▸ Rotate By… | Ctrl+Shift+Alt+Z |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
 | View | Replay History… | Ctrl+Alt+Z |  |
+| View | Back where I was | Ctrl+Shift+B |  |
 | View | Dark Mode | Ctrl+Shift+Alt+D |  |
 | Tools | Ask the Assistant… | Ctrl+Alt+J |  |
 | Tools | Random Generator… | Ctrl+Alt+R |  |
@@ -228,13 +231,14 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Number All Slide Titles | Ctrl+Shift+Alt+B |  |
 | Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
-| Format | Describe Object… | Ctrl+Alt+D |  |
+| Format | Name & describe… | Ctrl+Alt+D |  |
 | Format | Rotate ▸ Rotate Right 90° | Ctrl+Alt+. |  |
 | Format | Rotate ▸ Rotate Left 90° | Ctrl+Alt+, |  |
 | Format | Rotate ▸ Rotate By… | Ctrl+Shift+Alt+Z |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
 | View | Replay History… | Ctrl+Alt+Z |  |
+| View | Back where I was | Ctrl+Shift+B |  |
 | View | Dark Mode | Ctrl+Shift+Alt+D |  |
 | View | Show Grid | Ctrl+Alt+G |  |
 | View | Present from the First Slide | F5 |  |
