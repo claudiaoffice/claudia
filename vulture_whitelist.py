@@ -19,6 +19,7 @@ used.protocol  # FastAPI route /api/protocol in create_app
 used.live  # FastAPI WebSocket route in create_app
 used.app_protocol  # FastAPI route /api/{app}/protocol (D431)
 used.app_documents  # FastAPI route /api/{app}/docs (D431)
+used.set_security  # FastAPI route PUT /api/admin/settings/security (admin_api, D1267)
 used.fonts_page  # FastAPI route GET /api/admin/fonts (admin_fonts, D1041)
 used.hold_file  # FastAPI route POST /api/admin/fonts/files (admin_fonts)
 used.let_go  # FastAPI route DELETE /api/admin/fonts/files (admin_fonts, CODE-49)
@@ -247,3 +248,4 @@ used._targets  # structure_methods: table.method("reference_targets")
 used._insert_reference  # structure_methods: table.method("insert_reference")
 used._set_field  # structure_methods: table.method("set_field")
 used.source_id  # TableSource.source_id: what a linked table reads (E9.33, D1209); tests/test_tables.py
+used._empty_cache  # autouse pytest fixture (packages/claudia-container/tests/test_warm_login.py)

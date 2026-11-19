@@ -53,9 +53,12 @@ def test_a_step_that_is_not_there_is_a_command_error(deck):
     assert "main:9" in str(caught.value.message)
 
 
-def test_a_viewer_may_look(deck):
+def test_a_viewer_may_not_look(deck):
+    """The steps of the history are behind the history key, which a viewer does not hold (D1261)."""
     add_text(deck)
-    assert call(deck, "peek_revision", {"revision": "main:1"}, account=VERA)["revision"] == "main:1"
+    with pytest.raises(RequestError) as refused:
+        call(deck, "peek_revision", {"revision": "main:1"}, account=VERA)
+    assert refused.value.code == "forbidden"
 
 
 def test_looking_changes_nothing(deck):

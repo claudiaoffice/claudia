@@ -68,9 +68,12 @@ def test_nothing_but_looking_is_possible(deck, method):
     assert len(call(deck, "slide", {"slide": "s1"})["objects"]) == 1
 
 
-def test_a_viewer_may_look_back(deck):
+def test_a_viewer_may_not_look_back(deck):
+    """The document as it was is built from the history, which a viewer's key does not open (D1261)."""
     add_text(deck)
-    assert as_of(deck, "main:1", "slides", account=VERA)
+    with pytest.raises(RequestError) as refused:
+        as_of(deck, "main:1", "slides", account=VERA)
+    assert refused.value.code == "forbidden"
 
 
 def test_the_log_is_the_history_up_to_that_step(deck):

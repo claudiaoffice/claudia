@@ -29,6 +29,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
+from claudia_container import Domain
 from claudia_core import (
     ChatPosted,
     CommandLog,
@@ -44,6 +45,7 @@ from claudia_core import (
 from claudia_core.clock import utc_now
 from claudia_render import RenderFailed, ToolUnavailable
 
+from .audience import may_read, shape_for
 from .auth import AI_COLOR, ROLES, Account, UserDirectory
 from .i18n import localized, msg
 from .protocol import (
@@ -215,7 +217,15 @@ class Connection:
 
     # -- outgoing -----------------------------------------------------------------------
     def deliver(self, message: dict) -> None:
-        """Send one frame. A dead or slow client never breaks the edit that is being broadcast."""
+        """Send one frame. A dead or slow client never breaks the edit that is being broadcast.
+
+        A pushed event is shaped for this person's role first (D1261): a viewer gets the content, the names and presence
+        and nothing from the history or the chat."""
+        if "event" in message:
+            shaped = shape_for(self.account.role, message["event"], message["data"])
+            if shaped is None:
+                return
+            message = {**message, "data": shaped}
         try:
             self._send(json.dumps(message, allow_nan=False, separators=(",", ":")))
         except Exception:
@@ -225,6 +235,7 @@ class Connection:
         """What a client needs to start: who it is, where the document is, who else is here."""
         doc = self.hosted.document
         revision = doc.revision
+        history = may_read(self.account.role, Domain.HISTORY)  # a viewer's welcome carries none of it (D1261)
         return {
             "protocol": PROTOCOL_VERSION,
             "user": self.account.user,
@@ -245,13 +256,23 @@ class Connection:
                 for hold in doc.presence.holds()
                 if hold.owner != self.account.user
             ],
-            "checkpoints": [{"number": c.number, "label": c.label, "author": c.author} for c in doc.checkpoints],
-            "lines": [
-                {"name": x.name, "head": None if x.head is None else x.head.to_data(), "active": x.active}
-                for x in doc.lines()
-            ],
-            "proposal": None if (p := self.hosted.restore.open_proposal) is None else p.to_data(),
-            "returned": None if self.account.system else self.hosted.restore.notice_for(self.account.user, doc.branch),
+            "checkpoints": (
+                [{"number": c.number, "label": c.label, "author": c.author} for c in doc.checkpoints] if history else []
+            ),
+            "lines": (
+                [
+                    {"name": x.name, "head": None if x.head is None else x.head.to_data(), "active": x.active}
+                    for x in doc.lines()
+                ]
+                if history
+                else []
+            ),
+            "proposal": None if not history or (p := self.hosted.restore.open_proposal) is None else p.to_data(),
+            "returned": (
+                None
+                if self.account.system or not history
+                else self.hosted.restore.notice_for(self.account.user, doc.branch)
+            ),
         }
 
     def person(self) -> dict:
@@ -259,6 +280,28 @@ class Connection:
         return {"id": self.id, "user": self.account.user, "color": self.color}
 
     # -- incoming -----------------------------------------------------------------------
+    def hashing_for(self, raw: str | bytes) -> Callable[[], None] | None:
+        """The slow work of this request frame, ready to run in a thread, or ``None`` if it has none (SEC-21).
+
+        A request that confirms a password hashes it, which takes a good fraction of a second; done inside ``handle``
+        that would stop every other window of the server. The transport runs what this returns first, in a worker
+        thread behind its hashing cap, and ``handle`` then finds the hashes done. A directory that cannot hash ahead
+        (``WarmableDirectory``) has nothing to run, and ``handle`` hashes as it always did."""
+        hosted = self.hosted
+        warm = getattr(hosted.directory, "warm", None)
+        if warm is None:
+            return None
+        pairs = hosted.methods.hashes_of(raw, self.account.user)
+        if not pairs:
+            return None
+        doc_id = hosted.id
+
+        def work() -> None:
+            for name, password in pairs:
+                warm(doc_id, name, password)
+
+        return work
+
     def handle(self, raw: str | bytes) -> None:
         """Process one request frame; exactly one response frame is sent for it."""
         hosted = self.hosted

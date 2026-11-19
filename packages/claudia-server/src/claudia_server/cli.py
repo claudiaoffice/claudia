@@ -80,6 +80,7 @@ from .hosts import AllowedHosts, is_loopback, machine_names
 from .hub import DEFAULT_MAX_DOCUMENTS, DocumentProvider, Hub, MemoryProvider
 from .hyphenation import HyphenationService
 from .idle import IdleWatch
+from .kdf_policy import KdfPolicy
 from .protocol import Limits
 from .rasterise import svg_rasteriser
 from .rendered import RenderDesk
@@ -103,6 +104,13 @@ class Plan:
     redirect_from: int | None = None
     closers: list[Callable[[], None]] = field(default_factory=list)  # what to stop when the server has stopped
     idle: IdleWatch | None = None  # with --exit-when-idle: told how to stop the server once it runs (main)
+    kdf: KdfPolicy | None = None  # what hashing costs for new sealed documents: measured once the server runs (D1267)
+
+    def start(self) -> None:
+        """Begin what only makes sense while the server runs: measuring the machine for the hashing cost, in the
+        background, so that the server is up at once."""
+        if self.kdf is not None:
+            self.kdf.start()
 
     def close(self) -> None:
         """Stop what the server started besides itself (the language model's worker, the lock on its folder)."""
@@ -495,13 +503,15 @@ def _build_assistant(
 
 
 def _storage(
-    args: argparse.Namespace, model: type[DocumentModel], one_app: bool
+    args: argparse.Namespace, model: type[DocumentModel], one_app: bool, kdf: KdfPolicy | None = None
 ) -> tuple[DocumentProvider, UserDirectory]:
     """Where an app's documents (and, for ``--plain-dir``, their own users) live: sealed files, plain files, or
     memory. Each app has its own place, ``DIR/<app>`` (D431); a server of the old kind (``--model``) keeps them
     directly in ``DIR`` (D433)."""
     if args.dir:
-        sealed = SealedDocuments(Path(args.dir) if one_app else Path(args.dir) / model.app, model)
+        sealed = SealedDocuments(
+            Path(args.dir) if one_app else Path(args.dir) / model.app, model, kdf=None if kdf is None else kdf.current
+        )
         return sealed, sealed
     if args.plain_dir:
         folder = Path(args.plain_dir) if one_app else Path(args.plain_dir) / model.app
@@ -591,15 +601,33 @@ def _suite(
     library: ShapeLibrary | None,
     assistants: dict[str, Callable[[], Assistant] | None],
     hub_options: dict[str, Any],
+    kdf: KdfPolicy | None = None,
 ) -> Suite:
     """The server's apps (D430): for each document model its store, its methods, its assistant and its hub."""
     modules = []
     for model in models:
-        provider, directory = _storage(args, model, one_app)
+        provider, directory = _storage(args, model, one_app, kdf)
         methods = methods_for(model, shapes=library)
         hub = Hub(provider, methods=methods, assistant=assistants[model.app], **hub_options)
         modules.append(Module(hub, directory))
     return Suite(modules, max_documents=hub_options["max_documents"])
+
+
+def _kdf_policy(args: argparse.Namespace, settings: ServerSettings) -> KdfPolicy | None:
+    """What hashing costs for new sealed documents, measured once the server runs (D1267); none for documents that are
+    not sealed."""
+    return KdfPolicy(settings.security.kdf_target_seconds) if args.dir else None
+
+
+def _kdf_banner_lines(kdf: KdfPolicy | None) -> list[str]:
+    """What the start-up banner says about the hashing of new documents."""
+    if kdf is None:
+        return []
+    seconds = kdf.describe()["target_seconds"]
+    return [
+        f"password hashing for new documents: measured at start, about {seconds:g} s each"
+        " (Server settings > Security); existing documents keep theirs"
+    ]
 
 
 def _storage_banner_line(args: argparse.Namespace, one_app: bool) -> str:
@@ -623,7 +651,6 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     hosts = _hosts(args)
     state_dir, settings, admins = _server_state(args)
     secret = _access_secret(args, settings)
-    max_documents = args.max_documents if args.max_documents is not None else settings.max_documents
     _check_places(args)
     limits = Limits()
     library = _shapes(args, models)
@@ -635,11 +662,12 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     hub_options = {
         "limits": limits,
         "allow_create": not args.no_create,
-        "max_documents": max_documents,
+        "max_documents": args.max_documents if args.max_documents is not None else settings.max_documents,
         "max_connections": args.max_connections,
         "renderings": renderings,
     }
-    suite = _suite(args, models, one_app, library=library, assistants=assistants, hub_options=hub_options)
+    kdf = _kdf_policy(args, settings)
+    suite = _suite(args, models, one_app, library=library, assistants=assistants, hub_options=hub_options, kdf=kdf)
     idle = IdleWatch(args.exit_when_idle) if args.exit_when_idle else None
     exposed = not is_loopback(args.host)
     admin = AdminContext(
@@ -650,6 +678,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         ai=ai,
         exposed=exposed,
         fonts=fonts,
+        kdf=kdf,
     )
     app = create_app(
         suite,
@@ -666,8 +695,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         hyphenation=hyphenation,
         idle=idle,
     )
-    scheme = "http" if certificate is None else "https"
-    ws_scheme = "ws" if certificate is None else "wss"
+    scheme, ws_scheme = ("http", "ws") if certificate is None else ("https", "wss")
     banner = [
         f"serving {', '.join(suite.apps)} on {ws_scheme}://{args.host}:{args.port}/api/<app>/docs/<id>/ws",
     ]
@@ -684,6 +712,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         else f"no web app: {scheme}://{args.host}:{args.port}/ explains how to build and serve it"
     )
     banner.append(_storage_banner_line(args, one_app))
+    banner += _kdf_banner_lines(kdf)
     banner.append(fonts.summary())
     banner += [f"  not used, {problem.path}: {problem.reason}" for problem in fonts.catalogue.problems]
     banner += rendering_lines
@@ -708,7 +737,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
             ai.runner.close()
 
     closers = [_close_ai] if lock is None else [_close_ai, lock.release]
-    return Plan(app, options, banner, args.redirect_port, closers, idle)
+    return Plan(app, options, banner, args.redirect_port, closers, idle, kdf)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -729,6 +758,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
     import uvicorn
 
+    plan.start()
     for line in plan.banner:
         print(line, flush=True)
     server = uvicorn.Server(uvicorn.Config(plan.app, **plan.uvicorn_options))

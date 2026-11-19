@@ -14,6 +14,7 @@ the one setting that is more than a value to remember — changing the AI model 
 reason for this module to know what a ``Gateway`` is)."""
 
 import asyncio
+import math
 import secrets
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -21,6 +22,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 from claudia_ai import ModelError, ModelRunner, OpenVinoModel
 from claudia_core import DocumentModel
@@ -33,6 +35,8 @@ from .admin_sessions import AdminSessions
 from .apps import model_assistant_for, stand_in_assistant_for
 from .assistant import Assistant
 from .fonts import FontService
+from .kdf_policy import KdfPolicy, check_target
+from .login_throttle import LoginThrottle
 from .server_settings import AiSettings, ServerSettings, TypesetSettings, save_admins, save_settings
 from .suite import Suite
 
@@ -119,6 +123,9 @@ class AdminContext:
     exposed: bool
     fonts: FontService | None = None
     """The server's fonts, for Server settings ▸ Fonts (``admin_fonts``); ``None`` for a server without them."""
+    kdf: KdfPolicy | None = None
+    """What password hashing costs for new documents, for Server settings ▸ Security (D1267); ``None`` for a server
+    that keeps no documents of its own."""
 
 
 def _bearer_token(request: Request) -> str | None:
@@ -144,7 +151,18 @@ def _diagnose_typeset(typeset: TypesetSettings) -> dict[str, dict]:
     return result
 
 
-def _identity_routes(router: APIRouter, context: AdminContext, require_admin: Callable) -> None:
+ADMIN_LOGIN = (
+    "\x00admin"  # the "document" of the administrators' sign-in in the login counters: no document is called so
+)
+
+
+def _identity_routes(
+    router: APIRouter,
+    context: AdminContext,
+    require_admin: Callable,
+    throttle: LoginThrottle | None,
+    address_of: Callable[[Request], str],
+) -> None:
     """``status``, ``setup``, ``login``, ``logout``, ``me``: becoming and being an administrator."""
     Signedin = Annotated[str, Depends(require_admin)]
 
@@ -181,12 +199,25 @@ def _identity_routes(router: APIRouter, context: AdminContext, require_admin: Ca
         return {"token": token, "admin": _account_dict(account, signed_in_as=account.name)}
 
     @router.post("/login")
-    async def login(body: JsonBody):
-        """Sign in as an existing administrator."""
+    async def login(body: JsonBody, request: Request):
+        """Sign in as an existing administrator. Failed sign-ins wait longer each time (D1266): inside a wait the
+        answer is 429 with the seconds in ``Retry-After`` and ``retry_after``, before any hashing."""
         name, password = body.get("name"), body.get("password")
+        address = address_of(request)
+        if throttle is not None and (wait := throttle.check(address, ADMIN_LOGIN, name)) > 0:
+            seconds = max(1, math.ceil(wait))
+            return JSONResponse(
+                status_code=429,
+                content={"detail": f"too many tries; try again in {seconds} s", "retry_after": seconds},
+                headers={"Retry-After": str(seconds)},
+            )
         account = await asyncio.to_thread(context.admins.verify, name, password)
         if account is None:
+            if throttle is not None:
+                throttle.failed(address, ADMIN_LOGIN, name)
             raise HTTPException(401, "wrong name or password")
+        if throttle is not None:
+            throttle.succeeded(address)
         token = context.sessions.issue(account.name)
         return {"token": token, "admin": _account_dict(account, signed_in_as=account.name)}
 
@@ -248,6 +279,14 @@ def _admin_routes(router: APIRouter, context: AdminContext, require_admin: Calla
         _save()
 
 
+def settings_view(context: AdminContext) -> dict:
+    """What a settings page shows: the public settings, how the LaTeX programs were found, and what password hashing
+    costs for new documents now (``None`` for a server with no sealed documents)."""
+    kdf = context.kdf.describe() if context.kdf is not None else None
+    diagnosis = _diagnose_typeset(context.settings.typeset)
+    return {**context.settings.to_public_dict(), "typeset_diagnosis": diagnosis, "kdf": kdf}
+
+
 def _settings_routes(
     router: APIRouter,
     suite: Suite,
@@ -259,8 +298,7 @@ def _settings_routes(
     Signedin = Annotated[str, Depends(require_admin)]
 
     def _dict() -> dict:
-        diagnosis = _diagnose_typeset(context.settings.typeset)
-        return {**context.settings.to_public_dict(), "typeset_diagnosis": diagnosis}
+        return settings_view(context)
 
     def _save() -> None:
         save_settings(context.state_dir, context.settings)
@@ -334,9 +372,37 @@ def _settings_routes(
         return _dict()
 
 
-def admin_router(suite: Suite, set_access_secret: Callable[[str | None], None], context: AdminContext) -> APIRouter:
+def _security_routes(router: APIRouter, context: AdminContext, require_admin: Callable) -> None:
+    """Server settings ▸ Security (D1267): how slow password hashing is for the documents made from now on."""
+    Signedin = Annotated[str, Depends(require_admin)]
+
+    @router.put("/settings/security")
+    async def set_security(admin: Signedin, body: JsonBody):
+        try:
+            target = check_target(body.get("kdf_target_seconds"))
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        context.settings.security.kdf_target_seconds = target
+        context.settings.note_changed("security", admin)
+        save_settings(context.state_dir, context.settings)
+        if context.kdf is not None:
+            context.kdf.retarget(target)
+        return settings_view(context)
+
+
+def admin_router(
+    suite: Suite,
+    set_access_secret: Callable[[str | None], None],
+    context: AdminContext,
+    *,
+    throttle: LoginThrottle | None = None,
+    address_of: Callable[[Request], str] = lambda request: request.client.host if request.client else "",
+) -> APIRouter:
     """The ``/api/admin`` routes, closed over ``suite`` (the server's apps), ``context`` (one per server) and
-    ``set_access_secret`` (``Gateway.set_secret``, passed in rather than imported: see the module docstring)."""
+    ``set_access_secret`` (``Gateway.set_secret``, passed in rather than imported: see the module docstring).
+
+    With a ``throttle`` (the gateway's, so that an address has one count for both doors) failed sign-ins wait longer
+    each time (D1266); ``address_of`` says who a request is, behind a proxy too (D1275)."""
     router = APIRouter(prefix="/api/admin")
 
     def require_admin(request: Request) -> str:
@@ -345,9 +411,10 @@ def admin_router(suite: Suite, set_access_secret: Callable[[str | None], None], 
             raise HTTPException(401, "sign in as an administrator first", headers={"WWW-Authenticate": "Bearer"})
         return admin
 
-    _identity_routes(router, context, require_admin)
+    _identity_routes(router, context, require_admin, throttle, address_of)
     _admin_routes(router, context, require_admin)
     _settings_routes(router, suite, set_access_secret, context, require_admin)
+    _security_routes(router, context, require_admin)
     if context.fonts is not None:
         font_admin_routes(router, context.fonts, require_admin, lambda: context.settings.access_secret is not None)
     return router

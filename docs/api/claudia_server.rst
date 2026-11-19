@@ -12,6 +12,10 @@ Application
 .. autofunction:: claudia_server.create_app
 .. autoclass:: claudia_server.Gateway
 .. autoclass:: claudia_server.IdleWatch
+.. autoclass:: claudia_server.LoginThrottle
+   :members:
+.. autoclass:: claudia_server.KdfPolicy
+   :members:
 
 Apps on one server
 ------------------
@@ -150,6 +154,7 @@ Users
 .. autoclass:: claudia_server.Account
 .. autoclass:: claudia_server.Credentials
 .. autoclass:: claudia_server.UserDirectory
+.. autoclass:: claudia_server.WarmableDirectory
 .. autoclass:: claudia_server.ScryptDirectory
 .. autoclass:: claudia_server.AuthRefused
 
@@ -179,6 +184,7 @@ Server settings ▸ Fonts (E3.13 f, D1041): ``/api/admin/fonts``, its ``files``,
 .. autodata:: claudia_server.admin_fonts.HOLD_SECONDS
 .. autoclass:: claudia_server.ServerSettings
 .. autoclass:: claudia_server.AiSettings
+.. autoclass:: claudia_server.SecuritySettings
 .. autoclass:: claudia_server.TypesetSettings
 .. autoclass:: claudia_server.server_settings.RenderSettings
 .. autoclass:: claudia_server.Changed

@@ -78,6 +78,7 @@ from claudia_container import (
     transfer_owner,
     unlock,
     unlock_with_recovery,
+    warm,
     write_original,
 )
 from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Import, Snapshot
@@ -205,17 +206,18 @@ def _snapshot_from(data: bytes | None) -> Snapshot | None:
 class SealedDocuments:
     """``DocumentProvider`` and ``UserDirectory`` over a folder of document files (see the module text).
 
-    ``kdf`` sets the cost of the password hashing of *new* documents (default: the container's); existing ones keep
-    theirs. ``key_ttl`` is how long after a login the keys wait for the document to be opened. ``pack_every`` is after
-    how many changes an open document is packed into its file (see the module text). ``options`` go to every
-    ``Document`` (clock, lock clock)."""
+    ``kdf`` sets the cost of the password hashing of *new* documents (default: the container's), either as one fixed
+    value or as a function asked each time a document is made (``KdfPolicy.current``); existing ones keep theirs.
+    ``key_ttl`` is how long after a login the keys wait for the document to be opened. ``pack_every`` is after how
+    many changes an open document is packed into its file (see the module text). ``options`` go to every ``Document``
+    (clock, lock clock)."""
 
     def __init__(
         self,
         root: str | Path,
         model_cls: type[DocumentModel],
         *,
-        kdf: KdfParams | None = None,
+        kdf: KdfParams | Callable[[], KdfParams] | None = None,
         key_ttl: float = 60.0,
         transfer_ttl: float = 300.0,
         pack_every: int = DEFAULT_PACK_EVERY,
@@ -244,6 +246,11 @@ class SealedDocuments:
         return self.model_cls.app
 
     # -- where things are ---------------------------------------------------------------------
+    def _new_kdf(self) -> KdfParams | None:
+        """The cost of hashing for a document made now: fixed, or asked from a policy that measures the machine
+        (``kdf_policy.py``); ``None`` is the container's default."""
+        return self._kdf() if callable(self._kdf) else self._kdf
+
     def _file(self, doc_id: str) -> Path:
         return self.root / "docs" / f"{_check_id(doc_id)}{SUFFIX}"
 
@@ -295,7 +302,7 @@ class SealedDocuments:
             path = None
         if path is None or not path.is_file():
             # Hash anyway, so the time does not tell whether the document exists (SEC-04).
-            derive_login_material(password, name, b"\0" * 16, self._kdf or KdfParams.default())
+            derive_login_material(password, name, b"\0" * 16, self._new_kdf() or KdfParams.default())
             return None
         try:
             unlocked = unlock(path, name, password)
@@ -307,6 +314,20 @@ class SealedDocuments:
         if set(unlocked.keys) == set(Domain):
             self._keep_pending(doc_id, unlocked.keys)
         return Account(unlocked.name, unlocked.role.value)
+
+    def warm(self, doc_id: str, name: str, password: str) -> None:
+        """Hash ``name``'s ``password`` for this document ahead of the call that needs it (SEC-21): the server does
+        it in a worker thread, so the call itself, which runs on its event loop, finds the result and does not hash.
+        Whatever is wrong (no such document, an unreadable file, something that is no text) is left for that call to
+        say."""
+        if not (isinstance(name, str) and isinstance(password, str)):
+            return
+        try:
+            path = self._file(doc_id)
+            if path.is_file():
+                warm(path, name, password)
+        except (ValueError, ContainerError, OSError):
+            return
 
     def add_user(self, doc_id: str, name: str, password: str, role: str = "editor") -> Account:
         """Add a person. The first one of a document is its owner and makes the document file.
@@ -334,7 +355,7 @@ class SealedDocuments:
             app=self.model_cls.app,
             owner=account.user,
             password=password,
-            kdf=self._kdf,
+            kdf=self._new_kdf(),
         )
         self._keep_pending(doc_id, unlocked.keys)
         return Account(unlocked.name, "owner")

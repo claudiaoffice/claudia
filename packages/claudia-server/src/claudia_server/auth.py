@@ -220,6 +220,16 @@ class SealedCopyDirectory(Protocol):
         refusal for a wrong name)."""
 
 
+@runtime_checkable
+class WarmableDirectory(Protocol):
+    """A directory whose password hashing can be done ahead of the call that needs it (SEC-21)."""
+
+    def warm(self, doc_id: str, name: str, password: str) -> None:
+        """Do the slow hashing of ``name``'s ``password`` for this document now, so that the next call with them (any of
+        the directory's methods that confirm a password) finds it done. It never raises for a wrong password or a
+        missing document, and changes nothing."""
+
+
 @dataclass(frozen=True)
 class _Record:
     account: Account

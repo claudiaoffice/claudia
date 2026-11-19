@@ -5,6 +5,37 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-11-19
+
+### Added
+- A viewer is shown the content and nothing of the history or the chat (D1261, SEC-17). `claudia_server.audience`
+  (`EVENT_RULES`, `EPHEMERAL_RULES`, `shape_for`, `may_read`): every pushed event is classified once as content, history
+  or chat, and each connection is sent what its role's keys open; owners and editors get everything, a viewer gets
+  content events unchanged, a `command` event reduced to `{type, revision}`, a `branch` event to `{type}`, and nothing
+  from history, checkpoints, chat, redactions or restores. What nobody classified goes to owners and editors only.
+  `welcome` for a viewer carries no checkpoints, lines, proposal or returned text.
+- `MethodTable.method(..., reads="content"|"history"|"chat")`, `Method.reads` and `describe()["reads"]`: a method says
+  which part of the document it shows, and a viewer who calls one that reads the history or the chat is refused with
+  `forbidden`. 12 methods read the history, 1 the chat (`chat_log`); `tests/method_reads.json` pins the list.
+- Failed logins wait (D1266, SEC-11): `LoginThrottle` (`login_throttle.py`). Three free tries, then 1, 2, 4, 8 … seconds,
+  at most 30 per address and 10 per document and name; forgotten after 15 quiet minutes; in memory, so a restart forgets
+  it (D1276). A login inside a wait is refused before any hashing with the error code `too_many_tries`, close code 4429
+  and `retry_after` (whole seconds); the administrator's sign-in answers 429 with `Retry-After` and `retry_after`.
+  `create_app(login_throttle=...)`, `Gateway.login_throttle`.
+- Requests that confirm a password no longer hash on the event loop (SEC-21): `set_details`, `download_claudia`,
+  `change_password`, `add_user`, `leave`, `delete_document`, `propose_owner` and `accept_owner` say so with
+  `Method.hashes`, and the gateway hashes in a worker thread behind its hashing cap before handling them
+  (`Gateway.prepare`, `Connection.hashing_for`, `MethodTable.hashes_of`, `WarmableDirectory.warm`,
+  `SealedDocuments.warm`).
+- The cost of password hashing for new documents is measured by the server at start, in the background, to take about
+  0.75 s (D1267): `KdfPolicy` (`kdf_policy.py`), `SecuritySettings`, `PUT /api/admin/settings/security
+  {kdf_target_seconds}` (0.1 to 30), and `kdf` in `GET /api/admin/settings`. `SealedDocuments(kdf=...)` takes a function
+  as well as a value. Documents made before keep their cost.
+
+### Changed
+- A viewer's `ping` is how a window learns the revision; the history, the log and the checkpoints are not asked for.
+- The `sealed` refusal of a viewer who is first at a sealed document now says what will happen (D1262).
+
 ## [0.38.0] - 2026-11-19
 
 ### Added

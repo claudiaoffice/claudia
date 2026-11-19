@@ -75,6 +75,14 @@ class RenderSettings:
 
 
 @dataclass
+class SecuritySettings:
+    """How slow password hashing should be for new documents, in seconds on this machine (D1267). The server measures
+    what that means for it (``kdf_policy.py``); documents made before keep the cost they were made with."""
+
+    kdf_target_seconds: float = 0.75
+
+
+@dataclass
 class ServerSettings:
     """The mutable part of a server's configuration, plus who last changed each part of it. Nothing here is a
     document, and nothing here is kept per document."""
@@ -84,6 +92,7 @@ class ServerSettings:
     ai: AiSettings = field(default_factory=AiSettings)
     typeset: TypesetSettings = field(default_factory=TypesetSettings)
     render: RenderSettings = field(default_factory=RenderSettings)
+    security: SecuritySettings = field(default_factory=SecuritySettings)
     changed: dict[str, Changed] = field(default_factory=dict)
 
     def note_changed(self, key: str, by: str) -> None:
@@ -98,6 +107,7 @@ class ServerSettings:
             "ai": asdict(self.ai),
             "typeset": asdict(self.typeset),
             "render": asdict(self.render),
+            "security": asdict(self.security),
             "changed": {key: asdict(value) for key, value in self.changed.items()},
         }
 
@@ -110,6 +120,7 @@ class ServerSettings:
             "ai": asdict(self.ai),
             "typeset": asdict(self.typeset),
             "render": asdict(self.render),
+            "security": asdict(self.security),
             "changed": {key: asdict(value) for key, value in self.changed.items()},
         }
 
@@ -122,6 +133,7 @@ class ServerSettings:
             ai=AiSettings(**data.get("ai", {})),
             typeset=TypesetSettings(**data.get("typeset", {})),
             render=RenderSettings(**data.get("render", {})),
+            security=SecuritySettings(**data.get("security", {})),
         )
         settings.changed = {key: Changed(**value) for key, value in data.get("changed", {}).items()}
         return settings

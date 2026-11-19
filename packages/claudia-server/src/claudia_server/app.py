@@ -27,7 +27,8 @@ true if the document was made by this very ``hello``, so that the client can sho
 the connection speaks the protocol of ``protocol.py`` and receives events. With ``create: true`` for a document that
 does not exist, the document is made and the person becomes its owner. A wrong password, an unknown name and a
 document that does not exist are the same answer. Failures to get that far close the socket with a code: 4400 bad
-request, 4401 unauthorized, 4404 no such document, 4408 no hello in time, 4403 foreign origin or host, 4423 the
+request, 4401 unauthorized, 4404 no such document, 4408 no hello in time, 4403 foreign origin or host, 4429 too many
+failed tries (the error carries ``retry_after``, the seconds to wait; nothing is locked), 4423 the
 document is sealed (nobody who holds all its keys has opened it since the server started: a viewer tries again later),
 1013 too many connections, too many people waiting to be let in, a full server or a client that is too slow.
 
@@ -60,9 +61,11 @@ import hashlib
 import hmac
 import json
 import logging
+import math
 from collections.abc import Callable, Iterable
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket
@@ -87,6 +90,7 @@ from .hub import Hub, HubError, same_document_message
 from .hyphenation import HyphenationService, hyphenation_router
 from .i18n import localized, msg
 from .idle import IdleMiddleware, IdleWatch
+from .login_throttle import LoginThrottle
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, WebScriptHashes
 from .suite import Module, Suite
@@ -248,6 +252,7 @@ class Gateway:
         max_waiting: int = DEFAULT_MAX_WAITING,
         max_waiting_per_address: int = DEFAULT_MAX_WAITING_PER_ADDRESS,
         proxy_hops: int = 0,
+        login_throttle: LoginThrottle | None = None,
     ):
         if access_secret is not None and len(access_secret) < MIN_ACCESS_SECRET:
             raise ValueError(f"the access secret needs at least {MIN_ACCESS_SECRET} characters")
@@ -259,6 +264,21 @@ class Gateway:
         self._hashing = asyncio.Semaphore(max_hashing)
         self._waiting = _Waiting(max_waiting, max_waiting_per_address)
         self.client_address = ClientAddress(proxy_hops)  # who a connection is, behind a proxy too (D1275)
+        self.login_throttle = login_throttle or LoginThrottle()  # failed logins wait longer each time (D1266)
+
+    async def prepare(self, connection, raw: str | bytes) -> None:
+        """Do the slow hashing a request frame needs before ``connection.handle`` runs it (SEC-21).
+
+        In a thread, behind the same cap as the logins (SEC-03): the event loop, and so every other window, goes on.
+        Whatever goes wrong here is left to ``handle``, which hashes for itself and says what is wrong."""
+        work = connection.hashing_for(raw)
+        if work is None:
+            return
+        try:
+            async with self._hashing:
+                await asyncio.to_thread(work)
+        except Exception:
+            log.debug("could not hash ahead", exc_info=True)
 
     def accepts_secret(self, candidate: object) -> bool:
         """Did the person give the server's access secret? Always ``True`` for a server that has none."""
@@ -360,13 +380,20 @@ class Gateway:
             return
         try:
             await websocket.accept()
-            admitted = await self._hello(websocket, doc_id, app)
+            admitted = await self._hello(websocket, doc_id, app, address)
         finally:
             self._waiting.leave(address)
         if admitted is not None:
             request_id, account, document, created, locale, imported = admitted
             await _Live(
-                websocket, document, account, request_id, created=created, locale=locale, imported=imported
+                websocket,
+                document,
+                account,
+                request_id,
+                created=created,
+                locale=locale,
+                imported=imported,
+                prepare=self.prepare,
             ).run()
 
     # -- a document made from a file (D438, D440) ------------------------------------------------------------------
@@ -434,8 +461,8 @@ class Gateway:
         described = details != ("", ()) and await asyncio.to_thread(module.hub.describe, doc_id, *details)
         return {"name": upload.name, "format": upload.fmt, "kept": kept, "losses": losses, "described": described}
 
-    async def _hello(self, websocket: WebSocket, doc_id: str, app: str | None):
-        """The first frame: ``(request id, account, document)`` if the person may come in, else the socket is closed."""
+    async def _read_hello(self, websocket: WebSocket) -> tuple[Any, dict] | None:
+        """The first frame as ``(request id, params)``; the socket is closed with the reason if it is not a hello."""
         try:
             raw = await asyncio.wait_for(websocket.receive_text(), HELLO_TIMEOUT)
         except TimeoutError:
@@ -453,7 +480,18 @@ class Gateway:
                 websocket, request_id, "bad_request", msg("the first message must be hello with params"), 4400
             )
             return None
+        return request_id, params
+
+    async def _hello(self, websocket: WebSocket, doc_id: str, app: str | None, address: str):
+        """The first frame: ``(request id, account, document)`` if the person may come in, else the socket is closed."""
+        hello = await self._read_hello(websocket)
+        if hello is None:
+            return None
+        request_id, params = hello
         locale = normalize_locale(params.get("locale"))
+        if (wait := self.login_throttle.check(address, doc_id, params.get("user"))) > 0:
+            await _refuse_for_now(websocket, request_id, wait, locale)  # before any hashing: it costs nothing (D1266)
+            return None
         try:
             Hub.check_id(doc_id)
             upload = self._upload_for(params)
@@ -468,8 +506,10 @@ class Gateway:
                     module, doc_id, credentials, params.get("create") is True, params.get("access")
                 )
             if account is None:
+                self.login_throttle.failed(address, doc_id, params.get("user"))
                 await _refuse(websocket, request_id, "unauthorized", msg("missing or wrong credentials"), 4401, locale)
                 return None
+            self.login_throttle.succeeded(address)
             document = await module.hub.open(doc_id)
             if created and imported is not None:
                 answer = await self._import(module, doc_id, document, account.user, imported, params, details)
@@ -480,6 +520,7 @@ class Gateway:
         except HubError as exc:
             await _refuse(websocket, request_id, exc.code, exc.message, _CLOSE.get(exc.code, 4400), locale)
         except AuthRefused as exc:
+            self.login_throttle.failed(address, doc_id, params.get("user"))
             await _refuse(websocket, request_id, "unauthorized", exc.args[0], 4401, locale)
         except ValueError as exc:  # the name or password of a new document is not acceptable
             await _refuse(websocket, request_id, "bad_request", str(exc), 4400)
@@ -531,13 +572,35 @@ def _set_up(document, author: str, locale: str) -> None:
 
 
 async def _refuse(
-    websocket: WebSocket, request_id, code: str, message: str, close_code: int, locale: str = DEFAULT_LOCALE
+    websocket: WebSocket,
+    request_id,
+    code: str,
+    message: str,
+    close_code: int,
+    locale: str = DEFAULT_LOCALE,
+    **more: object,
 ) -> None:
     """Answer the first frame with an error (its message in ``locale``, once the person has said which) and close the
-    socket with ``close_code``."""
-    frame = {"id": request_id, "ok": False, "error": {"code": code, "message": localized(message, locale)}}
-    await websocket.send_text(json.dumps(frame))
+    socket with ``close_code``. ``more`` are further fields of the error (``retry_after``)."""
+    error = {"code": code, "message": localized(message, locale), **more}
+    await websocket.send_text(json.dumps({"id": request_id, "ok": False, "error": error}))
     await websocket.close(code=close_code)
+
+
+async def _refuse_for_now(websocket: WebSocket, request_id, wait: float, locale: str) -> None:
+    """The login came too soon after failed ones (D1266): refused before any hashing, with the whole seconds to wait
+    (``retry_after``) and the close code 4429. Nothing is locked: the same login is looked at when the wait is over."""
+    seconds = max(1, math.ceil(wait))
+    message = (
+        msg("Too many tries. Try again in 1 second.")
+        if seconds == 1
+        else msg("Too many tries. Try again in {seconds} seconds.", seconds=seconds)
+    )
+    await _refuse(websocket, request_id, "too_many_tries", message, 4429, locale, retry_after=seconds)
+
+
+async def _nothing_to_prepare(connection, raw) -> None:
+    """What a connection does before a request when nothing is to be hashed ahead (no gateway behind it)."""
 
 
 class _Live:
@@ -553,7 +616,9 @@ class _Live:
         created: bool = False,
         locale: str = DEFAULT_LOCALE,
         imported: dict | None = None,
+        prepare=None,
     ):
+        self.prepare = prepare or _nothing_to_prepare
         self.created = created
         self.imported = imported
         self.websocket = websocket
@@ -602,7 +667,9 @@ class _Live:
                 if message["type"] == "websocket.disconnect":
                     break
                 text = message.get("text")
-                connection.handle(text if text is not None else message.get("bytes", b""))
+                frame = text if text is not None else message.get("bytes", b"")
+                await self.prepare(connection, frame)
+                connection.handle(frame)
         except (WebSocketDisconnect, RuntimeError):
             pass
         finally:
@@ -628,6 +695,7 @@ def create_app(
     max_waiting: int = DEFAULT_MAX_WAITING,
     max_waiting_per_address: int = DEFAULT_MAX_WAITING_PER_ADDRESS,
     proxy_hops: int = 0,
+    login_throttle: LoginThrottle | None = None,
     web_dir: str | Path | None = None,
     list_documents: bool = True,
     admin: AdminContext | None = None,
@@ -657,6 +725,10 @@ def create_app(
     by the address the nearest proxy appended, not by the proxy's own (D1275, ``client_address.py``); 0, the default,
     counts by the socket and ignores the header.
 
+    Failed logins wait longer each time (D1266, ``login_throttle.py``), at the document's ``hello`` and at the
+    administrator's sign-in alike, by the rules of ``login_throttle`` (a default one if none is given: a test passes
+    its own for the clock). The login is refused with 4429 and ``retry_after`` before any hashing.
+
     With ``admin`` (``admin_api.AdminContext``), the server also serves ``/api/admin/*``: the settings pages, signed
     in to separately from any document (``admin.py``). Without it — the default, and every use before this existed
     — none of those routes exist at all, which keeps every other caller of this function unaffected."""
@@ -670,6 +742,7 @@ def create_app(
         max_waiting=max_waiting,
         max_waiting_per_address=max_waiting_per_address,
         proxy_hops=proxy_hops,
+        login_throttle=login_throttle,
     )
 
     presence = _Presence(gateway, max_waiting)
@@ -709,7 +782,15 @@ def create_app(
 
     _fixed_routes(app, suite, gateway, presence, list_documents)
     if admin is not None:
-        app.include_router(admin_router(suite, gateway.set_secret, admin))
+        app.include_router(
+            admin_router(
+                suite,
+                gateway.set_secret,
+                admin,
+                throttle=gateway.login_throttle,
+                address_of=gateway.client_address.of,
+            )
+        )
     if fonts is not None:
         app.include_router(font_router(fonts, DEFAULT_SUBSTITUTIONS, _people_of(gateway, admin)))
     if hyphenation is not None:
