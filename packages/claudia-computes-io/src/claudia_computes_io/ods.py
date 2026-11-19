@@ -57,6 +57,7 @@ from claudia_computes.formula.nodes import walk
 from claudia_computes.limits import MAX_COLS, MAX_ROWS
 from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT
 from claudia_computes.values import INT_LIMIT, ErrorValue, Value
+from claudia_core import Rasterise
 from claudia_odf_io import (
     MIME,
     NS,
@@ -75,17 +76,19 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import read_parts, write_parts
 
-from ._unwritten import ODS_WRITTEN, workbook_unwritten_changes
+from ._pictures import picture_losses, written_pictures
+from ._unwritten import FRESH_ONLY, ODS_WRITTEN, workbook_unwritten_changes
 from .cell_looks import Dressing, Lines, LookExport, SheetLooks, changed_styles, restyling, sheet_styling
 from .chart_plan import chart_losses
 from .extensions import INVERSE_NAMES, NOTE_MARKER, from_excel, restore_alternatives, to_excel, with_note
 from .layout_sizes import MAX_SIZED_COLUMNS, MAX_SIZED_ROWS, changed_sizes
 from .ods_chart_files import FileChart, file_charts
 from .ods_chart_patch import ChartPatch
-from .ods_charts import written_charts
+from .ods_charts import new_shapes, written_charts
 from .ods_layout import OdsSizes, read_sizes
 from .ods_looks import OdsLooks, column_styles, read_looks
 from .ods_names import NamesPatch, SheetPlace, global_elements, local_expressions, read_names, sheet_names
+from .ods_pictures import add_pictures, decorative_count
 from .ods_pivots import data_pilot_tables, read_pivots
 from .ods_write_looks import OdsLookWriter, OdsRestyler
 from .openformula import Untranslatable, from_openformula, to_openformula
@@ -889,16 +892,22 @@ def _styles_part(writer: OdsLookWriter | None = None) -> bytes:
     return (_DECLARATION + etree.tostring(root, encoding="unicode")).encode()
 
 
-def workbook_to_ods(model: WorkbookModel, *, info: DocumentInfo | None = None) -> bytes:
+def workbook_to_ods(
+    model: WorkbookModel, *, info: DocumentInfo | None = None, rasterise: Rasterise | None = None
+) -> bytes:
     """``model`` as ods bytes: a table per sheet, and in it a row per row that holds something (empty stretches are
     written once, with a count). A formula is written as OpenFormula with the value it shows, a constant as its value.
-    ``info`` is the metadata (D411). Anything the file cannot hold is in :func:`ods_export_losses`."""
+    The charts and pictures floating on a sheet are in its ``table:shapes``, stacked as they are (D462, D1233;
+    ``rasterise`` draws an SVG as a PNG). ``info`` is the metadata (D411). Anything the file cannot hold is in
+    :func:`ods_export_losses`."""
     root = _el("office", "document-content", {"office:version": "1.3"})
     for name in ("scripts", "font-face-decls", "automatic-styles"):
         etree.SubElement(root, _q("office", name))
     spreadsheet = etree.SubElement(etree.SubElement(root, _q("office", "body")), _q("office", "spreadsheet"))
     writer = OdsLookWriter(model)
     charts = written_charts(model)
+    pictures = written_pictures(model, rasterise=rasterise, svg_beside_png=False)
+    picture_parts = add_pictures(model, pictures, charts.shapes, new_shapes)
     for sheet in model.sheets.values():
         spreadsheet.append(
             _new_table(
@@ -923,19 +932,31 @@ def workbook_to_ods(model: WorkbookModel, *, info: DocumentInfo | None = None) -
     content = _DECLARATION + etree.tostring(root, encoding="unicode")
     styles = _styles_part(writer)
     return new_package(
-        "spreadsheet", content.encode(), styles, meta=new_meta(info or DocumentInfo()), extra=charts.parts or None
+        "spreadsheet",
+        content.encode(),
+        styles,
+        meta=new_meta(info or DocumentInfo()),
+        extra={**charts.parts, **picture_parts} or None,
     )
 
 
-def ods_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
+def ods_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tuple[Loss, ...]:
     """What :func:`workbook_to_ods` cannot put into the file for ``model``, each as a code with how many:
     ``"formula"`` (with the reason: the cell is written as its value), ``"chart"`` (with ``tab``: a file has no chart
     tab, it is a sheet with the chart; ``source``: a chart that follows a name has the cells the name is now; ``empty``:
-    it reads nothing and is not written), ``"object"`` (the text, shape and image objects floating on a sheet are not
-    written yet) and ``"look"`` (``too-many-cells``: cells of style ranges too large to write one by one)."""
+    it reads nothing and is not written), ``"svg-fallback"`` (a picture drawn as SVG, which other programs may show
+    without what its style sheet gives unless there was something to draw it as a PNG with, ``rasterised``),
+    ``"rendering-pending"`` (a rendered container nothing has been drawn for: left out), ``"decorative"`` (a picture
+    marked as having nothing to say: ODF has no way to say so), ``"object"`` (a text box or shape floating on a sheet,
+    which computes does not have, is not written) and ``"look"`` (``too-many-cells``: cells of style ranges too large
+    to write one by one)."""
     losses = LossLog()
     for detail in chart_losses(model):
         losses.add("chart", detail)
+    for loss in picture_losses(model, rasterised=rasterised):
+        losses.add(loss.kind, loss.detail, loss.count)
+    if decorative := decorative_count(written_pictures(model, svg_beside_png=False)):
+        losses.add("decorative", count=decorative)
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
     if dropped:
         losses.add("look", "too-many-cells", dropped)
@@ -958,7 +979,7 @@ def ods_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None =
     ``table-scope``), ``"chart"`` and ``"object"``
     (with the pictures and shapes they use)."""
     return workbook_unwritten_changes(
-        model, baseline, written=ODS_WRITTEN | ({"pivots"} if baseline is None else set())
+        model, baseline, written=ODS_WRITTEN | (FRESH_ONLY if baseline is None else set())
     )
 
 

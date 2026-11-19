@@ -208,13 +208,13 @@ def chart_document(model: WorkbookModel, spec: ChartSpec, width: int, height: in
 
 
 def frame_element(  # noqa: PLR0913 (a frame is: which chart, where, how big and what it says to someone who cannot see)
-    folder: str, name: str, x: float, y: float, width: int, height: int, description: str = ""
+    folder: str, name: str, x: float, y: float, width: int, height: int, description: str = "", layer: int = 0
 ) -> etree._Element:
     """The ``draw:frame`` of a chart whose part is ``folder`` (``Object 1``), at ``x``, ``y`` (pixels from the sheet's
     corner)."""
     frame = etree.Element(_q("draw:frame"), nsmap={p: u for p, u in NS.items() if p != "xml"})
     attributes = {
-        "draw:z-index": "0",
+        "draw:z-index": str(layer),
         "draw:name": name,
         "svg:width": text_of(width),
         "svg:height": text_of(height),
@@ -395,6 +395,7 @@ def a_chart(  # noqa: PLR0913 (what a chart in a file is: the model, its definit
     size: tuple[int, int],
     corner: tuple[float, float],
     description: str = "",
+    layer: int = 0,
 ) -> ChartOut | None:
     """The chart for ``spec`` as ``Object {number}``, ``size`` pixels at ``corner`` of its sheet; ``None`` when it reads
     no cells."""
@@ -403,7 +404,7 @@ def a_chart(  # noqa: PLR0913 (what a chart in a file is: the model, its definit
         return None
     folder = f"Object {number}"
     parts: Parts = {f"{folder}/": (None, CHART_MEDIA), f"{folder}/content.xml": (document, "text/xml")}
-    return ChartOut(frame_element(folder, f"Chart {number}", *corner, *size, description), parts)
+    return ChartOut(frame_element(folder, f"Chart {number}", *corner, *size, description, layer), parts)
 
 
 def new_shapes() -> etree._Element:
@@ -441,14 +442,14 @@ def written_charts(model: WorkbookModel, *, first: int = 1) -> WrittenCharts:
     out = WrittenCharts({}, [], {}, chart_losses(model))
     number = first
     for sheet_id, sheet in model.sheets.items():
-        for object_id in model.stack_of(str(sheet_id)):
+        for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
             obj = model.get_object(object_id)
             if obj.body.diagram is None:
                 continue
             spec = model.diagrams[obj.body.diagram]
             assert isinstance(spec, ChartSpec)
             corner = offset_of(sheet.col_widths, sheet.row_heights, obj.anchor.row, obj.anchor.col)
-            made = a_chart(model, spec, number, (obj.body.w, obj.body.h), corner, obj.body.description)
+            made = a_chart(model, spec, number, (obj.body.w, obj.body.h), corner, obj.body.description, layer)
             if made is not None:
                 out.shapes.setdefault(sheet_id, new_shapes()).append(made.frame)
                 out.parts.update(made.parts)

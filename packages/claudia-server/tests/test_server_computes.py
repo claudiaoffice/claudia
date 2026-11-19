@@ -201,6 +201,27 @@ def test_export_office_returns_xlsx_bytes_that_round_trip(book):
     assert [s.name for s in reloaded.sheets.values()] == ["Costs"]
 
 
+@pytest.mark.parametrize("format_", ["xlsx", "ods"])
+def test_a_picture_on_a_sheet_is_in_the_exported_file_turned_and_described_as_it_is_in_the_document(book, format_):
+    """D1233: the picture reaches the file where it is, how big, how turned and what it says; nothing is lost."""
+    from claudia_opc_io import read_parts
+
+    call(book, "add_sheet", {"name": "Costs"})
+    picture = add_image(book, alt="a logo", row=3, col=1, w=200, h=100)
+    call(book, "rotate_object", {"id": picture, "rotation": 30})
+    answer = call(book, "export_office", {"format": format_})
+    parts = read_parts(base64.b64decode(answer["data"]))
+    if format_ == "xlsx":
+        drawing = parts["xl/drawings/drawing1.xml"]
+        assert b'rot="1800000"' in drawing and b'descr="a logo"' in drawing
+        assert any(name.startswith("xl/media/") for name in parts)
+    else:
+        content = parts["content.xml"]
+        assert b"draw:transform" in content and b"<svg:desc>a logo</svg:desc>" in content
+        assert any(name.startswith("Pictures/") for name in parts)
+    assert [loss for loss in answer["losses"] if loss["kind"] == "object"] == []
+
+
 def test_an_xlsx_says_who_made_it_when_and_not_what_wrote_it(book):
     from claudia_opc_io import read_parts
 

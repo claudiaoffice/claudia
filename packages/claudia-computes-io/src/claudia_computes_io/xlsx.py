@@ -22,8 +22,9 @@ from __future__ import annotations
 
 import posixpath
 import zipfile
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
 from dataclasses import replace
+from functools import partial
 from io import BytesIO
 from xml.sax.saxutils import escape as _xml_escape
 
@@ -34,10 +35,12 @@ from openpyxl.comments import Comment
 from claudia_computes import CellAnchor, Content, ObjectBody, Sheet, VisualObject, WorkbookModel
 from claudia_computes.cellstyles import DEFAULT_CELL_STYLE
 from claudia_computes.values import ErrorValue, Value
+from claudia_core import Rasterise
 from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
 from claudia_opc_io import write_parts
 
-from ._unwritten import XLSX_WRITTEN, in_order, workbook_unwritten_changes
+from ._pictures import WrittenPicture, picture_losses, written_pictures
+from ._unwritten import FRESH_ONLY, XLSX_WRITTEN, in_order, workbook_unwritten_changes
 from .cell_looks import (
     Dressing,
     Lines,
@@ -135,20 +138,24 @@ def _put(cell, content: Content, value: Value) -> Loss | None:  # noqa: ANN001 (
     return lost
 
 
-def xlsx_export_losses(model: WorkbookModel) -> tuple[Loss, ...]:
+def xlsx_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tuple[Loss, ...]:
     """What :func:`workbook_to_xlsx` cannot say in Excel for ``model``, each as a code with how many:
     ``"formula"`` (with the reason, ``random`` for a draw Excel has no single formula for: written as its value),
     ``"alternatives"`` (written as the first alternative with a note: only claudia reads the rest), ``"look"``
     (``too-many-cells``: cells of style ranges too large to write one by one) and ``"chart"`` (``tab``: a chart tab is
     a sheet with the chart in it; ``source``: a chart that follows a name has the cells the name is now; ``rotation``;
-    ``empty``: a chart that reads nothing is not written), and what :func:`xlsx_unwritten_changes`
-    says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"``."""
+    ``empty``: a chart that reads nothing is not written), ``"svg-fallback"`` (a picture drawn as SVG, which only
+    Excel 2016 and later show; other programs show it empty unless there was something to draw it with,
+    ``rasterised``), ``"rendering-pending"`` (a rendered container nothing has been drawn for: left out) and what
+    :func:`xlsx_unwritten_changes` says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"``."""
     losses = LossLog()
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
     if dropped:
         losses.add("look", "too-many-cells", dropped)
     for detail in chart_losses(model):
         losses.add("chart", detail)
+    for loss in picture_losses(model, rasterised=rasterised):
+        losses.add(loss.kind, loss.detail, loss.count)
     for sheet in model.sheets.values():
         for content, value in sheet_cells(model, sheet).values():
             _, note, lost = _written(content, value)
@@ -169,18 +176,22 @@ def xlsx_unwritten_changes(model: WorkbookModel, baseline: WorkbookModel | None 
     cannot hold of a named range or table: ``result``, ``purpose``, ``table-scope``, ``table-header``), ``"chart"``
     and ``"object"`` (with the pictures and shapes they use)."""
     found = workbook_unwritten_changes(
-        model, baseline, written=XLSX_WRITTEN | ({"pivots"} if baseline is None else set())
+        model, baseline, written=XLSX_WRITTEN | (FRESH_ONLY if baseline is None else set())
     )
     return in_order((*found, *header_losses(model, baseline).result(), *layout_losses(model, baseline).result()))
 
 
-def workbook_to_xlsx(model: WorkbookModel, *, info: DocumentInfo | None = None) -> bytes:
+def workbook_to_xlsx(
+    model: WorkbookModel, *, info: DocumentInfo | None = None, rasterise: Rasterise | None = None
+) -> bytes:
     """A base xlsx of ``model``: one worksheet per sheet, each cell as its stored content (a formula as its text,
     with the leading ``=``; see ``_written`` for what is written differently), and the cells' looks: Body text as
     the file's Normal, named styles as named cell styles, the rest as direct formats with their number formats
     (``xlsx_write_looks``, D379), and the bar charts floating on its sheets, each pinned to its cell (a chart tab as a
-    sheet of its own with the chart in it; ``xlsx_charts``, D463). The file says in its properties who made the workbook
-    and when and who changed it last, from ``info``; what ``info`` does not know it leaves out (D466)."""
+    sheet of its own with the chart in it; ``xlsx_charts``, D463) and its pictures, in the same drawing in the order
+    they are stacked (``xlsx_pictures``, D1233; ``rasterise`` draws an SVG as a PNG). The file says in its properties
+    who made the workbook and when and who changed it last, from ``info``; what ``info`` does not know it leaves out
+    (D466)."""
     wb = openpyxl.Workbook()
     assert wb.active is not None  # a freshly constructed Workbook always starts with one
     wb.remove(wb.active)
@@ -191,6 +202,7 @@ def workbook_to_xlsx(model: WorkbookModel, *, info: DocumentInfo | None = None) 
             _put(ws.cell(row=row + 1, column=col + 1), content, value)
         looks.sheet(sheet, ws)
     charts, tabs = written_charts(model)
+    pictures = written_pictures(model, rasterise=rasterise, svg_beside_png=True)
     for name in tabs:
         wb.create_sheet(title=name)
     if not wb.sheetnames:
@@ -199,26 +211,34 @@ def workbook_to_xlsx(model: WorkbookModel, *, info: DocumentInfo | None = None) 
     out = BytesIO()
     wb.save(out)
     data = add_pivots(out.getvalue(), model, written_pivots_of(model).pivots)
-    data = _with_charts(data, charts) if charts else data
+    data = _with_drawings(data, charts, pictures) if charts or pictures else data
     return stamp_office_meta(data, info)
 
 
-def _with_charts(data: bytes, charts: list[WrittenChart]) -> bytes:
-    """``data`` with ``charts`` on its sheets (each by the name of its sheet)."""
+def _with_drawings(data: bytes, charts: list[WrittenChart], pictures: tuple[WrittenPicture, ...]) -> bytes:
+    """``data`` with ``charts`` and ``pictures`` on its sheets (each by the name of its sheet, in the order of their
+    layers: what is stacked later is in front)."""
     package = open_package(data)
     patch = PackagePatch(package.parts)
     drawings = Drawings(patch)
     by_name = {sheet.name.casefold(): sheet.part for sheet in package.sheets}
+    things: list[tuple[int, str, Callable[[], None]]] = []
     for chart in charts:
-        drawings.add(
-            by_name[chart.sheet.casefold()],
-            chart.xml,
-            chart.row,
-            chart.col,
-            chart.width,
-            chart.height,
-            chart.description,
+        part = by_name[chart.sheet.casefold()]
+        things.append(
+            (
+                chart.layer,
+                part,
+                partial(
+                    drawings.add, part, chart.xml, chart.row, chart.col, chart.width, chart.height, chart.description
+                ),
+            )
         )
+    for picture in pictures:
+        part = by_name[picture.sheet_name.casefold()]
+        things.append((picture.layer, part, partial(drawings.add_picture, part, picture)))
+    for _, _, write in sorted(things, key=lambda each: (each[1], each[0])):
+        write()
     drawings.finish()
     return write_parts(patch.finish())
 

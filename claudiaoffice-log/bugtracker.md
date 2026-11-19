@@ -12,7 +12,7 @@ the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-che
 (`qa-recommendations.md`). Fifth round 2026-11-13 at `cfa2d91` (all feature branches merged: printing, lists, search, random numbers and
 scenarios, i18n, BITV): new items SEC-18, PERF-09 to PERF-11, UX-33 to UX-37, PROC-18 to PROC-22, CODE-17 to CODE-21,
 DOC-02; the `bitv` items re-checked as merged. Sixth round 2026-11-17 at `f150f0d` (stabilisation of `main`, no features): new items
-PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45 to UX-47.
+PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45 to UX-47, CODE-66 and CODE-67.
 
 ## How to add a bug
 
@@ -203,6 +203,8 @@ statement in the docs or on the website).
 | UX-45 | P3 | UX / composes | Resizing an object from its top or left handle is two history entries, not one (`resize_object` takes no offset in a text) | **new, open** |
 | UX-46 | P3 | UX / computes, composes | Edit ▸ Select Next Object (D1063, D1222) is not built: computes reaches an object only by Ctrl+Alt+PageDown/PageUp, which has no menu entry | **new, open** |
 | UX-47 | P3 | UX / computes, composes | Delete on a selected object or table works, but has no menu entry and no key in the key table in composes and computes (the hint "Del" is typed into the context menu) | **new, open** |
+| CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **new, open** (D1233) |
+| CODE-67 | P3 | computes I/O | Pictures of an XLSX or ODS are not read into the model: they stay in the file, are counted as `picture`, and survive an edit, but cannot be moved or described in computes | **new, open** (D1233) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -2005,6 +2007,22 @@ from the manifest instead of a typed string.
 **Acceptance.** Edit ▸ Delete (composes) / Edit ▸ Delete Object (computes) is in the web menu and both desktop menus,
 Delete is in the generated key table, and selecting an object and pressing it removes the object in one history entry
 (`objects.cjs`, step "delete"). Found while auditing rotation and key coverage 2026-11-19.
+
+### CODE-66 · A picture added to an imported workbook is not written into it · P3 · new, open
+`apply_edits_to_xlsx` / `apply_edits_to_ods` change only the cells, looks, names, widths and charts of the original file's XML;
+a picture added in computes after an import is reported (`object`) and not in the file (a fresh export has it, D1233).
+**Fix.** The patch adds an `xdr:pic` and its media part to the sheet's drawing (`Drawings.add_picture` is there for it) and a
+`draw:frame` and its `Pictures/` part to the sheet's `table:shapes`; moving, turning or describing a picture changes its frame
+or anchor; removing one takes it and its part out. **Acceptance.** Import a workbook, add, move, turn and remove a picture,
+export: the file has what the model has and `xlsx_unwritten_changes` is empty (`test_pictures.py`, a patch case for each).
+Found while building D1233.
+
+### CODE-67 · The pictures of an XLSX or ODS are not read into the model · P3 · new, open
+A picture in an imported workbook stays in the file untouched and is counted as `picture` on import, but computes does not
+show or select it. **Fix.** Read `xdr:pic` / `draw:image` frames (size from the anchor and the widths and heights the sheet
+has, as for charts; `rot`, `descr`, `name`) as image objects with the asset decoded from the media part, as `file_charts`
+does for charts. **Acceptance.** An imported picture is on the sheet, has the file's size and turn, and writes back to the
+same place (`test_pictures.py`, a round trip for each format). Found while building D1233.
 
 ---
 

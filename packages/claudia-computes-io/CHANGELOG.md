@@ -3,9 +3,17 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
-## [Unreleased]
+## [0.12.0] - 2026-11-19
 
 Pivot tables go to and from ods and xlsx (D625, D628).
+
+### Added
+- Pictures floating on a sheet (an image, a rendered container's picture) are written to xlsx and ods (D1233): pinned to
+  their cell with their size, turn, name and description, stacked with the charts of the sheet. `workbook_to_xlsx`,
+  `workbook_to_ods`, `xlsx_export_losses` and `ods_export_losses` take `rasterise` / `rasterised` (an SVG is drawn as a
+  PNG when there is something to draw it with). New losses: `svg-fallback`, `rendering-pending`, `image-missing`, and
+  for ods `decorative`. Pictures of a fresh export are no longer an `object` loss; in an edit of an imported file they
+  still are (the patch of a kept file does not add them yet, CODE-66).
 
 ### Fixed
 - Everything in a file that anybody may have written is read through `claudia_opc_io.parse_xml` (no entity is expanded, none fetched) and unpacked only after `claudia_opc_io.check_package` has judged its size (SEC-15); the xlsx export's reading of the original's workbook, relationships and content types now uses the xlsx reader's own hardened parser.
