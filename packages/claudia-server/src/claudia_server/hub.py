@@ -27,7 +27,7 @@ import re
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from claudia_computes import WorkbookModel
 from claudia_core import (
@@ -60,6 +60,7 @@ from .protocol import (
     parse_request,
 )
 from .restore import Resolution, RestoreCoordinator
+from .what_if import drop_person
 from .workers import DEFAULT_MAX_WAITING, DEFAULT_WORKERS, WorkerPool
 
 if TYPE_CHECKING:
@@ -284,6 +285,7 @@ class Connection:
                 hosted.renderings,
                 hosted.original,
                 hosted.render_outcomes,
+                hosted.font_catalogue,
             )
             hosted.acting_user = self.account.user
             result = hosted.methods.dispatch(context, name, params)
@@ -313,6 +315,7 @@ class Connection:
         hosted.connections.discard(self)
         if not any(c.account.user == self.account.user for c in hosted.connections):
             hosted.document.presence.release(self.account.user)
+            drop_person(hosted.document, self.account.user)
             hosted.document.publish("presence", self.account.user, {"regions": [], "gone": True})
             if not self.account.system:
                 outcome = hosted.restore.left(self.account.user, hosted.document.branch)
@@ -340,8 +343,10 @@ class HostedDocument:
         original: Callable[[], bytes | None] = lambda: None,
         uid: Callable[[], str | None] = lambda: None,
         workers: WorkerPool | None = None,
+        font_catalogue: Callable[[], Any] = lambda: None,
     ):
         self.id = doc_id
+        self.font_catalogue = font_catalogue  # the fonts this server has, for the font report (E1.9)
         self.document = document
         self.renderings = renderings
         self.original = original  # the file the document was imported from, if it is kept (D439)
@@ -646,7 +651,9 @@ class Hub:
         max_workers: int = DEFAULT_WORKERS,
         renderings: RenderDesk | None = None,
         max_waiting: int | None = DEFAULT_MAX_WAITING,
+        font_catalogue: Callable[[], Any] = lambda: None,
     ):
+        self.font_catalogue = font_catalogue  # what fonts this server has, for the font report (E1.9)
         self.provider = provider
         self.renderings = renderings  # what makes rendered containers (D395); ``None``: this server makes none
         self.methods = methods
@@ -837,6 +844,7 @@ class Hub:
                 original=lambda: self.original(doc_id),
                 uid=lambda: self.uid_of(doc_id),
                 workers=self.workers,
+                font_catalogue=self.font_catalogue,
             )
             if self.assistant is not None:
                 self.assistant().attach(hosted)

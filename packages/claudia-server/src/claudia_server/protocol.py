@@ -306,6 +306,8 @@ class Context:
     original: Callable[[], bytes | None] = field(default=lambda: None)  # the imported file, if it is kept (D439)
     # What the last try to draw each rendered container said, by container: a window that joins later hears it too.
     render_outcomes: Callable[[], dict[str, dict]] = field(default=lambda: {})
+    # The fonts this server has, as a ``claudia_fonts.Catalogue`` (anything that ``resolve``s a family), or ``None``.
+    font_catalogue: Callable[[], Any] = field(default=lambda: None)
 
     @property
     def user(self) -> str:

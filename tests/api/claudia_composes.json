@@ -701,6 +701,7 @@
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "remove": "(self, block_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...]]'",
    "remove_text": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]'",
+   "requirements": "(self) -> 'Requirements'",
    "restore": "(state: 'dict') -> 'Self'",
    "restyle": "(self, block_id: 'str', style: 'str') -> 'None'",
    "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",

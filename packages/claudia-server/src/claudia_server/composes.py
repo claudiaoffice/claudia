@@ -93,7 +93,9 @@ from .office_export import export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .rendered import add_rendering_methods
+from .font_report import add_font_report_method
 from .replay import add_replay_methods
+from .what_if import add_what_if_methods
 from .shape_methods import add_shape_methods
 from .structure_methods import add_structure_methods
 from .style_targets import OBJECTS
@@ -147,6 +149,8 @@ add_structure_methods(composes_methods)
 add_contents_methods(composes_methods)
 add_name_methods(composes_methods)
 add_replay_methods(composes_methods)
+add_what_if_methods(composes_methods)
+add_font_report_method(composes_methods)
 
 
 def _inside(model: TextModel, block: str, offset: int, what: str = "offset") -> int:

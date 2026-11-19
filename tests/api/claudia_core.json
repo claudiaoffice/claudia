@@ -620,6 +620,7 @@
   "init": "(model: 'DocumentModel', *, log: 'CommandLog | None' = None, store: 'DocumentStore | None' = None, branch: 'str | None' = None, clock: 'Callable[[], str]' = <function utc_now>, lock_clock: 'Callable[[], float]' = <function monotonic>, chat: 'Iterable[ChatRecord]' = ())",
   "methods": {
    "apply_entry": "(self, entry: 'Entry', *, persist: 'bool' = True) -> 'Applied'",
+   "apply_proposal": "(self, proposal: 'Proposal', *, author: 'str | None' = None, via: 'str | None' = None) -> 'Applied'",
    "apply_report": "(self, report: 'RequirementReport') -> 'None'",
    "cache_snapshot": "(self) -> 'Snapshot | None'",
    "changes_since": "(self, rev: 'Revision', limit: 'int' = 500) -> 'Changes'",
@@ -627,7 +628,8 @@
    "check_requirements": "(self, env: 'Environment') -> 'RequirementReport'",
    "discard_side_history": "(self) -> 'list[Revision]'",
    "entries_since": "(self, revision: 'Revision | None') -> 'list[Entry]'",
-   "execute": "(self, command: 'Command', *, author: 'str | None' = None, time: 'str | None' = None, base: 'Revision | None' = None) -> 'Applied'",
+   "execute": "(self, command: 'Command', *, author: 'str | None' = None, time: 'str | None' = None, base: 'Revision | None' = None, via: 'str | None' = None) -> 'Applied'",
+   "footprint": "(self, proposal: 'Proposal') -> 'tuple[Region, ...]'",
    "history_for": "(self, author: 'str | None') -> 'History'",
    "history_revisions": "(self) -> 'list[Revision]'",
    "last_seen": "(self, present: 'Callable[[DocumentModel], bool]') -> 'Revision | None'",
@@ -654,7 +656,8 @@
    "subscribe": "(self, callback: 'Callable[[object], None]') -> 'Callable[[], None]'",
    "subscribe_batches": "(self, callback: 'Callable[[list], None]') -> 'Callable[[], None]'",
    "switch_to": "(self, line: 'str', author: 'str | None' = None) -> 'Applied | None'",
-   "undo": "(self, author: 'str | None') -> 'Applied | None'"
+   "undo": "(self, author: 'str | None') -> 'Applied | None'",
+   "what_if": "(self, at: 'Revision | None' = None, *, author: 'str | None' = None) -> 'WhatIf'"
   },
   "properties": [
    "checkpoints",
@@ -712,7 +715,7 @@
   "class": [
    "object"
   ],
-  "init": "(rev: 'Revision', parent: 'Revision | None', author: 'str | None', time: 'str', command: 'Command', origin: 'str' = 'do', of: 'Revision | None' = None, redacted: 'bool' = False) -> None",
+  "init": "(rev: 'Revision', parent: 'Revision | None', author: 'str | None', time: 'str', command: 'Command', origin: 'str' = 'do', of: 'Revision | None' = None, redacted: 'bool' = False, via: 'str | None' = None) -> None",
   "methods": {
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Entry'",
    "to_data": "(self) -> 'dict'"
@@ -1637,6 +1640,25 @@
    "release": "(self, owner: 'str') -> 'None'",
    "show": "(self, owner: 'str', regions: 'Iterable[Region]') -> 'Hold'"
   },
+  "properties": []
+ },
+ "Proposal": {
+  "class": [
+   "object"
+  ],
+  "init": "(base: 'Revision | None', commands: 'tuple[Command, ...]', author: 'str | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Proposal'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "ProposalOutdated": {
+  "class": [
+   "KernelError"
+  ],
+  "init": "(conflicts: 'Sequence[object]' = ())",
+  "methods": {},
   "properties": []
  },
  "Rasterise": {
@@ -2565,6 +2587,7 @@
    "children": "(self, style_id: 'str') -> 'list[str]'",
    "computed": "(self, style_id: 'str') -> 'dict[str, str]'",
    "fallback": "(self, style_id: 'str') -> 'StyleDef | None'",
+   "font_families": "(self) -> 'tuple[str, ...]'",
    "from_data": "(items: 'Iterable[dict]') -> 'StyleBook'",
    "get": "(self, style_id: 'str') -> 'StyleDef'",
    "heading_level": "(self, style_id: 'str') -> 'int | None'",
@@ -2882,6 +2905,20 @@
    "container",
    "id"
   ]
+ },
+ "WhatIf": {
+  "class": [
+   "object"
+  ],
+  "init": "(live: 'Document', at: 'Revision | None', author: 'str | None')",
+  "methods": {
+   "apply": "(self, command: 'Command') -> 'Applied'",
+   "changes": "(self) -> 'tuple[Region, ...]'",
+   "proposal": "(self) -> 'Proposal'",
+   "undo_last": "(self) -> 'Applied | None'",
+   "what_if": "(self) -> 'WhatIf'"
+  },
+  "properties": []
  },
  "asset_of": {
   "function": "(data: 'bytes | None') -> 'ImageAsset | None'"

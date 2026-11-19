@@ -1296,6 +1296,7 @@
    "rename_name": "(self, scope: 'SheetId | None', old: 'str', new: 'str', *, shared: 'bool' = True) -> 'dict[SheetId, Cells]'",
    "rename_sheet": "(self, sheet_id: 'SheetId', name: 'str') -> 'tuple[str, dict[SheetId, Cells]]'",
    "rename_thing": "(self, ctx, thing_id: 'str', name: 'str')",
+   "requirements": "(self) -> 'Requirements'",
    "restore": "(state: 'dict') -> 'Self'",
    "restructure": "(self, edit: 'StructuralEdit') -> 'tuple[Cells, dict[SheetId, Cells], tuple[tuple[int, float], ...], list[tuple[str, str, Piece]], NameRestores]'",
    "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",

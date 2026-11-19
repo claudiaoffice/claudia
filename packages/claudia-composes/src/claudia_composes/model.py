@@ -22,6 +22,7 @@ from claudia_core import (
     Context,
     DocumentModel,
     Field,
+    FontRequirement,
     Generated,
     Label,
     ListBook,
@@ -33,6 +34,7 @@ from claudia_core import (
     Paragraph,
     Placed,
     Region,
+    Requirements,
     Run,
     SchemeBook,
     SetLanguage,
@@ -487,6 +489,10 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """A new text starts in the language of its maker's interface (D915), set by the server when it creates
         the document rather than by her client as her own first step (UX-33)."""
         return () if language is None else (SetLanguage(language),)
+
+    def requirements(self) -> Requirements:
+        """The fonts the styles ask for by name are what this document needs from the server (E1.9, D1306)."""
+        return Requirements(fonts=tuple(FontRequirement(family) for family in self.styles.font_families()))
 
     def serialize(self) -> dict:
         """The state as plain data (a snapshot is a cache of it)."""

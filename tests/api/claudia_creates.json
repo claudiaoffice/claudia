@@ -564,6 +564,7 @@
    "reading_order": "(self) -> 'Iterator[Placed]'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "remove_text": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]'",
+   "requirements": "(self) -> 'Requirements'",
    "restore": "(state: 'dict') -> 'Self'",
    "serialize": "(self) -> 'dict'",
    "set_notes": "(self, slide: 'str', text: 'str') -> 'str'",

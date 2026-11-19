@@ -81,6 +81,7 @@ from .document import Applied, Changes, CheckpointInfo, Document, Line, Look, Re
 from .errors import (
     KernelError,
     MissingUpcaster,
+    ProposalOutdated,
     RedactionError,
     RegionHeld,
     ReplayError,
@@ -330,6 +331,7 @@ from .tables import (
     parse_number,
 )
 from .turning import SINE_MILLIONTHS, nudge_into, turned_extent
+from .what_if import Proposal, WhatIf
 from .writing import DeleteText, InsertText, Span, TextCommand, TypingHost, word_changes
 
 __all__ = [
@@ -621,7 +623,10 @@ __all__ = [
     "SLOTS",
     "SlotTable",
     "Snapshot",
+    "ProposalOutdated",
     "StaleEdit",
+    "Proposal",
+    "WhatIf",
     "Step",
     "StyleBook",
     "SetHeadingLevel",

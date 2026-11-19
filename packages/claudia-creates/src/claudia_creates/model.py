@@ -24,6 +24,7 @@ from claudia_core import (
     CommandRegistry,
     DocumentModel,
     Field,
+    FontRequirement,
     Generated,
     Label,
     ListBook,
@@ -34,6 +35,7 @@ from claudia_core import (
     Palette,
     Placed,
     Region,
+    Requirements,
     Run,
     SchemeBook,
     SetLanguage,
@@ -189,6 +191,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """A new presentation starts in the language of its maker's interface (D915), set by the server when it creates
         the document rather than by her client as her own first step (UX-33)."""
         return () if language is None else (SetLanguage(language),)
+
+    def requirements(self) -> Requirements:
+        """The fonts the styles ask for by name are what this document needs from the server (E1.9, D1306)."""
+        return Requirements(fonts=tuple(FontRequirement(family) for family in self.styles.font_families()))
 
     def serialize(self) -> dict:
         return {

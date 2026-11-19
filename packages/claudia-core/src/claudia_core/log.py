@@ -35,6 +35,7 @@ class Entry:
     origin: str = "do"
     of: Revision | None = None  # for undo/redo: the revision this entry reverses
     redacted: bool = False
+    via: str | None = None  # by what the author made the step, when not by hand ("ai": accepted from a proposal, D1308)
 
     def to_data(self) -> dict:
         """The plain-data form of the entry, as stored and sent to replicas."""
@@ -53,6 +54,8 @@ class Entry:
             data["of"] = self.of.to_data()
         if self.redacted:
             data["redacted"] = True
+        if self.via is not None:
+            data["via"] = self.via
         return data
 
     @classmethod
@@ -71,6 +74,7 @@ class Entry:
             origin,
             Revision.parse(of) if of else None,
             bool(data.get("redacted", False)),
+            data.get("via"),
         )
 
 

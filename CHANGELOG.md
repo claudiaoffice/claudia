@@ -7,6 +7,16 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- What-ifs and proposals (D236, D263, D1308): `Document.what_if(at, author=)` makes a `WhatIf`, a private copy
+  (`Document.scratch` underneath) that remembers the commands it is given (`apply`, `undo_last`, `what_if()` for a
+  what-if of it); `proposal()` hands them back as a plain-data `Proposal` (`base`, `commands`, `author`, `to_data`,
+  `from_data`), `changes()` names the places they would change, and `Document.apply_proposal(proposal, author=, via=)`
+  carries one out as one step on the live document, or raises `ProposalOutdated` (with the `conflicts`) when a step
+  after its base touches or moves one of its places; it never rebases. `Document.footprint(proposal)` is the places.
+  A scratch copy now knows the state it started from (`materialize(None)` is that state, not an empty document).
+- `Entry.via` and `Document.execute(..., via=)`: by what an author made a step when not by hand (`"ai"`); in the log
+  entry's data only when set, so older logs read as before.
+- `StyleBook.font_families()`: the fonts the styles ask for by name, for the manifest's font requirements (E1.9).
 - Names and descriptions of every thing (E1.13, D1310, D1317, D1318): the command **`DescribeThing`** and the event
   **`ThingDescribed`** for what is not drawn; `ObjectModel.thing_description`, `set_thing_description` and
   `name_is_fixed` as the hooks the apps override beside `thing_name` (`DescribeObject` stays for drawn things, which can be

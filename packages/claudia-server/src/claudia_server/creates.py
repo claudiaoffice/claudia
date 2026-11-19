@@ -56,7 +56,9 @@ from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
 from .rendered import add_rendering_methods
+from .font_report import add_font_report_method
 from .replay import add_replay_methods
+from .what_if import add_what_if_methods
 from .shape_methods import PARAGRAPH_STYLE_OF_KIND, STYLE_OF_KIND, add_shape_methods
 from .structure_methods import add_structure_methods
 from .styles import add_style_methods
@@ -156,6 +158,8 @@ def _add_shared_methods(table: MethodTable) -> None:
     _add_object_methods(table)
     add_name_methods(table)
     add_replay_methods(table)
+    add_what_if_methods(table)
+    add_font_report_method(table)
     _add_print_methods(table)
     _add_plan_methods(table)
     add_search_methods(table)

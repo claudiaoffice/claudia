@@ -638,6 +638,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         "max_documents": max_documents,
         "max_connections": args.max_connections,
         "renderings": renderings,
+        "font_catalogue": lambda: fonts.catalogue,
     }
     suite = _suite(args, models, one_app, library=library, assistants=assistants, hub_options=hub_options)
     idle = IdleWatch(args.exit_when_idle) if args.exit_when_idle else None

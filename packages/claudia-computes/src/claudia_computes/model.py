@@ -26,11 +26,13 @@ from claudia_core import (
     Command,
     CommandRegistry,
     DocumentModel,
+    FontRequirement,
     ObjectBody,
     ObjectModel,
     PageSetup,
     Palette,
     Region,
+    Requirements,
     StyleBook,
     VisualObject,
     builtin_palette,
@@ -497,6 +499,10 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         from .commands import AddSheet
 
         return (AddSheet(SheetId("s1"), "Sheet1"),)
+
+    def requirements(self) -> Requirements:
+        """The fonts the styles ask for by name are what this document needs from the server (E1.9, D1306)."""
+        return Requirements(fonts=tuple(FontRequirement(family) for family in self.styles.font_families()))
 
     def serialize(self) -> dict:
         return {

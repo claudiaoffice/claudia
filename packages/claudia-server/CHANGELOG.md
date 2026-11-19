@@ -6,6 +6,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- **What-if methods** in every app (D1308): `what_if_start` (`at?`), `what_if_apply` (`token`, `method`, `params`),
+  `as_what_if` (`token`, `method`, `params`), `what_if_changes`, `what_if_commit` (`token`, `via?`) and `what_if_drop`.
+  A what-if is private to the person who started it (three each, twelve a document, dropped after 15 minutes idle or
+  when their last window closes); a write on it is one of the app's own methods, answered with the person's own rights,
+  and nothing else of the document is reachable (`NOT_TRIED`). `what_if_commit` answers `{applied: false, reason,
+  conflicts}` when somebody worked on the same places since, and changes nothing.
+- **`font_report`** in every app (E1.9, D1306): the fonts the document asks for that this server does not have, each
+  with its stand-in (`{checked, missing: [{family, stand_in, closeness}]}`). A read for anybody; it never blocks, and
+  getting a font stays the administrator's (Server settings ▸ Fonts). `Context.font_catalogue` and the hub option of
+  the same name carry the catalogue.
 - **`export_office`** of a text takes `description_comments` (default off, E1.13 A4-A6): what a person wrote about a
   paragraph is written as a review comment by the person who exports, dated that day. A name a person gave is always
   written as a bookmark; a generic or worked-out one is not. A file that an import kept cannot be patched with

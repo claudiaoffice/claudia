@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `requirements()` of a text: the fonts its styles ask for by name (`Requirements.fonts`), for the font report a
+  server makes when it is opened (E1.9, D1306).
 - Paragraphs have names from the start and can be described (E1.13, D1310, D1311, D1317, D1318): **`SplitBlock.name`**
   gives the new paragraph its name (an older log gave none); `TextModel.block_descriptions` keeps what is written about a
   paragraph, the same way as an object's description; `thing_description`, `set_thing_description` and `name_is_fixed`.

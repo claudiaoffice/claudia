@@ -79,6 +79,19 @@ class RegionHeld(KernelError):
         self.holders = holders
 
 
+class ProposalOutdated(KernelError):
+    """A proposal cannot be carried out: somebody has worked on the places it touches (or moved them) since it was made.
+
+    ``conflicts`` are those places, as regions of the proposal's own commands; empty when the line the proposal was
+    made on is not the one the document is on any more. Nothing was changed, and nothing is rebased (D263, D1308)."""
+
+    code: ClassVar[str] = "proposal_outdated"
+
+    def __init__(self, conflicts: Sequence[object] = ()):
+        self.conflicts = tuple(conflicts)
+        super().__init__("the document has changed where this proposal acts since it was made")
+
+
 class StaleEdit(KernelError):
     """An edit was written against a view that is not part of the document's current line any more.
 

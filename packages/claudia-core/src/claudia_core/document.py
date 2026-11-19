@@ -19,11 +19,12 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field, replace
 
 from .clock import monotonic, utc_now
-from .commands import Checkpoint, Command, Import, Redaction, Restore, Switch, tombstone
+from .commands import Batch, Checkpoint, Command, Import, Redaction, Restore, Switch, tombstone
 from .commands import Redacted as RedactedCommand
 from .context import Context
 from .errors import (
     KernelError,
+    ProposalOutdated,
     RedactionError,
     RegionHeld,
     ReplayError,
@@ -50,10 +51,11 @@ from .manifest import Environment, Manifest, RequirementReport, check
 from .messages import ChatRecord, Ephemeral, parse_chat
 from .model import DocumentModel, Snapshot
 from .presence import Presence
-from .region import Region
+from .region import Region, transform
 from .replay import replay, replay_collecting
 from .revision import Branch, Revision
 from .store import DocumentStore
+from .what_if import Proposal, WhatIf, places
 
 
 @dataclass(frozen=True)
@@ -162,6 +164,7 @@ class Document:
         self._checkpoints: list[CheckpointInfo] = []
         self._state_head: Revision | None = None
         self._snapshots: dict[Revision, Snapshot] = {}
+        self._origin: dict | None = None  # a scratch copy's own state at the start: its log starts there, not empty
         self._purge_hooks: list[Callable[[tuple[Revision, ...]], None]] = []
         self._reindex()
 
@@ -218,7 +221,13 @@ class Document:
 
     # ------------------------------------------------------------------ the one entry point for changes
     def execute(
-        self, command: Command, *, author: str | None = None, time: str | None = None, base: Revision | None = None
+        self,
+        command: Command,
+        *,
+        author: str | None = None,
+        time: str | None = None,
+        base: Revision | None = None,
+        via: str | None = None,
     ) -> Applied:
         """Apply ``command`` atomically as ``author``. On any error the document is unchanged.
 
@@ -226,11 +235,12 @@ class Document:
         or the line switched while the edit was on its way) the edit is refused with ``StaleEdit``. ``None`` skips
         the check. Refuses (``RegionHeld``) a command that touches a region somebody else holds: the rule is enforced
         here, once, for people and the AI alike. Replaying entries the server already accepted (``apply_entry``) is
-        not checked."""
+        not checked. ``via`` says by what the author made the step when not by hand (``"ai"``), and is kept in the entry
+        (D1308)."""
         if base is not None and not self.log.on_path(base, self.revision):
             raise StaleEdit(base, self.branch)
         self.check_free(author, command)
-        return self._commit(command, author, time, "do", None)
+        return self._commit(command, author, time, "do", None, via=via)
 
     def apply_entry(self, entry: Entry, *, persist: bool = True) -> Applied:
         """Replay an entry made elsewhere (a replica following the server). Must be exactly the next one."""
@@ -238,7 +248,14 @@ class Document:
         if entry.rev != expected or entry.parent != self.revision:
             raise RevisionMismatch(f"expected {expected} after {self.revision}, got {entry.rev} after {entry.parent}")
         return self._commit(
-            entry.command, entry.author, entry.time, entry.origin, entry.of, persist=persist, redacted=entry.redacted
+            entry.command,
+            entry.author,
+            entry.time,
+            entry.origin,
+            entry.of,
+            persist=persist,
+            redacted=entry.redacted,
+            via=entry.via,
         )
 
     def entries_since(self, revision: Revision | None) -> list[Entry]:
@@ -255,6 +272,7 @@ class Document:
         *,
         persist: bool = True,
         redacted: bool = False,
+        via: str | None = None,
     ) -> Applied:
         rev = self.log.next_revision(self.branch)
         parent = self.revision
@@ -267,7 +285,7 @@ class Document:
             self.model.settle(ctx)  # a rolled-back command may leave derived state to recompute
             raise
         self.model.settle(ctx)
-        entry = Entry(rev, parent, author, when, command, origin, of, redacted)
+        entry = Entry(rev, parent, author, when, command, origin, of, redacted, via)
         if persist and self.store is not None:
             try:
                 self.store.append_entry(entry)
@@ -432,7 +450,7 @@ class Document:
                 model, start = type(self.model).restore(snap.state), index + 1
                 break
         if model is None:
-            model = type(self.model).empty()
+            model = type(self.model).empty() if self._origin is None else type(self.model).restore(self._origin)
         return replay(model, path[start:])
 
     def scratch(self, at: Revision | None = None) -> Document:
@@ -452,7 +470,55 @@ class Document:
                 model = self.materialize(at)
             except KeyError as exc:
                 raise KernelError(f"there is no revision {at}") from exc
-        return Document(model, clock=self._clock, lock_clock=self._lock_clock)
+        copy = Document(model, clock=self._clock, lock_clock=self._lock_clock)
+        copy._origin = model.serialize()  # its log starts here: what it can show of its own beginning (D1308)
+        return copy
+
+    # ------------------------------------------------------------------ what-ifs and proposals (D1308)
+    def what_if(self, at: Revision | None = None, *, author: str | None = None) -> WhatIf:
+        """A :class:`~claudia_core.WhatIf` that starts from the state now (or at ``at``, any revision on any line):
+        a private copy that remembers what it is asked to do, to be handed back as a :class:`~claudia_core.Proposal`.
+        ``KernelError`` for a revision that does not exist."""
+        return WhatIf(self, at, author)
+
+    def footprint(self, proposal: Proposal) -> tuple[Region, ...]:
+        """The places ``proposal`` would change, read against the state it was made on."""
+        return places(self.materialize(proposal.base), proposal.commands, self._clock(), proposal.author)
+
+    def apply_proposal(self, proposal: Proposal, *, author: str | None = None, via: str | None = None) -> Applied:
+        """Carry out ``proposal`` on the document as one step by ``author`` (one entry, one undo step), tagged ``via``.
+
+        Refused with :class:`~claudia_core.ProposalOutdated`, and nothing changed, when a step after the one the
+        proposal was made on touches a place it touches or moves one of them, or when that step is not on the line the
+        document is on; never rebased (D263). A place somebody holds refuses it whole (``RegionHeld``). ``KernelError``
+        for a proposal that does nothing."""
+        if not proposal.commands:
+            raise KernelError("a proposal that does nothing has nothing to carry out")
+        base = proposal.base
+        if base is not None and not self.log.on_path(base, self.revision):
+            raise ProposalOutdated(())
+        later = self.log.since(base, self.branch)
+        if later:
+            footprint = self.footprint(proposal)
+            state = self.materialize(base)
+            conflicts: list[Region] = []
+
+            def look(entry: Entry, inverse: Command) -> None:
+                touched = [r for each in (entry.command, inverse) for r in _regions_of(each, state)]
+                for region in footprint:
+                    moved = transform(region, entry.command)
+                    if region not in conflicts and (
+                        any(region.overlaps(other) for other in touched)
+                        or moved is None
+                        or moved.to_data() != region.to_data()
+                    ):
+                        conflicts.append(region)
+
+            replay(state, later, look)
+            if conflicts:
+                raise ProposalOutdated(conflicts)
+        command = proposal.commands[0] if len(proposal.commands) == 1 else Batch(proposal.commands)
+        return self.execute(command, author=author, via=via)
 
     # ------------------------------------------------------------------ checkpoints (E1.7)
     @property
@@ -905,6 +971,14 @@ class Document:
         if names:
             self.model.mark_stale(names)
             self.bus.emit(ResultsStale(names))
+
+
+def _regions_of(command: Command, model: DocumentModel) -> tuple[Region, ...]:
+    """Where ``command`` acts in ``model``; nowhere when it cannot say."""
+    try:
+        return command.regions(model)
+    except (KeyError, ValueError, IndexError):
+        return ()
 
 
 def _usable(snapshot: Snapshot, model_cls: type[DocumentModel]) -> bool:

@@ -143,7 +143,9 @@ from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, RequestError, core_methods
 from .rendered import add_rendering_methods
+from .font_report import add_font_report_method
 from .replay import add_replay_methods
+from .what_if import add_what_if_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods
 from .thing_names import add_name_methods, default_name
@@ -200,6 +202,8 @@ computes_methods = core_methods.extended()
 add_style_methods(computes_methods, targets=(OBJECTS, _CellTargets()))
 add_name_methods(computes_methods)
 add_replay_methods(computes_methods)
+add_what_if_methods(computes_methods)
+add_font_report_method(computes_methods)
 
 
 def _workbook(ctx: Context) -> WorkbookModel:

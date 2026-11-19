@@ -21,6 +21,8 @@ from typing import TYPE_CHECKING, ClassVar, Literal
 
 from .commands import Batch, Command, CommandRegistry, core_commands
 from .css import INITIAL_CSS, resolve_css, validate_css
+from .css import _split_families as split_families
+from .stand_ins import GENERIC_ALIASES
 from .facets import check_kind
 
 if TYPE_CHECKING:
@@ -168,6 +170,17 @@ class StyleBook:
 
     def __iter__(self) -> Iterator[StyleDef]:
         return iter(list(self._styles.values()))
+
+    def font_families(self) -> tuple[str, ...]:
+        """The fonts the styles ask for by name, each once, sorted: the first family of every ``font-family`` that is
+        not a generic one. Later families of a list are fall-backs, not requirements (E1.9, D1306)."""
+        found: dict[str, str] = {}
+        for style in self._styles.values():
+            first = split_families(style.css.get("font-family", ""))[:1]
+            name = first[0].strip("'\"").strip() if first else ""
+            if name and name.lower() not in GENERIC_ALIASES:
+                found.setdefault(name.casefold(), name)
+        return tuple(sorted(found.values(), key=str.casefold))
 
     def __len__(self) -> int:
         return len(self._styles)
