@@ -1,7 +1,7 @@
 # E2 round two — architecture proposal (viewers, back-off, hashing cost, key renewal, exports and their record)
 
 **Status: proposal of 2026-11-19, with the owner's answers of the same day (§6) and the first built parts (§8).** Branch `e2-document-sec`, written against `main` at `518a7bf`.
-Decisions: D1261–D1276 (D1274 and D1276 decided by the owner on 2026-11-19). Mock-ups in `notes/mockups/`:
+Decisions: D1261–D1278 (D1274 and D1276 decided by the owner on 2026-11-19). Mock-ups in `notes/mockups/`:
 
 | File | Shows |
 |---|---|
@@ -223,6 +223,22 @@ Found while fixing them: **SEC-21** (password-confirming methods hash on the eve
 | The address of a connection behind a proxy; `--proxy-hops` | `client_address.py`, `app.py`, `cli.py` | `test_server_client_address.py` (16), `test_server_cli.py`, `test_server_uid.py` |
 | German and pseudo-locale strings, the menu workbook, `docs/server.md`, `docs/web.md`, changelogs and API snapshots (container 0.9.0, server 0.38.0) | | the gate (`scripts/check_debt.py`) |
 
-Slice A is therefore started with its smallest part (D1275). Not yet built: the viewer filter (D1261), the back-off (D1266)
-and the hashing cost (D1267); slices B and C. A viewer's downloaded copy cannot be opened until E2.11 (read-only hosting)
+| Viewer filter: events and methods by domain; the viewer's window and panel | `audience.py`, `protocol.py` (`reads=`), `hub.py`, `base-session.ts`, `SidePanel.vue` | `test_server_audience.py`, `tests/method_reads.json`, `web/tests/session.test.ts`, `specs/container/viewer.feature` (2 of 3 core scenarios run) |
+| Sealed-first viewer waits (D1262) | `base-session.ts` (`waiting`), `DocumentFrame.vue` | `web/tests/session.test.ts` (the scenario in `viewer.feature` has no step code for the server restart) |
+| Back-off (D1266, D1276) | `login_throttle.py`, `app.py`, `admin_api.py`, `login-wait.ts` | `test_server_login_throttle.py` (24), `test_server_login_waits.py`, `web/tests/login-wait.test.ts`, `specs/container/login-wait.feature` |
+| SEC-21: hash ahead in a thread (D1277) | `crypto.py` (`warm_login_material`), `container.warm`, `Method.hashes`, `Gateway.prepare` | `test_warm_login.py`, `test_server_password_methods.py` |
+| Hashing cost calibrated (D1267, D1278) | `kdf.py`, `kdf_policy.py`, `server_settings.py`, `AdminSecurity.vue` | `test_kdf_calibration.py`, `test_server_kdf_policy.py`, `web/tests/security-settings.test.ts` |
+
+Slice A is built (container 0.10.0, server 0.39.0). Not built: authorship for viewers (SEC-22, waits for the owner), slices B and C.
+
+## 9. Threat-model consequences of slice A
+
+| Statement | Where it lives |
+|---|---|
+| A viewer receives content, names and presence and nothing from the history or chat, in the live session, in the welcome and in her sealed file; she is refused the methods that read them | D1261, `audience.py` |
+| A viewer sees who wrote which stretch (not masked) | SEC-22 |
+| A restart forgets the back-off counters; a guesser regains at most one wait (30 s at the top) | D1276 |
+| Guessing is paced by the waits (per address, per document and name), by the hashing cap and by the cost of one hash; many addresses at once are not stopped by the waits | D1266 |
+| The process holds derived login material (not the password) for up to 30 s, once, for requests that confirm a password | D1277 |
+| New documents are hashed at a cost measured on the server; old documents keep theirs | D1267, D1278 | A viewer's downloaded copy cannot be opened until E2.11 (read-only hosting)
 exists.
