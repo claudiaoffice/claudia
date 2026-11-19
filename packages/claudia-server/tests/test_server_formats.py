@@ -96,3 +96,69 @@ def test_a_zip_bomb_is_refused_before_any_reader_opens_it(fmt, monkeypatch):
     monkeypatch.setattr(formats, "_reader", lambda _fmt: (opened, None))
     with pytest.raises(PackageRefused, match="document.xml"):
         import_state(fmt, bomb.getvalue())
+
+
+# -- things get names on import (E1.13, D1311) ---------------------------------------------------------------------
+def _word_file(*paragraphs: str, bookmarked: dict[str, str] | None = None) -> bytes:
+    import io
+
+    import docx
+    from docx.oxml.ns import qn
+
+    document = docx.Document()
+    for number, words in enumerate(paragraphs, start=1):
+        paragraph = document.add_paragraph(words)
+        if bookmarked and words in bookmarked:
+            start = paragraph._p.makeelement(
+                qn("w:bookmarkStart"), {qn("w:id"): str(number), qn("w:name"): bookmarked[words]}
+            )
+            end = paragraph._p.makeelement(qn("w:bookmarkEnd"), {qn("w:id"): str(number)})
+            paragraph._p.insert(0, start)
+            paragraph._p.append(end)
+    out = io.BytesIO()
+    document.save(out)
+    return out.getvalue()
+
+
+def _names(state: dict) -> dict[str, str]:
+    from claudia_composes import TextModel
+
+    model = TextModel.restore(state)
+    return {thing: name for _kind, thing, name in model.named_things() if thing.startswith("b")}
+
+
+def test_every_paragraph_of_an_imported_text_gets_a_generic_name_in_the_language_of_the_one_who_imports():
+    state, _ = import_state("docx", _word_file("one", "two", "three"), "de")
+    assert list(_names(state).values()) == ["Absatz 1", "Absatz 2", "Absatz 3"]
+
+
+def test_a_bookmark_of_the_file_is_the_name_and_the_others_are_counted_around_it():
+    data = _word_file("one", "two", "three", bookmarked={"two": "Budget_summary"})
+    names = _names(import_state("docx", data, "en")[0])
+    assert names["b2"] == "Budget summary"
+    assert {names["b1"], names["b3"]} == {"Paragraph 1", "Paragraph 2"}
+
+
+def test_a_name_in_the_file_that_is_a_generic_one_is_not_taken_twice():
+    data = _word_file("one", "two", bookmarked={"one": "Paragraph_1"})
+    names = _names(import_state("docx", data, "en")[0])
+    assert len(set(names.values())) == len(names)
+
+
+def test_a_big_text_is_named_in_one_pass():
+    import time
+
+    data = _word_file(*[f"paragraph number {i}" for i in range(4000)])
+    started = time.perf_counter()
+    state, _ = import_state("docx", data, "en")
+    assert time.perf_counter() - started < 20
+    assert len(set(_names(state).values())) == 4000
+
+
+def test_an_imported_deck_names_its_slides():
+    from claudia_creates_io import slides_to_pptx
+
+    from claudia_creates import SlideModel
+
+    state, _ = import_state("pptx", slides_to_pptx(SlideModel.empty()), "en")
+    assert [name for _kind, _thing, name in SlideModel.restore(state).named_things()] == ["Slide 1"]

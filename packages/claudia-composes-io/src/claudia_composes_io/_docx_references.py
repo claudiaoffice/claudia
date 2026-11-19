@@ -129,6 +129,25 @@ def bookmarks_starting(element: Any) -> list[str]:
     return found
 
 
+def bookmarks_around(element: Any) -> list[str]:
+    """The names of the bookmarks that surround all the words of a paragraph: they start before its first word and end
+    after its last, and a bookmark around a part of the words (or around more than the paragraph) is not among them."""
+    around: dict[str, str] = {}  # ... that started before any word
+    seen_words = False
+    ended: list[str] = []
+    for child in element.iterchildren():
+        if child.tag == qn("w:bookmarkStart"):
+            if not seen_words:
+                around[child.get(qn("w:id"))] = child.get(qn("w:name"))
+        elif child.tag == qn("w:bookmarkEnd"):
+            if seen_words and child.get(qn("w:id")) in around:
+                ended.append(child.get(qn("w:id")))
+        elif any(True for _ in child.iter(qn("w:t"), qn("w:instrText"))):
+            seen_words = True
+            ended.clear()  # an end before this word did not come after the last one
+    return [around[i] for i in around if i in ended]
+
+
 def has_references(element: Any) -> bool:
     """Does the paragraph hold a ``REF`` or ``PAGEREF`` field?"""
     return any(_REF.match(said.text or "") for said in element.iter(qn("w:instrText")))

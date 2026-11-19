@@ -538,3 +538,28 @@ def test_a_workbook_with_charts_comes_back_patched_with_a_chart_moved_and_descri
     found = back.objects["o1"]
     assert (found.anchor, found.body.description) == (CellAnchor("s1", 14, 2), "Sales per region")
     assert set(back.diagrams) == {"c1", "c2"}
+
+
+def test_a_docx_with_descriptions_as_comments_is_written_anew_and_says_the_kept_file_could_not_take_them():
+    import docx
+
+    from claudia_composes import TextModel
+
+    document = docx.Document()
+    document.add_paragraph("Hello world")
+    out = io.BytesIO()
+    document.save(out)
+    suite = Suite([Module(app_hub(MemoryProvider(TextModel), TextModel), _directory())])
+    with TestClient(create_app(suite)) as client:
+        token = upload(client, out.getvalue(), name="file.docx").json()["upload"]
+        with client.websocket_connect("/api/composes/docs/file/ws") as ws:
+            ws.send_json(hello(create=True, upload=token))
+            assert ws.receive_json()["ok"]
+            assert request(ws, "name_and_describe", {"id": "b1", "name": "Greeting", "description": "Says hello"})["ok"]
+            plain = request(ws, "export_office", {"format": "docx"})["result"]
+            commented = request(ws, "export_office", {"format": "docx", "description_comments": True})["result"]
+    assert plain["patched"] is True
+    assert "patched" not in commented
+    assert [loss["kind"] for loss in commented["losses"]] == ["not-patched"]
+    back = docx.Document(io.BytesIO(base64.b64decode(commented["data"])))
+    assert [c.text for c in back.comments] == ["Says hello"]

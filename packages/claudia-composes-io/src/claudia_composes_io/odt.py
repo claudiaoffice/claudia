@@ -65,9 +65,11 @@ from claudia_odf_io import (
 )
 from claudia_opc_io import parse_xml, read_parts, write_parts
 
+from ._annotations import Annotations, name_paragraphs
 from ._boxes import box_losses, boxes_of, is_written, look_of
 from ._boxes import has_references as has_box_references
 from ._fonts import take_fonts
+from ._odt_annotations import annotate, bookmarks_around
 from ._odt_boxes import BoxPlan, BoxStyles, BoxWriter, FileBox, file_boxes, graphic_style_names
 from ._odt_contents import TABLE_OF_CONTENT, contents_element, read_contents
 from ._odt_fonts import style_fonts
@@ -371,6 +373,7 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     waiting = next(contents, None)
     tables = count(len(scan.paragraphs) + 1)  # a table of contents' id comes after every paragraph's
     marked: dict[str, str] = {}  # the paragraph each bookmark starts, by name
+    named: dict[str, list[str]] = {}  # the bookmarks around the words of exactly one paragraph, by its id
     referring: list[tuple[int, list[ReadReference]]] = []
     for number, paragraph in enumerate(scan.paragraphs, start=1):
         while waiting is not None and waiting[0] < number:
@@ -380,6 +383,8 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
         text = plain(text) if not found else text
         for name in bookmarks_starting(paragraph):
             marked[name] = f"b{number}"
+        if around := bookmarks_around(paragraph):
+            named[f"b{number}"] = around
         if found:
             referring.append((len(blocks), found))
         runs = (Run(len(text), None),) if text else ()
@@ -418,6 +423,7 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
             )
         )
     put_tables(model, _placed_tables(scan, root, _styles_root(parts), model))
+    name_paragraphs(model, named, spaces=False)
     return model
 
 
@@ -658,6 +664,7 @@ def text_to_odt(
     info: DocumentInfo | None = None,
     change_times: Mapping[str, str] | None = None,
     rasterise: Rasterise | None = None,
+    annotations: Annotations | None = None,
 ) -> bytes:
     """``model`` as odt bytes: one paragraph (or heading) per block, the built-in styles written as the styles of the
     same name, and an item of a list as the item of a ``text:list`` (nested for its level) with a list style that has
@@ -673,7 +680,9 @@ def text_to_odt(
     earliest date there is (D411). A picture floating over the text (an image, a rendered text container) is a frame in
     the paragraph it hangs from, at its character, with its description; a rendered container is drawn as a PNG by
     ``rasterise`` when there is one (D464). The tables of the text are written as ``table:table`` after the paragraph
-    they hang from (E9.32, D1214)."""
+    they hang from (E9.32, D1214). ``annotations`` says which paragraphs are bookmarked with the name a person gave
+    them and which get an annotation (a review comment) with what a person wrote about them (E1.13); without it
+    neither is written."""
     when = when_made(change_times, info.modified if info else None)
     by_block = open_replacements(model, track=track_suggestions)
     ids = _ids(set())
@@ -697,6 +706,7 @@ def text_to_odt(
         model, box_styles, lambda style_id, words: _new_paragraph(style_id, words, [], ids, when, styles)[0]
     )
     tables = _TableWriter(model, flow, ids, when, styles)
+    notes = annotations or Annotations()
     for number, block in enumerate(model.blocks, start=1):
         if block.generated is not None:
             name = f"Table of Contents{number}"
@@ -711,6 +721,7 @@ def text_to_odt(
             swap_fields(paragraph, [reference_item(f, s, targets) for f, s in zip(block.fields, said, strict=True)])
         if block.id in targets:
             mark_target(paragraph, bookmark_name(block.id))
+        annotate(paragraph, number, block.id, notes)
         flow.add(paragraph, block.item)
         regions += found
         tables.after(block.id)

@@ -44,10 +44,12 @@ from claudia_core import MAX_LIST_LEVEL, ListItem, Rasterise, StyleBook, TableDe
 from claudia_odf_io import DocumentInfo, Loss, LossLog, stamp_office_meta
 from claudia_opc_io import owns, reconcile
 
+from ._annotations import Annotations, name_paragraphs, word_bookmark_names
 from ._boxes import box_losses, is_written, look_of
 from ._boxes import has_references as has_box_references
 from ._docx_blocks import hidden_content, place, remove
 from ._docx_boxes import BoxEdits, BoxWriter, FileBox, file_boxes, restyled_words
+from ._docx_comments import write_comment
 from ._docx_contents import body_order, write_contents
 from ._docx_fonts import style_fonts
 from ._docx_links import Carried, carry_links
@@ -61,6 +63,7 @@ from ._docx_pictures import (
 )
 from ._docx_references import (
     bookmark_name,
+    bookmarks_around,
     bookmarks_starting,
     has_references,
     mark_targets,
@@ -97,6 +100,7 @@ def text_to_docx(
     change_times: Mapping[str, str] | None = None,
     rasterise: Rasterise | None = None,
     info: DocumentInfo | None = None,
+    annotations: Annotations | None = None,
 ) -> bytes:
     """``model`` as docx bytes: one paragraph per block. When ``track_suggestions`` (the default), every open
     suggestion that proposes a replacement is written as a tracked change instead of being silently dropped; a
@@ -107,7 +111,8 @@ def text_to_docx(
     an SVG is shown by the picture ``rasterise`` draws of it, or else by an empty one (D464). The file says in its
     properties who made the document and when and who changed it last, from ``info``; what ``info`` does not know it
     leaves out (D466). The tables of the text are written as real tables after the paragraph they hang from (E9.32,
-    D1214)."""
+    D1214). ``annotations`` says which paragraphs are bookmarked with the name a person gave them and which get a
+    review comment with what a person wrote about them (E1.13); without it neither is written."""
     document = Document()
     write_page(document, None, model.page)
     write_language(document, model.language)
@@ -121,6 +126,9 @@ def text_to_docx(
     entries, shown = model.structure.all_entries(), model.structure.shown()
     targets = _targets(model)
     bookmarks = count(1)
+    notes = annotations or Annotations()
+    given = [block.id for block in model.blocks if block.id in notes.names]
+    word_names = dict(zip(given, word_bookmark_names(notes.names[each] for each in given), strict=True))
     boxes = BoxWriter(document, names, model, pictures)
     style_ids = _style_ids(document, names)
     for block in model.blocks:
@@ -138,6 +146,10 @@ def text_to_docx(
             swap_fields(paragraph, [reference_runs(f, s, targets) for f, s in zip(block.fields, said, strict=True)])
         if block.id in targets:
             mark_targets(paragraph, bookmark_name(block.id), bookmarks)
+        if block.id in word_names:
+            mark_targets(paragraph, word_names[block.id], bookmarks)
+        if text := notes.comments.get(block.id):
+            write_comment(document, paragraph, text, notes)
         _write_tables(document, model, block.id, style_ids)
     out = BytesIO()
     document.save(out)
@@ -437,6 +449,7 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
     paragraphs = document.paragraphs
     tables = count(len(paragraphs) + 1)  # a table of contents' id comes after every paragraph's
     marked: dict[str, str] = {}  # the paragraph each bookmark starts, by name
+    named: dict[str, list[str]] = {}  # the bookmarks around the words of exactly one paragraph, by its id
     referring: list[tuple[int, list[ReadReference]]] = []
     for at, toc in body_order(document):
         if toc is not None:
@@ -449,6 +462,8 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
         text, found = read_words(paragraph._p) if has_references(paragraph._p) else (plain(paragraph.text), [])
         for name in bookmarks_starting(paragraph._p):
             marked[name] = f"b{index}"
+        if around := bookmarks_around(paragraph._p):
+            named[f"b{index}"] = around
         if found:
             referring.append((len(blocks), found))
         runs = (Run(len(text), None),) if text else ()
@@ -486,6 +501,7 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
             )
         )
     put_tables(model, _file_tables(document, model, setup.language))
+    name_paragraphs(model, named, spaces=True)
     return model
 
 

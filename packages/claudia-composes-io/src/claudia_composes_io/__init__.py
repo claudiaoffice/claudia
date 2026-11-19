@@ -15,9 +15,11 @@ The names, by kind::
           docx_unwritten_changes, UnsupportedEdit
    odt    text_to_odt, odt_to_text, apply_edits_to_odt, odt_import_losses, odt_export_losses (D401),
           odt_unwritten_changes
+   names  Annotations -- the names and descriptions an export writes as bookmarks and review comments (E1.13)
    log    export_info -- the dates and people of a document, and when each suggestion was made, from its log (D411)
 """
 
+from ._annotations import Annotations
 from ._history import export_info
 from ._version import __version__
 from .docx import (
@@ -40,6 +42,7 @@ from .odt import (
 
 __all__ = [
     "__version__",
+    "Annotations",
     "UnsupportedEdit",
     "apply_edits_to_docx",
     "apply_edits_to_odt",

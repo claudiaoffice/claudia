@@ -6,6 +6,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- **`export_office`** of a text takes `description_comments` (default off, E1.13 A4-A6): what a person wrote about a
+  paragraph is written as a review comment by the person who exports, dated that day. A name a person gave is always
+  written as a bookmark; a generic or worked-out one is not. A file that an import kept cannot be patched with
+  comments: the answer is a new file and its `losses` say `not-patched`.
+- An import names every thing of the file that has no name (a slide, a paragraph), in the language of the one who
+  imports, in one pass (`import_state(fmt, data, locale)`, `thing_names.name_unnamed_things`).
 - **`name_and_describe_range`** (`range`, `name`, `description`) in a workbook: the *Name & describe…* dialog for cells that have no name yet; it asks for the name, since a range is not a thing without one, and writes name and description as one step.
 - **`thing_details`** (`id`) and **`name_and_describe`** (`id`, `name`, `description`, `decorative`): the two methods behind
   the one *Name & describe…* dialog for every thing (D1317, D1318). The second writes name and description as one step

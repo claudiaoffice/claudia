@@ -24,6 +24,7 @@ _REFERENCE = f"{{{NS['text']}}}bookmark-ref"
 _BOOKMARKS = {f"{{{NS['text']}}}bookmark", f"{{{NS['text']}}}bookmark-start"}
 _BOOKMARKS_TAG = f"{{{NS['text']}}}bookmark"
 _NAME = f"{{{NS['text']}}}name"
+_ANNOTATION = f"{{{NS['office']}}}annotation"
 _REF_NAME = f"{{{NS['text']}}}ref-name"
 _FORMAT = f"{{{NS['text']}}}reference-format"
 #: OpenDocument's reference format for what a reference shows (a name is words: there is no field for it).
@@ -100,6 +101,10 @@ def bookmarks_starting(paragraph: etree._Element) -> list[str]:
         return []
     found = []
     for child in paragraph:
+        if child.tag == _ANNOTATION:  # a comment around the words is not a word
+            if (child.tail or "").strip():
+                break
+            continue
         if child.tag not in _BOOKMARKS:
             break
         found.append(child.get(_NAME, ""))

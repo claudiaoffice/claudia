@@ -20,6 +20,7 @@ from claudia_core import (
     RenameThing,
     clean_name,
     free_name,
+    free_names,
     name_problem,
 )
 
@@ -123,6 +124,25 @@ def naming_steps(model: object, locale: str) -> list[RenameThing]:
         taken.append(name)
         steps.append(RenameThing(thing, name))
     return steps
+
+
+def name_unnamed_things(model: object, locale: str) -> int:
+    """Give every unnamed thing of ``model`` the first free name for what it is, in ``locale``, *in place*: no history
+    step, because the model is not a document yet. What an import does with a file's things (E1.13, D1311): a slide is
+    "Slide 1", a paragraph "Paragraph 4". One pass over the things however many there are: a text of fifty thousand
+    paragraphs is not renamed one command at a time. Returns how many were named."""
+    if not isinstance(model, ObjectModel):
+        return 0
+    wanted: dict[str, list[str]] = {}  # the things of each kind of name, in order
+    for kind, thing in model.unnamed_things():
+        wanted.setdefault(localized(_label_of(kind), locale), []).append(thing)
+    taken = list(model.names_in_use())
+    for label, things in wanted.items():
+        names = free_names(label, taken, len(things))
+        taken.extend(names)
+        for thing, name in zip(things, names, strict=True):
+            model.set_thing_name(thing, name)
+    return sum(len(things) for things in wanted.values())
 
 
 def _name_unnamed(ctx: Context, *, base) -> dict:

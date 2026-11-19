@@ -83,6 +83,7 @@ from claudia_core import (
 )
 from claudia_creates import ShapeLibrary
 
+from .composes_annotations import export_annotations
 from .composes_contents import add_contents_methods
 from .composes_search import add_search_methods
 from .composes_words import add_word_methods
@@ -204,8 +205,8 @@ def _suggestions(ctx):
     return _text(ctx).visible_suggestions()
 
 
-@composes_methods.method("export_office", "format:str tracked_changes:bool=false")
-def _export_office(ctx, *, format, tracked_changes):
+@composes_methods.method("export_office", "format:str tracked_changes:bool=false description_comments:bool=false")
+def _export_office(ctx, *, format, tracked_changes, description_comments):
     """The document's current content as bytes of a Word file (`format` `"docx"`) or an OpenDocument text (`"odt"`),
     wrapped for the wire as `{format, content_type, data}` (`data` base64); the answer also has `losses`, what
     the file could not hold, as `{kind, detail, count}` codes.
@@ -213,12 +214,20 @@ def _export_office(ctx, *, format, tracked_changes):
     With `tracked_changes` (default off, so a clean copy is the default, D212), every open suggestion that proposes a
     replacement is written as a tracked change a reviewer can accept or reject in Word or any OpenDocument program,
     dated with when it was proposed, by whom. An odt also says in its metadata when the document was made and last
-    changed, and by whom: all read from the document's log (D411)."""
+    changed, and by whom: all read from the document's log (D411).
+
+    A name a person gave a paragraph is written as a bookmark around its words, one that was only worked out is not
+    (D1311). With `description_comments` (default off, A4) what a person wrote about a paragraph is written as a review
+    comment by the person who exports, dated today (A6). Such a file is always written anew: the file an import kept
+    cannot be patched with comments, and the answer says so in `losses`."""
     if format not in ("docx", "odt"):
         raise RequestError("bad_request", msg('export_office: format must be "docx" or "odt"'))
     model = _text(ctx)
     info, times = export_info(ctx.document.log, ctx.document.branch)
     draw = None if ctx.renderings is None else ctx.renderings.rasteriser  # draws an SVG picture as a PNG (D464)
+    notes = export_annotations(model, ctx.user, comments=description_comments)
+    # the file an import kept cannot be patched with comments: a new one is written, and the answer says so
+    why = msg("the descriptions are written as comments, which the kept file cannot take") if notes.comments else ""
     if format == "docx":
         return export_with_original(
             ctx,
@@ -235,10 +244,18 @@ def _export_office(ctx, *, format, tracked_changes):
             ),
             lambda: office_export(
                 format,
-                text_to_docx(model, track_suggestions=tracked_changes, change_times=times, rasterise=draw, info=info),
+                text_to_docx(
+                    model,
+                    track_suggestions=tracked_changes,
+                    change_times=times,
+                    rasterise=draw,
+                    info=info,
+                    annotations=notes,
+                ),
                 docx_export_losses(model, track_suggestions=tracked_changes, rasterised=draw is not None),
             ),
             docx_unwritten_changes,
+            not_patched=why,
         )
     return export_with_original(
         ctx,
@@ -255,10 +272,18 @@ def _export_office(ctx, *, format, tracked_changes):
         ),
         lambda: office_export(
             format,
-            text_to_odt(model, track_suggestions=tracked_changes, info=info, change_times=times, rasterise=draw),
+            text_to_odt(
+                model,
+                track_suggestions=tracked_changes,
+                info=info,
+                change_times=times,
+                rasterise=draw,
+                annotations=notes,
+            ),
             odt_export_losses(model, track_suggestions=tracked_changes, rasterised=draw is not None),
         ),
         odt_unwritten_changes,
+        not_patched=why,
     )
 
 

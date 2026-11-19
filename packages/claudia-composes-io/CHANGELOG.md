@@ -5,6 +5,15 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Names and descriptions in docx and odt (E1.13, D1311, D1318): **`Annotations`** (`names`, `comments`, `author`,
+  `when`) is the new `annotations=` argument of `text_to_docx` and `text_to_odt`. A paragraph with a name in
+  `names` gets a bookmark around its words (a docx cannot hold a space in a bookmark, so a space is written as `_`);
+  one with a text in `comments` gets a review comment by `author` at `when` (`add_comment` in a docx,
+  `office:annotation` in an odt). Without it nothing changes. `docx_to_text` and `odt_to_text` read a bookmark around
+  the words of exactly one paragraph as that paragraph's name (not one a program makes for itself, starting with `_` or
+  `ref-`; a clash gets `(2)`; a heading keeps its title); comments are not read back as descriptions.
+
 ### Changed
 - The docx and odt exports leave the box properties of the table looks out of the style-by-style check
   (`TABLE_STYLE_IDS`), and the paragraph styles of the table roles are written **without** their lines, fill and

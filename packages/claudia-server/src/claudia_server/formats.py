@@ -21,6 +21,9 @@ from xml.etree import ElementTree
 from claudia_container import MAX_DESCRIPTION, MAX_TAGS, clean_details
 from claudia_opc_io import check_package
 
+from .i18n import DEFAULT_LOCALE
+from .thing_names import name_unnamed_things
+
 #: The formats an import reads, the app each becomes, and its own words for people.
 FORMATS: dict[str, tuple[str, str]] = {
     "docx": ("composes", "Word document"),
@@ -111,14 +114,18 @@ def _reader(fmt: str):  # noqa: ANN202 - one of six reader functions
     raise UnknownFormat(f"{fmt} cannot be imported")
 
 
-def import_state(fmt: str, data: bytes) -> tuple[dict, list[dict]]:
+def import_state(fmt: str, data: bytes, locale: str = DEFAULT_LOCALE) -> tuple[dict, list[dict]]:
     """The state an import of ``data`` (a file of format ``fmt``) makes, as ``serialize()`` gives it, and what the
     document will not show, as ``{kind, detail, count}``. Raises whatever the reader raises for a broken file, and
     ``claudia_opc_io.PackageRefused`` for a zip that unpacks to far too much (SEC-15): the office libraries open the
-    zip themselves, so this is the one place every format passes before any of them does."""
+    zip themselves, so this is the one place every format passes before any of them does.
+
+    A thing of the file that has no name (a slide, a paragraph the file did not bookmark) is named by what it is, in
+    ``locale``, the language of the one who imports (E1.13, D1311)."""
     read, losses_of = _reader(fmt)
     check_package(data)
     model = read(data)
+    name_unnamed_things(model, locale)
     losses = (
         []
         if losses_of is None

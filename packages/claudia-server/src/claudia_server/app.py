@@ -396,9 +396,11 @@ class Gateway:
         except ValueError as error:
             raise HubError("bad_request", str(error)) from error
 
-    async def _read_upload(self, module: Module, doc_id: str, upload: Upload) -> tuple[Upload, dict, list[dict]]:
+    async def _read_upload(
+        self, module: Module, doc_id: str, upload: Upload, locale: str
+    ) -> tuple[Upload, dict, list[dict]]:
         """The state the import makes, read in the worker pool before anything is created (D436): a file that cannot
-        be read costs nobody a half-made document."""
+        be read costs nobody a half-made document. Its things are named in ``locale``, the language of the importer."""
         if module.app != upload.app:
             raise HubError(
                 "bad_request", msg("{name} cannot become a document of {app}", name=upload.name, app=module.app)
@@ -406,7 +408,7 @@ class Gateway:
         if module.hub.exists(doc_id):
             raise HubError("bad_request", msg("{id} is here already: give the new document another name", id=doc_id))
         try:
-            state, losses = await module.hub.workers.submit(import_state, upload.fmt, upload.data)
+            state, losses = await module.hub.workers.submit(import_state, upload.fmt, upload.data, locale)
         except Exception as exc:  # noqa: BLE001 - whatever a reader raises, the file is not one it can read
             log.info("cannot import %s: %s", upload.name, exc)
             raise HubError("bad_request", msg("{name} cannot be read", name=upload.name)) from exc
@@ -459,7 +461,7 @@ class Gateway:
             upload = self._upload_for(params)
             details = self._details_for(params) if upload is not None else ("", ())
             module = self.module_for(doc_id, app, params.get("app") or (upload.app if upload else None))
-            imported = None if upload is None else await self._read_upload(module, doc_id, upload)
+            imported = None if upload is None else await self._read_upload(module, doc_id, upload, locale)
             if params.get("recovery_key") is not None:
                 account, created = await self._recover(module, doc_id, params), False
             else:

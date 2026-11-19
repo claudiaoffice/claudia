@@ -69,6 +69,8 @@ def export_with_original[M: DocumentModel](
     patch: Callable[[bytes, M, M, LossLog], bytes],
     fresh: Callable[[], dict],
     unwritten: Callable[[M, M], Iterable[Loss]] | None = None,
+    *,
+    not_patched: str = "",
 ) -> dict:
     """``export_office`` for a document that may have been imported (D441). When it was imported from a file of
     ``fmt`` and that file is kept, the answer is that file with the edits since the import patched in (``patch``:
@@ -76,10 +78,14 @@ def export_with_original[M: DocumentModel](
     the patch itself could not keep), and says ``patched: true``: everything Claudia does not show stays as the file
     had it. Its ``losses`` are what the patch said and what ``unwritten(current, baseline)`` says of the edits the
     patch has no place for (D299, D405). Otherwise, or when the edits cannot be patched in, the answer is
-    ``fresh()``; in the second case its losses also say ``not-patched``, with the reason."""
+    ``fresh()``; in the second case its losses also say ``not-patched``, with the reason. ``not_patched`` is a reason
+    given by the caller why the original is not to be patched this time (what was asked for cannot be patched in):
+    the answer is ``fresh()`` and says ``not-patched`` with that reason, when there is an original."""
     imported = import_of(ctx.document.log, ctx.document.branch)
     if imported is None or imported.fmt != fmt or not imported.kept:
         return fresh()
+    if not_patched:
+        return _noted(fresh(), not_patched)
     original = ctx.original()
     if original is None or hashlib.sha256(original).hexdigest() != imported.sha256:
         log.warning("the kept original of %s is missing or not the imported file", ctx.doc_id)
