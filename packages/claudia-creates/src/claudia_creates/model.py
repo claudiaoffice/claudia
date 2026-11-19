@@ -138,7 +138,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 13: the presentation holds lists, whose items are the words of text boxes and shapes (step C, E10.21)
     # 14: the presentation holds its numbering schemes; styles may name a list that numbers them (step D, E9.22)
     # 15: the words of a text box may be generated (an agenda, step E, E9.31)
-    state_schema: ClassVar[int] = 16  # 16: an object body has one ``ref`` instead of a field per kind
+    # 16: an object body has one ``ref`` instead of a field per kind
+    state_schema: ClassVar[int] = 17  # 17: slides may have descriptions, by their id (D1317, D1318)
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -156,6 +157,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.times: dict[str, int] = {}
         #: The names of the slides that have one (D550); a name is shared with the objects, so see ``named_things``.
         self.slide_names: dict[str, str] = {}
+        #: What was written about the slides that have something (D1317, D1318), beside their names.
+        self.slide_descriptions: dict[str, str] = {}
         #: How the slides are printed, as a layout and a page (D917).
         self.print_setup: PrintSetup = print_setup if print_setup is not None else PrintSetup()
         #: The language of the presentation, a BCP 47 tag, or ``None`` when it is not known (D915, D917).
@@ -193,6 +196,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "notes": dict(self.notes),
             "times": dict(self.times),
             "names": dict(self.slide_names),
+            "descriptions": dict(self.slide_descriptions),
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
             "shapes": self.shapes_to_data(),
@@ -220,6 +224,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model.times = {k: v for k, v in state.get("times", {}).items() if k in model.slides}
         # schema 10 and earlier: no names
         model.slide_names = {k: v for k, v in state.get("names", {}).items() if k in model.slides and v}
+        # schema 16 and earlier: nothing was written about a slide
+        model.slide_descriptions = {k: v for k, v in state.get("descriptions", {}).items() if k in model.slides and v}
         model.restore_objects(
             state["objects"], state["images"], state["shapes"], renderings=state.get("renderings", ())
         )
@@ -237,6 +243,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             raise ValueError(f"the presentation has no slide or object {unknown[0]!r}")
         chosen = slides if parts is None else slides & parts
         self.notes = {slide: text for slide, text in self.notes.items() if slide not in chosen}
+        self.slide_descriptions = {k: v for k, v in self.slide_descriptions.items() if k not in chosen}
         if parts is None:
             self.blank_objects(None)
             return
@@ -285,10 +292,16 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
 
     # -- slides ----------------------------------------------------------------
     def insert_slide(
-        self, slide: str, at: int | None = None, notes: str = "", seconds: int | None = None, name: str = ""
+        self,
+        slide: str,
+        at: int | None = None,
+        notes: str = "",
+        seconds: int | None = None,
+        name: str = "",
+        description: str = "",
     ) -> None:
-        """Add a slide at position ``at`` (the end by default), optionally with its notes, planned time and name (which
-        is how undoing the removal of a slide gives them back)."""
+        """Add a slide at position ``at`` (the end by default), optionally with its notes, planned time, name and
+        description (which is how undoing the removal of a slide gives them back)."""
         if not _ID.fullmatch(slide):
             raise ValueError(f"slide id {slide!r}: lower-case letters, digits, '-' and '_', starting with a letter")
         if slide in self.slides:
@@ -306,6 +319,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             self.notes[slide] = notes
         if seconds is not None:
             self.times[slide] = seconds
+        if description:
+            self.slide_descriptions[slide] = description
         if name:
             self.slide_names[slide] = name
 
@@ -322,6 +337,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.notes.pop(slide, None)
         self.times.pop(slide, None)
         self.slide_names.pop(slide, None)
+        self.slide_descriptions.pop(slide, None)
         return place
 
     # -- the shared text structure (step C): the presentation as a ParagraphHost ---------
@@ -433,6 +449,24 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             self.slide_names[thing_id] = name
         else:
             self.slide_names.pop(thing_id, None)
+        return old
+
+    def thing_description(self, thing_id: str) -> str:
+        """What is written about an object or a slide, ``""`` if nothing; ``ValueError`` if there is neither."""
+        if thing_id not in self.slides:
+            return super().thing_description(thing_id)
+        return self.slide_descriptions.get(thing_id, "")
+
+    def set_thing_description(self, thing_id: str, description: str) -> str:
+        """Write something about a slide (``""``: nothing); returns what was written. An object is described by
+        :class:`~claudia_core.DescribeObject`."""
+        if thing_id not in self.slides:
+            return super().set_thing_description(thing_id, description)
+        old = self.slide_descriptions.get(thing_id, "")
+        if description:
+            self.slide_descriptions[thing_id] = description
+        else:
+            self.slide_descriptions.pop(thing_id, None)
         return old
 
     # -- notes and planned times (E10.2) -----------------------------------------

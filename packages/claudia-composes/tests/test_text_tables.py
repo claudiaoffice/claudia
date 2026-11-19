@@ -157,7 +157,7 @@ def test_the_tables_are_in_the_snapshot_and_a_text_from_before_tables_reads():
     assert again.serialize() == state
     del state["tables"]
     assert TextModel.restore(state).tables == {}
-    assert TextModel.state_schema == 15
+    assert TextModel.state_schema == 16  # 16: paragraph descriptions
 
 
 # -- typing in a box ----------------------------------------------------------------------------------------------

@@ -8,6 +8,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 Heavy functions in worker processes (E4.4, D37, D1314).
 
 ### Added
+- A sheet, a chart tab and a named range can be described (E1.13, D1317, D1318): `WorkbookModel.thing_descriptions`, `thing_description`, `set_thing_description`, and `rename_command`, which renames a named range with `RenameName`. State schema 16: `descriptions` is new (absent: none).
 - The command **`ApplyCalculated`** (kind `computes.ApplyCalculated`, not undoable): a worker's result for a heavy call
   that was deferred, applied like any other change (recalculated readers, an event, a log entry). It does nothing when
   the cell is no longer waiting for that call, so a result computed from a stale snapshot never lands.

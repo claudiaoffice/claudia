@@ -443,3 +443,40 @@ def test_a_name_a_person_chose_is_not(name):
     from claudia_server.thing_names import is_generic_name
 
     assert not is_generic_name(name)
+
+
+# -- a sheet, a chart tab, a range (D1317) --------------------------------------------------------------------------
+def test_a_sheet_is_named_and_described_in_one_step_and_the_formulas_follow(book):
+    on_book(book, "name_and_describe", {"id": "s1", "name": "Plan", "description": "Q4 budget"})
+    assert (name_of(book, "s1"), book.model.thing_description("s1")) == ("Plan", "Q4 budget")
+    book.undo("ann")
+    assert (name_of(book, "s1"), book.model.thing_description("s1")) == ("Sheet1", "")
+
+
+def test_a_cell_range_without_a_name_is_named_and_described_together(book):
+    box = {"sheet": "s1", "row0": 1, "col0": 1, "row1": 3, "col1": 2}
+    answer = on_book(book, "name_and_describe_range", {"range": box, "name": "Rates", "description": "Tax rates"})
+    assert book.model.thing_name(answer["id"]) == "Rates"
+    assert book.model.thing_description(answer["id"]) == "Tax rates"
+    book.undo("ann")
+    assert list(book.model.names) == [], "one Undo takes the name and the words back"
+
+
+def test_a_cell_range_needs_a_name_when_it_is_described(book):
+    box = {"sheet": "s1", "row0": 1, "col0": 1, "row1": 3, "col1": 2}
+    with pytest.raises(RequestError, match="needs some text"):
+        on_book(book, "name_and_describe_range", {"range": box, "name": "", "description": "words"})
+
+
+def test_a_cell_range_cannot_take_a_name_somebody_has(book):
+    box = {"sheet": "s1", "row0": 1, "col0": 1, "row1": 3, "col1": 2}
+    with pytest.raises(RequestError):
+        on_book(book, "name_and_describe_range", {"range": box, "name": "sheet1", "description": ""})
+
+
+def test_a_named_range_is_renamed_and_described_in_the_dialog(book):
+    box = {"sheet": "s1", "row0": 1, "col0": 1, "row1": 3, "col1": 2}
+    made = on_book(book, "name_and_describe_range", {"range": box, "name": "Rates", "description": ""})
+    on_book(book, "name_and_describe", {"id": made["id"], "name": "TaxRates", "description": "now words"})
+    assert (name_of(book, made["id"]), book.model.thing_description(made["id"])) == ("TaxRates", "now words")
+    assert on_book(book, "thing_details", {"id": made["id"]})["kind"] == "range"

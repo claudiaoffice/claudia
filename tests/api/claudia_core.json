@@ -1457,6 +1457,7 @@
    "put_object_generated": "(self, object_id: 'str', generated: 'Generated | None') -> 'ObjectsChanged'",
    "put_object_item": "(self, object_id: 'str', item: 'ListItem | None') -> 'ObjectsChanged'",
    "remove_object_text": "(self, object_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], ObjectsChanged]'",
+   "rename_command": "(self, thing_id: 'str', name: 'str') -> 'Command'",
    "rename_thing": "(self, ctx: 'Context', thing_id: 'str', name: 'str') -> 'tuple[str, tuple[Command, ...]]'",
    "renderings_to_data": "(self) -> 'list[dict]'",
    "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",

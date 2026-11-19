@@ -28,7 +28,8 @@ register = SlideModel.registry.register
 @dataclass(frozen=True)
 class AddSlide(Command):
     """Add an empty slide, at the end or at a place. It carries notes, a planned time and a name only when it is the
-    inverse of removing a slide that had them, or when the server names a new one (D550)."""
+    inverse of removing a slide that had them (a name and a description too), or when the server names a new one
+    (D550)."""
 
     kind: ClassVar[str] = "creates.AddSlide"
     id: str
@@ -36,6 +37,7 @@ class AddSlide(Command):
     notes: str = ""
     seconds: int | None = None
     name: str = ""
+    description: str = ""
 
     @property
     def label(self) -> str:
@@ -46,7 +48,7 @@ class AddSlide(Command):
         return "Added a slide"
 
     def apply(self, ctx: Context[SlideModel]) -> Command:
-        ctx.model.insert_slide(self.id, self.at, self.notes, self.seconds, self.name)
+        ctx.model.insert_slide(self.id, self.at, self.notes, self.seconds, self.name, self.description)
         ctx.emit(SlidesChanged())
         return RemoveSlide(self.id)
 
@@ -58,17 +60,26 @@ class AddSlide(Command):
             data["seconds"] = self.seconds
         if self.name:
             data["name"] = self.name
+        if self.description:
+            data["description"] = self.description
         return data
 
     @classmethod
     def from_data(cls, data, registry) -> AddSlide:
-        return cls(data["id"], data.get("at"), data.get("notes", ""), data.get("seconds"), data.get("name", ""))
+        return cls(
+            data["id"],
+            data.get("at"),
+            data.get("notes", ""),
+            data.get("seconds"),
+            data.get("name", ""),
+            data.get("description", ""),
+        )
 
     def shifted_by(self, other: Command) -> Command | None:
         return None if isinstance(other, AddSlide) and other.id == self.id else self
 
     def redacted(self) -> Command:
-        """Notes are content (E1.8); the slide itself is what later commands refer to."""
+        """Notes and the description are content (E1.8); the slide itself is what later commands refer to."""
         return AddSlide(self.id, self.at, name=self.name)
 
 
@@ -92,9 +103,10 @@ class RemoveSlide(Command):
         notes = ctx.model.notes.get(self.id, "")
         seconds = ctx.model.times.get(self.id)
         name = ctx.model.slide_names.get(self.id, "")
+        description = ctx.model.slide_descriptions.get(self.id, "")
         place = ctx.model.delete_slide(self.id)
         ctx.emit(SlidesChanged())
-        return AddSlide(self.id, place, notes, seconds, name)
+        return AddSlide(self.id, place, notes, seconds, name, description)
 
     def to_data(self) -> dict:
         return {"id": self.id}

@@ -226,7 +226,7 @@ def _name_and_describe(
         problem = name_problem(name)
         if problem is not None:
             raise RequestError("bad_request", problem)
-        steps.append(RenameThing(id, cleaned))
+        steps.append(model.rename_command(id, cleaned))
     drawn = _is_drawn(model, id)
     if decorative and not drawn:
         raise RequestError("command_error", msg("only something that is drawn can be marked as decoration"))

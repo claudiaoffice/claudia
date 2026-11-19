@@ -27,7 +27,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '') -> None",
+  "init": "(id: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '', description: 'str' = '') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'AddSlide'",
@@ -550,7 +550,7 @@
    "fields_of": "(self, paragraph_id: 'str') -> 'tuple[Field, ...]'",
    "generated_of": "(self, paragraph_id: 'str') -> 'Generated | None'",
    "get": "(self, object_id: 'str') -> 'SlideObject'",
-   "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '') -> 'None'",
+   "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '', description: 'str' = '') -> 'None'",
    "insert_text": "(self, paragraph_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'tuple[object, ...]'",
    "item_of": "(self, paragraph_id: 'str') -> 'ListItem | None'",
    "item_regions": "(self, paragraph_id: 'str') -> 'tuple[Region, ...]'",
@@ -567,12 +567,14 @@
    "restore": "(state: 'dict') -> 'Self'",
    "serialize": "(self) -> 'dict'",
    "set_notes": "(self, slide: 'str', text: 'str') -> 'str'",
+   "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
    "set_time": "(self, slide: 'str', seconds: 'int | None') -> 'int | None'",
    "settle": "(self, ctx) -> 'None'",
    "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
    "text_moved": "(self, command: 'TextCommand') -> 'tuple[object, ...]'",
    "text_regions": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[Region, ...]'",
+   "thing_description": "(self, thing_id: 'str') -> 'str'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "time_of": "(self, slide: 'str') -> 'int | None'",
    "total_time": "(self) -> 'int'",

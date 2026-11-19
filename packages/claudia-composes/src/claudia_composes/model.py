@@ -428,7 +428,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 13: the text holds its numbering schemes; styles may name a list that numbers them (E9.22)
     # 14: a paragraph may be generated (a table of contents, E9.31)
     # 15: the text holds tables, shown by objects of the kind table (D1201); an object body has one ``ref`` (see core)
-    state_schema: ClassVar[int] = 15
+    # 16: paragraphs may have descriptions, by their id (D1317, D1318)
+    state_schema: ClassVar[int] = 16
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -541,12 +542,14 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
 
     def blank(self, parts: frozenset[str] | None) -> None:
         """Blank the paragraphs and objects named in ``parts`` (all of them for ``None``), for redacting an import
-        (D723): every character becomes :data:`~claudia_core.FILLER`, so lengths, places and who wrote what stay; the
-        suggestions on a blanked paragraph lose their words and reasons. ``ValueError`` for a name that is neither."""
+        (D723): every character becomes :data:`~claudia_core.FILLER`, so lengths, places and who wrote what stay; what
+        was written about a paragraph goes; the suggestions on a blanked paragraph lose their words and reasons.
+        ``ValueError`` for a name that is neither."""
         blocks = {block.id for block in self.blocks}
         if parts is not None and (unknown := sorted(parts - blocks - set(self.objects))):
             raise ValueError(f"the text has no paragraph or object {unknown[0]!r}")
         chosen = blocks if parts is None else blocks & parts
+        self.block_descriptions = {k: v for k, v in self.block_descriptions.items() if k not in chosen}
         self.blocks = [
             block.with_text(FILLER * len(block.text), block.runs) if block.id in chosen else block
             for block in self.blocks

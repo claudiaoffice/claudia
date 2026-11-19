@@ -100,3 +100,12 @@ def test_an_object_is_described_by_describe_object_which_says_whether_it_is_deco
         text.execute(DescribeThing("o1", "words"), author="ann")
     text.execute(DescribeObject("o1", "a note about the fox", False), author="ann")
     assert text.model.thing_description("o1") == "a note about the fox"
+
+
+def test_redacting_an_import_takes_the_words_written_about_a_blanked_paragraph(text):
+    text.execute(DescribeThing("b2", "secret"), author="ann")
+    text.execute(DescribeThing("b1", "kept"), author="ann")
+    text.model.blank(frozenset({"b2"}))
+    assert (text.model.thing_description("b2"), text.model.thing_description("b1")) == ("", "kept")
+    text.model.blank(None)
+    assert text.model.thing_description("b1") == ""

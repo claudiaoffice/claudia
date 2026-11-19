@@ -6,6 +6,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- **`name_and_describe_range`** (`range`, `name`, `description`) in a workbook: the *Name & describe…* dialog for cells that have no name yet; it asks for the name, since a range is not a thing without one, and writes name and description as one step.
 - **`thing_details`** (`id`) and **`name_and_describe`** (`id`, `name`, `description`, `decorative`): the two methods behind
   the one *Name & describe…* dialog for every thing (D1317, D1318). The second writes name and description as one step
   of the history, so one Undo takes both back, and writes nothing when nothing changes. `blocks` says each paragraph's

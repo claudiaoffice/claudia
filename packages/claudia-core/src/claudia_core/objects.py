@@ -639,6 +639,11 @@ class ObjectModel[A: Anchor]:
         self.replace_object(old.with_body(name=name))
         return old.body.name
 
+    def rename_command(self, thing_id: str, name: str) -> Command:
+        """The command that gives the thing this (checked) name. An app whose things are renamed another way (a named
+        range, whose formulas are rewritten with it) overrides this for them."""
+        return RenameThing(thing_id, name)
+
     def name_is_fixed(self, thing_id: str) -> bool:
         """Is the name of this thing worked out, so that nobody can change it? (A heading is called by its title.)"""
         return False

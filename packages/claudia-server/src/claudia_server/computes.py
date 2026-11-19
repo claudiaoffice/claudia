@@ -126,11 +126,14 @@ from claudia_core import (
     Batch,
     Command,
     DefineDiagram,
+    DescribeThing,
     ForgetDiagram,
     ObjectBody,
     PageSetup,
     PageSetupError,
     UpdateDiagram,
+    clean_name,
+    name_problem,
 )
 
 from .computes_search import add_search_methods
@@ -896,6 +899,25 @@ def _define_name(ctx, *, definition, base):
     that is not a cell address. One change in the history."""
     named = _name_from(_workbook(ctx), definition, "define_name")
     return done(ctx, DefineName(named), base)
+
+
+@computes_methods.method("name_and_describe_range", "range:dict name:str description:text base:revision?", write=True)
+def _name_and_describe_range(ctx, *, range, name, description, base):  # noqa: A002 - the wire name
+    """The Name & describe… dialog for cells that have no name yet (D1317): give the cells `range` (`{sheet, row0,
+    col0, row1, col1}`) the name `name` and the description `description`, as one step in the history, so one Undo takes
+    both back. A range is not a thing until it has a name, so the name is required (`bad_request` without text,
+    `command_error` when somebody else has it, as for `define_name`). Returns `{revision, id, name}`: the id is the one
+    to give `name_and_describe` from then on."""
+    problem = name_problem(name)
+    if problem is not None:
+        raise RequestError("bad_request", problem)
+    named = _name_from(_workbook(ctx), {"name": clean_name(name), "range": range}, "name_and_describe_range")
+    steps: list[Command] = [DefineName(named)]
+    if description:
+        steps.append(DescribeThing(named.id, description))
+    command = steps[0] if len(steps) == 1 else Batch(tuple(steps), name="Name and describe")
+    applied = ctx.document.execute(command, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data(), "id": named.id, "name": named.name}
 
 
 @computes_methods.method("rename_name", "old:str new:str scope:str? base:revision?", write=True)

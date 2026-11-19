@@ -434,7 +434,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 12: how it is printed, and its language (E6.19, D1001)
     # 13: names have ids (D552)
     state_schema: ClassVar[int] = (
-        15  # 15: an object body has one ``ref``; 14: the workbook carries its pivot tables (E6.30, D620)
+        16  # 16: sheets, chart tabs and named ranges may have descriptions (D1317); 15: an object body has one
+        # ``ref``; 14: the workbook carries its pivot tables (E6.30, D620)
     )
     registry: ClassVar[CommandRegistry] = new_registry()
 
@@ -462,6 +463,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         self.charts: dict[str, Chart] = {}
         #: Named ranges, tables and the results of ``SQL()`` formulas (E6.5): see :class:`~claudia_computes.Names`.
         self.names = Names()
+        #: What was written about a sheet, a chart tab or a named range, by its id (D1317, D1318): a plain string beside
+        #: the name, as an object's description is. Kept when the thing is removed, for the undo.
+        self.thing_descriptions: dict[str, str] = {}
         #: The pivot tables of the workbook, as :class:`~claudia_computes.Pivots` (E6.30).
         self.pivots = Pivots()
         #: The seed and the draw number every random number is a function of (D291). Both are part of the document, so
@@ -506,6 +510,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "objects": self.objects_to_data(),
             "charts": [chart.to_data() for chart in self.charts.values()],
             "names": self.names.to_data(),
+            "descriptions": dict(self.thing_descriptions),
             "pivots": self.pivots.to_data(),
             "random": {"seed": self.random_seed, "draw": self.random_draw},
             "number_formats": self.number_formats.to_data(),
@@ -530,6 +535,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         )
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
+        model.thing_descriptions = dict(state.get("descriptions", {}))  # (schema 15 and earlier: nothing written)
         model.pivots = Pivots.from_data(state.get("pivots", ()))  # (schema 13 and earlier: none)
         model.random_seed, model.random_draw = state["random"]["seed"], state["random"]["draw"]
         model.number_formats = NumberFormatBook.from_data(state["number_formats"])
@@ -554,6 +560,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         blanks the object. Sheets, their names, sizes and styles, names of ranges and charts stay, so later steps
         still find what they refer to. ``ValueError`` for a part the workbook does not have."""
         if parts is None:
+            self.thing_descriptions.clear()
             for sheet in self.sheets.values():
                 sheet.cells.clear()
             for chart in self.charts.values():
@@ -565,6 +572,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         self.blank_objects(parts & set(self.objects))
 
     def _blank_part(self, part: str) -> None:
+        self.thing_descriptions.pop(part, None)
         if part in self.sheets:
             self.sheets[SheetId(part)].cells.clear()
         elif part in self.charts:
@@ -709,6 +717,38 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         if thing_id in self.charts:
             return self.charts[thing_id].name
         return super().thing_name(thing_id)
+
+    def _describes(self, thing_id: str) -> bool:
+        """Is this a sheet, a chart tab or a named range, the things whose descriptions this model keeps?"""
+        return thing_id in self.sheets or thing_id in self.charts or self.name_with_id(thing_id) is not None
+
+    def thing_description(self, thing_id: str) -> str:
+        """What is written about a sheet, a chart tab, a named range or an object, ``""`` if nothing."""
+        if self._describes(thing_id):
+            return self.thing_descriptions.get(thing_id, "")
+        return super().thing_description(thing_id)
+
+    def set_thing_description(self, thing_id: str, description: str) -> str:
+        """Write something about a sheet, a chart tab or a named range (``""``: nothing); returns what was written.
+        An object is described by :class:`~claudia_core.DescribeObject`."""
+        if not self._describes(thing_id):
+            return super().set_thing_description(thing_id, description)
+        old = self.thing_descriptions.get(thing_id, "")
+        if description:
+            self.thing_descriptions[thing_id] = description
+        else:
+            self.thing_descriptions.pop(thing_id, None)
+        return old
+
+    def rename_command(self, thing_id: str, name: str):
+        """The command that gives the thing this (checked) name: a named range is renamed in the list of names, which
+        also rewrites the formulas that use it, so it is not a :class:`~claudia_core.RenameThing`."""
+        named = self.name_with_id(thing_id)
+        if named is None:
+            return super().rename_command(thing_id, name)
+        from .name_commands import RenameName
+
+        return RenameName(named.scope, named.name, name)
 
     def rename_thing(self, ctx, thing_id: str, name: str):
         """As :meth:`~claudia_core.ObjectModel.rename_thing`. A sheet's name is written in the formulas that read it
