@@ -107,6 +107,7 @@ const grid = ref<{
   openStyleMenu: (at?: { x: number; y: number }, mode?: 'edit' | 'apply') => void
   selectedObject: () => string | null
   stepObject: (step: 1 | -1) => void
+  paste: () => Promise<boolean>
   anchorPoint: (row: number, col: number) => { x: number; y: number } | null
   centre: (row: number, col: number) => void
 } | null>(null)
@@ -541,6 +542,7 @@ async function paste(rows: string[][]) {
  * (`@paste="paste"` below) — same destination (`paste(rows)`, which already knows where the selection is and checks
  * its bounds), only the source of the text differs: the Clipboard API instead of a browser paste event's data. */
 async function pasteFromClipboard() {
+  if (await grid.value?.paste()) return // a picture that was cut or copied (D1229)
   let text: string
   try {
     text = await navigator.clipboard.readText()
@@ -1225,6 +1227,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       :cell-host="cellHost"
       :marks="searchMarks"
       @object="objectSelected = $event"
+      @describe="openDescribe"
       @styles="dialog = 'styles'"
       @select="select"
       @move="moveBy"

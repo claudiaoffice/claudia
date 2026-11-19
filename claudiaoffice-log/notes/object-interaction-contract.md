@@ -233,7 +233,10 @@ Each patch assumes the earlier ones are applied; the last step of each is a merg
    Follow-up of 2026-11-19 (D1229): the size cap, the table commands in Tools (`clients/linux/src/claudia_shell_gtk/manifest.py`),
    the workbook's wording, Delete on a selected table, and the object clipboard for pictures in all three apps
    (`web/app/lib/object-clipboard.ts`).
-4. **computes:** host adapter, handles, turn, menu, the `contextmenu` rule in `SheetGrid.vue`.
+4. **computes — built (D1230):** the host (`web/app/lib/sheet-object-host.ts`: nearest cell on release, one cell per arrow), handles,
+   turn handle, *Rotate by…*, the object menu and the `contextmenu` rule in `web/app/components/SheetGrid.vue` (the viewport's
+   capture handler now yields to `[data-object]`), pointer events with capture, the picture clipboard pasting into the selected
+   cell. **Not built:** wrap and *Release from grid* (do not apply in a cell grid).
 5. **`objects.cjs`** and its guard test, wired into `npm run e2e:objects` and CI as the other specs are.
 
 ## What I could not do here

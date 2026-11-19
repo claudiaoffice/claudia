@@ -901,6 +901,11 @@ export class Session extends BaseSession<State> {
     return (await this.attempt('resize_object', { id, ...frame, base: this.state.revision })) !== false
   }
 
+  /** Turn an object to `rotation` whole degrees clockwise about its centre (D1021); its anchor cell stays. */
+  async rotateObject(id: string, rotation: number): Promise<boolean> {
+    return (await this.attempt('rotate_object', { id, rotation, base: this.state.revision })) !== false
+  }
+
   /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the
    * history. A picture needs one or the other, which the server insists on. */
   async describeObject(id: string, description: string, decorative: boolean): Promise<boolean> {

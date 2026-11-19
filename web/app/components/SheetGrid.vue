@@ -7,7 +7,13 @@ import { cellLook, DEFAULT_CELL_STYLE, styleAt, within, type CellLook } from '~/
 import { cycleObject, objectName } from '~/lib/descriptions'
 import { ariaColCount, ariaRowCount, cellDomId, cellName, colIndexOf, rowIndexOf } from '~/lib/grid-a11y'
 import { imageDataUrl } from '~/lib/images'
-import { besideRect, centredScroll } from '~/lib/geometry'
+import { besideRect, centredScroll, CORNERS, HANDLES, type Handle } from '~/lib/geometry'
+import { useObjectInteraction } from '~/lib/object-interaction'
+import { contextMenuItems } from '~/lib/object-menu'
+import { pictureOf as clippedImport, useObjectClipboard } from '~/lib/object-clipboard'
+import { nearestLine, stepFor } from '~/lib/sheet-object-host'
+import { canTurn, degreesText, SHIFT_STEP, stepTurn } from '~/lib/turning'
+import type { MenuItem } from './MenuBar.vue'
 import { renderedView } from '~/lib/rendering'
 import {
   buildSizeTable,
@@ -80,6 +86,8 @@ const emit = defineEmits<{
   headerMenu: [axis: Axis, index: number, x: number, y: number]
   /** A floating object was selected (true) or let go of (false): the menus style it instead of the cells (D209). */
   object: [selected: boolean]
+  /** Name & describe… was chosen for the selected object: the workspace owns the dialog. */
+  describe: []
   /** The purpose chip on a table's header was pressed (mock 2): open the purpose menu for that column at this point. */
   tableMenu: [table: NameInfo, offset: number, x: number, y: number]
   /** A cell was right-clicked (and selected, unless it is in the selection already): open its menu at this point. */
@@ -421,13 +429,15 @@ const selectedObject = ref<string | null>(null)
 
 const objects = computed(() => props.session.objectsOn(props.sheet))
 
-/** An object's own anchor, or the live position of the drag in progress that is moving it. */
-function anchorOf(o: SheetObject): { row: number; col: number } {
-  return objDrag.value?.id === o.id ? objDrag.value.pos : { row: o.anchor.row, col: o.anchor.col }
+/** The frame an object is drawn in: the preview of the gesture under way, else its own (sheet pixels from the first cell,
+ * without the headers or the scroll), and the angle it is drawn at. */
+function frameOf(o: SheetObject) {
+  return interaction.frameOf(o.id) ?? { x: lineStart(colTable.value, W, o.anchor.col), y: lineStart(rowTable.value, H, o.anchor.row), w: o.w, h: o.h }
 }
+const turnCss = (degrees: number) => (degrees ? { transform: `rotate(${degrees}deg)` } : {})
 function objectStyle(o: SheetObject) {
-  const { row, col } = anchorOf(o)
-  return { left: `${x(col)}px`, top: `${y(row)}px`, width: `${o.w}px`, height: `${o.h}px` }
+  const f = frameOf(o)
+  return { left: `${HW + f.x - scroll.value.left}px`, top: `${HH + f.y - scroll.value.top}px`, width: `${f.w}px`, height: `${f.h}px`, ...turnCss(interaction.rotationOf(o.id) ?? o.rotation) }
 }
 /** What a screen reader says for an object on the sheet: its kind and description, or that it is decoration. */
 const nameOf = (o: SheetObject) => objectName(o)
@@ -462,44 +472,186 @@ function pictureSrc(o: SheetObject): string | null {
   return asset ? imageDataUrl(asset) : null
 }
 
-type ObjDrag = { id: string; from: { x: number; y: number }; start: { row: number; col: number }; pos: { row: number; col: number }; moved: boolean }
-const objDrag = ref<ObjDrag | null>(null)
+// ------------------------------------------------------------------------------ the pointer: select, drag, size, turn (D1221)
+/** A pointer position as a point of the sheet: pixels from the first cell, without the headers or the scroll. */
+function toSheet(event: { clientX: number; clientY: number }) {
+  const box = viewport.value?.querySelector('.stage')?.getBoundingClientRect()
+  return { x: event.clientX - (box?.left ?? 0) - HW + scroll.value.left, y: event.clientY - (box?.top ?? 0) - HH + scroll.value.top }
+}
+/** The cell an object's top-left corner at (x, y) belongs to: the nearest one. */
+const cornerCell = (px: number, py: number) => ({ row: nearestLine(rowTable.value, H, py, VIEW_ROWS), col: nearestLine(colTable.value, W, px, VIEW_COLS) })
+const readonlyHere = () => state.me.role === 'viewer'
+/** A picture keeps its own proportions; the server refuses another size (`claudia_core.ObjectModel._check_size`). */
+function aspectOf(o: SheetObject): number | null {
+  const image = pointer(o, 'image')
+  const asset = image ? state.images[image] : null
+  return asset ? asset.width / asset.height : null
+}
 
-/** `stopPropagation` here is the whole of "the image takes click priority": the cell grid's own `onDown` is
- * bound on the outer `.viewport` and never even sees a mousedown that an object already caught, so a cell
- * underneath an image cannot be reached by clicking — only by moving the image out of the way. */
-function onObjectDown(event: MouseEvent, o: SheetObject) {
-  if (event.button !== 0) return
+/** What a press and a drag do is `lib/object-interaction.ts`'s, the same in all three apps; this is what computes tells it
+ * about its sheet. A move is a new anchor cell, a resize is a size (and the cell, when a top or left handle was used). */
+const interaction = useObjectInteraction({
+  get bounds() {
+    return { w: lineStart(colTable.value, W, VIEW_COLS), h: lineStart(rowTable.value, H, VIEW_ROWS) }
+  },
+  scale: 1,
+  get readonly() {
+    return readonlyHere()
+  },
+  toUnits: toSheet,
+  subject(id) {
+    const o = state.objects[id]
+    return o ? { id, frame: frameOf(o), rotation: o.rotation, aspect: aspectOf(o), grid: null } : null
+  },
+  async commit(change) {
+    const o = state.objects[change.id]
+    if (!o) return
+    const start = { x: lineStart(colTable.value, W, o.anchor.col), y: lineStart(rowTable.value, H, o.anchor.row), w: o.w, h: o.h }
+    const step = stepFor(change, { start, anchor: { row: o.anchor.row, col: o.anchor.col }, cellAt: cornerCell })
+    if (!step) return
+    if (step.kind === 'move') return props.session.moveObject(o.id, step.row, step.col)
+    if (step.kind === 'resize') return props.session.resizeObject(o.id, { row: step.row, col: step.col, w: step.w, h: step.h })
+    return props.session.rotateObject(o.id, step.rotation)
+  },
+})
+const { rotatePreview } = interaction
+const selected = computed(() => (selectedObject.value ? (state.objects[selectedObject.value] ?? null) : null))
+const selectedBox = computed(() => (selected.value ? frameOf(selected.value) : null))
+const selectedTurn = computed(() => (selected.value ? (interaction.rotationOf(selected.value.id) ?? selected.value.rotation) : 0))
+const turnSaid = ref('')
+const turnable = computed(() => !!selected.value && canTurn(selected.value.kind) && !readonlyHere() && !containerEditing.value)
+const handles = computed<Handle[]>(() => (!selected.value || readonlyHere() || containerEditing.value ? [] : aspectOf(selected.value) !== null ? CORNERS : HANDLES))
+/** The turn handle would be under the column letters at the top: it goes below the object instead. */
+const handleBelow = computed(() => !!selectedBox.value && HH + selectedBox.value.y - scroll.value.top < HH + 44)
+const mineStyle = computed(() => {
+  const f = selectedBox.value
+  return f ? { left: `${HW + f.x - scroll.value.left}px`, top: `${HH + f.y - scroll.value.top}px`, width: `${f.w}px`, height: `${f.h}px`, ...turnCss(selectedTurn.value) } : {}
+})
+
+/** The press is the object's: it is selected, nothing below it (a cell, a header) gets it, and dragging moves it. `mousedown`
+ * is stopped as well, since the grid's own cell selection listens to that one. */
+function onObjectDown(event: PointerEvent, o: SheetObject) {
+  if (event.button !== 0) return // another button only selects (its menu is the grid's `onHeaderContext`)
   event.stopPropagation()
   if (props.edit) emit('commit', 'down')
-  viewport.value?.focus() // so Delete/Escape reach `onKey` even if the focus was elsewhere (the formula bar, say)
+  viewport.value?.focus({ preventScroll: true }) // so Delete and Esc reach `onKey` even if the focus was elsewhere
   selectedObject.value = o.id
-  objDrag.value = { id: o.id, from: { x: event.clientX, y: event.clientY }, start: { row: o.anchor.row, col: o.anchor.col }, pos: { row: o.anchor.row, col: o.anchor.col }, moved: false }
-  window.addEventListener('mousemove', onObjectDrag)
-  window.addEventListener('mouseup', onObjectUp)
+  if (readonlyHere() || containerEditing.value === o.id) return
+  ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+  interaction.begin(o.id, 'move', event)
+}
+function onHandleDown(event: PointerEvent, handle: Handle) {
+  const o = selected.value
+  if (!o || event.button !== 0) return
+  event.stopPropagation()
+  ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+  interaction.begin(o.id, handle, event)
+}
+function onTurnDown(event: PointerEvent) {
+  const o = selected.value
+  if (!o || !turnable.value || event.button !== 0) return
+  event.stopPropagation()
+  event.preventDefault() // the handle takes no focus from the mouse; the grid keeps it, so that Esc reaches it
+  ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+  interaction.begin(o.id, 'turn', event)
+}
+/** The arrow keys on the turn handle: a degree, with Shift 15° (the same keys turn it back), Home upright. */
+async function onTurnKey(event: KeyboardEvent) {
+  const o = selected.value
+  if (!o || !turnable.value) return
+  const by: Record<string, number> = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }
+  let to: number | null = null
+  if (by[event.key] !== undefined) to = stepTurn(o.rotation, by[event.key]! * (event.shiftKey ? SHIFT_STEP : 1))
+  else if (event.key === 'Home') to = 0
+  if (to === null) return
+  event.preventDefault()
+  event.stopPropagation()
+  if (to !== o.rotation && (await props.session.rotateObject(o.id, to))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? to) })
+}
+function onPointerMove(event: PointerEvent) {
+  interaction.move(event)
+}
+/** The release: one change is sent, and what was tried stays on screen until the answer is in. */
+async function onPointerUp() {
+  const change = await interaction.release()
+  if (change?.kind === 'rotate') turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(change.rotation) })
 }
 
-function onObjectDrag(event: MouseEvent) {
-  const d = objDrag.value
-  if (!d) return
-  const dCol = Math.round((event.clientX - d.from.x) / W)
-  const dRow = Math.round((event.clientY - d.from.y) / H)
-  const row = Math.max(0, Math.min(VIEW_ROWS - 1, d.start.row + dRow))
-  const col = Math.max(0, Math.min(VIEW_COLS - 1, d.start.col + dCol))
-  if (row !== d.pos.row || col !== d.pos.col) {
-    d.pos = { row, col }
-    d.moved = true
-  }
+/** Rotate by…: the popover, beside the object. Its angles are previews on the sheet until Done. */
+const rotating = ref<{ id: string; x: number; y: number } | null>(null)
+function openRotateBy(id: string | null = selectedObject.value, at?: { x: number; y: number }) {
+  const o = id ? state.objects[id] : null
+  if (!o || !canTurn(o.kind)) return
+  if (readonlyHere()) return props.session.notice(t('You can only look at this document.'), 'warning')
+  const el = viewport.value?.querySelector(`[data-object="${CSS.escape(o.id)}"]`)
+  const where = at ?? (el ? besideRect(el.getBoundingClientRect(), 264, window.innerWidth) : { x: 160, y: 180 })
+  selectedObject.value = o.id
+  if (!interaction.startRotateBy(o.id)) return
+  rotating.value = { id: o.id, ...where }
+}
+async function doneRotateBy(angle: number) {
+  rotating.value = null
+  const change = await interaction.finishRotateBy(angle)
+  if (change?.kind === 'rotate') turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(angle) })
+  viewport.value?.focus({ preventScroll: true })
+}
+function cancelRotateBy() {
+  rotating.value = null
+  interaction.cancel()
+  viewport.value?.focus({ preventScroll: true })
 }
 
-function onObjectUp() {
-  const d = objDrag.value
-  objDrag.value = null
-  window.removeEventListener('mousemove', onObjectDrag)
-  window.removeEventListener('mouseup', onObjectUp)
-  if (d && d.moved && (d.pos.row !== d.start.row || d.pos.col !== d.start.col)) void props.session.moveObject(d.id, d.pos.row, d.pos.col)
+// ------------------------------------------------------------------------------ the object menu and its clipboard (D1225, D1229)
+/** A right press on an object, or the menu key with one selected: the object is selected and its own menu opens, where
+ * the cell menu (or the browser's) would have. Called from `onHeaderContext`, which sees the event first. */
+const objectMenu = ref<{ x: number; y: number; id: string } | null>(null)
+function openObjectMenu(event: MouseEvent, id: string) {
+  event.preventDefault()
+  event.stopPropagation()
+  if (props.edit) emit('commit', 'down')
+  selectedObject.value = id
+  const keyboard = event.clientX === 0 && event.clientY === 0
+  const rect = viewport.value?.querySelector(`[data-object="${CSS.escape(id)}"]`)?.getBoundingClientRect()
+  objectMenu.value = { id, x: keyboard && rect ? rect.left + 24 : event.clientX, y: keyboard && rect ? rect.top + 12 : event.clientY }
 }
-onBeforeUnmount(onObjectUp)
+const objectItems = computed<MenuItem[]>(() => {
+  const at = objectMenu.value
+  const o = at ? state.objects[at.id] : null
+  if (!at || !o) return []
+  const close = () => (objectMenu.value = null)
+  return contextMenuItems(
+    o,
+    readonlyHere(),
+    {
+      describe: () => (close(), emit('describe')),
+      edit: () => (close(), beginContainerEdit(o)),
+      style: () => (close(), openStyleMenu({ x: at.x, y: at.y })),
+      rotateBy: () => (close(), openRotateBy(o.id, { x: at.x, y: at.y })),
+      remove: () => void removeSelected(),
+      cut: () => void clip.cut(),
+      copy: () => void clip.copy(),
+      setSnap: () => undefined, // computes has no grid for objects
+    },
+    { edit: o.kind === 'rendered' }, // a picture and a chart have no words; a container is written in
+  )
+})
+async function removeSelected() {
+  const id = selectedObject.value
+  selectedObject.value = null
+  if (id) await props.session.removeObject(id)
+}
+
+/** Cut, Copy and Paste of a picture (D1229): one module for the three apps; a paste goes to the cell selected. */
+const clip = useObjectClipboard({
+  selected: () => (selected.value ? { id: selected.value.id, body: selected.value, asset: selected.value.ref ? state.images[selected.value.ref] : undefined } : null),
+  readonly: readonlyHere,
+  remove: (id) => props.session.removeObject(id),
+  add: async (c) => {
+    const at = bounds(props.sel)
+    const id = await props.session.addImage(clippedImport(c), { row: at.r0, col: at.c0, w: c.w, h: c.h })
+    if (id) selectedObject.value = id
+  },
+})
 
 /** Grid lines for the rows and columns currently in view, at their own (possibly resized) positions — a plain
  * repeating background, as it was before D135, can only draw lines evenly spaced apart. */
@@ -812,6 +964,10 @@ function onHeaderHover(event: MouseEvent) {
 // ------------------------------------------------------------------------------ the row/column header menu
 function onHeaderContext(event: MouseEvent) {
   if (event.shiftKey && event.clientX !== 0) return // Shift + right button: the browser's own menu, as in TextEditor.vue
+  // An object is above the cells: a right press on it is its own, and never reaches the cell menu (D1222).
+  const hitObject = (event.target as HTMLElement).closest<HTMLElement>('[data-object]')
+  if (hitObject && viewport.value?.contains(hitObject)) return openObjectMenu(event, hitObject.dataset.object!)
+  if (selectedObject.value && event.clientX === 0 && event.clientY === 0) return openObjectMenu(event, selectedObject.value) // the menu key
   const hit = cellAt(event)
   if (hit && !hit.rowHead && !hit.colHead) {
     // A cell (E6.21–E6.23, mock computes-random-alternatives-follow-menus): outcomes, follow, resample, the clipboard.
@@ -847,6 +1003,22 @@ function onKey(event: KeyboardEvent) {
   }
   const mod = event.ctrlKey || event.metaKey
   const arrow = ARROWS[event.key]
+  if (event.key === 'Escape' && interaction.cancel()) {
+    event.preventDefault() // what was being tried is dropped; the object is as it was
+    return
+  }
+  if (arrow && selected.value && !mod) {
+    // the object is what the keys move: one cell, five with Shift (the anchor is a cell)
+    event.preventDefault()
+    if (!readonlyHere()) {
+      const o = selected.value
+      const step = event.shiftKey ? 5 : 1
+      const row = Math.max(0, Math.min(VIEW_ROWS - 1, o.anchor.row + arrow[0] * step))
+      const col = Math.max(0, Math.min(VIEW_COLS - 1, o.anchor.col + arrow[1] * step))
+      if (row !== o.anchor.row || col !== o.anchor.col) void props.session.moveObject(o.id, row, col)
+    }
+    return
+  }
   if (arrow) {
     event.preventDefault()
     emit('move', arrow[0], arrow[1], event.shiftKey, mod)
@@ -872,10 +1044,8 @@ function onKey(event: KeyboardEvent) {
     selectedObject.value = null
   } else if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault()
-    if (selectedObject.value) {
-      void props.session.removeObject(selectedObject.value)
-      selectedObject.value = null
-    } else emit('clear')
+    if (selectedObject.value) void removeSelected()
+    else emit('clear')
   } else if (mod && event.key.toLowerCase() === 'a') {
     event.preventDefault()
     emit('selectAll')
@@ -994,6 +1164,9 @@ defineExpose({
   centre,
   focus: () => viewport.value?.focus(),
   selectObject: (id: string) => (selectedObject.value = id),
+  openRotateBy,
+  /** Paste a picture that was cut or copied (false: there is none, the cells are pasted instead). */
+  paste: () => clip.paste(),
   beginContainerEdit: () => beginContainerEdit(selectedObject.value ? state.objects[selectedObject.value] : undefined),
   stepObject,
   openStyleMenu,
@@ -1017,6 +1190,9 @@ defineExpose({
     @scroll.passive="onScroll"
     @mousedown="onDown"
     @mousemove.passive="onHeaderHover"
+    @pointermove="onPointerMove"
+    @pointerup="onPointerUp"
+    @pointercancel="interaction.cancel()"
     @dblclick="onDouble"
     @contextmenu.capture="onHeaderContext"
     @keydown="onKey"
@@ -1127,7 +1303,8 @@ defineExpose({
           :role="o.decorative ? 'presentation' : 'img'"
           :aria-label="o.decorative ? undefined : nameOf(o)"
           :aria-hidden="o.decorative ? 'true' : undefined"
-          @mousedown.stop="onObjectDown($event, o)"
+          @pointerdown="onObjectDown($event, o)"
+          @mousedown.stop
           @dblclick.stop="beginContainerEdit(o)"
         >
           <template v-if="o.kind === 'rendered' && faceOf(o)">
@@ -1142,6 +1319,11 @@ defineExpose({
           </template>
           <ChartView v-else-if="o.kind === 'diagram' && o.ref" :session="session" :diagram-id="o.ref" :width="o.w" :height="o.h" />
           <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="''" draggable="false" >
+        </div>
+
+        <!-- my selection: the handles, drawn once for the three apps (the outline is the object's own) -->
+        <div v-if="selected && selectedBox" class="mine" data-testid="object-frame" :style="mineStyle">
+          <ObjectFrame :handles="handles" :turnable="turnable" :turn="selectedTurn" :turning="interaction.turningNow(selected.id)" :below="handleBelow" @handle="onHandleDown" @turn-down="onTurnDown" @turn-key="onTurnKey" />
         </div>
 
         <div v-for="b in replayBoxes" :key="b.id" class="replay-box" :class="b.tint" :style="b.style" data-testid="replay-tint" />
@@ -1174,6 +1356,9 @@ defineExpose({
         <div class="corner" aria-hidden="true" />
       </div>
     </div>
+    <p class="sr" role="status" aria-live="polite">{{ turnSaid }}</p>
+    <RotatePopover v-if="rotating && rotatePreview" :x="rotating.x" :y="rotating.y" :rotation="rotatePreview.from" @preview="interaction.previewRotateBy" @done="doneRotateBy" @cancel="cancelRotateBy" />
+    <ContextMenu v-if="objectMenu" :x="objectMenu.x" :y="objectMenu.y" :items="objectItems" :label="t('Object menu')" @close="objectMenu = null" />
     <StyleMenu v-if="styleMenu" :host="styleMenu.cells && cellHost ? cellHost : styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />
   </div>
 </template>
@@ -1472,10 +1657,24 @@ defineExpose({
   background: color-mix(in srgb, var(--color) 8%, transparent);
   pointer-events: none;
 }
+.mine {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .object {
   position: absolute;
   overflow: hidden;
   cursor: grab;
+  touch-action: none;
   outline: 2px solid transparent;
 }
 .object.selected {
