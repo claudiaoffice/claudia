@@ -1,7 +1,7 @@
 # E2 round two — architecture proposal (viewers, back-off, hashing cost, key renewal, exports and their record)
 
-**Status: proposal of 2026-11-19. Nothing is implemented.** Branch `e2-document-sec`, written against `main` at `518a7bf`.
-Decisions: D1261–D1275 (D1274 and D1275 are proposals that wait for the owner). Mock-ups in `notes/mockups/`:
+**Status: proposal of 2026-11-19, with the owner's answers of the same day (§6) and the first built parts (§8).** Branch `e2-document-sec`, written against `main` at `518a7bf`.
+Decisions: D1261–D1276 (D1274 and D1276 are proposals that wait for the owner). Mock-ups in `notes/mockups/`:
 
 | File | Shows |
 |---|---|
@@ -65,7 +65,9 @@ client code says so (§1); a scenario with two windows proves it.
 
 `LoginThrottle` is a plain class with an injected clock and no I/O: `check(address, doc, name)` returns the seconds to wait
 or 0, `failed(...)` and `succeeded(address)` update two counters (per address, per document-and-name), `forget` drops
-anything quiet for fifteen minutes. It lives in memory; a restart forgets, which is fine for a delay (nothing is locked).
+anything quiet for fifteen minutes. It lives in memory; a restart forgets, which is fine for a delay (nothing is locked). The owner asked whether writing it to
+disk would be safer: a little, in one narrow case (a restart or a crash resets the wait), at the cost of keeping hashed
+addresses on disk; D1276 proposes how, and waits for the answer.
 
 `Gateway._hello` asks it **before** `_hello` reaches the hashing semaphore, so a refused guesser costs nothing. The document
 `hello` (also with a recovery key) and `POST /api/admin/login` use the same instance. The counters count a name whether or
@@ -73,7 +75,7 @@ not the document exists, so the answer reveals nothing (SEC-04).
 
 **Open technical points.** (a) How the refusal travels: a `hello` answer frame with `error.code = "retry_after"` and
 `seconds`, if `hello` failures are frames today, otherwise a close code next to 4403 and 4423; I'll read that code before
-the first line is written. (b) The address behind a proxy, D1275: the right-most `X-Forwarded-For` entry with
+the first line is written. (b) The address behind a proxy, D1275 (decided and built, §8): the right-most `X-Forwarded-For` entry with
 `--behind-proxy`. The same fix repairs `max_waiting_per_address`.
 
 ### 3.3 Hashing cost (D1267)
@@ -162,8 +164,8 @@ as a new kind next to the Office formats; replaying the imported log must give t
 The format specification `docs/container-format.md` is written with slices B and C. API documentation stays generated from
 docstrings (Sphinx). Public changes in `claudia-container` and `claudia-server` raise their minor versions, with a CHANGELOG
 entry and `scripts/api_surface.py --write` (`docs/versioning.md`). The wire changes (`reads=` metadata, `retry_after`,
-`audit_log`, `report_output`, `set_role`, `export_claudia`) are additive. I propose `PROTOCOL_VERSION` stays at 2 and the
-change in what a viewer receives is described in `docs/server.md`; the owner may prefer a bump to 3.
+`audit_log`, `report_output`, `set_role`, `export_claudia`) are additive. `PROTOCOL_VERSION` stays at 2 (owner, 2026-11-19) and the
+change in what a viewer receives is described in `docs/server.md`.
 
 ## 4. Tests (written first)
 
@@ -187,20 +189,40 @@ the keys the shell uses for dialogs. BITV: the wait is announced politely once a
 viewer sentence is text, not colour; the role control has a visible label and the progress bar a role and a text; focus
 goes to the first control of every dialog and returns to the one that opened it. Where we diverge, the patch notes say so.
 
-## 6. Questions for the owner
+## 6. Questions for the owner — answered 2026-11-19
 
-1. **D1274**, the inbox with a key pair per person, instead of the owner rewriting slots (which cannot work). Yes, no, or another idea?
-2. **D1275**, the address behind a proxy: the right-most `X-Forwarded-For` entry, trusted hops 1 by default.
-3. **The record is not redactable** (D1271): an owner cannot erase the trace of her own export.
-4. **File ▸ Download and D110** (D1270, E2.12): confirm that Download becomes the sealed file, and when.
-5. **Protocol version** (§3.7): keep 2, or bump to 3.
-6. **Slice order** (§2): A, then B, then C; and where the first patch starts.
+| # | Question | Answer |
+|---|---|---|
+| 1 | D1274, the inbox with a key pair per person | **Open.** The owner asked for a plainer explanation; it is now at the top of D1274 ("In plain words"). Still undecided |
+| 2 | D1275, the address behind a proxy | **Yes** (built, §8) |
+| 3 | The record is not redactable (D1271) | **Yes, not by the owner either** |
+| 4 | File ▸ Download and D110 (D1270, E2.12) | **Download is the sealed file**; decisions and code updated (built, §8) |
+| 5 | Protocol version | **Stays 2** |
+| 6 | Slice order | **A, B, C** |
+| new | D1276: the back-off state on disk | Proposed, waits for the answer |
 
-## 7. Findings while reading (to be logged or fixed as the owner decides)
+## 7. Findings while reading (all four fixed 2026-11-19; the owner asked for it)
 
-| What | Size |
-|---|---|
-| `KdfParams`' docstring claims the cost can be raised "at the next login"; it cannot for a document with several people | 3 |
-| `docs/versioning.md` says the protocol version is "now 1"; the code says 2 | 3 |
-| D110 (the sealed download) is current since 2026-11-02 and has no code; File ▸ Download in the code and in the menu workbook mean different things | 2 |
-| Behind `--behind-proxy` every client has the proxy's address: `max_waiting_per_address` (SEC-02) is then one cap for everybody | 2 |
+| What | Size | Now |
+|---|---|---|
+| `KdfParams`' docstring claims the cost can be raised "at the next login"; it cannot for a document with several people | 3 | fixed (CODE-72) |
+| `docs/versioning.md` says the protocol version is "now 1"; the code says 2 | 3 | fixed, and a test compares them (DOC-04) |
+| D110 (the sealed download) is current since 2026-11-02 and has no code; File ▸ Download in the code and in the menu workbook mean different things | 2 | fixed: Download is the sealed file (CODE-73) |
+| Behind `--behind-proxy` every client has the proxy's address: `max_waiting_per_address` (SEC-02) is then one cap for everybody | 2 | fixed (SEC-20, D1275) |
+
+Found while fixing them: **SEC-21** (password-confirming methods hash on the event loop; open, size 2) and **PROC-34** (the
+`backlog` branch broke `tests/test_backlog.py` by a renamed story file; fixed).
+
+## 8. What is built (2026-11-19, branch `e2-document-sec`)
+
+| Part | Where | Tests |
+|---|---|---|
+| The sealed copy for one person: owner whole file, editor own slot, viewer own slot and the content parts only | `claudia_container.container.sealed_copy` | `claudia-container/tests/test_sealed_copy.py` (11) |
+| `download_claudia` on the wire and `SealedCopyDirectory`; an open document is packed first | `protocol.py`, `auth.py`, `sealed.py` | `claudia-server/tests/test_server_download.py` (6) |
+| File ▸ Download in the web app, and so in the GTK and Neutralino shells (they show it; their Save dialog takes the `.claudia` name) | `DownloadDialog.vue` (was `ExportDialog.vue`), `BaseSession.downloadClaudia` | `web/tests/session.test.ts`, `document-menus.test.ts`, and the scenarios of `specs/container/download.feature` (3 of 6 run in Chrome) |
+| The address of a connection behind a proxy; `--proxy-hops` | `client_address.py`, `app.py`, `cli.py` | `test_server_client_address.py` (16), `test_server_cli.py`, `test_server_uid.py` |
+| German and pseudo-locale strings, the menu workbook, `docs/server.md`, `docs/web.md`, changelogs and API snapshots (container 0.9.0, server 0.38.0) | | the gate (`scripts/check_debt.py`) |
+
+Slice A is therefore started with its smallest part (D1275). Not yet built: the viewer filter (D1261), the back-off (D1266)
+and the hashing cost (D1267); slices B and C. A viewer's downloaded copy cannot be opened until E2.11 (read-only hosting)
+exists.

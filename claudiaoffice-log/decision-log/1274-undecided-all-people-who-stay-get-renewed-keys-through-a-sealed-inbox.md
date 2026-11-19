@@ -35,5 +35,28 @@ serves her live as soon as she logs in.
 **Rejected.** Making every person present for a renewal (impossible for a person who is away). Chaining new keys under the
 old ones (the removed person holds the old ones and would follow the chain). A shared password for the document (D20).
 
+## In plain words (added 2026-11-19, after the owner asked for it)
+
+**What is the problem?** Every person has a locker in the file. Her password is the only key to her locker, and in it lie
+the keys to the document's parts (the content, the history, the chat). When the owner removes Tobi, the keys Tobi held
+must be replaced by new ones, or Tobi's old copy of the file would still open what is written afterwards. The new keys have
+to reach everybody who stays, Anna and Ben. But the owner **cannot open Anna's locker**: only Anna's password does, and
+nobody keeps passwords. So there is no way for the owner to put the new keys into it.
+
+**What do we do about it?** Give every locker a **letter slot**. Everybody may post a letter through the slot, but only the
+person whose locker it is can take the letters out. Technically: each person has a pair of keys, a public one (the slot,
+stored in the people list, which is not secret) and a private one (stored inside her locker). The owner seals the new keys
+with Anna's public key and leaves the letter in the file. When Anna next logs in, her password opens her locker, her
+private key opens the letter, she takes the new keys out and the server puts them into her locker. The letter is then
+deleted. Nobody but Anna can read Anna's letter, not even Tobi, whose old keys open nothing of it.
+
+**What does it cost?** One more kind of key in the file (X25519, a well-known, small, standard one), and one more step at
+login for people who were away during a renewal. Nothing changes for people who are online, because the server holds the
+keys of an open document. If Anna was away for two renewals, the newest letter holds all the current keys, so she only
+needs it.
+
+**What was the alternative?** Ask everybody to type their password again whenever someone is removed. That does not work for
+people who are not there, and it would be a reason never to remove anybody.
+
 **Notes.** Also what a role change needs: the owner puts the keys the person gains into her inbox. A role change that
 takes keys away is the same as a renewal for those domains.
