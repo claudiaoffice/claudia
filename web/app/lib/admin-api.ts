@@ -12,6 +12,8 @@ export class AdminApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    /** For 429, a sign-in that came too soon after failed ones: the seconds to wait (D1266). */
+    public retryAfter?: number,
   ) {
     super(message)
   }
@@ -71,12 +73,28 @@ export interface TypesetDiagnosis {
   detail: string
 }
 
+export interface SecuritySettings {
+  kdf_target_seconds: number
+}
+
+/** The cost of password hashing in force for new documents, and whether this server has measured itself yet (D1267). */
+export interface KdfView {
+  target_seconds: number
+  iterations: number
+  memory_kib: number
+  lanes: number
+  measured: boolean
+}
+
 export interface ServerSettingsView {
   max_documents: number
   access_secret_set: boolean
   ai: AiSettings
   typeset: TypesetSettings
   typeset_diagnosis: Record<string, TypesetDiagnosis>
+  security: SecuritySettings
+  /** `null` for a server that keeps no sealed documents. */
+  kdf: KdfView | null
   changed: Record<string, Changed>
 }
 
@@ -109,7 +127,12 @@ export function createAdminApi(fetchImpl: typeof fetch = fetch) {
     }
     if (!response.ok) {
       const detail = (parsed as { detail?: unknown })?.detail
-      throw new AdminApiError(response.status, typeof detail === 'string' ? detail : `request failed (${response.status})`)
+      const wait = (parsed as { retry_after?: unknown })?.retry_after
+      throw new AdminApiError(
+        response.status,
+        typeof detail === 'string' ? detail : `request failed (${response.status})`,
+        typeof wait === 'number' ? wait : undefined,
+      )
     }
     return parsed as T
   }
@@ -136,6 +159,7 @@ export function createAdminApi(fetchImpl: typeof fetch = fetch) {
     rotateAccessSecret: (token: string): Promise<ServerSettingsView & { access_secret: string }> =>
       call('POST', '/settings/access-secret/rotate', undefined, token),
     setAi: (token: string, settings: AiSettings): Promise<ServerSettingsView> => call('PUT', '/settings/ai', settings, token),
+    setSecurity: (token: string, settings: SecuritySettings): Promise<ServerSettingsView> => call('PUT', '/settings/security', settings, token),
     setTypeset: (token: string, settings: TypesetSettings): Promise<ServerSettingsView> => call('PUT', '/settings/typeset', settings, token),
 
     // Server settings ▸ Fonts (E3.13 f, D1041): every change answers the whole page.

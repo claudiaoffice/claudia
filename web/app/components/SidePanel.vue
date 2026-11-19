@@ -387,6 +387,7 @@ const others = computed(() => state.typing.filter((u) => u !== state.me.user))
 
 // ------------------------------------------------------------------------------ lines, and restoring with consent (E3.7, E3.8)
 const canWrite = computed(() => state.me.role === 'owner' || state.me.role === 'editor')
+const viewer = computed(() => state.me.role === 'viewer')  // holds the content key only: no history, no chat (D1261)
 const isOwner = computed(() => state.me.role === 'owner')
 const hiddenLines = computed(() => state.lines.filter((l) => !l.active))
 const myProposal = computed(() => state.proposal)
@@ -494,6 +495,8 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     </div>
 
     <div v-show="tab === 'history'" class="historyChat" :aria-label="t('history and chat')" @wheel="onWheel">
+    <p v-if="viewer" class="viewerNote" data-testid="viewer-note">{{ t('History and chat are for the document\'s editors.') }}</p>
+    <template v-else>
     <div v-if="myProposal" class="proposal" role="alert">
       <p class="ask">
         <TransText :text="t('{who} suggests going to {line}.', { line: myProposal.label })"><template #who><b>{{ myProposal.by }}</b></template></TransText>
@@ -683,6 +686,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
       <p v-if="chatFocused" id="pick-hint" class="pick-hint">{{ t('Click something in the document to write a tag for it.') }}</p>
       <p v-else id="pick-hint" class="sr-only">{{ t('Click something in the document to write a tag for it.') }}</p>
     </section>
+    </template>
     </div>
 
     <HelpPanel v-show="tab === 'help'" ref="helpPanel" class="helpTab" :session="session" />
@@ -763,6 +767,12 @@ ol {
   overflow: auto;
   flex: 1;
   min-height: 0;
+}
+.viewerNote {
+  margin: 0;
+  padding: 14px 16px;
+  color: rgb(230 224 245 / 80%);
+  font: 400 13px/1.45 var(--font-ui);
 }
 .empty {
   color: rgb(230 224 245 / 55%);

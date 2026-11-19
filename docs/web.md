@@ -22,6 +22,25 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
   the place, each with its app's icon and name, and an app filter.
 * On the right, open a document with a name and password; **Create document** asks for Table, Text or Slides first on
   a server of several apps.
+* **A wait after wrong passwords** (D1266, `lib/login-wait.ts`): the sentence "Too many tries. Try again in N seconds."
+  counts down, and Open (also "Get back in" and the administrator's sign-in) cannot be pressed until it is over; then
+  "You can try again now." For a screen reader the sentence is said once when the wait starts and once when it is over
+  (`role="status"`); the running seconds are `aria-hidden`.
+
+## Viewers and sealed documents (D1261, D1262)
+
+A viewer's window asks only for the content: `BaseSession.reload` skips the log, chat, checkpoints, history, lines and
+restore policy, and learns the revision with `ping`. The side panel shows one sentence instead of History and Chat
+("History and chat are for the document's editors.") and no history list. A viewer who is first at a document that is
+sealed (nobody who holds its keys has opened it since the server started) gets status `waiting`: the window says an
+editor or owner has to open it first, keeps trying every few seconds and opens it by itself (`DocumentFrame.vue`,
+`data-testid=waiting-for-an-editor`; Close is always there).
+
+## Server settings ▸ Security (D1267)
+
+`AdminSecurity.vue`: the time one password check should take for new documents, in seconds (0.1 to 30, `lib/security-settings.ts`),
+and what the server found for its machine ("New documents use 256 MiB and 4 passes."; "Measuring this machine…" until
+it has). Apply saves and measures again. The page says that a document keeps the cost it was made with.
 * A document opened from File ▸ Open… replaces the one in the window (`lib/switch-session.ts`).
 * **In a desktop window** (D444) the shell says which app the window is (`welcome.app`): the page lists that app's
   documents only (place, Mine, collections), has no app filter and no choice of kind, offers only that app's formats

@@ -131,7 +131,7 @@ export interface BaseState {
   host: string
   /** How the AI treats this person's requests in this document (D262): the person's own choice, kept in this browser. */
   aiMode: AiMode
-  status: 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed'
+  status: 'idle' | 'connecting' | 'open' | 'reconnecting' | 'waiting' | 'closed'
   error: string
   me: { user: string; role: string; color: string }
   doc: string
@@ -218,6 +218,8 @@ function initialState(): BaseState {
 
 /** What `download_claudia` returns: the sealed Claudia file as base64, and what it holds (`content`, and for an owner
  * or an editor `history` and `chat`). */
+type UndoState = { can_undo: boolean; can_redo: boolean; undo_label: string; redo_label: string }
+
 export interface SealedFile {
   format: 'claudia'
   filename: string
@@ -270,6 +272,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     try {
       await this.start()
     } catch (error) {
+      if (error instanceof ProtocolError && error.code === 'sealed') {
+        // The server holds no key to this document yet and a viewer cannot bring it up (D101, D1262): wait for the
+        // editor or owner who will, and open by ourselves as soon as one has.
+        this.state.status = 'waiting'
+        this.state.error = closeMessage(4423)
+        this.track(this.reconnect())
+        return
+      }
       this.state.status = 'closed'
       this.state.error = error instanceof ProtocolError ? error.message : closeMessage(0)
       throw error
@@ -369,9 +379,9 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   private async reconnect() {
-    for (let attempt = 0; this.state.status === 'reconnecting'; attempt++) {
+    for (let attempt = 0; this.waitingToConnect(); attempt++) {
       await sleep(this.retryDelays[Math.min(attempt, this.retryDelays.length - 1)] ?? 1000)
-      if (this.state.status !== 'reconnecting') return
+      if (!this.waitingToConnect()) return
       try {
         await this.start()
         return
@@ -383,6 +393,11 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         }
       }
     }
+  }
+
+  /** Is the session trying to get back (after a loss) or to get in (a sealed document)? */
+  private waitingToConnect(): boolean {
+    return this.state.status === 'reconnecting' || this.state.status === 'waiting'
   }
 
   protected track<T>(task: Promise<T>): Promise<T> {
@@ -400,13 +415,19 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     this.state.renamed = {}
     const link = this.need()
     const s = this.state
+    // A viewer holds the content key only, and the server keeps the history and the chat from her (D1261).
+    const reads = s.me.role !== 'viewer'
     const [entries, chat, checkpoints, history, lines, restorePolicy, renderTypes, renderings] = await Promise.all([
-      link.request<Entry[]>('log', { limit: LOG_LIMIT }),
-      link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }),
-      link.request<CheckpointInfo[]>('checkpoints'),
-      link.request<{ can_undo: boolean; can_redo: boolean; undo_label: string; redo_label: string }>('history'),
-      link.request<LineInfo[]>('lines'),
-      link.request<{ policy: 'consensus' | 'veto' }>('restore_policy'),
+      reads ? link.request<Entry[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Entry[]>([]),
+      reads ? link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }) : Promise.resolve<ChatMessage[]>([]),
+      reads ? link.request<CheckpointInfo[]>('checkpoints') : Promise.resolve<CheckpointInfo[]>([]),
+      reads
+        ? link.request<UndoState>('history')
+        : Promise.resolve<UndoState>({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
+      reads ? link.request<LineInfo[]>('lines') : Promise.resolve<LineInfo[]>([]),
+      reads
+        ? link.request<{ policy: 'consensus' | 'veto' }>('restore_policy')
+        : Promise.resolve<{ policy: 'consensus' | 'veto' }>({ policy: 'consensus' }),
       this.optional<{ types: RenderType[] }>('rendering_types'),
       this.optional<RenderingDef[]>('renderings'),
       this.loadApp(),
@@ -425,6 +446,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.renderOutcomes = outcomesOf(renderings ?? [])
     const last = entries.at(-1)
     if (last) s.revision = last.revision
+    else if (!reads) s.revision = (await link.request<{ revision: string | null }>('ping')).revision ?? s.revision
   }
 
   /** What a request answers, or `null` where this server does not know it (an older server, an app without it). */
@@ -445,7 +467,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     switch (name) {
       case 'command':
         s.revision = data.revision
-        if (!s.entries.some((e) => e.revision === data.revision)) {
+        // A viewer is told the revision alone (D1261): there is no step to list.
+        if (s.me.role !== 'viewer' && !s.entries.some((e) => e.revision === data.revision)) {
           if (s.replay) s.replay.newer++
           s.entries.push(data)
           if (s.entries.length > LOG_LIMIT) s.entries.shift()

@@ -100,6 +100,23 @@ describe('useAdminSession', () => {
     expect(error).toBe('Could not reach the server.')
   })
 
+  it('login says how long to wait when the server asks for a wait, and forgets it at the next try (D1266)', async () => {
+    let answers = 0
+    const api = fakeApi({
+      login: async () => {
+        answers += 1
+        if (answers === 1) throw new AdminApiError(429, 'too many tries', 5)
+        return { token: 't', admin: { name: 'tobi', added: 'now', you: true } }
+      },
+    })
+    const session = useAdminSession(api)
+    expect(session.waitAdvice.value).toBe(0)
+    expect(await session.login('tobi', 'x')).toBe('too many tries')
+    expect(session.waitAdvice.value).toBe(5)
+    expect(await session.login('tobi', 'right one')).toBeNull()
+    expect(session.waitAdvice.value).toBe(0)
+  })
+
   it('refresh resolves the stored token to a name', async () => {
     const session = useAdminSession(fakeApi({ me: async () => ({ name: 'anna' }) }))
     await session.setup('tobi', 'hunter22') // puts a token in place to refresh

@@ -171,6 +171,37 @@ describe('opening', () => {
     expect(link.count('sheets')).toBe(1)
   })
 
+  it('asks a viewer for no history and no chat, which the server keeps from her (D1261)', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.welcome = { ...WELCOME, user: 'vera', role: 'viewer' }
+    for (const refused of ['log', 'chat_log', 'checkpoints', 'history', 'lines', 'restore_policy']) {
+      link.handlers[refused] = () => {
+        throw new ProtocolError('forbidden', `${refused} is for editors`)
+      }
+    }
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    const s = session.state
+    expect(s.status).toBe('open')
+    expect(s.sheets.map((x) => x.name)).toEqual(['Budget'])
+    expect([s.entries, s.chat, s.checkpoints, s.lines]).toEqual([[], [], [], []])
+    expect([s.canUndo, s.canRedo]).toEqual([false, false])
+    for (const method of ['log', 'chat_log', 'checkpoints', 'history', 'lines', 'restore_policy']) expect(link.count(method)).toBe(0)
+  })
+
+  it('follows the revision of a viewer\'s document from the commands it is told of, which carry the revision alone', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.welcome = { ...WELCOME, user: 'vera', role: 'viewer', revision: 'main:3' }
+    const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
+    await session.open()
+    expect(session.state.revision).toBe('main:3')
+    link.push('command', { type: 'command', revision: 'main:4' })
+    expect(session.state.revision).toBe('main:4')
+    expect(session.state.entries).toEqual([])
+  })
+
   it('reports a refused handshake and stays closed', async () => {
     const link = new FakeLink()
     link.failConnect = new ProtocolError('unauthorized', 'missing or wrong credentials')
@@ -663,6 +694,34 @@ describe('losing the connection', () => {
     await session.settled()
     expect(session.state.status).toBe('open')
     expect(second.count('sheets')).toBe(1)
+  })
+
+  it('waits, and says so, when it is the first to ask and the document is sealed (D1262)', async () => {
+    const sealed = new FakeLink()
+    const ready = new FakeLink()
+    server(ready)
+    sealed.failConnect = new ProtocolError('sealed', 'this document is sealed: an owner or editor has to open it first')
+    const links = [sealed, ready]
+    const session = new Session(() => links.shift()!, { retryDelays: [0] })
+    const opening = session.open()
+    await opening // it does not fail: it waits
+    expect(session.state.status === 'waiting' || session.state.status === 'open').toBe(true)
+    await session.settled()
+    expect(session.state.status).toBe('open')
+    expect(ready.count('sheets')).toBe(1)
+    expect(session.state.error).toBe('')
+  })
+
+  it('says in the words of the decision what a viewer who opens first waits for', async () => {
+    const sealed = new FakeLink()
+    sealed.failConnect = new ProtocolError('sealed', 'x')
+    const stuck = new FakeLink()
+    stuck.failConnect = new ProtocolError('sealed', 'x')
+    const session = new Session(() => (session.state.status === 'connecting' ? sealed : stuck), { retryDelays: [20] })
+    await session.open()
+    expect(session.state.status).toBe('waiting')
+    expect(session.state.error).toBe('An editor or owner has to open this document first. This window will open it as soon as one has.')
+    session.close()
   })
 
   it('gives up for good on a refusal that will not change', async () => {

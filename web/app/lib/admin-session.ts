@@ -58,6 +58,8 @@ function safeStorage(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> {
 export function useAdminSession(api: AdminApi = adminApi) {
   const token = ref<string | null>(readToken())
   const name = ref<string | null>(null)
+  /** Seconds the last refused sign-in was asked to wait (D1266); 0 when it was not. */
+  const waitAdvice = ref(0)
   const busy = ref(false)
 
   async function refresh(): Promise<boolean> {
@@ -88,6 +90,7 @@ export function useAdminSession(api: AdminApi = adminApi) {
 
   async function login(adminName: string, password: string): Promise<string | null> {
     busy.value = true
+    waitAdvice.value = 0
     try {
       const { token: t, admin } = await api.login(adminName, password)
       token.value = t
@@ -95,6 +98,7 @@ export function useAdminSession(api: AdminApi = adminApi) {
       storeToken(t)
       return null
     } catch (error) {
+      if (error instanceof AdminApiError && error.retryAfter) waitAdvice.value = error.retryAfter
       return error instanceof AdminApiError ? error.message : t('Could not reach the server.')
     } finally {
       busy.value = false
@@ -113,5 +117,5 @@ export function useAdminSession(api: AdminApi = adminApi) {
     if (t) await api.logout(t).catch(() => {}) // signed out locally either way
   }
 
-  return { token, name, busy, refresh, setup, login, logout }
+  return { token, name, busy, waitAdvice, refresh, setup, login, logout }
 }
