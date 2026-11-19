@@ -911,11 +911,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   // ------------------------------------------------------------------------------ rendered containers (D560)
   /** Puts a container of `type` at `where` (the app's own place: `{slide, x, y}`, …), its first text the type's example.
-   *  Returns the new object's id, or `null` — after telling why — if it was not made. */
-  async addRendering(type: string, where: Record<string, unknown>, size = { w: 480, h: 270 }, source?: string): Promise<string | null> {
+   *  Returns the new object's id, or `null` — after telling why — if it was not made. With `fit`, `size` is only the
+   *  most it may take: its first picture is shown at its own size if that is smaller (D1229). */
+  async addRendering(type: string, where: Record<string, unknown>, size = { w: 420, h: 240 }, source?: string, fit = false): Promise<string | null> {
     const kind = this.state.renderTypes.find((k) => k.type === type)
     if (!kind) return null
-    const done = await this.attempt('add_rendering', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, base: this.state.revision })
+    const done = await this.attempt('add_rendering', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, ...(fit ? { fit: true } : {}), base: this.state.revision })
     return done === false ? null : (done.object as string)
   }
 

@@ -1,5 +1,6 @@
 // The arithmetic of the slide: the screen scale, what a click hits, and how dragging moves or resizes a frame.
 // Everything is in slide units (1600 by 900), whole numbers, as the server wants them. These are pure functions.
+import { NEW_OBJECT_CAP, pictureSize } from './images'
 
 export const SLIDE_W = 1600
 export const SLIDE_H = 900
@@ -110,11 +111,11 @@ const STEPS = 8
 /** Where a new object goes: the `index`-th one added gets a little further from the first so none hides another.
  * An image is sized the same way a shape is (it always has an aspect, since every decoded picture has a width and
  * height); it is not its own branch below. */
-export function insertFrame(kind: 'text' | 'shape' | 'image', aspect: number | null, index: number): Frame {
+export function insertFrame(kind: 'text' | 'shape' | 'image', aspect: number | null, index: number, natural?: { width: number; height: number }): Frame {
   const shift = (index % STEPS) * STEP
   if (kind === 'text') return { x: 160 + shift, y: 120 + shift, ...TEXT_BOX }
-  const h = SHAPE_HEIGHT
-  const w = aspect === null ? SHAPE_WIDTH : Math.round(h * aspect)
+  // a picture is no bigger than 420 × 240 or its own size (the owner, 2026-11-19); a shape and a container keep the old size
+  const { w, h } = kind === 'image' && aspect !== null && natural ? pictureSize(aspect, SHAPE_HEIGHT, NEW_OBJECT_CAP.w, natural) : { w: aspect === null ? SHAPE_WIDTH : Math.round(SHAPE_HEIGHT * aspect), h: SHAPE_HEIGHT }
   return {
     x: Math.min(Math.round((SLIDE_W - w) / 2) + shift, SLIDE_W - w),
     y: Math.min(Math.round((SLIDE_H - h) / 2) + shift, SLIDE_H - h),

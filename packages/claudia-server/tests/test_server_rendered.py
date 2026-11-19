@@ -11,7 +11,7 @@ import pytest
 
 from claudia_composes import TextModel
 from claudia_computes import AddSheet, WorkbookModel
-from claudia_core import Document, MemoryStore
+from claudia_core import Document, MemoryStore, ResizeObject
 from claudia_creates import SlideModel
 from claudia_render import CliPlugin, PluginRegistry, Rendered, parse_manifest
 from claudia_server.apps import MODEL_METHODS
@@ -336,3 +336,37 @@ def test_the_frame_keeps_its_width_and_takes_the_proportions_of_the_picture(deck
     assert (body.w, body.h) == (300, 100), "the picture is three times as wide as it is high"
     deck.undo("ann")
     assert deck.model.get_object(added["object"]).body.h == 200
+
+
+# -- a new container is no bigger than its picture (the owner, 2026-11-19: the smaller of 420 × 240 and the picture)
+def test_a_container_added_to_fit_is_shown_at_its_pictures_own_size_if_that_is_smaller(deck, desk):
+    added = put_on_slide(deck, desk, w=420, h=240, fit=True)
+    render(desk, deck, added["rendering"])
+    body = deck.model.get_object(added["object"]).body
+    assert (body.w, body.h) == (30, 20), "the picture is 30 × 10, and an object is at least 20 units a side"
+
+
+def test_a_container_added_to_fit_goes_into_its_frame_if_the_picture_is_larger(deck, desk):
+    big = GLYPHS.replace('width="30" height="10"', 'width="1200" height="400"')
+    desk.service.svg = big
+    added = put_on_slide(deck, desk, w=420, h=240, fit=True)
+    render(desk, deck, added["rendering"])
+    body = deck.model.get_object(added["object"]).body
+    assert (body.w, body.h) == (420, 140), "three times as wide as high, as wide as the frame"
+
+
+def test_a_container_added_without_fit_keeps_the_frame_it_was_given(deck, desk):
+    added = put_on_slide(deck, desk, w=300, h=200)
+    render(desk, deck, added["rendering"])
+    assert deck.model.get_object(added["object"]).body.w == 300
+
+
+def test_only_the_first_picture_is_capped(deck, desk):
+    added = put_on_slide(deck, desk, w=420, h=240, fit=True)
+    render(desk, deck, added["rendering"])
+    deck.execute(
+        ResizeObject(added["object"], deck.model.get_object(added["object"]).anchor.to_data(), 300, 100), author="ann"
+    )
+    call(deck, creates_methods, "set_rendering_source", {"id": added["rendering"], "source": "again"}, desk=desk)
+    render(desk, deck, added["rendering"])
+    assert deck.model.get_object(added["object"]).body.w == 300, "a second picture keeps the width the person gave it"

@@ -24,7 +24,7 @@ import {
   type Pos,
   type TextEvent,
 } from './blocks'
-import type { ImageAsset } from './images'
+import { NEW_OBJECT_CAP, type ImageAsset } from './images'
 import type { BlockAnchor, ObjectBody, ObjectsEvent, PaletteEvent, StyleModel, StyleTarget, VisualObject } from './objects'
 import { describeParams } from './descriptions'
 import { nextWrap, wrapOf, wrapParams, type Wrap } from './wrap'
@@ -196,7 +196,7 @@ export class TextSession extends BaseSession<TextState> {
    * telling the person why not. It is selected, ready to be written in. */
   async addContainer(type: string, place: { block: string; offset: number }, size: { w: number; h: number }): Promise<string | null> {
     await this.flush()
-    const id = await this.addRendering(type, this.placeOnWire(place), size)
+    const id = await this.addRendering(type, this.placeOnWire(place), size, undefined, true)
     if (id) this.state.selectedObject = id
     return id
   }
@@ -207,7 +207,7 @@ export class TextSession extends BaseSession<TextState> {
     const fenced = parseFence(text.trim(), this.state.renderTypes.map((k) => k.type))
     if (!fenced) return null
     await this.flush()
-    const id = await this.addRendering(fenced.type, this.placeOnWire(place), { w: 420, h: 240 }, fenced.source)
+    const id = await this.addRendering(fenced.type, this.placeOnWire(place), NEW_OBJECT_CAP, fenced.source, true)
     if (id) this.state.selectedObject = id
     return id
   }

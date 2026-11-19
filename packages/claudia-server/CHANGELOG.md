@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `add_rendering` takes `fit` (D1229): `w` and `h` are then only the most the container may take, and its first
+  picture is shown at its own size if that is smaller (never below 20 units a side). Without it nothing changes.
 - Tables in a text over the wire (E9.32, D1212): `tables` (each definition with `used_by` and its derived `totals`),
   `add_table`, `remove_table`, `set_entries`, `insert_rows`, `delete_rows`, `move_rows`, `sort_rows`,
   `insert_columns`, `delete_columns`, `move_columns`, `set_column`, `set_table_options`, `merge_cells` and

@@ -3,7 +3,7 @@
 // grid, a block for wrap), so creates, composes and computes cannot drift apart: each app supplies its live callbacks
 // and renders the result with the generic `ContextMenu.vue`.
 //
-//   Describe… · Edit text · Style… · Rotate by… · Wrap text… ▸ (composes) · — · Cut · Copy (pictures) · — ·
+//   Name & describe… · Edit text · Style… · Rotate by… · Wrap text… ▸ (composes) · — · Cut · Copy (pictures) · — ·
 //   Release from grid (creates) · Delete
 //
 // An app leaves out what it cannot do yet (`ObjectMenuApp`): the entry is not shown rather than shown and dead.
@@ -44,7 +44,8 @@ export interface ObjectMenuActions {
 }
 
 /** What an app has: `grid` is creates', `wrap` is composes' (the object's current mode). `edit` and `clipboard` are on
- * unless the app says no: composes can write in a rendered container only, and has no clipboard for objects yet. */
+ * unless the app says no: composes can write in a rendered container only. Cut, Copy and Paste of a picture are the same in
+ * the three apps (`object-clipboard.ts`, D1229). */
 export interface ObjectMenuApp {
   grid?: boolean
   wrap?: Wrap
@@ -60,15 +61,15 @@ export function contextMenuItems(o: MenuSubject, readonly: boolean, actions: Obj
   const picture = o.kind === 'image'
   const groups: MenuItem[][] = []
 
-  const top: MenuItem[] = [{ label: t('Describe…'), hint: hintOf('format.describe'), action: actions.describe, disabled: readonly }]
+  const top: MenuItem[] = [{ label: t('Name & describe…'), hint: hintOf('format.describe'), action: actions.describe, disabled: readonly }]
   // A picture has no text to write and a chart has none either: the entry is left off rather than shown disabled.
-  if (!picture && o.kind !== 'diagram' && app.edit !== false) top.push({ label: t('Edit Text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
+  if (!picture && o.kind !== 'diagram' && app.edit !== false) top.push({ label: t('Edit text'), hint: t('Enter'), action: actions.edit, disabled: readonly })
   top.push({ label: t('Style…'), hint: hintOf('format.apply-style'), action: actions.style, disabled: readonly })
-  if (canTurn(o.kind)) top.push({ label: t('Rotate By…'), hint: hintOf('format.rotate-by'), action: actions.rotateBy, disabled: readonly })
+  if (canTurn(o.kind)) top.push({ label: t('Rotate by…'), hint: hintOf('format.rotate-by'), action: actions.rotateBy, disabled: readonly })
   if (app.wrap !== undefined && actions.setWrap) {
     const setWrap = actions.setWrap
     top.push({
-      label: t('Wrap Text…'),
+      label: t('Wrap text…'),
       hint: hintOf('format.wrap-text'),
       disabled: readonly,
       items: [

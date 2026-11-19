@@ -27,7 +27,7 @@ import { pivotAt, roleAt, roleLabel, valueIndexFor } from '~/lib/pivots'
 import { pointTo, refOf, sheetPrefix, slotAt } from '~/lib/pointing'
 import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection'
 import type { Session } from '~/lib/session'
-import type { PictureImport } from '~/lib/images'
+import { NEW_OBJECT_CAP, pictureSize, type PictureImport } from '~/lib/images'
 import {
   askItem,
   authorsItemUnavailable,
@@ -961,23 +961,19 @@ function headerResize() {
 }
 
 // ------------------------------------------------------------------------------ images (E6.17)
-const IMAGE_HEIGHT = 240 // pixels; an image is sized to this height and whatever width keeps its own aspect
-
 /** Anchor a new image at the current selection's top-left cell, sized to keep its own aspect (the server rejects
- * any other size for an image, within one pixel — mirrors creates' `insertFrame('image', aspect, …)`). */
-function anchorForImage(aspect: number) {
-  return { row: b.value.r0, col: b.value.c0, w: Math.round(IMAGE_HEIGHT * aspect), h: IMAGE_HEIGHT }
+ * any other size for an image, within one pixel — mirrors creates' `insertFrame('image', aspect, …)`) and no bigger
+ * than 420 × 240 or the picture itself (the owner, 2026-11-19). */
+function anchorForImage(aspect: number, natural?: PictureImport['natural']) {
+  return { row: b.value.r0, col: b.value.c0, ...pictureSize(aspect, NEW_OBJECT_CAP.h, NEW_OBJECT_CAP.w, natural) }
 }
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
-  return session.addImage(picture, anchorForImage(aspect))
+  return session.addImage(picture, anchorForImage(aspect, picture.natural))
 }
-
-const CONTAINER_WIDTH = 480
-const CONTAINER_HEIGHT = 270
 
 /** Insert ▸ Container ▸ …: a container of the chosen type where the selection starts (D560), ready to be written in. */
 async function addContainer(type: string) {
-  const id = await session.addContainer(type, { row: b.value.r0, col: b.value.c0, w: CONTAINER_WIDTH, h: CONTAINER_HEIGHT })
+  const id = await session.addContainer(type, { row: b.value.r0, col: b.value.c0, w: NEW_OBJECT_CAP.w, h: NEW_OBJECT_CAP.h })
   if (!id) return
   grid.value?.selectObject(id)
   grid.value?.focus()

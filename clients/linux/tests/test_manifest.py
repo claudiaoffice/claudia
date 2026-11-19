@@ -120,18 +120,18 @@ def test_insert_starts_with_the_cross_reference_and_the_table_of_contents_which_
     assert contents.key_owner == manifest.KeyOwner.PAGE
 
 
-def test_composes_alone_has_tables_in_insert_and_edit_with_the_keys_of_the_decision_log(app: manifest.Manifest) -> None:
-    """E9.32, D1208: Insert ▸ Table… and Edit ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… are
-    composes' own, because the other two apps have their grid. Row and Column are computes' entries (one action, one key
+def test_composes_alone_has_tables_in_insert_and_tools_with_the_keys_of_the_decision_log(app: manifest.Manifest) -> None:
+    """E9.32, D1208: Insert ▸ Table… and Tools ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… are
+    composes' own (in Tools since D1229, as computes has its pivot table there), because the other two apps have their grid. Row and Column are computes' entries (one action, one key
     in every app, see test_one_action_has_one_key_in_every_app), the page reports them off outside a table."""
     ids = {action.id for action in app.actions}
     table_ids = {
         "insert.table",
-        "edit.sort-ascending",
-        "edit.sort-descending",
-        "edit.merge-cells",
-        "edit.split-cell",
-        "edit.table-options",
+        "tools.sort-ascending",
+        "tools.sort-descending",
+        "tools.merge-cells",
+        "tools.split-cell",
+        "tools.table-options",
     }
     if app.app != "composes":
         assert not ids & table_ids
@@ -139,18 +139,18 @@ def test_composes_alone_has_tables_in_insert_and_edit_with_the_keys_of_the_decis
     assert table_ids <= ids
     keys = {
         "insert.table": ("<Primary><Shift>f",),
-        "edit.table-options": ("<Primary><Shift>l",),
-        "edit.merge-cells": ("<Primary><Shift>g",),
-        "edit.split-cell": ("<Primary><Shift>h",),
-        "edit.sort-ascending": ("<Primary><Shift>x",),
-        "edit.sort-descending": ("<Primary><Shift>y",),
+        "tools.table-options": ("<Primary><Shift>l",),
+        "tools.merge-cells": ("<Primary><Shift>g",),
+        "tools.split-cell": ("<Primary><Shift>h",),
+        "tools.sort-ascending": ("<Primary><Shift>x",),
+        "tools.sort-descending": ("<Primary><Shift>y",),
         "edit.row-insert-above": ("<Alt><Shift>Up",),
         "edit.column-insert-right": ("<Alt><Shift>Right",),
     }
     for action_id, accelerators in keys.items():
         assert app.action(action_id).accelerators == accelerators, action_id
         assert app.action(action_id).key_owner == manifest.KeyOwner.PAGE, action_id
-    assert [submenu.label for submenu in _submenus(app.menu("Edit")) if submenu.label in {"Row", "Column", "Sort"}] == [
+    assert [submenu.label for submenu in _submenus(app.menu("Tools")) if submenu.label in {"Row", "Column", "Sort"}] == [
         "Row",
         "Column",
         "Sort",
@@ -910,6 +910,9 @@ WEB_ONLY_PARENTS = {
     "edit.row": "Edit ▸ Row ▸ is a Submenu here",
     "edit.column": "Edit ▸ Column ▸ is a Submenu here",
     "edit.sort": "composes' Edit ▸ Sort ▸ is a Submenu here",
+    "tools.row": "composes' Tools ▸ Row ▸ is a Submenu here (D1229)",
+    "tools.column": "composes' Tools ▸ Column ▸ is a Submenu here (D1229)",
+    "tools.sort": "composes' Tools ▸ Sort ▸ is a Submenu here (D1229)",
 }
 
 

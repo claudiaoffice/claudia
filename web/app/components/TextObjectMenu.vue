@@ -15,7 +15,7 @@ import { useI18n } from '~/lib/i18n'
 import type { MenuItem } from './MenuBar.vue'
 
 const { t } = useI18n()
-const props = defineProps<{ session: TextSession; menu: { id: string; x: number; y: number } | null; tableHost: TableMenuHost }>()
+const props = defineProps<{ session: TextSession; menu: { id: string; x: number; y: number } | null; tableHost: TableMenuHost; clipboard: { cut: () => unknown; copy: () => unknown } }>()
 const emit = defineEmits<{
   close: []
   /** A turn being tried from Rotate By… (`null`: none), for the page to draw. */
@@ -69,8 +69,8 @@ const items = computed<MenuItem[]>(() => {
         rotating.value = { id: o.id, from: o.rotation, x: at.x, y: at.y }
       },
       remove: () => void session.removeObject(o.id),
-      cut: () => undefined, // not offered here (`clipboard: false` below)
-      copy: () => undefined,
+      cut: () => void props.clipboard.cut(),
+      copy: () => void props.clipboard.copy(),
       setSnap: () => undefined, // composes has no grid
       setWrap: (mode: Wrap) => void session.setWrap(o.id, mode),
       setGap: () => {
@@ -78,8 +78,8 @@ const items = computed<MenuItem[]>(() => {
         gapping.value = o.id
       },
     },
-    // only a rendered container is written in, here; objects have no clipboard in a text yet
-    { wrap, edit: o.kind === 'rendered', clipboard: false },
+    // only a rendered container is written in, here (the server has no step for the words of a box or a shape in a text)
+    { wrap, edit: o.kind === 'rendered' },
   )
 })
 

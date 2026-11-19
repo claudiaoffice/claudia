@@ -139,6 +139,26 @@ const DRAG_START = 3 // screen pixels the pointer must travel before a press on 
 const dragging = ref<{ x: number; y: number; moved: boolean; after: string | null; line: { left: number; top: number; width: number } | null } | null>(null)
 
 const select = () => props.session.selectObject(props.object.id)
+const tab = ref<HTMLElement | null>(null)
+
+// A selected table has the keys: Delete takes it away, Esc leaves it, however it was selected (a press on the tab or
+// the frame, Select Next Object, the menu). Focus goes to the tab unless a box already has it.
+watch(
+  () => state.selectedObject === props.object.id,
+  async (selected) => {
+    if (!selected) return
+    await nextTick()
+    if (!root.value?.contains(document.activeElement)) tab.value?.focus()
+  },
+  { immediate: true, flush: 'post' },
+)
+/** A press on the frame or between the boxes selects the table; a press in a box or on a button is theirs. */
+function onIslandDown(event: PointerEvent) {
+  if (event.button !== 0 || (event.target as HTMLElement).closest('textarea, button')) return
+  event.preventDefault()
+  select()
+  tab.value?.focus()
+}
 
 function paragraphs(): { id: string; bottom: number; left: number; width: number }[] {
   const doc = root.value?.closest('.doc')
@@ -208,11 +228,13 @@ defineExpose({ focusBox })
     data-table
     :data-object="object.id"
     data-testid="table"
+    @pointerdown="onIslandDown"
     @contextmenu="onContext"
   >
     <table :class="`look-${table.look}`" :style="tableCss">
       <caption>
         <button
+          ref="tab"
           type="button"
           class="tab"
           data-testid="table-tab"

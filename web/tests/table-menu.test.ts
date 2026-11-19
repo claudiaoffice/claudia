@@ -65,8 +65,8 @@ describe('the table entries of Edit', () => {
   it('run the action they are for', () => {
     const h = host()
     const items = flat(tableItems({ t }, h))
-    items.find((i) => i.id === 'edit.sort-descending')?.action?.()
-    items.find((i) => i.id === 'edit.table-options')?.action?.()
+    items.find((i) => i.id === 'tools.sort-descending')?.action?.()
+    items.find((i) => i.id === 'tools.table-options')?.action?.()
     expect(h.done).toEqual(['sort-descending', 'options'])
   })
 })
@@ -79,14 +79,14 @@ describe('the keys of the table entries', () => {
 
   it('work in the box the caret is in, which is a field, and run the action', () => {
     const h = host()
-    expect(press(tableShortcuts({ t }, h), 'edit.merge-cells', true)?.id).toBe('edit.merge-cells')
+    expect(press(tableShortcuts({ t }, h), 'tools.merge-cells', true)?.id).toBe('tools.merge-cells')
     expect(press(tableShortcuts({ t }, h), 'edit.row-insert-below', true)?.id).toBe('edit.row-insert-below')
     expect(h.done).toEqual(['merge-cells', 'row-below'])
   })
 
   it('do nothing where the entry is off', () => {
     const h = host({ box: null })
-    expect(press(tableShortcuts({ t }, h), 'edit.sort-ascending', false)).toBeNull()
+    expect(press(tableShortcuts({ t }, h), 'tools.sort-ascending', false)).toBeNull()
     expect(h.done).toEqual([])
   })
 })

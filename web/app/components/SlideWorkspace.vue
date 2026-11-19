@@ -328,7 +328,7 @@ async function addContainer(type: string) {
   if (await session.addContainer(type, insertFrame('image', 16 / 9, count.value))) canvas.value?.focus()
 }
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
-  return session.addImage(picture, insertFrame('image', aspect, count.value))
+  return session.addImage(picture, insertFrame('image', aspect, count.value, picture.natural))
 }
 function imageInserted() {
   showImageDialog.value = false
@@ -339,11 +339,13 @@ async function remove() {
   canvas.value?.focus()
 }
 
-/** Copy/Cut act on whatever the browser still has selected; Paste only does anything while a text frame is in edit
+/** Copy/Cut act on the picture selected (D1229), else on whatever the browser still has selected; Paste puts a picture that
+ * was cut or copied on the slide, else it only does anything while a text frame is in edit
  * mode (`document.activeElement` is then its contenteditable) — same honest limit `lib/clipboard.ts` documents: a
  * shape or an unselected canvas has no text to paste into, and the menu click quietly does nothing, same as a
  * native paste finding nowhere to land. */
 async function pasteFromClipboard() {
+  if (await canvas.value?.paste()) return // a picture that was cut or copied (D1229)
   await pasteAsPlainText(document.activeElement)
 }
 

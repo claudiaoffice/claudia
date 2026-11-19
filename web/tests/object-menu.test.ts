@@ -32,20 +32,20 @@ const groups = (items: ReturnType<typeof contextMenuItems>) => {
 describe('the object menu is one list (D1225)', () => {
   it('for a text box in creates: Describe, Edit text, Style, Rotate by, then the grid, then Delete — no 90° entries', () => {
     const items = contextMenuItems(text(), false, actions(), { grid: true })
-    expect(groups(items)).toEqual([['Describe…', 'Edit Text', 'Style…', 'Rotate By…'], ['Release from grid'], ['Delete']])
+    expect(groups(items)).toEqual([['Name & describe…', 'Edit text', 'Style…', 'Rotate by…'], ['Release from grid'], ['Delete']])
   })
 
   it('for a picture: no Edit text, Cut and Copy in a group of their own, and no "Properties" (Style… holds it)', () => {
     const items = contextMenuItems(image(), false, actions(), { grid: true })
-    expect(groups(items)).toEqual([['Describe…', 'Style…', 'Rotate By…'], ['Cut', 'Copy'], ['Release from grid'], ['Delete']])
+    expect(groups(items)).toEqual([['Name & describe…', 'Style…', 'Rotate by…'], ['Cut', 'Copy'], ['Release from grid'], ['Delete']])
   })
 
   it('for a shape and for a container (rendered text): the same as for a text box', () => {
-    for (const o of [shape(), container()]) expect(labels(contextMenuItems(o, false, actions(), { grid: true }))).toEqual(['Describe…', 'Edit Text', 'Style…', 'Rotate By…', 'Release from grid', 'Delete'])
+    for (const o of [shape(), container()]) expect(labels(contextMenuItems(o, false, actions(), { grid: true }))).toEqual(['Name & describe…', 'Edit text', 'Style…', 'Rotate by…', 'Release from grid', 'Delete'])
   })
 
   it('for a chart: no Rotate by… (D1021) and no Edit text, since it holds no paragraph', () => {
-    expect(labels(contextMenuItems(chart(), false, actions(), { grid: true }))).toEqual(['Describe…', 'Style…', 'Release from grid', 'Delete'])
+    expect(labels(contextMenuItems(chart(), false, actions(), { grid: true }))).toEqual(['Name & describe…', 'Style…', 'Release from grid', 'Delete'])
   })
 
   it('offers the grid only where the app has one: computes and composes have none', () => {
@@ -55,7 +55,7 @@ describe('the object menu is one list (D1225)', () => {
 
   it('never offers Rotate Right 90° or Rotate Left 90° (Rotate by… does them)', () => {
     for (const o of [text(), shape(), image(), chart(), container()]) {
-      expect(labels(contextMenuItems(o, false, actions(), { grid: true })).some((l) => l.startsWith('Rotate') && l !== 'Rotate By…')).toBe(false)
+      expect(labels(contextMenuItems(o, false, actions(), { grid: true })).some((l) => l.startsWith('Rotate') && l !== 'Rotate by…')).toBe(false)
     }
   })
 })
@@ -64,7 +64,7 @@ describe('each entry is wired to its own action', () => {
   it('runs describe, edit, style, rotate by and delete, and nothing else', () => {
     const a = actions()
     const items = contextMenuItems(text(), false, a, { grid: true })
-    for (const label of ['Describe…', 'Edit Text', 'Style…', 'Rotate By…', 'Delete']) items.find((i) => i.label === label)!.action!()
+    for (const label of ['Name & describe…', 'Edit text', 'Style…', 'Rotate by…', 'Delete']) items.find((i) => i.label === label)!.action!()
     expect([a.describe, a.edit, a.style, a.rotateBy, a.remove].map((f) => f.mock.calls.length)).toEqual([1, 1, 1, 1, 1])
     expect([a.cut, a.copy, a.setSnap, a.setWrap].map((f) => f.mock.calls.length)).toEqual([0, 0, 0, 0])
   })
@@ -81,8 +81,8 @@ describe('keys', () => {
   it('shows the key every entry has in the menus (Enter, Ctrl+Alt+D, Ctrl+Alt+A, Ctrl+Shift+Alt+Z, Del, Ctrl+X, Ctrl+C)', () => {
     const items = contextMenuItems(image(), false, actions(), { grid: true })
     const hint = (label: string) => items.find((i) => i.label === label)!.hint
-    expect([hint('Describe…'), hint('Style…'), hint('Rotate By…'), hint('Cut'), hint('Copy'), hint('Delete')]).toEqual(['Ctrl+Alt+D', 'Ctrl+Alt+A', 'Ctrl+Shift+Alt+Z', 'Ctrl+X', 'Ctrl+C', 'Del'])
-    expect(contextMenuItems(text(), false, actions()).find((i) => i.label === 'Edit Text')!.hint).toBe('Enter')
+    expect([hint('Name & describe…'), hint('Style…'), hint('Rotate by…'), hint('Cut'), hint('Copy'), hint('Delete')]).toEqual(['Ctrl+Alt+D', 'Ctrl+Alt+A', 'Ctrl+Shift+Alt+Z', 'Ctrl+X', 'Ctrl+C', 'Del'])
+    expect(contextMenuItems(text(), false, actions()).find((i) => i.label === 'Edit text')!.hint).toBe('Enter')
   })
 })
 
@@ -110,7 +110,7 @@ describe('the grid toggle (E10.15)', () => {
 })
 
 describe('Wrap text… (composes only, D1061)', () => {
-  const wrapEntry = (items: ReturnType<typeof contextMenuItems>) => items.find((i) => i.label === 'Wrap Text…')!
+  const wrapEntry = (items: ReturnType<typeof contextMenuItems>) => items.find((i) => i.label === 'Wrap text…')!
 
   it('is a submenu of the four modes with a tick on the current one, then Gap…, and shows the key that cycles them', () => {
     const entry = wrapEntry(contextMenuItems(image(), false, actions(), { wrap: 'around' }))
@@ -130,28 +130,28 @@ describe('Wrap text… (composes only, D1061)', () => {
   })
 
   it('sits between Rotate by… and the Cut/Copy group, in the first group', () => {
-    expect(groups(contextMenuItems(image(), false, actions(), { wrap: 'over' }))[0]).toEqual(['Describe…', 'Style…', 'Rotate By…', 'Wrap Text…'])
+    expect(groups(contextMenuItems(image(), false, actions(), { wrap: 'over' }))[0]).toEqual(['Name & describe…', 'Style…', 'Rotate by…', 'Wrap text…'])
   })
 
   it('is left off where the app has no wrap, and disabled for a viewer', () => {
-    expect(labels(contextMenuItems(image(), false, actions(), { grid: true }))).not.toContain('Wrap Text…')
+    expect(labels(contextMenuItems(image(), false, actions(), { grid: true }))).not.toContain('Wrap text…')
     expect(wrapEntry(contextMenuItems(image(), true, actions(), { wrap: 'over' })).disabled).toBe(true)
   })
 
   it('is offered for a chart, which floats in composes like any other object', () => {
-    expect(labels(contextMenuItems(chart(), false, actions(), { wrap: 'over' }))).toContain('Wrap Text…')
+    expect(labels(contextMenuItems(chart(), false, actions(), { wrap: 'over' }))).toContain('Wrap text…')
   })
 })
 
 describe('what an app leaves out (composes, for now)', () => {
   it('leaves Edit text off where the words cannot be written from here, and keeps it for a container', () => {
-    expect(labels(contextMenuItems(text(), false, actions(), { edit: false }))).not.toContain('Edit Text')
-    expect(labels(contextMenuItems(container(), false, actions(), { edit: true }))).toContain('Edit Text')
+    expect(labels(contextMenuItems(text(), false, actions(), { edit: false }))).not.toContain('Edit text')
+    expect(labels(contextMenuItems(container(), false, actions(), { edit: true }))).toContain('Edit text')
   })
   it('leaves Cut and Copy off a picture where there is no clipboard for objects, with their group', () => {
     const items = contextMenuItems(image(), false, actions(), { clipboard: false })
     expect(labels(items)).not.toContain('Cut')
     expect(labels(items)).not.toContain('Copy')
-    expect(groups(items)).toEqual([['Describe…', 'Style…', 'Rotate By…'], ['Delete']])
+    expect(groups(items)).toEqual([['Name & describe…', 'Style…', 'Rotate by…'], ['Delete']])
   })
 })

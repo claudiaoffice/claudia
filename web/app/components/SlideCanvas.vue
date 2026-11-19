@@ -8,8 +8,8 @@ import { viewTints } from '~/lib/replay-tint'
 // the selection turns it (D1024); a turned object is drawn turned about the centre of its frame. Nothing is
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { cutSelection, copySelection } from '~/lib/clipboard'
-import { CORNERS, GRID_SIZE, HANDLES, SLIDE_BOUNDS, SLIDE_H, SLIDE_W, besideRect, fitScale, moveFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { pictureOf as clippedImport, useObjectClipboard } from '~/lib/object-clipboard'
+import { CORNERS, GRID_SIZE, HANDLES, SLIDE_BOUNDS, SLIDE_H, SLIDE_W, besideRect, insertFrame, fitScale, moveFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
 import { gridOf } from '~/lib/object-gestures'
 import { useObjectInteraction } from '~/lib/object-interaction'
 import { objectName, pictureAlt } from '~/lib/descriptions'
@@ -37,6 +37,23 @@ const props = defineProps<{ session: SlideSession; showGrid: boolean; marks?: Sl
 const emit = defineEmits<{ styles: []; agenda: [id: string] }>()
 const session = props.session
 const state = session.state
+
+/** Cut, Copy and Paste of a picture (D1229): one module for the three apps. A paste puts the picture where a new one goes,
+ * at the size it had (and no further out than the slide). */
+const clip = useObjectClipboard({
+  selected: () => {
+    const o = state.selected ? state.objects[state.selected] : null
+    return o ? { id: o.id, body: o, asset: o.ref ? state.images[o.ref] : undefined } : null
+  },
+  readonly: () => session.readOnly,
+  remove: (id) => session.remove(id),
+  add: async (c) => {
+    const w = Math.min(c.w, SLIDE_W)
+    const h = Math.min(c.h, SLIDE_H)
+    const at = insertFrame('image', c.w / c.h, session.objectsOn(state.activeSlide).length)
+    await session.addImage(clippedImport(c), { x: Math.max(0, Math.min(at.x, SLIDE_W - w)), y: Math.max(0, Math.min(at.y, SLIDE_H - h)), w, h })
+  },
+})
 /** What a replay marks on this slide (D553): by object, what the step changed or what changed after it. */
 const tints = computed(() => viewTints(state))
 const replayClass = (id: string) => {
@@ -361,8 +378,8 @@ const contextItems = computed<MenuItem[]>(() => {
         openRotateBy(o.id, at ? { x: at.x, y: at.y } : undefined)
       },
       remove: () => session.remove(o.id),
-      cut: () => cutSelection(),
-      copy: () => copySelection(),
+      cut: () => void clip.cut(),
+      copy: () => void clip.copy(),
       setSnap: (snap) => session.setSnap(o.id, snap),
     },
     { grid: true },
@@ -547,7 +564,7 @@ async function onKey(event: KeyboardEvent) {
   }
 }
 
-defineExpose({ focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe, quarter, openRotateBy, referencePlace })
+defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), beginEdit, openStyleMenu, openDescribe, quarter, openRotateBy, referencePlace })
 
 </script>
 

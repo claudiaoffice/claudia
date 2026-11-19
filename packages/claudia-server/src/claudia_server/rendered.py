@@ -15,6 +15,7 @@ says nothing about *how* a tool is run."""
 
 from __future__ import annotations
 
+import weakref
 from collections.abc import Callable
 from typing import Any
 
@@ -45,6 +46,13 @@ from .wire import fresh_id
 MAX_ALT = 500
 
 
+def fit_within(w: int, h: int, picture_w: float, picture_h: float, least: int = 1) -> tuple[int, int]:
+    """The size a picture of ``picture_w`` × ``picture_h`` is shown at when a frame of ``w`` × ``h`` is only the most it
+    may take: its own size, or smaller if that does not go in, with its proportions. Never below ``least`` a side."""
+    scale = min(1.0, w / picture_w, h / picture_h)
+    return max(least, round(picture_w * scale)), max(least, round(picture_h * scale))
+
+
 class RenderDesk:
     """What a server offers for rendered containers: the types, and making a picture for a document.
 
@@ -53,6 +61,13 @@ class RenderDesk:
     def __init__(self, service: RenderService, rasteriser: Rasterise | None = None) -> None:
         self.service = service
         self.rasteriser = rasteriser  # draws an SVG as a PNG for office files; ``None``: they get the SVG alone (D394)
+        # containers whose frame is only a cap until their first picture comes, by document: that picture is then
+        # shown at its own size if that is smaller. Lost when the server stops; the frame then stays as given.
+        self._capped: weakref.WeakKeyDictionary[Any, set[str]] = weakref.WeakKeyDictionary()
+
+    def cap_first_picture(self, document, object_id: str) -> None:  # noqa: ANN001 - Document
+        """The frame of ``object_id`` is the most its first picture may take (``add_rendering`` with ``fit``)."""
+        self._capped.setdefault(document, set()).add(object_id)
 
     def types(self) -> list[dict]:
         """What clients and the AI are told of each type (identity, settings, hints); never how it is run."""
@@ -89,13 +104,21 @@ class RenderDesk:
         old = current.image
         if old and old != asset.id and not self._held_elsewhere(model, old, rendering_id):
             steps.append(ForgetImage(old))
+        first = current.image is None
         for object_id in model.users_of_rendering(rendering_id):
             shown = model.get_object(object_id)
             if not shown.body.description and not shown.body.decorative:
                 steps.append(DescribeObject(object_id, default_alt(current.type, current.source, rendered.svg), False))
-            fitted = max(1, round(shown.body.w * asset.height / asset.width))
-            if fitted != shown.body.h:  # the frame keeps its width and follows the picture's proportions
-                steps.append(ResizeObject(object_id, shown.anchor.to_data(), shown.body.w, fitted))
+            w, h = shown.body.w, shown.body.h
+            if first and object_id in self._capped.get(document, ()):
+                # a new container is no bigger than its picture, and no bigger than the frame it was given
+                w, h = fit_within(w, h, asset.width, asset.height, model.min_object_size)
+            self._capped.get(document, set()).discard(object_id)
+            fitted = max(
+                model.min_object_size, round(w * asset.height / asset.width)
+            )  # the width stays; the height follows
+            if (w, fitted) != (shown.body.w, shown.body.h):
+                steps.append(ResizeObject(object_id, shown.anchor.to_data(), w, fitted))
         document.execute(Batch(tuple(steps), name="Render"), author=user)
         return rendered
 
@@ -136,11 +159,25 @@ def _renderings(model_of: Callable[[Context], ObjectModel]):
 
 
 def _add(model_of: Callable[[Context], ObjectModel], placement: Placement):
-    def add_rendering(ctx: Context, *, w, h, type, source, params, alt, base, **where):  # noqa: A002 - the wire name
+    def add_rendering(  # noqa: PLR0913 - the wire name `type`
+        ctx: Context,
+        *,
+        w,
+        h,
+        type,
+        source,
+        params,
+        alt,
+        base,
+        fit=None,
+        **where,  # noqa: A002
+    ):
         """Put a rendered container where the person points: `type` is one of `rendering_types`, `source` the text
         (the truth the picture is made from), `params` its settings (defaults fill the rest), `alt` a short description
-        for whoever cannot see the picture (one is made from the text if left out). Returns the new `object`, its
-        `rendering` and the revision. The text is not drawn yet: the picture arrives as a later edit."""
+        for whoever cannot see the picture (one is made from the text if left out). With `fit`, `w` and `h` are only
+        the most the container may take: its first picture is shown at its own size if that is smaller, so a new
+        container does not fill the page by accident. Returns the new `object`, its `rendering` and the revision. The
+        text is not drawn yet: the picture arrives as a later edit."""
         desk, model = _desk(ctx), model_of(ctx)
         anchor = placement.anchor(model, None, **where)
         settings = desk.check(type, source, params or {})
@@ -160,6 +197,8 @@ def _add(model_of: Callable[[Context], ObjectModel], placement: Placement):
         definition = RenderedDefinition(rendering_id, type, source, settings)  # type: ignore[arg-type]
         command = Batch((DefineRendering(definition.to_data()), AddObject(body, anchor)), name="Add rendered container")
         applied = ctx.document.execute(command, author=ctx.user, base=base)
+        if fit:
+            desk.cap_first_picture(ctx.document, object_id)
         return {"object": object_id, "rendering": rendering_id, "revision": applied.revision.to_data()}
 
     return add_rendering
@@ -194,7 +233,7 @@ def add_rendering_methods(
     table.method("renderings")(_renderings(model_of))
     table.method(
         "add_rendering",
-        f"{placement.new} w:int h:int type:str source:text params:dict? alt:text? base:revision?",
+        f"{placement.new} w:int h:int type:str source:text params:dict? alt:text? fit:bool? base:revision?",
         write=True,
     )(_add(model_of, placement))
     table.method("set_rendering_source", "id:str source:text params:dict? base:revision?", write=True)(

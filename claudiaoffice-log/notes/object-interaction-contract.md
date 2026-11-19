@@ -204,15 +204,12 @@ three adapters have it.
 
 ## Open points
 
-1. **The initial size of a rendered container** (LaTeX) is too large. Found: every container starts at 420 × 240
-   (`CONTAINER_WIDTH` and `CONTAINER_HEIGHT` in `web/app/components/TextWorkspace.vue`, and the same two numbers in
-   `web/app/lib/text-session.ts` for a pasted fence), whatever it will draw. Not changed, because it needs a decision:
-   Proposed:
-   the container is first drawn at its rendered size (the renderer returns `width × height`), capped at the column
-   width, then scaled by the person.
+1. ~~The initial size of a rendered container~~ — answered 2026-11-19 (D1229): the smaller of 420 × 240 and the rendered
+   picture, for containers (the server's `fit`, `claudia_server/rendered.py`) and for imported pictures (`pictureSize` in
+   `web/app/lib/images.ts`).
 2. **Composes tables have no row and column headers**, so "Height / width…" and "Insert / delete ▸" on headers (workbook
    rows 18, 19) need that UI first; it is not part of this work.
-3. **Keys of the table menu entries** stay those the Edit entries have today until the workbook assigns new ones.
+3. **Keys of the table menu entries** stay those they have today (the entries moved from Edit to Tools, D1229).
 
 ## Build order
 
@@ -232,8 +229,10 @@ Each patch assumes the earlier ones are applied; the last step of each is a merg
    paragraph and offset), the right button never reaches the words (`web/app/components/TextEditor.vue`), the object menu and
    its dialogs are in `web/app/components/TextObjectMenu.vue`, and `web/app/components/ObjectFrame.vue` is the handles for
    creates and composes. **Not built:** the table's width handle (a table's width is set in its options); the
-   bounding-box wrap of a turned object (D1226); Edit text for a text box or shape in a text and Cut/Copy of a picture (the
-   server and the clipboard have no step for them); the LaTeX initial size (see open point 1).
+   bounding-box wrap of a turned object (D1226); Edit text for a text box or shape in a text (the server has no step for it).
+   Follow-up of 2026-11-19 (D1229): the size cap, the table commands in Tools (`clients/linux/src/claudia_shell_gtk/manifest.py`),
+   the workbook's wording, Delete on a selected table, and the object clipboard for pictures in all three apps
+   (`web/app/lib/object-clipboard.ts`).
 4. **computes:** host adapter, handles, turn, menu, the `contextmenu` rule in `SheetGrid.vue`.
 5. **`objects.cjs`** and its guard test, wired into `npm run e2e:objects` and CI as the other specs are.
 

@@ -78,7 +78,7 @@ async function submit() {
   busy.value = true
   const data = await fileToBase64(file.value)
   const aspect = naturalSize.value.width / naturalSize.value.height
-  const id = await props.add({ data, alt: decorative.value ? '' : alt.value.trim(), decorative: decorative.value, sourceName: file.value.name, sourcePath: null }, aspect)
+  const id = await props.add({ data, alt: decorative.value ? '' : alt.value.trim(), decorative: decorative.value, sourceName: file.value.name, sourcePath: null, natural: naturalSize.value }, aspect)
   busy.value = false
   if (id) emit('inserted', id) // a failure already told the person why, via the session's own notice
 }

@@ -303,7 +303,7 @@ export class SlideSession extends BaseSession<SlideState> {
 
   /** Put a rendered container of `type` on the slide that is shown, in `frame`; its id, or null after telling why not. */
   async addContainer(type: string, frame: Frame): Promise<string | null> {
-    const id = await this.addRendering(type, { slide: this.state.activeSlide, x: frame.x, y: frame.y }, { w: frame.w, h: frame.h })
+    const id = await this.addRendering(type, { slide: this.state.activeSlide, x: frame.x, y: frame.y }, { w: frame.w, h: frame.h }, undefined, true)
     if (id) await this.select(id)
     return id
   }

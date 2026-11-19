@@ -213,7 +213,7 @@ msgstr "[8,000 pàîd bàck în 48 pàyménts ôf 200~~~~~~~~~~~~~~~]"
 msgid "9 per page"
 msgstr "[9 pér pàgé~~~~]"
 
-#: web/app/components/TextWorkspace.vue:617
+#: web/app/components/TextWorkspace.vue:631
 msgid "@ai review this text"
 msgstr "[@àî révîéw thîs téxt~~~~~~~~]"
 
@@ -469,7 +469,7 @@ msgstr "[Àdd~]"
 msgid "Add 1 font"
 msgstr "[Àdd 1 fônt~~~~]"
 
-#: web/app/components/Workspace.vue:1275
+#: web/app/components/Workspace.vue:1271
 msgid "Add Sheet"
 msgstr "[Àdd Shéét~~~~]"
 
@@ -573,7 +573,7 @@ msgstr "[Àdmînîstràtôrs~~~~~~]"
 msgid "After"
 msgstr "[Àftér~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:402 web/app/components/SlideWorkspace.vue:523
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:404 web/app/components/SlideWorkspace.vue:525
 msgid "Agenda"
 msgstr "[Àgéndà~~]"
 
@@ -721,11 +721,11 @@ msgstr "[Àprîcôt~~~]"
 msgid "Around the object"
 msgstr "[Àrôûnd thé ôbjéct~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:455
+#: web/app/components/SlideWorkspace.vue:457
 msgid "Arrows"
 msgstr "[Àrrôws~~]"
 
-#: web/app/components/Workspace.vue:1137
+#: web/app/components/Workspace.vue:1133
 msgid "Arrows, Tab, Enter"
 msgstr "[Àrrôws, Tàb, Éntér~~~~~~~]"
 
@@ -849,7 +849,7 @@ msgstr "[Bàck tô {place} (Ésc)~~~~~~~~]"
 msgid "Background"
 msgstr "[Bàckgrôûnd~~~~]"
 
-#: web/app/components/TextWorkspace.vue:614
+#: web/app/components/TextWorkspace.vue:628
 msgid "Backspace / Delete"
 msgstr "[Bàckspàcé / Délété~~~~~~~]"
 
@@ -933,7 +933,7 @@ msgstr "[Bûllét~~]"
 msgid "Bullet of level {level}"
 msgstr "[Bûllét ôf lévél {level}~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:252 web/app/lib/format-menu.ts:78
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:265 web/app/lib/format-menu.ts:78
 msgid "Bulleted List"
 msgstr "[Bûllétéd Lîst~~~~~]"
 
@@ -981,7 +981,7 @@ msgstr "[Càncél~~]"
 msgid "Cell"
 msgstr "[Céll~~]"
 
-#: web/app/components/Workspace.vue:1273
+#: web/app/components/Workspace.vue:1269
 msgid "Cell menu"
 msgstr "[Céll ménû~~~~]"
 
@@ -1069,11 +1069,11 @@ msgstr "[Chàràctérs frôm thé mîddlé ôf thé téxt: whéré tô stàrt (f
 msgid "Chart"
 msgstr "[Chàrt~~]"
 
-#: web/app/components/Workspace.vue:1216
+#: web/app/components/Workspace.vue:1212
 msgid "Chart: {name}"
 msgstr "[Chàrt: {name}~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1065
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1061
 msgid "Chart…"
 msgstr "[Chàrt…~~]"
 
@@ -1153,7 +1153,7 @@ msgstr "[Cléàr~~]"
 msgid "Clear Cell Style"
 msgstr "[Cléàr Céll Stylé~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1090
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1086
 msgid "Clear Cells"
 msgstr "[Cléàr Célls~~~~]"
 
@@ -1169,7 +1169,7 @@ msgstr "[Cléàr thé pîck~~~~~~]"
 msgid "Clear the selected cells"
 msgstr "[Cléàr thé séléctéd célls~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:452
+#: web/app/components/SlideWorkspace.vue:454
 msgid "Click"
 msgstr "[Clîck~~]"
 
@@ -1249,7 +1249,7 @@ msgstr "[Côlôûrs~~~]"
 msgid "Colours…"
 msgstr "[Côlôûrs…~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TableOptionsDialog.vue:79 web/app/components/TableOptionsDialog.vue:81 web/app/components/Workspace.vue:1081 web/app/lib/table-menu.ts:93
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TableOptionsDialog.vue:79 web/app/components/TableOptionsDialog.vue:81 web/app/components/Workspace.vue:1077 web/app/lib/table-menu.ts:93
 msgid "Column"
 msgstr "[Côlûmn~~]"
 
@@ -1357,7 +1357,7 @@ msgstr "[Côpîéd.~~~]"
 msgid "Copies, downloads, exports and backups made before keep it."
 msgstr "[Côpîés, dôwnlôàds, éxpôrts ànd bàckûps màdé béfôré kéép ît.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/RecoveryKeyDialog.vue:48 web/app/lib/document-menus.ts:136 web/app/lib/object-menu.ts:84
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/RecoveryKeyDialog.vue:48 web/app/lib/document-menus.ts:136 web/app/lib/object-menu.ts:85
 msgid "Copy"
 msgstr "[Côpy~~]"
 
@@ -1445,19 +1445,19 @@ msgstr "[Crôss-Référéncé…~~~~~~]"
 msgid "Ctrl"
 msgstr "[Ctrl~~]"
 
-#: web/app/components/TextWorkspace.vue:615
+#: web/app/components/TextWorkspace.vue:629
 msgid "Ctrl + Backspace / Delete"
 msgstr "[Ctrl + Bàckspàcé / Délété~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:456 web/app/components/TextWorkspace.vue:616 web/app/components/Workspace.vue:1143
+#: web/app/components/SlideWorkspace.vue:458 web/app/components/TextWorkspace.vue:630 web/app/components/Workspace.vue:1139
 msgid "Ctrl + C / X / V"
 msgstr "[Ctrl + C / X / V~~~~~~]"
 
-#: web/app/components/Workspace.vue:1140
+#: web/app/components/Workspace.vue:1136
 msgid "Ctrl + arrows"
 msgstr "[Ctrl + àrrôws~~~~~]"
 
-#: web/app/lib/object-menu.ts:84
+#: web/app/lib/object-menu.ts:85
 msgid "Ctrl+C"
 msgstr "[Ctrl+C~~]"
 
@@ -1469,7 +1469,7 @@ msgstr "[Ctrl+Éntér~~~~]"
 msgid "Ctrl+Enter draws it, Escape leaves it as it was"
 msgstr "[Ctrl+Éntér dràws ît, Éscàpé léàvés ît às ît wàs~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/object-menu.ts:84
+#: web/app/lib/object-menu.ts:85
 msgid "Ctrl+X"
 msgstr "[Ctrl+X~~]"
 
@@ -1489,7 +1489,7 @@ msgstr "[Cûrrént slîdé~~~~~]"
 msgid "Custom…"
 msgstr "[Cûstôm…~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:137 web/app/lib/object-menu.ts:84
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:137 web/app/lib/object-menu.ts:85
 msgid "Cut"
 msgstr "[Cût~]"
 
@@ -1529,11 +1529,11 @@ msgstr "[Décôràtîvé: ônly fôr lôôks, à scréén réàdér skîps ît~~
 msgid "Define"
 msgstr "[Défîné~~]"
 
-#: web/app/lib/object-menu.ts:90 web/app/lib/table-menu.ts:122
+#: web/app/lib/object-menu.ts:91 web/app/lib/table-menu.ts:122
 msgid "Del"
 msgstr "[Dél~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/PivotDeleteDialog.vue:31 web/app/components/SlideWorkspace.vue:399 web/app/components/Workspace.vue:1076 web/app/components/Workspace.vue:1086 web/app/lib/object-menu.ts:90 web/app/lib/table-menu.ts:89 web/app/lib/table-menu.ts:95
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/NamesDialog.vue:95 web/app/components/PivotDeleteDialog.vue:31 web/app/components/SlideWorkspace.vue:401 web/app/components/Workspace.vue:1072 web/app/components/Workspace.vue:1082 web/app/lib/object-menu.ts:91 web/app/lib/table-menu.ts:89 web/app/lib/table-menu.ts:95
 msgid "Delete"
 msgstr "[Délété~~]"
 
@@ -1561,10 +1561,6 @@ msgstr "[Délété Rôw~~~~]"
 msgid "Delete Rows"
 msgstr "[Délété Rôws~~~~]"
 
-#: web/app/lib/table-menu.ts:122
-msgid "Delete Table"
-msgstr "[Délété Tàblé~~~~~]"
-
 #: web/app/components/DeleteDocumentDialog.vue:31
 msgid "Delete for good"
 msgstr "[Délété fôr gôôd~~~~~~]"
@@ -1576,6 +1572,10 @@ msgstr "[Délété pîvôt tàblé~~~~~~~]"
 #: web/app/components/DeleteStyleDialog.vue:135
 msgid "Delete style"
 msgstr "[Délété stylé~~~~~]"
+
+#: web/app/lib/table-menu.ts:122
+msgid "Delete table"
+msgstr "[Délété tàblé~~~~~]"
 
 #: web/app/components/PivotDeleteDialog.vue:28
 msgid "Delete the pivot table {name}? Its cells go empty and the table it reads is not touched. You can undo it."
@@ -1613,7 +1613,7 @@ msgstr "[Délété…~~~]"
 msgid "Descending"
 msgstr "[Déscéndîng~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:408 web/app/components/Workspace.vue:1099 web/app/lib/descriptions.ts:63
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:410 web/app/components/Workspace.vue:1095 web/app/lib/descriptions.ts:63
 msgid "Describe Object…"
 msgstr "[Déscrîbé Ôbjéct…~~~~~~]"
 
@@ -1624,10 +1624,6 @@ msgstr "[Déscrîbé ôbjéct~~~~~~]"
 #: web/app/components/ObjectDescriptionDialog.vue:27
 msgid "Describe the picture, or tick \"Decorative\" if it adds nothing a reader would miss."
 msgstr "[Déscrîbé thé pîctûré, ôr tîck \"Décôràtîvé\" îf ît àdds nôthîng à réàdér wôûld mîss.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
-
-#: web/app/lib/object-menu.ts:63 web/app/lib/table-menu.ts:116
-msgid "Describe…"
-msgstr "[Déscrîbé…~~~~]"
 
 #: web/app/components/DetailsFields.vue:67 web/app/components/ImportDialog.vue:165
 msgid "Description"
@@ -1721,15 +1717,15 @@ msgstr "[Dôné~~]"
 msgid "Dot plot of {n} outcomes, from {low} to {high}, median {median}"
 msgstr "[Dôt plôt ôf {n} ôûtcômés, frôm {low} tô {high}, médîàn {median}~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/FooterBar.vue:39 web/app/components/FooterBar.vue:55 web/app/components/SlideWorkspace.vue:544
+#: web/app/components/FooterBar.vue:39 web/app/components/FooterBar.vue:55 web/app/components/SlideWorkspace.vue:546
 msgid "Double-click to rename"
 msgstr "[Dôûblé-clîck tô rénàmé~~~~~~~~~]"
 
-#: web/app/components/SlideCanvas.vue:604
+#: web/app/components/SlideCanvas.vue:621
 msgid "Double-click to type"
 msgstr "[Dôûblé-clîck tô typé~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:454
+#: web/app/components/SlideWorkspace.vue:456
 msgid "Double-click, Enter"
 msgstr "[Dôûblé-clîck, Éntér~~~~~~~~]"
 
@@ -1745,7 +1741,7 @@ msgstr "[Dôwnlôàd PDF~~~~~]"
 msgid "Download the document to this computer"
 msgstr "[Dôwnlôàd thé dôcûmént tô thîs cômpûtér~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:453
+#: web/app/components/SlideWorkspace.vue:455
 msgid "Drag"
 msgstr "[Dràg~~]"
 
@@ -1753,11 +1749,11 @@ msgstr "[Dràg~~]"
 msgid "Drag fields between the boxes, or use a chip’s ▾ menu."
 msgstr "[Dràg fîélds bétwéén thé bôxés, ôr ûsé à chîp’s ▾ ménû.~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TableView.vue:219
+#: web/app/components/TableView.vue:241
 msgid "Drag to move the table"
 msgstr "[Dràg tô môvé thé tàblé~~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:1188
+#: web/app/components/Workspace.vue:1184
 msgid "Draw new random numbers ({key})"
 msgstr "[Dràw néw ràndôm nûmbérs ({key})~~~~~~~~~~~~]"
 
@@ -1765,11 +1761,11 @@ msgstr "[Dràw néw ràndôm nûmbérs ({key})~~~~~~~~~~~~]"
 msgid "Draw new random numbers for everybody"
 msgstr "[Dràw néw ràndôm nûmbérs fôr évérybôdy~~~~~~~~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:1192
+#: web/app/components/Workspace.vue:1188
 msgid "Draw {n}"
 msgstr "[Dràw {n}~~~]"
 
-#: web/app/components/Workspace.vue:1189
+#: web/app/components/Workspace.vue:1185
 msgid "Draw {n}: draw new random numbers"
 msgstr "[Dràw {n}: dràw néw ràndôm nûmbérs~~~~~~~~~~~~~]"
 
@@ -1789,21 +1785,25 @@ msgstr "[Éàsy tô réàd~~~~~]"
 msgid "Easy to see"
 msgstr "[Éàsy tô séé~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:365 web/app/components/StylesDialog.vue:70 web/app/components/TextWorkspace.vue:457 web/app/components/Workspace.vue:1044
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:367 web/app/components/StylesDialog.vue:70 web/app/components/TextWorkspace.vue:470 web/app/components/Workspace.vue:1040
 msgid "Edit"
 msgstr "[Édît~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:393 web/app/lib/object-menu.ts:65
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:395
 msgid "Edit Text"
 msgstr "[Édît Téxt~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylePicker.vue:71 web/app/components/TextWorkspace.vue:245 web/app/components/Workspace.vue:694 web/app/lib/format-menu.ts:121
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StylePicker.vue:71 web/app/components/TextWorkspace.vue:258 web/app/components/Workspace.vue:694 web/app/lib/format-menu.ts:121
 msgid "Edit This Style…"
 msgstr "[Édît Thîs Stylé…~~~~~~]"
 
 #: web/app/components/NamesDialog.vue:93 web/app/components/ResultNote.vue:37 web/app/components/ResultNote.vue:45 web/app/components/ResultNote.vue:53
 msgid "Edit query…"
 msgstr "[Édît qûéry…~~~~]"
+
+#: web/app/lib/object-menu.ts:66
+msgid "Edit text"
+msgstr "[Édît téxt~~~~]"
 
 #: web/app/components/ContentsDialog.vue:76
 msgid "Edit these styles in All Styles…"
@@ -1833,11 +1833,11 @@ msgstr "[Énd thé shôw~~~~~]"
 msgid "End the show (Esc)"
 msgstr "[Énd thé shôw (Ésc)~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:612 web/app/lib/object-menu.ts:65
+#: web/app/components/TextWorkspace.vue:626 web/app/lib/object-menu.ts:66
 msgid "Enter"
 msgstr "[Éntér~~]"
 
-#: web/app/components/Workspace.vue:1142
+#: web/app/components/Workspace.vue:1138
 msgid "Enter / Tab / Esc"
 msgstr "[Éntér / Tàb / Ésc~~~~~~~]"
 
@@ -1917,7 +1917,7 @@ msgstr "[Éxpôrtéd.~~~~]"
 msgid "Export…"
 msgstr "[Éxpôrt…~~~]"
 
-#: web/app/components/Workspace.vue:1138
+#: web/app/components/Workspace.vue:1134
 msgid "F6 / Shift + F6"
 msgstr "[F6 / Shîft + F6~~~~~~]"
 
@@ -2037,7 +2037,7 @@ msgstr "[Fînds {parts} în téxts thàt {conditions}.~~~~~~~~~~~~~~~~]"
 msgid "Finds {parts}."
 msgstr "[Fînds {parts}.~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:530 web/app/components/TextWorkspace.vue:667
+#: web/app/components/SlideWorkspace.vue:532 web/app/components/TextWorkspace.vue:681
 msgid "First number"
 msgstr "[Fîrst nûmbér~~~~~]"
 
@@ -2065,7 +2065,7 @@ msgstr "[Fît tô wîdth~~~~~]"
 msgid "Fit width"
 msgstr "[Fît wîdth~~~~]"
 
-#: web/app/components/StyleBar.vue:112 web/app/components/TextWorkspace.vue:557
+#: web/app/components/StyleBar.vue:112 web/app/components/TextWorkspace.vue:567
 msgid "Flow"
 msgstr "[Flôw~~]"
 
@@ -2073,7 +2073,7 @@ msgstr "[Flôw~~]"
 msgid "Flow: the text runs to the width of the window"
 msgstr "[Flôw: thé téxt rûns tô thé wîdth ôf thé wîndôw~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1034 web/app/components/Workspace.vue:1120 web/app/components/Workspace.vue:748
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1030 web/app/components/Workspace.vue:1116 web/app/components/Workspace.vue:748
 msgid "Follow Computation"
 msgstr "[Fôllôw Cômpûtàtîôn~~~~~~~]"
 
@@ -2137,7 +2137,7 @@ msgstr "[Fôr thé {count} séléctéd célls~~~~~~~~~~~~]"
 msgid "For {doc}, as {user}. Everybody else keeps their own password."
 msgstr "[Fôr {doc}, às {user}. Évérybôdy élsé kééps théîr ôwn pàsswôrd.~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:1275
+#: web/app/components/Workspace.vue:1271
 msgid "Forecast"
 msgstr "[Fôrécàst~~~]"
 
@@ -2145,7 +2145,7 @@ msgstr "[Fôrécàst~~~]"
 msgid "Forget every hidden line"
 msgstr "[Fôrgét évéry hîddén lîné~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:56 web/app/components/SlideWorkspace.vue:404 web/app/components/TextWorkspace.vue:498 web/app/components/Workspace.vue:1095
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:56 web/app/components/SlideWorkspace.vue:406 web/app/components/TextWorkspace.vue:508 web/app/components/Workspace.vue:1091
 msgid "Format"
 msgstr "[Fôrmàt~~]"
 
@@ -2181,7 +2181,7 @@ msgstr "[Gàmmà~~]"
 msgid "Gap between items"
 msgstr "[Gàp bétwéén îtéms~~~~~~~]"
 
-#: web/app/components/TextObjectMenu.vue:165 web/app/lib/object-menu.ts:77
+#: web/app/components/TextObjectMenu.vue:165 web/app/lib/object-menu.ts:78
 msgid "Gap…"
 msgstr "[Gàp…~~]"
 
@@ -2221,7 +2221,7 @@ msgstr "[Gô ôn côûntîng whéré thé lîst béfôré thîs ôné stôppéd~
 msgid "Go to"
 msgstr "[Gô tô~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:404 web/app/lib/document-menus.ts:220
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:417 web/app/lib/document-menus.ts:220
 msgid "Go to Target"
 msgstr "[Gô tô Tàrgét~~~~~]"
 
@@ -2493,7 +2493,7 @@ msgstr "[Îmàgé~~]"
 msgid "Image properties"
 msgstr "[Îmàgé prôpértîés~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:395 web/app/components/TextWorkspace.vue:477 web/app/components/Workspace.vue:1064
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:397 web/app/components/TextWorkspace.vue:490 web/app/components/Workspace.vue:1060
 msgid "Image…"
 msgstr "[Îmàgé…~~]"
 
@@ -2557,15 +2557,15 @@ msgstr "[Înpût ôf thé cômpûtàtîôn~~~~~~~~~~]"
 msgid "Input {n}"
 msgstr "[Înpût {n}~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImageImportDialog.vue:102 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/TableDialog.vue:43 web/app/components/TextWorkspace.vue:484 web/app/lib/document-menus.ts:174
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImageImportDialog.vue:102 web/app/components/SheetChartInsertDialog.vue:190 web/app/components/TableDialog.vue:43 web/app/components/TextWorkspace.vue:497 web/app/lib/document-menus.ts:174
 msgid "Insert"
 msgstr "[Însért~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1074 web/app/lib/table-menu.ts:89
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1070 web/app/lib/table-menu.ts:89
 msgid "Insert Above"
 msgstr "[Însért Àbôvé~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1075 web/app/lib/table-menu.ts:89
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1071 web/app/lib/table-menu.ts:89
 msgid "Insert Below"
 msgstr "[Însért Bélôw~~~~~]"
 
@@ -2577,11 +2577,11 @@ msgstr "[Însért Côlûmn Léft~~~~~~~]"
 msgid "Insert Column Right"
 msgstr "[Însért Côlûmn Rîght~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1084 web/app/lib/table-menu.ts:95
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1080 web/app/lib/table-menu.ts:95
 msgid "Insert Left"
 msgstr "[Însért Léft~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1085 web/app/lib/table-menu.ts:95
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1081 web/app/lib/table-menu.ts:95
 msgid "Insert Right"
 msgstr "[Însért Rîght~~~~~]"
 
@@ -2737,7 +2737,7 @@ msgstr "[Kînd ôf thé néw dôcûmént~~~~~~~~~~]"
 msgid "LaTeX"
 msgstr "[LàTéX~~]"
 
-#: web/app/components/SlideWorkspace.vue:496 web/app/lib/object-style-host.ts:49
+#: web/app/components/SlideWorkspace.vue:498 web/app/lib/object-style-host.ts:49
 msgid "Label"
 msgstr "[Làbél~~]"
 
@@ -2973,7 +2973,7 @@ msgstr "[Màrgîns~~~]"
 msgid "Mark where the document changed after this step: solid outlines are what this step changed, dashed ones what changed later"
 msgstr "[Màrk whéré thé dôcûmént chàngéd àftér thîs stép: sôlîd ôûtlînés àré whàt thîs stép chàngéd, dàshéd ônés whàt chàngéd làtér~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:136
+#: web/app/components/TextWorkspace.vue:137
 msgid "Markdown (.md)"
 msgstr "[Màrkdôwn (.md)~~~~~~]"
 
@@ -3025,9 +3025,13 @@ msgstr "[Méàn~~]"
 msgid "Members of {field}"
 msgstr "[Mémbérs ôf {field}~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts:103 web/app/lib/table-menu.ts:118 web/app/lib/table-menu.ts:139
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts:103 web/app/lib/table-menu.ts:139
 msgid "Merge Cells"
 msgstr "[Mérgé Célls~~~~]"
+
+#: web/app/lib/table-menu.ts:118
+msgid "Merge cells"
+msgstr "[Mérgé célls~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Mermaid"
@@ -3125,9 +3129,13 @@ msgstr "[My plàcés~~~~]"
 msgid "My places and collections"
 msgstr "[My plàcés ànd côlléctîôns~~~~~~~~~~]"
 
-#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/AdminFonts.vue:204 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/NumberingDialog.vue:134 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:44 web/app/components/SlideWorkspace.vue:517 web/app/components/StyleSpec.vue:291 web/app/components/Workspace.vue:1274 web/app/components/Workspace.vue:1275 web/app/lib/reference-labels.ts:17
+#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/AdminFonts.vue:204 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/NumberingDialog.vue:134 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:44 web/app/components/SlideWorkspace.vue:519 web/app/components/StyleSpec.vue:291 web/app/components/Workspace.vue:1270 web/app/components/Workspace.vue:1271 web/app/lib/reference-labels.ts:17
 msgid "Name"
 msgstr "[Nàmé~~]"
+
+#: web/app/lib/object-menu.ts:64 web/app/lib/table-menu.ts:116
+msgid "Name & describe…"
+msgstr "[Nàmé & déscrîbé…~~~~~~]"
 
 #: web/app/components/SheetChartInsertDialog.vue:158
 msgid "Name (the tab it opens as)"
@@ -3181,7 +3189,7 @@ msgstr "[Nàméd thîngs~~~~~]"
 msgid "Names"
 msgstr "[Nàmés~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue:91 web/app/components/Workspace.vue:1122
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/FormulaBar.vue:91 web/app/components/Workspace.vue:1118
 msgid "Names…"
 msgstr "[Nàmés…~~]"
 
@@ -3189,11 +3197,11 @@ msgstr "[Nàmés…~~]"
 msgid "New"
 msgstr "[Néw~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1062
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1058
 msgid "New Sheet…"
 msgstr "[Néw Shéét…~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:383 web/app/components/SlideWorkspace.vue:550
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:385 web/app/components/SlideWorkspace.vue:552
 msgid "New Slide"
 msgstr "[Néw Slîdé~~~~]"
 
@@ -3225,7 +3233,7 @@ msgstr "[Néw pàsswôrd (àt léàst 8 chàràctérs)~~~~~~~~~~~~~~]"
 msgid "New pivot table"
 msgstr "[Néw pîvôt tàblé~~~~~~]"
 
-#: web/app/components/FooterBar.vue:63 web/app/components/Workspace.vue:1275
+#: web/app/components/FooterBar.vue:63 web/app/components/Workspace.vue:1271
 msgid "New sheet"
 msgstr "[Néw shéét~~~~]"
 
@@ -3305,7 +3313,7 @@ msgstr "[Nô shéll àccéss, nô nétwôrk, nô fîlés ôûtsîdé thé jôb �
 msgid "No styles fit what is selected"
 msgstr "[Nô stylés fît whàt îs séléctéd~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:196 web/app/components/TextWorkspace.vue:501 web/app/components/Workspace.vue:895
+#: web/app/components/SlideWorkspace.vue:196 web/app/components/TextWorkspace.vue:511 web/app/components/Workspace.vue:895
 msgid "No styles yet"
 msgstr "[Nô stylés yét~~~~~]"
 
@@ -3321,7 +3329,7 @@ msgstr "[Nôbôdy càn brîng ît bàck: nôt yôû, nôt thé sérvér, nôt û
 msgid "Nobody edits this document yet. Make somebody an editor first (File ▸ Manage ▸ Share…)."
 msgstr "[Nôbôdy édîts thîs dôcûmént yét. Màké sômébôdy àn édîtôr fîrst (Fîlé ▸ Mànàgé ▸ Shàré…).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:250 web/app/components/TextWorkspace.vue:488
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:263 web/app/components/TextWorkspace.vue:501
 msgid "Non-breaking Hyphen"
 msgstr "[Nôn-bréàkîng Hyphén~~~~~~~~]"
 
@@ -3405,7 +3413,7 @@ msgstr "[Nôthîng ànybôdy séés în thé dôcûmént chàngés: ît îs ônl
 msgid "Nothing differs from now"
 msgstr "[Nôthîng dîfférs frôm nôw~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:1017
+#: web/app/lib/base-session.ts:1018
 msgid "Nothing has changed since the last checkpoint."
 msgstr "[Nôthîng hàs chàngéd sîncé thé làst chéckpôînt.~~~~~~~~~~~~~~~~~~]"
 
@@ -3485,7 +3493,7 @@ msgstr "[Nûmbér~~]"
 msgid "Number All Slide Titles"
 msgstr "[Nûmbér Àll Slîdé Tîtlés~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:531 web/app/lib/format-menu.ts:89
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:541 web/app/lib/format-menu.ts:89
 msgid "Number Headings"
 msgstr "[Nûmbér Héàdîngs~~~~~~]"
 
@@ -3505,7 +3513,7 @@ msgstr "[Nûmbér ôf lévél {level}~~~~~~~~~]"
 msgid "Number the title of every slide: 1, 2, 3 …"
 msgstr "[Nûmbér thé tîtlé ôf évéry slîdé: 1, 2, 3 …~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:253 web/app/lib/format-menu.ts:79
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:266 web/app/lib/format-menu.ts:79
 msgid "Numbered List"
 msgstr "[Nûmbéréd Lîst~~~~~]"
 
@@ -3533,7 +3541,7 @@ msgstr "[Nûmbérs~~~]"
 msgid "Object in paragraph {n}"
 msgstr "[Ôbjéct în pàràgràph {n}~~~~~~~~~]"
 
-#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SlideCanvas.vue:643 web/app/components/TextObjectMenu.vue:159
+#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SlideCanvas.vue:660 web/app/components/TextObjectMenu.vue:159
 msgid "Object menu"
 msgstr "[Ôbjéct ménû~~~~]"
 
@@ -3689,7 +3697,7 @@ msgstr "[Ôpén à téxt, ôr stàrt à néw ôné. Évérybôdy yôû învîté
 msgid "Open the chat with an empty prompt"
 msgstr "[Ôpén thé chàt wîth àn émpty prômpt~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:643
+#: web/app/components/TextWorkspace.vue:657
 msgid "Open the first suggestion"
 msgstr "[Ôpén thé fîrst sûggéstîôn~~~~~~~~~~]"
 
@@ -3705,7 +3713,7 @@ msgstr "[ÔpénDôcûmént préséntàtîôn (.ôdp)~~~~~~~~~~~~~]"
 msgid "OpenDocument spreadsheet (.ods)"
 msgstr "[ÔpénDôcûmént spréàdshéét (.ôds)~~~~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:138
+#: web/app/components/TextWorkspace.vue:139
 msgid "OpenDocument text (.odt)"
 msgstr "[ÔpénDôcûmént téxt (.ôdt)~~~~~~~~~~]"
 
@@ -3725,7 +3733,7 @@ msgstr "[Ôpénîng {name}~~~~~~]"
 msgid "Open…"
 msgstr "[Ôpén…~~]"
 
-#: web/app/components/TableView.vue:227 web/app/components/TextEditor.vue:767
+#: web/app/components/TableView.vue:249 web/app/components/TextEditor.vue:767
 msgid "Options…"
 msgstr "[Ôptîôns…~~~]"
 
@@ -3753,7 +3761,7 @@ msgstr "[Ôrîéntàtîôn~~~~]"
 msgid "Other arguments are handed to GTK."
 msgstr "[Ôthér àrgûménts àré hàndéd tô GTK.~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1033 web/app/components/Workspace.vue:1119 web/app/components/Workspace.vue:747
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1029 web/app/components/Workspace.vue:1115 web/app/components/Workspace.vue:747
 msgid "Outcomes of This Cell…"
 msgstr "[Ôûtcômés ôf Thîs Céll…~~~~~~~~~]"
 
@@ -3801,7 +3809,7 @@ msgstr "[Pàcé~~]"
 msgid "Padding"
 msgstr "[Pàddîng~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:113 web/app/components/TextWorkspace.vue:559 web/app/lib/reference-labels.ts:15
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:113 web/app/components/TextWorkspace.vue:569 web/app/lib/reference-labels.ts:15
 msgid "Page"
 msgstr "[Pàgé~~]"
 
@@ -3905,7 +3913,7 @@ msgstr "[Pîck whàt tô blànk~~~~~~~]"
 msgid "Picked to redact: {n}"
 msgstr "[Pîckéd tô rédàct: {n}~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:20 web/app/components/SidePanel.vue:272 web/app/lib/descriptions.ts:41
+#: packages/claudia-server/src/claudia_server/thing_names.py:20 web/app/components/SidePanel.vue:272 web/app/lib/descriptions.ts:41 web/app/lib/object-clipboard.ts:43
 msgid "Picture"
 msgstr "[Pîctûré~~~]"
 
@@ -3921,7 +3929,7 @@ msgstr "[Pîvôt~~]"
 msgid "Pivot Fields"
 msgstr "[Pîvôt Fîélds~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1125
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1121
 msgid "Pivot Table…"
 msgstr "[Pîvôt Tàblé…~~~~~]"
 
@@ -3957,7 +3965,7 @@ msgstr "[Plàîn dàtà, nôthîng tô téll~~~~~~~~~~~]"
 msgid "Plan a time for this slide"
 msgstr "[Plàn à tîmé fôr thîs slîdé~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:387 web/app/lib/present-keys.ts:53
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:389 web/app/lib/present-keys.ts:53
 msgid "Plan the Time of This Slide…"
 msgstr "[Plàn thé Tîmé ôf Thîs Slîdé…~~~~~~~~~~~]"
 
@@ -3977,7 +3985,7 @@ msgstr "[Plànnéd tîmé fôr thîs slîdé: {time}~~~~~~~~~~~~~~]"
 msgid "Planned time, for example 2, 2:30 or 90s"
 msgstr "[Plànnéd tîmé, fôr éxàmplé 2, 2:30 ôr 90s~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:555
+#: web/app/components/SlideWorkspace.vue:557
 msgid "Planned {time}"
 msgstr "[Plànnéd {time}~~~~~~]"
 
@@ -4001,15 +4009,15 @@ msgstr "[PôwérPôînt préséntàtîôn (.pptx)~~~~~~~~~~~~]"
 msgid "PowerPoint, OpenDocument or Claudia slides, or drop one anywhere on this page."
 msgstr "[PôwérPôînt, ÔpénDôcûmént ôr Clàûdîà slîdés, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:484
+#: web/app/components/SlideWorkspace.vue:486
 msgid "Present"
 msgstr "[Présént~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:432 web/app/lib/present-keys.ts:51
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:434 web/app/lib/present-keys.ts:51
 msgid "Present from This Slide"
 msgstr "[Présént frôm Thîs Slîdé~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:431 web/app/lib/present-keys.ts:50
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:433 web/app/lib/present-keys.ts:50
 msgid "Present from the First Slide"
 msgstr "[Présént frôm thé Fîrst Slîdé~~~~~~~~~~~]"
 
@@ -4137,7 +4145,7 @@ msgstr "[Qûîck tûrns~~~~]"
 msgid "Quit"
 msgstr "[Qûît~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1117 web/app/components/Workspace.vue:746
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1113 web/app/components/Workspace.vue:746
 msgid "Random Generator…"
 msgstr "[Ràndôm Généràtôr…~~~~~~~]"
 
@@ -4237,7 +4245,7 @@ msgstr "[Rédô {label}~~~~~]"
 msgid "Reference in Chat"
 msgstr "[Référéncé în Chàt~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:664
+#: web/app/components/TextWorkspace.vue:678
 msgid "Reference menu"
 msgstr "[Référéncé ménû~~~~~~]"
 
@@ -4257,7 +4265,7 @@ msgstr "[Référs tô {range}~~~~~~~]"
 msgid "Reject"
 msgstr "[Réjéct~~]"
 
-#: web/app/lib/object-menu.ts:88
+#: web/app/lib/object-menu.ts:89
 msgid "Release from grid"
 msgstr "[Réléàsé frôm grîd~~~~~~~]"
 
@@ -4269,7 +4277,7 @@ msgstr "[Rémàrks~~~]"
 msgid "Remove"
 msgstr "[Rémôvé~~]"
 
-#: web/app/components/TextWorkspace.vue:405
+#: web/app/components/TextWorkspace.vue:418
 msgid "Remove Reference"
 msgstr "[Rémôvé Référéncé~~~~~~]"
 
@@ -4321,15 +4329,15 @@ msgstr "[Rémôvés spàcés àt bôth énds ànd rédûcés thé ônés bétwé
 msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
 msgstr "[Rémôvés thé chàràctérs thàt cànnôt bé prîntéd (côdés 0 tô 31) frôm à téxt.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:826 web/app/components/SlideWorkspace.vue:517 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139 web/app/components/StylesDialog.vue:70 web/app/components/Workspace.vue:1274
+#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:826 web/app/components/SlideWorkspace.vue:519 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139 web/app/components/StylesDialog.vue:70 web/app/components/Workspace.vue:1270
 msgid "Rename"
 msgstr "[Rénàmé~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1063
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1059
 msgid "Rename Sheet…"
 msgstr "[Rénàmé Shéét…~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:384
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:386
 msgid "Rename Slide…"
 msgstr "[Rénàmé Slîdé…~~~~~]"
 
@@ -4337,11 +4345,11 @@ msgstr "[Rénàmé Slîdé…~~~~~]"
 msgid "Rename collection"
 msgstr "[Rénàmé côlléctîôn~~~~~~~]"
 
-#: web/app/components/Workspace.vue:1274
+#: web/app/components/Workspace.vue:1270
 msgid "Rename sheet"
 msgstr "[Rénàmé shéét~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:517
+#: web/app/components/SlideWorkspace.vue:519
 msgid "Rename slide"
 msgstr "[Rénàmé slîdé~~~~~]"
 
@@ -4433,7 +4441,7 @@ msgstr "[Répôrt àn Îssûé~~~~~~]"
 msgid "Require a secret to create or list documents"
 msgstr "[Réqûîré à sécrét tô créàté ôr lîst dôcûménts~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1035 web/app/components/Workspace.vue:1118 web/app/components/Workspace.vue:745
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1031 web/app/components/Workspace.vue:1114 web/app/components/Workspace.vue:745
 msgid "Resample Random Numbers"
 msgstr "[Résàmplé Ràndôm Nûmbérs~~~~~~~~~]"
 
@@ -4473,7 +4481,7 @@ msgstr "[Rôsé~~]"
 msgid "Rotate"
 msgstr "[Rôtàté~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:139 web/app/lib/object-menu.ts:67
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:139
 msgid "Rotate By…"
 msgstr "[Rôtàté By…~~~~]"
 
@@ -4484,6 +4492,10 @@ msgstr "[Rôtàté Léft 90°~~~~~~]"
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:137
 msgid "Rotate Right 90°"
 msgstr "[Rôtàté Rîght 90°~~~~~~]"
+
+#: web/app/lib/object-menu.ts:68
+msgid "Rotate by…"
+msgstr "[Rôtàté by…~~~~]"
 
 #: web/app/components/ObjectFrame.vue:40 web/app/components/RotatePopover.vue:68
 msgid "Rotate object"
@@ -4545,7 +4557,7 @@ msgstr "[Rôûnds ûp tô à mûltîplé ôf thé sîgnîfîcàncé (1 ûnléss 
 msgid "Rounds up to a multiple of the significance (1 unless given; its sign is ignored)."
 msgstr "[Rôûnds ûp tô à mûltîplé ôf thé sîgnîfîcàncé (1 ûnléss gîvén; îts sîgn îs îgnôréd).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1071 web/app/lib/table-menu.ts:87
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1067 web/app/lib/table-menu.ts:87
 msgid "Row"
 msgstr "[Rôw~]"
 
@@ -4589,7 +4601,7 @@ msgstr "[SÉLÉCT Régîôn, SÛM(Àmôûnt) ÀS Révénûé FRÔM Sàlés GRÔ�
 msgid "SQL"
 msgstr "[SQL~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1123
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/Workspace.vue:1119
 msgid "SQL Query…"
 msgstr "[SQL Qûéry…~~~~]"
 
@@ -4833,7 +4845,7 @@ msgstr "[Shéll côntràct v{SHELL_CONTRACT_VERSION}~~~~~~~~~~~~~~~~]"
 msgid "Shift"
 msgstr "[Shîft~~]"
 
-#: web/app/components/Workspace.vue:1139
+#: web/app/components/Workspace.vue:1135
 msgid "Shift + arrows or drag"
 msgstr "[Shîft + àrrôws ôr dràg~~~~~~~~~]"
 
@@ -4849,11 +4861,11 @@ msgstr "[Shôrtcûts~~~~]"
 msgid "Show"
 msgstr "[Shôw~~]"
 
-#: web/app/components/TextWorkspace.vue:400
+#: web/app/components/TextWorkspace.vue:413
 msgid "Show As"
 msgstr "[Shôw Às~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:424
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:426
 msgid "Show Grid"
 msgstr "[Shôw Grîd~~~~]"
 
@@ -4861,7 +4873,7 @@ msgstr "[Shôw Grîd~~~~]"
 msgid "Show Pivot Table as SQL…"
 msgstr "[Shôw Pîvôt Tàblé às SQL…~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:110 web/app/components/TextWorkspace.vue:552 web/app/lib/document-menus.ts:238
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:110 web/app/components/TextWorkspace.vue:562 web/app/lib/document-menus.ts:238
 msgid "Show Who Wrote What"
 msgstr "[Shôw Whô Wrôté Whàt~~~~~~~~]"
 
@@ -4969,7 +4981,7 @@ msgstr "[Skîppéd {where}~~~~~~]"
 msgid "Slide"
 msgstr "[Slîdé~~]"
 
-#: web/app/components/SlideWorkspace.vue:525
+#: web/app/components/SlideWorkspace.vue:527
 msgid "Slide numbers"
 msgstr "[Slîdé nûmbérs~~~~~]"
 
@@ -5001,11 +5013,11 @@ msgstr "[Smàllér nôtés~~~~~]"
 msgid "Smallest"
 msgstr "[Smàllést~~~]"
 
-#: web/app/lib/object-menu.ts:88
+#: web/app/lib/object-menu.ts:89
 msgid "Snap to grid"
 msgstr "[Snàp tô grîd~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:249 web/app/components/TextWorkspace.vue:487
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:262 web/app/components/TextWorkspace.vue:500
 msgid "Soft Hyphen"
 msgstr "[Sôft Hyphén~~~~]"
 
@@ -5013,7 +5025,7 @@ msgstr "[Sôft Hyphén~~~~]"
 msgid "Something is repeated that is not there."
 msgstr "[Sôméthîng îs répéàtéd thàt îs nôt théré.~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:1059 web/app/lib/base-session.ts:868 web/app/lib/session.ts:653
+#: web/app/lib/base-session.ts:1060 web/app/lib/base-session.ts:868 web/app/lib/session.ts:653
 msgid "Something went wrong."
 msgstr "[Sôméthîng wént wrông.~~~~~~~~]"
 
@@ -5045,7 +5057,7 @@ msgstr "[Sôûrcé~~]"
 msgid "Source field"
 msgstr "[Sôûrcé fîéld~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:435 web/app/lib/present-keys.ts:52
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:437 web/app/lib/present-keys.ts:52
 msgid "Speaker Notes"
 msgstr "[Spéàkér Nôtés~~~~~]"
 
@@ -5057,9 +5069,13 @@ msgstr "[Spéàkér nôtés~~~~~]"
 msgid "Speaker notes of slide {n}"
 msgstr "[Spéàkér nôtés ôf slîdé {n}~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts:104 web/app/lib/table-menu.ts:119 web/app/lib/table-menu.ts:140
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts:104 web/app/lib/table-menu.ts:140
 msgid "Split Cell"
 msgstr "[Splît Céll~~~~]"
+
+#: web/app/lib/table-menu.ts:119
+msgid "Split cell"
+msgstr "[Splît céll~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "Splits a text into columns at the column delimiters and into rows at the row delimiters (each may be several in a range). ignore_empty TRUE drops empty pieces, match_mode 1 ignores case; shorter rows are filled with pad_with (#N/A)."
@@ -5073,7 +5089,7 @@ msgstr "[Stànd-îns {n}~~~~~]"
 msgid "Stands in for"
 msgstr "[Stànds în fôr~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:530 web/app/components/TextWorkspace.vue:667
+#: web/app/components/SlideWorkspace.vue:532 web/app/components/TextWorkspace.vue:681
 msgid "Start"
 msgstr "[Stàrt~~]"
 
@@ -5089,7 +5105,7 @@ msgstr "[Stàrt à néw dôcûmént~~~~~~~~]"
 msgid "Start again"
 msgstr "[Stàrt àgàîn~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:530 web/app/components/TextWorkspace.vue:667
+#: web/app/components/SlideWorkspace.vue:532 web/app/components/TextWorkspace.vue:681
 msgid "Start numbering at"
 msgstr "[Stàrt nûmbérîng àt~~~~~~~]"
 
@@ -5105,7 +5121,7 @@ msgstr "[Stàrtîng {app}…~~~~~~]"
 msgid "Step {at} of {total}"
 msgstr "[Stép {at} ôf {total}~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:1034
+#: web/app/components/Workspace.vue:1030
 msgid "Stop Following"
 msgstr "[Stôp Fôllôwîng~~~~~~]"
 
@@ -5145,7 +5161,7 @@ msgstr "[Stylé: màrk téxt by whàt ît îs fôr~~~~~~~~~~~~~~]"
 msgid "Styles"
 msgstr "[Stylés~~]"
 
-#: web/app/lib/object-menu.ts:66
+#: web/app/lib/object-menu.ts:67
 msgid "Style…"
 msgstr "[Stylé…~~]"
 
@@ -5229,7 +5245,7 @@ msgstr "[TRÛÉ whén thé whôlé pàrt ôf thé nûmbér îs évén.~~~~~~~~~~
 msgid "TRUE when the whole part of the number is odd."
 msgstr "[TRÛÉ whén thé whôlé pàrt ôf thé nûmbér îs ôdd.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:613
+#: web/app/components/TextWorkspace.vue:627
 msgid "Tab / Shift + Tab"
 msgstr "[Tàb / Shîft + Tàb~~~~~~~]"
 
@@ -5237,7 +5253,7 @@ msgstr "[Tàb / Shîft + Tàb~~~~~~~]"
 msgid "Table"
 msgstr "[Tàblé~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts:105 web/app/lib/table-menu.ts:117 web/app/lib/table-menu.ts:141
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/table-menu.ts:105 web/app/lib/table-menu.ts:141
 msgid "Table Options…"
 msgstr "[Tàblé Ôptîôns…~~~~~~]"
 
@@ -5245,17 +5261,21 @@ msgstr "[Tàblé Ôptîôns…~~~~~~]"
 msgid "Table menu"
 msgstr "[Tàblé ménû~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:496 web/app/lib/document-menus.ts:185
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:506 web/app/lib/document-menus.ts:185
 msgid "Table of Contents"
 msgstr "[Tàblé ôf Cônténts~~~~~~~]"
 
-#: web/app/components/TextEditor.vue:675 web/app/components/TextEditor.vue:747 web/app/components/TextWorkspace.vue:665
+#: web/app/components/TextEditor.vue:675 web/app/components/TextEditor.vue:747 web/app/components/TextWorkspace.vue:679
 msgid "Table of contents"
 msgstr "[Tàblé ôf cônténts~~~~~~~]"
 
 #: web/app/components/TableOptionsDialog.vue:56
 msgid "Table options"
 msgstr "[Tàblé ôptîôns~~~~~]"
+
+#: web/app/lib/table-menu.ts:117
+msgid "Table options…"
+msgstr "[Tàblé ôptîôns…~~~~~~]"
 
 #: web/app/components/PivotCreateDialog.vue:87
 msgid "Table or range to analyse"
@@ -5333,7 +5353,7 @@ msgstr "[Téll thém în thé chàt:~~~~~~~~~]"
 msgid "Text"
 msgstr "[Téxt~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/InsertBar.vue:26 web/app/components/SlideWorkspace.vue:394 web/app/components/TextWorkspace.vue:478
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/InsertBar.vue:26 web/app/components/SlideWorkspace.vue:396 web/app/components/TextWorkspace.vue:491
 msgid "Text Box"
 msgstr "[Téxt Bôx~~~]"
 
@@ -6041,7 +6061,7 @@ msgstr "[Thé pàsswôrds dô nôt màtch.~~~~~~~~~~~]"
 msgid "The payment per period that pays off a loan (or saves up a sum) at a fixed rate."
 msgstr "[Thé pàymént pér pérîôd thàt pàys ôff à lôàn (ôr sàvés ûp à sûm) àt à fîxéd ràté.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:554
+#: web/app/components/SlideWorkspace.vue:556
 msgid "The planned times of the slides, added up"
 msgstr "[Thé plànnéd tîmés ôf thé slîdés, àddéd ûp~~~~~~~~~~~~~~~~]"
 
@@ -6589,7 +6609,7 @@ msgstr "[Thîs céll ônly~~~~~~]"
 msgid "This chart only"
 msgstr "[Thîs chàrt ônly~~~~~~]"
 
-#: web/app/components/Workspace.vue:1217
+#: web/app/components/Workspace.vue:1213
 msgid "This chart's definition is gone."
 msgstr "[Thîs chàrt's défînîtîôn îs gôné.~~~~~~~~~~~~~]"
 
@@ -6605,7 +6625,7 @@ msgstr "[Thîs cômpûtér~~~~~]"
 msgid "This document cannot say what deleting the style would do."
 msgstr "[Thîs dôcûmént cànnôt sày whàt délétîng thé stylé wôûld dô.~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:1249
+#: web/app/components/Workspace.vue:1245
 msgid "This document has no sheet yet."
 msgstr "[Thîs dôcûmént hàs nô shéét yét.~~~~~~~~~~~~]"
 
@@ -6677,7 +6697,7 @@ msgstr "[Thîs pîvôt tàblé hàs nô vàlûé fîéld yét. Pût à fîéld �
 msgid "This place does not keep documents of this kind."
 msgstr "[Thîs plàcé dôés nôt kéép dôcûménts ôf thîs kînd.~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:504
+#: web/app/components/SlideWorkspace.vue:506
 msgid "This presentation has no slide."
 msgstr "[Thîs préséntàtîôn hàs nô slîdé.~~~~~~~~~~~~]"
 
@@ -6781,11 +6801,11 @@ msgstr "[Tîtlé (ôptîônàl)~~~~~~]"
 msgid "Too faint"
 msgstr "[Tôô fàînt~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:444 web/app/components/TextWorkspace.vue:563 web/app/components/Workspace.vue:1112
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:446 web/app/components/TextWorkspace.vue:573 web/app/components/Workspace.vue:1108
 msgid "Tools"
 msgstr "[Tôôls~~]"
 
-#: web/app/components/TableView.vue:134 web/app/components/TableView.vue:270 web/app/lib/pivots.ts:108 web/app/lib/print/document.ts:65
+#: web/app/components/TableView.vue:134 web/app/components/TableView.vue:292 web/app/lib/pivots.ts:108 web/app/lib/print/document.ts:65
 msgid "Total"
 msgstr "[Tôtàl~~]"
 
@@ -6829,7 +6849,7 @@ msgstr "[Tûrn thé ôbjéct yôû hàvé séléctéd tô àn ànglé, în whôl
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr "[Tûrn: dràg, ôr àrrôw kéys (Shîft fôr 15°)~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SlideCanvas.vue:262 web/app/components/SlideCanvas.vue:291 web/app/components/SlideCanvas.vue:299 web/app/components/SlideCanvas.vue:320 web/app/components/TextContainers.vue:279 web/app/components/TextContainers.vue:283
+#: web/app/components/RotatePopover.vue:102 web/app/components/SlideCanvas.vue:279 web/app/components/SlideCanvas.vue:308 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:337 web/app/components/TextContainers.vue:279 web/app/components/TextContainers.vue:283
 msgid "Turned to {degrees}"
 msgstr "[Tûrnéd tô {degrees}~~~~~~~~]"
 
@@ -6841,7 +6861,7 @@ msgstr "[Twô pàgés~~~~]"
 msgid "Two pages side by side"
 msgstr "[Twô pàgés sîdé by sîdé~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:611
+#: web/app/components/TextWorkspace.vue:625
 msgid "Type"
 msgstr "[Typé~~]"
 
@@ -6853,7 +6873,7 @@ msgstr "[Typé à sérvér àddréss.~~~~~~~~~]"
 msgid "Type the address of a server, such as demo.example.org:8420."
 msgstr "[Typé thé àddréss ôf à sérvér, sûch às démô.éxàmplé.ôrg:8420.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:1141
+#: web/app/components/Workspace.vue:1137
 msgid "Type, F2 or double click"
 msgstr "[Typé, F2 ôr dôûblé clîck~~~~~~~~~~]"
 
@@ -6965,7 +6985,7 @@ msgstr "[Vértîcàl~~~]"
 msgid "Vertical alignment"
 msgstr "[Vértîcàl àlîgnmént~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:414 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:550 web/app/components/Workspace.vue:1103
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:416 web/app/components/StyleBar.vue:111 web/app/components/TextWorkspace.vue:560 web/app/components/Workspace.vue:1099
 msgid "View"
 msgstr "[Vîéw~~]"
 
@@ -7181,7 +7201,7 @@ msgstr "[Wîthôût ôné, ônly thîs màchîné mày créàté dôcûménts.~~
 msgid "Without what you picked, these steps no longer work, so they are blanked too."
 msgstr "[Wîthôût whàt yôû pîckéd, thésé stéps nô lôngér wôrk, sô théy àré blànkéd tôô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:137
+#: web/app/components/TextWorkspace.vue:138
 msgid "Word document (.docx)"
 msgstr "[Wôrd dôcûmént (.dôcx)~~~~~~~~]"
 
@@ -7209,21 +7229,21 @@ msgstr "[Wôrkîng ît ôût…~~~~~~]"
 msgid "Works on"
 msgstr "[Wôrks ôn~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:204 web/app/components/TextWorkspace.vue:543
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:201 web/app/components/TextWorkspace.vue:553
 msgid "Wrap Text"
 msgstr "[Wràp Téxt~~~~]"
 
-#: web/app/components/TextWorkspace.vue:543
+#: web/app/components/TextWorkspace.vue:553
 msgid "Wrap Text: {mode}"
 msgstr "[Wràp Téxt: {mode}~~~~~~~]"
-
-#: web/app/lib/object-menu.ts:71
-msgid "Wrap Text…"
-msgstr "[Wràp Téxt…~~~~]"
 
 #: web/app/components/StyleSpec.vue:249
 msgid "Wrap long text"
 msgstr "[Wràp lông téxt~~~~~~]"
+
+#: web/app/lib/object-menu.ts:72
+msgid "Wrap text…"
+msgstr "[Wràp téxt…~~~~]"
 
 #: web/app/components/DetailsFields.vue:69
 msgid "Write"
@@ -7293,7 +7313,7 @@ msgstr "[Yôû àré nôw thé ôwnér ôf {doc}.~~~~~~~~~~~~]"
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "[Yôû càn chàngé ît ànywày — thîs îs à wàrnîng, nôt à réfûsàl.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:445 web/app/components/SlideCanvas.vue:298 web/app/components/SlideCanvas.vue:307 web/app/components/SlideCanvas.vue:439 web/app/components/SlideCanvas.vue:472 web/app/components/TextContainers.vue:208 web/app/components/Workspace.vue:273 web/app/components/Workspace.vue:330 web/app/components/Workspace.vue:381 web/app/components/Workspace.vue:463 web/app/components/Workspace.vue:523 web/app/components/Workspace.vue:529 web/app/components/Workspace.vue:610 web/app/components/Workspace.vue:778 web/app/components/Workspace.vue:837 web/app/components/Workspace.vue:957 web/app/lib/base-session.ts:877 web/app/lib/text-session.ts:721
+#: web/app/components/SheetGrid.vue:445 web/app/components/SlideCanvas.vue:315 web/app/components/SlideCanvas.vue:324 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:489 web/app/components/TextContainers.vue:208 web/app/components/Workspace.vue:273 web/app/components/Workspace.vue:330 web/app/components/Workspace.vue:381 web/app/components/Workspace.vue:463 web/app/components/Workspace.vue:523 web/app/components/Workspace.vue:529 web/app/components/Workspace.vue:610 web/app/components/Workspace.vue:778 web/app/components/Workspace.vue:837 web/app/components/Workspace.vue:957 web/app/lib/base-session.ts:877 web/app/lib/text-session.ts:721
 msgid "You can only look at this document."
 msgstr "[Yôû càn ônly lôôk àt thîs dôcûmént.~~~~~~~~~~~~~~]"
 
@@ -7537,7 +7557,7 @@ msgstr "[àdd_ûsér: rôlé mûst bé édîtôr ôr vîéwér~~~~~~~~~~~~~~~~]"
 msgid "adds the values"
 msgstr "[àdds thé vàlûés~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:526
+#: web/app/components/SlideWorkspace.vue:528
 msgid "after each title"
 msgstr "[àftér éàch tîtlé~~~~~~]"
 
@@ -7761,7 +7781,7 @@ msgstr "[côlûmn {name}’s stylé~~~~~~~~]"
 msgid "column {n}"
 msgstr "[côlûmn {n}~~~~]"
 
-#: web/app/components/Workspace.vue:1196
+#: web/app/components/Workspace.vue:1192
 msgid "completions"
 msgstr "[cômplétîôns~~~~]"
 
@@ -7793,7 +7813,7 @@ msgstr "[côntàîn ôné ôf {chars}~~~~~~~~~]"
 msgid "contain “{text}”"
 msgstr "[côntàîn “{text}”~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:456 web/app/components/TextWorkspace.vue:616 web/app/components/Workspace.vue:1143
+#: web/app/components/SlideWorkspace.vue:458 web/app/components/TextWorkspace.vue:630 web/app/components/Workspace.vue:1139
 msgid "copy, cut and paste, also from and to other programs"
 msgstr "[côpy, cût ànd pàsté, àlsô frôm ànd tô ôthér prôgràms~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7837,11 +7857,11 @@ msgstr "[dégréés clôckwîsé~~~~~~~]"
 msgid "delete"
 msgstr "[délété~~]"
 
-#: web/app/components/TextWorkspace.vue:615
+#: web/app/components/TextWorkspace.vue:629
 msgid "delete a word"
 msgstr "[délété à wôrd~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:614
+#: web/app/components/TextWorkspace.vue:628
 msgid "delete; at the edge of a paragraph it joins the one next to it"
 msgstr "[délété; àt thé édgé ôf à pàràgràph ît jôîns thé ôné néxt tô ît~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7901,7 +7921,7 @@ msgstr "[éàch chàngé îs [rôw, côlûmn, téxt ôr nûll]~~~~~~~~~~~~~~~~~]
 msgid "edit"
 msgstr "[édît~~]"
 
-#: web/app/components/Workspace.vue:1141
+#: web/app/components/Workspace.vue:1137
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr "[édît à céll (ôthérs àré képt ôût ôf ît whîlé yôû dô)~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7909,7 +7929,7 @@ msgstr "[édît à céll (ôthérs àré képt ôût ôf ît whîlé yôû dô)~
 msgid "editing cell"
 msgstr "[édîtîng céll~~~~~]"
 
-#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:557 web/app/components/TextWorkspace.vue:645 web/app/lib/grid-a11y.ts:49
+#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:559 web/app/components/TextWorkspace.vue:659 web/app/lib/grid-a11y.ts:49
 msgid "empty"
 msgstr "[émpty~~]"
 
@@ -7917,7 +7937,7 @@ msgstr "[émpty~~]"
 msgid "end"
 msgstr "[énd~]"
 
-#: web/app/components/TextWorkspace.vue:612
+#: web/app/components/TextWorkspace.vue:626
 msgid "end the paragraph (after a heading the next one is body text); in a list, the next item; on an empty item, out of the list"
 msgstr "[énd thé pàràgràph (àftér à héàdîng thé néxt ôné îs bôdy téxt); în à lîst, thé néxt îtém; ôn àn émpty îtém, ôût ôf thé lîst~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8077,7 +8097,7 @@ msgstr "[îmàgé~~]"
 msgid "in Page view, print and PDF"
 msgstr "[în Pàgé vîéw, prînt ànd PDF~~~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:613
+#: web/app/components/TextWorkspace.vue:627
 msgid "in a list, one level in or out"
 msgstr "[în à lîst, ôné lévél în ôr ôût~~~~~~~~~~~~]"
 
@@ -8109,7 +8129,7 @@ msgstr "[îs wôrkîng~~~~]"
 msgid "italic"
 msgstr "[îtàlîc~~]"
 
-#: web/app/components/Workspace.vue:1140
+#: web/app/components/Workspace.vue:1136
 msgid "jump to the edge of a block of data"
 msgstr "[jûmp tô thé édgé ôf à blôck ôf dàtà~~~~~~~~~~~~~~]"
 
@@ -8117,7 +8137,7 @@ msgstr "[jûmp tô thé édgé ôf à blôck ôf dàtà~~~~~~~~~~~~~~]"
 msgid "just now"
 msgstr "[jûst nôw~~~]"
 
-#: web/app/components/Workspace.vue:1142
+#: web/app/components/Workspace.vue:1138
 msgid "keep and go down / keep and go right / cancel"
 msgstr "[kéép ànd gô dôwn / kéép ànd gô rîght / càncél~~~~~~~~~~~~~~~~~~]"
 
@@ -8133,7 +8153,7 @@ msgstr "[làndscàpé~~~~]"
 msgid "least"
 msgstr "[léàst~~]"
 
-#: web/app/components/Workspace.vue:1138
+#: web/app/components/Workspace.vue:1134
 msgid "leave the table: on to the next / back to the previous part of the window"
 msgstr "[léàvé thé tàblé: ôn tô thé néxt / bàck tô thé prévîôûs pàrt ôf thé wîndôw~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8181,7 +8201,7 @@ msgstr "[lîké SÛBTÔTÀL wîth môré fûnctîôns (1-13 às SÛBTÔTÀL bût
 msgid "line height"
 msgstr "[lîné héîght~~~~]"
 
-#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:557 web/app/components/TextWorkspace.vue:645
+#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:559 web/app/components/TextWorkspace.vue:659
 msgid "line {line}"
 msgstr "[lîné {line}~~~~]"
 
@@ -8257,15 +8277,15 @@ msgstr "[mm~]"
 msgid "most likely"
 msgstr "[môst lîkély~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:455
+#: web/app/components/SlideWorkspace.vue:457
 msgid "move it by 10 units; with Shift by 1"
 msgstr "[môvé ît by 10 ûnîts; wîth Shîft by 1~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:453
+#: web/app/components/SlideWorkspace.vue:455
 msgid "move it; the handles resize it"
 msgstr "[môvé ît; thé hàndlés résîzé ît~~~~~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:1137
+#: web/app/components/Workspace.vue:1133
 msgid "move through the table"
 msgstr "[môvé thrôûgh thé tàblé~~~~~~~~~]"
 
@@ -8297,7 +8317,7 @@ msgstr "[néw nàmé~~~]"
 msgid "new sheet"
 msgstr "[néw shéét~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:550
+#: web/app/components/SlideWorkspace.vue:552
 msgid "new slide"
 msgstr "[néw slîdé~~~~]"
 
@@ -8497,11 +8517,11 @@ msgstr "[ôvérvîéw~~~]"
 msgid "page {n}"
 msgstr "[pàgé {n}~~~]"
 
-#: web/app/components/TextWorkspace.vue:642 web/app/lib/noun-phrases.ts:15
+#: web/app/components/TextWorkspace.vue:656 web/app/lib/noun-phrases.ts:15
 msgid "paragraph"
 msgstr "[pàràgràph~~~~]"
 
-#: web/app/components/TextWorkspace.vue:642
+#: web/app/components/TextWorkspace.vue:656
 msgid "paragraphs"
 msgstr "[pàràgràphs~~~~]"
 
@@ -8693,11 +8713,11 @@ msgstr "[séàrch_réplàcé: thàt wôûld chàngé {count} téxts, àt môst {
 msgid "search_replace: the search took longer than {seconds} seconds, so nothing was replaced: narrow it"
 msgstr "[séàrch_réplàcé: thé séàrch tôôk lôngér thàn {seconds} sécônds, sô nôthîng wàs réplàcéd: nàrrôw ît~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/Workspace.vue:1139
+#: web/app/components/Workspace.vue:1135
 msgid "select a block"
 msgstr "[séléct à blôck~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:452
+#: web/app/components/SlideWorkspace.vue:454
 msgid "select an object (colleagues cannot change it while you hold it)"
 msgstr "[séléct àn ôbjéct (côlléàgûés cànnôt chàngé ît whîlé yôû hôld ît)~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8757,11 +8777,11 @@ msgstr "[sîzé~~]"
 msgid "skipped"
 msgstr "[skîppéd~~~]"
 
-#: web/app/components/SlideCanvas.vue:559
+#: web/app/components/SlideCanvas.vue:576
 msgid "slide"
 msgstr "[slîdé~~]"
 
-#: web/app/components/ImportDialog.vue:76 web/app/components/PresentShow.vue:215 web/app/components/SlideWorkspace.vue:535
+#: web/app/components/ImportDialog.vue:76 web/app/components/PresentShow.vue:215 web/app/components/SlideWorkspace.vue:537
 msgid "slides"
 msgstr "[slîdés~~]"
 
@@ -8813,11 +8833,11 @@ msgstr "[strûctûré: àxîs mûst bé \"rôw\" ôr \"côl\"~~~~~~~~~~~~~~~]"
 msgid "suggest switching here"
 msgstr "[sûggést swîtchîng héré~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:643
+#: web/app/components/TextWorkspace.vue:657
 msgid "suggestion"
 msgstr "[sûggéstîôn~~~~]"
 
-#: web/app/components/TextWorkspace.vue:643
+#: web/app/components/TextWorkspace.vue:657
 msgid "suggestions"
 msgstr "[sûggéstîôns~~~~]"
 
@@ -8845,7 +8865,7 @@ msgstr "[téxt~~]"
 msgid "text box"
 msgstr "[téxt bôx~~~]"
 
-#: web/app/components/SlideCanvas.vue:612
+#: web/app/components/SlideCanvas.vue:629
 msgid "text of the object"
 msgstr "[téxt ôf thé ôbjéct~~~~~~~]"
 
@@ -8881,7 +8901,7 @@ msgstr "[thé àssîstànt dôés nôt vôté~~~~~~~~~~~]"
 msgid "the assistant does not withdraw suggestions"
 msgstr "[thé àssîstànt dôés nôt wîthdràw sûggéstîôns~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:617
+#: web/app/components/TextWorkspace.vue:631
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr "[thé àssîstànt sûggésts chàngés; yôû àccépt ôr réjéct éàch~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9173,7 +9193,7 @@ msgstr "[thîs dôcûmént hàs nô stylés~~~~~~~~~~~]"
 msgid "this document has no table {id!r}"
 msgstr "[thîs dôcûmént hàs nô tàblé {îd!r}~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/rendered.py:174
+#: packages/claudia-server/src/claudia_server/rendered.py:213
 msgid "this document has nothing rendered with the id {id!r}"
 msgstr "[thîs dôcûmént hàs nôthîng réndéréd wîth thé îd {îd!r}~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9229,7 +9249,7 @@ msgstr "[thîs sérvér dôés nôt kéép récôvéry kéys~~~~~~~~~~~~~~~~]"
 msgid "this server does not list a document's people this way"
 msgstr "[thîs sérvér dôés nôt lîst à dôcûmént's péôplé thîs wày~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/rendered.py:111
+#: packages/claudia-server/src/claudia_server/rendered.py:134
 msgid "this server does not make rendered containers"
 msgstr "[thîs sérvér dôés nôt màké réndéréd côntàînérs~~~~~~~~~~~~~~~~~~]"
 
@@ -9365,11 +9385,11 @@ msgstr "[wàs {size} px wîdé~~~~~~~]"
 msgid "width in millimetres"
 msgstr "[wîdth în mîllîmétrés~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:641
+#: web/app/components/TextWorkspace.vue:655
 msgid "word"
 msgstr "[wôrd~~]"
 
-#: web/app/components/TextWorkspace.vue:641
+#: web/app/components/TextWorkspace.vue:655
 msgid "words"
 msgstr "[wôrds~~]"
 
@@ -9385,11 +9405,11 @@ msgstr "[wôûld bé tôô lông~~~~~~~]"
 msgid "would no longer be a formula"
 msgstr "[wôûld nô lôngér bé à fôrmûlà~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:454
+#: web/app/components/SlideWorkspace.vue:456
 msgid "write in it; Enter keeps the text, Shift+Enter starts a line, Esc drops it"
 msgstr "[wrîté în ît; Éntér kééps thé téxt, Shîft+Éntér stàrts à lîné, Ésc drôps ît~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextWorkspace.vue:611
+#: web/app/components/TextWorkspace.vue:625
 msgid "write; a word is sent when it ends, and the others see where you are"
 msgstr "[wrîté; à wôrd îs sént whén ît énds, ànd thé ôthérs séé whéré yôû àré~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9945,7 +9965,7 @@ msgstr "[{n} sàmplés wéré dràwn, théré àré tôô màny cômbînàtîôn
 msgid "{n} things to point at. Use the arrow keys, then Enter."
 msgstr "[{n} thîngs tô pôînt àt. Ûsé thé àrrôw kéys, thén Éntér.~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SlideWorkspace.vue:555
+#: web/app/components/SlideWorkspace.vue:557
 msgid "{n} without a time"
 msgstr "[{n} wîthôût à tîmé~~~~~~~]"
 
@@ -10033,7 +10053,7 @@ msgstr "[{type} côntàînér: {words}~~~~~~~~~~]"
 msgid "{user} (you)"
 msgstr "[{user} (yôû)~~~~~]"
 
-#: web/app/components/SlideCanvas.vue:629
+#: web/app/components/SlideCanvas.vue:646
 msgid "{user} is working on this"
 msgstr "[{user} îs wôrkîng ôn thîs~~~~~~~~~~]"
 
@@ -10041,7 +10061,7 @@ msgstr "[{user} îs wôrkîng ôn thîs~~~~~~~~~~]"
 msgid "{user} left this document."
 msgstr "[{user} léft thîs dôcûmént.~~~~~~~~~~]"
 
-#: web/app/components/SlideCanvas.vue:629
+#: web/app/components/SlideCanvas.vue:646
 msgid "{user} selected this"
 msgstr "[{user} séléctéd thîs~~~~~~~~]"
 
