@@ -53,11 +53,11 @@ msgstr "(geschwärzt, Länge {n})"
 msgid "+ Add administrator…"
 msgstr "+ Administrator hinzufügen…"
 
-#: web/app/components/OpenDialog.vue:842
+#: web/app/components/OpenDialog.vue:849
 msgid "+ Connect to a server…"
 msgstr "+ Mit einem Server verbinden…"
 
-#: web/app/components/OpenDialog.vue:873
+#: web/app/components/OpenDialog.vue:880
 msgid "+ New collection"
 msgstr "+ Neue Sammlung"
 
@@ -261,6 +261,10 @@ msgstr "Eine Spalte für jedes Element des Spaltenfelds; ein neues Element fügt
 msgid "A document has at most {count} tags."
 msgstr "Ein Dokument hat höchstens {count} Schlagwörter."
 
+#: web/app/components/AdminSecurity.vue:102
+msgid "A document keeps the cost it was made with: each person’s key is sealed under their own password, so nobody can make it harder for them afterwards."
+msgstr "Ein Dokument behält den Aufwand, mit dem es angelegt wurde: Der Schlüssel jeder Person ist unter deren eigenem Passwort versiegelt, daher kann ihn niemand nachträglich für sie erschweren."
+
 #: web/app/lib/admin-fonts.ts:208
 msgid "A file name with * or ? cannot be used; rename the file."
 msgstr "Ein Dateiname mit * oder ? geht nicht; benennen Sie die Datei um."
@@ -305,7 +309,7 @@ msgstr "Eine Liste verwendet dieses Schema"
 msgid "A name like this exists already and will point here."
 msgstr "Ein Name wie dieser existiert bereits und verweist künftig hierher."
 
-#: web/app/components/OpenDialog.vue:1071
+#: web/app/components/OpenDialog.vue:1081
 msgid "A new document belongs to whoever creates it first. The password protects this document only (at least 8 characters, with a capital letter, a small letter and a digit)."
 msgstr "Ein neues Dokument gehört demjenigen, der es zuerst erstellt. Das Passwort schützt nur dieses Dokument (mindestens 8 Zeichen, mit einem Großbuchstaben, einem Kleinbuchstaben und einer Ziffer)."
 
@@ -401,7 +405,7 @@ msgstr "Eine ganze Zahl als Text in einer anderen Basis (2 bis 36), mit Nullen a
 msgid "A1:B5"
 msgstr "A1:B5"
 
-#: web/app/components/OpenDialog.vue:1028
+#: web/app/components/OpenDialog.vue:1035
 msgid "ABCD-EFGH-…"
 msgstr "ABCD-EFGH-…"
 
@@ -449,7 +453,7 @@ msgstr "Ein Dokument annehmen, das Ihnen übergeben wurde"
 msgid "Accept ownership"
 msgstr "Eigentümerschaft annehmen"
 
-#: web/app/components/AdminAccessDocuments.vue:187 web/app/components/AdminShell.vue:17
+#: web/app/components/AdminAccessDocuments.vue:187 web/app/components/AdminShell.vue:18
 msgid "Access & documents"
 msgstr "Zugang & Dokumente"
 
@@ -577,7 +581,7 @@ msgstr "Danach"
 msgid "Agenda"
 msgstr "Agenda"
 
-#: web/app/components/SidePanel.vue:503
+#: web/app/components/SidePanel.vue:506
 msgid "Agree"
 msgstr "Zustimmen"
 
@@ -609,7 +613,7 @@ msgstr "Alle Zellen ausgewählt"
 msgid "All combinations"
 msgstr "Alle Kombinationen"
 
-#: web/app/components/OpenDialog.vue:885
+#: web/app/components/OpenDialog.vue:892
 msgid "All documents"
 msgstr "Alle Dokumente"
 
@@ -656,6 +660,10 @@ msgstr "Ein Winkel in Grad als Bogenmaß."
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "An angle in radians as degrees."
 msgstr "Ein Winkel im Bogenmaß als Grad."
+
+#: web/app/lib/protocol.ts:258
+msgid "An editor or owner has to open this document first. This window will open it as soon as one has."
+msgstr "Zuerst muss eine Bearbeiterin, ein Bearbeiter oder die Eigentümerin bzw. der Eigentümer dieses Dokument öffnen. Dieses Fenster öffnet es, sobald das geschehen ist."
 
 #: web/app/components/PrintPreview.vue:282
 msgid "An object cannot be printed: {reason}."
@@ -813,11 +821,11 @@ msgstr "Mittelwert von {field}"
 msgid "Average {value}"
 msgstr "Mittelwert {value}"
 
-#: web/app/components/AddFontsDialog.vue:207 web/app/components/OpenDialog.vue:1038
+#: web/app/components/AddFontsDialog.vue:207 web/app/components/OpenDialog.vue:1048
 msgid "Back"
 msgstr "Zurück"
 
-#: web/app/components/SidePanel.vue:512
+#: web/app/components/SidePanel.vue:515
 msgid "Back to now"
 msgstr "Zurück zur Gegenwart"
 
@@ -829,7 +837,7 @@ msgstr "Zurück zu den Ergebnissen"
 msgid "Back to the builder"
 msgstr "Zurück zum Baukasten"
 
-#: web/app/components/DocumentFrame.vue:242
+#: web/app/components/DocumentFrame.vue:251
 msgid "Back to the documents"
 msgstr "Zurück zu den Dokumenten"
 
@@ -973,7 +981,7 @@ msgstr "Berechnung"
 msgid "Calculation step"
 msgstr "Rechenschritt"
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:847 web/app/components/OpenDialog.vue:878 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SidePanel.vue:536 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:854 web/app/components/OpenDialog.vue:885 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SidePanel.vue:539 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -1077,7 +1085,7 @@ msgstr "Diagramm: {name}"
 msgid "Chart…"
 msgstr "Diagramm…"
 
-#: web/app/components/SidePanel.vue:598 web/app/components/SidePanel.vue:93
+#: web/app/components/SidePanel.vue:601 web/app/components/SidePanel.vue:93
 msgid "Chat"
 msgstr "Chat"
 
@@ -1093,7 +1101,7 @@ msgstr "Die Dateien werden geprüft …"
 msgid "Checkpoint saved."
 msgstr "Prüfpunkt gespeichert."
 
-#: web/app/components/OpenDialog.vue:736
+#: web/app/components/OpenDialog.vue:739
 msgid "Choose Table, Text or Slides first."
 msgstr "Erst Tabelle, Text oder Folien wählen."
 
@@ -1129,7 +1137,7 @@ msgstr "Elemente wählen…"
 msgid "Choose somebody…"
 msgstr "Jemanden auswählen…"
 
-#: web/app/components/OpenDialog.vue:194
+#: web/app/components/OpenDialog.vue:196
 msgid "Claudia cannot open this file."
 msgstr "Claudia kann diese Datei nicht öffnen."
 
@@ -1173,7 +1181,7 @@ msgstr "Die ausgewählten Zellen leeren"
 msgid "Click"
 msgstr "Klick"
 
-#: web/app/components/SidePanel.vue:683 web/app/components/SidePanel.vue:684
+#: web/app/components/SidePanel.vue:686 web/app/components/SidePanel.vue:687
 msgid "Click something in the document to write a tag for it."
 msgstr "Klicke etwas im Dokument an, um ein Tag dafür zu schreiben."
 
@@ -1181,7 +1189,7 @@ msgstr "Klicke etwas im Dokument an, um ein Tag dafür zu schreiben."
 msgid "Click {what} in the document to pick them · {n} picked"
 msgstr "Klicken Sie {what} im Dokument an, um sie auszuwählen · {n} ausgewählt"
 
-#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:38 web/app/components/AdminShell.vue:25 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ContentsDialog.vue:82 web/app/components/ImagePropertiesDialog.vue:94 web/app/components/NamesDialog.vue:101 web/app/components/NumberingDialog.vue:204 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:466 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:145 web/app/components/TableOptionsDialog.vue:108
+#: web/app/components/AboutDialog.vue:41 web/app/components/AdminLogin.vue:44 web/app/components/AdminShell.vue:26 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ContentsDialog.vue:82 web/app/components/DocumentFrame.vue:243 web/app/components/ImagePropertiesDialog.vue:94 web/app/components/NamesDialog.vue:101 web/app/components/NumberingDialog.vue:204 web/app/components/OutcomePopover.vue:156 web/app/components/PivotPanel.vue:243 web/app/components/PivotSqlDialog.vue:72 web/app/components/RandomDialog.vue:221 web/app/components/SearchPanel.vue:466 web/app/components/ShortcutsDialog.vue:35 web/app/components/StylesDialog.vue:145 web/app/components/TableOptionsDialog.vue:108
 msgid "Close"
 msgstr "Schließen"
 
@@ -1225,11 +1233,11 @@ msgstr "Sammlung entfernt."
 msgid "Collection renamed."
 msgstr "Sammlung umbenannt."
 
-#: web/app/components/AdminFonts.vue:133 web/app/components/OpenDialog.vue:852
+#: web/app/components/AdminFonts.vue:133 web/app/components/OpenDialog.vue:859
 msgid "Collections"
 msgstr "Sammlungen"
 
-#: web/app/components/OpenDialog.vue:1003 web/app/components/OpenDialog.vue:1004 web/app/components/OpenDialog.vue:932 web/app/components/OpenDialog.vue:933
+#: web/app/components/OpenDialog.vue:1010 web/app/components/OpenDialog.vue:1011 web/app/components/OpenDialog.vue:939 web/app/components/OpenDialog.vue:940
 msgid "Collections of {id}…"
 msgstr "Sammlungen von {id}…"
 
@@ -1301,7 +1309,7 @@ msgstr "Verbunden"
 msgid "Connecting to {address}…"
 msgstr "Verbinde mit {address}…"
 
-#: web/app/components/OpenDialog.vue:850 web/app/lib/connection.ts:32
+#: web/app/components/OpenDialog.vue:857 web/app/lib/connection.ts:32
 msgid "Connecting…"
 msgstr "Verbinde…"
 
@@ -1385,7 +1393,7 @@ msgstr "Kann ein Eigentümer bitte schwärzen, was ich um {times} getan habe? Es
 msgid "Could not connect"
 msgstr "Verbindung nicht möglich"
 
-#: web/app/components/OpenDialog.vue:781
+#: web/app/components/OpenDialog.vue:788
 msgid "Could not connect."
 msgstr "Verbindung nicht möglich."
 
@@ -1397,7 +1405,7 @@ msgstr "Konnte nicht gezeichnet werden: {message}"
 msgid "Could not place the chart."
 msgstr "Das Diagramm konnte nicht eingefügt werden."
 
-#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:125 web/app/components/AdminAccessDocuments.vue:142 web/app/components/AdminAccessDocuments.vue:158 web/app/components/AdminAccessDocuments.vue:178 web/app/components/AdminAccessDocuments.vue:32 web/app/components/AdminAccessDocuments.vue:59 web/app/components/AdminAccessDocuments.vue:74 web/app/components/AdminAccessDocuments.vue:97 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminFonts.vue:78 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:83 web/app/lib/admin-session.ts:98
+#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:125 web/app/components/AdminAccessDocuments.vue:142 web/app/components/AdminAccessDocuments.vue:158 web/app/components/AdminAccessDocuments.vue:178 web/app/components/AdminAccessDocuments.vue:32 web/app/components/AdminAccessDocuments.vue:59 web/app/components/AdminAccessDocuments.vue:74 web/app/components/AdminAccessDocuments.vue:97 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminFonts.vue:78 web/app/components/AdminSecurity.vue:54 web/app/components/AdminSecurity.vue:80 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:102 web/app/lib/admin-session.ts:85
 msgid "Could not reach the server."
 msgstr "Der Server ist nicht erreichbar."
 
@@ -1429,7 +1437,7 @@ msgstr "Erstellen"
 msgid "Create administrator"
 msgstr "Administrator erstellen"
 
-#: web/app/components/OpenDialog.vue:1070
+#: web/app/components/OpenDialog.vue:1080
 msgid "Create document"
 msgstr "Dokument erstellen"
 
@@ -1513,7 +1521,7 @@ msgstr "Daten"
 msgid "Data from"
 msgstr "Daten aus"
 
-#: web/app/components/SidePanel.vue:504
+#: web/app/components/SidePanel.vue:507
 msgid "Decline"
 msgstr "Ablehnen"
 
@@ -1601,7 +1609,7 @@ msgstr "Das Format „{name}“ löschen?"
 msgid "Delete this document"
 msgstr "Dieses Dokument löschen"
 
-#: web/app/components/SidePanel.vue:628
+#: web/app/components/SidePanel.vue:631
 msgid "Deleted. Show the last moment it was there."
 msgstr "Gelöscht. Den letzten Moment zeigen, in dem es da war."
 
@@ -1653,7 +1661,7 @@ msgstr "Beschreibungen"
 msgid "Details of {id}"
 msgstr "Details von {id}"
 
-#: web/app/components/OpenDialog.vue:923 web/app/components/OpenDialog.vue:924 web/app/components/OpenDialog.vue:994 web/app/components/OpenDialog.vue:995
+#: web/app/components/OpenDialog.vue:1001 web/app/components/OpenDialog.vue:1002 web/app/components/OpenDialog.vue:930 web/app/components/OpenDialog.vue:931
 msgid "Details of {id}…"
 msgstr "Details von {id} …"
 
@@ -1697,7 +1705,7 @@ msgstr "Diesen Teil nicht behalten"
 msgid "Do your last undone step again"
 msgstr "Den zuletzt rückgängig gemachten Schritt wiederherstellen"
 
-#: web/app/components/OpenDialog.vue:1025
+#: web/app/components/OpenDialog.vue:1032
 msgid "Document"
 msgstr "Dokument"
 
@@ -1849,6 +1857,10 @@ msgstr "Eingabe"
 msgid "Enter / Tab / Esc"
 msgstr "Eingabe / Tab / Esc"
 
+#: web/app/lib/security-settings.ts:17
+msgid "Enter a number of seconds from {min} to {max}."
+msgstr "Geben Sie eine Anzahl Sekunden von {min} bis {max} ein."
+
 #: web/app/components/SearchPanel.vue:691
 msgid "Enter: next match · Shift+Enter: previous · Esc: close"
 msgstr "Eingabe: nächster Treffer · Umschalt+Eingabe: vorheriger · Esc: schließen"
@@ -1869,7 +1881,7 @@ msgstr "Jedes Ergebnis der Alternativen, von denen diese Zelle abhängt"
 msgid "Every use of “{name}”"
 msgstr "Jede Verwendung von „{name}“"
 
-#: web/app/lib/base-session.ts:343
+#: web/app/lib/base-session.ts:353
 msgid "Everybody agreed: now at {label}."
 msgstr "Alle waren einverstanden: jetzt bei {label}."
 
@@ -1901,7 +1913,7 @@ msgstr "Excel hat dafür keine Formel: Die Datei enthält den aktuellen Wert."
 msgid "Excel workbook (.xlsx)"
 msgstr "Excel-Arbeitsmappe (.xlsx)"
 
-#: web/app/components/OpenDialog.vue:182
+#: web/app/components/OpenDialog.vue:184
 msgid "Excel, OpenDocument or Claudia tables, or drop one anywhere on this page."
 msgstr "Excel-, OpenDocument- oder Claudia-Tabellen, oder eine Datei irgendwo auf diese Seite ziehen."
 
@@ -1961,11 +1973,11 @@ msgstr "Dateigröße"
 msgid "Fill"
 msgstr "Füllung"
 
-#: web/app/components/OpenDialog.vue:744
+#: web/app/components/OpenDialog.vue:747
 msgid "Fill in the document, your name and your password."
 msgstr "Geben Sie das Dokument, Ihren Namen und Ihr Passwort an."
 
-#: web/app/components/OpenDialog.vue:743
+#: web/app/components/OpenDialog.vue:746
 msgid "Fill in the document, your name, the recovery key and a new password."
 msgstr "Geben Sie das Dokument, Ihren Namen, den Wiederherstellungsschlüssel und ein neues Passwort an."
 
@@ -1973,7 +1985,7 @@ msgstr "Geben Sie das Dokument, Ihren Namen, den Wiederherstellungsschlüssel un
 msgid "Fill in your name and a password."
 msgstr "Geben Sie Ihren Namen und ein Passwort an."
 
-#: web/app/components/AdminLogin.vue:26
+#: web/app/components/AdminLogin.vue:28
 msgid "Fill in your name and password."
 msgstr "Geben Sie Ihren Namen und Ihr Passwort an."
 
@@ -1989,7 +2001,7 @@ msgstr "Füllt {range}. Ihre Zellen lassen sich nicht überschreiben."
 msgid "Filters"
 msgstr "Filter"
 
-#: web/app/components/OpenDialog.vue:875
+#: web/app/components/OpenDialog.vue:882
 msgid "Finance"
 msgstr "Finanzen"
 
@@ -2085,7 +2097,7 @@ msgstr "Fließtext: Der Text läuft bis zur Fensterbreite"
 msgid "Follow Computation"
 msgstr "Berechnung verfolgen"
 
-#: web/app/components/SidePanel.vue:525
+#: web/app/components/SidePanel.vue:528
 msgid "Follow changes"
 msgstr "Änderungen folgen"
 
@@ -2153,7 +2165,7 @@ msgstr "Für {doc}, als {user}. Alle anderen behalten ihr eigenes Passwort."
 msgid "Forecast"
 msgstr "Prognose"
 
-#: web/app/components/SidePanel.vue:594
+#: web/app/components/SidePanel.vue:597
 msgid "Forget every hidden line"
 msgstr "Alle ausgeblendeten Linien vergessen"
 
@@ -2197,7 +2209,7 @@ msgstr "Abstand zwischen Einträgen"
 msgid "Gap…"
 msgstr "Abstand…"
 
-#: web/app/components/OpenDialog.vue:1037
+#: web/app/components/OpenDialog.vue:1047
 msgid "Get back in"
 msgstr "Wieder anmelden"
 
@@ -2205,7 +2217,7 @@ msgstr "Wieder anmelden"
 msgid "Give a colleague a name and a password for {doc}. They open the document with them, like you did. Tell them the password yourself: the server never shows it again."
 msgstr "Geben Sie einer Kollegin oder einem Kollegen einen Namen und ein Passwort für {doc}. Damit wird das Dokument geöffnet, so wie bei Ihnen. Teilen Sie das Passwort selbst mit: Der Server zeigt es nie wieder an."
 
-#: web/app/components/SidePanel.vue:657
+#: web/app/components/SidePanel.vue:660
 msgid "Give names to {n} things without one"
 msgstr "{n} Dingen ohne Namen einen Namen geben"
 
@@ -2217,7 +2229,7 @@ msgstr "Gibt dem aktuellen Blatt einen anderen Namen; die Formeln, die es lesen,
 msgid "Give the slide you are on another name; a tag in the chat keeps pointing at it"
 msgstr "Gibt der aktuellen Folie einen anderen Namen; ein Tag im Chat zeigt weiter auf sie"
 
-#: web/app/components/OpenDialog.vue:846
+#: web/app/components/OpenDialog.vue:853
 msgid "Go"
 msgstr "Los"
 
@@ -2265,7 +2277,7 @@ msgstr "Gehen Sie zur Form, in der Ihr Cursor steht, um nur diese Form zu änder
 msgid "Go to the text box where your cursor is to change this text box only"
 msgstr "Gehen Sie zum Textfeld, in dem Ihr Cursor steht, um nur dieses Textfeld zu ändern"
 
-#: web/app/components/SidePanel.vue:628
+#: web/app/components/SidePanel.vue:631
 msgid "Go to this"
 msgstr "Hierhin gehen"
 
@@ -2349,7 +2361,7 @@ msgstr "Überschriften"
 msgid "Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …"
 msgstr "Überschriften, die in einer Liste nummeriert sind, zählen zusammen als eine Gliederung: 1, 1.1, 1.2, 2 …"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:493 web/app/lib/document-menus.ts:274
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:494 web/app/lib/document-menus.ts:274
 msgid "Help"
 msgstr "Hilfe"
 
@@ -2365,11 +2377,11 @@ msgstr "Ausblenden"
 msgid "Hide password"
 msgstr "Passwort verbergen"
 
-#: web/app/components/SidePanel.vue:511
+#: web/app/components/SidePanel.vue:514
 msgid "History"
 msgstr "Verlauf"
 
-#: web/app/components/SidePanel.vue:492
+#: web/app/components/SidePanel.vue:493
 msgid "History & Chat"
 msgstr "Verlauf & Chat"
 
@@ -2380,6 +2392,10 @@ msgstr "Verlauf & Chat"
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:208
 msgid "History and Chat"
 msgstr "Verlauf und Chat"
+
+#: web/app/components/SidePanel.vue:498
+msgid "History and chat are for the document's editors."
+msgstr "Verlauf und Chat sind den Bearbeitenden des Dokuments vorbehalten."
 
 #: web/app/components/TableOptionsDialog.vue:88
 msgid "Holds"
@@ -2453,6 +2469,10 @@ msgstr "Wie viele Standardabweichungen ein Wert vom Mittelwert entfernt ist."
 msgid "How many times"
 msgstr "Wie viele Male"
 
+#: web/app/components/AdminSecurity.vue:90
+msgid "How passwords protect the documents on this server."
+msgstr "Wie Passwörter die Dokumente auf diesem Server schützen."
+
 #: web/app/components/StyleColorPicker.vue:80
 msgid "How strong"
 msgstr "Wie stark"
@@ -2481,7 +2501,7 @@ msgstr "Wie das Format gelöscht wird"
 msgid "Hyphenate"
 msgstr "Silbentrennung"
 
-#: web/app/components/OpenDialog.vue:1048
+#: web/app/components/OpenDialog.vue:1058
 msgid "I forgot my password"
 msgstr "Ich habe mein Passwort vergessen"
 
@@ -2525,7 +2545,7 @@ msgstr "Von der Festplatte importiert"
 msgid "In an Excel file"
 msgstr "In einer Excel-Datei"
 
-#: web/app/components/OpenDialog.vue:1050
+#: web/app/components/OpenDialog.vue:1060
 msgid "In collections"
 msgstr "In Sammlungen"
 
@@ -2537,7 +2557,7 @@ msgstr "Im Textfluss: Die Tabelle steht nach ihrem Absatz und wird zwischen den 
 msgid "In this document now:"
 msgstr "Jetzt in diesem Dokument:"
 
-#: web/app/components/OpenDialog.vue:907
+#: web/app/components/OpenDialog.vue:914
 msgid "In {name}"
 msgstr "In {name}"
 
@@ -2741,7 +2761,7 @@ msgstr "Behalten als"
 msgid "Kept parts, click to insert:"
 msgstr "Behaltene Teile, zum Einfügen anklicken:"
 
-#: web/app/components/OpenDialog.vue:1057
+#: web/app/components/OpenDialog.vue:1067
 msgid "Kind of the new document"
 msgstr "Art des neuen Dokuments"
 
@@ -2861,7 +2881,7 @@ msgstr "Die Zellen hervorheben, die an der Berechnung dieser Zelle beteiligt sin
 msgid "Line · soon"
 msgstr "Linie · bald"
 
-#: web/app/components/SidePanel.vue:578
+#: web/app/components/SidePanel.vue:581
 msgid "Lines"
 msgstr "Linien"
 
@@ -2877,13 +2897,17 @@ msgstr "Listenpunkt"
 msgid "List, rename, delete and hide the styles of this document"
 msgstr "Die Formate dieses Dokuments auflisten, umbenennen, löschen und ausblenden"
 
-#: web/app/components/AdminApp.vue:73
+#: web/app/components/AdminApp.vue:74
 msgid "Loading…"
 msgstr "Wird geladen…"
 
 #: web/app/components/RandomDialog.vue:107
 msgid "Log-normal"
 msgstr "Lognormal"
+
+#: web/app/components/AdminSecurity.vue:96
+msgid "Longer is safer against someone who steals a document file and guesses its passwords, and makes a login take that long. The server measures what this means for its machine at start; Apply measures again."
+msgstr "Länger ist sicherer gegen jemanden, der eine Dokumentdatei stiehlt und ihre Passwörter errät, und macht die Anmeldung entsprechend langsamer. Der Server misst beim Start, was das für seinen Rechner bedeutet; „Anwenden“ misst erneut."
 
 #: web/app/components/StyleSpec.vue:150 web/app/components/StyleSpec.vue:152 web/app/components/TableOptionsDialog.vue:66
 msgid "Look"
@@ -2929,7 +2953,7 @@ msgstr "Aus den Feldern der Leiste gebildet."
 msgid "Made from what you typed. Your own pattern replaces it."
 msgstr "Aus Ihrer Eingabe erstellt. Ihr eigenes Muster ersetzt sie."
 
-#: web/app/components/NumberingDialog.vue:127 web/app/components/OpenDialog.vue:877
+#: web/app/components/NumberingDialog.vue:127 web/app/components/OpenDialog.vue:884
 msgid "Make"
 msgstr "Anlegen"
 
@@ -2973,7 +2997,7 @@ msgstr "Verwalten"
 msgid "Manage this server…"
 msgstr "Diesen Server verwalten…"
 
-#: web/app/components/OpenDialog.vue:831 web/app/components/OpenDialog.vue:831
+#: web/app/components/OpenDialog.vue:838 web/app/components/OpenDialog.vue:838
 msgid "Manage {server}…"
 msgstr "{server} verwalten…"
 
@@ -2981,7 +3005,7 @@ msgstr "{server} verwalten…"
 msgid "Margins"
 msgstr "Ränder"
 
-#: web/app/components/SidePanel.vue:526
+#: web/app/components/SidePanel.vue:529
 msgid "Mark where the document changed after this step: solid outlines are what this step changed, dashed ones what changed later"
 msgstr "Markiert, wo sich das Dokument nach diesem Schritt geändert hat: durchgezogene Umrisse zeigen, was dieser Schritt geändert hat, gestrichelte, was später geändert wurde"
 
@@ -3033,6 +3057,10 @@ msgstr "Darf gehen"
 msgid "Mean"
 msgstr "Mittelwert"
 
+#: web/app/lib/security-settings.ts:27
+msgid "Measuring this machine… New documents use {memory} MiB and {passes} passes until then."
+msgstr "Dieser Rechner wird vermessen … Neue Dokumente verwenden bis dahin {memory} MiB und {passes} Durchläufe."
+
 #: web/app/components/PivotMembersDialog.vue:54 web/app/components/PivotMembersDialog.vue:63
 msgid "Members of {field}"
 msgstr "Elemente von {field}"
@@ -3049,11 +3077,11 @@ msgstr "Zellen verbinden"
 msgid "Mermaid"
 msgstr "Mermaid"
 
-#: web/app/components/SidePanel.vue:665
+#: web/app/components/SidePanel.vue:668
 msgid "Message everyone, or @ai …"
 msgstr "Allen schreiben oder @ai …"
 
-#: web/app/components/SidePanel.vue:627
+#: web/app/components/SidePanel.vue:630
 msgid "Message redacted"
 msgstr "Nachricht geschwärzt"
 
@@ -3065,11 +3093,11 @@ msgstr "Min"
 msgid "Min of {field}"
 msgstr "Min von {field}"
 
-#: web/app/components/OpenDialog.vue:881
+#: web/app/components/OpenDialog.vue:888
 msgid "Mine and the collections are kept in this browser."
 msgstr "Meine und die Sammlungen werden in diesem Browser aufbewahrt."
 
-#: web/app/components/OpenDialog.vue:907
+#: web/app/components/OpenDialog.vue:914
 msgid "Mine · opened before"
 msgstr "Meine · zuvor geöffnet"
 
@@ -3093,7 +3121,7 @@ msgstr "Mehr zu {name}"
 msgid "More padding"
 msgstr "Mehr Abstand"
 
-#: web/app/components/SidePanel.vue:421
+#: web/app/components/SidePanel.vue:422
 msgid "More than {n} places differ from now"
 msgstr "Mehr als {n} Stellen weichen von jetzt ab"
 
@@ -3133,11 +3161,11 @@ msgstr "„{name}“ hierher verschieben"
 msgid "Multiplies the ranges cell by cell (they must have the same shape) and adds up the products."
 msgstr "Multipliziert die Bereiche Zelle für Zelle (sie müssen dieselbe Form haben) und addiert die Produkte."
 
-#: web/app/components/OpenDialog.vue:805
+#: web/app/components/OpenDialog.vue:812
 msgid "My places"
 msgstr "Meine Orte"
 
-#: web/app/components/OpenDialog.vue:804
+#: web/app/components/OpenDialog.vue:811
 msgid "My places and collections"
 msgstr "Meine Orte und Sammlungen"
 
@@ -3165,7 +3193,7 @@ msgstr "Benennen"
 msgid "Name it…"
 msgstr "Benennen …"
 
-#: web/app/components/AddFontsDialog.vue:148 web/app/components/OpenDialog.vue:875
+#: web/app/components/AddFontsDialog.vue:148 web/app/components/OpenDialog.vue:882
 msgid "Name of the collection"
 msgstr "Name der Sammlung"
 
@@ -3217,13 +3245,17 @@ msgstr "Neues Blatt…"
 msgid "New Slide"
 msgstr "Neue Folie"
 
-#: web/app/components/OpenDialog.vue:1016 web/app/components/OpenDialog.vue:961
+#: web/app/components/OpenDialog.vue:1023 web/app/components/OpenDialog.vue:968
 msgid "New collection"
 msgstr "Neue Sammlung"
 
-#: web/app/components/OpenDialog.vue:1016 web/app/components/OpenDialog.vue:961
+#: web/app/components/OpenDialog.vue:1023 web/app/components/OpenDialog.vue:968
 msgid "New collection…"
 msgstr "Neue Sammlung…"
+
+#: web/app/lib/security-settings.ts:26
+msgid "New documents use {memory} MiB and {passes} passes."
+msgstr "Neue Dokumente verwenden {memory} MiB und {passes} Durchläufe."
 
 #: web/app/components/StylesDialog.vue:113
 msgid "New name of {name}"
@@ -3233,7 +3265,7 @@ msgstr "Neuer Name für {name}"
 msgid "New owner"
 msgstr "Neuer Eigentümer"
 
-#: web/app/components/ChangePasswordDialog.vue:38 web/app/components/OpenDialog.vue:1031
+#: web/app/components/ChangePasswordDialog.vue:38 web/app/components/OpenDialog.vue:1038
 msgid "New password"
 msgstr "Neues Passwort"
 
@@ -3369,7 +3401,7 @@ msgstr "Keine Schrift, die sich lesen lässt."
 msgid "Not available yet"
 msgstr "Noch nicht verfügbar"
 
-#: web/app/lib/base-session.ts:659 web/app/lib/base-session.ts:895
+#: web/app/lib/base-session.ts:682 web/app/lib/base-session.ts:918
 msgid "Not connected to the server."
 msgstr "Nicht mit dem Server verbunden."
 
@@ -3421,11 +3453,11 @@ msgstr "Nichts"
 msgid "Nothing anybody sees in the document changes: it is only in the history."
 msgstr "Was im Dokument zu sehen ist, ändert sich nicht: es steht nur im Verlauf."
 
-#: web/app/components/SidePanel.vue:420
+#: web/app/components/SidePanel.vue:421
 msgid "Nothing differs from now"
 msgstr "Nichts weicht von jetzt ab"
 
-#: web/app/lib/base-session.ts:1034
+#: web/app/lib/base-session.ts:1057
 msgid "Nothing has changed since the last checkpoint."
 msgstr "Seit dem letzten Prüfpunkt hat sich nichts geändert."
 
@@ -3437,7 +3469,7 @@ msgstr "Nichts hat dieses Format und nichts baut darauf auf; es wird einfach gel
 msgid "Nothing has this style."
 msgstr "Nichts hat dieses Format."
 
-#: web/app/components/OpenDialog.vue:909
+#: web/app/components/OpenDialog.vue:916
 msgid "Nothing in this collection yet. Add a document with the bookmark button next to it, or drag it onto the collection."
 msgstr "Noch nichts in dieser Sammlung. Fügen Sie ein Dokument mit dem Lesezeichen-Knopf daneben hinzu oder ziehen Sie es auf die Sammlung."
 
@@ -3453,7 +3485,7 @@ msgstr "Nichts ausgewählt. Wählen Sie Änderungen oder Nachrichten in Verlauf 
 msgid "Nothing is replaced."
 msgstr "Es wird nichts ersetzt."
 
-#: web/app/components/OpenDialog.vue:909
+#: web/app/components/OpenDialog.vue:916
 msgid "Nothing opened yet from this browser."
 msgstr "In diesem Browser noch nichts geöffnet."
 
@@ -3481,19 +3513,19 @@ msgstr "Nichts rückgängig zu machen"
 msgid "Nothing was replaced."
 msgstr "Es wurde nichts ersetzt."
 
-#: web/app/components/OpenDialog.vue:982
+#: web/app/components/OpenDialog.vue:989
 msgid "Nothing yet. Create the first document."
 msgstr "Noch nichts. Erstellen Sie das erste Dokument."
 
-#: web/app/components/SidePanel.vue:539
+#: web/app/components/SidePanel.vue:542
 msgid "Nothing yet. Put a text box on the slide."
 msgstr "Noch nichts. Legen Sie ein Textfeld auf die Folie."
 
-#: web/app/components/SidePanel.vue:539
+#: web/app/components/SidePanel.vue:542
 msgid "Nothing yet. Start writing."
 msgstr "Noch nichts. Fangen Sie an zu schreiben."
 
-#: web/app/components/SidePanel.vue:539
+#: web/app/components/SidePanel.vue:542
 msgid "Nothing yet. Type into a cell."
 msgstr "Noch nichts. Tippen Sie etwas in eine Zelle."
 
@@ -3581,7 +3613,7 @@ msgstr "Offline"
 msgid "On a new sheet"
 msgstr "Auf einem neuen Blatt"
 
-#: web/app/components/OpenDialog.vue:969
+#: web/app/components/OpenDialog.vue:976
 msgid "On this server"
 msgstr "Auf diesem Server"
 
@@ -3589,7 +3621,7 @@ msgstr "Auf diesem Server"
 msgid "On this sheet at"
 msgstr "Auf diesem Blatt bei"
 
-#: web/app/components/OpenDialog.vue:969
+#: web/app/components/OpenDialog.vue:976
 msgid "On {place} · {count}"
 msgstr "Auf {place} · {count}"
 
@@ -3669,7 +3701,7 @@ msgstr "Nur, wenn es der ganze Text ist."
 msgid "Only whole words."
 msgstr "Nur ganze Wörter."
 
-#: web/app/components/ImportDialog.vue:182 web/app/components/OpenDialog.vue:1041 web/app/components/OpenDialog.vue:792
+#: web/app/components/ImportDialog.vue:182 web/app/components/OpenDialog.vue:1051 web/app/components/OpenDialog.vue:799
 msgid "Open"
 msgstr "Öffnen"
 
@@ -3677,7 +3709,7 @@ msgstr "Öffnen"
 msgid "Open a File"
 msgstr "Datei öffnen"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:897 web/app/lib/document-menus.ts:80
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/OpenDialog.vue:904 web/app/lib/document-menus.ts:80
 msgid "Open a File…"
 msgstr "Datei öffnen…"
 
@@ -3693,15 +3725,15 @@ msgstr "Ein Dokument aus einem Ihrer Orte, einer Sammlung oder Meine öffnen"
 msgid "Open a file"
 msgstr "Eine Datei öffnen"
 
-#: web/app/components/OpenDialog.vue:206
+#: web/app/components/OpenDialog.vue:208
 msgid "Open a presentation, or start a new one. Everybody you invite works on the same slides at the same time."
 msgstr "Öffnen Sie eine Präsentation oder beginnen Sie eine neue. Alle, die Sie einladen, arbeiten gleichzeitig an denselben Folien."
 
-#: web/app/components/OpenDialog.vue:210
+#: web/app/components/OpenDialog.vue:212
 msgid "Open a table, or start a new one. Everybody you invite works in the same table, and so does the assistant."
 msgstr "Öffnen Sie eine Tabelle oder beginnen Sie eine neue. Alle, die Sie einladen, arbeiten in derselben Tabelle, ebenso der Assistent."
 
-#: web/app/components/OpenDialog.vue:202
+#: web/app/components/OpenDialog.vue:204
 msgid "Open a text, or start a new one. Everybody you invite writes in the same text, and so does the assistant: it suggests, you decide."
 msgstr "Öffnen Sie einen Text oder beginnen Sie einen neuen. Alle, die Sie einladen, schreiben im selben Text, ebenso der Assistent: Er schlägt vor, Sie entscheiden."
 
@@ -3749,7 +3781,7 @@ msgstr "Öffnen…"
 msgid "Options…"
 msgstr "Optionen…"
 
-#: web/app/components/OpenDialog.vue:1056
+#: web/app/components/OpenDialog.vue:1066
 msgid "Or start a new one"
 msgstr "Oder ein neues anfangen"
 
@@ -3849,7 +3881,7 @@ msgstr "Absatz"
 msgid "Paragraph {n}"
 msgstr "Absatz {n}"
 
-#: web/app/lib/base-session.ts:495
+#: web/app/lib/base-session.ts:518
 msgid "Part of the history was redacted. The document was reloaded."
 msgstr "Ein Teil des Verlaufs wurde geschwärzt. Das Dokument wurde neu geladen."
 
@@ -3857,7 +3889,7 @@ msgstr "Ein Teil des Verlaufs wurde geschwärzt. Das Dokument wurde neu geladen.
 msgid "Part of the result of the query in {cell}"
 msgstr "Teil des Ergebnisses der Abfrage in {cell}"
 
-#: web/app/components/AdminLogin.vue:48 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:153 web/app/components/OpenDialog.vue:1031
+#: web/app/components/AdminLogin.vue:54 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:153 web/app/components/OpenDialog.vue:1038
 msgid "Password"
 msgstr "Passwort"
 
@@ -3868,6 +3900,10 @@ msgstr "Passwort (mindestens 8 Zeichen)"
 #: web/app/components/ShareDialog.vue:45
 msgid "Password (at least 8 characters, with a capital letter, a small letter and a digit)"
 msgstr "Passwort (mindestens 8 Zeichen, mit einem Großbuchstaben, einem Kleinbuchstaben und einer Ziffer)"
+
+#: web/app/components/AdminSecurity.vue:92
+msgid "Password hashing"
+msgstr "Passwort-Hashing"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:138
 msgid "Paste"
@@ -3893,15 +3929,15 @@ msgstr "Eine Verteilung wählen und RANDOM in die Zelle setzen"
 msgid "Pick cells instead…"
 msgstr "Stattdessen Zellen wählen…"
 
-#: web/app/components/SidePanel.vue:554 web/app/components/SidePanel.vue:617
+#: web/app/components/SidePanel.vue:557 web/app/components/SidePanel.vue:620
 msgid "Pick for redaction"
 msgstr "Zum Schwärzen auswählen"
 
-#: web/app/components/SidePanel.vue:618
+#: web/app/components/SidePanel.vue:621
 msgid "Pick for redaction: message by {who} at {time}"
 msgstr "Zum Schwärzen auswählen: Nachricht von {who} um {time}"
 
-#: web/app/components/SidePanel.vue:555
+#: web/app/components/SidePanel.vue:558
 msgid "Pick for redaction: {what}"
 msgstr "Zum Schwärzen auswählen: {what}"
 
@@ -3913,7 +3949,7 @@ msgstr "Im Dokument auswählen…"
 msgid "Pick more…"
 msgstr "Mehr auswählen…"
 
-#: web/app/components/SidePanel.vue:534
+#: web/app/components/SidePanel.vue:537
 msgid "Pick the changes and messages to redact."
 msgstr "Wählen Sie die Änderungen und Nachrichten aus, die geschwärzt werden sollen."
 
@@ -3921,7 +3957,7 @@ msgstr "Wählen Sie die Änderungen und Nachrichten aus, die geschwärzt werden 
 msgid "Pick what to blank"
 msgstr "Auswählen, was geschwärzt wird"
 
-#: web/app/components/SidePanel.vue:534
+#: web/app/components/SidePanel.vue:537
 msgid "Picked to redact: {n}"
 msgstr "Zum Schwärzen ausgewählt: {n}"
 
@@ -3957,7 +3993,7 @@ msgstr "PivotTable als SQL"
 msgid "Place it"
 msgstr "Platzieren"
 
-#: web/app/components/SidePanel.vue:421
+#: web/app/components/SidePanel.vue:422
 msgid "Places that differ from now: {n}"
 msgstr "Stellen, die von jetzt abweichen: {n}"
 
@@ -4017,7 +4053,7 @@ msgstr "Hochformat"
 msgid "PowerPoint presentation (.pptx)"
 msgstr "PowerPoint-Präsentation (.pptx)"
 
-#: web/app/components/OpenDialog.vue:183
+#: web/app/components/OpenDialog.vue:185
 msgid "PowerPoint, OpenDocument or Claudia slides, or drop one anywhere on this page."
 msgstr "PowerPoint-, OpenDocument- oder Claudia-Folien, oder eine Datei irgendwo auf diese Seite ziehen."
 
@@ -4205,7 +4241,7 @@ msgstr "Liest sich:"
 msgid "Reconnecting…"
 msgstr "Verbindung wird wiederhergestellt…"
 
-#: web/app/components/OpenDialog.vue:1028 web/app/components/ShareDialog.vue:58
+#: web/app/components/OpenDialog.vue:1035 web/app/components/ShareDialog.vue:58
 msgid "Recovery key"
 msgstr "Wiederherstellungsschlüssel"
 
@@ -4225,7 +4261,7 @@ msgstr "Verlauf schwärzen…"
 msgid "Redact for good"
 msgstr "Endgültig schwärzen"
 
-#: web/app/components/SidePanel.vue:562
+#: web/app/components/SidePanel.vue:565
 msgid "Redacted: the content of this change was taken away."
 msgstr "Geschwärzt: Der Inhalt dieser Änderung wurde entfernt."
 
@@ -4233,11 +4269,11 @@ msgstr "Geschwärzt: Der Inhalt dieser Änderung wurde entfernt."
 msgid "Redacted: {what}, by {who} at {time}"
 msgstr "Geschwärzt: {what}, von {who} um {time}"
 
-#: web/app/components/SidePanel.vue:689
+#: web/app/components/SidePanel.vue:693
 msgid "Redaction menu"
 msgstr "Menü zum Schwärzen"
 
-#: web/app/components/SidePanel.vue:535
+#: web/app/components/SidePanel.vue:538
 msgid "Redact…"
 msgstr "Schwärzen…"
 
@@ -4297,7 +4333,7 @@ msgstr "Verweis entfernen"
 msgid "Remove collection"
 msgstr "Sammlung entfernen"
 
-#: web/app/components/OpenDialog.vue:870 web/app/components/OpenDialog.vue:870
+#: web/app/components/OpenDialog.vue:877 web/app/components/OpenDialog.vue:877
 msgid "Remove collection {name}"
 msgstr "Sammlung {name} entfernen"
 
@@ -4341,7 +4377,7 @@ msgstr "Entfernt Leerzeichen an beiden Enden und reduziert die zwischen Wörtern
 msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
 msgstr "Entfernt die nicht druckbaren Zeichen (Codes 0 bis 31) aus einem Text."
 
-#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:826 web/app/components/SlideWorkspace.vue:513 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139 web/app/components/StylesDialog.vue:70 web/app/components/Workspace.vue:1286
+#: web/app/components/AdminFonts.vue:204 web/app/components/NamesDialog.vue:88 web/app/components/NamesDialog.vue:94 web/app/components/OpenDialog.vue:833 web/app/components/SlideWorkspace.vue:513 web/app/components/StylesDialog.vue:122 web/app/components/StylesDialog.vue:139 web/app/components/StylesDialog.vue:70 web/app/components/Workspace.vue:1286
 msgid "Rename"
 msgstr "Umbenennen"
 
@@ -4365,7 +4401,7 @@ msgstr "Blatt umbenennen"
 msgid "Rename slide"
 msgstr "Folie umbenennen"
 
-#: web/app/components/OpenDialog.vue:812 web/app/components/OpenDialog.vue:826
+#: web/app/components/OpenDialog.vue:819 web/app/components/OpenDialog.vue:833
 msgid "Rename {server}"
 msgstr "{server} umbenennen"
 
@@ -4433,7 +4469,7 @@ msgstr "Ersetzt alten Text durch neuen Text (alle Vorkommen oder nur das n-te)."
 msgid "Replaces {family} {style} from {collection}, for every document on this server."
 msgstr "Ersetzt {family} {style} aus {collection}, für jedes Dokument auf diesem Server."
 
-#: web/app/components/SidePanel.vue:512
+#: web/app/components/SidePanel.vue:515
 msgid "Replay"
 msgstr "Wiedergabe"
 
@@ -4441,7 +4477,7 @@ msgstr "Wiedergabe"
 msgid "Replay History…"
 msgstr "Verlauf abspielen…"
 
-#: web/app/components/SidePanel.vue:512
+#: web/app/components/SidePanel.vue:515
 msgid "Replay the history: wheel over this panel, or Alt+Page Up"
 msgstr "Den Verlauf abspielen: Mausrad über diesem Bereich oder Alt+Bild auf"
 
@@ -4673,7 +4709,7 @@ msgstr "Gespeichert als {path}."
 msgid "Saved {name} to {folder}"
 msgstr "{name} in {folder} gespeichert"
 
-#: web/app/components/OpenDialog.vue:205
+#: web/app/components/OpenDialog.vue:207
 msgid "Say it on a slide."
 msgstr "Sagen Sie es auf einer Folie."
 
@@ -4697,7 +4733,7 @@ msgstr "Schemata"
 msgid "Sealed Claudia document"
 msgstr "Versiegeltes Claudia-Dokument"
 
-#: web/app/components/OpenDialog.vue:893
+#: web/app/components/OpenDialog.vue:900
 msgid "Search"
 msgstr "Suchen"
 
@@ -4713,7 +4749,7 @@ msgstr "Suchen & Ersetzen…"
 msgid "Search & replace"
 msgstr "Suchen & Ersetzen"
 
-#: web/app/components/OpenDialog.vue:894
+#: web/app/components/OpenDialog.vue:901
 msgid "Search Mine and {place}"
 msgstr "Meine und {place} durchsuchen"
 
@@ -4736,6 +4772,10 @@ msgstr "Hilfe durchsuchen…"
 #: web/app/components/SearchPanel.vue:106
 msgid "Searching…"
 msgstr "Suche läuft…"
+
+#: web/app/components/AdminSecurity.vue:89 web/app/components/AdminShell.vue:17
+msgid "Security"
+msgstr "Sicherheit"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "See the pages and print them"
@@ -4793,15 +4833,15 @@ msgstr "Gesendet"
 msgid "Series are in"
 msgstr "Datenreihen in"
 
-#: web/app/components/OpenDialog.vue:844
+#: web/app/components/OpenDialog.vue:851
 msgid "Server address"
 msgstr "Serveradresse"
 
-#: web/app/components/AdminLogin.vue:37 web/app/components/AdminShell.vue:24 web/app/components/FirstAdminSetup.vue:39
+#: web/app/components/AdminLogin.vue:43 web/app/components/AdminShell.vue:25 web/app/components/FirstAdminSetup.vue:39
 msgid "Server settings"
 msgstr "Servereinstellungen"
 
-#: web/app/components/AdminShell.vue:28
+#: web/app/components/AdminShell.vue:29
 msgid "Server settings pages"
 msgstr "Seiten der Servereinstellungen"
 
@@ -4861,7 +4901,7 @@ msgstr "Umschalt"
 msgid "Shift + arrows or drag"
 msgstr "Umschalt + Pfeiltasten oder Ziehen"
 
-#: web/app/components/SidePanel.vue:535
+#: web/app/components/SidePanel.vue:538
 msgid "Shift+Del"
 msgstr "Umschalt+Entf"
 
@@ -4901,7 +4941,7 @@ msgstr "Anzeigen als"
 msgid "Show as SQL…"
 msgstr "Als SQL anzeigen…"
 
-#: web/app/components/SidePanel.vue:526
+#: web/app/components/SidePanel.vue:529
 msgid "Show differences from now"
 msgstr "Unterschiede zu jetzt zeigen"
 
@@ -4929,7 +4969,7 @@ msgstr "Die Leiste mit den Feldern der PivotTable ein- oder ausblenden"
 msgid "Show password"
 msgstr "Passwort anzeigen"
 
-#: web/app/components/SidePanel.vue:625
+#: web/app/components/SidePanel.vue:628
 msgid "Show the document as it was at this message"
 msgstr "Das Dokument so zeigen, wie es bei dieser Nachricht war"
 
@@ -4949,7 +4989,7 @@ msgstr "Die Präsentation im Vollbild zeigen, beginnend mit der Folie, auf der S
 msgid "Show the text as pages instead of a flowing text"
 msgstr "Den Text als Seiten statt als Fließtext anzeigen"
 
-#: web/app/components/OpenDialog.vue:860
+#: web/app/components/OpenDialog.vue:867
 msgid "Shown now. Choose it again, or Esc, to see all documents."
 msgstr "Wird gerade angezeigt. Wählen Sie sie noch einmal oder drücken Sie Esc, um alle Dokumente zu sehen."
 
@@ -4961,19 +5001,19 @@ msgstr "Auf dem Bildschirm zu sehen; Druck und PDF können ihre Umrisse noch nic
 msgid "Shows"
 msgstr "Zeigt"
 
-#: web/app/components/AdminLogin.vue:54
+#: web/app/components/AdminLogin.vue:63
 msgid "Sign in"
 msgstr "Anmelden"
 
-#: web/app/components/AdminLogin.vue:44
+#: web/app/components/AdminLogin.vue:50
 msgid "Sign in to {label}"
 msgstr "Bei {label} anmelden"
 
-#: web/app/components/AdminShell.vue:53
+#: web/app/components/AdminShell.vue:55
 msgid "Sign out"
 msgstr "Abmelden"
 
-#: web/app/components/AdminShell.vue:37
+#: web/app/components/AdminShell.vue:38
 msgid "Signed in as {signedInAs}"
 msgstr "Angemeldet als {signedInAs}"
 
@@ -5009,7 +5049,7 @@ msgstr "Folie {n} von {total}"
 msgid "Slide {n} of {total}: {title}"
 msgstr "Folie {n} von {total}: {title}"
 
-#: web/app/components/OpenDialog.vue:101 web/app/lib/print/setup.ts:45
+#: web/app/components/OpenDialog.vue:103 web/app/lib/print/setup.ts:45
 msgid "Slides"
 msgstr "Folien"
 
@@ -5037,7 +5077,7 @@ msgstr "Bedingter Trennstrich"
 msgid "Something is repeated that is not there."
 msgstr "Es wird etwas wiederholt, das nicht da ist."
 
-#: web/app/lib/base-session.ts:1076 web/app/lib/base-session.ts:884 web/app/lib/session.ts:653
+#: web/app/lib/base-session.ts:1099 web/app/lib/base-session.ts:907 web/app/lib/session.ts:653
 msgid "Something went wrong."
 msgstr "Etwas ist schiefgegangen."
 
@@ -5181,11 +5221,11 @@ msgstr "Format…"
 msgid "Suggest first"
 msgstr "Erst vorschlagen"
 
-#: web/app/components/SidePanel.vue:528
+#: web/app/components/SidePanel.vue:531
 msgid "Suggest going back to the document as it was after this step"
 msgstr "Vorschlagen, zum Dokument nach diesem Schritt zurückzugehen"
 
-#: web/app/components/SidePanel.vue:570
+#: web/app/components/SidePanel.vue:573
 msgid "Suggest going back to this checkpoint"
 msgstr "Vorschlagen, zu diesem Prüfpunkt zurückzukehren"
 
@@ -5261,7 +5301,7 @@ msgstr "TRUE, wenn der ganzzahlige Teil der Zahl ungerade ist."
 msgid "Tab / Shift + Tab"
 msgstr "Tab / Umschalt + Tab"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:23 web/app/components/OpenDialog.vue:101 web/app/components/SidePanel.vue:275 web/app/components/TableOptionsDialog.vue:59 web/app/components/TableView.vue:30
+#: packages/claudia-server/src/claudia_server/thing_names.py:23 web/app/components/OpenDialog.vue:103 web/app/components/SidePanel.vue:275 web/app/components/TableOptionsDialog.vue:59 web/app/components/TableView.vue:30
 msgid "Table"
 msgstr "Tabelle"
 
@@ -5301,7 +5341,7 @@ msgstr "Tabellen"
 msgid "Tables, named ranges and query results are offered; the pivot follows them when rows are added."
 msgstr "Angeboten werden Tabellen, benannte Bereiche und Abfrageergebnisse; die PivotTable folgt ihnen, wenn Zeilen hinzukommen."
 
-#: web/app/components/OpenDialog.vue:888
+#: web/app/components/OpenDialog.vue:895
 msgid "Tables, texts and slides on this place, and the documents you opened before."
 msgstr "Tabellen, Texte und Folien an diesem Ort, und die Dokumente, die Sie zuvor geöffnet haben."
 
@@ -5337,11 +5377,11 @@ msgstr "Das eigene Format der ausgewählten Zellen entfernen, zurück zu dem der
 msgid "Take the selected object off the slide"
 msgstr "Das ausgewählte Objekt von der Folie entfernen"
 
-#: web/app/components/OpenDialog.vue:942 web/app/components/OpenDialog.vue:943
+#: web/app/components/OpenDialog.vue:949 web/app/components/OpenDialog.vue:950
 msgid "Take {id} off Mine"
 msgstr "{id} aus Meine entfernen"
 
-#: web/app/components/OpenDialog.vue:950 web/app/components/OpenDialog.vue:951
+#: web/app/components/OpenDialog.vue:957 web/app/components/OpenDialog.vue:958
 msgid "Take {id} out of {name}"
 msgstr "{id} aus {name} nehmen"
 
@@ -5361,7 +5401,7 @@ msgstr "Petrol"
 msgid "Tell them in the chat:"
 msgstr "Im Chat Bescheid geben:"
 
-#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:101 web/app/components/SearchPanel.vue:334 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:176 web/app/components/StyleSpec.vue:177 web/app/components/StyleSpec.vue:189 web/app/lib/reference-labels.ts:11
+#: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:103 web/app/components/SearchPanel.vue:334 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:176 web/app/components/StyleSpec.vue:177 web/app/components/StyleSpec.vue:189 web/app/lib/reference-labels.ts:11
 msgid "Text"
 msgstr "Text"
 
@@ -5401,7 +5441,7 @@ msgstr "Textumbruch: {mode}"
 msgid "That cannot be pointed at yet."
 msgstr "Darauf kann noch nicht verwiesen werden."
 
-#: web/app/components/OpenDialog.vue:777
+#: web/app/components/OpenDialog.vue:784
 msgid "That document exists already — or the name or password is not acceptable. Try Open."
 msgstr "Dieses Dokument gibt es schon – oder der Name oder das Passwort ist nicht zulässig. Versuchen Sie es mit Öffnen."
 
@@ -5425,7 +5465,7 @@ msgstr "Das ist zu viel auf einmal zum Einfügen (höchstens 10.000 Zellen)."
 msgid "That range will not make a chart."
 msgstr "Aus diesem Bereich lässt sich kein Diagramm machen."
 
-#: web/app/components/OpenDialog.vue:779
+#: web/app/components/OpenDialog.vue:786
 msgid "That recovery key does not fit this document."
 msgstr "Dieser Wiederherstellungsschlüssel passt nicht zu diesem Dokument."
 
@@ -5433,7 +5473,7 @@ msgstr "Dieser Wiederherstellungsschlüssel passt nicht zu diesem Dokument."
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr "Dieser Server betreibt {other}. Dieses Fenster ist {this} – öffnen Sie ihn dort."
 
-#: web/app/lib/base-session.ts:815
+#: web/app/lib/base-session.ts:838
 msgid "That was deleted. This is the last moment it was there."
 msgstr "Das wurde gelöscht. Dies ist der letzte Moment, in dem es da war."
 
@@ -5549,11 +5589,11 @@ msgstr "Die Farben, mit denen es begann"
 msgid "The colours of this document, by what each one means"
 msgstr "Die Farben dieses Dokuments, nach ihrer Bedeutung"
 
-#: web/app/lib/protocol.ts:258
+#: web/app/lib/protocol.ts:262
 msgid "The connection to the server was lost."
 msgstr "Die Verbindung zum Server wurde unterbrochen."
 
-#: web/app/components/DocumentFrame.vue:241
+#: web/app/components/DocumentFrame.vue:250
 msgid "The connection was closed."
 msgstr "Die Verbindung wurde geschlossen."
 
@@ -5621,7 +5661,7 @@ msgstr "Der Tag des Monats eines Datums, 1 bis 31."
 msgid "The day of the week of a date: 1 (Sunday) to 7, or as the second argument counts (2: Monday is 1)."
 msgstr "Der Wochentag eines Datums: 1 (Sonntag) bis 7, oder wie das zweite Argument zählt (2: Montag ist 1)."
 
-#: web/app/components/OpenDialog.vue:172
+#: web/app/components/OpenDialog.vue:174
 msgid "The description and tags of {id} are saved."
 msgstr "Beschreibung und Schlagwörter von {id} sind gespeichert."
 
@@ -5633,7 +5673,7 @@ msgstr "Die Determinante einer quadratischen Matrix aus Zahlen."
 msgid "The different rows of a range in order of first appearance (columns with by_col TRUE); with exactly_once TRUE only those that occur once."
 msgstr "Die verschiedenen Zeilen eines Bereichs in der Reihenfolge ihres ersten Auftretens (Spalten mit by_col TRUE); mit exactly_once TRUE nur die, die einmal vorkommen."
 
-#: web/app/lib/base-session.ts:503 web/app/lib/base-session.ts:507
+#: web/app/lib/base-session.ts:526 web/app/lib/base-session.ts:530
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
 msgstr "Das Dokument hat sich unter Ihnen geändert (es ging zu einem Prüfpunkt zurück oder wurde neu aufgebaut). Es wurde neu geladen."
 
@@ -5641,15 +5681,11 @@ msgstr "Das Dokument hat sich unter Ihnen geändert (es ging zu einem Prüfpunkt
 msgid "The document changes now: the marked places show filler (the document behind this dialog is the preview)."
 msgstr "Das Dokument ändert sich jetzt: Die markierten Stellen zeigen Füllzeichen (das Dokument hinter diesem Dialog ist die Vorschau)."
 
-#: web/app/lib/protocol.ts:256
+#: web/app/lib/protocol.ts:260
 msgid "The document is full, or the connection was too slow."
 msgstr "Das Dokument ist voll, oder die Verbindung war zu langsam."
 
-#: web/app/lib/protocol.ts:254
-msgid "The document is waiting for an owner or editor to open it."
-msgstr "Das Dokument wartet darauf, dass ein Eigentümer oder Bearbeiter es öffnet."
-
-#: web/app/components/OpenDialog.vue:888
+#: web/app/components/OpenDialog.vue:895
 msgid "The documents you put into this collection, on any place."
 msgstr "Die Dokumente, die Sie in diese Sammlung gelegt haben, an jedem Ort."
 
@@ -5925,15 +5961,15 @@ msgstr "Der Monat eines Datums, 1 bis 12."
 msgid "The name is sealed into the file and cannot change."
 msgstr "Der Name ist in die Datei eingesiegelt und kann sich nicht ändern."
 
-#: web/app/components/OpenDialog.vue:780
+#: web/app/components/OpenDialog.vue:787
 msgid "The name or password is not right (or there is no such document)."
 msgstr "Name oder Passwort stimmen nicht (oder es gibt kein solches Dokument)."
 
-#: web/app/lib/protocol.ts:246
+#: web/app/lib/protocol.ts:248
 msgid "The name or password is not right."
 msgstr "Name oder Passwort stimmen nicht."
 
-#: packages/claudia-server/src/claudia_server/auth.py:298 packages/claudia-server/src/claudia_server/sealed.py:289
+#: packages/claudia-server/src/claudia_server/auth.py:308 packages/claudia-server/src/claudia_server/sealed.py:296
 msgid "The name “{name}” belongs to the AI assistant. Choose another name."
 msgstr "Der Name „{name}“ gehört dem KI-Assistenten. Wählen Sie einen anderen Namen."
 
@@ -6141,7 +6177,7 @@ msgstr "Der Rang eines Wertes unter den Zahlen als Anteil von 0 bis 1, auf die a
 msgid "The rate at which cash flows (the first one now, one per period after it) are worth nothing today."
 msgstr "Der Zins, bei dem Zahlungsströme (der erste jetzt, danach einer je Periode) heute nichts wert sind."
 
-#: web/app/components/OpenDialog.vue:1045
+#: web/app/components/OpenDialog.vue:1055
 msgid "The recovery key was shown to the owner when the document was made (or when they made a new one). With it you choose a new password; you keep what you were allowed to do."
 msgstr "Der Wiederherstellungsschlüssel wurde dem Eigentümer beim Erstellen des Dokuments gezeigt (oder als er einen neuen erstellte). Damit wählen Sie ein neues Passwort; Ihre Berechtigungen bleiben erhalten."
 
@@ -6213,11 +6249,11 @@ msgstr "Der Server hat unter {url} innerhalb von {seconds} Sekunden nicht geantw
 msgid "The server did not answer with a document list."
 msgstr "Der Server hat nicht mit einer Dokumentliste geantwortet."
 
-#: web/app/lib/protocol.ts:252
+#: web/app/lib/protocol.ts:254
 msgid "The server did not hear from the page in time."
 msgstr "Der Server hat rechtzeitig nichts von der Seite gehört."
 
-#: web/app/lib/protocol.ts:244
+#: web/app/lib/protocol.ts:246
 msgid "The server did not understand the request."
 msgstr "Der Server hat die Anfrage nicht verstanden."
 
@@ -6325,11 +6361,11 @@ msgstr "Die Standardnormalverteilung (Mittelwert 0, Standardabweichung 1) an der
 msgid "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
 msgstr "Die Gerade y = m1*x1 + ... + b durch bekannte y- und x-Werte, als Zeile: die Koeffizienten in umgekehrter Reihenfolge, dann b; mit stats TRUE auch Standardfehler, Bestimmtheitsmaß, F, Freiheitsgrade und Quadratsummen."
 
-#: web/app/lib/base-session.ts:344
+#: web/app/lib/base-session.ts:354
 msgid "The suggestion to go to {label} was declined."
 msgstr "Der Vorschlag, zu {label} zu wechseln, wurde abgelehnt."
 
-#: web/app/lib/base-session.ts:345
+#: web/app/lib/base-session.ts:355
 msgid "The suggestion to go to {label} was withdrawn."
 msgstr "Der Vorschlag, zu {label} zu wechseln, wurde zurückgezogen."
 
@@ -6517,7 +6553,7 @@ msgstr "Zur „)“ bei Zeichen {position} fehlt die „(“. Es wird nichts ers
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr "Zur „[“ bei Zeichen {position} fehlt die „]“. Es wird nichts ersetzt."
 
-#: web/app/lib/protocol.ts:250
+#: web/app/lib/protocol.ts:252
 msgid "There is no such document."
 msgstr "Es gibt kein solches Dokument."
 
@@ -6533,11 +6569,11 @@ msgstr "Es gibt noch keine Tabelle zum Auswerten. Wählen Sie Zellen mit einer K
 msgid "There is nothing in this to redact."
 msgstr "Hier gibt es nichts zu schwärzen."
 
-#: web/app/lib/base-session.ts:812
+#: web/app/lib/base-session.ts:835
 msgid "There is nothing like that in this document."
 msgstr "So etwas gibt es in diesem Dokument nicht."
 
-#: web/app/components/OpenDialog.vue:192
+#: web/app/components/OpenDialog.vue:194
 msgid "These are slides. Open them with Claudia Creates."
 msgstr "Das sind Folien. Öffnen Sie sie mit Claudia Creates."
 
@@ -6545,7 +6581,7 @@ msgstr "Das sind Folien. Öffnen Sie sie mit Claudia Creates."
 msgid "These cells are filled by the query, so they are not typed into."
 msgstr "Diese Zellen werden von der Abfrage gefüllt, deshalb wird dort nichts eingetippt."
 
-#: web/app/components/AdminLogin.vue:45
+#: web/app/components/AdminLogin.vue:51
 msgid "These settings are for administrators only. Sign in with your name and password to continue."
 msgstr "Diese Einstellungen sind nur für Administratoren. Melden Sie sich mit Ihrem Namen und Passwort an, um fortzufahren."
 
@@ -6573,11 +6609,11 @@ msgstr "Dicker"
 msgid "Thicker border"
 msgstr "Dickerer Rahmen"
 
-#: web/app/components/SidePanel.vue:639
+#: web/app/components/SidePanel.vue:642
 msgid "Things to point at"
 msgstr "Dinge, auf die man verweisen kann"
 
-#: web/app/components/OpenDialog.vue:209
+#: web/app/components/OpenDialog.vue:211
 msgid "Think with your data."
 msgstr "Denken Sie mit Ihren Daten."
 
@@ -6633,6 +6669,10 @@ msgstr "Diese Farbe ist nicht in der Palette, eine Palettenänderung lässt sie 
 msgid "This computer"
 msgstr "Dieser Computer"
 
+#: web/app/components/DocumentFrame.vue:240
+msgid "This document"
+msgstr "Dieses Dokument"
+
 #: web/app/components/DeleteStyleDialog.vue:80
 msgid "This document cannot say what deleting the style would do."
 msgstr "Dieses Dokument kann nicht sagen, was das Löschen des Formats bewirken würde."
@@ -6641,11 +6681,11 @@ msgstr "Dieses Dokument kann nicht sagen, was das Löschen des Formats bewirken 
 msgid "This document has no sheet yet."
 msgstr "Dieses Dokument hat noch kein Blatt."
 
-#: packages/claudia-server/src/claudia_server/hub.py:106
+#: packages/claudia-server/src/claudia_server/hub.py:108
 msgid "This document is on this server already, as “{id}”. It cannot be added a second time."
 msgstr "Dieses Dokument ist auf diesem Server bereits vorhanden, als „{id}“. Es kann nicht ein zweites Mal hinzugefügt werden."
 
-#: web/app/lib/base-session.ts:540
+#: web/app/lib/base-session.ts:563
 msgid "This document was deleted by its owner."
 msgstr "Dieses Dokument wurde von seinem Eigentümer gelöscht."
 
@@ -6653,11 +6693,11 @@ msgstr "Dieses Dokument wurde von seinem Eigentümer gelöscht."
 msgid "This does not look like a picture the browser can show."
 msgstr "Das sieht nicht nach einem Bild aus, das der Browser anzeigen kann."
 
-#: web/app/components/OpenDialog.vue:191
+#: web/app/components/OpenDialog.vue:193
 msgid "This is a table. Open it with Claudia Computes."
 msgstr "Das ist eine Tabelle. Öffnen Sie sie mit Claudia Computes."
 
-#: web/app/components/OpenDialog.vue:190
+#: web/app/components/OpenDialog.vue:192
 msgid "This is a text. Open it with Claudia Composes."
 msgstr "Das ist ein Text. Öffnen Sie ihn mit Claudia Composes."
 
@@ -6681,7 +6721,7 @@ msgstr "Diese Zahl muss größer als null sein."
 msgid "This object only"
 msgstr "Nur dieses Objekt"
 
-#: web/app/lib/protocol.ts:248
+#: web/app/lib/protocol.ts:250
 msgid "This page is not allowed to use that server."
 msgstr "Diese Seite darf diesen Server nicht verwenden."
 
@@ -6773,6 +6813,10 @@ msgstr "Dieser Server hat keinen Ordner, in den Schriften kommen könnten."
 msgid "This server has no tool set up to draw {type}."
 msgstr "Auf diesem Server ist kein Werkzeug eingerichtet, um {type} zu zeichnen."
 
+#: web/app/components/AdminSecurity.vue:100
+msgid "This server keeps no sealed documents, so there is nothing to set here."
+msgstr "Dieser Server verwaltet keine versiegelten Dokumente, daher gibt es hier nichts einzustellen."
+
 #: web/app/lib/noun-phrases.ts:42
 msgid "This shape only"
 msgstr "Nur diese Form"
@@ -6805,6 +6849,10 @@ msgstr "Das würde auch Arbeit von {names} schwärzen"
 msgid "Time"
 msgstr "Uhrzeit"
 
+#: web/app/components/AdminSecurity.vue:93
+msgid "Time to check one password, in seconds"
+msgstr "Zeit für die Prüfung eines Passworts, in Sekunden"
+
 #: web/app/components/AdminAiModel.vue:92
 msgid "Timeout (seconds)"
 msgstr "Zeitlimit (Sekunden)"
@@ -6820,6 +6868,18 @@ msgstr "Titel (optional)"
 #: web/app/components/PaletteDialog.vue:123
 msgid "Too faint"
 msgstr "Zu blass"
+
+#: packages/claudia-server/src/claudia_server/app.py:595 web/app/lib/login-wait.ts:14
+msgid "Too many tries. Try again in 1 second."
+msgstr "Zu viele Versuche. Versuchen Sie es in 1 Sekunde erneut."
+
+#: web/app/lib/protocol.ts:256
+msgid "Too many tries. Try again in a little while."
+msgstr "Zu viele Versuche. Versuchen Sie es in Kürze erneut."
+
+#: packages/claudia-server/src/claudia_server/app.py:597 web/app/lib/login-wait.ts:14
+msgid "Too many tries. Try again in {seconds} seconds."
+msgstr "Zu viele Versuche. Versuchen Sie es in {seconds} Sekunden erneut."
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SlideWorkspace.vue:440 web/app/components/TextWorkspace.vue:594 web/app/components/Workspace.vue:1123
 msgid "Tools"
@@ -6853,6 +6913,10 @@ msgstr "TrueType"
 msgid "Try 2 for two minutes, 2:30 or 90s."
 msgstr "Probieren Sie 2 für zwei Minuten, 2:30 oder 90s."
 
+#: web/app/components/DocumentFrame.vue:242
+msgid "Trying again every few seconds…"
+msgstr "Es wird alle paar Sekunden erneut versucht …"
+
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Turn the object you have selected a quarter turn clockwise"
 msgstr "Das ausgewählte Objekt eine Vierteldrehung im Uhrzeigersinn drehen"
@@ -6885,7 +6949,7 @@ msgstr "Zwei Seiten nebeneinander"
 msgid "Type"
 msgstr "Typ"
 
-#: web/app/components/OpenDialog.vue:440 web/app/components/OpenDialog.vue:445
+#: web/app/components/OpenDialog.vue:442 web/app/components/OpenDialog.vue:447
 msgid "Type a server address."
 msgstr "Geben Sie eine Serveradresse ein."
 
@@ -7017,7 +7081,7 @@ msgstr "Ansicht des Formats"
 msgid "Waiting for a name"
 msgstr "Wartet auf einen Namen"
 
-#: web/app/components/SidePanel.vue:500
+#: web/app/components/SidePanel.vue:503
 msgid "Waiting on {names}."
 msgstr "Wartet auf {names}."
 
@@ -7065,7 +7129,7 @@ msgstr "Was das Ergebnis am meisten bewegt"
 msgid "What regular payments (and a sum at the end) are worth today at a fixed rate."
 msgstr "Was regelmäßige Zahlungen (und eine Summe am Ende) heute bei festem Zins wert sind."
 
-#: web/app/components/SidePanel.vue:579
+#: web/app/components/SidePanel.vue:582
 msgid "What silence at a suggestion's deadline means"
 msgstr "Was Schweigen bei Ablauf der Frist eines Vorschlags bedeutet"
 
@@ -7101,7 +7165,7 @@ msgstr "So sehen {n} Ziehungen aus"
 msgid "What “{name}” sets itself. The rest comes from its parent."
 msgstr "Was „{name}“ selbst festlegt. Der Rest stammt vom übergeordneten Format."
 
-#: web/app/components/SidePanel.vue:476
+#: web/app/components/SidePanel.vue:477
 msgid "When I ask the AI, in this document:"
 msgstr "Wenn ich die KI bitte, in diesem Dokument:"
 
@@ -7129,7 +7193,7 @@ msgstr "Wo das Wort am Zeilenende getrennt werden darf"
 msgid "Where to look"
 msgstr "Wo gesucht wird"
 
-#: web/app/components/OpenDialog.vue:975
+#: web/app/components/OpenDialog.vue:982
 msgid "Which apps"
 msgstr "Welche Apps"
 
@@ -7141,19 +7205,19 @@ msgstr "Welcher Teil formatiert wird"
 msgid "Which side the border is on"
 msgstr "Auf welcher Seite der Rahmen liegt"
 
-#: web/app/components/SidePanel.vue:515
+#: web/app/components/SidePanel.vue:518
 msgid "Which steps the wheel visits"
 msgstr "Welche Schritte das Mausrad besucht"
 
-#: web/app/components/OpenDialog.vue:971
+#: web/app/components/OpenDialog.vue:978
 msgid "Which tags"
 msgstr "Welche Schlagwörter"
 
-#: web/app/lib/base-session.ts:337
+#: web/app/lib/base-session.ts:347
 msgid "While you were away, {by} restored to {label} (agreed: {agreed})."
 msgstr "Während Ihrer Abwesenheit hat {by} auf {label} zurückgestellt (einverstanden: {agreed})."
 
-#: web/app/lib/base-session.ts:338
+#: web/app/lib/base-session.ts:348
 msgid "While you were away, {by} switched to {label} (agreed: {agreed})."
 msgstr "Während Ihrer Abwesenheit hat {by} zu {label} gewechselt (einverstanden: {agreed})."
 
@@ -7209,7 +7273,7 @@ msgstr "Wird hinzugefügt"
 msgid "Will look different: {what}"
 msgstr "Sieht dann anders aus: {what}"
 
-#: web/app/components/SidePanel.vue:505
+#: web/app/components/SidePanel.vue:508
 msgid "Withdraw"
 msgstr "Zurückziehen"
 
@@ -7225,11 +7289,11 @@ msgstr "Ohne das Ausgewählte funktionieren diese Schritte nicht mehr, deshalb w
 msgid "Word document (.docx)"
 msgstr "Word-Dokument (.docx)"
 
-#: web/app/components/OpenDialog.vue:185
+#: web/app/components/OpenDialog.vue:187
 msgid "Word, Excel, PowerPoint, OpenDocument or Claudia, or drop one anywhere on this page."
 msgstr "Word, Excel, PowerPoint, OpenDocument oder Claudia, oder eine Datei irgendwo auf diese Seite ziehen."
 
-#: web/app/components/OpenDialog.vue:181
+#: web/app/components/OpenDialog.vue:183
 msgid "Word, OpenDocument or Claudia texts, or drop one anywhere on this page."
 msgstr "Word-, OpenDocument- oder Claudia-Texte, oder eine Datei irgendwo auf diese Seite ziehen."
 
@@ -7289,7 +7353,7 @@ msgstr "In das ausgewählte Textfeld schreiben"
 msgid "Write the pattern yourself…"
 msgstr "Muster selbst schreiben…"
 
-#: web/app/components/SidePanel.vue:600
+#: web/app/components/SidePanel.vue:603
 msgid "Write to everybody, or {ask} to ask the assistant. Say {help} to see what it can do."
 msgstr "Schreiben Sie allen, oder fragen Sie den Assistenten mit {ask}. Sagen Sie {help}, um zu sehen, was er kann."
 
@@ -7297,7 +7361,7 @@ msgstr "Schreiben Sie allen, oder fragen Sie den Assistenten mit {ask}. Sagen Si
 msgid "Write to the assistant in the chat"
 msgstr "Dem Assistenten im Chat schreiben"
 
-#: web/app/components/OpenDialog.vue:201
+#: web/app/components/OpenDialog.vue:203
 msgid "Write together."
 msgstr "Schreiben Sie gemeinsam."
 
@@ -7321,7 +7385,7 @@ msgstr "Sie sind Eigentümer."
 msgid "You are its owner. What the document does not show stays in the kept file and is listed after it opens."
 msgstr "Sie sind der Eigentümer. Was das Dokument nicht zeigt, bleibt in der aufbewahrten Datei und wird nach dem Öffnen aufgeführt."
 
-#: web/app/components/DocumentFrame.vue:240
+#: web/app/components/DocumentFrame.vue:249
 msgid "You are not connected any more"
 msgstr "Sie sind nicht mehr verbunden"
 
@@ -7333,7 +7397,7 @@ msgstr "Sie sind jetzt Eigentümer von {doc}."
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "Sie können es trotzdem ändern – das ist eine Warnung, keine Ablehnung."
 
-#: web/app/components/SheetGrid.vue:455 web/app/components/SheetGrid.vue:584 web/app/components/SheetGrid.vue:594 web/app/components/SlideCanvas.vue:315 web/app/components/SlideCanvas.vue:324 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:489 web/app/components/TextContainers.vue:211 web/app/components/TextObjectMenu.vue:116 web/app/components/TextObjectMenu.vue:124 web/app/components/Workspace.vue:277 web/app/components/Workspace.vue:334 web/app/components/Workspace.vue:385 web/app/components/Workspace.vue:467 web/app/components/Workspace.vue:527 web/app/components/Workspace.vue:533 web/app/components/Workspace.vue:615 web/app/components/Workspace.vue:783 web/app/components/Workspace.vue:842 web/app/components/Workspace.vue:962 web/app/lib/base-session.ts:893 web/app/lib/text-session.ts:740
+#: web/app/components/SheetGrid.vue:455 web/app/components/SheetGrid.vue:584 web/app/components/SheetGrid.vue:594 web/app/components/SlideCanvas.vue:315 web/app/components/SlideCanvas.vue:324 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:489 web/app/components/TextContainers.vue:211 web/app/components/TextObjectMenu.vue:116 web/app/components/TextObjectMenu.vue:124 web/app/components/Workspace.vue:277 web/app/components/Workspace.vue:334 web/app/components/Workspace.vue:385 web/app/components/Workspace.vue:467 web/app/components/Workspace.vue:527 web/app/components/Workspace.vue:533 web/app/components/Workspace.vue:615 web/app/components/Workspace.vue:783 web/app/components/Workspace.vue:842 web/app/components/Workspace.vue:962 web/app/lib/base-session.ts:916 web/app/lib/text-session.ts:740
 msgid "You can only look at this document."
 msgstr "Sie können dieses Dokument nur ansehen."
 
@@ -7345,6 +7409,10 @@ msgstr "Sie können nur Ihre eigene Arbeit schwärzen."
 msgid "You can redact only your own work. Untick what these steps need, or ask an owner to redact all of it."
 msgstr "Sie können nur Ihre eigene Arbeit schwärzen. Nehmen Sie heraus, was diese Schritte brauchen, oder bitten Sie einen Eigentümer, alles zu schwärzen."
 
+#: web/app/lib/login-wait.ts:43
+msgid "You can try again now."
+msgstr "Sie können es jetzt erneut versuchen."
+
 #: web/app/components/LeaveDocumentDialog.vue:25
 msgid "You will no longer be able to open {doc}, unless somebody adds you again. Confirm it is you with your own current password."
 msgstr "Sie können {doc} nicht mehr öffnen, es sei denn, jemand fügt Sie wieder hinzu. Bestätigen Sie mit Ihrem eigenen aktuellen Passwort, dass Sie es sind."
@@ -7353,7 +7421,7 @@ msgstr "Sie können {doc} nicht mehr öffnen, es sei denn, jemand fügt Sie wied
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr "Ihr Browser wollte ihn nicht kopieren: Markieren Sie den Schlüssel und kopieren Sie ihn selbst."
 
-#: web/app/lib/base-session.ts:890
+#: web/app/lib/base-session.ts:913
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr "Ihre Änderung wurde nicht übernommen: Das Dokument hat sich unter Ihnen geändert. Es wurde neu geladen."
 
@@ -7361,7 +7429,7 @@ msgstr "Ihre Änderung wurde nicht übernommen: Das Dokument hat sich unter Ihne
 msgid "Your changes to the pattern are dropped."
 msgstr "Ihre Änderungen am Muster gehen verloren."
 
-#: web/app/components/AdminLogin.vue:47 web/app/components/DetailsDialog.vue:42 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:152 web/app/components/OpenDialog.vue:1026
+#: web/app/components/AdminLogin.vue:53 web/app/components/DetailsDialog.vue:42 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:152 web/app/components/OpenDialog.vue:1033
 msgid "Your name"
 msgstr "Ihr Name"
 
@@ -7393,7 +7461,7 @@ msgstr "Ihre Bitte steht im Chat."
 msgid "Zoom"
 msgstr "Zoom"
 
-#: packages/claudia-server/src/claudia_server/app.py:382
+#: packages/claudia-server/src/claudia_server/app.py:409
 msgid "a Claudia file goes in as it is, not as a new document"
 msgstr "eine Claudia-Datei kommt so hinein, wie sie ist, nicht als neues Dokument"
 
@@ -7413,7 +7481,7 @@ msgstr "Eine Spalte hat keine Einstellung {name!r}"
 msgid "a digit"
 msgstr "eine Ziffer"
 
-#: packages/claudia-server/src/claudia_server/app.py:384
+#: packages/claudia-server/src/claudia_server/app.py:411
 msgid "a file becomes a new document: hello needs create"
 msgstr "aus einer Datei wird ein neues Dokument: hello braucht create"
 
@@ -7473,7 +7541,7 @@ msgstr "eine Zufallszahl aus der genannten Verteilung, zum Beispiel RANDOM(\"nor
 msgid "a range stays inside one box of a table"
 msgstr "Ein Bereich bleibt innerhalb eines Tabellenfelds"
 
-#: packages/claudia-server/src/claudia_server/app.py:343
+#: packages/claudia-server/src/claudia_server/app.py:363
 msgid "a recovery key, a name and a new password are needed"
 msgstr "Ein Wiederherstellungsschlüssel, ein Name und ein neues Passwort sind nötig"
 
@@ -7481,7 +7549,7 @@ msgstr "Ein Wiederherstellungsschlüssel, ein Name und ein neues Passwort sind n
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "Eine Bemerkung schlägt keine Änderung vor; weisen Sie sie stattdessen ab"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:457
+#: packages/claudia-server/src/claudia_server/protocol.py:511
 msgid "a request must be a JSON object"
 msgstr "Eine Anfrage muss ein JSON-Objekt sein"
 
@@ -7573,7 +7641,7 @@ msgstr "add_object: Mit add_rendering kommt ein Container hierher"
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr "add_sheet: Der Name muss 1 bis {limit} Zeichen haben"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1015
+#: packages/claudia-server/src/claudia_server/protocol.py:1069
 msgid "add_user: role must be editor or viewer"
 msgstr "add_user: role muss editor oder viewer sein"
 
@@ -7589,7 +7657,7 @@ msgstr "nach jedem Titel"
 msgid "alignment"
 msgstr "Ausrichtung"
 
-#: web/app/components/OpenDialog.vue:976
+#: web/app/components/OpenDialog.vue:983
 msgid "all apps"
 msgstr "alle Apps"
 
@@ -7597,7 +7665,7 @@ msgstr "alle Apps"
 msgid "all of these must hold"
 msgstr "alle müssen zutreffen"
 
-#: web/app/components/OpenDialog.vue:972
+#: web/app/components/OpenDialog.vue:979
 msgid "all tags"
 msgstr "alle Schlagwörter"
 
@@ -7629,7 +7697,7 @@ msgstr "und {moreCount} weitere"
 msgid "and {n} more"
 msgstr "und {n} weitere"
 
-#: web/app/components/OpenDialog.vue:1026
+#: web/app/components/OpenDialog.vue:1033
 msgid "ann"
 msgstr "anna"
 
@@ -7717,7 +7785,7 @@ msgstr "fett"
 msgid "border"
 msgstr "Rahmen"
 
-#: web/app/components/OpenDialog.vue:1025
+#: web/app/components/OpenDialog.vue:1032
 msgid "budget-2027"
 msgstr "budget-2027"
 
@@ -7769,11 +7837,11 @@ msgstr "Diagramm"
 msgid "chart type"
 msgstr "Diagrammtyp"
 
-#: web/app/components/SidePanel.vue:666
+#: web/app/components/SidePanel.vue:669
 msgid "chat message"
 msgstr "Chatnachricht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1198
+#: packages/claudia-server/src/claudia_server/protocol.py:1256
 msgid "chat: {reason}"
 msgstr "chat: {reason}"
 
@@ -7781,11 +7849,11 @@ msgstr "chat: {reason}"
 msgid "chat: {text}"
 msgstr "Chat: {text}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:904
+#: packages/claudia-server/src/claudia_server/protocol.py:958
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr "chat_log: limit muss von 1 bis {limit} gehen"
 
-#: web/app/components/SidePanel.vue:588
+#: web/app/components/SidePanel.vue:591
 msgid "close"
 msgstr "schließen"
 
@@ -7893,7 +7961,7 @@ msgstr "löschen; am Rand eines Absatzes verbindet es ihn mit dem benachbarten"
 msgid "description"
 msgstr "Beschreibung"
 
-#: packages/claudia-server/src/claudia_server/app.py:393
+#: packages/claudia-server/src/claudia_server/app.py:420
 msgid "description is text and tags are a list of words"
 msgstr "Die Beschreibung ist Text und die Schlagwörter sind eine Liste von Wörtern."
 
@@ -7921,11 +7989,11 @@ msgstr "nicht zum Muster für Texte passen"
 msgid "do not start with “{text}”"
 msgstr "nicht mit „{text}“ beginnen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:665
+#: packages/claudia-server/src/claudia_server/hub.py:708
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "Dokument-IDs bestehen aus 1–64 Buchstaben, Ziffern, „-“ oder „_“"
 
-#: web/app/components/SidePanel.vue:470
+#: web/app/components/SidePanel.vue:471
 msgid "document panel"
 msgstr "Dokumentbereich"
 
@@ -7985,7 +8053,7 @@ msgstr "Fehler {value}: {why}"
 msgid "every role is an object with id, name, purpose and colour"
 msgstr "Jede Rolle ist ein Objekt mit id, name, purpose und colour"
 
-#: web/app/components/SidePanel.vue:538
+#: web/app/components/SidePanel.vue:541
 msgid "everything that was done to this document"
 msgstr "alles, was mit diesem Dokument gemacht wurde"
 
@@ -7993,7 +8061,7 @@ msgstr "alles, was mit diesem Dokument gemacht wurde"
 msgid "exactly"
 msgstr "genau"
 
-#: web/app/components/OpenDialog.vue:844
+#: web/app/components/OpenDialog.vue:851
 msgid "example.com:8420"
 msgstr "example.com:8420"
 
@@ -8085,7 +8153,7 @@ msgstr "ausgeblendet"
 msgid "high"
 msgstr "hoch"
 
-#: web/app/components/SidePanel.vue:496
+#: web/app/components/SidePanel.vue:497
 msgid "history and chat"
 msgstr "Verlauf und Chat"
 
@@ -8109,7 +8177,7 @@ msgstr "wie viele Zeilen der Bereich hat."
 msgid "how many sheets the workbook has (1 for a reference)."
 msgstr "wie viele Tabellenblätter die Arbeitsmappe hat (1 bei einem Bezug)."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:460
+#: packages/claudia-server/src/claudia_server/protocol.py:514
 msgid "id must be an integer or a short string"
 msgstr "id muss eine ganze Zahl oder ein kurzer Text sein"
 
@@ -8137,15 +8205,15 @@ msgstr "in {source}"
 msgid "insert"
 msgstr "einfügen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:294
+#: packages/claudia-server/src/claudia_server/hub.py:337
 msgid "internal server error"
 msgstr "Interner Serverfehler"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:949
+#: packages/claudia-server/src/claudia_server/protocol.py:1003
 msgid "invalid command: {reason!r}"
 msgstr "Ungültiger Befehl: {reason!r}"
 
-#: web/app/components/SidePanel.vue:632
+#: web/app/components/SidePanel.vue:635
 msgid "is working"
 msgstr "arbeitet"
 
@@ -8241,7 +8309,7 @@ msgstr "gesperrt von {name}"
 msgid "log more and enable the web inspector"
 msgstr "mehr protokollieren und den Web-Inspektor aktivieren"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:854
+#: packages/claudia-server/src/claudia_server/protocol.py:908
 msgid "log: limit must be from 1 to {limit}"
 msgstr "log: limit muss von 1 bis {limit} gehen"
 
@@ -8273,15 +8341,15 @@ msgstr "Median"
 msgid "menu"
 msgstr "Menü"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:451
+#: packages/claudia-server/src/claudia_server/protocol.py:505
 msgid "message too large"
 msgstr "Nachricht zu groß"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:401
+#: packages/claudia-server/src/claudia_server/protocol.py:447
 msgid "method must be a string"
 msgstr "method muss ein Text sein"
 
-#: packages/claudia-server/src/claudia_server/app.py:471
+#: packages/claudia-server/src/claudia_server/app.py:510
 msgid "missing or wrong credentials"
 msgstr "Anmeldedaten fehlen oder sind falsch"
 
@@ -8353,11 +8421,11 @@ msgstr "keine App"
 msgid "no cells"
 msgstr "keine Zellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:619
+#: packages/claudia-server/src/claudia_server/protocol.py:673
 msgid "no checkpoint number {checkpoint}"
 msgstr "Es gibt keinen Prüfpunkt mit der Nummer {checkpoint}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:813
+#: packages/claudia-server/src/claudia_server/hub.py:856
 msgid "no document {id!r}"
 msgstr "Kein Dokument {id!r}"
 
@@ -8365,7 +8433,7 @@ msgstr "Kein Dokument {id!r}"
 msgid "no function named {name!r}"
 msgstr "Keine Funktion namens {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:521
+#: packages/claudia-server/src/claudia_server/protocol.py:575
 msgid "no help topic {id!r}"
 msgstr "Kein Hilfethema {id!r}"
 
@@ -8373,11 +8441,11 @@ msgstr "Kein Hilfethema {id!r}"
 msgid "no merged box starts at row {row!r}, column {col!r}"
 msgstr "In Zeile {row!r}, Spalte {col!r} beginnt kein verbundenes Feld"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:404
+#: packages/claudia-server/src/claudia_server/protocol.py:450
 msgid "no method {name!r}"
 msgstr "Keine Methode {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1097
+#: packages/claudia-server/src/claudia_server/protocol.py:1155
 msgid "no ownership transfer is waiting for you with that password"
 msgstr "Mit diesem Passwort wartet keine Eigentümerübergabe auf Sie"
 
@@ -8397,11 +8465,11 @@ msgstr "ohne"
 msgid "not a numbering scheme: {reason}"
 msgstr "kein Nummerierungsschema: {reason}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:485
+#: packages/claudia-server/src/claudia_server/protocol.py:539
 msgid "not a region this document understands: {reason!r}"
 msgstr "Keine Region, die dieses Dokument versteht: {reason!r}"
 
-#: web/app/lib/protocol.ts:201
+#: web/app/lib/protocol.ts:203
 msgid "not connected"
 msgstr "nicht verbunden"
 
@@ -8413,7 +8481,7 @@ msgstr "nicht nummeriert"
 msgid "not the options of a table of contents: {reason}"
 msgstr "keine Optionen eines Inhaltsverzeichnisses: {reason}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:455
+#: packages/claudia-server/src/claudia_server/protocol.py:509
 msgid "not valid JSON"
 msgstr "Kein gültiges JSON"
 
@@ -8465,11 +8533,11 @@ msgstr "nur der Sonntag ist frei: der Samstag ist ein Arbeitstag"
 msgid "only a built-in scheme can be reset"
 msgstr "nur ein vorgegebenes Schema kann zurückgesetzt werden"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1128
+#: packages/claudia-server/src/claudia_server/protocol.py:1186
 msgid "only an editor or an owner of a document may change its description and tags"
 msgstr "nur wer ein Dokument bearbeiten darf oder es besitzt, kann Beschreibung und Schlagwörter ändern"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1109
+#: packages/claudia-server/src/claudia_server/protocol.py:1167
 msgid "only an owner of a document may delete it"
 msgstr "Nur ein Eigentümer eines Dokuments darf es löschen"
 
@@ -8481,7 +8549,7 @@ msgstr "nur seine Box"
 msgid "only look"
 msgstr "nur ansehen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:723
+#: packages/claudia-server/src/claudia_server/protocol.py:777
 msgid "only owners, and editors on their own work, redact"
 msgstr "Schwärzen dürfen nur Eigentümer, und Bearbeiter bei ihrer eigenen Arbeit"
 
@@ -8493,23 +8561,23 @@ msgstr "Nur der Assistent macht Vorschläge"
 msgid "only the branch taken is evaluated, so IF(B1=0, 0, A1/B1) never divides by zero."
 msgstr "nur der gewählte Zweig wird ausgewertet, sodass IF(B1=0, 0, A1/B1) nie durch null teilt."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1011
+#: packages/claudia-server/src/claudia_server/protocol.py:1065
 msgid "only the owner of a document adds people to it"
 msgstr "Nur der Eigentümer eines Dokuments fügt Personen hinzu"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1079
+#: packages/claudia-server/src/claudia_server/protocol.py:1137
 msgid "only the owner of a document can hand it over"
 msgstr "Nur der Eigentümer eines Dokuments kann es übergeben"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:707
+#: packages/claudia-server/src/claudia_server/protocol.py:761
 msgid "only the owner of a document discards its hidden lines"
 msgstr "Nur der Eigentümer eines Dokuments verwirft dessen verborgene Linien"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1027
+#: packages/claudia-server/src/claudia_server/protocol.py:1081
 msgid "only the owner of a document makes a recovery key"
 msgstr "Nur der Eigentümer eines Dokuments erstellt einen Wiederherstellungsschlüssel"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:600
+#: packages/claudia-server/src/claudia_server/protocol.py:654
 msgid "only the owner of a document sets this"
 msgstr "Nur der Eigentümer eines Dokuments legt dies fest"
 
@@ -8553,7 +8621,7 @@ msgstr "Absätze"
 msgid "paragraphs, pictures and boxes"
 msgstr "Absätze, Bilder und Textfelder"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:373
+#: packages/claudia-server/src/claudia_server/protocol.py:419
 msgid "params must be an object"
 msgstr "params muss ein Objekt sein"
 
@@ -8565,7 +8633,7 @@ msgstr "Teil eines Ergebnisses"
 msgid "pdftocairo"
 msgstr "pdftocairo"
 
-#: web/app/components/SidePanel.vue:588
+#: web/app/components/SidePanel.vue:591
 msgid "peek"
 msgstr "ansehen"
 
@@ -8661,7 +8729,7 @@ msgstr "Rate"
 msgid "recovery key"
 msgstr "Wiederherstellungsschlüssel"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:730
+#: packages/claudia-server/src/claudia_server/protocol.py:784
 msgid "redaction: revisions like \"main:12\", chat numbers, parts by revision"
 msgstr "Schwärzen: Schritte wie \"main:12\", Nummern von Chat-Nachrichten, Teile je Schritt"
 
@@ -8673,7 +8741,7 @@ msgstr "wiederholen"
 msgid "remark"
 msgstr "Bemerkung"
 
-#: web/app/lib/protocol.ts:228
+#: web/app/lib/protocol.ts:230
 msgid "request failed"
 msgstr "Anfrage fehlgeschlagen"
 
@@ -8745,7 +8813,7 @@ msgstr "einen Block auswählen"
 msgid "select an object (colleagues cannot change it while you hold it)"
 msgstr "ein Objekt auswählen (Kolleginnen und Kollegen können es nicht ändern, solange Sie es halten)"
 
-#: web/app/components/SidePanel.vue:679
+#: web/app/components/SidePanel.vue:682
 msgid "send"
 msgstr "senden"
 
@@ -8761,7 +8829,7 @@ msgstr "set_cells: Jede Zelle ist ein Objekt mit row, col und input"
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr "set_cells: input muss Text mit höchstens {limit} Zeichen sein"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:603
+#: packages/claudia-server/src/claudia_server/protocol.py:657
 msgid "set_restore_policy: policy must be one of {policies}"
 msgstr "set_restore_policy: policy muss eines von {policies} sein"
 
@@ -8785,11 +8853,11 @@ msgstr "Blätter, Zellbereiche, Diagramme und Objekte"
 msgid "show must be one of {shows}"
 msgstr "show muss eines von {shows} sein"
 
-#: web/app/components/SidePanel.vue:581
+#: web/app/components/SidePanel.vue:584
 msgid "silence = agree"
 msgstr "Schweigen = Zustimmung"
 
-#: web/app/components/SidePanel.vue:580
+#: web/app/components/SidePanel.vue:583
 msgid "silence = decline"
 msgstr "Schweigen = Ablehnung"
 
@@ -8853,7 +8921,7 @@ msgstr "mit „{text}“ beginnen"
 msgid "structure: axis must be \"row\" or \"col\""
 msgstr "structure: axis muss „row“ oder „col“ sein"
 
-#: web/app/components/SidePanel.vue:589
+#: web/app/components/SidePanel.vue:592
 msgid "suggest switching here"
 msgstr "Wechsel hierher vorschlagen"
 
@@ -8873,7 +8941,7 @@ msgstr "Tabelle · {rows} Zeilen"
 msgid "tables"
 msgstr "Tabellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1133
+#: packages/claudia-server/src/claudia_server/protocol.py:1191
 msgid "tags are words"
 msgstr "Schlagwörter sind Wörter."
 
@@ -8893,7 +8961,7 @@ msgstr "Textfeld"
 msgid "text of the object"
 msgstr "Text des Objekts"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1051 packages/claudia-server/src/claudia_server/protocol.py:1068 packages/claudia-server/src/claudia_server/protocol.py:1083 packages/claudia-server/src/claudia_server/protocol.py:1113 packages/claudia-server/src/claudia_server/protocol.py:1139 packages/claudia-server/src/claudia_server/protocol.py:1177
+#: packages/claudia-server/src/claudia_server/protocol.py:1105 packages/claudia-server/src/claudia_server/protocol.py:1126 packages/claudia-server/src/claudia_server/protocol.py:1141 packages/claudia-server/src/claudia_server/protocol.py:1171 packages/claudia-server/src/claudia_server/protocol.py:1197 packages/claudia-server/src/claudia_server/protocol.py:1235
 msgid "that is not your current password"
 msgstr "Das ist nicht Ihr aktuelles Passwort"
 
@@ -8901,27 +8969,27 @@ msgstr "Das ist nicht Ihr aktuelles Passwort"
 msgid "that would make too many paragraphs"
 msgstr "Das ergäbe zu viele Absätze"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:943
+#: packages/claudia-server/src/claudia_server/protocol.py:997
 msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr "Der Assistent kann keinen rohen Befehl ausführen; nutzen Sie die Methoden der App"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:616
+#: packages/claudia-server/src/claudia_server/protocol.py:670
 msgid "the assistant does not suggest restoring a checkpoint"
 msgstr "Der Assistent schlägt nicht vor, einen Prüfpunkt wiederherzustellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:643
+#: packages/claudia-server/src/claudia_server/protocol.py:697
 msgid "the assistant does not suggest restoring a step"
 msgstr "Der Assistent schlägt nicht vor, einen Schritt wiederherzustellen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:670
+#: packages/claudia-server/src/claudia_server/protocol.py:724
 msgid "the assistant does not suggest switching lines"
 msgstr "Der Assistent schlägt nicht vor, die Linie zu wechseln"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:689
+#: packages/claudia-server/src/claudia_server/protocol.py:743
 msgid "the assistant does not vote"
 msgstr "Der Assistent stimmt nicht ab"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:827
+#: packages/claudia-server/src/claudia_server/protocol.py:881
 msgid "the assistant does not withdraw suggestions"
 msgstr "Der Assistent zieht keine Vorschläge zurück"
 
@@ -8953,7 +9021,7 @@ msgstr "die Zellen, die der Text nennt (``\"B\"&A1``, ``\"Sheet2!A1:A5\"``). Sei
 msgid "the column number."
 msgstr "die Spaltennummer."
 
-#: web/app/lib/protocol.ts:191
+#: web/app/lib/protocol.ts:193
 msgid "the connection closed ({code})"
 msgstr "die Verbindung wurde geschlossen ({code})"
 
@@ -8973,11 +9041,11 @@ msgstr "das Zellenende"
 msgid "the end of the text"
 msgstr "das Textende"
 
-#: packages/claudia-server/src/claudia_server/app.py:380
+#: packages/claudia-server/src/claudia_server/app.py:407
 msgid "the file is no longer here: choose it again"
 msgstr "die Datei ist nicht mehr da: bitte noch einmal auswählen"
 
-#: packages/claudia-server/src/claudia_server/app.py:453
+#: packages/claudia-server/src/claudia_server/app.py:480
 msgid "the first message must be hello with params"
 msgstr "Die erste Nachricht muss hello mit params sein"
 
@@ -9041,7 +9109,7 @@ msgstr "die Position (ab 1) des Wertes. Vergleichsmodus 0 ist genau, -1 der gena
 msgid "the range ends before it starts"
 msgstr "Der Bereich endet vor seinem Anfang"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:814
+#: packages/claudia-server/src/claudia_server/protocol.py:868
 msgid "the redaction would now blank other steps than you were shown; look at it again"
 msgstr "Das Schwärzen würde jetzt andere Schritte leeren als die, die Ihnen gezeigt wurden; sehen Sie es sich noch einmal an"
 
@@ -9153,11 +9221,11 @@ msgstr "die Wörter {find!r} stehen nicht in Absatz {block}; bitte erneut lesen 
 msgid "there is a table of contents here already"
 msgstr "hier steht schon ein Inhaltsverzeichnis"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:709 packages/claudia-server/src/claudia_server/protocol.py:805
+#: packages/claudia-server/src/claudia_server/protocol.py:763 packages/claudia-server/src/claudia_server/protocol.py:859
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr "Es gibt einen offenen Vorschlag; beantworten oder ziehen Sie ihn zuerst zurück"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:735
+#: packages/claudia-server/src/claudia_server/protocol.py:789
 msgid "there is no chat message of that number for you"
 msgstr "Für Sie gibt es keine Chat-Nachricht mit dieser Nummer"
 
@@ -9165,7 +9233,7 @@ msgstr "Für Sie gibt es keine Chat-Nachricht mit dieser Nummer"
 msgid "there is no earlier list of this kind to continue"
 msgstr "Es gibt keine frühere Liste dieser Art, die sich fortsetzen ließe"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:672
+#: packages/claudia-server/src/claudia_server/protocol.py:726
 msgid "there is no line called {line!r}"
 msgstr "Es gibt keine Linie namens {line!r}"
 
@@ -9177,7 +9245,7 @@ msgstr "Es gibt keinen Absatz {block!r}"
 msgid "there is no pivot table called {name!r}"
 msgstr "Es gibt keine Pivot-Tabelle namens {name!r}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:645
+#: packages/claudia-server/src/claudia_server/protocol.py:699
 msgid "there is no step {revision} on this line"
 msgstr "Auf diesem Verlauf gibt es keinen Schritt {revision}"
 
@@ -9257,23 +9325,23 @@ msgstr "Diese Vorschau wird nicht mehr aufbewahrt; lassen Sie die Schwärzung ne
 msgid "this row"
 msgstr "diese Zeile"
 
-#: packages/claudia-server/src/claudia_server/app.py:290 packages/claudia-server/src/claudia_server/suite.py:115
+#: packages/claudia-server/src/claudia_server/app.py:310 packages/claudia-server/src/claudia_server/suite.py:115
 msgid "this server does not host {app}"
 msgstr "dieser Server bietet {app} nicht an"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1131
+#: packages/claudia-server/src/claudia_server/protocol.py:1189
 msgid "this server does not keep a description and tags"
 msgstr "Dieser Server speichert keine Beschreibung und Schlagwörter."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1171
+#: packages/claudia-server/src/claudia_server/protocol.py:1229
 msgid "this server does not keep documents as files you can download"
 msgstr "Dieser Server hält Dokumente nicht als Dateien vor, die Sie herunterladen können"
 
-#: packages/claudia-server/src/claudia_server/app.py:346 packages/claudia-server/src/claudia_server/protocol.py:1029
+#: packages/claudia-server/src/claudia_server/app.py:366 packages/claudia-server/src/claudia_server/protocol.py:1083
 msgid "this server does not keep recovery keys"
 msgstr "Dieser Server bewahrt keine Wiederherstellungsschlüssel auf"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1039
+#: packages/claudia-server/src/claudia_server/protocol.py:1093
 msgid "this server does not list a document's people this way"
 msgstr "Dieser Server listet die Personen eines Dokuments nicht auf diese Weise auf"
 
@@ -9281,31 +9349,31 @@ msgstr "Dieser Server listet die Personen eines Dokuments nicht auf diese Weise 
 msgid "this server does not make rendered containers"
 msgstr "Dieser Server erzeugt keine gerenderten Container"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1013
+#: packages/claudia-server/src/claudia_server/protocol.py:1067
 msgid "this server does not manage people"
 msgstr "Dieser Server verwaltet keine Personen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1062
+#: packages/claudia-server/src/claudia_server/protocol.py:1120
 msgid "this server does not support changing a password"
 msgstr "dieser Server unterstützt kein Ändern des Passworts"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1111
+#: packages/claudia-server/src/claudia_server/protocol.py:1169
 msgid "this server does not support deleting a document"
 msgstr "Dieser Server unterstützt das Löschen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1081 packages/claudia-server/src/claudia_server/protocol.py:1094
+#: packages/claudia-server/src/claudia_server/protocol.py:1139 packages/claudia-server/src/claudia_server/protocol.py:1152
 msgid "this server does not support handing over ownership"
 msgstr "Dieser Server unterstützt die Übergabe des Eigentums nicht"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1049
+#: packages/claudia-server/src/claudia_server/protocol.py:1103
 msgid "this server does not support leaving a document"
 msgstr "Dieser Server unterstützt das Verlassen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/hub.py:607
+#: packages/claudia-server/src/claudia_server/hub.py:650
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
 
-#: packages/claudia-server/src/claudia_server/hub.py:740
+#: packages/claudia-server/src/claudia_server/hub.py:783
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "dieser Server hält seine Dokumente nur im Speicher und kann keine Datei aufnehmen"
 
@@ -9313,7 +9381,7 @@ msgstr "dieser Server hält seine Dokumente nur im Speicher und kann keine Datei
 msgid "this suggestion is not open any more"
 msgstr "Dieser Vorschlag ist nicht mehr offen"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:810
+#: packages/claudia-server/src/claudia_server/protocol.py:864
 msgid "this would also blank later changes by {names}; ask an owner"
 msgstr "Das würde auch spätere Änderungen von {names} leeren; bitten Sie einen Eigentümer darum"
 
@@ -9365,7 +9433,7 @@ msgstr "unterstrichen"
 msgid "undo"
 msgstr "rückgängig"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:377
+#: packages/claudia-server/src/claudia_server/protocol.py:423
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr "Unbekannter Parameter {parameter!r} für {name}"
 
@@ -9453,7 +9521,7 @@ msgstr "xelatex"
 msgid "you"
 msgstr "Sie"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:740
+#: packages/claudia-server/src/claudia_server/protocol.py:794
 msgid "you can redact only your own changes and messages; ask an owner"
 msgstr "Sie können nur Ihre eigenen Änderungen und Nachrichten schwärzen; bitten Sie einen Eigentümer darum"
 
@@ -9705,35 +9773,35 @@ msgstr "{host} ist jetzt von außerhalb dieses Computers erreichbar. Legen Sie e
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr "{host} ist über diesen Computer hinaus noch nicht erreichbar, daher ist das nicht erforderlich – legen Sie aber jetzt einen Namen und ein Passwort fest, wenn Sie die Einstellungen verwalten möchten oder bevor Sie ihn später für andere öffnen."
 
-#: packages/claudia-server/src/claudia_server/hub.py:415
+#: packages/claudia-server/src/claudia_server/hub.py:458
 msgid "{id} already has {limit} connections"
 msgstr "{id} hat schon {limit} Verbindungen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:801
+#: packages/claudia-server/src/claudia_server/hub.py:844
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "{id} lässt sich noch nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:804
+#: packages/claudia-server/src/claudia_server/hub.py:847
 msgid "{id} cannot be opened: {reason}"
 msgstr "{id} lässt sich nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:808
+#: packages/claudia-server/src/claudia_server/hub.py:851
 msgid "{id} cannot be read"
 msgstr "{id} lässt sich nicht lesen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:752
+#: packages/claudia-server/src/claudia_server/hub.py:795
 msgid "{id} cannot be taken in: {reason}"
 msgstr "{id} kann nicht aufgenommen werden: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:743 packages/claudia-server/src/claudia_server/hub.py:748
+#: packages/claudia-server/src/claudia_server/hub.py:786 packages/claudia-server/src/claudia_server/hub.py:791
 msgid "{id} is here already"
 msgstr "{id} ist schon hier"
 
-#: packages/claudia-server/src/claudia_server/app.py:407
+#: packages/claudia-server/src/claudia_server/app.py:434
 msgid "{id} is here already: give the new document another name"
 msgstr "{id} ist schon hier: bitte dem neuen Dokument einen anderen Namen geben"
 
-#: web/app/components/OpenDialog.vue:710
+#: web/app/components/OpenDialog.vue:712
 msgid "{id} is here now. Open it with your name and password in it."
 msgstr "{id} ist jetzt hier. Öffnen Sie es mit Ihrem Namen und Passwort darin."
 
@@ -9817,11 +9885,11 @@ msgstr "{method}: Ein Tabellenblatt wird mit seiner ID angegeben"
 msgid "{method}: kinds is a list of {kinds}"
 msgstr "{method}: kinds ist eine Liste aus {kinds}"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:385
+#: packages/claudia-server/src/claudia_server/protocol.py:431
 msgid "{method}: missing parameter {parameter!r}"
 msgstr "{method}: Parameter {parameter!r} fehlt"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:394
+#: packages/claudia-server/src/claudia_server/protocol.py:440
 msgid "{method}: {parameter} {reason}"
 msgstr "{method}: {parameter} {reason}"
 
@@ -9841,11 +9909,11 @@ msgstr "{names}: Ich habe einen Teil Ihrer Arbeit im Verlauf dieses Dokuments ge
 msgid "{name} as hex"
 msgstr "{name} als Hex"
 
-#: packages/claudia-server/src/claudia_server/app.py:412
+#: packages/claudia-server/src/claudia_server/app.py:439
 msgid "{name} cannot be read"
 msgstr "{name} kann nicht gelesen werden"
 
-#: packages/claudia-server/src/claudia_server/app.py:404
+#: packages/claudia-server/src/claudia_server/app.py:431
 msgid "{name} cannot become a document of {app}"
 msgstr "aus {name} kann kein Dokument von {app} werden"
 
@@ -9857,15 +9925,15 @@ msgstr "{name} konnte nicht gelesen werden: {reason}"
 msgid "{name} has no cells right now"
 msgstr "{name} hat gerade keine Zellen"
 
-#: web/app/components/OpenDialog.vue:464
+#: web/app/components/OpenDialog.vue:466
 msgid "{name} is here, and kept inside the document for Download."
 msgstr "{name} ist da und für Herunterladen im Dokument aufbewahrt."
 
-#: web/app/components/OpenDialog.vue:465
+#: web/app/components/OpenDialog.vue:467
 msgid "{name} is here. The file was not kept: Download writes a new one."
 msgstr "{name} ist da. Die Datei wurde nicht aufbewahrt: Herunterladen schreibt eine neue."
 
-#: web/app/components/OpenDialog.vue:463
+#: web/app/components/OpenDialog.vue:465
 msgid "{name} is here. {count} things it holds are not shown, and stay in the kept file."
 msgstr "{name} ist da. {count} Dinge darin werden nicht gezeigt und bleiben in der aufbewahrten Datei."
 
@@ -9873,13 +9941,21 @@ msgstr "{name} ist da. {count} Dinge darin werden nicht gezeigt und bleiben in d
 msgid "{name} is larger than {mb} MB."
 msgstr "{name} ist größer als {mb} MB."
 
-#: packages/claudia-server/src/claudia_server/protocol.py:410
+#: packages/claudia-server/src/claudia_server/protocol.py:464
 msgid "{name} is not one of the methods this account may call"
 msgstr "{name} gehört nicht zu den Methoden, die dieses Konto aufrufen darf"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:406
+#: packages/claudia-server/src/claudia_server/protocol.py:452
 msgid "{name} needs the editor role"
 msgstr "{name} braucht die Rolle „editor“"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:456
+msgid "{name} reads the chat, which is for the document's owners and editors"
+msgstr "{name} liest den Chat, der den Eigentümern und Bearbeitenden des Dokuments vorbehalten ist"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:459
+msgid "{name} reads the history, which is for the document's owners and editors"
+msgstr "{name} liest den Verlauf, der den Eigentümern und Bearbeitenden des Dokuments vorbehalten ist"
 
 #: web/app/components/SheetGrid.vue:1286
 msgid "{name} · {purpose} — change what this column is for"
@@ -9949,7 +10025,7 @@ msgstr "{n} Min."
 msgid "{n} min ago"
 msgstr "vor {n} Min."
 
-#: web/app/components/SidePanel.vue:530
+#: web/app/components/SidePanel.vue:533
 msgid "{n} newer changes by others"
 msgstr "{n} neuere Änderungen anderer"
 
@@ -9997,7 +10073,7 @@ msgstr "{n} Dinge zum Verweisen. Mit den Pfeiltasten wählen, dann Eingabe."
 msgid "{n} without a time"
 msgstr "{n} ohne Zeit"
 
-#: web/app/lib/base-session.ts:537
+#: web/app/lib/base-session.ts:560
 msgid "{owner} is now the owner of this document."
 msgstr "{owner} ist jetzt Eigentümer dieses Dokuments."
 
@@ -10033,7 +10109,7 @@ msgstr "{range} · {rows} · {fields}"
 msgid "{ref}, empty"
 msgstr "{ref}, leer"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:844
+#: packages/claudia-server/src/claudia_server/protocol.py:898
 msgid "{revision} is not part of the document's current line; reload it"
 msgstr "{revision} gehört nicht zur aktuellen Linie des Dokuments; laden Sie es neu"
 
@@ -10085,7 +10161,7 @@ msgstr "{user} (Sie)"
 msgid "{user} is working on this"
 msgstr "{user} arbeitet daran"
 
-#: web/app/lib/base-session.ts:535
+#: web/app/lib/base-session.ts:558
 msgid "{user} left this document."
 msgstr "{user} hat dieses Dokument verlassen."
 
@@ -10177,7 +10253,7 @@ msgstr "{what}: {problem}"
 msgid "{who} has been asked to take over {doc}. Until they accept, you are still the owner. You will become an editor the moment they do."
 msgstr "{who} wurde gebeten, {doc} zu übernehmen. Bis die Person annimmt, bleiben Sie Eigentümer. Sobald sie annimmt, werden Sie Bearbeiter."
 
-#: web/app/components/SidePanel.vue:499
+#: web/app/components/SidePanel.vue:502
 msgid "{who} suggests going to {line}."
 msgstr "{who} schlägt vor, zu {line} zu gehen."
 
@@ -10189,7 +10265,7 @@ msgstr "{width} × {height} px"
 msgid "· editing"
 msgstr "· bearbeitet gerade"
 
-#: web/app/components/OpenDialog.vue:988
+#: web/app/components/OpenDialog.vue:995
 msgid "· {online} here now"
 msgstr "· {online} jetzt hier"
 
@@ -10233,7 +10309,7 @@ msgstr "„{name}“ legt {what} selbst fest, und das bleibt. Alles andere folgt
 msgid "“{requested}” is not on this server; the preview and the PDF use {used} for it."
 msgstr "„{requested}“ ist nicht auf diesem Server; Vorschau und PDF verwenden dafür {used}."
 
-#: web/app/components/SidePanel.vue:637
+#: web/app/components/SidePanel.vue:640
 msgid "← Back where I was"
 msgstr "← Zurück, wo ich war"
 
@@ -10245,22 +10321,22 @@ msgstr "← Formate"
 msgid "↑↓ choose · Tab to “Show as” · Enter puts it in · Esc closes"
 msgstr "↑↓ auswählen · Tab zu „Anzeigen als“ · Eingabe setzt ein · Esc schließt"
 
-#: web/app/components/SidePanel.vue:570
+#: web/app/components/SidePanel.vue:573
 msgid "↺ restore"
 msgstr "↺ wiederherstellen"
 
-#: web/app/components/SidePanel.vue:528
+#: web/app/components/SidePanel.vue:531
 msgid "↺ restore this step"
 msgstr "↺ diesen Schritt wiederherstellen"
 
-#: web/app/components/SidePanel.vue:625
+#: web/app/components/SidePanel.vue:628
 msgid "▶ here"
 msgstr "▶ hier"
 
-#: web/app/components/SidePanel.vue:625
+#: web/app/components/SidePanel.vue:628
 msgid "▷ go here"
 msgstr "▷ hierher"
 
-#: web/app/components/SidePanel.vue:569
+#: web/app/components/SidePanel.vue:572
 msgid "◆ saved: {label}"
 msgstr "◆ gespeichert: {label}"

@@ -38,6 +38,7 @@ BROWSER = os.environ.get("CLAUDIA_E2E_BROWSER", "chromium")
 SHOTS = Path(os.environ.get("CLAUDIA_E2E_SHOTS", ROOT / ".claudia" / "e2e" / "shots"))
 HEADED = bool(os.environ.get("CLAUDIA_E2E_HEADED"))
 PASSWORD = "Ann has a password 1"
+PASSWORDS = {"Ann": PASSWORD, "Vera": "Vera has a password 1"}
 TAGS_FOR_MARKERS = ("core", "extended", "firefox", "two-users", "desktop", "needs-decision")
 
 
@@ -62,6 +63,9 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         tags = _tags(item)
         if BROWSER == "firefox" and "firefox" not in tags:
             continue
+        elsewhere = [t for t in tags if t.startswith(("unit:", "io:", "e2e:"))]
+        if elsewhere:  # a scenario that no browser is needed for: its test is the file the tag names
+            item.add_marker(pytest.mark.skip(reason=f"checked by {elsewhere[0]}"))
         if "needs-decision" in tags:
             item.add_marker(pytest.mark.skip(reason="waits for the owner's decision (@needs-decision)"))
         pending = [t for t in tags if t.startswith("pending:")]
@@ -101,8 +105,11 @@ def stack() -> Iterator[str]:
         yield running.url
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def browser() -> Iterator[object]:
+    """One browser per file of scenarios, shut down when the last of them is done. Not for the whole run (PROC-35): a
+    Playwright that is still open keeps an event loop running in this thread, and the other end-to-end tests start their
+    own Playwright, which refuses to start inside it."""
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as play:
@@ -126,6 +133,7 @@ class Person:
 
     def __init__(self, browser, url: str, document: str, name: str):
         self.name = name
+        self.password = PASSWORDS.get(name, PASSWORD)
         self.document = document
         self.context = browser.new_context(viewport={"width": 1360, "height": 900})
         self.page = self.context.new_page()
@@ -139,13 +147,37 @@ class Person:
         page.goto(self.url + "/", wait_until="domcontentloaded")
         page.fill("input[name=document]", self.document)
         page.fill("input[name=user]", self.name.lower())
-        page.fill("input[name=password]", PASSWORD)
+        page.fill("input[name=password]", self.password)
         page.click("text=Create document")
         page.wait_for_selector("[data-testid=recovery-key]")
         page.check(".modal input[type=checkbox]")
         page.click('.modal button:text-is("Continue")')
         page.wait_for_selector("[data-testid=text]")
         page.wait_for_function("document.querySelector('.health.open')")
+
+    def type_login(self, password: str | None = None) -> None:
+        """The Open dialog of this person's document, filled in and not yet sent."""
+        page = self.page
+        page.goto(self.url + "/", wait_until="domcontentloaded")
+        page.fill("input[name=document]", self.document)
+        page.fill("input[name=user]", self.name.lower())
+        page.fill("input[name=password]", self.password if password is None else password)
+
+    def press_open(self) -> None:
+        self.page.click('button[type=submit]:text-is("Open")')
+
+    def open(self, password: str | None = None) -> None:
+        """Open the document that exists, as a person who has a name and a password in it."""
+        self.type_login(password)
+        self.press_open()
+
+    def wait_until_open(self, timeout: float = 15000) -> None:
+        self.page.wait_for_selector("[data-testid=text]", timeout=timeout)
+        self.page.wait_for_function("document.querySelector('.health.open')", timeout=timeout)
+
+    def leave(self) -> None:
+        """Close the window of the document, as a person who is done with it."""
+        self.page.goto("about:blank")
 
     def menu(self, title: str, entry: str) -> None:
         self.page.click(f'.menus .title:text-is("{title}")')
@@ -184,7 +216,9 @@ class World:
         self.last_error: str | None = None
 
     def join(self, name: str) -> Person:
-        person = Person(self.browser, self.url, f"spec-{next(_counter)}-{os.getpid()}", name)
+        """A person with a page of their own; the second person and later share the first one's document."""
+        document = self.me.document if self.me is not None else f"spec-{next(_counter)}-{os.getpid()}"
+        person = Person(self.browser, self.url, document, name)
         self.people[name] = person
         self.me = self.me or person
         return person
