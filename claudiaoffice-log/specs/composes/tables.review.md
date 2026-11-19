@@ -1,0 +1,71 @@
+# Review of `tables.feature` and `objects-in-composes.feature` (draft of 2026-11-19)
+
+How to answer: for each question, "ok" accepts my proposal; anything else replaces it. When all are answered I move the
+answers into the feature files (and the decision log, with the id range you give me) and delete this file.
+
+**Suggested order of review:** the invariants file first (12 scenarios, 8 `@core`), then in `tables.feature` only the
+`@core` rules. The `@extended` rules and everything `@needs-decision` can wait for the answers below.
+The `@core` rules are: inserting, filling with the keyboard, row/column/sort entries, sorting, options, totals, among
+the paragraphs, long tables over pages, two people, assistive technology.
+
+## A. What I saw when I looked at the table (throwaway run in Chrome, `main` + this branch at `496b3db`)
+
+`composes-tables.md` §15 says the table was never looked at in a browser. I did that: a local server, Chrome, a new text
+with two paragraphs, the table inserted with Ctrl+Shift+F, then typing. The scripts are throwaway and not in the
+patch. I did **not** reproduce "the table is drawn twice" (one `<table>`, four rows, twelve boxes); that fix is with the
+other agent and may already be in a branch I do not have. What I did see:
+
+| # | What | Size | Seen |
+|---|---|---|---|
+| B1 | **Words are typed twice when a box is left with Tab or Enter.** Typed "A" + Enter gives "AA", "C" + Tab gives "CC", "Dee" + Tab gives "DeeDee"; the history shows two entries "typed …" each. Clicking elsewhere gives it once ("B"). Slow typing, 120 ms per key, makes no difference. It looks like two commits (the key handler and then the blur) where the second one adds to the first instead of replacing it. | 1 (huge: every table fill is wrong) | every time: Enter once, Tab in ten boxes |
+| B2 | **The table was shown after "After"**, though my caret was at the end of "Before" (clicked there with the mouse, then Ctrl+Shift+F). The design says: right after the paragraph the caret is in. I do not know whether the anchor or only the drawing is wrong. | 2 (medium) | 1 of 1 (twice, mouse and keyboard) |
+| B3 | **An empty table shows almost nothing**: the look "Rules" draws a line above and under the header and nothing between rows, empty boxes have no border and no hint. A new 3×4 table looks like one line, so one cannot tell there are rows to type in. The boxes exist (351×23 px each); they are just not visible. | 3 (small), but it is the "obviously not working" impression | 2 of 2 |
+| B4 | With very fast typing (Playwright's default, no pause after Tab) words went into the wrong box, because focus moves only after the commit has been confirmed. A fast typist on a slow connection would meet the same. Not diagnosed further. | 2 (medium), unsure | 1 of 1 |
+
+The scenarios now say "reads exactly 'Roof 1', once", "the history shows one entry per box", "the table is between
+'Before' and 'After'", and "I can see where every box is, also while it is empty". They will fail on this commit until B1–B3 are fixed.
+
+**Question 0:** B1 to B4 are in the table code that the other agent is working on. Do you want me to (a) leave them to
+that agent and just put them in `bugtracker.md`, (b) fix B1–B3 in this branch after the scenarios are approved (the
+failing scenarios first, then the fix, TDD), or (c) hand them to the other agent as the first acceptance tests?
+*Proposal: (c) if that agent is still on the table, otherwise (b); and B1–B4 into the bugtracker either way.*
+
+## B. Questions about behaviour (proposal first)
+
+| Q | Question | Proposal |
+|---|---|---|
+| 1 | The Insert dialog: "4 rows with a header" is 4 rows in all (1 header + 3 body) or 4 body rows? | 4 rows in all, as in Word and LibreOffice; the dialog says "rows (including the header)". Default 3 × 3 with a header. |
+| 2 | After inserting, where is the caret? | In the first box of the header row; a header box is where a person starts typing. |
+| 3 | How fast must a 100 × 10 table be (insert and scroll)? | Inserted and drawn in under 2 seconds on a normal laptop; I will measure first and only then pin a number. |
+| 4 | The caret is in the middle of a paragraph: where does the table go? | After that paragraph, which stays in one piece (the design note's rule). |
+| 5 | The caret is in an empty paragraph: does the table replace it? | Yes, the empty paragraph is used up, so no blank line is left behind. |
+| 6 | The caret is already in a table and I choose Insert ▸ Table…. | The entry is not available inside a table (no table in a table); the dialog is not offered. |
+| 7 | Esc in a box: where does the caret go? And how does a keyboard-only person get *into* a table? | Esc restores the box and puts the caret in the text after the table. Into a table: the arrow key down from the paragraph above, or the key for Table Options…; a Tab at the end of a table never traps (Tab in the last box adds a row, so Esc is the exit; it is announced). To be checked with BITV. |
+| 8 | Words typed in a box but not yet committed: reload, lost connection. | Committed on every blur, on page hide, and before the connection is dropped; if the connection is lost, a box shows "not saved yet" and keeps the words until it is back. |
+| 9 | Pasting several lines into one box. | The first line stays in the box, the rest go into the boxes below (rows are added if the table can grow), as in a spreadsheet. One undo. |
+| 10 | Deleting the last body row / the only column. | Not deleted: one empty row / one column stays. To get rid of everything: Remove table. |
+| 11 | Delete row with the caret in the header. | Refused with a hint to use Table Options… (header rows). |
+| 12 | Merge Cells: "the box and its neighbour only" is what exists. Is that enough for the first version? | Yes; Merge and Split stay `@extended` and their scenarios are written but run last. |
+| 13 | Remove table: asks first? | No question, because it is one undo and keeps its words; the history shows "Removed a table". |
+| 14 | Deleting or splitting the paragraph the table hangs from. | Split: the table stays with the first half. Delete the whole paragraph: the table moves to the previous paragraph (or the next, if there is none); it is never deleted by deleting a paragraph. |
+| 15 | Backspace at the start of "After" / a selection across the table. | Backspace only moves the caret into the table's last box, nothing is deleted. A selection that contains the table is deleted with the table, and the person is asked once ("Delete the table too?"), as with other objects. *Please check against the object rules of D1221–D1226 — I did not want to guess.* |
+| 16 | What the assistant may do with a table. | As in the design note: words only. "Add a column" is answered with "I can only change the words in a table". Scenarios stay `@needs-decision` until the stand-in assistant has a table lens in the tests. |
+| 17 | Which real documents? | One regular and one irregular table from `test-documents` / your real files; please name two, or tell me to choose. |
+
+## C. How we run it (my proposals, to be agreed)
+
+- **Tool.** `pytest-bdd` with Python Playwright in `tests/e2e/`: the servers' start, the skip with a reason and CI step
+  `uv run pytest tests/e2e` are already there. The existing `web/e2e/*.cjs` stay. The `.feature` files in this
+  directory are the single source; the step code is shared with later features. *Alternative: `playwright-bdd` in
+  TypeScript, next to the `.cjs` scripts; it fits the web code better and fits the Python server's start worse.*
+- **Browsers.** CI runs Chromium only today. I propose Chromium and Firefox for everything tagged `@firefox` (all
+  `@core`), since Firefox is the browser you test with. In my workspace I have Chrome and can run Chromium-based
+  runs, but not Firefox unless a download works; the first Firefox runs would then be CI's or yours. I will say so
+  with every patch.
+- **Cost of `@core`.** 43 + 8 scenarios is a lot for a first run: a table scenario takes 3–8 seconds, so about 5
+  minutes, plus servers starting. Proposal: the whole `@core` set on every push to a branch's pull request, `@extended`
+  nightly; and a rule that a scenario that needs more than ten steps is split.
+- **Decision-log range.** The working agreement, the invariants rule and "scenarios are approved before coding" should be a
+  decision (and the project instruction is already one). Please give me an id range if you want it in the log.
+- **Where the specs live.** `claudiaoffice-log/specs/` as in the README of that folder; each story in `_tasks`
+  gets a line "Specs: `specs/composes/tables.feature`" under its acceptance. I did not touch the stories yet.
