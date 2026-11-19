@@ -40,17 +40,6 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Edit | Text Box | Ctrl+Alt+B |  |
 | Edit | Insert ▸ Soft Hyphen | Ctrl+- |  |
 | Edit | Insert ▸ Non-breaking Hyphen | Ctrl+_ |  |
-| Edit | Row ▸ Insert Above | Shift+Alt+↑ |  |
-| Edit | Row ▸ Insert Below | Shift+Alt+↓ |  |
-| Edit | Row ▸ Delete | Ctrl+Alt+- |  |
-| Edit | Column ▸ Insert Left | Shift+Alt+← |  |
-| Edit | Column ▸ Insert Right | Shift+Alt+→ |  |
-| Edit | Column ▸ Delete | Ctrl+Alt+_ |  |
-| Edit | Sort ▸ Ascending | Ctrl+Shift+X |  |
-| Edit | Sort ▸ Descending | Ctrl+Shift+Y |  |
-| Edit | Merge Cells | Ctrl+Shift+G |  |
-| Edit | Split Cell | Ctrl+Shift+H |  |
-| Edit | Table Options… | Ctrl+Shift+L |  |
 | Insert | Cross-Reference… | Ctrl+F2 |  |
 | Insert | Table of Contents | Ctrl+Shift+Alt+I |  |
 | Insert | Table… | Ctrl+Shift+F |  |
@@ -69,6 +58,9 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ Number Headings | Ctrl+Shift+Alt+B |  |
 | Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
+| Format | Rotate ▸ Rotate Right 90° | Ctrl+Alt+. |  |
+| Format | Rotate ▸ Rotate Left 90° | Ctrl+Alt+, |  |
+| Format | Rotate ▸ Rotate By… | Ctrl+Shift+Alt+Z |  |
 | Format | Wrap Text | Ctrl+Alt+R |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
@@ -76,6 +68,17 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | View | Dark Mode | Ctrl+Shift+Alt+D |  |
 | View | Page | Ctrl+Alt+P |  |
 | Tools | Ask the Assistant… | Ctrl+Alt+J |  |
+| Tools | Row ▸ Insert Above | Shift+Alt+↑ |  |
+| Tools | Row ▸ Insert Below | Shift+Alt+↓ |  |
+| Tools | Row ▸ Delete | Ctrl+Alt+- |  |
+| Tools | Column ▸ Insert Left | Shift+Alt+← |  |
+| Tools | Column ▸ Insert Right | Shift+Alt+→ |  |
+| Tools | Column ▸ Delete | Ctrl+Alt+_ |  |
+| Tools | Sort ▸ Ascending | Ctrl+Shift+X |  |
+| Tools | Sort ▸ Descending | Ctrl+Shift+Y |  |
+| Tools | Merge Cells | Ctrl+Shift+G |  |
+| Tools | Split Cell | Ctrl+Shift+H |  |
+| Tools | Table Options… | Ctrl+Shift+L |  |
 | Config | Shortcuts | Ctrl+? |  |
 | Config | App Language ▸ English | — |  |
 | Config | App Language ▸ Deutsch | — |  |
@@ -144,6 +147,9 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Format | List ▸ All Numbering… | Ctrl+Shift+Alt+J |  |
 | Format | Colours… | Ctrl+Alt+K |  |
 | Format | Describe Object… | Ctrl+Alt+D |  |
+| Format | Rotate ▸ Rotate Right 90° | Ctrl+Alt+. |  |
+| Format | Rotate ▸ Rotate Left 90° | Ctrl+Alt+, |  |
+| Format | Rotate ▸ Rotate By… | Ctrl+Shift+Alt+Z |  |
 | View | Show Who Wrote What | Ctrl+Alt+U |  |
 | View | History and Chat | Ctrl+Alt+H |  |
 | View | Replay History… | Ctrl+Alt+Z |  |

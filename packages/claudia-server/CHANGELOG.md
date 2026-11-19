@@ -5,7 +5,17 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Changed
+- `rotate_object` refuses a table (D1232, D1224): "A table does not turn", as it refuses a chart. A table in a text never
+  had a rotation in the file formats or the clients, so no document holds one; a client that sent it got a turned table
+  nobody could see turned back.
+
 ### Added
+- `set_text` and `write_words` in composes (D1232): the words of a text box or a shape in a text, written as a person types
+  them. They moved from `creates` to `claudia_server.shape_methods`, next to `add_object`, so both apps have them; their
+  behaviour in creates is unchanged.
+- `add_rendering` takes `fit` (D1229): `w` and `h` are then only the most the container may take, and its first
+  picture is shown at its own size if that is smaller (never below 20 units a side). Without it nothing changes.
 - Tables in a text over the wire (E9.32, D1212): `tables` (each definition with `used_by` and its derived `totals`),
   `add_table`, `remove_table`, `set_entries`, `insert_rows`, `delete_rows`, `move_rows`, `sort_rows`,
   `insert_columns`, `delete_columns`, `move_columns`, `set_column`, `set_table_options`, `merge_cells` and

@@ -254,13 +254,18 @@ def _export_office(ctx, *, format):
         raise RequestError("bad_request", msg('export_office: format must be "xlsx" or "ods"'))
     book = _workbook(ctx)
     info = document_info(ctx.document.log, ctx.document.branch)
+    draw = None if ctx.renderings is None else ctx.renderings.rasteriser  # draws an SVG picture as a PNG (D464)
     if format == "xlsx":
         return export_with_original(
             ctx,
             format,
             WorkbookModel,
             lambda original, baseline, current, found: apply_edits_to_xlsx(original, baseline, current, losses=found),
-            lambda: office_export(format, workbook_to_xlsx(book, info=info), xlsx_export_losses(book)),
+            lambda: office_export(
+                format,
+                workbook_to_xlsx(book, info=info, rasterise=draw),
+                xlsx_export_losses(book, rasterised=draw is not None),
+            ),
             xlsx_unwritten_changes,
         )
     return export_with_original(
@@ -270,7 +275,11 @@ def _export_office(ctx, *, format):
         lambda original, baseline, current, found: apply_edits_to_ods(
             original, baseline, current, losses=found, info=info
         ),
-        lambda: office_export(format, workbook_to_ods(book, info=info), ods_export_losses(book)),
+        lambda: office_export(
+            format,
+            workbook_to_ods(book, info=info, rasterise=draw),
+            ods_export_losses(book, rasterised=draw is not None),
+        ),
         ods_unwritten_changes,
     )
 

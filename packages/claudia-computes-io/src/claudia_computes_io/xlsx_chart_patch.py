@@ -21,6 +21,7 @@ from lxml import etree
 
 from claudia_computes import ChartSpec, VisualObject, WorkbookModel
 
+from ._pictures import MEDIA_TYPES, WrittenPicture
 from .chart_plan import chart_losses
 from .xlsx_charts import (
     CHART_TYPE,
@@ -33,6 +34,7 @@ from .xlsx_charts import (
     new_drawing,
 )
 from .xlsx_patch import PackagePatch, UnsupportedEdit, serialized
+from .xlsx_pictures import picture_anchor
 from .xlsx_read import Package, parse_xml, q, relationships, rels_part
 
 #: What may follow ``drawing`` in a worksheet (ECMA-376 part 1, 18.3.1.99): a new one goes before the first.
@@ -65,6 +67,7 @@ class Drawings:
         self.changed: set[str] = set()
         self.sheets: dict[str, etree._Element] = {}  # the worksheets that got a ``drawing``, parsed
         self.gone: list[FileChart] = []
+        self.media: dict[tuple[str, str], str] = {}  # (what is shown, as what) -> the part that holds it
 
     # -- the drawing of a sheet ----------------------------------------------------------------------------------
     def _sheet_root(self, sheet_part: str) -> etree._Element:
@@ -108,6 +111,29 @@ class Drawings:
         used = [int(p.get("id", "0")) for p in root.iter(f"{{{NS['xdr']}}}cNvPr") if (p.get("id") or "").isdigit()]
         number = max(used, default=0) + 1
         root.append(anchor_element(rid, number, f"Chart {number - 1}", row, col, width, height, description))
+        self.changed.add(drawing)
+
+    def _media_part(self, key: tuple[str, str], extension: str, data: bytes, media_type: str) -> str:
+        """The part that holds a picture's bytes: made once for what is shown however many pictures show it."""
+        if key not in self.media:
+            part = self.patch.free_name(f"xl/media/image{{}}.{extension}")
+            self.patch.parts[part] = data
+            self.patch.declare_extension(extension, media_type)
+            self.media[key] = part
+        return self.media[key]
+
+    def add_picture(self, sheet_part: str, picture: WrittenPicture) -> None:
+        """A picture on the sheet in ``sheet_part``, pinned to the corner of its cell (D1233)."""
+        drawing = self._drawing_of(sheet_part)
+        part = self._media_part((picture.asset, "picture"), picture.format, picture.data, MEDIA_TYPES[picture.format])
+        rid = self.patch.add_relationship(drawing, "image", part)
+        svg_rid = None
+        if picture.svg is not None:
+            svg_part = self._media_part((picture.asset, "svg"), "svg", picture.svg, MEDIA_TYPES["svg"])
+            svg_rid = self.patch.add_relationship(drawing, "image", svg_part)
+        root = self.roots[drawing]
+        used = [int(p.get("id", "0")) for p in root.iter(f"{{{NS['xdr']}}}cNvPr") if (p.get("id") or "").isdigit()]
+        root.append(picture_anchor(picture, max(used, default=0) + 1, rid, svg_rid))
         self.changed.add(drawing)
 
     def remove(self, chart: FileChart) -> None:

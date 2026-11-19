@@ -24,8 +24,9 @@ import {
   type Pos,
   type TextEvent,
 } from './blocks'
-import type { ImageAsset } from './images'
-import type { BlockAnchor, ObjectsEvent, PaletteEvent, StyleModel, VisualObject } from './objects'
+import { NEW_OBJECT_CAP, type ImageAsset } from './images'
+import type { BlockAnchor, ObjectBody, ObjectsEvent, PaletteEvent, StyleModel, StyleTarget, VisualObject } from './objects'
+import { describeParams } from './descriptions'
 import { nextWrap, wrapOf, wrapParams, type Wrap } from './wrap'
 import { DEFAULT_STYLE, type PageSetupData, type ShapeOutline, type TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
@@ -93,6 +94,9 @@ export interface TextState extends BaseState {
   library: TextShape[]
   /** The object a person has selected here; this is not shared with colleagues. */
   selectedObject: string | null
+  /** The rendered container whose text is being written in its own editor, or `null`; not shared. The object menu's
+   * Edit text and Enter set it, and `TextContainers.vue` shows the editor. */
+  editingObject: string | null
   /** The tables of the text by id (E9.32): what the objects of kind `table` point at with `ref`. */
   tables: Record<string, TableInfo>
   /** The box of a table the caret is in, or `null`; not shared with colleagues. Edit ▸ Row, Column, Sort and the
@@ -158,7 +162,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, shapes: {}, library: [], images: {}, selectedObject: null, tables: {}, box: null })
+    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, shapes: {}, library: [], images: {}, selectedObject: null, editingObject: null, tables: {}, box: null })
   }
 
   get readOnly(): boolean {
@@ -192,7 +196,7 @@ export class TextSession extends BaseSession<TextState> {
    * telling the person why not. It is selected, ready to be written in. */
   async addContainer(type: string, place: { block: string; offset: number }, size: { w: number; h: number }): Promise<string | null> {
     await this.flush()
-    const id = await this.addRendering(type, this.placeOnWire(place), size)
+    const id = await this.addRendering(type, this.placeOnWire(place), size, undefined, true)
     if (id) this.state.selectedObject = id
     return id
   }
@@ -203,7 +207,7 @@ export class TextSession extends BaseSession<TextState> {
     const fenced = parseFence(text.trim(), this.state.renderTypes.map((k) => k.type))
     if (!fenced) return null
     await this.flush()
-    const id = await this.addRendering(fenced.type, this.placeOnWire(place), { w: 420, h: 240 }, fenced.source)
+    const id = await this.addRendering(fenced.type, this.placeOnWire(place), NEW_OBJECT_CAP, fenced.source, true)
     if (id) this.state.selectedObject = id
     return id
   }
@@ -282,13 +286,47 @@ export class TextSession extends BaseSession<TextState> {
     return (await this.setWrap(id, next)) ? next : null
   }
 
-  /** Hang an object from another place of the text. */
-  async moveObject(id: string, place: { block: string; offset: number }): Promise<boolean> {
-    return (await this.attempt('move_object', { id, ...this.placeOnWire(place), base: this.state.revision })) !== false
+  /** Hang an object from another place of the text. `away` is how far it floats from that character (D1023): left out,
+   * the object keeps the offset it has. */
+  async moveObject(id: string, place: { block: string; offset: number }, away?: { dx: number; dy: number }): Promise<boolean> {
+    return (await this.attempt('move_object', { id, ...this.placeOnWire(place), ...(away ?? {}), base: this.state.revision })) !== false
   }
 
   async resizeObject(id: string, w: number, h: number): Promise<boolean> {
     return (await this.attempt('resize_object', { id, w, h, base: this.state.revision })) !== false
+  }
+
+  /** Turn an object to `rotation` whole degrees clockwise (D1021); a chart does not turn, and the server says so. */
+  async rotateObject(id: string, rotation: number): Promise<boolean> {
+    return (await this.attempt('rotate_object', { id, rotation, base: this.state.revision })) !== false
+  }
+
+  /** What an object shows to someone who cannot see it, or that it is decoration (BITV 1.1.1). */
+  async describeObject(id: string, description: string, decorative: boolean): Promise<boolean> {
+    return (await this.attempt('describe_object', { id, ...describeParams(description, decorative), base: this.state.revision })) !== false
+  }
+
+  // -- the style of an object: the one style API every app has (`apply_style`, `deviate`, D304); a paragraph's own
+  // styling is above. These two are what `object-style-host.ts` needs besides `changeStyle`, `renameStyle`, `setRole`
+  // and `checkCss`.
+  /** The styles as the object style menu wants them. */
+  styleViews(): StyleView[] {
+    return this.state.styles
+  }
+
+  /** Every object of the document, for the use counts beside the style names. */
+  bodies(): ObjectBody[] {
+    return Object.values(this.state.objects)
+  }
+
+  /** Put a style into one slot of these targets (`apply_style`). */
+  async applyObjectStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
+    return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
+  }
+
+  /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
+  async deviateObjectStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
+    return (await this.attempt('deviate', { parent, targets, slot, ...edit, base: this.state.revision })) !== false
   }
 
   async removeObject(id: string): Promise<boolean> {

@@ -79,6 +79,8 @@ _BODY_FIELDS = (
 #: ``table``) and grew a generation of field sets with each new field. They still read: the pointer that matches the
 #: body's kind becomes ``ref``, and any other pointer that is set is refused. Nothing new is ever added to this list;
 #: a new kind of object uses ``ref`` and needs no field of its own.
+# The kinds that do not turn, and what the sentence calls them (D1021: a chart; D1224: a table).
+_NOT_TURNED = {"diagram": "chart", "table": "table"}
 _LEGACY_POINTERS = ("shape", "image", "diagram", "rendered", "table")
 _LEGACY_SETS = (
     frozenset(
@@ -540,19 +542,20 @@ class ObjectModel[A: Anchor]:
     def turn_command(self, object_id: str, rotation: int) -> RotateObject:
         """The command that turns an object to ``rotation`` degrees clockwise: any whole number, read modulo a whole
         turn (−20 is 340), carrying the place the object must be moved to for its turned outline to be allowed (see
-        :meth:`turned_anchor`) when that is not where it is. A chart does not turn (``ValueError``)."""
+        :meth:`turned_anchor`) when that is not where it is.
+        A chart and a table do not turn (``ValueError``; D1021, D1224)."""
         if not _is_whole(rotation):
             raise ValueError("the rotation must be whole degrees")
         obj = self.get_object(object_id)
         if not self.can_turn(obj.body):
-            raise ValueError("A chart does not turn")
+            raise ValueError(f"A {_NOT_TURNED[obj.body.kind]} does not turn")
         turned = rotation % 360
         anchor = self.turned_anchor(obj, turned)
         return RotateObject(object_id, turned, None if anchor == obj.anchor else anchor.to_data())
 
     def can_turn(self, body: ObjectBody) -> bool:
-        """Does an object like this turn? Text boxes, shapes, pictures and rendered text do; a chart does not."""
-        return body.kind != "diagram"
+        """Does an object like this turn? Text boxes, shapes, pictures, rendered text do; a chart or table does not."""
+        return body.kind not in _NOT_TURNED
 
     def turned_anchor(self, obj: VisualObject[A], rotation: int) -> A:
         """Where ``obj`` has to sit for a turn to ``rotation`` to be allowed: its own anchor unless this app keeps what

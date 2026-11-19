@@ -31,14 +31,11 @@ from claudia_creates_io import (
 
 from claudia_core import (
     AddObject,
-    Batch,
     ObjectBody,
     PageSetupError,
     SetSnap,
-    SetText,
     Toc,
     paragraph_for,
-    word_changes,
 )
 from claudia_creates import (
     AddSlide,
@@ -72,24 +69,6 @@ def _deck(ctx: Context) -> SlideModel:
     if not isinstance(model, SlideModel):
         raise RequestError("command_error", msg("this document is not a presentation"))
     return model
-
-
-def _set_text(ctx, *, id, text, base):
-    """Replace the text of an object."""
-    return done(ctx, SetText(id, text), base)
-
-
-def _write_words(ctx, *, id, text, base):
-    """Write the words of an object as `text`, as a person types them (step G): only what differs from the words it
-    has now changes, so the words that stay keep who wrote them, where `set_text` would give them all to whoever
-    saved. One step in the history; none when nothing changed. `command_error` for a picture or an agenda."""
-    words = _deck(ctx).get_object(id).body.paragraph
-    if words is None:
-        raise RequestError("command_error", msg("an image carries no text"))
-    steps = word_changes(id, words.text, text)
-    if not steps:
-        return {"revision": current_revision(ctx)}
-    return done(ctx, Batch(steps, "Edit text"), base)
 
 
 def _set_snap(ctx, *, id, snap, base):
@@ -126,8 +105,6 @@ def _add_object_methods(table: MethodTable) -> None:
     words of their own and a hold to the grid."""
     add_object_methods(table, model_of=_deck, placement=ON_SLIDE)
     add_rendering_methods(table, model_of=_deck, placement=ON_SLIDE)
-    table.method("set_text", "id:str text:text base:revision?", write=True)(_set_text)
-    table.method("write_words", "id:str text:text base:revision?", write=True)(_write_words)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
 
 

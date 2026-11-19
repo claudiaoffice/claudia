@@ -3,6 +3,7 @@
 // shape `MenuBar.vue` already uses (so a caller builds its items once and either bar can show them), just offered
 // through `Popover` instead of a fixed dropdown. App-agnostic — knows nothing about slides, cells or paragraphs —
 // so composes and computes can reuse it for their own objects the same way `SlideCanvas.vue` does for creates'.
+import { ref } from 'vue'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
 
@@ -11,8 +12,16 @@ const { t } = useI18n()
 defineProps<{ x: number; y: number; items: MenuItem[]; label?: string; width?: number }>()
 const emit = defineEmits<{ close: [] }>()
 
-function choose(item: MenuItem) {
+/** The entry whose submenu is open (one level, as in `MenuBar.vue`): a click or Enter opens it in place below the
+ * entry, so the menu stays one column and works with the keyboard exactly like the flat entries do. */
+const open = ref<number | null>(null)
+
+function choose(item: MenuItem, index?: number) {
   if (item.disabled || item.separator) return
+  if (item.items) {
+    open.value = open.value === index ? null : (index ?? null)
+    return
+  }
   emit('close')
   item.action?.()
 }
@@ -24,10 +33,29 @@ function choose(item: MenuItem) {
       <template v-for="(item, i) in items" :key="i">
         <li v-if="item.separator" class="sep" role="separator" />
         <li v-else role="none">
-          <button type="button" role="menuitem" :disabled="item.disabled" @click="choose(item)">
-            <span>{{ item.label }}</span>
+          <button
+            type="button"
+            :role="item.checked !== undefined ? 'menuitemcheckbox' : 'menuitem'"
+            :aria-checked="item.checked"
+            :aria-haspopup="item.items ? 'menu' : undefined"
+            :aria-expanded="item.items ? open === i : undefined"
+            :disabled="item.disabled"
+            @click="choose(item, i)"
+          >
+            <span><span class="tick" aria-hidden="true">{{ item.checked ? '✓' : '' }}</span>{{ item.label }}<span v-if="item.items" aria-hidden="true"> ▸</span></span>
             <kbd v-if="item.hint">{{ item.hint }}</kbd>
           </button>
+          <ul v-if="item.items && open === i" class="sub" role="menu" :aria-label="item.label">
+            <template v-for="(sub, j) in item.items" :key="j">
+              <li v-if="sub.separator" class="sep" role="separator" />
+              <li v-else role="none">
+                <button type="button" :role="sub.checked !== undefined ? 'menuitemradio' : 'menuitem'" :aria-checked="sub.checked" :disabled="sub.disabled" @click="choose(sub)">
+                  <span><span class="tick" aria-hidden="true">{{ sub.checked ? '✓' : '' }}</span>{{ sub.label }}</span>
+                  <kbd v-if="sub.hint">{{ sub.hint }}</kbd>
+                </button>
+              </li>
+            </template>
+          </ul>
         </li>
       </template>
     </ul>
@@ -59,6 +87,15 @@ function choose(item: MenuItem) {
 .menu button:disabled {
   color: var(--muted);
   cursor: default;
+}
+.tick {
+  display: inline-block;
+  width: 1.2em;
+}
+.sub {
+  list-style: none;
+  margin: 0 0 0 12px;
+  padding: 0;
 }
 .sep {
   height: 1px;

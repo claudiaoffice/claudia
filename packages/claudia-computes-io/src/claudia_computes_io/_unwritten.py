@@ -14,17 +14,22 @@ from claudia_computes import WorkbookModel
 from claudia_odf_io import Loss, unwritten_changes
 
 from ._named import unheld
+from ._pictures import PICTURE_KINDS
 
 #: The facets a converter writes, by the name :func:`facets` gives them: the cells with their looks, and the look
 #: definitions they name.
 ODS_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout", "charts"})
 XLSX_WRITTEN: frozenset[str] = frozenset({"sheets", "styles", "palette", "number_formats", "names", "layout", "charts"})
+#: What only a fresh export writes: a pivot table and a picture are put into a file that is made, not yet into one that
+#: is kept (an edit of an import reports them until its patch learns them).
+FRESH_ONLY: frozenset[str] = frozenset({"pivots", "pictures"})
 
 #: The code a facet is reported under, where an export reported it before the facets existed.
 KINDS: dict[str, str] = {
     "layout": "layout",
     "charts": "chart",
     "objects": "object",
+    "pictures": "object",
     "names": "name",
     "pivots": "pivot-table",
 }
@@ -34,7 +39,8 @@ def facets(model: WorkbookModel) -> dict[str, object]:
     """A workbook as the facets a converter writes or leaves out, in the order losses are reported. The sheets count
     by their name, cells and looks; the widths and heights of rows and columns are a facet of their own (only a sheet
     that has any), the charts shown (a tab, or a diagram floating on a sheet, each with its definition) are one facet
-    and the other floating objects, with the assets they use, another."""
+    and the pictures (an image or a rendered container, with the assets they show) another, and the other floating
+    objects (computes has no text boxes and shapes, D1232, but a model may hold them), with what they use, a last."""
     data = model.serialize()
     sheets = data["sheets"]
     return {
@@ -46,11 +52,14 @@ def facets(model: WorkbookModel) -> dict[str, object]:
         "names": data["names"],
         "charts": _charts(data),
         "pivots": _pivots(model),
-        "objects": [
-            *(each for each in data["objects"] if each["kind"] != "diagram"),
+        "pictures": [
+            *(each for each in data["objects"] if each["kind"] in PICTURE_KINDS),
             *(("image", each) for each in data["images"]),
-            *(("shape", each) for each in data["shapes"]),
             *(("rendering", each) for each in data["renderings"]),
+        ],
+        "objects": [
+            *(each for each in data["objects"] if each["kind"] != "diagram" and each["kind"] not in PICTURE_KINDS),
+            *(("shape", each) for each in data["shapes"]),
         ],
     }
 

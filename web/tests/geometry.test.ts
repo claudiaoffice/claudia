@@ -182,3 +182,15 @@ describe('centredScroll', () => {
     expect(centredScroll(440, 20, 50, 430, 30)).toBe(250)
   })
 })
+
+describe('insertFrame of a picture with its own size (the owner, 2026-11-19)', () => {
+  it('is no bigger than the picture, and no bigger than 420 × 240', () => {
+    expect(insertFrame('image', 2, 0, { width: 100, height: 50 })).toMatchObject({ w: 100, h: 50 })
+    const big = insertFrame('image', 2, 0, { width: 4000, height: 2000 })
+    expect(big.w).toBeLessThanOrEqual(420)
+    expect(big.h).toBeLessThanOrEqual(240)
+  })
+  it('is unchanged without it', () => {
+    expect(insertFrame('image', 2, 0)).toMatchObject({ w: 480, h: 240 })
+  })
+})

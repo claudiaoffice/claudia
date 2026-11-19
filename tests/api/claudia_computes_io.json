@@ -1,5 +1,5 @@
 {
- "version": "0.11.0",
+ "version": "0.12.0",
  "UnsupportedEdit": {
   "class": [
    "Exception"
@@ -37,7 +37,7 @@
   "function": "(attribute: 'str', functions: 'Container[str] | None' = None, names: 'Container[str] | None' = None) -> 'str'"
  },
  "ods_export_losses": {
-  "function": "(model: 'WorkbookModel') -> 'tuple[Loss, ...]'"
+  "function": "(model: 'WorkbookModel', *, rasterised: 'bool' = False) -> 'tuple[Loss, ...]'"
  },
  "ods_import_losses": {
   "function": "(ods_bytes: 'bytes') -> 'tuple[Loss, ...]'"
@@ -52,13 +52,13 @@
   "function": "(formula: 'str') -> 'str'"
  },
  "workbook_to_ods": {
-  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None) -> 'bytes'"
+  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
  },
  "workbook_to_xlsx": {
-  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None) -> 'bytes'"
+  "function": "(model: 'WorkbookModel', *, info: 'DocumentInfo | None' = None, rasterise: 'Rasterise | None' = None) -> 'bytes'"
  },
  "xlsx_export_losses": {
-  "function": "(model: 'WorkbookModel') -> 'tuple[Loss, ...]'"
+  "function": "(model: 'WorkbookModel', *, rasterised: 'bool' = False) -> 'tuple[Loss, ...]'"
  },
  "xlsx_import_losses": {
   "function": "(xlsx_bytes: 'bytes') -> 'tuple[Loss, ...]'"

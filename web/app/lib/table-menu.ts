@@ -32,11 +32,11 @@ export const TABLE_ACTION_IDS: Readonly<Record<TableAction, string>> = {
   'column-left': 'edit.column-insert-left',
   'column-right': 'edit.column-insert-right',
   'column-delete': 'edit.column-delete',
-  'sort-ascending': 'edit.sort-ascending',
-  'sort-descending': 'edit.sort-descending',
-  'merge-cells': 'edit.merge-cells',
-  'split-cell': 'edit.split-cell',
-  options: 'edit.table-options',
+  'sort-ascending': 'tools.sort-ascending',
+  'sort-descending': 'tools.sort-descending',
+  'merge-cells': 'tools.merge-cells',
+  'split-cell': 'tools.split-cell',
+  options: 'tools.table-options',
 }
 
 /** What the entries need from the window: the table and the box the caret is in, and a way to do an action. */
@@ -76,26 +76,26 @@ export function possible(h: Pick<TableMenuHost, 'table' | 'box' | 'readonly'>, a
   }
 }
 
-/** Edit's table entries, in the manifest's order: Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options…. */
+/** The table entries of Tools (they were Edit's until D1229), in the manifest's order: Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options…. */
 export function tableItems(c: { t: Translate }, h: TableMenuHost): MenuItem[] {
   const { t } = c
   const item = (action: TableAction, label: string): MenuItem => ({ id: TABLE_ACTION_IDS[action], label, action: () => h.run(action), disabled: !possible(h, action) })
   const anyOn = (...actions: TableAction[]) => actions.some((a) => possible(h, a))
   return [
     {
-      id: 'edit.row',
+      id: 'tools.row',
       label: t('Row'),
       disabled: !anyOn('row-above', 'row-delete'),
       items: [item('row-above', t('Insert Above')), item('row-below', t('Insert Below')), item('row-delete', t('Delete'))],
     },
     {
-      id: 'edit.column',
+      id: 'tools.column',
       label: t('Column'),
       disabled: !anyOn('column-left', 'column-delete'),
       items: [item('column-left', t('Insert Left')), item('column-right', t('Insert Right')), item('column-delete', t('Delete'))],
     },
     {
-      id: 'edit.sort',
+      id: 'tools.sort',
       label: t('Sort'),
       disabled: !possible(h, 'sort-ascending'),
       items: [item('sort-ascending', t('Ascending')), item('sort-descending', t('Descending'))],
@@ -103,6 +103,23 @@ export function tableItems(c: { t: Translate }, h: TableMenuHost): MenuItem[] {
     item('merge-cells', t('Merge Cells')),
     item('split-cell', t('Split Cell')),
     item('options', t('Table Options…')),
+  ]
+}
+
+/** The table's own menu, on the right button on its tab, its frame or a box (D1224, D1225): Describe…, Table Options…,
+ *  Merge Cells, Split Cell, Sort ▸, then Delete Table. The same actions and keys as Tools' table entries, which work on
+ *  the box the caret is in: the right button puts it under the pointer first. */
+export function tableContextItems(c: { t: Translate }, h: TableMenuHost, a: { describe: () => void; remove: () => void }): MenuItem[] {
+  const { t } = c
+  const item = (action: TableAction, label: string): MenuItem => ({ label, hint: hintOf(TABLE_ACTION_IDS[action]), action: () => h.run(action), disabled: !possible(h, action) })
+  return [
+    { label: t('Name & describe…'), hint: hintOf('format.describe'), action: a.describe, disabled: h.readonly },
+    item('options', t('Table options…')),
+    item('merge-cells', t('Merge cells')),
+    item('split-cell', t('Split cell')),
+    { label: t('Sort'), disabled: !possible(h, 'sort-ascending'), items: [item('sort-ascending', t('Ascending')), item('sort-descending', t('Descending'))] },
+    { label: '', separator: true },
+    { label: t('Delete table'), hint: t('Del'), action: a.remove, disabled: h.readonly },
   ]
 }
 

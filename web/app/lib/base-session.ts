@@ -742,6 +742,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   protected tracksThings(): boolean {
     return false
   }
+  /** Write the words of an object (a text box or a shape on a slide or in a text) as a person typed them (step G): the
+   * server changes only what differs, so the words that stay keep who wrote them. One step in the history (D1232). */
+  async writeWords(id: string, text: string): Promise<boolean> {
+    return (await this.attempt('write_words', { id, text, base: this.state.revision })) !== false
+  }
+
   /** Is this thing known to be gone from the document as shown (a tag to it then says so)? */
   isGone(id: string): boolean {
     return this.tracksThings() && this.nameOf(id) === undefined
@@ -911,11 +917,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   // ------------------------------------------------------------------------------ rendered containers (D560)
   /** Puts a container of `type` at `where` (the app's own place: `{slide, x, y}`, …), its first text the type's example.
-   *  Returns the new object's id, or `null` — after telling why — if it was not made. */
-  async addRendering(type: string, where: Record<string, unknown>, size = { w: 480, h: 270 }, source?: string): Promise<string | null> {
+   *  Returns the new object's id, or `null` — after telling why — if it was not made. With `fit`, `size` is only the
+   *  most it may take: its first picture is shown at its own size if that is smaller (D1229). */
+  async addRendering(type: string, where: Record<string, unknown>, size = { w: 420, h: 240 }, source?: string, fit = false): Promise<string | null> {
     const kind = this.state.renderTypes.find((k) => k.type === type)
     if (!kind) return null
-    const done = await this.attempt('add_rendering', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, base: this.state.revision })
+    const done = await this.attempt('add_rendering', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, ...(fit ? { fit: true } : {}), base: this.state.revision })
     return done === false ? null : (done.object as string)
   }
 

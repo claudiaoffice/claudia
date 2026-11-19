@@ -12,7 +12,7 @@ the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-che
 (`qa-recommendations.md`). Fifth round 2026-11-13 at `cfa2d91` (all feature branches merged: printing, lists, search, random numbers and
 scenarios, i18n, BITV): new items SEC-18, PERF-09 to PERF-11, UX-33 to UX-37, PROC-18 to PROC-22, CODE-17 to CODE-21,
 DOC-02; the `bitv` items re-checked as merged. Sixth round 2026-11-17 at `f150f0d` (stabilisation of `main`, no features): new items
-PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below).
+PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45 to UX-47, CODE-66 and CODE-67; second list of the same day, every open point of the branch: UX-48 to UX-53, CODE-68 to CODE-71, PROC-28 to PROC-33.
 
 ## How to add a bug
 
@@ -200,6 +200,27 @@ statement in the docs or on the website).
 | CODE-63 | P3 | UX / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |
 | CODE-64 | P2 | composes | The browser editor does not draw the text wrap (the flowing view shows objects over the words; Page view and print wrap) | **fixed** 2026-11-18 (D1068) |
 | CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |
+| UX-45 | P3 | UX / composes | Resizing an object from its top or left handle is two history entries, not one (`resize_object` takes no offset in a text) | **new, open** |
+| UX-46 | P3 | UX / computes, composes | Edit ▸ Select Next Object (D1063, D1222) is not built: computes reaches an object only by Ctrl+Alt+PageDown/PageUp, which has no menu entry | **new, open** |
+| UX-47 | P3 | UX / computes, composes | Delete on a selected object or table works, but has no menu entry and no key in the key table in composes and computes (the hint "Del" is typed into the context menu) | **new, open** |
+| CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **new, open** (D1233) |
+| CODE-67 | P3 | computes I/O | Pictures of an XLSX or ODS are not read into the model: they stay in the file, are counted as `picture`, and survive an edit, but cannot be moved or described in computes | **new, open** (D1233) |
+| UX-48 | P3 | UX / all | The object clipboard (D1229) copies pictures only: no box or shape, and nothing from another program can be pasted as a picture | **new, open** |
+| UX-49 | P3 | UX / composes | A table has no width handle: its width is set only in Table options… (D1224 says it can be scaled in width) | **new, open** |
+| UX-50 | P3 | UX / composes | Composes tables have no row and column headers, so *Height / width…* and *Insert / delete ▸* on a header (workbook rows 18, 19) cannot be offered | **new, open** |
+| UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |
+| UX-52 | P3 | UX / computes | A dropped object snaps to the nearest cell border on release, so its free position is lost (D1230, by design) | **needs decision** |
+| UX-53 | P3 | UX / computes | An object keeps its pixel size when rows or columns are inserted or resized, so it no longer covers the cells it covered (E6.17, D1230) | **new, open** |
+| CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |
+| CODE-69 | P3 | Code / shared objects | A shape's text is a plain `str`, not the shared paragraph entity: no styles, no authorship runs, no per-host overflow policy | **new, open** (implementation note, shared object layer) |
+| CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |
+| CODE-71 | P3 | Code / web | `contextMenuItems` in `object-menu.ts` types four key hints by hand ("Enter", "Ctrl+X", "Ctrl+C", "Del"); the others come from the manifest through `hintOf` (see UX-47) | **new, open** (read) |
+| PROC-28 | P2 | Process / E2E | `web/e2e/objects.cjs` (D1231) was written and never run: the sandbox had no browser. Its first run is the proof of D1221–D1232 on screen | **new, open** |
+| PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |
+| PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |
+| PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |
+| PROC-32 | P3 | Process / docs | `claudiaoffice-log/notes/claudia-menus.xlsx` is not in the repo: the keys of this round are only in the generated key table, and the rows the contract note lists "for the workbook" are not settled | **new, open** |
+| PROC-33 | P3 | Process / gate | Patches 9–11 had ruff failures (lines over 120 characters in three files) that only the gate on the merged tree found | **fixed** 2026-11-19 (patch 12) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -1968,6 +1989,160 @@ many small nodes is refused with a sentence and the server stays up.
 
 ### UX-44 · Blinking dots ignored reduced motion · P3 · fixed 2026-11-17
 `SidePanel.vue` `.dots i` now stops animating under `prefers-reduced-motion: reduce` (WCAG 2.3.3).
+
+---
+
+## Round of 2026-11-19 (object interaction, branch `object-interaction`, D1221–D1231)
+
+### UX-45 · A resize from the top or left handle is two history entries in composes · P3 · new, open
+An object in a text hangs from a character and an offset (`dx`, `dy`); `resize_object` in composes takes only `w` and
+`h` (`Placement.frame` is empty for `IN_TEXT`), so a handle that moves the top left corner has to send `move_object`
+and `resize_object`, which are two entries and two undo steps (creates sends both in one, `x`/`y` come with the size).
+**Fix.** Give `IN_TEXT.frame` the offset (`dx:int? dy:int?`) as `move` has it, and let the client send one call.
+**Acceptance.** A drag of a top left handle changes the history by one entry and one Undo takes it all back (`objects.cjs`, composes, any kind; the check in step 4 of the battery says one entry for the size).
+Found while building D1228.
+
+### UX-46 · Edit ▸ Select Next Object is not built in computes (and composes) · P3 · new, open
+D1063 and D1222 decide that **Tab and Edit ▸ Select Next Object (Ctrl+Alt+Shift+B) reach an object without a pointer** in
+composes and computes (`notes/rotation-ui-and-the-composes-object-layer.md`). In computes Tab belongs to the cells and the
+only way is Ctrl+Alt+PageDown/PageUp, which has no menu entry and so no key in the key table; in composes the objects
+take Tab (`tabindex`) but the menu entry does not exist either. **Fix.** Add `edit.select-next-object` to the composes and
+computes manifests with the decided key and make the computes grid step through its objects with it.
+**Acceptance.** A person who uses no pointer can select, move (arrows), turn (Rotate By…) and delete an object in computes
+and composes (`objects.cjs`). Found while building D1230.
+
+### UX-47 · Delete of a selected object or table has no menu entry and no key in the key table · P3 · new, open
+In composes and computes, Delete on a selected object (and, in composes, a selected table) deletes it, and the context menu
+shows the hint "Del" (`web/app/lib/object-menu.ts`, written by hand). The manifest has no entry for it, so the key is in
+no key table (`keys.generated.ts`, `keyboard-shortcuts.md`), the desktop menus do not show it, and BITV ("every menu entry
+has a key") cannot be checked for it. Creates has `edit.delete` (`KeyOwner.VIEW`, Delete).
+**Fix.** Composes: `edit.delete` as in creates, acting on the selected object or table. Computes: Delete already clears
+cells, so either a second entry with the same key that acts on what is selected (object, else cells), or the cell entry
+is named *Clear Cells* and Delete *Delete Object* is a separate entry; the owner decides. The context menu takes its hint
+from the manifest instead of a typed string.
+**Acceptance.** Edit ▸ Delete (composes) / Edit ▸ Delete Object (computes) is in the web menu and both desktop menus,
+Delete is in the generated key table, and selecting an object and pressing it removes the object in one history entry
+(`objects.cjs`, step "delete"). Found while auditing rotation and key coverage 2026-11-19.
+
+### CODE-66 · A picture added to an imported workbook is not written into it · P3 · new, open
+`apply_edits_to_xlsx` / `apply_edits_to_ods` change only the cells, looks, names, widths and charts of the original file's XML;
+a picture added in computes after an import is reported (`object`) and not in the file (a fresh export has it, D1233).
+**Fix.** The patch adds an `xdr:pic` and its media part to the sheet's drawing (`Drawings.add_picture` is there for it) and a
+`draw:frame` and its `Pictures/` part to the sheet's `table:shapes`; moving, turning or describing a picture changes its frame
+or anchor; removing one takes it and its part out. **Acceptance.** Import a workbook, add, move, turn and remove a picture,
+export: the file has what the model has and `xlsx_unwritten_changes` is empty (`test_pictures.py`, a patch case for each).
+Found while building D1233.
+
+### CODE-67 · The pictures of an XLSX or ODS are not read into the model · P3 · new, open
+A picture in an imported workbook stays in the file untouched and is counted as `picture` on import, but computes does not
+show or select it. **Fix.** Read `xdr:pic` / `draw:image` frames (size from the anchor and the widths and heights the sheet
+has, as for charts; `rot`, `descr`, `name`) as image objects with the asset decoded from the media part, as `file_charts`
+does for charts. **Acceptance.** An imported picture is on the sheet, has the file's size and turn, and writes back to the
+same place (`test_pictures.py`, a round trip for each format). Found while building D1233.
+
+### Second list of 2026-11-19: every open point of `object-interaction`
+
+Entered at the owner's request, from the decision log, the contract note and the delivery reports of the branch.
+Evidence is **read** unless it says otherwise; none of these was run in a browser (see PROC-28).
+
+### UX-48 · The object clipboard copies pictures only · P3 · new, open
+D1229 gives the three apps one object clipboard (`web/app/lib/object-clipboard.ts`) for pictures. A box or a shape has
+paragraph content the server cannot copy yet, and a picture from another program cannot be pasted (no import from the
+system clipboard). **Fix.** A `copy_object` / `paste_object` pair in the kernel for every kind of `OBJECT_KINDS`; the web
+reads image data from the paste event. **Acceptance.** Copy a box, a shape and a rendered container in each app and paste:
+same body, new id, one history entry; paste an image from another program: it arrives capped as D1229 says
+(`objects.cjs`, a clipboard step per kind).
+
+### UX-49 · A table has no width handle · P3 · new, open
+D1224 lists "scale the width" among what a table does as an in-flow object; D1228 builds select, move and the menu, and
+leaves the width to Table options…. **Fix.** One handle on the right edge of the table frame (`ObjectFrame.vue`) that sends
+the width of the table options. **Acceptance.** Drag the handle: the width changes by one history entry, and the options
+dialog shows the new value (`objects.cjs`, composes, table).
+
+### UX-50 · Composes tables have no row and column headers · P3 · new, open
+The table menu of the workbook has *Height / width…* and *Insert / delete ▸* for a row or a column; composes draws no header
+for them. Not part of the object work (`notes/object-interaction-contract.md`, open point 2). **Acceptance.** A header
+click selects the row or column and opens the menu of the workbook; the entries do what computes' do.
+
+### UX-51 · The words go round the unturned frame of a turned object · P2 · new, open (read)
+D1226: in composes the wrap (D1061) of a turned object uses the box that holds the turned frame. Not built (D1228 says so:
+nothing was turned on screen before). Since patch 10 Format ▸ Rotate works in composes, so a turned picture or box lets
+words run into its corners, and Page view and print do the same. **Fix.** The layout takes the bounding box of
+the turned frame (`layout/`), the editor draws the same. **Acceptance.** Turn a wrapped picture by 45° and by 90°: no line
+of words enters the turned box in the editor, in Page view and in print, and the DOCX/ODT export writes the wrap of the box.
+An exact outline for the wrap is a later story (D1226).
+
+### UX-52 · A dropped object snaps to a cell border in computes · P3 · needs decision
+The anchor of an object in computes is a cell (D1230): during the drag the frame follows the pointer, on release the object
+goes to the nearer line at a cell border, so the position the person chose is lost. Stated as by design; entered because
+the owner listed it as open. **Decision needed:** keep (and say so in the help), or let an object hold an offset inside its
+cell as composes does (`dx`, `dy`), which XLSX and ODS can write (`xdr:from` offsets, `svg:x`).
+
+### UX-53 · An object keeps its pixel size when rows or columns change · P3 · new, open
+Insert, delete or resize rows and columns under a picture or a chart: the object keeps its width and height (E6.17,
+D1230 "Not changed"), whereas Excel and Calc may move or scale it with the cells (`twoCellAnchor`, `table:end-cell-address`).
+**Fix.** An object's *Move and size with cells* property, with the files' two modes mapped onto it. **Acceptance.** Per
+mode, a row inserted above moves the object, a row resized inside it scales it or not, and the XLSX/ODS export says the same.
+
+### CODE-68 · Computes cannot make a text box or a shape · P3 · new, open
+The model can hold one on a sheet (a workbook from another app, a command from the AI) and the exports report it as `object`;
+there is no Insert entry and no host support for writing in it from the sheet. **Fix.** Insert ▸ Text Box and ▸ Shape in the
+computes manifest (the same entries as creates and composes), Edit text through D1232, XLSX `xdr:sp` and ODS `draw:custom-shape` export.
+**Acceptance.** Insert a box and a shape in computes, write in them, export to XLSX and ODS and reimport: the same words; the loss report no longer says `object` for them.
+
+### CODE-69 · A shape's text is a plain string · P3 · new, open
+The shared object layer keeps a shape's text as `str` (`implementation-notes-shared-object-layer.md`, "Not done"). Promoting
+it to composes' `Block` would give it styles and authorship, but needs an overflow policy per host (a paragraph in a fixed
+box cannot push anything down). **Acceptance.** A shape's paragraph has a style and a run with an author in all three apps;
+an overflowing box shows its overflow by the host's rule (clip or grow), tested per host.
+
+### CODE-70 · The patch of a kept file does not add pivot tables · P3 · new, open
+Same cause and same shape as CODE-66: `apply_edits_to_xlsx` / `_ods` change what the file already has. A pivot table
+defined in computes after an import is reported and not written. **Acceptance.** Import a workbook, define a pivot, export:
+the file has it, or `xlsx_unwritten_changes` names it and the test says so.
+
+### CODE-71 · The context menu types its key hints by hand · P3 · new, open (read)
+`web/app/lib/object-menu.ts` writes "Enter", "Ctrl+X", "Ctrl+C" and "Del" as strings where the other entries use `hintOf`; the manifest owns the keys
+(`keys.generated.ts`). The two can drift, as the missing Delete entry shows (UX-47). **Fix.** Hints come from the generated
+table by action id. **Acceptance.** A unit test fails when a hint differs from the manifest's key.
+
+### PROC-28 · `objects.cjs` has never run · P2 · new, open
+D1231 wrote `web/e2e/objects.cjs` (and its guard `tests/test_object_kinds_agree.py`, which runs) and wired it into
+`npm run e2e:objects` and CI; the sandbox it was written in has no browser, so no step of it has run, and the table step
+and the Rotate steps of patches 9–10 are as untested. **Acceptance.** `npm run e2e:objects` is green on a machine with a
+browser; every red step is a bug of this list or a new one, entered here.
+
+### PROC-29 · The holder's outline and name tag are not asserted · P3 · new, open
+Step 8 of the battery (D1231: a second window sees the holder's outline and name tag while the object is selected, no drag
+live, only the result, D1223) asserts only that the object, its removal and its return arrive. **Acceptance.** Two pages,
+page 1 selects an object: page 2 shows an outline with page 1's colour and name tag, and page 2's move is refused or waits;
+page 1 deselects and the tag goes. For every kind and every app.
+
+### PROC-30 · The desktop clients were not run for this branch · P2 · new, open
+Definition of done: all desktop clients work with the latest server and do not diverge from the web. For `object-interaction`
+the Neutralino menus (`menu.composes.json`, `menu.computes.json`) were regenerated and the Linux manifest tests
+pass; the Neutralino tests, the Windows and macOS clients and the GTK client's windows were not run. **Acceptance.**
+The client tests of the three desktops pass, and a hand check on each of Format ▸ Rotate, Tools ▸ table commands and
+Edit text in composes and computes is recorded in the implementation note.
+
+### PROC-31 · `po/claudia.pot` goes stale at every merge of `main` · P3 · new, open (measured)
+Merged onto `main` at `85109b8`, `extract_i18n.py` rewrote 43 lines of `po/claudia.pot`, **all `#:` source references**, no
+msgid (measured). The i18n check of `check_debt.py` fails on that, so every merge needs a regeneration commit. **Fix.** Write
+the catalogue without locations (`--no-location`) or let the check compare msgids only. **Acceptance.** Merging a branch
+that moves a line of a translated file leaves the check green.
+
+### PROC-32 · `claudia-menus.xlsx` is not in the repo · P3 · new, open
+The project says behaviours and keys are kept in `claudiaoffice-log/notes/claudia-menus.xlsx`; the file is not there (the
+versions the owner sent in chat were not committed). What the branch changed is in the generated `keyboard-shortcuts.md`
+only. Still to enter, from `notes/object-interaction-contract.md` ("For the workbook"): the table rows of the context menu
+(D1224), "not for a chart or a table" on *Rotate by…*, the wrap entry (D1225), Format ▸ Rotate in composes and
+computes, Delete (UX-47), the table commands in Tools (D1229). **Acceptance.** The workbook is in the repo and a test
+compares its key column with the manifest.
+
+### PROC-33 · Patches 9–11 failed the lint gate · P3 · fixed 2026-11-19
+The last step of the series, the gate on the merged tree, found `ruff` errors (lines over 120 characters in `manifest.py`,
+`clients/linux/tests/test_manifest.py` and `tests/test_object_kinds_agree.py`) that earlier steps had not run it
+for. Fixed in patch 12. **Lesson, kept as the rule:** `scripts/check_debt.py` runs on the final tree of every series, not per patch.
 
 ---
 

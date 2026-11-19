@@ -510,6 +510,7 @@ class WrittenChart:
     width: int
     height: int
     description: str
+    layer: int = 0  # its place in the stack of its sheet, which the pictures on it share
 
 
 def sheet_name(wanted: str, taken: set[str]) -> str:
@@ -533,7 +534,7 @@ def written_charts(model: WorkbookModel, taken: set[str] | None = None) -> tuple
     names = taken if taken is not None else {sheet.name.casefold() for sheet in model.sheets.values()}
     out: list[WrittenChart] = []
     for sheet_id, sheet in model.sheets.items():
-        for object_id in model.stack_of(str(sheet_id)):
+        for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
             obj = model.get_object(object_id)
             if obj.body.diagram is None:
                 continue
@@ -543,7 +544,9 @@ def written_charts(model: WorkbookModel, taken: set[str] | None = None) -> tuple
             if xml is not None:
                 body = obj.body
                 out.append(
-                    WrittenChart(sheet.name, xml, obj.anchor.row, obj.anchor.col, body.w, body.h, body.description)
+                    WrittenChart(
+                        sheet.name, xml, obj.anchor.row, obj.anchor.col, body.w, body.h, body.description, layer
+                    )
                 )
     tabs: list[str] = []
     for tab in model.charts.values():

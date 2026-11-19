@@ -6,7 +6,7 @@
 // and the server reach the same verdict about the same slide. What only the screen needs (the angle of a pointer, the
 // resize in an object's own axes) may use `Math`, because the server checks its result again with the integer rules.
 
-import { MIN_SIZE, SLIDE_H, SLIDE_W, type Frame, type Handle, type Point } from './geometry'
+import { MIN_SIZE, SLIDE_BOUNDS, type Bounds, type Frame, type Handle, type Point } from './geometry'
 
 /** `sin(d°)` in millionths for the whole degrees 0 to 90; every other angle is a reflection of one of these. */
 export const SINE_MILLIONTHS: readonly number[] = [
@@ -48,17 +48,17 @@ function rangeFor(size: number, extent: number, space: number): [number, number]
 
 /** The top left nearest `(x, y)` at which a `w` by `h` frame turned `rotation` degrees has its whole outline on the
  * slide, or `null` if it can never be. The corner is that of the *unturned* frame, so it may lie outside the slide. */
-export function nudgeInto(x: number, y: number, w: number, h: number, rotation: number, width = SLIDE_W, height = SLIDE_H): Point | null {
+export function nudgeInto(x: number, y: number, w: number, h: number, rotation: number, bounds: Bounds = SLIDE_BOUNDS): Point | null {
   const out = turnedExtent(w, h, rotation)
-  const [lowX, highX] = rangeFor(w, out.w, width)
-  const [lowY, highY] = rangeFor(h, out.h, height)
+  const [lowX, highX] = rangeFor(w, out.w, bounds.w)
+  const [lowY, highY] = rangeFor(h, out.h, bounds.h)
   if (lowX > highX || lowY > highY) return null
   return { x: Math.min(Math.max(x, lowX), highX), y: Math.min(Math.max(y, lowY), highY) }
 }
 
 /** Does the turned outline of this frame lie on the slide, wherever the frame itself is? */
-export function fitsOnSlide(x: number, y: number, w: number, h: number, rotation: number): boolean {
-  const place = nudgeInto(x, y, w, h, rotation)
+export function fitsOnSlide(x: number, y: number, w: number, h: number, rotation: number, bounds: Bounds = SLIDE_BOUNDS): boolean {
+  const place = nudgeInto(x, y, w, h, rotation, bounds)
   return place !== null && place.x === x && place.y === y
 }
 
@@ -104,9 +104,9 @@ const snapTo = (value: number, grid: number | null) => (grid ? Math.round(value 
 
 /** A frame dragged by (dx, dy) while turned `rotation` degrees. The frame goes where the pointer takes it (snapping to
  * the grid first, when the object holds to it), and then no further than keeps the *outline* on the slide. */
-export function moveTurned(start: Frame, rotation: number, dx: number, dy: number, grid: number | null): Frame {
+export function moveTurned(start: Frame, rotation: number, dx: number, dy: number, grid: number | null, bounds: Bounds = SLIDE_BOUNDS): Frame {
   const wanted = { x: snapTo(Math.round(start.x + dx), grid), y: snapTo(Math.round(start.y + dy), grid) }
-  const place = nudgeInto(wanted.x, wanted.y, start.w, start.h, rotation) ?? { x: start.x, y: start.y }
+  const place = nudgeInto(wanted.x, wanted.y, start.w, start.h, rotation, bounds) ?? { x: start.x, y: start.y }
   return { ...place, w: start.w, h: start.h }
 }
 
@@ -129,7 +129,7 @@ function onSlide(frame: Frame, rotation: number, local: Point): Point {
  * With an `aspect` (width / height of an object that must keep it) only corners work. `null` when the result would
  * take the outline off the slide: the caller keeps the last frame that did fit.
  */
-export function resizeTurned(start: Frame, rotation: number, handle: Handle, dx: number, dy: number, aspect: number | null): Frame | null {
+export function resizeTurned(start: Frame, rotation: number, handle: Handle, dx: number, dy: number, aspect: number | null, bounds: Bounds = SLIDE_BOUNDS): Frame | null {
   if (aspect !== null && handle.length !== 2) return null // an edge would break the proportions
   const t = radians(rotation)
   const along = dx * Math.cos(t) + dy * Math.sin(t) // the pull along the object's own width
@@ -156,12 +156,13 @@ export function resizeTurned(start: Frame, rotation: number, handle: Handle, dx:
   const cx = pinned.x + toCentre.x * Math.cos(t) - toCentre.y * Math.sin(t)
   const cy = pinned.y + toCentre.x * Math.sin(t) + toCentre.y * Math.cos(t)
   const frame = { x: Math.round(cx - w / 2), y: Math.round(cy - h / 2), w, h }
-  return fitsOnSlide(frame.x, frame.y, frame.w, frame.h, rotation) ? frame : null
+  return fitsOnSlide(frame.x, frame.y, frame.w, frame.h, rotation, bounds) ? frame : null
 }
 
-/** Does an object of this kind turn? Charts (kind `diagram`) do not (D1021); text boxes, shapes, pictures and rendered
- * text do. The server decides for itself — this only keeps the handle and the menu entries off what it would refuse. */
-export const canTurn = (kind: string): boolean => kind !== 'diagram'
+/** Does an object of this kind turn? Charts (kind `diagram`, D1021) and tables (D1224) do not; text boxes, shapes,
+ * pictures and rendered text do. The server decides for itself (`turn_command`) — this only keeps the handle and the
+ * menu entries off what it would refuse. */
+export const canTurn = (kind: string): boolean => kind !== 'diagram' && kind !== 'table'
 
 /** The words a screen reader says for a turn: "30°". */
 export const degreesText = (rotation: number): string => `${rotation}°`

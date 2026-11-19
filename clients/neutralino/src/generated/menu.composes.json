@@ -404,155 +404,6 @@
             ],
             "label": "Insert"
           }
-        ],
-        [
-          {
-            "items": [
-              {
-                "accelerators": [
-                  "<Alt><Shift>Up"
-                ],
-                "checkable": false,
-                "id": "edit.row-insert-above",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Insert Above",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Alt><Shift>Down"
-                ],
-                "checkable": false,
-                "id": "edit.row-insert-below",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Insert Below",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Primary><Alt>minus"
-                ],
-                "checkable": false,
-                "id": "edit.row-delete",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Delete",
-                "role": null,
-                "start": false
-              }
-            ],
-            "label": "Row"
-          },
-          {
-            "items": [
-              {
-                "accelerators": [
-                  "<Alt><Shift>Left"
-                ],
-                "checkable": false,
-                "id": "edit.column-insert-left",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Insert Left",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Alt><Shift>Right"
-                ],
-                "checkable": false,
-                "id": "edit.column-insert-right",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Insert Right",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Primary><Alt>underscore"
-                ],
-                "checkable": false,
-                "id": "edit.column-delete",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Delete",
-                "role": null,
-                "start": false
-              }
-            ],
-            "label": "Column"
-          },
-          {
-            "items": [
-              {
-                "accelerators": [
-                  "<Primary><Shift>x"
-                ],
-                "checkable": false,
-                "id": "edit.sort-ascending",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Ascending",
-                "role": null,
-                "start": false
-              },
-              {
-                "accelerators": [
-                  "<Primary><Shift>y"
-                ],
-                "checkable": false,
-                "id": "edit.sort-descending",
-                "key_owner": "page",
-                "kind": "page",
-                "label": "Descending",
-                "role": null,
-                "start": false
-              }
-            ],
-            "label": "Sort"
-          },
-          {
-            "accelerators": [
-              "<Primary><Shift>g"
-            ],
-            "checkable": false,
-            "id": "edit.merge-cells",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Merge Cells",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Primary><Shift>h"
-            ],
-            "checkable": false,
-            "id": "edit.split-cell",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Split Cell",
-            "role": null,
-            "start": false
-          },
-          {
-            "accelerators": [
-              "<Primary><Shift>l"
-            ],
-            "checkable": false,
-            "id": "edit.table-options",
-            "key_owner": "page",
-            "kind": "page",
-            "label": "Table Options\u2026",
-            "role": null,
-            "start": false
-          }
         ]
       ]
     },
@@ -802,6 +653,49 @@
         ],
         [
           {
+            "items": [
+              {
+                "accelerators": [
+                  "<Primary><Alt>period"
+                ],
+                "checkable": false,
+                "id": "format.rotate-right",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Rotate Right 90\u00b0",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt>comma"
+                ],
+                "checkable": false,
+                "id": "format.rotate-left",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Rotate Left 90\u00b0",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt><Shift>z"
+                ],
+                "checkable": false,
+                "id": "format.rotate-by",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Rotate By\u2026",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Rotate"
+          }
+        ],
+        [
+          {
             "accelerators": [
               "<Primary><Alt>r"
             ],
@@ -898,6 +792,155 @@
             "key_owner": "page",
             "kind": "page",
             "label": "Ask the Assistant\u2026",
+            "role": null,
+            "start": false
+          }
+        ],
+        [
+          {
+            "items": [
+              {
+                "accelerators": [
+                  "<Alt><Shift>Up"
+                ],
+                "checkable": false,
+                "id": "edit.row-insert-above",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Insert Above",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Alt><Shift>Down"
+                ],
+                "checkable": false,
+                "id": "edit.row-insert-below",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Insert Below",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt>minus"
+                ],
+                "checkable": false,
+                "id": "edit.row-delete",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Delete",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Row"
+          },
+          {
+            "items": [
+              {
+                "accelerators": [
+                  "<Alt><Shift>Left"
+                ],
+                "checkable": false,
+                "id": "edit.column-insert-left",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Insert Left",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Alt><Shift>Right"
+                ],
+                "checkable": false,
+                "id": "edit.column-insert-right",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Insert Right",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Alt>underscore"
+                ],
+                "checkable": false,
+                "id": "edit.column-delete",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Delete",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Column"
+          },
+          {
+            "items": [
+              {
+                "accelerators": [
+                  "<Primary><Shift>x"
+                ],
+                "checkable": false,
+                "id": "tools.sort-ascending",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Ascending",
+                "role": null,
+                "start": false
+              },
+              {
+                "accelerators": [
+                  "<Primary><Shift>y"
+                ],
+                "checkable": false,
+                "id": "tools.sort-descending",
+                "key_owner": "page",
+                "kind": "page",
+                "label": "Descending",
+                "role": null,
+                "start": false
+              }
+            ],
+            "label": "Sort"
+          },
+          {
+            "accelerators": [
+              "<Primary><Shift>g"
+            ],
+            "checkable": false,
+            "id": "tools.merge-cells",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Merge Cells",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Shift>h"
+            ],
+            "checkable": false,
+            "id": "tools.split-cell",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Split Cell",
+            "role": null,
+            "start": false
+          },
+          {
+            "accelerators": [
+              "<Primary><Shift>l"
+            ],
+            "checkable": false,
+            "id": "tools.table-options",
+            "key_owner": "page",
+            "kind": "page",
+            "label": "Table Options\u2026",
             "role": null,
             "start": false
           }

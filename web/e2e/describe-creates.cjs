@@ -42,7 +42,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
 
     // the object's own menu offers it, with its key
     await picture().click({ button: 'right' })
-    await page.getByRole('menuitem', { name: /Describe…/ }).click()
+    await page.getByRole("menuitem", { name: /describe…/i }).click()
     await page.waitForSelector('dialog[open] textarea')
     assert.equal(await page.locator('dialog input[type=checkbox]').isChecked(), true)
     await page.uncheck('dialog input[type=checkbox]')

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fileToBase64, formatByteSize, imageByteSize, imageDataUrl, pictureSize } from '~/lib/images'
+import { fileToBase64, formatByteSize, imageByteSize, imageDataUrl, NEW_OBJECT_CAP, pictureSize } from '~/lib/images'
 
 describe('fileToBase64', () => {
   it('encodes a small file exactly as the bytes it holds', async () => {
@@ -71,5 +71,21 @@ describe('pictureSize', () => {
       expect(wide.w).toBeLessThanOrEqual(480)
       expect(Math.abs(wide.w - aspect * wide.h)).toBeLessThanOrEqual(1) // the server's own tolerance (ASPECT_TOLERANCE)
     }
+  })
+})
+
+describe('pictureSize with the picture\'s own size (the owner, 2026-11-19: no bigger than 420 × 240 or the picture)', () => {
+  it('shows a small picture at its own size', () => {
+    expect(pictureSize(2, 240, 420, { width: 100, height: 50 })).toEqual({ w: 100, h: 50 })
+  })
+  it('shows a big picture within the cap', () => {
+    expect(pictureSize(2, NEW_OBJECT_CAP.h, NEW_OBJECT_CAP.w, { width: 4000, height: 2000 })).toEqual({ w: 420, h: 210 })
+    expect(pictureSize(0.5, NEW_OBJECT_CAP.h, NEW_OBJECT_CAP.w, { width: 2000, height: 4000 })).toEqual({ w: 120, h: 240 })
+  })
+  it('is never smaller than an object may be, and keeps the proportions', () => {
+    expect(pictureSize(1, 240, 420, { width: 8, height: 8 })).toEqual({ w: 20, h: 20 })
+    const flat = pictureSize(10, 240, 420, { width: 30, height: 3 })
+    expect(flat.h).toBeGreaterThanOrEqual(20)
+    expect(Math.abs(flat.w - 10 * flat.h)).toBeLessThanOrEqual(1)
   })
 })

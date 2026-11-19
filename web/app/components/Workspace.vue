@@ -27,7 +27,7 @@ import { pivotAt, roleAt, roleLabel, valueIndexFor } from '~/lib/pivots'
 import { pointTo, refOf, sheetPrefix, slotAt } from '~/lib/pointing'
 import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection'
 import type { Session } from '~/lib/session'
-import type { PictureImport } from '~/lib/images'
+import { NEW_OBJECT_CAP, pictureSize, type PictureImport } from '~/lib/images'
 import {
   askItem,
   authorsItemUnavailable,
@@ -64,6 +64,7 @@ import type { Axis } from '~/lib/line-sizes'
 import DocumentFrame from './DocumentFrame.vue'
 import PrintPreview from './PrintPreview.vue'
 import SearchPanel from './SearchPanel.vue'
+import { rotateItem } from '~/lib/rotate-menu'
 import type { Menu } from './MenuBar.vue'
 import type { EditState } from './SheetGrid.vue'
 
@@ -107,6 +108,9 @@ const grid = ref<{
   openStyleMenu: (at?: { x: number; y: number }, mode?: 'edit' | 'apply') => void
   selectedObject: () => string | null
   stepObject: (step: 1 | -1) => void
+  quarter: (direction: 1 | -1) => Promise<void>
+  openRotateBy: () => void
+  paste: () => Promise<boolean>
   anchorPoint: (row: number, col: number) => { x: number; y: number } | null
   centre: (row: number, col: number) => void
 } | null>(null)
@@ -541,6 +545,7 @@ async function paste(rows: string[][]) {
  * (`@paste="paste"` below) — same destination (`paste(rows)`, which already knows where the selection is and checks
  * its bounds), only the source of the text differs: the Clipboard API instead of a browser paste event's data. */
 async function pasteFromClipboard() {
+  if (await grid.value?.paste()) return // a picture that was cut or copied (D1229)
   let text: string
   try {
     text = await navigator.clipboard.readText()
@@ -961,23 +966,19 @@ function headerResize() {
 }
 
 // ------------------------------------------------------------------------------ images (E6.17)
-const IMAGE_HEIGHT = 240 // pixels; an image is sized to this height and whatever width keeps its own aspect
-
 /** Anchor a new image at the current selection's top-left cell, sized to keep its own aspect (the server rejects
- * any other size for an image, within one pixel — mirrors creates' `insertFrame('image', aspect, …)`). */
-function anchorForImage(aspect: number) {
-  return { row: b.value.r0, col: b.value.c0, w: Math.round(IMAGE_HEIGHT * aspect), h: IMAGE_HEIGHT }
+ * any other size for an image, within one pixel — mirrors creates' `insertFrame('image', aspect, …)`) and no bigger
+ * than 420 × 240 or the picture itself (the owner, 2026-11-19). */
+function anchorForImage(aspect: number, natural?: PictureImport['natural']) {
+  return { row: b.value.r0, col: b.value.c0, ...pictureSize(aspect, NEW_OBJECT_CAP.h, NEW_OBJECT_CAP.w, natural) }
 }
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
-  return session.addImage(picture, anchorForImage(aspect))
+  return session.addImage(picture, anchorForImage(aspect, picture.natural))
 }
-
-const CONTAINER_WIDTH = 480
-const CONTAINER_HEIGHT = 270
 
 /** Insert ▸ Container ▸ …: a container of the chosen type where the selection starts (D560), ready to be written in. */
 async function addContainer(type: string) {
-  const id = await session.addContainer(type, { row: b.value.r0, col: b.value.c0, w: CONTAINER_WIDTH, h: CONTAINER_HEIGHT })
+  const id = await session.addContainer(type, { row: b.value.r0, col: b.value.c0, w: NEW_OBJECT_CAP.w, h: NEW_OBJECT_CAP.h })
   if (!id) return
   grid.value?.selectObject(id)
   grid.value?.focus()
@@ -1097,6 +1098,16 @@ const menus = computed<Menu[]>(() => {
         ...styleItems(),
         { label: '', separator: true },
         { id: 'format.describe', label: t('Describe Object…'), hint: chordLabel(DESCRIBE.chord), action: () => openDescribe(), disabled: readonly.value || !grid.value?.selectedObject() },
+        // a quarter turn each way and any angle, for what turns (a chart and a table do not, D1021, D1224)
+        rotateItem(t, {
+          kind: () => {
+            const id = grid.value?.selectedObject()
+            return id ? (state.objects[id]?.kind ?? null) : null
+          },
+          readonly: () => readonly.value,
+          quarter: (direction) => void grid.value?.quarter(direction),
+          by: () => grid.value?.openRotateBy(),
+        }),
       ],
     },
     {
@@ -1229,6 +1240,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       :cell-host="cellHost"
       :marks="searchMarks"
       @object="objectSelected = $event"
+      @describe="openDescribe"
       @styles="dialog = 'styles'"
       @select="select"
       @move="moveBy"

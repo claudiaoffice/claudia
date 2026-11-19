@@ -36,6 +36,7 @@ WEB_SHARED_MENUS = REPO / "web" / "app" / "lib" / "document-menus.ts"
 WEB_FORMAT_MENU = REPO / "web" / "app" / "lib" / "format-menu.ts"
 # Composes' table entries (E9.32), Edit ▸ Row ▸ … Table Options… and Insert ▸ Table…, are built in one place.
 WEB_TABLE_MENU = REPO / "web" / "app" / "lib" / "table-menu.ts"
+WEB_ROTATE_MENU = REPO / "web" / "app" / "lib" / "rotate-menu.ts"
 # Config ▸ App Language's ids are built from this list (`config.language.${tag}`), not written out one by one.
 WEB_LANGUAGES = REPO / "web" / "app" / "lib" / "i18n.ts"
 BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creates": manifest.creates}
@@ -120,18 +121,21 @@ def test_insert_starts_with_the_cross_reference_and_the_table_of_contents_which_
     assert contents.key_owner == manifest.KeyOwner.PAGE
 
 
-def test_composes_alone_has_tables_in_insert_and_edit_with_the_keys_of_the_decision_log(app: manifest.Manifest) -> None:
-    """E9.32, D1208: Insert ▸ Table… and Edit ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… are
-    composes' own, because the other two apps have their grid. Row and Column are computes' entries (one action, one key
-    in every app, see test_one_action_has_one_key_in_every_app), the page reports them off outside a table."""
+def test_composes_alone_has_tables_in_insert_and_tools_with_the_keys_of_the_decision_log(
+    app: manifest.Manifest,
+) -> None:
+    """E9.32, D1208: Insert ▸ Table… and Tools ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… are
+    composes' own (in Tools since D1229, as computes has its pivot table there), because the other two apps have
+    their grid. Row and Column are computes' entries (one action, one key in every app, see
+    test_one_action_has_one_key_in_every_app), the page reports them off outside a table."""
     ids = {action.id for action in app.actions}
     table_ids = {
         "insert.table",
-        "edit.sort-ascending",
-        "edit.sort-descending",
-        "edit.merge-cells",
-        "edit.split-cell",
-        "edit.table-options",
+        "tools.sort-ascending",
+        "tools.sort-descending",
+        "tools.merge-cells",
+        "tools.split-cell",
+        "tools.table-options",
     }
     if app.app != "composes":
         assert not ids & table_ids
@@ -139,18 +143,20 @@ def test_composes_alone_has_tables_in_insert_and_edit_with_the_keys_of_the_decis
     assert table_ids <= ids
     keys = {
         "insert.table": ("<Primary><Shift>f",),
-        "edit.table-options": ("<Primary><Shift>l",),
-        "edit.merge-cells": ("<Primary><Shift>g",),
-        "edit.split-cell": ("<Primary><Shift>h",),
-        "edit.sort-ascending": ("<Primary><Shift>x",),
-        "edit.sort-descending": ("<Primary><Shift>y",),
+        "tools.table-options": ("<Primary><Shift>l",),
+        "tools.merge-cells": ("<Primary><Shift>g",),
+        "tools.split-cell": ("<Primary><Shift>h",),
+        "tools.sort-ascending": ("<Primary><Shift>x",),
+        "tools.sort-descending": ("<Primary><Shift>y",),
         "edit.row-insert-above": ("<Alt><Shift>Up",),
         "edit.column-insert-right": ("<Alt><Shift>Right",),
     }
     for action_id, accelerators in keys.items():
         assert app.action(action_id).accelerators == accelerators, action_id
         assert app.action(action_id).key_owner == manifest.KeyOwner.PAGE, action_id
-    assert [submenu.label for submenu in _submenus(app.menu("Edit")) if submenu.label in {"Row", "Column", "Sort"}] == [
+    assert [
+        submenu.label for submenu in _submenus(app.menu("Tools")) if submenu.label in {"Row", "Column", "Sort"}
+    ] == [
         "Row",
         "Column",
         "Sort",
@@ -305,6 +311,7 @@ def test_composes_format_offers_the_style_actions_the_lists_and_the_document_col
         "All Styles…",
         "List",
         "Colours…",
+        "Rotate",
         "Wrap Text",
     ]
 
@@ -353,7 +360,7 @@ def test_every_app_offers_the_same_three_format_actions(app_name: str, request: 
     The two that have floating objects also say what an object shows to someone who cannot see it (BITV 1.1.1)."""
     m = request.getfixturevalue(app_name)
     styles = ["format.apply-style"] + (["format.clear-cell-style"] if app_name == "computes" else [])
-    turning = ["format.rotate-right", "format.rotate-left", "format.rotate-by"] if app_name == "creates" else []
+    turning = ["format.rotate-right", "format.rotate-left", "format.rotate-by"]
     assert [
         a.id
         for a in m.menu("Format").all_actions()
@@ -392,12 +399,19 @@ def test_rotate_is_a_flyout_of_three_page_actions_with_keys_of_their_own(creates
     assert creates.action("view.replay").accelerators == ("<Primary><Alt>z",)
 
 
-@pytest.mark.parametrize("app_name", ["composes", "computes"])
-def test_the_apps_that_do_not_turn_objects_yet_have_no_rotate_entries(
+@pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
+def test_every_app_that_has_objects_turns_them_with_the_same_entries_and_keys(
     app_name: str, request: pytest.FixtureRequest
 ) -> None:
+    """D1024, D1232: Format ▸ Rotate ▸ is one shape wherever an app turns objects. Only creates had it; composes and
+    computes have floating objects too and the server turns them all the same way."""
     m = request.getfixturevalue(app_name)
-    assert not [a.id for a in m.actions if a.id.startswith("format.rotate")]
+    keys = {a.id: a.accelerators for a in m.menu("Format").all_actions() if a.id.startswith("format.rotate")}
+    assert keys == {
+        "format.rotate-right": ("<Primary><Alt>period",),
+        "format.rotate-left": ("<Primary><Alt>comma",),
+        "format.rotate-by": ("<Primary><Alt><Shift>z",),
+    }
 
 
 @pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
@@ -661,14 +675,14 @@ def test_every_page_and_editing_action_id_is_in_the_matching_web_source(app_name
     """The guard against drift (see this module's docstring): if the web app renames or drops an id this shell
     still dispatches, this fails and says which. ``Kind.SHELL`` actions (Quit, About) have no web equivalent by
     design — the shell intercepts them before they would ever reach the page — so they are not checked here."""
-    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_LANGUAGES, WEB_TABLE_MENU)
+    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_LANGUAGES, WEB_TABLE_MENU, WEB_ROTATE_MENU)
     if not all(path.exists() for path in sources):
         pytest.skip("the web sources are not next to the client")
-    app_source, shared_menus, format_menu, languages_source, table_menu = (
+    app_source, shared_menus, format_menu, languages_source, table_menu, rotate_menu = (
         path.read_text(encoding="utf-8") for path in sources
     )
     assert "formatItems(" in app_source, "every app builds its Format menu with lib/format-menu.ts"
-    shared_source = shared_menus + format_menu
+    shared_source = shared_menus + format_menu + rotate_menu  # Format ▸ Rotate ▸ is one module (D1232)
     # composes' table entries: the actions are named in one table (`TABLE_ACTION_IDS`), the menus and keys built from it
     table_source = table_menu if app_name == "composes" else ""
 
@@ -911,6 +925,9 @@ WEB_ONLY_PARENTS = {
     "edit.row": "Edit ▸ Row ▸ is a Submenu here",
     "edit.column": "Edit ▸ Column ▸ is a Submenu here",
     "edit.sort": "composes' Edit ▸ Sort ▸ is a Submenu here",
+    "tools.row": "composes' Tools ▸ Row ▸ is a Submenu here (D1229)",
+    "tools.column": "composes' Tools ▸ Column ▸ is a Submenu here (D1229)",
+    "tools.sort": "composes' Tools ▸ Sort ▸ is a Submenu here (D1229)",
 }
 
 
@@ -919,12 +936,16 @@ def test_every_web_menu_entry_is_in_the_desktop_menus_too(app_name: str) -> None
     """At cfa2d91 File ▸ Print…, Image…, Chart…, Names…, SQL Query…, Show Grid and the List flyout were on the web
     only, and the desktop shells hide the web menu bar: on the desktop they could not be found. A menu item on the web
     is `{ id: '…', label: … }`; a keyboard shortcut (`get label()`) is not a menu item."""
-    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_TABLE_MENU)
+    sources = (WEB_SOURCES[app_name], WEB_SHARED_MENUS, WEB_FORMAT_MENU, WEB_TABLE_MENU, WEB_ROTATE_MENU)
     if not all(path.exists() for path in sources):
         pytest.skip("the web sources are not next to the client")
-    app_source, shared_menus, format_menu, table_menu = (path.read_text(encoding="utf-8") for path in sources)
+    app_source, shared_menus, format_menu, table_menu, rotate_menu = (
+        path.read_text(encoding="utf-8") for path in sources
+    )
     item = re.compile(r"\{\s*id: '([a-z.-]+)',\s*label:")
     ids = set(item.findall(app_source)) | set(item.findall(format_menu)) | set(item.findall(shared_menus))
+    if "rotateItem(" in app_source:  # the apps that turn objects hand the Format menu the shared Rotate submenu
+        ids |= set(item.findall(rotate_menu))
     if app_name == "composes":
         ids |= set(item.findall(table_menu))
     ids |= {"file.manage", "edit.paste-as"} & set(re.findall(r"id: '([a-z.-]+)',\n", shared_menus))

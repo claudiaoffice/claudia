@@ -82,19 +82,45 @@ export function formatByteSize(bytes: number): string {
  * cannot know a file's full path. */
 export interface PictureImport {
   data: string
+  /** The picture's own size in pixels, as the browser read it; it is never sent, only used to cap the size it is shown at. */
+  natural?: { width: number; height: number }
   alt: string
   sourceName: string
   sourcePath: string | null
   decorative?: boolean
 }
 
+/** The most a new picture or container takes when it is put in a document (the owner, 2026-11-19): so that an import
+ * does not fill the screen or the slide by accident. A picture smaller than that is shown at its own size. */
+export const NEW_OBJECT_CAP = { w: 420, h: 240 }
+
 /** The size to put a picture of `aspect` (width / height) at: `height` high, or narrower if that would be wider than
- * `maxWidth`. A picture keeps its own proportions — the server turns down any other size, within one pixel. */
-export function pictureSize(aspect: number, height: number, maxWidth: number): { w: number; h: number } {
+ * `maxWidth`, and never larger than the picture itself (`natural`, in pixels). A picture keeps its own proportions —
+ * the server turns down any other size, within one pixel. */
+export function pictureSize(
+  aspect: number,
+  height: number,
+  maxWidth: number,
+  natural?: { width: number; height: number },
+): { w: number; h: number } {
+  if (natural) {
+    height = Math.min(height, natural.height)
+    maxWidth = Math.min(maxWidth, natural.width)
+  }
   const w = Math.round(height * aspect)
-  if (w <= maxWidth) return { w, h: height }
+  if (w <= maxWidth) return larger({ w, h: height }, aspect)
   // narrowed: the height is rounded *down* and the width then follows it, so that it is the width that is off by at most
   // half a unit (rounding the height off the width could leave a wide picture several units out)
   const h = Math.max(1, Math.floor(maxWidth / aspect))
-  return { w: Math.min(maxWidth, Math.round(h * aspect)), h }
+  return larger({ w: Math.min(maxWidth, Math.round(h * aspect)), h }, aspect)
+}
+
+/** Mirrors `claudia_core.MIN_OBJECT_SIZE`: the server turns down an object narrower or lower than this. */
+export const MIN_OBJECT_SIDE = 20
+
+/** A tiny picture (an icon) is shown at the least size an object may have, with its proportions. */
+function larger(size: { w: number; h: number }, aspect: number): { w: number; h: number } {
+  if (size.w >= MIN_OBJECT_SIDE && size.h >= MIN_OBJECT_SIDE) return size
+  const h = Math.max(MIN_OBJECT_SIDE, Math.ceil(MIN_OBJECT_SIDE / aspect))
+  return { w: Math.round(h * aspect), h }
 }

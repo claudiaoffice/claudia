@@ -25,8 +25,8 @@ import { useI18n } from '~/lib/i18n'
 import { objectStyleHost, type ObjectStyling } from '~/lib/object-style-host'
 import { galleryFor } from '~/lib/style-host'
 import { describeShortcut } from '~/lib/descriptions'
-import { chordLabel, hintOf, searchShortcuts } from '~/lib/shortcuts'
-import { canTurn } from '~/lib/turning'
+import { chordLabel, searchShortcuts } from '~/lib/shortcuts'
+import { rotateItem } from '~/lib/rotate-menu'
 import { formatItems, type ListMenu } from '~/lib/format-menu'
 import { looksOf, type ContentsHost } from '~/lib/contents'
 import type { Show } from '~/lib/references'
@@ -125,20 +125,14 @@ const searchHost = slideSearchHost({ session, showNotes: () => (notesShown.value
 const searchMarks = computed(() => (search.open.value ? marksFor(search.view.value.matches, search.view.value.current, state.activeSlide) : []))
 const openSearch = (replace = false) => search.openSearch(replace)
 
-/** Format ▸ Rotate ▸ (D1024): a quarter turn each way and any angle, for what turns (a chart does not, D1021). Their keys
- * come from the manifest's table like every other entry's, so `menuShortcuts` binds them. */
-function rotateItem(): MenuItem {
-  const o = state.selected ? state.objects[state.selected] : undefined
-  const off = readonly.value || !o || !canTurn(o.kind)
-  return {
-    label: t('Rotate'),
-    disabled: !o || !canTurn(o.kind),
-    items: [
-      { id: 'format.rotate-right', label: t('Rotate Right 90°'), hint: hintOf('format.rotate-right'), action: () => void canvas.value?.quarter(1), disabled: off },
-      { id: 'format.rotate-left', label: t('Rotate Left 90°'), hint: hintOf('format.rotate-left'), action: () => void canvas.value?.quarter(-1), disabled: off },
-      { id: 'format.rotate-by', label: t('Rotate By…'), hint: hintOf('format.rotate-by'), action: () => canvas.value?.openRotateBy(), disabled: off },
-    ],
-  }
+/** Format ▸ Rotate ▸ (D1024): the same submenu in every app that turns objects (`lib/rotate-menu.ts`). */
+function rotateMenu(): MenuItem {
+  return rotateItem(t, {
+    kind: () => (state.selected ? (state.objects[state.selected]?.kind ?? null) : null),
+    readonly: () => readonly.value,
+    quarter: (direction) => void canvas.value?.quarter(direction),
+    by: () => canvas.value?.openRotateBy(),
+  })
 }
 
 const extraShortcuts = [
@@ -328,7 +322,7 @@ async function addContainer(type: string) {
   if (await session.addContainer(type, insertFrame('image', 16 / 9, count.value))) canvas.value?.focus()
 }
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
-  return session.addImage(picture, insertFrame('image', aspect, count.value))
+  return session.addImage(picture, insertFrame('image', aspect, count.value, picture.natural))
 }
 function imageInserted() {
   showImageDialog.value = false
@@ -339,11 +333,13 @@ async function remove() {
   canvas.value?.focus()
 }
 
-/** Copy/Cut act on whatever the browser still has selected; Paste only does anything while a text frame is in edit
+/** Copy/Cut act on the picture selected (D1229), else on whatever the browser still has selected; Paste puts a picture that
+ * was cut or copied on the slide, else it only does anything while a text frame is in edit
  * mode (`document.activeElement` is then its contenteditable) — same honest limit `lib/clipboard.ts` documents: a
  * shape or an unselected canvas has no text to paste into, and the menu click quietly does nothing, same as a
  * native paste finding nowhere to land. */
 async function pasteFromClipboard() {
+  if (await canvas.value?.paste()) return // a picture that was cut or copied (D1229)
   await pasteAsPlainText(document.activeElement)
 }
 
@@ -407,7 +403,7 @@ const menus = computed<Menu[]>(() => {
         { label: '', separator: true },
         { id: 'format.describe', label: t('Describe Object…'), hint: chordLabel(describeSelected.chord), action: () => canvas.value?.openDescribe(), disabled: readonly.value || !state.selected },
         { label: '', separator: true },
-        rotateItem(),
+        rotateMenu(),
       ],
     },
     {

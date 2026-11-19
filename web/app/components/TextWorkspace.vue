@@ -5,7 +5,8 @@ import { roleNow } from '~/lib/replay'
 import { computed, nextTick, ref, watch } from 'vue'
 import { DEFAULT_STYLE, SHAPE_LABEL_STYLE } from '@claudia/layout'
 import { countWords } from '~/lib/blocks'
-import { pictureSize, type PictureImport } from '~/lib/images'
+import { NEW_OBJECT_CAP, pictureSize, type PictureImport } from '~/lib/images'
+import { pictureOf, useObjectClipboard } from '~/lib/object-clipboard'
 import { NEW_OBJECT_WRAP, wrapAnnouncement, wrapLabel, wrapOf } from '~/lib/wrap'
 import { toMarkdown } from '~/lib/markdown'
 import { textStyleHost } from '~/lib/text-style-host'
@@ -44,6 +45,7 @@ import PrintPreview from './PrintPreview.vue'
 import ImageImportDialog from './ImageImportDialog.vue'
 import { textSource } from '~/lib/print/source'
 import { usePrint } from '~/lib/print/use-print'
+import { rotateItem } from '~/lib/rotate-menu'
 import type { Menu, MenuItem } from './MenuBar.vue'
 
 const props = defineProps<{ session: TextSession }>()
@@ -157,25 +159,21 @@ function closeStyleMenu() {
 
 // composes has one way to bring text in, however it arrives (typed, "Paste", or "Paste as plain text") — there is no
 // separate rich-paste path yet, so the two Edit items below are, honestly, the same operation.
-const CONTAINER_WIDTH = 420
-const CONTAINER_HEIGHT = 240
-
 /** Insert ▸ Container ▸ …: a container of the chosen type, hanging from the paragraph the caret is in (D560). */
 async function addContainer(type: string) {
   const at = state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
   if (!at) return
-  await session.addContainer(type, at, { w: CONTAINER_WIDTH, h: CONTAINER_HEIGHT })
+  await session.addContainer(type, at, NEW_OBJECT_CAP)
 }
 
-const PICTURE_HEIGHT = 240 // as high as this, unless that would be wider than a container may be
 /** Where the caret is, or the start of the text: what a new object hangs from. */
 const hangFrom = () => state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
 /** Edit ▸ Image…: a picture hangs from the character the caret is at, as a container does (E10.8, E10.16). It keeps its
- * own proportions, and is no wider than a container is by default. The text stops above it and goes on below (D1061). */
+ * own proportions, and is no bigger than 420 × 240 or the picture itself. The text stops above it and goes on below (D1061). */
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
   const at = hangFrom()
   if (!at) return Promise.resolve(null)
-  return session.addImage(picture, at, pictureSize(aspect, PICTURE_HEIGHT, CONTAINER_WIDTH), NEW_OBJECT_WRAP)
+  return session.addImage(picture, at, pictureSize(aspect, NEW_OBJECT_CAP.h, NEW_OBJECT_CAP.w, picture.natural), NEW_OBJECT_WRAP)
 }
 
 const SHAPE_HEIGHT = 160
@@ -209,7 +207,23 @@ function pictureInserted() {
   nextTick(() => editor.value?.focus())
 }
 
+/** Cut, Copy and Paste of a picture (D1229): the same module as in the other two apps; a paste hangs it from the caret. */
+const objectClip = useObjectClipboard({
+  selected: () => {
+    const id = state.selectedObject
+    const o = id ? state.objects[id] : null
+    return id && o ? { id, body: o, asset: o.ref ? state.images[o.ref] : undefined } : null
+  },
+  readonly: () => readonly.value,
+  remove: (id) => session.removeObject(id),
+  add: async (clip) => {
+    const at = hangFrom()
+    if (at) await session.addImage(pictureOf(clip), at, { w: clip.w, h: clip.h }, NEW_OBJECT_WRAP)
+  },
+})
+
 async function pasteFromClipboard() {
+  if (await objectClip.paste()) return
   let text: string
   try {
     text = await navigator.clipboard.readText()
@@ -277,6 +291,11 @@ const extraShortcuts = [
 ]
 
 // ------------------------------------------------------------------------------ tables (E9.32)
+/** Where the menu of an object or a table is open (D1225, D1224), and a turn being tried from its Rotate By…. */
+const objectMenu = ref<{ id: string; x: number; y: number } | null>(null)
+const turning = ref<{ id: string; turn: number } | null>(null)
+const objectMenuHost = ref<{ quarter: (direction: 1 | -1) => Promise<void>; openRotateBy: () => void } | null>(null)
+
 /** The table whose options are open, and the column the caret was in. */
 const optionsFor = ref<{ table: string; column?: string } | null>(null)
 
@@ -484,9 +503,6 @@ const menus = computed<Menu[]>(() => {
             { id: 'edit.nonbreaking-hyphen', label: t('Non-breaking Hyphen'), disabled: !typing(), action: () => HARD_HYPHEN.run() },
           ],
         },
-        // the table the caret is in (E9.32): on only in one of its boxes
-        { label: '', separator: true },
-        ...tableItems(c, tableHost),
       ],
     },
     insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }, insertTableItems(c, { add: () => (dialog.value = 'table'), possible: canInsertTable() })),
@@ -533,6 +549,14 @@ const menus = computed<Menu[]>(() => {
               },
             })),
         { label: '', separator: true },
+        // a quarter turn each way and any angle, for what turns (a chart and a table do not, D1021, D1224)
+        rotateItem(t, {
+          kind: () => (state.selectedObject ? (state.objects[state.selectedObject]?.kind ?? null) : null),
+          readonly: () => readonly.value || printing.value,
+          quarter: (direction) => void objectMenuHost.value?.quarter(direction),
+          by: () => objectMenuHost.value?.openRotateBy(),
+        }),
+        { label: '', separator: true },
         // one entry and one key that cycles the four modes (D1064); it says which mode the selected object has now
         {
           id: 'format.wrap-text',
@@ -561,6 +585,10 @@ const menus = computed<Menu[]>(() => {
         // Only the generic "Ask ai" (D126). The canned demo requests ("Review this text", "Review this paragraph") and
         // "Insert sample text" were taken out at the owner's request (2026-11-12): demo props, not features.
         askItem(c, ask),
+        // the table the caret is in (E9.32): on only in one of its boxes. In Tools since D1229, as computes has its pivot
+        // table there.
+        { label: '', separator: true },
+        ...tableItems(c, tableHost),
       ],
     },
     configMenu(c, { current: locale.value, choose }),
@@ -630,7 +658,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <StyleBar v-if="!printing" data-region="toolbar" :session="session" :view="view" :authors="authors" @view="view = $event" @authors="authors = $event" @styled="editor?.focus()" @look="openStyleMenu" />
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" :pages="pageNumbers" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" @reference-menu="refMenu = $event" @table-options="openTableOptions" />
+    <TextEditor v-else ref="editor" data-region="document" :session="session" :view="view" :authors="authors" :active="active" :marks="searchMarks" :pages="pageNumbers" :turning="turning" @suggestion="pick" @style-menu="openStyleMenu" @contents="openContents" @reference-menu="refMenu = $event" @table-options="openTableOptions" @object-menu="objectMenu = $event" />
     <template #footer>
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">
@@ -656,6 +684,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <ImageImportDialog v-if="dialog === 'image'" :add="addPicture" @close="dialog = null" @inserted="pictureInserted" />
       <StylesDialog v-if="dialog === 'styles'" :host="styleHost" @close="dialog = null" />
       <ReferencePicker v-if="picker" :x="picker.x" :y="picker.y" :targets="(q) => session.referenceTargets(q)" @choose="putReference" @close="(picker = null), editor?.focus()" />
+      <TextObjectMenu ref="objectMenuHost" :session="session" :menu="objectMenu" :table-host="tableHost" :clipboard="objectClip" @close="objectMenu = null" @turning="turning = $event" @styles="dialog = 'styles'" />
       <ContextMenu v-if="refMenu" :x="refMenu.x" :y="refMenu.y" :items="refMenuItems" :width="260" :label="t('Reference menu')" @close="refMenu = null" />
       <ContentsDialog v-if="dialog === 'contents' && contentsHost" :host="contentsHost" :title="t('Table of contents')" @close="dialog = null" />
       <NumberingDialog v-if="dialog === 'numbering'" :host="numberingHost" :initial="session.currentScheme() ?? undefined" @close="dialog = null" />

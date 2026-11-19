@@ -897,8 +897,9 @@ def _manifest(
 
 
 def _table_block() -> tuple[MenuEntry, ...]:
-    """Edit ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… (E9.32, D1208): composes only, and
-    on only while the caret is in a table box. Row and Column are computes' (same ids, words and keys); the others
+    """Tools ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell, Table Options… (E9.32, D1208; moved from Edit to Tools
+    by the owner, 2026-11-19, as computes has its pivot table there): composes only, and on only while the caret is in
+    a table box. Row and Column are computes' (same ids, words and keys); the others
     take Ctrl+Shift with a letter nobody else has, F, L, G, H (Insert ▸ Table… is F), X and Y for the two sorts."""
     return (
         *_row_column_menus(),
@@ -906,13 +907,13 @@ def _table_block() -> tuple[MenuEntry, ...]:
             "Sort",
             (
                 _page(
-                    "edit.sort-ascending",
+                    "tools.sort-ascending",
                     "Ascending",
                     "Order the rows of the table by the column the caret is in, smallest first",
                     accelerators=("<Primary><Shift>x",),
                 ),
                 _page(
-                    "edit.sort-descending",
+                    "tools.sort-descending",
                     "Descending",
                     "Order the rows of the table by the column the caret is in, largest first",
                     accelerators=("<Primary><Shift>y",),
@@ -920,19 +921,19 @@ def _table_block() -> tuple[MenuEntry, ...]:
             ),
         ),
         _page(
-            "edit.merge-cells",
+            "tools.merge-cells",
             "Merge Cells",
             "Make this cell and the one next to it one cell",
             accelerators=("<Primary><Shift>g",),
         ),
         _page(
-            "edit.split-cell",
+            "tools.split-cell",
             "Split Cell",
             "Make a merged cell into single cells again",
             accelerators=("<Primary><Shift>h",),
         ),
         _page(
-            "edit.table-options",
+            "tools.table-options",
             "Table Options…",
             "Header rows, banding, look, width and the columns of this table",
             accelerators=("<Primary><Shift>l",),
@@ -1029,7 +1030,6 @@ def composes() -> Manifest:
                     ),
                 ),
             ),
-            _table_block(),
         ),
     )
     view_menu = Menu(
@@ -1047,14 +1047,14 @@ def composes() -> Manifest:
             ),
         ),
     )
-    # Tools has only the generic entry (D126): the canned demo requests and Insert Sample Text went (2026-11-12).
+    # Tools has the generic entry (D126) and the table commands (D1229).
     return _manifest(
         "composes",
         "Claudia Composes",
         edit=edit_menu,
-        format_menu=_format_menu(look="Change how this kind of paragraph looks", wrap=True),
+        format_menu=_format_menu(look="Change how this kind of paragraph looks", wrap=True, rotate=True),
         view=view_menu,
-        tools=Menu("Tools", ((_tools_ask(),),)),
+        tools=Menu("Tools", ((_tools_ask(),), _table_block())),
         prints=True,
         tables=True,
     )
@@ -1182,7 +1182,7 @@ def computes() -> Manifest:
         "Claudia Computes",
         edit=edit_menu,
         format_menu=_format_menu(
-            look="Change how the object you have selected looks", clear_cell_style=True, describe=True
+            look="Change how the object you have selected looks", clear_cell_style=True, describe=True, rotate=True
         ),
         view=Menu("View", (_shared_view_block(authors=False),)),
         tools=tools_menu,

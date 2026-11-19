@@ -10,14 +10,14 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 
-from claudia_core import AddObject, Batch, DefineShape, ObjectBody, ObjectModel, paragraph_for
+from claudia_core import AddObject, Batch, DefineShape, ObjectBody, ObjectModel, SetText, paragraph_for, word_changes
 from claudia_creates import ShapeLibrary
 
 from .i18n import msg
 from .object_methods import Placement, spec
 from .protocol import Context, MethodTable, RequestError
 from .thing_names import default_name
-from .wire import done, fresh_id
+from .wire import current_revision, done, fresh_id
 
 #: The style a new object of each kind starts with: its container's slot (D304). A text box's box is a box style
 #: of its own (D310), so a change to it never has to deviate from Body text.
@@ -101,6 +101,26 @@ def add_shape_methods(
     table.method(
         "add_object", spec(placement.new, 'kind:str w:int h:int shape:str? text:text="" base:revision?'), write=True
     )(add_object)
+
+    def set_text(ctx: Context, *, id, text, base) -> dict:
+        """Replace the text of an object."""
+        return done(ctx, SetText(id, text), base)
+
+    def write_words(ctx: Context, *, id, text, base) -> dict:
+        """Write the words of an object as `text`, as a person types them (step G): only what differs from the words it
+        has now changes, so the words that stay keep who wrote them, where `set_text` would give them all to whoever
+        saved. One step in the history; none when nothing changed. `command_error` for a picture, a container or a
+        chart, which carry no words."""
+        words = model_of(ctx).get_object(id).body.paragraph
+        if words is None:
+            raise RequestError("command_error", msg("an image carries no text"))
+        steps = word_changes(id, words.text, text)
+        if not steps:
+            return {"revision": current_revision(ctx)}
+        return done(ctx, Batch(steps, "Edit text"), base)
+
+    table.method("set_text", "id:str text:text base:revision?", write=True)(set_text)
+    table.method("write_words", "id:str text:text base:revision?", write=True)(write_words)
 
 
 __all__ = ["ADDABLE_KINDS", "PARAGRAPH_STYLE_OF_KIND", "STYLE_OF_KIND", "add_shape_methods", "check_addable"]

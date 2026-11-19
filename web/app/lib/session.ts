@@ -780,7 +780,7 @@ export class Session extends BaseSession<State> {
   /** Put a rendered container of `type` on the sheet that is shown, anchored to a cell (D560); its id, or `null` after
    * telling the person why not. */
   addContainer(type: string, anchor: { row: number; col: number; w: number; h: number }): Promise<string | null> {
-    return this.addRendering(type, { sheet: this.state.activeSheet, row: anchor.row, col: anchor.col }, { w: anchor.w, h: anchor.h })
+    return this.addRendering(type, { sheet: this.state.activeSheet, row: anchor.row, col: anchor.col }, { w: anchor.w, h: anchor.h }, undefined, true)
   }
 
   /** Take a new chart definition into the document (E6.6); its id, or `null` after telling the person why not.
@@ -899,6 +899,11 @@ export class Session extends BaseSession<State> {
    * corner too. An image must keep its own proportions (the server refuses otherwise); a diagram keeps none. */
   async resizeObject(id: string, frame: { row: number; col: number; w: number; h: number }): Promise<boolean> {
     return (await this.attempt('resize_object', { id, ...frame, base: this.state.revision })) !== false
+  }
+
+  /** Turn an object to `rotation` whole degrees clockwise about its centre (D1021); its anchor cell stays. */
+  async rotateObject(id: string, rotation: number): Promise<boolean> {
+    return (await this.attempt('rotate_object', { id, rotation, base: this.state.revision })) !== false
   }
 
   /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the

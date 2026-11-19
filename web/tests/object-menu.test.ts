@@ -1,179 +1,157 @@
 import { describe, expect, it, vi } from 'vitest'
-import { contextMenuItems } from '~/lib/object-menu'
-import type { SlideObject } from '~/lib/slide-session'
+import { contextMenuItems, type MenuSubject } from '~/lib/object-menu'
 
-const text = (extra: object = {}): SlideObject => ({
-  id: 't1',
-  slide: 's1',
-  kind: 'text',
-  x: 0,
-  y: 0,
-  w: 100,
-  h: 100,
-  style: 'body-text',
-  text: 'hello',
-  ref: null,
-  imported: null,
-  snap: true,
-  rotation: 0,
-  ...extra,
+const text = (extra: Partial<MenuSubject> = {}): MenuSubject => ({ kind: 'text', snap: true, ...extra })
+const shape = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'shape', ...extra })
+const image = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'image', ...extra })
+const chart = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'diagram', ...extra })
+const container = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'rendered', ...extra })
+
+const actions = () => ({
+  describe: vi.fn(),
+  edit: vi.fn(),
+  style: vi.fn(),
+  rotateBy: vi.fn(),
+  remove: vi.fn(),
+  cut: vi.fn(),
+  copy: vi.fn(),
+  setSnap: vi.fn(),
+  setWrap: vi.fn(),
+  setGap: vi.fn(),
 })
-const shape = (extra: object = {}): SlideObject => ({ ...text(extra), id: 's1-shape', kind: 'shape', ref: 'circle' })
-const image = (extra: object = {}): SlideObject => ({ ...text(extra), id: 'i1', kind: 'image', ref: 'a'.repeat(64) })
+const labels = (items: ReturnType<typeof contextMenuItems>) => items.filter((i) => !i.separator).map((i) => i.label)
+const groups = (items: ReturnType<typeof contextMenuItems>) => {
+  const out: string[][] = [[]]
+  for (const i of items) {
+    if (i.separator) out.push([])
+    else out.at(-1)!.push(i.label)
+  }
+  return out
+}
 
-const actions = () => ({ edit: vi.fn(), remove: vi.fn(), cut: vi.fn(), copy: vi.fn(), properties: vi.fn(), setSnap: vi.fn(), style: vi.fn(), describe: vi.fn(), rotateRight: vi.fn(), rotateLeft: vi.fn(), rotateBy: vi.fn() })
+describe('the object menu is one list (D1225)', () => {
+  it('for a text box in creates: Describe, Edit text, Style, Rotate by, then the grid, then Delete — no 90° entries', () => {
+    const items = contextMenuItems(text(), false, actions(), { grid: true })
+    expect(groups(items)).toEqual([['Name & describe…', 'Edit text', 'Style…', 'Rotate by…'], ['Release from grid'], ['Delete']])
+  })
 
-describe('contextMenuItems', () => {
-  it('offers Edit text, the grid toggle and Delete for a text object, each wired to its own action', () => {
+  it('for a picture: no Edit text, Cut and Copy in a group of their own, and no "Properties" (Style… holds it)', () => {
+    const items = contextMenuItems(image(), false, actions(), { grid: true })
+    expect(groups(items)).toEqual([['Name & describe…', 'Style…', 'Rotate by…'], ['Cut', 'Copy'], ['Release from grid'], ['Delete']])
+  })
+
+  it('for a shape and for a container (rendered text): the same as for a text box', () => {
+    for (const o of [shape(), container()]) expect(labels(contextMenuItems(o, false, actions(), { grid: true }))).toEqual(['Name & describe…', 'Edit text', 'Style…', 'Rotate by…', 'Release from grid', 'Delete'])
+  })
+
+  it('for a chart: no Rotate by… (D1021) and no Edit text, since it holds no paragraph', () => {
+    expect(labels(contextMenuItems(chart(), false, actions(), { grid: true }))).toEqual(['Name & describe…', 'Style…', 'Release from grid', 'Delete'])
+  })
+
+  it('offers the grid only where the app has one: computes and composes have none', () => {
+    expect(labels(contextMenuItems(text(), false, actions()))).not.toContain('Release from grid')
+    expect(labels(contextMenuItems(text(), false, actions()))).not.toContain('Snap to grid')
+  })
+
+  it('never offers Rotate Right 90° or Rotate Left 90° (Rotate by… does them)', () => {
+    for (const o of [text(), shape(), image(), chart(), container()]) {
+      expect(labels(contextMenuItems(o, false, actions(), { grid: true })).some((l) => l.startsWith('Rotate') && l !== 'Rotate by…')).toBe(false)
+    }
+  })
+})
+
+describe('each entry is wired to its own action', () => {
+  it('runs describe, edit, style, rotate by and delete, and nothing else', () => {
     const a = actions()
-    const items = contextMenuItems(text(), false, a)
-    const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Style…', 'Describe…', 'Edit Text', 'Rotate Right 90°', 'Rotate Left 90°', 'Rotate By…', 'Release from grid', 'Delete'])
-
-    items.find((i) => i.label === 'Edit Text')!.action!()
-    expect(a.edit).toHaveBeenCalledOnce()
-    expect(a.remove).not.toHaveBeenCalled()
-
-    items.find((i) => i.label === 'Delete')!.action!()
-    expect(a.remove).toHaveBeenCalledOnce()
+    const items = contextMenuItems(text(), false, a, { grid: true })
+    for (const label of ['Name & describe…', 'Edit text', 'Style…', 'Rotate by…', 'Delete']) items.find((i) => i.label === label)!.action!()
+    expect([a.describe, a.edit, a.style, a.rotateBy, a.remove].map((f) => f.mock.calls.length)).toEqual([1, 1, 1, 1, 1])
+    expect([a.cut, a.copy, a.setSnap, a.setWrap].map((f) => f.mock.calls.length)).toEqual([0, 0, 0, 0])
   })
-
-  it('offers Edit text for a shape too, the same as the Edit menu does (Enter/F2 works on it there)', () => {
-    const items = contextMenuItems(shape(), false, actions())
-    expect(items.map((i) => i.label)).toContain('Edit Text')
-  })
-
-  it('leaves Cut/Copy/Properties off a text object or shape, unchanged from before the image-properties bug fix', () => {
-    const items = contextMenuItems(shape(), false, actions())
-    const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Style…', 'Describe…', 'Edit Text', 'Rotate Right 90°', 'Rotate Left 90°', 'Rotate By…', 'Release from grid', 'Delete'])
-  })
-
-  it('offers Cut, Copy, Properties, the grid toggle and Delete for an image, in that order, no Edit text (it has no text to write)', () => {
+  it('runs Cut and Copy for a picture', () => {
     const a = actions()
     const items = contextMenuItems(image(), false, a)
-    const labels = items.filter((i) => !i.separator).map((i) => i.label)
-    expect(labels).toEqual(['Style…', 'Describe…', 'Cut', 'Copy', 'Properties', 'Rotate Right 90°', 'Rotate Left 90°', 'Rotate By…', 'Release from grid', 'Delete'])
-
     items.find((i) => i.label === 'Cut')!.action!()
-    expect(a.cut).toHaveBeenCalledOnce()
     items.find((i) => i.label === 'Copy')!.action!()
-    expect(a.copy).toHaveBeenCalledOnce()
-    items.find((i) => i.label === 'Properties')!.action!()
-    expect(a.properties).toHaveBeenCalledOnce()
-    items.find((i) => i.label === 'Delete')!.action!()
-    expect(a.remove).toHaveBeenCalledOnce()
-  })
-
-  it('disables Cut, Delete and the grid toggle for a viewer, but leaves Copy and Properties enabled since those only read', () => {
-    const items = contextMenuItems(image(), true, actions())
-    expect(items.find((i) => i.label === 'Cut')!.disabled).toBe(true)
-    expect(items.find((i) => i.label === 'Delete')!.disabled).toBe(true)
-    expect(items.find((i) => i.label === 'Release from grid')!.disabled).toBe(true)
-    expect(items.find((i) => i.label === 'Copy')!.disabled).toBeFalsy()
-    expect(items.find((i) => i.label === 'Properties')!.disabled).toBeFalsy()
-  })
-
-  it('disables every action for a viewer on a text object, same as the Edit menu already does', () => {
-    const items = contextMenuItems(text(), true, actions())
-    expect(items.filter((i) => !i.separator).every((i) => i.disabled)).toBe(true)
-  })
-
-  it('gives Edit text, Cut and Delete their usual keyboard hints, so the menu teaches the shortcut too', () => {
-    const textItems = contextMenuItems(text(), false, actions())
-    expect(textItems.find((i) => i.label === 'Edit Text')!.hint).toBe('Enter')
-    expect(textItems.find((i) => i.label === 'Delete')!.hint).toBe('Del')
-
-    const imageItems = contextMenuItems(image(), false, actions())
-    expect(imageItems.find((i) => i.label === 'Cut')!.hint).toBe('Ctrl+X')
-    expect(imageItems.find((i) => i.label === 'Copy')!.hint).toBe('Ctrl+C')
-    expect(imageItems.find((i) => i.label === 'Delete')!.hint).toBe('Del')
-  })
-
-  describe('the grid toggle (E10.15)', () => {
-    it('offers "Release from grid" for an object that snaps, and calls setSnap(false)', () => {
-      const acts = actions()
-      const items = contextMenuItems(text({ snap: true }), false, acts)
-      const toggle = items.find((i) => i.label === 'Release from grid')!
-      toggle.action!()
-      expect(acts.setSnap).toHaveBeenCalledWith(false)
-    })
-
-    it('offers "Snap to grid" for an object that was released, and calls setSnap(true)', () => {
-      const acts = actions()
-      const items = contextMenuItems(text({ snap: false }), false, acts)
-      const toggle = items.find((i) => i.label === 'Snap to grid')!
-      toggle.action!()
-      expect(acts.setSnap).toHaveBeenCalledWith(true)
-    })
-
-    it('is offered for a shape and an image too, not only a text box', () => {
-      expect(contextMenuItems(shape({ snap: false }), false, actions()).map((i) => i.label)).toContain('Snap to grid')
-      expect(contextMenuItems(image({ snap: false }), false, actions()).map((i) => i.label)).toContain('Snap to grid')
-    })
+    expect([a.cut.mock.calls.length, a.copy.mock.calls.length]).toEqual([1, 1])
   })
 })
 
-describe('Style… (E9.7, D203)', () => {
-  it('is offered first for every kind, because every object has a look of its own', () => {
-    for (const o of [text(), shape(), image()]) {
-      const items = contextMenuItems(o, false, actions())
-      expect(items.filter((i) => !i.separator)[0]!.label).toBe('Style…')
-    }
+describe('keys', () => {
+  it('shows the key every entry has in the menus (Enter, Ctrl+Alt+D, Ctrl+Alt+A, Ctrl+Shift+Alt+Z, Del, Ctrl+X, Ctrl+C)', () => {
+    const items = contextMenuItems(image(), false, actions(), { grid: true })
+    const hint = (label: string) => items.find((i) => i.label === label)!.hint
+    expect([hint('Name & describe…'), hint('Style…'), hint('Rotate by…'), hint('Cut'), hint('Copy'), hint('Delete')]).toEqual(['Ctrl+Alt+D', 'Ctrl+Alt+A', 'Ctrl+Shift+Alt+Z', 'Ctrl+X', 'Ctrl+C', 'Del'])
+    expect(contextMenuItems(text(), false, actions()).find((i) => i.label === 'Edit text')!.hint).toBe('Enter')
   })
+})
 
-  it('calls the action the canvas supplies, which opens the style menu where the click was', () => {
+describe('a viewer may look but not change', () => {
+  it('disables every entry except Copy, which only reads', () => {
+    const items = contextMenuItems(image(), true, actions(), { grid: true })
+    for (const i of items.filter((x) => !x.separator)) expect(!!i.disabled, i.label).toBe(i.label !== 'Copy')
+  })
+  it('disables every entry for a text box', () => {
+    expect(contextMenuItems(text(), true, actions(), { grid: true }).filter((i) => !i.separator).every((i) => i.disabled)).toBe(true)
+  })
+})
+
+describe('the grid toggle (E10.15)', () => {
+  it('is "Release from grid" for an object that snaps and sets snap off', () => {
     const a = actions()
-    contextMenuItems(shape(), false, a).find((i) => i.label === 'Style…')!.action!()
-    expect(a.style).toHaveBeenCalledOnce()
+    contextMenuItems(text({ snap: true }), false, a, { grid: true }).find((i) => i.label === 'Release from grid')!.action!()
+    expect(a.setSnap).toHaveBeenCalledWith(false)
   })
-
-  it('is disabled for a viewer: a style change is a change to the document', () => {
-    const items = contextMenuItems(shape(), true, actions())
-    expect(items.find((i) => i.label === 'Style…')!.disabled).toBe(true)
-  })
-})
-
-describe('contextMenuItems: describing an object (BITV 1.1.1)', () => {
-  it('offers Describe… on every kind, with its key, and runs the describe action', () => {
-    for (const o of [text(), shape(), image()]) {
-      const a = actions()
-      const item = contextMenuItems(o, false, a).find((i) => i.label === 'Describe…')!
-      expect(item.hint).toBe('Ctrl+Alt+D')
-      expect(item.disabled).toBe(false)
-      item.action!()
-      expect(a.describe).toHaveBeenCalledOnce()
-    }
-  })
-
-  it('is disabled for a viewer, who may look but not change', () => {
-    expect(contextMenuItems(image(), true, actions()).find((i) => i.label === 'Describe…')!.disabled).toBe(true)
-  })
-})
-
-describe('turning (D1024)', () => {
-  it('offers the three turns, each wired to its own action, with the keys of Format ▸ Rotate', () => {
+  it('is "Snap to grid" for an object that was released and sets snap on', () => {
     const a = actions()
-    const items = contextMenuItems(shape(), false, a)
-    const right = items.find((i) => i.label === 'Rotate Right 90°')!
-    const left = items.find((i) => i.label === 'Rotate Left 90°')!
-    const by = items.find((i) => i.label === 'Rotate By…')!
-    expect([right.hint, left.hint, by.hint]).toEqual(['Ctrl+Alt+.', 'Ctrl+Alt+,', 'Ctrl+Shift+Alt+Z'])
-    right.action!()
-    left.action!()
-    by.action!()
-    expect([a.rotateRight, a.rotateLeft, a.rotateBy].map((f) => f.mock.calls.length)).toEqual([1, 1, 1])
+    contextMenuItems(text({ snap: false }), false, a, { grid: true }).find((i) => i.label === 'Snap to grid')!.action!()
+    expect(a.setSnap).toHaveBeenCalledWith(true)
   })
-  it('turns a picture and a text box as well, and a viewer may look but not turn', () => {
-    for (const o of [image(), text()]) {
-      expect(contextMenuItems(o, false, actions()).some((i) => i.label === 'Rotate By…')).toBe(true)
-    }
-    const turns = contextMenuItems(image(), true, actions()).filter((i) => i.label.startsWith('Rotate'))
-    expect(turns).toHaveLength(3)
-    expect(turns.every((i) => i.disabled)).toBe(true)
+})
+
+describe('Wrap text… (composes only, D1061)', () => {
+  const wrapEntry = (items: ReturnType<typeof contextMenuItems>) => items.find((i) => i.label === 'Wrap text…')!
+
+  it('is a submenu of the four modes with a tick on the current one, then Gap…, and shows the key that cycles them', () => {
+    const entry = wrapEntry(contextMenuItems(image(), false, actions(), { wrap: 'around' }))
+    expect(entry.hint).toBe('Ctrl+Alt+R')
+    const modes = entry.items!.filter((i) => !i.separator)
+    expect(modes.map((i) => i.label)).toEqual(['Over the text', 'Around the object', 'Above and below the object', 'Behind the text', 'Gap…'])
+    expect(modes.map((i) => i.checked)).toEqual([false, true, false, false, undefined])
   })
-  it('leaves the turns off a chart, which does not turn', () => {
-    const items = contextMenuItems(text({ kind: 'diagram' }), false, actions())
-    expect(items.some((i) => i.label.startsWith('Rotate'))).toBe(false)
+
+  it('sets the mode that is chosen, and opens the gap', () => {
+    const a = actions()
+    const entry = wrapEntry(contextMenuItems(shape(), false, a, { wrap: 'over' }))
+    entry.items!.find((i) => i.label === 'Behind the text')!.action!()
+    expect(a.setWrap).toHaveBeenCalledWith('behind')
+    entry.items!.find((i) => i.label === 'Gap…')!.action!()
+    expect(a.setGap).toHaveBeenCalledOnce()
+  })
+
+  it('sits between Rotate by… and the Cut/Copy group, in the first group', () => {
+    expect(groups(contextMenuItems(image(), false, actions(), { wrap: 'over' }))[0]).toEqual(['Name & describe…', 'Style…', 'Rotate by…', 'Wrap text…'])
+  })
+
+  it('is left off where the app has no wrap, and disabled for a viewer', () => {
+    expect(labels(contextMenuItems(image(), false, actions(), { grid: true }))).not.toContain('Wrap text…')
+    expect(wrapEntry(contextMenuItems(image(), true, actions(), { wrap: 'over' })).disabled).toBe(true)
+  })
+
+  it('is offered for a chart, which floats in composes like any other object', () => {
+    expect(labels(contextMenuItems(chart(), false, actions(), { wrap: 'over' }))).toContain('Wrap text…')
+  })
+})
+
+describe('what an app leaves out (composes, for now)', () => {
+  it('leaves Edit text off where the words cannot be written from here, and keeps it for a container', () => {
+    expect(labels(contextMenuItems(text(), false, actions(), { edit: false }))).not.toContain('Edit text')
+    expect(labels(contextMenuItems(container(), false, actions(), { edit: true }))).toContain('Edit text')
+  })
+  it('leaves Cut and Copy off a picture where there is no clipboard for objects, with their group', () => {
+    const items = contextMenuItems(image(), false, actions(), { clipboard: false })
+    expect(labels(items)).not.toContain('Cut')
+    expect(labels(items)).not.toContain('Copy')
+    expect(groups(items)).toEqual([['Name & describe…', 'Style…', 'Rotate by…'], ['Delete']])
   })
 })
