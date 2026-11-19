@@ -1,4 +1,18 @@
 
+The suite has support by agentic ai running on the server. The user can run her own model like qwen or deepseek using openvino integration.
+
+Each of the programs of the suite integrates the AI the same way via a toolbox-like widget that is docked in workspace containing the document history (all commands that were used to create the current document state) and a chat function, with which users can mention each other using @<username> <message>. The AI is just another user - there can be only one ai user per document and session.
+
+The calc/excel/table part of the suite should focus on the following broad use cases:
+- Project Management
+- Financial Modeling
+- Science
+- Data analysis
+- Education
+
+It should be inspired by the thinking of Bret Victor: it helps users with co-thinking, and user understanding through interaction and visualization/simulation of and with the data.
+
+
 Claudia starts as an office suite, but its aim is higher: 
 
 Claudia helps single users or groups of users think and reason 
