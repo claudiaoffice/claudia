@@ -46,6 +46,9 @@
   "methods": {},
   "properties": []
  },
+ "BASE_FONT_PX": {
+  "value": "16.0"
+ },
  "BOX": {
   "value": "100"
  },
@@ -1442,6 +1445,7 @@
    "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None, *, shared_names: 'bool' = True) -> 'None'",
    "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'ObjectsChanged'",
    "is_entry": "(self, paragraph_id: 'str') -> 'bool'",
+   "least_new_size": "(self) -> 'int'",
    "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
    "name_is_fixed": "(self, thing_id: 'str') -> 'bool'",
    "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",
@@ -1469,6 +1473,7 @@
    "replace_table": "(self, definition: 'TableDef') -> 'TableDef'",
    "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = (), renderings: 'Iterable[dict]' = (), tables: 'Iterable[dict]' = ()) -> 'None'",
    "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",
+   "room_for_new_object": "(self, anchor: 'A | None') -> 'int | None'",
    "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
    "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
@@ -2995,6 +3000,9 @@
  "fits": {
   "function": "(kind: 'str', slot: 'Slot') -> 'bool'"
  },
+ "font_size_px": {
+  "function": "(value: 'str | None', base: 'float' = 16.0) -> 'float | None'"
+ },
  "format_css": {
   "function": "(css: 'Mapping[str, str]') -> 'str'"
  },
@@ -3027,6 +3035,9 @@
  },
  "name_problem": {
   "function": "(text: 'str') -> 'str | None'"
+ },
+ "new_object_size": {
+  "function": "(most_w: 'float', most_h: 'float', picture_w: 'float', picture_h: 'float', *, least: 'float', room: 'float | None' = None, smallest: 'int' = 20) -> 'tuple[int, int]'"
  },
  "new_registry": {
   "function": "() -> 'CommandRegistry'"

@@ -176,7 +176,7 @@ const hangFrom = () => state.selection?.focus ?? (state.blocks[0] ? { block: sta
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
   const at = hangFrom()
   if (!at) return Promise.resolve(null)
-  return session.addImage(picture, at, pictureSize(aspect, NEW_OBJECT_CAP.h, NEW_OBJECT_CAP.w, picture.natural), NEW_OBJECT_WRAP)
+  return session.addImage({ ...picture, fit: true }, at, pictureSize(aspect, NEW_OBJECT_CAP.h, NEW_OBJECT_CAP.w, picture.natural), NEW_OBJECT_WRAP)
 }
 
 const SHAPE_HEIGHT = 160

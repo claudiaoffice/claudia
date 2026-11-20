@@ -137,6 +137,20 @@ export function stepBox(t: TableInfo, from: { row: string; col: string }, step: 
   return to ? { row: to.row, col: to.col } : null
 }
 
+/** Whether `step` from the box `from` takes the caret out of the table, and to which side (D1330): the down arrow
+ *  where no box is below, the up arrow where none is above; the right arrow only from the very last box, the left
+ *  arrow only from the very first. `null`: the step stays in the table (or does nothing there). Tab and Shift+Tab
+ *  never leave: Tab in the last box adds a row (E9.32). */
+export function leaveSide(t: TableInfo, from: { row: string; col: string }, step: Step): 'before' | 'after' | null {
+  if (step === 'next' || step === 'prev' || stepBox(t, from, step) !== null) return null
+  if (step === 'down') return 'after'
+  if (step === 'up') return 'before'
+  const grid = gridOf(t)
+  const all = [...grid.header, ...grid.body].flat()
+  const edge = step === 'right' ? all.at(-1) : all[0]
+  return edge && edge.row === from.row && edge.col === from.col ? (step === 'right' ? 'after' : 'before') : null
+}
+
 /** What Merge Cells joins for the box the caret is in (there is no selection of several boxes yet): the box and the one
  *  to its right, else the one below it. Only boxes of the same size and in line are joined, a header box is never joined
  *  with a body box, and a box that is joined already is split first. `null` when there is nothing to join. */

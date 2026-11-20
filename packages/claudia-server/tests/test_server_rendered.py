@@ -343,7 +343,8 @@ def test_a_container_added_to_fit_is_shown_at_its_pictures_own_size_if_that_is_s
     added = put_on_slide(deck, desk, w=420, h=240, fit=True)
     render(desk, deck, added["rendering"])
     body = deck.model.get_object(added["object"]).body
-    assert (body.w, body.h) == (30, 20), "the picture is 30 × 10, and an object is at least 20 units a side"
+    # D1332: and at least as tall as the body text (40 on a slide), with its proportions; it used to be 30 × 20
+    assert (body.w, body.h) == (120, 40), "the picture is 30 × 10, raised to the body text's 40"
 
 
 def test_a_container_added_to_fit_goes_into_its_frame_if_the_picture_is_larger(deck, desk):

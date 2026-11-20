@@ -384,6 +384,15 @@ describe('floating objects (images, E6.17)', () => {
     expect(session.state.images[ASSET.id]).toBeUndefined()
   })
 
+  it('asks the server to size a picture from a file, and only then (D1332)', async () => {
+    const { link, session } = await opened()
+    link.handlers.add_image = () => ({ object: 'i1', revision: 'main:4' })
+    await session.addImage({ data: 'AA==', alt: 'a dot', sourceName: 'dot.png', sourcePath: null, fit: true }, { row: 2, col: 1, w: 20, h: 20 })
+    expect(link.last('add_image')).toMatchObject({ fit: true })
+    await session.addImage({ data: 'AA==', alt: 'a dot', sourceName: 'dot.png', sourcePath: null }, { row: 2, col: 1, w: 20, h: 20 })
+    expect(link.last('add_image')).not.toHaveProperty('fit')
+  })
+
   it('imports a picture, anchored to a cell with a fixed pixel size', async () => {
     const { link, session } = await opened()
     link.handlers.add_image = () => ({ object: 'i1', revision: 'main:4' })

@@ -6,6 +6,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `SplitBlock.keep` (D1331): what hangs exactly at the cut stays in the paragraph that is cut, so that a paragraph can
+  be made after a table at the end of the text; written only when set, so older logs read the same.
+- `TextModel.room_for_new_object`: the text column of the page in CSS pixels (D1332); `body_text_style` is `body`.
 - `requirements()` of a text: the fonts its styles ask for by name (`Requirements.fonts`), for the font report a
   server makes when it is opened (E1.9, D1306).
 - Paragraphs have names from the start and can be described (E1.13, D1310, D1311, D1317, D1318): **`SplitBlock.name`**
@@ -24,6 +27,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- The inverse of `JoinBlocks` is a split that keeps what hangs at the cut when the joined paragraph had no objects of
+  its own (D1331): undoing a join no longer carries an object that hung at the end of the first paragraph into the
+  second.
 - A heading is called by its title (D1311): `thing_name` and `named_things` work it out each time, with "(2)" on a
   second heading that has the same words, so it cannot go stale; a name given to a heading is kept for when it is a
   paragraph again. `split` hands a name that is taken on with a number in brackets.

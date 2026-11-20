@@ -69,3 +69,49 @@ def test_an_anchor_round_trips_and_refuses_what_is_not_one():
     ):
         with pytest.raises(ValueError):
             BlockAnchor.from_data(bad)
+
+
+# D1331: a paragraph after what hangs at the end of a paragraph (a table at the end of the text), not before it
+def test_a_split_that_keeps_leaves_what_hangs_at_the_cut_where_it_is():
+    d = text_with_a_box("Hello", offset=5)
+    d.execute(SplitBlock("b1", 5, "b2", "body", keep=True), author="ann")
+    assert anchor(d) == ("b1", 5), "the object stays with the paragraph it hung from"
+    assert [b.id for b in d.model.blocks] == ["b1", "b2"]
+    assert d.model.block("b2").text == ""
+    assert d.model.objects_on("b2") == []
+
+
+def test_a_split_that_keeps_still_carries_what_hangs_after_the_cut():
+    d = text_with_a_box("Hello world", offset=8)
+    d.execute(SplitBlock("b1", 6, "b2", "body", keep=True), author="ann")
+    assert anchor(d) == ("b2", 2), "only what hangs exactly at the cut stays"
+
+
+def test_undo_and_redo_of_a_split_that_keeps_leave_the_object_where_it_was():
+    d = text_with_a_box("Hello", offset=5)
+    d.execute(SplitBlock("b1", 5, "b2", "body", keep=True), author="ann")
+    d.undo("ann")
+    assert [b.id for b in d.model.blocks] == ["b1"]
+    assert anchor(d) == ("b1", 5)
+    d.redo("ann")
+    assert [b.id for b in d.model.blocks] == ["b1", "b2"]
+    assert anchor(d) == ("b1", 5), "redo must not carry the object into the new paragraph"
+
+
+def test_undoing_the_join_of_a_paragraph_without_objects_does_not_carry_the_others_away():
+    d = text_with_a_box("Hello", offset=5)
+    d.execute(SplitBlock("b1", 5, "b2", "body", keep=True), author="ann")
+    d.execute(InsertText("b2", 0, "next"), author="ann")
+    d.execute(JoinBlocks("b2", "b1", 5), author="ann")
+    assert d.model.block("b1").text == "Hellonext"
+    d.undo("ann")
+    assert anchor(d) == ("b1", 5), "the object hung from b1 before the join and does after its undo"
+    assert d.model.block("b2").text == "next"
+
+
+def test_keep_is_written_only_when_it_is_set():
+    assert "keep" not in SplitBlock("b1", 5, "b2", "body").to_data()
+    data = SplitBlock("b1", 5, "b2", "body", keep=True).to_data()
+    assert data["keep"] is True
+    assert SplitBlock.from_data(data, None) == SplitBlock("b1", 5, "b2", "body", keep=True)
+    assert SplitBlock.from_data({"block": "b1", "offset": 5, "new_id": "b2", "style": "body"}, None).keep is False

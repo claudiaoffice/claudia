@@ -149,6 +149,13 @@ describe('containers in a text', () => {
     expect(link.last('add_image')).toEqual({ block: 'b1', offset: 2, w: 300, h: 200, data: 'AAAA', alt: 'a cat', source_name: 'cat.png', source_path: null, base: 'main:2' })
     expect(state.selectedObject).toBe('o7')
   })
+  it('asks the server to size a picture from a file, and only then (D1332)', async () => {
+    const { link, session } = await opened()
+    await session.addImage({ data: 'AAAA', alt: 'a dot', sourceName: 'dot.png', sourcePath: null, fit: true }, { block: 'b2', offset: 0 }, { w: 8, h: 8 })
+    expect(link.last('add_image')).toMatchObject({ fit: true, w: 8, h: 8 })
+    await session.addImage({ data: 'AAAA', alt: 'a dot', sourceName: 'dot.png', sourcePath: null }, { block: 'b2', offset: 0 }, { w: 40, h: 40 })
+    expect(link.last('add_image')).not.toHaveProperty('fit')
+  })
   it('says that a picture is only decoration, and then needs no words', async () => {
     const { link, session } = await opened()
     await session.addImage({ data: 'AAAA', alt: '', sourceName: 'line.png', sourcePath: null, decorative: true }, { block: 'b2', offset: 0 }, { w: 100, h: 20 })
@@ -158,7 +165,8 @@ describe('containers in a text', () => {
     const { link, session, state } = await opened()
     // 'a😀b': after the emoji is unit 3 here, character 2 there
     expect(await session.addContainer('latex', { block: 'b1', offset: 3 }, { w: 300, h: 100 })).toBe('o9')
-    expect(link.last('add_rendering')).toMatchObject({ block: 'b1', offset: 2, w: 300, h: 100, type: 'latex', source: 'x^2' })
+    expect(link.last('add_rendering')).toMatchObject({ block: 'b1', offset: 2, w: 300, h: 100, type: 'latex', source: 'x^2', fit: true })
+    expect(link.last('add_rendering')).toMatchObject({ wrap: 'above-below' }) // the words go above and below it (D1334)
     expect(state.selectedObject).toBe('o9')
   })
   it('offers the shapes the server has, and keeps the ones the document uses apart', async () => {
@@ -235,7 +243,7 @@ describe('containers in a text', () => {
   it('turns pasted text that is one fenced block into a container at the caret', async () => {
     const { link, session } = await opened()
     expect(await session.pasteFence('```latex\nE=mc^2\n```', { block: 'b2', offset: 1 })).toBe('o9')
-    expect(link.last('add_rendering')).toMatchObject({ block: 'b2', offset: 1, type: 'latex', source: 'E=mc^2' })
+    expect(link.last('add_rendering')).toMatchObject({ block: 'b2', offset: 1, type: 'latex', source: 'E=mc^2', wrap: 'above-below' })
   })
   it('leaves other text to be pasted as text', async () => {
     const { link, session } = await opened()

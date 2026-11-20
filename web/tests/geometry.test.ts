@@ -74,6 +74,27 @@ describe('resizeFrame without a fixed shape', () => {
     expect(resizeFrame(start, 'se', -1000, -1000, null)).toEqual({ x: 100, y: 100, w: 20, h: 20 })
     expect(resizeFrame(start, 'nw', 1000, 1000, null)).toEqual({ x: 480, y: 280, w: 20, h: 20 })
   })
+  // B6: composes measures its frames on the page, in fractions of a pixel; the server takes whole units only
+  describe('a frame measured in fractions of a pixel', () => {
+    const measured: Frame = { x: 236.5, y: 40.25, w: 260.1875, h: 100.4 }
+    const whole = (f: Frame) => Number.isInteger(f.w) && Number.isInteger(f.h)
+    it.each(['se', 'e', 's', 'nw', 'w', 'n', 'ne', 'sw'] as const)('the %s handle gives a whole width and height', (handle) => {
+      expect(whole(resizeFrame(measured, handle, 40.3, 20.7, null, null, { w: 2000, h: 2000 }))).toBe(true)
+    })
+    it('the edge that is not dragged stays exactly where it was', () => {
+      const se = resizeFrame(measured, 'se', 40, 20, null, null, { w: 2000, h: 2000 })
+      expect([se.x, se.y]).toEqual([236.5, 40.25])
+      const nw = resizeFrame(measured, 'nw', -40, -20, null, null, { w: 2000, h: 2000 })
+      expect(nw.x + nw.w).toBeCloseTo(measured.x + measured.w, 0)
+      expect(nw.y + nw.h).toBeCloseTo(measured.y + measured.h, 0)
+    })
+    it('keeps the least size in whole units', () => {
+      expect(resizeFrame(measured, 'se', -1000, -1000, null, null, { w: 2000, h: 2000 })).toMatchObject({ w: 20, h: 20 })
+    })
+    it('with proportions to keep, too', () => {
+      expect(whole(resizeFrame(measured, 'se', 40.3, 20.7, 2.5, null, { w: 2000, h: 2000 }))).toBe(true)
+    })
+  })
   it('does not leave the slide', () => {
     expect(resizeFrame(start, 'se', 5000, 5000, null)).toEqual({ x: 100, y: 100, w: SLIDE_W - 100, h: SLIDE_H - 100 })
     expect(resizeFrame(start, 'nw', -5000, -5000, null)).toEqual({ x: 0, y: 0, w: 500, h: 300 })
@@ -145,6 +166,11 @@ describe('insertFrame', () => {
   it('sizes an image by its own aspect, the same way as a shape with fixed proportions', () => {
     const wide = insertFrame('image', 2, 0)
     expect(wide.w).toBe(wide.h * 2)
+  })
+  it('gives a new container the 420 × 240 it may take at most, as in the other apps (D1333)', () => {
+    const box = insertFrame('container', null, 0)
+    expect([box.w, box.h]).toEqual([420, 240])
+    expect(box.x + box.w / 2).toBeCloseTo(SLIDE_W / 2, -1)
   })
   it('shifts the next ones a little so that they do not hide each other, and stays on the slide', () => {
     const [a, b] = [insertFrame('text', null, 0), insertFrame('text', null, 1)]

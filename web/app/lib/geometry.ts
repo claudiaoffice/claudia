@@ -79,7 +79,11 @@ function resizeFree(start: Frame, handle: Handle, dx: number, dy: number, grid: 
   if (handle.includes('e')) right = clamp(snapTo(Math.round(right + dx), grid), left + MIN_SIZE, bounds.w)
   if (handle.includes('n')) top = clamp(snapTo(Math.round(top + dy), grid), 0, bottom - MIN_SIZE)
   if (handle.includes('s')) bottom = clamp(snapTo(Math.round(bottom + dy), grid), top + MIN_SIZE, bounds.h)
-  return { x: left, y: top, w: right - left, h: bottom - top }
+  // The size is whole even when the edge that stays was measured on the page in fractions of a pixel (composes, B6):
+  // the server takes whole units only. That edge keeps its exact place; the dragged one follows the whole size.
+  const w = Math.max(MIN_SIZE, Math.round(right - left))
+  const h = Math.max(MIN_SIZE, Math.round(bottom - top))
+  return { x: handle.includes('w') ? right - w : left, y: handle.includes('n') ? bottom - h : top, w, h }
 }
 
 function resizeKeeping(start: Frame, handle: Handle, dx: number, dy: number, aspect: number, grid: number | null, bounds: Bounds): Frame {
@@ -111,11 +115,17 @@ const STEPS = 8
 /** Where a new object goes: the `index`-th one added gets a little further from the first so none hides another.
  * An image is sized the same way a shape is (it always has an aspect, since every decoded picture has a width and
  * height); it is not its own branch below. */
-export function insertFrame(kind: 'text' | 'shape' | 'image', aspect: number | null, index: number, natural?: { width: number; height: number }): Frame {
+export function insertFrame(kind: 'text' | 'shape' | 'image' | 'container', aspect: number | null, index: number, natural?: { width: number; height: number }): Frame {
   const shift = (index % STEPS) * STEP
   if (kind === 'text') return { x: 160 + shift, y: 120 + shift, ...TEXT_BOX }
-  // a picture is no bigger than 420 × 240 or its own size (the owner, 2026-11-19); a shape and a container keep the old size
-  const { w, h } = kind === 'image' && aspect !== null && natural ? pictureSize(aspect, SHAPE_HEIGHT, NEW_OBJECT_CAP.w, natural) : { w: aspect === null ? SHAPE_WIDTH : Math.round(SHAPE_HEIGHT * aspect), h: SHAPE_HEIGHT }
+  // a picture is no bigger than 420 × 240 or its own size (D1229); a container asks for 420 × 240 and the server fits
+  // its first picture into that (D1333); a shape keeps the old size
+  const { w, h } =
+    kind === 'container'
+      ? NEW_OBJECT_CAP
+      : kind === 'image' && aspect !== null && natural
+        ? pictureSize(aspect, SHAPE_HEIGHT, NEW_OBJECT_CAP.w, natural)
+        : { w: aspect === null ? SHAPE_WIDTH : Math.round(SHAPE_HEIGHT * aspect), h: SHAPE_HEIGHT }
   return {
     x: Math.min(Math.round((SLIDE_W - w) / 2) + shift, SLIDE_W - w),
     y: Math.min(Math.round((SLIDE_H - h) / 2) + shift, SLIDE_H - h),

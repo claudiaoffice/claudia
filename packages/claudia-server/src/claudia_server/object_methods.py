@@ -26,6 +26,7 @@ from claudia_core import (
     RemoveObject,
     ResizeObject,
     decode_image,
+    new_object_size,
 )
 from claudia_core.clock import utc_now
 
@@ -35,7 +36,7 @@ from .thing_names import default_name
 from .wire import done, fresh_id
 
 IMAGE_STYLE = "plain-image"
-PICTURE = "w:int h:int data:image alt:str source_name:str source_path:str? decorative:bool?"
+PICTURE = "w:int h:int data:image alt:str source_name:str source_path:str? decorative:bool? fit:bool?"
 
 
 @dataclass(frozen=True)
@@ -95,11 +96,23 @@ def add_object_methods(
         )
     )
 
-    def add_image(ctx: Context, *, w, h, data, alt, source_name, source_path, decorative, base, **where) -> dict:
+    def add_image(
+        ctx: Context, *, w, h, data, alt, source_name, source_path, decorative, base, fit=None, **where
+    ) -> dict:
         model = model_of(ctx)
         anchor = placement.anchor(model, None, **where)
         words = picture_words(alt, bool(decorative))
         asset = decode_image(data)
+        if fit:  # a new picture from a file: within w × h, at least as tall as the body text, in its room (D1332)
+            w, h = new_object_size(
+                w,
+                h,
+                asset.width,
+                asset.height,
+                least=model.least_new_size(),
+                room=model.room_for_new_object(model.anchor_from_data(anchor)),
+                smallest=model.min_object_size,
+            )
         steps: list = [] if asset.id in model.images else [DefineImage(asset)]
         imported = ImageImport.from_data(
             {
@@ -138,7 +151,9 @@ def add_object_methods(
                 "flourish, a divider), when it has none and `alt` is empty. `source_name` is the file name as the "
                 "client has it; `source_path` is its full path if the client could supply one (a plain web browser "
                 "cannot, for its own security — send `null`). Returns the new object's id and the revision. The "
-                "image keeps its own proportions.",
+                "image keeps its own proportions. With `fit`, `w` and `h` are only the most it may take: it is "
+                "shown at its own size within them, but at least as tall as the body text's letters and no wider "
+                "than the room it has, with its proportions (D1332); without, it is shown at `w` × `h`.",
             ),
         )
     )

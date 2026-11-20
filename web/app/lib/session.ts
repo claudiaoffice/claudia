@@ -761,7 +761,7 @@ export class Session extends BaseSession<State> {
    * `null`. `anchor` fixes the object's cell and its pixel size for good: there is no resize yet, and no
    * structural edit (row/column insert, delete or resize) ever changes either. */
   async addImage(
-    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean },
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
     anchor: { row: number; col: number; w: number; h: number },
   ): Promise<string | null> {
     const done = await this.attempt('add_image', {
@@ -771,6 +771,7 @@ export class Session extends BaseSession<State> {
       source_name: picture.sourceName,
       source_path: picture.sourcePath,
       ...(picture.decorative ? { decorative: true } : {}),
+      ...(picture.fit ? { fit: true } : {}), // from a file: the server sizes it (D1332)
       ...anchor,
       base: this.state.revision,
     })

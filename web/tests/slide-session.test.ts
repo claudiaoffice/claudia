@@ -343,6 +343,13 @@ describe('making changes', () => {
     await session.addImage({ data: 'AA==', alt: '', sourceName: 'rule.gif', sourcePath: null, decorative: true }, { x: 0, y: 0, w: 400, h: 200 })
     expect(link.last('add_image')).toMatchObject({ alt: '', decorative: true })
   })
+  it('asks the server to size a picture from a file, and only then (D1332)', async () => {
+    const { link, session } = await opened()
+    await session.addImage({ data: 'AA==', alt: 'a dot', sourceName: 'dot.png', sourcePath: null, fit: true }, { x: 0, y: 0, w: 20, h: 20 })
+    expect(link.last('add_image')).toMatchObject({ fit: true })
+    await session.addImage({ data: 'AA==', alt: 'a dot', sourceName: 'dot.png', sourcePath: null }, { x: 0, y: 0, w: 20, h: 20 })
+    expect(link.last('add_image')).not.toHaveProperty('fit')
+  })
   it('does not send the decorative mark for a picture that is described', async () => {
     const { link, session } = await opened()
     await session.addImage({ data: 'AA==', alt: 'a chart', sourceName: 'chart.gif', sourcePath: null }, { x: 0, y: 0, w: 400, h: 200 })
