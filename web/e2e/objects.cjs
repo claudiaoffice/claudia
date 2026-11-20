@@ -390,12 +390,15 @@ async function editText(app, kind, ann, ben, obj) {
 }
 
 // -- Format ▸ Rotate: the same three entries and keys in every app; not for a chart, not for nothing selected
-async function rotateEntries(page) {
-  await page.click('.menus .title:text-is("Format")')
-  await page.click('.menus .drop [role=menuitem]:has-text("Rotate")')
-}
 async function rotateOff(page, where) {
-  await rotateEntries(page)
+  // With nothing to turn the whole Rotate submenu is off (it used to open with its three entries off): either says it.
+  await page.click('.menus .title:text-is("Format")')
+  const submenu = page.locator('.menus .drop [role=menuitem]:has-text("Rotate")').first()
+  if (await submenu.isDisabled()) {
+    await page.keyboard.press('Escape')
+    return
+  }
+  await submenu.click()
   for (const name of ['Rotate Right 90°', 'Rotate Left 90°', 'Rotate By…'])
     assert.equal(await page.locator(`.menus .drop [role=menuitem]:has-text("${name}")`).isDisabled(), true, `${where}: ${name} is off`)
   await page.keyboard.press('Escape')

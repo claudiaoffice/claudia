@@ -20,6 +20,7 @@ import { wrapOf } from '~/lib/wrap'
 import { floatStyle, measureFloats, takesRoom, type Hung, type WrapFloat, type WrapPage } from '~/lib/wrap-flow'
 import { pointer } from '~/lib/objects'
 import TableView from './TableView.vue'
+import { endsWithTable, pastTable, tableAbove, tableBelow, type Landing, type PathBlock } from '~/lib/table-path'
 
 const { t } = useI18n()
 
@@ -248,6 +249,82 @@ function domPoint(pos: Pos, afterOverlay: boolean): [Node, number] | null {
   return [found.firstChild!, Math.max(0, Math.min(pos.offset - Number(found.dataset.off), (found.textContent ?? '').length))]
 }
 
+// ------------------------------------------------------------------------------ the path through tables (D1330, D1331)
+/** The tables drawn on the page, by object id: the text hands the caret to them, and they hand it back (`exit`). */
+const tableViews = new Map<string, InstanceType<typeof TableView>>()
+const tableRef = (id: string) => (el: unknown) => (el ? tableViews.set(id, el as InstanceType<typeof TableView>) : tableViews.delete(id))
+
+/** The paragraphs and the tables after each, as the arrow keys go through them. */
+const path = (): PathBlock[] => state.blocks.map((b) => ({ id: b.id, length: b.text.length, tables: tablesAfter(b.id).map((t) => t.object.id) }))
+const tailIsTable = computed(() => endsWithTable(path()))
+
+/** Put the caret where `to` says: into a table, at a place in the words, or into a paragraph made for it first. */
+async function land(to: Landing | null) {
+  if (!to) return
+  if (to.kind === 'table') {
+    await props.session.flush()
+    tableViews.get(to.object)?.enter(to.where)
+    return
+  }
+  if (to.kind === 'text') props.session.setSelection({ block: to.block, offset: to.offset })
+  else if (!(await props.session.addParagraphAfter(to.after))) return
+  await nextTick()
+  focus()
+}
+
+/** A table hands the caret back: the arrow keys went past its edge. */
+function onTableExit(object: string, side: 'before' | 'after') {
+  void land(pastTable(path(), object, side))
+}
+
+/** The space below a table that ends the text: a click there writes after it. */
+function writeAfterTables() {
+  const last = state.blocks.at(-1)
+  if (last && !props.session.readOnly) void land({ kind: 'new', after: last.id })
+}
+
+/** Whether the caret is on the first or the last line of the paragraph `block` (where an arrow leaves it). */
+function onEdgeLine(block: string, which: 'first' | 'last', offset: number, length: number): boolean {
+  const el = root.value?.querySelector<HTMLElement>(`[data-block="${CSS.escape(block)}"]`)
+  const sel = document.getSelection()
+  const caret = sel?.rangeCount ? sel.getRangeAt(0).getClientRects()[0] : undefined
+  if (!el || !caret) return which === 'last' ? offset === length : offset === 0 // no line to measure: the ends of the words
+  const box = el.getBoundingClientRect()
+  const line = parseFloat(getComputedStyle(el).lineHeight) || caret.height || 16
+  return which === 'last' ? box.bottom - caret.bottom < line * 0.75 : caret.top - box.top < line * 0.75
+}
+
+/** The keys that lead from the words into a table, or past a table that ends the text; `true` when one did. */
+function leadsThroughTable(event: KeyboardEvent): boolean {
+  if (event.altKey || event.metaKey || event.shiftKey || props.session.readOnly) return false
+  const blocks = path()
+  if (event.ctrlKey) {
+    if (event.key !== 'End' || !endsWithTable(blocks)) return false
+    event.preventDefault()
+    void land({ kind: 'new', after: blocks.at(-1)!.id })
+    return true
+  }
+  if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' && event.key !== 'Backspace') return false
+  adoptSelection()
+  const sel = state.selection
+  if (!sel || sel.anchor.block !== sel.focus.block || sel.anchor.offset !== sel.focus.offset) return false
+  const at = sel.focus
+  const length = state.blocks.find((b) => b.id === at.block)?.text.length ?? 0
+  let to: Landing | null = null
+  if (event.key === 'ArrowDown') {
+    const table = tableBelow(blocks, at.block)
+    if (table && onEdgeLine(at.block, 'last', at.offset, length)) to = { kind: 'table', object: table, where: 'first' }
+  } else {
+    const table = tableAbove(blocks, at.block)
+    const edge = event.key === 'Backspace' ? at.offset === 0 && !props.session.state.pending : onEdgeLine(at.block, 'first', at.offset, length)
+    if (table && edge) to = { kind: 'table', object: table, where: event.key === 'Backspace' ? 'lastBox' : 'lastRow' }
+  }
+  if (!to) return false
+  event.preventDefault()
+  void land(to)
+  return true
+}
+
 /** The tables that hang from a paragraph, in the order of their anchors (E9.32). */
 function tablesAfter(block: string) {
   return props.session
@@ -411,7 +488,8 @@ function onBeforeInput(event: InputEvent) {
 
 /** Tab and Shift+Tab move a list item one level in or out; anywhere else they are the browser's (focus moves on). */
 function onKeydown(event: KeyboardEvent) {
-  if (fromTable(event) || event.key !== 'Tab' || event.ctrlKey || event.altKey || event.metaKey || composing) return
+  if (fromTable(event) || composing || leadsThroughTable(event)) return
+  if (event.key !== 'Tab' || event.ctrlKey || event.altKey || event.metaKey) return
   adoptSelection()
   if (props.session.tab(event.shiftKey)) event.preventDefault()
 }
@@ -851,14 +929,18 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
         <TableView
           v-for="shown in tablesAfter(block.id)"
           :key="shown.object.id"
+          :ref="tableRef(shown.object.id)"
           :session="session"
           :object="shown.object"
           :table="shown.table"
           @options="emit('table-options', $event)"
           @menu="emit('object-menu', $event)"
           @leave="focus()"
+          @exit="onTableExit(shown.object.id, $event)"
         />
         </template>
+        <!-- the text ends with a table: a click below it writes after it (D1331); the keys get there too, so it is hidden from a screen reader -->
+        <div v-if="tailIsTable && !session.readOnly" class="after-tables" data-skip contenteditable="false" aria-hidden="true" data-testid="after-tables" @mousedown.prevent="writeAfterTables" />
       </div>
       <TextContainers :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
     </div>
@@ -1114,5 +1196,9 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
   font-weight: 500;
   cursor: pointer;
   user-select: none;
+}
+.after-tables {
+  min-height: 3em; /* room enough to aim at below a table that ends the text (D1331) */
+  cursor: text;
 }
 </style>

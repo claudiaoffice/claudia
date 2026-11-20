@@ -9,6 +9,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 16.
 
 ### Added
+- `SlideModel.room_for_new_object`: what is left of the slide to the right of a new object's anchor (D1332).
 - `requirements()` of a presentation: the fonts its styles ask for by name (`Requirements.fonts`), for the font report a
   server makes when it is opened (E1.9, D1306).
 - A slide can be described (E1.13, D1317, D1318): `SlideModel.slide_descriptions`, `thing_description`, `set_thing_description`; `AddSlide.description` brings it back when the removal of a slide is undone. State schema 17: `descriptions` is new (absent: none).

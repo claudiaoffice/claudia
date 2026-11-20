@@ -14,7 +14,7 @@
 // never the paragraph menu of the words; Esc, in a box or on the tab, leaves it for the text.
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { paragraphCss } from '~/lib/style-css'
-import { columnName, gridOf, stepBox, type Box, type Step, type TableInfo } from '~/lib/tables'
+import { columnName, gridOf, leaveSide, stepBox, type Box, type Step, type TableInfo } from '~/lib/tables'
 import { nearestGap } from '~/lib/text-object-host'
 import type { BlockAnchor, VisualObject } from '~/lib/objects'
 import type { TextSession } from '~/lib/text-session'
@@ -22,7 +22,7 @@ import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 const props = defineProps<{ session: TextSession; object: VisualObject<BlockAnchor>; table: TableInfo }>()
-const emit = defineEmits<{ options: [table: string]; menu: [at: { id: string; x: number; y: number }]; leave: [] }>()
+const emit = defineEmits<{ options: [table: string]; menu: [at: { id: string; x: number; y: number }]; leave: []; exit: [side: 'before' | 'after'] }>()
 const state = props.session.state
 
 const grid = computed(() => gridOf(props.table))
@@ -113,7 +113,13 @@ async function go(box: Box, el: HTMLTextAreaElement, step: Step) {
     if (last && !(await props.session.insertRows(props.table.id, { after: last }))) grew = null
     return
   }
-  if (!target || target === 'end') return
+  if (!target) {
+    // past the edge of the table: the words go in first, then the caret goes on in the text (D1330)
+    const side = leaveSide(props.table, box, step)
+    if (side && (readonly.value || (await commit(box, el)))) emit('exit', side)
+    return
+  }
+  if (target === 'end') return
   // The caret moves at once and the words follow to the server: the person goes on typing in the next box, and
   // waiting for the answer would put those words into this one (B4). The session takes the commits one after the other.
   void commit(box, el)
@@ -243,7 +249,20 @@ function onContext(event: MouseEvent) {
   const keyboard = event.clientX === 0 && event.clientY === 0
   emit('menu', { id: props.object.id, x: keyboard ? rect.left + 24 : event.clientX, y: keyboard ? rect.top + 12 : event.clientY })
 }
-defineExpose({ focusBox })
+/** The caret comes into the table from the text (D1330): `first` the first box, `lastRow` the first box of the last
+ *  row, `lastBox` the end of the words of the very last box. */
+function enter(where: 'first' | 'lastRow' | 'lastBox') {
+  const grid = gridOf(props.table)
+  const rows = [...grid.header, ...grid.body]
+  const box = where === 'first' ? rows[0]?.[0] : where === 'lastRow' ? rows.at(-1)?.[0] : rows.at(-1)?.at(-1)
+  if (!box) return
+  if (where !== 'lastBox') return focusBox(box)
+  const el = field(box.row, box.col)
+  el?.focus()
+  el?.setSelectionRange(el.value.length, el.value.length)
+}
+
+defineExpose({ focusBox, enter })
 </script>
 
 <template>

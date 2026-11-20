@@ -344,7 +344,7 @@ export class SlideSession extends BaseSession<SlideState> {
    * `null`. Clipboard and drag-and-drop import are not built yet; this is the "browse a file" path only.
    */
   async addImage(
-    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean },
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
     frame: Frame,
   ): Promise<string | null> {
     const done = await this.attempt('add_image', {
@@ -354,6 +354,7 @@ export class SlideSession extends BaseSession<SlideState> {
       source_name: picture.sourceName,
       source_path: picture.sourcePath,
       ...(picture.decorative ? { decorative: true } : {}),
+      ...(picture.fit ? { fit: true } : {}), // from a file: the server sizes it (D1332)
       ...frame,
       base: this.state.revision,
     })

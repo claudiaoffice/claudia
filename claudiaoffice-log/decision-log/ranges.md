@@ -62,6 +62,7 @@ Unused numbers in a closed block stay unused.
 | D1261–D1280 | the document container and its security, second round: what a viewer receives, role changes and key rotation, failed-login waits, the password-hashing cost, unencrypted export and import and the record of what leaves (E2, SEC-11, SEC-17; branch `e2-document-sec`; D1261–D1279 used) | 2026-11-19 | open |
 | D1281–D1299 | the document container and its security, slice C of the second round: key pairs and the sealed inbox, renewal on removal and downgrade, private domains, the format number (E2.2, E2.3, E2.4; branch `e2-document-sec`; D1281–D1285 used; narrowed from D1281–D1300 at the merge, D1300 being E1's) | 2026-11-19 | open |
 | D1300–D1329 | E1 core, closing out the open stories: the style model's last points, names of things, the manifest, the what-if API and the macro and worker design (E1.9, E1.10, E1.13, D235, D236, D239; branch `e1-core`; D1300–D1320 used, D1314–D1316 being the worker-pool decisions salvaged from D177–D179 and D291–D293) | 2026-11-19 | open |
+| D1330–D1349 | bug fixes: leaving a table in composes (B5), resizing objects in composes (B6), the least and most a new picture or container takes in all three apps (branch `fix-table-exit-object-sizes`; D1330–D1334 used) | 2026-11-20 | open |
 
 ## Never to be used
 

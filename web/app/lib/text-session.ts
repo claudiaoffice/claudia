@@ -27,7 +27,7 @@ import {
 import { NEW_OBJECT_CAP, type ImageAsset } from './images'
 import type { BlockAnchor, ObjectBody, ObjectsEvent, PaletteEvent, StyleModel, StyleTarget, VisualObject } from './objects'
 import { describeParams } from './descriptions'
-import { nextWrap, wrapOf, wrapParams, type Wrap } from './wrap'
+import { NEW_OBJECT_WRAP, nextWrap, wrapOf, wrapParams, type Wrap } from './wrap'
 import { DEFAULT_STYLE, type PageSetupData, type ShapeOutline, type TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
 import type { ListInfo, SchemeInfo } from './numbering'
@@ -193,12 +193,18 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   /** Hang a container of `type` from `place` (a paragraph and a place in it, in screen units); its id, or `null` after
-   * telling the person why not. It is selected, ready to be written in. */
+   * telling the person why not. It is selected, ready to be written in. The words go above and below it, as they do
+   * for a new picture (D1334). */
   async addContainer(type: string, place: { block: string; offset: number }, size: { w: number; h: number }): Promise<string | null> {
     await this.flush()
-    const id = await this.addRendering(type, this.placeOnWire(place), size, undefined, true)
+    const id = await this.addRendering(type, this.newObjectAt(place), size, undefined, true)
     if (id) this.state.selectedObject = id
     return id
+  }
+
+  /** Where a new container goes on the wire: the place, and the wrap every new object gets (D1061, D1334). */
+  private newObjectAt(place: { block: string; offset: number }): Record<string, unknown> {
+    return { ...this.placeOnWire(place), ...wrapParams(NEW_OBJECT_WRAP) }
   }
 
   /** Pasted text that is one fenced block (```latex … ```) of a type the server makes becomes a container at `place`
@@ -207,7 +213,7 @@ export class TextSession extends BaseSession<TextState> {
     const fenced = parseFence(text.trim(), this.state.renderTypes.map((k) => k.type))
     if (!fenced) return null
     await this.flush()
-    const id = await this.addRendering(fenced.type, this.placeOnWire(place), NEW_OBJECT_CAP, fenced.source, true)
+    const id = await this.addRendering(fenced.type, this.newObjectAt(place), NEW_OBJECT_CAP, fenced.source, true)
     if (id) this.state.selectedObject = id
     return id
   }
@@ -219,7 +225,7 @@ export class TextSession extends BaseSession<TextState> {
    * for its own security — and `null` if not. The same request as creates' (`add_image`), with a place in the text.
    */
   async addImage(
-    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean },
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
     place: { block: string; offset: number },
     size: { w: number; h: number },
     wrap?: Wrap,
@@ -234,6 +240,7 @@ export class TextSession extends BaseSession<TextState> {
       source_name: picture.sourceName,
       source_path: picture.sourcePath,
       ...(picture.decorative ? { decorative: true } : {}),
+      ...(picture.fit ? { fit: true } : {}), // from a file: the server sizes it (D1332)
       base: this.state.revision,
     })
     if (done === false) return null
@@ -362,6 +369,18 @@ export class TextSession extends BaseSession<TextState> {
     const done = await this.act(() => this.attempt('add_table', { ...this.placeOnWire(place), rows: size.rows, cols: size.cols, header_rows: size.headerRows, base: this.state.revision }))
     if (done === false) return null
     return { object: done.object as string, table: done.table as string }
+  }
+
+  /** An empty paragraph after `block` and after what hangs from its end, such as a table at the end of the text
+   *  (D1331); the caret goes to it. Its id, or `null` when the server refused (the person is told why). */
+  async addParagraphAfter(block: string): Promise<string | null> {
+    if (this.denied()) return null
+    const done = await this.act(() => this.attempt('add_paragraph_after', { block, base: this.state.revision }))
+    if (done === false) return null
+    const made = done.block as string
+    if (!this.state.blocks.some((b) => b.id === made)) await this.reload() // the event did not come before the answer
+    this.setSelection({ block: made, offset: 0 })
+    return made
   }
 
   /** Type `text` into a box, in place of the words it has. One line: a line break becomes a space (D1212). */

@@ -17,7 +17,7 @@ from claudia_server.protocol import Context, Limits, MethodTable, RequestError
 
 ANN = Account("ann", "owner")
 
-PICTURE = "w:int h:int data:image alt:str source_name:str source_path:str? decorative:bool? base:revision?"
+PICTURE = "w:int h:int data:image alt:str source_name:str source_path:str? decorative:bool? fit:bool? base:revision?"
 DESCRIBE = "id:str description:text decorative:bool? base:revision?"
 SAME_EVERYWHERE = {
     "images": "",

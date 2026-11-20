@@ -417,6 +417,27 @@ def _replace_text(ctx, *, block, start, end_block, end, text, base):
     return {"revision": applied.revision.to_data(), **result}
 
 
+@composes_methods.method("add_paragraph_after", "block:str base:revision?", write=True)
+def _add_paragraph_after(ctx, *, block, base):
+    """An empty paragraph right after the paragraph `block`, in the style Enter at its end would give, and after what
+    hangs from its end: a table there stays where it is, before the new paragraph (D1331). Returns the revision and
+    the new paragraph: `{revision, block, offset}`, the offset 0. Refused with `command_error` for a box of a table or
+    a paragraph the text does not have."""
+    model = _text(ctx)
+    try:
+        found = None if "/" in block or model.is_entry(block) else model.block(block)
+    except KeyError:
+        found = None
+    if found is None:
+        raise RequestError("command_error", msg("there is no paragraph {block!r}", block=block))
+    [new] = model.fresh_ids(1)
+    label = paragraph_label(ctx)
+    name = next(iter(free_names(label, model.names_in_use(), 1)), "") if label else ""
+    split = SplitBlock(block, len(found.text), new, next_style(model.styles, found.style), name, keep=True)
+    applied = ctx.document.execute(split, author=ctx.user, base=base)
+    return {"revision": applied.revision.to_data(), "block": new, "offset": 0}
+
+
 @composes_methods.method("set_style", "block:str style:str base:revision?", write=True)
 def _set_style(ctx, *, block, style, base):
     """Give the paragraph `block` the style named `style` (one of the ids `blocks` lists)."""

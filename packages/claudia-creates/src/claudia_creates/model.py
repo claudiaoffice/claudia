@@ -268,6 +268,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """Read a slide anchor; ``ValueError`` if the data is not one."""
         return SlideAnchor.from_data(data)
 
+    def room_for_new_object(self, anchor: SlideAnchor | None) -> int | None:
+        """What is left of the slide to the right of where a new object starts (D1332): an object stays on its slide."""
+        return SLIDE_WIDTH - (anchor.x if anchor is not None else 0)
+
     def check_anchor(self, anchor: SlideAnchor, body: ObjectBody) -> None:
         """An object must stay on its slide, whole units only. What has to be on the slide is the object's outline: its
         frame when it is upright, and what a turn makes of it otherwise, so the anchor of a turned object may lie

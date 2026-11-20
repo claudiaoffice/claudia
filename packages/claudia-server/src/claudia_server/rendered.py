@@ -33,6 +33,7 @@ from claudia_core import (
     ResizeObject,
     UpdateRendering,
     decode_image,
+    new_object_size,
 )
 from claudia_core.renderings import RenderedDefinition
 from claudia_render import RenderService, UnknownType, default_alt
@@ -44,13 +45,6 @@ from .thing_names import default_name
 from .wire import fresh_id
 
 MAX_ALT = 500
-
-
-def fit_within(w: int, h: int, picture_w: float, picture_h: float, least: int = 1) -> tuple[int, int]:
-    """The size a picture of ``picture_w`` × ``picture_h`` is shown at when a frame of ``w`` × ``h`` is only the most it
-    may take: its own size, or smaller if that does not go in, with its proportions. Never below ``least`` a side."""
-    scale = min(1.0, w / picture_w, h / picture_h)
-    return max(least, round(picture_w * scale)), max(least, round(picture_h * scale))
 
 
 class RenderDesk:
@@ -111,12 +105,20 @@ class RenderDesk:
                 steps.append(DescribeObject(object_id, default_alt(current.type, current.source, rendered.svg), False))
             w, h = shown.body.w, shown.body.h
             if first and object_id in self._capped.get(document, ()):
-                # a new container is no bigger than its picture, and no bigger than the frame it was given
-                w, h = fit_within(w, h, asset.width, asset.height, model.min_object_size)
+                # a new container: its picture's own size within the frame it was given, at least as tall as the body
+                # text, no wider than its room, its proportions kept (D1229, D1332)
+                w, fitted = new_object_size(
+                    w,
+                    h,
+                    asset.width,
+                    asset.height,
+                    least=model.least_new_size(),
+                    room=model.room_for_new_object(shown.anchor),
+                    smallest=model.min_object_size,
+                )
+            else:
+                fitted = max(model.min_object_size, round(w * asset.height / asset.width))  # the width stays
             self._capped.get(document, set()).discard(object_id)
-            fitted = max(
-                model.min_object_size, round(w * asset.height / asset.width)
-            )  # the width stays; the height follows
             if (w, fitted) != (shown.body.w, shown.body.h):
                 steps.append(ResizeObject(object_id, shown.anchor.to_data(), w, fitted))
         document.execute(Batch(tuple(steps), name="Render"), author=user)

@@ -520,3 +520,38 @@ def test_a_table_the_ai_makes_is_the_ais_and_a_name_is_free_for_the_next(paper):
     second = add(paper, block="b1", offset=1)
     names = {paper.model.get_object(first["object"]).body.name, paper.model.get_object(second["object"]).body.name}
     assert names == {"Table 1", "Table 2"}
+
+
+# ------------------------------------------------------------------------------ a paragraph after a table (D1331)
+def test_a_paragraph_after_a_table_at_the_end_of_the_text(paper):
+    second = paper.model.blocks[1].id
+    add(paper, block=second, offset=len("Our beds."))
+    answer = call(paper, "add_paragraph_after", {"block": second})
+    new = answer["block"]
+    assert [b.id for b in paper.model.blocks] == ["b1", second, new]
+    assert paper.model.block(new).text == ""
+    assert [o.body.kind for o in paper.model.objects_on(second)] == ["table"], (
+        "the table still hangs from its paragraph"
+    )
+    assert paper.model.objects_on(new) == []
+    assert paper.model.block(new).style == paper.model.block(second).style
+    assert paper.model.block_names.get(new), "the new paragraph has a name, as one made with Enter has (D1310)"
+
+
+def test_a_paragraph_after_a_table_is_one_step_and_undoes_cleanly(paper):
+    second = paper.model.blocks[1].id
+    add(paper, block=second, offset=len("Our beds."))
+    new = call(paper, "add_paragraph_after", {"block": second})["block"]
+    paper.undo("ann")
+    assert [b.id for b in paper.model.blocks] == ["b1", second]
+    paper.redo("ann")
+    assert [b.id for b in paper.model.blocks] == ["b1", second, new]
+    assert [o.body.kind for o in paper.model.objects_on(second)] == ["table"]
+
+
+def test_a_paragraph_after_needs_a_paragraph_of_the_text_and_the_right_to_write(paper):
+    with pytest.raises(RequestError):
+        call(paper, "add_paragraph_after", {"block": "nope"})
+    with pytest.raises(RequestError) as refused:
+        call(paper, "add_paragraph_after", {"block": "b1"}, Account("vera", "viewer"))
+    assert refused.value.code == "forbidden"

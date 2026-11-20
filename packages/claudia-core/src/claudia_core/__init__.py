@@ -272,6 +272,7 @@ from .schemes import (
     builtin_schemes,
 )
 from .shapes import BOX, FORMAT, PRIMITIVES, ShapeDefinition, ShapeError, parse_shape, primitive
+from .sizing import BASE_FONT_PX, font_size_px, new_object_size
 from .store import DocumentStore, MemoryStore
 from .structure import Emitter, LabelsChanged, ParagraphHost, Placed, TextStructure
 from .styles import (
@@ -335,6 +336,9 @@ from .what_if import Proposal, WhatIf
 from .writing import DeleteText, InsertText, Span, TextCommand, TypingHost, word_changes
 
 __all__ = [
+    "BASE_FONT_PX",
+    "font_size_px",
+    "new_object_size",
     "FALLBACK_SIDE",
     "FILE_IMPORTER",
     "IMAGE_STYLE",

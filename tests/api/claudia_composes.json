@@ -605,7 +605,7 @@
   "class": [
    "TextCommand"
   ],
-  "init": "(block: 'str', offset: 'int', new_id: 'str', style: 'str', name: 'str' = '') -> None",
+  "init": "(block: 'str', offset: 'int', new_id: 'str', style: 'str', name: 'str' = '', keep: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[TextModel]') -> 'Command'",
    "breaks": "(self, span: 'Span') -> 'bool'",
@@ -705,6 +705,7 @@
    "restore": "(state: 'dict') -> 'Self'",
    "restyle": "(self, block_id: 'str', style: 'str') -> 'None'",
    "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",
+   "room_for_new_object": "(self, anchor: 'BlockAnchor | None') -> 'int | None'",
    "serialize": "(self) -> 'dict'",
    "set_item": "(self, block_id: 'str', item: 'ListItem | None') -> 'None'",
    "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
