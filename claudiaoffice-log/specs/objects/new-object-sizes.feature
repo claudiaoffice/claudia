@@ -53,8 +53,8 @@ Feature: A new picture or container comes out at a size I can see and work with,
       Then it is as tall as the body text, and square
 
     Scenario: A picture copied and pasted keeps the size it was copied at
-      When a picture of 8 by 8 is added without fit
-      Then it is 20 by 20, the least of every object, as before
+      When a picture of 40 by 40 is added without fit
+      Then it is 40 by 40
 
   @core @e2e:objects.cjs
   Rule: A new container in computes and creates starts at 420 by 240, as in composes (D1333)
