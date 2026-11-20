@@ -78,7 +78,14 @@ def test_an_owner_gets_the_whole_file(path, team, tmp_path):
 def test_an_editor_gets_the_file_with_only_her_own_slot(path, team, tmp_path):
     data = sealed_copy(path, *EDITOR)
     assert slot_count(data) == 1
-    assert names(data) == names(path.read_bytes())  # all the parts: her keys open them
+    whole = names(path.read_bytes())
+    assert {n for n in names(data) if not n.startswith("private/")} == {
+        n for n in whole if not n.startswith("private/")
+    }
+    assert (
+        len({n.split("/")[1] for n in names(data) if n.startswith("private/")}) == 1
+    )  # her own domain, not the others'
+    assert len({n.split("/")[1] for n in whole if n.startswith("private/")}) == 3
     copy = copy_of(path, EDITOR, tmp_path)
     keys = unlock(copy, *EDITOR).keys
     assert read_state(copy, keys).history == [b"first change", b"second change"]

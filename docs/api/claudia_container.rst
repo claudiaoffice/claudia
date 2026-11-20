@@ -76,8 +76,29 @@ history and chat as blocks. Every change replaces the file atomically.
 .. autoexception:: claudia_container.ContainerError
 .. autoexception:: claudia_container.NotAClaudiaDocument
 .. autoexception:: claudia_container.UnsupportedFormat
+.. autoexception:: claudia_container.OutdatedFormat
 .. autoexception:: claudia_container.ReaderLimitExceeded
 .. autoexception:: claudia_container.TamperedDocument
+
+Keys of people, renewal and the private domain
+----------------------------------------------
+
+Every person has a key pair; keys she is not there to receive wait in a sealed inbox until her next login (D1274).
+Removing a person or lowering an editor renews the keys she held (D1263), in one atomic replacement of the file. The private
+domain of a person is a chain only her own key opens (D1265).
+
+.. autoclass:: claudia_container.KeyPair
+.. autofunction:: claudia_container.new_key_pair
+.. autofunction:: claudia_container.seal_to
+.. autofunction:: claudia_container.open_inbox
+.. autofunction:: claudia_container.change_role
+.. autofunction:: claudia_container.remove_person
+.. autoclass:: claudia_container.Renewed
+.. autoexception:: claudia_container.RenewalInterrupted
+.. autoclass:: claudia_container.PrivateDomain
+.. autofunction:: claudia_container.new_private_domain
+.. autofunction:: claudia_container.read_private
+.. autofunction:: claudia_container.write_private
 
 The recovery key of a document
 ------------------------------
@@ -111,3 +132,19 @@ file first and the journal second.
 .. autoclass:: claudia_container.State
 .. automodule:: claudia_container.blocks
    :members: seal_block, open_block, seal_head, open_head, Head, Chain, Place, BlockError, block_hash
+
+What leaves the document
+------------------------
+
+Every export, print and PDF is written to an audit chain sealed with the history key (D1271), and an export can be
+written as a plain zip that Claudia reads back (D1270, D1272).
+
+.. autoclass:: claudia_container.AuditRecord
+   :members:
+.. autofunction:: claudia_container.read_audit
+.. autofunction:: claudia_container.record_audit
+.. autofunction:: claudia_container.write_export
+.. autofunction:: claudia_container.read_export
+.. autofunction:: claudia_container.is_export
+.. autoclass:: claudia_container.ExportFile
+.. autoexception:: claudia_container.ExportRefused

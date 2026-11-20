@@ -1,6 +1,7 @@
 // What every app's session has in common: the connection with its reconnecting, who is here, the history, the chat,
 // checkpoints, undo/redo. The replica of the document itself belongs to the app (Session: cells, TextSession: text).
 // All changes go to the server as requests; nothing is believed until the server's events say it happened.
+import type { AuditRow } from './audit'
 import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
@@ -8,6 +9,7 @@ import { outcomesOf, toOutcome, type RenderingDef, type RenderOutcome, type Rend
 import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
+import { roleName } from './people'
 import type { Thing } from './tags'
 import type { SchemeInfo } from './numbering'
 import type { Toc } from './contents'
@@ -30,6 +32,15 @@ export interface ExportedFile {
   content_type: string
   data: string
   losses?: ExportLoss[]
+}
+
+/** File ▸ Export… ▸ Claudia, unencrypted (D1270): the zip, base64, and the parts it holds. */
+export interface UnprotectedFile {
+  format: 'claudia-unencrypted'
+  filename: string
+  content_type: string
+  data: string
+  parts: string[]
 }
 
 export interface Person {
@@ -142,6 +153,8 @@ export interface BaseState {
   typing: string[]
   entries: Entry[]
   chat: ChatMessage[]
+  /** What has left the document (exports, prints, PDFs), oldest first; empty for a viewer, who is never sent it (D1271). */
+  audit: AuditRow[]
   checkpoints: CheckpointInfo[]
   canUndo: boolean
   canRedo: boolean
@@ -197,6 +210,7 @@ function initialState(): BaseState {
     typing: [],
     entries: [],
     chat: [],
+    audit: [],
     checkpoints: [],
     canUndo: false,
     canRedo: false,
@@ -417,7 +431,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const s = this.state
     // A viewer holds the content key only, and the server keeps the history and the chat from her (D1261).
     const reads = s.me.role !== 'viewer'
-    const [entries, chat, checkpoints, history, lines, restorePolicy, renderTypes, renderings] = await Promise.all([
+    const [entries, chat, checkpoints, history, lines, restorePolicy, renderTypes, renderings, audit] = await Promise.all([
       reads ? link.request<Entry[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Entry[]>([]),
       reads ? link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }) : Promise.resolve<ChatMessage[]>([]),
       reads ? link.request<CheckpointInfo[]>('checkpoints') : Promise.resolve<CheckpointInfo[]>([]),
@@ -430,10 +444,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         : Promise.resolve<{ policy: 'consensus' | 'veto' }>({ policy: 'consensus' }),
       this.optional<{ types: RenderType[] }>('rendering_types'),
       this.optional<RenderingDef[]>('renderings'),
+      reads ? this.optional<AuditRow[]>('audit_log') : Promise.resolve<AuditRow[] | null>(null),
       this.loadApp(),
-    ]).then(([e, c, k, h, l, p, rt, rd]) => [e, c, k, h, l, p, rt, rd] as const)
+    ]).then(([e, c, k, h, l, p, rt, rd, au]) => [e, c, k, h, l, p, rt, rd, au] as const)
     s.entries = entries
     s.chat = chat
+    s.audit = audit ?? []
     s.checkpoints = checkpoints
     s.canUndo = history.can_undo
     s.canRedo = history.can_redo
@@ -554,6 +570,22 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     } else if (message.kind === 'typing') {
       const others = s.typing.filter((u) => u !== who)
       s.typing = message.data.on ? [...others, who] : others
+    } else if (message.kind === 'audit_recorded') {
+      s.audit = [...s.audit, message.data as AuditRow]
+    } else if (message.kind === 'role_changed') {
+      if (message.data.user === s.me.user) {
+        this.notice(t('Your role in this document is now “{role}”.', { role: roleName(message.data.role) }))
+        this.track(this.reconnectNow())  // the server holds fewer keys for us now, or more: start again with what we may see
+      } else {
+        this.notice(t('{user} may now “{role}”.', { user: message.data.user, role: roleName(message.data.role) }))
+      }
+    } else if (message.kind === 'person_removed') {
+      if (message.data.user === s.me.user) {
+        this.notice(t('You are no longer a person of this document.'), 'warning')
+        this.close()
+      } else {
+        this.notice(t('{user} was removed from this document.', { user: message.data.user }))
+      }
     } else if (message.kind === 'person_left') {
       this.notice(t('{user} left this document.', { user: message.data.user }))
     } else if (message.kind === 'owner_changed') {
@@ -1074,6 +1106,17 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return (await this.attempt('add_user', { name, password, role })) !== false
   }
 
+  /** Owners: give `name` the role `editor` or `viewer`. Lowering an editor renews the document's history and chat keys
+   *  (`renewed`). `false` after telling the person why not. */
+  async changeRole(name: string, role: 'editor' | 'viewer'): Promise<{ user: string; role: string; renewed: boolean } | false> {
+    return await this.attempt('change_role', { name, role })
+  }
+
+  /** Owners: take `name` out of the document and renew the keys she held. `false` after telling the person why not. */
+  async removePerson(name: string): Promise<boolean> {
+    return (await this.attempt('remove_person', { name })) !== false
+  }
+
   /** Reopen the connection with the same name and password, so a role the server just changed takes effect. */
   async reconnectNow(): Promise<void> {
     this.close()
@@ -1129,7 +1172,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** The document's current content as Claudia's own format (not Word, Excel or PowerPoint, and not the history
    * or the chat): `{format, app, exported_at, state_schema, state}`, ready to be saved to a file. */
   async exportContent(): Promise<Record<string, unknown> | false> {
-    return await this.attempt('export_content')
+    return await this.recorded(await this.attempt('export_content'))
   }
 
   /** The document as Claudia's own sealed file, for File ▸ Download (D110): the whole file for an owner, the file
@@ -1146,7 +1189,33 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    * the other apps do not know it. An OpenDocument answer also has `losses`: what the file could not hold, as
    * `{kind, detail, count}` codes (nothing shows them yet: the screen for that is designed first). */
   async exportOffice(format: string, options: { trackedChanges?: boolean } = {}): Promise<ExportedFile | false> {
-    return await this.attempt('export_office', options.trackedChanges ? { format, tracked_changes: true } : { format })
+    return await this.recorded(await this.attempt('export_office', options.trackedChanges ? { format, tracked_changes: true } : { format }))
+  }
+
+  /** File ▸ Export… ▸ Claudia, unencrypted (D1270): one zip anybody can read, with the content and, if an owner asks
+   * (`includeHistory`), the history with its hidden lines and the chat. No keys, no passwords, no people. The server
+   * records the export for you (D1271). `false` after saying why not (an editor or a viewer asking for the history). */
+  async exportClaudia(includeHistory = false): Promise<UnprotectedFile | false> {
+    return await this.recorded(await this.attempt('export_claudia', includeHistory ? { include_history: true } : {}))
+  }
+
+  /** Tell the server that this window has just printed or saved a PDF of the document (D1271), so that it is
+   * recorded for you: `kind` is `print` or `pdf`. Called when the file is saved or the page sent to the printer, not
+   * when the preview opens. It is a report of what Claudia's own screens did, not a guarantee. `false` after saying
+   * why not (a server that does not record, or more reports than it takes in a minute). */
+  async reportOutput(kind: 'print' | 'pdf', pages: number): Promise<boolean> {
+    return (await this.recorded(await this.attempt('report_output', { kind, format: kind, pages }))) !== false
+  }
+
+  /** `answer` of something that leaves the document, passed on: the server has recorded it, and the other windows are
+   * told (D1271) but this one, whose own request it was, is not, so it reads the record again. Owners and editors only:
+   * a viewer is never sent the record (D1261). */
+  private async recorded<T>(answer: T | false): Promise<T | false> {
+    if (answer !== false && this.state.me.role !== 'viewer') {
+      const audit = await this.optional<AuditRow[]>('audit_log')
+      if (audit) this.state.audit = audit
+    }
+    return answer
   }
 
   // ------------------------------------------------------------------------------ help (E13.1, E13.3, E13.5)

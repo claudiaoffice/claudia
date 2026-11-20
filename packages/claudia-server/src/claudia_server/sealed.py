@@ -45,16 +45,19 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from claudia_container import (
+    AuditRecord,
     ContainerError,
     Domain,
     JournalError,
     JournalWriter,
     KdfParams,
+    RenewalInterrupted,
     Role,
     WeakPassword,
     add_user,
     begin,
     change_password,
+    change_role,
     clean_details,
     create_document,
     derive_login_material,
@@ -65,11 +68,14 @@ from claudia_container import (
     new_recovery_key,
     pack_journal,
     parse_recovery_key,
+    read_audit,
     read_manifest,
     read_original,
     read_people,
     read_state,
+    record_audit,
     recover_access,
+    remove_person,
     remove_user,
     rewrite_journal,
     sealed_copy,
@@ -193,6 +199,12 @@ def _items(payloads: Iterable[bytes], what: str) -> list[tuple[str, object]]:
     return items
 
 
+def _snapshot_of(held: _Held) -> bytes | None:
+    """The snapshot of an open document as it is written into its file, or ``None`` if it has none."""
+    snapshot = held.document.snapshot() if held.document is not None else None
+    return None if snapshot is None else json.dumps(snapshot.to_data(), separators=(",", ":")).encode()
+
+
 def _snapshot_from(data: bytes | None) -> Snapshot | None:
     """The snapshot of a file, or ``None`` if there is none or it cannot be read (it is only a cache)."""
     if data is None:
@@ -244,6 +256,11 @@ class SealedDocuments:
     def app(self) -> str:
         """The kind of documents kept in the folder."""
         return self.model_cls.app
+
+    @property
+    def state_schema(self) -> int:
+        """The shape of the state of those documents."""
+        return self.model_cls.state_schema
 
     # -- where things are ---------------------------------------------------------------------
     def _new_kdf(self) -> KdfParams | None:
@@ -377,6 +394,47 @@ class SealedDocuments:
             return
         remove_user(path, keys, name)
 
+    # -- roles and removal, with the keys renewed (E2.3, D1263) --------------------------------
+    def set_role(self, doc_id: str, name: str, role: str) -> Account:
+        """Give ``name`` this role in the open document. A role that takes keys away (editor to viewer) renews them."""
+        if role not in (Role.EDITOR, Role.VIEWER):
+            raise ValueError("a person's role is editor or viewer; ownership is handed over")
+        return self._change_people(doc_id, name, Role(role))
+
+    def remove_person(self, doc_id: str, name: str) -> Account:
+        """Remove ``name`` from the open document and renew the keys she held."""
+        return self._change_people(doc_id, name, None)
+
+    def _change_people(self, doc_id: str, name: str, role: Role | None) -> Account:
+        clean = _clean_name(name)
+        path = self._file(doc_id)
+        with self._lock:
+            held = self._open.get(doc_id)
+            if held is None:
+                raise DocumentSealed(_SEALED)
+            target = next((p for p in read_people(path, held.keys) if _same_name(p.name, clean)), None)
+            if target is None:
+                raise KeyError(name)
+            if target.role is Role.OWNER:
+                raise ValueError("an owner stays: ownership is handed over, not taken away")
+            snapshot = _snapshot_of(held)
+            try:
+                if role is None:
+                    done = remove_person(path, held.keys, held.store.writer, target.name, snapshot=snapshot)
+                else:
+                    done = change_role(path, held.keys, held.store.writer, target.name, role, snapshot=snapshot)
+            except RenewalInterrupted as interrupted:
+                # the file has the new keys; go on with them, and start the journal again
+                held.keys = held.store.keys = interrupted.keys
+                held.store.writer = begin(path, interrupted.keys)
+                held.store.unpacked = 0
+                return Account(target.name, (role or target.role).value)
+            if done.renewed:
+                held.keys = held.store.keys = done.keys
+                held.store.writer = done.writer
+                held.store.unpacked = 0
+        return Account(target.name, (role or target.role).value)
+
     def _is_empty(self, doc_id: str, keys: Mapping[Domain, bytes]) -> bool:
         try:
             state = read_state(self._file(doc_id), keys)
@@ -505,6 +563,21 @@ class SealedDocuments:
         except (ContainerError, OSError) as error:
             raise ValueError(f"the document cannot be copied: {error}") from error
 
+    # -- what left the document (D1271) -------------------------------------------------------
+    def record_audit(self, doc_id: str, record: AuditRecord) -> None:
+        """Add ``record`` to the document's audit chain, with the keys the open document holds: the one who asked may
+        be a viewer, who holds none of them. ``DocumentSealed`` if nobody holding all the keys has opened the document
+        since the server started (a document cannot be exported then either)."""
+        keys = self._all_keys(doc_id)
+        with self._lock:
+            record_audit(self._file(doc_id), keys, record)
+
+    def audit_rows(self, doc_id: str) -> list[AuditRecord]:
+        """Everything recorded for the document, oldest first."""
+        keys = self._all_keys(doc_id)
+        with self._lock:
+            return read_audit(self._file(doc_id), keys)
+
     def describe(self, doc_id: str, description: str, tags: Sequence[str]) -> None:
         """Give a document its maker has just made (whose keys are still held) a description and tags: the one
         way to set them without a password, because whoever holds the keys of a new document made it a moment ago.
@@ -591,9 +664,7 @@ class SealedDocuments:
         """Fold the journal of an open document into its file and leave a snapshot. A failure is logged and loses
         nothing (the journal has it all); the next try comes after another ``pack_every`` changes."""
         try:
-            snapshot = held.document.snapshot() if held.document is not None else None
-            data = None if snapshot is None else json.dumps(snapshot.to_data(), separators=(",", ":")).encode()
-            held.store.writer = pack_journal(self._file(doc_id), held.keys, held.store.writer, data)
+            held.store.writer = pack_journal(self._file(doc_id), held.keys, held.store.writer, _snapshot_of(held))
         except Exception:
             log.exception("cannot pack %s; its changes are safe in the journal", doc_id)
             # `pack_journal` closes the old writer before it tries to put the new journal in its place (closed,

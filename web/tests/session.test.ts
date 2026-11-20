@@ -966,6 +966,93 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     expect(await session.downloadClaudia('wrong')).toBe(false)
   })
 
+  it('exports the unencrypted zip, with the history only when asked for', async () => {
+    const link = new FakeLink()
+    server(link)
+    const asked: unknown[] = []
+    const file = { format: 'claudia-unencrypted', filename: 'plan.claudia-export.zip', content_type: 'application/zip', data: 'AAAA', parts: ['content'] }
+    link.handlers.export_claudia = (params) => {
+      asked.push(params)
+      return file
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.exportClaudia()).toEqual(file)
+    await session.exportClaudia(true)
+    expect(asked).toEqual([{}, { include_history: true }])
+  })
+
+  it('says why the unencrypted export was refused and gives no file', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.export_claudia = () => {
+      throw new ProtocolError('forbidden', 'only an owner may export the history and the chat')
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.exportClaudia(true)).toBe(false)
+    expect(session.state.notice).not.toBeNull()
+  })
+
+  it('reports a print or a PDF with its pages, and nothing the client could use to name somebody else', async () => {
+    const link = new FakeLink()
+    server(link)
+    link.handlers.report_output = () => ({ recorded: true })
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.reportOutput('pdf', 6)).toBe(true)
+    expect(link.last('report_output')).toEqual({ kind: 'pdf', format: 'pdf', pages: 6 })
+  })
+
+  it('knows what has left the document, and hears of the next one as it happens', async () => {
+    const link = new FakeLink()
+    server(link)
+    const first = { kind: 'export', who: 'anna', when: '2026-11-19T14:02:00.000Z', format: 'docx', parts: ['content'], pages: null }
+    link.handlers.audit_log = () => [first]
+    const session = new Session(() => link)
+    await session.open()
+    expect(session.state.audit).toEqual([first])
+    const next = { ...first, kind: 'pdf', format: 'pdf', pages: 6, who: 'tobi' }
+    link.push('ephemeral', { kind: 'audit_recorded', sender: 'tobi', data: next })
+    expect(session.state.audit).toEqual([first, next])
+  })
+
+  it('reads the record again after its own export or PDF, because the server tells only the other windows', async () => {
+    const link = new FakeLink()
+    server(link)
+    const mine = { kind: 'pdf', who: 'anna', when: '2026-11-19T14:02:00.000Z', format: 'pdf', parts: ['content'], pages: 2 }
+    let rows: unknown[] = []
+    link.handlers.audit_log = () => rows
+    link.handlers.report_output = () => {
+      rows = [mine]
+      return { recorded: true }
+    }
+    const session = new Session(() => link)
+    await session.open()
+    expect(session.state.audit).toEqual([])
+    expect(await session.reportOutput('pdf', 2)).toBe(true)
+    expect(session.state.audit).toEqual([mine])
+  })
+
+  it('does not ask a viewer for the record, and an older server without it is no trouble', async () => {
+    const viewer = new FakeLink()
+    server(viewer)
+    viewer.welcome = { ...WELCOME, role: 'viewer' }
+    viewer.handlers.audit_log = () => {
+      throw new Error('a viewer must not ask')
+    }
+    viewer.handlers.ping = () => ({ revision: 'main:3', line: 'main' })
+    const seen = new Session(() => viewer)
+    await seen.open()
+    expect(viewer.count('audit_log')).toBe(0)
+    expect(seen.state.audit).toEqual([])
+    const old = new FakeLink()
+    server(old)
+    const session = new Session(() => old)
+    await session.open()
+    expect(session.state.audit).toEqual([])
+  })
+
   it('exports the current content as a Word, Excel or PowerPoint file', async () => {
     const link = new FakeLink()
     server(link)
@@ -1013,6 +1100,52 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     expect(session.state.notice?.text).toMatch(/ben is now the owner/)
     expect(session.state.status).toBe('open')
     expect(second.count('sheets')).toBe(1)
+  })
+
+  it('reconnects with what it may see now when its own role changed, and tells the person', async () => {
+    const first = new FakeLink()
+    const second = new FakeLink()
+    server(first)
+    server(second)
+    second.welcome = { ...WELCOME, role: 'viewer' }
+    const links = [first, second]
+    const session = new Session(() => links.shift()!)
+    await session.open()
+    first.push('ephemeral', { kind: 'role_changed', sender: 'ann', data: { user: 'ann', role: 'viewer' } })
+    await session.settled()
+    expect(session.state.notice?.text).toMatch(/now “only look”/)
+    expect(session.state.me.role).toBe('viewer')
+  })
+
+  it('only tells the person when somebody else’s role changed', async () => {
+    const { session, link } = await opened()
+    link.push('ephemeral', { kind: 'role_changed', sender: 'ann', data: { user: 'ben', role: 'viewer' } })
+    expect(session.state.notice?.text).toMatch(/ben may now “only look”/)
+    expect(session.state.me.role).toBe('owner')
+  })
+
+  it('closes when the person was removed, and says so', async () => {
+    const { session, link } = await opened()
+    link.push('ephemeral', { kind: 'person_removed', sender: 'ben', data: { user: 'ann' } })
+    expect(session.state.status).toBe('closed')
+    expect(session.state.notice?.text).toMatch(/no longer a person/)
+  })
+
+  it('stays open when somebody else was removed', async () => {
+    const { session, link } = await opened()
+    link.push('ephemeral', { kind: 'person_removed', sender: 'ann', data: { user: 'ben' } })
+    expect(session.state.status).toBe('open')
+    expect(session.state.notice?.text).toMatch(/ben was removed/)
+  })
+
+  it('asks the server to change a role and to remove a person', async () => {
+    const { session, link } = await opened()
+    link.handlers.change_role = (p: any) => ({ user: p.name, role: p.role, renewed: true })
+    link.handlers.remove_person = (p: any) => ({ user: p.name })
+    expect(await session.changeRole('ben', 'viewer')).toEqual({ user: 'ben', role: 'viewer', renewed: true })
+    expect(link.last('change_role')).toEqual({ name: 'ben', role: 'viewer' })
+    expect(await session.removePerson('ben')).toBe(true)
+    expect(link.last('remove_person')).toEqual({ name: 'ben' })
   })
 
   it('closes the session when the document was deleted out from under us', async () => {

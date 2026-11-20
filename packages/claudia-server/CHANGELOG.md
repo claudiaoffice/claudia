@@ -5,6 +5,45 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-11-19
+
+### Added
+- Roles can change and people can be removed (D1263, E2.3). Methods `change_role {name, role (editor|viewer)}` and
+  `remove_person {name}`, owners only; an owner is refused with `command_error` (ownership is handed over). Both answer
+  after the keys are renewed. `PeopleDirectory` (`set_role`, `remove_person`) is implemented by `SealedDocuments`.
+- Ephemeral events `role_changed {user, role}` and `person_removed {user}`. The hub updates the person's open
+  connections at once: the new role applies before the event is delivered; a removed person's connections get the
+  event, then no more events, and their requests are answered `forbidden`.
+- A renewal runs on the event loop under the document's lock, not off it as D1263 sketched: appends would race with the
+  rewrite of the file. For a normal document it takes about as long as writing the file once.
+
+### Changed
+- Reads of `change_role` and `remove_person` are `content` in `method_reads.json`.
+
+## [0.40.0] - 2026-11-19
+
+### Added
+- Everything that leaves a document is recorded (D1271, E2.9). `Method.leaves="export"` on `export_content`,
+  `export_office` (all three apps) and the new `export_claudia`: after the method has answered, `MethodTable.dispatch`
+  records who (the account), when, the format and the parts through `Context.record_leaving` and
+  `AuditDirectory.record_audit` (`SealedDocuments`: with the keys the open document holds, so a viewer's export is
+  recorded). New methods `report_output {kind: print|pdf, format, pages}` (the window reports a print or a PDF; the name is
+  the connection's; 20 a minute per person, error code `too_many`; `MAX_REPORTED_PAGES`) and `audit_log` (reads history:
+  owners and editors). The ephemeral event `audit_recorded` is classified as history, so a viewer is never sent it; the
+  sender is not sent it either. `tests/method_reads.json` lists the new methods.
+- `export_claudia {include_history}` gives Claudia's unencrypted zip (D1270): `{format: "claudia-unencrypted", filename,
+  content_type, data, parts}`; the history and chat only for an owner (`forbidden` otherwise).
+- An unencrypted export is imported as a new document (D1272): `formats.sniff` knows `claudia-export `,
+  `import_state(fmt, data, state_schema)` returns its state (refused if another `state_schema`), `Hub.state_schema` and
+  the provider's `state_schema`, `UploadDesk` takes `.zip` exports (`format: "claudia-export"`, `kind: "Claudia export"`,
+  `made_by`, `made_at`) and keeps no original for them. The document starts with one `core.Import` step; the importer is
+  its only owner. The history and chat parts of an export are not read back yet.
+- `formats.export_made(data)`: who made an export and when, from `export.json` alone.
+- `AuditDirectory` (a runtime-checkable protocol), implemented by `SealedDocuments` (`record_audit`, `audit_rows`); a server that keeps plain files or memory records nothing.
+
+### Changed
+- `PROTOCOL_VERSION` stays 2: the new methods and the new upload fields are additions.
+
 ## [0.39.0] - 2026-11-19
 
 ### Added

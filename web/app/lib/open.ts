@@ -215,7 +215,7 @@ function fold(text: string): string {
 export interface Uploaded {
   upload: string
   name: string
-  /** `docx`, `odt`, `xlsx`, `ods`, `pptx`, `odp` or `claudia` */
+  /** `docx`, `odt`, `xlsx`, `ods`, `pptx`, `odp`, `claudia` or `claudia-export` (an unencrypted export, D1272) */
   format: string
   app: string
   size: number
@@ -234,10 +234,13 @@ export interface Uploaded {
    *  start: the person may keep, change or clear it. */
   description?: string
   tags?: string[]
+  /** A Claudia export: who made it and when, as the file says (D1272). */
+  made_by?: string
+  made_at?: string
 }
 
 /** The file types the file picker offers: every one Claudia opens (sheet 10, B2). */
-export const OPENABLE = '.claudia,.docx,.odt,.xlsx,.ods,.pptx,.odp'
+export const OPENABLE = '.claudia,.docx,.odt,.xlsx,.ods,.pptx,.odp,.zip'
 
 /** The Office and OpenDocument formats of each app (the server's `formats.sniff` decides by the bytes; this is only
  * the name, for the picker and for refusing early). */
@@ -250,7 +253,7 @@ const FORMATS: Record<string, readonly string[]> = {
 /** What the file picker offers: everything in a browser tab, only the window's own app in a desktop window (D444). */
 export function openableFor(windowApp: string | null): string {
   const own = windowApp ? FORMATS[windowApp] : undefined
-  return own ? [...own, '.claudia'].join(',') : OPENABLE
+  return own ? [...own, '.claudia', '.zip'].join(',') : OPENABLE
 }
 
 /** The app an Office or OpenDocument file belongs to, by its name; `null` for a Claudia file (which app it is, only

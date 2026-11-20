@@ -81,7 +81,7 @@ it has). Apply saves and measures again. The page says that a document keeps the
   document (D262). It is kept in the browser (`lib/ai-mode.ts`, one key per server and document), is *suggest* until
   you choose, and goes with every chat message as `ai_mode`; a colleague can choose differently.
 * Presence: other people's cursors and locks are outlined with their colour and name.
-* File ▸ Save makes a checkpoint; File ▸ Share lets an owner add people (`add_user`) and make a new recovery key (`new_recovery_key`). A new document shows its recovery key once, before it opens (`created` in the answer to `hello`); "I forgot my password" on the start page comes in with it (`hello` with `recovery_key`).
+* File ▸ Save makes a checkpoint; File ▸ Share lets an owner add people (`add_user`), change an editor to "only look" and back (`change_role`), remove a person (`remove_person`; both renew keys and ask first, D1263) and make a new recovery key (`new_recovery_key`). A new document shows its recovery key once, before it opens (`created` in the answer to `hello`); "I forgot my password" on the start page comes in with it (`hello` with `recovery_key`).
 * A banner while the connection is lost; the app reconnects by itself and reloads what it shows.
 
 The assistant in this demo is a **scripted stand-in** (`claudia_server.ScriptedEngine`): it understands a few
@@ -274,6 +274,19 @@ PDF's bookmarks. **Page view** shows the same page numbers in the editor: `lib/p
 in the background, only while a table or a reference shows pages, once the typing has paused. Flow has no pages, so it
 shows none. A **page reference** in running text ("see page 12", step I) is filled in by the same layout: at most
 three passes, since a number can move a line and the line a page break; one that does not settle is reported as a note.
+
+Saving a PDF or sending the pages to the printer is **recorded in the document** (D1271): the preview calls
+`session.reportOutput('pdf'|'print', pages)` when the file is saved or the print dialog's page is sent — not when the
+preview opens — and the preview says so in a note under the bar. The History & Chat panel shows one muted line for each
+thing that left the document ("saved a PDF · 6 pages", "exported as Word · content", "exported unprotected · all parts";
+`lib/audit.ts`, `data-testid=audit-row`), merged among the changes by time because the record has no revision. Owners and
+editors see it; a viewer is never sent it. A window learns of its own export by reading `audit_log` again, and of other
+windows' by `audit_recorded`.
+
+**File ▸ Manage ▸ Export…** has a last format, "Claudia, unencrypted (JSON in a zip)" (`ExportFormatDialog.vue`): it asks
+"Save without protection?" once, in words, before the file is made, and only owners get the box "Include history and
+chat". An export file chosen in the Open dialog (the picker accepts `.zip`) shows "A Claudia export, made by … on …",
+no box to keep the original, and "You become the owner of the new document. Nobody else is given access."
 
 ## Presenter mode (creates)
 

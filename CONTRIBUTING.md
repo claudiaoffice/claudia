@@ -21,7 +21,9 @@
    the tests with their coverage floors, the docs build, the performance guards, the web app's lint, tests and
    types, and an `npm audit` of every lockfile (`scripts/check_npm_audit.py`: moderate or worse fails; what cannot be
    fixed goes into `[[tool.claudia.npm-audit-allow]]` in `pyproject.toml` with the reason). CI runs it on every push and once a week. A finding is fixed, or recorded in `vulture_whitelist.py`, the ruff
-   config or `web/eslint.config.mjs` *with the reason*; it is never just silenced.
+   config or `web/eslint.config.mjs` *with the reason*; it is never just silenced. **Run `ruff` as `uv run ruff`, never
+   a `ruff` installed on the machine:** the project pins `ruff<0.15`, and a newer one rewrites `except (A, B):` into
+   `except A, B:` and reformats files nobody touched (PROC-36).
 6. **The kernel stays pure.** `claudia-core` does no I/O, knows no app, and imports only the standard library
    (a test enforces it).
 

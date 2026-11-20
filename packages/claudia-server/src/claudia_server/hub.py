@@ -26,7 +26,7 @@ import logging
 import re
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Protocol
 
 from claudia_container import Domain
@@ -116,6 +116,10 @@ class DocumentProvider(Protocol):
     def app(self) -> str:
         """The kind of documents this provider holds (``DocumentModel.app``): a server hosts one kind."""
 
+    @property
+    def state_schema(self) -> int:
+        """The ``DocumentModel.state_schema`` of those documents: the shape of the state an import must have."""
+
     def exists(self, doc_id: str) -> bool:
         """Is there a document with this id?"""
 
@@ -162,6 +166,11 @@ class MemoryProvider:
     def app(self) -> str:
         """The kind of documents kept here."""
         return self._model_cls.app
+
+    @property
+    def state_schema(self) -> int:
+        """The shape of the state of those documents."""
+        return self._model_cls.state_schema
 
     def exists(self, doc_id: str) -> bool:
         """Is there a document with this id?"""
@@ -213,6 +222,7 @@ class Connection:
         self.color = AI_COLOR if account.system else hosted.pick_color()
         self.closed = False
         self.broken = False  # sending failed (client gone or too slow): the transport should drop it
+        self.removed = False  # the person was taken out of the document: nothing more is answered (D1263)
         self.locale = normalize_locale(locale)  # the window's own locale (E5.7); re-normalized, never trusted raw
 
     # -- outgoing -----------------------------------------------------------------------
@@ -222,6 +232,8 @@ class Connection:
         A pushed event is shaped for this person's role first (D1261): a viewer gets the content, the names and presence
         and nothing from the history or the chat."""
         if "event" in message:
+            if self.removed:
+                return  # nothing of the document reaches a person who was taken out of it
             shaped = shape_for(self.account.role, message["event"], message["data"])
             if shaped is None:
                 return
@@ -308,6 +320,8 @@ class Connection:
         request_id = None
         try:
             request_id, name, params = parse_request(raw, hosted.limits)
+            if self.removed:
+                raise RequestError("forbidden", msg("you are no longer a person of this document"))
             context = Context(
                 hosted.document,
                 self.account,
@@ -494,6 +508,8 @@ class HostedDocument:
         data = event.to_data()  # type: ignore[attr-defined]
         if isinstance(event, EphemeralPublished) and event.message.kind == "presence":
             (self._locked.add if event.message.data.get("locked") else self._locked.discard)(event.message.sender or "")
+        if isinstance(event, EphemeralPublished) and event.message.kind == "role_changed":
+            self._apply_people_change("role_changed", event.message.data)  # before it is delivered
         event_type = data.get("type", "state")
         # An event may offer `to_data_for(viewer)` to mask part of its payload per connection (e.g. an imported
         # image's source path, hidden from everyone but the person who imported it). Duck-typed, not imported by
@@ -502,6 +518,21 @@ class HostedDocument:
         for connection in self._audience(event):
             payload = data if to_data_for is None else to_data_for(connection.account.user)
             connection.deliver({"event": event_type, "data": payload})
+        if isinstance(event, EphemeralPublished) and event.message.kind == "person_removed":
+            self._apply_people_change("person_removed", event.message.data)  # after: she is told, then cut off
+
+    def _apply_people_change(self, kind: str, data: dict) -> None:
+        """A person's role was changed or she was removed (D1263): her open windows get the new role at once, before the
+        event is delivered, so what she may do and what she is shown follow the change on her next event and request. A
+        removed person's windows are told (the event is delivered first), then answer nothing more and get no events."""
+        user = data.get("user")
+        for connection in self.connections:
+            if connection.account.user != user:
+                continue
+            if kind == "role_changed":
+                connection.account = replace(connection.account, role=data["role"])
+            else:
+                connection.removed = True
 
     # -- pictures follow the text (D395) -------------------------------------------------------
     def _schedule_render(self, event: RenderingsChanged) -> None:
@@ -716,6 +747,11 @@ class Hub:
     def app(self) -> str:
         """The kind of documents this server hosts (``"computes"``, ``"creates"``, ...)."""
         return self.provider.app
+
+    @property
+    def state_schema(self) -> int:
+        """The shape of the state of this hub's documents (what an unencrypted export must match to come in)."""
+        return self.provider.state_schema
 
     def listing(self) -> list[dict]:
         """The documents on this server: ``{id, app, modified, online, description, tags}``, most recently changed

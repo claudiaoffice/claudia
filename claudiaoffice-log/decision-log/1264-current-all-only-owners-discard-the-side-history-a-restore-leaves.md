@@ -17,3 +17,5 @@ owners may. Editors may look at it, as they may at any history. Discarding it go
 redaction (D725), so the bytes are gone from the file.
 
 **Notes.** E2.3 listed "who may discard side history after a restore" as open.
+
+**Slice C:** already true in the code (`discard_side_history` is owner-only); a test now says so.

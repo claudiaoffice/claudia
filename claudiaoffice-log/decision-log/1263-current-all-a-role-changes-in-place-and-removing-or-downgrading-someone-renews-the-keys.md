@@ -11,7 +11,7 @@ superseded-by: []
 
 # D1263 · A role changes in place; removing or downgrading someone renews the keys they held
 
-**Decided by the owner 2026-11-19 (accepted the proposal: build it now). Not built.** E2.2 and E2.3 both list key rotation
+**Decided by the owner 2026-11-19 (accepted the proposal: build it now). Built in slice C (container 0.12.0, server 0.41.0); see D1282 for the one deviation.** E2.2 and E2.3 both list key rotation
 as not done, and E2.3 lists changing editor↔viewer without removing and re-adding the person.
 
 - **Changing a role** is one action of an owner in the Share dialog. The server lets the person in with her new role at

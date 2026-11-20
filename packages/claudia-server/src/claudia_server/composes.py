@@ -200,7 +200,7 @@ def _suggestions(ctx):
     return _text(ctx).visible_suggestions()
 
 
-@composes_methods.method("export_office", "format:str tracked_changes:bool=false")
+@composes_methods.method("export_office", "format:str tracked_changes:bool=false", leaves="export")
 def _export_office(ctx, *, format, tracked_changes):
     """The document's current content as bytes of a Word file (`format` `"docx"`) or an OpenDocument text (`"odt"`),
     wrapped for the wire as `{format, content_type, data}` (`data` base64); the answer also has `losses`, what

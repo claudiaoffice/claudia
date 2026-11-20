@@ -129,7 +129,7 @@ msgstr ""
 msgid "1 object"
 msgstr ""
 
-#: web/app/lib/print/setup.ts:104 web/app/lib/print/sheet.ts:99
+#: web/app/lib/audit.ts:27 web/app/lib/print/setup.ts:104 web/app/lib/print/sheet.ts:99
 msgid "1 page"
 msgstr ""
 
@@ -221,8 +221,20 @@ msgstr ""
 msgid "@{name} I redacted some of your work in the history of this document."
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:162
+#: web/app/components/ImportDialog.vue:174
 msgid "A Claudia document goes into a place as it is, still sealed, and is opened with a name and password it already knows."
+msgstr ""
+
+#: web/app/components/ImportDialog.vue:83
+msgid "A Claudia export, made by {who} on {date}."
+msgstr ""
+
+#: web/app/components/ImportDialog.vue:84
+msgid "A Claudia export, made by {who}."
+msgstr ""
+
+#: web/app/components/ImportDialog.vue:80
+msgid "A Claudia export."
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/desktop_server.py:450
@@ -333,7 +345,7 @@ msgstr ""
 msgid "A number raised to a power (the same as the operator ^)."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:281
+#: web/app/components/PrintPreview.vue:290
 msgid "A picture is printed without some of it: {reason}."
 msgstr ""
 
@@ -461,7 +473,7 @@ msgstr ""
 msgid "Access secret"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:44
+#: web/app/components/SidePanel.vue:45
 msgid "Act at once"
 msgstr ""
 
@@ -525,7 +537,7 @@ msgstr ""
 msgid "Add more files…"
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:50
+#: web/app/components/ShareDialog.vue:131
 msgid "Add person"
 msgstr ""
 
@@ -581,7 +593,7 @@ msgstr ""
 msgid "Agenda"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:506
+#: web/app/components/SidePanel.vue:513
 msgid "Agree"
 msgstr ""
 
@@ -589,7 +601,7 @@ msgstr ""
 msgid "Alignment"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:487 web/app/components/SidePanel.vue:91
+#: web/app/components/SearchPanel.vue:487 web/app/components/SidePanel.vue:98
 msgid "All"
 msgstr ""
 
@@ -665,7 +677,7 @@ msgstr ""
 msgid "An editor or owner has to open this document first. This window will open it as soon as one has."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:282
+#: web/app/components/PrintPreview.vue:291
 msgid "An object cannot be printed: {reason}."
 msgstr ""
 
@@ -689,8 +701,16 @@ msgstr ""
 msgid "Answers to what people often want to do"
 msgstr ""
 
+#: web/app/components/ShareDialog.vue:96
+msgid "Any private notes of this person are deleted."
+msgstr ""
+
 #: web/app/components/AddFontsDialog.vue:157
 msgid "Anyone"
+msgstr ""
+
+#: web/app/components/ExportFormatDialog.vue:107
+msgid "Anyone who gets the file can read it."
 msgstr ""
 
 #: web/app/lib/admin-fonts.ts:245
@@ -825,7 +845,7 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:515
+#: web/app/components/SidePanel.vue:522
 msgid "Back to now"
 msgstr ""
 
@@ -849,7 +869,7 @@ msgstr ""
 msgid "Back to the simple field"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:295
+#: web/app/components/PrintPreview.vue:304
 msgid "Back to {place} (Esc)"
 msgstr ""
 
@@ -981,7 +1001,7 @@ msgstr ""
 msgid "Calculation step"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:75 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:180 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:854 web/app/components/OpenDialog.vue:885 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SidePanel.vue:539 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:118 web/app/components/ExportFormatDialog.vue:119 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:192 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/ObjectDescriptionDialog.vue:65 web/app/components/OpenDialog.vue:854 web/app/components/OpenDialog.vue:885 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/ShareDialog.vue:89 web/app/components/ShareDialog.vue:99 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SidePanel.vue:546 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
 msgid "Cancel"
 msgstr ""
 
@@ -1053,11 +1073,19 @@ msgstr ""
 msgid "Change password"
 msgstr ""
 
+#: web/app/components/ShareDialog.vue:90
+msgid "Change to only look"
+msgstr ""
+
 #: web/app/components/ChangePasswordDialog.vue:30
 msgid "Change your password"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:92
+#: web/app/components/ShareDialog.vue:80
+msgid "Change {user} to “only look”?"
+msgstr ""
+
+#: web/app/components/SidePanel.vue:99
 msgid "Changes"
 msgstr ""
 
@@ -1073,7 +1101,7 @@ msgstr ""
 msgid "Characters from the middle of the text: where to start (from 1) and how many."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:21 web/app/components/SheetChartInsertDialog.vue:124 web/app/components/SheetChartInsertDialog.vue:30 web/app/components/SidePanel.vue:273 web/app/components/SidePanel.vue:278 web/app/lib/descriptions.ts:41
+#: packages/claudia-server/src/claudia_server/thing_names.py:21 web/app/components/SheetChartInsertDialog.vue:124 web/app/components/SheetChartInsertDialog.vue:30 web/app/components/SidePanel.vue:280 web/app/components/SidePanel.vue:285 web/app/lib/descriptions.ts:41
 msgid "Chart"
 msgstr ""
 
@@ -1085,7 +1113,7 @@ msgstr ""
 msgid "Chart…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:601 web/app/components/SidePanel.vue:93
+#: web/app/components/SidePanel.vue:100 web/app/components/SidePanel.vue:613
 msgid "Chat"
 msgstr ""
 
@@ -1141,7 +1169,11 @@ msgstr ""
 msgid "Claudia cannot open this file."
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:137
+#: web/app/components/ExportFormatDialog.vue:109
+msgid "Claudia cannot tell whether someone copies from the screen."
+msgstr ""
+
+#: web/app/components/ImportDialog.vue:148
 msgid "Claudia makes {what} of it, and the file goes into the new document with it, sealed. The file on this computer stays as it is."
 msgstr ""
 
@@ -1151,6 +1183,10 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/launch.py:35
 msgid "Claudia's server needs Python 3.14, and none was found.\nSet CLAUDIA_SERVER_PYTHON to the interpreter of an environment where Claudia is installed (in a checkout: run 'uv sync' and the interpreter is .venv/bin/python)."
+msgstr ""
+
+#: web/app/components/ExportFormatDialog.vue:29
+msgid "Claudia, unencrypted (JSON in a zip)"
 msgstr ""
 
 #: web/app/components/SlideNotes.vue:149
@@ -1169,7 +1205,7 @@ msgstr ""
 msgid "Clear cell style"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:237
+#: web/app/components/SidePanel.vue:244
 msgid "Clear the pick"
 msgstr ""
 
@@ -1181,7 +1217,7 @@ msgstr ""
 msgid "Click"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:686 web/app/components/SidePanel.vue:687
+#: web/app/components/SidePanel.vue:698 web/app/components/SidePanel.vue:699
 msgid "Click something in the document to write a tag for it."
 msgstr ""
 
@@ -1325,7 +1361,7 @@ msgstr ""
 msgid "Container"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes_contents.py:80 web/app/components/PrintPreview.vue:305
+#: packages/claudia-server/src/claudia_server/composes_contents.py:80 web/app/components/PrintPreview.vue:314
 msgid "Contents"
 msgstr ""
 
@@ -1493,7 +1529,7 @@ msgstr ""
 msgid "Current slide"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:318
+#: web/app/components/PrintPreview.vue:327
 msgid "Custom…"
 msgstr ""
 
@@ -1521,7 +1557,7 @@ msgstr ""
 msgid "Data from"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:507
+#: web/app/components/SidePanel.vue:514
 msgid "Decline"
 msgstr ""
 
@@ -1609,7 +1645,7 @@ msgstr ""
 msgid "Delete this document"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:631
+#: web/app/components/SidePanel.vue:643
 msgid "Deleted. Show the last moment it was there."
 msgstr ""
 
@@ -1633,7 +1669,7 @@ msgstr ""
 msgid "Describe the picture, or tick \"Decorative\" if it adds nothing a reader would miss."
 msgstr ""
 
-#: web/app/components/DetailsFields.vue:67 web/app/components/ImportDialog.vue:165
+#: web/app/components/DetailsFields.vue:67 web/app/components/ImportDialog.vue:177
 msgid "Description"
 msgstr ""
 
@@ -1673,7 +1709,7 @@ msgstr ""
 msgid "Device"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:22 web/app/components/SidePanel.vue:274
+#: packages/claudia-server/src/claudia_server/thing_names.py:22 web/app/components/SidePanel.vue:281
 msgid "Diagram"
 msgstr ""
 
@@ -1717,7 +1753,7 @@ msgstr ""
 msgid "Documents"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue:39 web/app/components/AssignOwnerDialog.vue:62 web/app/components/DownloadDialog.vue:71 web/app/components/ExportFormatDialog.vue:75 web/app/components/PaletteDialog.vue:143 web/app/components/RedactionDialog.vue:318 web/app/components/RotatePopover.vue:107 web/app/components/ShareDialog.vue:51
+#: web/app/components/AcceptOwnershipDialog.vue:39 web/app/components/AssignOwnerDialog.vue:62 web/app/components/DownloadDialog.vue:71 web/app/components/ExportFormatDialog.vue:119 web/app/components/PaletteDialog.vue:143 web/app/components/RedactionDialog.vue:318 web/app/components/RotatePopover.vue:107 web/app/components/ShareDialog.vue:132
 msgid "Done"
 msgstr ""
 
@@ -1741,7 +1777,7 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:344
+#: web/app/components/PrintPreview.vue:353
 msgid "Download PDF"
 msgstr ""
 
@@ -1881,7 +1917,7 @@ msgstr ""
 msgid "Every use of “{name}”"
 msgstr ""
 
-#: web/app/lib/base-session.ts:353
+#: web/app/lib/base-session.ts:367
 msgid "Everybody agreed: now at {label}."
 msgstr ""
 
@@ -1921,15 +1957,19 @@ msgstr ""
 msgid "Exponential"
 msgstr ""
 
-#: web/app/components/ExportFormatDialog.vue:74
+#: web/app/components/ExportFormatDialog.vue:116
 msgid "Export"
 msgstr ""
 
-#: web/app/components/ExportFormatDialog.vue:61
+#: web/app/components/ExportFormatDialog.vue:83
 msgid "Export this document"
 msgstr ""
 
-#: web/app/components/ExportFormatDialog.vue:71
+#: web/app/components/ExportFormatDialog.vue:117
+msgid "Export unprotected"
+msgstr ""
+
+#: web/app/components/ExportFormatDialog.vue:113
 msgid "Exported."
 msgstr ""
 
@@ -2069,7 +2109,7 @@ msgstr ""
 msgid "First row is the header (it names the columns)"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:357
+#: web/app/components/PrintPreview.vue:367
 msgid "Fit the width"
 msgstr ""
 
@@ -2097,7 +2137,7 @@ msgstr ""
 msgid "Follow Computation"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:528
+#: web/app/components/SidePanel.vue:535
 msgid "Follow changes"
 msgstr ""
 
@@ -2165,7 +2205,7 @@ msgstr ""
 msgid "Forecast"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:597
+#: web/app/components/SidePanel.vue:609
 msgid "Forget every hidden line"
 msgstr ""
 
@@ -2187,6 +2227,10 @@ msgstr ""
 
 #: web/app/components/AddFontsDialog.vue:131
 msgid "From files"
+msgstr ""
+
+#: web/app/components/ShareDialog.vue:86
+msgid "From now on {user} cannot read what is written to the history or the chat. {user} keeps what has already been seen and any copy that was saved. The document’s keys are renewed; for this document that takes about a second."
 msgstr ""
 
 #: web/app/components/StyleCssEditor.vue:89
@@ -2213,11 +2257,11 @@ msgstr ""
 msgid "Get back in"
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:40
+#: web/app/components/ShareDialog.vue:121
 msgid "Give a colleague a name and a password for {doc}. They open the document with them, like you did. Tell them the password yourself: the server never shows it again."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:660
+#: web/app/components/SidePanel.vue:672
 msgid "Give names to {n} things without one"
 msgstr ""
 
@@ -2277,7 +2321,7 @@ msgstr ""
 msgid "Go to the text box where your cursor is to change this text box only"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:631
+#: web/app/components/SidePanel.vue:643
 msgid "Go to this"
 msgstr ""
 
@@ -2333,7 +2377,7 @@ msgstr ""
 msgid "Hand {doc} over to somebody who already edits it. You will become an editor; they become the owner once they accept — confirm it is you with your own password."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:300
+#: web/app/components/PrintPreview.vue:309
 msgid "Handouts"
 msgstr ""
 
@@ -2349,7 +2393,7 @@ msgstr ""
 msgid "Header rows, banding, look, width and the columns of this table"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:26 web/app/components/SidePanel.vue:280 web/app/components/StyleSpec.vue:210
+#: packages/claudia-server/src/claudia_server/thing_names.py:26 web/app/components/SidePanel.vue:287 web/app/components/StyleSpec.vue:210
 msgid "Heading"
 msgstr ""
 
@@ -2361,7 +2405,7 @@ msgstr ""
 msgid "Headings numbered in one list count together as one outline: 1, 1.1, 1.2, 2 …"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:494 web/app/lib/document-menus.ts:274
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/SidePanel.vue:501 web/app/lib/document-menus.ts:274
 msgid "Help"
 msgstr ""
 
@@ -2377,11 +2421,11 @@ msgstr ""
 msgid "Hide password"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:514
+#: web/app/components/SidePanel.vue:521
 msgid "History"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:493
+#: web/app/components/SidePanel.vue:500
 msgid "History & Chat"
 msgstr ""
 
@@ -2393,7 +2437,7 @@ msgstr ""
 msgid "History and Chat"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:498
+#: web/app/components/SidePanel.vue:505
 msgid "History and chat are for the document's editors."
 msgstr ""
 
@@ -2405,7 +2449,7 @@ msgstr ""
 msgid "How Do I…?"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:310
+#: web/app/components/PrintPreview.vue:319
 msgid "How big the cells are printed"
 msgstr ""
 
@@ -2457,7 +2501,7 @@ msgstr ""
 msgid "How many positions meet all the criteria: pairs of a range and its criterion, all of the same shape."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:297
+#: web/app/components/PrintPreview.vue:306
 msgid "How many slides go on a page"
 msgstr ""
 
@@ -2513,7 +2557,7 @@ msgstr ""
 msgid "If somebody asked you to take over {doc}, confirm it is you with your own current password."
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:60
+#: web/app/components/ShareDialog.vue:141
 msgid "If somebody forgets their password, the recovery key lets them choose a new one. Making a new key shows it to you once and makes the old one stop working."
 msgstr ""
 
@@ -2559,6 +2603,10 @@ msgstr ""
 
 #: web/app/components/OpenDialog.vue:914
 msgid "In {name}"
+msgstr ""
+
+#: web/app/components/ExportFormatDialog.vue:98
+msgid "Include history and chat"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:102 web/app/lib/format-menu.ts:84
@@ -2737,7 +2785,7 @@ msgstr ""
 msgid "Keep the pattern"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:157
+#: web/app/components/ImportDialog.vue:168
 msgid "Keep the {format} file inside the document: Download then gives back this file with only your changes."
 msgstr ""
 
@@ -2773,15 +2821,15 @@ msgstr ""
 msgid "Label"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:328
+#: web/app/components/PrintPreview.vue:337
 msgid "Landscape"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:336
+#: web/app/components/PrintPreview.vue:345
 msgid "Language"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:356 web/app/components/StyleSizeField.vue:28 web/app/components/StyleSizeField.vue:28
+#: web/app/components/PrintPreview.vue:366 web/app/components/StyleSizeField.vue:28 web/app/components/StyleSizeField.vue:28
 msgid "Larger"
 msgstr ""
 
@@ -2797,11 +2845,11 @@ msgstr ""
 msgid "Last changed by {by} · {when}"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:360
+#: web/app/components/PrintPreview.vue:370
 msgid "Laying out the pages…"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:297
+#: web/app/components/PrintPreview.vue:306
 msgid "Layout"
 msgstr ""
 
@@ -2881,7 +2929,7 @@ msgstr ""
 msgid "Line · soon"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:581
+#: web/app/components/SidePanel.vue:593
 msgid "Lines"
 msgstr ""
 
@@ -2889,7 +2937,7 @@ msgstr ""
 msgid "List"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:281
+#: packages/claudia-server/src/claudia_server/thing_names.py:27 web/app/components/SidePanel.vue:288
 msgid "List item"
 msgstr ""
 
@@ -2969,7 +3017,7 @@ msgstr ""
 msgid "Make a merged cell into single cells again"
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:62
+#: web/app/components/ShareDialog.vue:143
 msgid "Make a new recovery key"
 msgstr ""
 
@@ -3001,11 +3049,11 @@ msgstr ""
 msgid "Manage {server}…"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:330
+#: web/app/components/PrintPreview.vue:339
 msgid "Margins"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:529
+#: web/app/components/SidePanel.vue:536
 msgid "Mark where the document changed after this step: solid outlines are what this step changed, dashed ones what changed later"
 msgstr ""
 
@@ -3045,7 +3093,7 @@ msgstr ""
 msgid "Maximum documents"
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:47
+#: web/app/components/ShareDialog.vue:128
 msgid "May"
 msgstr ""
 
@@ -3077,11 +3125,11 @@ msgstr ""
 msgid "Mermaid"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:668
+#: web/app/components/SidePanel.vue:680
 msgid "Message everyone, or @ai …"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:630
+#: web/app/components/SidePanel.vue:642
 msgid "Message redacted"
 msgstr ""
 
@@ -3121,7 +3169,7 @@ msgstr ""
 msgid "More padding"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:422
+#: web/app/components/SidePanel.vue:429
 msgid "More than {n} places differ from now"
 msgstr ""
 
@@ -3169,7 +3217,7 @@ msgstr ""
 msgid "My places and collections"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/AdminFonts.vue:204 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:140 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/NumberingDialog.vue:134 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:44 web/app/components/SlideWorkspace.vue:513 web/app/components/StyleSpec.vue:291 web/app/components/Workspace.vue:1286 web/app/components/Workspace.vue:1287 web/app/lib/reference-labels.ts:17
+#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/AdminFonts.vue:204 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:151 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/NumberingDialog.vue:134 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:125 web/app/components/SlideWorkspace.vue:513 web/app/components/StyleSpec.vue:291 web/app/components/Workspace.vue:1286 web/app/components/Workspace.vue:1287 web/app/lib/reference-labels.ts:17
 msgid "Name"
 msgstr ""
 
@@ -3401,7 +3449,7 @@ msgstr ""
 msgid "Not available yet"
 msgstr ""
 
-#: web/app/lib/base-session.ts:682 web/app/lib/base-session.ts:918
+#: web/app/lib/base-session.ts:714 web/app/lib/base-session.ts:950
 msgid "Not connected to the server."
 msgstr ""
 
@@ -3417,7 +3465,7 @@ msgstr ""
 msgid "Not finding it? Say {mention} in the chat."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:277
+#: web/app/components/PrintPreview.vue:286
 msgid "Not hyphenated: {reason}."
 msgstr ""
 
@@ -3433,7 +3481,7 @@ msgstr ""
 msgid "Not numbered (no parent)"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:338
+#: web/app/components/PrintPreview.vue:347
 msgid "Not set"
 msgstr ""
 
@@ -3453,11 +3501,11 @@ msgstr ""
 msgid "Nothing anybody sees in the document changes: it is only in the history."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:421
+#: web/app/components/SidePanel.vue:428
 msgid "Nothing differs from now"
 msgstr ""
 
-#: web/app/lib/base-session.ts:1057
+#: web/app/lib/base-session.ts:1089
 msgid "Nothing has changed since the last checkpoint."
 msgstr ""
 
@@ -3517,15 +3565,15 @@ msgstr ""
 msgid "Nothing yet. Create the first document."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:542
+#: web/app/components/SidePanel.vue:549
 msgid "Nothing yet. Put a text box on the slide."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:542
+#: web/app/components/SidePanel.vue:549
 msgid "Nothing yet. Start writing."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:542
+#: web/app/components/SidePanel.vue:549
 msgid "Nothing yet. Type into a cell."
 msgstr ""
 
@@ -3701,7 +3749,7 @@ msgstr ""
 msgid "Only whole words."
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:182 web/app/components/OpenDialog.vue:1051 web/app/components/OpenDialog.vue:799
+#: web/app/components/ImportDialog.vue:194 web/app/components/OpenDialog.vue:1051 web/app/components/OpenDialog.vue:799
 msgid "Open"
 msgstr ""
 
@@ -3721,7 +3769,7 @@ msgstr ""
 msgid "Open a document from one of your places, a collection or Mine"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:106
+#: web/app/components/ImportDialog.vue:116
 msgid "Open a file"
 msgstr ""
 
@@ -3745,7 +3793,7 @@ msgstr ""
 msgid "Open the first suggestion"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:181
+#: web/app/components/ImportDialog.vue:193
 msgid "Open the one here"
 msgstr ""
 
@@ -3769,7 +3817,7 @@ msgstr ""
 msgid "Opening"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:118
+#: web/app/components/ImportDialog.vue:128
 msgid "Opening {name}"
 msgstr ""
 
@@ -3797,7 +3845,7 @@ msgstr ""
 msgid "Order the rows of the table by the column the caret is in, smallest first"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:326
+#: web/app/components/PrintPreview.vue:335
 msgid "Orientation"
 msgstr ""
 
@@ -3837,6 +3885,10 @@ msgstr ""
 msgid "Overview (G)"
 msgstr ""
 
+#: web/app/components/ExportFormatDialog.vue:100
+msgid "Owners only. Hidden lines are included. Without it the file holds the content as it is now."
+msgstr ""
+
 #: web/app/components/RandomDialog.vue:109
 msgid "PERT"
 msgstr ""
@@ -3857,7 +3909,7 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
-#: web/app/components/ContentsDialog.vue:65 web/app/components/PrintPreview.vue:342
+#: web/app/components/ContentsDialog.vue:65 web/app/components/PrintPreview.vue:351
 msgid "Page numbers"
 msgstr ""
 
@@ -3869,11 +3921,11 @@ msgstr ""
 msgid "Pair by position"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:315 web/app/lib/palette.ts:17
+#: web/app/components/PrintPreview.vue:324 web/app/lib/palette.ts:17
 msgid "Paper"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:28 web/app/components/SidePanel.vue:282 web/app/components/StyleSpec.vue:193 web/app/components/StyleSpec.vue:194 web/app/lib/object-style-host.ts:52 web/app/lib/text-style-host.ts:11
+#: packages/claudia-server/src/claudia_server/thing_names.py:28 web/app/components/SidePanel.vue:289 web/app/components/StyleSpec.vue:193 web/app/components/StyleSpec.vue:194 web/app/lib/object-style-host.ts:52 web/app/lib/text-style-host.ts:11
 msgid "Paragraph"
 msgstr ""
 
@@ -3881,7 +3933,7 @@ msgstr ""
 msgid "Paragraph {n}"
 msgstr ""
 
-#: web/app/lib/base-session.ts:518
+#: web/app/lib/base-session.ts:534
 msgid "Part of the history was redacted. The document was reloaded."
 msgstr ""
 
@@ -3889,7 +3941,7 @@ msgstr ""
 msgid "Part of the result of the query in {cell}"
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:54 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:153 web/app/components/OpenDialog.vue:1038
+#: web/app/components/AdminLogin.vue:54 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:164 web/app/components/OpenDialog.vue:1038
 msgid "Password"
 msgstr ""
 
@@ -3897,7 +3949,7 @@ msgstr ""
 msgid "Password (at least 8 characters)"
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:45
+#: web/app/components/ShareDialog.vue:126
 msgid "Password (at least 8 characters, with a capital letter, a small letter and a digit)"
 msgstr ""
 
@@ -3917,6 +3969,10 @@ msgstr ""
 msgid "Pattern syntax: Python re"
 msgstr ""
 
+#: web/app/components/ShareDialog.vue:106
+msgid "People in this document"
+msgstr ""
+
 #: web/app/components/AddFontsDialog.vue:164
 msgid "People using this server"
 msgstr ""
@@ -3929,15 +3985,15 @@ msgstr ""
 msgid "Pick cells instead…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:557 web/app/components/SidePanel.vue:620
+#: web/app/components/SidePanel.vue:564 web/app/components/SidePanel.vue:632
 msgid "Pick for redaction"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:621
+#: web/app/components/SidePanel.vue:633
 msgid "Pick for redaction: message by {who} at {time}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:558
+#: web/app/components/SidePanel.vue:565
 msgid "Pick for redaction: {what}"
 msgstr ""
 
@@ -3945,11 +4001,11 @@ msgstr ""
 msgid "Pick in the document…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:235
+#: web/app/components/SidePanel.vue:242
 msgid "Pick more…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:537
+#: web/app/components/SidePanel.vue:544
 msgid "Pick the changes and messages to redact."
 msgstr ""
 
@@ -3957,11 +4013,11 @@ msgstr ""
 msgid "Pick what to blank"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:537
+#: web/app/components/SidePanel.vue:544
 msgid "Picked to redact: {n}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:20 web/app/components/SidePanel.vue:272 web/app/lib/descriptions.ts:41 web/app/lib/object-clipboard.ts:43
+#: packages/claudia-server/src/claudia_server/thing_names.py:20 web/app/components/SidePanel.vue:279 web/app/lib/descriptions.ts:41 web/app/lib/object-clipboard.ts:43
 msgid "Picture"
 msgstr ""
 
@@ -3993,7 +4049,7 @@ msgstr ""
 msgid "Place it"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:422
+#: web/app/components/SidePanel.vue:429
 msgid "Places that differ from now: {n}"
 msgstr ""
 
@@ -4045,7 +4101,7 @@ msgstr ""
 msgid "Poisson"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:327
+#: web/app/components/PrintPreview.vue:336
 msgid "Portrait"
 msgstr ""
 
@@ -4109,15 +4165,19 @@ msgstr ""
 msgid "Previous slide"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:294
+#: web/app/components/PrintPreview.vue:303
 msgid "Print"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:293 web/app/components/PrintPreview.vue:295
+#: web/app/components/PrintPreview.vue:302 web/app/components/PrintPreview.vue:304
 msgid "Print preview"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue:345 web/app/lib/document-menus.ts:85 web/app/lib/print/use-print.ts:33
+#: web/app/components/PrintPreview.vue:359
+msgid "Printing and saving a PDF are recorded in the document's history: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens."
+msgstr ""
+
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/PrintPreview.vue:354 web/app/lib/document-menus.ts:85 web/app/lib/print/use-print.ts:33
 msgid "Print…"
 msgstr ""
 
@@ -4161,7 +4221,7 @@ msgstr ""
 msgid "Put in {cell}"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:139 web/app/components/ImportDialog.vue:163 web/app/components/ImportDialog.vue:182
+#: web/app/components/ImportDialog.vue:150 web/app/components/ImportDialog.vue:175 web/app/components/ImportDialog.vue:194
 msgid "Put it in"
 msgstr ""
 
@@ -4201,7 +4261,7 @@ msgstr ""
 msgid "Random generator"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:279
+#: web/app/components/SidePanel.vue:286
 msgid "Range"
 msgstr ""
 
@@ -4241,7 +4301,7 @@ msgstr ""
 msgid "Reconnecting…"
 msgstr ""
 
-#: web/app/components/OpenDialog.vue:1035 web/app/components/ShareDialog.vue:58
+#: web/app/components/OpenDialog.vue:1035 web/app/components/ShareDialog.vue:139
 msgid "Recovery key"
 msgstr ""
 
@@ -4261,23 +4321,23 @@ msgstr ""
 msgid "Redact for good"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:565
+#: web/app/components/SidePanel.vue:572
 msgid "Redacted: the content of this change was taken away."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:253
+#: web/app/components/SidePanel.vue:260
 msgid "Redacted: {what}, by {who} at {time}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:693
+#: web/app/components/SidePanel.vue:705
 msgid "Redaction menu"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:538
+#: web/app/components/SidePanel.vue:545
 msgid "Redact…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:234
+#: web/app/components/SidePanel.vue:241
 msgid "Redact… ({n} picked)"
 msgstr ""
 
@@ -4321,7 +4381,7 @@ msgstr ""
 msgid "Remarks"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:211 web/app/components/NumberingDialog.vue:200 web/app/components/PivotPanel.vue:113 web/app/components/SearchPanel.vue:631
+#: web/app/components/AdminAccessDocuments.vue:211 web/app/components/NumberingDialog.vue:200 web/app/components/PivotPanel.vue:113 web/app/components/SearchPanel.vue:631 web/app/components/ShareDialog.vue:116
 msgid "Remove"
 msgstr ""
 
@@ -4363,6 +4423,14 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "Remove yourself from this document"
+msgstr ""
+
+#: web/app/components/ShareDialog.vue:100
+msgid "Remove {user}"
+msgstr ""
+
+#: web/app/components/ShareDialog.vue:80
+msgid "Remove {user} from “{doc}”?"
 msgstr ""
 
 #: web/app/components/ContentsDialog.vue:81
@@ -4407,6 +4475,10 @@ msgstr ""
 
 #: web/app/components/AdminFonts.vue:141
 msgid "Rename…"
+msgstr ""
+
+#: web/app/components/ShareDialog.vue:82
+msgid "Renewing the keys…"
 msgstr ""
 
 #: web/app/lib/shortcuts.ts:109
@@ -4469,7 +4541,7 @@ msgstr ""
 msgid "Replaces {family} {style} from {collection}, for every document on this server."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:515
+#: web/app/components/SidePanel.vue:522
 msgid "Replay"
 msgstr ""
 
@@ -4477,7 +4549,7 @@ msgstr ""
 msgid "Replay History…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:515
+#: web/app/components/SidePanel.vue:522
 msgid "Replay the history: wheel over this panel, or Alt+Page Up"
 msgstr ""
 
@@ -4685,7 +4757,7 @@ msgstr ""
 msgid "Save New Checkpoint…"
 msgstr ""
 
-#: web/app/components/ExportFormatDialog.vue:66
+#: web/app/components/ExportFormatDialog.vue:91
 msgid "Save as"
 msgstr ""
 
@@ -4701,7 +4773,11 @@ msgstr ""
 msgid "Save the document's content in Claudia's own format"
 msgstr ""
 
-#: web/app/components/DownloadDialog.vue:60 web/app/components/ExportFormatDialog.vue:70 web/app/components/PrintPreview.vue:215
+#: web/app/components/ExportFormatDialog.vue:104
+msgid "Save without protection?"
+msgstr ""
+
+#: web/app/components/DownloadDialog.vue:60 web/app/components/ExportFormatDialog.vue:112 web/app/components/PrintPreview.vue:215
 msgid "Saved as {path}."
 msgstr ""
 
@@ -4717,7 +4793,7 @@ msgstr ""
 msgid "Say what the object you have selected shows to someone who cannot see it"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:310
+#: web/app/components/PrintPreview.vue:319
 msgid "Scale"
 msgstr ""
 
@@ -4729,7 +4805,7 @@ msgstr ""
 msgid "Schemes"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:111
+#: web/app/components/ImportDialog.vue:121
 msgid "Sealed Claudia document"
 msgstr ""
 
@@ -4861,7 +4937,7 @@ msgstr ""
 msgid "Set width"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:19 web/app/components/SidePanel.vue:271 web/app/lib/descriptions.ts:41
+#: packages/claudia-server/src/claudia_server/thing_names.py:19 web/app/components/SidePanel.vue:278 web/app/lib/descriptions.ts:41
 msgid "Shape"
 msgstr ""
 
@@ -4869,7 +4945,7 @@ msgstr ""
 msgid "Shape labels"
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:39
+#: web/app/components/ShareDialog.vue:104
 msgid "Share this document"
 msgstr ""
 
@@ -4877,7 +4953,7 @@ msgstr ""
 msgid "Share…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:277 web/app/components/Workspace.vue:274
+#: web/app/components/SidePanel.vue:284 web/app/components/Workspace.vue:274
 msgid "Sheet"
 msgstr ""
 
@@ -4885,7 +4961,7 @@ msgstr ""
 msgid "Sheet {name}"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:279
+#: web/app/components/PrintPreview.vue:288
 msgid "Sheet: {reason}."
 msgstr ""
 
@@ -4901,7 +4977,7 @@ msgstr ""
 msgid "Shift + arrows or drag"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:538
+#: web/app/components/SidePanel.vue:545
 msgid "Shift+Del"
 msgstr ""
 
@@ -4941,7 +5017,7 @@ msgstr ""
 msgid "Show as SQL…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:529
+#: web/app/components/SidePanel.vue:536
 msgid "Show differences from now"
 msgstr ""
 
@@ -4969,7 +5045,7 @@ msgstr ""
 msgid "Show password"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:628
+#: web/app/components/SidePanel.vue:640
 msgid "Show the document as it was at this message"
 msgstr ""
 
@@ -5029,7 +5105,7 @@ msgstr ""
 msgid "Skipped {where}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:24 web/app/components/SidePanel.vue:276
+#: packages/claudia-server/src/claudia_server/thing_names.py:24 web/app/components/SidePanel.vue:283
 msgid "Slide"
 msgstr ""
 
@@ -5053,7 +5129,7 @@ msgstr ""
 msgid "Slides"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:354 web/app/components/StyleSizeField.vue:25 web/app/components/StyleSizeField.vue:25
+#: web/app/components/PrintPreview.vue:364 web/app/components/StyleSizeField.vue:25 web/app/components/StyleSizeField.vue:25
 msgid "Smaller"
 msgstr ""
 
@@ -5077,7 +5153,7 @@ msgstr ""
 msgid "Something is repeated that is not there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1099 web/app/lib/base-session.ts:907 web/app/lib/session.ts:653
+#: web/app/lib/base-session.ts:1142 web/app/lib/base-session.ts:939 web/app/lib/session.ts:653
 msgid "Something went wrong."
 msgstr ""
 
@@ -5169,7 +5245,7 @@ msgstr ""
 msgid "Starting {app}…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:103
+#: web/app/components/SidePanel.vue:110
 msgid "Step {at} of {total}"
 msgstr ""
 
@@ -5217,15 +5293,15 @@ msgstr ""
 msgid "Style…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:45
+#: web/app/components/SidePanel.vue:46
 msgid "Suggest first"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:531
+#: web/app/components/SidePanel.vue:538
 msgid "Suggest going back to the document as it was after this step"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:573
+#: web/app/components/SidePanel.vue:585
 msgid "Suggest going back to this checkpoint"
 msgstr ""
 
@@ -5301,7 +5377,7 @@ msgstr ""
 msgid "Tab / Shift + Tab"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:23 web/app/components/OpenDialog.vue:103 web/app/components/SidePanel.vue:275 web/app/components/TableOptionsDialog.vue:59 web/app/components/TableView.vue:30
+#: packages/claudia-server/src/claudia_server/thing_names.py:23 web/app/components/OpenDialog.vue:103 web/app/components/SidePanel.vue:282 web/app/components/TableOptionsDialog.vue:59 web/app/components/TableView.vue:30
 msgid "Table"
 msgstr ""
 
@@ -5349,7 +5425,7 @@ msgstr ""
 msgid "Table…"
 msgstr ""
 
-#: web/app/components/DetailsFields.vue:89 web/app/components/DocDetails.vue:42 web/app/components/ImportDialog.vue:167
+#: web/app/components/DetailsFields.vue:89 web/app/components/DocDetails.vue:42 web/app/components/ImportDialog.vue:179
 msgid "Tags"
 msgstr ""
 
@@ -5417,7 +5493,7 @@ msgstr ""
 msgid "Text before level {level}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:18 web/app/components/SidePanel.vue:270 web/app/lib/descriptions.ts:41
+#: packages/claudia-server/src/claudia_server/thing_names.py:18 web/app/components/SidePanel.vue:277 web/app/lib/descriptions.ts:41
 msgid "Text box"
 msgstr ""
 
@@ -5473,7 +5549,7 @@ msgstr ""
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:838
+#: web/app/lib/base-session.ts:870
 msgid "That was deleted. This is the last moment it was there."
 msgstr ""
 
@@ -5673,7 +5749,7 @@ msgstr ""
 msgid "The different rows of a range in order of first appearance (columns with by_col TRUE); with exactly_once TRUE only those that occur once."
 msgstr ""
 
-#: web/app/lib/base-session.ts:526 web/app/lib/base-session.ts:530
+#: web/app/lib/base-session.ts:542 web/app/lib/base-session.ts:546
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
 msgstr ""
 
@@ -5687,6 +5763,10 @@ msgstr ""
 
 #: web/app/components/OpenDialog.vue:895
 msgid "The documents you put into this collection, on any place."
+msgstr ""
+
+#: web/app/components/ShareDialog.vue:97
+msgid "The document’s keys are renewed. This takes a moment, and everybody who is here stays connected."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -5705,6 +5785,10 @@ msgstr ""
 msgid "The exponential curve y = b * m1^x1 * ... through known y and x values, as a row (as LINEST gives them)."
 msgstr ""
 
+#: web/app/components/ExportFormatDialog.vue:108
+msgid "The export is recorded in the document: who, when and what."
+msgstr ""
+
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The factorial of a whole number (1 * 2 * ... * n)."
 msgstr ""
@@ -5717,7 +5801,7 @@ msgstr ""
 msgid "The field has no members."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/files.py:196 web/app/components/DownloadDialog.vue:41 web/app/components/ExportFormatDialog.vue:53 web/app/components/PrintPreview.vue:217
+#: clients/linux/src/claudia_shell_gtk/files.py:196 web/app/components/DownloadDialog.vue:41 web/app/components/ExportFormatDialog.vue:75 web/app/components/PrintPreview.vue:218
 msgid "The file could not be saved: {reason}"
 msgstr ""
 
@@ -5725,8 +5809,16 @@ msgstr ""
 msgid "The file forbids embedding (fsType {fsType}), so no PDF could carry it."
 msgstr ""
 
-#: web/app/lib/open.ts:295
+#: web/app/components/ExportFormatDialog.vue:101
+msgid "The file holds the content as it is now. History and chat can only be exported by owners."
+msgstr ""
+
+#: web/app/lib/open.ts:298
 msgid "The file is too large for this server."
+msgstr ""
+
+#: web/app/components/ExportFormatDialog.vue:106
+msgid "The file will not be protected by a password."
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -5869,7 +5961,7 @@ msgstr ""
 msgid "The kurtosis of a sample (0 for a normal distribution): how heavy the tails are."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:336
+#: web/app/components/PrintPreview.vue:345
 msgid "The language of the document: its words are hyphenated by it"
 msgstr ""
 
@@ -5969,7 +6061,7 @@ msgstr ""
 msgid "The name or password is not right."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/auth.py:308 packages/claudia-server/src/claudia_server/sealed.py:296
+#: packages/claudia-server/src/claudia_server/auth.py:338 packages/claudia-server/src/claudia_server/sealed.py:313
 msgid "The name “{name}” belongs to the AI assistant. Choose another name."
 msgstr ""
 
@@ -6081,11 +6173,11 @@ msgstr ""
 msgid "The page stopped working"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:239
+#: web/app/components/PrintPreview.vue:246
 msgid "The pages are open in your PDF viewer: print them from there."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:241
+#: web/app/components/PrintPreview.vue:249
 msgid "The pages could not be handed to your PDF viewer: {reason}"
 msgstr ""
 
@@ -6229,11 +6321,11 @@ msgstr ""
 msgid "The second, 0 to 59, of a time."
 msgstr ""
 
-#: web/app/lib/open.ts:305 web/app/lib/open.ts:327 web/app/lib/open.ts:67
+#: web/app/lib/open.ts:308 web/app/lib/open.ts:330 web/app/lib/open.ts:67
 msgid "The server answered with an error ({status})."
 msgstr ""
 
-#: web/app/lib/open.ts:204 web/app/lib/open.ts:284 web/app/lib/open.ts:314 web/app/lib/open.ts:56
+#: web/app/lib/open.ts:204 web/app/lib/open.ts:287 web/app/lib/open.ts:317 web/app/lib/open.ts:56
 msgid "The server cannot be reached."
 msgstr ""
 
@@ -6361,11 +6453,11 @@ msgstr ""
 msgid "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
 msgstr ""
 
-#: web/app/lib/base-session.ts:354
+#: web/app/lib/base-session.ts:368
 msgid "The suggestion to go to {label} was declined."
 msgstr ""
 
-#: web/app/lib/base-session.ts:355
+#: web/app/lib/base-session.ts:369
 msgid "The suggestion to go to {label} was withdrawn."
 msgstr ""
 
@@ -6565,11 +6657,11 @@ msgstr ""
 msgid "There is no table to analyse yet. Select cells with a header row, type a word in the box left of the formula bar and press Enter — then it can be a pivot table’s source."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:187
+#: web/app/components/SidePanel.vue:194
 msgid "There is nothing in this to redact."
 msgstr ""
 
-#: web/app/lib/base-session.ts:835
+#: web/app/lib/base-session.ts:867
 msgid "There is nothing like that in this document."
 msgstr ""
 
@@ -6597,7 +6689,7 @@ msgstr ""
 msgid "These {count} cells only"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:168
+#: web/app/components/ImportDialog.vue:180
 msgid "They come with the file and cannot be changed here — use Details… after it is in."
 msgstr ""
 
@@ -6609,7 +6701,7 @@ msgstr ""
 msgid "Thicker border"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:642
+#: web/app/components/SidePanel.vue:654
 msgid "Things to point at"
 msgstr ""
 
@@ -6685,7 +6777,7 @@ msgstr ""
 msgid "This document is on this server already, as “{id}”. It cannot be added a second time."
 msgstr ""
 
-#: web/app/lib/base-session.ts:563
+#: web/app/lib/base-session.ts:595
 msgid "This document was deleted by its owner."
 msgstr ""
 
@@ -6701,7 +6793,7 @@ msgstr ""
 msgid "This is a text. Open it with Claudia Composes."
 msgstr ""
 
-#: web/app/lib/open.ts:296
+#: web/app/lib/open.ts:299
 msgid "This is not a file Claudia can open."
 msgstr ""
 
@@ -6745,7 +6837,7 @@ msgstr ""
 msgid "This pivot table has no value field yet. Put a field into Values."
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:177
+#: web/app/components/ImportDialog.vue:189
 msgid "This place does not keep documents of this kind."
 msgstr ""
 
@@ -6773,7 +6865,7 @@ msgstr ""
 msgid "This saves the content of {doc} to this computer as a Claudia file, still protected. It has no history and no chat, and it opens only with your own name and password."
 msgstr ""
 
-#: web/app/components/ExportFormatDialog.vue:62
+#: web/app/components/ExportFormatDialog.vue:87
 msgid "This saves the current content of {doc} to this computer, in the format you pick below. It does not include the document's history or chat, and no tracked changes are kept — just the content as it stands now."
 msgstr ""
 
@@ -6783,6 +6875,10 @@ msgstr ""
 
 #: web/app/components/DownloadDialog.vue:50
 msgid "This saves {doc} to this computer as a Claudia file: the whole document with its history, its chat and its people, still protected. It opens with the name and password of anybody who belongs to the document."
+msgstr ""
+
+#: web/app/components/ExportFormatDialog.vue:84
+msgid "This saves {doc} to this computer in Claudia's own format, as plain files in a zip that anyone can open."
 msgstr ""
 
 #: web/app/lib/text-search-host.ts:80
@@ -6869,7 +6965,7 @@ msgstr ""
 msgid "Too faint"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:595 web/app/lib/login-wait.ts:14
+#: packages/claudia-server/src/claudia_server/app.py:597 web/app/lib/login-wait.ts:14
 msgid "Too many tries. Try again in 1 second."
 msgstr ""
 
@@ -6877,7 +6973,7 @@ msgstr ""
 msgid "Too many tries. Try again in a little while."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:597 web/app/lib/login-wait.ts:14
+#: packages/claudia-server/src/claudia_server/app.py:599 web/app/lib/login-wait.ts:14
 msgid "Too many tries. Try again in {seconds} seconds."
 msgstr ""
 
@@ -6941,7 +7037,7 @@ msgstr ""
 msgid "Two pages"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:355
+#: web/app/components/PrintPreview.vue:365
 msgid "Two pages side by side"
 msgstr ""
 
@@ -7001,7 +7097,7 @@ msgstr ""
 msgid "Upright"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:324
+#: web/app/components/PrintPreview.vue:333
 msgid "Use"
 msgstr ""
 
@@ -7081,7 +7177,7 @@ msgstr ""
 msgid "Waiting for a name"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:503
+#: web/app/components/SidePanel.vue:510
 msgid "Waiting on {names}."
 msgstr ""
 
@@ -7113,7 +7209,7 @@ msgstr ""
 msgid "What differs: {what}"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:305
+#: web/app/components/PrintPreview.vue:314
 msgid "What is printed"
 msgstr ""
 
@@ -7129,7 +7225,7 @@ msgstr ""
 msgid "What regular payments (and a sum at the end) are worth today at a fixed rate."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:582
+#: web/app/components/SidePanel.vue:594
 msgid "What silence at a suggestion's deadline means"
 msgstr ""
 
@@ -7161,11 +7257,15 @@ msgstr ""
 msgid "What {n} draws look like"
 msgstr ""
 
+#: web/app/components/ShareDialog.vue:112
+msgid "What {user} may do"
+msgstr ""
+
 #: web/app/components/StyleCssEditor.vue:63
 msgid "What “{name}” sets itself. The rest comes from its parent."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:477
+#: web/app/components/SidePanel.vue:484
 msgid "When I ask the AI, in this document:"
 msgstr ""
 
@@ -7205,7 +7305,7 @@ msgstr ""
 msgid "Which side the border is on"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:518
+#: web/app/components/SidePanel.vue:525
 msgid "Which steps the wheel visits"
 msgstr ""
 
@@ -7213,11 +7313,11 @@ msgstr ""
 msgid "Which tags"
 msgstr ""
 
-#: web/app/lib/base-session.ts:347
+#: web/app/lib/base-session.ts:361
 msgid "While you were away, {by} restored to {label} (agreed: {agreed})."
 msgstr ""
 
-#: web/app/lib/base-session.ts:348
+#: web/app/lib/base-session.ts:362
 msgid "While you were away, {by} switched to {label} (agreed: {agreed})."
 msgstr ""
 
@@ -7253,6 +7353,10 @@ msgstr ""
 msgid "Whole workbook"
 msgstr ""
 
+#: web/app/components/ShareDialog.vue:87
+msgid "Why: the old keys still open what was written before; the new ones protect what is written from now on."
+msgstr ""
+
 #: web/app/components/StyleSpec.vue:273
 msgid "Width"
 msgstr ""
@@ -7273,7 +7377,7 @@ msgstr ""
 msgid "Will look different: {what}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:508
+#: web/app/components/SidePanel.vue:515
 msgid "Withdraw"
 msgstr ""
 
@@ -7353,7 +7457,7 @@ msgstr ""
 msgid "Write the pattern yourself…"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:603
+#: web/app/components/SidePanel.vue:615
 msgid "Write to everybody, or {ask} to ask the assistant. Say {help} to see what it can do."
 msgstr ""
 
@@ -7381,8 +7485,12 @@ msgstr ""
 msgid "You are an owner."
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:159
+#: web/app/components/ImportDialog.vue:171
 msgid "You are its owner. What the document does not show stays in the kept file and is listed after it opens."
+msgstr ""
+
+#: web/app/lib/base-session.ts:584
+msgid "You are no longer a person of this document."
 msgstr ""
 
 #: web/app/components/DocumentFrame.vue:249
@@ -7393,15 +7501,19 @@ msgstr ""
 msgid "You are now the owner of {doc}."
 msgstr ""
 
+#: web/app/components/ImportDialog.vue:170
+msgid "You become the owner of the new document. Nobody else is given access."
+msgstr ""
+
 #: web/app/components/PaletteDialog.vue:113
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:455 web/app/components/SheetGrid.vue:584 web/app/components/SheetGrid.vue:594 web/app/components/SlideCanvas.vue:315 web/app/components/SlideCanvas.vue:324 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:489 web/app/components/TextContainers.vue:211 web/app/components/TextObjectMenu.vue:116 web/app/components/TextObjectMenu.vue:124 web/app/components/Workspace.vue:277 web/app/components/Workspace.vue:334 web/app/components/Workspace.vue:385 web/app/components/Workspace.vue:467 web/app/components/Workspace.vue:527 web/app/components/Workspace.vue:533 web/app/components/Workspace.vue:615 web/app/components/Workspace.vue:783 web/app/components/Workspace.vue:842 web/app/components/Workspace.vue:962 web/app/lib/base-session.ts:916 web/app/lib/text-session.ts:740
+#: web/app/components/SheetGrid.vue:455 web/app/components/SheetGrid.vue:584 web/app/components/SheetGrid.vue:594 web/app/components/SlideCanvas.vue:315 web/app/components/SlideCanvas.vue:324 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:489 web/app/components/TextContainers.vue:211 web/app/components/TextObjectMenu.vue:116 web/app/components/TextObjectMenu.vue:124 web/app/components/Workspace.vue:277 web/app/components/Workspace.vue:334 web/app/components/Workspace.vue:385 web/app/components/Workspace.vue:467 web/app/components/Workspace.vue:527 web/app/components/Workspace.vue:533 web/app/components/Workspace.vue:615 web/app/components/Workspace.vue:783 web/app/components/Workspace.vue:842 web/app/components/Workspace.vue:962 web/app/lib/base-session.ts:948 web/app/lib/text-session.ts:740
 msgid "You can only look at this document."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:187
+#: web/app/components/SidePanel.vue:194
 msgid "You can redact only your own work."
 msgstr ""
 
@@ -7421,7 +7533,7 @@ msgstr ""
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr ""
 
-#: web/app/lib/base-session.ts:913
+#: web/app/lib/base-session.ts:945
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr ""
 
@@ -7429,7 +7541,7 @@ msgstr ""
 msgid "Your changes to the pattern are dropped."
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:53 web/app/components/DetailsDialog.vue:42 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:152 web/app/components/OpenDialog.vue:1033
+#: web/app/components/AdminLogin.vue:53 web/app/components/DetailsDialog.vue:42 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:163 web/app/components/OpenDialog.vue:1033
 msgid "Your name"
 msgstr ""
 
@@ -7457,7 +7569,11 @@ msgstr ""
 msgid "Your request went to the chat."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:353
+#: web/app/lib/base-session.ts:577
+msgid "Your role in this document is now “{role}”."
+msgstr ""
+
+#: web/app/components/PrintPreview.vue:363
 msgid "Zoom"
 msgstr ""
 
@@ -7549,7 +7665,7 @@ msgstr ""
 msgid "a remark suggests no change; dismiss it instead"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:511
+#: packages/claudia-server/src/claudia_server/protocol.py:536
 msgid "a request must be a JSON object"
 msgstr ""
 
@@ -7577,7 +7693,7 @@ msgstr ""
 msgid "a summary (1 AVERAGE, 2 COUNT, 3 COUNTA, 4 MAX, 5 MIN, 6 PRODUCT, 7 STDEV, 8 STDEV.P, 9 SUM, 10 VAR, 11 VAR.P; add 100 to skip hidden rows) that leaves out other SUBTOTAL cells."
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:76
+#: web/app/components/ImportDialog.vue:86
 msgid "a table"
 msgstr ""
 
@@ -7589,7 +7705,7 @@ msgstr ""
 msgid "a target names one of: {adapters}"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:76
+#: web/app/components/ImportDialog.vue:86
 msgid "a text"
 msgstr ""
 
@@ -7641,7 +7757,7 @@ msgstr ""
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1069
+#: packages/claudia-server/src/claudia_server/protocol.py:1094
 msgid "add_user: role must be editor or viewer"
 msgstr ""
 
@@ -7663,6 +7779,10 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:560
 msgid "all of these must hold"
+msgstr ""
+
+#: web/app/lib/audit.ts:29
+msgid "all parts"
 msgstr ""
 
 #: web/app/components/OpenDialog.vue:979
@@ -7829,6 +7949,10 @@ msgstr ""
 msgid "chance"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/protocol.py:1111
+msgid "change_role: role must be editor or viewer"
+msgstr ""
+
 #: web/app/lib/noun-phrases.ts:25
 msgid "chart"
 msgstr ""
@@ -7837,11 +7961,11 @@ msgstr ""
 msgid "chart type"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:669
+#: web/app/components/SidePanel.vue:681
 msgid "chat message"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1256
+#: packages/claudia-server/src/claudia_server/protocol.py:1420
 msgid "chat: {reason}"
 msgstr ""
 
@@ -7849,11 +7973,11 @@ msgstr ""
 msgid "chat: {text}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:958
+#: packages/claudia-server/src/claudia_server/protocol.py:983
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:591
+#: web/app/components/SidePanel.vue:603
 msgid "close"
 msgstr ""
 
@@ -7903,6 +8027,14 @@ msgstr ""
 
 #: web/app/lib/search.ts:261 web/app/lib/search.ts:458
 msgid "contain “{text}”"
+msgstr ""
+
+#: web/app/lib/audit.ts:29
+msgid "content"
+msgstr ""
+
+#: web/app/lib/audit.ts:29
+msgid "content and history"
 msgstr ""
 
 #: web/app/components/SlideWorkspace.vue:452 web/app/components/TextWorkspace.vue:651 web/app/components/Workspace.vue:1154
@@ -7989,11 +8121,11 @@ msgstr ""
 msgid "do not start with “{text}”"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:708
+#: packages/claudia-server/src/claudia_server/hub.py:739
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:471
+#: web/app/components/SidePanel.vue:478
 msgid "document panel"
 msgstr ""
 
@@ -8009,7 +8141,7 @@ msgstr ""
 msgid "each change is [row, column, text or null]"
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:47
+#: web/app/components/ShareDialog.vue:113 web/app/components/ShareDialog.vue:128 web/app/lib/people.ts:28
 msgid "edit"
 msgstr ""
 
@@ -8053,7 +8185,7 @@ msgstr ""
 msgid "every role is an object with id, name, purpose and colour"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:541
+#: web/app/components/SidePanel.vue:548
 msgid "everything that was done to this document"
 msgstr ""
 
@@ -8075,6 +8207,14 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py:254
 msgid "export_office: format must be \"xlsx\" or \"ods\""
+msgstr ""
+
+#: web/app/lib/audit.ts:36
+msgid "exported as {format}"
+msgstr ""
+
+#: web/app/lib/audit.ts:35
+msgid "exported unprotected"
 msgstr ""
 
 #: web/app/components/PivotPanel.vue:192
@@ -8137,7 +8277,7 @@ msgstr ""
 msgid "heading"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:323
+#: web/app/components/PrintPreview.vue:332
 msgid "height in millimetres"
 msgstr ""
 
@@ -8153,7 +8293,7 @@ msgstr ""
 msgid "high"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:497
+#: web/app/components/SidePanel.vue:504
 msgid "history and chat"
 msgstr ""
 
@@ -8177,7 +8317,7 @@ msgstr ""
 msgid "how many sheets the workbook has (1 for a reference)."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:514
+#: packages/claudia-server/src/claudia_server/protocol.py:539
 msgid "id must be an integer or a short string"
 msgstr ""
 
@@ -8205,15 +8345,15 @@ msgstr ""
 msgid "insert"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:337
+#: packages/claudia-server/src/claudia_server/hub.py:351
 msgid "internal server error"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1003
+#: packages/claudia-server/src/claudia_server/protocol.py:1028
 msgid "invalid command: {reason!r}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:635
+#: web/app/components/SidePanel.vue:647
 msgid "is working"
 msgstr ""
 
@@ -8225,7 +8365,7 @@ msgstr ""
 msgid "jump to the edge of a block of data"
 msgstr ""
 
-#: web/app/lib/people.ts:44
+#: web/app/lib/people.ts:51
 msgid "just now"
 msgstr ""
 
@@ -8309,7 +8449,7 @@ msgstr ""
 msgid "log more and enable the web inspector"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:908
+#: packages/claudia-server/src/claudia_server/protocol.py:933
 msgid "log: limit must be from 1 to {limit}"
 msgstr ""
 
@@ -8341,15 +8481,15 @@ msgstr ""
 msgid "menu"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:505
+#: packages/claudia-server/src/claudia_server/protocol.py:530
 msgid "message too large"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:447
+#: packages/claudia-server/src/claudia_server/protocol.py:468
 msgid "method must be a string"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:510
+#: packages/claudia-server/src/claudia_server/app.py:512
 msgid "missing or wrong credentials"
 msgstr ""
 
@@ -8361,7 +8501,7 @@ msgstr ""
 msgid "mixed"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:323
+#: web/app/components/PrintPreview.vue:332
 msgid "mm"
 msgstr ""
 
@@ -8421,11 +8561,11 @@ msgstr ""
 msgid "no cells"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:673
+#: packages/claudia-server/src/claudia_server/protocol.py:698
 msgid "no checkpoint number {checkpoint}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:856
+#: packages/claudia-server/src/claudia_server/hub.py:892
 msgid "no document {id!r}"
 msgstr ""
 
@@ -8433,7 +8573,7 @@ msgstr ""
 msgid "no function named {name!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:575
+#: packages/claudia-server/src/claudia_server/protocol.py:600
 msgid "no help topic {id!r}"
 msgstr ""
 
@@ -8441,11 +8581,11 @@ msgstr ""
 msgid "no merged box starts at row {row!r}, column {col!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:450
+#: packages/claudia-server/src/claudia_server/protocol.py:471
 msgid "no method {name!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1155
+#: packages/claudia-server/src/claudia_server/protocol.py:1229
 msgid "no ownership transfer is waiting for you with that password"
 msgstr ""
 
@@ -8465,7 +8605,7 @@ msgstr ""
 msgid "not a numbering scheme: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:539
+#: packages/claudia-server/src/claudia_server/protocol.py:564
 msgid "not a region this document understands: {reason!r}"
 msgstr ""
 
@@ -8481,7 +8621,7 @@ msgstr ""
 msgid "not the options of a table of contents: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:509
+#: packages/claudia-server/src/claudia_server/protocol.py:534
 msgid "not valid JSON"
 msgstr ""
 
@@ -8533,11 +8673,15 @@ msgstr ""
 msgid "only a built-in scheme can be reset"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1186
+#: packages/claudia-server/src/claudia_server/protocol.py:1260
 msgid "only an editor or an owner of a document may change its description and tags"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1167
+#: packages/claudia-server/src/claudia_server/protocol.py:1318
+msgid "only an owner may export the history and the chat"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:1241
 msgid "only an owner of a document may delete it"
 msgstr ""
 
@@ -8545,11 +8689,11 @@ msgstr ""
 msgid "only its box"
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:47
+#: web/app/components/ShareDialog.vue:114 web/app/components/ShareDialog.vue:128 web/app/lib/people.ts:27
 msgid "only look"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:777
+#: packages/claudia-server/src/claudia_server/protocol.py:802
 msgid "only owners, and editors on their own work, redact"
 msgstr ""
 
@@ -8561,23 +8705,31 @@ msgstr ""
 msgid "only the branch taken is evaluated, so IF(B1=0, 0, A1/B1) never divides by zero."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1065
+#: packages/claudia-server/src/claudia_server/protocol.py:1090
 msgid "only the owner of a document adds people to it"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1137
+#: packages/claudia-server/src/claudia_server/protocol.py:1211
 msgid "only the owner of a document can hand it over"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:761
+#: packages/claudia-server/src/claudia_server/protocol.py:1107
+msgid "only the owner of a document changes who may do what"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:786
 msgid "only the owner of a document discards its hidden lines"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1081
+#: packages/claudia-server/src/claudia_server/protocol.py:1155
 msgid "only the owner of a document makes a recovery key"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:654
+#: packages/claudia-server/src/claudia_server/protocol.py:1123
+msgid "only the owner of a document removes people from it"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:679
 msgid "only the owner of a document sets this"
 msgstr ""
 
@@ -8605,7 +8757,11 @@ msgstr ""
 msgid "overview"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:363
+#: web/app/lib/people.ts:26
+msgid "owner"
+msgstr ""
+
+#: web/app/components/PrintPreview.vue:373
 msgid "page {n}"
 msgstr ""
 
@@ -8621,7 +8777,7 @@ msgstr ""
 msgid "paragraphs, pictures and boxes"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:419
+#: packages/claudia-server/src/claudia_server/protocol.py:440
 msgid "params must be an object"
 msgstr ""
 
@@ -8633,11 +8789,11 @@ msgstr ""
 msgid "pdftocairo"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:591
+#: web/app/components/SidePanel.vue:603
 msgid "peek"
 msgstr ""
 
-#: web/app/components/ShareDialog.vue:54
+#: web/app/components/ShareDialog.vue:135
 msgid "people added just now"
 msgstr ""
 
@@ -8679,6 +8835,10 @@ msgstr ""
 
 #: web/app/lib/print/setup.ts:107 web/app/lib/print/sheet.ts:101
 msgid "portrait"
+msgstr ""
+
+#: web/app/lib/audit.ts:34
+msgid "printed"
 msgstr ""
 
 #: web/app/lib/print/assets.ts:49
@@ -8729,7 +8889,7 @@ msgstr ""
 msgid "recovery key"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:784
+#: packages/claudia-server/src/claudia_server/protocol.py:809
 msgid "redaction: revisions like \"main:12\", chat numbers, parts by revision"
 msgstr ""
 
@@ -8739,6 +8899,14 @@ msgstr ""
 
 #: web/app/components/SearchPanel.vue:358
 msgid "remark"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:1363
+msgid "report_output: kind must be print or pdf"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:1365
+msgid "report_output: pages and format are not usable"
 msgstr ""
 
 #: web/app/lib/protocol.ts:230
@@ -8781,6 +8949,10 @@ msgstr ""
 msgid "row {n}’s style"
 msgstr ""
 
+#: web/app/lib/audit.ts:33
+msgid "saved a PDF"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/tables.py:121
 msgid "say after or before, not both"
 msgstr ""
@@ -8813,7 +8985,7 @@ msgstr ""
 msgid "select an object (colleagues cannot change it while you hold it)"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:682
+#: web/app/components/SidePanel.vue:694
 msgid "send"
 msgstr ""
 
@@ -8829,7 +9001,7 @@ msgstr ""
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:657
+#: packages/claudia-server/src/claudia_server/protocol.py:682
 msgid "set_restore_policy: policy must be one of {policies}"
 msgstr ""
 
@@ -8853,11 +9025,11 @@ msgstr ""
 msgid "show must be one of {shows}"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:584
+#: web/app/components/SidePanel.vue:596
 msgid "silence = agree"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:583
+#: web/app/components/SidePanel.vue:595
 msgid "silence = decline"
 msgstr ""
 
@@ -8873,7 +9045,7 @@ msgstr ""
 msgid "slide"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:76 web/app/components/PresentShow.vue:215 web/app/components/SlideWorkspace.vue:531
+#: web/app/components/ImportDialog.vue:86 web/app/components/PresentShow.vue:215 web/app/components/SlideWorkspace.vue:531
 msgid "slides"
 msgstr ""
 
@@ -8921,7 +9093,7 @@ msgstr ""
 msgid "structure: axis must be \"row\" or \"col\""
 msgstr ""
 
-#: web/app/components/SidePanel.vue:592
+#: web/app/components/SidePanel.vue:604
 msgid "suggest switching here"
 msgstr ""
 
@@ -8941,7 +9113,7 @@ msgstr ""
 msgid "tables"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1191
+#: packages/claudia-server/src/claudia_server/protocol.py:1265
 msgid "tags are words"
 msgstr ""
 
@@ -8961,7 +9133,11 @@ msgstr ""
 msgid "text of the object"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1105 packages/claudia-server/src/claudia_server/protocol.py:1126 packages/claudia-server/src/claudia_server/protocol.py:1141 packages/claudia-server/src/claudia_server/protocol.py:1171 packages/claudia-server/src/claudia_server/protocol.py:1197 packages/claudia-server/src/claudia_server/protocol.py:1235
+#: packages/claudia-server/src/claudia_server/protocol.py:1368
+msgid "that is more prints and PDFs than the document records in a minute"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:1179 packages/claudia-server/src/claudia_server/protocol.py:1200 packages/claudia-server/src/claudia_server/protocol.py:1215 packages/claudia-server/src/claudia_server/protocol.py:1245 packages/claudia-server/src/claudia_server/protocol.py:1271 packages/claudia-server/src/claudia_server/protocol.py:1399
 msgid "that is not your current password"
 msgstr ""
 
@@ -8969,27 +9145,35 @@ msgstr ""
 msgid "that would make too many paragraphs"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:997
+#: packages/claudia-server/src/claudia_server/protocol.py:1022
 msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:670
+#: packages/claudia-server/src/claudia_server/protocol.py:1316
+msgid "the assistant does not export the document"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:1361
+msgid "the assistant does not print"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:695
 msgid "the assistant does not suggest restoring a checkpoint"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:697
+#: packages/claudia-server/src/claudia_server/protocol.py:722
 msgid "the assistant does not suggest restoring a step"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:724
+#: packages/claudia-server/src/claudia_server/protocol.py:749
 msgid "the assistant does not suggest switching lines"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:743
+#: packages/claudia-server/src/claudia_server/protocol.py:768
 msgid "the assistant does not vote"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:881
+#: packages/claudia-server/src/claudia_server/protocol.py:906
 msgid "the assistant does not withdraw suggestions"
 msgstr ""
 
@@ -9029,7 +9213,7 @@ msgstr ""
 msgid "the date and time as a day number with the time of day as its fraction."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:333
+#: web/app/components/PrintPreview.vue:342
 msgid "the document's own"
 msgstr ""
 
@@ -9045,7 +9229,7 @@ msgstr ""
 msgid "the file is no longer here: choose it again"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:480
+#: packages/claudia-server/src/claudia_server/app.py:482
 msgid "the first message must be hello with params"
 msgstr ""
 
@@ -9109,7 +9293,7 @@ msgstr ""
 msgid "the range ends before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:868
+#: packages/claudia-server/src/claudia_server/protocol.py:893
 msgid "the redaction would now blank other steps than you were shown; look at it again"
 msgstr ""
 
@@ -9145,7 +9329,7 @@ msgstr ""
 msgid "the sheet is {style}"
 msgstr ""
 
-#: web/app/lib/print/source.ts:256
+#: web/app/lib/print/source.ts:260
 msgid "the sheets"
 msgstr ""
 
@@ -9153,7 +9337,7 @@ msgstr ""
 msgid "the sheet’s style"
 msgstr ""
 
-#: web/app/lib/print/source.ts:204
+#: web/app/lib/print/source.ts:207
 msgid "the slides"
 msgstr ""
 
@@ -9181,7 +9365,7 @@ msgstr ""
 msgid "the table has no row {id!r}"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:729 web/app/lib/print/source.ts:130
+#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:729 web/app/lib/print/source.ts:132
 msgid "the text"
 msgstr ""
 
@@ -9221,11 +9405,11 @@ msgstr ""
 msgid "there is a table of contents here already"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:763 packages/claudia-server/src/claudia_server/protocol.py:859
+#: packages/claudia-server/src/claudia_server/protocol.py:788 packages/claudia-server/src/claudia_server/protocol.py:884
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:789
+#: packages/claudia-server/src/claudia_server/protocol.py:814
 msgid "there is no chat message of that number for you"
 msgstr ""
 
@@ -9233,7 +9417,7 @@ msgstr ""
 msgid "there is no earlier list of this kind to continue"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:726
+#: packages/claudia-server/src/claudia_server/protocol.py:751
 msgid "there is no line called {line!r}"
 msgstr ""
 
@@ -9245,7 +9429,7 @@ msgstr ""
 msgid "there is no pivot table called {name!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:699
+#: packages/claudia-server/src/claudia_server/protocol.py:724
 msgid "there is no step {revision} on this line"
 msgstr ""
 
@@ -9255,6 +9439,10 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes_words.py:168
 msgid "there is no text to add"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:1135
+msgid "there is nobody called {name} in this document"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/thing_names.py:122
@@ -9325,23 +9513,27 @@ msgstr ""
 msgid "this row"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/protocol.py:1109
+msgid "this server does not change roles"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/app.py:310 packages/claudia-server/src/claudia_server/suite.py:115
 msgid "this server does not host {app}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1189
+#: packages/claudia-server/src/claudia_server/protocol.py:1263
 msgid "this server does not keep a description and tags"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1229
+#: packages/claudia-server/src/claudia_server/protocol.py:1393
 msgid "this server does not keep documents as files you can download"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:366 packages/claudia-server/src/claudia_server/protocol.py:1083
+#: packages/claudia-server/src/claudia_server/app.py:366 packages/claudia-server/src/claudia_server/protocol.py:1157
 msgid "this server does not keep recovery keys"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1093
+#: packages/claudia-server/src/claudia_server/protocol.py:1167
 msgid "this server does not list a document's people this way"
 msgstr ""
 
@@ -9349,31 +9541,35 @@ msgstr ""
 msgid "this server does not make rendered containers"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1067
+#: packages/claudia-server/src/claudia_server/protocol.py:1092
 msgid "this server does not manage people"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1120
+#: packages/claudia-server/src/claudia_server/protocol.py:1125
+msgid "this server does not remove people"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:1194
 msgid "this server does not support changing a password"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1169
+#: packages/claudia-server/src/claudia_server/protocol.py:1243
 msgid "this server does not support deleting a document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1139 packages/claudia-server/src/claudia_server/protocol.py:1152
+#: packages/claudia-server/src/claudia_server/protocol.py:1213 packages/claudia-server/src/claudia_server/protocol.py:1226
 msgid "this server does not support handing over ownership"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1103
+#: packages/claudia-server/src/claudia_server/protocol.py:1177
 msgid "this server does not support leaving a document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:650
+#: packages/claudia-server/src/claudia_server/hub.py:681
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:783
+#: packages/claudia-server/src/claudia_server/hub.py:819
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr ""
 
@@ -9381,7 +9577,7 @@ msgstr ""
 msgid "this suggestion is not open any more"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:864
+#: packages/claudia-server/src/claudia_server/protocol.py:889
 msgid "this would also blank later changes by {names}; ask an owner"
 msgstr ""
 
@@ -9433,7 +9629,7 @@ msgstr ""
 msgid "undo"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:423
+#: packages/claudia-server/src/claudia_server/protocol.py:444
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr ""
 
@@ -9477,7 +9673,7 @@ msgstr ""
 msgid "was {size} px wide"
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:322
+#: web/app/components/PrintPreview.vue:331
 msgid "width in millimetres"
 msgstr ""
 
@@ -9517,11 +9713,15 @@ msgstr ""
 msgid "xelatex"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:198
+#: web/app/components/AdminAccessDocuments.vue:198 web/app/components/ShareDialog.vue:109
 msgid "you"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:794
+#: packages/claudia-server/src/claudia_server/hub.py:324
+msgid "you are no longer a person of this document"
+msgstr ""
+
+#: packages/claudia-server/src/claudia_server/protocol.py:819
 msgid "you can redact only your own changes and messages; ask an owner"
 msgstr ""
 
@@ -9685,6 +9885,10 @@ msgstr ""
 msgid "{count} styles"
 msgstr ""
 
+#: web/app/components/ShareDialog.vue:83
+msgid "{doc} can be read and edited as usual while this runs. A long document takes longer: about as long as writing the file once."
+msgstr ""
+
 #: web/app/components/RedactionDialog.vue:225
 msgid "{doc} on {host}"
 msgstr ""
@@ -9773,27 +9977,27 @@ msgstr ""
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:458
+#: packages/claudia-server/src/claudia_server/hub.py:472
 msgid "{id} already has {limit} connections"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:844
+#: packages/claudia-server/src/claudia_server/hub.py:880
 msgid "{id} cannot be opened yet: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:847
+#: packages/claudia-server/src/claudia_server/hub.py:883
 msgid "{id} cannot be opened: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:851
+#: packages/claudia-server/src/claudia_server/hub.py:887
 msgid "{id} cannot be read"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:795
+#: packages/claudia-server/src/claudia_server/hub.py:831
 msgid "{id} cannot be taken in: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:786 packages/claudia-server/src/claudia_server/hub.py:791
+#: packages/claudia-server/src/claudia_server/hub.py:822 packages/claudia-server/src/claudia_server/hub.py:827
 msgid "{id} is here already"
 msgstr ""
 
@@ -9885,11 +10089,11 @@ msgstr ""
 msgid "{method}: kinds is a list of {kinds}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:431
+#: packages/claudia-server/src/claudia_server/protocol.py:452
 msgid "{method}: missing parameter {parameter!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:440
+#: packages/claudia-server/src/claudia_server/protocol.py:461
 msgid "{method}: {parameter} {reason}"
 msgstr ""
 
@@ -9909,7 +10113,7 @@ msgstr ""
 msgid "{name} as hex"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:439
+#: packages/claudia-server/src/claudia_server/app.py:441
 msgid "{name} cannot be read"
 msgstr ""
 
@@ -9941,19 +10145,19 @@ msgstr ""
 msgid "{name} is larger than {mb} MB."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:464
+#: packages/claudia-server/src/claudia_server/protocol.py:485
 msgid "{name} is not one of the methods this account may call"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:452
+#: packages/claudia-server/src/claudia_server/protocol.py:473
 msgid "{name} needs the editor role"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:456
+#: packages/claudia-server/src/claudia_server/protocol.py:477
 msgid "{name} reads the chat, which is for the document's owners and editors"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:459
+#: packages/claudia-server/src/claudia_server/protocol.py:480
 msgid "{name} reads the history, which is for the document's owners and editors"
 msgstr ""
 
@@ -10005,7 +10209,7 @@ msgstr ""
 msgid "{n} fonts"
 msgstr ""
 
-#: web/app/lib/people.ts:46
+#: web/app/lib/people.ts:53
 msgid "{n} h ago"
 msgstr ""
 
@@ -10021,11 +10225,11 @@ msgstr ""
 msgid "{n} min"
 msgstr ""
 
-#: web/app/lib/people.ts:45
+#: web/app/lib/people.ts:52
 msgid "{n} min ago"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:533
+#: web/app/components/SidePanel.vue:540
 msgid "{n} newer changes by others"
 msgstr ""
 
@@ -10049,6 +10253,10 @@ msgstr ""
 msgid "{n} outcomes"
 msgstr ""
 
+#: web/app/lib/audit.ts:27
+msgid "{n} pages"
+msgstr ""
+
 #: web/app/components/FollowPill.vue:23
 msgid "{n} result"
 msgstr ""
@@ -10065,7 +10273,7 @@ msgstr ""
 msgid "{n} samples were drawn, there are too many combinations to run all."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:336
+#: web/app/components/SidePanel.vue:343
 msgid "{n} things to point at. Use the arrow keys, then Enter."
 msgstr ""
 
@@ -10073,7 +10281,7 @@ msgstr ""
 msgid "{n} without a time"
 msgstr ""
 
-#: web/app/lib/base-session.ts:560
+#: web/app/lib/base-session.ts:592
 msgid "{owner} is now the owner of this document."
 msgstr ""
 
@@ -10081,11 +10289,11 @@ msgstr ""
 msgid "{path} could not be written: {reason}"
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:174
+#: web/app/components/ImportDialog.vue:186
 msgid "{place} already holds a document called {id}. A name cannot change (it is sealed into the file): open the one that is here, or open the place you want it in first."
 msgstr ""
 
-#: web/app/components/ImportDialog.vue:171
+#: web/app/components/ImportDialog.vue:183
 msgid "{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here."
 msgstr ""
 
@@ -10109,7 +10317,7 @@ msgstr ""
 msgid "{ref}, empty"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:898
+#: packages/claudia-server/src/claudia_server/protocol.py:923
 msgid "{revision} is not part of the document's current line; reload it"
 msgstr ""
 
@@ -10161,12 +10369,28 @@ msgstr ""
 msgid "{user} is working on this"
 msgstr ""
 
-#: web/app/lib/base-session.ts:558
+#: web/app/components/ShareDialog.vue:95
+msgid "{user} keeps what has already been seen and any copy of the file that was saved."
+msgstr ""
+
+#: web/app/lib/base-session.ts:590
 msgid "{user} left this document."
+msgstr ""
+
+#: web/app/lib/base-session.ts:580
+msgid "{user} may now “{role}”."
 msgstr ""
 
 #: web/app/components/SlideCanvas.vue:646
 msgid "{user} selected this"
+msgstr ""
+
+#: web/app/lib/base-session.ts:587
+msgid "{user} was removed from this document."
+msgstr ""
+
+#: web/app/components/ShareDialog.vue:94
+msgid "{user} will no longer be able to open this document or read anything written after now."
 msgstr ""
 
 #: web/app/lib/search.ts:254
@@ -10253,7 +10477,7 @@ msgstr ""
 msgid "{who} has been asked to take over {doc}. Until they accept, you are still the owner. You will become an editor the moment they do."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:502
+#: web/app/components/SidePanel.vue:509
 msgid "{who} suggests going to {line}."
 msgstr ""
 
@@ -10305,11 +10529,11 @@ msgstr ""
 msgid "“{name}” sets {what} itself, and that stays. Everything else follows “{target}”, now and whenever it changes."
 msgstr ""
 
-#: web/app/components/PrintPreview.vue:275
+#: web/app/components/PrintPreview.vue:284
 msgid "“{requested}” is not on this server; the preview and the PDF use {used} for it."
 msgstr ""
 
-#: web/app/components/SidePanel.vue:640
+#: web/app/components/SidePanel.vue:652
 msgid "← Back where I was"
 msgstr ""
 
@@ -10321,22 +10545,22 @@ msgstr ""
 msgid "↑↓ choose · Tab to “Show as” · Enter puts it in · Esc closes"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:573
+#: web/app/components/SidePanel.vue:585
 msgid "↺ restore"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:531
+#: web/app/components/SidePanel.vue:538
 msgid "↺ restore this step"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:628
+#: web/app/components/SidePanel.vue:640
 msgid "▶ here"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:628
+#: web/app/components/SidePanel.vue:640
 msgid "▷ go here"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:572
+#: web/app/components/SidePanel.vue:584
 msgid "◆ saved: {label}"
 msgstr ""

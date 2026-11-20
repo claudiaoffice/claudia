@@ -229,7 +229,16 @@ Found while fixing them: **SEC-21** (password-confirming methods hash on the eve
 | SEC-21: hash ahead in a thread (D1277) | `crypto.py` (`warm_login_material`), `container.warm`, `Method.hashes`, `Gateway.prepare` | `test_warm_login.py`, `test_server_password_methods.py` |
 | Hashing cost calibrated (D1267, D1278) | `kdf.py`, `kdf_policy.py`, `server_settings.py`, `AdminSecurity.vue` | `test_kdf_calibration.py`, `test_server_kdf_policy.py`, `web/tests/security-settings.test.ts` |
 
-Slice A is built (container 0.10.0, server 0.39.0). Not built: authorship for viewers (SEC-22, waits for the owner), slices B and C.
+| The record of what left: the audit chain, `leaves="export"`, `report_output`, `audit_log`, the History & Chat line | `audit.py`, `blocks.py`, `container.py`, `protocol.py`, `sealed.py`, `audience.py`, `audit.ts`, `SidePanel.vue`, `PrintPreview.vue` | `test_audit.py`, `test_server_audit.py` (18), `web/tests/audit.test.ts`, `session.test.ts`, `specs/container/export-and-record.feature` |
+| The unencrypted export and its import | `export_file.py`, `formats.py`, `uploads.py`, `ExportFormatDialog.vue`, `ImportDialog.vue` | `test_export_file.py`, `test_server_export_import.py`, the same feature (6 of 9 scenarios run in Chrome) |
+| The format specification; the measurement of D1269 | `docs/container-format.md`; story E2.5 | the docs build |
+| Keys per person, the sealed inbox, login resolver (D1274) | `inbox.py`, `slots.py`, `container.py` (`_resolve`, `unlock`) | `test_inbox.py`, `test_container.py`, `test_sealed_copy.py` |
+| Renewal on removal and downgrade (D1263, D1282, D1285) | `renewal.py`, `sealed.py` (`_change_people`), `protocol.py`, `hub.py`, `ShareDialog.vue`, `base-session.ts` | `test_renewal.py`, `test_server_people_changes.py` (13), `web/tests/session.test.ts`, `specs/container/keys-and-people.feature` (6 of 12 scenarios run in Chrome) |
+| The private domain (D1265, D1283) | `container.py` (`read_private`, `write_private`), `blocks.py` | `test_private_domain.py` |
+
+Slice A is built (container 0.10.0, server 0.39.0), slice B too (container 0.11.0, server 0.40.0), slice C too (container 0.12.0,
+server 0.41.0, format 2). Not built: authorship for viewers (SEC-22, waits for the owner), the history and chat of an export read
+back (PROC-37).
 
 ## 9. Threat-model consequences of slice A
 

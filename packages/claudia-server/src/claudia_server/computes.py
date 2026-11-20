@@ -241,7 +241,7 @@ def _sheets(ctx):
     ]
 
 
-@computes_methods.method("export_office", "format:str")
+@computes_methods.method("export_office", "format:str", leaves="export")
 def _export_office(ctx, *, format):
     """The document's current content as bytes of an Excel file (`format` `"xlsx"`) or an OpenDocument
     spreadsheet (`"ods"`), wrapped for the wire as `{format, content_type, data}` (`data` base64); the answer

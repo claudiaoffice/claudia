@@ -21,6 +21,13 @@ export function inkOn(hex: string): string {
   return luminance > 0.4 ? '#1f1a33' : '#ffffff'
 }
 
+/** What a role is called to a person: the viewer role's label is "only look" in the dialog (E2.3). */
+export function roleName(role: string): string {
+  if (role === 'owner') return t('owner')
+  if (role === 'viewer') return t('only look')
+  return t('edit')
+}
+
 export function initial(name: string): string {
   return (name.trim()[0] ?? '?').toUpperCase()
 }

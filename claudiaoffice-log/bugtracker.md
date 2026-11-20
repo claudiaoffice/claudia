@@ -229,8 +229,13 @@ statement in the docs or on the website).
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |
 | PROC-35 | P3 | Process / e2e | `uv run pytest tests/e2e` as one run fails three tests ("Playwright Sync API inside the asyncio loop") that each pass alone: an earlier test leaves an event loop running | **fixed** 2026-11-19 on branch `e2-document-sec` (measured on the branch, which has no change to the other e2e tests) |
 | SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |
-| PROC-36 | P3 | Process / tooling | A `ruff` installed outside the project (0.16.9) rewrites `except (A, B):` into `except A, B:` and reformats unrelated files; the project pins `ruff<0.15` for this | **new, open** (use `uv run ruff`; a note in `docs/contributing.md` would do) |
-| UX-54 | P3 | UX / a11y | The pages of Server settings (AI model … Security) have no keyboard shortcut, and the menu workbook does not list them | **new, open** (pre-existing; found while adding the Security page) |
+| PROC-36 | P3 | Process / tooling | A `ruff` installed outside the project (0.16.9) rewrites `except (A, B):` into `except A, B:` and reformats unrelated files; the project pins `ruff<0.15` for this | **fixed** 2026-11-19 (a rule in `CONTRIBUTING.md`, rule 5) |
+| PROC-38 | P3 | Process / tests | `test_another_window_is_answered_quickly_while_a_password_is_hashed` assumes that hashing takes more than 0.15 s; on a fast machine under load it measured 0.1499 s and the test failed (it passed alone) | **new, open** (size 3; calibrate the cost used by the test instead of reading the clock) |
+| PROC-39 | P2 | Process / e2e | The test server's output went to a pipe nobody read (`tests/e2e/live.py`); after about 64 KiB the server blocked on its next write and the whole event loop stood still, so page loads timed out (three `test_viewer` scenarios failed in a full run of `tests/e2e/specs` and passed alone) | **fixed** 2026-11-19 on branch `e2-document-sec` (the output goes to `server.log`; `test_greeting.py` and `test_computes_grid.py` still use a pipe but stop their servers within a minute) |
+| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |
+| UX-55 | P2 | UX / record | After its own export, print or PDF the window that did it was not shown its own line in History & Chat: the server tells the other windows only | **fixed** 2026-11-19 in slice B (found by the first end-to-end run; `BaseSession.recorded` reads the record again) |
+| CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |
+| UX-54 | P3 | UX / a11y | The pages of Server settings (AI model … Security) have no keyboard shortcut, and the menu workbook does not list them | **new, open** (pre-existing; found while adding the Security page; needs the owner's decision whether the rule covers navigation) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -2264,11 +2269,45 @@ file (a viewer's snapshot would be written without them: a second snapshot); (b)
 so in D1261. **Proposal:** (b) until the owner says otherwise, because masking in the snapshot means the content is stored
 twice. Not built either way.
 
-### PROC-36 · A global `ruff` is not the project's · P3 · new, open
+### PROC-36 · A global `ruff` is not the project's · P3 · fixed 2026-11-19
 `ruff 0.16.9` outside the project rewrote `except (A, B):` into `except A, B:` in five files and reformatted six others
-that were not touched. `pyproject.toml` pins `ruff>=0.6,<0.15` for this reason. Use `uv run ruff`.
+that were not touched. `pyproject.toml` pins `ruff>=0.6,<0.15` for this reason. Use `uv run ruff`. **Fixed:** rule 5 of
+`CONTRIBUTING.md` says so.
 
 ### UX-54 · The server settings pages have no keyboard shortcut · P3 · new, open
 The pages of Server settings (AI model, Typesetting, Fonts, Security, Access & documents) are buttons in a sidebar with no
 shortcut, and the menu workbook does not list them. The project asks for a shortcut for every menu entry; these are
 navigation, not menu entries, so the owner may want to decide whether the rule covers them.
+
+### PROC-37 · The history and chat of an export are not read back · P2 · new, open (needs a decision)
+**Evidence (read, measured by the tests).** `write_export` puts `history.jsonl` and `chat.jsonl` in the zip for an owner and
+`read_export` returns them, but `import_state` takes only `state`; the new document starts with one `core.Import` step. D1272
+says the history comes in with its authors as plain text ("former people"). **Not built** because the history of an export
+is the commands of another document, with revisions that mean nothing in the new one; what a person would want is the list of
+who did what, not commands that can be undone. **Options.** (a) a read-only "History of the original" kept as one note in the
+new document's history, text only, with the names as text; (b) the commands replayed with their authors as former people;
+(c) log it and leave the import as content only. **Proposal:** (a) in slice C. The mock-up's sentence "The people named in its
+history are not given access; their names stay in the history as former people" is **not** on the import dialog until this
+is built; the dialog says "Nobody else is given access." and nothing about names.
+
+### UX-55 · A window was not told of its own export · P2 · fixed 2026-11-19
+Found by the first end-to-end run of `export-and-record.feature`: the scenario "Ann exports the document without protection"
+failed because the History & Chat panel had no line. The server publishes `audit_recorded` to the other windows and not to
+the sender; the unit test on the server only looked at another window. **Fixed:** `BaseSession.recorded` reads `audit_log`
+again after the window's own export, print or PDF (owners and editors); `web/tests/session.test.ts` has the case.
+
+### CODE-74 · `export_content` is a third kind of export nobody asked for · P3 · new, open
+`export_content` (a JSON object with `format: "claudia-export 1"`) predates D1270 and is not called by any window. It is
+recorded like every export (`leaves="export"`), under a format name the panel does not know. Either remove it or make it
+answer with the zip; removing it changes the network API (a minor version while the major is 0).
+
+### PROC-38 · A timing test needs a slower machine than the one it runs on · P3 · new, open
+`test_another_window_is_answered_quickly_while_a_password_is_hashed` first checks that hashing takes longer than 0.15 s, so that
+"answered quickly" means something. On a fast machine, with the suite running in parallel, it measured 0.1499 s and failed;
+alone it passes. Size 3: the test should set a cost of its own that is slow enough, not read the clock of the machine.
+
+### PROC-39 · The e2e server's output pipe was never read · P2 · fixed
+`live.server()` started the server with `stdout=PIPE` and read it only when the server stopped early. A run with enough scenarios
+(slice C added six) wrote more than the pipe holds, and the server's next `print` blocked inside the event loop: the next page load
+timed out after 30 s. It showed as three failing `test_viewer` scenarios that pass alone. Found by bisecting which module had to
+run before them; fixed by writing to a file. Size 2 (it would have hidden every later regression behind a timeout).

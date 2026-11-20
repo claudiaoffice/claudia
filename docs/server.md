@@ -120,6 +120,38 @@ app's folder as it is, uid included, and the person opens it with a name and pas
 overwrites (409), refuses a document that is here already, under whatever name and in whatever app (409, with a
 sentence naming the one that is here, D535), and a server that keeps documents in memory cannot take one in (422).
 
+An **unencrypted Claudia export** (`.claudia-export.zip`, D1270, D1272; the layout is in [the format](container-format.md))
+is uploaded the same way. The answer has `format: "claudia-export"`, `kind: "Claudia export"`, `app`, `made_by` and
+`made_at` (who exported it and when, as the file says: the dialog shows it, nothing trusts it) and a `suggested_id` made
+from the file's name; `hosted` says whether this server has the app. The second step is the one of an Office file with
+`"create": true, "upload": "<token>"`: the document starts with one `core.Import` entry, the importer is its only owner,
+and the file is **not** kept inside (`keep_original` is ignored). The state must be of the shape the app of this server
+uses (`state_schema`); another version is refused with a sentence. Nobody named in the export is given access.
+
+## What leaves the document is recorded (D1271)
+
+`export_content`, `export_office` and `export_claudia` are marked `leaves="export"` in the method table: after the method
+has answered, `MethodTable.dispatch` records who (the account of the connection), when, the format and the parts in the
+document's audit chain (`AuditDirectory.record_audit`; the document holds the keys of everybody who opened it, so a
+viewer's export is recorded too). A print or a PDF is made in the browser, so the window reports it: `report_output
+{kind: "print"|"pdf", format, pages}`; the server takes the name from the connection and ignores any name a client could
+send, limits one person to 20 reports a minute (`too_many`) and refuses a page count that is not a number between 0 and
+100 000. `audit_log` reads the record (history: owners and editors; a viewer gets `forbidden`). The other windows of
+owners and editors are told with the ephemeral event `audit_recorded`; the window that asked is not, and reads the record
+again. `export_claudia {include_history}` is the unencrypted zip as base64 (`format: "claudia-unencrypted"`); the history
+and chat go in only for an owner (`forbidden` otherwise).
+
+## Roles change and people are removed (D1263, D1284)
+
+`change_role {name, role}` (`role` is `editor` or `viewer`) and `remove_person {name}` are for owners (`forbidden`
+otherwise); an owner cannot be lowered or removed (`command_error`: ownership is handed over, `propose_owner`). Both answer
+after the keys the person held are renewed (`SealedDocuments`; the answer of `change_role` is `{user, role, renewed}`). The
+renewal runs under the document's lock on the event loop (D1282): for a normal document it takes about as long as writing
+the file once, and a long one stops the server's other documents for that time. The person's open windows follow at once:
+the ephemeral events `role_changed {user, role}` and `person_removed {user}` go to everybody in the document, the new role
+applies to her connections before the event is delivered, and after `person_removed` her connections get nothing more and
+answer `forbidden`. A person who was away gets the new keys at her next login, from her inbox in the file (D1274).
+
 ## After the handshake
 
 * Requests are `{"id", "method", "params"}`; responses `{"id", "ok", "result" | "error"}`; pushed events

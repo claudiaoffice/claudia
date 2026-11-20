@@ -1,5 +1,5 @@
 {
- "version": "0.39.0",
+ "version": "0.41.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -192,14 +192,15 @@
    "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": [
-   "app"
+   "app",
+   "state_schema"
   ]
  },
  "ERROR_CODES": {
-  "value": "{'bad_request': 'malformed message, unknown or missing parameter, wrong type, or over a limit', 'unknown_method': 'no such method', 'command_error': 'the request was understood but rejected (bad index, unknown sheet...); nothing changed', 'forbidden': 'the account may not do this (read-only role)', 'unauthorized': 'missing or wrong credentials', 'not_found': 'no such document', 'unavailable': 'a server limit was reached (too many connections to the document)', 'sealed': 'the document is stored but nobody who holds all its keys has opened it since the server started; a viewer has to wait (and may try again) until an owner or editor has', 'locked': 'somebody else is working on that part of the document right now; nothing changed', 'conflict': \"undo or redo would overwrite a colleague's later work; nothing changed\", 'stale': 'the request was made against a view of the document that is gone (it went back to a checkpoint or changed line); reload the document and try again; nothing changed', 'too_many_tries': 'a login came too soon after failed ones; the error carries `retry_after`, the whole seconds to wait. Nothing is locked: the same login is looked at when the wait is over', 'internal': 'a server error; the request may or may not have been applied, check the revision'}"
+  "value": "{'bad_request': 'malformed message, unknown or missing parameter, wrong type, or over a limit', 'unknown_method': 'no such method', 'command_error': 'the request was understood but rejected (bad index, unknown sheet...); nothing changed', 'forbidden': 'the account may not do this (read-only role)', 'unauthorized': 'missing or wrong credentials', 'not_found': 'no such document', 'unavailable': 'a server limit was reached (too many connections to the document)', 'sealed': 'the document is stored but nobody who holds all its keys has opened it since the server started; a viewer has to wait (and may try again) until an owner or editor has', 'locked': 'somebody else is working on that part of the document right now; nothing changed', 'conflict': \"undo or redo would overwrite a colleague's later work; nothing changed\", 'stale': 'the request was made against a view of the document that is gone (it went back to a checkpoint or changed line); reload the document and try again; nothing changed', 'too_many_tries': 'a login came too soon after failed ones; the error carries `retry_after`, the whole seconds to wait. Nothing is locked: the same login is looked at when the wait is over', 'too_many': 'more of this than the server allows in a minute; nothing was done. Try again a little later', 'internal': 'a server error; the request may or may not have been applied, check the revision'}"
  },
  "EVENTS": {
-  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and nothing else will ever be stored or delivered for this document \u2014 close and forget it', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions and chat messages was removed: {revisions, chat}; reload chat_log', 'thing_renamed': 'an object, slide, sheet or chart tab got another name: {id, name} (D550)', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection', 'restore_proposed': 'a suggestion to restore a checkpoint or a step, or to switch the line is open, or its answers changed (see `propose_restore`): the proposal, as `answer_restore` returns it', 'restore_resolved': 'the open suggestion closed: {outcome: agreed|declined|withdrawn}. `agreed` is followed by `branch` and `rebuilt`, same as any restore or switch'}"
+  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; role_changed: {user, role}; person_removed: {user}; document_deleted: {}, and nothing else will ever be stored or delivered for this document \u2014 close and forget it', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions and chat messages was removed: {revisions, chat}; reload chat_log', 'thing_renamed': 'an object, slide, sheet or chart tab got another name: {id, name} (D550)', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection', 'restore_proposed': 'a suggestion to restore a checkpoint or a step, or to switch the line is open, or its answers changed (see `propose_restore`): the proposal, as `answer_restore` returns it', 'restore_resolved': 'the open suggestion closed: {outcome: agreed|declined|withdrawn}. `agreed` is followed by `branch` and `rebuilt`, same as any restore or switch'}"
  },
  "Engine": {
   "class": [
@@ -235,7 +236,8 @@
    "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": [
-   "app"
+   "app",
+   "state_schema"
   ]
  },
  "FolderLock": {
@@ -346,7 +348,8 @@
   },
   "properties": [
    "app",
-   "max_documents"
+   "max_documents",
+   "state_schema"
   ]
  },
  "HubError": {
@@ -427,14 +430,15 @@
    "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": [
-   "app"
+   "app",
+   "state_schema"
   ]
  },
  "Method": {
   "class": [
    "object"
   ],
-  "init": "(name: 'str', params: 'tuple[Param, ...]', write: 'bool', doc: 'str', fn: 'Callable[..., Any]', reads: 'str' = 'content', hashes: 'tuple[tuple[str, str], ...]' = ()) -> None",
+  "init": "(name: 'str', params: 'tuple[Param, ...]', write: 'bool', doc: 'str', fn: 'Callable[..., Any]', reads: 'str' = 'content', hashes: 'tuple[tuple[str, str], ...]' = (), leaves: 'str | None' = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -450,7 +454,7 @@
    "extended": "(self) -> 'MethodTable'",
    "hashes_of": "(self, raw: 'str | bytes', user: 'str') -> 'list[tuple[str, str]]'",
    "kind": "(self, name: 'str')",
-   "method": "(self, name: 'str', spec: 'str' = '', *, write: 'bool' = False, reads: 'str' = 'content', hashes: 'tuple[tuple[str, str], ...]' = ())",
+   "method": "(self, name: 'str', spec: 'str' = '', *, write: 'bool' = False, reads: 'str' = 'content', hashes: 'tuple[tuple[str, str], ...]' = (), leaves: 'str | None' = None)",
    "names": "(self) -> 'set[str]'"
   },
   "properties": []
@@ -587,6 +591,7 @@
   "methods": {
    "accept_owner_transfer": "(self, doc_id: 'str', new_owner: 'str', new_owner_password: 'str') -> 'Account | None'",
    "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
+   "audit_rows": "(self, doc_id: 'str') -> 'list[AuditRecord]'",
    "change_password": "(self, doc_id: 'str', name: 'str', old_password: 'str', new_password: 'str') -> 'bool'",
    "create": "(self, doc_id: 'str') -> 'Document'",
    "delete_document": "(self, doc_id: 'str', owner: 'str', owner_password: 'str') -> 'bool'",
@@ -602,17 +607,21 @@
    "original": "(self, doc_id: 'str') -> 'bytes | None'",
    "place": "(self, doc_id: 'str', data: 'bytes') -> 'None'",
    "propose_owner_transfer": "(self, doc_id: 'str', old_owner: 'str', old_owner_password: 'str', new_owner: 'str') -> 'bool'",
+   "record_audit": "(self, doc_id: 'str', record: 'AuditRecord') -> 'None'",
    "recover": "(self, doc_id: 'str', recovery_key: 'str', name: 'str', new_password: 'str') -> 'Account | None'",
    "release": "(self, doc_id: 'str') -> 'None'",
+   "remove_person": "(self, doc_id: 'str', name: 'str') -> 'Account'",
    "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
    "sealed_copy": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'bytes | None'",
    "set_details": "(self, doc_id: 'str', owner: 'str', owner_password: 'str', description: 'str', tags: 'Sequence[str]') -> 'bool'",
+   "set_role": "(self, doc_id: 'str', name: 'str', role: 'str') -> 'Account'",
    "uid_of": "(self, doc_id: 'str') -> 'str | None'",
    "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'",
    "warm": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'None'"
   },
   "properties": [
-   "app"
+   "app",
+   "state_schema"
   ]
  },
  "SecuritySettings": {

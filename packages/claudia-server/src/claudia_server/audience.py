@@ -105,8 +105,11 @@ EPHEMERAL_RULES: dict[str, Domain] = {
     "presence": CONTENT,
     "person_left": CONTENT,
     "owner_changed": CONTENT,
+    "role_changed": CONTENT,  # an owner changed somebody's role: {user, role}
+    "person_removed": CONTENT,  # an owner removed somebody: {user}
     "document_deleted": CONTENT,
     "details_changed": CONTENT,
+    "audit_recorded": HISTORY,  # somebody exported, printed or saved a PDF (D1271): the record is history
     "typing": CHAT,  # somebody is writing a chat message
 }
 

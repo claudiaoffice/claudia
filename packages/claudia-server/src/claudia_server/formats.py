@@ -13,12 +13,13 @@ the event loop nor takes the server down when a reader crashes.
 from __future__ import annotations
 
 import io
+import json
 import re
 import zipfile
 from dataclasses import dataclass
 from xml.etree import ElementTree
 
-from claudia_container import MAX_DESCRIPTION, MAX_TAGS, clean_details
+from claudia_container import MAX_DESCRIPTION, MAX_TAGS, clean_details, read_export
 from claudia_opc_io import check_package
 
 #: The formats an import reads, the app each becomes, and its own words for people.
@@ -31,6 +32,8 @@ FORMATS: dict[str, tuple[str, str]] = {
     "odp": ("creates", "OpenDocument presentation"),
 }
 CLAUDIA = "claudia"
+CLAUDIA_EXPORT = "claudia-export"
+"""A Claudia export, the unencrypted zip of D1270: it comes in as a new document (D1272)."""
 _ODF = {
     "application/vnd.oasis.opendocument.text": "odt",
     "application/vnd.oasis.opendocument.spreadsheet": "ods",
@@ -38,6 +41,7 @@ _ODF = {
 }
 _OOXML = {"word/document.xml": "docx", "xl/workbook.xml": "xlsx", "ppt/presentation.xml": "pptx"}
 _MAX_SMALL_ENTRY = 4096  # ``mimetype`` and ``format`` are a few dozen bytes
+_MAX_EXPORT_INFO = 64 * 1024
 
 
 class UnknownFormat(ValueError):
@@ -74,6 +78,8 @@ def sniff(data: bytes) -> Sniffed:
                 declared = _small(archive, "format") or b""
                 if declared.startswith(b"claudia-document "):
                     return Sniffed(CLAUDIA, None)
+                if declared.startswith(b"claudia-export "):
+                    return Sniffed(CLAUDIA_EXPORT, _export_app(archive))
             mimetype = (_small(archive, "mimetype") or b"").decode("ascii", "replace").strip()
             if mimetype in _ODF:
                 fmt = _ODF[mimetype]
@@ -86,6 +92,36 @@ def sniff(data: bytes) -> Sniffed:
     except (zipfile.BadZipFile, OSError, ValueError, EOFError) as error:
         raise UnknownFormat("not a document Claudia can open") from error
     raise UnknownFormat("not a document Claudia can open")
+
+
+def _export_header(archive: zipfile.ZipFile) -> dict | None:
+    """``export.json`` of an export, if it is a small entry that reads as an object (the rest is not touched)."""
+    try:
+        info = archive.getinfo("export.json")
+        if info.file_size > _MAX_EXPORT_INFO:
+            return None
+        header = json.loads(archive.read(info))
+    except (KeyError, ValueError, TypeError):
+        return None
+    return header if isinstance(header, dict) else None
+
+
+def _export_app(archive: zipfile.ZipFile) -> str | None:
+    """The app an export says it is of, read from ``export.json`` alone."""
+    app = (_export_header(archive) or {}).get("app")
+    return app if isinstance(app, str) and app in {app for app, _ in FORMATS.values()} else None
+
+
+def export_made(data: bytes) -> tuple[str, str]:
+    """Who made an export and when, as the file says it (shown to the person who imports it): ``("", "")`` for a file
+    that does not say. Only ``export.json`` is read."""
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            header = _export_header(archive) or {}
+    except (zipfile.BadZipFile, OSError, ValueError, EOFError):
+        return "", ""
+    who, when = header.get("exporter"), header.get("exported_at")
+    return (who if isinstance(who, str) else "")[:200], (when if isinstance(when, str) else "")[:40]
 
 
 def _reader(fmt: str):  # noqa: ANN202 - one of six reader functions
@@ -111,11 +147,17 @@ def _reader(fmt: str):  # noqa: ANN202 - one of six reader functions
     raise UnknownFormat(f"{fmt} cannot be imported")
 
 
-def import_state(fmt: str, data: bytes) -> tuple[dict, list[dict]]:
+def import_state(fmt: str, data: bytes, state_schema: int | None = None) -> tuple[dict, list[dict]]:
     """The state an import of ``data`` (a file of format ``fmt``) makes, as ``serialize()`` gives it, and what the
-    document will not show, as ``{kind, detail, count}``. Raises whatever the reader raises for a broken file, and
+    document will not show, as ``{kind, detail, count}``. For a Claudia export (D1272) it is the export's own state,
+    refused if its ``state_schema`` is not ``state_schema``. Raises whatever the reader raises for a broken file, and
     ``claudia_opc_io.PackageRefused`` for a zip that unpacks to far too much (SEC-15): the office libraries open the
     zip themselves, so this is the one place every format passes before any of them does."""
+    if fmt == CLAUDIA_EXPORT:
+        exported = read_export(data)
+        if state_schema is not None and exported.state_schema != state_schema:
+            raise ValueError("the export was made by another version of Claudia and has another shape of state")
+        return exported.state, []
     read, losses_of = _reader(fmt)
     check_package(data)
     model = read(data)

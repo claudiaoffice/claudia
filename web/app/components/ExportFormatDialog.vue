@@ -1,10 +1,13 @@
 <script setup lang="ts">
 // File ▸ Export… (D212). Picks a target file format and saves the document's current content to this computer in
 // it — Word, Excel, PowerPoint or OpenDocument, or (composes only) plain Markdown — without tracked changes, history or chat.
-// Claudia's own sealed file is File ▸ Download (`DownloadDialog.vue`, D110); this is the home of "Export…".
-import { ref } from 'vue'
+// Claudia's own sealed file is File ▸ Download (`DownloadDialog.vue`, D110); this is the home of "Export…". The last
+// format is Claudia's own unencrypted zip (D1270): it asks once, in words, before it is saved, because the file is not
+// protected, and the server records it in the document (D1271). Only owners may add the history and the chat to it.
+import { computed, ref } from 'vue'
 import type { BaseSession } from '~/lib/base-session'
 import { downloadBase64, downloadText, type Saved } from '~/lib/download'
+import { UNPROTECTED } from '~/lib/audit'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
@@ -22,7 +25,15 @@ export interface ExportFormatOption {
 const props = defineProps<{ session: BaseSession; formats: ExportFormatOption[] }>()
 const emit = defineEmits<{ close: [] }>()
 
-const chosen = ref(props.formats[0]?.value ?? '')
+/** Every app's formats, and then Claudia's own unencrypted zip, which every app offers the same way (D1270). */
+const all = computed<ExportFormatOption[]>(() => [...props.formats, { value: UNPROTECTED, label: t('Claudia, unencrypted (JSON in a zip)') }])
+const chosen = ref(props.formats[0]?.value ?? UNPROTECTED)
+const unprotected = computed(() => chosen.value === UNPROTECTED)
+const owner = computed(() => props.session.state.me.role === 'owner')
+/** Owners only (D1270); off unless asked for. */
+const withHistory = ref(false)
+/** The question "Save without protection?", asked once before the unencrypted file is made. */
+const confirming = ref(false)
 const busy = ref(false)
 const done = ref(false)
 /** Where a desktop window saved it (D501): the person chose it, and sees it again here. */
@@ -37,12 +48,23 @@ function finished(saved: Saved) {
   done.value = true
 }
 
+function start() {
+  if (unprotected.value) confirming.value = true
+  else void exportNow()
+}
+
 async function exportNow() {
-  const format = props.formats.find((f) => f.value === chosen.value)
-  if (!format) return
+  confirming.value = false
   busy.value = true
   problem.value = ''
   try {
+    if (unprotected.value) {
+      const result = await props.session.exportClaudia(owner.value && withHistory.value)
+      if (result !== false) finished(await downloadBase64(result.filename, result.content_type, result.data))
+      return
+    }
+    const format = props.formats.find((f) => f.value === chosen.value)
+    if (!format) return
     if (format.local) {
       finished(await downloadText(`${props.session.state.doc}.${format.value}`, format.local(), format.mimeType))
     } else {
@@ -59,20 +81,42 @@ async function exportNow() {
 
 <template>
   <Modal :title="t('Export this document')" @close="emit('close')">
-    <TransText tag="p" class="lead" :text="t('This saves the current content of {doc} to this computer, in the format you pick below. It does not include the document\'s history or chat, and no tracked changes are kept — just the content as it stands now.')">
+    <TransText v-if="unprotected" tag="p" class="lead" :text="t('This saves {doc} to this computer in Claudia\'s own format, as plain files in a zip that anyone can open.')">
       <template #doc><b>{{ session.state.doc }}</b></template>
     </TransText>
-    <label v-if="!done && formats.length > 1" class="field">
-      {{ t('Save as') }}<select v-model="chosen">
-        <option v-for="f in formats" :key="f.value" :value="f.value">{{ f.label }}</option>
+    <TransText v-else tag="p" class="lead" :text="t('This saves the current content of {doc} to this computer, in the format you pick below. It does not include the document\'s history or chat, and no tracked changes are kept — just the content as it stands now.')">
+      <template #doc><b>{{ session.state.doc }}</b></template>
+    </TransText>
+    <label v-if="!done && !confirming" class="field">
+      {{ t('Save as') }}<select v-model="chosen" data-testid="export-format">
+        <option v-for="f in all" :key="f.value" :value="f.value">{{ f.label }}</option>
       </select>
     </label>
+    <template v-if="!done && !confirming && unprotected">
+      <label v-if="owner" class="check">
+        <input v-model="withHistory" type="checkbox" data-testid="export-history" aria-describedby="export-history-hint">
+        {{ t('Include history and chat') }}
+      </label>
+      <p v-if="owner" id="export-history-hint" class="hint">{{ t('Owners only. Hidden lines are included. Without it the file holds the content as it is now.') }}</p>
+      <p v-else class="hint" data-testid="export-owners-only">{{ t('The file holds the content as it is now. History and chat can only be exported by owners.') }}</p>
+    </template>
+    <div v-if="confirming" class="confirm" role="alertdialog" aria-labelledby="unprotected-title" aria-describedby="unprotected-text" data-testid="export-unprotected-confirm">
+      <h3 id="unprotected-title">{{ t('Save without protection?') }}</h3>
+      <div id="unprotected-text">
+        <p>{{ t('The file will not be protected by a password.') }}</p>
+        <p>{{ t('Anyone who gets the file can read it.') }}</p>
+        <p>{{ t('The export is recorded in the document: who, when and what.') }}</p>
+        <p>{{ t('Claudia cannot tell whether someone copies from the screen.') }}</p>
+      </div>
+    </div>
     <p v-if="done && savedTo" class="lead" data-testid="export-saved-to">{{ t('Saved as {path}.', { path: savedTo }) }}</p>
     <p v-else-if="done" class="lead">{{ t('Exported.') }}</p>
     <p v-if="problem" class="error" role="alert">{{ problem }}</p>
     <div class="buttons">
-      <button v-if="!done" class="btn primary" type="button" :disabled="busy" @click="exportNow">{{ t('Export') }}</button>
-      <button class="btn" type="button" @click="emit('close')">{{ done ? t('Done') : t('Cancel') }}</button>
+      <button v-if="!done && !confirming" class="btn primary" type="button" :disabled="busy" @click="start">{{ t('Export') }}</button>
+      <button v-if="confirming" class="btn primary" type="button" :disabled="busy" data-testid="export-unprotected" @click="exportNow">{{ t('Export unprotected') }}</button>
+      <button v-if="confirming" class="btn" type="button" @click="confirming = false">{{ t('Cancel') }}</button>
+      <button v-else class="btn" type="button" @click="emit('close')">{{ done ? t('Done') : t('Cancel') }}</button>
     </div>
   </Modal>
 </template>
@@ -85,6 +129,28 @@ async function exportNow() {
 .error {
   margin: 0;
   color: var(--rose);
+}
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.confirm {
+  border: 1px solid var(--rose);
+  border-radius: 10px;
+  padding: 8px 14px;
+}
+.confirm h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.confirm p {
+  margin: 4px 0;
 }
 .field {
   display: flex;

@@ -38,8 +38,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
+from weakref import WeakKeyDictionary
 
-from claudia_container import Domain, clean_details
+from claudia_container import AuditRecord, Domain, clean_details, write_export
 from claudia_core import (
     Document,
     KernelError,
@@ -56,10 +57,12 @@ from .audience import may_read
 from .auth import (
     WRITE_ROLES,
     Account,
+    AuditDirectory,
     DeletableDirectory,
     DetailsDirectory,
     LeavableDirectory,
     PasswordDirectory,
+    PeopleDirectory,
     RecoverableDirectory,
     RosterDirectory,
     SealedCopyDirectory,
@@ -70,6 +73,7 @@ from .help import default_library
 from .i18n import localized, msg
 from .planned import keep_plan
 from .restore import POLICIES, RestoreCoordinator, RestoreError
+from .throttle import Throttle
 
 if TYPE_CHECKING:
     from claudia_core import Region
@@ -109,6 +113,7 @@ ERROR_CODES = {
     "changed line); reload the document and try again; nothing changed",
     "too_many_tries": "a login came too soon after failed ones; the error carries `retry_after`, the whole seconds to "
     "wait. Nothing is locked: the same login is looked at when the wait is over",
+    "too_many": "more of this than the server allows in a minute; nothing was done. Try again a little later",
     "internal": "a server error; the request may or may not have been applied, check the revision",
 }
 
@@ -121,7 +126,8 @@ EVENTS = {
     "chat": "a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not "
     "for everybody",
     "ephemeral": "something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|"
-    "document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and "
+    "document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; role_changed: {user, role}; "
+    "person_removed: {user}; document_deleted: {}, and "
     "nothing else will ever be stored or delivered for this document — close and forget it",
     "branch": "the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, "
     "fork_point}. Everything you hold is stale: call snapshot",
@@ -315,6 +321,16 @@ class Context:
         """The author of what this request changes."""
         return self.account.user
 
+    def record_leaving(self, kind: str, fmt: str, parts: tuple[str, ...], pages: int | None = None) -> None:
+        """Record that the person asking took ``parts`` of the document out in ``fmt`` (D1271): an export, a print or
+        a PDF. The name is the account's, never anything the client said. Nothing happens on a server whose documents
+        keep no audit chain; the people who may read the record are told with an ephemeral ``audit_recorded``."""
+        if not isinstance(self.directory, AuditDirectory):
+            return
+        record = AuditRecord(kind, self.user, _now_text(), fmt, parts, pages)
+        self.directory.record_audit(self.doc_id, record)
+        self.document.publish("audit_recorded", self.user, audit_row(record))
+
 
 @dataclass(frozen=True)
 class Method:
@@ -331,6 +347,9 @@ class Method:
     hashes: tuple[tuple[str, str], ...] = ()
     """The passwords it confirms, as ``(name, password)`` parameter pairs; ``"@user"`` is the person asking.
     The server hashes them in a thread before the request is handled (SEC-21)."""
+    leaves: str | None = None
+    """``export`` for a method whose answer is the document in a form that can be read outside Claudia: the server
+    records it in the audit chain, for the person who asked, once the answer is made (D1271, E2.9)."""
 
 
 class MethodTable:
@@ -349,6 +368,7 @@ class MethodTable:
         write: bool = False,
         reads: str = "content",
         hashes: tuple[tuple[str, str], ...] = (),
+        leaves: str | None = None,
     ):
         """Decorator: register ``fn(ctx, **params)`` as method ``name``.
 
@@ -356,13 +376,14 @@ class MethodTable:
         method shows: ``"content"`` (the default), ``"history"`` or ``"chat"``; a person whose role holds no key of
         that part (a viewer) is refused it (D1261). ``hashes`` names the ``(name, password)`` parameter pairs a method
         confirms by hashing (``"@user"`` stands for the person asking), so that the server can do that slow work
-        outside its event loop first (SEC-21, ``hashes_of``)."""
+        outside its event loop first (SEC-21, ``hashes_of``). ``leaves="export"`` marks a method whose answer is the
+        document in a readable form: after it succeeds the server records the export (D1271)."""
         if reads not in tuple(Domain):
             raise ValueError(f"reads must be one of {', '.join(Domain)}, not {reads!r}")
 
         def register(fn):
             self._methods[name] = Method(
-                name, _parse_params(spec), write, (fn.__doc__ or "").strip(), fn, reads, hashes
+                name, _parse_params(spec), write, (fn.__doc__ or "").strip(), fn, reads, hashes, leaves
             )
             return fn
 
@@ -464,7 +485,11 @@ class MethodTable:
             raise RequestError("forbidden", msg("{name} is not one of the methods this account may call", name=name))
         args = self.bind(entry, params, ctx.limits)
         try:
-            return entry.fn(ctx, **args)
+            result = entry.fn(ctx, **args)
+            if entry.leaves is not None:
+                parts = tuple(result.get("parts", ("content",)))
+                ctx.record_leaving(entry.leaves, str(result.get("format", entry.name)), parts)
+            return result
         except RequestError:
             raise
         except StaleEdit as exc:
@@ -1071,6 +1096,55 @@ def _add_user(ctx, name, password, role):
     return {"user": account.user, "role": account.role}
 
 
+@core_methods.method("change_role", "name:str role:str")
+def _change_role(ctx, name, role):
+    """Owners only: give `name` the role `editor` or `viewer` (D1263). Lowering an editor to viewer renews the history
+    and chat keys of the document, which takes about as long as writing its file once; raising one renews nothing.
+    The person's open windows have the new role at once. An owner's role is not changed here (ownership is handed
+    over, `propose_owner`). Returns `{user, role, renewed}` (`renewed` says whether keys were renewed);
+    `command_error` with a sentence for the person if `name` is an owner."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", msg("only the owner of a document changes who may do what"))
+    if not isinstance(ctx.directory, PeopleDirectory):
+        raise RequestError("unavailable", msg("this server does not change roles"))
+    if role not in ("editor", "viewer"):
+        raise RequestError("bad_request", msg("change_role: role must be editor or viewer"))
+    return _people_change(ctx, name, lambda: ctx.directory.set_role(ctx.doc_id, name, role), "role_changed")
+
+
+@core_methods.method("remove_person", "name:str")
+def _remove_person(ctx, name):
+    """Owners only: take `name` out of this document and renew the keys she held (D1263). She keeps what she has already
+    seen and any copy of the file she holds; the new keys protect what is written from now on. Her private notes are
+    deleted. People who are here stay connected; her windows are told and answer nothing more. An owner cannot be
+    removed here (she `leave`s, after ownership was handed over). Returns `{user}`; `command_error` with a sentence
+    for the person if `name` is an owner."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", msg("only the owner of a document removes people from it"))
+    if not isinstance(ctx.directory, PeopleDirectory):
+        raise RequestError("unavailable", msg("this server does not remove people"))
+    return _people_change(ctx, name, lambda: ctx.directory.remove_person(ctx.doc_id, name), "person_removed")
+
+
+def _people_change(ctx, name, act, kind):
+    """Run a change of the people and tell the document's windows; the answer is what the caller returns."""
+    before = {a.user: a.role for a in ctx.directory.list_people(ctx.doc_id)} if kind == "role_changed" else {}
+    try:
+        account = act()
+    except KeyError:
+        raise RequestError("command_error", msg("there is nobody called {name} in this document", name=name)) from None
+    except ValueError as error:
+        raise RequestError("command_error", str(error)) from error
+    data = {"user": account.user}
+    if kind == "role_changed":
+        data["role"] = account.role
+    ctx.document.publish(kind, ctx.user, data)
+    if kind == "person_removed":
+        return {"user": account.user}
+    lowered = before.get(account.user) in ("owner", "editor") and account.role == "viewer"
+    return {"user": account.user, "role": account.role, "renewed": lowered}
+
+
 @core_methods.method("new_recovery_key")
 def _new_recovery_key(ctx):
     """Owners only: make a new recovery key for this document. It is the way back in for somebody who has lost their
@@ -1200,20 +1274,110 @@ def _set_details(ctx, password, description, tags):
     return {"description": kept_description, "tags": list(kept_tags)}
 
 
-@core_methods.method("export_content")
+def _now_text() -> str:
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def audit_row(record: AuditRecord) -> dict:
+    """A record as the wire shows it: `{kind, who, when, format, parts, pages}`."""
+    return {
+        "kind": record.kind,
+        "who": record.who,
+        "when": record.when,
+        "format": record.format,
+        "parts": list(record.parts),
+        "pages": record.pages,
+    }
+
+
+@core_methods.method("export_content", leaves="export")
 def _export_content(ctx):
     """The document's current content, as Claudia's own format — not Word, Excel or PowerPoint; import and export
     for those is separate, planned work: `{format, app, exported_at, state_schema, state}`. Does not include the
     command history or the chat (E2.9: exporting those, and importing, is not built yet)."""
     model = ctx.document.model
-    exported_at = datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
     return {
         "format": "claudia-export 1",
         "app": model.app,
-        "exported_at": exported_at,
+        "exported_at": _now_text(),
         "state_schema": model.state_schema,
         "state": model.serialize(),
     }
+
+
+@core_methods.method("export_claudia", "include_history:bool=false", leaves="export")
+def _export_claudia(ctx, include_history):
+    """File ▸ Export… ▸ Claudia, unencrypted (D1270): one zip anybody can read, with the document's content as
+    `content.json` and, if an owner asks for it with `include_history`, the history (hidden side lines included) and
+    the chat as `history.jsonl` and `chat.jsonl`. No keys, no password hashes, no people. It is recorded in the
+    document (D1271) as an export by you. Returns `{format: "claudia-unencrypted", filename, content_type, data
+    (base64), parts}`; `forbidden` if `include_history` is asked by anybody but an owner. The AI may not export."""
+    if ctx.account.system:
+        raise RequestError("forbidden", msg("the assistant does not export the document"))
+    if include_history and ctx.account.role != "owner":
+        raise RequestError("forbidden", msg("only an owner may export the history and the chat"))
+    model = ctx.document.model
+    history = chat = None
+    if include_history:
+        from .filestore import (  # noqa: PLC0415 - filestore needs the hub, which needs us
+            chat_payloads,
+            history_payloads,
+        )
+
+        history = history_payloads(ctx.document.log)
+        chat = chat_payloads(ctx.document.chat)
+    data = write_export(
+        model.app,
+        model.state_schema,
+        model.serialize(),
+        exporter=ctx.user,
+        exported_at=_now_text(),
+        history=history,
+        chat=chat,
+    )
+    return {
+        "format": "claudia-unencrypted",
+        "filename": f"{ctx.doc_id}.claudia-export.zip",
+        "content_type": "application/zip",
+        "data": base64.b64encode(data).decode("ascii"),
+        "parts": ["content", "history", "chat"] if include_history else ["content"],
+    }
+
+
+_REPORTS: WeakKeyDictionary[Document, Throttle] = WeakKeyDictionary()
+"""How often a person's client may report a print or a PDF, per document: a script cannot fill the file (D1271)."""
+REPORTS_PER_MINUTE = 20
+MAX_REPORTED_PAGES = 100_000
+
+
+@core_methods.method("report_output", "kind:str format:str pages:int")
+def _report_output(ctx, kind, format, pages):
+    """A print or a PDF that this window has just made (D1271): `kind` is `print` or `pdf`, `format` what it was made
+    as (`print`, `pdf`), `pages` how many pages the document has. The server records who did it: you, from your
+    connection. This is the client's report of what Claudia's own screens did, not a guarantee, and it is made when the
+    file is saved or the page sent to the printer, not when the preview opens. At most 20 a minute for each person;
+    `too_many` after that. Any role may report, a viewer too, and the assistant may not."""
+    if ctx.account.system:
+        raise RequestError("forbidden", msg("the assistant does not print"))
+    if kind not in ("print", "pdf"):
+        raise RequestError("bad_request", msg("report_output: kind must be print or pdf"))
+    if not 0 <= pages <= MAX_REPORTED_PAGES or not 0 < len(format) <= 40:
+        raise RequestError("bad_request", msg("report_output: pages and format are not usable"))
+    throttle = _REPORTS.setdefault(ctx.document, Throttle(REPORTS_PER_MINUTE, 60.0))
+    if not throttle.allow(ctx.user.casefold()):
+        raise RequestError("too_many", msg("that is more prints and PDFs than the document records in a minute"))
+    ctx.record_leaving(kind, format, ("content",), pages)
+    return {"recorded": True}
+
+
+@core_methods.method("audit_log", reads="history")
+def _audit_log(ctx):
+    """What has left the document in a form that can be read outside Claudia, oldest first, as `{kind, who, when,
+    format, parts, pages}` (D1271): exports in any format, prints and PDFs. For owners and editors; a viewer does not
+    see it. The record cannot be redacted and has no revision."""
+    if not isinstance(ctx.directory, AuditDirectory):
+        return []
+    return [audit_row(record) for record in ctx.directory.audit_rows(ctx.doc_id)]
 
 
 @core_methods.method("download_claudia", "password:str", hashes=(("@user", "password"),))

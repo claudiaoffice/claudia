@@ -35,7 +35,15 @@ MAX_BLOCK_BYTES = 64 * 1024 * 1024
 GENESIS = bytes(32)
 """The hash that "the block before the first block" has."""
 
-_DOMAIN_BYTE = {Domain.CONTENT: 1, Domain.HISTORY: 2, Domain.CHAT: 3}
+AUDIT = "audit"
+"""The name of the chain that records what leaves the document (D1271). It is sealed with the history key, so it is not
+a domain of its own: nobody holds a key for it besides those who hold the history key."""
+
+PRIVATE = "private"
+"""The folder of private domains, ``private/<id>/NNNNNN.blk`` (D1265). Each one is a chain of its own, sealed with the
+key of that domain alone, and has a head of its own."""
+
+_STREAM_BYTE = {"content": 1, "history": 2, "chat": 3, AUDIT: 4, PRIVATE: 5}
 
 
 class BlockError(Exception):
@@ -49,10 +57,11 @@ def block_hash(stored: bytes) -> bytes:
 
 @dataclass(frozen=True)
 class Place:
-    """Where a block belongs: its document, its domain, its number (from 1) and the hash of the block before it."""
+    """Where a block belongs: its document, its chain (a domain's name or ``"audit"``), its number (from 1) and the hash
+    of the block before it."""
 
     doc_id: str
-    domain: Domain
+    domain: str
     number: int
     previous: bytes
 
@@ -60,7 +69,10 @@ class Place:
 def _aad(place: Place) -> bytes:
     name = place.doc_id.encode()
     number = struct.pack(">I", place.number)
-    domain = bytes([_DOMAIN_BYTE[place.domain]])
+    if place.domain.startswith(f"{PRIVATE}/"):  # the id of the private domain is part of the place
+        domain = bytes([_STREAM_BYTE[PRIVATE]]) + place.domain.encode()
+    else:
+        domain = bytes([_STREAM_BYTE[place.domain]])
     return b"claudia/block/1" + struct.pack(">H", len(name)) + name + domain + number + place.previous
 
 
@@ -120,15 +132,19 @@ class Head:
     """The last journal generation whose records are in the blocks (-1 for none yet)."""
     history: Chain
     chat: Chain
+    audit: Chain = Chain(0, GENESIS)
+    """The record of what left the document (D1271); a head written before it existed has none."""
 
     @classmethod
     def empty(cls) -> Head:
         """The head of a document without blocks."""
-        return cls(-1, Chain(0, GENESIS), Chain(0, GENESIS))
+        return cls(-1, Chain(0, GENESIS), Chain(0, GENESIS), Chain(0, GENESIS))
 
-    def chain(self, domain: Domain) -> Chain:
-        """The chain of ``domain`` (history or chat)."""
-        return self.history if domain is Domain.HISTORY else self.chat
+    def chain(self, stream: str) -> Chain:
+        """The chain of ``stream``: ``"history"``, ``"chat"`` or ``"audit"``."""
+        if stream == AUDIT:
+            return self.audit
+        return self.history if stream == Domain.HISTORY else self.chat
 
 
 def _head_aad(doc_id: str) -> bytes:
@@ -141,6 +157,7 @@ def seal_head(key: bytes, doc_id: str, head: Head) -> bytes:
         "generation": head.generation,
         "history": {"blocks": head.history.blocks, "last": base64.b64encode(head.history.last).decode()},
         "chat": {"blocks": head.chat.blocks, "last": base64.b64encode(head.chat.last).decode()},
+        "audit": {"blocks": head.audit.blocks, "last": base64.b64encode(head.audit.last).decode()},
     }
     return seal(key, json.dumps(data).encode(), _head_aad(doc_id))
 
@@ -159,6 +176,25 @@ def open_head(key: bytes, doc_id: str, stored: bytes) -> Head:
         generation = data["generation"]
         if not isinstance(generation, int) or isinstance(generation, bool) or generation < -1:
             raise ValueError("not a generation")
-        return Head(generation, _chain_of(data["history"]), _chain_of(data["chat"]))
+        audit = _chain_of(data["audit"]) if "audit" in data else Chain(0, GENESIS)
+        return Head(generation, _chain_of(data["history"]), _chain_of(data["chat"]), audit)
     except (DecryptionError, ValueError, KeyError, TypeError, binascii.Error) as error:
         raise BlockError("the head cannot be opened: wrong key or document, or it was changed") from error
+
+
+def _chain_head_aad(doc_id: str, name: str) -> bytes:
+    return b"claudia/chainhead/1" + struct.pack(">H", len(doc_id.encode())) + doc_id.encode() + name.encode()
+
+
+def seal_chain_head(key: bytes, doc_id: str, name: str, chain: Chain) -> bytes:
+    """The head of one chain on its own (a private domain, D1265): how many blocks it has and the hash of the last."""
+    data = {"blocks": chain.blocks, "last": base64.b64encode(chain.last).decode()}
+    return seal(key, json.dumps(data).encode(), _chain_head_aad(doc_id, name))
+
+
+def open_chain_head(key: bytes, doc_id: str, name: str, stored: bytes) -> Chain:
+    """The head of the chain ``name``. :class:`BlockError` if it is not this chain's head under this key."""
+    try:
+        return _chain_of(json.loads(open_sealed(key, stored, _chain_head_aad(doc_id, name))))
+    except (DecryptionError, ValueError, KeyError, TypeError, binascii.Error) as error:
+        raise BlockError("the head of the chain cannot be opened: wrong key or place, or it was changed") from error

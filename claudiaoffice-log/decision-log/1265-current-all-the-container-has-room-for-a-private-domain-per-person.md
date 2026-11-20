@@ -28,3 +28,5 @@ E2.4 and must not be built on a format that is frozen without it. This round def
 - This round tests the mechanism with a stand-in payload. What goes into the domain (the binder's notes) is E16.8.
 
 **Notes.** Whether a viewer has a private domain is for E16.8; the container does not care about the role.
+
+**Built in slice C** (container 0.12.0): `read_private`, `write_private`; see D1283 for how it is stored.

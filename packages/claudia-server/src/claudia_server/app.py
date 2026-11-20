@@ -84,7 +84,7 @@ from .admin_api import AdminContext, admin_router
 from .auth import Account, AuthRefused, Credentials, RecoverableDirectory, UserDirectory
 from .client_address import ClientAddress
 from .fonts import FontService, font_router
-from .formats import CLAUDIA, import_state
+from .formats import CLAUDIA, CLAUDIA_EXPORT, import_state
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError, same_document_message
 from .hyphenation import HyphenationService, hyphenation_router
@@ -433,7 +433,9 @@ class Gateway:
         if module.hub.exists(doc_id):
             raise HubError("bad_request", msg("{id} is here already: give the new document another name", id=doc_id))
         try:
-            state, losses = await module.hub.workers.submit(import_state, upload.fmt, upload.data)
+            state, losses = await module.hub.workers.submit(
+                import_state, upload.fmt, upload.data, state_schema=module.hub.state_schema
+            )
         except Exception as exc:  # noqa: BLE001 - whatever a reader raises, the file is not one it can read
             log.info("cannot import %s: %s", upload.name, exc)
             raise HubError("bad_request", msg("{name} cannot be read", name=upload.name)) from exc
@@ -454,7 +456,7 @@ class Gateway:
         Answers what the welcome says about it."""
         upload, state, losses = imported
         self.uploads.take(upload.token)
-        keep = params.get("keep_original") is not False
+        keep = params.get("keep_original") is not False and upload.fmt != CLAUDIA_EXPORT  # an export is no original
         digest = hashlib.sha256(upload.data).hexdigest()
         kept = keep and await asyncio.to_thread(module.hub.keep_original, doc_id, upload.data)
         hosted.document.execute(Import(upload.name, upload.fmt, state, sha256=digest, kept=kept), author=author)
