@@ -169,6 +169,94 @@ Feature: Tables in a composes text (E9.32)
       And I undo
       Then the first body box is empty
 
+    # B5 (2026-11-20, size 2): nothing took the caret past a table; at the end of the text there was nowhere to write
+    # (D1330, D1331).
+    Scenario: The down arrow in the last row goes to the paragraph after the table
+      Given the caret is in the first box of the last row
+      When I press the down arrow
+      Then the caret is at the start of "After"
+
+    Scenario: The right arrow at the end of the very last box leaves the table too
+      Given the caret is in the last box of the last row
+      When I press the right arrow
+      Then the caret is at the start of "After"
+
+    Scenario: The up arrow in the header row goes to the end of the paragraph before the table
+      Given the caret is in the first box of the header row
+      When I press the up arrow
+      Then the caret is at the end of "Before"
+
+    Scenario: What I typed in the last row is kept when the down arrow leaves the table
+      Given the caret is in the first box of the last row
+      When I type "Pots" and press the down arrow
+      Then the first box of the last row reads exactly "Pots", once
+      And the caret is at the start of "After"
+
+  @core @firefox
+  Rule: A table at the end of the text: I can still go on writing after it (D1331)
+
+    Background:
+      Given my caret is at the end of "After"
+      And I have inserted a table of 2 columns and 2 rows with a header
+
+    Scenario: The down arrow gives me a paragraph to write in
+      Given the caret is in the first box of the last row
+      When I press the down arrow and type "Next"
+      Then the text reads "Before", "After", the table, "Next"
+      And the history shows one entry for the new paragraph
+
+    Scenario: A click below the table does the same
+      When I click in the empty space below the table and type "Next"
+      Then the text reads "Before", "After", the table, "Next"
+
+    Scenario: Ctrl+End goes past the table
+      When I press Esc, then Ctrl+End, and type "Next"
+      Then the text reads "Before", "After", the table, "Next"
+
+    Scenario: Going down, back up and down again makes one paragraph, not two
+      Given the caret is in the first box of the last row
+      When I press the down arrow, the up arrow and the down arrow
+      And I type "Next"
+      Then the text reads "Before", "After", the table, "Next"
+
+    Scenario: Undo takes the new paragraph away and leaves the table where it was
+      Given the caret is in the first box of the last row
+      When I press the down arrow and type "Next"
+      And I undo twice
+      Then the text reads "Before", "After", the table
+      When I redo twice
+      Then the text reads "Before", "After", the table, "Next"
+
+  @extended
+  Rule: The words around a table and the table are one path for the arrow keys (D1330)
+
+    Background:
+      Given I have inserted a table of 2 columns and 2 rows with a header
+      And I press Esc
+
+    Scenario: The down arrow on the last line of the paragraph above goes into the first box
+      Given my caret is at the end of "Before"
+      When I press the down arrow
+      Then the caret is in the first box of the header row
+
+    Scenario: The up arrow at the start of the paragraph below goes into the last row
+      Given my caret is at the start of "After"
+      When I press the up arrow
+      Then the caret is in the first box of the last row
+
+    Scenario: Backspace at the start of the paragraph after the table goes into it and joins nothing
+      Given my caret is at the start of "After"
+      When I press Backspace
+      Then the caret is in the last box of the last row
+      And the text reads "Before", the table, "After"
+
+    Scenario: Two tables after one paragraph: the down arrow goes from the first into the second
+      Given my caret is at the end of "Before"
+      And I have inserted a second table of 2 columns and 2 rows with a header
+      And the caret is in the first box of the last row of the first table
+      When I press the down arrow
+      Then the caret is in the first box of the header row of the second table
+
   @extended @needs-decision
   Rule: Words not committed yet when the page is left (Q8, the table's own part)
 
