@@ -30,7 +30,7 @@ from fastapi import HTTPException, Request
 
 from claudia_container import ContainerError, read_manifest
 
-from .formats import CLAUDIA, FORMATS, file_details, sniff
+from .formats import CLAUDIA, CLAUDIA_EXPORT, FORMATS, export_made, file_details, sniff
 
 MAX_UPLOAD_BYTES = 64 * 1024 * 1024
 DEFAULT_MOST = 16
@@ -63,6 +63,8 @@ class Upload:
     uid: str = ""  # a Claudia file: its random id (D533); held for the check when it is placed, never shown
     description: str = ""  # what the file says about itself: its manifest, or the properties of an office file
     tags: tuple[str, ...] = ()
+    made_by: str = ""  # an export: who made it, as the file says (D1272)
+    made_at: str = ""  # an export: when
 
     def describe(self) -> dict:
         """What the person is told about it: never the bytes."""
@@ -70,7 +72,10 @@ class Upload:
         answer["id" if self.fmt == CLAUDIA else "suggested_id"] = self.doc_id
         answer["description"] = self.description
         answer["tags"] = list(self.tags)
-        if self.fmt != CLAUDIA:
+        if self.fmt == CLAUDIA_EXPORT:
+            answer["kind"] = EXPORT_KIND
+            answer["made_by"], answer["made_at"] = self.made_by, self.made_at
+        elif self.fmt != CLAUDIA:
             answer["kind"] = FORMATS[self.fmt][1]
         return answer
 
@@ -103,6 +108,10 @@ def id_from_name(name: str) -> str:
     plain = unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode()
     made = _ID_CHARS.sub("-", plain).strip("-_")[:64].rstrip("-_")
     return made or "imported"
+
+
+EXPORT_KIND = "Claudia export"
+"""What the import dialog calls an unencrypted export (D1272)."""
 
 
 class UploadDesk:
@@ -150,6 +159,10 @@ class UploadDesk:
         details: tuple[str, tuple[str, ...]] = ("", ())
         if kind.fmt == CLAUDIA:
             app, doc_id, uid, details = _claudia_manifest(data)
+        elif kind.fmt == CLAUDIA_EXPORT:
+            if kind.app is None:
+                raise UploadRefused(415, "this Claudia export is damaged or from a newer version")
+            app, doc_id = kind.app, id_from_name(name.removesuffix(".zip").removesuffix(".claudia-export"))
         else:
             app, doc_id, details = FORMATS[kind.fmt][0], id_from_name(name), file_details(kind.fmt, data)
         upload = Upload(
@@ -157,6 +170,8 @@ class UploadDesk:
         )
         upload.uid = uid
         upload.description, upload.tags = details
+        if kind.fmt == CLAUDIA_EXPORT:
+            upload.made_by, upload.made_at = export_made(data)
         self._held[upload.token] = upload
         return upload
 

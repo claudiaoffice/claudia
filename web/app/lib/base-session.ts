@@ -1,6 +1,7 @@
 // What every app's session has in common: the connection with its reconnecting, who is here, the history, the chat,
 // checkpoints, undo/redo. The replica of the document itself belongs to the app (Session: cells, TextSession: text).
 // All changes go to the server as requests; nothing is believed until the server's events say it happened.
+import type { AuditRow } from './audit'
 import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
@@ -8,6 +9,7 @@ import { outcomesOf, toOutcome, type RenderingDef, type RenderOutcome, type Rend
 import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
+import { roleName } from './people'
 import type { Thing } from './tags'
 import type { FontReport } from './font-report'
 import type { ThingDetails } from './name-and-describe'
@@ -32,6 +34,15 @@ export interface ExportedFile {
   content_type: string
   data: string
   losses?: ExportLoss[]
+}
+
+/** File ▸ Export… ▸ Claudia, unencrypted (D1270): the zip, base64, and the parts it holds. */
+export interface UnprotectedFile {
+  format: 'claudia-unencrypted'
+  filename: string
+  content_type: string
+  data: string
+  parts: string[]
 }
 
 export interface Person {
@@ -147,7 +158,7 @@ export interface BaseState {
   host: string
   /** How the AI treats this person's requests in this document (D262): the person's own choice, kept in this browser. */
   aiMode: AiMode
-  status: 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed'
+  status: 'idle' | 'connecting' | 'open' | 'reconnecting' | 'waiting' | 'closed'
   error: string
   me: { user: string; role: string; color: string }
   doc: string
@@ -158,6 +169,8 @@ export interface BaseState {
   typing: string[]
   entries: Entry[]
   chat: ChatMessage[]
+  /** What has left the document (exports, prints, PDFs), oldest first; empty for a viewer, who is never sent it (D1271). */
+  audit: AuditRow[]
   checkpoints: CheckpointInfo[]
   canUndo: boolean
   canRedo: boolean
@@ -217,6 +230,7 @@ function initialState(): BaseState {
     typing: [],
     entries: [],
     chat: [],
+    audit: [],
     checkpoints: [],
     canUndo: false,
     canRedo: false,
@@ -240,6 +254,8 @@ function initialState(): BaseState {
 
 /** What `download_claudia` returns: the sealed Claudia file as base64, and what it holds (`content`, and for an owner
  * or an editor `history` and `chat`). */
+type UndoState = { can_undo: boolean; can_redo: boolean; undo_label: string; redo_label: string }
+
 export interface SealedFile {
   format: 'claudia'
   filename: string
@@ -292,6 +308,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     try {
       await this.start()
     } catch (error) {
+      if (error instanceof ProtocolError && error.code === 'sealed') {
+        // The server holds no key to this document yet and a viewer cannot bring it up (D101, D1262): wait for the
+        // editor or owner who will, and open by ourselves as soon as one has.
+        this.state.status = 'waiting'
+        this.state.error = closeMessage(4423)
+        this.track(this.reconnect())
+        return
+      }
       this.state.status = 'closed'
       this.state.error = error instanceof ProtocolError ? error.message : closeMessage(0)
       throw error
@@ -391,9 +415,9 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   private async reconnect() {
-    for (let attempt = 0; this.state.status === 'reconnecting'; attempt++) {
+    for (let attempt = 0; this.waitingToConnect(); attempt++) {
       await sleep(this.retryDelays[Math.min(attempt, this.retryDelays.length - 1)] ?? 1000)
-      if (this.state.status !== 'reconnecting') return
+      if (!this.waitingToConnect()) return
       try {
         await this.start()
         return
@@ -405,6 +429,11 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         }
       }
     }
+  }
+
+  /** Is the session trying to get back (after a loss) or to get in (a sealed document)? */
+  private waitingToConnect(): boolean {
+    return this.state.status === 'reconnecting' || this.state.status === 'waiting'
   }
 
   protected track<T>(task: Promise<T>): Promise<T> {
@@ -422,19 +451,27 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     this.state.renamed = {}
     const link = this.need()
     const s = this.state
-    const [entries, chat, checkpoints, history, lines, restorePolicy, renderTypes, renderings] = await Promise.all([
-      link.request<Entry[]>('log', { limit: LOG_LIMIT }),
-      link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }),
-      link.request<CheckpointInfo[]>('checkpoints'),
-      link.request<{ can_undo: boolean; can_redo: boolean; undo_label: string; redo_label: string }>('history'),
-      link.request<LineInfo[]>('lines'),
-      link.request<{ policy: 'consensus' | 'veto' }>('restore_policy'),
+    // A viewer holds the content key only, and the server keeps the history and the chat from her (D1261).
+    const reads = s.me.role !== 'viewer'
+    const [entries, chat, checkpoints, history, lines, restorePolicy, renderTypes, renderings, audit] = await Promise.all([
+      reads ? link.request<Entry[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Entry[]>([]),
+      reads ? link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }) : Promise.resolve<ChatMessage[]>([]),
+      reads ? link.request<CheckpointInfo[]>('checkpoints') : Promise.resolve<CheckpointInfo[]>([]),
+      reads
+        ? link.request<UndoState>('history')
+        : Promise.resolve<UndoState>({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
+      reads ? link.request<LineInfo[]>('lines') : Promise.resolve<LineInfo[]>([]),
+      reads
+        ? link.request<{ policy: 'consensus' | 'veto' }>('restore_policy')
+        : Promise.resolve<{ policy: 'consensus' | 'veto' }>({ policy: 'consensus' }),
       this.optional<{ types: RenderType[] }>('rendering_types'),
       this.optional<RenderingDef[]>('renderings'),
+      reads ? this.optional<AuditRow[]>('audit_log') : Promise.resolve<AuditRow[] | null>(null),
       this.loadApp(),
-    ]).then(([e, c, k, h, l, p, rt, rd]) => [e, c, k, h, l, p, rt, rd] as const)
+    ]).then(([e, c, k, h, l, p, rt, rd, au]) => [e, c, k, h, l, p, rt, rd, au] as const)
     s.entries = entries
     s.chat = chat
+    s.audit = audit ?? []
     s.checkpoints = checkpoints
     s.canUndo = history.can_undo
     s.canRedo = history.can_redo
@@ -447,6 +484,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.renderOutcomes = outcomesOf(renderings ?? [])
     const last = entries.at(-1)
     if (last) s.revision = last.revision
+    else if (!reads) s.revision = (await link.request<{ revision: string | null }>('ping')).revision ?? s.revision
   }
 
   /** What a request answers, or `null` where this server does not know it (an older server, an app without it). */
@@ -467,7 +505,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     switch (name) {
       case 'command':
         s.revision = data.revision
-        if (!s.entries.some((e) => e.revision === data.revision)) {
+        // A viewer is told the revision alone (D1261): there is no step to list.
+        if (s.me.role !== 'viewer' && !s.entries.some((e) => e.revision === data.revision)) {
           if (s.replay) s.replay.newer++
           s.entries.push(data)
           if (s.entries.length > LOG_LIMIT) s.entries.shift()
@@ -553,6 +592,22 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     } else if (message.kind === 'typing') {
       const others = s.typing.filter((u) => u !== who)
       s.typing = message.data.on ? [...others, who] : others
+    } else if (message.kind === 'audit_recorded') {
+      s.audit = [...s.audit, message.data as AuditRow]
+    } else if (message.kind === 'role_changed') {
+      if (message.data.user === s.me.user) {
+        this.notice(t('Your role in this document is now “{role}”.', { role: roleName(message.data.role) }))
+        this.track(this.reconnectNow())  // the server holds fewer keys for us now, or more: start again with what we may see
+      } else {
+        this.notice(t('{user} may now “{role}”.', { user: message.data.user, role: roleName(message.data.role) }))
+      }
+    } else if (message.kind === 'person_removed') {
+      if (message.data.user === s.me.user) {
+        this.notice(t('You are no longer a person of this document.'), 'warning')
+        this.close()
+      } else {
+        this.notice(t('{user} was removed from this document.', { user: message.data.user }))
+      }
     } else if (message.kind === 'person_left') {
       this.notice(t('{user} left this document.', { user: message.data.user }))
     } else if (message.kind === 'owner_changed') {
@@ -1119,6 +1174,17 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return (await this.attempt('add_user', { name, password, role })) !== false
   }
 
+  /** Owners: give `name` the role `editor` or `viewer`. Lowering an editor renews the document's history and chat keys
+   *  (`renewed`). `false` after telling the person why not. */
+  async changeRole(name: string, role: 'editor' | 'viewer'): Promise<{ user: string; role: string; renewed: boolean } | false> {
+    return await this.attempt('change_role', { name, role })
+  }
+
+  /** Owners: take `name` out of the document and renew the keys she held. `false` after telling the person why not. */
+  async removePerson(name: string): Promise<boolean> {
+    return (await this.attempt('remove_person', { name })) !== false
+  }
+
   /** Reopen the connection with the same name and password, so a role the server just changed takes effect. */
   async reconnectNow(): Promise<void> {
     this.close()
@@ -1174,7 +1240,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** The document's current content as Claudia's own format (not Word, Excel or PowerPoint, and not the history
    * or the chat): `{format, app, exported_at, state_schema, state}`, ready to be saved to a file. */
   async exportContent(): Promise<Record<string, unknown> | false> {
-    return await this.attempt('export_content')
+    return await this.recorded(await this.attempt('export_content'))
   }
 
   /** The document as Claudia's own sealed file, for File ▸ Download (D110): the whole file for an owner, the file
@@ -1194,7 +1260,33 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const params: Record<string, unknown> = { format }
     if (options.trackedChanges) params.tracked_changes = true
     if (options.descriptionComments) params.description_comments = true
-    return await this.attempt('export_office', params)
+    return await this.recorded(await this.attempt('export_office', params))
+  }
+
+  /** File ▸ Export… ▸ Claudia, unencrypted (D1270): one zip anybody can read, with the content and, if an owner asks
+   * (`includeHistory`), the history with its hidden lines and the chat. No keys, no passwords, no people. The server
+   * records the export for you (D1271). `false` after saying why not (an editor or a viewer asking for the history). */
+  async exportClaudia(includeHistory = false): Promise<UnprotectedFile | false> {
+    return await this.recorded(await this.attempt('export_claudia', includeHistory ? { include_history: true } : {}))
+  }
+
+  /** Tell the server that this window has just printed or saved a PDF of the document (D1271), so that it is
+   * recorded for you: `kind` is `print` or `pdf`. Called when the file is saved or the page sent to the printer, not
+   * when the preview opens. It is a report of what Claudia's own screens did, not a guarantee. `false` after saying
+   * why not (a server that does not record, or more reports than it takes in a minute). */
+  async reportOutput(kind: 'print' | 'pdf', pages: number): Promise<boolean> {
+    return (await this.recorded(await this.attempt('report_output', { kind, format: kind, pages }))) !== false
+  }
+
+  /** `answer` of something that leaves the document, passed on: the server has recorded it, and the other windows are
+   * told (D1271) but this one, whose own request it was, is not, so it reads the record again. Owners and editors only:
+   * a viewer is never sent the record (D1261). */
+  private async recorded<T>(answer: T | false): Promise<T | false> {
+    if (answer !== false && this.state.me.role !== 'viewer') {
+      const audit = await this.optional<AuditRow[]>('audit_log')
+      if (audit) this.state.audit = audit
+    }
+    return answer
   }
 
   // ------------------------------------------------------------------------------ help (E13.1, E13.3, E13.5)

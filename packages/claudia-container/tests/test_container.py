@@ -17,6 +17,7 @@ from claudia_container.container import (
     MAX_TAGS,
     ContainerError,
     NotAClaudiaDocument,
+    OutdatedFormat,
     Person,
     ReaderLimitExceeded,
     UnsupportedFormat,
@@ -68,7 +69,9 @@ def test_the_document_is_one_zip_that_names_its_format_first(path, owner):
         assert first.filename == "format"
         assert first.compress_type == zipfile.ZIP_STORED
         assert z.read("format") == FORMAT_TEXT.encode()
-        assert set(z.namelist()) == {"format", "manifest.json", "slots.json", "people.bin"}
+        names = set(z.namelist())
+        assert names >= {"format", "manifest.json", "slots.json", "people.bin"}
+        assert {n.split("/")[0] for n in names} == {"format", "manifest.json", "slots.json", "people.bin", "private"}
 
 
 def test_the_manifest_is_readable_without_a_password(path, owner):
@@ -404,10 +407,18 @@ def test_a_cut_off_file_is_refused(path, owner):
 
 
 def test_a_document_of_a_newer_format_says_so(path, owner):
-    entries = [("format", b"claudia-document 2")] + [e for e in good_entries(path) if e[0] != "format"]
+    entries = [("format", b"claudia-document 3")] + [e for e in good_entries(path) if e[0] != "format"]
     path.write_bytes(zip_of(entries, zipfile.ZIP_STORED))
     with pytest.raises(UnsupportedFormat, match="newer"):
         read_manifest(path)
+
+
+def test_a_document_of_the_first_format_is_refused_with_a_sentence_of_its_own(path, owner):
+    entries = [("format", b"claudia-document 1")] + [e for e in good_entries(path) if e[0] != "format"]
+    path.write_bytes(zip_of(entries, zipfile.ZIP_STORED))
+    with pytest.raises(OutdatedFormat, match="older version"):
+        read_manifest(path)
+    assert issubclass(OutdatedFormat, UnsupportedFormat)
 
 
 @pytest.mark.parametrize(

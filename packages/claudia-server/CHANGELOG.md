@@ -50,6 +50,80 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   when it is made, with the first free "Paragraph N" in the language of the connection (D1310). `name_unnamed` names the
   paragraphs of a text from before that. **`rename_thing`** is refused for a heading, which is called by its words
   (D1311). `paragraphs` leaves out `name` for a heading and for a name a paragraph got by being made.
+- `formats.import_state(fmt, data, locale=DEFAULT_LOCALE, *, state_schema=None)`: the locale of E1.13 stays the third
+  positional parameter, the `state_schema` of D1272 (0.40.0) is keyword-only since E1 and E2 were merged.
+- E1's new methods and the `thing_described` event read the content under D1261 (`tests/method_reads.json`);
+  `what_if_start` with `at` is `forbidden` to a viewer, since an earlier step is the history.
+## [0.41.0] - 2026-11-19
+
+### Added
+- Roles can change and people can be removed (D1263, E2.3). Methods `change_role {name, role (editor|viewer)}` and
+  `remove_person {name}`, owners only; an owner is refused with `command_error` (ownership is handed over). Both answer
+  after the keys are renewed. `PeopleDirectory` (`set_role`, `remove_person`) is implemented by `SealedDocuments`.
+- Ephemeral events `role_changed {user, role}` and `person_removed {user}`. The hub updates the person's open
+  connections at once: the new role applies before the event is delivered; a removed person's connections get the
+  event, then no more events, and their requests are answered `forbidden`.
+- A renewal runs on the event loop under the document's lock, not off it as D1263 sketched: appends would race with the
+  rewrite of the file. For a normal document it takes about as long as writing the file once.
+
+### Changed
+- Reads of `change_role` and `remove_person` are `content` in `method_reads.json`.
+
+## [0.40.0] - 2026-11-19
+
+### Added
+- Everything that leaves a document is recorded (D1271, E2.9). `Method.leaves="export"` on `export_content`,
+  `export_office` (all three apps) and the new `export_claudia`: after the method has answered, `MethodTable.dispatch`
+  records who (the account), when, the format and the parts through `Context.record_leaving` and
+  `AuditDirectory.record_audit` (`SealedDocuments`: with the keys the open document holds, so a viewer's export is
+  recorded). New methods `report_output {kind: print|pdf, format, pages}` (the window reports a print or a PDF; the name is
+  the connection's; 20 a minute per person, error code `too_many`; `MAX_REPORTED_PAGES`) and `audit_log` (reads history:
+  owners and editors). The ephemeral event `audit_recorded` is classified as history, so a viewer is never sent it; the
+  sender is not sent it either. `tests/method_reads.json` lists the new methods.
+- `export_claudia {include_history}` gives Claudia's unencrypted zip (D1270): `{format: "claudia-unencrypted", filename,
+  content_type, data, parts}`; the history and chat only for an owner (`forbidden` otherwise).
+- An unencrypted export is imported as a new document (D1272): `formats.sniff` knows `claudia-export `,
+  `import_state(fmt, data, state_schema)` returns its state (refused if another `state_schema`), `Hub.state_schema` and
+  the provider's `state_schema`, `UploadDesk` takes `.zip` exports (`format: "claudia-export"`, `kind: "Claudia export"`,
+  `made_by`, `made_at`) and keeps no original for them. The document starts with one `core.Import` step; the importer is
+  its only owner. The history and chat parts of an export are not read back yet.
+- `formats.export_made(data)`: who made an export and when, from `export.json` alone.
+- `AuditDirectory` (a runtime-checkable protocol), implemented by `SealedDocuments` (`record_audit`, `audit_rows`); a server that keeps plain files or memory records nothing.
+
+### Changed
+- `PROTOCOL_VERSION` stays 2: the new methods and the new upload fields are additions.
+
+## [0.39.0] - 2026-11-19
+
+### Added
+- A viewer is shown the content and nothing of the history or the chat (D1261, SEC-17). `claudia_server.audience`
+  (`EVENT_RULES`, `EPHEMERAL_RULES`, `shape_for`, `may_read`): every pushed event is classified once as content, history
+  or chat, and each connection is sent what its role's keys open; owners and editors get everything, a viewer gets
+  content events unchanged, a `command` event reduced to `{type, revision}`, a `branch` event to `{type}`, and nothing
+  from history, checkpoints, chat, redactions or restores. What nobody classified goes to owners and editors only.
+  `welcome` for a viewer carries no checkpoints, lines, proposal or returned text.
+- `MethodTable.method(..., reads="content"|"history"|"chat")`, `Method.reads` and `describe()["reads"]`: a method says
+  which part of the document it shows, and a viewer who calls one that reads the history or the chat is refused with
+  `forbidden`. 12 methods read the history, 1 the chat (`chat_log`); `tests/method_reads.json` pins the list.
+- Failed logins wait (D1266, SEC-11): `LoginThrottle` (`login_throttle.py`). Three free tries, then 1, 2, 4, 8 … seconds,
+  at most 30 per address and 10 per document and name; forgotten after 15 quiet minutes; in memory, so a restart forgets
+  it (D1276). A login inside a wait is refused before any hashing with the error code `too_many_tries`, close code 4429
+  and `retry_after` (whole seconds); the administrator's sign-in answers 429 with `Retry-After` and `retry_after`.
+  `create_app(login_throttle=...)`, `Gateway.login_throttle`.
+- Requests that confirm a password no longer hash on the event loop (SEC-21): `set_details`, `download_claudia`,
+  `change_password`, `add_user`, `leave`, `delete_document`, `propose_owner` and `accept_owner` say so with
+  `Method.hashes`, and the gateway hashes in a worker thread behind its hashing cap before handling them
+  (`Gateway.prepare`, `Connection.hashing_for`, `MethodTable.hashes_of`, `WarmableDirectory.warm`,
+  `SealedDocuments.warm`).
+- The cost of password hashing for new documents is measured by the server at start, in the background, to take about
+  0.75 s (D1267): `KdfPolicy` (`kdf_policy.py`), `SecuritySettings`, `PUT /api/admin/settings/security
+  {kdf_target_seconds}` (0.1 to 30), and `kdf` in `GET /api/admin/settings`. `SealedDocuments(kdf=...)` takes a function
+  as well as a value. Documents made before keep their cost.
+
+### Changed
+- A viewer's `ping` is how a window learns the revision; the history, the log and the checkpoints are not asked for.
+- The `sealed` refusal of a viewer who is first at a sealed document now says what will happen (D1262).
+
 ## [0.38.0] - 2026-11-19
 
 ### Added

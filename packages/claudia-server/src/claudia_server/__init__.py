@@ -12,7 +12,7 @@ from .admin_sessions import AdminSession, AdminSessions
 from .app import Gateway, create_app
 from .apps import methods_for, model_assistant_for, stand_in_assistant_for
 from .assistant import Assistant, AsyncEngine, Call, Engine, Say, Step, Task
-from .auth import AI_USER, Account, AuthRefused, Credentials, ScryptDirectory, UserDirectory
+from .auth import AI_USER, Account, AuthRefused, Credentials, ScryptDirectory, UserDirectory, WarmableDirectory
 from .certs import Certificate, CertificateError, ensure_certificate
 from .composes import composes_methods
 from .computes import computes_methods
@@ -23,6 +23,8 @@ from .heavy_dispatch import DEFAULT_TIMEOUT, HeavyDispatcher, Submittable
 from .help import HelpContentError, HelpLibrary, Topic, default_library, parse_topic
 from .hub import Connection, DocumentProvider, HostedDocument, Hub, HubError, MemoryProvider, Room, StoredInfo
 from .idle import IdleWatch
+from .kdf_policy import KdfPolicy
+from .login_throttle import LoginThrottle
 from .model_engine import ModelEngine
 from .protocol import (
     ERROR_CODES,
@@ -40,6 +42,7 @@ from .sealed import SealedDocuments
 from .server_settings import (
     AiSettings,
     Changed,
+    SecuritySettings,
     ServerSettings,
     TypesetSettings,
     load_admins,
@@ -92,6 +95,8 @@ __all__ = [
     "Hub",
     "HubError",
     "IdleWatch",
+    "KdfPolicy",
+    "LoginThrottle",
     "Limits",
     "MemoryProvider",
     "Method",
@@ -108,6 +113,7 @@ __all__ = [
     "Say",
     "ScriptedEngine",
     "SealedDocuments",
+    "SecuritySettings",
     "ServerSettings",
     "Step",
     "ScryptDirectory",
@@ -119,6 +125,7 @@ __all__ = [
     "Topic",
     "TypesetSettings",
     "UserDirectory",
+    "WarmableDirectory",
     "WorkerPool",
     "__version__",
     "admin_router",

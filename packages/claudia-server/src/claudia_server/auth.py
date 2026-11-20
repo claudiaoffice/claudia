@@ -27,9 +27,12 @@ import re
 import unicodedata
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .i18n import msg
+
+if TYPE_CHECKING:
+    from claudia_container import AuditRecord
 
 ROLES = ("owner", "editor", "viewer")
 WRITE_ROLES = ("owner", "editor")
@@ -151,6 +154,21 @@ class RosterDirectory(Protocol):
 
 
 @runtime_checkable
+class PeopleDirectory(Protocol):
+    """A directory where an owner can change a person's role and remove a person, and the keys a person loses are
+    renewed (D1263)."""
+
+    def set_role(self, doc_id: str, name: str, role: str) -> Account:
+        """Give ``name`` this role (``editor`` or ``viewer``). The account as it is now. ``KeyError`` if there is nobody
+        of that name; ``ValueError`` with a sentence for an owner (ownership is handed over) or a role that is not
+        one."""
+
+    def remove_person(self, doc_id: str, name: str) -> Account:
+        """Remove ``name`` and renew the keys she held; the account as it was. ``KeyError`` if there is nobody of that
+        name; ``ValueError`` with a sentence for an owner."""
+
+
+@runtime_checkable
 class LeavableDirectory(Protocol):
     """A directory where a person can remove themself, with nothing more than their own password."""
 
@@ -218,6 +236,28 @@ class SealedCopyDirectory(Protocol):
         """The document as a still sealed file for ``name`` to keep: the whole file for an owner, the file with only
         their own key slot and the parts their keys open for anybody else. ``None`` if the password is wrong (the same
         refusal for a wrong name)."""
+
+
+@runtime_checkable
+class AuditDirectory(Protocol):
+    """A directory whose documents keep the record of what left them (D1271): exports, prints and PDFs."""
+
+    def record_audit(self, doc_id: str, record: AuditRecord) -> None:
+        """Add ``record`` to the document's record. The directory holds the keys of the open document, so this works
+        for a viewer's export too."""
+
+    def audit_rows(self, doc_id: str) -> list[AuditRecord]:
+        """Everything recorded for the document, oldest first."""
+
+
+@runtime_checkable
+class WarmableDirectory(Protocol):
+    """A directory whose password hashing can be done ahead of the call that needs it (SEC-21)."""
+
+    def warm(self, doc_id: str, name: str, password: str) -> None:
+        """Do the slow hashing of ``name``'s ``password`` for this document now, so that the next call with them (any of
+        the directory's methods that confirm a password) finds it done. It never raises for a wrong password or a
+        missing document, and changes nothing."""
 
 
 @dataclass(frozen=True)

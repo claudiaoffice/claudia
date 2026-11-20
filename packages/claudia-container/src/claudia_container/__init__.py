@@ -9,6 +9,9 @@ the project document ``notes/e2-container-and-encryption.md`` (decisions D100 to
 """
 
 from ._version import __version__
+from .audit import KINDS as AUDIT_KINDS
+from .audit import PARTS as AUDIT_PARTS
+from .audit import AuditRecord
 from .container import (
     FORMAT_TEXT,
     MAX_DESCRIPTION,
@@ -17,6 +20,7 @@ from .container import (
     ContainerError,
     Manifest,
     NotAClaudiaDocument,
+    OutdatedFormat,
     Person,
     ReaderLimitExceeded,
     State,
@@ -34,11 +38,14 @@ from .container import (
     leave_document,
     new_uid,
     pack_journal,
+    read_audit,
     read_manifest,
     read_original,
     read_people,
+    read_private,
     read_snapshot,
     read_state,
+    record_audit,
     recover_access,
     remove_user,
     rewrite_journal,
@@ -48,7 +55,9 @@ from .container import (
     transfer_owner,
     unlock,
     unlock_with_recovery,
+    warm,
     write_original,
+    write_private,
 )
 from .crypto import (
     DecryptionError,
@@ -59,31 +68,56 @@ from .crypto import (
     open_sealed,
     random_key,
     seal,
+    warm_login_material,
 )
+from .export_file import ExportFile, ExportRefused, is_export, read_export, write_export
+from .inbox import KeyPair, new_key_pair, open_inbox, seal_to
 from .journal import JournalError, JournalRecord, JournalWriter, journal_generation, read_journal
+from .kdf import calibrate
 from .passwords import MIN_PASSWORD_LENGTH, WeakPassword, password_problems, require_strong_password
+from .renewal import RenewalInterrupted, Renewed, change_role, remove_person
 from .slots import (
     ROLE_DOMAINS,
     Domain,
     InvalidRecoveryKey,
     KeySlot,
+    PrivateDomain,
     Role,
     Unlocked,
     format_recovery_key,
     make_slot,
     new_domain_keys,
+    new_private_domain,
     new_recovery_key,
     open_slot,
     parse_recovery_key,
 )
 
 __all__ = [
+    "KeyPair",
+    "OutdatedFormat",
+    "PrivateDomain",
+    "RenewalInterrupted",
+    "Renewed",
+    "change_role",
+    "new_key_pair",
+    "new_private_domain",
+    "open_inbox",
+    "read_private",
+    "remove_person",
+    "seal_to",
+    "write_private",
     "FORMAT_TEXT",
     "MAX_DESCRIPTION",
     "MAX_TAG",
     "MAX_TAGS",
     "MIN_PASSWORD_LENGTH",
     "ROLE_DOMAINS",
+    "AUDIT_KINDS",
+    "AUDIT_PARTS",
+    "AuditRecord",
+    "ExportFile",
+    "ExportRefused",
     "ContainerError",
     "DecryptionError",
     "Domain",
@@ -111,9 +145,11 @@ __all__ = [
     "clean_details",
     "create_document",
     "derive_login_material",
+    "warm_login_material",
     "derive_recovery_material",
     "format_recovery_key",
     "has_recovery_key",
+    "is_export",
     "is_uid",
     "journal_generation",
     "journal_path",
@@ -129,12 +165,15 @@ __all__ = [
     "parse_recovery_key",
     "password_problems",
     "random_key",
+    "read_audit",
+    "read_export",
     "read_journal",
     "read_manifest",
     "read_people",
     "read_original",
     "read_snapshot",
     "read_state",
+    "record_audit",
     "recover_access",
     "remove_user",
     "rewrite_journal",
@@ -144,7 +183,10 @@ __all__ = [
     "sealed_copy",
     "set_recovery_key",
     "transfer_owner",
+    "calibrate",
     "unlock",
+    "warm",
     "unlock_with_recovery",
+    "write_export",
     "write_original",
 ]

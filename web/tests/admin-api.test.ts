@@ -65,6 +65,12 @@ describe('createAdminApi', () => {
     )
   })
 
+  it('carries the seconds to wait of a refused sign-in (D1266)', async () => {
+    const fetchImpl = fakeFetch(() => ({ status: 429, body: { detail: 'too many tries', retry_after: 7 } }))
+    const api = createAdminApi(fetchImpl)
+    await expect(api.login('tobi', 'nope')).rejects.toMatchObject({ status: 429, retryAfter: 7 })
+  })
+
   it('falls back to a generic message when the error body has no usable detail', async () => {
     const fetchImpl = fakeFetch(() => ({ status: 500, body: null }))
     const api = createAdminApi(fetchImpl)

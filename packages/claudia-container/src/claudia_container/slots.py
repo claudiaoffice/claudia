@@ -7,13 +7,17 @@ user's role may hold, encrypted with a key derived from that user's name and pas
 * owner and editor hold all three keys; a viewer holds the content key only (D101);
 * a slot is bound to its document and to its own locator, so it cannot be moved to another document or swapped with
   another slot to change somebody's role;
-* a wrong name and a wrong password are the same refusal (``None``), as D50 demands.
+* a wrong name and a wrong password are the same refusal (``None``), as D50 demands;
+* a slot also holds the **private key** of the person's key pair, with which she opens her inbox (D1274), and the key
+  of her **private domain** (D1265), which no other slot and no role holds.
 """
 
 import base64
 import binascii
 import hmac
 import json
+import os
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -87,12 +91,23 @@ class KeySlot:
 
 
 @dataclass(frozen=True)
+class PrivateDomain:
+    """A person's private domain (D1265): a random id that names it in the file and the one key that seals it."""
+
+    id: str
+    key: bytes = field(repr=False)  # a secret: never in a log line or a traceback
+
+
+@dataclass(frozen=True)
 class Unlocked:
-    """What a successful login yields: who it is, the role, and the domain keys that role holds."""
+    """What a successful login yields: who it is, the role, and the domain keys that role holds, and (for a slot made
+    since the inbox exists) the private key of the person's key pair and her private domain."""
 
     name: str
     role: Role
     keys: dict[Domain, bytes] = field(repr=False)  # secrets: never in a log line or a traceback
+    private_key: bytes | None = field(default=None, repr=False)
+    private: PrivateDomain | None = None
 
 
 def new_domain_keys() -> dict[Domain, bytes]:
@@ -105,8 +120,18 @@ def _slot_aad(doc_id: str, locator: bytes) -> bytes:
     return b"claudia/slot/1" + len(document).to_bytes(4, "big") + document + locator
 
 
-def make_slot(material: LoginMaterial, doc_id: str, name: str, role: Role, keys: Mapping[Domain, bytes]) -> KeySlot:
-    """Make the slot for ``name`` with ``role``. Only the domain keys of that role are put into it."""
+def make_slot(
+    material: LoginMaterial,
+    doc_id: str,
+    name: str,
+    role: Role,
+    keys: Mapping[Domain, bytes],
+    *,
+    private_key: bytes | None = None,
+    private: PrivateDomain | None = None,
+) -> KeySlot:
+    """Make the slot for ``name`` with ``role``. Only the domain keys of that role are put into it, and the person's
+    own private key and private domain if she has them."""
     allowed = ROLE_DOMAINS[role]
     for domain in sorted(allowed):
         if domain not in keys:
@@ -118,6 +143,10 @@ def make_slot(material: LoginMaterial, doc_id: str, name: str, role: Role, keys:
         "role": role.value,
         "keys": {domain.value: base64.b64encode(keys[domain]).decode() for domain in sorted(allowed)},
     }
+    if private_key is not None:
+        payload["private_key"] = base64.b64encode(private_key).decode()
+    if private is not None:
+        payload["private"] = {"id": private.id, "key": base64.b64encode(private.key).decode()}
     sealed = seal(material.key, json.dumps(payload).encode(), _slot_aad(doc_id, material.locator))
     return KeySlot(material.locator, sealed)
 
@@ -139,14 +168,34 @@ def open_slot(slots: Sequence[KeySlot], material: LoginMaterial, doc_id: str) ->
     except DecryptionError:
         return None
     try:
+        private_key = payload.get("private_key")
+        private = payload.get("private")
         return Unlocked(
             name=payload["name"],
             role=Role(payload["role"]),
             keys={Domain(domain): base64.b64decode(key, validate=True) for domain, key in payload["keys"].items()},
+            private_key=None if private_key is None else base64.b64decode(private_key, validate=True),
+            private=None
+            if private is None
+            else PrivateDomain(_private_id(private["id"]), base64.b64decode(private["key"], validate=True)),
         )
     except (KeyError, TypeError, ValueError, AttributeError) as error:
         # Authentic but malformed: not a wrong password. Whoever wrote it knew the key, so this is a bug, not an attack.
         raise ValueError(f"the key slot is authentic but malformed: {error}") from error
+
+
+_PRIVATE_ID = re.compile(r"[0-9a-f]{32}")
+
+
+def new_private_domain() -> PrivateDomain:
+    """A private domain with a random id (it is not derived from a name, D102) and a random key."""
+    return PrivateDomain(os.urandom(16).hex(), random_key())
+
+
+def _private_id(value: object) -> str:
+    if not isinstance(value, str) or not _PRIVATE_ID.fullmatch(value):
+        raise ValueError("a private domain id is 32 lower-case hex digits")
+    return value
 
 
 # --- the recovery key (D105) -------------------------------------------------------------------------------------

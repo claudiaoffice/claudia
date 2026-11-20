@@ -109,7 +109,7 @@ class PastDocument:
 def add_replay_methods(table: MethodTable) -> None:
     """Add ``as_of`` and ``as_planned`` to an app's method table, answering from that table."""
 
-    @table.method("as_of", "revision:revision method:str params:dict={}")
+    @table.method("as_of", "revision:revision method:str params:dict={}", reads="history")
     def as_of(ctx: Context, *, revision: Revision, method: str, params: dict) -> Any:
         """Answer one read request for the document as it was after the step `revision` (D551), so that the view an app
         already has can show the past: `method` is one of the requests a view reads with (`slides`, `slide`, `cells`,
@@ -125,7 +125,7 @@ def add_replay_methods(table: MethodTable) -> None:
         past = replace(ctx, document=PastDocument(ctx.document, revision, model))  # type: ignore[arg-type]
         return table.dispatch(past, method, params)
 
-    @table.method("as_planned", "plan:str method:str params:dict={}")
+    @table.method("as_planned", "plan:str method:str params:dict={}", reads="history")
     def as_planned(ctx: Context, *, plan: str, method: str, params: dict) -> Any:
         """Answer one read request for the document as a redaction would leave it (D721): `plan` is the token
         `redaction_plan` gave, `method` and `params` as for `as_of`. What the preview of a redaction is drawn with.
@@ -149,7 +149,7 @@ MAX_CHANGES = 500
 def add_changes_since_method(table: MethodTable) -> None:
     """Add ``changes_since`` to an app's method table."""
 
-    @table.method("changes_since", "revision:revision")
+    @table.method("changes_since", "revision:revision", reads="history")
     def changes_since(ctx: Context, *, revision: Revision) -> dict:
         """Where the document has changed after the step `revision` (D553): `{regions, truncated}`, each place once, in
         the order it was first changed, as the same `{kind: cells|text|objects ...}` regions presence uses. What the
@@ -165,7 +165,7 @@ def add_changes_since_method(table: MethodTable) -> None:
 def add_thing_history_method(table: MethodTable) -> None:
     """Add ``thing_last_seen`` to an app's method table."""
 
-    @table.method("thing_last_seen", "id:str")
+    @table.method("thing_last_seen", "id:str", reads="history")
     def thing_last_seen(ctx: Context, *, id: str) -> dict:  # noqa: A002 - the wire name
         """Where a thing (an object, slide, sheet or chart tab, by id) is in the history of the line the document is on
         (D551): `{present, revision}`. `present` is whether it is there now; `revision` is the last step after which it

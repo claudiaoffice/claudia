@@ -9,6 +9,7 @@ import { rowKey } from '~/lib/base-session'
 import { keyStep, WheelStepper, wheelDelta, type Filter } from '~/lib/replay'
 import { tintsOf } from '~/lib/replay-tint'
 import { ChatPick, POINTER_EVENTS, type PointerKind } from '~/lib/chat-pick'
+import { auditSentence, type AuditRow } from '~/lib/audit'
 import { hashAt, insertTag, matches, splitTags, withCurrentNames, withTag, type Thing, type ThingKind } from '~/lib/tags'
 import {
   REDACTION_KIND,
@@ -76,11 +77,17 @@ const rows = computed(() => {
   const out: (
     | { kind: 'entry'; entry: (typeof state.entries)[number] }
     | { kind: 'mark'; label: string; author: string | null; number: number }
+    | { kind: 'left'; row: AuditRow }
   )[] = []
+  // What left the document has no revision (D1271): the time alone says where among the changes its line goes.
+  const left = [...state.audit].sort((a, b) => Date.parse(a.when) - Date.parse(b.when))
+  let next = 0
   for (const entry of state.entries) {
+    while (next < left.length && Date.parse(left[next]!.when) < Date.parse(entry.time)) out.push({ kind: 'left', row: left[next++]! })
     out.push({ kind: 'entry', entry })
     for (const c of marks.get(entry.revision) ?? []) out.push({ kind: 'mark', label: c.label || `checkpoint ${c.number}`, author: c.author, number: c.number })
   }
+  while (next < left.length) out.push({ kind: 'left', row: left[next++]! })
   return out
 })
 
@@ -387,6 +394,7 @@ const others = computed(() => state.typing.filter((u) => u !== state.me.user))
 
 // ------------------------------------------------------------------------------ lines, and restoring with consent (E3.7, E3.8)
 const canWrite = computed(() => state.me.role === 'owner' || state.me.role === 'editor')
+const viewer = computed(() => state.me.role === 'viewer')  // holds the content key only: no history, no chat (D1261)
 const isOwner = computed(() => state.me.role === 'owner')
 const hiddenLines = computed(() => state.lines.filter((l) => !l.active))
 const myProposal = computed(() => state.proposal)
@@ -494,6 +502,8 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
     </div>
 
     <div v-show="tab === 'history'" class="historyChat" :aria-label="t('history and chat')" @wheel="onWheel">
+    <p v-if="viewer" class="viewerNote" data-testid="viewer-note">{{ t('History and chat are for the document\'s editors.') }}</p>
+    <template v-else>
     <div v-if="myProposal" class="proposal" role="alert">
       <p class="ask">
         <TransText :text="t('{who} suggests going to {line}.', { line: myProposal.label })"><template #who><b>{{ myProposal.by }}</b></template></TransText>
@@ -564,6 +574,11 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
               </span>
               <time>{{ clock(row.entry.time) }}</time>
             </component>
+          </li>
+          <li v-else-if="row.kind === 'left'" class="left" data-testid="audit-row">
+            <span class="who">{{ row.row.who }}</span>
+            <span class="what">{{ auditSentence(row.row) }}</span>
+            <time>{{ clock(row.row.when) }}</time>
           </li>
           <li v-else class="mark">
             <span>{{ t('◆ saved: {label}', { label: row.label }) }}<template v-if="row.author"> · {{ row.author }}</template></span>
@@ -680,6 +695,7 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
       <p v-if="chatFocused" id="pick-hint" class="pick-hint">{{ t('Click something in the document to write a tag for it.') }}</p>
       <p v-else id="pick-hint" class="sr-only">{{ t('Click something in the document to write a tag for it.') }}</p>
     </section>
+    </template>
     </div>
 
     <HelpPanel v-show="tab === 'help'" ref="helpPanel" class="helpTab" :session="session" />
@@ -760,6 +776,12 @@ ol {
   overflow: auto;
   flex: 1;
   min-height: 0;
+}
+.viewerNote {
+  margin: 0;
+  padding: 14px 16px;
+  color: rgb(230 224 245 / 80%);
+  font: 400 13px/1.45 var(--font-ui);
 }
 .empty {
   color: rgb(230 224 245 / 55%);
@@ -900,6 +922,24 @@ button.entryRow:focus-visible,
 time {
   color: rgb(230 224 245 / 62%); /* 45% was 3.7:1 on the panel; 62% is 6:1 (BITV 1.4.3) */
   font-size: 11px;
+}
+/* what left the document (D1271): one muted line, not a change, so it has no dot and cannot be undone or redacted */
+.left {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 2px 0;
+  padding-left: 14px;
+  color: rgb(230 224 245 / 62%);
+  font-size: 11.5px;
+  font-style: italic;
+}
+.left .who {
+  font-style: normal;
+}
+.left time {
+  margin-left: auto;
+  font-style: normal;
 }
 .mark {
   display: flex;

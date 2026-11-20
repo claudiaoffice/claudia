@@ -22,6 +22,25 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
   the place, each with its app's icon and name, and an app filter.
 * On the right, open a document with a name and password; **Create document** asks for Table, Text or Slides first on
   a server of several apps.
+* **A wait after wrong passwords** (D1266, `lib/login-wait.ts`): the sentence "Too many tries. Try again in N seconds."
+  counts down, and Open (also "Get back in" and the administrator's sign-in) cannot be pressed until it is over; then
+  "You can try again now." For a screen reader the sentence is said once when the wait starts and once when it is over
+  (`role="status"`); the running seconds are `aria-hidden`.
+
+## Viewers and sealed documents (D1261, D1262)
+
+A viewer's window asks only for the content: `BaseSession.reload` skips the log, chat, checkpoints, history, lines and
+restore policy, and learns the revision with `ping`. The side panel shows one sentence instead of History and Chat
+("History and chat are for the document's editors.") and no history list. A viewer who is first at a document that is
+sealed (nobody who holds its keys has opened it since the server started) gets status `waiting`: the window says an
+editor or owner has to open it first, keeps trying every few seconds and opens it by itself (`DocumentFrame.vue`,
+`data-testid=waiting-for-an-editor`; Close is always there).
+
+## Server settings ▸ Security (D1267)
+
+`AdminSecurity.vue`: the time one password check should take for new documents, in seconds (0.1 to 30, `lib/security-settings.ts`),
+and what the server found for its machine ("New documents use 256 MiB and 4 passes."; "Measuring this machine…" until
+it has). Apply saves and measures again. The page says that a document keeps the cost it was made with.
 * A document opened from File ▸ Open… replaces the one in the window (`lib/switch-session.ts`).
 * **In a desktop window** (D444) the shell says which app the window is (`welcome.app`): the page lists that app's
   documents only (place, Mine, collections), has no app filter and no choice of kind, offers only that app's formats
@@ -62,7 +81,7 @@ The page a server greets with (`OpenDialog.vue`) and File ▸ Open… (Ctrl+O, t
   document (D262). It is kept in the browser (`lib/ai-mode.ts`, one key per server and document), is *suggest* until
   you choose, and goes with every chat message as `ai_mode`; a colleague can choose differently.
 * Presence: other people's cursors and locks are outlined with their colour and name.
-* File ▸ Save makes a checkpoint; File ▸ Share lets an owner add people (`add_user`) and make a new recovery key (`new_recovery_key`). A new document shows its recovery key once, before it opens (`created` in the answer to `hello`); "I forgot my password" on the start page comes in with it (`hello` with `recovery_key`).
+* File ▸ Save makes a checkpoint; File ▸ Share lets an owner add people (`add_user`), change an editor to "only look" and back (`change_role`), remove a person (`remove_person`; both renew keys and ask first, D1263) and make a new recovery key (`new_recovery_key`). A new document shows its recovery key once, before it opens (`created` in the answer to `hello`); "I forgot my password" on the start page comes in with it (`hello` with `recovery_key`).
 * A banner while the connection is lost; the app reconnects by itself and reloads what it shows.
 
 The assistant in this demo is a **scripted stand-in** (`claudia_server.ScriptedEngine`): it understands a few
@@ -255,6 +274,19 @@ PDF's bookmarks. **Page view** shows the same page numbers in the editor: `lib/p
 in the background, only while a table or a reference shows pages, once the typing has paused. Flow has no pages, so it
 shows none. A **page reference** in running text ("see page 12", step I) is filled in by the same layout: at most
 three passes, since a number can move a line and the line a page break; one that does not settle is reported as a note.
+
+Saving a PDF or sending the pages to the printer is **recorded in the document** (D1271): the preview calls
+`session.reportOutput('pdf'|'print', pages)` when the file is saved or the print dialog's page is sent — not when the
+preview opens — and the preview says so in a note under the bar. The History & Chat panel shows one muted line for each
+thing that left the document ("saved a PDF · 6 pages", "exported as Word · content", "exported unprotected · all parts";
+`lib/audit.ts`, `data-testid=audit-row`), merged among the changes by time because the record has no revision. Owners and
+editors see it; a viewer is never sent it. A window learns of its own export by reading `audit_log` again, and of other
+windows' by `audit_recorded`.
+
+**File ▸ Manage ▸ Export…** has a last format, "Claudia, unencrypted (JSON in a zip)" (`ExportFormatDialog.vue`): it asks
+"Save without protection?" once, in words, before the file is made, and only owners get the box "Include history and
+chat". An export file chosen in the Open dialog (the picker accepts `.zip`) shows "A Claudia export, made by … on …",
+no box to keep the original, and "You become the owner of the new document. Nobody else is given access."
 
 ## Presenter mode (creates)
 

@@ -1,7 +1,7 @@
 # E2 round two — architecture proposal (viewers, back-off, hashing cost, key renewal, exports and their record)
 
 **Status: proposal of 2026-11-19, with the owner's answers of the same day (§6) and the first built parts (§8).** Branch `e2-document-sec`, written against `main` at `518a7bf`.
-Decisions: D1261–D1276 (D1274 and D1276 are proposals that wait for the owner). Mock-ups in `notes/mockups/`:
+Decisions: D1261–D1278 (D1274 and D1276 decided by the owner on 2026-11-19). Mock-ups in `notes/mockups/`:
 
 | File | Shows |
 |---|---|
@@ -67,7 +67,7 @@ client code says so (§1); a scenario with two windows proves it.
 or 0, `failed(...)` and `succeeded(address)` update two counters (per address, per document-and-name), `forget` drops
 anything quiet for fifteen minutes. It lives in memory; a restart forgets, which is fine for a delay (nothing is locked). The owner asked whether writing it to
 disk would be safer: a little, in one narrow case (a restart or a crash resets the wait), at the cost of keeping hashed
-addresses on disk; D1276 proposes how, and waits for the answer.
+addresses on disk. **Decided (D1276): it stays in memory**; the threat model states the gap.
 
 `Gateway._hello` asks it **before** `_hello` reaches the hashing semaphore, so a refused guesser costs nothing. The document
 `hello` (also with a recovery key) and `POST /api/admin/login` use the same instance. The counters count a name whether or
@@ -193,13 +193,13 @@ goes to the first control of every dialog and returns to the one that opened it.
 
 | # | Question | Answer |
 |---|---|---|
-| 1 | D1274, the inbox with a key pair per person | **Open.** The owner asked for a plainer explanation; it is now at the top of D1274 ("In plain words"). Still undecided |
+| 1 | D1274, the inbox with a key pair per person | **Yes, as proposed** after the plain-words explanation at the top of D1274; built in slice C |
 | 2 | D1275, the address behind a proxy | **Yes** (built, §8) |
 | 3 | The record is not redactable (D1271) | **Yes, not by the owner either** |
 | 4 | File ▸ Download and D110 (D1270, E2.12) | **Download is the sealed file**; decisions and code updated (built, §8) |
 | 5 | Protocol version | **Stays 2** |
 | 6 | Slice order | **A, B, C** |
-| new | D1276: the back-off state on disk | Proposed, waits for the answer |
+| new | D1276: the back-off state on disk | **No: it stays in memory** (decided) |
 
 ## 7. Findings while reading (all four fixed 2026-11-19; the owner asked for it)
 
@@ -223,6 +223,31 @@ Found while fixing them: **SEC-21** (password-confirming methods hash on the eve
 | The address of a connection behind a proxy; `--proxy-hops` | `client_address.py`, `app.py`, `cli.py` | `test_server_client_address.py` (16), `test_server_cli.py`, `test_server_uid.py` |
 | German and pseudo-locale strings, the menu workbook, `docs/server.md`, `docs/web.md`, changelogs and API snapshots (container 0.9.0, server 0.38.0) | | the gate (`scripts/check_debt.py`) |
 
-Slice A is therefore started with its smallest part (D1275). Not yet built: the viewer filter (D1261), the back-off (D1266)
-and the hashing cost (D1267); slices B and C. A viewer's downloaded copy cannot be opened until E2.11 (read-only hosting)
+| Viewer filter: events and methods by domain; the viewer's window and panel | `audience.py`, `protocol.py` (`reads=`), `hub.py`, `base-session.ts`, `SidePanel.vue` | `test_server_audience.py`, `tests/method_reads.json`, `web/tests/session.test.ts`, `specs/container/viewer.feature` (2 of 3 core scenarios run) |
+| Sealed-first viewer waits (D1262) | `base-session.ts` (`waiting`), `DocumentFrame.vue` | `web/tests/session.test.ts` (the scenario in `viewer.feature` has no step code for the server restart) |
+| Back-off (D1266, D1276) | `login_throttle.py`, `app.py`, `admin_api.py`, `login-wait.ts` | `test_server_login_throttle.py` (24), `test_server_login_waits.py`, `web/tests/login-wait.test.ts`, `specs/container/login-wait.feature` |
+| SEC-21: hash ahead in a thread (D1277) | `crypto.py` (`warm_login_material`), `container.warm`, `Method.hashes`, `Gateway.prepare` | `test_warm_login.py`, `test_server_password_methods.py` |
+| Hashing cost calibrated (D1267, D1278) | `kdf.py`, `kdf_policy.py`, `server_settings.py`, `AdminSecurity.vue` | `test_kdf_calibration.py`, `test_server_kdf_policy.py`, `web/tests/security-settings.test.ts` |
+
+| The record of what left: the audit chain, `leaves="export"`, `report_output`, `audit_log`, the History & Chat line | `audit.py`, `blocks.py`, `container.py`, `protocol.py`, `sealed.py`, `audience.py`, `audit.ts`, `SidePanel.vue`, `PrintPreview.vue` | `test_audit.py`, `test_server_audit.py` (18), `web/tests/audit.test.ts`, `session.test.ts`, `specs/container/export-and-record.feature` |
+| The unencrypted export and its import | `export_file.py`, `formats.py`, `uploads.py`, `ExportFormatDialog.vue`, `ImportDialog.vue` | `test_export_file.py`, `test_server_export_import.py`, the same feature (6 of 9 scenarios run in Chrome) |
+| The format specification; the measurement of D1269 | `docs/container-format.md`; story E2.5 | the docs build |
+| Keys per person, the sealed inbox, login resolver (D1274) | `inbox.py`, `slots.py`, `container.py` (`_resolve`, `unlock`) | `test_inbox.py`, `test_container.py`, `test_sealed_copy.py` |
+| Renewal on removal and downgrade (D1263, D1282, D1285) | `renewal.py`, `sealed.py` (`_change_people`), `protocol.py`, `hub.py`, `ShareDialog.vue`, `base-session.ts` | `test_renewal.py`, `test_server_people_changes.py` (13), `web/tests/session.test.ts`, `specs/container/keys-and-people.feature` (6 of 12 scenarios run in Chrome) |
+| The private domain (D1265, D1283) | `container.py` (`read_private`, `write_private`), `blocks.py` | `test_private_domain.py` |
+
+Slice A is built (container 0.10.0, server 0.39.0), slice B too (container 0.11.0, server 0.40.0), slice C too (container 0.12.0,
+server 0.41.0, format 2). Not built: authorship for viewers (SEC-22, waits for the owner), the history and chat of an export read
+back (PROC-37).
+
+## 9. Threat-model consequences of slice A
+
+| Statement | Where it lives |
+|---|---|
+| A viewer receives content, names and presence and nothing from the history or chat, in the live session, in the welcome and in her sealed file; she is refused the methods that read them | D1261, `audience.py` |
+| A viewer sees who wrote which stretch (not masked) | SEC-22 |
+| A restart forgets the back-off counters; a guesser regains at most one wait (30 s at the top) | D1276 |
+| Guessing is paced by the waits (per address, per document and name), by the hashing cap and by the cost of one hash; many addresses at once are not stopped by the waits | D1266 |
+| The process holds derived login material (not the password) for up to 30 s, once, for requests that confirm a password | D1277 |
+| New documents are hashed at a cost measured on the server; old documents keep theirs | D1267, D1278 | A viewer's downloaded copy cannot be opened until E2.11 (read-only hosting)
 exists.

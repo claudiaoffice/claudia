@@ -217,7 +217,9 @@ def _export_choices(ctx):
     return {"descriptions": len(export_annotations(_text(ctx), ctx.user, comments=True).comments)}
 
 
-@composes_methods.method("export_office", "format:str tracked_changes:bool=false description_comments:bool=false")
+@composes_methods.method(
+    "export_office", "format:str tracked_changes:bool=false description_comments:bool=false", leaves="export"
+)
 def _export_office(ctx, *, format, tracked_changes, description_comments):
     """The document's current content as bytes of a Word file (`format` `"docx"`) or an OpenDocument text (`"odt"`),
     wrapped for the wire as `{format, content_type, data}` (`data` base64); the answer also has `losses`, what

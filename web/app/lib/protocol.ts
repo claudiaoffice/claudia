@@ -8,6 +8,8 @@ export class ProtocolError extends Error {
   constructor(
     public code: string,
     message: string,
+    /** For `too_many_tries`: the seconds the server asks the person to wait (D1266). */
+    public retryAfter?: number,
   ) {
     super(message)
   }
@@ -225,7 +227,7 @@ export class Link implements LinkLike {
     if (!waiting) return
     this.pending.delete(frame.id)
     if (frame.ok) waiting.resolve(frame.result)
-    else waiting.reject(new ProtocolError(frame.error?.code ?? 'internal', frame.error?.message ?? t('request failed')))
+    else waiting.reject(new ProtocolError(frame.error?.code ?? 'internal', frame.error?.message ?? t('request failed'), frame.error?.retry_after))
   }
 }
 
@@ -250,8 +252,10 @@ export function closeMessage(code: number): string {
       return t('There is no such document.')
     case 4408:
       return t('The server did not hear from the page in time.')
+    case 4429:
+      return t('Too many tries. Try again in a little while.')
     case 4423:
-      return t('The document is waiting for an owner or editor to open it.')
+      return t('An editor or owner has to open this document first. This window will open it as soon as one has.')
     case 1013:
       return t('The document is full, or the connection was too slow.')
     default:

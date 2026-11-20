@@ -73,6 +73,16 @@ watch(tags, (now) => {
 const fromFileDescription = computed(() => !!props.file.description && description.value === props.file.description)
 const fromFileTags = computed(() => !!props.file.tags?.length && tags.value.join('\n') === props.file.tags.join('\n'))
 const claudia = computed(() => props.file.format === 'claudia')
+/** An unencrypted Claudia export (D1272): it is read like an office file, but it holds no original to keep. */
+const exported = computed(() => props.file.format === 'claudia-export')
+const madeText = computed(() => {
+  const { made_by: who, made_at: when } = props.file
+  if (!who) return t('A Claudia export.')
+  const day = when ? new Date(when) : null
+  return day && !Number.isNaN(day.getTime())
+    ? t('A Claudia export, made by {who} on {date}.', { who, date: day.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) })
+    : t('A Claudia export, made by {who}.', { who })
+})
 const appName: Record<string, string> = { computes: t('a table'), composes: t('a text'), creates: t('slides') }
 const formatName: Record<string, string> = {
   docx: 'Word',
@@ -95,7 +105,7 @@ function submit() {
       id: id.value.trim(),
       user: user.value.trim(),
       password: password.value,
-      keep: keep.value,
+      keep: keep.value && !exported.value,
       description: description.value,
       tags: tags.value,
     })
@@ -133,7 +143,8 @@ function submit() {
     </div>
     <form class="form" @submit.prevent="submit">
       <template v-if="!claudia">
-        <p class="lead">
+        <p v-if="exported" class="lead" data-testid="export-made">{{ madeText }}</p>
+        <p v-else class="lead">
           {{ t('Claudia makes {what} of it, and the file goes into the new document with it, sealed. The file on this computer stays as it is.', { what: appName[file.app] ?? file.app }) }}
         </p>
         <p class="where">{{ t('Put it in') }}: <b>{{ place }}</b></p>
@@ -152,11 +163,12 @@ function submit() {
           <label class="field">{{ t('Your name') }}<input v-model="user" name="import-user" autocomplete="username" required :readonly="working" ></label>
           <label class="field">{{ t('Password') }}<PasswordInput v-model="password" name="import-password" autocomplete="new-password" required :readonly="working" /></label>
         </div>
-        <label class="check">
+        <label v-if="!exported" class="check">
           <input v-model="keep" type="checkbox" name="keep-original" :disabled="working" >
           <span>{{ t('Keep the {format} file inside the document: Download then gives back this file with only your changes.', { format: formatName[file.format] ?? file.format }) }}</span>
         </label>
-        <p class="hint">{{ t('You are its owner. What the document does not show stays in the kept file and is listed after it opens.') }}</p>
+        <p v-if="exported" class="hint">{{ t('You become the owner of the new document. Nobody else is given access.') }}</p>
+        <p v-else class="hint">{{ t('You are its owner. What the document does not show stays in the kept file and is listed after it opens.') }}</p>
       </template>
       <template v-else>
         <p class="lead">{{ t('A Claudia document goes into a place as it is, still sealed, and is opened with a name and password it already knows.') }}</p>

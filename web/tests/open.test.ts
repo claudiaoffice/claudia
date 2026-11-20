@@ -330,9 +330,9 @@ describe('sendFile and placeUpload', () => {
 describe('the files a window opens (D444)', () => {
   it('offers every kind in a browser tab and only its own app\'s in a desktop window', () => {
     expect(openableFor(null)).toBe(OPENABLE)
-    expect(openableFor('composes')).toBe('.docx,.odt,.claudia')
-    expect(openableFor('computes')).toBe('.xlsx,.ods,.claudia')
-    expect(openableFor('creates')).toBe('.pptx,.odp,.claudia')
+    expect(openableFor('composes')).toBe('.docx,.odt,.claudia,.zip')
+    expect(openableFor('computes')).toBe('.xlsx,.ods,.claudia,.zip')
+    expect(openableFor('creates')).toBe('.pptx,.odp,.claudia,.zip')
   })
 
   it('tells the app of a file by its name, and not for a Claudia file, which says it inside', () => {

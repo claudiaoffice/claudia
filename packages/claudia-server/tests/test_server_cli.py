@@ -618,3 +618,21 @@ def test_the_latex_programs_of_the_settings_are_used_as_they_are_when_a_containe
     assert configured() == {"xelatex": "/opt/tex/xelatex", "pdftocairo": "/opt/poppler/pdftocairo"}
     settings.typeset = TypesetSettings(xelatex="/other/xelatex")
     assert configured() == {"xelatex": "/other/xelatex"}
+
+
+def test_sealed_documents_get_a_hashing_cost_that_is_measured_once_the_server_runs(tmp_path):
+    from unittest.mock import Mock
+
+    sealed = plan("--dir", str(tmp_path / "docs"), tmp_path=tmp_path)
+    assert sealed.kdf is not None and sealed.kdf.describe()["measured"] is False, "planning does not measure"
+    assert sealed.kdf.describe()["target_seconds"] == 0.75
+    assert any("password hashing" in line for line in sealed.banner)
+    sealed.kdf.start = Mock()
+    sealed.start()
+    sealed.kdf.start.assert_called_once_with()
+
+
+def test_documents_that_are_not_sealed_have_no_hashing_cost_to_measure(tmp_path):
+    memory = plan(tmp_path=tmp_path)
+    assert memory.kdf is None
+    memory.start()  # nothing to start, and no error

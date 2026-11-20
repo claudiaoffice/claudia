@@ -13,6 +13,7 @@ server
 web
 linux-client
 shell-contract
+container-format
 versioning
 api/claudia_core
 api/claudia_server

@@ -213,9 +213,15 @@ async function download() {
   try {
     const saved = await saveBlob(`${source.title()}.pdf`, new Blob([bytes as BlobPart], { type: 'application/pdf' }))
     outcome.value = saved.kind === 'saved' ? t('Saved as {path}.', { path: saved.path }) : ''
+    if (saved.kind !== 'cancelled') reported('pdf')
   } catch (e) {
     problem.value = t('The file could not be saved: {reason}', { reason: (e as Error).message })
   }
+}
+/** The document records that it left (D1271): told when the file is saved or the page sent to the printer, never when
+ * the preview opens. A report that does not go through is said in a notice by the session. */
+function reported(kind: 'print' | 'pdf') {
+  source.report(kind, result.value?.list.pages.length ?? 0)
 }
 let frame: HTMLIFrameElement | null = null
 /** The PDF goes to the browser's own print dialog, in a frame of its own; where a browser cannot print a PDF in a
@@ -228,6 +234,7 @@ async function print() {
   const instead = (globalThis as { __claudiaPrintDialog?: (pdf: Uint8Array) => void }).__claudiaPrintDialog
   if (instead) {
     instead(bytes)
+    reported('print')
     return
   }
   // A desktop window's web view prints no PDF of its own (D502): the shell opens it in the computer's viewer for PDFs,
@@ -237,6 +244,7 @@ async function print() {
     try {
       const opened = await shell.saveFile(`${source.title()}.pdf`, new Blob([bytes as BlobPart], { type: 'application/pdf' }), 'print')
       outcome.value = opened.kind === 'opened' ? t('The pages are open in your PDF viewer: print them from there.') : ''
+      if (opened.kind === 'opened') reported('print')
     } catch (e) {
       problem.value = t('The pages could not be handed to your PDF viewer: {reason}', { reason: (e as Error).message })
     }
@@ -253,6 +261,7 @@ async function print() {
     try {
       frame?.contentWindow?.focus()
       frame?.contentWindow?.print()
+      reported('print')
     } catch {
       window.open(url, '_blank', 'noopener')
     }
@@ -347,6 +356,7 @@ defineExpose({ print, download, status })
     <div ref="canvas" class="canvas">
       <div class="over">
         <p v-for="(n, i) in noteText" :key="i" class="note" data-testid="print-note"><span aria-hidden="true">ⓘ</span> {{ n }}</p>
+        <p class="note" data-testid="print-recorded"><span aria-hidden="true">ⓘ</span> {{ t('Printing and saving a PDF are recorded in the document\'s history: who, when and how many pages. It is written when the file is saved or the page is sent, not when the preview opens.') }}</p>
         <p v-if="problem" class="note bad" role="alert" data-testid="print-problem">{{ problem }}</p>
         <p v-if="outcome" class="note" role="status" data-testid="print-outcome">{{ outcome }}</p>
         <span class="grow" />

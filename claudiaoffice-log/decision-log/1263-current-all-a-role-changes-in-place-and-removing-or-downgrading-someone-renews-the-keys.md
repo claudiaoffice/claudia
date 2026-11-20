@@ -11,7 +11,7 @@ superseded-by: []
 
 # D1263 · A role changes in place; removing or downgrading someone renews the keys they held
 
-**Decided by the owner 2026-11-19 (accepted the proposal: build it now). Not built.** E2.2 and E2.3 both list key rotation
+**Decided by the owner 2026-11-19 (accepted the proposal: build it now). Built in slice C (container 0.12.0, server 0.41.0); see D1282 for the one deviation.** E2.2 and E2.3 both list key rotation
 as not done, and E2.3 lists changing editor↔viewer without removing and re-adding the person.
 
 - **Changing a role** is one action of an owner in the Share dialog. The server lets the person in with her new role at
@@ -20,7 +20,7 @@ as not done, and E2.3 lists changing editor↔viewer without removing and re-add
 - **Removing a person, or downgrading an editor to viewer, renews the domain keys that person held** (removal: all of
   them; downgrade: history and chat). The blocks of those domains, the people list, the snapshot and the head are sealed
   again under the new keys, in one atomic replacement of the file. It uses the rewrite that redaction made (D725). **How
-  the people who stay, and the recovery key, get the new keys is D1274** (undecided): a slot is opened by its person's
+  the people who stay, and the recovery key, get the new keys is D1274** (decided: a sealed inbox): a slot is opened by its person's
   password, which nobody else has, so the owner cannot rewrite it.
 - **What this protects, and what not,** is said in the dialog in words: the person keeps what she has already seen and
   every copy of the file she holds, which her old keys still open (D20). The new keys protect what is written *from now

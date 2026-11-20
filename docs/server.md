@@ -70,8 +70,15 @@ change with the language, so a client branches on those. What the document packa
 `PROTOCOL_VERSION` is **2** as of this field (was 1).
 
 When the handshake fails the server answers and closes the socket with a code: 4400 bad request, 4401 unauthorized,
-4403 foreign origin or host, 4404 no such document, 4408 no hello in time, 1013 too many connections, too many people
-waiting to be let in, a full server or a client that is too slow.
+4403 foreign origin or host, 4404 no such document, 4408 no hello in time, 4429 too many tries, 1013 too many connections,
+too many people waiting to be let in, a full server or a client that is too slow.
+
+**Wrong passwords make the next try wait** (D1266, `login_throttle.py`). Three tries are free; after that each wrong
+password makes the next try wait 1, 2, 4, 8 … seconds, at most 30 per address and 10 per document and name, and the wait is
+forgotten after 15 quiet minutes. A `hello` inside a wait is refused **before any hashing** with the error `too_many_tries`,
+close code 4429 and `retry_after` (whole seconds); the administrator's sign-in answers `429` with a `Retry-After` header
+and `retry_after` in its JSON. The right password does not get around a wait, nobody is locked out for good, and the state
+is in memory: a restart forgets it (D1276). Behind a proxy the address is counted as `--proxy-hops` says (D1275).
 
 On a server with an access secret, `"access": "<secret>"` goes into `hello` when a document is to be made, and
 `Authorization: Bearer <secret>` into `GET /api/docs`; see *Who can reach the server* below.
@@ -112,6 +119,38 @@ is the very same one (the file's uid is here already), else `null`. `POST /api/u
 app's folder as it is, uid included, and the person opens it with a name and password it knows (D442). It never
 overwrites (409), refuses a document that is here already, under whatever name and in whatever app (409, with a
 sentence naming the one that is here, D535), and a server that keeps documents in memory cannot take one in (422).
+
+An **unencrypted Claudia export** (`.claudia-export.zip`, D1270, D1272; the layout is in [the format](container-format.md))
+is uploaded the same way. The answer has `format: "claudia-export"`, `kind: "Claudia export"`, `app`, `made_by` and
+`made_at` (who exported it and when, as the file says: the dialog shows it, nothing trusts it) and a `suggested_id` made
+from the file's name; `hosted` says whether this server has the app. The second step is the one of an Office file with
+`"create": true, "upload": "<token>"`: the document starts with one `core.Import` entry, the importer is its only owner,
+and the file is **not** kept inside (`keep_original` is ignored). The state must be of the shape the app of this server
+uses (`state_schema`); another version is refused with a sentence. Nobody named in the export is given access.
+
+## What leaves the document is recorded (D1271)
+
+`export_content`, `export_office` and `export_claudia` are marked `leaves="export"` in the method table: after the method
+has answered, `MethodTable.dispatch` records who (the account of the connection), when, the format and the parts in the
+document's audit chain (`AuditDirectory.record_audit`; the document holds the keys of everybody who opened it, so a
+viewer's export is recorded too). A print or a PDF is made in the browser, so the window reports it: `report_output
+{kind: "print"|"pdf", format, pages}`; the server takes the name from the connection and ignores any name a client could
+send, limits one person to 20 reports a minute (`too_many`) and refuses a page count that is not a number between 0 and
+100 000. `audit_log` reads the record (history: owners and editors; a viewer gets `forbidden`). The other windows of
+owners and editors are told with the ephemeral event `audit_recorded`; the window that asked is not, and reads the record
+again. `export_claudia {include_history}` is the unencrypted zip as base64 (`format: "claudia-unencrypted"`); the history
+and chat go in only for an owner (`forbidden` otherwise).
+
+## Roles change and people are removed (D1263, D1284)
+
+`change_role {name, role}` (`role` is `editor` or `viewer`) and `remove_person {name}` are for owners (`forbidden`
+otherwise); an owner cannot be lowered or removed (`command_error`: ownership is handed over, `propose_owner`). Both answer
+after the keys the person held are renewed (`SealedDocuments`; the answer of `change_role` is `{user, role, renewed}`). The
+renewal runs under the document's lock on the event loop (D1282): for a normal document it takes about as long as writing
+the file once, and a long one stops the server's other documents for that time. The person's open windows follow at once:
+the ephemeral events `role_changed {user, role}` and `person_removed {user}` go to everybody in the document, the new role
+applies to her connections before the event is delivered, and after `person_removed` her connections get nothing more and
+answer `forbidden`. A person who was away gets the new keys at her next login, from her inbox in the file (D1274).
 
 ## After the handshake
 
@@ -201,8 +240,19 @@ sentence naming the one that is here, D535), and a server that keeps documents i
 * The keys are held in memory only while a document is open, and are forgotten when the server unloads it. After a
   restart a **viewer** cannot bring a document up (a viewer holds only the content key): the first person to log in has
   to be an owner or editor; a viewer is told so (error `sealed`, close code 4423, and the web app keeps trying until
-  somebody has opened it). Password hashing runs in threads, so it never stops the server; the hashes take turns
-  (OpenSSL's Argon2id is not safe to run twice at once).
+  somebody has opened it). Password hashing runs in threads, so it never stops the server, **also for requests that confirm a
+  password** (`set_details`, `download_claudia`, `change_password`, `add_user` and the others that say `hashes` in
+  `describe`): the gateway hashes them in a worker thread, at most two at once, before it handles them (SEC-21). The result
+  is held for at most 30 s and used once. The hashes take turns (OpenSSL's Argon2id is not safe to run twice at once).
+* **What a viewer is shown** (D1261). A viewer holds only the content key, and the server sends her only what it opens:
+  the content, the names of the people and presence. Nothing of the history, the chat, a checkpoint, a redaction or a
+  restore is pushed to her, a `command` event is reduced to its type and revision, and `welcome` has no history parts.
+  Every method says what it reads (`reads` in `describe`: `content`, `history` or `chat`), and a viewer who calls one that
+  reads the history or the chat gets `forbidden`. A new event or method is for owners and editors until it is classified
+  (`audience.py`). *Who wrote which stretch* is part of the content and is still shown (bug SEC-22).
+* **The cost of hashing** for new documents is measured when the server starts (about 0.75 s, up to 256 MiB), in the
+  background; until then, and on a machine too slow for it, the minimum applies (3 passes over 64 MiB). Server settings ▸
+  Security sets the target time. A document keeps the cost it was made with.
 * **Packing.** Changes are appended to the journal as they happen. When a document is unloaded (and when the server is
   stopped, and every 500 changes while it is open) the journal is folded into the document file as sealed, chained
   blocks with a head record, and a snapshot is left, so that opening replays only what came after it. Somebody who
@@ -249,7 +299,7 @@ people who already have a document still log in with their name and password. So
 make a document is answered like somebody who asked for one that does not exist, so nothing is learned about which
 documents there are. The secret is compared in constant time and never printed. The web app has no field for it yet.
 
-Redaction rewrites the document file and its journal (D725; `redaction_plan` and `redact`, owners on anything and editors on their own work, D727). Not there yet: unencrypted export and import (E2.9), rate limits over time (E2.7: the caps above bound what is waiting, not how often an address may try), read restrictions for viewers and a viewer opening a sealed document first (E2.4).
+Redaction rewrites the document file and its journal (D725; `redaction_plan` and `redact`, owners on anything and editors on their own work, D727). Not there yet: unencrypted export and import (E2.9), the sealed inbox that gives everybody renewed keys after a role change or key renewal (E2.3, slice C).
 
 
 ## Presentations (creates)

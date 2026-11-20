@@ -1,7 +1,7 @@
 ---
 id: D1274
 title: "People who stay get renewed keys through a sealed inbox, one public key per person"
-status: undecided
+status: current
 applies-to: all
 date: 2026-11-19
 round: "The document container and its security, second round (branch e2-document-sec)"
@@ -11,14 +11,15 @@ superseded-by: []
 
 # D1274 · People who stay get renewed keys through a sealed inbox, one public key per person
 
-**Proposed 2026-11-19 while planning D1263; waits for the owner. Not built.**
+**Proposed 2026-11-19 while planning D1263; decided by the owner the same day ("D1274 is good, let's do it that way", after
+the plain-words explanation below). Built in slice C of the second round of E2 (E2.3); not built yet.**
 
 **The problem.** A key slot is opened by a key derived from its person's name and password (D101, D102). When keys are
 renewed (D1263), or a role changes, the slots of the people who stay must hold the new keys, and only the person has the
 password that opens her slot. An owner cannot rewrite it, and neither can the server for anyone who is not logged in. D1263
 as first written ("every remaining slot is rewritten") cannot be done.
 
-**The proposal.** Each person, and the recovery key, gets an X25519 key pair when the slot is made. The private key lives
+**The decision.** Each person, and the recovery key, gets an X25519 key pair when the slot is made. The private key lives
 in her slot, sealed as everything in it is. The public key is written beside her name in the people list (sealed with the
 content key, so everyone in the document can read it, and it is not a secret). To give a person new keys, the owner's
 server seals them to her public key (ephemeral X25519, HKDF-SHA256, AES-256-GCM, the primitives of D104 plus X25519) into
@@ -60,3 +61,5 @@ people who are not there, and it would be a reason never to remove anybody.
 
 **Notes.** Also what a role change needs: the owner puts the keys the person gains into her inbox. A role change that
 takes keys away is the same as a renewal for those domains.
+
+**Built in slice C** (container 0.12.0): `inbox.py`, login resolver in `container.py`; format in `docs/container-format.md`.

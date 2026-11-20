@@ -126,15 +126,17 @@ def server(folder: Path, *extra: str) -> Iterator[Live]:
         str(folder / "state"),
         *extra,
     ]
-    process = subprocess.Popen(
-        command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True
-    )
+    # The output goes to a file, not to a pipe nobody reads: a full pipe (about 64 KiB) blocks the server's next write,
+    # and with it the whole event loop (PROC-39).
+    log = folder / "server.log"
+    with log.open("wb") as output:
+        process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
     url = f"http://127.0.0.1:{port}"
     try:
         deadline = time.monotonic() + START_SECONDS
         while True:
             if process.poll() is not None:
-                raise AssertionError(f"the server stopped early:\n{process.communicate()[0]}")
+                raise AssertionError(f"the server stopped early:\n{log.read_text(errors='replace')}")
             try:
                 if _http(f"{url}/api/health")[0] == 200:
                     break

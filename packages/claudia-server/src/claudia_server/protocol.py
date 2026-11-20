@@ -38,8 +38,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
+from weakref import WeakKeyDictionary
 
-from claudia_container import clean_details
+from claudia_container import AuditRecord, Domain, clean_details, write_export
 from claudia_core import (
     Document,
     KernelError,
@@ -52,13 +53,16 @@ from claudia_core import (
 )
 
 from .ai_mode import parse_mode
+from .audience import may_read
 from .auth import (
     WRITE_ROLES,
     Account,
+    AuditDirectory,
     DeletableDirectory,
     DetailsDirectory,
     LeavableDirectory,
     PasswordDirectory,
+    PeopleDirectory,
     RecoverableDirectory,
     RosterDirectory,
     SealedCopyDirectory,
@@ -69,6 +73,7 @@ from .help import default_library
 from .i18n import localized, msg
 from .planned import keep_plan
 from .restore import POLICIES, RestoreCoordinator, RestoreError
+from .throttle import Throttle
 
 if TYPE_CHECKING:
     from claudia_core import Region
@@ -106,6 +111,9 @@ ERROR_CODES = {
     "conflict": "undo or redo would overwrite a colleague's later work; nothing changed",
     "stale": "the request was made against a view of the document that is gone (it went back to a checkpoint or "
     "changed line); reload the document and try again; nothing changed",
+    "too_many_tries": "a login came too soon after failed ones; the error carries `retry_after`, the whole seconds to "
+    "wait. Nothing is locked: the same login is looked at when the wait is over",
+    "too_many": "more of this than the server allows in a minute; nothing was done. Try again a little later",
     "internal": "a server error; the request may or may not have been applied, check the revision",
 }
 
@@ -118,7 +126,8 @@ EVENTS = {
     "chat": "a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not "
     "for everybody",
     "ephemeral": "something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|"
-    "document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and "
+    "document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; role_changed: {user, role}; "
+    "person_removed: {user}; document_deleted: {}, and "
     "nothing else will ever be stored or delivered for this document — close and forget it",
     "branch": "the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, "
     "fork_point}. Everything you hold is stale: call snapshot",
@@ -314,6 +323,16 @@ class Context:
         """The author of what this request changes."""
         return self.account.user
 
+    def record_leaving(self, kind: str, fmt: str, parts: tuple[str, ...], pages: int | None = None) -> None:
+        """Record that the person asking took ``parts`` of the document out in ``fmt`` (D1271): an export, a print or
+        a PDF. The name is the account's, never anything the client said. Nothing happens on a server whose documents
+        keep no audit chain; the people who may read the record are told with an ephemeral ``audit_recorded``."""
+        if not isinstance(self.directory, AuditDirectory):
+            return
+        record = AuditRecord(kind, self.user, _now_text(), fmt, parts, pages)
+        self.directory.record_audit(self.doc_id, record)
+        self.document.publish("audit_recorded", self.user, audit_row(record))
+
 
 @dataclass(frozen=True)
 class Method:
@@ -324,6 +343,15 @@ class Method:
     write: bool
     doc: str
     fn: Callable[..., Any] = field(repr=False)
+    reads: str = (
+        "content"  # the part of the document it reads (``claudia_server.audience``): a viewer holds content only
+    )
+    hashes: tuple[tuple[str, str], ...] = ()
+    """The passwords it confirms, as ``(name, password)`` parameter pairs; ``"@user"`` is the person asking.
+    The server hashes them in a thread before the request is handled (SEC-21)."""
+    leaves: str | None = None
+    """``export`` for a method whose answer is the document in a form that can be read outside Claudia: the server
+    records it in the audit chain, for the person who asked, once the answer is made (D1271, E2.9)."""
 
 
 class MethodTable:
@@ -334,13 +362,31 @@ class MethodTable:
         self._kinds: dict[str, Callable[[Any, Limits], Any]] = {}
 
     # -- building ---------------------------------------------------------------------
-    def method(self, name: str, spec: str = "", *, write: bool = False):
+    def method(
+        self,
+        name: str,
+        spec: str = "",
+        *,
+        write: bool = False,
+        reads: str = "content",
+        hashes: tuple[tuple[str, str], ...] = (),
+        leaves: str | None = None,
+    ):
         """Decorator: register ``fn(ctx, **params)`` as method ``name``.
 
-        ``spec`` lists the parameters as ``"name:type name:type=default"``."""
+        ``spec`` lists the parameters as ``"name:type name:type=default"``. ``reads`` is the part of the document the
+        method shows: ``"content"`` (the default), ``"history"`` or ``"chat"``; a person whose role holds no key of
+        that part (a viewer) is refused it (D1261). ``hashes`` names the ``(name, password)`` parameter pairs a method
+        confirms by hashing (``"@user"`` stands for the person asking), so that the server can do that slow work
+        outside its event loop first (SEC-21, ``hashes_of``). ``leaves="export"`` marks a method whose answer is the
+        document in a readable form: after it succeeds the server records the export (D1271)."""
+        if reads not in tuple(Domain):
+            raise ValueError(f"reads must be one of {', '.join(Domain)}, not {reads!r}")
 
         def register(fn):
-            self._methods[name] = Method(name, _parse_params(spec), write, (fn.__doc__ or "").strip(), fn)
+            self._methods[name] = Method(
+                name, _parse_params(spec), write, (fn.__doc__ or "").strip(), fn, reads, hashes, leaves
+            )
             return fn
 
         return register
@@ -367,6 +413,27 @@ class MethodTable:
         return set(self._methods)
 
     # -- running ----------------------------------------------------------------------
+    def hashes_of(self, raw: str | bytes, user: str) -> list[tuple[str, str]]:
+        """The ``(name, password)`` pairs a request frame asks the server to hash, for the person ``user`` (SEC-21).
+
+        Cheap for the many requests that carry no password. A frame that is malformed or names no such method gives
+        ``[]``: ``dispatch`` will say what is wrong with it."""
+        if b"password" not in (raw if isinstance(raw, bytes) else raw.encode("utf-8", "ignore")):
+            return []
+        try:
+            frame = json.loads(raw)
+            entry = self._methods.get(frame["method"])
+            params = frame.get("params") or {}
+            pairs = []
+            for name_field, password_field in entry.hashes if entry else ():
+                name = user if name_field == "@user" else params.get(name_field)
+                password = params.get(password_field)
+                if isinstance(name, str) and isinstance(password, str):
+                    pairs.append((name, password))
+            return pairs
+        except (ValueError, KeyError, TypeError, AttributeError):
+            return []
+
     def bind(self, entry: Method, raw: Any, limits: Limits) -> dict[str, Any]:
         """Validate the request's params against the method's spec and fill in defaults."""
         if raw is None:
@@ -406,13 +473,25 @@ class MethodTable:
             raise RequestError("unknown_method", msg("no method {name!r}", name=name))
         if entry.write and not ctx.account.can_write:
             raise RequestError("forbidden", msg("{name} needs the editor role", name=name))
+        if not may_read(ctx.account.role, Domain(entry.reads)):
+            if entry.reads == Domain.CHAT:
+                raise RequestError(
+                    "forbidden", msg("{name} reads the chat, which is for the document's owners and editors", name=name)
+                )
+            raise RequestError(
+                "forbidden", msg("{name} reads the history, which is for the document's owners and editors", name=name)
+            )
         allowed = ctx.account.allowed_methods
         if entry.write and allowed is not None and name not in allowed:
             # SEC-10: the one place every path goes through (the wire, the assistant, a future remote engine).
             raise RequestError("forbidden", msg("{name} is not one of the methods this account may call", name=name))
         args = self.bind(entry, params, ctx.limits)
         try:
-            return entry.fn(ctx, **args)
+            result = entry.fn(ctx, **args)
+            if entry.leaves is not None:
+                parts = tuple(result.get("parts", ("content",)))
+                ctx.record_leaving(entry.leaves, str(result.get("format", entry.name)), parts)
+            return result
         except RequestError:
             raise
         except StaleEdit as exc:
@@ -435,7 +514,7 @@ class MethodTable:
             "framing": "JSON text frames; requests {id, method, params}; responses {id, ok, result | error}; "
             "pushed {event, data}",
             "methods": {
-                m.name: {"write": m.write, "doc": m.doc, "params": [p.to_dict() for p in m.params]}
+                m.name: {"write": m.write, "reads": m.reads, "doc": m.doc, "params": [p.to_dict() for p in m.params]}
                 for m in self._methods.values()
             },
             "param_types": {
@@ -559,7 +638,7 @@ def _snapshot(ctx):
     }
 
 
-@core_methods.method("lines")
+@core_methods.method("lines", reads="history")
 def _lines(ctx):
     """The lines of the document's history: the active one and the side lines a restore left behind."""
     return [
@@ -573,7 +652,7 @@ def _lines(ctx):
     ]
 
 
-@core_methods.method("peek_line", "line:str")
+@core_methods.method("peek_line", "line:str", reads="history")
 def _peek_line(ctx, line):
     """A read-only look at any line (active or hidden), without switching to it (E3.8): its revision and full
     state, in the shape of `snapshot`. For previewing before suggesting a restore or a switch. `command_error` for
@@ -588,7 +667,7 @@ def _peek_line(ctx, line):
     }
 
 
-@core_methods.method("restore_policy")
+@core_methods.method("restore_policy", reads="history")
 def _restore_policy(ctx):
     """How silence at a suggestion's deadline is read (E3.7): `consensus` (must actively agree) or `veto` (must
     actively object). One choice for the whole document, an owner's to make (`set_restore_policy`)."""
@@ -759,7 +838,7 @@ def _others_reached(ctx, plan) -> list[str]:
     return sorted(author for author in authors if author.casefold() != me)
 
 
-@core_methods.method("redaction_plan", _REDACTION_PARAMS + " state:bool=true")
+@core_methods.method("redaction_plan", _REDACTION_PARAMS + " state:bool=true", reads="history")
 def _redaction_plan(ctx, revisions, chat, parts, state):
     """What redacting these steps (`revisions`, on any line) and chat messages (`chat`, by number) would do, without
     doing it (D721). Owners may name anything they can read, editors only their own work (D727). `parts` blanks only
@@ -835,7 +914,7 @@ def _withdraw_restore(ctx):
     return {}
 
 
-@core_methods.method("changes_since", "revision:revision?")
+@core_methods.method("changes_since", "revision:revision?", reads="history")
 def _changes_since(ctx, revision):
     """The entries after a revision (everything if null), for bringing a replica up to date. A revision that is not
     on the document's line any more (it went back to a checkpoint) gives the error `stale`: reload with `snapshot`."""
@@ -847,7 +926,7 @@ def _changes_since(ctx, revision):
         ) from None
 
 
-@core_methods.method("log", "limit:int=200")
+@core_methods.method("log", "limit:int=200", reads="history")
 def _log(ctx, limit):
     """The visible history, oldest first, as sentences for a history panel: the newest `limit` entries (1 to 5000) of
     the active line as `{revision, author, origin, time, label, summary, of}`. `summary` may name values (a cell and
@@ -874,7 +953,7 @@ def _entry_view(entry) -> dict:
     }
 
 
-@core_methods.method("peek_revision", "revision:revision state:bool=true")
+@core_methods.method("peek_revision", "revision:revision state:bool=true", reads="history")
 def _peek_revision(ctx, revision, state):
     """A read-only look at the document after one step of its history, on any line, for replaying it (D551): `{revision,
     entry, focus, app, state_schema, state}`. `entry` is the step as `log` gives it; `focus` lists the regions the step
@@ -898,7 +977,7 @@ def _peek_revision(ctx, revision, state):
     return out
 
 
-@core_methods.method("chat_log", "limit:int=200")
+@core_methods.method("chat_log", "limit:int=200", reads="chat")
 def _chat_log(ctx, limit):
     """The chat this account may read, oldest first: messages for everybody and the private ones it sent or got.
     The newest `limit` (1 to 5000), each as in the `chat` event."""
@@ -913,14 +992,14 @@ def _chat_log(ctx, limit):
     return readable[-limit:]
 
 
-@core_methods.method("history")
+@core_methods.method("history", reads="history")
 def _history(ctx):
     """This account's undo and redo state."""
     h = ctx.document.history_for(ctx.user)
     return {"can_undo": h.can_undo, "can_redo": h.can_redo, "undo_label": h.undo_label, "redo_label": h.redo_label}
 
 
-@core_methods.method("checkpoints")
+@core_methods.method("checkpoints", reads="history")
 def _checkpoints(ctx):
     """The saved checkpoints of the document's line, oldest first."""
     return [_checkpoint(info) for info in ctx.document.checkpoints]
@@ -1004,7 +1083,7 @@ def _unlock(ctx):
 
 
 # -- people
-@core_methods.method("add_user", 'name:str password:str role:str="editor"')
+@core_methods.method("add_user", 'name:str password:str role:str="editor"', hashes=(("name", "password"),))
 def _add_user(ctx, name, password, role):
     """Owners only: let a person into this document with a name and a password you give them (they can keep using
     it; there is no way yet to change it). `role` is `editor` or `viewer`. Returns `{user, role}`; `command_error`
@@ -1017,6 +1096,55 @@ def _add_user(ctx, name, password, role):
         raise RequestError("bad_request", msg("add_user: role must be editor or viewer"))
     account = ctx.directory.add_user(ctx.doc_id, name, password, role)
     return {"user": account.user, "role": account.role}
+
+
+@core_methods.method("change_role", "name:str role:str")
+def _change_role(ctx, name, role):
+    """Owners only: give `name` the role `editor` or `viewer` (D1263). Lowering an editor to viewer renews the history
+    and chat keys of the document, which takes about as long as writing its file once; raising one renews nothing.
+    The person's open windows have the new role at once. An owner's role is not changed here (ownership is handed
+    over, `propose_owner`). Returns `{user, role, renewed}` (`renewed` says whether keys were renewed);
+    `command_error` with a sentence for the person if `name` is an owner."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", msg("only the owner of a document changes who may do what"))
+    if not isinstance(ctx.directory, PeopleDirectory):
+        raise RequestError("unavailable", msg("this server does not change roles"))
+    if role not in ("editor", "viewer"):
+        raise RequestError("bad_request", msg("change_role: role must be editor or viewer"))
+    return _people_change(ctx, name, lambda: ctx.directory.set_role(ctx.doc_id, name, role), "role_changed")
+
+
+@core_methods.method("remove_person", "name:str")
+def _remove_person(ctx, name):
+    """Owners only: take `name` out of this document and renew the keys she held (D1263). She keeps what she has already
+    seen and any copy of the file she holds; the new keys protect what is written from now on. Her private notes are
+    deleted. People who are here stay connected; her windows are told and answer nothing more. An owner cannot be
+    removed here (she `leave`s, after ownership was handed over). Returns `{user}`; `command_error` with a sentence
+    for the person if `name` is an owner."""
+    if ctx.account.role != "owner":
+        raise RequestError("forbidden", msg("only the owner of a document removes people from it"))
+    if not isinstance(ctx.directory, PeopleDirectory):
+        raise RequestError("unavailable", msg("this server does not remove people"))
+    return _people_change(ctx, name, lambda: ctx.directory.remove_person(ctx.doc_id, name), "person_removed")
+
+
+def _people_change(ctx, name, act, kind):
+    """Run a change of the people and tell the document's windows; the answer is what the caller returns."""
+    before = {a.user: a.role for a in ctx.directory.list_people(ctx.doc_id)} if kind == "role_changed" else {}
+    try:
+        account = act()
+    except KeyError:
+        raise RequestError("command_error", msg("there is nobody called {name} in this document", name=name)) from None
+    except ValueError as error:
+        raise RequestError("command_error", str(error)) from error
+    data = {"user": account.user}
+    if kind == "role_changed":
+        data["role"] = account.role
+    ctx.document.publish(kind, ctx.user, data)
+    if kind == "person_removed":
+        return {"user": account.user}
+    lowered = before.get(account.user) in ("owner", "editor") and account.role == "viewer"
+    return {"user": account.user, "role": account.role, "renewed": lowered}
 
 
 @core_methods.method("new_recovery_key")
@@ -1042,7 +1170,7 @@ def _roster(ctx):
     return [{"user": account.user, "role": account.role} for account in ctx.directory.list_people(ctx.doc_id)]
 
 
-@core_methods.method("leave", "password:str")
+@core_methods.method("leave", "password:str", hashes=(("@user", "password"),))
 def _leave(ctx, password):
     """Remove yourself from this document, confirming it is really you with your own current password. Refused if
     you are the document's only owner: make somebody else the owner first (`propose_owner`). Returns `{left:
@@ -1055,7 +1183,11 @@ def _leave(ctx, password):
     return {"left": True}
 
 
-@core_methods.method("change_password", "old_password:str new_password:str")
+@core_methods.method(
+    "change_password",
+    "old_password:str new_password:str",
+    hashes=(("@user", "old_password"), ("@user", "new_password")),
+)
 def _change_password(ctx, old_password, new_password):
     """Choose a new password for this document, confirming it is really you with your current one (D448). Only your
     own, whatever your role; everybody else keeps theirs. Returns `{changed: true}`; `unauthorized` if the current
@@ -1071,7 +1203,7 @@ def _change_password(ctx, old_password, new_password):
     return {"changed": True}
 
 
-@core_methods.method("propose_owner", "name:str password:str")
+@core_methods.method("propose_owner", "name:str password:str", hashes=(("@user", "password"),))
 def _propose_owner(ctx, name, password):
     """Owners only: ask `name` (who must already be an editor of this document) to become its owner instead of you,
     confirming it is really you with your own current password. They have a while to accept (`accept_owner`);
@@ -1086,7 +1218,7 @@ def _propose_owner(ctx, name, password):
     return {"proposed": name}
 
 
-@core_methods.method("accept_owner", "password:str")
+@core_methods.method("accept_owner", "password:str", hashes=(("@user", "password"),))
 def _accept_owner(ctx, password):
     """Accept an ownership transfer proposed to you (`propose_owner`), confirming it is really you with your own
     current password. You are the owner from now on; reconnect to be recognised as one by the server for the rest
@@ -1101,7 +1233,7 @@ def _accept_owner(ctx, password):
     return {"accepted": True}
 
 
-@core_methods.method("delete_document", "password:str")
+@core_methods.method("delete_document", "password:str", hashes=(("@user", "password"),))
 def _delete_document(ctx, password):
     """Owners only: remove this document from the server for good — its file, its history and its chat, everybody's
     access to it — confirming it is really you with your own current password. There is no way back from this: make
@@ -1117,7 +1249,7 @@ def _delete_document(ctx, password):
     return {"deleted": True}
 
 
-@core_methods.method("set_details", "password:str description:text tags:list")
+@core_methods.method("set_details", "password:str description:text tags:list", hashes=(("@user", "password"),))
 def _set_details(ctx, password, description, tags):
     """Owners and editors: say what this document is about. `description` is Markdown, `tags` a list of short words;
     both replace what was there, and both are kept in the plain part of the document file so that everybody who may
@@ -1144,23 +1276,113 @@ def _set_details(ctx, password, description, tags):
     return {"description": kept_description, "tags": list(kept_tags)}
 
 
-@core_methods.method("export_content")
+def _now_text() -> str:
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def audit_row(record: AuditRecord) -> dict:
+    """A record as the wire shows it: `{kind, who, when, format, parts, pages}`."""
+    return {
+        "kind": record.kind,
+        "who": record.who,
+        "when": record.when,
+        "format": record.format,
+        "parts": list(record.parts),
+        "pages": record.pages,
+    }
+
+
+@core_methods.method("export_content", leaves="export")
 def _export_content(ctx):
     """The document's current content, as Claudia's own format — not Word, Excel or PowerPoint; import and export
     for those is separate, planned work: `{format, app, exported_at, state_schema, state}`. Does not include the
     command history or the chat (E2.9: exporting those, and importing, is not built yet)."""
     model = ctx.document.model
-    exported_at = datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
     return {
         "format": "claudia-export 1",
         "app": model.app,
-        "exported_at": exported_at,
+        "exported_at": _now_text(),
         "state_schema": model.state_schema,
         "state": model.serialize(),
     }
 
 
-@core_methods.method("download_claudia", "password:str")
+@core_methods.method("export_claudia", "include_history:bool=false", leaves="export")
+def _export_claudia(ctx, include_history):
+    """File ▸ Export… ▸ Claudia, unencrypted (D1270): one zip anybody can read, with the document's content as
+    `content.json` and, if an owner asks for it with `include_history`, the history (hidden side lines included) and
+    the chat as `history.jsonl` and `chat.jsonl`. No keys, no password hashes, no people. It is recorded in the
+    document (D1271) as an export by you. Returns `{format: "claudia-unencrypted", filename, content_type, data
+    (base64), parts}`; `forbidden` if `include_history` is asked by anybody but an owner. The AI may not export."""
+    if ctx.account.system:
+        raise RequestError("forbidden", msg("the assistant does not export the document"))
+    if include_history and ctx.account.role != "owner":
+        raise RequestError("forbidden", msg("only an owner may export the history and the chat"))
+    model = ctx.document.model
+    history = chat = None
+    if include_history:
+        from .filestore import (  # noqa: PLC0415 - filestore needs the hub, which needs us
+            chat_payloads,
+            history_payloads,
+        )
+
+        history = history_payloads(ctx.document.log)
+        chat = chat_payloads(ctx.document.chat)
+    data = write_export(
+        model.app,
+        model.state_schema,
+        model.serialize(),
+        exporter=ctx.user,
+        exported_at=_now_text(),
+        history=history,
+        chat=chat,
+    )
+    return {
+        "format": "claudia-unencrypted",
+        "filename": f"{ctx.doc_id}.claudia-export.zip",
+        "content_type": "application/zip",
+        "data": base64.b64encode(data).decode("ascii"),
+        "parts": ["content", "history", "chat"] if include_history else ["content"],
+    }
+
+
+_REPORTS: WeakKeyDictionary[Document, Throttle] = WeakKeyDictionary()
+"""How often a person's client may report a print or a PDF, per document: a script cannot fill the file (D1271)."""
+REPORTS_PER_MINUTE = 20
+MAX_REPORTED_PAGES = 100_000
+
+
+@core_methods.method("report_output", "kind:str format:str pages:int")
+def _report_output(ctx, kind, format, pages):
+    """A print or a PDF that this window has just made (D1271): `kind` is `print` or `pdf`, `format` what it was made
+    as (`print`, `pdf`), `pages` how many pages the document has. The server records who did it: you, from your
+    connection. This is the client's report of what Claudia's own screens did, not a guarantee, and it is made when the
+    file is saved or the page sent to the printer, not when the preview opens. At most 20 a minute for each person;
+    `too_many` after that. Any role may report, a viewer too, and the assistant may not."""
+    if ctx.account.system:
+        raise RequestError("forbidden", msg("the assistant does not print"))
+    if kind not in ("print", "pdf"):
+        raise RequestError("bad_request", msg("report_output: kind must be print or pdf"))
+    if not 0 <= pages <= MAX_REPORTED_PAGES or not 0 < len(format) <= 40:
+        raise RequestError("bad_request", msg("report_output: pages and format are not usable"))
+    throttle = _REPORTS.setdefault(ctx.document, Throttle(REPORTS_PER_MINUTE, 60.0))
+    if not throttle.allow(ctx.user.casefold()):
+        raise RequestError("too_many", msg("that is more prints and PDFs than the document records in a minute"))
+    ctx.record_leaving(kind, format, ("content",), pages)
+    return {"recorded": True}
+
+
+@core_methods.method("audit_log", reads="history")
+def _audit_log(ctx):
+    """What has left the document in a form that can be read outside Claudia, oldest first, as `{kind, who, when,
+    format, parts, pages}` (D1271): exports in any format, prints and PDFs. For owners and editors; a viewer does not
+    see it. The record cannot be redacted and has no revision."""
+    if not isinstance(ctx.directory, AuditDirectory):
+        return []
+    return [audit_row(record) for record in ctx.directory.audit_rows(ctx.doc_id)]
+
+
+@core_methods.method("download_claudia", "password:str", hashes=(("@user", "password"),))
 def _download_claudia(ctx, password):
     """File ▸ Download (D110, D1270): the document as Claudia's own sealed file, to keep on your computer. An owner
     gets the whole file; an editor gets it with only her own key slot; a viewer gets only what the content key opens

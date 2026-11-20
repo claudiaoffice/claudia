@@ -138,7 +138,8 @@ def test_the_welcome_describes_the_document_and_the_people_in_it(hosted):
     assert (welcome["user"], welcome["role"], welcome["doc"], welcome["app"]) == ("cleo", "viewer", "plan", "test-list")
     assert welcome["revision"] == "main:2" and welcome["line"] == "main" and welcome["limits"]["max_text"] > 0
     assert sorted(p["user"] for p in welcome["people"]) == ["ann", "ben"]
-    assert [c["label"] for c in welcome["checkpoints"]] == ["start"]
+    assert welcome["checkpoints"] == [], "a viewer's welcome carries no history (D1261)"
+    assert [c["label"] for c in first.connection.welcome()["checkpoints"]] == ["start"]
     assert second.connection.id != first.connection.id and first.connection.color != second.connection.color
 
 

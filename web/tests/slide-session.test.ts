@@ -125,6 +125,7 @@ function server(link: FakeLink, objects: any[] = []) {
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
     lines: () => [{ name: 'main', head: 'main:0', active: true, forked_from: null }],
     restore_policy: () => ({ policy: 'consensus' }),
+    ping: () => ({ revision: 'main:3', line: 'main' }),
     add_object: () => ({ object: 'o1', revision: 'main:1' }),
     add_image: () => ({ object: 'o1', revision: 'main:1' }),
     move_object: () => ({ revision: 'main:2' }),

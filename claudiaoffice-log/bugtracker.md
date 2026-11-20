@@ -41,13 +41,13 @@ statement in the docs or on the website).
 | SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` in CI since 2026-11-17 (job `pip-audit`; clean when run by hand) |
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |
 | SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |
-| SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12); decided 2026-11-19 (D1266), to be built on branch `e2-document-sec` |
+| SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12); **fixed** 2026-11-19 on branch `e2-document-sec` (D1266, D1275, D1276; admin sign-in too) |
 | SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **new, open** |
 | SEC-13 | P2 | Security | The web app is served without CSP, frame-ancestors, nosniff or referrer headers | **fixed** 2026-11-12 |
 | SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |
 | SEC-15 | P2 | Security | Office import reads every zip part whole and parses some XML with default parsers | **fixed** 2026-11-17 (`claudia_opc_io.check_package`, `parse_xml`) |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |
-| SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05, **now tracked**; decided 2026-11-19 (D1261), to be built on branch `e2-document-sec` |
+| SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05, **now tracked**; **fixed** 2026-11-19 on branch `e2-document-sec` (D1261); one part left, see SEC-22 |
 | PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |
 | PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |
 | PERF-03 | P3 | Performance | `users.json` rewritten and fsynced in full on every user added | superseded by the container |
@@ -222,12 +222,20 @@ statement in the docs or on the website).
 | PROC-32 | P3 | Process / docs | `claudiaoffice-log/notes/claudia-menus.xlsx` is not in the repo: the keys of this round are only in the generated key table, and the rows the contract note lists "for the workbook" are not settled | **new, open** |
 | PROC-33 | P3 | Process / gate | Patches 9–11 had ruff failures (lines over 120 characters in three files) that only the gate on the merged tree found | **fixed** 2026-11-19 (patch 12) |
 | SEC-20 | P2 | Security | Behind `--behind-proxy` every client had the proxy's address, so the per-address caps (waiting sockets, lookups, uploads) were one cap for everybody | **fixed** 2026-11-19 (D1275, branch `e2-document-sec`) |
-| SEC-21 | P2 | Security / performance | Methods that confirm a password (`set_details`, `delete_document`, `leave`, `change_password`, `propose_owner`, `download_claudia`) hash on the event loop, in `Connection.handle`, not in a thread: at 0.75 s (D1267) each stops every connection of the server for that long | **new, open** (read) |
+| SEC-21 | P2 | Security / performance | Methods that confirm a password (`set_details`, `delete_document`, `leave`, `change_password`, `propose_owner`, `download_claudia`) hash on the event loop, in `Connection.handle`, not in a thread: at 0.75 s (D1267) each stops every connection of the server for that long | **fixed** 2026-11-19 on branch `e2-document-sec` (D1277) |
 | CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |
 | DOC-04 | P3 | Docs | `docs/versioning.md` said the protocol version is "now 1"; the code says 2 | **fixed** 2026-11-19, with a test that compares them |
 | PROC-34 | P3 | Process / backlog | The `backlog` branch had renamed `e0.3-shells-gtk-with-webkitgtk-6-0.md` (an Obsidian plugin does that when a title changes) so the story and its epic no longer named each other and `tests/test_backlog.py` failed | **fixed** 2026-11-19 (file name restored) |
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |
-| PROC-35 | P3 | Process / e2e | `uv run pytest tests/e2e` as one run fails three tests ("Playwright Sync API inside the asyncio loop") that each pass alone: an earlier test leaves an event loop running | **new, open** (measured 2026-11-19, not compared with `main`) |
+| PROC-35 | P3 | Process / e2e | `uv run pytest tests/e2e` as one run fails three tests ("Playwright Sync API inside the asyncio loop") that each pass alone: an earlier test leaves an event loop running | **fixed** 2026-11-19 on branch `e2-document-sec` (measured on the branch, which has no change to the other e2e tests) |
+| SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |
+| PROC-36 | P3 | Process / tooling | A `ruff` installed outside the project (0.16.9) rewrites `except (A, B):` into `except A, B:` and reformats unrelated files; the project pins `ruff<0.15` for this | **fixed** 2026-11-19 (a rule in `CONTRIBUTING.md`, rule 5) |
+| PROC-38 | P3 | Process / tests | `test_another_window_is_answered_quickly_while_a_password_is_hashed` assumes that hashing takes more than 0.15 s; on a fast machine under load it measured 0.1499 s and the test failed (it passed alone) | **new, open** (size 3; calibrate the cost used by the test instead of reading the clock) |
+| PROC-39 | P2 | Process / e2e | The test server's output went to a pipe nobody read (`tests/e2e/live.py`); after about 64 KiB the server blocked on its next write and the whole event loop stood still, so page loads timed out (three `test_viewer` scenarios failed in a full run of `tests/e2e/specs` and passed alone) | **fixed** 2026-11-19 on branch `e2-document-sec` (the output goes to `server.log`; `test_greeting.py` and `test_computes_grid.py` still use a pipe but stop their servers within a minute) |
+| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |
+| UX-55 | P2 | UX / record | After its own export, print or PDF the window that did it was not shown its own line in History & Chat: the server tells the other windows only | **fixed** 2026-11-19 in slice B (found by the first end-to-end run; `BaseSession.recorded` reads the record again) |
+| CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |
+| UX-54 | P3 | UX / a11y | The pages of Server settings (AI model … Security) have no keyboard shortcut, and the menu workbook does not list them | **new, open** (pre-existing; found while adding the Security page; needs the owner's decision whether the rule covers navigation) |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
 
@@ -345,7 +353,9 @@ scripts/check_debt.py --fast` clean (ruff, mypy, vulture, docs, tests) except a 
 in the Linux client (`clients/linux/tests/test_manifest.py`, a `Submenu` union-attr error) — not touched by this fix
 and not re-checked here. Not yet re-verified against a commit hash: this round's patch has not been merged.
 
-### SEC-11 · No per-address back-off on failed logins · P3 · verified open
+### SEC-11 · No per-address back-off on failed logins · P3 · fixed 2026-11-19 on branch `e2-document-sec`
+**Fixed (D1266, D1276).** `LoginThrottle` before any hashing, at the document's `hello`, the recovery and the administrator's sign-in; code 4429 / 429 with `retry_after`; the web app counts down. In memory by decision (D1276): a restart forgets it.
+
 **Evidence (read).** `_Waiting` bounds how many connections wait to be let in, but nothing slows a patient guesser who
 logs in once, fails, disconnects and repeats. Named as the remaining part of E2.7 in the security-fix notes.
 **Fix.** Per-address and per-(document, name) back-off with a cap, on top of the hashing semaphore.
@@ -424,7 +434,9 @@ An administrator is trusted, but with SEC-12 that is anyone, and even without it
 "run this binary on every formula". **Fix.** Accept the setting only after the program answers `--version` with an
 XeTeX / pdftocairo banner (in the sandbox), and show what it answered on the settings page.
 
-### SEC-17 · A viewer's connection receives the whole history and chat · P2 · open (found 2026-11-05, tracked now)
+### SEC-17 · A viewer's connection receives the whole history and chat · P2 · fixed 2026-11-19 on branch `e2-document-sec` (found 2026-11-05)
+**Fixed (D1261).** `claudia_server.audience` classifies every pushed event; a viewer is sent content only, her `command`/`branch` events are reduced, her `welcome` has no history parts; `reads=` on every method refuses a viewer the history and the chat (`forbidden`). Tests: `test_server_audience.py`, the golden `tests/method_reads.json`, the updated hub tests. One part is not done: the authorship of the content, SEC-22.
+
 **Evidence (read, `7e619a2`).** The container gives a viewer no key to history and chat blocks (E2.4), but the live
 session ignores roles: `HostedDocument._audience` (`hub.py`) filters events by author, recipient and sender only, and
 the `log` and `chat_log` methods (`protocol.py`) answer any account. The 2026-11-05 review described this but it never
@@ -2161,7 +2173,9 @@ With `--behind-proxy` that is the proxy. **Fix.** D1275: the `X-Forwarded-For` e
 (`--proxy-hops`, default 1). Tests: `test_server_client_address.py`, `test_server_cli.py`, `test_server_uid.py`.
 **Not run:** a real proxy in front of a real server.
 
-### SEC-21 · Password-confirming methods hash on the event loop · P2 · new, open (read)
+### SEC-21 · Password-confirming methods hash on the event loop · P2 · fixed 2026-11-19 on branch `e2-document-sec`
+**Fixed (D1277).** Hashed in a worker thread behind the cap before the request is handled (`Method.hashes`, `Gateway.prepare`, the one-shot cache in `claudia_container.crypto`). `test_server_password_methods.py` failed first (the other window waited 0.19–0.42 s) and passes (under 50 ms, at most 2 hashing at once).
+
 **Evidence (read).** `Connection.handle` is synchronous and runs in the loop; `SealedDocuments.set_details`,
 `delete_document`, `leave`, `change_password`, the owner transfer and the new `sealed_copy` call `unlock` (one Argon2id run)
 inside it. Logins are different: `Gateway._hello` runs `verify` in a thread behind the hashing cap (SEC-03). Today a run takes
@@ -2186,7 +2200,9 @@ is edited in Obsidian: `tests/test_backlog.py` is what finds it.
 D110 (current since 2026-11-02) and the workbook say Download is the sealed `.claudia` file; the code wrote the
 unencrypted content JSON. Built as E2.12. The unencrypted export is now missing from the menus until E2.9 (owner accepted).
 
-### PROC-35 · The e2e tests fail together and pass alone · P3 · new, open (measured)
+### PROC-35 · The e2e tests fail together and pass alone · P3 · fixed 2026-11-19 on branch `e2-document-sec`
+**Fixed.** The spec runner's `browser` fixture was session-scoped, so its Playwright kept an event loop open for the rest of the run; it is module-scoped now. `uv run pytest tests/e2e` passes in one run (30 passed, 89 skipped, 2 xfailed). It was not compared with `main`; the cause was in this branch's runner or the one on `main`, which is the same file.
+
 **Evidence.** `CLAUDIA_CHROMIUM=/usr/bin/google-chrome uv run pytest tests/e2e` (one process): `test_greeting.py` (2 tests) and
 `test_computes_grid.py` fail with "It looks like you are using Playwright Sync API inside the asyncio loop"; run one file at
 a time, all pass (greeting 2, grid 1, names 7). The new `tests/e2e/specs` run on their own (3 passed, 3 skipped).
@@ -2244,3 +2260,54 @@ Linux client's notes and manifest, the CI workflow and the quality gate. Wrote a
 benchmark for the grid window and the sheet extent, a WCAG contrast calculation over the real tokens, and an
 inspection of the AI's authorisation path. Cross-checked every claim in the implementation notes that asserted a file
 or feature exists.
+
+### SEC-22 · A viewer still receives who wrote which stretch · P2 · new, open (needs a decision)
+**Evidence (read, `e2-document-sec`).** The authorship (`runs`) of every block is part of the content state: the `blocks`
+method, the `text` events, the snapshot and so the viewer's own sealed file (content key) all carry it. D1261 says the
+viewer's "show who wrote what" should have no data behind it. **Options.** (a) Mask `runs` for a viewer live and in her
+file (a viewer's snapshot would be written without them: a second snapshot); (b) accept the authorship as content and say
+so in D1261. **Proposal:** (b) until the owner says otherwise, because masking in the snapshot means the content is stored
+twice. Not built either way.
+
+### PROC-36 · A global `ruff` is not the project's · P3 · fixed 2026-11-19
+`ruff 0.16.9` outside the project rewrote `except (A, B):` into `except A, B:` in five files and reformatted six others
+that were not touched. `pyproject.toml` pins `ruff>=0.6,<0.15` for this reason. Use `uv run ruff`. **Fixed:** rule 5 of
+`CONTRIBUTING.md` says so.
+
+### UX-54 · The server settings pages have no keyboard shortcut · P3 · new, open
+The pages of Server settings (AI model, Typesetting, Fonts, Security, Access & documents) are buttons in a sidebar with no
+shortcut, and the menu workbook does not list them. The project asks for a shortcut for every menu entry; these are
+navigation, not menu entries, so the owner may want to decide whether the rule covers them.
+
+### PROC-37 · The history and chat of an export are not read back · P2 · new, open (needs a decision)
+**Evidence (read, measured by the tests).** `write_export` puts `history.jsonl` and `chat.jsonl` in the zip for an owner and
+`read_export` returns them, but `import_state` takes only `state`; the new document starts with one `core.Import` step. D1272
+says the history comes in with its authors as plain text ("former people"). **Not built** because the history of an export
+is the commands of another document, with revisions that mean nothing in the new one; what a person would want is the list of
+who did what, not commands that can be undone. **Options.** (a) a read-only "History of the original" kept as one note in the
+new document's history, text only, with the names as text; (b) the commands replayed with their authors as former people;
+(c) log it and leave the import as content only. **Proposal:** (a) in slice C. The mock-up's sentence "The people named in its
+history are not given access; their names stay in the history as former people" is **not** on the import dialog until this
+is built; the dialog says "Nobody else is given access." and nothing about names.
+
+### UX-55 · A window was not told of its own export · P2 · fixed 2026-11-19
+Found by the first end-to-end run of `export-and-record.feature`: the scenario "Ann exports the document without protection"
+failed because the History & Chat panel had no line. The server publishes `audit_recorded` to the other windows and not to
+the sender; the unit test on the server only looked at another window. **Fixed:** `BaseSession.recorded` reads `audit_log`
+again after the window's own export, print or PDF (owners and editors); `web/tests/session.test.ts` has the case.
+
+### CODE-74 · `export_content` is a third kind of export nobody asked for · P3 · new, open
+`export_content` (a JSON object with `format: "claudia-export 1"`) predates D1270 and is not called by any window. It is
+recorded like every export (`leaves="export"`), under a format name the panel does not know. Either remove it or make it
+answer with the zip; removing it changes the network API (a minor version while the major is 0).
+
+### PROC-38 · A timing test needs a slower machine than the one it runs on · P3 · new, open
+`test_another_window_is_answered_quickly_while_a_password_is_hashed` first checks that hashing takes longer than 0.15 s, so that
+"answered quickly" means something. On a fast machine, with the suite running in parallel, it measured 0.1499 s and failed;
+alone it passes. Size 3: the test should set a cost of its own that is slow enough, not read the clock of the machine.
+
+### PROC-39 · The e2e server's output pipe was never read · P2 · fixed
+`live.server()` started the server with `stdout=PIPE` and read it only when the server stopped early. A run with enough scenarios
+(slice C added six) wrote more than the pipe holds, and the server's next `print` blocked inside the event loop: the next page load
+timed out after 30 s. It showed as three failing `test_viewer` scenarios that pass alone. Found by bisecting which module had to
+run before them; fixed by writing to a file. Size 2 (it would have hidden every later regression behind a timeout).

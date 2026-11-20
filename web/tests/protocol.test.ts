@@ -156,6 +156,14 @@ describe('Link', () => {
     expect(closes.at(-1)).toEqual([1000, true])
   })
 
+  it('carries the seconds to wait when the server asks for them (D1266)', async () => {
+    const { l, socket } = link()
+    const welcome = l.connect()
+    socket.open()
+    socket.push({ id: 1, ok: false, error: { code: 'too_many_tries', message: 'Too many tries. Try again in 4 seconds.', retry_after: 4 } })
+    await expect(welcome).rejects.toMatchObject({ code: 'too_many_tries', retryAfter: 4 })
+  })
+
   it('ignores frames that are not JSON or that nobody waits for', async () => {
     const { l, socket } = link()
     const welcome = l.connect()
@@ -176,6 +184,8 @@ describe('addresses and messages', () => {
     expect(closeMessage(4401)).toMatch(/password/)
     expect(closeMessage(4404)).toMatch(/no such document/)
     expect(closeMessage(1006)).toMatch(/lost/)
+    expect(closeMessage(4429)).toMatch(/Too many tries/)
+    expect(closeMessage(4423)).toMatch(/editor or owner has to open this document first/)
   })
 })
 

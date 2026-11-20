@@ -121,6 +121,21 @@ def chat_items(chat: Sequence[ChatRecord]) -> list[tuple[str, Any]]:
     return [("chat", record.to_data()) for record in chat]
 
 
+def history_payloads(log: CommandLog) -> list[bytes]:
+    """The history as one JSON text per change, as the sealed journal keeps it (and an unencrypted export writes it,
+    D1270): the active line and every hidden side line."""
+    return [_payload_of(kind, data) for kind, data in history_items(log)]
+
+
+def chat_payloads(chat: Sequence[ChatRecord]) -> list[bytes]:
+    """The chat as one JSON text per message."""
+    return [_payload_of(kind, data) for kind, data in chat_items(chat)]
+
+
+def _payload_of(kind: str, data: Any) -> bytes:
+    return json.dumps({"t": kind, "d": data}, separators=(",", ":"), ensure_ascii=False).encode()
+
+
 class _Replay:
     """The state a journal builds up while it is read."""
 
@@ -208,6 +223,11 @@ class FileProvider:
     def app(self) -> str:
         """The kind of documents kept in the folder."""
         return self.model_cls.app
+
+    @property
+    def state_schema(self) -> int:
+        """The shape of the state of those documents, which an import has to have (D1272)."""
+        return self.model_cls.state_schema
 
     def _journal(self, doc_id: str) -> Path:
         return self.root / "docs" / _check_id(doc_id) / JOURNAL

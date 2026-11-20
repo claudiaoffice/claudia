@@ -24,6 +24,7 @@ from weakref import WeakKeyDictionary
 
 from claudia_core import Command, Document, KernelError, ProposalOutdated, Revision, WhatIf
 
+from .audience import HISTORY, may_read
 from .i18n import msg
 from .protocol import Context, MethodTable, RequestError
 from .replay import VIEW_READS, PastDocument
@@ -157,7 +158,12 @@ def add_what_if_methods(table: MethodTable) -> None:
         """Start a private what-if of the document as it is now (or after the step `at`): `{token, base}`. Try things
         with `what_if_apply`, look with `as_what_if`, see what would change with `what_if_changes`, carry it out with
         `what_if_commit` or end it with `what_if_drop`. Only the person who started it can use it. `unavailable` when
-        they have three already (or the document has twelve); one unused for 15 minutes is dropped."""
+        they have three already (or the document has twelve); one unused for 15 minutes is dropped. An earlier step is
+        the history, so `at` is `forbidden` to a role without its key (D1261): a viewer tries things on the present."""
+        if at is not None and not may_read(ctx.account.role, HISTORY):
+            raise RequestError(
+                "forbidden", msg("{name} reads the history, which is for the document's owners and editors", name="at")
+            )
         token, idea = desk_of(ctx.document).start(ctx.document, ctx.user, at)
         return {"token": token, "base": None if idea.base is None else idea.base.to_data()}
 

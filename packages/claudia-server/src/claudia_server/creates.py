@@ -211,7 +211,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
             "seconds": deck.time_of(slide),
         }
 
-    @table.method("export_office", "format:str")
+    @table.method("export_office", "format:str", leaves="export")
     def _export_office(ctx, *, format):
         """The document's current content as bytes of a PowerPoint file (`format` `"pptx"`) or an OpenDocument
         presentation (`"odp"`), wrapped for the wire as `{format, content_type, data}` (`data` base64); an odp's

@@ -5,6 +5,59 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-19
+
+### Changed
+- **Format 2** (`claudia-document 2`, D1279). A file of format 1 is refused with `OutdatedFormat` (a sentence for the
+  person: it was written by an older version); format 3 and up is "newer". Slots hold an X25519 `private_key` and a
+  `private` domain id; `people.bin` lists each person's `public_key` and `private` id; the head has a `recovery` locator
+  and `recovery_public`.
+
+### Added
+- Keys and people (D1274): `new_key_pair`, `KeyPair`, `seal_to`, `open_inbox`. A letter to a person is a sealed box in
+  `inbox/<locator>.bin` holding her role and the keys she was not there to receive. Login opens her slot, then her
+  letter, checks it against the people list and the head, and writes the catch-up (`unlock`, `unlock_with_recovery`).
+  A forged or swapped letter is ignored. `sealed_copy` for somebody else leaves the inbox and the private chains out.
+- Renewal (D1263): `change_role(path, keys, writer, name, role, snapshot=)` and `remove_person(...)` return
+  `Renewed(keys, writer, renewed)`. Removing a viewer renews the content key; removing an editor or owner renews all
+  three; lowering an editor to viewer renews history and chat. One atomic replacement of the file re-seals the chains,
+  the head, the people list and the original; pending journal records are folded in and a new journal starts under the
+  new keys. `RenewalInterrupted(keys)` if only the journal step failed. The snapshot is dropped unless passed.
+- The private domain (D1265): `private/<id>/NNNNNN.blk` with its own head, sealed with her private-domain key only;
+  `read_private`, `write_private`, `new_private_domain`, `PrivateDomain`. A stand-in mechanism for E16.8. Recovery gives
+  the person a new key pair and a new private domain and deletes the old chain.
+- Discarding side history stays owner-only (D1264, unchanged).
+
+## [0.11.0] - 2026-11-19
+
+### Added
+- The record of what left the document (D1271, E2.9): `AuditRecord(kind, who, when, format, parts, pages)` with `check()`,
+  `to_bytes()` and `from_bytes()`; `AUDIT_KINDS`, `AUDIT_PARTS`; `record_audit(path, keys, record)` and
+  `read_audit(path, keys)`. The records are blocks of a third chain, `audit/NNNNNN.blk`, sealed with the history key and
+  covered by the head (`Head.audit`, `blocks.AUDIT`, `Place.domain` is now the chain's name). A redaction, packing and the
+  rewrite of the journal carry the chain over byte for byte; `sealed_copy` for a viewer leaves it out. Nothing removes a
+  record. The format text stays `claudia-document 1`: a file only has the chain after its first export, and an older
+  program refuses such a file as damaged (it does not know the folder).
+- The unencrypted export (D1270, D1272): `write_export(app, state_schema, state, exporter=, exported_at=, history=, chat=)`,
+  `read_export(data)` (an `ExportFile`), `is_export(data)`, `ExportRefused`, `FORMAT_TEXT` `claudia-export 2`. A zip of
+  `format`, `export.json` (with the SHA-256 and size of each part), `content.json` and, for an owner, `history.jsonl` and
+  `chat.jsonl`; no key, slot, password hash or list of people. The reader checks the listing and the compression ratio
+  before it inflates, and refuses with a sentence.
+
+### Changed
+- `blocks.Place.domain` is a `str` (a domain's value or `"audit"`), not a `Domain`.
+
+## [0.10.0] - 2026-11-19
+
+### Added
+- `warm_login_material(password, name, doc_salt, params)` and `warm(path, name, password)` (SEC-21): do the slow hashing
+  of a login ahead of time, so that the next `derive_login_material` (and so `unlock`, `sealed_copy`, `change_password`,
+  `add_user` and the like) for the very same inputs takes the result. One-shot, expires after 30 s, at most 64 kept, filed
+  under a keyed hash of the inputs and never under the password or the name. A server calls it in a worker thread so that
+  its event loop does not stand still for a hash.
+- `calibrate(target_seconds, max_memory_kib, floor, measure)` (D1267): the Argon2id cost that takes about the target on
+  this machine: all the memory allowed, then the passes that fill the time, never weaker than the floor.
+
 ## [0.9.0] - 2026-11-19
 
 ### Added

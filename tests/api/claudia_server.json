@@ -1,5 +1,5 @@
 {
- "version": "0.38.0",
+ "version": "0.41.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -31,7 +31,7 @@
   "class": [
    "object"
   ],
-  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool, fonts: claudia_server.fonts.FontService | None = None) -> None",
+  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool, fonts: claudia_server.fonts.FontService | None = None, kdf: claudia_server.kdf_policy.KdfPolicy | None = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -161,6 +161,7 @@
    "close": "(self) -> 'None'",
    "deliver": "(self, message: 'dict') -> 'None'",
    "handle": "(self, raw: 'str | bytes') -> 'None'",
+   "hashing_for": "(self, raw: 'str | bytes') -> 'Callable[[], None] | None'",
    "person": "(self) -> 'dict'",
    "set_locale": "(self, locale: 'str') -> 'None'",
    "welcome": "(self) -> 'dict'"
@@ -197,14 +198,15 @@
    "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": [
-   "app"
+   "app",
+   "state_schema"
   ]
  },
  "ERROR_CODES": {
-  "value": "{'bad_request': 'malformed message, unknown or missing parameter, wrong type, or over a limit', 'unknown_method': 'no such method', 'command_error': 'the request was understood but rejected (bad index, unknown sheet...); nothing changed', 'forbidden': 'the account may not do this (read-only role)', 'unauthorized': 'missing or wrong credentials', 'not_found': 'no such document', 'unavailable': 'a server limit was reached (too many connections to the document)', 'sealed': 'the document is stored but nobody who holds all its keys has opened it since the server started; a viewer has to wait (and may try again) until an owner or editor has', 'locked': 'somebody else is working on that part of the document right now; nothing changed', 'conflict': \"undo or redo would overwrite a colleague's later work; nothing changed\", 'stale': 'the request was made against a view of the document that is gone (it went back to a checkpoint or changed line); reload the document and try again; nothing changed', 'internal': 'a server error; the request may or may not have been applied, check the revision'}"
+  "value": "{'bad_request': 'malformed message, unknown or missing parameter, wrong type, or over a limit', 'unknown_method': 'no such method', 'command_error': 'the request was understood but rejected (bad index, unknown sheet...); nothing changed', 'forbidden': 'the account may not do this (read-only role)', 'unauthorized': 'missing or wrong credentials', 'not_found': 'no such document', 'unavailable': 'a server limit was reached (too many connections to the document)', 'sealed': 'the document is stored but nobody who holds all its keys has opened it since the server started; a viewer has to wait (and may try again) until an owner or editor has', 'locked': 'somebody else is working on that part of the document right now; nothing changed', 'conflict': \"undo or redo would overwrite a colleague's later work; nothing changed\", 'stale': 'the request was made against a view of the document that is gone (it went back to a checkpoint or changed line); reload the document and try again; nothing changed', 'too_many_tries': 'a login came too soon after failed ones; the error carries `retry_after`, the whole seconds to wait. Nothing is locked: the same login is looked at when the wait is over', 'too_many': 'more of this than the server allows in a minute; nothing was done. Try again a little later', 'internal': 'a server error; the request may or may not have been applied, check the revision'}"
  },
  "EVENTS": {
-  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; document_deleted: {}, and nothing else will ever be stored or delivered for this document \u2014 close and forget it', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions and chat messages was removed: {revisions, chat}; reload chat_log', 'thing_renamed': 'an object, slide, sheet or chart tab got another name: {id, name} (D550)', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection', 'restore_proposed': 'a suggestion to restore a checkpoint or a step, or to switch the line is open, or its answers changed (see `propose_restore`): the proposal, as `answer_restore` returns it', 'restore_resolved': 'the open suggestion closed: {outcome: agreed|declined|withdrawn}. `agreed` is followed by `branch` and `rebuilt`, same as any restore or switch'}"
+  "value": "{'command': \"a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. State events of the app (the document's own, e.g. cells changed) come just before it\", 'history': 'your undo and redo state changed: {author, can_undo, can_redo, undo_label, redo_label}; sent to that author only', 'checkpoint': 'somebody saved a checkpoint: {number, label, author, marks}', 'chat': 'a chat message: {number, author, to, text, time, at}; only its sender and recipient get one that is not for everybody', 'ephemeral': 'something that is not stored: {kind: presence|preview|typing|person_left|owner_changed|document_deleted|..., sender, data}. person_left: {user}; owner_changed: {owner}; role_changed: {user, role}; person_removed: {user}; document_deleted: {}, and nothing else will ever be stored or delivered for this document \u2014 close and forget it', 'branch': 'the document moved to another line (a checkpoint was restored, or the way back was taken): {old, new, fork_point}. Everything you hold is stale: call snapshot', 'rebuilt': 'the state was rebuilt from the log (after a restore, a switch or a redaction): call snapshot', 'redacted': 'the content of these revisions and chat messages was removed: {revisions, chat}; reload chat_log', 'thing_renamed': 'an object, slide, sheet or chart tab got another name: {id, name} (D550)', 'stale': 'functions the document uses changed: {functions}; results computed by them are out of date', 'joined': 'somebody connected: {id, user, color}', 'left': 'somebody disconnected: {id, user}; their presence and locks are gone if it was their last connection', 'restore_proposed': 'a suggestion to restore a checkpoint or a step, or to switch the line is open, or its answers changed (see `propose_restore`): the proposal, as `answer_restore` returns it', 'restore_resolved': 'the open suggestion closed: {outcome: agreed|declined|withdrawn}. `agreed` is followed by `branch` and `rebuilt`, same as any restore or switch'}"
  },
  "Engine": {
   "class": [
@@ -240,7 +242,8 @@
    "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": [
-   "app"
+   "app",
+   "state_schema"
   ]
  },
  "FolderLock": {
@@ -266,11 +269,12 @@
   "class": [
    "object"
   ],
-  "init": "(suite: 'Suite', allowed: 'set[str]', *, max_hashing: 'int' = 2, access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0)",
+  "init": "(suite: 'Suite', allowed: 'set[str]', *, max_hashing: 'int' = 2, access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0, login_throttle: 'LoginThrottle | None' = None)",
   "methods": {
    "accepts_secret": "(self, candidate: 'object') -> 'bool'",
    "admit": "(self, doc_id: 'str', credentials: 'Credentials', create: 'bool', access: 'object' = None, *, app: 'str | None' = None) -> 'Account | None'",
    "module_for": "(self, doc_id: 'str', app: 'str | None', asked_app: 'object' = None) -> 'Module'",
+   "prepare": "(self, connection, raw: 'str | bytes') -> 'None'",
    "serve": "(self, websocket: 'WebSocket', doc_id: 'str', app: 'str | None' = None) -> 'None'",
    "set_secret": "(self, access_secret: 'str | None') -> 'None'"
   },
@@ -360,7 +364,8 @@
   },
   "properties": [
    "app",
-   "max_documents"
+   "max_documents",
+   "state_schema"
   ]
  },
  "HubError": {
@@ -389,6 +394,20 @@
    "open_sockets"
   ]
  },
+ "KdfPolicy": {
+  "class": [
+   "object"
+  ],
+  "init": "(target_seconds: float = 0.75, *, max_memory_kib: int = 262144, floor: claudia_container.crypto.KdfParams | None = None, calibrate: collections.abc.Callable[..., claudia_container.crypto.KdfParams] = <function calibrate>)",
+  "methods": {
+   "current": "(self) -> claudia_container.crypto.KdfParams",
+   "describe": "(self) -> dict",
+   "retarget": "(self, target_seconds: object) -> None",
+   "start": "(self) -> None",
+   "wait": "(self, timeout: float) -> bool"
+  },
+  "properties": []
+ },
  "Limits": {
   "class": [
    "object"
@@ -396,6 +415,19 @@
   "init": "(max_text: 'int' = 32767, max_message_bytes: 'int' = 16777216, max_regions: 'int' = 16) -> None",
   "methods": {
    "to_dict": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "LoginThrottle": {
+  "class": [
+   "object"
+  ],
+  "init": "(*, free_tries: 'int' = 3, address_cap: 'float' = 30.0, name_cap: 'float' = 10.0, forget_after: 'float' = 900.0, max_entries: 'int' = 10000, clock: 'Callable[[], float]' = <built-in function monotonic>)",
+  "methods": {
+   "check": "(self, address: 'str', doc_id: 'str', name: 'object') -> 'float'",
+   "failed": "(self, address: 'str', doc_id: 'str', name: 'object') -> 'None'",
+   "size": "(self) -> 'int'",
+   "succeeded": "(self, address: 'str') -> 'None'"
   },
   "properties": []
  },
@@ -414,14 +446,15 @@
    "release": "(self, doc_id: 'str') -> 'None'"
   },
   "properties": [
-   "app"
+   "app",
+   "state_schema"
   ]
  },
  "Method": {
   "class": [
    "object"
   ],
-  "init": "(name: 'str', params: 'tuple[Param, ...]', write: 'bool', doc: 'str', fn: 'Callable[..., Any]') -> None",
+  "init": "(name: 'str', params: 'tuple[Param, ...]', write: 'bool', doc: 'str', fn: 'Callable[..., Any]', reads: 'str' = 'content', hashes: 'tuple[tuple[str, str], ...]' = (), leaves: 'str | None' = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -435,8 +468,9 @@
    "describe": "(self, limits: 'Limits | None' = None) -> 'dict'",
    "dispatch": "(self, ctx: 'Context', name: 'Any', params: 'Any') -> 'Any'",
    "extended": "(self) -> 'MethodTable'",
+   "hashes_of": "(self, raw: 'str | bytes', user: 'str') -> 'list[tuple[str, str]]'",
    "kind": "(self, name: 'str')",
-   "method": "(self, name: 'str', spec: 'str' = '', *, write: 'bool' = False)",
+   "method": "(self, name: 'str', spec: 'str' = '', *, write: 'bool' = False, reads: 'str' = 'content', hashes: 'tuple[tuple[str, str], ...]' = (), leaves: 'str | None' = None)",
    "names": "(self) -> 'set[str]'"
   },
   "properties": []
@@ -577,10 +611,11 @@
   "class": [
    "object"
   ],
-  "init": "(root: 'str | Path', model_cls: 'type[DocumentModel]', *, kdf: 'KdfParams | None' = None, key_ttl: 'float' = 60.0, transfer_ttl: 'float' = 300.0, pack_every: 'int' = 500, clock: 'Callable[[], float]' = <built-in function monotonic>, **options)",
+  "init": "(root: 'str | Path', model_cls: 'type[DocumentModel]', *, kdf: 'KdfParams | Callable[[], KdfParams] | None' = None, key_ttl: 'float' = 60.0, transfer_ttl: 'float' = 300.0, pack_every: 'int' = 500, clock: 'Callable[[], float]' = <built-in function monotonic>, **options)",
   "methods": {
    "accept_owner_transfer": "(self, doc_id: 'str', new_owner: 'str', new_owner_password: 'str') -> 'Account | None'",
    "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
+   "audit_rows": "(self, doc_id: 'str') -> 'list[AuditRecord]'",
    "change_password": "(self, doc_id: 'str', name: 'str', old_password: 'str', new_password: 'str') -> 'bool'",
    "create": "(self, doc_id: 'str') -> 'Document'",
    "delete_document": "(self, doc_id: 'str', owner: 'str', owner_password: 'str') -> 'bool'",
@@ -596,23 +631,36 @@
    "original": "(self, doc_id: 'str') -> 'bytes | None'",
    "place": "(self, doc_id: 'str', data: 'bytes') -> 'None'",
    "propose_owner_transfer": "(self, doc_id: 'str', old_owner: 'str', old_owner_password: 'str', new_owner: 'str') -> 'bool'",
+   "record_audit": "(self, doc_id: 'str', record: 'AuditRecord') -> 'None'",
    "recover": "(self, doc_id: 'str', recovery_key: 'str', name: 'str', new_password: 'str') -> 'Account | None'",
    "release": "(self, doc_id: 'str') -> 'None'",
+   "remove_person": "(self, doc_id: 'str', name: 'str') -> 'Account'",
    "remove_user": "(self, doc_id: 'str', name: 'str') -> 'None'",
    "sealed_copy": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'bytes | None'",
    "set_details": "(self, doc_id: 'str', owner: 'str', owner_password: 'str', description: 'str', tags: 'Sequence[str]') -> 'bool'",
+   "set_role": "(self, doc_id: 'str', name: 'str', role: 'str') -> 'Account'",
    "uid_of": "(self, doc_id: 'str') -> 'str | None'",
-   "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'"
+   "verify": "(self, doc_id: 'str', credentials: 'Credentials') -> 'Account | None'",
+   "warm": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'None'"
   },
   "properties": [
-   "app"
+   "app",
+   "state_schema"
   ]
+ },
+ "SecuritySettings": {
+  "class": [
+   "object"
+  ],
+  "init": "(kdf_target_seconds: 'float' = 0.75) -> None",
+  "methods": {},
+  "properties": []
  },
  "ServerSettings": {
   "class": [
    "object"
   ],
-  "init": "(max_documents: 'int', access_secret: 'str | None' = None, ai: 'AiSettings' = <factory>, typeset: 'TypesetSettings' = <factory>, render: 'RenderSettings' = <factory>, changed: 'dict[str, Changed]' = <factory>) -> None",
+  "init": "(max_documents: 'int', access_secret: 'str | None' = None, ai: 'AiSettings' = <factory>, typeset: 'TypesetSettings' = <factory>, render: 'RenderSettings' = <factory>, security: 'SecuritySettings' = <factory>, changed: 'dict[str, Changed]' = <factory>) -> None",
   "methods": {
    "dump": "(self) -> 'dict'",
    "load": "(data: 'dict') -> 'ServerSettings'",
@@ -712,6 +760,16 @@
   },
   "properties": []
  },
+ "WarmableDirectory": {
+  "class": [
+   "Protocol"
+  ],
+  "init": "(*args, **kwargs)",
+  "methods": {
+   "warm": "(self, doc_id: 'str', name: 'str', password: 'str') -> 'None'"
+  },
+  "properties": []
+ },
  "WorkerPool": {
   "class": [
    "object"
@@ -724,7 +782,7 @@
   "properties": []
  },
  "admin_router": {
-  "function": "(suite: claudia_server.suite.Suite, set_access_secret: collections.abc.Callable[[str | None], None], context: claudia_server.admin_api.AdminContext) -> fastapi.routing.APIRouter"
+  "function": "(suite: claudia_server.suite.Suite, set_access_secret: collections.abc.Callable[[str | None], None], context: claudia_server.admin_api.AdminContext, *, throttle: claudia_server.login_throttle.LoginThrottle | None = None, address_of: collections.abc.Callable[[starlette.requests.Request], str] = <function <lambda>>) -> fastapi.routing.APIRouter"
  },
  "composes_methods": {
   "value": "<MethodTable>"
@@ -736,7 +794,7 @@
   "value": "<MethodTable>"
  },
  "create_app": {
-  "function": "(hub: 'Hub | Suite', directory: 'UserDirectory | None' = None, *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None, idle: 'IdleWatch | None' = None) -> 'FastAPI'"
+  "function": "(hub: 'Hub | Suite', directory: 'UserDirectory | None' = None, *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0, login_throttle: 'LoginThrottle | None' = None, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None, idle: 'IdleWatch | None' = None) -> 'FastAPI'"
  },
  "creates_methods": {
   "value": "<MethodTable>"

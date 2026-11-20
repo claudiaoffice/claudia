@@ -83,9 +83,10 @@ def test_peeking_an_unknown_line_is_a_command_error(worked):
     assert error["code"] == "command_error"
 
 
-def test_a_viewer_may_peek(hosted):
+def test_a_viewer_may_not_peek(hosted):
+    """Another line is history, which a viewer does not read (D1261)."""
     vera = Client(hosted, Account("vera", "viewer"))
-    assert vera.request("peek_line", {"line": "main"})["ok"]
+    assert vera.request("peek_line", {"line": "main"})["error"]["code"] == "forbidden"
 
 
 # ------------------------------------------------------------------------------------------ restore_policy

@@ -26,10 +26,11 @@ import logging
 import re
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, Protocol
 
 from claudia_computes import WorkbookModel
+from claudia_container import Domain
 from claudia_core import (
     ChatPosted,
     CommandLog,
@@ -45,6 +46,7 @@ from claudia_core import (
 from claudia_core.clock import utc_now
 from claudia_render import RenderFailed, ToolUnavailable
 
+from .audience import may_read, shape_for
 from .auth import AI_COLOR, ROLES, Account, UserDirectory
 from .heavy_dispatch import HeavyDispatcher
 from .i18n import localized, msg
@@ -117,6 +119,10 @@ class DocumentProvider(Protocol):
     def app(self) -> str:
         """The kind of documents this provider holds (``DocumentModel.app``): a server hosts one kind."""
 
+    @property
+    def state_schema(self) -> int:
+        """The ``DocumentModel.state_schema`` of those documents: the shape of the state an import must have."""
+
     def exists(self, doc_id: str) -> bool:
         """Is there a document with this id?"""
 
@@ -163,6 +169,11 @@ class MemoryProvider:
     def app(self) -> str:
         """The kind of documents kept here."""
         return self._model_cls.app
+
+    @property
+    def state_schema(self) -> int:
+        """The shape of the state of those documents."""
+        return self._model_cls.state_schema
 
     def exists(self, doc_id: str) -> bool:
         """Is there a document with this id?"""
@@ -214,11 +225,22 @@ class Connection:
         self.color = AI_COLOR if account.system else hosted.pick_color()
         self.closed = False
         self.broken = False  # sending failed (client gone or too slow): the transport should drop it
+        self.removed = False  # the person was taken out of the document: nothing more is answered (D1263)
         self.locale = normalize_locale(locale)  # the window's own locale (E5.7); re-normalized, never trusted raw
 
     # -- outgoing -----------------------------------------------------------------------
     def deliver(self, message: dict) -> None:
-        """Send one frame. A dead or slow client never breaks the edit that is being broadcast."""
+        """Send one frame. A dead or slow client never breaks the edit that is being broadcast.
+
+        A pushed event is shaped for this person's role first (D1261): a viewer gets the content, the names and presence
+        and nothing from the history or the chat."""
+        if "event" in message:
+            if self.removed:
+                return  # nothing of the document reaches a person who was taken out of it
+            shaped = shape_for(self.account.role, message["event"], message["data"])
+            if shaped is None:
+                return
+            message = {**message, "data": shaped}
         try:
             self._send(json.dumps(message, allow_nan=False, separators=(",", ":")))
         except Exception:
@@ -228,6 +250,7 @@ class Connection:
         """What a client needs to start: who it is, where the document is, who else is here."""
         doc = self.hosted.document
         revision = doc.revision
+        history = may_read(self.account.role, Domain.HISTORY)  # a viewer's welcome carries none of it (D1261)
         return {
             "protocol": PROTOCOL_VERSION,
             "user": self.account.user,
@@ -248,13 +271,23 @@ class Connection:
                 for hold in doc.presence.holds()
                 if hold.owner != self.account.user
             ],
-            "checkpoints": [{"number": c.number, "label": c.label, "author": c.author} for c in doc.checkpoints],
-            "lines": [
-                {"name": x.name, "head": None if x.head is None else x.head.to_data(), "active": x.active}
-                for x in doc.lines()
-            ],
-            "proposal": None if (p := self.hosted.restore.open_proposal) is None else p.to_data(),
-            "returned": None if self.account.system else self.hosted.restore.notice_for(self.account.user, doc.branch),
+            "checkpoints": (
+                [{"number": c.number, "label": c.label, "author": c.author} for c in doc.checkpoints] if history else []
+            ),
+            "lines": (
+                [
+                    {"name": x.name, "head": None if x.head is None else x.head.to_data(), "active": x.active}
+                    for x in doc.lines()
+                ]
+                if history
+                else []
+            ),
+            "proposal": None if not history or (p := self.hosted.restore.open_proposal) is None else p.to_data(),
+            "returned": (
+                None
+                if self.account.system or not history
+                else self.hosted.restore.notice_for(self.account.user, doc.branch)
+            ),
         }
 
     def person(self) -> dict:
@@ -262,12 +295,36 @@ class Connection:
         return {"id": self.id, "user": self.account.user, "color": self.color}
 
     # -- incoming -----------------------------------------------------------------------
+    def hashing_for(self, raw: str | bytes) -> Callable[[], None] | None:
+        """The slow work of this request frame, ready to run in a thread, or ``None`` if it has none (SEC-21).
+
+        A request that confirms a password hashes it, which takes a good fraction of a second; done inside ``handle``
+        that would stop every other window of the server. The transport runs what this returns first, in a worker
+        thread behind its hashing cap, and ``handle`` then finds the hashes done. A directory that cannot hash ahead
+        (``WarmableDirectory``) has nothing to run, and ``handle`` hashes as it always did."""
+        hosted = self.hosted
+        warm = getattr(hosted.directory, "warm", None)
+        if warm is None:
+            return None
+        pairs = hosted.methods.hashes_of(raw, self.account.user)
+        if not pairs:
+            return None
+        doc_id = hosted.id
+
+        def work() -> None:
+            for name, password in pairs:
+                warm(doc_id, name, password)
+
+        return work
+
     def handle(self, raw: str | bytes) -> None:
         """Process one request frame; exactly one response frame is sent for it."""
         hosted = self.hosted
         request_id = None
         try:
             request_id, name, params = parse_request(raw, hosted.limits)
+            if self.removed:
+                raise RequestError("forbidden", msg("you are no longer a person of this document"))
             context = Context(
                 hosted.document,
                 self.account,
@@ -465,6 +522,8 @@ class HostedDocument:
         data = event.to_data()  # type: ignore[attr-defined]
         if isinstance(event, EphemeralPublished) and event.message.kind == "presence":
             (self._locked.add if event.message.data.get("locked") else self._locked.discard)(event.message.sender or "")
+        if isinstance(event, EphemeralPublished) and event.message.kind == "role_changed":
+            self._apply_people_change("role_changed", event.message.data)  # before it is delivered
         event_type = data.get("type", "state")
         # An event may offer `to_data_for(viewer)` to mask part of its payload per connection (e.g. an imported
         # image's source path, hidden from everyone but the person who imported it). Duck-typed, not imported by
@@ -473,6 +532,21 @@ class HostedDocument:
         for connection in self._audience(event):
             payload = data if to_data_for is None else to_data_for(connection.account.user)
             connection.deliver({"event": event_type, "data": payload})
+        if isinstance(event, EphemeralPublished) and event.message.kind == "person_removed":
+            self._apply_people_change("person_removed", event.message.data)  # after: she is told, then cut off
+
+    def _apply_people_change(self, kind: str, data: dict) -> None:
+        """A person's role was changed or she was removed (D1263): her open windows get the new role at once, before the
+        event is delivered, so what she may do and what she is shown follow the change on her next event and request. A
+        removed person's windows are told (the event is delivered first), then answer nothing more and get no events."""
+        user = data.get("user")
+        for connection in self.connections:
+            if connection.account.user != user:
+                continue
+            if kind == "role_changed":
+                connection.account = replace(connection.account, role=data["role"])
+            else:
+                connection.removed = True
 
     # -- pictures follow the text (D395) -------------------------------------------------------
     def _schedule_render(self, event: RenderingsChanged) -> None:
@@ -693,6 +767,11 @@ class Hub:
     def app(self) -> str:
         """The kind of documents this server hosts (``"computes"``, ``"creates"``, ...)."""
         return self.provider.app
+
+    @property
+    def state_schema(self) -> int:
+        """The shape of the state of this hub's documents (what an unencrypted export must match to come in)."""
+        return self.provider.state_schema
 
     def listing(self) -> list[dict]:
         """The documents on this server: ``{id, app, modified, online, description, tags}``, most recently changed

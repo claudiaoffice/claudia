@@ -162,6 +162,17 @@ def test_a_what_if_can_start_from_an_earlier_step(paper):
     assert [b["text"] for b in blocks_in(paper, token)] == ["Hello world"]
 
 
+def test_a_viewer_cannot_start_a_what_if_from_an_earlier_step(paper):
+    """An earlier step is the history, which a viewer's key does not open (D1261); the document as it is now is hers."""
+    from claudia_server.auth import Account
+
+    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 5, "text": "Howdy"}, BEN)
+    first = paper.log.path(paper.revision)[0].rev.to_data()
+    with pytest.raises(RequestError) as refused:
+        start(paper, Account("vera", "viewer"), params={"at": first})
+    assert refused.value.code == "forbidden"
+
+
 def test_the_what_if_methods_are_in_every_apps_table():
     from claudia_server.computes import computes_methods
     from claudia_server.creates import creates_methods

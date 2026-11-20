@@ -11,6 +11,7 @@ import { currentLocale } from '~/lib/locale'
 import { adminUrl, defaultLabel, list as listBookmarks, normalizeServerInput, rename as renameBookmark, upsert as upsertBookmark, withBookmark, withRenamed, type Bookmark } from '~/lib/server-bookmarks'
 import { createShellBridge, detectHandler, detectParentSink, isApp, type ShellBridge } from '~/lib/shell-bridge'
 import { LANGUAGES, useI18n } from '~/lib/i18n'
+import { useLoginWait } from '~/lib/login-wait'
 import { useTheme } from '~/lib/theme'
 import Modal from './Modal.vue'
 
@@ -62,6 +63,7 @@ const docField = ref<HTMLInputElement | null>(null)
 const user = ref('')
 const password = ref('')
 const error = ref('')
+const wait = useLoginWait() // failed logins make the next one wait (D1266)
 const busy = ref(false)
 /** The recovery key of a document that was just made, shown before the person goes in (the session waits here). */
 const fresh = shallowRef<{ session: AnySession; key: string } | null>(null)
@@ -730,6 +732,7 @@ function proceed() {
  */
 async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; keep: boolean; description?: string; tags?: string[] }, onAnswered?: () => void) {
   error.value = ''
+  if (wait.waiting.value) return // the server would refuse it anyway, and a wait that is running is not to be restarted
   startingNew.value = false
   if (how === 'create') await listed
   if (how === 'create' && !newApp.value) {
@@ -770,9 +773,13 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
     if (key) fresh.value = { session, key }
     else await enter(session)
   } catch (e) {
-    const failure = e as { code?: string; message?: string } | null // a ProtocolError, or whatever a link threw
+    const failure = e as { code?: string; message?: string; retryAfter?: number } | null // a ProtocolError, or whatever a link threw
+    if (failure?.code === 'too_many_tries' && failure.retryAfter) wait.begin(failure.retryAfter)
+    else wait.clear()
     error.value =
-      failure?.code === 'unauthorized'
+      failure?.code === 'too_many_tries'
+        ? ''
+        : failure?.code === 'unauthorized'
         ? how === 'create'
           ? t('That document exists already — or the name or password is not acceptable. Try Open.')
           : how === 'recover'
@@ -1032,13 +1039,16 @@ async function go(how: 'open' | 'create' | 'recover', from?: { upload: string; k
             <PasswordInput v-model="password" name="password" :autocomplete="recovering ? 'new-password' : 'current-password'" />
           </label>
           <p v-if="error" class="error" role="alert">{{ error }}</p>
+          <p v-if="wait.said.value" class="error wait" role="status" aria-live="polite" data-testid="login-wait">
+            {{ wait.said.value }} <span v-if="wait.waiting.value" aria-hidden="true">({{ wait.left.value }} s)</span>
+          </p>
           <div class="buttons">
             <template v-if="recovering">
-              <button class="btn primary" type="submit" :disabled="busy">{{ t('Get back in') }}</button>
+              <button class="btn primary" type="submit" :disabled="busy || wait.waiting.value">{{ t('Get back in') }}</button>
               <button class="btn" type="button" :disabled="busy" @click="recovering = false">{{ t('Back') }}</button>
             </template>
             <template v-else>
-              <button class="btn primary" type="submit" :disabled="busy">{{ t('Open') }}</button>
+              <button class="btn primary" type="submit" :disabled="busy || wait.waiting.value">{{ t('Open') }}</button>
             </template>
           </div>
           <p v-if="recovering" class="hint">

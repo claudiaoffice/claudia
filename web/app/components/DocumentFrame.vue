@@ -237,6 +237,15 @@ onBeforeUnmount(() => clearTimeout(timer))
 
     <div v-if="state.notice" class="toast" :class="state.notice.kind" role="status" @click="state.notice = null">{{ state.notice.text }}</div>
 
+    <div v-if="state.status === 'waiting'" class="gone" role="alertdialog" data-testid="waiting-for-an-editor">
+      <div>
+        <h2>{{ state.doc || t('This document') }}</h2>
+        <p>{{ state.error }}</p>
+        <p class="trying">{{ t('Trying again every few seconds…') }}</p>
+        <button class="btn" type="button" @click="emit('leave')">{{ t('Close') }}</button>
+      </div>
+    </div>
+
     <div v-if="state.status === 'closed'" class="gone" role="alertdialog">
       <div>
         <h2>{{ t('You are not connected any more') }}</h2>
@@ -310,6 +319,10 @@ onBeforeUnmount(() => clearTimeout(timer))
   place-items: center;
   background: rgb(247 243 236 / 92%);
   text-align: center;
+}
+.gone .trying {
+  color: var(--muted, #5b5470);
+  font-size: 13px;
 }
 .gone h2 {
   font: 400 26px var(--font-display);

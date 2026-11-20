@@ -109,6 +109,8 @@ export interface PrintSource {
   status(pages: PrintPages, page: PageSetupData): string
   /** the PDF's producer */
   readonly producer: string
+  /** tell the server that this window printed, or saved a PDF of, `pages` pages: it records it (D1271) */
+  report(kind: 'print' | 'pdf', pages: number): void
 }
 
 /** The PDF of laid-out pages. No date is written into it, so the same document gives the same file everywhere. */
@@ -154,6 +156,7 @@ export function textSource(session: TextSession): PrintSource {
     },
     status: (pages, page) => describe(page, pages.list.pages.length),
     producer: 'claudia composes',
+    report: (kind, pages) => void session.reportOutput(kind, pages),
   }
 }
 
@@ -225,6 +228,7 @@ export function slideSource(session: SlideSession): PrintSource {
     },
     status: (pages, page) => describe(page, pages.list.pages.length, pages.slides),
     producer: 'claudia creates',
+    report: (kind, pages) => void session.reportOutput(kind, pages),
   }
 }
 
@@ -313,5 +317,6 @@ export function sheetSource(session: Session, window: SheetWindow): PrintSource 
     },
     status: (pages, page) => (pages.printed ? describeSheets(pages.list.pages.length, pages.printed.sheets, pages.printed.name, PAPER_SIZES.find((p) => p.id === page.paper)?.name ?? `${mm(page.width)} × ${mm(page.height)} mm`, pages.printed.orientation) : describe(page, pages.list.pages.length)),
     producer: 'claudia computes',
+    report: (kind, pages) => void session.reportOutput(kind, pages),
   }
 }

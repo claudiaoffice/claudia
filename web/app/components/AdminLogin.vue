@@ -10,6 +10,7 @@
 import { ref } from 'vue'
 import type { useAdminSession } from '~/lib/admin-session'
 import { useI18n } from '~/lib/i18n'
+import { useLoginWait } from '~/lib/login-wait'
 
 const { t } = useI18n()
 
@@ -19,6 +20,7 @@ const emit = defineEmits<{ close: [] }>()
 const name = ref('')
 const password = ref('')
 const formError = ref('')
+const wait = useLoginWait() // failed sign-ins make the next one wait (D1266)
 
 async function signIn() {
   formError.value = ''
@@ -26,8 +28,12 @@ async function signIn() {
     formError.value = t('Fill in your name and password.')
     return
   }
+  if (wait.waiting.value) return
   const error = await props.session.login(name.value.trim(), password.value)
-  if (error) formError.value = error
+  const seconds = props.session.waitAdvice.value
+  if (seconds) wait.begin(seconds)
+  else wait.clear()
+  if (error && !seconds) formError.value = error
 }
 </script>
 
@@ -48,10 +54,13 @@ async function signIn() {
       <label class="field">{{ t('Password') }}<PasswordInput v-model="password" autocomplete="current-password" /></label>
 
       <p v-if="formError" class="error" role="alert">{{ formError }}</p>
+      <p v-if="wait.said.value" class="error" role="status" aria-live="polite" data-testid="login-wait">
+        {{ wait.said.value }} <span v-if="wait.waiting.value" aria-hidden="true">({{ wait.left.value }} s)</span>
+      </p>
 
       <div class="spacer" />
       <div class="buttons">
-        <button class="btn primary" type="submit" :disabled="session.busy.value">{{ t('Sign in') }}</button>
+        <button class="btn primary" type="submit" :disabled="session.busy.value || wait.waiting.value">{{ t('Sign in') }}</button>
       </div>
     </form>
   </div>
