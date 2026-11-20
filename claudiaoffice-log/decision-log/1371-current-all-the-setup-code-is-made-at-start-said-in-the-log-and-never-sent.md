@@ -22,7 +22,8 @@ superseded-by: []
   removed once an administrator exists. **The server never sends the code**: no answer of any request contains it.
 - **How it is checked.** Compared in constant time after normalising (`hmac.compare_digest`). A wrong code is 403
   with a sentence that says where to look; the tries of `/setup` and of the check (D1372) are counted per address by
-  the back-off of the sign-in (D1266), so too many get 429 with `Retry-After`. A code that was right but too late (an
+  the back-off of the sign-in (D1266): three tries are free, then a growing wait of at most 30 s, so the fifth wrong
+  try in a row gets 429 with `Retry-After` (owner, review of 2026-11-20). A code that was right but too late (an
   administrator was named meanwhile) is 409, and the page turns to the sign-in form with one line on top.
 - **The status says whether one is needed:** `GET /api/admin/status` gains `setup_code: true` while nobody has been
   named. A page that talks to an older server (no such field) shows no field.

@@ -15,7 +15,8 @@ superseded-by: []
 
 - `--admin NAME` (or `CLAUDIA_ADMIN`) with `--admin-password-file FILE` (or `CLAUDIA_ADMIN_PASSWORD_FILE`) names
   NAME the first administrator at start, with the password in FILE (its first line; the rules of an administrator's
-  password apply). For deployments where nobody reads the log: the demo, which starts afresh on every cold start, and
+  password apply). An empty file, one that cannot be read, or a password the rules refuse stops the server with a
+  sentence, before anything changes (owner, review of 2026-11-20). For deployments where nobody reads the log: the demo, which starts afresh on every cold start, and
   containers. The password is never taken from the command line or from an environment value of its own, which other
   processes and logs can see.
 - **Only when nobody is named.** With administrators already there it changes nothing and says so in the banner (also

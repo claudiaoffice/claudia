@@ -3,6 +3,12 @@
 #
 # "A server behind a proxy" is one started with --no-tls --behind-proxy on 127.0.0.1: the browser reaches it directly,
 # and it counts as exposed (D1374). "The server's log" is what the server printed at start.
+#
+# Reviewed by the owner on 2026-11-20 (all proposals accepted): a server started by hand on 127.0.0.1 keeps its
+# optional wording with the code field; wrong codes wait like the sign-in (three free tries, so the fifth is refused);
+# the password file's first line is the password; set-aside administrators stay; the banner names a reset once; the
+# demo's CLAUDIA_ADMIN and CLAUDIA_ADMIN_PASSWORD are the owner's to set; no menu entry; BITV as in the
+# implementation note.
 Feature: Only whoever runs a server can make the first administrator, and the pages say only what the server does
 
   # --- the setup code (D1370–D1372) -----------------------------------------------------------------------------------
@@ -56,7 +62,7 @@ Feature: Only whoever runs a server can make the first administrator, and the pa
   Scenario: Too many wrong codes make me wait
     Given a server behind a proxy that has no administrator
     When I open its server settings
-    And I try 4 wrong setup codes
+    And I try 5 wrong setup codes
     Then I am told to try again in some seconds
     And the server still has no administrator
 
