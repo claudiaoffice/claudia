@@ -369,10 +369,6 @@ msgstr "Ein Quartil der Zahlen ohne die kleinste und die größte: 1, 2 (der Med
 msgid "A quartile of the numbers: 0 the smallest, 1, 2 (the median), 3, 4 the largest."
 msgstr "Ein Quartil der Zahlen: 0 die kleinste, 1, 2 (der Median), 3, 4 die größte."
 
-#: web/app/components/AdminAccessDocuments.vue:245
-msgid "A recovery key, not needed day to day — administrators sign in with their own name and password instead. Rotating it doesn't sign anyone out."
-msgstr "Ein Wiederherstellungsschlüssel, im Alltag nicht nötig – Administratoren melden sich stattdessen mit eigenem Namen und Passwort an. Ihn zu erneuern meldet niemanden ab."
-
 #: web/app/components/AdminAccessDocuments.vue:252
 msgid "A request beyond this number is refused before anything is written."
 msgstr "Eine Anfrage über dieser Zahl wird abgelehnt, bevor etwas geschrieben wird."
@@ -2824,6 +2820,10 @@ msgstr "Die {format}-Datei im Dokument behalten: Herunterladen gibt dann genau d
 #: web/app/components/SearchPanel.vue:536
 msgid "Keep this part, to use it in the replacement"
 msgstr "Diesen Teil behalten, um ihn im Ersatztext zu verwenden"
+
+#: web/app/components/FirstAdminSetup.vue:56
+msgid "Keep this password safe. If every administrator is ever locked out, only someone with access to the computer the server runs on can name a new first administrator."
+msgstr "Bewahren Sie dieses Passwort gut auf. Falls jemals alle Administratoren ausgesperrt sind, kann nur jemand mit Zugang zu dem Computer, auf dem der Server läuft, einen neuen ersten Administrator benennen."
 
 #: web/app/components/FirstAdminSetup.vue:63
 msgid "Keep this server local for now"
@@ -5617,10 +5617,6 @@ msgstr "Die Student-t-Verteilung an der Stelle x: der Anteil unterhalb von x (ku
 msgid "The Unicode code point of the first character of a text."
 msgstr "Der Unicode-Codepunkt des ersten Zeichens eines Textes."
 
-#: web/app/components/FirstAdminSetup.vue:56
-msgid "The access secret you set earlier stays as a recovery key — only needed if every administrator is ever locked out."
-msgstr "Der Zugangsschlüssel, den Sie früher festgelegt haben, bleibt als Wiederherstellungsschlüssel bestehen – nur nötig, falls jemals alle Administratoren ausgesperrt sind."
-
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The address of a cell as text, from its row and column number. The third argument is 1 (default) for $A$1, 2 for A$1, 3 for $A1, 4 for A1; the fourth FALSE for R1C1 style; the fifth names a sheet."
 msgstr "Die Adresse einer Zelle als Text, aus Zeilen- und Spaltennummer. Das dritte Argument ist 1 (Standard) für $A$1, 2 für A$1, 3 für $A1, 4 für A1; das vierte FALSE für den R1C1-Stil; das fünfte nennt ein Tabellenblatt."
@@ -7376,6 +7372,10 @@ msgstr "Wer diese Einstellungen ändern, Dokumente erstellen oder auflisten darf
 #: web/app/components/AddFontsDialog.vue:153
 msgid "Who may receive these fonts"
 msgstr "Wer diese Schriften erhalten darf"
+
+#: web/app/components/AdminAccessDocuments.vue:245
+msgid "Whoever knows it may make documents and see their list; nobody signs in here with it. Administrators sign in with their own name and password. Rotating it doesn't sign anyone out."
+msgstr "Wer ihn kennt, darf Dokumente anlegen und ihre Liste sehen; anmelden kann sich damit hier niemand. Administratoren melden sich mit eigenem Namen und Passwort an. Ihn zu erneuern meldet niemanden ab."
 
 #: web/app/components/SearchPanel.vue:614
 msgid "Whole cell"

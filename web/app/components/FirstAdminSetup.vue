@@ -53,7 +53,7 @@ function keepLocal() {
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="11" width="18" height="10" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
         </svg>
-        <span>{{ t('The access secret you set earlier stays as a recovery key — only needed if every administrator is ever locked out.') }}</span>
+        <span>{{ t('Keep this password safe. If every administrator is ever locked out, only someone with access to the computer the server runs on can name a new first administrator.') }}</span>
       </div>
 
       <p v-if="formError" class="error" role="alert">{{ formError }}</p>

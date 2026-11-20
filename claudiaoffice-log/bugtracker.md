@@ -124,7 +124,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (131)
+### Fixed (132)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -184,6 +184,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-41 | P2 | UX / composes | Headings, list items and paragraphs could not be pointed at with `#` in the chat | **fixed** 2026-11-15 (D554) |  | 2026-11-15 |
 | UX-44 | P3 | UX / BITV | The blinking dots of the side panel ignored `prefers-reduced-motion` (WCAG 2.3.3) | **fixed** 2026-11-17 |  | 2026-11-17 |
 | UX-55 | P2 | UX / record | After its own export, print or PDF the window that did it was not shown its own line in History & Chat: the server tells the other windows only | **fixed** 2026-11-19 in slice B (found by the first end-to-end run; `BaseSession.recorded` reads the record again) |  | 2026-11-19 |
+| UX-61 | P3 | UX / admin | The first-administrator page and Access & documents called the access secret a recovery key for administrators: there is no such recovery, and nobody signs in with it | **fixed** 2026-11-20 (`web/tests/admin-wording.test.ts`; size 3) | 2026-11-20 | 2026-11-20 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -2409,3 +2410,14 @@ the paragraph, in the user's language.
 about them. E1 is merged, so its `@pending` tags are also stale. **Fix.** A test in `tests/` that fails when a feature
 file is neither bound nor has a test tag on every scenario; then bind the four (step code first for names and
 requirements). **Acceptance.** That test, red today, green after.
+
+### UX-61 · The access secret was called a recovery key · P3 · fixed 2026-11-20
+Found while drawing the mock-up for SEC-12. `FirstAdminSetup.vue` said "The access secret you set earlier stays as a
+recovery key — only needed if every administrator is ever locked out", and the hint under Access & documents began "A
+recovery key, not needed day to day". The server has no recovery of administrators at all (today only deleting
+`admins.json` in the state folder brings back the first-administrator page), and nobody signs in with the access
+secret: it lets people make documents and read their list. **Fixed:** the setup page says to keep the password safe
+and that only someone with access to the computer the server runs on can name a new first administrator (true now, and
+with SEC-12's reset); the hint says what the secret does. German translations included. **Test:**
+`web/tests/admin-wording.test.ts` (scenarios in `specs/server/administrators.feature`).
+

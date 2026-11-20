@@ -242,7 +242,7 @@ async function applyDocs() {
       </div>
     </div>
     <p v-if="secretError" class="error">{{ secretError }}</p>
-    <p class="hint">{{ t('A recovery key, not needed day to day — administrators sign in with their own name and password instead. Rotating it doesn\'t sign anyone out.') }}</p>
+    <p class="hint">{{ t('Whoever knows it may make documents and see their list; nobody signs in here with it. Administrators sign in with their own name and password. Rotating it doesn\'t sign anyone out.') }}</p>
 
     <h2>{{ t('Documents') }}</h2>
     <div class="card">
