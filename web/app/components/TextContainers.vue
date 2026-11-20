@@ -26,6 +26,7 @@ import { canTurn, degreesText, stepTurn } from '~/lib/turning'
 import { stepsFor, type Place, type Spot } from '~/lib/text-object-host'
 import { lookOf, type ObjectLook } from '~/lib/text-object-look'
 import { useI18n } from '~/lib/i18n'
+import { anchorMark, wordAt } from '~/lib/anchor-mark'
 import type { TextSession } from '~/lib/text-session'
 import { grabbable, wrapLabel, wrapOf } from '~/lib/wrap'
 
@@ -157,6 +158,49 @@ const interaction = useObjectInteraction({
     }
     return true
   },
+})
+
+// ------------------------------------------------------------------------------ the anchor mark (D1352)
+/** How high a line of the paragraph is, for the mark at a character of it. */
+function lineHeightOf(block: string): number {
+  const el = props.host?.querySelector<HTMLElement>(`[data-block="${CSS.escape(block)}"]`)
+  const css = el ? getComputedStyle(el) : null
+  return (css && (parseFloat(css.lineHeight) || parseFloat(css.fontSize) * 1.4)) || 20
+}
+/** Where a place is, in words: "Paragraph 3 · after “allotment”". */
+function whereLabel(at: Place): string {
+  const index = state.blocks.findIndex((b) => b.id === at.block)
+  const paragraph = session.nameOf(at.block) || t('Paragraph {n}', { n: index + 1 })
+  const found = index >= 0 ? wordAt(state.blocks[index]!.text, at.offset) : null
+  if (!found) return t('{paragraph} · at its start', { paragraph })
+  return found.within ? t('{paragraph} · in “{word}”', { paragraph, word: found.word }) : t('{paragraph} · after “{word}”', { paragraph, word: found.word })
+}
+/** The mark of the selected object: where it hangs; while it is dragged, where it would hang and, faintly, where it
+ *  hung (D1352). `null` when nothing in this layer is selected, or while it is written in. */
+const mark = computed(() => {
+  void props.tick
+  const id = state.selectedObject
+  if (!id || editing.value || !layer.value) return null
+  const o = state.objects[id]
+  if (!o || o.kind === 'table' || !mine(id)) return null
+  const g = geometryOf(o)
+  if (!g) return null
+  const frame = interaction.frameOf(id) ?? g.frame
+  const gesture = interaction.gesture.value
+  const dragging = gesture?.subject.id === id && gesture.grab === 'move' && (frame.x !== g.frame.x || frame.y !== g.frame.y)
+  // the place a drop would take: the character nearest the top left corner, as `commit` works it out (D1023)
+  const at = dragging ? props.placeAt(g.layer.left + frame.x + 1, g.layer.top + frame.y + 1) : g.place
+  const spot = at && (dragging ? props.spotOf(at) : g.spot)
+  if (!at || !spot) return null
+  const onLayer = (s: Spot) => ({ left: s.left - g.layer.left, top: s.top - g.layer.top })
+  return {
+    id,
+    block: at.block,
+    now: anchorMark(onLayer(spot), lineHeightOf(at.block), frame),
+    was: dragging ? anchorMark(onLayer(g.spot), lineHeightOf(g.place.block), g.frame) : null,
+    where: whereLabel(at),
+    dragging,
+  }
 })
 
 interface Placed {
@@ -338,6 +382,7 @@ const turnable = (id: string) => !!state.objects[id] && canTurn(state.objects[id
       role="button"
       tabindex="0"
       :aria-label="label(p.id)"
+      :aria-describedby="mark?.id === p.id ? `anchor-of-${p.id}` : undefined"
       @pointerdown="onDown($event, p.id)"
       @pointermove="interaction.move($event)"
       @pointerup="onUp"
@@ -388,10 +433,71 @@ const turnable = (id: string) => !!state.objects[id] && canTurn(state.objects[id
         @turn-key="(e) => onTurnKey(e, p.id)"
       />
     </div>
+    <!-- where the selected object hangs (D1352): never printed, not read out (its description says it in words) -->
+    <template v-if="mark">
+      <svg class="anchor-line" aria-hidden="true">
+        <polyline v-if="mark.was" class="was" :points="mark.was.line" />
+        <polyline :points="mark.now.line" />
+      </svg>
+      <span v-if="mark.was" class="anchor-mark was" aria-hidden="true" :style="{ left: `${mark.was.left}px`, top: `${mark.was.top}px`, height: `${mark.was.height}px` }" />
+      <span class="anchor-mark" data-testid="anchor-mark" :data-block="mark.block" aria-hidden="true" :style="{ left: `${mark.now.left}px`, top: `${mark.now.top}px`, height: `${mark.now.height}px` }" />
+      <span v-if="mark.dragging" class="anchor-label" data-testid="anchor-label" aria-hidden="true" :style="{ left: `${mark.now.left}px`, top: `${mark.now.top}px` }">{{ mark.where }}</span>
+      <span :id="`anchor-of-${mark.id}`" class="sr">{{ t('Hangs from {where}', { where: mark.where }) }}</span>
+    </template>
   </div>
 </template>
 
 <style scoped>
+.anchor-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.anchor-line polyline {
+  fill: none;
+  stroke: var(--iris, #5b4bc4);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+.anchor-line polyline.was {
+  opacity: 0.3;
+}
+.anchor-mark {
+  position: absolute;
+  width: 2.5px;
+  margin-left: -1.25px;
+  background: var(--iris, #5b4bc4);
+  border-radius: 1px;
+  pointer-events: none;
+}
+.anchor-mark::before {
+  content: '';
+  position: absolute;
+  left: -3.5px;
+  top: -9px;
+  width: 5px;
+  height: 5px;
+  border: 2px solid var(--iris, #5b4bc4);
+  border-radius: 50%;
+  background: var(--paper, #f7f3ec);
+}
+.anchor-mark.was {
+  opacity: 0.3;
+}
+.anchor-label {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 14px));
+  padding: 3px 10px;
+  border-radius: 13px;
+  background: var(--ink, #1f1a33);
+  color: var(--paper, #f7f3ec);
+  font-size: 11.5px;
+  white-space: nowrap;
+  pointer-events: none;
+}
 .layer {
   position: absolute;
   inset: 0;

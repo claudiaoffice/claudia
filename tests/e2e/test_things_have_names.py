@@ -200,6 +200,15 @@ def test_a_paragraph_pointed_at_gets_a_name_in_the_one_namespace(live: Live) -> 
         (seen,) = [b for b in session.ok("blocks")["blocks"] if b["id"] == first]
         assert seen["name"] == "Introduction"
 
-        session.ok("rename_thing", id=first, name="Intro")
-        assert session.ok("name_thing", id=first)["name"] == "Intro", "a name, once given, is kept"
-        assert session.ok("thing_last_seen", id=first)["present"]
+        # a heading is called by its words and is not renamed (D1311): the words are changed instead
+        refused = session.call("rename_thing", id=first, name="Intro")
+        assert not refused["ok"] and refused["error"]["code"] == "command_error", refused
+        session.ok("replace_text", block=first, start=0, end_block=first, end=len("Introduction"), text="Intro")
+        assert session.ok("name_thing", id=first)["name"] == "Intro", "a heading's name follows its words"
+
+        # any other paragraph keeps a name it was given
+        session.ok("replace_text", block=first, start=5, end_block=first, end=5, text="\nThe gardens.")
+        second = session.ok("blocks")["blocks"][1]["id"]
+        session.ok("rename_thing", id=second, name="Gardens")
+        assert session.ok("name_thing", id=second)["name"] == "Gardens", "a name, once given, is kept"
+        assert session.ok("thing_last_seen", id=second)["present"]

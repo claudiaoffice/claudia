@@ -1362,12 +1362,12 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', anchor: 'dict') -> None",
+  "init": "(id: 'str', anchor: 'dict', at: 'int | None' = None) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'MoveObject'",
    "redacted": "(self) -> 'Command'",
-   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "regions": "(self, model: 'object') -> 'tuple[Region, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -1459,10 +1459,12 @@
    "objects_to_data": "(self) -> 'list[dict]'",
    "open_container": "(self, container: 'str') -> 'None'",
    "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
+   "place_regions": "(self, anchor: 'A') -> 'tuple[Any, ...]'",
    "put_entry_words": "(self, paragraph_id: 'str', words: 'Paragraph') -> 'None'",
    "put_object_fields": "(self, object_id: 'str', fields: 'tuple[Field, ...]') -> 'ObjectsChanged'",
    "put_object_generated": "(self, object_id: 'str', generated: 'Generated | None') -> 'ObjectsChanged'",
    "put_object_item": "(self, object_id: 'str', item: 'ListItem | None') -> 'ObjectsChanged'",
+   "rehang_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None) -> 'int'",
    "remove_object_text": "(self, object_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], ObjectsChanged]'",
    "rename_command": "(self, thing_id: 'str', name: 'str') -> 'Command'",
    "rename_thing": "(self, ctx: 'Context', thing_id: 'str', name: 'str') -> 'tuple[str, tuple[Command, ...]]'",

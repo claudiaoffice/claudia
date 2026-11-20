@@ -195,6 +195,22 @@ class Person:
                 .map(e => e.getAttribute('data-testid') === 'table' ? 'TABLE' : e.textContent.trim())"""
         )
 
+    def caret(self) -> tuple[str, int] | None:
+        """The words of the paragraph the caret is in, and how far into them it is; ``None`` when it is not in the
+        words of the text (in a box of a table, in the chat, nowhere)."""
+        found = self.page.evaluate(
+            """() => {
+              const s = getSelection(), text = document.querySelector('[data-testid=text]')
+              if (!s || !s.focusNode || !text.contains(s.focusNode) || document.activeElement !== text) return null
+              const node = s.focusNode.nodeType === 1 ? s.focusNode : s.focusNode.parentElement
+              const block = node.closest('[data-block]')
+              if (!block) return null
+              const r = document.createRange(); r.setStart(block, 0); r.setEnd(s.focusNode, s.focusOffset)
+              return [block.textContent.trim(), r.toString().length]
+            }"""
+        )
+        return (found[0], found[1]) if found else None
+
     def boxes(self) -> list[str]:
         return self.page.eval_on_selector_all("[data-box]", "els => els.map(e => e.value)")
 

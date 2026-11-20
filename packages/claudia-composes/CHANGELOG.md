@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- An object can be moved to another paragraph (D1351): `TextModel.objects_change_container`; a move into another
+  paragraph takes the character it is dropped on (`TextModel.place_regions`), so a colleague's zone refuses it.
 - `SplitBlock.keep` (D1331): what hangs exactly at the cut stays in the paragraph that is cut, so that a paragraph can
   be made after a table at the end of the text; written only when set, so older logs read the same.
 - `TextModel.room_for_new_object`: the text column of the page in CSS pixels (D1332); `body_text_style` is `body`.
@@ -27,6 +29,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- `TextModel.settle` tells the clients a heading's name when it changes (`ThingRenamed`): a paragraph that becomes a
+  heading is called by its words at once, a retyped heading by its new words, and a heading that is a paragraph again by
+  the name it was given (D1311; the # list showed "Paragraph 1" for a new heading until a reload).
 - The inverse of `JoinBlocks` is a split that keeps what hangs at the cut when the joined paragraph had no objects of
   its own (D1331): undoing a join no longer carries an object that hung at the end of the first paragraph into the
   second.

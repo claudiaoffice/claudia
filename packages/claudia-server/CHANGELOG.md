@@ -50,6 +50,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- `move_object` in composes may take an object to another paragraph (D1351); it is refused with `locked` where a
+  colleague is writing.
 - The first picture of a container added with `fit` is sized by `claudia_core.new_object_size` (D1332, D1333): at least
   as tall as the body text, with its proportions (a 43 × 12 formula is 72 × 20 in a text, not 43 × 20), within the room
   it has. `rendered.fit_within` is gone.

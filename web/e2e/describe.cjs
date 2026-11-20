@@ -69,7 +69,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
 
     // -- the same through the Format menu, and what a colleague or a later session finds: it is in the document
     await page.getByRole('menuitem', { name: 'Format' }).click()
-    await page.getByRole('menuitem', { name: 'Describe Object…' }).click()
+    await page.getByRole('menuitem', { name: 'Name & describe…' }).click() // was Describe Object… (D1317)
     await page.waitForSelector('dialog[open] textarea')
     assert.equal(await page.locator('dialog input[type=checkbox]').isChecked(), true)
     await page.keyboard.press('Escape')
