@@ -441,19 +441,7 @@ def nth_table(n: int = 0) -> str:
 
 
 def caret_in_text(person) -> tuple[str, int] | None:
-    """The words of the paragraph the caret is in, and how far into them it is; ``None`` when it is not in the words."""
-    found = person.page.evaluate(
-        """() => {
-          const s = getSelection(), text = document.querySelector('[data-testid=text]')
-          if (!s || !s.focusNode || !text.contains(s.focusNode) || document.activeElement !== text) return null
-          const node = s.focusNode.nodeType === 1 ? s.focusNode : s.focusNode.parentElement
-          const block = node.closest('[data-block]')
-          if (!block) return null
-          const r = document.createRange(); r.setStart(block, 0); r.setEnd(s.focusNode, s.focusOffset)
-          return [block.textContent.trim(), r.toString().length]
-        }"""
-    )
-    return (found[0], found[1]) if found else None
+    return person.caret()
 
 
 def history_count(person, words: str) -> int:

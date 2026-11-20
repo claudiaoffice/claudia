@@ -137,6 +137,28 @@ describe('typing', () => {
     expect(session.state.selection?.focus).toEqual(at(3))
   })
 
+  // D1350 (2026-11-20): Home right after typing put the caret before the unsent word; once it was sent, the caret was
+  // behind it again, and what came next was typed at the end
+  it('a caret put into the words that are not sent yet stays there once they are sent', async () => {
+    const { session } = await opened('')
+    for (const c of 'First') session.type(c)
+    session.caretInUnsent(0) // Home: in front of the "First" that is drawn over the text
+    await session.flush()
+    expect(text(session)).toEqual(['First'])
+    expect(session.state.selection?.focus).toEqual(at(0))
+    for (const c of 'Start') session.type(c)
+    await session.flush()
+    expect(text(session)).toEqual(['StartFirst'])
+  })
+
+  it('a caret in the middle of the unsent words stays in the middle', async () => {
+    const { session } = await opened('')
+    for (const c of 'abcd') session.type(c)
+    session.caretInUnsent(2)
+    await session.flush()
+    expect(session.state.selection?.focus).toEqual(at(2))
+  })
+
   it('sends after a pause, too', async () => {
     const { session, link } = await opened('')
     session.type('a')

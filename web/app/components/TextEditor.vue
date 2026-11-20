@@ -375,7 +375,22 @@ const key = (a: Pos, f: Pos): string => `${a.block}:${a.offset}-${f.block}:${f.o
 
 /** Take the selection of the page as the person's. `always`: a click or key was seen; otherwise only if the page
  *  shows something other than what we put there (the model is ahead of the page for a moment after each change). */
+/** How far into the words that are typed but not sent yet the caret is, if it is in them and not behind them (Home
+ *  right after typing, D1350); `null` otherwise. Only the page knows this place: the paragraph has no such words yet. */
+function caretInUnsent(): number | null {
+  const sel = document.getSelection()
+  if (!sel?.isCollapsed || !sel.focusNode) return null
+  const node = sel.focusNode.nodeType === Node.TEXT_NODE ? sel.focusNode.parentElement : (sel.focusNode as HTMLElement)
+  const overlay = node?.closest<HTMLElement>('[data-overlay]')
+  if (!overlay || !root.value?.contains(overlay)) return null
+  const length = overlay.textContent?.length ?? 0
+  const index = sel.focusNode.nodeType === Node.TEXT_NODE ? sel.focusOffset : 0
+  return index < length ? index : null
+}
+
 function adoptSelection(always = false) {
+  const inUnsent = caretInUnsent()
+  if (inUnsent !== null) props.session.caretInUnsent(inUnsent)
   const now = domSelection()
   if (!now || (!always && key(...now) === placed)) return
   placed = key(...now)
@@ -487,8 +502,31 @@ function onBeforeInput(event: InputEvent) {
 }
 
 /** Tab and Shift+Tab move a list item one level in or out; anywhere else they are the browser's (focus moves on). */
+/** Up on the first line of the text goes to its start, Down on the last line to its end; with Shift the selection
+ *  reaches there (D1350). Left to the browser, Firefox puts the caret above the first paragraph, outside the words. */
+function keepsCaretInText(event: KeyboardEvent): boolean {
+  if ((event.key !== 'ArrowUp' && event.key !== 'ArrowDown') || event.ctrlKey || event.altKey || event.metaKey) return false
+  const up = event.key === 'ArrowUp'
+  const edge = up ? state.blocks[0] : state.blocks.at(-1)
+  if (!edge) return false
+  adoptSelection()
+  const sel = state.selection
+  if (!sel || sel.focus.block !== edge.id) return false
+  const unsent = props.session.state.pending?.text.length ?? 0
+  if (!onEdgeLine(edge.id, up ? 'first' : 'last', sel.focus.offset, edge.text.length + unsent)) return false
+  event.preventDefault()
+  void (async () => {
+    await props.session.flush() // words typed just now are in the paragraph before its end is worked out
+    const length = state.blocks.find((b) => b.id === edge.id)?.text.length ?? 0
+    const to = { block: edge.id, offset: up ? 0 : length }
+    props.session.setSelection(event.shiftKey ? (state.selection?.anchor ?? to) : to, to)
+    placeSelection()
+  })()
+  return true
+}
+
 function onKeydown(event: KeyboardEvent) {
-  if (fromTable(event) || composing || leadsThroughTable(event)) return
+  if (fromTable(event) || composing || leadsThroughTable(event) || keepsCaretInText(event)) return
   if (event.key !== 'Tab' || event.ctrlKey || event.altKey || event.metaKey) return
   adoptSelection()
   if (props.session.tab(event.shiftKey)) event.preventDefault()

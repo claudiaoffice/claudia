@@ -7,6 +7,10 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- Objects that may change container (D1351): `ObjectModel.objects_change_container` (false by default),
+  `ObjectModel.rehang_object(obj, at=None)` (out of the old stack, into the new one, returns the old place) and
+  `ObjectModel.place_regions(anchor)` (what a move into another container also takes, for locks). `MoveObject.at`: the
+  place in the new stack, set by the inverse of such a move and written only when set.
 - The size of a new picture or container (D1229, D1332): `new_object_size(most_w, most_h, picture_w, picture_h, *,
   least, room=None, smallest=MIN_OBJECT_SIZE)` keeps a picture's own size within the most, raises it to `least` high,
   keeps it within `room` and every side at `smallest`, always with its proportions; `font_size_px(value, base=16)` reads
@@ -43,6 +47,9 @@ While the major version is 0, a minor version may break the API; every break is 
   `"table"` is one of `OBJECT_KINDS`; the facet slots have a `table` thing.
 
 ### Changed
+- `MoveObject` to another container moves the object between the stacks where the app allows it (D1351), tells
+  the old container its stack and the new one the object, and takes the drop place as a region; elsewhere it is
+  refused as before ("an object cannot change its container").
 - **Breaking:** `ObjectBody` points at its definition with one field, `ref`, whose table the kind names, instead of one
   field per kind (`shape`, `image`, `diagram`, `rendered`, `table`). The five names stay as read-only properties
   (`body.image` is `body.ref` for an image, else `None`), so readers keep working; code that builds a body or changes

@@ -46,6 +46,7 @@ from .tables import FILLER, TableDef, parse_entry_id
 if TYPE_CHECKING:
     from .context import Context
     from .model import DocumentModel
+    from .region import Region
 
 #: Kinds of object every app understands. A text box carries only words; a shape carries an outline and may carry
 #: words; an image carries an asset; a diagram carries a :class:`DiagramDefinition` (E6.6) — what it draws is
@@ -518,6 +519,9 @@ class ObjectModel[A: Anchor]:
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
     #: The style whose letters are "the body text" a new picture is at least as tall as (D1332).
     body_text_style: ClassVar[str] = "body-text"
+    #: Whether a move may take an object to another container (D1351). In a text it may go to another paragraph; on
+    #: a slide or a sheet it may not, since there that would make it another object for locks and the stacking order.
+    objects_change_container: ClassVar[bool] = False
     #: The kinds of object this app offers (a subset of ``OBJECT_KINDS``).
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
 
@@ -1208,6 +1212,33 @@ class ObjectModel[A: Anchor]:
         ):
             self.paragraph_order += 1
         return old
+
+    def rehang_object(self, obj: VisualObject[A], at: int | None = None) -> int:
+        """Put a changed (checked) version of an object that exists into another container (D1351): out of the old
+        stack, into the new one at ``at`` (on top when ``None``). Returns the place it had in the old stack, which
+        the inverse of the move gives back. ``ValueError`` where the app keeps its objects in their container."""
+        old = self.get_object(obj.id)
+        if obj.container == old.container:
+            self.replace_object(obj)
+            return self._stack[old.container].index(obj.id)
+        if not self.objects_change_container:
+            raise ValueError("an object cannot change its container")
+        self.check_object(obj)
+        stack = self._stack.setdefault(obj.container, [])
+        if len(stack) >= self.max_objects_per_container:
+            raise ValueError(f"a container holds at most {self.max_objects_per_container} objects")
+        was = self._stack[old.container]
+        place = was.index(obj.id)
+        del was[place]
+        stack.insert(len(stack) if at is None else max(0, min(at, len(stack))), obj.id)
+        self.objects[obj.id] = obj
+        self.paragraph_order += 1
+        return place
+
+    def place_regions(self, anchor: A) -> tuple[Any, ...]:  # noqa: ARG002 - an app with places others hold uses it
+        """The regions a move to ``anchor`` in another container also takes: what a colleague may hold there (in a text,
+        the words where it is dropped, D1351). None by default."""
+        return ()
 
     def objects_changed(
         self,
@@ -1904,6 +1935,9 @@ class MoveObject(Command):
     kind: ClassVar[str] = "core.MoveObject"
     id: str
     anchor: dict
+    #: Where in the stack of the new container it goes, when the move changes container (D1351); ``None``: on top.
+    #: Set by the inverse of such a move, so that undo puts the object back at its place; written only when set.
+    at: int | None = None
 
     @property
     def label(self) -> str:
@@ -1917,19 +1951,35 @@ class MoveObject(Command):
         model = _host(ctx)
         old = model.get_object(self.id)
         new = replace(old, anchor=_anchor_of(ctx, self.anchor))
-        model.replace_object(new)
+        if new.container == old.container:
+            model.replace_object(new)
+            ctx.emit(model.objects_changed(new.container, changed=(new,)))
+            return MoveObject(self.id, old.anchor.to_data())
+        place = model.rehang_object(new, self.at)
+        ctx.emit(model.objects_changed(old.container))  # its stack without the object; it is not removed (D1351)
         ctx.emit(model.objects_changed(new.container, changed=(new,)))
-        return MoveObject(self.id, old.anchor.to_data())
+        return MoveObject(self.id, old.anchor.to_data(), at=place)
 
     def to_data(self) -> dict:
-        return {"id": self.id, "anchor": dict(self.anchor)}
+        data: dict = {"id": self.id, "anchor": dict(self.anchor)}
+        if self.at is not None:
+            data["at"] = self.at
+        return data
 
     @classmethod
     def from_data(cls, data: dict, registry: CommandRegistry) -> MoveObject:
-        return cls(data["id"], dict(data["anchor"]))
+        return cls(data["id"], dict(data["anchor"]), data.get("at"))
 
-    def regions(self, model: object) -> tuple[ObjectSet, ...]:
-        return model.selection_of(self.id) if isinstance(model, ObjectModel) else ()
+    def regions(self, model: object) -> tuple[Region, ...]:
+        if not isinstance(model, ObjectModel):
+            return ()
+        own = tuple(model.selection_of(self.id))
+        if self.id not in model.objects:
+            return own
+        anchor = model.anchor_from_data(dict(self.anchor))
+        if anchor.container == model.get_object(self.id).container:
+            return own
+        return own + tuple(model.place_regions(anchor))  # into a paragraph a colleague holds: refused (D1351)
 
     def shifted_by(self, other: Command) -> Command | None:
         return None if _changes_frame(other, self.id) else self

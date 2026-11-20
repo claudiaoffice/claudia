@@ -209,3 +209,34 @@ def test_an_object_is_named_in_the_same_namespace_as_the_paragraphs(three):
         three.execute(RenameThing("o1", "fox"), author="ann")
     three.undo("ann")
     assert three.model.thing_name("o1") == ""
+
+
+# dock-text (2026-11-20): a paragraph made a heading was still offered as "Paragraph 1" in the # list, since nobody told
+# the clients that its name had become its words (D1311)
+def renamings(document):
+    told: list = []
+    document.subscribe(lambda e: told.append(e) if isinstance(e, ThingRenamed) else None)
+    return told
+
+
+def test_a_paragraph_that_becomes_a_heading_is_told_by_its_words(clock):
+    d = Document(TextModel(), store=MemoryStore(), clock=clock.time, lock_clock=clock.lock_time)
+    d.execute(InsertText("b1", 0, "Introduction"), author="ann")
+    d.execute(RenameThing("b1", "Paragraph 1"), author="ann")  # as a paragraph made by Enter is called (D1310)
+    told = renamings(d)
+    d.execute(SetStyle("b1", "heading-1"), author="ann")
+    assert ThingRenamed("b1", "Introduction") in told
+
+
+def test_retyping_a_heading_tells_its_new_name_and_a_paragraph_again_its_old_one(three):
+    told = renamings(three)
+    three.execute(InsertText("b1", 0, "An "), author="ann")
+    assert told[-1] == ThingRenamed("b1", "An Introduction")
+    three.execute(SetStyle("b1", "body"), author="ann")
+    assert told[-1].id == "b1" and told[-1].name == three.model.thing_name("b1")
+
+
+def test_typing_in_a_paragraph_tells_no_name(three):
+    told = renamings(three)
+    three.execute(InsertText("b3", 0, "Well, "), author="ann")
+    assert told == []

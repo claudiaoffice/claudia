@@ -464,12 +464,12 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', anchor: 'dict') -> None",
+  "init": "(id: 'str', anchor: 'dict', at: 'int | None' = None) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'MoveObject'",
    "redacted": "(self) -> 'Command'",
-   "regions": "(self, model: 'object') -> 'tuple[ObjectSet, ...]'",
+   "regions": "(self, model: 'object') -> 'tuple[Region, ...]'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },

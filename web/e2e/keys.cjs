@@ -113,7 +113,7 @@ const panelShown = (page) => page.evaluate(() => {
     const view = await deck.$$eval('.menus .drop [role=menuitem], .menus .drop [role=menuitemcheckbox]', (els) => els.map((e) => e.querySelector('.label')?.textContent?.trim()))
     await deck.keyboard.press('Escape')
     assert.deepEqual(view, [
-      'Show Who Wrote What', 'History and Chat', 'Replay History…', 'Dark Mode', 'Show Grid', // (Replay: D551)
+      'Show Who Wrote What', 'History and Chat', 'Replay History…', 'Back where I was', 'Dark Mode', 'Show Grid', // (Replay: D551; Back: D1319)
       'Present from the First Slide', 'Present from This Slide', 'Speaker Notes',
     ])
     log('creates: View ▸ Show Grid follows the shared entries, then the presenting entries')

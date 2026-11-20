@@ -44,6 +44,7 @@ from claudia_core import (
     TableLook,
     TableRegion,
     TextStructure,
+    ThingRenamed,
     VisualObject,
     builtin_palette,
     clean_name,
@@ -421,6 +422,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
 
     app: ClassVar[str] = "composes"
     body_text_style: ClassVar[str] = DEFAULT_STYLE
+    objects_change_container: ClassVar[bool] = True  # an object can be dragged to another paragraph (D1351)
     # 4: a text also carries objects, images and shapes (E10.16)
     # 5: the text carries its own colour palette (D200)
     # 6: the text says which page it is printed on (D904)
@@ -464,6 +466,9 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         #: paragraph through every edit; one whose paragraph was joined away is kept, unused, until undo brings the
         #: paragraph back.
         self.block_names: dict[str, str] = {}
+        #: The names of the headings as the clients were last told them (``settle``): a heading is called by its words
+        #: (D1311), so typing in it or giving it a heading style renames it without a rename command.
+        self._told_titles: dict[str, str] | None = None
         #: What was written about a paragraph, by id (see D1317 and D1318). It has the same pattern as the description
         #: of an object, a plain string beside the name. Kept like a name when the paragraph is joined away, for undo.
         self.block_descriptions: dict[str, str] = {}
@@ -594,6 +599,12 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     def anchor_from_data(self, data: dict) -> BlockAnchor:
         """Read a block anchor; ``ValueError`` if the data is not one."""
         return BlockAnchor.from_data(data)
+
+    def place_regions(self, anchor: BlockAnchor) -> tuple[TextRange, ...]:
+        """The character an object is dropped on in another paragraph (D1351): a colleague writing there holds it."""
+        length = len(self.block(anchor.block).text)
+        start = min(anchor.offset, max(length - 1, 0))
+        return (TextRange(anchor.block, start, start + 1),)
 
     def room_for_new_object(self, anchor: BlockAnchor | None) -> int | None:  # noqa: ARG002 - the column is one width
         """The text column of the page, in CSS pixels (the units of a text's objects): a new object is no wider
@@ -960,8 +971,26 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
 
     def settle(self, ctx: Context) -> None:
         """Tell the clients which labels changed: the numbering of a list is derived, so a command that only set
-        one item may have renumbered a hundred others."""
+        one item may have renumbered a hundred others. And which headings are called by other words now (D1311): a
+        paragraph that becomes a heading, a heading that is retyped, a heading that is a paragraph again."""
         self.structure.settle(ctx)
+        self._settle_titles(ctx)
+
+    def _settle_titles(self, ctx: Context) -> None:
+        titles = {b.id for b in self.blocks if self.heading_level(b) is not None and self._title_of(b)}
+        was = self._told_titles or {}
+        if not titles and not was:
+            self._told_titles = {}
+            return
+        names = self._names_of_paragraphs()
+        now = {block_id: names[block_id] for block_id in titles}
+        for block_id, name in now.items():
+            if was.get(block_id) != name:
+                ctx.emit(ThingRenamed(block_id, name))
+        for block_id in was.keys() - now.keys():
+            if self._has_block(block_id):  # a heading no longer: it is called what it was given, or nothing
+                ctx.emit(ThingRenamed(block_id, self.block_names.get(block_id, "")))
+        self._told_titles = now
 
     def style_uses(self) -> dict[str, int]:
         """How many paragraphs have each style that is in use."""

@@ -1382,7 +1382,8 @@ defineExpose({
         <div class="corner" aria-hidden="true" />
       </div>
     </div>
-    <p class="sr" role="status" aria-live="polite">{{ turnSaid }}</p>
+    <!-- a grid holds rows only (ARIA): the announcement of a turn lives outside it -->
+    <Teleport to="body"><p class="sr" role="status" aria-live="polite">{{ turnSaid }}</p></Teleport>
     <RotatePopover v-if="rotating && rotatePreview" :x="rotating.x" :y="rotating.y" :rotation="rotatePreview.from" @preview="interaction.previewRotateBy" @done="doneRotateBy" @cancel="cancelRotateBy" />
     <ContextMenu v-if="objectMenu" :x="objectMenu.x" :y="objectMenu.y" :items="objectItems" :label="t('Object menu')" @close="objectMenu = null" />
     <StyleMenu v-if="styleMenu" :host="styleMenu.cells && cellHost ? cellHost : styleHost" :x="styleMenu.x" :y="styleMenu.y" :mode="styleMenu.mode" @close="styleMenu = null" @styles="((styleMenu = null), emit('styles'))" />

@@ -1,0 +1,103 @@
+<svg viewBox="0 0 1500 700" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia composes — where an object hangs, and dragging it to another paragraph</title>
+<desc id="d">Three states. Selected: a small anchor mark at the character the object hangs from, joined to the object's top left corner by a dotted line. Dragging: the mark moves with the object to the character nearest its top left corner, also into another paragraph, and the place it left is shown faintly. Dropped: the object hangs from the new character, one entry in the history.</desc>
+<defs>
+  <filter id="sh" x="-10%" y="-10%" width="125%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1f1a33" flood-opacity="0.18"/></filter>
+  <g id="mark">
+    <!-- the anchor mark: a caret bar at the character with a ring on top, in iris -->
+    <rect x="-1.25" y="0" width="2.5" height="20" rx="1" fill="#5b4bc4"/>
+    <circle cx="0" cy="-4" r="4" fill="#f7f3ec" stroke="#5b4bc4" stroke-width="2"/>
+  </g>
+</defs>
+<rect x="0" y="0" width="1500" height="700" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" font-family="Fraunces, Georgia, serif">claudia composes — where an object hangs, and dragging it to another paragraph</text>
+<text x="40" y="68" font-size="12.5" fill="#6e6880">For review (branch fix-stale-tests-caret-drag). The rule of D1023 stays: an object hangs from the character nearest its top left corner. New: the mark shows that character, and a drop may take the object to another paragraph.</text>
+
+<!-- ============================================================ panel 1: selected -->
+<g transform="translate(40,96)">
+  <rect width="450" height="520" rx="12" fill="#fff" stroke="#d8d2e6" filter="url(#sh)"/>
+  <text x="20" y="32" font-size="15" font-weight="600" fill="#1f1a33">1 · Selected</text>
+  <text x="20" y="52" font-size="12" fill="#6e6880">The mark sits at the character the object hangs from.</text>
+  <g font-size="14" fill="#1f1a33">
+    <rect x="20" y="70" width="410" height="370" fill="#f7f3ec"/>
+    <text x="40" y="108">The gardens on the roof had a good</text>
+    <text x="40" y="134">year: <tspan fill="#1f1a33">kale</tspan> and beans did best.</text>
+    <text x="40" y="270">The courtyard beds were planted late</text>
+    <text x="40" y="296">and gave less than in the year before.</text>
+    <text x="40" y="350">In the allotment the pumpkins took over</text>
+    <text x="40" y="376">half of the beds by August.</text>
+  </g>
+  <!-- the object, words above and below it -->
+  <rect x="120" y="150" width="200" height="96" rx="4" fill="#fff" stroke="#5b4bc4" stroke-width="2"/>
+  <text x="138" y="190" font-size="13" fill="#1f1a33">A note on the harvest</text>
+  <g fill="#fff" stroke="#5b4bc4" stroke-width="1.5"><rect x="115" y="145" width="9" height="9"/><rect x="315" y="145" width="9" height="9"/><rect x="115" y="241" width="9" height="9"/><rect x="315" y="241" width="9" height="9"/></g>
+  <!-- the mark at "kale" and the dotted line to the corner -->
+  <use href="#mark" x="77" y="119"/>
+  <path d="M77 140 L77 150 L120 150" fill="none" stroke="#5b4bc4" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <text x="20" y="470" font-size="11.5" fill="#6e6880">Shown while the object is selected and while it is dragged;</text>
+  <text x="20" y="486" font-size="11.5" fill="#6e6880">never printed, never in an export. A screen reader hears</text>
+  <text x="20" y="502" font-size="11.5" fill="#6e6880">"hangs from paragraph 1, after ‘year: ’" with the object.</text>
+</g>
+
+<!-- ============================================================ panel 2: dragging -->
+<g transform="translate(525,96)">
+  <rect width="450" height="520" rx="12" fill="#fff" stroke="#d8d2e6" filter="url(#sh)"/>
+  <text x="20" y="32" font-size="15" font-weight="600" fill="#1f1a33">2 · Dragging</text>
+  <text x="20" y="52" font-size="12" fill="#6e6880">The mark goes with the object, into another paragraph.</text>
+  <g font-size="14" fill="#1f1a33">
+    <rect x="20" y="70" width="410" height="370" fill="#f7f3ec"/>
+    <text x="40" y="108">The gardens on the roof had a good</text>
+    <text x="40" y="134">year: kale and beans did best.</text>
+    <text x="40" y="270">The courtyard beds were planted late</text>
+    <text x="40" y="296">and gave less than in the year before.</text>
+    <text x="40" y="350">In the allotment the pumpkins took over</text>
+    <text x="40" y="376">half of the beds by August.</text>
+  </g>
+  <!-- where it was: faint -->
+  <rect x="120" y="150" width="200" height="96" rx="4" fill="none" stroke="#5b4bc4" stroke-opacity="0.3" stroke-dasharray="5 4"/>
+  <g opacity="0.3"><use href="#mark" x="77" y="119"/></g>
+  <!-- the object under the pointer: a preview -->
+  <rect x="190" y="304" width="200" height="96" rx="4" fill="#fff" fill-opacity="0.92" stroke="#5b4bc4" stroke-width="2" filter="url(#sh)"/>
+  <text x="208" y="344" font-size="13" fill="#1f1a33">A note on the harvest</text>
+  <!-- the mark: the character nearest the corner, in the third paragraph -->
+  <use href="#mark" x="188" y="335"/>
+  <path d="M188 356 L188 304 L190 304" fill="none" stroke="#5b4bc4" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <g transform="translate(170,262)">
+    <rect width="206" height="26" rx="13" fill="#1f1a33"/>
+    <text x="12" y="17" font-size="11.5" fill="#f7f3ec">Paragraph 3 · after “allotment”</text>
+  </g>
+  <path d="M380 412 l10 10 l-4 1 l3 6 l-3 1 l-3 -6 l-3 3 z" fill="#1f1a33"/>
+  <text x="20" y="470" font-size="11.5" fill="#6e6880">Nothing is sent while the button is held. Esc puts the object</text>
+  <text x="20" y="486" font-size="11.5" fill="#6e6880">and its mark back. The words around do not move yet: the</text>
+  <text x="20" y="502" font-size="11.5" fill="#6e6880">text flows round it once it is dropped.</text>
+</g>
+
+<!-- ============================================================ panel 3: dropped -->
+<g transform="translate(1010,96)">
+  <rect width="450" height="520" rx="12" fill="#fff" stroke="#d8d2e6" filter="url(#sh)"/>
+  <text x="20" y="32" font-size="15" font-weight="600" fill="#1f1a33">3 · Dropped</text>
+  <text x="20" y="52" font-size="12" fill="#6e6880">It hangs from the new character; one step in the history.</text>
+  <g font-size="14" fill="#1f1a33">
+    <rect x="20" y="70" width="410" height="370" fill="#f7f3ec"/>
+    <text x="40" y="108">The gardens on the roof had a good</text>
+    <text x="40" y="134">year: kale and beans did best.</text>
+    <text x="40" y="160">The courtyard beds were planted late</text>
+    <text x="40" y="186">and gave less than in the year before.</text>
+    <text x="40" y="240">In the allotment the pumpkins took over</text>
+    <text x="40" y="374">half of the beds by August.</text>
+  </g>
+  <rect x="190" y="252" width="200" height="96" rx="4" fill="#fff" stroke="#5b4bc4" stroke-width="2"/>
+  <text x="208" y="292" font-size="13" fill="#1f1a33">A note on the harvest</text>
+  <g fill="#fff" stroke="#5b4bc4" stroke-width="1.5"><rect x="185" y="247" width="9" height="9"/><rect x="385" y="247" width="9" height="9"/><rect x="185" y="343" width="9" height="9"/><rect x="385" y="343" width="9" height="9"/></g>
+  <use href="#mark" x="188" y="225"/>
+  <path d="M188 246 L188 252 L190 252" fill="none" stroke="#5b4bc4" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <g transform="translate(20,396)">
+    <rect width="410" height="36" rx="8" fill="#ece8f7"/>
+    <text x="14" y="23" font-size="12" fill="#1f1a33">History: ann · moved “A note on the harvest” to paragraph 3</text>
+  </g>
+  <text x="20" y="470" font-size="11.5" fill="#6e6880">Undo puts it back where it hung. A colleague sees it move.</text>
+  <text x="20" y="486" font-size="11.5" fill="#6e6880">A table is moved the same way by its name tab: it goes</text>
+  <text x="20" y="502" font-size="11.5" fill="#6e6880">after the paragraph it is dropped on.</text>
+</g>
+<text x="40" y="660" font-size="12" fill="#6e6880">Mark: 2.5 × line-height caret bar with a ring, iris #5B4BC4 (the colour of selection); dotted line to the top left corner. Label while dragging: ink pill, as the tooltips.</text>
+</svg>
