@@ -12,7 +12,7 @@ the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-che
 (`qa-recommendations.md`). Fifth round 2026-11-13 at `cfa2d91` (all feature branches merged: printing, lists, search, random numbers and
 scenarios, i18n, BITV): new items SEC-18, PERF-09 to PERF-11, UX-33 to UX-37, PROC-18 to PROC-22, CODE-17 to CODE-21,
 DOC-02; the `bitv` items re-checked as merged. Sixth round 2026-11-17 at `f150f0d` (stabilisation of `main`, no features): new items
-PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45 to UX-47, CODE-66 and CODE-67; second list of the same day, every open point of the branch: UX-48 to UX-53, CODE-68 to CODE-71, PROC-28 to PROC-33.
+PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45 to UX-47, CODE-66 and CODE-67; second list of the same day, every open point of the branch: UX-48 to UX-53, CODE-68 to CODE-71, PROC-28 to PROC-33. Eighth round 2026-11-20 at `f34365f` (tracker update): ten items closed, UX-56 to UX-60 and PROC-40 added (see "Round of 2026-11-20" at the end).
 
 ## How to add a bug
 
@@ -24,220 +24,243 @@ Priorities: **P1** before the product is shown outside the team or runs on any m
 **P2** before the first release, or before the story it belongs to is called done. **P3** backlog.
 
 Status: `open` · `needs decision` · `in progress` · `fixed` · `wontfix`.
+Dates: a new row gets its **Opened** date; a row that is fixed moves from *Open* to *Fixed* and gets its **Fixed**
+date (the day the fix reached `main`, or the branch it is on, said in the status).
 Evidence labels: **measured** (run against the real code), **read** (from reading code, not run), **documented** (a
 statement in the docs or on the website).
 
 ## Index
 
-| ID | Pri | Category | Title | Status |
-|---|---|---|---|---|
-| SEC-01 | P1 | Security | DNS rebinding defeats the Origin check | fixed (verified at `54d1245`) |
-| SEC-02 | P2 | Security | Anyone who reaches the server can create unlimited documents | fixed (verified at `54d1245`) |
-| SEC-03 | P2 | Security / Perf | Password hashing runs on the event loop | fixed (verified at `54d1245`) |
-| SEC-04 | P2 | Security | Answer time reveals whether a document exists | fixed (verified at `54d1245`) |
-| SEC-05 | P2 | Security | Redaction leaves the content in the journal and in packed blocks | **fixed** 2026-11-16 (D725) |
-| SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |
-| SEC-07 | P2 | Security | Plain-text passwords allowed on non-loopback addresses | fixed (verified at `54d1245`) |
-| SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | npm fixed 2026-11-11; `pip-audit` in CI since 2026-11-17 (job `pip-audit`; clean when run by hand) |
-| SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |
-| SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |
-| SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | verified open (2026-11-12); **fixed** 2026-11-19 on branch `e2-document-sec` (D1266, D1275, D1276; admin sign-in too) |
-| SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **new, open** |
-| SEC-13 | P2 | Security | The web app is served without CSP, frame-ancestors, nosniff or referrer headers | **fixed** 2026-11-12 |
-| SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |
-| SEC-15 | P2 | Security | Office import reads every zip part whole and parses some XML with default parsers | **fixed** 2026-11-17 (`claudia_opc_io.check_package`, `parse_xml`) |
-| SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |
-| SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05, **now tracked**; **fixed** 2026-11-19 on branch `e2-document-sec` (D1261); one part left, see SEC-22 |
-| PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |
-| PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |
-| PERF-03 | P3 | Performance | `users.json` rewritten and fsynced in full on every user added | superseded by the container |
-| PERF-04 | P3 | Performance | `GET /api/docs` scans the disk on every request | fixed (listing cache) |
-| PERF-05 | P2 | Performance | `sheets` recomputes the extent by scanning every cell | **fixed** (re-measured 2026-11-12) |
-| PERF-06 | P3 | Performance | Packing rewrites the whole zip; threshold packing on the event loop | verified open |
-| PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |
-| PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |
-| UX-01 | P2 | UX | Menus cannot be operated with the keyboard | fixed (read 2026-11-12, not screen-reader tested) |
-| UX-02 | P2 | UX | The grid has no accessible structure | fixed, merged at `cfa2d91` (`grid-a11y.cjs` passes; no screen reader run yet) |
-| UX-03 | P2 | UX | Dialogs do not manage focus | fixed (native `<dialog>`, read 2026-11-12) |
-| UX-04 | P2 | UX | Text and border colours fail WCAG contrast | fixed, merged at `fd4b087` (guarded by a test) |
-| UX-05 | P3 | UX | No dark mode | fixed (2026-11-12) |
-| UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |
-| UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open; the website is not in this repository (searched 2026-11-13) |
-| UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |
-| UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |
-| UX-10 | P2 | UX / Web | An empty server greets everybody as computes, whichever app it serves | **fixed** |
-| UX-11 | P2 | UX | The admin sign-in screen had no way back except the browser's Back button | **fixed** |
-| UX-12 | P2 | UX | Open dialog goes blank if the server has an access secret | **fixed** |
-| UX-13 | P2 | UX | `help_search` leaks one app's topics into another's; composes has none of its own | **fixed** |
-| UX-14 | P2 | UX | "Edit this style…" gallery applies and closes on click instead of showing the style to inspect | **fixed** |
-| UX-15 | P1 | IO / pptx | The PowerPoint exporter cannot be imported, and loses every colour when it can | **fixed** |
-| UX-16 | P2 | UX / Web | A submenu opened by hovering closes again when its item is clicked (File ▸ Manage ▸ …) | **fixed** |
-| UX-17 | P2 | UX / i18n | A browser in `en-US` asks for a catalog that does not exist; in `de-DE` it stays English with no language ticked | **fixed** |
-| UX-18 | P2 | UX / computes | The formula hint covers the column letters exactly when a whole column is to be picked | **fixed** |
-| UX-19 | P2 | UX | Picking the caret's own style back in the gallery pins it: a deviation is then not offered a name, and the next change goes to the old style everywhere | **fixed** |
-| UX-20 | **P1** | UX / AI | The AI in computes does nothing and points at an act/suggest switch no client has | **fixed** 2026-11-12 |
-| UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **new, open** |
-| UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |
-| UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | partly fixed 2026-11-12 (the suggestion list is gone from above the tabs) |
-| UX-24 | P1 | UX / creates | A named style could not be applied to another text box from where people look for it | **fixed** 2026-11-12 |
-| UX-25 | P3 | UX / creates | All styles… counted every style's uses as "shapes" when a shape was selected | **fixed** 2026-11-12 |
-| UX-28 | P2 | UX / BITV | The page declares no language (WCAG 3.1.1) | fixed, merged at `fd4b087` |
-| UX-29 | P2 | UX / BITV | A keyboard user cannot leave the grid, nor skip the menus and toolbar (WCAG 2.1.2, 2.4.1) | fixed, merged at `fd4b087` (`regions.cjs` passes) |
-| UX-30 | P3 | UX / BITV | The tab title does not name the document (WCAG 2.4.2) | fixed, merged at `fd4b087` |
-| UX-31 | P2 | UX / BITV | Pictures, charts and shapes had no description of their own, and nothing could be marked as decoration (WCAG 1.1.1) | fixed, merged at `cfa2d91` (`describe*.cjs` pass); design to confirm |
-| UX-32 | P3 | UX / BITV | The workspace pages have no landmarks (axe `landmark-one-main`, `region`; WCAG 1.3.1, 2.4.1) | **new, open** |
-| UX-26 | P2 | UX | The AI mode switch: the unchosen half invisible in the light theme, and the switch below the history | **fixed** 2026-11-12 |
-| UX-27 | P3 | UX / creates | A new object lands exactly on the previous one, so the second hides the first | **new, open** |
-| PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |
-| PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |
-| PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |
-| PROC-04 | P1 | Process / CI | CI's Python job fails on every OS: "e2e greeting" skips and `--ci` does not allow it | **fixed** |
-| PROC-05 | P2 | Process / CI | CI's web type check checks nothing (`vue-tsc --noEmit` over a `files: []` tsconfig) | **fixed** |
-| PROC-06 | P2 | Process / CI | No CI job runs a browser or the Windows client; the `web/e2e` scripts had rotted unnoticed | **fixed** |
-| PROC-07 | P3 | Process / tests | A performance guard measures the garbage collector and fails now and then | **fixed** |
-| PROC-08 | P3 | Process / tests | A test of the gate fails on every machine where `npm install` has been run | **fixed** |
-| PROC-09 | P1 | Process / CI | Two branches both released claudia-core 0.13.0; the gate fails on the duplicate | **fixed** 2026-11-12 |
-| PROC-10 | P1 | Process / CI | The Sphinx build fails: `Budget`, `Lens`, `Recorder` are in signatures but not in the reference | **fixed** 2026-11-12 |
-| PROC-11 | P2 | Process / CI | The LibreOffice check broke silently: its job may fail and nothing else runs its code | **fixed** 2026-11-12 |
-| PROC-12 | P1 | Process / CI | The Linux client's end-to-end test reads the page address before the page starts loading | **fixed** 2026-11-12 |
-| PROC-13 | P2 | Process | Nothing pins Python 3.14: `uv` takes 3.15 where it is installed, and OpenVINO cannot be installed there | **fixed** 2026-11-12 |
-| PROC-14 | P2 | Process / CI | Two web browser scripts fail on `main` (a stale selector, and UX-20) | **fixed** 2026-11-12 |
-| PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | **new, partly fixed** |
-| PROC-16 | P3 | Process / tests | The undo performance guard measured one sample and failed now and then | **fixed** 2026-11-12 |
-| PROC-17 | P2 | Process / CI | `web/e2e/demo.cjs` fails again once the client sends *suggest*: it never switched to *act* | **fixed** 2026-11-12 |
-| CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |
-| CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |
-| CODE-03 | P3 | Code | README is out of date | open (not re-checked) |
-| CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |
-| CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |
-| CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |
-| CODE-07 | P3 | Code | `uv.lock.rej` committed at the repository root | fixed |
-| CODE-08 | P3 | Code | `ruff format --check` fails; the gate does not run it | fixed |
-| CODE-09 | P3 | Code | e2e scripts exist without `package.json` entries | fixed |
-| CODE-10 | P1 | Code | `main` at `558f429` has a real `SyntaxError` in 10 files: `except A, B:` instead of `except (A, B):` | fixed |
-| CODE-11 | P3 | Code | Windows client: its generated menu is stale, and a test depends on the clone's folder name | **fixed** |
-| CODE-12 | P3 | Code | `.gitignore` ignores the tracked `docs/` sources; two test documents are committed | **fixed** |
-| CODE-13 | P2 | Code / Perf | `WorkerPool` is built and owned by every hub, and nothing submits work to it | open (re-checked 2026-11-13; now also SEC-18, PERF-10) |
-| CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | **fixed** 2026-11-15 (D660) |
-| CODE-15 | P2 | Code | `./start.sh` kept documents in three layouts and all servers' state in one shared folder | **fixed** 2026-11-12 |
-| CODE-16 | P2 | Code / macOS | The macOS client's generated creates menu had no Format ▸ Apply Style…, and nothing checked it | **fixed** 2026-11-12 |
-| SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **fixed** 2026-11-13 (D288) |
-| PERF-09 | P2 | Performance | Making a webfont (WOFF2) blocked every request of every document for seconds | **fixed** 2026-11-13 |
-| PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |
-| PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **fixed** 2026-11-13 |
-| UX-33 | P2 | UX | A new document starts with an undoable step: Ctrl+Z removes a new workbook's only sheet | **fixed** 2026-11-13 (D362) |
-| UX-34 | P3 | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | deferred (owner, 2026-11-13: the AI is not fully built yet) |
-| UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **fixed** 2026-11-13 (D360) |
-| UX-36 | P2 | UX / desktop | Features of this round are missing from the native desktop menus (Print, lists, Image, Chart, Names, SQL, …) | **fixed** 2026-11-13 (D361) |
-| UX-37 | P3 | UX / composes | composes shows an act/suggest switch that changes nothing | **new, open** |
-| UX-39 | P2 | UX | A dialog or the search panel cannot be moved; its help link did not reach its topic; help topics showed their Markdown as typed | **fixed** 2026-11-15 (D520–D522) |
-| UX-38 | P2 | UX / Linux client | Dialogs are stretched to the window's height in WebKitGTK: huge gaps, a button in a row of its own turns into a circle | **fixed** 2026-11-14 (`web/tests/modal-layout.test.ts`) |
-| PROC-18 | **P1** | Process / CI | The gate fails on every fresh clone: a note names `web/public/wasm`, a build output | **fixed** 2026-11-13 |
-| PROC-19 | P2 | Process / CI | Six browser scripts and the macOS client's own tests ran nowhere; image and .deb ignored `layout/` | **fixed** 2026-11-13 |
-| PROC-20 | **P1** | Process / CI | Two end-to-end tests on `main` fail: `demo.cjs` (the grid's blank active cell) and the Linux client (D915) | **fixed** 2026-11-13 |
-| PROC-21 | P2 | Process / CD | The demo deployment checks `demo.claudiaoffice.de`, a domain that is not ours | **fixed** 2026-11-13 |
-| PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |
-| CODE-17 | P3 | Code / tests | Three names for "use this browser" in the tests (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`) | **new, open** |
-| CODE-18 | P2 | Code / Arch | The search panel and protocol "for all three apps" speak only in sheet, row and column | **fixed** 2026-11-13 (D289) |
-| CODE-19 | P3 | Code | A debugging scan of the garbage collector and a 10 s sleep loop left in the journal | **new, open** |
-| CODE-20 | P3 | Code / Supply chain | The Dockerfile copies `uv:latest`: the image's build tool is not pinned | **new, open** |
-| CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | open; search split out 2026-11-13; 1,121 lines at `7994b00` (see CODE-27, CODE-29) |
-| DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |
-| CODE-22 | P2 | Code / Import | An xlsx with an array formula failed to import; one edit dropped a sheet's lists, icon sets and spill marks | **fixed** 2026-11-13 |
-| DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |
-| UX-40 | P2 | UX / creates | A new presentation's first slide had no name; the next one was called "Slide 1" too, and both tabs said "Slide 1" | **fixed** 2026-11-15 |
-| UX-41 | P2 | UX / composes | Headings, list items and paragraphs could not be pointed at with `#` in the chat | **fixed** 2026-11-15 (D554) |
-| UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |
-| UX-43 | P3 | UX / creates | A text box whose words become a container is two undo steps and loses its name (a tag to it breaks) | **new, open** |
-| CODE-23 | P2 | Code / clients | The Windows and macOS menus lacked Insert ▸ Container: their generated menus were stale and CI's client job red (CODE-16 again) | **fixed** 2026-11-15 |
-| CODE-24 | P3 | Code / server | `add_object` with kind `rendered` or `diagram` failed inside the server after a message that allowed them | **fixed** 2026-11-15 |
-| CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |
-| PROC-23 | **P1** | Process / CI | Three web e2e scripts on `main` fail after the dock merge (`demo`, `composes`: the chat box; `keys`: the View menu); `details.cjs` never ran in CI | **fixed** 2026-11-15 |
-| DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |
-| CODE-26 | **P1** | Code / macOS client | Closing a window with its close button crashes the macOS app every time (Neutralino 6.8.0) | **fixed** 2026-11-15 (D506) |
-| CODE-27 | P2 | Code / Arch | The object methods are written once in the kernel and three times on the wire | **fixed** 2026-11-15 on the server; composes' screens for pictures and descriptions open |
-| CODE-28 | P3 | Code / Arch | An app's server wiring is spread over five tables in `apps.py` | **new, open** |
-| CODE-29 | P3 | Code / Arch | `claudia_server` is flat: app glue next to infrastructure | **new, open** |
-| CODE-30 | P3 | Code / server | Parameters are validated twice, and a handler's bug answers `command_error` | **new, open** |
-| CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |
-| CODE-32 | P3 | Code / clients | The menu's one source lives inside the Linux shell, and the web menus are a second copy | **new, open** |
-| CODE-33 | P3 | Code | `claudia-client` is a package no client uses | **fixed** 2026-11-16 (D700) |
-| CODE-34 | P3 | Code / Windows | Atomic writes are written seven times; five lack the Windows retry | **fixed** 2026-11-16 (D701) |
-| CODE-35 | P3 | Code / web | The web sessions repeat their write call 57 times and three shared methods | **new, open** |
-| CODE-36 | P3 | Code / web | `localStorage` is guarded six times over | **new, open** |
-| CODE-37 | P3 | Code / web | Two image dialogs that differ in one prop | **new, open** |
-| CODE-38 | P3 | Code / naming | computes kept the generic names (`Session`, `Workspace.vue`, `standin.py`) | **new, open** |
-| CODE-39 | P3 | Code / web | `OpenDialog.vue` does five jobs in 1,615 lines | **new, open** |
-| CODE-40 | P3 | Code / macOS client | An orphaned build file in the macOS creates app | **fixed** 2026-11-15 (with D660) |
-| CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |
-| CODE-42 | P3 | Code / Export | Exports named a generic font family by a font Claudia does not show | **fixed** 2026-11-16 (E3.13) |
-| CODE-43 | P2 | Code / Import | docx and odt import ignored the file's fonts and reported no loss | **fixed** 2026-11-16 (E3.13) |
-| CODE-44 | P2 | Code / Import | pptx and odp import did not read fonts | **fixed** 2026-11-16 (E3.13) |
-| CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |
-| CODE-46 | P2 | Code / Import | The slides importers do not read text size and colour, so most boxes are a `look` loss | **new, open** |
-| CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | **new, open** |
-| CODE-48 | P3 | Code / Web | After naming the first administrator, the server settings stayed on the setup form | **fixed** 2026-11-17 |
-| CODE-49 | P2 | Code / Server | Add fonts… stayed blocked for 30 minutes after too many files were chosen | **fixed** 2026-11-17 |
-| CODE-50 | P2 | Code / Render | LaTeX formulas ignored fonts added while the server ran ("Latin Modern Roman is not available") | **fixed** 2026-11-17 |
-| CODE-51 | P2 | Code / Server | A container whose picture was never made stayed on "Drawing…" for ever, also after reopening the document | **fixed** 2026-11-17 |
-| CODE-52 | P3 | Code / Typeset | A TeX error was cut at 79 characters ("Fatal Package", "cannot be f") | **fixed** 2026-11-17 |
-| CODE-53 | P3 | Web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |
-| CODE-54 | P3 | Code / Render | A finished picture is kept without the fonts in its key, so it stays after a font of the same family and style is replaced | open |
-| CODE-55 | P2 | Code / Server | A tool path changed in Server settings (xelatex, pdftocairo) was used only after a restart of the server | **fixed** 2026-11-17 |
-| CODE-56 | P3 | Code / computes | A new sheet can get the id of a removed sheet | **new, open** |
-| CODE-57 | P2 | Code / core | Undoing typing after an undone delete that cut into it removes the wrong characters | **fixed** 2026-11-17 |
-| PROC-24 | **P1** | Process / CI | `main` after the last merge was red: two tests (a story id and decision numbers D730–D735 used twice) | **fixed** 2026-11-17 |
-| PROC-25 | P2 | Process / CD | The demo deployment was not gated on CI: it deployed whatever an image push produced, also from a red `main` | **fixed** 2026-11-17 |
-| PROC-26 | P3 | Process / Supply chain | No dependabot: five lockfiles and the workflows were never watched | **fixed** 2026-11-17 |
-| PROC-27 | P2 | Process / Supply chain | Actions are pinned by tag, not SHA; the `latest` image tag follows a red `main`; CI has no CodeQL and no `pip-audit` | **fixed** 2026-11-17 (D762); first runs unseen |
-| CODE-58 | P2 | Code / Export | pptx and odp exports drop border, padding, line-height, letter-spacing, hyphenation and margins of creates text styles and report no loss | **fixed** 2026-11-17 (D760: reported, not yet written) |
-| CODE-59 | P3 | Code / Drift | `OBJECT_KINDS` was written in `claudia_core` and again in `claudia_computes.model` | **fixed** 2026-11-17 |
-| CODE-60 | P2 | Code / Drift | Facts written twice: the web's built-in style ids and `'body-text'` literals, `VisualObject.kind` in `layout/` lacks `rendered`, list leader dots drawn differently by the editor and the display list | **fixed** 2026-11-17 (D761); see CODE-63 |
-| CODE-61 | P3 | Process / Backlog | Stale statuses in the backlog (E9.30, E10.21, probably E9.31 say open where code exists) | **new, open** |
-| SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |
-| UX-44 | P3 | UX / BITV | The blinking dots of the side panel ignored `prefers-reduced-motion` (WCAG 2.3.3) | **fixed** 2026-11-17 |
-| CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |
-| CODE-63 | P3 | UX / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |
-| CODE-64 | P2 | composes | The browser editor does not draw the text wrap (the flowing view shows objects over the words; Page view and print wrap) | **fixed** 2026-11-18 (D1068) |
-| CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |
-| UX-45 | P3 | UX / composes | Resizing an object from its top or left handle is two history entries, not one (`resize_object` takes no offset in a text) | **new, open** |
-| UX-46 | P3 | UX / computes, composes | Edit ▸ Select Next Object (D1063, D1222) is not built: computes reaches an object only by Ctrl+Alt+PageDown/PageUp, which has no menu entry | **new, open** |
-| UX-47 | P3 | UX / computes, composes | Delete on a selected object or table works, but has no menu entry and no key in the key table in composes and computes (the hint "Del" is typed into the context menu) | **new, open** |
-| CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **new, open** (D1233) |
-| CODE-67 | P3 | computes I/O | Pictures of an XLSX or ODS are not read into the model: they stay in the file, are counted as `picture`, and survive an edit, but cannot be moved or described in computes | **new, open** (D1233) |
-| UX-48 | P3 | UX / all | The object clipboard (D1229) copies pictures only: no box or shape, and nothing from another program can be pasted as a picture | **new, open** |
-| UX-49 | P3 | UX / composes | A table has no width handle: its width is set only in Table options… (D1224 says it can be scaled in width) | **new, open** |
-| UX-50 | P3 | UX / composes | Composes tables have no row and column headers, so *Height / width…* and *Insert / delete ▸* on a header (workbook rows 18, 19) cannot be offered | **new, open** |
-| UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |
-| UX-52 | P3 | UX / computes | A dropped object snaps to the nearest cell border on release, so its free position is lost (D1230, by design) | **needs decision** |
-| UX-53 | P3 | UX / computes | An object keeps its pixel size when rows or columns are inserted or resized, so it no longer covers the cells it covered (E6.17, D1230) | **new, open** |
-| CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |
-| CODE-69 | P3 | Code / shared objects | A shape's text is a plain `str`, not the shared paragraph entity: no styles, no authorship runs, no per-host overflow policy | **new, open** (implementation note, shared object layer) |
-| CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |
-| CODE-71 | P3 | Code / web | `contextMenuItems` in `object-menu.ts` types four key hints by hand ("Enter", "Ctrl+X", "Ctrl+C", "Del"); the others come from the manifest through `hintOf` (see UX-47) | **new, open** (read) |
-| PROC-28 | P2 | Process / E2E | `web/e2e/objects.cjs` (D1231) was written and never run: the sandbox had no browser. Its first run is the proof of D1221–D1232 on screen | **new, open** |
-| PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |
-| PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |
-| PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |
-| PROC-32 | P3 | Process / docs | `claudiaoffice-log/notes/claudia-menus.xlsx` is not in the repo: the keys of this round are only in the generated key table, and the rows the contract note lists "for the workbook" are not settled | **new, open** |
-| PROC-33 | P3 | Process / gate | Patches 9–11 had ruff failures (lines over 120 characters in three files) that only the gate on the merged tree found | **fixed** 2026-11-19 (patch 12) |
-| SEC-20 | P2 | Security | Behind `--behind-proxy` every client had the proxy's address, so the per-address caps (waiting sockets, lookups, uploads) were one cap for everybody | **fixed** 2026-11-19 (D1275, branch `e2-document-sec`) |
-| SEC-21 | P2 | Security / performance | Methods that confirm a password (`set_details`, `delete_document`, `leave`, `change_password`, `propose_owner`, `download_claudia`) hash on the event loop, in `Connection.handle`, not in a thread: at 0.75 s (D1267) each stops every connection of the server for that long | **fixed** 2026-11-19 on branch `e2-document-sec` (D1277) |
-| CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |
-| DOC-04 | P3 | Docs | `docs/versioning.md` said the protocol version is "now 1"; the code says 2 | **fixed** 2026-11-19, with a test that compares them |
-| PROC-34 | P3 | Process / backlog | The `backlog` branch had renamed `e0.3-shells-gtk-with-webkitgtk-6-0.md` (an Obsidian plugin does that when a title changes) so the story and its epic no longer named each other and `tests/test_backlog.py` failed | **fixed** 2026-11-19 (file name restored) |
-| CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |
-| PROC-35 | P3 | Process / e2e | `uv run pytest tests/e2e` as one run fails three tests ("Playwright Sync API inside the asyncio loop") that each pass alone: an earlier test leaves an event loop running | **fixed** 2026-11-19 on branch `e2-document-sec` (measured on the branch, which has no change to the other e2e tests) |
-| SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |
-| PROC-36 | P3 | Process / tooling | A `ruff` installed outside the project (0.16.9) rewrites `except (A, B):` into `except A, B:` and reformats unrelated files; the project pins `ruff<0.15` for this | **fixed** 2026-11-19 (a rule in `CONTRIBUTING.md`, rule 5) |
-| PROC-38 | P3 | Process / tests | `test_another_window_is_answered_quickly_while_a_password_is_hashed` assumes that hashing takes more than 0.15 s; on a fast machine under load it measured 0.1499 s and the test failed (it passed alone) | **new, open** (size 3; calibrate the cost used by the test instead of reading the clock) |
-| PROC-39 | P2 | Process / e2e | The test server's output went to a pipe nobody read (`tests/e2e/live.py`); after about 64 KiB the server blocked on its next write and the whole event loop stood still, so page loads timed out (three `test_viewer` scenarios failed in a full run of `tests/e2e/specs` and passed alone) | **fixed** 2026-11-19 on branch `e2-document-sec` (the output goes to `server.log`; `test_greeting.py` and `test_computes_grid.py` still use a pipe but stop their servers within a minute) |
-| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |
-| UX-55 | P2 | UX / record | After its own export, print or PDF the window that did it was not shown its own line in History & Chat: the server tells the other windows only | **fixed** 2026-11-19 in slice B (found by the first end-to-end run; `BaseSession.recorded` reads the record again) |
-| CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |
-| UX-54 | P3 | UX / a11y | The pages of Server settings (AI model … Security) have no keyboard shortcut, and the menu workbook does not list them | **new, open** (pre-existing; found while adding the Security page; needs the owner's decision whether the rule covers navigation) |
-| WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |
-| WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |
+The index is the status of record; a section below keeps the status of the round it was written in unless it says it was
+re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
+the date.
+
+### Open (82)
+
+By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
+
+| ID | Pri | Category | Title | Status | Opened | Fixed |
+|---|---|---|---|---|---|---|
+| SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **new, open** |  |  |
+| WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |  |  |
+| SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |  |  |
+| SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |  |  |
+| SEC-22 | P2 | Security | Who wrote which stretch (`runs`, E9.10) is part of the content state, so a viewer still receives it: in the `blocks` method, in `text` events, in the snapshot and in her own sealed file, although D1261 says no data should be behind "show who wrote what" for a viewer | **new, open**, needs the owner's decision (mask it live and in the viewer's file, or accept it as content) |  |  |
+| PERF-02 | P2 | Performance | Journal `fsync` on the event loop for every edit | verified open (2026-11-12; see CODE-13) |  |  |
+| PERF-10 | P2 | Performance | What-if outcomes are recalculated on the event loop: 9 s per edit in a 1,000-cell model | **new, open** |  |  |
+| UX-07 | P2 | UX / Web | Website blocks pinch-zoom (`user-scalable=no`) | open; the website is not in this repository (searched 2026-11-13) |  |  |
+| UX-09 | P2 | UX | Six web menus against four in D4; the Linux shell maps between them | **new** |  |  |
+| UX-21 | P2 | UX / AI | The chat promises `@ai` where no AI answers (creates), and the refusal names a missing switch | **new, open** |  |  |
+| UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
+| UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
+| UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
+| UX-56 | P2 | UX / creates | Enter in the Rotate by… field is taken by the slide: it starts writing in the selected text box, and the angle is not applied | **new, open** (measured, `objects.cjs`; size 2) | 2026-11-20 |  |
+| UX-57 | P2 | UX / computes | Turning a picture by its turn handle does not happen: `objects.cjs` step 5 times out waiting for the turn handle | **new, open** (measured; cause not looked into; size 2) | 2026-11-20 |  |
+| CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
+| CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
+| CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
+| PROC-15 | P2 | Process | The tracker and the backlog lag the code: fixed items still "open", 64 stories at a placeholder 50 % | **new, partly fixed**; the tracker was brought up to date on 2026-11-20 (ten items closed, six added) |  |  |
+| PROC-30 | P2 | Process / desktop clients | The Neutralino (Windows, macOS) tests and the GTK client were not run for `object-interaction`: the generated menus were rebuilt and the manifest unit tests pass, nothing more | **new, open** |  |  |
+| PROC-37 | P2 | Process / scope | D1272 says an export's history and chat come back in with their authors as text; slice B imports the content only (`import_state` returns the state, the `history.jsonl` and `chat.jsonl` of an export are written but never read back) | **new, open** (size 2; needs the owner's decision: build it in slice C or log it) |  |  |
+| PROC-40 | P2 | Process / E2E | Four spec files (51 scenarios) run nowhere: no step code binds them and no scenario names a unit or e2e test (`names`, `requirements`, `objects-in-composes`, `pictures-in-files`) | **new, open** (measured; size 2) | 2026-11-20 |  |
+| SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
+| SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |  |  |
+| SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |  |  |
+| PERF-06 | P3 | Performance | Packing rewrites the whole zip; threshold packing on the event loop | verified open |  |  |
+| PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |  |  |
+| PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |  |  |
+| UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |  |  |
+| UX-23 | P3 | UX | Panel layout and undo placement differ between the three apps | partly fixed 2026-11-12 (the suggestion list is gone from above the tabs) |  |  |
+| UX-27 | P3 | UX / creates | A new object lands exactly on the previous one, so the second hides the first | **new, open** |  |  |
+| UX-32 | P3 | UX / BITV | The workspace pages have no landmarks (axe `landmark-one-main`, `region`; WCAG 1.3.1, 2.4.1) | **new, open** |  |  |
+| UX-34 | P3 | UX / AI | In computes and creates the AI refuses every change by default (suggest is the default, proposals do not exist) | deferred (owner, 2026-11-13: the AI is not fully built yet) |  |  |
+| UX-43 | P3 | UX / creates | A text box whose words become a container is two undo steps and loses its name (a tag to it breaks) | **new, open** |  |  |
+| UX-45 | P3 | UX / composes | Resizing an object from its top or left handle is two history entries, not one (`resize_object` takes no offset in a text) | **new, open** |  |  |
+| UX-46 | P3 | UX / computes, composes | Edit ▸ Select Next Object (D1063, D1222) is not built: computes reaches an object only by Ctrl+Alt+PageDown/PageUp, which has no menu entry | **new, open** |  |  |
+| UX-47 | P3 | UX / computes, composes | Delete on a selected object or table works, but has no menu entry and no key in the key table in composes and computes (the hint "Del" is typed into the context menu) | **new, open** |  |  |
+| UX-48 | P3 | UX / all | The object clipboard (D1229) copies pictures only: no box or shape, and nothing from another program can be pasted as a picture | **new, open** |  |  |
+| UX-49 | P3 | UX / composes | A table has no width handle: its width is set only in Table options… (D1224 says it can be scaled in width) | **new, open** |  |  |
+| UX-50 | P3 | UX / composes | Composes tables have no row and column headers, so *Height / width…* and *Insert / delete ▸* on a header (workbook rows 18, 19) cannot be offered | **new, open** |  |  |
+| UX-52 | P3 | UX / computes | A dropped object snaps to the nearest cell border on release, so its free position is lost (D1230, by design) | **needs decision** |  |  |
+| UX-53 | P3 | UX / computes | An object keeps its pixel size when rows or columns are inserted or resized, so it no longer covers the cells it covered (E6.17, D1230) | **new, open** |  |  |
+| UX-54 | P3 | UX / a11y | The pages of Server settings (AI model … Security) have no keyboard shortcut, and the menu workbook does not list them | **new, open** (pre-existing; found while adding the Security page; needs the owner's decision whether the rule covers navigation) |  |  |
+| UX-58 | P3 | UX / composes | A press on a text box also moves the caret in the words below it | **new, open** (measured, `objects.cjs` step 1; size 3) | 2026-11-20 |  |
+| UX-59 | P3 | UX / composes | Up from the second paragraph to the first failed once in four runs: a re-render of a paragraph just saved may undo a native caret move | **new, open** (measured once, cause a guess; size 3) | 2026-11-20 |  |
+| UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
+| CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
+| CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
+| CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
+| CODE-17 | P3 | Code / tests | Three names for "use this browser" in the tests (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`) | **new, open** |  |  |
+| CODE-19 | P3 | Code | A debugging scan of the garbage collector and a 10 s sleep loop left in the journal | **new, open** |  |  |
+| CODE-20 | P3 | Code / Supply chain | The Dockerfile copies `uv:latest`: the image's build tool is not pinned | **new, open** |  |  |
+| CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | open; search split out 2026-11-13; 1,121 lines at `7994b00` (see CODE-27, CODE-29) |  |  |
+| CODE-28 | P3 | Code / Arch | An app's server wiring is spread over five tables in `apps.py` | **new, open** |  |  |
+| CODE-29 | P3 | Code / Arch | `claudia_server` is flat: app glue next to infrastructure | **new, open** |  |  |
+| CODE-30 | P3 | Code / server | Parameters are validated twice, and a handler's bug answers `command_error` | **new, open** |  |  |
+| CODE-32 | P3 | Code / clients | The menu's one source lives inside the Linux shell, and the web menus are a second copy | **new, open** |  |  |
+| CODE-35 | P3 | Code / web | The web sessions repeat their write call 57 times and three shared methods | **new, open** |  |  |
+| CODE-36 | P3 | Code / web | `localStorage` is guarded six times over | **new, open** |  |  |
+| CODE-37 | P3 | Code / web | Two image dialogs that differ in one prop | **new, open** |  |  |
+| CODE-38 | P3 | Code / naming | computes kept the generic names (`Session`, `Workspace.vue`, `standin.py`) | **new, open** |  |  |
+| CODE-39 | P3 | Code / web | `OpenDialog.vue` does five jobs in 1,615 lines | **new, open** |  |  |
+| CODE-41 | P3 | Code / Arch | Import cycles in computes are worked around with 29 function-level imports | **new, open** |  |  |
+| CODE-47 | P3 | Code / Import | Words of a docx with a font of their own are a `formatting` loss | **new, open** |  |  |
+| CODE-53 | P3 | Web | The failure text of a rendered container is clipped in a small frame and cannot be read in full | open |  |  |
+| CODE-54 | P3 | Code / Render | A finished picture is kept without the fonts in its key, so it stays after a font of the same family and style is replaced | open |  |  |
+| CODE-56 | P3 | Code / computes | A new sheet can get the id of a removed sheet | **new, open** |  |  |
+| CODE-62 | P3 | Code / Linux client | A window that revives the shared server while the old one still holds the port starts it on a random port, not the remembered one | **new, open** |  |  |
+| CODE-63 | P3 | UX / composes | The Format ▸ Styles menu lists composes' built-in `contents-title` and `contents-1` to `contents-9` as "custom" styles | **new, open** (read) |  |  |
+| CODE-66 | P3 | computes I/O | A picture added to an imported XLSX or ODS is not written into it: the patch of a kept file does not add pictures (reported as `object`) | **new, open** (D1233) |  |  |
+| CODE-67 | P3 | computes I/O | Pictures of an XLSX or ODS are not read into the model: they stay in the file, are counted as `picture`, and survive an edit, but cannot be moved or described in computes | **new, open** (D1233) |  |  |
+| CODE-68 | P3 | computes | Computes cannot make a text box or a shape, though a model can hold one (a file from another app) and an export reports it as `object` | **new, open** |  |  |
+| CODE-69 | P3 | Code / shared objects | A shape's text is a plain `str`, not the shared paragraph entity: no styles, no authorship runs, no per-host overflow policy | **new, open** (implementation note, shared object layer) |  |  |
+| CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |  |  |
+| CODE-71 | P3 | Code / web | `contextMenuItems` in `object-menu.ts` types four key hints by hand ("Enter", "Ctrl+X", "Ctrl+C", "Del"); the others come from the manifest through `hintOf` (see UX-47) | **new, open** (read) |  |  |
+| CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
+| PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
+| PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
+| PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
+| PROC-38 | P3 | Process / tests | `test_another_window_is_answered_quickly_while_a_password_is_hashed` assumes that hashing takes more than 0.15 s; on a fast machine under load it measured 0.1499 s and the test failed (it passed alone) | **new, open** (size 3; calibrate the cost used by the test instead of reading the clock) |  |  |
+| WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
+| UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
+
+### Fixed (131)
+
+By ID. Items closed without a fix (superseded, wontfix) are here too.
+
+| ID | Pri | Category | Title | Status | Opened | Fixed |
+|---|---|---|---|---|---|---|
+| SEC-01 | P1 | Security | DNS rebinding defeats the Origin check | fixed (verified at `54d1245`) |  |  |
+| SEC-02 | P2 | Security | Anyone who reaches the server can create unlimited documents | fixed (verified at `54d1245`) |  |  |
+| SEC-03 | P2 | Security / Perf | Password hashing runs on the event loop | fixed (verified at `54d1245`) |  |  |
+| SEC-04 | P2 | Security | Answer time reveals whether a document exists | fixed (verified at `54d1245`) |  |  |
+| SEC-05 | P2 | Security | Redaction leaves the content in the journal and in packed blocks | **fixed** 2026-11-16 (D725) |  | 2026-11-16 |
+| SEC-07 | P2 | Security | Plain-text passwords allowed on non-loopback addresses | fixed (verified at `54d1245`) |  |  |
+| SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | **fixed** 2026-11-17 (npm audit 2026-11-11; `pip-audit` in CI since 2026-11-17, job `pip-audit`; clean when run by hand) |  | 2026-11-17 |
+| SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |  | 2026-11-06 |
+| SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | **fixed** 2026-11-19 (D1266, D1275, D1276; admin sign-in too; on `main` with `e2-document-sec` since 2026-11-20) |  | 2026-11-19 |
+| SEC-13 | P2 | Security | The web app is served without CSP, frame-ancestors, nosniff or referrer headers | **fixed** 2026-11-12 |  | 2026-11-12 |
+| SEC-15 | P2 | Security | Office import reads every zip part whole and parses some XML with default parsers | **fixed** 2026-11-17 (`claudia_opc_io.check_package`, `parse_xml`) |  | 2026-11-17 |
+| SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05; **fixed** 2026-11-19 (D1261; on `main` with `e2-document-sec` since 2026-11-20); one part left, see SEC-22 | 2026-11-05 | 2026-11-19 |
+| SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **fixed** 2026-11-13 (D288) |  | 2026-11-13 |
+| SEC-20 | P2 | Security | Behind `--behind-proxy` every client had the proxy's address, so the per-address caps (waiting sockets, lookups, uploads) were one cap for everybody | **fixed** 2026-11-19 (D1275, branch `e2-document-sec`) |  | 2026-11-19 |
+| SEC-21 | P2 | Security / performance | Methods that confirm a password (`set_details`, `delete_document`, `leave`, `change_password`, `propose_owner`, `download_claudia`) hash on the event loop, in `Connection.handle`, not in a thread: at 0.75 s (D1267) each stops every connection of the server for that long | **fixed** 2026-11-19 on branch `e2-document-sec` (D1277) |  | 2026-11-19 |
+| PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |  |  |
+| PERF-03 | P3 | Performance | `users.json` rewritten and fsynced in full on every user added | superseded by the container |  |  |
+| PERF-04 | P3 | Performance | `GET /api/docs` scans the disk on every request | fixed (listing cache) |  |  |
+| PERF-05 | P2 | Performance | `sheets` recomputes the extent by scanning every cell | **fixed** (re-measured 2026-11-12) |  |  |
+| PERF-09 | P2 | Performance | Making a webfont (WOFF2) blocked every request of every document for seconds | **fixed** 2026-11-13 |  | 2026-11-13 |
+| PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **fixed** 2026-11-13 |  | 2026-11-13 |
+| UX-01 | P2 | UX | Menus cannot be operated with the keyboard | fixed (read 2026-11-12, not screen-reader tested) |  |  |
+| UX-02 | P2 | UX | The grid has no accessible structure | fixed, merged at `cfa2d91` (`grid-a11y.cjs` passes; no screen reader run yet) |  |  |
+| UX-03 | P2 | UX | Dialogs do not manage focus | fixed (native `<dialog>`, read 2026-11-12) |  |  |
+| UX-04 | P2 | UX | Text and border colours fail WCAG contrast | fixed, merged at `fd4b087` (guarded by a test) |  |  |
+| UX-05 | P3 | UX | No dark mode | fixed (2026-11-12) |  | 2026-11-12 |
+| UX-10 | P2 | UX / Web | An empty server greets everybody as computes, whichever app it serves | **fixed** |  |  |
+| UX-11 | P2 | UX | The admin sign-in screen had no way back except the browser's Back button | **fixed** |  |  |
+| UX-12 | P2 | UX | Open dialog goes blank if the server has an access secret | **fixed** |  |  |
+| UX-13 | P2 | UX | `help_search` leaks one app's topics into another's; composes has none of its own | **fixed** |  |  |
+| UX-14 | P2 | UX | "Edit this style…" gallery applies and closes on click instead of showing the style to inspect | **fixed** |  |  |
+| UX-15 | P1 | IO / pptx | The PowerPoint exporter cannot be imported, and loses every colour when it can | **fixed** |  |  |
+| UX-16 | P2 | UX / Web | A submenu opened by hovering closes again when its item is clicked (File ▸ Manage ▸ …) | **fixed** |  |  |
+| UX-17 | P2 | UX / i18n | A browser in `en-US` asks for a catalog that does not exist; in `de-DE` it stays English with no language ticked | **fixed** |  |  |
+| UX-18 | P2 | UX / computes | The formula hint covers the column letters exactly when a whole column is to be picked | **fixed** |  |  |
+| UX-19 | P2 | UX | Picking the caret's own style back in the gallery pins it: a deviation is then not offered a name, and the next change goes to the old style everywhere | **fixed** |  |  |
+| UX-20 | **P1** | UX / AI | The AI in computes does nothing and points at an act/suggest switch no client has | **fixed** 2026-11-12 |  | 2026-11-12 |
+| UX-24 | P1 | UX / creates | A named style could not be applied to another text box from where people look for it | **fixed** 2026-11-12 |  | 2026-11-12 |
+| UX-25 | P3 | UX / creates | All styles… counted every style's uses as "shapes" when a shape was selected | **fixed** 2026-11-12 |  | 2026-11-12 |
+| UX-26 | P2 | UX | The AI mode switch: the unchosen half invisible in the light theme, and the switch below the history | **fixed** 2026-11-12 |  | 2026-11-12 |
+| UX-28 | P2 | UX / BITV | The page declares no language (WCAG 3.1.1) | fixed, merged at `fd4b087` |  |  |
+| UX-29 | P2 | UX / BITV | A keyboard user cannot leave the grid, nor skip the menus and toolbar (WCAG 2.1.2, 2.4.1) | fixed, merged at `fd4b087` (`regions.cjs` passes) |  |  |
+| UX-30 | P3 | UX / BITV | The tab title does not name the document (WCAG 2.4.2) | fixed, merged at `fd4b087` |  |  |
+| UX-31 | P2 | UX / BITV | Pictures, charts and shapes had no description of their own, and nothing could be marked as decoration (WCAG 1.1.1) | fixed, merged at `cfa2d91` (`describe*.cjs` pass); design to confirm |  |  |
+| UX-33 | P2 | UX | A new document starts with an undoable step: Ctrl+Z removes a new workbook's only sheet | **fixed** 2026-11-13 (D362) |  | 2026-11-13 |
+| UX-35 | P2 | UX | 30–37 menu entries per app have no shortcut; the native menu hides the ones the page handles | **fixed** 2026-11-13 (D360) |  | 2026-11-13 |
+| UX-36 | P2 | UX / desktop | Features of this round are missing from the native desktop menus (Print, lists, Image, Chart, Names, SQL, …) | **fixed** 2026-11-13 (D361) |  | 2026-11-13 |
+| UX-37 | P3 | UX / composes | composes shows an act/suggest switch that changes nothing | **fixed** 2026-11-16 (composes has its AI, D640, D681: *suggest* and *act* differ there now) |  | 2026-11-16 |
+| UX-38 | P2 | UX / Linux client | Dialogs are stretched to the window's height in WebKitGTK: huge gaps, a button in a row of its own turns into a circle | **fixed** 2026-11-14 (`web/tests/modal-layout.test.ts`) |  | 2026-11-14 |
+| UX-39 | P2 | UX | A dialog or the search panel cannot be moved; its help link did not reach its topic; help topics showed their Markdown as typed | **fixed** 2026-11-15 (D520–D522) |  | 2026-11-15 |
+| UX-40 | P2 | UX / creates | A new presentation's first slide had no name; the next one was called "Slide 1" too, and both tabs said "Slide 1" | **fixed** 2026-11-15 |  | 2026-11-15 |
+| UX-41 | P2 | UX / composes | Headings, list items and paragraphs could not be pointed at with `#` in the chat | **fixed** 2026-11-15 (D554) |  | 2026-11-15 |
+| UX-44 | P3 | UX / BITV | The blinking dots of the side panel ignored `prefers-reduced-motion` (WCAG 2.3.3) | **fixed** 2026-11-17 |  | 2026-11-17 |
+| UX-55 | P2 | UX / record | After its own export, print or PDF the window that did it was not shown its own line in History & Chat: the server tells the other windows only | **fixed** 2026-11-19 in slice B (found by the first end-to-end run; `BaseSession.recorded` reads the record again) |  | 2026-11-19 |
+| CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
+| CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
+| CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
+| CODE-07 | P3 | Code | `uv.lock.rej` committed at the repository root | fixed |  |  |
+| CODE-08 | P3 | Code | `ruff format --check` fails; the gate does not run it | fixed |  |  |
+| CODE-09 | P3 | Code | e2e scripts exist without `package.json` entries | fixed |  |  |
+| CODE-10 | P1 | Code | `main` at `558f429` has a real `SyntaxError` in 10 files: `except A, B:` instead of `except (A, B):` | fixed |  |  |
+| CODE-11 | P3 | Code | Windows client: its generated menu is stale, and a test depends on the clone's folder name | **fixed** |  |  |
+| CODE-12 | P3 | Code | `.gitignore` ignores the tracked `docs/` sources; two test documents are committed | **fixed** |  |  |
+| CODE-13 | P2 | Code / Perf | `WorkerPool` is built and owned by every hub, and nothing submits work to it | **fixed** 2026-11-19: imports run on the pool, heavy formula calls are sent to it (D1314); the what-if outcomes are not (PERF-10) |  | 2026-11-19 |
+| CODE-14 | P2 | Code / Arch | The Windows and macOS shells are one design kept as two copies (~1,550 identical lines) | **fixed** 2026-11-15 (D660) |  | 2026-11-15 |
+| CODE-15 | P2 | Code | `./start.sh` kept documents in three layouts and all servers' state in one shared folder | **fixed** 2026-11-12 |  | 2026-11-12 |
+| CODE-16 | P2 | Code / macOS | The macOS client's generated creates menu had no Format ▸ Apply Style…, and nothing checked it | **fixed** 2026-11-12 |  | 2026-11-12 |
+| CODE-18 | P2 | Code / Arch | The search panel and protocol "for all three apps" speak only in sheet, row and column | **fixed** 2026-11-13 (D289) |  | 2026-11-13 |
+| CODE-22 | P2 | Code / Import | An xlsx with an array formula failed to import; one edit dropped a sheet's lists, icon sets and spill marks | **fixed** 2026-11-13 |  | 2026-11-13 |
+| CODE-23 | P2 | Code / clients | The Windows and macOS menus lacked Insert ▸ Container: their generated menus were stale and CI's client job red (CODE-16 again) | **fixed** 2026-11-15 |  | 2026-11-15 |
+| CODE-24 | P3 | Code / server | `add_object` with kind `rendered` or `diagram` failed inside the server after a message that allowed them | **fixed** 2026-11-15 |  | 2026-11-15 |
+| CODE-26 | **P1** | Code / macOS client | Closing a window with its close button crashes the macOS app every time (Neutralino 6.8.0) | **fixed** 2026-11-15 (D506) |  | 2026-11-15 |
+| CODE-27 | P2 | Code / Arch | The object methods are written once in the kernel and three times on the wire | **fixed** 2026-11-19: the server's methods 2026-11-15; composes' Edit ▸ Image… and Format ▸ Name & describe… (D1317) followed; the web sessions' copies are CODE-35 |  | 2026-11-19 |
+| CODE-33 | P3 | Code | `claudia-client` is a package no client uses | **fixed** 2026-11-16 (D700) |  | 2026-11-16 |
+| CODE-34 | P3 | Code / Windows | Atomic writes are written seven times; five lack the Windows retry | **fixed** 2026-11-16 (D701) |  | 2026-11-16 |
+| CODE-40 | P3 | Code / macOS client | An orphaned build file in the macOS creates app | **fixed** 2026-11-15 (with D660) |  | 2026-11-15 |
+| CODE-42 | P3 | Code / Export | Exports named a generic font family by a font Claudia does not show | **fixed** 2026-11-16 (E3.13) |  | 2026-11-16 |
+| CODE-43 | P2 | Code / Import | docx and odt import ignored the file's fonts and reported no loss | **fixed** 2026-11-16 (E3.13) |  | 2026-11-16 |
+| CODE-44 | P2 | Code / Import | pptx and odp import did not read fonts | **fixed** 2026-11-16 (E3.13) |  | 2026-11-16 |
+| CODE-46 | P2 | Code / Import | The slides importers do not read text size and colour, so most boxes are a `look` loss | **fixed** 2026-11-17 (IEW-20, D467: `_pptx_looks` and `_odp_looks` read a box's size and colour) |  | 2026-11-17 |
+| CODE-48 | P3 | Code / Web | After naming the first administrator, the server settings stayed on the setup form | **fixed** 2026-11-17 |  | 2026-11-17 |
+| CODE-49 | P2 | Code / Server | Add fonts… stayed blocked for 30 minutes after too many files were chosen | **fixed** 2026-11-17 |  | 2026-11-17 |
+| CODE-50 | P2 | Code / Render | LaTeX formulas ignored fonts added while the server ran ("Latin Modern Roman is not available") | **fixed** 2026-11-17 |  | 2026-11-17 |
+| CODE-51 | P2 | Code / Server | A container whose picture was never made stayed on "Drawing…" for ever, also after reopening the document | **fixed** 2026-11-17 |  | 2026-11-17 |
+| CODE-52 | P3 | Code / Typeset | A TeX error was cut at 79 characters ("Fatal Package", "cannot be f") | **fixed** 2026-11-17 |  | 2026-11-17 |
+| CODE-55 | P2 | Code / Server | A tool path changed in Server settings (xelatex, pdftocairo) was used only after a restart of the server | **fixed** 2026-11-17 |  | 2026-11-17 |
+| CODE-57 | P2 | Code / core | Undoing typing after an undone delete that cut into it removes the wrong characters | **fixed** 2026-11-17 |  | 2026-11-17 |
+| CODE-58 | P2 | Code / Export | pptx and odp exports drop border, padding, line-height, letter-spacing, hyphenation and margins of creates text styles and report no loss | **fixed** 2026-11-17 (D760: reported, not yet written) |  | 2026-11-17 |
+| CODE-59 | P3 | Code / Drift | `OBJECT_KINDS` was written in `claudia_core` and again in `claudia_computes.model` | **fixed** 2026-11-17 |  | 2026-11-17 |
+| CODE-60 | P2 | Code / Drift | Facts written twice: the web's built-in style ids and `'body-text'` literals, `VisualObject.kind` in `layout/` lacks `rendered`, list leader dots drawn differently by the editor and the display list | **fixed** 2026-11-17 (D761); see CODE-63 |  | 2026-11-17 |
+| CODE-61 | P3 | Process / Backlog | Stale statuses in the backlog (E9.30, E10.21, probably E9.31 say open where code exists) | **fixed** (seen 2026-11-20: E9.30 and E9.31 are `done`, E10.21 is `in-progress`) |  |  |
+| CODE-64 | P2 | composes | The browser editor does not draw the text wrap (the flowing view shows objects over the words; Page view and print wrap) | **fixed** 2026-11-18 (D1068) |  | 2026-11-18 |
+| CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |  | 2026-11-18 |
+| CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |  | 2026-11-19 |
+| CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
+| PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
+| PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
+| PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
+| PROC-04 | P1 | Process / CI | CI's Python job fails on every OS: "e2e greeting" skips and `--ci` does not allow it | **fixed** |  |  |
+| PROC-05 | P2 | Process / CI | CI's web type check checks nothing (`vue-tsc --noEmit` over a `files: []` tsconfig) | **fixed** |  |  |
+| PROC-06 | P2 | Process / CI | No CI job runs a browser or the Windows client; the `web/e2e` scripts had rotted unnoticed | **fixed** |  |  |
+| PROC-07 | P3 | Process / tests | A performance guard measures the garbage collector and fails now and then | **fixed** |  |  |
+| PROC-08 | P3 | Process / tests | A test of the gate fails on every machine where `npm install` has been run | **fixed** |  |  |
+| PROC-09 | P1 | Process / CI | Two branches both released claudia-core 0.13.0; the gate fails on the duplicate | **fixed** 2026-11-12 |  | 2026-11-12 |
+| PROC-10 | P1 | Process / CI | The Sphinx build fails: `Budget`, `Lens`, `Recorder` are in signatures but not in the reference | **fixed** 2026-11-12 |  | 2026-11-12 |
+| PROC-11 | P2 | Process / CI | The LibreOffice check broke silently: its job may fail and nothing else runs its code | **fixed** 2026-11-12 |  | 2026-11-12 |
+| PROC-12 | P1 | Process / CI | The Linux client's end-to-end test reads the page address before the page starts loading | **fixed** 2026-11-12 |  | 2026-11-12 |
+| PROC-13 | P2 | Process | Nothing pins Python 3.14: `uv` takes 3.15 where it is installed, and OpenVINO cannot be installed there | **fixed** 2026-11-12 |  | 2026-11-12 |
+| PROC-14 | P2 | Process / CI | Two web browser scripts fail on `main` (a stale selector, and UX-20) | **fixed** 2026-11-12 |  | 2026-11-12 |
+| PROC-16 | P3 | Process / tests | The undo performance guard measured one sample and failed now and then | **fixed** 2026-11-12 |  | 2026-11-12 |
+| PROC-17 | P2 | Process / CI | `web/e2e/demo.cjs` fails again once the client sends *suggest*: it never switched to *act* | **fixed** 2026-11-12 |  | 2026-11-12 |
+| PROC-18 | **P1** | Process / CI | The gate fails on every fresh clone: a note names `web/public/wasm`, a build output | **fixed** 2026-11-13 |  | 2026-11-13 |
+| PROC-19 | P2 | Process / CI | Six browser scripts and the macOS client's own tests ran nowhere; image and .deb ignored `layout/` | **fixed** 2026-11-13 |  | 2026-11-13 |
+| PROC-20 | **P1** | Process / CI | Two end-to-end tests on `main` fail: `demo.cjs` (the grid's blank active cell) and the Linux client (D915) | **fixed** 2026-11-13 |  | 2026-11-13 |
+| PROC-21 | P2 | Process / CD | The demo deployment checks `demo.claudiaoffice.de`, a domain that is not ours | **fixed** 2026-11-13 |  | 2026-11-13 |
+| PROC-23 | **P1** | Process / CI | Three web e2e scripts on `main` fail after the dock merge (`demo`, `composes`: the chat box; `keys`: the View menu); `details.cjs` never ran in CI | **fixed** 2026-11-15 |  | 2026-11-15 |
+| PROC-24 | **P1** | Process / CI | `main` after the last merge was red: two tests (a story id and decision numbers D730–D735 used twice) | **fixed** 2026-11-17 |  | 2026-11-17 |
+| PROC-25 | P2 | Process / CD | The demo deployment was not gated on CI: it deployed whatever an image push produced, also from a red `main` | **fixed** 2026-11-17 |  | 2026-11-17 |
+| PROC-26 | P3 | Process / Supply chain | No dependabot: five lockfiles and the workflows were never watched | **fixed** 2026-11-17 |  | 2026-11-17 |
+| PROC-27 | P2 | Process / Supply chain | Actions are pinned by tag, not SHA; the `latest` image tag follows a red `main`; CI has no CodeQL and no `pip-audit` | **fixed** 2026-11-17 (D762); first runs unseen |  | 2026-11-17 |
+| PROC-28 | P2 | Process / E2E | `web/e2e/objects.cjs` (D1231) was written and never run: the sandbox had no browser. Its first run is the proof of D1221–D1232 on screen | **fixed** 2026-11-20: first run on `fix-table-exit-object-sizes`; its red steps are app bugs, UX-56 to UX-58 |  | 2026-11-20 |
+| PROC-32 | P3 | Process / docs | `claudiaoffice-log/notes/claudia-menus.xlsx` is not in the repo: the keys of this round are only in the generated key table, and the rows the contract note lists "for the workbook" are not settled | **fixed** 2026-11-19 (in the repo since `496b3db`; the keys of the later rounds are in it) |  | 2026-11-19 |
+| PROC-33 | P3 | Process / gate | Patches 9–11 had ruff failures (lines over 120 characters in three files) that only the gate on the merged tree found | **fixed** 2026-11-19 (patch 12) |  | 2026-11-19 |
+| PROC-34 | P3 | Process / backlog | The `backlog` branch had renamed `e0.3-shells-gtk-with-webkitgtk-6-0.md` (an Obsidian plugin does that when a title changes) so the story and its epic no longer named each other and `tests/test_backlog.py` failed | **fixed** 2026-11-19 (file name restored) |  | 2026-11-19 |
+| PROC-35 | P3 | Process / e2e | `uv run pytest tests/e2e` as one run fails three tests ("Playwright Sync API inside the asyncio loop") that each pass alone: an earlier test leaves an event loop running | **fixed** 2026-11-19 on branch `e2-document-sec` (measured on the branch, which has no change to the other e2e tests) |  | 2026-11-19 |
+| PROC-36 | P3 | Process / tooling | A `ruff` installed outside the project (0.16.9) rewrites `except (A, B):` into `except A, B:` and reformats unrelated files; the project pins `ruff<0.15` for this | **fixed** 2026-11-19 (a rule in `CONTRIBUTING.md`, rule 5) |  | 2026-11-19 |
+| PROC-39 | P2 | Process / e2e | The test server's output went to a pipe nobody read (`tests/e2e/live.py`); after about 64 KiB the server blocked on its next write and the whole event loop stood still, so page loads timed out (three `test_viewer` scenarios failed in a full run of `tests/e2e/specs` and passed alone) | **fixed** 2026-11-19 on branch `e2-document-sec` (the output goes to `server.log`; `test_greeting.py` and `test_computes_grid.py` still use a pipe but stop their servers within a minute) |  | 2026-11-19 |
+| DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
+| DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
+| DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
+| DOC-04 | P3 | Docs | `docs/versioning.md` said the protocol version is "now 1"; the code says 2 | **fixed** 2026-11-19, with a test that compares them |  | 2026-11-19 |
 
 ---
 
@@ -296,7 +319,7 @@ signed by the same key fails.
 ### SEC-07 · Plain-text passwords on non-loopback addresses · P2 · fixed
 Verified at `54d1245`: `--no-tls` with a non-loopback `--host` raises `UsageError` unless `--behind-proxy`.
 
-### SEC-08 · Dependency audits are not run by the gate or CI · P3 · npm fixed 2026-11-11; `pip-audit` open
+### SEC-08 · Dependency audits are not run by the gate or CI · P3 · fixed 2026-11-17
 **Update 2026-11-11.** The npm half is done: `scripts/check_npm_audit.py` is a step of the gate (so also of CI, on every
 push and weekly) and audits every `package-lock.json`, development tools included, failing on moderate or worse; the
 allow-list is `[[tool.claudia.npm-audit-allow]]` in `pyproject.toml` (empty; a reason is required, an unneeded entry
@@ -307,6 +330,8 @@ web checks. It runs no `npm audit`, no `pip-audit`. `.github/workflows/ci.yml` a
 **Fix.** Add `npm audit --omit=dev` and `pip-audit` (or `uv pip audit`) to the gate, with an allow-list that needs a
 written reason per entry.
 **Acceptance.** The gate fails on a new high or critical advisory.
+**Re-checked 2026-11-20 at `f34365f`.** Both audits run: `scripts/check_npm_audit.py` in the gate and CI, `pip-audit` as
+its own CI job.
 
 ### SEC-09 · User names can be confusable · P3 · unverified
 **Evidence (read).** `claudia_container.crypto._normalise_name` uses NFKC and `casefold`, which does not fold Cyrillic
@@ -353,7 +378,7 @@ scripts/check_debt.py --fast` clean (ruff, mypy, vulture, docs, tests) except a 
 in the Linux client (`clients/linux/tests/test_manifest.py`, a `Submenu` union-attr error) — not touched by this fix
 and not re-checked here. Not yet re-verified against a commit hash: this round's patch has not been merged.
 
-### SEC-11 · No per-address back-off on failed logins · P3 · fixed 2026-11-19 on branch `e2-document-sec`
+### SEC-11 · No per-address back-off on failed logins · P3 · fixed 2026-11-19
 **Fixed (D1266, D1276).** `LoginThrottle` before any hashing, at the document's `hello`, the recovery and the administrator's sign-in; code 4429 / 429 with `retry_after`; the web app counts down. In memory by decision (D1276): a restart forgets it.
 
 **Evidence (read).** `_Waiting` bounds how many connections wait to be let in, but nothing slows a patient guesser who
@@ -363,6 +388,8 @@ logs in once, fails, disconnects and repeats. Named as the remaining part of E2.
 ---
 **Re-checked 2026-11-12:** still no back-off, and the new administrator sign-in (`POST /api/admin/login`) has none
 either; with SEC-12 fixed it becomes the way in, so it needs the same per-address back-off as documents.
+**Re-checked 2026-11-20 at `f34365f`.** `e2-document-sec` was merged into `main` on 2026-11-20 (`1d8415a`);
+`login_throttle.py` guards the document logins and `admin_api.py` `login` the admin sign-in (429 with `Retry-After`).
 
 ### SEC-12 · Anyone who reaches an exposed server with no administrator can become its administrator · P1 · new, open
 **Evidence (measured, `7e619a2`).** `admin_api.py` `setup` needs nothing but a name and a password while
@@ -434,7 +461,7 @@ An administrator is trusted, but with SEC-12 that is anyone, and even without it
 "run this binary on every formula". **Fix.** Accept the setting only after the program answers `--version` with an
 XeTeX / pdftocairo banner (in the sandbox), and show what it answered on the settings page.
 
-### SEC-17 · A viewer's connection receives the whole history and chat · P2 · fixed 2026-11-19 on branch `e2-document-sec` (found 2026-11-05)
+### SEC-17 · A viewer's connection receives the whole history and chat · P2 · fixed 2026-11-19 (found 2026-11-05)
 **Fixed (D1261).** `claudia_server.audience` classifies every pushed event; a viewer is sent content only, her `command`/`branch` events are reduced, her `welcome` has no history parts; `reads=` on every method refuses a viewer the history and the chat (`forbidden`). Tests: `test_server_audience.py`, the golden `tests/method_reads.json`, the updated hub tests. One part is not done: the authorship of the content, SEC-22.
 
 **Evidence (read, `7e619a2`).** The container gives a viewer no key to history and chat blocks (E2.4), but the live
@@ -445,6 +472,8 @@ owners only; `log`/`chat_log` refuse a viewer with `forbidden`; the web panel sh
 for the document's editors". Decide first whether a viewer may at least see the *document's* public chat (product
 call, not a security one). **Acceptance.** Server tests: a viewer's connection receives no `log`/`chat` event and is
 refused `log` and `chat_log`; an editor's is unchanged.
+**Re-checked 2026-11-20 at `f34365f`.** Merged into `main` with `e2-document-sec` on 2026-11-20. What a viewer still
+receives is SEC-22.
 
 ## Performance
 
@@ -1180,13 +1209,16 @@ not repeat on one document; it now takes the best of three fresh documents per s
 placeholder. **Fix.** A branch that fixes a tracked item changes its row in the same commit (CONTRIBUTING rule);
 `test_backlog.py` could refuse `progress: 50` on a story without a status-evidence paragraph.
 
-### CODE-13 · `WorkerPool` has no callers · P2 · new, open
+### CODE-13 · `WorkerPool` has no callers · P2 · fixed 2026-11-19
 **Evidence (read).** `workers.py` (E3.5) says it exists for PERF-02 and D37, `Hub` makes one and stops it, but nothing
 in `packages/*/src` calls `submit`. Meanwhile every edit still `fsync`s on the event loop (PERF-02) and threshold
 packing runs there (PERF-06). **Fix.** Either use it — journal append and packing via `asyncio.to_thread` (I/O, a thread
 is enough), formula recalculation of large structure edits via the pool (PERF-07, E4.4) — or remove it until a caller
 exists. **Acceptance.** A test that a slow `fsync` (monkeypatched to sleep 50 ms) on one document does not delay a
 `cells` request on another.
+**Re-checked 2026-11-20 at `f34365f`.** `app.py` sends every import to `hub.workers` (since 2026-11-16) and
+`heavy_dispatch.py` sends a formula's heavy call (D1314, salvaged from `worker-pool` on 2026-11-19). Nothing in the
+library is heavy yet, and the what-if outcomes still run on the loop: PERF-10. Timeouts and a memory cap are SEC-19.
 
 ### CODE-14 · The Windows and macOS shells are one design kept as two copies · P2 · fixed 2026-11-15
 **Evidence (read, `d696927`).** At `7e619a2` the Windows shell (7 files, 975 lines) had none of macOS's connection,
@@ -1403,10 +1435,13 @@ check: every web menu `id` of an app is in its manifest, or on a named list of w
 **Fixed (D361).** All added, regenerated and translated; also Format ▸ List ▸ (every app) and composes' Edit ▸ Insert ▸
 for the two hyphens, which had keys and no entry. **Test:** `test_every_web_menu_entry_is_in_the_desktop_menus_too`.
 
-### UX-37 · composes shows an act/suggest switch that changes nothing · P3 · new, open
+### UX-37 · composes shows an act/suggest switch that changes nothing · P3 · fixed 2026-11-16
 The switch is live in composes and says beneath it "Text documents: the AI suggests either way." A control that does
 nothing should not be offered. **Fix:** show the line in place of the switch (or disable it), the same component as
 UX-34 (b).
+**Re-checked 2026-11-20 at `f34365f`.** The line "Text documents: the AI suggests either way." went with `b66fae0`
+(composes gets its AI, D640, D680, D681): in composes *suggest* proposes with `suggest`/`suggest_words` and *act*
+writes.
 
 ### UX-38 · Dialogs are stretched to the window's height in the Linux client · P2 · fixed 2026-11-14
 Reported by the owner on the recovery-key dialog (2026-11-14): oversized round buttons, big gaps, a dialog as tall as the
@@ -1582,7 +1617,7 @@ directly when already on the main thread).
 Owner's request: duplication, separation of concerns, naming, convoluted solutions. Overview, order of work and open
 questions: `notes/code-review-2026-11-15.md`. Evidence is **read** at `7994b00` unless it says **measured**.
 
-### CODE-27 · The object methods are written once in the kernel and three times on the wire · P2 · new, open
+### CODE-27 · The object methods are written once in the kernel and three times on the wire · P2 · fixed 2026-11-19
 `claudia_core.objects` says an app "does not bring its own copy of place-an-object, take-it-away, stack-it, size-it"
 (D177), and in the kernel that holds. One layer up it does not: `add_image`, `describe_object`, `move_object`,
 `resize_object`, `rotate_object` and `remove_object` are written per app in `claudia_server/computes.py` (786–870),
@@ -1604,6 +1639,8 @@ holds every app's wire words for these methods and runs one object through all o
 composes, which now has `add_image` and `describe_object` on the wire. **Still open:** composes' menu entries and
 screens for them (Edit ▸ Image…, Format ▸ Describe…), to be agreed as mock-ups first; the web sessions' copies
 (CODE-35).
+**Re-checked 2026-11-20 at `f34365f`.** composes has Edit ▸ Image… (`02bfc03`, 2026-11-17, one import dialog for the
+three apps) and Format ▸ Name & describe…, Ctrl+Alt+D (`467614e`, 2026-11-19, D1317).
 
 ### CODE-28 · An app's server wiring is spread over five tables · P3 · new, open
 `claudia_server/apps.py` keys five dicts by app name: `_METHODS` (23), `_ENGINES` (44), `MODEL_METHODS` (55),
@@ -1773,11 +1810,13 @@ The stand-in-fonts sample uses a text box for its title for that reason. **Accep
 title's words in the theme's heading font), round-trips through `apply_edits_to_pptx` keeping the placeholder, and
 `pptx_import_losses` reports nothing for them. Touches the object ids, the losses and the export; its own patch.
 
-### CODE-46 · The slides importers do not read text size and colour, so most boxes are a `look` loss · P2 · new, open
+### CODE-46 · The slides importers do not read text size and colour, so most boxes are a `look` loss · P2 · fixed 2026-11-17
 **Measured** (reported as bug B, size 2): `pptx_to_slides` and `odp_to_slides` read the words and (since CODE-44) the
 font of a box, not its size or colour, so a box with PowerPoint's 18 points or a coloured title comes in as Body text
 and is reported as `look`. **Acceptance:** sizes and colours of the stand-in-fonts sample's boxes come in as the
 styles' `font-size` and `color` (a provisional style per look, as for fonts) and are no loss.
+**Re-checked 2026-11-20 at `f34365f`.** `_pptx_looks.read_look` reads `sz` and the run's `solidFill`, `_odp_looks` reads
+`fo:font-size` and `fo:color`; the look book makes styles of them (D467). Placeholders are still not read (CODE-45).
 
 ### CODE-47 · Words of a docx with a font of their own are a `formatting` loss · P3 · new, open
 **Measured** (reported as bug C, size 3): a run with its own `w:rFonts` (not through a style) keeps the paragraph
@@ -1958,9 +1997,11 @@ the screen draws the leader with `leaderCss` (the editor's was 0.4 em and a dott
 now as the pages draw them). **Left:** the Format menu names three called-out styles (CODE-63); the exporters' name
 tables stay as they are (they map to other programs' names).
 
-### CODE-61 · Stale backlog statuses · P3 · open
+### CODE-61 · Stale backlog statuses · P3 · fixed
 E9.30, E10.21 and probably E9.31 say open where code and tests exist. **Fix.** Check each against the tests it names and
 set its status; `tests/test_backlog.py` could require a test path in every story marked done.
+**Re-checked 2026-11-20 at `f34365f`.** E9.30 and E9.31 say `done`, E10.21 `in-progress`. The test that a story marked
+done names its tests is not built.
 
 ### CODE-63 · The Format ▸ Styles menu lists composes' contents styles as "custom" · P3 · new, open (read)
 `TextWorkspace.vue` groups the styles of a text: headings, Body text, three called-out blocks, then `customStyles()`,
@@ -2125,11 +2166,14 @@ the file has it, or `xlsx_unwritten_changes` names it and the test says so.
 (`keys.generated.ts`). The two can drift, as the missing Delete entry shows (UX-47). **Fix.** Hints come from the generated
 table by action id. **Acceptance.** A unit test fails when a hint differs from the manifest's key.
 
-### PROC-28 · `objects.cjs` has never run · P2 · new, open
+### PROC-28 · `objects.cjs` has never run · P2 · fixed 2026-11-20
 D1231 wrote `web/e2e/objects.cjs` (and its guard `tests/test_object_kinds_agree.py`, which runs) and wired it into
 `npm run e2e:objects` and CI; the sandbox it was written in has no browser, so no step of it has run, and the table step
 and the Rotate steps of patches 9–10 are as untested. **Acceptance.** `npm run e2e:objects` is green on a machine with a
 browser; every red step is a bug of this list or a new one, entered here.
+**Re-checked 2026-11-20 at `f34365f`.** `objects.cjs` ran first on 2026-11-20 (branch `fix-table-exit-object-sizes`):
+one stale step of its own (`rotateOff`) was fixed there; steps 1–4 pass in computes and creates; what still fails is the
+app's: UX-56 (creates), UX-57 (computes), UX-58 (composes).
 
 ### PROC-29 · The holder's outline and name tag are not asserted · P3 · new, open
 Step 8 of the battery (D1231: a second window sees the holder's outline and name tag while the object is selected, no drag
@@ -2150,13 +2194,16 @@ msgid (measured). The i18n check of `check_debt.py` fails on that, so every merg
 the catalogue without locations (`--no-location`) or let the check compare msgids only. **Acceptance.** Merging a branch
 that moves a line of a translated file leaves the check green.
 
-### PROC-32 · `claudia-menus.xlsx` is not in the repo · P3 · new, open
+### PROC-32 · `claudia-menus.xlsx` is not in the repo · P3 · fixed 2026-11-19
 The project says behaviours and keys are kept in `claudiaoffice-log/notes/claudia-menus.xlsx`; the file is not there (the
 versions the owner sent in chat were not committed). What the branch changed is in the generated `keyboard-shortcuts.md`
 only. Still to enter, from `notes/object-interaction-contract.md` ("For the workbook"): the table rows of the context menu
 (D1224), "not for a chart or a table" on *Rotate by…*, the wrap entry (D1225), Format ▸ Rotate in composes and
 computes, Delete (UX-47), the table commands in Tools (D1229). **Acceptance.** The workbook is in the repo and a test
 compares its key column with the manifest.
+**Re-checked 2026-11-20 at `f34365f`.** `claudiaoffice-log/notes/claudia-menus.xlsx` was added in `496b3db` (2026-11-19)
+and has been kept up to date by every round since (the keys of D1330–D1334 and D1350–D1352 included). The test that
+compares its key column with the manifest is not built.
 
 ### PROC-33 · Patches 9–11 failed the lint gate · P3 · fixed 2026-11-19
 The last step of the series, the gate on the merged tree, found `ruff` errors (lines over 120 characters in `manifest.py`,
@@ -2311,3 +2358,54 @@ alone it passes. Size 3: the test should set a cost of its own that is slow enou
 (slice C added six) wrote more than the pipe holds, and the server's next `print` blocked inside the event loop: the next page load
 timed out after 30 s. It showed as three failing `test_viewer` scenarios that pass alone. Found by bisecting which module had to
 run before them; fixed by writing to a file. Size 2 (it would have hidden every later regression behind a timeout).
+
+---
+
+## Round of 2026-11-20 (tracker update, `main` at `f34365f`)
+
+Every open item was re-checked against `main` at `f34365f` (after the merges of `e1-core`, `e2-document-sec`,
+`fix-table-exit-object-sizes` and `fix-stale-tests-caret-drag`). Closed: SEC-08, SEC-11, SEC-17, CODE-13, CODE-27,
+CODE-46, CODE-61, UX-37, PROC-28, PROC-32 (each with a line "Re-checked 2026-11-20" in its section). Still open after a
+look at the code: SEC-12, PERF-02, PERF-10, CODE-19 (the scan moved to `claudia_file_writer/atomic.py`), CODE-20,
+CODE-25, CODE-31, CODE-45, CODE-56, CODE-63, UX-21, UX-27, UX-45 to UX-47, UX-51, CODE-71, PROC-22, PROC-31. The rest
+were not re-checked one by one: nothing on `main` names them as fixed. New items below.
+
+### UX-56 · Enter in Rotate by… is taken by the slide in creates · P2 · new, open
+**Measured** (`web/e2e/objects.cjs`, 2026-11-20, while fixing the stale `rotateOff` step): with a text box selected,
+Format ▸ Rotate by…, type an angle and press Enter: the key reaches the slide, which starts editing the box's words, and
+the angle is not applied. The dialog should own its keys (Enter applies, Esc closes). Keyboard users cannot turn an
+object by a given angle in creates. **Acceptance.** `objects.cjs` step "Rotate by…" in creates: Enter applies the angle,
+one history entry, the box's words unchanged.
+
+### UX-57 · The turn handle of a picture does not turn it in computes · P2 · new, open
+**Measured** (`objects.cjs` step 5, 2026-11-20): turning a picture by its turn handle times out waiting for the handle in
+computes; steps 1–4 (select, drag, resize handles) pass. Cause not looked into: the handle may be missing for a picture
+in a cell, or hidden under the grid. **Acceptance.** `objects.cjs` step 5 passes in computes.
+
+### UX-58 · A press on a text box moves the caret below it in composes · P3 · new, open
+**Measured** (`objects.cjs` step 1, 2026-11-20): a press on a text box selects it, but the words of the paragraph under
+it also take the press and move their caret. D1221: a press on an object is not heard by what lies below. **Acceptance.**
+`objects.cjs` step 1 in composes: the caret's place before and after the press is the same.
+
+### UX-59 · Up between paragraphs may be undone by a re-render · P3 · new, open
+**Measured once** (2026-11-20, `caret.feature` "Up from Second to First"): one run in four ended with the caret still in
+the second paragraph. The scenario now waits for the caret to be placed before it presses a key, and has passed since.
+The guess, not confirmed: a paragraph saved a moment before re-renders and puts back the caret the browser had just
+moved. **Acceptance.** The scenario without its wait passes 20 runs in a row; or the race is shown and fixed in
+`TextEditor.vue`.
+
+### UX-60 · "Moved an object" for a move to another paragraph · P3 · new, open
+D1352's mock shows the history entry of a drag to another paragraph with the object's name and the paragraph's ("Moved
+Picture 1 to Paragraph 3"). The build uses the generic label "Moved an object" for every move. Belongs with UX-22 and
+CODE-31 (how the history speaks). Related assumption of the same branch: a selection someone holds on an object still
+names the paragraph the object was in before the move. **Acceptance.** The entry names the object and, when it changes,
+the paragraph, in the user's language.
+
+### PROC-40 · Four spec files run nowhere · P2 · new, open
+**Measured** (2026-11-20): of the `.feature` files in `claudiaoffice-log/specs`, four are bound by no `scenarios(...)` in
+`tests/e2e/specs/` and none of their scenarios has `@unit:`, `@io:` or `@e2e:`: `objects/names.feature` (28 scenarios,
+`@pending:e1.13`), `container/requirements.feature` (6, `@pending:e1.9`), `invariants/objects-in-composes.feature` (12),
+`computes/pictures-in-files.feature` (5). So they are not even counted as skipped: "all E2E specs pass" says nothing
+about them. E1 is merged, so its `@pending` tags are also stale. **Fix.** A test in `tests/` that fails when a feature
+file is neither bound nor has a test tag on every scenario; then bind the four (step code first for names and
+requirements). **Acceptance.** That test, red today, green after.
