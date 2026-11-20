@@ -56,7 +56,10 @@ def _moved(ctx: Context[TextModel], command: TextCommand) -> None:
 @register
 @dataclass(frozen=True)
 class SplitBlock(TextCommand):
-    """Cut the paragraph ``block`` at ``offset``: the rest becomes the new paragraph ``new_id``, in ``style``."""
+    """Cut the paragraph ``block`` at ``offset``: the rest becomes the new paragraph ``new_id``, in ``style``.
+
+    What hangs from the rest goes along with it, and so does what hangs exactly at the cut, unless ``keep``: then that
+    stays where it is (D1331: an empty paragraph after a table that hangs at the end of its paragraph)."""
 
     kind: ClassVar[str] = "composes.SplitBlock"
     block: str
@@ -65,6 +68,8 @@ class SplitBlock(TextCommand):
     style: str
     #: What the new paragraph is called (D1310); ``""`` for what an older log wrote, which gave it none.
     name: str = ""
+    #: What hangs exactly at the cut stays in ``block`` (D1331); not written when false, so older logs read the same.
+    keep: bool = False
 
     @property
     def label(self) -> str:
@@ -81,14 +86,18 @@ class SplitBlock(TextCommand):
         return JoinBlocks(self.new_id, self.block, self.offset)
 
     def to_data(self) -> dict:
-        data = {"block": self.block, "offset": self.offset, "new_id": self.new_id, "style": self.style}
+        data: dict = {"block": self.block, "offset": self.offset, "new_id": self.new_id, "style": self.style}
         if self.name:
             data["name"] = self.name
+        if self.keep:
+            data["keep"] = True
         return data
 
     @classmethod
     def from_data(cls, data, registry) -> SplitBlock:
-        return cls(data["block"], data["offset"], data["new_id"], data["style"], data.get("name", ""))
+        return cls(
+            data["block"], data["offset"], data["new_id"], data["style"], data.get("name", ""), data.get("keep", False)
+        )
 
     def regions(self, model) -> tuple[Region, ...]:
         return (TextRange(self.block, self.offset, self.offset + 1),)
@@ -97,7 +106,7 @@ class SplitBlock(TextCommand):
         block, start, end = span
         if block != self.block:
             return span
-        if start >= self.offset:
+        if start > self.offset or (start == self.offset and not (self.keep and end == start)):
             return (self.new_id, start - self.offset, end - self.offset)
         return (block, start, min(end, self.offset))
 
@@ -134,10 +143,13 @@ class JoinBlocks(TextCommand):
         return "joined paragraphs"
 
     def apply(self, ctx: Context[TextModel]) -> Command:
+        # Undone, the join is a split at ``at``. What hangs there now came from ``into`` (its end) or from ``block``
+        # (its start). When ``block`` had nothing hanging from it, it was all ``into``'s, and the split keeps it there.
+        kept = not ctx.model.objects_on(self.block)
         gone = ctx.model.join(self.block, self.into, self.at)
         ctx.emit(BlocksJoined(self.block, self.into, self.at))
         _moved(ctx, self)
-        split = SplitBlock(self.into, self.at, self.block, gone.style)
+        split = SplitBlock(self.into, self.at, self.block, gone.style, keep=kept)
         if gone.item == ctx.model.block(self.into).item:
             return split  # a split gives the new paragraph that item anyway
         return Batch((split, SetListItem(self.block, gone.item)))  # the paragraph that went away was another kind

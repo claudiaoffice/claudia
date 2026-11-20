@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { boxId, columnName, columnPlace, gridOf, isBoxId, mergeRect, oneLine, rowPlace, stepBox, tableOf, withEvent, type TableEvent, type TableInfo } from '~/lib/tables'
+import { boxId, columnName, columnPlace, gridOf, isBoxId, leaveSide, mergeRect, oneLine, rowPlace, stepBox, tableOf, withEvent, type TableEvent, type TableInfo } from '~/lib/tables'
 
 function table(words: string[][], extra: Partial<TableInfo> = {}): TableInfo {
   return {
@@ -124,6 +124,39 @@ describe('what an event says', () => {
     expect(tables.t1!.totals).toEqual({ c3: '1' })
     withEvent(tables, { type: 'table', id: 't1', definition: null })
     expect(tables.t1).toBeUndefined()
+  })
+})
+
+// D1330: the keys that take the caret out of a table, and to which side
+describe('which key leaves a table, and to which side', () => {
+  const side = (t: TableInfo, row: string, col: string, step: Parameters<typeof leaveSide>[2]) => leaveSide(t, { row, col }, step)
+
+  it('the down arrow in any box of the last row leaves after the table, the up arrow in the first row before it', () => {
+    const t = table(GARDEN)
+    expect(side(t, 'r3', 'c1', 'down')).toBe('after')
+    expect(side(t, 'r3', 'c2', 'down')).toBe('after')
+    expect(side(t, 'r1', 'c3', 'up')).toBe('before')
+  })
+
+  it('right leaves only from the very last box, left only from the very first', () => {
+    const t = table(GARDEN)
+    expect(side(t, 'r3', 'c3', 'right')).toBe('after')
+    expect(side(t, 'r2', 'c3', 'right')).toBeNull()
+    expect(side(t, 'r1', 'c1', 'left')).toBe('before')
+    expect(side(t, 'r2', 'c1', 'left')).toBeNull()
+  })
+
+  it('does not leave where a box is still to go to, nor with Tab, which adds a row in the last box', () => {
+    const t = table(GARDEN)
+    expect(side(t, 'r2', 'c1', 'down')).toBeNull()
+    expect(side(t, 'r2', 'c1', 'up')).toBeNull()
+    expect(side(t, 'r3', 'c3', 'next')).toBeNull()
+    expect(side(t, 'r1', 'c1', 'prev')).toBeNull()
+  })
+
+  it('a box joined over the last two rows leaves downwards too', () => {
+    const t = table(GARDEN, { merges: [{ row: 'r2', col: 'c1', rows: 2, cols: 1 }] })
+    expect(side(t, 'r2', 'c1', 'down')).toBe('after')
   })
 })
 

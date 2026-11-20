@@ -397,7 +397,7 @@ msgstr ""
 msgid "A table has 1 to {columns} columns and 1 to {rows} rows."
 msgstr ""
 
-#: web/app/lib/text-session.ts:770
+#: web/app/lib/text-session.ts:789
 msgid "A table of contents takes no typing: its entries come from the headings."
 msgstr ""
 
@@ -1537,7 +1537,7 @@ msgstr ""
 msgid "Ctrl+X"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:651 web/app/components/TextEditor.vue:652
+#: web/app/components/TextEditor.vue:729 web/app/components/TextEditor.vue:730
 msgid "Ctrl+click to go there"
 msgstr ""
 
@@ -1813,7 +1813,7 @@ msgstr ""
 msgid "Drag fields between the boxes, or use a chip’s ▾ menu."
 msgstr ""
 
-#: web/app/components/TableView.vue:268
+#: web/app/components/TableView.vue:287
 msgid "Drag to move the table"
 msgstr ""
 
@@ -3409,7 +3409,7 @@ msgstr ""
 msgid "No heading (no parent)"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:790
+#: web/app/components/TextEditor.vue:868
 msgid "No headings yet: the table lists them as they are written."
 msgstr ""
 
@@ -3861,7 +3861,7 @@ msgstr ""
 msgid "Open…"
 msgstr ""
 
-#: web/app/components/TableView.vue:276 web/app/components/TextEditor.vue:792
+#: web/app/components/TableView.vue:295 web/app/components/TextEditor.vue:870
 msgid "Options…"
 msgstr ""
 
@@ -4393,7 +4393,7 @@ msgstr ""
 msgid "Reference menu"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:647
+#: web/app/components/TextEditor.vue:725
 msgid "Reference to {what}"
 msgstr ""
 
@@ -5145,7 +5145,7 @@ msgstr ""
 msgid "Slide numbers"
 msgstr ""
 
-#: web/app/components/PresentShow.vue:236 web/app/lib/slide-session.ts:531
+#: web/app/components/PresentShow.vue:236 web/app/lib/slide-session.ts:532
 msgid "Slide {n}"
 msgstr ""
 
@@ -5425,7 +5425,7 @@ msgstr ""
 msgid "Table of Contents"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:679 web/app/components/TextEditor.vue:772 web/app/components/TextWorkspace.vue:715
+#: web/app/components/TextEditor.vue:757 web/app/components/TextEditor.vue:850 web/app/components/TextWorkspace.vue:715
 msgid "Table of contents"
 msgstr ""
 
@@ -6197,7 +6197,7 @@ msgstr ""
 msgid "The page could not be loaded"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:651
+#: web/app/components/TextEditor.vue:729
 msgid "The page is known in Page view and when printing"
 msgstr ""
 
@@ -6857,7 +6857,7 @@ msgstr ""
 msgid "This page is not allowed to use that server."
 msgstr ""
 
-#: web/app/lib/text-session.ts:975
+#: web/app/lib/text-session.ts:994
 msgid "This paragraph"
 msgstr ""
 
@@ -7021,7 +7021,7 @@ msgstr ""
 msgid "Tools"
 msgstr ""
 
-#: web/app/components/TableView.vue:161 web/app/components/TableView.vue:321 web/app/lib/pivots.ts:108 web/app/lib/print/document.ts:65
+#: web/app/components/TableView.vue:167 web/app/components/TableView.vue:340 web/app/lib/pivots.ts:108 web/app/lib/print/document.ts:65
 msgid "Total"
 msgstr ""
 
@@ -7273,7 +7273,7 @@ msgstr ""
 msgid "What this means"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:650
+#: web/app/components/TextEditor.vue:728
 msgid "What this reference points at was deleted"
 msgstr ""
 
@@ -7553,7 +7553,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:325 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:479 web/app/components/TextContainers.vue:211 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:292 web/app/components/Workspace.vue:349 web/app/components/Workspace.vue:400 web/app/components/Workspace.vue:482 web/app/components/Workspace.vue:542 web/app/components/Workspace.vue:548 web/app/components/Workspace.vue:630 web/app/components/Workspace.vue:796 web/app/components/Workspace.vue:850 web/app/components/Workspace.vue:970 web/app/lib/base-session.ts:1016 web/app/lib/text-session.ts:740
+#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:325 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:479 web/app/components/TextContainers.vue:211 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:292 web/app/components/Workspace.vue:349 web/app/components/Workspace.vue:400 web/app/components/Workspace.vue:482 web/app/components/Workspace.vue:542 web/app/components/Workspace.vue:548 web/app/components/Workspace.vue:630 web/app/components/Workspace.vue:796 web/app/components/Workspace.vue:850 web/app/components/Workspace.vue:970 web/app/lib/base-session.ts:1016 web/app/lib/text-session.ts:759
 msgid "You can only look at this document."
 msgstr ""
 
@@ -7693,7 +7693,7 @@ msgstr ""
 msgid "a number from 0 up to, not including, 1. Fresh numbers come with Tools > Resample (F9)."
 msgstr ""
 
-#: web/app/components/TextEditor.vue:647
+#: web/app/components/TextEditor.vue:725
 msgid "a page"
 msgstr ""
 
@@ -7713,7 +7713,7 @@ msgstr ""
 msgid "a recovery key, a name and a new password are needed"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:553
+#: packages/claudia-server/src/claudia_server/composes.py:574
 msgid "a remark suggests no change; dismiss it instead"
 msgstr ""
 
@@ -7945,7 +7945,7 @@ msgstr ""
 msgid "blocks must be a list of 1 to {limit} paragraph ids"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:477
+#: packages/claudia-server/src/claudia_server/composes.py:498
 msgid "blocks must be a list of at most {limit} paragraph ids"
 msgstr ""
 
@@ -8465,11 +8465,11 @@ msgstr ""
 msgid "leave: said is the text the match had when it was shown"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:678
+#: web/app/components/TextEditor.vue:756
 msgid "level {n}"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:678
+#: web/app/components/TextEditor.vue:756
 msgid "levels {first}–{last}"
 msgstr ""
 
@@ -8489,7 +8489,7 @@ msgstr ""
 msgid "line {line}"
 msgstr ""
 
-#: web/app/components/RenderedFace.vue:20
+#: web/app/components/RenderedFace.vue:21
 msgid "line {line}: {message}"
 msgstr ""
 
@@ -8545,7 +8545,7 @@ msgstr ""
 msgid "missing or wrong credentials"
 msgstr ""
 
-#: web/app/components/ParagraphWords.vue:51 web/app/components/TextEditor.vue:646 web/app/components/TextEditor.vue:842
+#: web/app/components/ParagraphWords.vue:51 web/app/components/TextEditor.vue:724 web/app/components/TextEditor.vue:920
 msgid "missing reference"
 msgstr ""
 
@@ -8697,7 +8697,7 @@ msgstr ""
 msgid "occurrence counts from 1"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:577
+#: packages/claudia-server/src/claudia_server/composes.py:598
 msgid "offset is outside the paragraph"
 msgstr ""
 
@@ -8753,7 +8753,7 @@ msgstr ""
 msgid "only something that is drawn can be marked as decoration"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:539 packages/claudia-server/src/claudia_server/composes_words.py:200
+#: packages/claudia-server/src/claudia_server/composes.py:560 packages/claudia-server/src/claudia_server/composes_words.py:200
 msgid "only the assistant makes suggestions"
 msgstr ""
 
@@ -9109,7 +9109,7 @@ msgstr ""
 msgid "slides and objects"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:193
+#: web/app/components/TextEditor.vue:194
 msgid "someone"
 msgstr ""
 
@@ -9329,7 +9329,7 @@ msgstr ""
 msgid "the mean of the values"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:493 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:225
+#: packages/claudia-server/src/claudia_server/composes.py:514 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:225
 msgid "the new style would look just like “{name}”"
 msgstr ""
 
@@ -9429,7 +9429,7 @@ msgstr ""
 msgid "the table has no row {id!r}"
 msgstr ""
 
-#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:748 web/app/lib/print/source.ts:132
+#: web/app/components/SearchPanel.vue:193 web/app/components/TextEditor.vue:826 web/app/lib/print/source.ts:132
 msgid "the text"
 msgstr ""
 
@@ -9485,7 +9485,7 @@ msgstr ""
 msgid "there is no line called {line!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:372 packages/claudia-server/src/claudia_server/composes.py:575 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
+#: packages/claudia-server/src/claudia_server/composes.py:372 packages/claudia-server/src/claudia_server/composes.py:432 packages/claudia-server/src/claudia_server/composes.py:596 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
 msgid "there is no paragraph {block!r}"
 msgstr ""
 
@@ -9537,7 +9537,7 @@ msgstr ""
 msgid "this document has no table {id!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/rendered.py:213
+#: packages/claudia-server/src/claudia_server/rendered.py:215
 msgid "this document has nothing rendered with the id {id!r}"
 msgstr ""
 
@@ -9605,7 +9605,7 @@ msgstr ""
 msgid "this server does not list a document's people this way"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/rendered.py:134
+#: packages/claudia-server/src/claudia_server/rendered.py:136
 msgid "this server does not make rendered containers"
 msgstr ""
 
@@ -9641,7 +9641,7 @@ msgstr ""
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:564
+#: packages/claudia-server/src/claudia_server/composes.py:585
 msgid "this suggestion is not open any more"
 msgstr ""
 
@@ -9761,7 +9761,7 @@ msgstr ""
 msgid "words"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:507
+#: packages/claudia-server/src/claudia_server/composes.py:528
 msgid "words must be from 0 to {limit}"
 msgstr ""
 
@@ -9781,7 +9781,7 @@ msgstr ""
 msgid "write; a word is sent when it ends, and the others see where you are"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:194
+#: web/app/components/TextEditor.vue:195
 msgid "written by {author}"
 msgstr ""
 
@@ -9817,7 +9817,7 @@ msgstr ""
 msgid "{app} for the Linux desktop"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:195
+#: web/app/components/TextEditor.vue:196
 msgid "{author} is writing here"
 msgstr ""
 
@@ -9825,7 +9825,7 @@ msgstr ""
 msgid "{author} suggests"
 msgstr ""
 
-#: web/app/components/TextEditor.vue:193
+#: web/app/components/TextEditor.vue:194
 msgid "{author}, from a suggestion of {via}"
 msgstr ""
 

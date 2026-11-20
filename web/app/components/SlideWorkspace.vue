@@ -319,10 +319,10 @@ async function addShape(id: string) {
   if (await session.addShape(id, insertFrame('shape', outline?.aspect ?? null, count.value))) canvas.value?.focus()
 }
 async function addContainer(type: string) {
-  if (await session.addContainer(type, insertFrame('image', 16 / 9, count.value))) canvas.value?.focus()
+  if (await session.addContainer(type, insertFrame('container', null, count.value))) canvas.value?.focus()
 }
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
-  return session.addImage(picture, insertFrame('image', aspect, count.value, picture.natural))
+  return session.addImage({ ...picture, fit: true }, insertFrame('image', aspect, count.value, picture.natural))
 }
 function imageInserted() {
   showImageDialog.value = false

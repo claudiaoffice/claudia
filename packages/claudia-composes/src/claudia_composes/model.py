@@ -420,6 +420,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     """The paragraphs of a document, its suggestions and the objects floating over it."""
 
     app: ClassVar[str] = "composes"
+    body_text_style: ClassVar[str] = DEFAULT_STYLE
     # 4: a text also carries objects, images and shapes (E10.16)
     # 5: the text carries its own colour palette (D200)
     # 6: the text says which page it is printed on (D904)
@@ -593,6 +594,13 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     def anchor_from_data(self, data: dict) -> BlockAnchor:
         """Read a block anchor; ``ValueError`` if the data is not one."""
         return BlockAnchor.from_data(data)
+
+    def room_for_new_object(self, anchor: BlockAnchor | None) -> int | None:  # noqa: ARG002 - the column is one width
+        """The text column of the page, in CSS pixels (the units of a text's objects): a new object is no wider
+        (D1332). The page is in mpt; 1 pt is 4/3 px."""
+        page = self.page
+        across = page.height if page.orientation == "landscape" else page.width
+        return int((across - page.margin_left - page.margin_right) / 1000 * 4 / 3)
 
     def check_anchor(self, anchor: BlockAnchor, body: ObjectBody) -> None:
         """An object hangs from a character of its paragraph, so the offset must lie inside that paragraph.

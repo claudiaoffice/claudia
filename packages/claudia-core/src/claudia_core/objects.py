@@ -26,6 +26,7 @@ or style-it.
 
 from __future__ import annotations
 
+import math
 import re
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, replace
@@ -515,6 +516,8 @@ class ObjectModel[A: Anchor]:
     max_objects_per_container: ClassVar[int] = MAX_OBJECTS_PER_CONTAINER
     #: The smallest an object may be, in the app's own units.
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
+    #: The style whose letters are "the body text" a new picture is at least as tall as (D1332).
+    body_text_style: ClassVar[str] = "body-text"
     #: The kinds of object this app offers (a subset of ``OBJECT_KINDS``).
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
 
@@ -530,6 +533,24 @@ class ObjectModel[A: Anchor]:
         #: came, went or moved to another container, or its paragraph's item or style changed; typing in an object
         #: does not count. Part of what a ``ParagraphHost`` reports as its ``structure_version``.
         self.paragraph_order = 0
+
+    # -- the size of a new object (D1332) ------------------------------------------
+    def least_new_size(self) -> int:
+        """How tall a new picture or container is at least, in the app's own units: the font size of the body text
+        style as it is now, and never less than :attr:`min_object_size` (the size is read as CSS pixels, which are the
+        units objects are measured in, in every app)."""
+        from .sizing import font_size_px  # sizing reads MIN_OBJECT_SIZE from here
+
+        styles = getattr(self, "styles", None)
+        if styles is None or self.body_text_style not in styles:
+            return self.min_object_size
+        size = font_size_px(styles.resolved(self.body_text_style).get("font-size"))
+        return max(self.min_object_size, math.ceil(size - 1e-9)) if size else self.min_object_size
+
+    def room_for_new_object(self, anchor: A | None) -> int | None:  # noqa: ARG002 - an app that has room uses it
+        """How wide a new object that hangs at ``anchor`` may be at most, in the app's own units; ``None`` when the
+        app sets no limit (a sheet). A text says its column, a slide what is left of it to the right (D1332)."""
+        return None
 
     # -- what the app brings -----------------------------------------------------
     def containers(self) -> Iterable[str]:

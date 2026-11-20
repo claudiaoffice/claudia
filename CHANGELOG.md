@@ -7,6 +7,12 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- The size of a new picture or container (D1229, D1332): `new_object_size(most_w, most_h, picture_w, picture_h, *,
+  least, room=None, smallest=MIN_OBJECT_SIZE)` keeps a picture's own size within the most, raises it to `least` high,
+  keeps it within `room` and every side at `smallest`, always with its proportions; `font_size_px(value, base=16)` reads
+  a CSS font size (`BASE_FONT_PX`). `ObjectModel.least_new_size()` is the font size of the body text style
+  (`ObjectModel.body_text_style`) in the app's units, at least `min_object_size`; `ObjectModel.room_for_new_object(anchor)`
+  how wide a new object may be (`None`: no limit).
 - What-ifs and proposals (D236, D263, D1308): `Document.what_if(at, author=)` makes a `WhatIf`, a private copy
   (`Document.scratch` underneath) that remembers the commands it is given (`apply`, `undo_last`, `what_if()` for a
   what-if of it); `proposal()` hands them back as a plain-data `Proposal` (`base`, `commands`, `author`, `to_data`,

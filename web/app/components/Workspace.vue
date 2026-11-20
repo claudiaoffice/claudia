@@ -981,7 +981,7 @@ function anchorForImage(aspect: number, natural?: PictureImport['natural']) {
   return { row: b.value.r0, col: b.value.c0, ...pictureSize(aspect, NEW_OBJECT_CAP.h, NEW_OBJECT_CAP.w, natural) }
 }
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
-  return session.addImage(picture, anchorForImage(aspect, picture.natural))
+  return session.addImage({ ...picture, fit: true }, anchorForImage(aspect, picture.natural))
 }
 
 /** Insert ▸ Container ▸ …: a container of the chosen type where the selection starts (D560), ready to be written in. */

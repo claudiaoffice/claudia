@@ -69,10 +69,10 @@ def _paragraphs(world):
     eventually(lambda: _assert_equal(ann.paragraphs(), ["Before", "After"]))
 
 
-@given('my caret is at the end of "Before"')
-def _caret_before(world):
+@given(parsers.parse('my caret is at the end of "{text}"'))
+def _caret_at_end(world, text):
     # no pause on purpose: a person's next key can come before the page has told the app where the caret went (B2)
-    world.ann.page.click('[data-testid=text] [data-block]:has-text("Before")')
+    world.ann.page.click(f'[data-testid=text] [data-block]:has-text("{text}")')
     world.ann.page.keyboard.press("End")
 
 
@@ -229,13 +229,27 @@ def _typed_header(world, shape, words):
     settle(world.ann)
 
 
+#: The keys as a person names them, as Playwright names them.
+KEYS = {
+    "the down arrow": "ArrowDown",
+    "the up arrow": "ArrowUp",
+    "the right arrow": "ArrowRight",
+    "the left arrow": "ArrowLeft",
+    "Esc": "Escape",
+}
+
+
+def key_of(words: str) -> str:
+    return KEYS.get(words, words)
+
+
 @when(parsers.parse('I type "{text}" in the first body box and press {key}'))
 def _type_in_first_and_key(world, shape, text, key):
     page = world.ann.page
     page.click(box(shape, 1, 1))
     shape.typed.append(text)
     page.keyboard.type(text)
-    page.keyboard.press(key)
+    page.keyboard.press(key_of(key))
 
 
 @when(parsers.parse('I type "{text}" in the first body box'))
@@ -250,7 +264,7 @@ def _type_in_first(world, shape, text):
 def _type_and_key(world, shape, text, key):
     shape.typed.append(text)
     world.ann.page.keyboard.type(text)
-    world.ann.page.keyboard.press(key)
+    world.ann.page.keyboard.press(key_of(key))
 
 
 @when(parsers.re(r"I type (?P<words>.+) into the first body row as fast as the keyboard allows, a Tab after each"))
@@ -416,3 +430,195 @@ def _history_one(world, shape):
         assert entries_with(world.ann, word) == 1, (
             f"the history has {entries_with(world.ann, word)} entries for {word!r}"
         )
+
+
+# ---------------------------------------------------------------------------------- leaving a table (D1330, D1331)
+NEW_PARAGRAPH = "new paragraph"  # how the history speaks of a paragraph that was made
+
+
+def nth_table(n: int = 0) -> str:
+    return f"{TABLE} >> nth={n}"
+
+
+def caret_in_text(person) -> tuple[str, int] | None:
+    """The words of the paragraph the caret is in, and how far into them it is; ``None`` when it is not in the words."""
+    found = person.page.evaluate(
+        """() => {
+          const s = getSelection(), text = document.querySelector('[data-testid=text]')
+          if (!s || !s.focusNode || !text.contains(s.focusNode) || document.activeElement !== text) return null
+          const node = s.focusNode.nodeType === 1 ? s.focusNode : s.focusNode.parentElement
+          const block = node.closest('[data-block]')
+          if (!block) return null
+          const r = document.createRange(); r.setStart(block, 0); r.setEnd(s.focusNode, s.focusOffset)
+          return [block.textContent.trim(), r.toString().length]
+        }"""
+    )
+    return (found[0], found[1]) if found else None
+
+
+def history_count(person, words: str) -> int:
+    return person.page.locator(".log li.entry .what", has_text=words).count()
+
+
+@given("the caret is in the first box of the last row")
+def _given_first_of_last(world, shape):
+    world.ann.page.click(f'{nth_table(0)} >> [data-box="r{shape.rows}/c1"]')
+
+
+@given("the caret is in the first box of the last row of the first table")
+def _given_first_of_last_first_table(world, shape):
+    world.ann.page.click(f'{nth_table(0)} >> [data-box="r{shape.rows}/c1"]')
+
+
+@given("the caret is in the first box of the header row")
+def _given_first_header(world):
+    world.ann.page.click(f'{nth_table(0)} >> [data-box="r1/c1"]')
+
+
+@given(parsers.parse('my caret is at the start of "{text}"'))
+def _caret_at_start(world, text):
+    world.ann.page.click(f'[data-testid=text] [data-block]:has-text("{text}")')
+    world.ann.page.keyboard.press("Home")
+
+
+@given(
+    parsers.re(r"I have inserted a second table of (?P<cols>\d+) columns? and (?P<rows>\d+) rows? with a header"),
+    target_fixture="second",
+)
+def _second_table(world, cols, rows):
+    open_dialog(world.ann)
+    page = world.ann.page
+    page.fill("[data-testid=table-cols]", cols)
+    page.fill("[data-testid=table-rows]", rows)
+    page.set_checked("[data-testid=table-header]", True)
+    page.click("[data-testid=table-insert]")
+    eventually(lambda: _assert_equal(page.locator(TABLE).count(), 2))
+    return Shape(int(cols), int(rows), 1)
+
+
+@given("I press Esc")
+@when("I press Esc")
+def _press_esc(world):
+    world.ann.page.keyboard.press("Escape")
+    settle(world.ann)
+
+
+@when(parsers.re(r"I press (?P<key>the down arrow|the up arrow|the right arrow|the left arrow|Backspace)$"))
+def _press(world, key):
+    world.new_paragraphs = history_count(world.ann, NEW_PARAGRAPH)
+    world.ann.page.keyboard.press(key_of(key))
+
+
+@when(parsers.parse('I press the down arrow and type "{text}"'))
+def _down_and_type(world, text):
+    page = world.ann.page
+    world.new_paragraphs = history_count(world.ann, NEW_PARAGRAPH)
+    page.keyboard.press("ArrowDown")
+    eventually(lambda: _assert_true(caret_in_text(world.ann) is not None, "the caret came back to the words"))
+    page.keyboard.type(text)
+
+
+@when("I press the down arrow, the up arrow and the down arrow")
+def _down_up_down(world):
+    page = world.ann.page
+    page.keyboard.press("ArrowDown")
+    eventually(lambda: _assert_true(caret_in_text(world.ann) is not None, "out of the table"))
+    page.keyboard.press("ArrowUp")
+    eventually(lambda: _assert_true(world.ann.focused_box() is not None, "back in the table"))
+    page.keyboard.press("ArrowDown")
+    eventually(lambda: _assert_true(caret_in_text(world.ann) is not None, "out of the table again"))
+
+
+@when(parsers.parse('I type "{text}"'))
+def _type(world, text):
+    world.ann.page.keyboard.type(text)
+
+
+@when(parsers.parse('I click in the empty space below the table and type "{text}"'))
+def _click_below(world, text):
+    page = world.ann.page
+    page.click("[data-testid=after-tables]")
+    eventually(lambda: _assert_true(caret_in_text(world.ann) is not None, "the caret is in the words"))
+    page.keyboard.type(text)
+
+
+@when(parsers.parse('I press Esc, then Ctrl+End, and type "{text}"'))
+def _esc_end_type(world, text):
+    page = world.ann.page
+    page.keyboard.press("Escape")
+    page.keyboard.press("Control+End")
+    eventually(lambda: _assert_true(caret_in_text(world.ann) == ("", 0), "the caret is in a new, empty paragraph"))
+    page.keyboard.type(text)
+
+
+@when("I undo twice")
+def _undo_twice(world):
+    settle(world.ann)
+    for _ in range(2):
+        world.ann.page.keyboard.press("Control+z")
+        settle(world.ann)
+
+
+@when("I redo twice")
+def _redo_twice(world):
+    for _ in range(2):
+        world.ann.page.keyboard.press("Control+Shift+z")
+        settle(world.ann)
+
+
+@then(parsers.parse('the caret is at the start of "{text}"'))
+def _caret_start(world, text):
+    eventually(lambda: _assert_equal(caret_in_text(world.ann), (text, 0)))
+
+
+@then(parsers.parse('the caret is at the end of "{text}"'))
+def _caret_end(world, text):
+    eventually(lambda: _assert_equal(caret_in_text(world.ann), (text, len(text))))
+
+
+@then("the caret is in the first box of the last row")
+def _caret_first_of_last(world, shape):
+    eventually(lambda: _assert_equal(world.ann.focused_box(), f"r{shape.rows}/c1"))
+
+
+@then("the caret is in the last box of the last row")
+def _caret_last_box(world, shape):
+    eventually(lambda: _assert_equal(world.ann.focused_box(), f"r{shape.rows}/c{shape.cols}"))
+
+
+@then("the caret is in the first box of the header row of the second table")
+def _caret_second_table(world):
+    def check():
+        where = world.ann.page.evaluate(
+            """() => { const a = document.activeElement, t = a && a.closest('[data-testid=table]')
+                       const all = [...document.querySelectorAll('[data-testid=table]')]
+                       return t ? [all.indexOf(t), a.getAttribute('data-box')] : null }"""
+        )
+        _assert_equal(where, [1, "r1/c1"])
+
+    eventually(check)
+
+
+@then(parsers.parse('the first box of the last row reads exactly "{text}", once'))
+def _first_of_last_reads(world, shape, text):
+    settle(world.ann)
+    value = world.ann.page.input_value(f'{nth_table(0)} >> [data-box="r{shape.rows}/c1"]')
+    _assert_equal(value, text)
+    _assert_equal(entries_with(world.ann, text), 1)
+
+
+@then(parsers.re(r"the text reads (?P<parts>.+)$"))
+def _text_reads(world, parts):
+    want = ["TABLE" if p.strip() == "the table" else p.strip().strip('"') for p in parts.split(",")]
+    eventually(lambda: _assert_equal(world.ann.order(), want))
+    settle(world.ann)
+    _assert_equal(world.ann.order(), want)  # and still, a moment later
+
+
+@then("the history shows one entry for the new paragraph")
+def _one_new_paragraph(world):
+    eventually(lambda: _assert_equal(history_count(world.ann, NEW_PARAGRAPH), world.new_paragraphs + 1))
+
+
+def _assert_true(value, what: str) -> None:
+    assert value, what

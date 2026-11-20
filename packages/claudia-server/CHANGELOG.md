@@ -6,6 +6,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
+- `add_paragraph_after` (`block`) in composes (D1331): an empty paragraph after a paragraph and after what hangs from
+  its end, such as a table at the end of the text; returns `{revision, block, offset}`. It reads the content (D1261).
+- `add_image` takes `fit` in every app (D1332): `w` × `h` are then only the most; the picture is shown at its own size
+  within them, at least as tall as the body text and within its room, with its proportions.
 - **What-if methods** in every app (D1308): `what_if_start` (`at?`), `what_if_apply` (`token`, `method`, `params`),
   `as_what_if` (`token`, `method`, `params`), `what_if_changes`, `what_if_commit` (`token`, `via?`) and `what_if_drop`.
   A what-if is private to the person who started it (three each, twelve a document, dropped after 15 minutes idle or
@@ -46,6 +50,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- The first picture of a container added with `fit` is sized by `claudia_core.new_object_size` (D1332, D1333): at least
+  as tall as the body text, with its proportions (a 43 × 12 formula is 72 × 20 in a text, not 43 × 20), within the room
+  it has. `rendered.fit_within` is gone.
 - A paragraph a person makes (typing Enter, pasting lines, `replace_text`, `replace_words`, `add_paragraphs`) is named
   when it is made, with the first free "Paragraph N" in the language of the connection (D1310). `name_unnamed` names the
   paragraphs of a text from before that. **`rename_thing`** is refused for a heading, which is called by its words
