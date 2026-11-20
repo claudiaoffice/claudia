@@ -39,6 +39,15 @@ describe('hello', () => {
     expect(calls.ready).toBe(1)
   })
 
+  it('carries the setup code the window gives it, asked at every hello (D1373)', () => {
+    const codes = ['K7QM-4TXR-92HB', undefined]
+    const { sent, hello } = make({ setupCode: () => codes.shift() })
+    hello()
+    hello()
+    expect(sent.map((message) => message.setup_code)).toEqual(['K7QM-4TXR-92HB', undefined])
+    expect(Object.keys(sent[1]!)).not.toContain('setup_code')
+  })
+
   it('offers connect and servers only when the shell can do them', () => {
     const { sent, hello } = make({ onConnect: undefined, onServers: undefined })
     hello()

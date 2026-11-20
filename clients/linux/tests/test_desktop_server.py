@@ -463,3 +463,34 @@ def test_closing_the_presence_socket_ends_the_wait() -> None:
     server.accepted.wait(5)
     socket_.close()
     assert done.wait(5)
+
+
+# ------------------------------------------------------------------------------------- the setup code (D1373)
+def test_the_setup_code_is_read_from_the_servers_state_folder_each_time(tmp_path: Path) -> None:
+    from claudia_shell_gtk.desktop_server import read_setup_code
+
+    assert read_setup_code(tmp_path) is None
+    (tmp_path / "admin").mkdir()
+    code = tmp_path / "admin" / "setup-code"
+    code.write_text("K7QM-4TXR-92HB\n", encoding="utf-8")
+    assert read_setup_code(tmp_path) == "K7QM-4TXR-92HB"
+    code.write_text("2W9C-HQ4M-7KXA\n", encoding="utf-8")  # the server restarted
+    assert read_setup_code(tmp_path) == "2W9C-HQ4M-7KXA"
+    code.write_text("not a code at all\n", encoding="utf-8")
+    assert read_setup_code(tmp_path) is None
+    code.unlink()  # an administrator was named
+    assert read_setup_code(tmp_path) is None
+
+
+def test_only_a_page_of_the_shells_own_server_gets_the_code() -> None:
+    from claudia_shell_gtk.desktop_server import setup_code_for_page
+
+    def read() -> str:
+        return "K7QM-4TXR-92HB"
+
+    assert setup_code_for_page("http://127.0.0.1:8765", "http://127.0.0.1:8765", read) == "K7QM-4TXR-92HB"
+    assert setup_code_for_page("http://127.0.0.1:8765/admin/", "http://127.0.0.1:8765", read) == "K7QM-4TXR-92HB"
+    assert setup_code_for_page("https://claudia.example.org", "http://127.0.0.1:8765", read) is None
+    assert setup_code_for_page("http://127.0.0.1:8766", "http://127.0.0.1:8765", read) is None
+    assert setup_code_for_page(None, "http://127.0.0.1:8765", read) is None
+    assert setup_code_for_page("http://127.0.0.1:8765", None, read) is None

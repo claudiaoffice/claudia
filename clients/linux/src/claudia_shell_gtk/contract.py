@@ -365,6 +365,7 @@ def welcome(
     contract: int = CONTRACT_VERSION,
     locale: str | None = None,
     app: str | None = None,
+    setup_code: str | None = None,
 ) -> Message:
     """The shell's answer to a ``hello``: the agreed version, who the shell is, what it offers.
 
@@ -372,7 +373,10 @@ def welcome(
     whatever the person picked in the shell itself once that exists. The page is never required to use it: locale is
     always the client's own setting, and the page may already have a stored override of its own.
 
-    ``app`` (D444) is the app this window is: on a server of several apps the page then shows that app only."""
+    ``app`` (D444) is the app this window is: on a server of several apps the page then shows that app only.
+
+    ``setup_code`` (D1373) is the setup code of the shell's own server while it has no administrator, for a page of
+    that server only: its settings pages then do not ask the person for it."""
     message: Message = {
         "type": "welcome",
         "contract": contract,
@@ -383,6 +387,8 @@ def welcome(
         message["locale"] = locale
     if app is not None:
         message["app"] = app
+    if setup_code is not None:
+        message["setup_code"] = setup_code
     return message
 
 

@@ -422,14 +422,114 @@ def test_no_secret_means_nothing_changes(tmp_path):
 
 
 # ------------------------------------------------------------------------------- the settings pages (admin.py)
-def test_a_fresh_server_has_no_administrators_and_the_prompt_is_dormant_on_loopback(tmp_path):
-    result = plan(tmp_path=tmp_path)
-    assert not any("administrator" in line for line in result.banner)
+def web(tmp_path):
+    folder = tmp_path / "web"
+    folder.mkdir()
+    (folder / "index.html").write_text("<!doctype html>", encoding="utf-8")
+    return str(folder)
 
 
-def test_an_exposed_server_without_administrators_says_so_in_the_banner(tmp_path):
-    result = plan("--no-tls", "--host", "0.0.0.0", "--behind-proxy", tmp_path=tmp_path)
+def code_in(banner):
+    return next(line.split()[-1] for line in banner if line.startswith("  setup code"))
+
+
+def test_a_fresh_server_says_its_setup_code_on_loopback_too(tmp_path):
+    """D1370: every server asks for the code, the desktop's own included."""
+    result = plan(tmp_path=tmp_path / "state")
     assert any("no administrator yet" in line for line in result.banner)
+    code = code_in(result.banner)
+    assert (tmp_path / "state" / "admin" / "setup-code").read_text(encoding="utf-8") == f"{code}\n"
+    assert not any("or open" in line for line in result.banner)  # no web app, no link
+
+
+def test_the_link_leads_to_the_settings_pages_of_this_server(tmp_path):
+    result = plan("--no-tls", "--port", "8791", "--web", web(tmp_path), tmp_path=tmp_path / "state")
+    code = code_in(result.banner)
+    assert f"  or open      http://127.0.0.1:8791/admin#setup={code}" in result.banner
+
+
+def test_behind_a_proxy_the_link_uses_the_servers_name_https_and_no_port(tmp_path):
+    result = plan(
+        "--no-tls",
+        "--host",
+        "0.0.0.0",
+        "--behind-proxy",
+        "--allow-host",
+        "claudia.example.org",
+        "--web",
+        web(tmp_path),
+        tmp_path=tmp_path / "state",
+    )
+    code = code_in(result.banner)
+    assert f"  or open      https://claudia.example.org/admin#setup={code}" in result.banner
+
+
+def test_the_setup_code_of_the_banner_is_the_one_setup_asks_for(tmp_path):
+    from starlette.testclient import TestClient
+
+    result = plan("--no-tls", tmp_path=tmp_path)
+    code = code_in(result.banner)
+    with TestClient(result.app) as client:
+        assert client.get("/api/admin/status").json()["setup_code"] is True
+        body = {"name": "tobi", "password": "correct horse battery"}
+        assert client.post("/api/admin/setup", json={**body, "code": "0000-0000-0000"}).status_code == 403
+        assert client.post("/api/admin/setup", json={**body, "code": code}).status_code == 200
+
+
+def test_a_server_on_loopback_behind_a_proxy_counts_as_exposed(tmp_path):
+    from starlette.testclient import TestClient
+
+    result = plan("--no-tls", "--behind-proxy", tmp_path=tmp_path)
+    with TestClient(result.app) as client:
+        assert client.get("/api/admin/status").json()["exposed"] is True
+
+
+def _two_administrators(state_dir):
+    from claudia_server.admin import AdminDirectory
+    from claudia_server.server_settings import save_admins
+
+    admins = AdminDirectory(cost=2**4)
+    admins.add("anna", "correct horse battery", added="2026-11-01T00:00:00Z")
+    admins.add("ben", "correct horse battery", added="2026-11-02T00:00:00Z")
+    save_admins(state_dir, admins)
+
+
+def test_reset_administrators_removes_them_says_so_and_makes_a_code(tmp_path):
+    _two_administrators(tmp_path)
+    result = plan("--no-tls", "--reset-administrators", tmp_path=tmp_path)
+    assert any(line.startswith("administrators reset: anna, ben removed") for line in result.banner)
+    assert code_in(result.banner)
+
+
+def test_admin_names_the_first_administrator_from_a_password_file_or_the_environment(tmp_path, monkeypatch):
+    from starlette.testclient import TestClient
+
+    secret = tmp_path / "password"
+    secret.write_text("correct horse battery\n", encoding="utf-8")
+    result = plan("--no-tls", "--admin", "anna", "--admin-password-file", str(secret), tmp_path=tmp_path / "a")
+    assert "administrators: anna (named at start with --admin)" in result.banner
+    with TestClient(result.app) as client:
+        assert client.get("/api/admin/status").json()["setup_code"] is False
+        login = {"name": "anna", "password": "correct horse battery"}
+        assert client.post("/api/admin/login", json=login).status_code == 200
+
+    monkeypatch.setenv("CLAUDIA_ADMIN", "ben")
+    monkeypatch.setenv("CLAUDIA_ADMIN_PASSWORD_FILE", str(secret))
+    result = plan("--no-tls", tmp_path=tmp_path / "b")
+    assert "administrators: ben (named at start with --admin)" in result.banner
+
+
+@pytest.mark.parametrize(
+    ("args", "said"),
+    [
+        (["--admin", "anna"], "--admin-password-file"),
+        (["--admin-password-file", "x"], "--admin NAME"),
+        (["--admin", "anna", "--admin-password-file", "/nonexistent/password"], "cannot read"),
+    ],
+)
+def test_admin_options_that_cannot_work_stop_the_start(tmp_path, args, said):
+    with pytest.raises(UsageError, match=said):
+        plan("--no-tls", *args, tmp_path=tmp_path)
 
 
 def test_max_documents_given_on_the_command_line_overrides_what_was_saved_but_does_not_replace_it(tmp_path):

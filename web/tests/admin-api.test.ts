@@ -46,9 +46,31 @@ describe('createAdminApi', () => {
       return { status: 200, body: { token: 't', admin: { name: 'tobi', added: 'now', you: true } } }
     })
     const api = createAdminApi(fetchImpl)
-    await api.setup('tobi', 'hunter2')
+    await api.setup('tobi', 'hunter2', 'K7QM-4TXR-92HB')
     expect((seenInit?.headers as Record<string, string>)['content-type']).toBe('application/json')
-    expect(seenInit?.body).toBe(JSON.stringify({ name: 'tobi', password: 'hunter2' }))
+    expect(seenInit?.body).toBe(JSON.stringify({ name: 'tobi', password: 'hunter2', code: 'K7QM-4TXR-92HB' }))
+  })
+
+  it('checks a setup code without naming anybody (D1372)', async () => {
+    const seen: string[] = []
+    const fetchImpl = fakeFetch((url, init) => {
+      seen.push(`${init?.method} ${url} ${init?.body}`)
+      return { status: 204 }
+    })
+    await createAdminApi(fetchImpl).checkSetupCode('K7QM-4TXR-92HB')
+    expect(seen).toEqual(['POST /api/admin/setup-code {"code":"K7QM-4TXR-92HB"}'])
+  })
+
+  it('reads and dismisses the reset note as an administrator (D1375)', async () => {
+    const seen: string[] = []
+    const fetchImpl = fakeFetch((url, init) => {
+      seen.push(`${init?.method} ${url} ${(init?.headers as Record<string, string>).authorization}`)
+      return init?.method === 'GET' ? { status: 200, body: { at: '2026-11-20T14:03:12Z', previous: ['anna', 'ben'] } } : { status: 204 }
+    })
+    const api = createAdminApi(fetchImpl)
+    expect(await api.resetNote('t')).toEqual({ at: '2026-11-20T14:03:12Z', previous: ['anna', 'ben'] })
+    await api.dismissResetNote('t')
+    expect(seen).toEqual(['GET /api/admin/reset-note Bearer t', 'DELETE /api/admin/reset-note Bearer t'])
   })
 
   it('treats a 204 as success with no body', async () => {

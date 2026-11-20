@@ -4,6 +4,12 @@ Newest first. The shell contract has its own version (`clients/contract/`); this
 
 ## [0.1.0] - unreleased
 
+### Added (SEC-12, D1373): the setup code of the desktop's own server
+- The shell contract's `welcome` may carry `setup_code` (optional, so version 1 stays): the setup code of the shell's
+  own server while it has no administrator, read in its state folder at every `hello`, and only for a page of that
+  server. Its settings pages then do not ask the person for it. `DesktopServer.setup_code`, `read_setup_code`,
+  `setup_code_for_page`; `contract.welcome(setup_code=)`; `Bridge(setup_code=)`.
+
 ### Added (E3.14)
 - File ▸ Manage ▸ Redact History… (Ctrl+Shift+F8), in every app: owners and editors pick what to redact in History
   & Chat (D727); viewers see it off.

@@ -49,7 +49,7 @@ msgstr ""
 msgid "(redacted, length {n})"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:225
+#: web/app/components/AdminAccessDocuments.vue:249
 msgid "+ Add administrator…"
 msgstr ""
 
@@ -237,7 +237,7 @@ msgstr ""
 msgid "A Claudia export."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py:450
+#: clients/linux/src/claudia_shell_gtk/desktop_server.py:480
 msgid "A Claudia server of another version ({running}, this app belongs to {own}) is running on this computer (port {port})."
 msgstr ""
 
@@ -369,7 +369,7 @@ msgstr ""
 msgid "A quartile of the numbers: 0 the smallest, 1, 2 (the median), 3, 4 the largest."
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:252
+#: web/app/components/AdminAccessDocuments.vue:276
 msgid "A request beyond this number is refused before anything is written."
 msgstr ""
 
@@ -469,11 +469,11 @@ msgstr ""
 msgid "Accept ownership"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:187 web/app/components/AdminShell.vue:18
+#: web/app/components/AdminAccessDocuments.vue:206 web/app/components/AdminShell.vue:18
 msgid "Access & documents"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:227
+#: web/app/components/AdminAccessDocuments.vue:251
 msgid "Access secret"
 msgstr ""
 
@@ -481,7 +481,7 @@ msgstr ""
 msgid "Act at once"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:220
+#: web/app/components/AdminAccessDocuments.vue:244
 msgid "Add"
 msgstr ""
 
@@ -565,7 +565,7 @@ msgstr ""
 msgid "Added in the server settings."
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:200
+#: web/app/components/AdminAccessDocuments.vue:224
 msgid "Added {when}"
 msgstr ""
 
@@ -581,12 +581,16 @@ msgstr ""
 msgid "Adds {fonts} in {families} to {server}. From now on every document here that asks for {names} is laid out, shown and printed with them."
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:200
+#: web/app/components/AdminAccessDocuments.vue:224
 msgid "Administrator since {when}"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:191
+#: web/app/components/AdminAccessDocuments.vue:210
 msgid "Administrators"
+msgstr ""
+
+#: web/app/components/AdminAccessDocuments.vue:213
+msgid "Administrators were reset from the server's console on {date} (previously {names}). If they should no longer know the access secret, rotate it below."
 msgstr ""
 
 #: web/app/components/NumberingDialog.vue:143
@@ -633,7 +637,7 @@ msgstr ""
 msgid "All documents"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:117
+#: clients/linux/src/claudia_shell_gtk/window.py:118
 msgid "All files"
 msgstr ""
 
@@ -1013,7 +1017,7 @@ msgstr ""
 msgid "Calculation step"
 msgstr ""
 
-#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:205 web/app/components/AdminAccessDocuments.vue:221 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:131 web/app/components/ExportFormatDialog.vue:132 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:192 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameAndDescribeDialog.vue:69 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/OpenDialog.vue:854 web/app/components/OpenDialog.vue:885 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/ShareDialog.vue:89 web/app/components/ShareDialog.vue:99 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SidePanel.vue:546 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
+#: web/app/components/AcceptOwnershipDialog.vue:34 web/app/components/AddFontsDialog.vue:181 web/app/components/AdminAccessDocuments.vue:229 web/app/components/AdminAccessDocuments.vue:245 web/app/components/AdminFonts.vue:211 web/app/components/AdminPageFooter.vue:21 web/app/components/AssignOwnerDialog.vue:57 web/app/components/ChangePasswordDialog.vue:44 web/app/components/DeleteDocumentDialog.vue:32 web/app/components/DeleteStyleDialog.vue:134 web/app/components/DetailsDialog.vue:48 web/app/components/DownloadDialog.vue:67 web/app/components/ExportFormatDialog.vue:131 web/app/components/ExportFormatDialog.vue:132 web/app/components/ImageImportDialog.vue:103 web/app/components/ImportDialog.vue:192 web/app/components/LeaveDocumentDialog.vue:32 web/app/components/LineSizeDialog.vue:120 web/app/components/NameAndDescribeDialog.vue:69 web/app/components/NameDefinePopover.vue:68 web/app/components/NamesDialog.vue:89 web/app/components/OpenDialog.vue:854 web/app/components/OpenDialog.vue:885 web/app/components/PivotCreateDialog.vue:108 web/app/components/PivotDeleteDialog.vue:30 web/app/components/PivotMembersDialog.vue:72 web/app/components/PivotValueDialog.vue:68 web/app/components/PromptDialog.vue:30 web/app/components/RedactionDialog.vue:304 web/app/components/RotatePopover.vue:108 web/app/components/ShareDialog.vue:89 web/app/components/ShareDialog.vue:99 web/app/components/SheetChartInsertDialog.vue:191 web/app/components/SidePanel.vue:546 web/app/components/SqlEditor.vue:164 web/app/components/TableDialog.vue:44
 msgid "Cancel"
 msgstr ""
 
@@ -1085,7 +1089,7 @@ msgstr ""
 msgid "Change it as you like."
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:210 web/app/components/ChangePasswordDialog.vue:43
+#: web/app/components/AdminAccessDocuments.vue:234 web/app/components/ChangePasswordDialog.vue:43
 msgid "Change password"
 msgstr ""
 
@@ -1349,7 +1353,7 @@ msgstr ""
 msgid "Config"
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:50
+#: web/app/components/FirstAdminSetup.vue:156
 msgid "Confirm password"
 msgstr ""
 
@@ -1357,7 +1361,7 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:331
+#: clients/linux/src/claudia_shell_gtk/window.py:338
 msgid "Connecting to {address}…"
 msgstr ""
 
@@ -1441,7 +1445,7 @@ msgstr ""
 msgid "Could an owner please redact what I did at {times}? It also reaches work by {names}."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:337
+#: clients/linux/src/claudia_shell_gtk/window.py:344
 msgid "Could not connect"
 msgstr ""
 
@@ -1457,11 +1461,11 @@ msgstr ""
 msgid "Could not place the chart."
 msgstr ""
 
-#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:125 web/app/components/AdminAccessDocuments.vue:142 web/app/components/AdminAccessDocuments.vue:158 web/app/components/AdminAccessDocuments.vue:178 web/app/components/AdminAccessDocuments.vue:32 web/app/components/AdminAccessDocuments.vue:59 web/app/components/AdminAccessDocuments.vue:74 web/app/components/AdminAccessDocuments.vue:97 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminFonts.vue:78 web/app/components/AdminSecurity.vue:54 web/app/components/AdminSecurity.vue:80 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:102 web/app/lib/admin-session.ts:85
+#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:116 web/app/components/AdminAccessDocuments.vue:144 web/app/components/AdminAccessDocuments.vue:161 web/app/components/AdminAccessDocuments.vue:177 web/app/components/AdminAccessDocuments.vue:197 web/app/components/AdminAccessDocuments.vue:42 web/app/components/AdminAccessDocuments.vue:54 web/app/components/AdminAccessDocuments.vue:78 web/app/components/AdminAccessDocuments.vue:93 web/app/components/AdminAiModel.vue:38 web/app/components/AdminAiModel.vue:62 web/app/components/AdminFonts.vue:78 web/app/components/AdminSecurity.vue:54 web/app/components/AdminSecurity.vue:80 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:119 web/app/lib/admin-session.ts:59
 msgid "Could not reach the server."
 msgstr ""
 
-#: web/app/components/AdminApp.vue:50
+#: web/app/components/AdminApp.vue:70
 msgid "Could not reach this server."
 msgstr ""
 
@@ -1485,7 +1489,7 @@ msgstr ""
 msgid "Create"
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:64
+#: web/app/components/FirstAdminSetup.vue:170
 msgid "Create administrator"
 msgstr ""
 
@@ -1733,7 +1737,7 @@ msgstr ""
 msgid "Discrete (values and weights)"
 msgstr ""
 
-#: web/app/components/FontReportBanner.vue:32 web/app/components/SuggestionPopover.vue:45
+#: web/app/components/AdminAccessDocuments.vue:214 web/app/components/FontReportBanner.vue:32 web/app/components/SuggestionPopover.vue:45
 msgid "Dismiss"
 msgstr ""
 
@@ -1757,7 +1761,7 @@ msgstr ""
 msgid "Documentation"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:247
+#: web/app/components/AdminAccessDocuments.vue:271
 msgid "Documents"
 msgstr ""
 
@@ -2033,7 +2037,11 @@ msgstr ""
 msgid "Fill in the document, your name, the recovery key and a new password."
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:21
+#: web/app/components/FirstAdminSetup.vue:96
+msgid "Fill in the setup code."
+msgstr ""
+
+#: web/app/components/FirstAdminSetup.vue:100
 msgid "Fill in your name and a password."
 msgstr ""
 
@@ -2245,6 +2253,10 @@ msgstr ""
 msgid "From now on {user} cannot read what is written to the history or the chat. {user} keeps what has already been seen and any copy that was saved. The document’s keys are renewed; for this document that takes about a second."
 msgstr ""
 
+#: web/app/components/FirstAdminSetup.vue:148
+msgid "From the link you opened."
+msgstr ""
+
 #: web/app/components/StyleCssEditor.vue:89
 msgid "From the styles it is based on"
 msgstr ""
@@ -2441,7 +2453,7 @@ msgstr ""
 msgid "Hex"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:239 web/app/components/StylesDialog.vue:70
+#: web/app/components/AdminAccessDocuments.vue:263 web/app/components/StylesDialog.vue:70
 msgid "Hide"
 msgstr ""
 
@@ -2625,6 +2637,10 @@ msgstr ""
 msgid "In the flow: the table takes its own place after its paragraph and breaks between rows across pages."
 msgstr ""
 
+#: web/app/components/FirstAdminSetup.vue:151
+msgid "In the server's log where it started, or in admin/setup-code in its state folder. A restart of the server makes a new code."
+msgstr ""
+
 #: web/app/components/PaletteDialog.vue:137
 msgid "In this document now:"
 msgstr ""
@@ -2765,7 +2781,7 @@ msgstr ""
 msgid "It shows {code}: {detail}"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py:433
+#: clients/linux/src/claudia_shell_gtk/desktop_server.py:463
 msgid "It stops by itself ten minutes after its last window has closed. Or end its python process (System Monitor). Then start again."
 msgstr ""
 
@@ -2821,11 +2837,11 @@ msgstr ""
 msgid "Keep this part, to use it in the replacement"
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:56
+#: web/app/components/FirstAdminSetup.vue:162
 msgid "Keep this password safe. If every administrator is ever locked out, only someone with access to the computer the server runs on can name a new first administrator."
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:63
+#: web/app/components/FirstAdminSetup.vue:169
 msgid "Keep this server local for now"
 msgstr ""
 
@@ -2977,7 +2993,7 @@ msgstr ""
 msgid "List, rename, delete and hide the styles of this document"
 msgstr ""
 
-#: web/app/components/AdminApp.vue:75
+#: web/app/components/AdminApp.vue:95
 msgid "Loading…"
 msgstr ""
 
@@ -3121,7 +3137,7 @@ msgstr ""
 msgid "Max of {field}"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:251
+#: web/app/components/AdminAccessDocuments.vue:275
 msgid "Maximum documents"
 msgstr ""
 
@@ -3249,7 +3265,7 @@ msgstr ""
 msgid "My places and collections"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:218 web/app/components/AdminFonts.vue:204 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:151 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/NumberingDialog.vue:134 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:125 web/app/components/SlideWorkspace.vue:514 web/app/components/StyleSpec.vue:291 web/app/components/Workspace.vue:1296 web/app/components/Workspace.vue:1297 web/app/lib/reference-labels.ts:17
+#: web/app/components/AdminAccessDocuments.vue:242 web/app/components/AdminFonts.vue:204 web/app/components/DetailsDialog.vue:38 web/app/components/ImportDialog.vue:151 web/app/components/NameDefinePopover.vue:51 web/app/components/NameDefinePopover.vue:57 web/app/components/NameDefinePopover.vue:57 web/app/components/NamesDialog.vue:66 web/app/components/NumberingDialog.vue:134 web/app/components/PivotCreateDialog.vue:79 web/app/components/ShareDialog.vue:125 web/app/components/SlideWorkspace.vue:514 web/app/components/StyleSpec.vue:291 web/app/components/Workspace.vue:1296 web/app/components/Workspace.vue:1297 web/app/lib/reference-labels.ts:17
 msgid "Name"
 msgstr ""
 
@@ -3305,7 +3321,7 @@ msgstr ""
 msgid "Name these cells"
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:44
+#: web/app/components/FirstAdminSetup.vue:124
 msgid "Name yourself as this server's administrator"
 msgstr ""
 
@@ -3357,7 +3373,7 @@ msgstr ""
 msgid "New password"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:203
+#: web/app/components/AdminAccessDocuments.vue:227
 msgid "New password (at least 8 characters)"
 msgstr ""
 
@@ -3981,11 +3997,11 @@ msgstr ""
 msgid "Part of the result of the query in {cell}"
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:54 web/app/components/FirstAdminSetup.vue:49 web/app/components/ImportDialog.vue:164 web/app/components/OpenDialog.vue:1038
+#: web/app/components/AdminLogin.vue:55 web/app/components/FirstAdminSetup.vue:155 web/app/components/ImportDialog.vue:164 web/app/components/OpenDialog.vue:1038
 msgid "Password"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:219
+#: web/app/components/AdminAccessDocuments.vue:243
 msgid "Password (at least 8 characters)"
 msgstr ""
 
@@ -4421,7 +4437,7 @@ msgstr ""
 msgid "Remarks"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:211 web/app/components/NumberingDialog.vue:200 web/app/components/PivotPanel.vue:113 web/app/components/SearchPanel.vue:631 web/app/components/ShareDialog.vue:116
+#: web/app/components/AdminAccessDocuments.vue:235 web/app/components/NumberingDialog.vue:200 web/app/components/PivotPanel.vue:113 web/app/components/SearchPanel.vue:631 web/app/components/ShareDialog.vue:116
 msgid "Remove"
 msgstr ""
 
@@ -4529,7 +4545,7 @@ msgstr ""
 msgid "Replace all {count}"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:149
+#: web/app/components/AdminAccessDocuments.vue:168
 msgid "Replace the access secret? Anyone using the old one will need the new one — this never signs an administrator out."
 msgstr ""
 
@@ -4597,7 +4613,7 @@ msgstr ""
 msgid "Report an Issue"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:231 web/app/components/AdminAccessDocuments.vue:234
+#: web/app/components/AdminAccessDocuments.vue:255 web/app/components/AdminAccessDocuments.vue:258
 msgid "Require a secret to create or list documents"
 msgstr ""
 
@@ -4625,7 +4641,7 @@ msgstr ""
 msgid "Result of the computation"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:239
+#: web/app/components/AdminAccessDocuments.vue:263
 msgid "Reveal"
 msgstr ""
 
@@ -4661,7 +4677,7 @@ msgstr ""
 msgid "Rotate object"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:241
+#: web/app/components/AdminAccessDocuments.vue:265
 msgid "Rotate secret"
 msgstr ""
 
@@ -4789,7 +4805,7 @@ msgstr ""
 msgid "Sandboxed execution"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/files.py:217 clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:204 web/app/components/DocumentFrame.vue:202 web/app/components/NameAndDescribeDialog.vue:68 web/app/components/StylesDialog.vue:114 web/app/components/TextObjectMenu.vue:181 web/app/lib/document-menus.ts:82 web/app/lib/shortcuts.ts:68
+#: clients/linux/src/claudia_shell_gtk/files.py:217 clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/AdminAccessDocuments.vue:228 web/app/components/DocumentFrame.vue:202 web/app/components/NameAndDescribeDialog.vue:68 web/app/components/StylesDialog.vue:114 web/app/components/TextObjectMenu.vue:181 web/app/lib/document-menus.ts:82 web/app/lib/shortcuts.ts:68
 msgid "Save"
 msgstr ""
 
@@ -4821,7 +4837,7 @@ msgstr ""
 msgid "Saved as {path}."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:341
+#: clients/linux/src/claudia_shell_gtk/window.py:348
 msgid "Saved {name} to {folder}"
 msgstr ""
 
@@ -4949,7 +4965,7 @@ msgstr ""
 msgid "Server address"
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:43 web/app/components/AdminShell.vue:25 web/app/components/FirstAdminSetup.vue:39
+#: web/app/components/AdminLogin.vue:43 web/app/components/AdminShell.vue:25 web/app/components/FirstAdminSetup.vue:119
 msgid "Server settings"
 msgstr ""
 
@@ -4971,6 +4987,10 @@ msgstr ""
 
 #: web/app/components/LineSizeDialog.vue:119
 msgid "Set width"
+msgstr ""
+
+#: web/app/components/FirstAdminSetup.vue:129
+msgid "Setup code"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/thing_names.py:34 web/app/components/SidePanel.vue:278 web/app/lib/descriptions.ts:41
@@ -5113,11 +5133,11 @@ msgstr ""
 msgid "Shows"
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:63
+#: web/app/components/AdminLogin.vue:64
 msgid "Sign in"
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:50
+#: web/app/components/AdminLogin.vue:51
 msgid "Sign in to {label}"
 msgstr ""
 
@@ -5133,7 +5153,7 @@ msgstr ""
 msgid "Size"
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:63
+#: web/app/components/FirstAdminSetup.vue:169
 msgid "Skip for now"
 msgstr ""
 
@@ -5183,6 +5203,10 @@ msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/TextWorkspace.vue:274 web/app/components/TextWorkspace.vue:524
 msgid "Soft Hyphen"
+msgstr ""
+
+#: web/app/components/AdminApp.vue:50
+msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr ""
 
 #: web/app/lib/search.ts:501
@@ -5277,7 +5301,7 @@ msgstr ""
 msgid "Start over"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:248
+#: clients/linux/src/claudia_shell_gtk/window.py:253
 msgid "Starting {app}…"
 msgstr ""
 
@@ -5569,6 +5593,10 @@ msgstr ""
 msgid "That file is too big (at most {mb} MB)."
 msgstr ""
 
+#: web/app/components/FirstAdminSetup.vue:34
+msgid "That is not this server's setup code. Check the log of its last start: a restart makes a new code."
+msgstr ""
+
 #: web/app/components/Workspace.vue:551
 msgid "That is too much to paste at once (at most 10,000 cells)."
 msgstr ""
@@ -5589,7 +5617,7 @@ msgstr ""
 msgid "That was deleted. This is the last moment it was there."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py:439
+#: clients/linux/src/claudia_shell_gtk/desktop_server.py:469
 msgid "The Claudia server on this computer (port {port}) does not serve {app}; it serves {apps}."
 msgstr ""
 
@@ -6225,7 +6253,7 @@ msgstr ""
 msgid "The part of the payment in one period that pays off the loan itself (the payment without the interest)."
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:25
+#: web/app/components/FirstAdminSetup.vue:104
 msgid "The passwords do not match."
 msgstr ""
 
@@ -6705,7 +6733,7 @@ msgstr ""
 msgid "These cells are filled by the query, so they are not typed into."
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:51
+#: web/app/components/AdminLogin.vue:52
 msgid "These settings are for administrators only. Sign in with your name and password to continue."
 msgstr ""
 
@@ -6789,7 +6817,7 @@ msgstr ""
 msgid "This colour is not in the palette, so a palette change will leave it behind."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/window.py:217 web/app/lib/server-bookmarks.ts:94
+#: clients/linux/src/claudia_shell_gtk/window.py:218 web/app/lib/server-bookmarks.ts:94
 msgid "This computer"
 msgstr ""
 
@@ -7005,6 +7033,10 @@ msgstr ""
 msgid "Too faint"
 msgstr ""
 
+#: web/app/components/FirstAdminSetup.vue:38
+msgid "Too many tries from this address. Try again in {seconds} seconds."
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/app.py:599 web/app/lib/login-wait.ts:14
 msgid "Too many tries. Try again in 1 second."
 msgstr ""
@@ -7139,6 +7171,10 @@ msgstr ""
 
 #: web/app/components/PrintPreview.vue:333
 msgid "Use"
+msgstr ""
+
+#: web/app/components/FirstAdminSetup.vue:149
+msgid "Use another code"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/servers.py:149
@@ -7365,7 +7401,7 @@ msgstr ""
 msgid "White"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:188
+#: web/app/components/AdminAccessDocuments.vue:207
 msgid "Who may change these settings, who may create or list documents, and how many this server holds."
 msgstr ""
 
@@ -7373,7 +7409,7 @@ msgstr ""
 msgid "Who may receive these fonts"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:245
+#: web/app/components/AdminAccessDocuments.vue:269
 msgid "Whoever knows it may make documents and see their list; nobody signs in here with it. Administrators sign in with their own name and password. Rotating it doesn't sign anyone out."
 msgstr ""
 
@@ -7425,7 +7461,7 @@ msgstr ""
 msgid "Withdraw"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:232
+#: web/app/components/AdminAccessDocuments.vue:256
 msgid "Without one, only this machine may create documents."
 msgstr ""
 
@@ -7589,7 +7625,7 @@ msgstr ""
 msgid "Your changes to the pattern are dropped."
 msgstr ""
 
-#: web/app/components/AdminLogin.vue:53 web/app/components/DetailsDialog.vue:42 web/app/components/FirstAdminSetup.vue:48 web/app/components/ImportDialog.vue:163 web/app/components/OpenDialog.vue:1033
+#: web/app/components/AdminLogin.vue:54 web/app/components/DetailsDialog.vue:42 web/app/components/FirstAdminSetup.vue:154 web/app/components/ImportDialog.vue:163 web/app/components/OpenDialog.vue:1033
 msgid "Your name"
 msgstr ""
 
@@ -8609,7 +8645,7 @@ msgstr ""
 msgid "new slide"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/desktop_server.py:440
+#: clients/linux/src/claudia_shell_gtk/desktop_server.py:470
 msgid "no app"
 msgstr ""
 
@@ -9661,7 +9697,7 @@ msgstr ""
 msgid "to name"
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:48
+#: web/app/components/FirstAdminSetup.vue:154
 msgid "tobi"
 msgstr ""
 
@@ -9793,7 +9829,7 @@ msgstr ""
 msgid "xelatex"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:198 web/app/components/ShareDialog.vue:109
+#: web/app/components/AdminAccessDocuments.vue:222 web/app/components/ShareDialog.vue:109
 msgid "you"
 msgstr ""
 
@@ -9809,11 +9845,11 @@ msgstr ""
 msgid "{administrator}'s server"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/app.py:131
+#: clients/linux/src/claudia_shell_gtk/app.py:132
 msgid "{app} cannot start yet"
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/app.py:134 clients/linux/src/claudia_shell_gtk/app.py:165
+#: clients/linux/src/claudia_shell_gtk/app.py:135 clients/linux/src/claudia_shell_gtk/app.py:166
 msgid "{app} could not start its server"
 msgstr ""
 
@@ -10049,11 +10085,11 @@ msgstr ""
 msgid "{formula}  gives  {result}  (with {given})"
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:45
-msgid "{host} can now be reached from outside this computer. Before anyone else can reach it, set a name and password for yourself — you'll use them to sign in here from now on."
+#: web/app/components/FirstAdminSetup.vue:125
+msgid "{host} can be reached from other computers. To show that you run it, give the setup code from the server's log, then a name and a password for yourself. You will use them to sign in here from now on."
 msgstr ""
 
-#: web/app/components/FirstAdminSetup.vue:46
+#: web/app/components/FirstAdminSetup.vue:126
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr ""
 

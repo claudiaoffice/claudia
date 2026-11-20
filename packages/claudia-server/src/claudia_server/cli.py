@@ -36,8 +36,10 @@ folder, a missing library or a device that is not there stops the server with a 
     python3 -m claudia_server --dir ./documents --ai ~/models/qwen2.5-7b-instruct-int4-ov --ai-device GPU
 
 Who may configure the server once it is running, rather than choosing everything up front, is a different question
-(``admin.py``): on an address beyond this computer, the first person to open the settings pages names its
-administrator, and after that administrators manage it (and each other) from there, at ``/api/admin/*``. What they
+(``admin.py``): the first administrator is named on the settings pages with the setup code this server says in its
+start banner (``admin_start.py``, SEC-12), or at start with ``--admin NAME`` and ``--admin-password-file``; after that
+administrators manage it (and each other) from there, at ``/api/admin/*``. ``--reset-administrators`` forgets them
+all, for whoever can start the server, and keeps every setting. What they
 set is saved under the server's own state (``--state-dir``, next to its TLS certificate) and applies at every later
 start. ``--max-documents``, ``--access-secret-file``/``CLAUDIA_ACCESS_SECRET`` and ``--ai``/``--ai-device`` remain
 useful without ever touching the settings pages (a container that must start the same way every time, say): given on
@@ -60,14 +62,16 @@ from typing import Any
 
 from claudia_ai import DEFAULT_DEVICE, ModelError, ModelRunner, OpenVinoModel
 from claudia_core import DocumentModel
+from claudia_core.clock import utc_now
 from claudia_creates import ShapeLibrary
 from claudia_fonts import builtin_folder
 from claudia_render import RenderService, ToolRegistry, builtin_registry
 
 from . import __version__, redirect
-from .admin import AdminDirectory, needs_administrator
+from .admin import AdminDirectory
 from .admin_api import AdminContext, AiRuntime, any_lens, assistants_for
 from .admin_sessions import AdminSessions
+from .admin_start import AdminOptions, AdminStart, prepare_administrators
 from .app import DEFAULT_MAX_WAITING, DEFAULT_MAX_WAITING_PER_ADDRESS, MIN_ACCESS_SECRET, create_app
 from .apps import methods_for
 from .assistant import Assistant
@@ -76,7 +80,7 @@ from .certs import Certificate, CertificateError, ensure_certificate
 from .filestore import FileDirectory, FileProvider
 from .folder_lock import FolderLock, FolderLocked
 from .fonts import FontService
-from .hosts import AllowedHosts, is_loopback, machine_names
+from .hosts import LOCALHOST, AllowedHosts, is_exposed, is_loopback, is_unspecified, machine_names
 from .hub import DEFAULT_MAX_DOCUMENTS, DocumentProvider, Hub, MemoryProvider
 from .hyphenation import HyphenationService
 from .idle import IdleWatch
@@ -236,6 +240,26 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--state-dir", help="where the certificate and the admin settings are kept (default: a per-user folder)"
+    )
+    admins = parser.add_argument_group("administrators (SEC-12)")
+    admins.add_argument(
+        "--reset-administrators",
+        action="store_true",
+        help="forget every administrator (they are kept aside in the state folder); settings, fonts and documents "
+        "stay. The next administrator is named with a new setup code, or with --admin",
+    )
+    admins.add_argument(
+        "--admin",
+        metavar="NAME",
+        default=os.environ.get("CLAUDIA_ADMIN"),
+        help="name NAME the first administrator at start if there is none, with the password in "
+        "--admin-password-file; never changes an administrator who exists (default: CLAUDIA_ADMIN)",
+    )
+    admins.add_argument(
+        "--admin-password-file",
+        metavar="FILE",
+        default=os.environ.get("CLAUDIA_ADMIN_PASSWORD_FILE"),
+        help="the password of --admin: the first line of FILE (default: CLAUDIA_ADMIN_PASSWORD_FILE)",
     )
     tls = parser.add_argument_group("encryption")
     tls.add_argument("--no-tls", action="store_true", help="do not encrypt (only for this computer, or behind a proxy)")
@@ -541,13 +565,49 @@ def _server_state(args: argparse.Namespace) -> tuple[Path, ServerSettings, Admin
     return state_dir, settings, admins
 
 
-def _administrator_banner_line(admins: AdminDirectory, exposed: bool) -> str | None:
-    """Who may configure this server, for the start-up banner; ``None`` on loopback, where nobody needs to be one."""
-    if admins:
-        return f"administrators: {', '.join(a.name for a in admins.list_admins())}"
-    if needs_administrator(exposed, len(admins)):
-        return "no administrator yet: open the server settings on this address to name one (/api/admin)"
-    return None
+def _bracketed(host: str) -> str:
+    return f"[{host}]" if ":" in host else host
+
+
+def _settings_link(args: argparse.Namespace, certificate: Certificate | None) -> str | None:
+    """The address of the settings pages for the banner's link to the setup code (D1372); ``None`` without the web
+    app. The first name the server was given (``--allow-host``, then ``--tls-name``) or the address it listens on;
+    behind a proxy https and no port, since the proxy's port is not known here."""
+    if not args.web:
+        return None
+    given = [*args.allow_host, *args.tls_name]
+    if given:
+        host = given[0]
+    elif is_unspecified(args.host):
+        host = next(iter(machine_names()), LOCALHOST)
+    else:
+        host = args.host
+    if args.behind_proxy:
+        return f"https://{_bracketed(host)}/admin"
+    scheme = "http" if certificate is None else "https"
+    return f"{scheme}://{_bracketed(host)}:{args.port}/admin"
+
+
+def _admin_options(args: argparse.Namespace) -> AdminOptions:
+    if args.admin_password_file and not args.admin:
+        raise UsageError("--admin-password-file needs --admin NAME (or CLAUDIA_ADMIN)")
+    return AdminOptions(
+        reset=args.reset_administrators,
+        name=args.admin,
+        password_file=Path(args.admin_password_file) if args.admin_password_file else None,
+    )
+
+
+def _administrators(
+    args: argparse.Namespace, state_dir: Path, admins: AdminDirectory, certificate: Certificate | None
+) -> AdminStart:
+    """Reset, name at start and make the setup code (``admin_start.py``); ``UsageError`` for options that fail."""
+    try:
+        return prepare_administrators(
+            state_dir, admins, _admin_options(args), link_base=_settings_link(args, certificate), now=utc_now()
+        )
+    except ValueError as exc:
+        raise UsageError(str(exc)) from exc
 
 
 def _proxy_hops(args: argparse.Namespace) -> int:
@@ -659,6 +719,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     assistants, ai = _build_assistant(args, models, settings)
     renderings, rendering_lines = _renderings(settings, state_dir, fonts)
     lock = _lock_folder(args)  # before any store touches the folder
+    administrators = _administrators(args, state_dir, admins, certificate)  # before anybody can reach the server
     hub_options = {
         "limits": limits,
         "allow_create": not args.no_create,
@@ -670,7 +731,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     kdf = _kdf_policy(args, settings)
     suite = _suite(args, models, one_app, library=library, assistants=assistants, hub_options=hub_options, kdf=kdf)
     idle = IdleWatch(args.exit_when_idle) if args.exit_when_idle else None
-    exposed = not is_loopback(args.host)
+    exposed = is_exposed(args.host, behind_proxy=args.behind_proxy)
     admin = AdminContext(
         admins=admins,
         sessions=AdminSessions(),
@@ -680,6 +741,8 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         exposed=exposed,
         fonts=fonts,
         kdf=kdf,
+        setup_code=administrators.code,
+        reset_note=administrators.reset,
     )
     app = create_app(
         suite,
@@ -705,8 +768,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     banner.append(f"answers to {', '.join(hosts.names)} and IP addresses; more names with --allow-host NAME")
     if secret:
         banner.append("access secret set: making documents and reading the list need it")
-    if (admin_line := _administrator_banner_line(admins, exposed)) is not None:
-        banner.append(admin_line)
+    banner += administrators.banner
     banner.append(
         f"web app: {scheme}://{args.host}:{args.port}/ (from {args.web})"
         if args.web

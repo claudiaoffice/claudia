@@ -188,6 +188,17 @@ def test_welcome_carries_a_locale_only_when_given_one() -> None:
     assert contract.welcome(shell_version="0.1.0", capabilities=[], locale="de")["locale"] == "de"
 
 
+def test_welcome_carries_the_setup_code_of_the_shells_own_server_only_when_given_one() -> None:
+    # (D1373) additive and optional, like the locale; the schema takes the code only in its grouped form
+    schema = json.loads(SCHEMA_FILE.read_text())
+    assert "setup_code" not in contract.welcome(shell_version="0.1.0", capabilities=[])
+    welcome = contract.welcome(shell_version="0.1.0", capabilities=[], setup_code="K7QM-4TXR-92HB")
+    assert welcome["setup_code"] == "K7QM-4TXR-92HB"
+    jsonschema.validate(welcome, schema)
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate({**welcome, "setup_code": "not a code"}, schema)
+
+
 def test_welcome_says_who_the_shell_is() -> None:
     welcome = contract.welcome(shell_version="0.1.0", capabilities=["native-menu"])
     assert welcome["contract"] == 1

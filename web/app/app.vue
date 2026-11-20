@@ -4,6 +4,7 @@ import { openedFromDocument } from '~/lib/switch-session'
 import { isSlides, isText, type AnySession } from '~/lib/open'
 import { setPageLanguage } from '~/lib/i18n'
 import { tabTitle } from '~/lib/shell-bridge'
+import { rememberSetupCode, takeCodeFromAddress } from '~/lib/setup-code'
 import type { SlideSession } from '~/lib/slide-session'
 import type { TextSession } from '~/lib/text-session'
 import type { Session } from '~/lib/session'
@@ -12,6 +13,10 @@ import type { Session } from '~/lib/session'
 // app, so this is the one branch on the URL path, checked once since the path never changes without a real
 // navigation (switching servers, and leaving the admin pages, are both full page loads — see server-bookmarks.ts).
 const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/')
+
+// A link from the server's log carries its setup code in the fragment (D1372): kept for this tab, gone from the address.
+const linkCode = takeCodeFromAddress(location, history)
+if (linkCode) rememberSetupCode(linkCode, 'link')
 
 const session = shallowRef<AnySession | null>(null)
 /** File ▸ New asks to land on a blank document name, not the one just closed (File ▸ Open / Close document do not). */

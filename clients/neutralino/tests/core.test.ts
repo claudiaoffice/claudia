@@ -152,6 +152,29 @@ describe('Core', () => {
     })
   })
 
+  describe('the setup code of its own server (D1373)', () => {
+    it('shows its own server with the setup code it has now, and another server without', async () => {
+      const codes = ['K7QM-4TXR-92HB', '2W9C-HQ4M-7KXA']
+      const server = Object.assign(new FakeServer(), { setupCode: () => codes.shift() ?? null })
+      const core = make({
+        serverFactory: async () => server,
+        check: async (address) => ({ kind: 'reached', origin: address.origin, app: 'creates' }),
+      })
+      core.handle({ kind: 'start' })
+      await tick()
+      expect(sent.at(-1)).toEqual({ kind: 'show', origin: 'http://127.0.0.1:5000', setupCode: 'K7QM-4TXR-92HB' })
+      core.handle({ kind: 'connect', address: 'other.example:8420' })
+      await tick()
+      expect(sent.at(-1)).toEqual({ kind: 'show', origin: 'https://other.example:8420' })
+      core.handle({ kind: 'connect', address: 'http://127.0.0.1:5000' }) // back to "This computer": read again
+      await tick()
+      expect(sent.at(-1)).toEqual({ kind: 'show', origin: 'http://127.0.0.1:5000', setupCode: '2W9C-HQ4M-7KXA' })
+      core.handle({ kind: 'connect', address: 'http://127.0.0.1:5000' }) // an administrator exists by now
+      await tick()
+      expect(sent.at(-1)).toEqual({ kind: 'show', origin: 'http://127.0.0.1:5000' })
+    })
+  })
+
   describe('requests of the page', () => {
     it('connects to another server when asked, and remembers it', async () => {
       const core = make({

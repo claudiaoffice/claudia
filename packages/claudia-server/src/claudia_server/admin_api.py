@@ -2,7 +2,7 @@
 
 Everything here is about the *server* — who may configure it and what it is configured to do — never about a
 document; a document's own protocol (``app.py``) does not call into this module and this module does not call into
-it. Every route but ``status``, ``setup`` and ``login`` needs a current administrator session
+it. Every route but ``status``, ``setup``, ``setup-code`` and ``login`` needs a current administrator session
 (``Authorization: Bearer <token>``, issued by ``login`` or ``setup``); :func:`admin_router` is the one way in.
 
 ``AdminContext`` is everything the routes need that is not already on the ``Suite``: the administrators themselves,
@@ -32,12 +32,14 @@ from claudia_typeset.programs import EngineUnavailable, resolve_program
 from .admin import AdminAccount, AdminDirectory, needs_administrator
 from .admin_fonts import font_admin_routes
 from .admin_sessions import AdminSessions
+from .admin_start import ResetNote, dismiss_reset_note
 from .apps import model_assistant_for, stand_in_assistant_for
 from .assistant import Assistant
 from .fonts import FontService
 from .kdf_policy import KdfPolicy, check_target
 from .login_throttle import LoginThrottle
 from .server_settings import AiSettings, ServerSettings, TypesetSettings, save_admins, save_settings
+from .setup_code import SetupCode, remove_code
 from .suite import Suite
 
 JsonBody = Annotated[dict, Body()]
@@ -126,6 +128,11 @@ class AdminContext:
     kdf: KdfPolicy | None = None
     """What password hashing costs for new documents, for Server settings ▸ Security (D1267); ``None`` for a server
     that keeps no documents of its own."""
+    setup_code: SetupCode | None = None
+    """The code that ``setup`` asks for while nobody is named (D1370, D1371); ``None`` once somebody is, and for a
+    server that made none, which then lets nobody set up."""
+    reset_note: ResetNote | None = None
+    """When the administrators were last reset from the console, until one of them dismisses it (D1375)."""
 
 
 def _bearer_token(request: Request) -> str | None:
@@ -154,6 +161,19 @@ def _diagnose_typeset(typeset: TypesetSettings) -> dict[str, dict]:
 ADMIN_LOGIN = (
     "\x00admin"  # the "document" of the administrators' sign-in in the login counters: no document is called so
 )
+ADMIN_SETUP = "\x00setup"  # the same for tries of the setup code (D1371); its "name" is always empty
+WRONG_CODE = "that is not this server's setup code; look in the log of its last start (a restart makes a new code)"
+TAKEN = "this server already has an administrator; sign in to add another"
+
+
+def _too_many(seconds: float) -> JSONResponse:
+    """429 with the wait in ``Retry-After`` and ``retry_after`` (D1266)."""
+    whole = max(1, math.ceil(seconds))
+    return JSONResponse(
+        status_code=429,
+        content={"detail": f"too many tries; try again in {whole} s", "retry_after": whole},
+        headers={"Retry-After": str(whole)},
+    )
 
 
 def _identity_routes(
@@ -169,7 +189,8 @@ def _identity_routes(
     @router.get("/status")
     async def status():
         """Public: whether this server needs somebody to become its first administrator (``exposed`` and nobody
-        is one yet). A settings page checks this before anything else, since it decides what to show.
+        is one yet), and whether ``setup`` asks for a setup code (``setup_code``: never the code itself, D1371). A
+        settings page checks this before anything else, since it decides what to show.
 
         ``administrator`` is the earliest-added administrator's name, or ``null`` if there is none yet — a hint a
         client can turn into a friendly label ("<name>'s server") before anyone has signed in to this server in
@@ -180,13 +201,36 @@ def _identity_routes(
             "needs_administrator": needs,
             "exposed": context.exposed,
             "administrator": first[0].name if first else None,
+            "setup_code": not first and context.setup_code is not None,
         }
 
-    @router.post("/setup")
-    async def setup(body: JsonBody):
-        """Become this server's first administrator. Refused once it has one — sign in and add another instead."""
+    def _check_code(request: Request, given: object) -> JSONResponse | None:
+        """The refusal for a try of the setup code, or ``None`` if ``given`` is this run's code (D1371): 429 inside
+        a wait, 409 once somebody is named, 403 for a wrong code (counted)."""
+        address = address_of(request)
+        if throttle is not None and (wait := throttle.check(address, ADMIN_SETUP, "")) > 0:
+            return _too_many(wait)
         if len(context.admins) > 0:
-            raise HTTPException(409, "this server already has an administrator; sign in to add another")
+            return JSONResponse(status_code=409, content={"detail": TAKEN})
+        if context.setup_code is None or not context.setup_code.matches(given):
+            if throttle is not None:
+                throttle.failed(address, ADMIN_SETUP, "")
+            return JSONResponse(status_code=403, content={"detail": WRONG_CODE})
+        return None
+
+    @router.post("/setup-code", status_code=204)
+    async def check_setup_code(body: JsonBody, request: Request):
+        """Is this the setup code? For a code that came with a link (D1372); a try like any other."""
+        if (refused := _check_code(request, body.get("code"))) is not None:
+            return refused
+        return None
+
+    @router.post("/setup")
+    async def setup(body: JsonBody, request: Request):
+        """Become this server's first administrator, with the setup code of this run (D1370). Refused once it has
+        one — sign in and add another instead."""
+        if (refused := _check_code(request, body.get("code"))) is not None:
+            return refused
         name, password = body.get("name"), body.get("password")
         if not (isinstance(name, str) and isinstance(password, str)):
             raise HTTPException(400, "a name and a password are needed")
@@ -195,6 +239,10 @@ def _identity_routes(
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
         save_admins(context.state_dir, context.admins)
+        context.setup_code = None
+        remove_code(context.state_dir)
+        if throttle is not None:
+            throttle.succeeded(address_of(request))
         token = context.sessions.issue(account.name)
         return {"token": token, "admin": _account_dict(account, signed_in_as=account.name)}
 
@@ -205,12 +253,7 @@ def _identity_routes(
         name, password = body.get("name"), body.get("password")
         address = address_of(request)
         if throttle is not None and (wait := throttle.check(address, ADMIN_LOGIN, name)) > 0:
-            seconds = max(1, math.ceil(wait))
-            return JSONResponse(
-                status_code=429,
-                content={"detail": f"too many tries; try again in {seconds} s", "retry_after": seconds},
-                headers={"Retry-After": str(seconds)},
-            )
+            return _too_many(wait)
         account = await asyncio.to_thread(context.admins.verify, name, password)
         if account is None:
             if throttle is not None:
@@ -237,6 +280,18 @@ def _admin_routes(router: APIRouter, context: AdminContext, require_admin: Calla
 
     def _save() -> None:
         save_admins(context.state_dir, context.admins)
+
+    @router.get("/reset-note")
+    async def reset_note(admin: Signedin):
+        """When the administrators were last reset from the console and who they were (D1375), or ``null``."""
+        note = context.reset_note
+        return None if note is None else note.to_data()
+
+    @router.delete("/reset-note", status_code=204)
+    async def dismiss_reset(admin: Signedin):
+        """An administrator has read the note: nobody sees it again. Dismissing twice is no error."""
+        context.reset_note = None
+        dismiss_reset_note(context.state_dir)
 
     @router.get("/admins")
     async def list_admins(admin: Signedin):

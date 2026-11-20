@@ -57,6 +57,7 @@ class Bridge:
         on_servers: Callable[[list[dict[str, Any]]], None] | None = None,
         server_list: Callable[[], list[dict[str, Any]]] | None = None,
         files: FileDesk | None = None,
+        setup_code: Callable[[], str | None] | None = None,
     ) -> None:
         self._manifest = manifest
         self._send = send
@@ -68,6 +69,9 @@ class Bridge:
         self._on_servers = on_servers
         self._server_list = server_list
         self._files = files
+        self._setup_code = setup_code or (lambda: None)
+        """The setup code the page may have (D1373): the window's own server's, ``None`` for another server's page.
+        Asked at every ``hello``, since another window may have restarted the shared server since."""
         self._ready = False
         self.view = "document"
         """What the page said it is in its last ``hello`` (sheet 11): ``start``, the front page, or ``document`` — also
@@ -132,6 +136,7 @@ class Bridge:
                 contract=version,
                 locale=self._locale,
                 app=self._manifest.app,  # D444: this window is one app, whatever the server behind it hosts
+                setup_code=self._setup_code(),
             )
         )
         if self._server_list is not None:

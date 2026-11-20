@@ -47,6 +47,7 @@ from urllib.parse import urlsplit
 
 from .i18n import translate as _
 from .server import LOOPBACK, LocalServer, ServerStartError, free_port, server_command
+from .urls import is_internal
 
 __all__ = [
     "IDLE_SECONDS",
@@ -58,7 +59,9 @@ __all__ = [
     "is_port_free",
     "probe_health",
     "read_port",
+    "read_setup_code",
     "server_version",
+    "setup_code_for_page",
     "write_port",
 ]
 
@@ -68,6 +71,29 @@ IDLE_SECONDS = 600
 """``--exit-when-idle``: ten minutes (D445). The clock starts only when the last page has closed."""
 STATE_FILE = "desktop-server.json"
 """The file in the server's state folder that says where the server runs, ``{"port": N}``."""
+SETUP_CODE_FILE = Path("admin") / "setup-code"
+"""Where the server writes its setup code while it has no administrator (D1371), readable by this user only."""
+_SETUP_CODE = re.compile(r"[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}")
+
+
+def read_setup_code(state: Path) -> str | None:
+    """The setup code the server with this state folder wrote, or ``None`` (an administrator exists, or the file is
+    not a code). Read anew at every call: the shared server may have been restarted by another window (D1373)."""
+    try:
+        text = (state / SETUP_CODE_FILE).read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError):
+        return None
+    return text if _SETUP_CODE.fullmatch(text) else None
+
+
+def setup_code_for_page(shown: str | None, local: str | None, read: Callable[[], str | None]) -> str | None:
+    """The setup code a page may be handed (D1373): the shell's own server's, and only while the window shows that
+    server (``shown`` is the address of the page, ``local`` the origin of the shell's own server)."""
+    if not shown or not local or not is_internal(shown, local):
+        return None
+    return read()
+
+
 SERVER_PORT = 8765
 """The port of every Claudia server unless told otherwise (D504), the same for ./start.sh and the desktop's own."""
 
@@ -346,6 +372,10 @@ class DesktopServer:
     def url(self) -> str:
         """Where the server answers, once :meth:`check_ready` said so (empty before)."""
         return self._origin or ""
+
+    def setup_code(self) -> str | None:
+        """The server's setup code while it has no administrator (:func:`read_setup_code`)."""
+        return read_setup_code(self._state)
 
     # ------------------------------------------------------------------------------- what the application calls
 

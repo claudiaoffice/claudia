@@ -49,6 +49,19 @@ Worker pool
 .. autodata:: claudia_server.DEFAULT_MAX_WAITING
 .. autoexception:: claudia_server.PoolBusy
 
+Administrators
+--------------
+
+Not in ``__all__`` (the admin API is reached over HTTP, see :doc:`../server`, *The first administrator*); documented
+for the setup code and the start options ``--reset-administrators`` and ``--admin`` (SEC-12, D1370–D1376).
+
+.. automodule:: claudia_server.setup_code
+   :members: SetupCode, normalize, code_path, write_code, read_code, remove_code
+
+.. automodule:: claudia_server.admin_start
+   :members: AdminOptions, AdminStart, ResetNote, prepare_administrators, read_password_file, load_reset_note,
+      dismiss_reset_note
+
 Heavy-call dispatch
 --------------------
 

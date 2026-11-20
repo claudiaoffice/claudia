@@ -11,12 +11,15 @@ from claudia_core.testing import ListModel
 from claudia_server.admin import AdminDirectory
 from claudia_server.admin_api import AdminContext, AiRuntime
 from claudia_server.admin_sessions import AdminSessions
+from claudia_server.admin_start import ResetNote, load_reset_note
 from claudia_server.app import create_app
 from claudia_server.auth import ScryptDirectory
 from claudia_server.hub import Hub, MemoryProvider
 from claudia_server.server_settings import ServerSettings
+from claudia_server.setup_code import SetupCode, read_code, write_code
 
 PASSWORD = "correct horse battery"
+CODE = "K7QM-4TXR-92HB"  # the setup code of the server under test (D1371)
 _DOC_IDS = (f"doc-{n}" for n in itertools.count())
 
 
@@ -29,6 +32,7 @@ def serve(*, exposed=True, ai_enabled=True, admins=None, settings=None, state_di
         state_dir=state_dir,
         ai=AiRuntime(models=(ListModel,), enabled=ai_enabled),
         exposed=exposed,
+        setup_code=SetupCode.of(CODE),
     )
     app = create_app(hub, ScryptDirectory(), admin=admin)
     return app, hub, admin
@@ -47,6 +51,7 @@ def test_status_says_an_administrator_is_needed_only_when_exposed_and_none_exist
             "needs_administrator": True,
             "exposed": True,
             "administrator": None,
+            "setup_code": True,
         }
 
     app, _, _ = serve(exposed=False, state_dir=tmp_path / "loopback")
@@ -55,6 +60,7 @@ def test_status_says_an_administrator_is_needed_only_when_exposed_and_none_exist
             "needs_administrator": False,
             "exposed": False,
             "administrator": None,
+            "setup_code": True,
         }
 
 
@@ -77,10 +83,114 @@ def test_status_names_the_earliest_added_administrator_once_one_exists(tmp_path)
 
 
 # -------------------------------------------------------------------------------------------- setup, login, me
+def test_setup_needs_the_setup_code_on_every_server(tmp_path):
+    """SEC-12, D1370: without the code, or with a wrong one, nobody becomes the first administrator, loopback too."""
+    for exposed in (True, False):
+        app, _, admin = serve(exposed=exposed, state_dir=tmp_path / str(exposed))
+        with TestClient(app) as client:
+            for body in (
+                {"name": "mallory", "password": PASSWORD},
+                {"name": "mallory", "password": PASSWORD, "code": "K7QM-4TXR-92H8"},
+                {"name": "mallory", "password": PASSWORD, "code": 42},
+            ):
+                response = client.post("/api/admin/setup", json=body)
+                assert response.status_code == 403
+                assert "setup code" in response.json()["detail"]
+            assert len(admin.admins) == 0
+
+
+def test_the_code_counts_as_typed_and_dies_with_the_first_administrator(tmp_path):
+    app, _, admin = serve(state_dir=tmp_path)
+    write_code(tmp_path, admin.setup_code)
+    with TestClient(app) as client:
+        body = {"name": "tobi", "password": PASSWORD, "code": " k7qm 4txr 92hb "}
+        assert client.post("/api/admin/setup", json=body).status_code == 200
+        assert admin.setup_code is None
+        assert read_code(tmp_path) is None
+        assert client.get("/api/admin/status").json()["setup_code"] is False
+
+
+def test_a_server_without_a_code_lets_nobody_set_up(tmp_path):
+    app, _, admin = serve(state_dir=tmp_path)
+    admin.setup_code = None
+    with TestClient(app) as client:
+        assert client.get("/api/admin/status").json()["setup_code"] is False
+        body = {"name": "tobi", "password": PASSWORD, "code": CODE}
+        assert client.post("/api/admin/setup", json=body).status_code == 403
+
+
+def test_no_answer_contains_the_code(tmp_path):
+    app, _, _ = serve(state_dir=tmp_path)
+    with TestClient(app) as client:
+        for path in ("/api/admin/status",):
+            assert "K7QM" not in client.get(path).text
+        assert "K7QM" not in client.post("/api/admin/setup", json={"name": "a", "password": "b"}).text
+        assert "K7QM" not in client.post("/api/admin/setup-code", json={"code": "nope"}).text
+
+
+def test_a_code_from_a_link_can_be_checked_first(tmp_path):
+    app, _, admin = serve(state_dir=tmp_path)
+    with TestClient(app) as client:
+        assert client.post("/api/admin/setup-code", json={"code": "k7qm-4txr-92hb"}).status_code == 204
+        assert client.post("/api/admin/setup-code", json={"code": "K7QM-4TXR-92H8"}).status_code == 403
+        assert client.post("/api/admin/setup-code", json={}).status_code == 403
+        assert len(admin.admins) == 0
+
+
+def test_too_many_wrong_codes_make_an_address_wait_and_the_checks_count(tmp_path):
+    app, _, admin = serve(state_dir=tmp_path)
+    with TestClient(app) as client:
+        wrong = {"name": "mallory", "password": PASSWORD, "code": "0000-0000-0000"}
+        assert client.post("/api/admin/setup-code", json={"code": wrong["code"]}).status_code == 403
+        for _ in range(3):  # three tries are free, as at the sign-in (D1266); the fourth failure makes it wait
+            assert client.post("/api/admin/setup", json=wrong).status_code == 403
+        waited = client.post("/api/admin/setup", json={**wrong, "code": CODE})  # even the right one waits now
+        assert waited.status_code == 429
+        assert int(waited.headers["Retry-After"]) >= 1
+        assert waited.json()["retry_after"] >= 1
+        assert client.post("/api/admin/setup-code", json={"code": CODE}).status_code == 429
+        assert len(admin.admins) == 0
+
+
+def test_someone_faster_gets_409_also_with_the_right_code(tmp_path):
+    app, _, _ = serve(state_dir=tmp_path)
+    with TestClient(app) as client:
+        assert (
+            client.post("/api/admin/setup", json={"name": "ben", "password": PASSWORD, "code": CODE}).status_code == 200
+        )
+        late = client.post("/api/admin/setup", json={"name": "anna", "password": PASSWORD, "code": CODE})
+        assert late.status_code == 409
+        assert client.post("/api/admin/setup-code", json={"code": CODE}).status_code == 409
+
+
+# --------------------------------------------------------------------------------------- the reset note (D1375)
+def test_the_reset_note_is_for_administrators_until_one_dismisses_it(tmp_path):
+    admins = AdminDirectory(cost=2**4)
+    admins.add("carla", PASSWORD, added="2026-11-20T14:05:00Z")
+    note = ResetNote("2026-11-20T14:03:12Z", ("anna", "ben"))
+    (tmp_path / "admin").mkdir()
+    (tmp_path / "admin" / "reset.json").write_text(json.dumps(note.to_data()), encoding="utf-8")
+    app, _, admin = serve(admins=admins, state_dir=tmp_path)
+    admin.reset_note = note
+    with TestClient(app) as client:
+        assert client.get("/api/admin/reset-note").status_code == 401
+        assert "anna" not in client.get("/api/admin/status").text
+        token = client.post("/api/admin/login", json={"name": "carla", "password": PASSWORD}).json()["token"]
+        signed = {"Authorization": f"Bearer {token}"}
+        assert client.get("/api/admin/reset-note", headers=signed).json() == {
+            "at": "2026-11-20T14:03:12Z",
+            "previous": ["anna", "ben"],
+        }
+        assert client.delete("/api/admin/reset-note", headers=signed).status_code == 204
+        assert client.get("/api/admin/reset-note", headers=signed).json() is None
+        assert load_reset_note(tmp_path) is None
+        assert client.delete("/api/admin/reset-note", headers=signed).status_code == 204
+
+
 def test_setup_becomes_the_first_administrator_and_signs_them_in(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        response = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD})
+        response = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE})
         assert response.status_code == 200
         token = response.json()["token"]
         assert response.json()["admin"] == {"name": "tobi", "added": response.json()["admin"]["added"], "you": True}
@@ -91,22 +201,22 @@ def test_setup_becomes_the_first_administrator_and_signs_them_in(tmp_path):
 def test_setup_is_refused_once_the_server_has_an_administrator(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD})
-        response = client.post("/api/admin/setup", json={"name": "anna", "password": PASSWORD})
+        client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE})
+        response = client.post("/api/admin/setup", json={"name": "anna", "password": PASSWORD, "code": CODE})
         assert response.status_code == 409
 
 
 def test_setup_rejects_a_short_password(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        response = client.post("/api/admin/setup", json={"name": "tobi", "password": "short"})
+        response = client.post("/api/admin/setup", json={"name": "tobi", "password": "short", "code": CODE})
         assert response.status_code == 400
 
 
 def test_login_with_the_wrong_password_is_refused(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD})
+        client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE})
         assert client.post("/api/admin/login", json={"name": "tobi", "password": "wrong"}).status_code == 401
         response = client.post("/api/admin/login", json={"name": "tobi", "password": PASSWORD})
         assert response.status_code == 200
@@ -126,7 +236,9 @@ def test_every_route_but_status_setup_and_login_needs_a_session(tmp_path):
 def test_logout_ends_the_session(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         assert client.post("/api/admin/logout", headers=headers).status_code == 204
         assert client.get("/api/admin/me", headers=headers).status_code == 401
@@ -137,7 +249,9 @@ def test_logout_ends_the_session(tmp_path):
 def test_an_administrator_can_add_and_remove_another(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         added = client.post("/api/admin/admins", headers=headers, json={"name": "anna", "password": PASSWORD})
         assert added.status_code == 200 and added.json()["you"] is False
@@ -151,7 +265,9 @@ def test_an_administrator_can_add_and_remove_another(tmp_path):
 def test_the_last_administrator_cannot_be_removed_through_the_api(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         response = client.delete("/api/admin/admins/tobi", headers=headers)
         assert response.status_code == 409
@@ -160,7 +276,9 @@ def test_the_last_administrator_cannot_be_removed_through_the_api(tmp_path):
 def test_removing_an_administrator_signs_them_out_everywhere(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        tobi_token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        tobi_token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {tobi_token}"}
         client.post("/api/admin/admins", headers=headers, json={"name": "anna", "password": PASSWORD})
         anna_token = client.post("/api/admin/login", json={"name": "anna", "password": PASSWORD}).json()["token"]
@@ -172,7 +290,9 @@ def test_removing_an_administrator_signs_them_out_everywhere(tmp_path):
 def test_changing_a_password(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         response = client.post("/api/admin/admins/tobi/password", headers=headers, json={"password": "another one"})
         assert response.status_code == 204
@@ -184,7 +304,9 @@ def test_changing_a_password(tmp_path):
 def test_max_documents_takes_effect_on_the_live_hub_and_is_saved(tmp_path):
     app, hub, _ = serve(state_dir=tmp_path, hub_options={"max_documents": 5})
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         response = client.put("/api/admin/settings/max-documents", headers=headers, json={"max_documents": 20})
         assert response.status_code == 200
@@ -196,7 +318,9 @@ def test_max_documents_takes_effect_on_the_live_hub_and_is_saved(tmp_path):
 def test_max_documents_rejects_nonsense(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         for bad in (0, -1, "many", True):
             assert (
@@ -210,7 +334,9 @@ def test_max_documents_rejects_nonsense(tmp_path):
 def test_the_access_secret_can_be_revealed_set_and_rotated_and_takes_effect_live(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         assert client.get("/api/admin/settings/access-secret", headers=headers).json() == {"access_secret": None}
 
@@ -234,7 +360,9 @@ def test_the_access_secret_can_be_revealed_set_and_rotated_and_takes_effect_live
 def test_the_access_secret_is_rejected_when_too_short(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         response = client.put("/api/admin/settings/access-secret", headers=headers, json={"access_secret": "short"})
         assert response.status_code == 400
@@ -243,7 +371,9 @@ def test_the_access_secret_is_rejected_when_too_short(tmp_path):
 def test_typeset_settings_are_saved_and_diagnosed(tmp_path):
     app, _, _ = serve(state_dir=tmp_path)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         response = client.put(
             "/api/admin/settings/typeset",
@@ -266,7 +396,9 @@ def test_typeset_settings_are_saved_and_diagnosed(tmp_path):
 def test_ai_settings_are_refused_when_the_assistant_is_disabled(tmp_path):
     app, _, _ = serve(state_dir=tmp_path, ai_enabled=False)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         response = client.put("/api/admin/settings/ai", headers=headers, json={"model_dir": None})
         assert response.status_code == 400
@@ -278,7 +410,9 @@ def test_ai_settings_without_a_model_dir_use_the_scripted_stand_in(tmp_path):
     ``None``) is the one AI change this test can make without a real OpenVINO model to load."""
     app, hub, admin = serve(state_dir=tmp_path, ai_enabled=True)
     with TestClient(app) as client:
-        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+        token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()[
+            "token"
+        ]
         headers = {"Authorization": f"Bearer {token}"}
         response = client.put("/api/admin/settings/ai", headers=headers, json={"model_dir": None})
         assert response.status_code == 200

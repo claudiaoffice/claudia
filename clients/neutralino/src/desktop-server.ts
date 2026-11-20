@@ -62,6 +62,21 @@ export async function probeHealth(url: string, timeoutMs = 1000): Promise<Health
   }
 }
 
+/** Where the server writes its setup code while it has no administrator (D1371), readable by this user only. */
+const SETUP_CODE_FILE = join('admin', 'setup-code')
+const SETUP_CODE = /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/
+
+/** The setup code the server with this state folder wrote, or `null` (an administrator exists, or the file is not a
+ * code). Read anew at every call: the shared server may have been restarted by another window (D1373). */
+export function readSetupCode(state: string): string | null {
+  try {
+    const code = readFileSync(join(state, SETUP_CODE_FILE), 'utf8').trim()
+    return SETUP_CODE.test(code) ? code : null
+  } catch {
+    return null
+  }
+}
+
 /** The remembered port, or `null` for a missing, broken or nonsensical file. */
 export function readPort(file: string): number | null {
   try {
@@ -200,6 +215,11 @@ export class DesktopServer {
   }
 
   /** Where the server answers, once `start()` has returned. */
+  /** The server's setup code while it has no administrator (D1373). */
+  setupCode(): string | null {
+    return readSetupCode(this.options.state)
+  }
+
   get url(): string | null {
     return this.origin
   }

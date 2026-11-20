@@ -47,6 +47,22 @@ function safeStorage(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> {
   }
 }
 
+/** Why naming the first administrator was refused (D1371): a wrong setup code, too many tries, somebody faster, or
+ *  anything else the server said (a short password, say). */
+export interface SetupRefusal {
+  kind: 'wrong-code' | 'too-soon' | 'taken' | 'other'
+  message: string
+  retryAfter?: number
+}
+
+export function setupRefusal(error: unknown): SetupRefusal {
+  if (!(error instanceof AdminApiError)) return { kind: 'other', message: t('Could not reach the server.') }
+  if (error.status === 403) return { kind: 'wrong-code', message: error.message }
+  if (error.status === 409) return { kind: 'taken', message: error.message }
+  if (error.status === 429) return { kind: 'too-soon', message: error.message, retryAfter: error.retryAfter }
+  return { kind: 'other', message: error.message }
+}
+
 // ------------------------------------------------------------------------------------------------------- Vue wiring
 
 /** One administrator's sitting on this server's settings pages: the token, who it is, and the actions that change
@@ -73,16 +89,17 @@ export function useAdminSession(api: AdminApi = adminApi) {
     }
   }
 
-  async function setup(adminName: string, password: string): Promise<string | null> {
+  /** Become the first administrator with the setup code (D1370); `null` when it worked, else why not. */
+  async function setup(adminName: string, password: string, code: string): Promise<SetupRefusal | null> {
     busy.value = true
     try {
-      const { token: t, admin } = await api.setup(adminName, password)
+      const { token: t, admin } = await api.setup(adminName, password, code)
       token.value = t
       name.value = admin.name
       storeToken(t)
       return null
     } catch (error) {
-      return error instanceof AdminApiError ? error.message : t('Could not reach the server.')
+      return setupRefusal(error)
     } finally {
       busy.value = false
     }

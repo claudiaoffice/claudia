@@ -15,11 +15,13 @@ from claudia_server.hub import Hub
 from claudia_server.kdf_policy import KdfPolicy
 from claudia_server.sealed import SealedDocuments
 from claudia_server.server_settings import SecuritySettings, ServerSettings, load_settings, save_settings
+from claudia_server.setup_code import SetupCode
 
 FLOOR = KdfParams(iterations=3, memory_kib=64 * 1024, lanes=4)
 BIG = KdfParams(iterations=4, memory_kib=256 * 1024, lanes=4)
 CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 PASSWORD = "correct horse battery"
+CODE = "K7QM-4TXR-92HB"  # the setup code of the server under test (D1371)
 
 
 class Measured:
@@ -151,6 +153,7 @@ def _serve(tmp_path, policy):
         ai=AiRuntime(models=(ListModel,), enabled=True),
         exposed=True,
         kdf=policy,
+        setup_code=SetupCode.of(CODE),
     )
     from claudia_server.auth import ScryptDirectory
 
@@ -158,7 +161,7 @@ def _serve(tmp_path, policy):
 
 
 def _signed_in(client):
-    token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).json()["token"]
+    token = client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).json()["token"]
     return {"Authorization": f"Bearer {token}"}
 
 

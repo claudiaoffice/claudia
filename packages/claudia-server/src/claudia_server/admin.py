@@ -10,8 +10,11 @@ administrator: whoever is running the process already controls it, and asking th
 would be exactly the kind of friction this project tries to avoid for people who never touch a server flag. The
 moment the server is told to listen on anything else, more than one person could plausibly reach its settings, so
 it needs exactly one administrator before those settings do anything but ask for one (``needs_administrator``).
-After that, administrators manage themselves and each other the same way a document's first owner invites the
-next (D50) — there is no super-user above them, and removing the last one is refused outright.
+Whoever names the first administrator, on any server, must give the setup code the server says only to its operator
+(``setup_code.py``, SEC-12, D1370): otherwise the first visitor of an exposed server, or another account of the same
+computer, could make it run programs. After that, administrators manage themselves and each other the same way a
+document's first owner invites the next (D50) — there is no super-user above them, and removing the last one is
+refused outright, except by ``--reset-administrators`` at start (``admin_start.py``).
 
 Passwords are scrypt hashes with a random salt, the same scheme as a document's own users
 (:class:`claudia_server.auth.ScryptDirectory`); this directory is simpler because there is only ever one server's
@@ -78,15 +81,25 @@ class AdminDirectory:
 
     def add(self, name: str, password: str, *, added: str) -> AdminAccount:
         """Add an administrator. ``ValueError`` for a bad name, a short password, or a name already taken."""
-        account = AdminAccount(name, added)  # validates the name
-        if len(password) < MIN_ADMIN_PASSWORD:
-            raise ValueError(f"the password needs at least {MIN_ADMIN_PASSWORD} characters")
+        self.check_new(name, password)
+        account = AdminAccount(name, added)
         key = normalized(name)
         if key in self._admins:
             raise ValueError(f"{name!r} is already an administrator")
         salt = os.urandom(16)
         self._admins[key] = _Record(account, salt, self._hash(password, salt))
         return account
+
+    def check_new(self, name: str, password: str) -> None:
+        """``ValueError`` if :meth:`add` would refuse ``name`` and ``password`` for their form (a name taken aside)."""
+        AdminAccount(name, "")
+        if len(password) < MIN_ADMIN_PASSWORD:
+            raise ValueError(f"the password needs at least {MIN_ADMIN_PASSWORD} characters")
+
+    def clear(self) -> None:
+        """Forget every administrator (``--reset-administrators``, D1375): the one way past :meth:`remove`'s rule
+        that a server keeps at least one, for whoever can start the server."""
+        self._admins = {}
 
     def remove(self, name: str) -> None:
         """Remove an administrator. ``KeyError`` if there is none of that name. ``ValueError`` if it is the last

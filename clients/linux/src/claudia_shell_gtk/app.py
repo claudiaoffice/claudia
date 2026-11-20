@@ -45,6 +45,7 @@ class Server(Protocol):
     def spawn(self) -> None: ...
     def check_ready(self) -> bool: ...
     def stop(self) -> None: ...
+    def setup_code(self) -> str | None: ...
 
 
 def downloads_dir() -> Path:
@@ -166,6 +167,7 @@ class ClaudiaApp(Adw.Application):
             return False
         self._poll_source = 0  # the source ends itself by returning False
         window.book.local_origin = server.url  # "This computer" in the page's list, from now on
+        window.local_setup_code = server.setup_code  # for its settings pages while it has no administrator (D1373)
         window.show_page(server.url)
         return False
 

@@ -18,6 +18,9 @@ function fakeApi(overrides: Partial<AdminApi> = {}): AdminApi {
     login: async () => ({ token: 't', admin: { name: 'tobi', added: 'now', you: true } }),
     logout: async () => undefined,
     me: async () => ({ name: 'tobi' }),
+    checkSetupCode: async () => undefined,
+    resetNote: async () => null,
+    dismissResetNote: async () => undefined,
     listAdmins: async () => [],
     addAdmin: async () => ({ name: 'tobi', added: 'now', you: true }),
     removeAdmin: async () => undefined,
@@ -71,22 +74,38 @@ describe('useAdminSession', () => {
 
   it('setup stores the token and name on success', async () => {
     const session = useAdminSession(fakeApi())
-    const error = await session.setup('tobi', 'hunter22')
-    expect(error).toBeNull()
+    const refused = await session.setup('tobi', 'hunter22', 'c')
+    expect(refused).toBeNull()
     expect(session.token.value).toBe('t')
     expect(session.name.value).toBe('tobi')
   })
 
-  it('setup surfaces the server message on failure, and leaves the session signed out', async () => {
-    const api = fakeApi({
-      setup: async () => {
-        throw new AdminApiError(409, 'this server already has an administrator')
-      },
+  it('setup sends the setup code', async () => {
+    const sent: string[][] = []
+    const session = useAdminSession(fakeApi({ setup: async (...args: string[]) => (sent.push(args), { token: 't', admin: { name: 'tobi', added: 'now', you: true } }) }))
+    await session.setup('tobi', 'hunter22', 'K7QM-4TXR-92HB')
+    expect(sent).toEqual([['tobi', 'hunter22', 'K7QM-4TXR-92HB']])
+  })
+
+  it('setup says why it was refused, and leaves the session signed out (D1371)', async () => {
+    const refusing = (error: Error) =>
+      useAdminSession(
+        fakeApi({
+          setup: async () => {
+            throw error
+          },
+        }),
+      )
+    const taken = refusing(new AdminApiError(409, 'this server already has an administrator'))
+    expect(await taken.setup('tobi', 'hunter22', 'c')).toEqual({ kind: 'taken', message: 'this server already has an administrator' })
+    expect(taken.token.value).toBeNull()
+    expect(await refusing(new AdminApiError(403, 'not the code')).setup('tobi', 'hunter22', 'c')).toEqual({ kind: 'wrong-code', message: 'not the code' })
+    expect(await refusing(new AdminApiError(429, 'too many', 12)).setup('tobi', 'hunter22', 'c')).toEqual({ kind: 'too-soon', message: 'too many', retryAfter: 12 })
+    expect(await refusing(new AdminApiError(400, 'the password needs at least 8 characters')).setup('tobi', 'x', 'c')).toEqual({
+      kind: 'other',
+      message: 'the password needs at least 8 characters',
     })
-    const session = useAdminSession(api)
-    const error = await session.setup('tobi', 'hunter22')
-    expect(error).toBe('this server already has an administrator')
-    expect(session.token.value).toBeNull()
+    expect((await refusing(new Error('offline')).setup('tobi', 'hunter22', 'c'))?.kind).toBe('other')
   })
 
   it('login falls back to a generic message for a non-API error', async () => {
@@ -119,7 +138,7 @@ describe('useAdminSession', () => {
 
   it('refresh resolves the stored token to a name', async () => {
     const session = useAdminSession(fakeApi({ me: async () => ({ name: 'anna' }) }))
-    await session.setup('tobi', 'hunter22') // puts a token in place to refresh
+    await session.setup('tobi', 'hunter22', 'c') // puts a token in place to refresh
     const ok = await session.refresh()
     expect(ok).toBe(true)
     expect(session.name.value).toBe('anna')
@@ -132,7 +151,7 @@ describe('useAdminSession', () => {
       },
     })
     const session = useAdminSession(api)
-    await session.setup('tobi', 'hunter22')
+    await session.setup('tobi', 'hunter22', 'c')
     const ok = await session.refresh()
     expect(ok).toBe(false)
     expect(session.token.value).toBeNull()
@@ -151,7 +170,7 @@ describe('useAdminSession', () => {
       },
     })
     const session = useAdminSession(api)
-    await session.setup('tobi', 'hunter22')
+    await session.setup('tobi', 'hunter22', 'c')
     await session.logout()
     expect(session.token.value).toBeNull()
     expect(session.name.value).toBeNull()

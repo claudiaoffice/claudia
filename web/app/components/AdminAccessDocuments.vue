@@ -4,7 +4,9 @@
 // (admin_api.py has a separate route for each), so each acts the moment its own button is pressed — only the
 // document cap behaves like a draft, which is what the shared Cancel/Apply footer governs.
 import { computed, onMounted, ref } from 'vue'
-import { adminApi, AdminApiError, type AdminAccount, type ServerSettingsView } from '~/lib/admin-api'
+import { adminApi, AdminApiError, type AdminAccount, type ResetNote, type ServerSettingsView } from '~/lib/admin-api'
+import { resetNoteWords } from '~/lib/admin-reset'
+import { currentLocale } from '~/lib/locale'
 import { ago, initial } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
 
@@ -14,6 +16,9 @@ const props = defineProps<{ token: string }>()
 
 const settings = ref<ServerSettingsView | null>(null)
 const admins = ref<AdminAccount[]>([])
+/** The administrators were reset from the server's console (D1375): shown until one of them dismisses it. */
+const resetNote = ref<ResetNote | null>(null)
+const resetWords = computed(() => (resetNote.value ? resetNoteWords(resetNote.value, currentLocale()) : null))
 const loading = ref(true)
 const loadError = ref('')
 
@@ -24,9 +29,14 @@ function avatarColor(i: number): string {
 
 async function loadAll() {
   try {
-    const [s, a] = await Promise.all([adminApi.getSettings(props.token), adminApi.listAdmins(props.token)])
+    const [s, a, r] = await Promise.all([
+      adminApi.getSettings(props.token),
+      adminApi.listAdmins(props.token),
+      adminApi.resetNote(props.token),
+    ])
     settings.value = s
     admins.value = a
+    resetNote.value = r
     maxDocuments.value = s.max_documents
   } catch (e) {
     loadError.value = e instanceof AdminApiError ? e.message : t('Could not reach the server.')
@@ -35,6 +45,15 @@ async function loadAll() {
   }
 }
 onMounted(loadAll)
+
+async function dismissReset() {
+  try {
+    await adminApi.dismissResetNote(props.token)
+    resetNote.value = null
+  } catch (e) {
+    loadError.value = e instanceof AdminApiError ? e.message : t('Could not reach the server.')
+  }
+}
 
 // ---- administrators
 const adding = ref(false)
@@ -189,6 +208,11 @@ async function applyDocs() {
     <p v-if="loadError" class="error" role="alert">{{ loadError }}</p>
 
     <h2>{{ t('Administrators') }}</h2>
+    <div v-if="resetWords" class="reset-note" role="status" data-testid="reset-note">
+      <span class="mark" aria-hidden="true">!</span>
+      <p>{{ t("Administrators were reset from the server's console on {date} (previously {names}). If they should no longer know the access secret, rotate it below.", resetWords) }}</p>
+      <button class="link" type="button" @click="dismissReset">{{ t('Dismiss') }}</button>
+    </div>
     <div class="card">
       <div v-for="(a, i) in admins" :key="a.name" class="admin-row">
         <span class="avatar" :style="{ background: avatarColor(i) }">{{ initial(a.name) }}</span>
@@ -263,6 +287,42 @@ async function applyDocs() {
 h1 {
   margin: 0 0 4px;
   font: 500 23px/1.3 var(--font-display);
+}
+.reset-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--apricot);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--apricot) 10%, var(--surface));
+}
+.reset-note p {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.reset-note .mark {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--apricot);
+  color: var(--ink);
+  font: 700 12px/18px var(--font-ui);
+  text-align: center;
+}
+.reset-note .link {
+  flex: none;
+  align-self: flex-end;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--iris);
+  font: 500 13px var(--font-ui);
+  cursor: pointer;
 }
 h2 {
   margin: 20px 0 8px;

@@ -89,6 +89,11 @@ Open https://localhost:8765/. The server makes its own certificate on first star
   (1000). To keep strangers out, set an access secret (`-e CLAUDIA_ACCESS_SECRET=...`, at least 16 characters): only
   those who know it can then create documents or read the list (the web app has no field for it yet, so it is for
   clients of the protocol for now), or use `--no-create`. See `docs/server.md`, *Who can reach the server*.
+* **Who configures it.** The server settings (`/admin`) need an administrator. The first one is named with the *setup
+  code* the server prints in its log at every start while it has none (`docker logs`; also in `admin/setup-code` of
+  its state folder), or at start with `-e CLAUDIA_ADMIN=anna -e CLAUDIA_ADMIN_PASSWORD=...` (a password file instead:
+  `--admin anna --admin-password-file FILE`). Locked out? Start it once with `--reset-administrators`: the
+  administrators are forgotten, every setting stays. See `docs/server.md`, *The first administrator*.
 
 ### A web demo on a serverless platform (Scaleway)
 
@@ -102,6 +107,7 @@ server listens on the port in `PORT`, which the platform sets (Scaleway: 8080). 
 | `CLAUDIA_DEMO` | `1` |
 | `CLAUDIA_APP` | optional: `computes`, `composes` or `creates` serves that app only |
 | `CLAUDIA_ALLOW_HOST` | the name people type in the address bar, without `https://`, e.g. `abc123.functions.fnc.fr-par.scw.cloud` or your own domain; several separated by commas |
+| `CLAUDIA_ADMIN`, `CLAUDIA_ADMIN_PASSWORD` | optional, as *secret* variables: the first administrator of the server settings. Without them every cold start prints a new setup code in the container's log, and only someone who reads it can name one |
 
 Scaleway Serverless Containers, step by step:
 

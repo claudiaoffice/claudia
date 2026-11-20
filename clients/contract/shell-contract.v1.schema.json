@@ -79,6 +79,11 @@
         "app": {
           "description": "The app this window is ('composes', 'computes', 'creates'), D444. Optional. On a server of several apps the page then shows this app's documents only and refuses files of another kind; without it the page shows every app, as in a browser tab.",
           "$ref": "#/$defs/token"
+        },
+        "setup_code": {
+          "description": "The setup code of the shell's own server while it has no administrator (D1373, SEC-12): the page shows the server settings without asking for it. Optional; only sent to a page of the shell's own server, never to a server the window was connected to.",
+          "type": "string",
+          "pattern": "^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$"
         }
       }
     },

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { nextTick, reactive, watchEffect } from 'vue'
+import { forgetSetupCode, rememberedSetupCode } from '~/lib/setup-code'
 import { FILE_CHUNK_BYTES, ShellBridge, acceptedExtensions, createShellBridge, currentShell, detectHandler, detectParentSink, isApp, isShellOrigin, tabTitle } from '~/lib/shell-bridge'
 
 function fakeSink() {
@@ -44,6 +45,20 @@ describe('ShellBridge', () => {
     expect(bridge.windowApp).toBeNull()
     bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [] }))
     expect(bridge.windowApp).toBeNull()
+  })
+
+  it("keeps the setup code of the desktop app's own server for the settings pages (D1373)", () => {
+    forgetSetupCode()
+    const { sink } = fakeSink()
+    const bridge = new ShellBridge(undefined, sink, 'start')
+    const shell = { name: 'gtk', platform: 'linux', version: '1' }
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [] }))
+    expect(rememberedSetupCode()).toBeNull()
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [], setup_code: 42 }))
+    expect(rememberedSetupCode()).toBeNull()
+    bridge.receive(JSON.stringify({ type: 'welcome', contract: 1, shell, capabilities: [], setup_code: 'K7QM-4TXR-92HB' }))
+    expect(rememberedSetupCode()).toEqual({ code: 'K7QM-4TXR-92HB', from: 'app' })
+    forgetSetupCode()
   })
 
   it('dispatches an action message to every registered handler, with its target', () => {

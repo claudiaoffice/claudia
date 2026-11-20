@@ -17,8 +17,10 @@ from claudia_server.admin_sessions import AdminSessions
 from claudia_server.login_throttle import LoginThrottle
 from claudia_server.sealed import SealedDocuments
 from claudia_server.server_settings import ServerSettings
+from claudia_server.setup_code import SetupCode
 
 PASSWORD = "correct horse battery"
+CODE = "K7QM-4TXR-92HB"  # the setup code of the server under test (D1371)
 TOO_MANY = (4429, "too_many_tries")
 
 
@@ -197,6 +199,7 @@ def admin_server(clock, tmp_path):
         state_dir=tmp_path,
         ai=AiRuntime(models=(ListModel,), enabled=False),
         exposed=True,
+        setup_code=SetupCode.of(CODE),
     )
     app = create_app(
         Hub(MemoryProvider(ListModel)),
@@ -205,7 +208,10 @@ def admin_server(clock, tmp_path):
         login_throttle=LoginThrottle(clock=clock.lock_time),
     )
     with TestClient(app) as client:
-        assert client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD}).status_code == 200
+        assert (
+            client.post("/api/admin/setup", json={"name": "tobi", "password": PASSWORD, "code": CODE}).status_code
+            == 200
+        )
         yield client, admins
 
 

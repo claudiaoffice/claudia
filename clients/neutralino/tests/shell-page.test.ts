@@ -249,6 +249,18 @@ describe('a page that does not speak the contract', () => {
 })
 
 describe('the core shows a server', () => {
+  it('hands the setup code of its own server to the page in welcome, and none to another server (D1373)', async () => {
+    const t = setup()
+    await t.page.start()
+    t.core({ kind: 'show', origin: 'https://demo.example.org', setupCode: 'K7QM-4TXR-92HB' })
+    t.hello()
+    expect(t.toFrame()).toMatchObject([{ type: 'welcome', setup_code: 'K7QM-4TXR-92HB' }])
+    t.posted.length = 0
+    t.core({ kind: 'show', origin: 'https://demo.example.org' })
+    t.hello()
+    expect(t.toFrame()[0]).not.toHaveProperty('setup_code')
+  })
+
   it('loads it into the frame and accepts messages from that origin only', async () => {
     const t = setup()
     await t.page.start()

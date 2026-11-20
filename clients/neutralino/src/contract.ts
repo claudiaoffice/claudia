@@ -286,6 +286,8 @@ export function welcome(options: {
   locale?: string
   /** The app of this window (D444): the page then shows that app's documents only. */
   app?: string
+  /** The setup code of the shell's own server, for a page of that server only (D1373). */
+  setupCode?: string
 }): Message {
   const built: Message = {
     type: 'welcome',
@@ -295,6 +297,7 @@ export function welcome(options: {
   }
   if (options.locale !== undefined) built.locale = options.locale
   if (options.app !== undefined) built.app = options.app
+  if (options.setupCode !== undefined) built.setup_code = options.setupCode
   return built
 }
 
