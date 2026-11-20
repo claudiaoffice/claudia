@@ -41,7 +41,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
-| SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **new, open** |  |  |
+| SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **in progress** on `sec-12-setup-code` (design agreed 2026-11-20: D1370–D1376, every server asks for the code) |  |  |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |  |  |
 | SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |  |  |
 | SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |  |  |
@@ -392,7 +392,7 @@ either; with SEC-12 fixed it becomes the way in, so it needs the same per-addres
 **Re-checked 2026-11-20 at `f34365f`.** `e2-document-sec` was merged into `main` on 2026-11-20 (`1d8415a`);
 `login_throttle.py` guards the document logins and `admin_api.py` `login` the admin sign-in (429 with `Retry-After`).
 
-### SEC-12 · Anyone who reaches an exposed server with no administrator can become its administrator · P1 · new, open
+### SEC-12 · Anyone who reaches an exposed server with no administrator can become its administrator · P1 · in progress
 **Evidence (measured, `7e619a2`).** `admin_api.py` `setup` needs nothing but a name and a password while
 `len(context.admins) == 0`. A server bound beyond loopback (`exposed`: every Docker container, the Scaleway demo) asks
 for its first administrator, and the first anonymous visitor wins. Reproduced with
@@ -411,6 +411,10 @@ the proxy.
 **Acceptance.** `test_admin_api`: on an exposed server `setup` without the code → 403, with a wrong code → 403 and the
 same time as a right one, with the code → 200 once; with an access secret, the code alone → 403. The banner test shows
 the code exactly once.
+**Agreed 2026-11-20 (D1370–D1376), replacing the recommendation above:** every server asks for the code, loopback
+included (the desktop apps hand it over); the code alone is enough, also with an access secret; a server behind a proxy
+counts as exposed; `--reset-administrators` and `--admin` with a password file are in scope. Branch `sec-12-setup-code`;
+scenarios in `specs/server/administrators.feature`.
 
 ### SEC-13 · The web app is served without security headers · P2 · fixed 2026-11-12
 **Evidence (measured).** `curl -I /` on a server with `--web`: only `cache-control`, `etag`, `content-type`. No
