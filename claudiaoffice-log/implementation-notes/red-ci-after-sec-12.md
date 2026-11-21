@@ -44,3 +44,11 @@ what came up. `./run-e2e.sh` was not used: it runs the specs, and the red steps 
 
 Firefox, the GTK window tests (no GTK in the sandbox), Neutralino itself (its shell page and core run faked, as in CI), a
 screen reader. The workflows `deb`, `windows`, `docker`, `codeql` and the demo deployment run on GitHub only.
+
+## Addendum (2026-11-21, after the push)
+
+- The compiled German catalogs (`.mo`, `web/public/i18n/*.json`) were not part of the first commit; CI's
+  "mo compilation" gate and `test_the_web_catalog_is_derived_from_the_po_file` failed. Committed in d5f67892.
+- `test_object_anchor` ("The anchor is shown when the object is selected") failed once on CI (anchor in paragraph 4):
+  the setup clicked the first paragraph before the layout had settled. The setup now waits for a settled box
+  (`settled_box`). No business outcome changed.
