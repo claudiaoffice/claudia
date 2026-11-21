@@ -198,6 +198,10 @@ _avoid_: name (in this sense), defined name, range name
 A named look, defined by its purpose, put into slots; every slot with the same style serves the same purpose.
 _avoid_: format, formatting, theme, look
 
+**Style kind**
+Which facets a style may hold, and so which slots it fits: a paragraph style (text, paragraph and box), a box style or an outline style. A style and the style it is based on are always of the same kind.
+_avoid_: style type, category
+
 **Palette**
 The colours of a document, each named by what it means, shared by all its styles.
 _avoid_: colour scheme, theme
@@ -215,7 +219,7 @@ An object whose content is supplied and drawn by software outside claudia, such 
 _avoid_: rendered, rendered picture, embed, plug-in
 
 **Slot**
-A part of a document that takes exactly one style: a paragraph, the words of a cell, the box of a text box. Some things have no slot, and many slots belong to no thing.
+A part of a document that always holds exactly one style: a paragraph, the words of a cell, the box of a text box. A thing may have several slots, each with its own purpose; some things have no slot, and many slots belong to no thing. A slot takes any style whose kind fits it.
 _avoid_: element, styled item, container
 
 **Purpose**
