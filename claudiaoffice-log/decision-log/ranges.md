@@ -65,6 +65,7 @@ Unused numbers in a closed block stay unused.
 | D1330–D1349 | bug fixes: leaving a table in composes (B5), resizing objects in composes (B6), the least and most a new picture or container takes in all three apps (branch `fix-table-exit-object-sizes`; D1330–D1334 used) | 2026-11-20 | open |
 | D1350–D1369 | bug fixes: stale regression and end-to-end tests, the caret at the edges of a composes text, dragging an object to another paragraph (branch `fix-stale-tests-caret-drag`; D1350–D1352 used) | 2026-11-20 | open |
 | D1370–D1389 | SEC-12: the first administrator needs a setup code on every server, the desktop apps hand it over, resetting and naming administrators at start (branch `sec-12-setup-code`; D1370–D1376 used) | 2026-11-20 | open |
+| D1390–D1409 | bug fixes after SEC-12: the red CI, the keys of dialogs on the grid and the slide, the arrow keys of composes objects (branch `main`; D1390 used) | 2026-11-21 | open |
 
 ## Never to be used
 

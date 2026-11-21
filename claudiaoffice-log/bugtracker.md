@@ -12,7 +12,7 @@ the statuses of SEC-11, PERF-01, PERF-02, PERF-05 and UX-01 to UX-05 were re-che
 (`qa-recommendations.md`). Fifth round 2026-11-13 at `cfa2d91` (all feature branches merged: printing, lists, search, random numbers and
 scenarios, i18n, BITV): new items SEC-18, PERF-09 to PERF-11, UX-33 to UX-37, PROC-18 to PROC-22, CODE-17 to CODE-21,
 DOC-02; the `bitv` items re-checked as merged. Sixth round 2026-11-17 at `f150f0d` (stabilisation of `main`, no features): new items
-PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45 to UX-47, CODE-66 and CODE-67; second list of the same day, every open point of the branch: UX-48 to UX-53, CODE-68 to CODE-71, PROC-28 to PROC-33. Eighth round 2026-11-20 at `f34365f` (tracker update): ten items closed, UX-56 to UX-60 and PROC-40 added (see "Round of 2026-11-20" at the end).
+PROC-24 to PROC-27, CODE-58 to CODE-61, SEC-19, UX-44; SEC-15 fixed (see "Round of 2026-11-17" below). Seventh round 2026-11-19 (object interaction): UX-45 to UX-47, CODE-66 and CODE-67; second list of the same day, every open point of the branch: UX-48 to UX-53, CODE-68 to CODE-71, PROC-28 to PROC-33. Eighth round 2026-11-20 at `f34365f` (tracker update): ten items closed, UX-56 to UX-60 and PROC-40 added (see "Round of 2026-11-20"). Ninth round 2026-11-21 (the red CI after SEC-12): UX-56 to UX-58, UX-62, PROC-38, PROC-41 to PROC-43 fixed (see "Round of 2026-11-21" at the end).
 
 ## How to add a bug
 
@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (81)
+### Open (77)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -53,8 +53,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
-| UX-56 | P2 | UX / creates | Enter in the Rotate by… field is taken by the slide: it starts writing in the selected text box, and the angle is not applied | **new, open** (measured, `objects.cjs`; size 2) | 2026-11-20 |  |
-| UX-57 | P2 | UX / computes | Turning a picture by its turn handle does not happen: `objects.cjs` step 5 times out waiting for the turn handle | **new, open** (measured; cause not looked into; size 2) | 2026-11-20 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -83,7 +81,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-52 | P3 | UX / computes | A dropped object snaps to the nearest cell border on release, so its free position is lost (D1230, by design) | **needs decision** |  |  |
 | UX-53 | P3 | UX / computes | An object keeps its pixel size when rows or columns are inserted or resized, so it no longer covers the cells it covered (E6.17, D1230) | **new, open** |  |  |
 | UX-54 | P3 | UX / a11y | The pages of Server settings (AI model … Security) have no keyboard shortcut, and the menu workbook does not list them | **new, open** (pre-existing; found while adding the Security page; needs the owner's decision whether the rule covers navigation) |  |  |
-| UX-58 | P3 | UX / composes | A press on a text box also moves the caret in the words below it | **new, open** (measured, `objects.cjs` step 1; size 3) | 2026-11-20 |  |
 | UX-59 | P3 | UX / composes | Up from the second paragraph to the first failed once in four runs: a re-render of a paragraph just saved may undo a native caret move | **new, open** (measured once, cause a guess; size 3) | 2026-11-20 |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
@@ -119,11 +116,10 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
-| PROC-38 | P3 | Process / tests | `test_another_window_is_answered_quickly_while_a_password_is_hashed` assumes that hashing takes more than 0.15 s; on a fast machine under load it measured 0.1499 s and the test failed (it passed alone) | **new, open** (size 3; calibrate the cost used by the test instead of reading the clock) |  |  |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (133)
+### Fixed (141)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -184,7 +180,11 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-41 | P2 | UX / composes | Headings, list items and paragraphs could not be pointed at with `#` in the chat | **fixed** 2026-11-15 (D554) |  | 2026-11-15 |
 | UX-44 | P3 | UX / BITV | The blinking dots of the side panel ignored `prefers-reduced-motion` (WCAG 2.3.3) | **fixed** 2026-11-17 |  | 2026-11-17 |
 | UX-55 | P2 | UX / record | After its own export, print or PDF the window that did it was not shown its own line in History & Chat: the server tells the other windows only | **fixed** 2026-11-19 in slice B (found by the first end-to-end run; `BaseSession.recorded` reads the record again) |  | 2026-11-19 |
+| UX-56 | P2 | UX / creates | Enter in the Rotate by… field is taken by the slide: it starts writing in the selected text box, and the angle is not applied | **fixed** 2026-11-21 (the grid and the slide leave the keys of a dialog inside them to the dialog; `objects.cjs` checks Enter and Backspace; size 2) | 2026-11-20 | 2026-11-21 |
+| UX-57 | P2 | UX / computes | Turning a picture by its turn handle did not happen: the press on a handle also reached the cell selection and let go of the picture | **fixed** 2026-11-21 (`objects.cjs` step 5; size 2) | 2026-11-20 | 2026-11-21 |
+| UX-58 | P3 | UX / composes | A press on a text box also moved the caret in the words below it | **fixed** 2026-11-21 (`objects.cjs` step 1; size 3) | 2026-11-20 | 2026-11-21 |
 | UX-61 | P3 | UX / admin | The first-administrator page and Access & documents called the access secret a recovery key for administrators: there is no such recovery, and nobody signs in with it | **fixed** 2026-11-20 (`web/tests/admin-wording.test.ts`; size 3) | 2026-11-20 | 2026-11-20 |
+| UX-62 | P3 | UX / composes | ← and → did nothing on a selected object, where the contract says the arrow keys nudge it | **fixed** 2026-11-21 (D1390; `objects.cjs` step 6; size 3) | 2026-11-21 | 2026-11-21 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -257,7 +257,11 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-34 | P3 | Process / backlog | The `backlog` branch had renamed `e0.3-shells-gtk-with-webkitgtk-6-0.md` (an Obsidian plugin does that when a title changes) so the story and its epic no longer named each other and `tests/test_backlog.py` failed | **fixed** 2026-11-19 (file name restored) |  | 2026-11-19 |
 | PROC-35 | P3 | Process / e2e | `uv run pytest tests/e2e` as one run fails three tests ("Playwright Sync API inside the asyncio loop") that each pass alone: an earlier test leaves an event loop running | **fixed** 2026-11-19 on branch `e2-document-sec` (measured on the branch, which has no change to the other e2e tests) |  | 2026-11-19 |
 | PROC-36 | P3 | Process / tooling | A `ruff` installed outside the project (0.16.9) rewrites `except (A, B):` into `except A, B:` and reformats unrelated files; the project pins `ruff<0.15` for this | **fixed** 2026-11-19 (a rule in `CONTRIBUTING.md`, rule 5) |  | 2026-11-19 |
+| PROC-38 | P3 | Process / tests | `test_another_window_is_answered_quickly_while_a_password_is_hashed` assumed that hashing takes more than 0.15 s: on the CI runners it took 0.12 s and the test failed on all three systems | **fixed** 2026-11-21 (the test measures this machine and takes as many passes as it needs; size 3) |  | 2026-11-21 |
 | PROC-39 | P2 | Process / e2e | The test server's output went to a pipe nobody read (`tests/e2e/live.py`); after about 64 KiB the server blocked on its next write and the whole event loop stood still, so page loads timed out (three `test_viewer` scenarios failed in a full run of `tests/e2e/specs` and passed alone) | **fixed** 2026-11-19 on branch `e2-document-sec` (the output goes to `server.log`; `test_greeting.py` and `test_computes_grid.py` still use a pipe but stop their servers within a minute) |  | 2026-11-19 |
+| PROC-41 | P3 | Process / E2E | `test_computes_grid.py` stopped its launcher but not the server the launcher had started, which lived on after the run | **fixed** 2026-11-21 (the whole process group is stopped; size 3) | 2026-11-21 | 2026-11-21 |
+| PROC-42 | P2 | Process / CI | The CI step "Server settings ▸ Fonts" did not give `e2e:admin-fonts` the setup code that SEC-12 made necessary: it would have been the next red step | **fixed** 2026-11-21 (the step reads the code from the state folder; size 2) | 2026-11-21 | 2026-11-21 |
+| PROC-43 | P2 | Process / E2E | The job "End to end (Chromium)" was red from 2026-11-17: each first failure hid the next, and four lines of `objects.cjs` were stale (proportions of a free rectangle, the name of a table's menu, "Edit text" for a picture in creates, a race on the history entry of Delete) | **fixed** 2026-11-21 (the script follows the contract; it ran six times in a row; size 2) | 2026-11-21 | 2026-11-21 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2357,10 +2361,12 @@ again after the window's own export, print or PDF (owners and editors); `web/tes
 recorded like every export (`leaves="export"`), under a format name the panel does not know. Either remove it or make it
 answer with the zip; removing it changes the network API (a minor version while the major is 0).
 
-### PROC-38 · A timing test needs a slower machine than the one it runs on · P3 · new, open
+### PROC-38 · A timing test needs a slower machine than the one it runs on · P3 · fixed 2026-11-21
 `test_another_window_is_answered_quickly_while_a_password_is_hashed` first checks that hashing takes longer than 0.15 s, so that
 "answered quickly" means something. On a fast machine, with the suite running in parallel, it measured 0.1499 s and failed;
 alone it passes. Size 3: the test should set a cost of its own that is slow enough, not read the clock of the machine.
+
+**Fixed 2026-11-21.** It was not only a fast machine under load: on the runners of CI the hash took 0.12 s every time, and the test failed on Linux, Windows and macOS in every run since it was written, which made the job "Python" red. The test now uses `claudia_container.kdf.calibrate` (the server's own measuring, D1267) with the old cost as its floor, aiming for twice the time it needs. The threshold of 0.15 s stays: what it says is the same.
 
 ### PROC-39 · The e2e server's output pipe was never read · P2 · fixed
 `live.server()` started the server with `stdout=PIPE` and read it only when the server stopped early. A run with enough scenarios
@@ -2379,22 +2385,28 @@ look at the code: SEC-12, PERF-02, PERF-10, CODE-19 (the scan moved to `claudia_
 CODE-25, CODE-31, CODE-45, CODE-56, CODE-63, UX-21, UX-27, UX-45 to UX-47, UX-51, CODE-71, PROC-22, PROC-31. The rest
 were not re-checked one by one: nothing on `main` names them as fixed. New items below.
 
-### UX-56 · Enter in Rotate by… is taken by the slide in creates · P2 · new, open
+### UX-56 · Enter in Rotate by… is taken by the slide in creates · P2 · fixed 2026-11-21
 **Measured** (`web/e2e/objects.cjs`, 2026-11-20, while fixing the stale `rotateOff` step): with a text box selected,
 Format ▸ Rotate by…, type an angle and press Enter: the key reaches the slide, which starts editing the box's words, and
 the angle is not applied. The dialog should own its keys (Enter applies, Esc closes). Keyboard users cannot turn an
 object by a given angle in creates. **Acceptance.** `objects.cjs` step "Rotate by…" in creates: Enter applies the angle,
 one history entry, the box's words unchanged.
 
-### UX-57 · The turn handle of a picture does not turn it in computes · P2 · new, open
+**Fixed 2026-11-21.** The popover sits inside the element that listens for keys, so every key typed in its field bubbled up: Enter began editing, and Backspace or Delete **deleted the selected object**; the arrow keys moved it. The slide and the cell grid (where Enter began a cell edit and so cancelled the form's submit) now leave a key that comes from a dialog inside them to the dialog. `objects.cjs` presses Backspace in the angle field and sees that the object stays (red without the fix), then Enter applies the angle. Both apps.
+
+### UX-57 · The turn handle of a picture does not turn it in computes · P2 · fixed 2026-11-21
 **Measured** (`objects.cjs` step 5, 2026-11-20): turning a picture by its turn handle times out waiting for the handle in
 computes; steps 1–4 (select, drag, resize handles) pass. Cause not looked into: the handle may be missing for a picture
 in a cell, or hidden under the grid. **Acceptance.** `objects.cjs` step 5 passes in computes.
 
-### UX-58 · A press on a text box moves the caret below it in composes · P3 · new, open
+**Fixed 2026-11-21.** The cause was one step earlier: the handles are drawn beside the picture, not inside it, so the `mousedown` that follows the press on a handle was not stopped as the picture's own is, and reached the grid's cell selection. That let go of the picture and selected the cells under the pointer (the screenshot showed D6:D7), so the next step found no turn handle. The wrapper of the handles stops the `mousedown` now.
+
+### UX-58 · A press on a text box moves the caret below it in composes · P3 · fixed 2026-11-21
 **Measured** (`objects.cjs` step 1, 2026-11-20): a press on a text box selects it, but the words of the paragraph under
 it also take the press and move their caret. D1221: a press on an object is not heard by what lies below. **Acceptance.**
 `objects.cjs` step 1 in composes: the caret's place before and after the press is the same.
+
+**Fixed 2026-11-21.** The browser's own action on a press put the selection into the object's markup (the stem of its turn handle), out of every paragraph. A press on an object is now the object's (`preventDefault` on the pointer down), unless its words are being written in.
 
 ### UX-59 · Up between paragraphs may be undone by a re-render · P3 · new, open
 **Measured once** (2026-11-20, `caret.feature` "Up from Second to First"): one run in four ended with the caret still in
@@ -2429,3 +2441,18 @@ and that only someone with access to the computer the server runs on can name a 
 with SEC-12's reset); the hint says what the secret does. German translations included. **Test:**
 `web/tests/admin-wording.test.ts` (scenarios in `specs/server/administrators.feature`).
 
+## Round of 2026-11-21 (the red CI after SEC-12, `main` at `2fc8b1b`)
+
+The jobs "Python" (three systems) and "End to end (Chromium)" had been red since 2026-11-17 and 2026-11-20. Python had one cause (PROC-38). The end-to-end job was red because each first failure hid the one behind it: the Python step failed first, then `objects.cjs`, and the scripts after it had not run in CI for days. All of them were run on one computer in CI's order, with CI's fonts and hyphenation, and all pass now; the Python suite of `tests/e2e` too.
+
+### UX-62 · ← and → did nothing on a selected object in composes · P3 · fixed 2026-11-21
+The contract (`object-interaction-contract.md`, Arrow keys) says the arrow keys nudge a selected object and that in composes ↑↓ hang it from the previous or next paragraph and ←→ change its offset. ↑↓ were built; ←→ were not, and `objects.cjs` step 6 ("an arrow key nudges it") was red for composes. **Fixed.** ←→ move the object off the character it hangs from by 10 units, with Shift by 1, as in creates (D1390); the step is one constant for both apps now (`NUDGE`, `NUDGE_FINE` in `lib/geometry.ts`).
+
+### PROC-41 · A launcher's server outlives the test that started it · P3 · fixed 2026-11-21
+**Found** while reporting SEC-12 (a `claudia_server` was still there after the run of `tests/e2e`, with fonts and hyphenation folders): `test_computes_grid.py` starts `scripts/start.py`, which starts the server as its child, and killed only the launcher. **Fixed.** The process group is killed. After the run nothing is left.
+
+### PROC-42 · The CI step for the Fonts script had no setup code · P2 · fixed 2026-11-21
+My change for SEC-12 made the first administrator ask for the server's setup code. `scripts/run_e2e.py` was given it, the step "Server settings ▸ Fonts" of `ci.yml` was not: it would have been the next red step. **Fixed.** The step reads the code from `state-8768/admin/setup-code` (the file the server writes at its start).
+
+### PROC-43 · Four stale lines in `objects.cjs` · P2 · fixed 2026-11-21
+Behind UX-56 to UX-58 the script itself was out of date in four places, all made right **by the contract, not by the app's luck**: (1) *Proportions kept* was asked of every shape; a Rectangle has no aspect and may change its proportions (`null` in `shapes.py`), and creates only passed because its 3:2 shape moved by 2.6 %, under the 3 % allowed. It is asked of what shows corner handles only. (2) A table's menu is called "Table menu" (D1228, translated), not "Object menu". (3) `editable` for creates said every kind has words; a picture has none (D1225), and its menu already agreed. (4) After Delete the object leaves the screen at once and its history entry comes with the answer: the script waits for it (it failed one run in six). Business outcomes are as before.
