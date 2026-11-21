@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How styles work in claudia</title>
+<!-- Source of styling-system.pdf. To rebuild, from this folder: google-chrome --headless --no-pdf-header-footer --print-to-pdf=styling-system.pdf styling-system.html -->
+<style>
+@font-face { font-family: Inter; src: url("../../packages/claudia-fonts/src/claudia_fonts/builtin/inter/Inter%5Bopsz,wght%5D.ttf"); font-weight: 100 900; font-style: normal; }
+@font-face { font-family: Inter; src: url("../../packages/claudia-fonts/src/claudia_fonts/builtin/inter/Inter-Italic%5Bopsz,wght%5D.ttf"); font-weight: 100 900; font-style: italic; }
+@font-face { font-family: Fraunces; src: url("../../packages/claudia-fonts/src/claudia_fonts/builtin/fraunces/Fraunces%5BSOFT,WONK,opsz,wght%5D.ttf"); font-weight: 100 900; font-style: normal; }
+@font-face { font-family: Fraunces; src: url("../../packages/claudia-fonts/src/claudia_fonts/builtin/fraunces/Fraunces-Italic%5BSOFT,WONK,opsz,wght%5D.ttf"); font-weight: 100 900; font-style: italic; }
+@font-face { font-family: "JetBrains Mono"; src: url("../../packages/claudia-fonts/src/claudia_fonts/builtin/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf"); font-weight: 100 900; }
+
+:root { --ink:#1f1a33; --iris:#5b4bc4; --mist:#e7e1f4; --paper:#f7f3ec; --teal:#13917f; --teal-dark:#0d7768; --soft:#6b6680; --line:#d9d3e6; }
+
+@page {
+  size: A4; margin: 22mm 22mm 24mm 22mm;
+  @bottom-left { content: "How styles work in claudia"; font: 8.5pt Inter, sans-serif; color: #6b6680; }
+  @bottom-right { content: counter(page) " / " counter(pages); font: 8.5pt Inter, sans-serif; color: #6b6680; }
+}
+@page :first { @bottom-left { content: none; } }
+
+html { font-family: Inter, sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--ink); }
+body { margin: 0; }
+h1 { font-family: Fraunces, serif; font-weight: 500; font-size: 26pt; line-height: 1.15; margin: 0 0 4pt; letter-spacing: -0.2pt; }
+.sub { color: var(--soft); font-size: 10pt; margin: 0 0 18pt; }
+h2 { font-family: Fraunces, serif; font-weight: 500; font-size: 15pt; margin: 20pt 0 6pt; break-after: avoid; }
+h3 { font-size: 10.5pt; font-weight: 600; margin: 12pt 0 3pt; break-after: avoid; }
+p { margin: 0 0 7pt; }
+code { font-family: "JetBrains Mono", monospace; font-size: 9pt; background: var(--mist); padding: 0 3pt; border-radius: 3pt; }
+em { font-style: italic; }
+.lead { font-size: 11.5pt; line-height: 1.55; border-left: 3pt solid var(--iris); padding: 2pt 0 2pt 10pt; margin: 0 0 12pt; }
+dl { margin: 0 0 8pt; display: grid; grid-template-columns: 30mm 1fr; column-gap: 8pt; row-gap: 5pt; }
+dt { font-weight: 600; color: var(--iris); }
+dd { margin: 0; }
+figure { margin: 10pt 0 12pt; break-inside: avoid; }
+figcaption { font-size: 9pt; color: var(--soft); margin-top: 4pt; }
+table { border-collapse: collapse; width: 100%; margin: 4pt 0 10pt; font-size: 9.5pt; break-inside: avoid; }
+th { text-align: left; font-weight: 600; border-bottom: 1pt solid var(--ink); padding: 3pt 6pt 3pt 0; }
+td { border-bottom: 0.5pt solid var(--line); padding: 3pt 6pt 3pt 0; vertical-align: top; }
+.box { background: var(--paper); border-radius: 6pt; padding: 8pt 11pt; margin: 8pt 0 10pt; break-inside: avoid; }
+.box p:last-child { margin-bottom: 0; }
+.box .t { font-weight: 600; margin-bottom: 3pt; }
+.open { background: var(--mist); }
+ul { margin: 0 0 8pt; padding-left: 14pt; }
+li { margin-bottom: 3pt; }
+.small { font-size: 9pt; color: var(--soft); }
+.keep { break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<h1>How styles work in claudia</h1>
+<p class="sub">A note on styles, purposes, facets, style kinds and slots, from the glossary session of 21 November 2026.
+The words used here are defined in <code>claudiaoffice-log/glossary.md</code>.</p>
+
+<p class="lead">In claudia a style says what something is <em>for</em>. Everything that serves the same purpose looks
+the same, because it carries the same style. Nobody makes one word bold &ldquo;just here&rdquo;: whoever wants
+another look picks, or makes, a style with another purpose.</p>
+
+<p>That is the whole idea (D306). The rest of this note explains how claudia makes it work across a text, a
+spreadsheet and a slide deck: which parts of a document can carry a style, what a style is made of, and why some
+styles fit some places and not others.</p>
+
+<h2>The words</h2>
+<dl>
+  <dt>Style</dt><dd>A named look, defined by its purpose, put into slots. Every slot with the same style serves the
+  same purpose. Example: <em>Quote</em>, &ldquo;the words of other people&rdquo;.</dd>
+  <dt>Purpose</dt><dd>What something in a document is for. A style states it in a sentence.</dd>
+  <dt>Facet</dt><dd>One of four sides of a look, naming what can be set for it: <b>text</b> (how characters look),
+  <b>paragraph</b> (how a stretch of text is laid out), <b>box</b> (background, border and padding around content)
+  and <b>outline</b> (a shape&rsquo;s paint). The values are always a style&rsquo;s own.</dd>
+  <dt>Style kind</dt><dd>Which facets a style may hold, and so which slots it fits: a <b>paragraph</b> style
+  (text, paragraph and box), a <b>box</b> style or an <b>outline</b> style.</dd>
+  <dt>Slot</dt><dd>A part of a document that always holds exactly one style: a paragraph, the words of a cell, the
+  box of a text box. A thing may have several slots, each with its own purpose.</dd>
+  <dt>Thing</dt><dd>Anything in a document with a name, unique in that document, that can be referenced.</dd>
+  <dt>Palette colour</dt><dd>A colour named by what it means (<em>accent</em>, <em>muted</em>); every style that
+  uses it follows when it changes.</dd>
+  <dt>Number format</dt><dd>How the value of a cell reads (a percentage, euros, a date). It belongs to the cell,
+  not to its style.</dd>
+</dl>
+
+<h2>A text box, step by step</h2>
+<p>A text box is a thing with two slots: its <b>box</b> (the rectangle: background, border, padding) and its
+<b>words</b> (what the text in it looks like). Each slot holds one style. Here the box holds <em>Warning</em> and the
+words hold <em>Quote</em>.</p>
+
+<figure>
+<svg width="100%" viewBox="0 0 680 350" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#6b6680" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="40" y="30" width="230" height="100" rx="8" fill="#f7f3ec" stroke="#b9b2c9" stroke-width="0.8"/>
+<text x="56" y="56" font-size="14" font-weight="600" fill="#1f1a33">Style “Warning”</text>
+<text x="56" y="74" font-size="12" fill="#6b6680">kind: box</text>
+<rect x="56" y="86" width="198" height="30" rx="4" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="0.8"/>
+<text x="66" y="105" font-size="12" fill="#1f1a33"><tspan font-weight="600">box:</tspan> red border, pale fill</text>
+<rect x="40" y="160" width="230" height="170" rx="8" fill="#f7f3ec" stroke="#b9b2c9" stroke-width="0.8"/>
+<text x="56" y="186" font-size="14" font-weight="600" fill="#1f1a33">Style “Quote”</text>
+<text x="56" y="204" font-size="12" fill="#6b6680">kind: paragraph</text>
+<rect x="56" y="216" width="198" height="30" rx="4" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="0.8"/>
+<text x="66" y="235" font-size="12" fill="#1f1a33"><tspan font-weight="600">text:</tspan> italic serif, 11 pt</text>
+<rect x="56" y="254" width="198" height="30" rx="4" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="0.8"/>
+<text x="66" y="273" font-size="12" fill="#1f1a33"><tspan font-weight="600">paragraph:</tspan> indent 1 cm</text>
+<rect x="56" y="292" width="198" height="30" rx="4" fill="none" stroke="#b9b2c9" stroke-width="0.8" stroke-dasharray="3 3"/>
+<text x="66" y="311" font-size="12" fill="#6b6680"><tspan font-weight="600">box:</tspan> not read here</text>
+<rect x="400" y="40" width="240" height="270" rx="12" fill="none" stroke="#6b6680" stroke-width="0.8" stroke-dasharray="5 4"/>
+<text x="420" y="68" font-size="14" font-weight="600" fill="#1f1a33">Text box (a thing)</text>
+<rect x="420" y="90" width="200" height="56" rx="8" fill="#e0f2ef" stroke="#13917f" stroke-width="0.8"/>
+<text x="520" y="113" font-size="14" font-weight="600" fill="#0d7768" text-anchor="middle">Box slot</text>
+<text x="520" y="133" font-size="12" fill="#13917f" text-anchor="middle">reads: box</text>
+<rect x="420" y="220" width="200" height="56" rx="8" fill="#e0f2ef" stroke="#13917f" stroke-width="0.8"/>
+<text x="520" y="243" font-size="14" font-weight="600" fill="#0d7768" text-anchor="middle">Words slot</text>
+<text x="520" y="263" font-size="12" fill="#13917f" text-anchor="middle">reads: text, paragraph</text>
+<path d="M254 101 L334 101 L334 118 L418 118" fill="none" stroke="#6b6680" stroke-width="1" marker-end="url(#a)"/>
+<path d="M254 231 L340 231 L340 242 L418 242" fill="none" stroke="#6b6680" stroke-width="1" marker-end="url(#a)"/>
+<path d="M254 269 L340 269 L340 254 L418 254" fill="none" stroke="#6b6680" stroke-width="1" marker-end="url(#a)"/>
+</svg>
+<figcaption>Each style is a set of drawers, one per facet. Each slot opens only the drawers it understands: the box slot
+reads Warning&rsquo;s box; the words slot reads Quote&rsquo;s text and paragraph and ignores Quote&rsquo;s box.</figcaption>
+</figure>
+
+<p>Four things to take from the picture:</p>
+<ul>
+  <li><b>Facets are the drawers inside a style.</b> The values (red border, italic serif 11&nbsp;pt, an indent of
+  1&nbsp;cm) sit in the style&rsquo;s drawers and belong to that style.</li>
+  <li><b>The kind says which drawers a style may have.</b> A box style has only a box drawer; a paragraph style may
+  have text, paragraph and box drawers; an outline style has only an outline drawer.</li>
+  <li><b>A slot reads only the drawers it understands</b> and ignores the rest.</li>
+  <li><b>A slot is never empty.</b> It always holds exactly one style; a cell nobody styled falls back to its
+  sheet&rsquo;s default.</li>
+</ul>
+
+<div class="box keep">
+<p class="t">A paper form, for comparison</p>
+<p>A facet is a section of a form with its fields printed on it: <em>Border: ___ &nbsp;Fill: ___</em>. The section
+is the same for every style. A style is one filled-in copy of the form. CSS, and SVG for a shape&rsquo;s paint, are
+only the handwriting in which the values are written down: notation, not the substance of either the facet or the
+style.</p>
+</div>
+
+<h2>Which style fits which slot</h2>
+<p>A style fits a slot when its kind holds <em>every</em> facet the slot reads (D316). So:</p>
+<ul>
+  <li>A <b>words</b> slot reads text and paragraph, so it takes only paragraph styles.</li>
+  <li>A <b>box</b> slot reads box, so it takes box styles <em>and</em> paragraph styles, since a paragraph style
+  may hold a box too. That is how one style can dress a whole cell: put <em>Input</em> into both of a cell&rsquo;s
+  slots, and its box gives the cell&rsquo;s background and border while its text and paragraph give the words.</li>
+  <li>An <b>outline</b> slot takes only outline styles.</li>
+  <li>A picture&rsquo;s box reads nothing of a style yet, and takes only box styles.</li>
+  <li>A style and the style it is <em>based on</em> are always of the same kind.</li>
+</ul>
+
+<table>
+  <tr><th style="width:30%">Thing</th><th style="width:30%">Its slots</th><th>What each slot reads</th></tr>
+  <tr><td>Paragraph</td><td>paragraph</td><td>text, paragraph, box</td></tr>
+  <tr><td>Text box</td><td>box, words</td><td>box &middot; text, paragraph</td></tr>
+  <tr><td>Cell (not a thing)</td><td>box, words</td><td>box &middot; text, paragraph</td></tr>
+  <tr><td>Shape</td><td>outline, label</td><td>outline &middot; text, paragraph</td></tr>
+  <tr><td>Chart, container, table</td><td>box</td><td>box</td></tr>
+  <tr><td>Image</td><td>box</td><td>nothing yet</td></tr>
+</table>
+<p class="small">Slides, sheets, chart tabs and named ranges are things without a slot today; a slide&rsquo;s
+background or a page may become slots later (D315). Cells have slots but are not things. Things and slots overlap,
+and neither contains the other.</p>
+
+<h2>What a style is not</h2>
+
+<h3>Not one per thing</h3>
+<p>A style goes into a slot, not onto a whole thing. Take a text box styled <em>Warning</em> whose words are a
+<em>Quote</em>. With one style per thing you would need a style &ldquo;Warning containing a quote&rdquo;, and soon
+one for every combination. With one style per slot it is two choices, each with a clear purpose: the box warns, the
+words quote.</p>
+
+<h3>Not a number format</h3>
+<p>A cell has a style <em>and</em> a number format, and neither decides the other (D1410). A cell styled
+<em>Quote</em> may show a percentage; otherwise there would have to be a style &ldquo;the one I use when I quote a
+percentage&rdquo;, which makes no sense. The style says what the cell is for and how it looks; the number format says
+how its value reads. Setting a number format is therefore not direct formatting.</p>
+
+<h3>Not direct formatting</h3>
+<p>You cannot click on a cell or a word and say &ldquo;leave it as it is, but make it bold&rdquo;. If someone
+really insists, that makes a new style, with a purpose of its own. The goal is a clean style <em>language</em> in a
+document, in which a person does not get lost micromanaging her own style decisions (D306).</p>
+
+<h2>How styles share</h2>
+<p>A style holds its own values, and today they are shared in exactly two ways:</p>
+<ul>
+  <li><b>Based on.</b> A style may be based on one other style of the same kind and inherit everything it does not
+  set itself. <em>Explanatory note</em> based on <em>Quote</em> reads like a quote until Note sets something of its
+  own.</li>
+  <li><b>Palette colours.</b> A style may name a colour by its meaning, such as <em>accent</em>, not by its value.
+  Change <em>accent</em> once in the palette and every style that names it follows, in all three apps.</li>
+</ul>
+
+<div class="box open keep">
+<p class="t">Open question (D1412, undecided): could a drawer&rsquo;s contents be shared?</p>
+<p><em>Quote</em> and <em>Explanatory note</em> should read alike but differ in their box; <em>Warning</em> has a red
+box. Note based on Quote gets Quote&rsquo;s text, but cannot also take Warning&rsquo;s box: a style has only one
+parent. If a facet&rsquo;s values could stand on their own, a text facet &ldquo;Reading text&rdquo; could be named and
+used by Quote and Note alike, and changed once for both.</p>
+<p>Against it, for now: a second set of named things to manage, where D306 asks for a small, clean style language.
+The likelier next step is a <em>palette of type</em>, named fonts as palette colours are named colours, which would
+cover the most common sharing with less to manage.</p>
+</div>
+
+<h2>What follows for the code</h2>
+<table>
+  <tr><th style="width:18%">Backlog</th><th>What changes</th></tr>
+  <tr><td>E1.19</td><td>A style stores its values grouped by facet, not as one flat bag of CSS. The drawers become
+  real in the code; the outline facet&rsquo;s SVG values stop being stored as if they were CSS.</td></tr>
+  <tr><td>E1.16</td><td>The number format moves from the style to the cell, in every app that has cells (D1410).</td></tr>
+  <tr><td>E1.15</td><td>Styles become things: their names join the one namespace, so <code>#Quote</code> can be
+  referenced like any other thing.</td></tr>
+  <tr><td>E1.14, E1.18</td><td>The code and the interface use the glossary&rsquo;s words: <em>palette colour</em>
+  for &ldquo;colour role&rdquo;, <em>marker scheme</em> for a list&rsquo;s &ldquo;scheme&rdquo; and
+  &ldquo;Numbering&rdquo;.</td></tr>
+</table>
+<p>Not yet part of the model, and so not in the glossary: templates, and inline marks: purpose-named marks such as
+<em>Emphasis</em> or <em>Strong</em>, which D306 plans as the one later, opt-in exception inside a slot (for composes
+paragraphs first).</p>
+
+<p class="small">Sources: <code>claudiaoffice-log/glossary.md</code>; decisions D303&ndash;D305, D306, D312, D315,
+D316, D1410, D1412 in <code>claudiaoffice-log/decision-log/</code>; the code in
+<code>packages/claudia-core/src/claudia_core/facets.py</code> and <code>styles.py</code>.</p>
+
+</body>
+</html>
