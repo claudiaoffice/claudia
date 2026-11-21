@@ -20,7 +20,7 @@ subtaskIds:
   - "[[e16.5-corkboard-in-computes|E16.5 Corkboard in computes]]"
   - "[[e16.6-corkboard-in-creates|E16.6 Corkboard in creates]]"
   - "[[e16.7-scrapbook|E16.7 Scrapbook: here and everything]]"
-  - "[[e16.8-private-drawer|E16.8 The private drawer]]"
+  - "[[e16.8-private-notes|E16.8 Private notes]]"
   - "[[e16.9-open-points-tracker|E16.9 Open points tracker]]"
   - "[[e16.10-menus-keys-i18n-and-exchange|E16.10 Workflow menus, keys, texts and exchange formats]]"
 dependencies: []
@@ -28,7 +28,7 @@ createdAt: 2026-11-18T12:00:00.000Z
 updatedAt: 2026-11-19T16:51:37.039Z
 ---
 
-Goal: a fluent flow of work with good focus and goal achievement (D1101). Workflow helps a person stay with the work, see the whole of it and keep her own thoughts to hand, in all three apps, without timers, scores or any measuring of the person. Everything in it is optional and belongs to the person using it. The private drawer (E16.8) is the foundation for the scrapbook; the decisions are D1101 to D1116, and D1103, D1104, D1107, D1109 and D1115 are still proposals.
+Goal: a fluent flow of work with good focus and goal achievement (D1101). Workflow helps a person stay with the work, see the whole of it and keep her own thoughts to hand, in all three apps, without timers, scores or any measuring of the person. Everything in it is optional and belongs to the person using it. The private notes (E16.8) are the foundation for the scrapbook; the decisions are D1101 to D1116, and D1103, D1104, D1107, D1109 and D1115 are still proposals.
 
 Project: [[claudia-office|claudia-office]]
 
@@ -40,6 +40,6 @@ Project: [[claudia-office|claudia-office]]
 - [ ] [[e16.5-corkboard-in-computes|E16.5 Corkboard in computes]]
 - [ ] [[e16.6-corkboard-in-creates|E16.6 Corkboard in creates]]
 - [ ] [[e16.7-scrapbook|E16.7 Scrapbook: here and everything]]
-- [ ] [[e16.8-private-drawer|E16.8 The private drawer]]
+- [ ] [[e16.8-private-notes|E16.8 Private notes]]
 - [ ] [[e16.9-open-points-tracker|E16.9 Open points tracker]]
 - [ ] [[e16.10-menus-keys-i18n-and-exchange|E16.10 Workflow menus, keys, texts and exchange formats]]

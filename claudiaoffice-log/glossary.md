@@ -192,6 +192,10 @@ _avoid_: audit log, export log, history
 The file an imported document was made from, kept sealed inside the document if the person chose to keep it.
 _avoid_: source file, attachment
 
+**Scrapbook**
+A person's own place beside a document for notes, sources and images, each linked to one or more places in the document; what is in it are her private notes.
+_avoid_: binder, notebook, parking lot
+
 **Private notes**
 A person's own notes in a document, kept in her scrapbook. Nobody else can read them, not an owner and not the recovery key; sharing one makes an independent copy, and they are deleted when she leaves the document or is removed from it.
 _avoid_: private domain, private part

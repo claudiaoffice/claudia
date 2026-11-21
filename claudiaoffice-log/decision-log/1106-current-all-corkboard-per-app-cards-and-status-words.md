@@ -4,7 +4,7 @@ title: "What a corkboard card is in each app, and the default status words"
 status: current
 applies-to: all
 date: 2026-11-18
-round: "Workflow: focus, corkboard, scrapbook and the private drawer (first round)"
+round: "Workflow: focus, corkboard, scrapbook and the private notes (first round)"
 supersedes: []
 superseded-by: []
 ---

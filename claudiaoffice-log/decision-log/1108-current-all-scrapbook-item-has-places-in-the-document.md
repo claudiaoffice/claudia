@@ -4,7 +4,7 @@ title: "A scrapbook item is linked to one or more places in the document"
 status: current
 applies-to: all
 date: 2026-11-18
-round: "Workflow: focus, corkboard, scrapbook and the private drawer (first round)"
+round: "Workflow: focus, corkboard, scrapbook and the private notes (first round)"
 supersedes: []
 superseded-by: []
 ---

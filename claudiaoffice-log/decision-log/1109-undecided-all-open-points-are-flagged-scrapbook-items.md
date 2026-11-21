@@ -4,7 +4,7 @@ title: "An open point is a scrapbook item with a flag, and the tracker is the sc
 status: undecided
 applies-to: all
 date: 2026-11-18
-round: "Workflow: focus, corkboard, scrapbook and the private drawer (first round)"
+round: "Workflow: focus, corkboard, scrapbook and the private notes (first round)"
 supersedes: []
 superseded-by: []
 ---

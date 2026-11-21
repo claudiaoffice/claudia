@@ -11,7 +11,7 @@ superseded-by: []
 
 # D1265 · The container has room for a private domain per person
 
-**Decided by the owner 2026-11-19 (accepted the proposal). Not built.** The private drawer of E16.8 depends on E2.2 and
+**Decided by the owner 2026-11-19 (accepted the proposal). Not built.** The private notes of E16.8 depend on E2.2 and
 E2.4 and must not be built on a format that is frozen without it. This round defines the mechanism; E16.8 fills it.
 
 - A person may have a domain of her own: one random key, **wrapped only in her own key slot** — not in the recovery

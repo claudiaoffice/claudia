@@ -4,7 +4,7 @@ title: "The edit heatmap and an end-of-session reflection are not part of the wo
 status: current
 applies-to: all
 date: 2026-11-18
-round: "Workflow: focus, corkboard, scrapbook and the private drawer (first round)"
+round: "Workflow: focus, corkboard, scrapbook and the private notes (first round)"
 supersedes: []
 superseded-by: []
 ---

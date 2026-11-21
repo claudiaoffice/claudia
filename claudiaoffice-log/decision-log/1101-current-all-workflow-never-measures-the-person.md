@@ -4,7 +4,7 @@ title: "Workflow support is optional, per person, and never measures the person"
 status: current
 applies-to: all
 date: 2026-11-18
-round: "Workflow: focus, corkboard, scrapbook and the private drawer (first round)"
+round: "Workflow: focus, corkboard, scrapbook and the private notes (first round)"
 supersedes: []
 superseded-by: []
 ---
