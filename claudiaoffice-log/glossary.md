@@ -70,6 +70,22 @@ _avoid_: host, backend, instance
 The person who looks after a server; never a role in a document, and sees that documents exist but not what is in them.
 _avoid_: admin, owner
 
+**Place**
+A location where claudia documents are kept: a server, as a person knows it by name and address. "This computer" is the claudia server running on her own machine; a claudia file in a folder on a disk is not in a place.
+_avoid_: location, library, folder, storage
+
+**Mine**
+The documents a person has opened before, on any place; kept on her own client, never seen by a server.
+_avoid_: recent, my documents, history
+
+**Collection**
+A named group of documents a person makes, from any places; kept on her own client, never seen by a server. A document may be in several collections.
+_avoid_: folder, library, project
+
+**Keyword**
+A word on a document that helps find it, readable without the document's password.
+_avoid_: tag, label, category
+
 ### People
 
 **User**
@@ -97,7 +113,7 @@ A part of a document a user holds for a while, so that nobody else changes it th
 _avoid_: hold, reservation
 
 **Author**
-The user who made a step.
+The user who made a step; a step made by accepting a proposal has the accepting person as its author.
 _avoid_: writer, creator
 
 ### History
@@ -205,13 +221,27 @@ A paragraph that belongs to a list, at one of its levels.
 _avoid_: bullet, point, entry
 
 **Reference**
-Words in a document that point at a heading, an item or a thing, and always show it as it is now.
-_avoid_: link, field, cross-reference
-
-**Tag**
-A reference to a thing in the chat, written with #.
-_avoid_: mention, hashtag
+Words in a document's text or chat that point at a thing and always show it as it is now: in the text by its number, words, page or name, in the chat (written with #) by its name.
+_avoid_: link, field, cross-reference, tag
 
 **Mention**
 The @ in a chat message that addresses it to one user.
-_avoid_: ping, address, tag
+_avoid_: ping, address
+
+### The ai at work
+
+**AI mode**
+How one person wants the ai to treat her requests in one document: act (it makes the change) or propose (it offers the change).
+_avoid_: autopilot, review mode, permission, suggest
+
+**Proposal**
+Changes to a document that are offered but not made, until a person accepts or rejects them; seen by everybody or only by the one who asked.
+_avoid_: suggestion, tracked change
+
+**Remark**
+A note the ai leaves at a place in a document that offers no change; a person dismisses it.
+_avoid_: comment, annotation
+
+**What-if**
+A private copy of a document in which one person tries changes before carrying them out as one step.
+_avoid_: sandbox, scratch copy, preview, branch
