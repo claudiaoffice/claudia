@@ -103,7 +103,7 @@ def paragraph_view(model: TextModel, index: int, labels: dict) -> dict:
     return view
 
 
-def _paragraphs(ctx, *, first, count, containing):
+def _read_paragraphs(ctx, *, first, count, containing):
     """Read paragraphs in order: from `first` (an id; the start if left out), at most `count` (up to 50). With
     `containing`, only the ones whose text contains those words, ignoring case. Returns `{revision, total,
     paragraphs, more}`: `total` paragraphs in the text, each as `{id, index, style, text, label?, name?}`, and
@@ -213,7 +213,7 @@ def _suggest_words(ctx, *, paragraph, find, reason, replacement, occurrence, bas
 
 def add_word_methods(table: MethodTable, *, edit: EditPlan) -> None:
     """Add the methods of this module to the text app's ``table``; ``edit`` is its ``edit_plan``."""
-    table.method("read_paragraphs", "first:str? count:int=20 containing:text?")(_paragraphs)
+    table.method("read_paragraphs", "first:str? count:int=20 containing:text?")(_read_paragraphs)
     table.method("outline")(_outline)
     table.method("replace_words", "paragraph:str find:text text:text occurrence:int=1 base:revision?", write=True)(
         update_wrapper(partial(_replace_words, edit=edit), _replace_words)

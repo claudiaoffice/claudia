@@ -77,13 +77,13 @@ _BODY_FIELDS = (
     "decorative",
     "name",
 )
-#: Bodies were once written with one pointer field per kind (``shape``, ``image``, ``diagram``, ``container``,
+#: Bodies were once written with one pointer field per kind (``shape``, ``image``, ``diagram``, ``rendered``,
 #: ``table``) and grew a generation of field sets with each new field. They still read: the pointer that matches the
 #: body's kind becomes ``ref``, and any other pointer that is set is refused. Nothing new is ever added to this list;
 #: a new kind of object uses ``ref`` and needs no field of its own.
 # The kinds that do not turn, and what the sentence calls them (D1021: a chart; D1224: a table).
 _NOT_TURNED = {"diagram": "chart", "table": "table"}
-_LEGACY_POINTERS = ("shape", "image", "diagram", "container", "table")
+_LEGACY_POINTERS = ("shape", "image", "diagram", "rendered", "table")
 _LEGACY_SETS = (
     frozenset(
         (
@@ -1168,9 +1168,9 @@ class AddObject(Command):
 
     kind: ClassVar[str] = "core.AddObject"
     schema: ClassVar[int] = (
-        6  # 1: a body without ``description`` and ``decorative``; 2: without ``container``; 3: without ``name``;
+        6  # 1: a body without ``description`` and ``decorative``; 2: without ``rendered``; 3: without ``name``;
         # 4: names were not yet shared with named ranges (D552); 5: a body with one pointer field per kind (``shape``,
-        # ``image``, ``diagram``, ``container``, ``table``) instead of ``ref``
+        # ``image``, ``diagram``, ``rendered``, ``table``) instead of ``ref``
     )
     body: ObjectBody
     anchor: dict
@@ -1721,9 +1721,9 @@ def _objects_with_descriptions(data: dict) -> dict:
 
 
 @core_commands.upcaster("core.AddObject", 2)
-def _objects_without_containers(data: dict) -> dict:
-    """Schema 2 bodies had no ``container``: none of those objects shows a container."""
-    return {**data, "body": {**data["body"], "container": None}}
+def _objects_without_renderings(data: dict) -> dict:
+    """Schema 2 bodies had no ``rendered`` (what a container's pointer was called then): none of them shows one."""
+    return {**data, "body": {**data["body"], "rendered": None}}
 
 
 @core_commands.register

@@ -81,9 +81,19 @@ the web sends with a literal payload names only parameters the server takes. The
 
 ## What could not be run
 
-- Second session: the whole gate ran green after each commit, this time with `web lint`, `web tests`, `web types`,
-  `layout types`, `layout tests` and the Linux client's tests too; only `e2e greeting` was skipped (the web app is not
-  built in the workspace). The journey tests (`web/e2e`, `tests/e2e`) were changed with the names but not run.
+- Second session: the whole gate ran green after each commit, with `web lint`, `web tests`, `web types`, `layout types`,
+  `layout tests` and the Linux client's tests too, and `e2e greeting`. **E2E `@core` ran in Chromium** (after the code
+  review): 58 passed, 2 xfailed (`@pending:N2`), 53 skipped: 47 with a step nobody has written code for yet, 6 checked
+  elsewhere (unit tests, `objects.cjs`, the Neutralino bridge test), and 1 container scenario because this server has no
+  Latin Modern Roman for LaTeX. The screenshots of the scenarios were looked at (a container, a box dropped on a
+  paragraph, the anchor mark, a table in a text): nothing wrong was seen.
+- **The workspace has Playwright's Chromium** at `/opt/pw-browsers` (the first session's note that browsers cannot be
+  had was wrong: only the download is blocked). Its build (1243) is older than the one either Playwright asks for
+  (Python 1248, Node 1254); `PLAYWRIGHT_BROWSERS_PATH` pointed at a folder whose `chromium-1248`/`-1254` link to it,
+  and `CLAUDIA_CHROMIUM=/opt/pw-browsers/chromium` for `e2e greeting`, made both work without touching the repo.
+- Not run: Firefox (not installed), the regression scripts (`./run-e2e.sh regression`: `web/e2e/*.cjs` and
+  `tests/e2e`, about half an hour, among them `objects.cjs`, which checks two of the core scenarios), the GTK and
+  Neutralino shells, and CI on this branch.
 
 - **The end-to-end tests and "use it before delivery".** The browsers Playwright needs cannot be downloaded in the
   workspace this was built in (`cdn.playwright.dev` is not reachable). What did run: the whole Python gate

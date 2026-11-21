@@ -376,21 +376,21 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     marked: dict[str, str] = {}  # the paragraph each bookmark starts, by name
     named: dict[str, list[str]] = {}  # the bookmarks around the words of exactly one paragraph, by its id
     referring: list[tuple[int, list[ReadReference]]] = []
-    for number, paragraph in enumerate(scan.paragraphs, start=1):
+    for number, odt_paragraph in enumerate(scan.paragraphs, start=1):
         while waiting is not None and waiting[0] < number:
             paragraphs.append(Paragraph(f"b{next(tables)}", DEFAULT_STYLE, generated=waiting[1]))
             waiting = next(contents, None)
-        text, found = read_words(paragraph)
+        text, found = read_words(odt_paragraph)
         text = plain(text) if not found else text
-        for name in bookmarks_starting(paragraph):
+        for name in bookmarks_starting(odt_paragraph):
             marked[name] = f"b{number}"
-        if around := bookmarks_around(paragraph):
+        if around := bookmarks_around(odt_paragraph):
             named[f"b{number}"] = around
         if found:
             referring.append((len(paragraphs), found))
         runs = (Run(len(text), None),) if text else ()
         paragraphs.append(
-            Paragraph(f"b{number}", _style_of(paragraph, parents, None), text, runs, lists.items.get(paragraph))
+            Paragraph(f"b{number}", _style_of(odt_paragraph, parents, None), text, runs, lists.items.get(odt_paragraph))
         )
     for at, found in referring:  # now that every bookmark is known
         paragraphs[at] = with_references(paragraphs[at], found, marked)
@@ -619,7 +619,7 @@ def _ids(used: set[str]) -> Iterator[str]:
 def _new_paragraph(
     style_id: str, text: str, suggestions: list[Suggestion], ids: Iterator[str], when: WhenMade, names: StyleNames
 ) -> tuple[etree._Element, list[etree._Element]]:
-    """A paragraph element for a paragraph, and the tracked-change regions of its suggestions."""
+    """The file's element of a paragraph, and the tracked-change regions of its suggestions."""
     name = names.of(style_id)
     level = names.outline_level(style_id)
     paragraph = etree.Element(_H if level else _P, nsmap={"text": NS["text"]})
@@ -921,22 +921,24 @@ class _Patch:
         self.regions: list[etree._Element] = []  # tracked changes to add
         self.appended: list[etree._Element] = []  # paragraphs that go at the end of the text
         self.changed = False
-        paragraphs = _scan(self.body).paragraphs
+        odt_paragraphs = _scan(self.body).paragraphs
         # A text with no paragraph at all still reads as a model with one empty paragraph (that is what a new model is),
         # which is no paragraph of the file: nothing to patch, and if it is still empty there is nothing to add either.
-        blank = [] if paragraphs else [b.id for b in baseline.paragraphs if not b.text and b.style == DEFAULT_STYLE][:1]
+        blank = (
+            [] if odt_paragraphs else [b.id for b in baseline.paragraphs if not b.text and b.style == DEFAULT_STYLE][:1]
+        )
         self.blank = set(blank)
         held = [paragraph for paragraph in baseline.paragraphs if paragraph.id not in self.blank]
-        if len(paragraphs) != len(held):
+        if len(odt_paragraphs) != len(held):
             raise UnsupportedEdit("the baseline is not the text this file holds")
         self.held = held
-        self.paragraphs = paragraphs
-        self.element_of = {paragraph.id: element for paragraph, element in zip(held, paragraphs, strict=True)}
+        self.odt_paragraphs = odt_paragraphs
+        self.element_of = {paragraph.id: element for paragraph, element in zip(held, odt_paragraphs, strict=True)}
         graphics = graphic_styles(*roots)
         self.graphic_names = set(graphics)
         self.wraps = WrapStyles(self.graphic_names)  # (what a frame whose wrapping changed needs, pictures and boxes)
         self.pictures = PicturePlan(
-            file_pictures(paragraphs, graphics, self.parts),
+            file_pictures(odt_paragraphs, graphics, self.parts),
             [paragraph.id for paragraph in held],
             baseline,
             current,
@@ -947,7 +949,7 @@ class _Patch:
         )
         self.box_styles = BoxStyles(graphic_style_names(*roots))
         self.boxes = BoxPlan(
-            file_boxes(paragraphs, graphics, _words_style(_paragraph_styles(*roots))),
+            file_boxes(odt_paragraphs, graphics, _words_style(_paragraph_styles(*roots))),
             [paragraph.id for paragraph in held],
             baseline,
             current,
@@ -956,7 +958,7 @@ class _Patch:
             self.wraps,
         )
         self.before = {paragraph.id: paragraph for paragraph in held}
-        self.reading = read_lists(paragraphs, [self.part.root, self.styles.root if self.styles else self.part.root])
+        self.reading = read_lists(odt_paragraphs, [self.part.root, self.styles.root if self.styles else self.part.root])
         self.top = {paragraph.id: self.reading.container[self.element_of[paragraph.id]] for paragraph in held}
         changed = [
             list_id
@@ -1104,8 +1106,8 @@ class _Patch:
         return plan
 
     def _paragraph_of(self, paragraph: Paragraph, suggestions: list[Suggestion]) -> etree._Element:
-        """The file's paragraph of a paragraph that is written again: its element in the file (edited, in a copy) or a
-        new one."""
+        """The element of the file that a paragraph written again goes into: its own (edited, in a copy) or a new
+        one."""
         if paragraph.id in self.before:
             element = self.element_of[paragraph.id]
             edited = self._edited(paragraph, element, suggestions)
@@ -1142,7 +1144,7 @@ class _Patch:
         for element in elements:
             if after is not None:
                 self.part.insert_after(after, element)
-            elif self.paragraphs:
+            elif self.odt_paragraphs:
                 assert self.first_top is not None  # a text with paragraphs has a first one (set in _patch_current)
                 self.part.insert_before(self.first_top, element)
             else:

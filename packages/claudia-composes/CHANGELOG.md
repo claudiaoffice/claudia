@@ -36,7 +36,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   `composes.JoinParagraphs`) and the events `ParagraphSplit`, `ParagraphsJoined`, `ParagraphGenerated`. Stored, every
   command and event says `paragraph` (was `block`), the state key is `paragraphs`, and the event types are
   `paragraph_fields` and `paragraph_generated`; no reader for the old names.
-- **Breaking** — the glossary's holder (D1430, see `claudia-core`): `BlockAnchor.holder` (was `container`),
+- **Breaking** — the glossary's holder (D1430, see `claudia-core`): `ParagraphAnchor.holder` (was `container`),
   `TextModel.holders()`; an anchor's data says `holder`.
 - **Breaking** — `DefineImage`, `ForgetImage`, `DefineShape` and `ForgetShape` are no longer re-exported:
   claudia-core's `DefineAsset` and `ForgetAsset` replace them (D1431).

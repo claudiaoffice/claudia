@@ -20,6 +20,15 @@ events, stored keys, web state, file names), and some of those collide with name
 - **The chart slice waits** ("needs more consideration"): `DiagramDefinition`, the object kind `diagram`, computes'
   `Chart`/`charts` and their wire names stay as they are for now. The other slices go on without it.
 
+## Holder (done before this rule; for the owner to confirm)
+
+The holder slice came first, before the owner asked to see each list, so these names around D1430's were chosen by the
+same rule as the rest and are listed here for confirmation: `ObjectModel.open_holder`, `close_holder`,
+`MAX_OBJECTS_PER_HOLDER`; `VisualObject.holder`, `ObjectText.holder`, `Placed.holder`; stored and on the wire, an anchor,
+an `objects` region and the `objects` event say `holder`. Web: `holderOf`, `currentHolder`, `showHolder`;
+`lib/text-object-layer.ts` beside `TextObjectLayer.vue`; the page's `data-testid` `object-layer` and
+`object-layer-behind`.
+
 ## Container (agreed)
 
 The thing becomes `container`; the verb stays, because rendering is what the software outside claudia does.

@@ -1,7 +1,7 @@
 """Help topics: short, example-oriented "how do I" guides, loaded and searched (E13.1, E13.3; D76, D99).
 
 A topic is a Markdown file with simple front matter — exactly the shape ``claudia_typeset/help/configure-latex.md``
-shipped as a draft (D99) before this module existed to read it: a paragraph of ``key: value`` lines between two
+shipped as a draft (D99) before this module existed to read it: a block of ``key: value`` lines between two
 ``---`` lines, then the body::
 
     ---

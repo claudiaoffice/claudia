@@ -262,7 +262,7 @@ def _patch_tables(
 
 
 class _ParagraphWriter:
-    """Writes the file's paragraphs of the paragraphs that were added or changed into a kept document."""
+    """Writes the paragraphs that were added or changed into a kept document, as paragraphs of the file."""
 
     def __init__(
         self,
@@ -787,8 +787,8 @@ def apply_edits_to_docx(
     ``text_to_docx``), then calls :func:`claudia_opc_io.reconcile` so every other part of the package -- and
     every paragraph this call did not touch -- comes back exactly as it was.
 
-    A paragraph that was added is a new paragraph right after the file's paragraph of the paragraph before it (or right
-    before that of the one after it, when it comes first); a paragraph that was removed takes its paragraph in the file
+    A paragraph that was added goes into the file right after the paragraph before it (or right before the one after
+    it, when it comes first); a paragraph that was removed takes its paragraph in the file
     with it, and ``losses`` gets a ``removed-...`` entry for each picture, note, comment, link or tracked change that
     went with it. A paragraph that ends a section of the file is only emptied, so that the section stays. ``losses``
     also gets a ``style`` entry for a paragraph whose style the text does not have.
@@ -809,17 +809,19 @@ def apply_edits_to_docx(
     _no_contents(baseline, current)
     held = baseline.paragraphs
     document = Document(BytesIO(original_bytes))
-    paragraphs = document.paragraphs
-    if len(paragraphs) != len(held):
+    docx_paragraphs = document.paragraphs
+    if len(docx_paragraphs) != len(held):
         raise UnsupportedEdit("the text the edits are measured from is not what the file holds")
     baseline_by_id = {b.id: b for b in held}
     current_ids = {b.id for b in current.paragraphs}
     kept = [paragraph.id for paragraph in current.paragraphs if paragraph.id in baseline_by_id]
     if kept != [paragraph.id for paragraph in held if paragraph.id in current_ids]:
         raise UnsupportedEdit("paragraphs cannot be moved relative to each other in the file")
-    paragraph_of = {paragraph.id: docx_paragraph for paragraph, docx_paragraph in zip(held, paragraphs, strict=True)}
+    paragraph_of = {
+        paragraph.id: docx_paragraph for paragraph, docx_paragraph in zip(held, docx_paragraphs, strict=True)
+    }
     names, owned = _patch_setup(document, baseline, current)
-    lists = _patch_lists(document, paragraphs, baseline, current, names, owned)
+    lists = _patch_lists(document, docx_paragraphs, baseline, current, names, owned)
     replacements = open_replacements(current, track=track_suggestions)
     rewritten = {
         paragraph.id

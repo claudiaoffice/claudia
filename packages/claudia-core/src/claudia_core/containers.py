@@ -18,7 +18,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-#: How much text a container may hold. The same bound as a typeset job's (``claudia_typeset.job.MAX_RENDERING_SOURCE``).
+#: How much text a container may hold. The same bound as a typeset job's (``claudia_typeset.job.MAX_SOURCE_CHARS``).
 MAX_CONTAINER_SOURCE = 200_000
 MAX_PARAMS = 32
 MAX_PARAM_TEXT = 200

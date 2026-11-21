@@ -105,7 +105,7 @@ def test_the_field_is_part_of_the_plain_data_of_every_body():
 
 def test_a_body_written_before_containers_existed_still_reads():
     text = container_body(kind="text", ref=None, paragraph=paragraph_for("o1", "body-text", "x"))
-    old = body_before_ref(text.to_data(), "container", "name", "table")  # a body of that time had none of the three
+    old = body_before_ref(text.to_data(), "rendered", "name", "table")  # a body of that time had none of the three
     assert ObjectBody.from_data(old).container is None
 
 
@@ -121,7 +121,7 @@ def test_an_add_object_logged_before_the_field_is_upcast_with_no_definition():
     )
     stored = now.to_data()
     stored["body"] = body_before_ref(
-        stored["body"], "container", "table", "name", "description", "decorative"
+        stored["body"], "rendered", "table", "name", "description", "decorative"
     )  # schema 1
     command = core_commands.decode({"k": "core.AddObject", "s": 1, "d": stored})
     assert command.body.container is None
@@ -132,5 +132,5 @@ def test_an_add_object_of_schema_two_is_upcast_too():
         container_body(kind="text", ref=None, paragraph=paragraph_for("o1", "body-text", "x")), {"kind": "x"}
     )
     stored = now.to_data()
-    stored["body"] = body_before_ref(stored["body"], "container", "table", "name")
+    stored["body"] = body_before_ref(stored["body"], "rendered", "table", "name")
     assert core_commands.decode({"k": "core.AddObject", "s": 2, "d": stored}).body.container is None

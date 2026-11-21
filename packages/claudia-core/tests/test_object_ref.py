@@ -36,7 +36,12 @@ def legacy(kind: str, **more) -> dict:
     return {**body_before_ref(body(kind).to_data()), **more}
 
 
-@pytest.mark.parametrize("kind", POINTERS)
+#: The kinds old bodies had under the names they still have. A container's was ``rendered`` then, a kind that is not
+#: read any more (E1.18, D1430): there is no old body of the kind ``container``.
+OLD_KINDS = ("shape", "image", "diagram", "table")
+
+
+@pytest.mark.parametrize("kind", OLD_KINDS)
 def test_a_body_written_with_a_field_for_each_kind_reads_with_its_pointer_as_ref(kind):
     assert ObjectBody.from_data(legacy(kind)) == body(kind)
 

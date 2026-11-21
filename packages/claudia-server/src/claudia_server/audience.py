@@ -37,7 +37,7 @@ class Rule:
 _CONTENT = Rule(CONTENT)
 
 # Every kind of event a window can be sent, by the name it travels under (the ``event`` of the frame; the kernel and
-# the apps name it in the ``type`` of their payload). The app events (the first paragraph) are the document's content.
+# the apps name it in the ``type`` of their payload). The app events (the first block) are the document's content.
 EVENT_RULES: dict[str, Rule] = {
     **dict.fromkeys(
         (

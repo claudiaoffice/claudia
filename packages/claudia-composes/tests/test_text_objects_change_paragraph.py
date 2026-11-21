@@ -93,7 +93,7 @@ def test_the_move_is_written_and_read_with_its_place_in_the_stack():
     assert MoveObject.from_data(plain.to_data(), None).at is None
 
 
-def test_on_a_slide_an_object_still_cannot_change_its_container():
+def test_on_a_slide_an_object_still_cannot_change_its_holder():
     deck = Document(SlideModel.empty(), store=MemoryStore())
     deck.execute(AddSlide("s2"), author="ann")
     deck.model.insert_object(VisualObject(box("o1", "body-text"), SlideAnchor("s1", 10, 10)))

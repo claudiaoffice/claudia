@@ -25,10 +25,10 @@ def pointing_as_ref(fields: dict) -> dict:
 
 def body_before_ref(data: dict, *without: str) -> dict:
     """An object body's plain data as it was written with one pointer field per kind (``shape``, ``image``,
-    ``diagram``, ``container``, ``table``) instead of ``ref``, and without the fields named: for the tests of documents
+    ``diagram``, ``rendered``, ``table``) instead of ``ref``, and without the fields named: for the tests of documents
     that were written long ago."""
     old = {name: value for name, value in data.items() if name != "ref"}
-    for pointer in ("shape", "image", "diagram", "container", "table"):
+    for pointer in ("shape", "image", "diagram", "rendered", "table"):
         old[pointer] = data["ref"] if pointer == data["kind"] else None
     return {name: value for name, value in old.items() if name not in without}
 

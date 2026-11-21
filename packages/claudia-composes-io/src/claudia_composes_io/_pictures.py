@@ -31,8 +31,8 @@ def all_pictures(model: TextModel) -> dict[str, tuple[VisualObject, ImageAsset]]
 def picture_losses(
     model: TextModel, losses: LossLog, *, vector_loss: str | None = None, only_containers: bool = False
 ) -> None:
-    """Say in ``losses`` what the files cannot keep of the pictures of ``model``: ``rendering-pending`` for a rendered
-    text container nothing has been drawn for (it is left out) and, when ``vector_loss`` is given, that code for each
+    """Say in ``losses`` what the files cannot keep of the pictures of ``model``: ``rendering-pending`` for a
+    container nothing has been drawn for (it is left out) and, when ``vector_loss`` is given, that code for each
     picture that is an SVG (only the containers when ``only_containers``): a program that cannot draw an SVG
     shows an empty picture."""
     for obj in model.objects.values():
