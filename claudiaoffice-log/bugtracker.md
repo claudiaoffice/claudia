@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (77)
+### Open (78)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -83,6 +83,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-54 | P3 | UX / a11y | The pages of Server settings (AI model … Security) have no keyboard shortcut, and the menu workbook does not list them | **new, open** (pre-existing; found while adding the Security page; needs the owner's decision whether the rule covers navigation) |  |  |
 | UX-59 | P3 | UX / composes | Up from the second paragraph to the first failed once in four runs: a re-render of a paragraph just saved may undo a native caret move | **new, open** (measured once, cause a guess; size 3) | 2026-11-20 |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
+| UX-63 | P3 | UX / all apps | The print preview says printing and saving a PDF are "recorded in the document's history"; they go into the exit record, which is not part of the history (glossary) | **new, open** (`web/app/components/PrintPreview.vue`, string in `po/`; size 3) | 2026-11-21 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |

@@ -101,7 +101,7 @@ A named group of documents a person makes, from any places; kept on her own clie
 _avoid_: folder, library, project
 
 **Keyword**
-A word on a document that helps find it, readable without the document's password.
+A word on a document's cover that helps find it.
 _avoid_: tag, label, category
 
 ### People
@@ -133,6 +133,56 @@ _avoid_: hold, reservation
 **Author**
 The user who made a step; a step made by accepting a proposal has the accepting person as its author.
 _avoid_: writer, creator
+
+### Security
+
+**Sealed**
+Readable only by a document's users, with their own keys, wherever the file is. A document is always sealed; only what is exported is not.
+_avoid_: encrypted, locked
+
+**Part**
+One of the sealed parts of a document (its content, its history, its chat), each with a key of its own; a viewer can read only the content.
+_avoid_: domain, section, layer
+
+**Key slot**
+One user's way into a document: opened by her name and password, it holds the keys to the parts her role may read. The recovery key has one too.
+_avoid_: account, login
+
+**Password**
+What one person chose for one document; with her name, it unlocks that document. Nobody else, the server included, can show it.
+_avoid_: account password, credentials
+
+**Unlock**
+To give one's name and password, or the recovery key, so that a sealed document opens for oneself, with the rights of one's role.
+_avoid_: log in, sign in, authenticate
+
+**Recovery key**
+A key shown once, when a document is made or the key is made anew, that unlocks the document as an owner and lets someone who forgot her password choose a new one. Whoever holds it can read the document.
+_avoid_: master password, backup key
+
+**Cover**
+What can be read of a sealed document without unlocking it: its title, description, keywords, app and times. It is what lets a place list documents.
+_avoid_: manifest, metadata, details
+
+**Download**
+A sealed copy of a document for one person to keep: an owner gets the whole document, anyone else only her own key slot and the parts her keys open.
+_avoid_: save as, export
+
+**Export**
+A copy of a document that anyone can read, in claudia's open export or another file format. Only an owner may include the history and chat, and every export goes into the exit record.
+_avoid_: download, save as
+
+**Exit record**
+The sealed list of everything that left a document in a readable form (an export, a print, a PDF): who, when, what and which parts. It is not part of the history, and nothing removes an entry from it.
+_avoid_: audit log, export log, history
+
+**Original**
+The file an imported document was made from, kept sealed inside the document if the person chose to keep it.
+_avoid_: source file, attachment
+
+**Private notes**
+A person's own notes in a document, kept in her binder. Nobody else can read them, not an owner and not the recovery key; sharing one makes an independent copy, and they are deleted when she leaves the document or is removed from it.
+_avoid_: private domain, private part
 
 ### History
 
