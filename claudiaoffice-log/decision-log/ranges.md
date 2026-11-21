@@ -66,7 +66,7 @@ Unused numbers in a closed block stay unused.
 | D1350–D1369 | bug fixes: stale regression and end-to-end tests, the caret at the edges of a composes text, dragging an object to another paragraph (branch `fix-stale-tests-caret-drag`; D1350–D1352 used) | 2026-11-20 | open |
 | D1370–D1389 | SEC-12: the first administrator needs a setup code on every server, the desktop apps hand it over, resetting and naming administrators at start (branch `sec-12-setup-code`; D1370–D1376 used) | 2026-11-20 | open |
 | D1390–D1409 | bug fixes after SEC-12: the red CI, the keys of dialogs on the grid and the slide, the arrow keys of composes objects (branch `main`; D1390 used) | 2026-11-21 | open |
-| D1410–D1429 | glossary session: domain notions and what follows from them, starting with the number format of a cell (glossary.md; D1410–D1412 used) | 2026-11-21 | open |
+| D1410–D1429 | glossary session: domain notions and what follows from them, starting with the number format of a cell (glossary.md; D1410–D1413 used) | 2026-11-21 | open |
 | D1430–D1449 | architecture improvements and the glossary words in the code: one asset store in the object layer, one web document session (with CODE-75), then the renames of E1.18 (branch `architecture-improvements`) | 2026-11-21 | open |
 
 ## Never to be used
