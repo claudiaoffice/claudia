@@ -5,7 +5,7 @@ import base64
 import pytest
 
 from claudia_composes import TextModel
-from claudia_core import Document, MemoryStore
+from claudia_core import DefineAsset, Document, MemoryStore
 from claudia_opc_io import read_parts
 from claudia_server.apps import MODEL_METHODS
 from claudia_server.auth import Account
@@ -222,12 +222,12 @@ def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing
     from pathlib import Path
 
     from claudia_composes import BlockAnchor
-    from claudia_core import DefineImage, ImageImport, ObjectBody, VisualObject, decode_image, paragraph_for
+    from claudia_core import ImageImport, ObjectBody, VisualObject, decode_image, paragraph_for
 
     type_(paper, "a text with a note")
     png = (Path(__file__).parents[3] / "layout" / "tests" / "images" / "rgb.png").read_bytes()
     asset = decode_image(png)
-    paper.execute(DefineImage(asset), author="ann")
+    paper.execute(DefineAsset("image", asset.to_data()), author="ann")
     box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
     record = ImageImport(asset.id, "a picture", "ann", "2026-11-12T10:00:00Z", "disk", "rgb.png")
     picture = ObjectBody("o2", "image", 70, 50, "plain-image", ref=asset.id, imported=record)

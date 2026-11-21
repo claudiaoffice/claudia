@@ -47,6 +47,17 @@ While the major version is 0, a minor version may break the API; every break is 
   `"table"` is one of `OBJECT_KINDS`; the facet slots have a `table` thing.
 
 ### Changed
+- **Breaking** — one asset store (D1431): `ObjectModel.assets` holds an `AssetStore` per kind (`image`, `shape`,
+  `diagram`, `rendering`, `table`); `images`, `shapes`, `diagrams`, `renderings` and `tables` are those stores, read like
+  a dict and changed with `define`, `replace`, `forget`, `put`, `users`, `known`, `to_data` and `restore`.
+  `ObjectModel.users_of(kind, asset_id)` replaces `users_of_image`/`_shape`/`_diagram`/`_rendering`/`_table`;
+  `assets_to_data()` and `restore_objects(objects, assets)` replace the five `*_to_data()` and the long
+  `restore_objects`. The commands `DefineAsset(asset_kind, data)`, `UpdateAsset(asset_kind, id, data)` and
+  `ForgetAsset(asset_kind, id)` and the event `AssetsChanged` replace `DefineShape`, `ForgetShape`, `DefineImage`,
+  `ForgetImage`, `DefineDiagram`, `UpdateDiagram`, `ForgetDiagram`, `DefineRendering`, `UpdateRendering`,
+  `ForgetRendering`, `ImagesChanged`, `ShapesChanged`, `DiagramsChanged` and `RenderingsChanged` (their wire form is
+  unchanged). New: `AssetKind`, `ASSET_KINDS`, `asset_kind()`. Logs with the old command kinds are not read
+  (pre-release, E1.18).
 - `MoveObject` to another container moves the object between the stacks where the app allows it (D1351), tells
   the old container its stack and the new one the object, and takes the drop place as a region; elsewhere it is
   refused as before ("an object cannot change its container").

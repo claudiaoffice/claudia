@@ -28,6 +28,8 @@
     object_texts the words and descriptions of objects as texts a search can look in and replace, for any app
     looks        colours and lengths of a resolved style as values a file format holds (D465)
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
+    asset_store  AssetStore, AssetKind, AssetsChanged: what objects show and the document keeps once, by id (D1431)
+    asset_commands  DefineAsset, UpdateAsset, ForgetAsset: the same three commands for every kind of asset (D1431)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
                  (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
     file_boxes   the text boxes and shapes of an office file as the model holds them (D465)
@@ -41,6 +43,8 @@ The kernel contains no spreadbook, text or slide code and does no I/O.
 """
 
 from ._version import __version__
+from .asset_commands import DefineAsset, ForgetAsset, UpdateAsset
+from .asset_store import ASSET_KINDS, AssetKind, AssetsChanged, AssetStore, asset_kind
 from .assets import (
     MAX_IMAGE_BYTES,
     SUPPORTED_IMAGE_FORMATS,
@@ -185,19 +189,9 @@ from .objects import (
     OBJECT_KINDS,
     AddObject,
     Anchor,
-    DefineDiagram,
-    DefineImage,
-    DefineRendering,
-    DefineShape,
     DescribeObject,
     DescribeThing,
     DiagramDefinition,
-    DiagramsChanged,
-    ForgetDiagram,
-    ForgetImage,
-    ForgetRendering,
-    ForgetShape,
-    ImagesChanged,
     MoveObject,
     ObjectBody,
     ObjectModel,
@@ -205,7 +199,6 @@ from .objects import (
     ObjectSet,
     RemoveObject,
     RenameThing,
-    RenderingsChanged,
     ResizeObject,
     RotateObject,
     SetObjectStyle,
@@ -213,11 +206,8 @@ from .objects import (
     SetParagraphStyle,
     SetSnap,
     SetText,
-    ShapesChanged,
     ThingDescribed,
     ThingRenamed,
-    UpdateDiagram,
-    UpdateRendering,
     VisualObject,
     paragraph_for,
 )
@@ -336,6 +326,14 @@ from .what_if import Proposal, WhatIf
 from .writing import DeleteText, InsertText, Span, TextCommand, TypingHost, word_changes
 
 __all__ = [
+    "ASSET_KINDS",
+    "AssetKind",
+    "AssetStore",
+    "AssetsChanged",
+    "DefineAsset",
+    "ForgetAsset",
+    "UpdateAsset",
+    "asset_kind",
     "BASE_FONT_PX",
     "font_size_px",
     "new_object_size",
@@ -438,16 +436,11 @@ __all__ = [
     "distinct_name",
     "free_name",
     "free_names",
-    "DefineDiagram",
-    "DefineImage",
-    "DefineRendering",
-    "DefineShape",
     "DescribeObject",
     "DescribeThing",
     "delete_runs",
     "edit_object_text",
     "DiagramDefinition",
-    "DiagramsChanged",
     "Document",
     "Look",
     "DocumentModel",
@@ -466,10 +459,6 @@ __all__ = [
     "FACETS",
     "fits",
     "FontRequirement",
-    "ForgetDiagram",
-    "ForgetImage",
-    "ForgetRendering",
-    "ForgetShape",
     "FORMAT",
     "format_css",
     "FunctionInfo",
@@ -482,7 +471,6 @@ __all__ = [
     "ImageAsset",
     "ImageError",
     "ImageImport",
-    "ImagesChanged",
     "insert_runs",
     "KernelError",
     "KINDS",
@@ -584,7 +572,6 @@ __all__ = [
     "format_number",
     "parse_entry_id",
     "parse_number",
-    "RenderingsChanged",
     "RebaseStyle",
     "RemoveStyle",
     "RenameStyle",
@@ -618,7 +605,6 @@ __all__ = [
     "SetText",
     "ShapeDefinition",
     "ShapeError",
-    "ShapesChanged",
     "ThingDescribed",
     "ThingRenamed",
     "slice_runs",
@@ -656,8 +642,6 @@ __all__ = [
     "UndoConflict",
     "UndoRefused",
     "UnknownCommand",
-    "UpdateDiagram",
-    "UpdateRendering",
     "validate_css",
     "VisualObject",
 ]

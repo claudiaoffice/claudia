@@ -290,7 +290,7 @@ def test_a_container_on_a_sheet_is_rendered_and_its_frame_follows_the_picture():
         assert model.renderings[added["rendering"]].image is not None
         (told,) = ann.events("render_result")
         assert told["ok"] is True
-        (shown,) = model.users_of_rendering(added["rendering"])
+        (shown,) = model.renderings.users(added["rendering"])
         assert model.get_object(shown).body.h != 120  # fitted to the picture's proportions by a ResizeObject
 
     asyncio.run(run())

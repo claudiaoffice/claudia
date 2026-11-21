@@ -336,7 +336,7 @@ def test_a_picture_of_a_file_is_an_object_of_the_text_and_its_new_description_is
     frame = b"\x2c" + struct.pack("<HHHH", 0, 0, 40, 20) + b"\x00" + b"\x02\x01\x00\x00"
     asset: ImageAsset = decode_image(header + frame + b"\x3b")
     start = TextModel([Block("b1", DEFAULT_STYLE, "Hello world")])
-    start.define_image(asset)
+    start.images.define(asset)
     start.insert_object(
         VisualObject(
             ObjectBody("o1", "image", 200, 100, "plain-image", ref=asset.id, imported=made_by_ann(asset)),
@@ -476,7 +476,7 @@ def test_a_deck_with_a_picture_comes_back_patched_with_the_picture_turned_and_de
     frame = b"\x2c" + struct.pack("<HHHH", 0, 0, 40, 20) + b"\x00" + b"\x02\x01\x00\x00"
     asset = decode_image(header + frame + b"\x3b")
     deck = SlideModel.empty()
-    deck.define_image(asset)
+    deck.images.define(asset)
     record = ImageImport.from_data(
         {
             "asset": asset.id,

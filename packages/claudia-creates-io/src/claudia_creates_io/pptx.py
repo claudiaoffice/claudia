@@ -604,7 +604,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                 asset = held_picture(shape)
                 assert asset is not None  # _classify said so
                 if asset.id not in model.images:
-                    model.define_image(asset)
+                    model.images.define(asset)
                 description, decorative = alt_text_of(shape)
                 body = picture_body(
                     object_id,
@@ -625,7 +625,7 @@ def pptx_to_slides(pptx_bytes: bytes) -> SlideModel:
                     definition = library.get(shape_id)
                     if definition is None:  # pragma: no cover -- the three ids in _SHAPE_ID are always shipped
                         raise ValueError(f"the built-in shape library has no shape {shape_id!r}")
-                    model.define_shape(definition)
+                    model.shapes.define(definition)
                     defined.add(shape_id)
             description, decorative = alt_text_of(shape)
             style, words = _styles_of(shape, kind, (style, words), (model, looks, theme, colours), 1 / scale_x)

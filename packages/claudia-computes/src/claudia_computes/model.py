@@ -23,6 +23,7 @@ from typing import ClassVar, Self, TypeIs, cast
 
 from claudia_core import (
     OBJECT_KINDS,
+    AssetKind,
     Command,
     CommandRegistry,
     DocumentModel,
@@ -509,10 +510,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "sheets": [sheet.to_data() for sheet in self.sheets.values()],
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
-            "shapes": self.shapes_to_data(),
-            "images": self.images_to_data(),
-            "diagrams": self.diagrams_to_data(),
-            "renderings": self.renderings_to_data(),
+            **self.assets_to_data(),  # images, shapes, diagrams, renderings, tables (D1431)
             "objects": self.objects_to_data(),
             "charts": [chart.to_data() for chart in self.charts.values()],
             "names": self.names.to_data(),
@@ -536,9 +534,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             sheet.cell_styles = CellStyles.from_data(item["cell_styles"])  # no upcast before the first release (D308)
             model.sheets[sheet.id] = sheet
             model.open_container(str(sheet.id))
-        model.restore_objects(
-            state["objects"], state["images"], state["shapes"], state["diagrams"], state.get("renderings", ())
-        )
+        model.restore_objects(state["objects"], state)
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
         model.thing_descriptions = dict(state.get("descriptions", {}))  # (schema 15 and earlier: nothing written)
@@ -595,9 +591,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
 
     def _blank_chart(self, chart: Chart) -> None:
         if chart.spec_id in self.diagrams:
-            self.diagrams[chart.spec_id] = ChartSpec.from_data(
-                self.blank_diagram(self.diagrams[chart.spec_id].to_data())
-            )
+            self.diagrams.put(ChartSpec.from_data(self.blank_diagram(self.diagrams[chart.spec_id].to_data())))
 
     def load_state(self, state: dict) -> None:
         """As :meth:`~claudia_core.DocumentModel.load_state`, and the calculator then works for this workbook."""
@@ -659,11 +653,13 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             raise ValueError("a chart's range must be inside the sheet")
         return spec
 
-    def users_of_diagram(self, diagram_id: str) -> list[str]:
-        """As the shared check (floating objects), plus any chart tab showing this diagram (E6.6): a tab is a
-        user of a diagram definition exactly as an object anchored to one is, so ``forget_diagram`` refuses
-        while either kind of user remains."""
-        return [*super().users_of_diagram(diagram_id), *(c.id for c in self.charts.values() if c.spec_id == diagram_id)]
+    def users_of(self, kind: AssetKind, asset_id: str) -> list[str]:
+        """As the shared answer (floating objects), plus any chart tab showing a diagram (E6.6): a tab is a user of a
+        diagram definition exactly as an object anchored to one is, so forgetting it is refused while either remains."""
+        users = super().users_of(kind, asset_id)
+        if kind.name == "diagram":
+            users += [chart.id for chart in self.charts.values() if chart.spec_id == asset_id]
+        return users
 
     def charts_reading(self, sheet_id: SheetId) -> list[str]:
         """Ids of the diagram definitions whose range names ``sheet_id`` (E6.6): what ``RemoveSheet`` refuses

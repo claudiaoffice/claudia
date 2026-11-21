@@ -5,10 +5,8 @@ from conftest import S1, add, image_asset, image_import, image_object, move, put
 
 from claudia_computes import (
     AddSheet,
-    DefineImage,
     DeleteCols,
     DeleteRows,
-    ForgetImage,
     InsertCols,
     InsertRows,
     RemoveObject,
@@ -17,8 +15,8 @@ from claudia_computes import (
     Structure,
     WorkbookModel,
 )
-from claudia_computes.events import ImagesChanged, ObjectsChanged
-from claudia_core import Batch, Document, MemoryStore, encode
+from claudia_computes.events import ObjectsChanged
+from claudia_core import AssetsChanged, Batch, DefineAsset, Document, ForgetAsset, MemoryStore, encode
 from claudia_core.assets import BLANK_GIF
 
 
@@ -46,7 +44,7 @@ def test_two_objects_can_share_the_same_asset(doc):
     asset = image_asset()
     put_image(doc, "i1", asset=asset)
     put_image(doc, "i2", asset=asset)
-    assert set(doc.model.users_of_image(asset.id)) == {"i1", "i2"}
+    assert set(doc.model.images.users(asset.id)) == {"i1", "i2"}
     assert len(doc.model.images) == 1, "the asset is only kept once"
 
 
@@ -63,11 +61,11 @@ def test_an_image_that_is_in_use_cannot_be_forgotten_and_one_that_exists_cannot_
     asset = image_asset()
     put_image(doc, asset=asset)
     with pytest.raises(ValueError, match="in use"):
-        doc.execute(ForgetImage(asset.id), author="ana")
+        doc.execute(ForgetAsset("image", asset.id), author="ana")
     with pytest.raises(ValueError, match="already"):
-        doc.execute(DefineImage(asset), author="ana")
+        doc.execute(DefineAsset("image", asset.to_data()), author="ana")
     doc.execute(RemoveObject("i1"), author="ana")
-    doc.execute(ForgetImage(asset.id), author="ana")
+    doc.execute(ForgetAsset("image", asset.id), author="ana")
     assert doc.model.images == {}
 
 
@@ -93,8 +91,8 @@ def test_an_image_object_needs_a_known_asset_and_its_import_record(doc):
 
 def test_the_import_records_asset_must_match_the_objects_image(doc):
     a, b = image_asset(width=10, height=10), image_asset(width=20, height=20)
-    doc.execute(DefineImage(a), author="ana")
-    doc.execute(DefineImage(b), author="ana")
+    doc.execute(DefineAsset("image", a.to_data()), author="ana")
+    doc.execute(DefineAsset("image", b.to_data()), author="ana")
     mismatched = image_object(asset=a, imported=image_import(b.id))
     with pytest.raises(ValueError, match="does not match"):
         doc.execute(add(mismatched), author="ana")
@@ -102,14 +100,14 @@ def test_the_import_records_asset_must_match_the_objects_image(doc):
 
 def test_an_object_must_sit_on_a_known_sheet(doc):
     asset = image_asset()
-    doc.execute(DefineImage(asset), author="ana")
+    doc.execute(DefineAsset("image", asset.to_data()), author="ana")
     with pytest.raises(ValueError, match="unknown container"):  # a sheet is a container (E10.16)
         doc.execute(add(image_object(sheet="nope", asset=asset)), author="ana")
 
 
 def test_an_object_is_at_least_the_minimum_size(doc):
     asset = image_asset(width=10, height=10)
-    doc.execute(DefineImage(asset), author="ana")
+    doc.execute(DefineAsset("image", asset.to_data()), author="ana")
     with pytest.raises(ValueError, match="at least"):
         doc.execute(add(image_object(asset=asset, w=5, h=5)), author="ana")
 
@@ -179,11 +177,11 @@ def test_removing_a_sheet_does_not_forget_its_images_asset(doc):
 def test_views_hear_about_images(doc):
     seen = collect(doc)
     asset = image_asset()
-    doc.execute(DefineImage(asset), author="ana")
-    changed = [e for e in seen if isinstance(e, ImagesChanged)]
+    doc.execute(DefineAsset("image", asset.to_data()), author="ana")
+    changed = [e for e in seen if (isinstance(e, AssetsChanged) and e.kind.name == "image")]
     assert changed[0].to_data() == {"type": "image", "id": asset.id, "asset": asset.to_data()}
-    doc.execute(ForgetImage(asset.id), author="ana")
-    assert [e for e in seen if isinstance(e, ImagesChanged)][-1].to_data() == {
+    doc.execute(ForgetAsset("image", asset.id), author="ana")
+    assert [e for e in seen if (isinstance(e, AssetsChanged) and e.kind.name == "image")][-1].to_data() == {
         "type": "image",
         "id": asset.id,
         "asset": None,
@@ -227,7 +225,7 @@ def test_the_history_has_a_sentence_for_adding_an_image():
 def test_command_data_round_trips_for_images():
     asset = image_asset()
     obj = image_object(asset=asset)
-    for command in (DefineImage(asset), ForgetImage(asset.id), add(obj)):
+    for command in (DefineAsset("image", asset.to_data()), ForgetAsset("image", asset.id), add(obj)):
         # Objects are shared by all three apps, so their commands are namespaced ``core.`` (E10.16).
         assert command.kind.startswith("core.")
         assert WorkbookModel.registry.decode(encode(command)) == command
@@ -246,7 +244,7 @@ def test_equal_states_serialize_equally_with_shared_images_whatever_order(doc):
     put_image(doc, "i2", asset=asset)
     other = Document(WorkbookModel(), store=MemoryStore())
     other.execute(AddSheet(S1, "Sheet1"), author="x")
-    other.execute(Batch((DefineImage(asset), add(image_object("i1", asset=asset)))), author="x")
+    other.execute(Batch((DefineAsset("image", asset.to_data()), add(image_object("i1", asset=asset)))), author="x")
     other.execute(add(image_object("i2", asset=asset)), author="x")
     assert other.model.serialize() == doc.model.serialize()
 

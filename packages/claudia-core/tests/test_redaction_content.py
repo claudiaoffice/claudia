@@ -1,7 +1,7 @@
 """What counts as content when a step is redacted (D720): words, descriptions, the words of an import record and the
 pixels of a picture go; ids, sizes and places stay."""
 
-from claudia_core import AddObject, DefineImage, ImageImport, ObjectBody, decode_image, paragraph_for
+from claudia_core import AddObject, DefineAsset, ImageImport, ObjectBody, decode_image, paragraph_for
 from claudia_core.assets import BLANK_GIF, ImageAsset
 from claudia_core.objects import FILLER, blank_body
 
@@ -25,8 +25,8 @@ def test_a_redacted_picture_keeps_its_id_and_size_but_not_its_pixels():
 
 
 def test_redacting_the_step_that_took_a_picture_in_blanks_the_picture():
-    redacted = DefineImage(asset()).redacted()
-    assert isinstance(redacted, DefineImage) and redacted.image.data == BLANK_GIF
+    redacted = DefineAsset("image", asset().to_data()).redacted()
+    assert isinstance(redacted, DefineAsset) and ImageAsset.from_data(redacted.data).data == BLANK_GIF
 
 
 def test_an_import_record_keeps_who_and_when_but_not_what_was_written_or_where_it_came_from():

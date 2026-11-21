@@ -7,9 +7,11 @@ from conftest import SLIDE, add, define, move, put, put_image, reopen, resize, s
 
 import claudia_creates.model as model_module
 from claudia_core import (
+    AssetsChanged,
     Batch,
     CreateStyle,
     Document,
+    ForgetAsset,
     MemoryStore,
     RegionHeld,
     RemoveStyle,
@@ -25,7 +27,6 @@ from claudia_core import (
 )
 from claudia_creates import (
     AddSlide,
-    ForgetShape,
     ObjectSet,
     RemoveObject,
     RemoveSlide,
@@ -34,7 +35,7 @@ from claudia_creates import (
     SlideModel,
     VisualObject,
 )
-from claudia_creates.events import ObjectsChanged, ShapesChanged, SlidesChanged
+from claudia_creates.events import ObjectsChanged, SlidesChanged
 
 
 def ids(doc, slide=SLIDE):
@@ -208,11 +209,11 @@ def test_a_circle_stays_a_circle(doc):
 def test_a_shape_that_is_in_use_cannot_be_forgotten_and_one_that_exists_cannot_be_defined_again(doc):
     put(doc, shape_object())
     with pytest.raises(ValueError, match="in use"):
-        doc.execute(ForgetShape("rectangle"), author="ana")
+        doc.execute(ForgetAsset("shape", "rectangle"), author="ana")
     with pytest.raises(ValueError, match="already"):
         doc.execute(define(), author="ana")
     doc.execute(RemoveObject("r1"), author="ana")
-    doc.execute(ForgetShape("rectangle"), author="ana")
+    doc.execute(ForgetAsset("shape", "rectangle"), author="ana")
     assert doc.model.shapes == {}
 
 
@@ -250,7 +251,7 @@ def test_a_removed_slide_comes_back_where_it_was(doc):
 def test_undo_of_a_removal_is_refused_when_a_colleague_took_the_shape_away_meanwhile(doc):
     put(doc, shape_object())
     doc.execute(RemoveObject("r1"), author="ana")
-    doc.execute(ForgetShape("rectangle"), author="ben")
+    doc.execute(ForgetAsset("shape", "rectangle"), author="ben")
     with pytest.raises(UndoConflict):
         doc.undo("ana")
 
@@ -406,11 +407,11 @@ def test_views_hear_about_shapes_and_slides(doc):
     seen = collect(doc)
     doc.execute(define(), author="ana")
     doc.execute(AddSlide("s2"), author="ana")
-    shapes = [e for e in seen if isinstance(e, ShapesChanged)]
+    shapes = [e for e in seen if (isinstance(e, AssetsChanged) and e.kind.name == "shape")]
     assert shapes[0].to_data()["type"] == "shape" and shapes[0].to_data()["definition"]["id"] == "rectangle"
     assert any(isinstance(e, SlidesChanged) for e in seen)
-    doc.execute(ForgetShape("rectangle"), author="ana")
-    assert [e for e in seen if isinstance(e, ShapesChanged)][-1].to_data() == {
+    doc.execute(ForgetAsset("shape", "rectangle"), author="ana")
+    assert [e for e in seen if (isinstance(e, AssetsChanged) and e.kind.name == "shape")][-1].to_data() == {
         "type": "shape",
         "id": "rectangle",
         "definition": None,
@@ -464,7 +465,7 @@ def test_command_data_round_trips_and_kinds_are_namespaced():
         SetText("t1", "x"),
         SetSnap("t1", False),
         define(),
-        ForgetShape("rectangle"),
+        ForgetAsset("shape", "rectangle"),
     ]
     for command in commands:
         # Slides are this app's own; everything about objects is shared, so it is namespaced ``core.`` (E10.16).
@@ -585,7 +586,7 @@ def test_a_slide_object_knows_what_it_is_made_of():
         "anchor",
     }
     assert box.to_data()["anchor"] == {"kind": "slide", "container": SLIDE, "x": 100, "y": 100}
-    assert define().to_data()["shape"]["id"] == "rectangle"
+    assert define().to_data()["data"]["id"] == "rectangle"
 
 
 # -- an object's words as a paragraph (E10.17, D181) ------------------------------------------------------------

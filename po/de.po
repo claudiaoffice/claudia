@@ -6833,7 +6833,7 @@ msgstr "Dieses Dokument kann nicht sagen, was das Löschen des Formats bewirken 
 msgid "This document has no sheet yet."
 msgstr "Dieses Dokument hat noch kein Blatt."
 
-#: packages/claudia-server/src/claudia_server/hub.py:111
+#: packages/claudia-server/src/claudia_server/hub.py:113
 msgid "This document is on this server already, as “{id}”. It cannot be added a second time."
 msgstr "Dieses Dokument ist auf diesem Server bereits vorhanden, als „{id}“. Es kann nicht ein zweites Mal hinzugefügt werden."
 
@@ -8213,7 +8213,7 @@ msgstr "nicht zum Muster für Texte passen"
 msgid "do not start with “{text}”"
 msgstr "nicht mit „{text}“ beginnen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:759
+#: packages/claudia-server/src/claudia_server/hub.py:761
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "Dokument-IDs bestehen aus 1–64 Buchstaben, Ziffern, „-“ oder „_“"
 
@@ -8437,7 +8437,7 @@ msgstr "in {source}"
 msgid "insert"
 msgstr "einfügen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:355
+#: packages/claudia-server/src/claudia_server/hub.py:357
 msgid "internal server error"
 msgstr "Interner Serverfehler"
 
@@ -8657,7 +8657,7 @@ msgstr "keine Zellen"
 msgid "no checkpoint number {checkpoint}"
 msgstr "Es gibt keinen Prüfpunkt mit der Nummer {checkpoint}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:912
+#: packages/claudia-server/src/claudia_server/hub.py:914
 msgid "no document {id!r}"
 msgstr "Kein Dokument {id!r}"
 
@@ -9577,7 +9577,7 @@ msgstr "Dieses Dokument hat keine Stile"
 msgid "this document has no table {id!r}"
 msgstr "Dieses Dokument hat keine Tabelle {id!r}"
 
-#: packages/claudia-server/src/claudia_server/rendered.py:215
+#: packages/claudia-server/src/claudia_server/rendered.py:216
 msgid "this document has nothing rendered with the id {id!r}"
 msgstr "Dieses Dokument enthält nichts Gerendertes mit der Kennung {id!r}"
 
@@ -9645,7 +9645,7 @@ msgstr "Dieser Server bewahrt keine Wiederherstellungsschlüssel auf"
 msgid "this server does not list a document's people this way"
 msgstr "Dieser Server listet die Personen eines Dokuments nicht auf diese Weise auf"
 
-#: packages/claudia-server/src/claudia_server/rendered.py:136
+#: packages/claudia-server/src/claudia_server/rendered.py:135
 msgid "this server does not make rendered containers"
 msgstr "Dieser Server erzeugt keine gerenderten Container"
 
@@ -9673,11 +9673,11 @@ msgstr "Dieser Server unterstützt die Übergabe des Eigentums nicht"
 msgid "this server does not support leaving a document"
 msgstr "Dieser Server unterstützt das Verlassen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/hub.py:695
+#: packages/claudia-server/src/claudia_server/hub.py:697
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
 
-#: packages/claudia-server/src/claudia_server/hub.py:839
+#: packages/claudia-server/src/claudia_server/hub.py:841
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "dieser Server hält seine Dokumente nur im Speicher und kann keine Datei aufnehmen"
 
@@ -9833,7 +9833,7 @@ msgstr "xelatex"
 msgid "you"
 msgstr "Sie"
 
-#: packages/claudia-server/src/claudia_server/hub.py:327
+#: packages/claudia-server/src/claudia_server/hub.py:329
 msgid "you are no longer a person of this document"
 msgstr "Sie gehören nicht mehr zu den Personen dieses Dokuments"
 
@@ -10093,27 +10093,27 @@ msgstr "{host} ist von anderen Computern aus erreichbar. Zeigen Sie mit dem Einr
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr "{host} ist über diesen Computer hinaus noch nicht erreichbar, daher ist das nicht erforderlich – legen Sie aber jetzt einen Namen und ein Passwort fest, wenn Sie die Einstellungen verwalten möchten oder bevor Sie ihn später für andere öffnen."
 
-#: packages/claudia-server/src/claudia_server/hub.py:486
+#: packages/claudia-server/src/claudia_server/hub.py:488
 msgid "{id} already has {limit} connections"
 msgstr "{id} hat schon {limit} Verbindungen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:900
+#: packages/claudia-server/src/claudia_server/hub.py:902
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "{id} lässt sich noch nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:903
+#: packages/claudia-server/src/claudia_server/hub.py:905
 msgid "{id} cannot be opened: {reason}"
 msgstr "{id} lässt sich nicht öffnen: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:907
+#: packages/claudia-server/src/claudia_server/hub.py:909
 msgid "{id} cannot be read"
 msgstr "{id} lässt sich nicht lesen"
 
-#: packages/claudia-server/src/claudia_server/hub.py:851
+#: packages/claudia-server/src/claudia_server/hub.py:853
 msgid "{id} cannot be taken in: {reason}"
 msgstr "{id} kann nicht aufgenommen werden: {reason}"
 
-#: packages/claudia-server/src/claudia_server/hub.py:842 packages/claudia-server/src/claudia_server/hub.py:847
+#: packages/claudia-server/src/claudia_server/hub.py:844 packages/claudia-server/src/claudia_server/hub.py:849
 msgid "{id} is here already"
 msgstr "{id} ist schon hier"
 

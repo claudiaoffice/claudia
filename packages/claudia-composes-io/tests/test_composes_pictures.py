@@ -56,7 +56,7 @@ def a_text(*texts: str) -> TextModel:
 
 def put_picture(model: TextModel, object_id="o1", *, at=("b1", 5), size=(200, 100), shade=0, **changes) -> ImageAsset:
     asset = a_picture(shade=shade)
-    model.define_image(asset)
+    model.images.define(asset)
     body = ObjectBody(object_id, "image", *size, "plain-image", ref=asset.id, imported=an_import(asset), **changes)
     model.insert_object(VisualObject(body, BlockAnchor(*at)))
     return asset
@@ -528,7 +528,7 @@ def test_an_svg_added_to_a_kept_docx_says_its_fallback_picture_is_empty():
 
     def edit(model: TextModel) -> None:
         asset = an_svg_asset()
-        model.define_image(asset)
+        model.images.define(asset)
         model.insert_object(
             VisualObject(
                 ObjectBody("o1", "image", 80, 40, "plain-image", ref=asset.id, imported=an_import(asset)),
@@ -550,9 +550,9 @@ def a_container_text(*, pictured: bool = True, svg: bool = True) -> TextModel:
     image = None
     if pictured:
         asset = an_svg_asset() if svg else a_picture(shade=7)
-        model.define_image(asset)
+        model.images.define(asset)
         image = asset.id
-    model.define_rendering(RenderedDefinition("r1", "typst", "= Hi", image=image))
+    model.renderings.define(RenderedDefinition("r1", "typst", "= Hi", image=image))
     body = ObjectBody("c1", "rendered", 200, 100, "plain-image", ref="r1")
     model.insert_object(VisualObject(body, BlockAnchor("b1", 3)))
     return model
@@ -598,7 +598,7 @@ def test_two_rendered_containers_of_one_picture_share_one_png():
     model = a_container_text()
     from claudia_core import RenderedDefinition
 
-    model.define_rendering(RenderedDefinition("r2", "typst", "= Hi", image=next(iter(model.images))))
+    model.renderings.define(RenderedDefinition("r2", "typst", "= Hi", image=next(iter(model.images))))
     model.insert_object(
         VisualObject(ObjectBody("c2", "rendered", 200, 100, "plain-image", ref="r2"), BlockAnchor("b2", 1))
     )
@@ -612,8 +612,8 @@ def test_a_rendered_container_added_to_a_kept_odt_says_what_a_program_without_sv
     found = LossLog()
     baseline, current = odt_to_text(original), odt_to_text(original)
     container = a_container_text()
-    current.define_image(next(iter(container.images.values())))
-    current.define_rendering(container.renderings["r1"])
+    current.images.define(next(iter(container.images.values())))
+    current.renderings.define(container.renderings["r1"])
     current.insert_object(container.get_object("c1"))
     data = apply_edits_to_odt(original, baseline, current, losses=found)
     assert "svg-picture" in codes(found.result()) and problems(data) == []
@@ -629,7 +629,7 @@ def test_a_rendered_container_nothing_has_drawn_is_listed_when_a_kept_file_is_pa
         found = LossLog()
         baseline, current = to_text(original), to_text(original)
         container = a_container_text(pictured=False)
-        current.define_rendering(container.renderings["r1"])
+        current.renderings.define(container.renderings["r1"])
         current.insert_object(container.get_object("c1"))
         patch(original, baseline, current, losses=found)
         assert "rendering-pending" in codes(found.result())
@@ -794,7 +794,7 @@ def test_a_picture_swapped_for_another_in_a_kept_docx_leaves_one_picture():
     def edit(model: TextModel) -> None:
         found = only(model)
         other = a_picture(shade=9)
-        model.define_image(other)
+        model.images.define(other)
         body = replace(found.body, ref=other.id, imported=an_import(other))
         model.replace_object(VisualObject(body, found.anchor))
 
@@ -831,7 +831,7 @@ def test_a_picture_put_into_a_paragraph_with_a_tab_and_a_link_lands_after_what_c
 def test_two_svg_pictures_of_one_asset_share_the_svg_part_of_a_docx():
     model = a_text("Hello world")
     asset = an_svg_asset()
-    model.define_image(asset)
+    model.images.define(asset)
     for number, offset in ((1, 1), (2, 5)):
         body = ObjectBody(f"o{number}", "image", 80, 40, "plain-image", ref=asset.id, imported=an_import(asset))
         model.insert_object(VisualObject(body, BlockAnchor("b1", offset)))

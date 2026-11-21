@@ -204,7 +204,7 @@ def new_deck() -> tuple[bytes, list[str]]:
 
     model, library = SlideModel(), ShapeLibrary.load()
     for shape_id in ("circle", "rectangle", "triangle"):
-        model.define_shape(library.get(shape_id))
+        model.shapes.define(library.get(shape_id))
     model.insert_slide("s1")
     model.insert_slide("s2")
     put(model, "o1", "s1", "text", 160, 90, 800, 120, "Annual report\nSecond line & <more>")

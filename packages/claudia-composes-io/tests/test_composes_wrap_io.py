@@ -43,7 +43,7 @@ def a_text(wrap="over", gap=8, *, picture=False) -> TextModel:
     anchor = BlockAnchor("b1", 5, wrap=wrap, gap=gap)
     if picture:
         asset = png()
-        model.define_image(asset)
+        model.images.define(asset)
         body = picture_body("o1", asset, (90, 90), name="p", description="a picture", decorative=False, rotation=0)
     else:
         body = ObjectBody("o1", "text", 200, 100, "plain-box", paragraph_for("o1", "body", "Words"))

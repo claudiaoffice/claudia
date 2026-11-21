@@ -6,6 +6,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Changed
+- **Breaking** — `DefineImage`, `ForgetImage`, `DefineShape`, `ForgetShape`, `ImagesChanged` and `ShapesChanged` are
+  no longer re-exported: claudia-core's `DefineAsset`, `ForgetAsset` and `AssetsChanged` replace them (D1431).
 - An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 16.
 
 ### Added

@@ -413,9 +413,9 @@ def odt_to_text(odt_bytes: bytes) -> TextModel:
     for _, _, _, each in sorted(floating, key=lambda found: found[:3]):
         if isinstance(each, FileBox):
             if each.body.shape is not None and each.body.shape not in model.shapes:
-                model.define_shape(primitive(each.body.shape))
+                model.shapes.define(primitive(each.body.shape))
         elif each.asset.id not in model.images:
-            model.define_image(each.asset)
+            model.images.define(each.asset)
         model.insert_object(
             VisualObject(
                 each.body,

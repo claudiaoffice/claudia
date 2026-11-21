@@ -100,40 +100,6 @@
  "DEFAULT_WRAP_GAP": {
   "value": "8"
  },
- "DefineImage": {
-  "class": [
-   "Command"
-  ],
-  "init": "(image: 'ImageAsset') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "DefineShape": {
-  "class": [
-   "Command"
-  ],
-  "init": "(shape: 'ShapeDefinition') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineShape'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
  "DeleteText": {
   "class": [
    "TextCommand"
@@ -182,40 +148,6 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
- },
- "ForgetImage": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetImage'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "ForgetShape": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetShape'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
  },
  "InsertText": {
   "class": [

@@ -1,7 +1,7 @@
 """State events the creates model raises through ``Context.emit`` (the kernel adds its own).
 
-``ObjectsChanged``, ``ShapesChanged`` and ``ImagesChanged`` are the same events in all three apps and live in
-:mod:`claudia_core.objects` (E10.16); they are re-exported here, where they have always been imported from. What
+``ObjectsChanged`` and ``AssetsChanged`` (shapes, images) are the same events in all three apps and live in
+:mod:`claudia_core` (E10.16, D1431); they are re-exported here, where they have always been imported from. What
 is only a presentation's own is below.
 """
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from claudia_core import ImagesChanged, ObjectsChanged, ShapesChanged  # noqa: F401  (re-exported)
+from claudia_core import AssetsChanged, ObjectsChanged  # noqa: F401  (re-exported)
 
 
 @dataclass(frozen=True)

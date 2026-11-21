@@ -627,7 +627,7 @@ def _model_of(
         model.names.put(named)
     for chart in _held_charts(tables, parts):
         if chart.held is not None:
-            model.define_diagram(chart.spec)
+            model.diagrams.define(chart.spec)
             body = ObjectBody(chart.object_id, "diagram", chart.width, chart.height, "plain-image", ref=chart.spec_id)
             if chart.description:
                 body = replace(body, description=chart.description)

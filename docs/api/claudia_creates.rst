@@ -92,8 +92,7 @@ documented in :doc:`claudia_core`:
 :class:`~claudia_core.AddObject`, :class:`~claudia_core.RemoveObject`,
 :class:`~claudia_core.MoveObject`, :class:`~claudia_core.ResizeObject`,
 :class:`~claudia_core.RotateObject`, :class:`~claudia_core.SetText`, :class:`~claudia_core.SetSnap`, :class:`~claudia_core.DescribeObject`,
-:class:`~claudia_core.DefineShape`, :class:`~claudia_core.ForgetShape`,
-:class:`~claudia_core.DefineImage`, :class:`~claudia_core.ForgetImage`, :class:`~claudia_core.ObjectSet`.
+:class:`~claudia_core.DefineAsset`, :class:`~claudia_core.ForgetAsset`, :class:`~claudia_core.ObjectSet`.
 
 State events
 ------------

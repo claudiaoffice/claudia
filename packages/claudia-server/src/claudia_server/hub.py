@@ -27,11 +27,12 @@ import re
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from claudia_computes import WorkbookModel
 from claudia_container import Domain
 from claudia_core import (
+    AssetsChanged,
     ChatPosted,
     CommandLog,
     Document,
@@ -40,7 +41,6 @@ from claudia_core import (
     HistoryChanged,
     MemoryStore,
     ObjectModel,
-    RenderingsChanged,
     Revision,
 )
 from claudia_core.clock import utc_now
@@ -66,6 +66,8 @@ from .what_if import drop_person
 from .workers import DEFAULT_MAX_WAITING, DEFAULT_WORKERS, WorkerPool
 
 if TYPE_CHECKING:
+    from claudia_core import RenderedDefinition
+
     from .assistant import Assistant
     from .rendered import RenderDesk
 
@@ -517,7 +519,7 @@ class HostedDocument:
         return everyone
 
     def _on_event(self, event: object) -> None:
-        if isinstance(event, RenderingsChanged):
+        if isinstance(event, AssetsChanged) and event.kind.name == "rendering":
             self._schedule_render(event)
         data = event.to_data()  # type: ignore[attr-defined]
         if isinstance(event, EphemeralPublished) and event.message.kind == "presence":
@@ -549,12 +551,12 @@ class HostedDocument:
                 connection.removed = True
 
     # -- pictures follow the text (D395) -------------------------------------------------------
-    def _schedule_render(self, event: RenderingsChanged) -> None:
+    def _schedule_render(self, event: AssetsChanged) -> None:
         """A container's definition changed: make its picture soon, unless it was made from exactly this text already.
 
         Typing makes a burst of changes, so a job waits ``RENDER_DELAY`` and a newer change replaces it. The job is
         by the person whose request caused the change, so that undo follows what that person did (D395)."""
-        rendering_id, definition = event.rendering_id, event.definition
+        rendering_id, definition = event.asset_id, cast("RenderedDefinition | None", event.asset)
         previous = self._render_jobs.pop(rendering_id, None)
         if previous is not None and previous is not asyncio.current_task():
             previous.cancel()
