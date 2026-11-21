@@ -70,6 +70,22 @@ _avoid_: host, backend, instance
 The person who looks after a server; never a role in a document, and sees that documents exist but not what is in them.
 _avoid_: admin, owner
 
+**Setup code**
+The short code a server makes at every start that ends with no administrator, shows in its start banner and keeps in its state folder; whoever types it may name the server's first administrator. It proves that a person can read the server's log or folder, so it is never sent over the network, and it dies when the first administrator is named.
+_avoid_: setup password, activation code, token, pin
+
+**Access secret**
+A secret a server may ask for before it lists or makes documents; it does not open any document, and an administrator sets and removes it.
+_avoid_: server password, api key, document password
+
+**Exposed server**
+A server that can be reached from other computers: it listens on a non-loopback address or sits behind a proxy.
+_avoid_: public server, remote server, internet server
+
+**Reset of the administrators**
+Starting a server with `--reset-administrators` to remove all its administrators; settings, documents and fonts stay, the old list is kept aside, and the next administrators are told. It is how access is regained when no administrator can sign in.
+_avoid_: reset, factory reset, password reset
+
 **Place**
 A location where claudia documents are kept: a server, as a person knows it by name and address. "This computer" is the claudia server running on her own machine; a claudia file in a folder on a disk is not in a place.
 _avoid_: location, library, folder, storage
