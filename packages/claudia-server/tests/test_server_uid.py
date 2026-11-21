@@ -12,7 +12,7 @@ from test_server_import import app_hub, hello, upload
 
 from claudia_composes import TextModel
 from claudia_computes import WorkbookModel
-from claudia_container import KdfParams, read_manifest
+from claudia_document_file import KdfParams, read_manifest
 from claudia_server import create_app
 from claudia_server.sealed import SealedDocuments
 from claudia_server.suite import Module, Suite

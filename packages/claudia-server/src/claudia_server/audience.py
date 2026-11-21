@@ -1,8 +1,8 @@
 """Who receives and may ask for what in a live document: the roles of the file, applied to the session (D1261, SEC-17).
 
 A document file has three separately encrypted parts, its **content**, its **history** and its **chat**, and a role
-holds the keys of some of them (D101, ``claudia_container.ROLE_DOMAINS``): a viewer holds the content key only. The live
-session must not give a viewer what her key would not open, so every event the server pushes and every method it
+holds the keys of some of them (D101, ``claudia_document_file.ROLE_DOMAINS``): a viewer holds the content key only. The
+live session must not give a viewer what her key would not open, so every event the server pushes and every method it
 answers belongs to one of those domains, and this module says which.
 
 Two tables, one rule:
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from claudia_container import ROLE_DOMAINS, Domain, Role
+from claudia_document_file import ROLE_DOMAINS, Domain, Role
 
 CONTENT, HISTORY, CHAT = Domain.CONTENT, Domain.HISTORY, Domain.CHAT
 

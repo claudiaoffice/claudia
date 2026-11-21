@@ -1,4 +1,4 @@
-"""The steps of ``claudiaoffice-log/specs/container/viewer.feature`` (D1261, D1262, E2.11) and of
+"""The steps of ``claudiaoffice-log/specs/document-file/viewer.feature`` (D1261, D1262, E2.11) and of
 ``login-wait.feature`` (D1266, E2.7): two windows of one real server, a person who may only look, and wrong passwords.
 """
 
@@ -8,8 +8,8 @@ from conftest import PASSWORD
 from playwright.sync_api import expect
 from pytest_bdd import given, parsers, scenarios, then, when
 
-scenarios("../../../claudiaoffice-log/specs/container/viewer.feature")
-scenarios("../../../claudiaoffice-log/specs/container/login-wait.feature")
+scenarios("../../../claudiaoffice-log/specs/document-file/viewer.feature")
+scenarios("../../../claudiaoffice-log/specs/document-file/login-wait.feature")
 
 
 # -- the document and its people ---------------------------------------------------------------------------------

@@ -65,3 +65,17 @@ library's flow blocks, the filler character █, and the verb. Where a file's pa
 the converters, the file's side is `docx_paragraph` / `odt_paragraph` (python-docx's class: `DocxParagraph`).
 
 The GTK client has no paragraph "block": it hosts the web client, so nothing changed there.
+
+## The document file (agreed)
+
+| Before | After |
+|---|---|
+| package `claudia-container`, `claudia_container` | `claudia-document-file`, `claudia_document_file` (D1430) |
+| its main module `claudia_container.container` | `claudia_document_file.file` |
+| `ContainerError` (base of the file's errors) | `DocumentFileError` |
+| `docs/container-format.md`, `docs/changelog-container.md`, `docs/api/claudia_container.rst` | `document-file-format.md`, `changelog-document-file.md`, `claudia_document_file.rst` |
+| `claudiaoffice-log/specs/container/` | `claudiaoffice-log/specs/document-file/` |
+| "the container" meaning the document file, in comments and docs | "the document file" |
+
+Kept: "container" for a Docker or OCI container (README, deployment, the state folder), the glossary's Container, and
+the history (changelog entries, decisions, notes). `Domain` (the glossary's Part) is not in D1430 and stays for now.

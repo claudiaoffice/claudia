@@ -1,8 +1,8 @@
-"""A file store for the demo server: documents and users survive a restart (stand-in for the container, E2).
+"""A file store for the demo server: documents and users survive a restart (stand-in for the document file, E2).
 
 **Not the real thing.** Nothing here is encrypted or compressed, and there is one journal file per document. The
-container (E2.1) replaces it, with encryption, key slots and blocks. It exists so that a demo server keeps what people
-made.
+document file (E2.1) replaces it, with encryption, key slots and blocks. It exists so that a demo server keeps what
+people made.
 
 Layout under the root folder::
 

@@ -1,4 +1,4 @@
-"""The sealed store: documents in the encrypted container, and their people (E2.1 to E2.3, E2.7).
+"""The sealed store: documents in their sealed document files, and their people (E2.1 to E2.3, E2.7).
 
 ``SealedDocuments`` is both of the server's storage interfaces at once: the ``DocumentProvider`` (documents) and the
 ``UserDirectory`` (who may open them). They cannot be separate, because the people of a document are the key slots in
@@ -7,8 +7,8 @@ its file, and a person's password is the only thing that opens them.
 Layout under the root folder::
 
     docs/<id>.claudia            the document file: manifest, key slots, sealed list of people, and the changes so far
-                                 as sealed blocks with their head record and a snapshot (see ``claudia_container``)
-    docs/<id>.claudia.journal    the sealed changes since then (see :mod:`claudia_container.journal`)
+                                 as sealed blocks with their head record and a snapshot (see ``claudia_document_file``)
+    docs/<id>.claudia.journal    the sealed changes since then (see :mod:`claudia_document_file.journal`)
 
 Every change is appended to the journal when it happens. **Packing** folds the journal into the blocks of the file,
 writes a fresh snapshot (a cache of the document's state, so that opening does not replay everything) and starts a new
@@ -44,9 +44,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from claudia_container import (
+from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Import, Snapshot
+from claudia_document_file import (
     AuditRecord,
-    ContainerError,
+    DocumentFileError,
     Domain,
     JournalError,
     JournalWriter,
@@ -87,7 +88,6 @@ from claudia_container import (
     warm,
     write_original,
 )
-from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Import, Snapshot
 
 from .auth import AI_USER, Account, AuthRefused, Credentials, is_reserved
 from .filestore import JournalStore, chat_items, history_items, replay
@@ -117,8 +117,8 @@ def _check_id(doc_id: object) -> str:
 
 
 def _clean_name(name: str) -> str:
-    """The name as the container stores it: Unicode-compatible, single-spaced. A name with a control character (a line
-    break, say) is refused, not tidied up."""
+    """The name as the document file stores it: Unicode-compatible, single-spaced. A name with a control character (a
+    line break, say) is refused, not tidied up."""
     text = unicodedata.normalize("NFKC", name)
     if any(unicodedata.category(c).startswith("C") for c in text):
         raise ValueError("a name cannot contain control characters")
@@ -218,11 +218,11 @@ def _snapshot_from(data: bytes | None) -> Snapshot | None:
 class SealedDocuments:
     """``DocumentProvider`` and ``UserDirectory`` over a folder of document files (see the module text).
 
-    ``kdf`` sets the cost of the password hashing of *new* documents (default: the container's), either as one fixed
-    value or as a function asked each time a document is made (``KdfPolicy.current``); existing ones keep theirs.
-    ``key_ttl`` is how long after a login the keys wait for the document to be opened. ``pack_every`` is after how
-    many changes an open document is packed into its file (see the module text). ``options`` go to every ``Document``
-    (clock, lock clock)."""
+    ``kdf`` sets the cost of the password hashing of *new* documents (default: claudia-document-file's), either as one
+    fixed value or as a function asked each time a document is made (``KdfPolicy.current``); existing ones keep theirs.
+    ``key_ttl`` is how long after a login the keys wait for the document to be opened. ``pack_every`` is after how many
+    changes an open document is packed into its file (see the module text). ``options`` go to every ``Document`` (clock,
+    lock clock)."""
 
     def __init__(
         self,
@@ -265,7 +265,7 @@ class SealedDocuments:
     # -- where things are ---------------------------------------------------------------------
     def _new_kdf(self) -> KdfParams | None:
         """The cost of hashing for a document made now: fixed, or asked from a policy that measures the machine
-        (``kdf_policy.py``); ``None`` is the container's default."""
+        (``kdf_policy.py``); ``None`` is claudia-document-file's default."""
         return self._kdf() if callable(self._kdf) else self._kdf
 
     def _file(self, doc_id: str) -> Path:
@@ -323,7 +323,7 @@ class SealedDocuments:
             return None
         try:
             unlocked = unlock(path, name, password)
-        except (ContainerError, OSError) as error:
+        except (DocumentFileError, OSError) as error:
             log.warning("cannot unlock %s: %s", path.name, error)
             return None
         if unlocked is None:
@@ -343,7 +343,7 @@ class SealedDocuments:
             path = self._file(doc_id)
             if path.is_file():
                 warm(path, name, password)
-        except (ValueError, ContainerError, OSError):
+        except (ValueError, DocumentFileError, OSError):
             return
 
     def add_user(self, doc_id: str, name: str, password: str, role: str = "editor") -> Account:
@@ -438,7 +438,7 @@ class SealedDocuments:
     def _is_empty(self, doc_id: str, keys: Mapping[Domain, bytes]) -> bool:
         try:
             state = read_state(self._file(doc_id), keys)
-        except (ContainerError, JournalError, OSError):
+        except (DocumentFileError, JournalError, OSError):
             return False  # something is wrong with it: never delete what might be somebody's work
         return not state.history and not state.chat
 
@@ -469,7 +469,7 @@ class SealedDocuments:
             return change_password(self._file(doc_id), _clean_name(name), old_password, new_password)
         except WeakPassword as problem:
             raise ValueError(explain(problem)) from problem
-        except (ContainerError, OSError) as error:
+        except (DocumentFileError, OSError) as error:
             log.warning("cannot change a password in %s: %s", doc_id, error)
             return False
 
@@ -551,7 +551,7 @@ class SealedDocuments:
         return True
 
     def sealed_copy(self, doc_id: str, name: str, password: str) -> bytes | None:
-        """The document as a sealed file for ``name`` to keep (D110; see ``claudia_container.sealed_copy`` for what
+        """The document as a sealed file for ``name`` to keep (D110; see ``claudia_document_file.sealed_copy`` for what
         each role gets). An open document is packed first, so the file holds what has been said so far, and has a
         fresh snapshot for a viewer's copy. ``None`` for a wrong name or password."""
         with self._lock:
@@ -560,7 +560,7 @@ class SealedDocuments:
             self._pack(doc_id, held)
         try:
             return sealed_copy(self._file(doc_id), name, password)
-        except (ContainerError, OSError) as error:
+        except (DocumentFileError, OSError) as error:
             raise ValueError(f"the document cannot be copied: {error}") from error
 
     # -- what left the document (D1271) -------------------------------------------------------
@@ -622,7 +622,7 @@ class SealedDocuments:
                 log_, chat = self._replayed(state.history, state.chat)
                 snapshot, pending = _snapshot_from(state.snapshot), state.pending
             writer = begin(path, keys)
-        except (ContainerError, JournalError) as error:
+        except (DocumentFileError, JournalError) as error:
             raise ValueError(f"the document is damaged or has been changed: {error}") from error
         store = SealedStore(path, writer, keys)
         if fresh:
@@ -715,7 +715,7 @@ class SealedDocuments:
             return None
         try:
             return read_original(self._file(doc_id), keys)
-        except ContainerError:
+        except DocumentFileError:
             log.exception("the kept original of %s does not open", doc_id)
             return None
 
@@ -737,7 +737,7 @@ class SealedDocuments:
             if twin is not None:
                 raise DuplicateDocument(twin.id)
             os.link(temp, target)  # fails if the target exists: never overwrites
-        except ContainerError as error:
+        except DocumentFileError as error:
             raise ValueError(str(error)) from error
         finally:
             temp.unlink(missing_ok=True)
@@ -776,7 +776,7 @@ class SealedDocuments:
             unlocked = unlock_with_recovery(path, key) if person is not None else None
         except WeakPassword as problem:
             raise ValueError(explain(problem)) from problem
-        except (ContainerError, OSError) as error:
+        except (DocumentFileError, OSError) as error:
             log.warning("cannot recover %s: %s", path.name, error)
             return None
         if person is None or unlocked is None:
@@ -789,7 +789,7 @@ class SealedDocuments:
         """The uid of a stored document (D533), or ``None`` if there is no such document or it cannot be read."""
         try:
             return read_manifest(self._file(doc_id)).uid
-        except (ContainerError, OSError, ValueError):
+        except (DocumentFileError, OSError, ValueError):
             return None
 
     def find(self, uid: str) -> StoredInfo | None:
@@ -807,7 +807,7 @@ class SealedDocuments:
                 journal = journal_path(path)
                 if journal.exists():
                     changed = max(changed, journal.stat().st_mtime)
-            except (ContainerError, OSError, ValueError):
+            except (DocumentFileError, OSError, ValueError):
                 continue  # not a document of ours; never break the list for it
             if manifest.app != self.model_cls.app:
                 continue  # another app's file in this app's place (D431): not listed, never opened

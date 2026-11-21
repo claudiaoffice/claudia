@@ -1,4 +1,4 @@
-"""The demo's file store: documents and users survive a restart (stand-in for the container, E2)."""
+"""The demo's file store: documents and users survive a restart (stand-in for the document file, E2)."""
 
 import json
 import os

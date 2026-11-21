@@ -13,10 +13,10 @@ members = [
     "claudia-composes-io",
     "claudia-computes",
     "claudia-computes-io",
-    "claudia-container",
     "claudia-core",
     "claudia-creates",
     "claudia-creates-io",
+    "claudia-document-file",
     "claudia-file-writer",
     "claudia-fonts",
     "claudia-monorepo",
@@ -420,20 +420,6 @@ requires-dist = [
 ]
 
 [[package]]
-name = "claudia-container"
-source = { editable = "packages/claudia-container" }
-dependencies = [
-    { name = "claudia-file-writer" },
-    { name = "cryptography" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "claudia-file-writer", editable = "packages/claudia-file-writer" },
-    { name = "cryptography", specifier = ">=44" },
-]
-
-[[package]]
 name = "claudia-core"
 source = { editable = "packages/claudia-core" }
 
@@ -472,6 +458,20 @@ requires-dist = [
 ]
 
 [[package]]
+name = "claudia-document-file"
+source = { editable = "packages/claudia-document-file" }
+dependencies = [
+    { name = "claudia-file-writer" },
+    { name = "cryptography" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "claudia-file-writer", editable = "packages/claudia-file-writer" },
+    { name = "cryptography", specifier = ">=44" },
+]
+
+[[package]]
 name = "claudia-file-writer"
 source = { editable = "packages/claudia-file-writer" }
 
@@ -503,10 +503,10 @@ dependencies = [
     { name = "claudia-composes-io" },
     { name = "claudia-computes" },
     { name = "claudia-computes-io" },
-    { name = "claudia-container" },
     { name = "claudia-core" },
     { name = "claudia-creates" },
     { name = "claudia-creates-io" },
+    { name = "claudia-document-file" },
     { name = "claudia-file-writer" },
     { name = "claudia-fonts" },
     { name = "claudia-odf-io" },
@@ -542,10 +542,10 @@ requires-dist = [
     { name = "claudia-composes-io", editable = "packages/claudia-composes-io" },
     { name = "claudia-computes", editable = "packages/claudia-computes" },
     { name = "claudia-computes-io", editable = "packages/claudia-computes-io" },
-    { name = "claudia-container", editable = "packages/claudia-container" },
     { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "claudia-creates", editable = "packages/claudia-creates" },
     { name = "claudia-creates-io", editable = "packages/claudia-creates-io" },
+    { name = "claudia-document-file", editable = "packages/claudia-document-file" },
     { name = "claudia-file-writer", editable = "packages/claudia-file-writer" },
     { name = "claudia-fonts", editable = "packages/claudia-fonts" },
     { name = "claudia-odf-io", editable = "packages/claudia-odf-io" },
@@ -633,10 +633,10 @@ dependencies = [
     { name = "claudia-composes-io" },
     { name = "claudia-computes" },
     { name = "claudia-computes-io" },
-    { name = "claudia-container" },
     { name = "claudia-core" },
     { name = "claudia-creates" },
     { name = "claudia-creates-io" },
+    { name = "claudia-document-file" },
     { name = "claudia-file-writer" },
     { name = "claudia-fonts" },
     { name = "claudia-opc-io" },
@@ -662,10 +662,10 @@ requires-dist = [
     { name = "claudia-composes-io", editable = "packages/claudia-composes-io" },
     { name = "claudia-computes", editable = "packages/claudia-computes" },
     { name = "claudia-computes-io", editable = "packages/claudia-computes-io" },
-    { name = "claudia-container", editable = "packages/claudia-container" },
     { name = "claudia-core", editable = "packages/claudia-core" },
     { name = "claudia-creates", editable = "packages/claudia-creates" },
     { name = "claudia-creates-io", editable = "packages/claudia-creates-io" },
+    { name = "claudia-document-file", editable = "packages/claudia-document-file" },
     { name = "claudia-file-writer", editable = "packages/claudia-file-writer" },
     { name = "claudia-fonts", editable = "packages/claudia-fonts" },
     { name = "claudia-opc-io", editable = "packages/claudia-opc-io" },

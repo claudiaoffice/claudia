@@ -120,7 +120,7 @@ app's folder as it is, uid included, and the person opens it with a name and pas
 overwrites (409), refuses a document that is here already, under whatever name and in whatever app (409, with a
 sentence naming the one that is here, D535), and a server that keeps documents in memory cannot take one in (422).
 
-An **unencrypted Claudia export** (`.claudia-export.zip`, D1270, D1272; the layout is in [the format](container-format.md))
+An **unencrypted Claudia export** (`.claudia-export.zip`, D1270, D1272; the layout is in [the format](document-file-format.md))
 is uploaded the same way. The answer has `format: "claudia-export"`, `kind: "Claudia export"`, `app`, `made_by` and
 `made_at` (who exported it and when, as the file says: the dialog shows it, nothing trusts it) and a `suggested_id` made
 from the file's name; `hosted` says whether this server has the app. The second step is the one of an Office file with
@@ -236,7 +236,7 @@ answer `forbidden`. A person who was away gets the new keys at her next login, f
   history, the chat and the names of the people are encrypted (AES-256-GCM), and the keys are opened by each person's
   password (Argon2id). Nothing readable is on disk, not even who the people are. A wrong password, an unknown name and a
   document that does not exist give the same answer in the same time. Passwords have at least 8 characters, a capital
-  letter, a small letter and a digit. See `claudia-container` and the design in `e2-container-design.md`.
+  letter, a small letter and a digit. See `claudia-document-file` and the design in `e2-container-design.md`.
 * The keys are held in memory only while a document is open, and are forgotten when the server unloads it. After a
   restart a **viewer** cannot bring a document up (a viewer holds only the content key): the first person to log in has
   to be an owner or editor; a viewer is told so (error `sealed`, close code 4423, and the web app keeps trying until

@@ -1,5 +1,5 @@
 """File ▸ Manage ▸ Export… as Claudia's unencrypted zip, the record of what left and the import of the zip: steps of
-``claudiaoffice-log/specs/container/export-and-record.feature`` (D1270, D1271, D1272, E2.9).
+``claudiaoffice-log/specs/document-file/export-and-record.feature`` (D1270, D1271, D1272, E2.9).
 
 Scenarios tagged ``@unit`` are run by the unit tests they name, not here. The saved file is opened as a person
 would: as a zip, looking at its names and its bytes."""
@@ -13,7 +13,7 @@ from pathlib import Path
 from playwright.sync_api import expect
 from pytest_bdd import given, parsers, scenarios, then, when
 
-scenarios("../../../claudiaoffice-log/specs/container/export-and-record.feature")
+scenarios("../../../claudiaoffice-log/specs/document-file/export-and-record.feature")
 
 DIALOG = ".modal"
 UNPROTECTED_FORMAT = "claudia-unencrypted"

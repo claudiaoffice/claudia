@@ -66,7 +66,7 @@ A rule that nothing enforces will erode, so every `Planned` item is a debt item,
 
 **Rule.** Public interfaces are versioned and documented, and breaking changes are deliberate.
 
-The interfaces in scope are: the server API used by clients, the `.claudia` container format, the protocol between the document server and the AI server, the command and history log format, and the shared catalogue of translatable strings.
+The interfaces in scope are: the server API used by clients, the `.claudia` document file format, the protocol between the document server and the AI server, the command and history log format, and the shared catalogue of translatable strings.
 
 - Semantic versioning. The API version is part of the handshake or URL, and the server states which client versions it supports.
 - A file carries its own format version. A reader that meets a newer version than it supports refuses cleanly; it never opens and rewrites the file.
@@ -110,7 +110,7 @@ The interfaces in scope are: the server API used by clients, the `.claudia` cont
 **Rule.** Security and dependencies are a standing practice, not a release-time check.
 
 - Never commit secrets. Secret scanning runs in CI.
-- **No homemade cryptography.** Use vetted libraries only. Any change to the container, key slots, key derivation, signing or authentication needs a short threat note in the implementation note and a second look in review.
+- **No homemade cryptography.** Use vetted libraries only. Any change to the document file, key slots, key derivation, signing or authentication needs a short threat note in the implementation note and a second look in review.
 - **Imported office files are untrusted input.** Parsers apply limits (size, nesting depth, decompression ratio), do not resolve external entities, and never execute macros or fetch external resources.
 - Dependencies are locked and pinned. Python and npm advisories are scanned automatically; npm audit already fails the build on moderate or higher.
 - Each allowed advisory exception names the advisory and the condition for removing it.

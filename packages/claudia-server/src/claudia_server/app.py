@@ -75,8 +75,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
 
-from claudia_container import clean_details, is_uid
 from claudia_core import Import, LanguageError, Setup, normalize_language
+from claudia_document_file import clean_details, is_uid
 from claudia_fonts import DEFAULT_SUBSTITUTIONS
 
 from ._version import __version__

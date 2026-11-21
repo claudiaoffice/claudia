@@ -8,7 +8,7 @@ document, missing credentials: always the same answer, so nothing can be learned
 The account's ``user`` becomes the *author* of its edits (it selects the undo history and shows up in every
 update); its ``role`` decides whether it may write.
 
-The directory that really matters lives inside the document file (E2.3, users and roles in the container).
+The directory that really matters lives inside the document file (E2.3, its users and roles).
 ``ScryptDirectory`` is the in-memory stand-in with the same interface, used by tests and by a development server;
 the passwords in it are stored as scrypt hashes with a random salt, never as they are.
 
@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from .i18n import msg
 
 if TYPE_CHECKING:
-    from claudia_container import AuditRecord
+    from claudia_document_file import AuditRecord
 
 ROLES = ("owner", "editor", "viewer")
 WRITE_ROLES = ("owner", "editor")

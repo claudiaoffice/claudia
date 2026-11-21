@@ -5,8 +5,8 @@ import threading
 import pytest
 from starlette.testclient import TestClient
 
-from claudia_container import KdfParams, read_manifest
 from claudia_core.testing import ListModel
+from claudia_document_file import KdfParams, read_manifest
 from claudia_server.admin import AdminDirectory
 from claudia_server.admin_api import AdminContext, AiRuntime
 from claudia_server.admin_sessions import AdminSessions

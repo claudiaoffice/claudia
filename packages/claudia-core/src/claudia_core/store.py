@@ -1,4 +1,4 @@
-"""What the kernel needs from storage. The kernel never opens a file: E2 (container, encryption) implements this.
+"""What the kernel needs from storage. The kernel never opens a file: E2 (document file, encryption) implements this.
 
 Only three kinds of thing ever reach a store, matching the message classes of E1.6: log entries, chat records
 and snapshots. There is deliberately no method for ephemeral messages.

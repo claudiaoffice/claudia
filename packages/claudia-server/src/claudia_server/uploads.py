@@ -28,7 +28,7 @@ from urllib.parse import unquote
 
 from fastapi import HTTPException, Request
 
-from claudia_container import ContainerError, read_manifest
+from claudia_document_file import DocumentFileError, read_manifest
 
 from .formats import CLAUDIA, CLAUDIA_EXPORT, FORMATS, export_made, file_details, sniff
 
@@ -196,6 +196,6 @@ def _claudia_manifest(data: bytes) -> tuple[str, str, str, tuple[str, tuple[str,
         path.write_bytes(data)
         try:
             manifest = read_manifest(path)
-        except ContainerError as error:
+        except DocumentFileError as error:
             raise UploadRefused(415, "this Claudia file is damaged or from a newer version") from error
     return manifest.app, manifest.name, manifest.uid, (manifest.description, manifest.tags)

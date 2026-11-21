@@ -1,0 +1,19 @@
+[project]
+name = "claudia-document-file"
+dynamic = ["version"]
+description = "claudia-document-file: the encrypted document file of Claudia (E2): passwords, key slots, blocks, journal"
+requires-python = ">=3.14"
+dependencies = ["cryptography>=44", "claudia-file-writer"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/claudia_document_file/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudia_document_file"]
+
+[tool.uv.sources]
+claudia-file-writer = { workspace = true }

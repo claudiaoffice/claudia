@@ -10,7 +10,7 @@ from test_server_formats import made
 from test_server_import import app_hub, hello, request, upload
 
 from claudia_computes import WorkbookModel
-from claudia_container import KdfParams
+from claudia_document_file import KdfParams
 from claudia_server import create_app
 from claudia_server.formats import file_details
 from claudia_server.sealed import SealedDocuments

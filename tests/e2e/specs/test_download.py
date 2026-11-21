@@ -1,8 +1,8 @@
-"""File ▸ Download: the steps of ``claudiaoffice-log/specs/container/download.feature`` (D110, D1270, E2.12).
+"""File ▸ Download: the steps of ``claudiaoffice-log/specs/document-file/download.feature`` (D110, D1270, E2.12).
 
 What is bound here is what is automated; a scenario with a step that has no code here is skipped with its words
 (``conftest.py``). Steps look at the page and at the file the browser saved, as a person would: the saved file is
-opened with the container library, the way the server opens a document, and looked at as bytes."""
+opened with the document file library, the way the server opens a document, and looked at as bytes."""
 
 from __future__ import annotations
 
@@ -13,9 +13,9 @@ from pathlib import Path
 from conftest import PASSWORD
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from claudia_container import unlock
+from claudia_document_file import unlock
 
-scenarios("../../../claudiaoffice-log/specs/container/download.feature")
+scenarios("../../../claudiaoffice-log/specs/document-file/download.feature")
 
 DIALOG = ".modal"
 

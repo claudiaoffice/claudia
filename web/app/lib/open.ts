@@ -148,7 +148,7 @@ export function tagsFromText(text: string): string[] {
   return [...seen]
 }
 
-/** Most tags a document has, and most characters of one: what the server keeps (`claudia_container.MAX_TAGS`, `MAX_TAG`). */
+/** Most tags a document has, and most characters of one: what the server keeps (`claudia_document_file.MAX_TAGS`, `MAX_TAG`). */
 export const MAX_TAGS = 10
 export const MAX_TAG = 30
 export const MAX_DESCRIPTION = 2000

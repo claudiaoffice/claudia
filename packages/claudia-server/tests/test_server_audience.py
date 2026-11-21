@@ -126,7 +126,7 @@ def test_every_ephemeral_kind_the_server_publishes_is_classified():
 
 
 def test_the_table_only_names_domains_a_document_has():
-    from claudia_container import Domain
+    from claudia_document_file import Domain
 
     domains = {rule.domain for rule in EVENT_RULES.values()} | set(EPHEMERAL_RULES.values())
     assert domains <= set(Domain)
@@ -341,8 +341,8 @@ def test_a_viewer_is_refused_before_the_method_runs():
 
 
 def test_the_role_table_is_the_files(monkeypatch):
-    """The live session follows the container's table of which role holds which key (one source of truth)."""
-    from claudia_container import ROLE_DOMAINS, Domain, Role
+    """The live session follows claudia-document-file's table of which role holds which key (one source of truth)."""
+    from claudia_document_file import ROLE_DOMAINS, Domain, Role
 
     assert audience.may_read("viewer", Domain.CONTENT)
     assert not audience.may_read("viewer", Domain.HISTORY)

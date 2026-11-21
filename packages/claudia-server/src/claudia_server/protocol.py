@@ -40,7 +40,6 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 from weakref import WeakKeyDictionary
 
-from claudia_container import AuditRecord, Domain, clean_details, write_export
 from claudia_core import (
     Document,
     KernelError,
@@ -51,6 +50,7 @@ from claudia_core import (
     UndoConflict,
     UnknownCommand,
 )
+from claudia_document_file import AuditRecord, Domain, clean_details, write_export
 
 from .ai_mode import parse_mode
 from .audience import may_read

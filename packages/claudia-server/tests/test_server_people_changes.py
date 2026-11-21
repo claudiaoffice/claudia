@@ -6,9 +6,9 @@ import pytest
 from starlette.testclient import TestClient
 from test_server_app import Peer, refused
 
-from claudia_container import KdfParams, read_state, unlock
-from claudia_container.slots import Domain
 from claudia_core.testing import ListModel
+from claudia_document_file import KdfParams, read_state, unlock
+from claudia_document_file.slots import Domain
 from claudia_server.app import create_app
 from claudia_server.hub import Hub
 from claudia_server.sealed import SealedDocuments
@@ -162,7 +162,7 @@ def test_the_removed_persons_old_keys_open_nothing_in_the_file_afterwards(world)
     ben_keys = unlock(path, BEN, BEN_PW).keys
     ann.request("remove_person", {"name": BEN})
     ann.request("chat", {"text": "written after the removal"})
-    from claudia_container import TamperedDocument
+    from claudia_document_file import TamperedDocument
 
     with pytest.raises(TamperedDocument):
         read_state(path, ben_keys)

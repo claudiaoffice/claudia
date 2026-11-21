@@ -403,9 +403,9 @@
   "class": [
    "object"
   ],
-  "init": "(target_seconds: float = 0.75, *, max_memory_kib: int = 262144, floor: claudia_container.crypto.KdfParams | None = None, calibrate: collections.abc.Callable[..., claudia_container.crypto.KdfParams] = <function calibrate>)",
+  "init": "(target_seconds: float = 0.75, *, max_memory_kib: int = 262144, floor: claudia_document_file.crypto.KdfParams | None = None, calibrate: collections.abc.Callable[..., claudia_document_file.crypto.KdfParams] = <function calibrate>)",
   "methods": {
-   "current": "(self) -> claudia_container.crypto.KdfParams",
+   "current": "(self) -> claudia_document_file.crypto.KdfParams",
    "describe": "(self) -> dict",
    "retarget": "(self, target_seconds: object) -> None",
    "start": "(self) -> None",

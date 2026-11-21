@@ -30,7 +30,6 @@ from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from claudia_computes import WorkbookModel
-from claudia_container import Domain
 from claudia_core import (
     AssetsChanged,
     ChatPosted,
@@ -45,6 +44,7 @@ from claudia_core import (
 )
 from claudia_core.asset_store import CONTAINER
 from claudia_core.clock import utc_now
+from claudia_document_file import Domain
 from claudia_render import RenderFailed, ToolUnavailable
 
 from .audience import may_read, shape_for
@@ -115,7 +115,7 @@ def same_document_message(existing: str) -> str:
 
 
 class DocumentProvider(Protocol):
-    """Where documents come from and go to. E2 implements it with the container file; ``MemoryProvider`` is the
+    """Where documents come from and go to. E2 implements it with the document file; ``MemoryProvider`` is the
     stand-in."""
 
     @property

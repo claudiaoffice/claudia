@@ -1,5 +1,5 @@
 """File ▸ Manage ▸ Share… as the place where an owner lowers a role or removes a person, and what the other window
-shows: steps of ``claudiaoffice-log/specs/container/keys-and-people.feature`` (D1263, D1274, E2.3).
+shows: steps of ``claudiaoffice-log/specs/document-file/keys-and-people.feature`` (D1263, D1274, E2.3).
 
 Scenarios tagged ``@unit`` are run by the unit tests they name, not here."""
 
@@ -10,7 +10,7 @@ import re
 from playwright.sync_api import expect
 from pytest_bdd import given, parsers, scenarios, then, when
 
-scenarios("../../../claudiaoffice-log/specs/container/keys-and-people.feature")
+scenarios("../../../claudiaoffice-log/specs/document-file/keys-and-people.feature")
 
 DIALOG = ".modal"
 

@@ -2,7 +2,7 @@
 
 A document's title, its creator, the day it was made and the day it was last saved are not part of its text, but
 every program shows them (File ▸ Properties) and a reviewer reads a tracked change's date against them. Claudia has
-them: the container keeps when a document was made and the log says when and by whom each change was made. This
+them: the document file keeps when a document was made and the log says when and by whom each change was made. This
 module turns that into ``meta.xml``.
 
 * :func:`new_meta` writes the part for a new file.

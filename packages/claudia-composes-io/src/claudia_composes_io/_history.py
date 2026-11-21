@@ -26,7 +26,7 @@ def export_info(log: CommandLog, branch: str | None = None) -> tuple[DocumentInf
     The document was made, by whom, with its first change, and last changed, by whom, with its last. An empty log
     knows none of this. Entries that undo or redo something are not changes of their own, and a suggestion that was
     proposed is dated by the entry that proposed it, whatever happened to it since (the converters only write the open
-    ones). The title is not in the log (it is the container's): the caller adds it with ``dataclasses.replace``."""
+    ones). The title is not in the log (it is the document file's): the caller adds it with ``dataclasses.replace``."""
     path = log.path(log.head(branch if branch is not None else log.active))
     times = {
         proposal.id: entry.time
