@@ -36,6 +36,19 @@ def _equal(got, want) -> None:
     assert got == want, f"expected {want!r}, the page shows {got!r}"
 
 
+def settled_box(page, locator) -> dict:
+    """The box of a block once the layout stopped moving it (a click at a stale box lands in another paragraph)."""
+    last = None
+    end = time.monotonic() + 5.0
+    while time.monotonic() < end:
+        box = locator.bounding_box()
+        if box is not None and box == last:
+            return box
+        last = box
+        page.wait_for_timeout(150)
+    raise AssertionError("the layout of the first paragraph does not settle")
+
+
 def block_id(page, n: int) -> str:
     return page.locator(BLOCKS).nth(n - 1).get_attribute("data-block")
 
@@ -94,7 +107,7 @@ def _four(world):
 @given("I have put a text box in the first paragraph")
 def _text_box(world):
     page = world.ann.page
-    first = page.locator(BLOCKS).first.bounding_box()
+    first = settled_box(page, page.locator(BLOCKS).first)
     page.mouse.click(first["x"] + first["width"] * 0.3, first["y"] + 8)
     world.ann.menu("Edit", "Text Box")
     page.wait_for_selector(OBJECT)
@@ -106,7 +119,7 @@ def _text_box(world):
 @given("a table of 2 columns and 2 rows after the first paragraph")
 def _table(world):
     page = world.ann.page
-    first = page.locator(BLOCKS).first.bounding_box()
+    first = settled_box(page, page.locator(BLOCKS).first)
     page.mouse.click(first["x"] + first["width"] - 4, first["y"] + first["height"] - 8)  # its last line, past the box
     page.keyboard.press("End")
     world.ann.menu("Insert", "Table…")
