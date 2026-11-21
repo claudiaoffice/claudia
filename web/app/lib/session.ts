@@ -27,7 +27,7 @@ export type {
   BaseState,
   ChatMessage,
   CheckpointInfo,
-  Entry,
+  Step,
   Notice,
   Person,
   SessionOptions,

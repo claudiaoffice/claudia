@@ -101,7 +101,7 @@ class CommandLog:
         return line[-1].rev if line else self._branches[branch].fork_point
 
     def steps_of(self, name: str) -> tuple[Step, ...]:
-        """The steps that belong to the branch ``name`` itself, without those it shares with the branch it forked from."""
+        """The steps that belong to the branch ``name`` itself, not those it shares with the branch it forked from."""
         return tuple(self._branch_steps[name])
 
     def has(self, rev: Revision) -> bool:

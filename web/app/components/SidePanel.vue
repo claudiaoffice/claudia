@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ChatInput from './ChatInput.vue'
 import { clock, colorOf, inkOn } from '~/lib/people'
 import { useI18n } from '~/lib/i18n'
-import type { BaseSession, ChatMessage, Entry } from '~/lib/base-session'
+import type { BaseSession, ChatMessage, Step } from '~/lib/base-session'
 import type { AiMode } from '~/lib/ai-mode'
 import { rowKey } from '~/lib/base-session'
 import { keyStep, WheelStepper, wheelDelta, type Filter } from '~/lib/replay'
@@ -189,7 +189,7 @@ const menu = ref<{ x: number; y: number } | null>(null)
 
 const isPickedEntry = (revision: string) => picked.value.revisions.includes(revision)
 const isPickedMessage = (number: number) => picked.value.chat.includes(number)
-const canPickEntry = (entry: Entry) => redacts.value && mayRedactEntry(entry, me.value)
+const canPickEntry = (entry: Step) => redacts.value && mayRedactEntry(entry, me.value)
 const canPickMessage = (message: ChatMessage) => redacts.value && mayRedactMessage(message, me.value)
 const notYours = computed(() => (state.me.role === 'owner' ? t('There is nothing in this to redact.') : t('You can redact only your own work.')))
 
@@ -204,14 +204,14 @@ function clearRedactionPick() {
   picking.value = false
   menu.value = null
 }
-function pickEntry(entry: Entry) {
+function pickEntry(entry: Step) {
   if (canPickEntry(entry)) picked.value = togglingEntry(picked.value, entry.revision)
 }
 function pickMessage(message: ChatMessage) {
   if (canPickMessage(message)) picked.value = togglingMessage(picked.value, message.number)
 }
 /** Ctrl+click (Cmd+click) picks a row and shows the pick boxes; a plain click in a replay still visits. */
-function onEntryClick(event: MouseEvent, entry: Entry) {
+function onEntryClick(event: MouseEvent, entry: Step) {
   if ((event.ctrlKey || event.metaKey) && canPickEntry(entry)) {
     event.preventDefault()
     picking.value = true
@@ -225,7 +225,7 @@ function onMessageClick(event: MouseEvent, message: ChatMessage) {
   pickMessage(message)
 }
 /** The right-click menu of a row: the row joins the pick, and "Redact n items…" is offered. */
-function onEntryMenu(event: MouseEvent, entry: Entry) {
+function onEntryMenu(event: MouseEvent, entry: Step) {
   if (!canPickEntry(entry)) return
   event.preventDefault()
   if (!isPickedEntry(entry.revision)) pickEntry(entry)
@@ -254,9 +254,9 @@ function onPickKey(event: KeyboardEvent) {
   event.preventDefault()
   askToRedact()
 }
-const isRecord = (entry: Entry) => entry.kind === REDACTION_KIND
+const isRecord = (entry: Step) => entry.kind === REDACTION_KIND
 /** What a redacted row says to a screen reader: who and when, and the filler as lengths. */
-function redactedLabel(entry: Entry): string {
+function redactedLabel(entry: Step): string {
   return t('Redacted: {what}, by {who} at {time}', { what: spokenFiller(entry.summary, t), who: entry.author ?? '?', time: clock(entry.time) })
 }
 

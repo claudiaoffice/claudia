@@ -19,6 +19,7 @@ from dataclasses import dataclass, replace
 from typing import ClassVar
 
 from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetAsset, PageSetup, fits
+from claudia_core.asset_store import DIAGRAM
 
 from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
 from .events import (
@@ -741,7 +742,7 @@ class AddChart(Command):
     def shifted_by(self, other: Command) -> Command | None:
         """Refused once the diagram it would show is gone (the same guard ``AddObject`` keeps for its shape,
         image or diagram, applied here to a tab instead of a floating object)."""
-        if isinstance(other, ForgetAsset) and (other.asset_kind, other.id) == ("diagram", self.spec_id):
+        if isinstance(other, ForgetAsset) and (other.asset_kind, other.id) == (DIAGRAM.name, self.spec_id):
             return None
         return self
 

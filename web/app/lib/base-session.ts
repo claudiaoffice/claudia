@@ -54,7 +54,7 @@ export interface Person {
   user: string
   color: string
 }
-export interface Entry {
+export interface Step {
   revision: string
   author: string | null
   origin: 'do' | 'undo' | 'redo'
@@ -192,7 +192,7 @@ export interface BaseState extends ObjectLayerState {
   people: Person[]
   presence: Record<string, { regions: Region[]; locked: boolean }>
   typing: string[]
-  entries: Entry[]
+  entries: Step[]
   chat: ChatMessage[]
   /** What has left the document (exports, prints, PDFs), oldest first; empty for a viewer, who is never sent it (D1271). */
   audit: AuditRow[]
@@ -486,7 +486,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     // A viewer holds the content key only, and the server keeps the history and the chat from her (D1261).
     const reads = s.me.role !== 'viewer'
     const [entries, chat, checkpoints, history, branches, restorePolicy, renderTypes, renderings, audit] = await Promise.all([
-      reads ? link.request<Entry[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Entry[]>([]),
+      reads ? link.request<Step[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Step[]>([]),
       reads ? link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }) : Promise.resolve<ChatMessage[]>([]),
       reads ? link.request<CheckpointInfo[]>('checkpoints') : Promise.resolve<CheckpointInfo[]>([]),
       reads

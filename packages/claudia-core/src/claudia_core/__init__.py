@@ -81,7 +81,7 @@ from .css import (
     roles_used,
     validate_css,
 )
-from .document import Applied, Changes, CheckpointInfo, Document, BranchInfo, Look, RedactionPlan, environment_of
+from .document import Applied, BranchInfo, Changes, CheckpointInfo, Document, Look, RedactionPlan, environment_of
 from .errors import (
     KernelError,
     MissingUpcaster,

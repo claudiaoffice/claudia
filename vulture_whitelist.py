@@ -156,7 +156,7 @@ used._test_client_calls_the_server_by_a_name_it_answers_to  # autouse fixture of
 used._restore_active_translation  # autouse fixture of clients/linux/tests/test_i18n.py (D160)
 used._german  # autouse fixture of clients/linux/tests/test_shell_strings_german.py (D160)
 used._slides  # creates_methods_with(...).method("slides")
-used._peek_line  # core_methods.method("peek_line")
+used._peek_branch  # core_methods.method("peek_branch")
 used._restore_policy  # core_methods.method("restore_policy")
 used._set_restore_policy  # core_methods.method("set_restore_policy")
 used._propose_restore  # core_methods.method("propose_restore")

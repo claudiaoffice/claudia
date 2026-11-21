@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BaseSession, type BaseState, type Entry } from '~/lib/base-session'
+import { BaseSession, type BaseState, type Step } from '~/lib/base-session'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Region, type Welcome, type WireData } from '~/lib/protocol'
 import { PlannedLink, lookOnly, roleNow } from '~/lib/replay'
 import type { RedactionPlan } from '~/lib/redaction'
@@ -23,7 +23,7 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-const entry = (n: number, author = 'bob'): Entry => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '', kind: 'creates.AddObject', redacted: false })
+const entry = (n: number, author = 'bob'): Step => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '', kind: 'creates.AddObject', redacted: false })
 const place: Region = { kind: 'objects', container: 's1', ids: ['t1'] } as Region
 const PLAN: RedactionPlan = {
   targets: ['main:2'],

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BaseSession, type BaseState, type Entry } from '~/lib/base-session'
+import { BaseSession, type BaseState, type Step } from '~/lib/base-session'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome, type WireData } from '~/lib/protocol'
 import type { Thing } from '~/lib/tags'
 
@@ -20,7 +20,7 @@ const WELCOME: Welcome = {
   proposal: null,
   returned: null,
 }
-const entry = (n: number): Entry => ({ revision: `main:${n}`, author: 'ann', origin: 'do', time: '', label: `step ${n}`, summary: '' })
+const entry = (n: number): Step => ({ revision: `main:${n}`, author: 'ann', origin: 'do', time: '', label: `step ${n}`, summary: '' })
 
 class FakeLink implements LinkLike {
   calls: { method: string; params: any }[] = []

@@ -1115,7 +1115,7 @@ def blank_body(body: ObjectBody, *, keep_length: bool = False) -> ObjectBody:
 
 
 # --------------------------------------------------------------------------- the shared commands
-def host_of(ctx: Context) -> ObjectModel:
+def object_model_of(ctx: Context) -> ObjectModel:
     """The object model of the document a command runs on; ``TypeError`` for a model without objects."""
     model = ctx.model
     if not isinstance(model, ObjectModel):
@@ -1124,7 +1124,7 @@ def host_of(ctx: Context) -> ObjectModel:
 
 
 def _anchor_of(ctx: Context, data: dict):
-    return host_of(ctx).anchor_from_data(data)
+    return object_model_of(ctx).anchor_from_data(data)
 
 
 def _target(command: Command) -> str | None:
@@ -1210,7 +1210,7 @@ class AddObject(Command):
         return f"Added a {self.body.shape}"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         obj = VisualObject(self.body, _anchor_of(ctx, self.anchor))
         model.insert_object(obj, self.at, shared_names=not self.legacy_names)
         ctx.emit(model.objects_changed(obj.container, changed=(obj,)))
@@ -1266,7 +1266,7 @@ class RemoveObject(Command):
         return "Removed an object"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         obj, place = model.delete_object(self.id)
         ctx.emit(model.objects_changed(obj.container, removed=(obj.id,)))
         return AddObject(obj.body, obj.anchor.to_data(), place)
@@ -1316,7 +1316,7 @@ class MoveObject(Command):
         return "Moved an object"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         old = model.get_object(self.id)
         new = replace(old, anchor=_anchor_of(ctx, self.anchor))
         if new.container == old.container:
@@ -1376,7 +1376,7 @@ class ResizeObject(Command):
         return f"Resized an object to {self.w} × {self.h}"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         old = model.get_object(self.id)
         new = replace(old, anchor=_anchor_of(ctx, self.anchor)).with_body(w=self.w, h=self.h)
         model.replace_object(new)
@@ -1423,7 +1423,7 @@ class RotateObject(Command):
         return f"Turned an object to {self.rotation}°"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         old = model.get_object(self.id)
         new = old.with_body(rotation=self.rotation)
         if self.anchor is not None:
@@ -1475,7 +1475,7 @@ class SetText(Command):
         return f"Wrote {_quote(self.text)}" if self.text.strip() else "Cleared an object's text"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         old = model.get_object(self.id)
         if old.body.paragraph is None:
             raise ValueError("an image carries no text")
@@ -1534,7 +1534,7 @@ class SetParagraph(Command):
         return f"Wrote {_quote(words)}" if words.strip() else "Cleared an object's text"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         old = model.get_object(self.id)
         if old.body.paragraph is None:
             raise ValueError("an image carries no text")
@@ -1589,7 +1589,7 @@ class SetObjectStyle(Command):
         return f"put an object under {self.style}"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         old = model.get_object(self.id)
         new = old.with_body(style=self.style)
         model.replace_object(new)  # checks that the style exists, as it checks everything else about an object
@@ -1636,7 +1636,7 @@ class SetParagraphStyle(Command):
         return f"put an object's words under {self.style}"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         old = model.get_object(self.id)
         if old.body.paragraph is None:
             raise ValueError("an image carries no text")
@@ -1684,7 +1684,7 @@ class SetSnap(Command):
         return "Snapped an object to the grid" if self.snap else "Released an object from the grid"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         old = model.get_object(self.id)
         new = old.with_body(snap=self.snap)
         model.replace_object(new)
@@ -1748,7 +1748,7 @@ class RenameThing(Command):
         return f"Renamed something to “{self.name}”"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         name = clean_name(self.name)
         model.check_thing_name(self.id, name, shared=not self.legacy_names)
         old, restores = model.rename_thing(ctx, self.id, name)
@@ -1827,7 +1827,7 @@ class DescribeObject(Command):
         return "Removed an object's description"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         old = model.get_object(self.id)
         new = old.with_body(description=self.description, decorative=self.decorative)
         model.replace_object(new)
@@ -1880,7 +1880,7 @@ class DescribeThing(Command):
         return "Removed a description"
 
     def apply(self, ctx: Context) -> Command:
-        model = host_of(ctx)
+        model = object_model_of(ctx)
         if not isinstance(self.description, str) or len(self.description) > MAX_ALT_CHARS:
             raise ValueError(f"the description is text of at most {MAX_ALT_CHARS} characters")
         if not model.has_thing(self.id):

@@ -681,7 +681,6 @@ export class TextSession extends BaseSession<TextState> {
     } while (this.state.pending || this.jobs > 0) // characters typed while a job ran are appended when it is done
   }
 
-  /** Run a change after whatever was typed before it has been sent. */
   /** A change waits for the words typed before it, and for every change queued before it (D1432). */
   protected override run<T>(job: () => Promise<T>): Promise<T> {
     return this.enqueue(async () => {
@@ -1085,15 +1084,15 @@ export class TextSession extends BaseSession<TextState> {
   /** Let the list of the caret's item go on where the nearest earlier list of its kind ends. */
   continueList(): Promise<boolean> {
     const block = this.state.selection?.focus.block
-    if (this.refused() || !block || !this.currentItem()) return Promise.resolve(false)
-    return this.run(async () => (await this.attempt('continue_list', { block, base: this.state.revision })) !== false)
+    if (!block || !this.currentItem()) return Promise.resolve(false)
+    return this.write('continue_list', { block }).then((done) => done !== false)
   }
 
   /** Number the first level of the caret's list from `start` on. */
   startAt(start: number): Promise<boolean> {
     const item = this.currentItem()
-    if (this.refused() || !item) return Promise.resolve(false)
-    return this.run(async () => (await this.attempt('list_start', { list: item.list, start, base: this.state.revision })) !== false)
+    if (!item) return Promise.resolve(false)
+    return this.write('list_start', { list: item.list, start }).then((done) => done !== false)
   }
 
   /** The way out of a list from an item with nothing in it: one level out, at the first level out of the list. */

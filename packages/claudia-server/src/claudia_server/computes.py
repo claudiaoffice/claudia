@@ -135,6 +135,7 @@ from claudia_core import (
     clean_name,
     name_problem,
 )
+from claudia_core.asset_store import DIAGRAM
 
 from .computes_search import add_search_methods
 from .font_report import add_font_report_method
@@ -686,7 +687,7 @@ def _define_diagram(ctx, *, definition, base):
         raise RequestError("bad_request", msg("define_diagram: id and format are assigned by the server"))
     workbook = _workbook(ctx)
     diagram_id = fresh_id("g", workbook.diagrams)
-    command = DefineAsset("diagram", {**definition, "id": diagram_id, "format": 1})
+    command = DefineAsset(DIAGRAM.name, {**definition, "id": diagram_id, "format": 1})
     return done(ctx, command, base, diagram=diagram_id)
 
 
@@ -695,7 +696,7 @@ def _update_diagram(ctx, *, id, definition, base):
     """Redefine a chart in place (E6.6): what a tab or floating object already showing `id` updates to, with
     nothing to re-place. Same shape as `define_diagram`'s `definition`; the id and format are unchanged."""
     _diagram_definition(_workbook(ctx), id, "update_diagram")
-    command = UpdateAsset("diagram", id, {**definition, "id": id, "format": 1})
+    command = UpdateAsset(DIAGRAM.name, id, {**definition, "id": id, "format": 1})
     return done(ctx, command, base)
 
 
@@ -703,7 +704,7 @@ def _update_diagram(ctx, *, id, definition, base):
 def _forget_diagram(ctx, *, id, base):
     """Let a chart definition go. Refused while a tab or a floating object still shows it — remove or repoint
     those first (`remove_chart`, `remove_object`, or `update_diagram`/`add_chart` onto another definition)."""
-    return done(ctx, ForgetAsset("diagram", id), base)
+    return done(ctx, ForgetAsset(DIAGRAM.name, id), base)
 
 
 @computes_methods.method(

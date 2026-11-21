@@ -15,7 +15,8 @@ superseded-by: []
 show it:** an image, a shape's outline, a chart, a container's definition, a table. "Asset" is a word of the code,
 not of the glossary; people never see it.
 
-**The five kinds share one store and one set of commands.** `claudia_core/assets.py` holds:
+**The five kinds share one store and one set of commands.** `claudia_core/asset_store.py` holds the first three below,
+`claudia_core/asset_commands.py` the commands (`claudia_core/assets.py` is the image module and keeps that name):
 
 - `AssetKind` — what differs between the kinds, as data: how one is read from plain data (a chart through the app),
   whether it can be changed in place (charts, containers, tables), an extra check (a container's picture must be in
@@ -32,5 +33,6 @@ Tables join the store (registry, users, stored form, restore) but keep their own
 since a table is edited box by box.
 
 **Why:** the five copies made every new kind of object about eight edits in one 2500-line file, and the glossary
-renames (diagram → chart, rendered → container, D1430) would have had to be made five times over. The clients see no
-change from this decision. Moving the naming of things out of `ObjectModel` is left to E1.15/E1.17, which rework names.
+renames (diagram → chart, rendered → container, D1430) would have had to be made five times over. The wire does not change
+(the event keeps the form of the four it replaces); a stored document now lists every kind of asset, an empty list
+where it has none. Moving the naming of things out of `ObjectModel` is left to E1.15/E1.17, which rework names.

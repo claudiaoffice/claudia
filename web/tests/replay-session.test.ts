@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BaseSession, type BaseState, type Entry } from '~/lib/base-session'
+import { BaseSession, type BaseState, type Step } from '~/lib/base-session'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Region, type Welcome, type WireData } from '~/lib/protocol'
 import { PastLink } from '~/lib/replay'
 
@@ -21,7 +21,7 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-const entry = (n: number, author = 'ann'): Entry => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '' })
+const entry = (n: number, author = 'ann'): Step => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '' })
 const slideRegion = (container: string): Region => ({ kind: 'objects', container, ids: [] }) as Region
 
 class FakeLink implements LinkLike {

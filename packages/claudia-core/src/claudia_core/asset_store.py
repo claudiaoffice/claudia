@@ -179,7 +179,7 @@ class AssetStore[T: Asset](Mapping[str, T]):
     def restore(self, stored: Iterable[dict]) -> None:
         """Put back what :meth:`to_data` stored."""
         for data in stored:
-            self.put(self.kind.read(self._model, data))  # type: ignore[arg-type]
+            self.put(self.kind.read(self._model, data))  # type: ignore[arg-type] - a kind reads its own asset type, T
 
 
 @dataclass(frozen=True)

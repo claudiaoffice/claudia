@@ -11,9 +11,9 @@ import {
   timeline,
   type Item,
 } from '~/lib/replay'
-import type { ChatMessage, Entry } from '~/lib/base-session'
+import type { ChatMessage, Step } from '~/lib/base-session'
 
-const entry = (n: number, author = 'ann', extra: Partial<Entry> = {}): Entry => ({
+const entry = (n: number, author = 'ann', extra: Partial<Step> = {}): Step => ({
   revision: `main:${n}`,
   author,
   origin: 'do',
