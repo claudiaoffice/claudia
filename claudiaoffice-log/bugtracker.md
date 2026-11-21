@@ -113,6 +113,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-70 | P3 | computes I/O | The patch of a kept XLSX or ODS does not add pivot tables either (reported), as it does not add pictures (CODE-66) | **new, open** (D1233) |  |  |
 | CODE-71 | P3 | Code / web | `contextMenuItems` in `object-menu.ts` types four key hints by hand ("Enter", "Ctrl+X", "Ctrl+C", "Del"); the others come from the manifest through `hintOf` (see UX-47) | **new, open** (read) |  |  |
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
+| CODE-75 | P3 | Code / web clients | Only composes refused a change of a viewer before sending it; computes sent it and showed the server's refusal, creates checked in some places only | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
+| CODE-76 | P3 | Code / web clients | The sheet session ignored `shape` events, so an outline a colleague's sheet object needed arrived only with a reload | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
@@ -2456,3 +2458,18 @@ My change for SEC-12 made the first administrator ask for the server's setup cod
 
 ### PROC-43 · Four stale lines in `objects.cjs` · P2 · fixed 2026-11-21
 Behind UX-56 to UX-58 the script itself was out of date in four places, all made right **by the contract, not by the app's luck**: (1) *Proportions kept* was asked of every shape; a Rectangle has no aspect and may change its proportions (`null` in `shapes.py`), and creates only passed because its 3:2 shape moved by 2.6 %, under the 3 % allowed. It is asked of what shows corner handles only. (2) A table's menu is called "Table menu" (D1228, translated), not "Object menu". (3) `editable` for creates said every kind has words; a picture has none (D1225), and its menu already agreed. (4) After Delete the object leaves the screen at once and its history entry comes with the answer: the script waits for it (it failed one run in six). Business outcomes are as before.
+
+## Round of 2026-11-21 (architecture improvements, branch `architecture-improvements`)
+
+### CODE-75 · A viewer's change was sent in computes, and in creates only sometimes refused first · P3 · size 3 · fixed 2026-11-21
+**Found** in the architecture review: composes refused every change of someone who may only look before sending it
+(`denied()`, 33 places), creates checked `readOnly` in 9 places, computes in none, so a viewer's change in a workbook
+went to the server and came back as `forbidden`. The words a person saw were the same; the round trip, the places that
+were left out and the difference between the apps were not (the clients must not differ in function). Evidence: read,
+then **measured**: `web/tests/object-layer-session.test.ts` fails on `main` for computes and creates. **Fixed.** Every
+change goes through `BaseSession.write()`, which refuses before anything is sent (D1432). Escaped because: missing test
+(each app's session was tested on its own).
+
+### CODE-76 · The sheet session did not take in outlines · P3 · size 3 · fixed 2026-11-21
+**Found** by the same test: the `shape` event was reduced by the text and the slide session, not by the sheet's. **Fixed**
+with the one reducer of D1432. Escaped because: missing test (three copies of the reducer, each tested where it was).
