@@ -96,8 +96,8 @@ const replay = computed(() => state.replay)
 const stepper = new WheelStepper()
 const filters: { id: Filter; label: string }[] = [
   { id: 'all', label: t('All') },
-  { id: 'changes', label: t('Changes') },
-  { id: 'conversation', label: t('Chat') },
+  { id: 'steps', label: t('Steps') },
+  { id: 'chat', label: t('Chat') },
 ]
 const canReplay = computed(() => state.status === 'open' && state.entries.length > 0)
 /** The rows the playhead can visit with the current filter, by key. */

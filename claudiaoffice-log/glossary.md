@@ -64,6 +64,14 @@ _avoid_: assistant, bot, agent, AI user
 What a user may do in one document: owner, editor or viewer. The administrator of a server is not a role.
 _avoid_: permission, access level, admin (for owner)
 
+**Presence**
+Where each user is in a document right now, shown to the others; it is never stored.
+_avoid_: cursor, awareness
+
+**Lock**
+A part of a document a user holds for a while, so that nobody else changes it there; it is never stored.
+_avoid_: hold, reservation
+
 **Author**
 The user who made a step.
 _avoid_: writer, creator
@@ -83,9 +91,31 @@ One command as it happened in a document: which command, which author, when, and
 _avoid_: entry, record, change, revision
 
 **Branch**
-One path through a document's history. Main is the main branch; restoring a checkpoint starts a new branch, and the branch left behind stays and can be switched back to.
+One path through a document's history. Main is the main branch; a restore starts a new branch, and the branch left behind stays and can be switched back to.
 _avoid_: line, fork, version
+
+**Restore**
+Going back to the document as it was after a step, usually a checkpoint, for everybody at once; the document continues on a new branch and nothing is lost.
+_avoid_: revert, roll back, undo
+
+**Redaction**
+The permanent removal, by an owner, of what past steps or chat messages contained, leaving behind that they happened.
+_avoid_: delete, erase, censor, remove
 
 **Checkpoint**
 A named point in a document's history that a person set on purpose and can go back to.
 _avoid_: save, version, snapshot
+
+**Chat**
+The messages the users of a document write to each other, to everybody or to one user, each placed at the step when it was written.
+_avoid_: comments, conversation, messages
+
+### Things
+
+**Thing**
+Anything in a document that has a name, unique in that document, by which a user can reference it with # in the chat.
+_avoid_: entity, element, item
+
+**Object**
+A text box, shape, image, diagram, rendered picture or table placed in a page, a slide or a sheet; every object is a thing.
+_avoid_: element, figure, container, shape (for objects of other kinds)

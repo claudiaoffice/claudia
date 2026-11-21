@@ -1105,10 +1105,6 @@ msgstr "Ihr Passwort ändern"
 msgid "Change {user} to “only look”?"
 msgstr "{user} auf „nur ansehen“ ändern?"
 
-#: web/app/components/SidePanel.vue:99
-msgid "Changes"
-msgstr "Änderungen"
-
 #: web/app/components/PresentShow.vue:190
 msgid "Changes since you started: {n}"
 msgstr "Änderungen seit dem Start: {n}"
@@ -1465,7 +1461,7 @@ msgstr "Das Diagramm konnte nicht eingefügt werden."
 msgid "Could not reach the server."
 msgstr "Der Server ist nicht erreichbar."
 
-#: web/app/components/AdminApp.vue:70
+#: web/app/components/AdminApp.vue:71
 msgid "Could not reach this server."
 msgstr "Dieser Server ist nicht erreichbar."
 
@@ -2993,7 +2989,7 @@ msgstr "Listenpunkt"
 msgid "List, rename, delete and hide the styles of this document"
 msgstr "Die Formate dieses Dokuments auflisten, umbenennen, löschen und ausblenden"
 
-#: web/app/components/AdminApp.vue:95
+#: web/app/components/AdminApp.vue:96
 msgid "Loading…"
 msgstr "Wird geladen…"
 
@@ -5205,7 +5201,7 @@ msgstr "Am Raster ausrichten"
 msgid "Soft Hyphen"
 msgstr "Bedingter Trennstrich"
 
-#: web/app/components/AdminApp.vue:50
+#: web/app/components/AdminApp.vue:51
 msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr "Inzwischen hat jemand den ersten Administrator dieses Servers benannt. Melden Sie sich an, oder bitten Sie darum, hinzugefügt zu werden."
 
@@ -5308,6 +5304,10 @@ msgstr "{app} wird gestartet…"
 #: web/app/components/SidePanel.vue:110
 msgid "Step {at} of {total}"
 msgstr "Schritt {at} von {total}"
+
+#: web/app/components/SidePanel.vue:99
+msgid "Steps"
+msgstr "Schritte"
 
 #: web/app/components/Workspace.vue:1043
 msgid "Stop Following"

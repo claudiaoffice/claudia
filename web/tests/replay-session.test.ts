@@ -195,7 +195,7 @@ describe('looking at the past', () => {
     await session.startReplay()
     await session.replayStep(-1)
     await session.replayStep(-1) // on the chat message
-    session.setReplayFilter('changes')
+    session.setReplayFilter('steps')
     expect(state.replay!.revision).toBe('main:2')
     expect(session.replayItems().every((i) => i.kind === 'change')).toBe(true)
     expect(session.replayIndex()).toBe(1)

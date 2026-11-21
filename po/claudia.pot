@@ -1105,10 +1105,6 @@ msgstr ""
 msgid "Change {user} to “only look”?"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:99
-msgid "Changes"
-msgstr ""
-
 #: web/app/components/PresentShow.vue:190
 msgid "Changes since you started: {n}"
 msgstr ""
@@ -1465,7 +1461,7 @@ msgstr ""
 msgid "Could not reach the server."
 msgstr ""
 
-#: web/app/components/AdminApp.vue:70
+#: web/app/components/AdminApp.vue:71
 msgid "Could not reach this server."
 msgstr ""
 
@@ -2993,7 +2989,7 @@ msgstr ""
 msgid "List, rename, delete and hide the styles of this document"
 msgstr ""
 
-#: web/app/components/AdminApp.vue:95
+#: web/app/components/AdminApp.vue:96
 msgid "Loading…"
 msgstr ""
 
@@ -5205,7 +5201,7 @@ msgstr ""
 msgid "Soft Hyphen"
 msgstr ""
 
-#: web/app/components/AdminApp.vue:50
+#: web/app/components/AdminApp.vue:51
 msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr ""
 
@@ -5307,6 +5303,10 @@ msgstr ""
 
 #: web/app/components/SidePanel.vue:110
 msgid "Step {at} of {total}"
+msgstr ""
+
+#: web/app/components/SidePanel.vue:99
+msgid "Steps"
 msgstr ""
 
 #: web/app/components/Workspace.vue:1043
