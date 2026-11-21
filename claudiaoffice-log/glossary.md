@@ -46,6 +46,22 @@ _avoid_: file, container, doc
 One of claudia composes, claudia computes and claudia creates; every document belongs to exactly one app.
 _avoid_: module, app type, product
 
+**Page**
+One piece of paper a document is laid out on, in page view or when printed, in any app.
+_avoid_: sheet
+
+**Sheet**
+A grid of cells in a computes document.
+_avoid_: worksheet, spreadsheet, tab
+
+**Slide**
+One page of a creates document, shown in turn when presenting.
+_avoid_: page, foil
+
+**File format**
+The kind of file a document is imported from or downloaded as: claudia's own, OpenDocument or MS Office.
+_avoid_: format (on its own), file type
+
 ### People
 
 **User**
@@ -119,3 +135,27 @@ _avoid_: entity, element, item
 **Object**
 A text box, shape, image, diagram, rendered picture or table placed in a page, a slide or a sheet; every object is a thing.
 _avoid_: element, figure, container, shape (for objects of other kinds)
+
+**Chart**
+A picture drawn from a document's data, shown as an object, as a chart tab of its own, or both.
+_avoid_: diagram, graph, plot
+
+**Chart tab**
+A tab of a computes document that shows one chart on its own, beside the sheets; a thing, but neither an object nor a sheet.
+_avoid_: chart sheet, diagram tab
+
+**Table**
+A named grid of cells whose first row names its columns: a named range in computes, an object in composes and creates.
+_avoid_: grid, list
+
+**Named range**
+A named rectangle of cells in a computes document, either kept by hand or filled by a formula's result.
+_avoid_: name (in this sense), defined name, range name
+
+**Style**
+A named look, defined by what it is for, shared by everything that serves the same purpose.
+_avoid_: format, formatting, theme, look
+
+**Number format**
+How the value of a cell reads (a percentage, an amount in euros, a date, a number of decimals), chosen for the cell itself, apart from its style, and never changing the value.
+_avoid_: format (on its own), cell format, number style
