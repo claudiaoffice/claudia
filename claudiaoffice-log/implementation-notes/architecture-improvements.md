@@ -45,22 +45,45 @@ Done: `Entry` → `Step`, `history.Step` → `UndoUnit`, the assistant's `Step` 
 and in an open restore proposal; two server messages ("switching branches", "no branch called"); the web's log type
 `Step`; in the side panel "Branches" ("Zweige").
 
-Not done yet (next slices, in this order): holder and the object layer (`Anchor.container`, `TextContainers.vue`), chart
-(`DiagramDefinition`, object kind `diagram`, computes' `Chart` → `ChartTab`), container (object kind `rendered`,
-`RenderedDefinition`, renderings), paragraph (`block` in composes, server, web and GTK: the widest one, about 3700
-places), proposal (`Suggestion`…, `WhatIfProposal`, AI mode `propose`), ai (`assistant`), the UI strings of E1.18
-(suggest, tag, line in messages), and the package `claudia-document-file`.
+Done since (2026-11-21, second session; the names around each slice were agreed with the owner first, D1433):
 
-Local variables called `entry` for a step, and the history's messages that still say "line" ("there is no step … on this
-line"), are left for the UI-string slice.
+- **Holder and object layer** (`91c3d106`): `Anchor.holder`, `holders()`, `open_holder`/`close_holder`,
+  `max_objects_per_holder`, `objects_change_holder`, `MAX_OBJECTS_PER_HOLDER`; on the wire and stored, an anchor, an
+  `objects` region and the `objects` event say `holder`. Web: `TextObjectLayer.vue`, `lib/text-object-layer.ts`,
+  `holderOf`/`currentHolder`/`showHolder`, the page's `data-testid` `object-layer` and `object-layer-behind`. The layout
+  library's anchors follow.
+- **Container** (`e9e4c4b3`): see D1433. The help topic `render.configure-tools` says container (en, de; the German
+  file's `source-hash` follows the English one).
+- **Paragraph** (`55c13243` Python and wire, `dc4236e0` web and layout): see D1433.
+
+Waiting: **chart** (the owner wants to think about it more, D1433). Not done yet, in this order: proposal
+(`Suggestion`…, `WhatIfProposal`, AI mode `propose`), ai (`assistant`), the UI strings of E1.18 (suggest, tag, line in
+messages), and the package `claudia-document-file`. Each needs the owner's list first.
+
+How the slices were done, for the next ones: a script with exact patterns, limited to the packages where the word has the
+meaning, with a guard for lines in another sense; then a check, per function, that no two names became one (Python:
+`ast`; TypeScript: the compiler's AST over the original files), the full `git diff` read, and a check that every request
+the web sends with a literal payload names only parameters the server takes. The catalogue extraction caught two cell
+"blocks" of computes the web rename had taken for paragraphs: rename a word in UI strings only with the strings in view.
 
 ## Assumptions
+
+- Stored names (also the legacy pointer `container` of old object bodies, which the old-body reader matches against the
+  kind) are renamed without readers for documents from before (E1.18).
+- `insertFrame` takes a `FramedKind` (`Exclude<ObjectKind, 'diagram' | 'table'>`), because spelling out four kinds is
+  refused by `tests/test_object_kinds_agree.py` now that `container` is one of them.
+- `LookHolder` (`text-object-look.ts`) and the converters' local `holder` of an XML element keep their names: they do not
+  name the glossary's holder, but a reader may stumble on them.
 
 - The stored names of commands and objects change without a way to read documents from before (E1.18, pre-release).
 - `name_thing` (naming a paragraph when it is first pointed at in the chat) still goes through `attempt`, not `write`:
   a viewer may write in the chat, and the server decides whether she may name the paragraph.
 
 ## What could not be run
+
+- Second session: the whole gate ran green after each commit, this time with `web lint`, `web tests`, `web types`,
+  `layout types`, `layout tests` and the Linux client's tests too; only `e2e greeting` was skipped (the web app is not
+  built in the workspace). The journey tests (`web/e2e`, `tests/e2e`) were changed with the names but not run.
 
 - **The end-to-end tests and "use it before delivery".** The browsers Playwright needs cannot be downloaded in the
   workspace this was built in (`cdn.playwright.dev` is not reachable). What did run: the whole Python gate
