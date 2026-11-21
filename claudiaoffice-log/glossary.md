@@ -7,7 +7,6 @@ Build shared notions and contexts
 - same for any change to this file.
 </rules>
 
-
 <format of this file>
 Entries follow this format:
 
@@ -26,7 +25,6 @@ _avoid_: put here other words that one might use for the same thing, and that co
 _avoid_: 
 
 </format of this file>
-
 
 <start>
 
@@ -62,6 +60,8 @@ _avoid_: page, foil
 The kind of file a document is imported from or downloaded as: claudia's own, OpenDocument or MS Office.
 _avoid_: format (on its own), file type
 
+### Servers
+
 **Server**
 The claudia software that keeps documents for people to open, hosting all three apps.
 _avoid_: host, backend, instance
@@ -71,7 +71,7 @@ The person who looks after a server; never a role in a document, and sees that d
 _avoid_: admin, owner
 
 **Setup code**
-The short code a server makes at every start that ends with no administrator, shows in its start banner and keeps in its state folder; whoever types it may name the server's first administrator. It proves that a person can read the server's log or folder, so it is never sent over the network, and it dies when the first administrator is named.
+A short code that a server without an administrator shows only to someone who can read its own log or files; whoever types it names the server's first administrator. It is never sent over the network and dies once the first administrator is named.
 _avoid_: setup password, activation code, token, pin
 
 **Access secret**
@@ -83,8 +83,10 @@ A server that can be reached from other computers: it listens on a non-loopback 
 _avoid_: public server, remote server, internet server
 
 **Reset of the administrators**
-Starting a server with `--reset-administrators` to remove all its administrators; settings, documents and fonts stay, the old list is kept aside, and the next administrators are told. It is how access is regained when no administrator can sign in.
+Removing all administrators of a server by starting it in a special way, which only someone with access to the server's machine can do; documents and settings stay, and new administrators can then be named. It is how access is regained when no administrator can sign in.
 _avoid_: reset, factory reset, password reset
+
+### Finding documents
 
 **Place**
 A location where claudia documents are kept: a server, as a person knows it by name and address. "This computer" is the claudia server running on her own machine; a claudia file in a folder on a disk is not in a place.
@@ -195,6 +197,14 @@ _avoid_: name (in this sense), defined name, range name
 **Style**
 A named look, defined by its purpose, put into slots; every slot with the same style serves the same purpose.
 _avoid_: format, formatting, theme, look
+
+**Palette**
+The colours of a document, each named by what it means, shared by all its styles.
+_avoid_: colour scheme, theme
+
+**Palette colour**
+One colour of a palette, named by what it means (accent, muted); every style that uses it follows when it changes.
+_avoid_: colour role, swatch, theme colour
 
 **Number format**
 How the value of a cell reads (a percentage, an amount in euros, a date, a number of decimals), chosen for the cell itself, apart from its style, and never changing the value.
