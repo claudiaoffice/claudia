@@ -1,6 +1,6 @@
 // References as the clients know them (step H): a field at one U+FFFC, what it reads as, and the picker's sums.
 import { describe, expect, it } from 'vitest'
-import { applyEvent, type Block } from '~/lib/blocks'
+import { applyEvent, type Paragraph } from '~/lib/paragraphs'
 import { defaultShow, fieldIndex, grouped, partsOf, plain, preview, readAs, type ReferenceTarget } from '~/lib/references'
 import { showLabel } from '~/lib/reference-labels'
 
@@ -21,16 +21,16 @@ describe('a paragraph with references', () => {
   })
 
   it('follows the server: the fields of a paragraph, what they read as, and splits and joins that share them out', () => {
-    const blocks: Block[] = [{ id: 'b1', style: 'body', text: `x${F}y${F}`, runs: [[4, 'ann', null]] }, { id: 'b2', style: 'body', text: 'z', runs: [[1, 'ann', null]] }]
-    applyEvent(blocks, { type: 'block_fields', block: 'b1', fields: [{ kind: 'ref', target: 'h1', show: 'number' }, { kind: 'ref', target: 'h2', show: 'text' }] })
-    applyEvent(blocks, { type: 'fields', paragraph: 'b1', fields: [{ text: '1', state: 'ok' }, { text: 'Two', state: 'ok' }] })
-    expect(applyEvent(blocks, { type: 'fields', paragraph: 'gone', fields: [] })).toBe(true)
-    applyEvent(blocks, { type: 'split', block: 'b1', offset: 2, new_id: 'b9', style: 'body' })
-    expect(blocks[0]!.fields?.map((f) => f.target)).toEqual(['h1'])
-    expect(blocks[1]!.fields?.map((f) => f.target)).toEqual(['h2'])
-    expect(blocks[1]!.shown?.map((s) => s.text)).toEqual(['Two'])
-    applyEvent(blocks, { type: 'join', block: 'b9', into: 'b1', at: 2 })
-    expect(blocks[0]!.fields?.map((f) => f.target)).toEqual(['h1', 'h2'])
+    const paragraphs: Paragraph[] = [{ id: 'b1', style: 'body', text: `x${F}y${F}`, runs: [[4, 'ann', null]] }, { id: 'b2', style: 'body', text: 'z', runs: [[1, 'ann', null]] }]
+    applyEvent(paragraphs, { type: 'paragraph_fields', paragraph: 'b1', fields: [{ kind: 'ref', target: 'h1', show: 'number' }, { kind: 'ref', target: 'h2', show: 'text' }] })
+    applyEvent(paragraphs, { type: 'fields', paragraph: 'b1', fields: [{ text: '1', state: 'ok' }, { text: 'Two', state: 'ok' }] })
+    expect(applyEvent(paragraphs, { type: 'fields', paragraph: 'gone', fields: [] })).toBe(true)
+    applyEvent(paragraphs, { type: 'split', paragraph: 'b1', offset: 2, new_id: 'b9', style: 'body' })
+    expect(paragraphs[0]!.fields?.map((f) => f.target)).toEqual(['h1'])
+    expect(paragraphs[1]!.fields?.map((f) => f.target)).toEqual(['h2'])
+    expect(paragraphs[1]!.shown?.map((s) => s.text)).toEqual(['Two'])
+    applyEvent(paragraphs, { type: 'join', paragraph: 'b9', into: 'b1', at: 2 })
+    expect(paragraphs[0]!.fields?.map((f) => f.target)).toEqual(['h1', 'h2'])
   })
 })
 

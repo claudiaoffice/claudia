@@ -86,8 +86,8 @@ const APPS = {
     below: (page) =>
       page.evaluate(() => {
         const s = getSelection()
-        const block = s?.anchorNode && (s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement)?.closest('[data-block]')
-        return JSON.stringify([block ? [...document.querySelectorAll('[data-block]')].indexOf(block) : -1, s?.anchorOffset ?? -1])
+        const paragraph = s?.anchorNode && (s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement)?.closest('[data-paragraph]')
+        return JSON.stringify([paragraph ? [...document.querySelectorAll('[data-paragraph]')].indexOf(paragraph) : -1, s?.anchorOffset ?? -1])
       }),
     // D1232: the words of a box or a shape are written as typed (`write_words`), as in creates
     editable: (kind) => kind !== 'image' && kind !== 'diagram',
@@ -456,8 +456,8 @@ async function tables(ann, ben) {
     await ann.keyboard.type(words)
     await ann.keyboard.press('Enter')
   }
-  await ann.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-block]').length >= 3)
-  await ann.locator('[data-testid=text] [data-block]').nth(0).click()
+  await ann.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-paragraph]').length >= 3)
+  await ann.locator('[data-testid=text] [data-paragraph]').nth(0).click()
   await menu(ann, 'Insert', 'Table…')
   await ann.fill('[data-testid=table-cols]', '3')
   await ann.fill('[data-testid=table-rows]', '2')
@@ -490,7 +490,7 @@ async function tables(ann, ben) {
   // drag the tab below the last paragraph: a drop line while held, one entry on release, Esc leaves the table
   const first = await box(table)
   const h1 = await entries(ann)
-  const last = await box(ann.locator('[data-testid=text] [data-block]').last())
+  const last = await box(ann.locator('[data-testid=text] [data-paragraph]').last())
   await drag(ann, centre(await box(tab)), { x: last.x + 40, y: last.y + last.height - 2 }, { release: false })
   await ann.waitForSelector('[data-testid=table-drop-line]')
   await ann.mouse.up()

@@ -14,7 +14,7 @@ from pytest_bdd import given, parsers, scenarios, then, when
 scenarios("../../../claudiaoffice-log/specs/composes/object-anchor.feature")
 
 OBJECT = "[data-object]"
-BLOCKS = "[data-testid=text] [data-block]"
+PARAGRAPHS = "[data-testid=text] [data-paragraph]"
 MARK = "[data-testid=anchor-mark]"
 LINE = "Paragraph number {n} has enough words in it to fill a line and then go on to a second line, which it does."
 MOVED = "Moved an object"  # how the history speaks of a move
@@ -37,7 +37,7 @@ def _equal(got, want) -> None:
 
 
 def settled_box(page, locator) -> dict:
-    """The box of a block once the layout stopped moving it (a click at a stale box lands in another paragraph)."""
+    """The box of a paragraph once the layout stopped moving it (a click at a stale box lands in another paragraph)."""
     last = None
     end = time.monotonic() + 5.0
     while time.monotonic() < end:
@@ -49,8 +49,8 @@ def settled_box(page, locator) -> dict:
     raise AssertionError("the layout of the first paragraph does not settle")
 
 
-def block_id(page, n: int) -> str:
-    return page.locator(BLOCKS).nth(n - 1).get_attribute("data-block")
+def paragraph_id(page, n: int) -> str:
+    return page.locator(PARAGRAPHS).nth(n - 1).get_attribute("data-paragraph")
 
 
 def moves(page) -> int:
@@ -65,7 +65,7 @@ def select(page) -> None:
 def hangs_from(page) -> str | None:
     """The paragraph the selected object's mark is in."""
     marks = page.locator(MARK)
-    return marks.first.get_attribute("data-block") if marks.count() else None
+    return marks.first.get_attribute("data-paragraph") if marks.count() else None
 
 
 def press_on_object(world) -> tuple[float, float]:
@@ -81,7 +81,7 @@ def press_on_object(world) -> tuple[float, float]:
 
 def onto_third(world, start: tuple[float, float]) -> None:
     page = world.ann.page
-    third = page.locator(BLOCKS).nth(2).bounding_box()
+    third = page.locator(PARAGRAPHS).nth(2).bounding_box()
     page.mouse.move(start[0] + 40, third["y"] + 30, steps=15)  # the grip is 20 below the corner: the corner is in it
     page.wait_for_timeout(150)
 
@@ -101,13 +101,13 @@ def _four(world):
         if n < 4:
             page.keyboard.press("Enter")
     page.wait_for_selector("[data-testid=text] [data-overlay]", state="detached")
-    eventually(lambda: _equal(page.locator(BLOCKS).count(), 4))
+    eventually(lambda: _equal(page.locator(PARAGRAPHS).count(), 4))
 
 
 @given("I have put a text box in the first paragraph")
 def _text_box(world):
     page = world.ann.page
-    first = settled_box(page, page.locator(BLOCKS).first)
+    first = settled_box(page, page.locator(PARAGRAPHS).first)
     page.mouse.click(first["x"] + first["width"] * 0.3, first["y"] + 8)
     world.ann.menu("Edit", "Text Box")
     page.wait_for_selector(OBJECT)
@@ -119,7 +119,7 @@ def _text_box(world):
 @given("a table of 2 columns and 2 rows after the first paragraph")
 def _table(world):
     page = world.ann.page
-    first = settled_box(page, page.locator(BLOCKS).first)
+    first = settled_box(page, page.locator(PARAGRAPHS).first)
     page.mouse.click(first["x"] + first["width"] - 4, first["y"] + first["height"] - 8)  # its last line, past the box
     page.keyboard.press("End")
     world.ann.menu("Insert", "Table…")
@@ -156,7 +156,7 @@ def _drag_escape(world):
 def _drag_table(world):
     page = world.ann.page
     tab = page.locator("[data-testid=table-tab]").bounding_box()
-    third = page.locator(BLOCKS).nth(2).bounding_box()
+    third = page.locator(PARAGRAPHS).nth(2).bounding_box()
     page.mouse.move(tab["x"] + 10, tab["y"] + 8)
     page.mouse.down()
     page.mouse.move(tab["x"] + 10, third["y"] + third["height"] - 4, steps=15)
@@ -189,14 +189,14 @@ def _select_escape(world):
 def _hangs_third(world):
     page = world.ann.page
     select(page)
-    eventually(lambda: _equal(hangs_from(page), block_id(page, 3)))
+    eventually(lambda: _equal(hangs_from(page), paragraph_id(page, 3)))
 
 
 @then("the text box hangs from the first paragraph, where it was")
 def _hangs_first(world):
     page = world.ann.page
     select(page)
-    eventually(lambda: _equal(hangs_from(page), block_id(page, 1)))
+    eventually(lambda: _equal(hangs_from(page), paragraph_id(page, 1)))
 
 
 @then("it stays where I dropped it")
@@ -204,7 +204,7 @@ def _stays(world):
     page = world.ann.page
     page.wait_for_timeout(600)  # long enough for a refusal to put it back
     top = page.locator(OBJECT).first.bounding_box()["y"]
-    second = page.locator(BLOCKS).nth(1).bounding_box()
+    second = page.locator(PARAGRAPHS).nth(1).bounding_box()
     assert top > second["y"] + second["height"] - 4, (top, second)
 
 
@@ -230,16 +230,16 @@ def _no_refusal(world):
 @then("an anchor mark is drawn at the character it hangs from, in the first paragraph")
 def _mark_first(world):
     page = world.ann.page
-    eventually(lambda: _equal(hangs_from(page), block_id(page, 1)))
+    eventually(lambda: _equal(hangs_from(page), paragraph_id(page, 1)))
     mark = page.locator(MARK).bounding_box()
-    first = page.locator(BLOCKS).first.bounding_box()
+    first = page.locator(PARAGRAPHS).first.bounding_box()
     assert first["x"] <= mark["x"] <= first["x"] + first["width"], (mark, first)
 
 
 @then("the anchor mark is in the third paragraph")
 def _mark_third(world):
     page = world.ann.page
-    eventually(lambda: _equal(hangs_from(page), block_id(page, 3)))
+    eventually(lambda: _equal(hangs_from(page), paragraph_id(page, 3)))
 
 
 @then(parsers.parse('a label says it will hang from "{where}"'))

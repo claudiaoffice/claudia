@@ -28,8 +28,8 @@ describe('what a replay tints', () => {
   })
 
   it('tints a paragraph as a whole, whichever stretch of it changed', () => {
-    const t = tintsOf([{ kind: 'text', block: 'b1', start: 2, end: 4 }], [{ kind: 'text', block: 'b2', start: 0, end: 0 }])
-    expect([t.block('b1'), t.block('b2'), t.block('b3')]).toEqual(['now', 'since', null])
+    const t = tintsOf([{ kind: 'text', paragraph: 'b1', start: 2, end: 4 }], [{ kind: 'text', paragraph: 'b2', start: 0, end: 0 }])
+    expect([t.paragraph('b1'), t.paragraph('b2'), t.paragraph('b3')]).toEqual(['now', 'since', null])
   })
 
   it('counts the places that differ from now, for the person who cannot see the tint', () => {
@@ -41,10 +41,10 @@ describe('what a replay tints', () => {
 describe('the tints of a session', () => {
   it('are none in the present, and the differences only when asked for', async () => {
     const { replayTints } = await import('../app/lib/replay-tint')
-    const focus: Region[] = [{ kind: 'text', block: 'b1', start: 0, end: 1 }]
-    const changed: Region[] = [{ kind: 'text', block: 'b2', start: 0, end: 1 }]
-    expect(replayTints(null).block('b1')).toBeNull()
-    expect(replayTints({ focus, differences: false, changed }).block('b2')).toBeNull()
-    expect(replayTints({ focus, differences: true, changed }).block('b2')).toBe('since')
+    const focus: Region[] = [{ kind: 'text', paragraph: 'b1', start: 0, end: 1 }]
+    const changed: Region[] = [{ kind: 'text', paragraph: 'b2', start: 0, end: 1 }]
+    expect(replayTints(null).paragraph('b1')).toBeNull()
+    expect(replayTints({ focus, differences: false, changed }).paragraph('b2')).toBeNull()
+    expect(replayTints({ focus, differences: true, changed }).paragraph('b2')).toBe('since')
   })
 })

@@ -18,8 +18,8 @@ export interface Tints {
   cells(sheet: string): CellTint[]
   /** How a floating object (on a slide or a sheet) is marked, by id; what the step did wins over what came later. */
   object(id: string): Tint | null
-  /** How a paragraph is marked, by block id: the whole paragraph, whichever stretch of it changed. */
-  block(id: string): Tint | null
+  /** How a paragraph is marked, by paragraph id: the whole paragraph, whichever stretch of it changed. */
+  paragraph(id: string): Tint | null
   /** How many places differ from now (the `since` ones), for a person who does not see the tint. */
   count: number
 }
@@ -28,10 +28,10 @@ export interface Tints {
 export function tintsOf(focus: Region[], changed: Region[]): Tints {
   const all: [Region, Tint][] = [...focus.map((r): [Region, Tint] => [r, 'now']), ...changed.map((r): [Region, Tint] => [r, 'since'])]
   const objects = new Map<string, Tint>()
-  const blocks = new Map<string, Tint>()
+  const paragraphs = new Map<string, Tint>()
   for (const [region, tint] of all) {
     if (region.kind === 'objects') for (const id of region.ids) if (!objects.has(id)) objects.set(id, tint)
-    if (region.kind === 'text' && !blocks.has(region.block)) blocks.set(region.block, tint)
+    if (region.kind === 'text' && !paragraphs.has(region.paragraph)) paragraphs.set(region.paragraph, tint)
   }
   const count = changed.reduce((n, r) => n + (r.kind === 'objects' ? r.ids.length : 1), 0)
   return {
@@ -51,7 +51,7 @@ export function tintsOf(focus: Region[], changed: Region[]): Tints {
       return out
     },
     object: (id) => objects.get(id) ?? null,
-    block: (id) => blocks.get(id) ?? null,
+    paragraph: (id) => paragraphs.get(id) ?? null,
     count,
   }
 }

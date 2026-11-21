@@ -11,7 +11,7 @@ const { usePageNumbers } = await import('~/lib/print/page-numbers')
 
 const TOC = { kind: 'toc', first: 1, last: 3, numbers: true, places: true, leader: 'dots' }
 function session(places = true) {
-  const state = reactive({ blocks: [{ id: 'toc', style: 'body', text: '', runs: [], generated: { ...TOC, places } }, { id: 'h1', style: 'heading-1', text: 'Why', runs: [] }], styles: [], page: null, language: 'de' })
+  const state = reactive({ paragraphs: [{ id: 'toc', style: 'body', text: '', runs: [], generated: { ...TOC, places } }, { id: 'h1', style: 'heading-1', text: 'Why', runs: [] }], styles: [], page: null, language: 'de' })
   return { state } as any
 }
 
@@ -36,10 +36,10 @@ describe('page numbers in Page view', () => {
     await vi.advanceTimersByTimeAsync(150)
     expect(layOut).toHaveBeenCalledTimes(1)
     expect(pages.value?.get('h1')).toBe(3)
-    s.state.blocks[1].text = 'Why we did it'
+    s.state.paragraphs[1].text = 'Why we did it'
     await nextTick()
     await vi.advanceTimersByTimeAsync(50)
-    s.state.blocks[1].text = 'Why we did it all'
+    s.state.paragraphs[1].text = 'Why we did it all'
     await nextTick()
     await vi.advanceTimersByTimeAsync(150)
     expect(layOut).toHaveBeenCalledTimes(2) // the two changes in a row are laid out once
@@ -64,7 +64,7 @@ describe('page numbers in Page view', () => {
 
   it('lays out for a page reference too (step I)', async () => {
     const s = session(false)
-    s.state.blocks[1].shown = [{ text: '', state: 'page' }]
+    s.state.paragraphs[1].shown = [{ text: '', state: 'page' }]
     const { pages } = mounted(s, () => true)
     await vi.advanceTimersByTimeAsync(150)
     expect(pages.value?.get('h1')).toBe(3)

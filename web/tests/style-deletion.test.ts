@@ -264,7 +264,7 @@ class FakeLink implements LinkLike {
 async function opened(role = 'owner') {
   const link = new FakeLink()
   link.handlers = {
-    blocks: () => ({ revision: 'main:2', styles: [], blocks: [{ id: 'b1', style: 'body', text: 'hi', runs: [[2, 'ann', null]] }] }),
+    paragraphs: () => ({ revision: 'main:2', styles: [], paragraphs: [{ id: 'b1', style: 'body', text: 'hi', runs: [[2, 'ann', null]] }] }),
     suggestions: () => [],
     style_model: () => STYLE_MODEL,
     palette: () => ({ type: 'palette', roles: [], readings: [] }),

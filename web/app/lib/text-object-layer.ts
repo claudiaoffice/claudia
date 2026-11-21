@@ -47,8 +47,8 @@ export function letsGoOfObject(target: { closest?: (selector: string) => unknown
 }
 
 /** The paragraph to hang from after a step with the arrow keys: the next or the previous, staying at the ends. */
-export function neighbour(blocks: readonly string[], current: string, step: 1 | -1): string {
-  const at = blocks.indexOf(current)
+export function neighbour(paragraphs: readonly string[], current: string, step: 1 | -1): string {
+  const at = paragraphs.indexOf(current)
   if (at < 0) return current
-  return blocks[Math.min(blocks.length - 1, Math.max(0, at + step))]!
+  return paragraphs[Math.min(paragraphs.length - 1, Math.max(0, at + step))]!
 }

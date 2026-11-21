@@ -72,7 +72,7 @@ def _paragraphs(world):
 @given(parsers.parse('my caret is at the end of "{text}"'))
 def _caret_at_end(world, text):
     # no pause on purpose: a person's next key can come before the page has told the app where the caret went (B2)
-    world.ann.page.click(f'[data-testid=text] [data-block]:has-text("{text}")')
+    world.ann.page.click(f'[data-testid=text] [data-paragraph]:has-text("{text}")')
     world.ann.page.keyboard.press("End")
 
 
@@ -288,7 +288,7 @@ def _tab(world):
 
 @when(parsers.parse('I click into the paragraph "{text}"'))
 def _click_paragraph(world, text):
-    world.ann.page.click(f'[data-testid=text] [data-block]:has-text("{text}")')
+    world.ann.page.click(f'[data-testid=text] [data-paragraph]:has-text("{text}")')
 
 
 @given("the caret is in the first box of the second body row")
@@ -465,7 +465,7 @@ def _given_first_header(world):
 
 @given(parsers.parse('my caret is at the start of "{text}"'))
 def _caret_at_start(world, text):
-    world.ann.page.click(f'[data-testid=text] [data-block]:has-text("{text}")')
+    world.ann.page.click(f'[data-testid=text] [data-paragraph]:has-text("{text}")')
     world.ann.page.keyboard.press("Home")
 
 

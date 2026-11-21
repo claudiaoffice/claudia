@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
-import type { Block } from '~/lib/blocks'
+import type { Paragraph } from '~/lib/paragraphs'
 import { TextSession } from '~/lib/text-session'
 
 const WELCOME: Welcome = {
@@ -54,23 +54,23 @@ const SCHEMES = [
   { id: 'bullets', name: 'Bullets', kind: 'bullet', indent: 1.6, gap: 0.25 },
   { id: 'numbers', name: 'Numbers', kind: 'number', indent: 1.6, gap: 0.25 },
 ]
-const plain = (id: string, text: string): Block => ({ id, style: 'body', text, runs: text ? [[text.length, 'ann', null]] : [] })
-const item = (id: string, text: string, level = 0, marker = '1.'): Block => ({
+const plain = (id: string, text: string): Paragraph => ({ id, style: 'body', text, runs: text ? [[text.length, 'ann', null]] : [] })
+const item = (id: string, text: string, level = 0, marker = '1.'): Paragraph => ({
   ...plain(id, text),
   item: { list: 'l1', level },
   label: { marker, path: [1] },
 })
 
-async function opened(blocks: Block[]) {
+async function opened(paragraphs: Paragraph[]) {
   const link = new FakeLink()
   const answer = { revision: 'main:9' }
   link.handlers = {
-    blocks: () => ({
+    paragraphs: () => ({
       revision: 'main:2',
       styles: [{ id: 'body', name: 'Body text', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }],
       lists: [{ id: 'l1', scheme: 'numbers', start: 1, name: null }],
       schemes: SCHEMES,
-      blocks,
+      paragraphs,
     }),
     suggestions: () => [],
     style_model: () => STYLE_MODEL,
@@ -84,7 +84,7 @@ async function opened(blocks: Block[]) {
     hold: () => ({}),
     look: () => ({}),
     unlock: () => ({}),
-    replace_text: () => ({ ...answer, block: 'b1', offset: 0 }),
+    replace_text: () => ({ ...answer, paragraph: 'b1', offset: 0 }),
     make_list: () => answer,
     indent_item: () => ({ ...answer, changed: 1 }),
     continue_list: () => answer,
@@ -95,7 +95,7 @@ async function opened(blocks: Block[]) {
   return { link, session }
 }
 
-const at = (offset: number, block = 'b1') => ({ block, offset })
+const at = (offset: number, paragraph = 'b1') => ({ paragraph, offset })
 
 beforeEach(() => vi.useFakeTimers())
 afterEach(() => vi.useRealTimers())
@@ -105,7 +105,7 @@ describe('knowing the lists', () => {
     const { session } = await opened([item('b1', 'one'), plain('b2', 'note')])
     expect(session.state.lists).toEqual([{ id: 'l1', scheme: 'numbers', start: 1, name: null }])
     expect(session.state.schemes.map((s) => s.id)).toEqual(['bullets', 'numbers'])
-    expect(session.state.blocks[0]!.label).toEqual({ marker: '1.', path: [1] })
+    expect(session.state.paragraphs[0]!.label).toEqual({ marker: '1.', path: [1] })
     expect(session.currentItem()).toEqual({ list: 'l1', level: 0 })
     session.setSelection(at(0, 'b2'))
     expect(session.currentItem()).toBeNull()
@@ -113,21 +113,21 @@ describe('knowing the lists', () => {
 
   it('follows the events of items, labels and lists', async () => {
     const { session, link } = await opened([plain('b1', 'one'), plain('b2', 'two')])
-    link.push('item', { type: 'item', block: 'b1', item: { list: 'l1', level: 0 } })
+    link.push('item', { type: 'item', paragraph: 'b1', item: { list: 'l1', level: 0 } })
     link.push('labels', { type: 'labels', labels: { b1: { marker: '1.', path: [1] } } })
     link.push('lists', { type: 'lists', lists: [{ id: 'l1', scheme: 'numbers', start: 4, name: 'Steps' }] })
-    expect(session.state.blocks[0]!.item).toEqual({ list: 'l1', level: 0 })
-    expect(session.state.blocks[0]!.label?.marker).toBe('1.')
+    expect(session.state.paragraphs[0]!.item).toEqual({ list: 'l1', level: 0 })
+    expect(session.state.paragraphs[0]!.label?.marker).toBe('1.')
     expect(session.state.lists[0]).toMatchObject({ start: 4, name: 'Steps' })
   })
 
   it('an Enter in an item makes an item of the new paragraph at once, its number comes with the labels', async () => {
     const { session, link } = await opened([item('b1', 'one two')])
-    link.push('split', { type: 'split', block: 'b1', offset: 3, new_id: 'b2', style: 'body' })
-    expect(session.state.blocks[1]!.item).toEqual({ list: 'l1', level: 0 })
-    expect(session.state.blocks[1]!.label).toBeUndefined()
+    link.push('split', { type: 'split', paragraph: 'b1', offset: 3, new_id: 'b2', style: 'body' })
+    expect(session.state.paragraphs[1]!.item).toEqual({ list: 'l1', level: 0 })
+    expect(session.state.paragraphs[1]!.label).toBeUndefined()
     link.push('labels', { type: 'labels', labels: { b2: { marker: '2.', path: [2] } } })
-    expect(session.state.blocks[1]!.label?.marker).toBe('2.')
+    expect(session.state.paragraphs[1]!.label?.marker).toBe('2.')
   })
 })
 
@@ -138,8 +138,8 @@ describe('making lists', () => {
     await session.makeList('bullets')
     await session.makeList(null)
     expect(link.sent('make_list')).toEqual([
-      { blocks: ['b1', 'b2'], scheme: 'bullets', base: 'main:2' },
-      { blocks: ['b1', 'b2'], scheme: null, base: 'main:2' },
+      { paragraphs: ['b1', 'b2'], scheme: 'bullets', base: 'main:2' },
+      { paragraphs: ['b1', 'b2'], scheme: null, base: 'main:2' },
     ])
   })
 
@@ -158,7 +158,7 @@ describe('making lists', () => {
     session.setSelection(at(0, 'b3'))
     await session.continueList()
     await session.startAt(5)
-    expect(link.sent('continue_list')).toEqual([{ block: 'b3', base: 'main:2' }])
+    expect(link.sent('continue_list')).toEqual([{ paragraph: 'b3', base: 'main:2' }])
     expect(link.sent('list_start')).toEqual([{ list: 'l1', start: 5, base: 'main:2' }])
   })
 
@@ -179,8 +179,8 @@ describe('the keys', () => {
     expect(session.tab(true)).toBe(true)
     await session.settled()
     expect(link.sent('indent_item')).toEqual([
-      { blocks: ['b2'], by: 1, base: 'main:2' },
-      { blocks: ['b2'], by: -1, base: 'main:2' },
+      { paragraphs: ['b2'], by: 1, base: 'main:2' },
+      { paragraphs: ['b2'], by: -1, base: 'main:2' },
     ])
     session.setSelection(at(0, 'b3'))
     expect(session.tab(false)).toBe(false)
@@ -200,8 +200,8 @@ describe('the keys', () => {
     await session.newline()
     session.setSelection(at(0, 'b3'))
     await session.newline()
-    expect(link.sent('indent_item')).toEqual([{ blocks: ['b2'], by: -1, base: 'main:2' }])
-    expect(link.sent('make_list')).toEqual([{ blocks: ['b3'], scheme: null, base: 'main:2' }])
+    expect(link.sent('indent_item')).toEqual([{ paragraphs: ['b2'], by: -1, base: 'main:2' }])
+    expect(link.sent('make_list')).toEqual([{ paragraphs: ['b3'], scheme: null, base: 'main:2' }])
     expect(link.sent('replace_text')).toHaveLength(0)
   })
 
@@ -220,11 +220,11 @@ describe('the keys', () => {
     session.setSelection(at(0, 'b2'))
     session.deleteBackward()
     await session.settled()
-    expect(link.sent('indent_item')).toEqual([{ blocks: ['b1'], by: -1, base: 'main:2' }])
-    expect(link.sent('make_list')).toEqual([{ blocks: ['b2'], scheme: null, base: 'main:2' }])
+    expect(link.sent('indent_item')).toEqual([{ paragraphs: ['b1'], by: -1, base: 'main:2' }])
+    expect(link.sent('make_list')).toEqual([{ paragraphs: ['b2'], scheme: null, base: 'main:2' }])
     expect(link.sent('replace_text')).toHaveLength(0)
     // a plain paragraph joins as ever
-    session.state.blocks[2]!.item = null
+    session.state.paragraphs[2]!.item = null
     session.deleteBackward()
     await session.settled()
     expect(link.sent('replace_text')).toHaveLength(1)
@@ -241,7 +241,7 @@ describe('the keys', () => {
 })
 
 describe('what the menu may offer', () => {
-  const second = (id: string, list: string, scheme: string): [Block, { id: string; scheme: string; start: number; name: null }] => [
+  const second = (id: string, list: string, scheme: string): [Paragraph, { id: string; scheme: string; start: number; name: null }] => [
     { ...item(id, id), item: { list, level: 0 } },
     { id: list, scheme, start: 1, name: null },
   ]

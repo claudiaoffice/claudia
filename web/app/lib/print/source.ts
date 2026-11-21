@@ -140,7 +140,7 @@ export function textSource(session: TextSession): PrintSource {
     language: () => state.language,
     canSetLanguage: () => !session.readOnly && state.language !== undefined,
     setLanguage: (tag) => void session.setLanguage(tag),
-    watched: () => [state.blocks, state.styles, state.page, state.language],
+    watched: () => [state.paragraphs, state.styles, state.page, state.language],
     async prepare() {
       try {
         extras = await session.printExtras()
@@ -150,7 +150,7 @@ export function textSource(session: TextSession): PrintSource {
     },
     images: () => extras?.images ?? [],
     async layOut(assets) {
-      const doc = textDocument(state.blocks, Object.values(state.styles), state.page ?? DEFAULT_PAGE, extras, state.language, { lists: state.lists, schemes: state.schemes })
+      const doc = textDocument(state.paragraphs, Object.values(state.styles), state.page ?? DEFAULT_PAGE, extras, state.language, { lists: state.lists, schemes: state.schemes })
       const [hyphenator] = await Promise.all([assets.hyphenator(doc.language), assets.ensure(fontsNeeded(doc, assets.resolver))])
       return layoutText(doc, assets.fonts, assets.resolver, { hyphenator })
     },

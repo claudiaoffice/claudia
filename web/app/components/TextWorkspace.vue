@@ -4,7 +4,7 @@ import { roleNow } from '~/lib/replay'
 // document window every app shares (DocumentFrame).
 import { computed, nextTick, ref, watch } from 'vue'
 import { DEFAULT_STYLE, SHAPE_LABEL_STYLE } from '@claudia/layout'
-import { countWords } from '~/lib/blocks'
+import { countWords } from '~/lib/paragraphs'
 import { NEW_OBJECT_CAP, pictureSize, type PictureImport } from '~/lib/images'
 import { pictureOf, useObjectClipboard } from '~/lib/object-clipboard'
 import { NEW_OBJECT_WRAP, wrapAnnouncement, wrapLabel, wrapOf } from '~/lib/wrap'
@@ -69,7 +69,7 @@ const active = ref<string | null>(null)
 const editor = ref<{
   focus: () => void
   scrollToSuggestion: (id: string) => void
-  scrollToBlock: (id: string) => void
+  scrollToParagraph: (id: string) => void
   caretPoint: () => { x: number; y: number }
   goTo: (target: string) => void
   syncCaret: () => void
@@ -102,7 +102,7 @@ const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT }
 const printSource = textSource(session)
 
 const readonly = computed(() => session.readOnly)
-const words = computed(() => countWords(state.blocks))
+const words = computed(() => countWords(state.paragraphs))
 const openSuggestions = computed(() => state.suggestions.filter((s) => s.state === 'open').length)
 
 // ------------------------------------------------------------------------------ doing things
@@ -123,8 +123,8 @@ function pick(id: string) {
 /** The bottom bar's count, and the card's "Next": the first open suggestion after `after`, in the order of the text. */
 function pickNext(after?: string) {
   const open = state.suggestions.filter((s) => s.state === 'open')
-  const order = state.blocks.map((b) => b.id)
-  open.sort((a, b) => order.indexOf(a.block) - order.indexOf(b.block) || a.start - b.start)
+  const order = state.paragraphs.map((b) => b.id)
+  open.sort((a, b) => order.indexOf(a.paragraph) - order.indexOf(b.paragraph) || a.start - b.start)
   const at = after ? open.findIndex((s) => s.id === after) : -1
   const next = open[(at + 1) % Math.max(open.length, 1)]
   if (next) pick(next.id)
@@ -135,10 +135,10 @@ function closeSuggestion() {
   active.value = null
 }
 
-/** File ▸ Export… (D212, D401): Markdown is built here from `state.blocks`, Word and OpenDocument text by the server. The window sends what is
+/** File ▸ Export… (D212, D401): Markdown is built here from `state.paragraphs`, Word and OpenDocument text by the server. The window sends what is
  * still being typed before it opens the dialog (`DocumentFrame.openDialog`), so both see the text as it stands. */
 const exportFormats = [
-  { value: 'md', get label() { return t('Markdown (.md)') }, mimeType: 'text/markdown', local: () => toMarkdown(state.blocks, Object.values(state.styles)) },
+  { value: 'md', get label() { return t('Markdown (.md)') }, mimeType: 'text/markdown', local: () => toMarkdown(state.paragraphs, Object.values(state.styles)) },
   { value: 'docx', get label() { return t('Word document (.docx)') } },
   { value: 'odt', get label() { return t('OpenDocument text (.odt)') } },
 ]
@@ -164,13 +164,13 @@ function closeStyleMenu() {
 // separate rich-paste path yet, so the two Edit items below are, honestly, the same operation.
 /** Insert ▸ Container ▸ …: a container of the chosen type, hanging from the paragraph the caret is in (D560). */
 async function addContainer(type: string) {
-  const at = state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
+  const at = state.selection?.focus ?? (state.paragraphs[0] ? { paragraph: state.paragraphs[0].id, offset: 0 } : null)
   if (!at) return
   await session.addContainer(type, at, NEW_OBJECT_CAP)
 }
 
 /** Where the caret is, or the start of the text: what a new object hangs from. */
-const hangFrom = () => state.selection?.focus ?? (state.blocks[0] ? { block: state.blocks[0].id, offset: 0 } : null)
+const hangFrom = () => state.selection?.focus ?? (state.paragraphs[0] ? { paragraph: state.paragraphs[0].id, offset: 0 } : null)
 /** Edit ▸ Image…: a picture hangs from the character the caret is at, as a container does (E10.8, E10.16). It keeps its
  * own proportions, and is no bigger than 420 × 240 or the picture itself. The text stops above it and goes on below (D1061). */
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
@@ -250,10 +250,10 @@ watch(
   (focus) => {
     if (!focus || !state.replay?.follow) return
     const first = focus.find((r) => r.kind === 'text')
-    if (first?.kind === 'text') editor.value?.scrollToBlock(first.block)
+    if (first?.kind === 'text') editor.value?.scrollToParagraph(first.paragraph)
   },
 )
-const searchHost = textSearchHost({ session, goTo: (block) => editor.value?.scrollToBlock(block), t })
+const searchHost = textSearchHost({ session, goTo: (paragraph) => editor.value?.scrollToParagraph(paragraph), t })
 const searchMarks = computed(() => (search.open.value ? marksFor(search.view.value.matches, search.view.value.current) : []))
 const openSearch = (replace = false) => search.openSearch(replace, session.selectedText())
 
@@ -263,7 +263,7 @@ const openSearch = (replace = false) => search.openSearch(replace, session.selec
 const nameDialog = useNameAndDescribe(session, () => editor.value?.focus())
 function openDescribe() {
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
-  const id = state.selectedObject ?? state.selection?.focus.block
+  const id = state.selectedObject ?? state.selection?.focus.paragraph
   if (id) void nameDialog.open(id)
 }
 const DESCRIBE = describeShortcut(openDescribe, () => !readonly.value && !!(state.selectedObject ?? state.selection))
@@ -315,11 +315,11 @@ const optionsFor = ref<{ table: string; column?: string } | null>(null)
 const canInsertTable = () => !readonly.value && !!state.selection && !state.box
 /** Where the table goes: the caret as it was when the menu entry was chosen (the dialog takes the focus, and a click
  *  into its fields must not move the place). */
-let tablePlace: { block: string; offset: number } | null = null
+let tablePlace: { paragraph: string; offset: number } | null = null
 function openTableDialog() {
   editor.value?.syncCaret()
   const focus = state.selection?.focus
-  tablePlace = focus ? { block: focus.block, offset: focus.offset } : null
+  tablePlace = focus ? { paragraph: focus.paragraph, offset: focus.offset } : null
   dialog.value = 'table'
 }
 async function insertTable(size: { rows: number; cols: number; headerRows: number }) {
@@ -420,25 +420,25 @@ async function putReference(target: string, show: Show) {
 function referenceAtCaret() {
   const sel = state.selection
   if (!sel) return null
-  const at = sel.anchor.block === sel.focus.block ? Math.min(sel.anchor.offset, sel.focus.offset) : sel.focus.offset
-  return session.referenceAt({ block: sel.focus.block, offset: at }) ?? (at > 0 ? session.referenceAt({ block: sel.focus.block, offset: at - 1 }) : null)
+  const at = sel.anchor.paragraph === sel.focus.paragraph ? Math.min(sel.anchor.offset, sel.focus.offset) : sel.focus.offset
+  return session.referenceAt({ paragraph: sel.focus.paragraph, offset: at }) ?? (at > 0 ? session.referenceAt({ paragraph: sel.focus.paragraph, offset: at - 1 }) : null)
 }
 function goToTarget() {
   const found = referenceAtCaret()
   if (found && found.shown?.state !== 'broken') editor.value?.goTo(found.field.target)
 }
 /** A reference's own menu (mock-up C): Show As, Go to Target, Remove Reference. */
-const refMenu = ref<{ block: string; index: number; x: number; y: number } | null>(null)
+const refMenu = ref<{ paragraph: string; index: number; x: number; y: number } | null>(null)
 const refMenuItems = computed<MenuItem[]>(() => {
   const at = refMenu.value
-  const block = at && state.blocks.find((b) => b.id === at.block)
-  const field = block?.fields?.[at!.index]
+  const paragraph = at && state.paragraphs.find((b) => b.id === at.paragraph)
+  const field = paragraph?.fields?.[at!.index]
   if (!at || !field) return []
-  const shows = SHOWS.map((s) => ({ label: `${field.show === s ? '✓ ' : ''}${t('Show As')} ${showLabel(s)}`, disabled: readonly.value || field.show === s, action: () => void session.setFieldShow(at.block, at.index, s) }))
+  const shows = SHOWS.map((s) => ({ label: `${field.show === s ? '✓ ' : ''}${t('Show As')} ${showLabel(s)}`, disabled: readonly.value || field.show === s, action: () => void session.setFieldShow(at.paragraph, at.index, s) }))
   return [
     ...shows,
     { label: '', separator: true },
-    { label: t('Go to Target'), hint: hintOf('edit.go-to-target'), disabled: block.shown?.[at.index]?.state === 'broken', action: () => editor.value?.goTo(field.target) },
+    { label: t('Go to Target'), hint: hintOf('edit.go-to-target'), disabled: paragraph.shown?.[at.index]?.state === 'broken', action: () => editor.value?.goTo(field.target) },
     { label: t('Remove Reference'), hint: 'Delete', disabled: readonly.value, action: () => void session.replaceSelection('') },
   ]
 })
@@ -449,20 +449,20 @@ const pageNumbers = usePageNumbers(session, () => view.value === 'page' && !prin
 /** The table of contents whose options are open (E9.31), and what the dialog works with. */
 const contentsOf = ref<string | null>(null)
 const contentsHost = computed<ContentsHost | null>(() => {
-  const block = state.blocks.find((b) => b.id === contentsOf.value)
-  if (!block?.generated) return null
+  const paragraph = state.paragraphs.find((b) => b.id === contentsOf.value)
+  if (!paragraph?.generated) return null
   return {
-    paragraph: block.id,
-    options: block.generated,
-    entries: block.entries ?? [],
-    looks: looksOf(block.entries ?? [], Object.values(state.styles)),
+    paragraph: paragraph.id,
+    options: paragraph.generated,
+    entries: paragraph.entries ?? [],
+    looks: looksOf(paragraph.entries ?? [], Object.values(state.styles)),
     readOnly: readonly.value,
-    set: (options) => session.setContents(block.id, options),
-    remove: () => session.removeContents(block.id),
+    set: (options) => session.setContents(paragraph.id, options),
+    remove: () => session.removeContents(paragraph.id),
   }
 })
-function openContents(block: string) {
-  contentsOf.value = block
+function openContents(paragraph: string) {
+  contentsOf.value = paragraph
   dialog.value = 'contents'
 }
 /** Insert ▸ Table of Contents: one at the caret; with the caret on a table, its options (the mock-up's rule). */
@@ -507,7 +507,7 @@ const menus = computed<Menu[]>(() => {
         searchItem(c, { open: () => openSearch() }),
         { label: '', separator: true },
         // the paragraph with the caret (D554); a floating object cannot be selected in the text yet
-        referenceItem(c, { run: () => void frame.value?.referenceThing(session.state.selection?.focus.block ?? ''), possible: () => !!session.state.selection }),
+        referenceItem(c, { run: () => void frame.value?.referenceThing(session.state.selection?.focus.paragraph ?? ''), possible: () => !!session.state.selection }),
         goToTargetItem(c, { run: () => goToTarget(), possible: () => !!referenceAtCaret() }),
         { label: '', separator: true },
         // a picture hangs from the caret's character, like a container (E10.16); its key is the same in all three apps
@@ -534,7 +534,7 @@ const menus = computed<Menu[]>(() => {
         ...(Object.keys(state.styles).length === 0
           ? [{ label: t('No styles yet'), disabled: true }]
           : formatItems(t, {
-              // D127's groups — structure · running text · called-out blocks — and then any style of the text's own.
+              // D127's groups — structure · running text · called-out paragraphs — and then any style of the text's own.
               // Structure is every style that gives a heading level (E9.22), by its level: the title and the
               // headings, and any style somebody made a heading.
               groups: [headingStyles(), builtins([DEFAULT_STYLE.composes]), builtins(CALLED_OUT_STYLE_IDS), customStyles()],
@@ -621,7 +621,7 @@ const menus = computed<Menu[]>(() => {
   ]
 })
 
-/** The built-in styles of one of D127's groups (structure · running text · called-out blocks), by id, in order. */
+/** The built-in styles of one of D127's groups (structure · running text · called-out paragraphs), by id, in order. */
 function builtins(ids: string[]): StyleView[] {
   return ids.map((id) => state.styles[id]).filter((s): s is StyleView => !!s)
 }
@@ -631,7 +631,7 @@ function headingStyles(): StyleView[] {
     .filter((s) => s.heading !== null && s.heading !== undefined && forParagraphs(s))
     .sort((a, b) => a.heading! - b.heading!)
 }
-/** The built-in styles of the called-out blocks (D127), as composes' built-ins name them (`tests/test_style_ids_generated.py`
+/** The built-in styles of the called-out paragraphs (D127), as composes' built-ins name them (`tests/test_style_ids_generated.py`
  * checks that each is one). */
 const CALLED_OUT_STYLE_IDS = ['quote', 'remark', 'definition']
 const BUILTIN_STYLE_IDS = new Set([DEFAULT_STYLE.composes, ...CALLED_OUT_STYLE_IDS])
@@ -688,7 +688,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <footer v-if="!printing" class="foot">
         <div class="stats mono" aria-live="polite">
           <span><b data-testid="words">{{ words }}</b> {{ words === 1 ? t('word') : t('words') }}</span>
-          <span><b>{{ state.blocks.length }}</b> {{ state.blocks.length === 1 ? t('paragraph') : t('paragraphs') }}</span>
+          <span><b>{{ state.paragraphs.length }}</b> {{ state.paragraphs.length === 1 ? t('paragraph') : t('paragraphs') }}</span>
           <button v-if="openSuggestions" type="button" class="sugs" data-testid="open-suggestions" :title="t('Open the first suggestion')" @click="pickNext()"><b>{{ openSuggestions }}</b> {{ openSuggestions === 1 ? t('suggestion') : t('suggestions') }}</button>
         </div>
         <span class="rev mono" :title="t('branch {branch}', { branch: state.branch })">{{ state.revision ?? t('empty') }}</span>

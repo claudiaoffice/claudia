@@ -80,7 +80,7 @@ export function renderStatus(definition: ContainerDef, outcome: RenderOutcome | 
 
 const OPEN = /^(`{3,})[ \t]*([A-Za-z][\w-]*)[ \t]*\n/
 
-/** A text block that is exactly one fenced block of a type that can be made, as `{type, source}`; else `null`. */
+/** Text that is exactly one fenced block of a type that can be made, as `{type, source}`; else `null`. */
 export function parseFence(text: string, types: readonly string[]): { type: string; source: string } | null {
   const open = OPEN.exec(text)
   if (!open) return null

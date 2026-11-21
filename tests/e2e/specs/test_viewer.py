@@ -77,7 +77,7 @@ def _ann_adds(world, words):
 def _vera_sees(world, words):
     vera = world.people["Vera"]
     vera.wait_until_open()
-    vera.page.locator("[data-testid=text] [data-block]", has_text=words).first.wait_for(timeout=10000)
+    vera.page.locator("[data-testid=text] [data-paragraph]", has_text=words).first.wait_for(timeout=10000)
 
 
 @then("Vera's side panel says that history and chat are for the document's editors")

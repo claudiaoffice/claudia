@@ -11,7 +11,7 @@ import type { ImageAsset } from './images'
 import type { ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { CssEdit } from './style-css'
 import type { PrintSetupData } from '@claudia/layout'
-import { pointOf, type Label } from './blocks'
+import { pointOf, type Label } from './paragraphs'
 import type { ListInfo, SchemeInfo } from './numbering'
 import type { ContentsEntry } from './contents'
 import type { ReferenceTarget, RefField, Show, Shown } from './references'
@@ -385,19 +385,19 @@ export class SlideSession extends BaseSession<SlideState> {
   /** Bullets or numbers for the selected box, or (`null`) none; asking for what it is takes it out of its list. */
   makeList(scheme: string | null): Promise<boolean> {
     const id = this.state.selected
-    return id && this.canList() ? this.listRequest('make_list', { blocks: [id], scheme }) : Promise.resolve(false)
+    return id && this.canList() ? this.listRequest('make_list', { paragraphs: [id], scheme }) : Promise.resolve(false)
   }
 
   /** Move the selected box's item one level in (`1`) or out (`-1`). */
   indent(by: 1 | -1): Promise<boolean> {
     const id = this.state.selected
-    return id && this.selectedItem() ? this.listRequest('indent_item', { blocks: [id], by }) : Promise.resolve(false)
+    return id && this.selectedItem() ? this.listRequest('indent_item', { paragraphs: [id], by }) : Promise.resolve(false)
   }
 
   /** Let the list of the selected box go on where the nearest earlier list of its kind ends. */
   continueList(): Promise<boolean> {
     const id = this.state.selected
-    return id && this.selectedItem() ? this.listRequest('continue_list', { block: id }) : Promise.resolve(false)
+    return id && this.selectedItem() ? this.listRequest('continue_list', { paragraph: id }) : Promise.resolve(false)
   }
 
   /** Number the first level of the selected box's list from `start` on. */

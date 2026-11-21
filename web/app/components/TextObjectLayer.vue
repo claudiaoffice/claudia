@@ -13,7 +13,7 @@
 // text wrap is "behind the text". The words are drawn above that one, so a press there goes to the words; while Ctrl
 // is held, the layer comes up over the words and takes the press, and the pointer shows a hand (`grabbable`).
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { pointer, type BlockAnchor } from '~/lib/objects'
+import { pointer, type ParagraphAnchor } from '~/lib/objects'
 import { descriptionOf } from '~/lib/text-container-names'
 import { objectName } from '~/lib/descriptions'
 import { imageDataUrl } from '~/lib/images'
@@ -75,7 +75,7 @@ onBeforeUnmount(() => {
 })
 /** The wrap an object says it has: only an object hung in the words has one; a slide's or a cell's is never behind. */
 const wrapOfObject = (id: string) => {
-  const a = state.objects[id]?.anchor as Partial<BlockAnchor> | undefined
+  const a = state.objects[id]?.anchor as Partial<ParagraphAnchor> | undefined
   return a && 'holder' in a ? wrapOf(a).wrap : 'over'
 }
 const mine = (id: string) => (wrapOfObject(id) === 'behind') === !!props.behind
@@ -148,7 +148,7 @@ const interaction = useObjectInteraction({
     if (change.kind === 'move') {
       // the object hangs from the place nearest where its top left corner was dropped (a point inside it, not on its edge)
       const at = props.placeAt(g.layer.left + change.x + 1, g.layer.top + change.y + 1)
-      const spot = at && (at.block !== g.place.block || at.offset !== g.place.offset) ? props.spotOf(at) : null
+      const spot = at && (at.paragraph !== g.place.paragraph || at.offset !== g.place.offset) ? props.spotOf(at) : null
       if (at && spot) dropped = { place: at, spot }
     }
     for (const step of stepsFor(change, { layer: g.layer, start: g.frame, current: { place: g.place, spot: g.spot }, dropped })) {
@@ -162,16 +162,16 @@ const interaction = useObjectInteraction({
 
 // ------------------------------------------------------------------------------ the anchor mark (D1352)
 /** How high a line of the paragraph is, for the mark at a character of it. */
-function lineHeightOf(block: string): number {
-  const el = props.host?.querySelector<HTMLElement>(`[data-block="${CSS.escape(block)}"]`)
+function lineHeightOf(paragraph: string): number {
+  const el = props.host?.querySelector<HTMLElement>(`[data-paragraph="${CSS.escape(paragraph)}"]`)
   const css = el ? getComputedStyle(el) : null
   return (css && (parseFloat(css.lineHeight) || parseFloat(css.fontSize) * 1.4)) || 20
 }
 /** Where a place is, in words: "Paragraph 3 · after “allotment”". */
 function whereLabel(at: Place): string {
-  const index = state.blocks.findIndex((b) => b.id === at.block)
-  const paragraph = session.nameOf(at.block) || t('Paragraph {n}', { n: index + 1 })
-  const found = index >= 0 ? wordAt(state.blocks[index]!.text, at.offset) : null
+  const index = state.paragraphs.findIndex((b) => b.id === at.paragraph)
+  const paragraph = session.nameOf(at.paragraph) || t('Paragraph {n}', { n: index + 1 })
+  const found = index >= 0 ? wordAt(state.paragraphs[index]!.text, at.offset) : null
   if (!found) return t('{paragraph} · at its start', { paragraph })
   return found.within ? t('{paragraph} · in “{word}”', { paragraph, word: found.word }) : t('{paragraph} · after “{word}”', { paragraph, word: found.word })
 }
@@ -195,9 +195,9 @@ const mark = computed(() => {
   const onLayer = (s: Spot) => ({ left: s.left - g.layer.left, top: s.top - g.layer.top })
   return {
     id,
-    block: at.block,
-    now: anchorMark(onLayer(spot), lineHeightOf(at.block), frame),
-    was: dragging ? anchorMark(onLayer(g.spot), lineHeightOf(g.place.block), g.frame) : null,
+    paragraph: at.paragraph,
+    now: anchorMark(onLayer(spot), lineHeightOf(at.paragraph), frame),
+    was: dragging ? anchorMark(onLayer(g.spot), lineHeightOf(g.place.paragraph), g.frame) : null,
     where: whereLabel(at),
     dragging,
   }
@@ -304,8 +304,8 @@ async function onKey(event: KeyboardEvent, id: string) {
   }
   if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
     event.preventDefault()
-    const to = neighbour(state.blocks.map((b) => b.id), o.anchor.holder, event.key === 'ArrowDown' ? 1 : -1)
-    if (to !== o.anchor.holder) await session.moveObject(id, { block: to, offset: 0 })
+    const to = neighbour(state.paragraphs.map((b) => b.id), o.anchor.holder, event.key === 'ArrowDown' ? 1 : -1)
+    if (to !== o.anchor.holder) await session.moveObject(id, { paragraph: to, offset: 0 })
   }
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
     // sideways it stays at its character and moves off it, a step as in creates (the contract's "arrows nudge")
@@ -448,7 +448,7 @@ const turnable = (id: string) => !!state.objects[id] && canTurn(state.objects[id
         <polyline :points="mark.now.line" />
       </svg>
       <span v-if="mark.was" class="anchor-mark was" aria-hidden="true" :style="{ left: `${mark.was.left}px`, top: `${mark.was.top}px`, height: `${mark.was.height}px` }" />
-      <span class="anchor-mark" data-testid="anchor-mark" :data-block="mark.block" aria-hidden="true" :style="{ left: `${mark.now.left}px`, top: `${mark.now.top}px`, height: `${mark.now.height}px` }" />
+      <span class="anchor-mark" data-testid="anchor-mark" :data-paragraph="mark.paragraph" aria-hidden="true" :style="{ left: `${mark.now.left}px`, top: `${mark.now.top}px`, height: `${mark.now.height}px` }" />
       <span v-if="mark.dragging" class="anchor-label" data-testid="anchor-label" aria-hidden="true" :style="{ left: `${mark.now.left}px`, top: `${mark.now.top}px` }">{{ mark.where }}</span>
       <span :id="`anchor-of-${mark.id}`" class="sr">{{ t('Hangs from {where}', { where: mark.where }) }}</span>
     </template>

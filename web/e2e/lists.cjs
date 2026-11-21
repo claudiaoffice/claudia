@@ -33,7 +33,7 @@ async function open(browser, [user, password], create) {
 
 // What the person reads in each paragraph: the words (the marker is drawn by CSS and is no text) and the marker.
 const readParagraphs = () =>
-  [...document.querySelectorAll('[data-testid=text] [data-block]')].map((e) => {
+  [...document.querySelectorAll('[data-testid=text] [data-paragraph]')].map((e) => {
     const copy = e.cloneNode(true)
     copy.querySelectorAll('[data-skip]').forEach((x) => x.remove())
     const content = getComputedStyle(e, '::before').content
@@ -54,7 +54,7 @@ async function menu(page, title, ...path) {
   await page.click(`.menus .title:text-is("${title}")`)
   for (const item of path) await page.click(`.menus .drop [role^=menuitem]:has-text("${item}")`)
 }
-const paragraph = (page, n) => page.locator('[data-testid=text] [data-block]').nth(n)
+const paragraph = (page, n) => page.locator('[data-testid=text] [data-paragraph]').nth(n)
 
 ;(async () => {
   const type = process.env.BROWSER === 'firefox' ? firefox : chromium

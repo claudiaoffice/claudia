@@ -73,18 +73,18 @@ describe('measuring the floats of a page', () => {
   /** A page of paragraphs `lineHeight` high with `lines` lines each: a float that is put in pushes down every paragraph
    * below the one it is in by the room it takes there (what a float above-below does to the lines under it). */
   const column = { left: 100, top: 0, width: 400, height: 1000 }
-  function page(blocks: string[], lineHeight = 20, lines = 3, jump = 0) {
+  function page(paragraphs: string[], lineHeight = 20, lines = 3, jump = 0) {
     // `jump`: how far the browser moves the view when the floats are taken out of the lines (it keeps what is shown)
     let scrolled = 0
-    const put = new Map<string, { block: string; f: ReturnType<typeof floatFor> }>()
-    const shift = (block: string) => {
+    const put = new Map<string, { paragraph: string; f: ReturnType<typeof floatFor> }>()
+    const shift = (paragraph: string) => {
       let down = 0
       for (const p of put.values()) {
-        if (blocks.indexOf(p.block) < blocks.indexOf(block) && p.f?.width === 400) down += p.f.height
+        if (paragraphs.indexOf(p.paragraph) < paragraphs.indexOf(paragraph) && p.f?.width === 400) down += p.f.height
       }
       return down
     }
-    const top = (block: string) => blocks.indexOf(block) * lineHeight * lines + shift(block) - scrolled
+    const top = (paragraph: string) => paragraphs.indexOf(paragraph) * lineHeight * lines + shift(paragraph) - scrolled
     const calls: string[] = []
     const host = {
       clear: () => {
@@ -94,16 +94,16 @@ describe('measuring the floats of a page', () => {
       },
       origin: () => ({ left: 100, top: -scrolled }),
       column: () => column,
-      spotOf: (block: string) => ({ left: 100, top: top(block) }),
-      paragraphOf: (block: string) => ({ left: 100, top: top(block), width: 400 }),
+      spotOf: (paragraph: string) => ({ left: 100, top: top(paragraph) }),
+      paragraphOf: (paragraph: string) => ({ left: 100, top: top(paragraph), width: 400 }),
       put: (id: string, f: ReturnType<typeof floatFor>) => {
-        put.set(id, { block: blocks.find((b) => id.startsWith(b)) ?? '', f })
+        put.set(id, { paragraph: paragraphs.find((b) => id.startsWith(b)) ?? '', f })
         calls.push(`put ${id}`)
       },
     }
     return { host, calls }
   }
-  const hung = (id: string, block: string, wrap: 'around' | 'above-below') => ({ id, block, offset: 0, wrap, gap: 8, w: 80, h: 40 })
+  const hung = (id: string, paragraph: string, wrap: 'around' | 'above-below') => ({ id, paragraph, offset: 0, wrap, gap: 8, w: 80, h: 40 })
 
   it('measures the second object with the first one in the lines, and the first with nothing before it', () => {
     const { host } = page(['b1', 'b2'])

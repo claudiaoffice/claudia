@@ -51,15 +51,15 @@ const BODY = { id: 'body', name: 'Body text', purpose: '', based_on: null, css: 
 const CIRCLE = { format: 1, id: 'circle', name: 'Circle', path: 'M0 0Z', aspect: 1, text_area: { x: 0, y: 0, w: 100, h: 100 } }
 const STAR = { ...CIRCLE, id: 'star', name: 'Star', aspect: null }
 const TYPES = { types: [{ type: 'latex', title: 'LaTeX', example: 'x^2' }] }
-const object = (id: string, block = 'b1', offset = 0, extra: object = {}) => ({
+const object = (id: string, paragraph = 'b1', offset = 0, extra: object = {}) => ({
   id, kind: 'container', w: 400, h: 200, style: 'plain-image', paragraph: null, ref: 'r1', imported: null,
-  rotation: 0, snap: false, anchor: { kind: 'block', holder: block, offset }, ...extra,
+  rotation: 0, snap: false, anchor: { kind: 'paragraph', holder: paragraph, offset }, ...extra,
 })
 
 async function opened(objects: object[] = [], text = 'a😀b') {
   const link = new FakeLink()
   link.handlers = {
-    blocks: () => ({ revision: 'main:2', styles: [BODY], blocks: [{ id: 'b1', style: 'body', text, runs: [] }, { id: 'b2', style: 'body', text: 'two', runs: [] }], lists: [], schemes: [] }),
+    paragraphs: () => ({ revision: 'main:2', styles: [BODY], paragraphs: [{ id: 'b1', style: 'body', text, runs: [] }, { id: 'b2', style: 'body', text: 'two', runs: [] }], lists: [], schemes: [] }),
     suggestions: () => [],
     style_model: () => STYLE_MODEL,
     palette: () => ({ type: 'palette', roles: [], readings: [] }),
@@ -132,40 +132,40 @@ describe('the object layer of a text', () => {
     expect(state.shapes.star).toBeUndefined()
   })
   it('keeps the offset of an object off its character, and an object that is not a container', async () => {
-    const { session } = await opened([object('o1', 'b1', 0, { kind: 'image', image: 'i1', anchor: { kind: 'block', holder: 'b1', offset: 0, dx: 12, dy: -4 } })])
+    const { session } = await opened([object('o1', 'b1', 0, { kind: 'image', image: 'i1', anchor: { kind: 'paragraph', holder: 'b1', offset: 0, dx: 12, dy: -4 } })])
     expect(session.objectsIn('b1')[0]!.anchor).toMatchObject({ dx: 12, dy: -4 })
   })
   it('tells where an object hangs in the units of the screen, though the server counts characters', async () => {
     const { session } = await opened([object('o1', 'b1', 2), object('o2', 'zz', 5)])
     // 'a😀b': character 2 is after the emoji, which is unit 3 here
-    expect(session.placeOf(session.state.objects.o1!)).toEqual({ block: 'b1', offset: 3 })
+    expect(session.placeOf(session.state.objects.o1!)).toEqual({ paragraph: 'b1', offset: 3 })
     // a paragraph that is not known (yet): no place to hang it at
     expect(session.placeOf(session.state.objects.o2!)).toBeNull()
   })
   it('puts a picture where the caret is, counting characters the way the server does, and selects it', async () => {
     const { link, session, state } = await opened()
     const picture = { data: 'AAAA', alt: 'a cat', sourceName: 'cat.png', sourcePath: null }
-    expect(await session.addImage(picture, { block: 'b1', offset: 3 }, { w: 300, h: 200 })).toBe('o7')
-    expect(link.last('add_image')).toEqual({ block: 'b1', offset: 2, w: 300, h: 200, data: 'AAAA', alt: 'a cat', source_name: 'cat.png', source_path: null, base: 'main:2' })
+    expect(await session.addImage(picture, { paragraph: 'b1', offset: 3 }, { w: 300, h: 200 })).toBe('o7')
+    expect(link.last('add_image')).toEqual({ paragraph: 'b1', offset: 2, w: 300, h: 200, data: 'AAAA', alt: 'a cat', source_name: 'cat.png', source_path: null, base: 'main:2' })
     expect(state.selectedObject).toBe('o7')
   })
   it('asks the server to size a picture from a file, and only then (D1332)', async () => {
     const { link, session } = await opened()
-    await session.addImage({ data: 'AAAA', alt: 'a dot', sourceName: 'dot.png', sourcePath: null, fit: true }, { block: 'b2', offset: 0 }, { w: 8, h: 8 })
+    await session.addImage({ data: 'AAAA', alt: 'a dot', sourceName: 'dot.png', sourcePath: null, fit: true }, { paragraph: 'b2', offset: 0 }, { w: 8, h: 8 })
     expect(link.last('add_image')).toMatchObject({ fit: true, w: 8, h: 8 })
-    await session.addImage({ data: 'AAAA', alt: 'a dot', sourceName: 'dot.png', sourcePath: null }, { block: 'b2', offset: 0 }, { w: 40, h: 40 })
+    await session.addImage({ data: 'AAAA', alt: 'a dot', sourceName: 'dot.png', sourcePath: null }, { paragraph: 'b2', offset: 0 }, { w: 40, h: 40 })
     expect(link.last('add_image')).not.toHaveProperty('fit')
   })
   it('says that a picture is only decoration, and then needs no words', async () => {
     const { link, session } = await opened()
-    await session.addImage({ data: 'AAAA', alt: '', sourceName: 'line.png', sourcePath: null, decorative: true }, { block: 'b2', offset: 0 }, { w: 100, h: 20 })
+    await session.addImage({ data: 'AAAA', alt: '', sourceName: 'line.png', sourcePath: null, decorative: true }, { paragraph: 'b2', offset: 0 }, { w: 100, h: 20 })
     expect(link.last('add_image')).toMatchObject({ decorative: true, alt: '' })
   })
   it('puts a container where the text is, counting characters the way the server does', async () => {
     const { link, session, state } = await opened()
     // 'a😀b': after the emoji is unit 3 here, character 2 there
-    expect(await session.addContainer('latex', { block: 'b1', offset: 3 }, { w: 300, h: 100 })).toBe('o9')
-    expect(link.last('add_container')).toMatchObject({ block: 'b1', offset: 2, w: 300, h: 100, type: 'latex', source: 'x^2', fit: true })
+    expect(await session.addContainer('latex', { paragraph: 'b1', offset: 3 }, { w: 300, h: 100 })).toBe('o9')
+    expect(link.last('add_container')).toMatchObject({ paragraph: 'b1', offset: 2, w: 300, h: 100, type: 'latex', source: 'x^2', fit: true })
     expect(link.last('add_container')).toMatchObject({ wrap: 'above-below' }) // the words go above and below it (D1334)
     expect(state.selectedObject).toBe('o9')
   })
@@ -185,19 +185,19 @@ describe('the object layer of a text', () => {
   })
   it('puts a shape and a text box where the caret is, as the server counts, and selects them', async () => {
     const { link, session, state } = await opened()
-    expect(await session.addShape('circle', { block: 'b1', offset: 3 }, { w: 120, h: 120 })).toBe('o8')
-    expect(link.last('add_object')).toEqual({ block: 'b1', offset: 2, kind: 'shape', shape: 'circle', w: 120, h: 120, base: 'main:2' })
+    expect(await session.addShape('circle', { paragraph: 'b1', offset: 3 }, { w: 120, h: 120 })).toBe('o8')
+    expect(link.last('add_object')).toEqual({ paragraph: 'b1', offset: 2, kind: 'shape', shape: 'circle', w: 120, h: 120, base: 'main:2' })
     expect(state.selectedObject).toBe('o8')
-    expect(await session.addTextBox({ block: 'b2', offset: 1 }, { w: 200, h: 80 })).toBe('o8')
-    expect(link.last('add_object')).toEqual({ block: 'b2', offset: 1, kind: 'text', w: 200, h: 80, base: 'main:2' })
+    expect(await session.addTextBox({ paragraph: 'b2', offset: 1 }, { w: 200, h: 80 })).toBe('o8')
+    expect(link.last('add_object')).toEqual({ paragraph: 'b2', offset: 1, kind: 'text', w: 200, h: 80, base: 'main:2' })
   })
   it('says how the text flows round a new picture, shape or text box when it is asked to', async () => {
     const { link, session } = await opened()
-    await session.addShape('circle', { block: 'b1', offset: 0 }, { w: 100, h: 100 }, 'above-below')
+    await session.addShape('circle', { paragraph: 'b1', offset: 0 }, { w: 100, h: 100 }, 'above-below')
     expect(link.last('add_object')).toMatchObject({ wrap: 'above-below' })
-    await session.addTextBox({ block: 'b1', offset: 0 }, { w: 100, h: 100 }, 'around')
+    await session.addTextBox({ paragraph: 'b1', offset: 0 }, { w: 100, h: 100 }, 'around')
     expect(link.last('add_object')).toMatchObject({ wrap: 'around' })
-    await session.addImage({ data: 'AAAA', alt: 'a cat', sourceName: 'cat.png', sourcePath: null }, { block: 'b1', offset: 0 }, { w: 100, h: 100 }, 'above-below')
+    await session.addImage({ data: 'AAAA', alt: 'a cat', sourceName: 'cat.png', sourcePath: null }, { paragraph: 'b1', offset: 0 }, { w: 100, h: 100 }, 'above-below')
     expect(link.last('add_image')).toMatchObject({ wrap: 'above-below' })
   })
   it('sets how the text flows round an object, keeping the gap when none is given', async () => {
@@ -214,7 +214,7 @@ describe('the object layer of a text', () => {
       const now = await session.cycleWrap('o1')
       seen.push(now!)
       // the server tells everyone (this window too) what the object is now
-      link.push('objects', { type: 'objects', holder: 'b1', changed: [object('o1', 'b1', 0, { anchor: { kind: 'block', holder: 'b1', offset: 0, wrap: now } })], removed: [], order: ['o1'] })
+      link.push('objects', { type: 'objects', holder: 'b1', changed: [object('o1', 'b1', 0, { anchor: { kind: 'paragraph', holder: 'b1', offset: 0, wrap: now } })], removed: [], order: ['o1'] })
     }
     expect(seen).toEqual(['around', 'above-below', 'behind', 'over', 'around'])
     expect(state.objects.o1!.anchor.wrap).toBe('around')
@@ -226,8 +226,8 @@ describe('the object layer of a text', () => {
   })
   it('moves, sizes and removes an object', async () => {
     const { link, session } = await opened([object('o1')])
-    expect(await session.moveObject('o1', { block: 'b1', offset: 3 })).toBe(true)
-    expect(link.last('move_object')).toMatchObject({ id: 'o1', block: 'b1', offset: 2 })
+    expect(await session.moveObject('o1', { paragraph: 'b1', offset: 3 })).toBe(true)
+    expect(link.last('move_object')).toMatchObject({ id: 'o1', paragraph: 'b1', offset: 2 })
     expect(await session.resizeObject('o1', 320, 120)).toBe(true)
     expect(link.last('resize_object')).toMatchObject({ id: 'o1', w: 320, h: 120 })
     expect(await session.removeObject('o1')).toBe(true)
@@ -242,13 +242,13 @@ describe('the object layer of a text', () => {
   })
   it('turns pasted text that is one fenced block into a container at the caret', async () => {
     const { link, session } = await opened()
-    expect(await session.pasteFence('```latex\nE=mc^2\n```', { block: 'b2', offset: 1 })).toBe('o9')
-    expect(link.last('add_container')).toMatchObject({ block: 'b2', offset: 1, type: 'latex', source: 'E=mc^2', wrap: 'above-below' })
+    expect(await session.pasteFence('```latex\nE=mc^2\n```', { paragraph: 'b2', offset: 1 })).toBe('o9')
+    expect(link.last('add_container')).toMatchObject({ paragraph: 'b2', offset: 1, type: 'latex', source: 'E=mc^2', wrap: 'above-below' })
   })
   it('leaves other text to be pasted as text', async () => {
     const { link, session } = await opened()
-    expect(await session.pasteFence('plain words', { block: 'b1', offset: 0 })).toBeNull()
-    expect(await session.pasteFence('```python\nx\n```', { block: 'b1', offset: 0 })).toBeNull()
+    expect(await session.pasteFence('plain words', { paragraph: 'b1', offset: 0 })).toBeNull()
+    expect(await session.pasteFence('```python\nx\n```', { paragraph: 'b1', offset: 0 })).toBeNull()
     expect(link.last('add_container')).toBeUndefined()
   })
 })

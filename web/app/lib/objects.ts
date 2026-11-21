@@ -30,8 +30,8 @@ export interface CellAnchor {
  * and absent for an object that sits exactly at its character. `wrap` says how the text flows round the object (D1061:
  * absent is `over`, the words do not give way) and `gap` how far the words keep from it, in the same units (absent is
  * the usual 8). */
-export interface BlockAnchor {
-  kind: 'block'
+export interface ParagraphAnchor {
+  kind: 'paragraph'
   holder: string
   offset: number
   dx?: number
@@ -39,7 +39,7 @@ export interface BlockAnchor {
   wrap?: 'over' | 'around' | 'above-below' | 'behind'
   gap?: number
 }
-export type Anchor = SlideAnchor | CellAnchor | BlockAnchor
+export type Anchor = SlideAnchor | CellAnchor | ParagraphAnchor
 
 /** What an object is and how it looks: the same fields in all three apps. */
 export interface ObjectBody {
@@ -237,7 +237,7 @@ export interface StyleModel {
 }
 
 /** Something a style is put into, in the app's own terms (`apply_style`, `deviate`). */
-export type StyleTarget = { object: string } | { block: string } | { sheet: string; range: [number, number, number, number] }
+export type StyleTarget = { object: string } | { paragraph: string } | { sheet: string; range: [number, number, number, number] }
 
 /** What an object's *words* look like: its paragraph's own style, resolved — not the object's style, which is its
  * box or outline (D181, D304). A shape's outline and its words are two slots with a style each (D310). Empty for an

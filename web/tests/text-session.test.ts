@@ -55,7 +55,7 @@ const STYLES = [view('body', 'Body text', { 'font-size': '11pt', color: '#1F1A33
 function server(link: FakeLink, text = 'hello world') {
   const doc = { text }
   link.handlers = {
-    blocks: () => ({ revision: 'main:2', styles: STYLES, blocks: [{ id: 'b1', style: 'body', text: doc.text, runs: doc.text ? [[[...doc.text].length, 'ann', null]] : [] }] }),
+    paragraphs: () => ({ revision: 'main:2', styles: STYLES, paragraphs: [{ id: 'b1', style: 'body', text: doc.text, runs: doc.text ? [[[...doc.text].length, 'ann', null]] : [] }] }),
     suggestions: () => [],
     // The palette reaches composes' paragraph styles from day one (D200): a style names `@text`, not a hex.
     style_model: () => STYLE_MODEL,
@@ -86,13 +86,13 @@ function server(link: FakeLink, text = 'hello world') {
       const chars = [...doc.text]
       if (p.removed_by_test) return {}
       const removed = p.end - p.start
-      if (removed) link.push('text', { type: 'text', block: 'b1', offset: p.start, removed, inserted: '', runs: [] })
+      if (removed) link.push('text', { type: 'text', paragraph: 'b1', offset: p.start, removed, inserted: '', runs: [] })
       if (p.text) {
-        link.push('text', { type: 'text', block: 'b1', offset: p.start, removed: 0, inserted: p.text, runs: [[[...p.text].length, 'ann', null]] })
+        link.push('text', { type: 'text', paragraph: 'b1', offset: p.start, removed: 0, inserted: p.text, runs: [[[...p.text].length, 'ann', null]] })
       }
       chars.splice(p.start, removed, ...p.text)
       doc.text = chars.join('')
-      return { revision: 'main:9', block: 'b1', offset: p.start + [...p.text].length }
+      return { revision: 'main:9', paragraph: 'b1', offset: p.start + [...p.text].length }
     },
   }
   return doc
@@ -106,8 +106,8 @@ async function opened(text = 'hello world') {
   return { link, session, doc }
 }
 
-const text = (session: TextSession) => session.state.blocks.map((b) => b.text)
-const at = (offset: number, block = 'b1') => ({ block, offset })
+const text = (session: TextSession) => session.state.paragraphs.map((b) => b.text)
+const at = (offset: number, paragraph = 'b1') => ({ paragraph, offset })
 
 beforeEach(() => vi.useFakeTimers())
 afterEach(() => vi.useRealTimers())
@@ -130,7 +130,7 @@ describe('typing', () => {
     expect(link.sent('replace_text')).toHaveLength(0)
     session.type(' ')
     await session.flush()
-    expect(link.sent('replace_text')).toEqual([{ block: 'b1', start: 0, end_block: 'b1', end: 0, text: 'Hi ', base: 'main:2' }])
+    expect(link.sent('replace_text')).toEqual([{ paragraph: 'b1', start: 0, end_paragraph: 'b1', end: 0, text: 'Hi ', base: 'main:2' }])
     expect(text(session)).toEqual(['Hi '])
     expect(session.state.pending).toBeNull()
     expect(session.state.sending).toBeNull()
@@ -243,11 +243,11 @@ describe('editing', () => {
 
   it('delete at the end of a paragraph and backspace at its start join paragraphs', async () => {
     const { session, link } = await opened('ab')
-    session.state.blocks.push({ id: 'b2', style: 'body', text: 'cd', runs: [[2, 'ann', null]] })
-    session.setSelection({ block: 'b2', offset: 0 })
+    session.state.paragraphs.push({ id: 'b2', style: 'body', text: 'cd', runs: [[2, 'ann', null]] })
+    session.setSelection({ paragraph: 'b2', offset: 0 })
     session.deleteBackward()
     await session.flush()
-    expect(link.sent('replace_text')[0]).toMatchObject({ block: 'b1', start: 2, end_block: 'b2', end: 0, text: '' })
+    expect(link.sent('replace_text')[0]).toMatchObject({ paragraph: 'b1', start: 2, end_paragraph: 'b2', end: 0, text: '' })
   })
 
   it('counts characters like the server does, not like javascript', async () => {
@@ -277,7 +277,7 @@ describe('editing', () => {
   it('setting a style asks for every paragraph of the selection that has another one', async () => {
     const { session, link } = await opened('hello')
     await session.setStyle('title')
-    expect(link.sent('set_style')).toEqual([{ block: 'b1', style: 'title', base: 'main:2' }])
+    expect(link.sent('set_style')).toEqual([{ paragraph: 'b1', style: 'title', base: 'main:2' }])
     await session.setStyle('body') // b1 is still body in the replica (no event arrived in this fake)
     expect(link.sent('set_style')).toHaveLength(1)
   })
@@ -286,9 +286,9 @@ describe('editing', () => {
 describe('following the others', () => {
   it('text typed before my caret moves it, and a colleague\'s zone moves too', async () => {
     const { session, link } = await opened('hello world')
-    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'text', block: 'b1', start: 6, end: 11 }, { kind: 'text', block: 'b1', start: 8, end: 8 }], locked: true } })
+    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'text', paragraph: 'b1', start: 6, end: 11 }, { kind: 'text', paragraph: 'b1', start: 8, end: 8 }], locked: true } })
     session.setSelection(at(6))
-    link.push('text', { type: 'text', block: 'b1', offset: 0, removed: 0, inserted: 'Oh, ', runs: [[4, 'ben', null]] })
+    link.push('text', { type: 'text', paragraph: 'b1', offset: 0, removed: 0, inserted: 'Oh, ', runs: [[4, 'ben', null]] })
     expect(text(session)).toEqual(['Oh, hello world'])
     expect(session.state.selection?.focus).toEqual(at(10))
     expect(session.state.presence.ben!.regions[0]).toMatchObject({ start: 10, end: 15 })
@@ -298,30 +298,30 @@ describe('following the others', () => {
     const { session, link } = await opened('ab')
     session.setSelection(at(2))
     session.type('x')
-    link.push('text', { type: 'text', block: 'b1', offset: 0, removed: 0, inserted: '>>', runs: [[2, 'ben', null]] })
+    link.push('text', { type: 'text', paragraph: 'b1', offset: 0, removed: 0, inserted: '>>', runs: [[2, 'ben', null]] })
     expect(session.state.pending).toMatchObject({ at: at(4), text: 'x' })
   })
 
   it('a split and a join move the caret between paragraphs', async () => {
     const { session, link } = await opened('hello world')
     session.setSelection(at(8))
-    link.push('split', { type: 'split', block: 'b1', offset: 5, new_id: 'b2', style: 'body' })
+    link.push('split', { type: 'split', paragraph: 'b1', offset: 5, new_id: 'b2', style: 'body' })
     expect(text(session)).toEqual(['hello', ' world'])
-    expect(session.state.selection?.focus).toEqual({ block: 'b2', offset: 3 })
-    link.push('join', { type: 'join', block: 'b2', into: 'b1', at: 5 })
+    expect(session.state.selection?.focus).toEqual({ paragraph: 'b2', offset: 3 })
+    link.push('join', { type: 'join', paragraph: 'b2', into: 'b1', at: 5 })
     expect(session.state.selection?.focus).toEqual(at(8))
   })
 
   it('reloads when an event does not fit', async () => {
     const { session, link } = await opened('hello')
-    link.push('text', { type: 'text', block: 'b7', offset: 0, removed: 0, inserted: 'x', runs: [[1, 'ben', null]] })
+    link.push('text', { type: 'text', paragraph: 'b7', offset: 0, removed: 0, inserted: 'x', runs: [[1, 'ben', null]] })
     await session.settled()
-    expect(link.calls.filter((c) => c.method === 'blocks')).toHaveLength(2)
+    expect(link.calls.filter((c) => c.method === 'paragraphs')).toHaveLength(2)
   })
 
   it('knows the suggestions and drops them when they are over', async () => {
     const { session, link } = await opened('the quick fox')
-    const item = { id: 's1', author: 'ai', block: 'b1', start: 4, end: 9, original: 'quick', replacement: 'fast', reason: 'shorter', state: 'open', outdated: false }
+    const item = { id: 's1', author: 'ai', paragraph: 'b1', start: 4, end: 9, original: 'quick', replacement: 'fast', reason: 'shorter', state: 'open', outdated: false }
     link.push('suggestions', { type: 'suggestions', items: [item] })
     expect(session.state.suggestions).toHaveLength(1)
     link.push('suggestions', { type: 'suggestions', items: [{ ...item, start: 6, end: 11, outdated: true }] })
@@ -346,7 +346,7 @@ describe('showing where I am', () => {
     session.setSelection(at(4))
     await vi.advanceTimersByTimeAsync(PLACE_MS + 10)
     await session.settled()
-    expect(link.sent('hold')).toEqual([{ block: 'b1', offset: 4, words: 3 }])
+    expect(link.sent('hold')).toEqual([{ paragraph: 'b1', offset: 4, words: 3 }])
   })
 
   it('looks only, when a colleague holds the place', async () => {
@@ -357,7 +357,7 @@ describe('showing where I am', () => {
     session.setSelection(at(3))
     await vi.advanceTimersByTimeAsync(PLACE_MS + 10)
     await session.settled()
-    expect(link.sent('look')).toEqual([{ block: 'b1', offset: 3, words: 3 }])
+    expect(link.sent('look')).toEqual([{ paragraph: 'b1', offset: 3, words: 3 }])
   })
 
   it('viewers look instead of holding', async () => {
@@ -372,7 +372,7 @@ describe('showing where I am', () => {
 
   it('translates a colleague\'s zone from code points to the units it displays', async () => {
     const { session, link } = await opened('😀 hi')
-    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'text', block: 'b1', start: 2, end: 4 }], locked: false } })
+    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'text', paragraph: 'b1', start: 2, end: 4 }], locked: false } })
     expect(session.state.presence.ben!.regions[0]).toMatchObject({ start: 3, end: 5 })
   })
 })
@@ -423,7 +423,7 @@ describe('styles', () => {
 
   it('counts how many paragraphs use each style', async () => {
     const { session } = await opened()
-    session.state.blocks.push({ id: 'b2', style: 'title', text: 'x', runs: [[1, 'ann', null]] })
+    session.state.paragraphs.push({ id: 'b2', style: 'title', text: 'x', runs: [[1, 'ann', null]] })
     expect(session.uses()).toEqual({ body: 1, title: 1 })
   })
 
@@ -443,12 +443,12 @@ describe('styles', () => {
 
   it('deviating asks once per style among the selected paragraphs, and puts the caret in the new style by the event', async () => {
     const { link, session } = await opened()
-    session.state.blocks.push({ id: 'b2', style: 'title', text: 'x', runs: [[1, 'ann', null]] }, { id: 'b3', style: 'body', text: 'y', runs: [[1, 'ann', null]] })
+    session.state.paragraphs.push({ id: 'b2', style: 'title', text: 'x', runs: [[1, 'ann', null]] }, { id: 'b3', style: 'body', text: 'y', runs: [[1, 'ann', null]] })
     session.setSelection(at(0, 'b1'), at(1, 'b3'))
     await session.deviateStyle({ set: { 'font-weight': 'bold' } })
     expect(link.sent('deviate_style')).toEqual([
-      { parent: 'body', blocks: ['b1', 'b3'], set: { 'font-weight': 'bold' }, base: 'main:2' },
-      { parent: 'title', blocks: ['b2'], set: { 'font-weight': 'bold' }, base: 'main:2' },
+      { parent: 'body', paragraphs: ['b1', 'b3'], set: { 'font-weight': 'bold' }, base: 'main:2' },
+      { parent: 'title', paragraphs: ['b2'], set: { 'font-weight': 'bold' }, base: 'main:2' },
     ])
   })
 

@@ -34,7 +34,7 @@ export interface ContentsEntry {
 
 /** What the options dialog works with: the table's options, what it lists and the session's requests. */
 export interface ContentsHost {
-  /** The table's paragraph (in composes a block, in creates the agenda's text box). */
+  /** The table's paragraph (in composes a paragraph, in creates the agenda's text box). */
   paragraph: string
   options: Toc
   entries: readonly ContentsEntry[]

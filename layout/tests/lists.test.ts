@@ -22,12 +22,12 @@ const LISTS = [{ id: 'l1', scheme: 'numbers' }, { id: 'l2', scheme: 'bullets' }]
 const SCHEMES = [{ id: 'numbers', indent: 1.6, gap: 0.25 }, { id: 'bullets', indent: 2, gap: 0.5 }]
 
 describe('where a list item sits', () => {
-  const blocks = [{ item: { list: 'l1', level: 0 } }, { item: { list: 'l1', level: 1 } }, { item: null }, { item: { list: 'l2', level: 0 } }]
+  const paragraphs = [{ item: { list: 'l1', level: 0 } }, { item: { list: 'l1', level: 1 } }, { item: null }, { item: { list: 'l2', level: 0 } }]
   it('moves a level in by its scheme’s indent, and puts its scheme’s gap only before the next item of its list', () => {
-    expect(itemGeometry(blocks, 0, LISTS, SCHEMES)).toEqual({ left: 0, step: 1.6, pad: 1.6, gap: 0.25 })
-    expect(itemGeometry(blocks, 1, LISTS, SCHEMES)).toEqual({ left: 1.6, step: 1.6, pad: 3.2, gap: null })
-    expect(itemGeometry(blocks, 2, LISTS, SCHEMES)).toBeNull()
-    expect(itemGeometry(blocks, 3, LISTS, SCHEMES)).toEqual({ left: 0, step: 2, pad: 2, gap: null })
+    expect(itemGeometry(paragraphs, 0, LISTS, SCHEMES)).toEqual({ left: 0, step: 1.6, pad: 1.6, gap: 0.25 })
+    expect(itemGeometry(paragraphs, 1, LISTS, SCHEMES)).toEqual({ left: 1.6, step: 1.6, pad: 3.2, gap: null })
+    expect(itemGeometry(paragraphs, 2, LISTS, SCHEMES)).toBeNull()
+    expect(itemGeometry(paragraphs, 3, LISTS, SCHEMES)).toEqual({ left: 0, step: 2, pad: 2, gap: null })
   })
   it('falls back to the default indent and gap for a list whose scheme has not arrived', () => {
     expect(itemGeometry([{ item: { list: 'lx', level: 0 } }, { item: { list: 'lx', level: 0 } }], 0, [], [])).toEqual({ left: 0, step: 1.6, pad: 1.6, gap: 0.25 })
@@ -37,7 +37,7 @@ describe('where a list item sits', () => {
 describe('a list on the page', () => {
   const words = 'Ein Punkt der Liste, lang genug, dass er über das Ende der ersten Zeile hinaus in eine zweite umbricht und weiterläuft.'
   const doc = (extra: Partial<TextDocument> = {}): TextDocument => ({
-    blocks: [
+    paragraphs: [
       { id: 'b1', style: 'body', text: 'Davor.' },
       { id: 'b2', style: 'body', text: words, item: { list: 'l1', level: 0 }, label: { marker: '1.' } },
       { id: 'b3', style: 'body', text: 'Innen.', item: { list: 'l1', level: 1 }, label: { marker: 'a.' } },
@@ -85,7 +85,7 @@ describe('a list on the page', () => {
 
   it('puts the marker and the text of an item after its style’s own padding and border, as the editor does', () => {
     const all = runs(doc({
-      blocks: [
+      paragraphs: [
         { id: 'q0', style: 'quote', text: 'Zitat.' },
         { id: 'q1', style: 'quote', text: 'Gezählt.', item: { list: 'l1', level: 0 }, label: { marker: '1.' } },
       ],
@@ -99,14 +99,14 @@ describe('a list on the page', () => {
   })
 
   it('leaves a paragraph without an item where it was, and an item without a label counted yet without a marker', () => {
-    const all = runs(doc({ blocks: [{ id: 'b1', style: 'body', text: 'Davor.' }, { id: 'b2', style: 'body', text: 'Noch nicht gezählt.', item: { list: 'l1', level: 0 } }] }))
+    const all = runs(doc({ paragraphs: [{ id: 'b1', style: 'body', text: 'Davor.' }, { id: 'b2', style: 'body', text: 'Noch nicht gezählt.', item: { list: 'l1', level: 0 } }] }))
     expect(all.map((r) => r.text)).toEqual(['Davor.', 'Noch', 'nicht', 'gezählt.'])
   })
 })
 
 describe('a numbered heading on the page (E9.22)', () => {
   const doc: TextDocument = {
-    blocks: [
+    paragraphs: [
       { id: 'b1', style: 'heading-1', text: 'Warum', label: { marker: '1' } },
       { id: 'b2', style: 'body', text: 'Text.' },
       { id: 'b3', style: 'heading-2', text: 'Wie', label: { marker: '1.1' } },

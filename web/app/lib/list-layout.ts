@@ -3,7 +3,7 @@
 // library's `itemGeometry` into the CSS custom properties it needs, so that the editor and the printed pages read one
 // rule and a list looks the same in both (E9.22).
 import { itemGeometry, MARKER_GAP_EM } from '@claudia/layout'
-import type { Block } from './blocks'
+import type { Paragraph } from './paragraphs'
 import type { ListInfo, SchemeInfo } from './text-session'
 
 /** After the style's own left padding, if it has one: where the printed page puts the marker and the text too. */
@@ -17,8 +17,8 @@ function after(own: string | undefined, em: number): string {
  * is an item of the same list, its `margin-bottom` (the scheme's gap, also as `--item-gap`) are given here, not by a class
  * rule: the style's own CSS sits on the paragraph too, and a rule would lose against it (a quote's padding, body text's
  * space after). */
-export function itemLayout(blocks: Block[], index: number, lists: ListInfo[], schemes: SchemeInfo[], own: Record<string, string> = {}): Record<string, string> | null {
-  const at = itemGeometry(blocks, index, lists, schemes)
+export function itemLayout(paragraphs: Paragraph[], index: number, lists: ListInfo[], schemes: SchemeInfo[], own: Record<string, string> = {}): Record<string, string> | null {
+  const at = itemGeometry(paragraphs, index, lists, schemes)
   if (!at) return null
   const css: Record<string, string> = {
     '--item-left': after(own['padding-left'], at.left),

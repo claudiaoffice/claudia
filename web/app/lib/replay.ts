@@ -122,7 +122,7 @@ export function holderOf(region: Region | null): string | null {
   if (region === null) return null
   if (region.kind === 'objects') return region.holder
   if (region.kind === 'cells') return region.range.first.sheet ?? null
-  return region.block
+  return region.paragraph
 }
 
 /** What a replay may still ask the server live: the panel's own reading, the conversation and the suggestions to go
@@ -175,7 +175,7 @@ export const VIEW_READS: ReadonlySet<string> = new Set([
   'outcome_table',
   'random_state',
   'objects',
-  'blocks',
+  'paragraphs',
   'page',
   'look',
   'suggestions',

@@ -183,8 +183,8 @@ def test_a_container_in_a_text_has_a_name(live: Live) -> None:
         kind = renderable(session)
         if kind is None:
             pytest.skip("this server has no tool to render a container with (D392); the text has nothing else to add")
-        block = session.ok("snapshot")["state"]["blocks"][0]["id"]
-        made = session.ok("add_container", block=block, offset=0, w=200, h=100, type=kind, source="x")["object"]
+        paragraph = session.ok("snapshot")["state"]["paragraphs"][0]["id"]
+        made = session.ok("add_container", paragraph=paragraph, offset=0, w=200, h=100, type=kind, source="x")["object"]
         objects = {obj["id"]: obj["name"] for obj in session.ok("objects")["objects"]}
         assert made in objects
         assert_named(objects)
@@ -193,22 +193,22 @@ def test_a_container_in_a_text_has_a_name(live: Live) -> None:
 def test_a_paragraph_pointed_at_gets_a_name_in_the_one_namespace(live: Live) -> None:
     with live.socket("composes", "essay") as session:
         session.hello(create=True)
-        first = session.ok("blocks")["blocks"][0]["id"]
-        session.ok("replace_text", block=first, start=0, end_block=first, end=0, text="Introduction")
-        session.ok("set_style", block=first, style="heading-1")
+        first = session.ok("paragraphs")["paragraphs"][0]["id"]
+        session.ok("replace_text", paragraph=first, start=0, end_paragraph=first, end=0, text="Introduction")
+        session.ok("set_style", paragraph=first, style="heading-1")
         assert session.ok("name_thing", id=first)["name"] == "Introduction"
-        (seen,) = [b for b in session.ok("blocks")["blocks"] if b["id"] == first]
+        (seen,) = [b for b in session.ok("paragraphs")["paragraphs"] if b["id"] == first]
         assert seen["name"] == "Introduction"
 
         # a heading is called by its words and is not renamed (D1311): the words are changed instead
         refused = session.call("rename_thing", id=first, name="Intro")
         assert not refused["ok"] and refused["error"]["code"] == "command_error", refused
-        session.ok("replace_text", block=first, start=0, end_block=first, end=len("Introduction"), text="Intro")
+        session.ok("replace_text", paragraph=first, start=0, end_paragraph=first, end=len("Introduction"), text="Intro")
         assert session.ok("name_thing", id=first)["name"] == "Intro", "a heading's name follows its words"
 
         # any other paragraph keeps a name it was given
-        session.ok("replace_text", block=first, start=5, end_block=first, end=5, text="\nThe gardens.")
-        second = session.ok("blocks")["blocks"][1]["id"]
+        session.ok("replace_text", paragraph=first, start=5, end_paragraph=first, end=5, text="\nThe gardens.")
+        second = session.ok("paragraphs")["paragraphs"][1]["id"]
         session.ok("rename_thing", id=second, name="Gardens")
         assert session.ok("name_thing", id=second)["name"] == "Gardens", "a name, once given, is kept"
         assert session.ok("thing_last_seen", id=second)["present"]

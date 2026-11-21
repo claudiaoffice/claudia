@@ -8,7 +8,7 @@ const DOC = `styles-${Date.now() % 100000}`
 const log = (...a) => console.log(...a)
 
 const look = (page, n) =>
-  page.$$eval('[data-testid=text] [data-block]', (els, n) => {
+  page.$$eval('[data-testid=text] [data-paragraph]', (els, n) => {
     const c = getComputedStyle(els[n])
     return { tag: els[n].tagName.toLowerCase(), cls: els[n].className, weight: c.fontWeight, size: c.fontSize, color: c.color, family: c.fontFamily, align: c.textAlign, decoration: c.textDecorationLine }
   }, n)
@@ -39,7 +39,7 @@ async function main() {
   await page.keyboard.press('Enter')
   await page.keyboard.type('A second paragraph of body text, to be left alone. ')
   await page.waitForTimeout(900)
-  await page.click('[data-testid=text] [data-block] >> nth=0')
+  await page.click('[data-testid=text] [data-paragraph] >> nth=0')
   await page.keyboard.press('Control+Home')
   await page.click('[data-testid=style-button]')
   await page.click('[data-style=title]')
@@ -86,7 +86,7 @@ async function main() {
   const box =await page.locator('.style-list [data-style=heading-2]').boundingBox()
   await page.mouse.click(box.x + 20, box.y + box.height / 2) // a real mouse click on the entry, where it is drawn
   await page.waitForSelector('.style-list', { state: 'detached' })
-  await page.waitForFunction(() => document.querySelector('[data-testid=text] [data-block]').className.includes('st-heading-2'))
+  await page.waitForFunction(() => document.querySelector('[data-testid=text] [data-paragraph]').className.includes('st-heading-2'))
   await page.click('[data-testid=style-button]')
   await page.click('[data-testid=style-button]') // the button toggles it
   await page.waitForSelector('.style-list', { state: 'detached' })
@@ -107,7 +107,7 @@ async function main() {
   log('style list of the bar is visible and closes; the Look button and a contextmenu event open the menu')
 
   // right-click in the second paragraph: the menu opens with the style gallery and the look
-  const second = page.locator('[data-testid=text] [data-block]').nth(1)
+  const second = page.locator('[data-testid=text] [data-paragraph]').nth(1)
   await second.click()
   await second.click({ button: 'right' })
   await page.waitForSelector('[data-testid=style-menu]')
@@ -133,7 +133,7 @@ async function main() {
 
   // bold, this paragraph only: a new style appears and waits for its name, the others are untouched
   await page.click('[data-testid=bold]')
-  await page.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-block]')[1].className.includes('body-text-changed'))
+  await page.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-paragraph]')[1].className.includes('body-text-changed'))
   assert.equal((await look(page, 1)).weight, '700')
   assert.equal((await look(page, 2)).weight, '400')
   assert.ok(await page.locator('[data-testid=name-invitation]').isVisible())
@@ -143,10 +143,10 @@ async function main() {
   await page.click('[data-testid=colour-text]')
   await page.click('[data-testid=colour-text] [data-role=accent]') // a colour by what it means (D210): the accent, iris
   await page.click('[data-testid=size-field] button[aria-label=Larger]')
-  await page.waitForFunction(() => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-block]')[1]).color === 'rgb(91, 75, 196)')
+  await page.waitForFunction(() => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-paragraph]')[1]).color === 'rgb(91, 75, 196)')
   const dev = await look(page, 1)
   assert.equal(dev.cls.includes('body-text-changed'), true)
-  assert.equal((await page.locator('[data-testid=text] [data-block][class*=body-text-changed]').count()), 1, 'still just the one paragraph')
+  assert.equal((await page.locator('[data-testid=text] [data-paragraph][class*=body-text-changed]').count()), 1, 'still just the one paragraph')
   await page.screenshot({ path: `${SHOTS}/styling-2-controls.png` })
   log('colour and size went into the same new style:', dev.color, dev.size)
 
@@ -171,7 +171,7 @@ async function main() {
   await textarea.fill('font-weight: bold;\ncolor: #D6477A;\nfont-style: italic;\nborder-left: 3px solid #F2A057;\npadding-left: 12pt;')
   await page.waitForFunction(() => !document.querySelector('.problems'))
   await textarea.press('Control+Enter')
-  await page.waitForFunction(() => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-block]')[1]).fontStyle === 'italic')
+  await page.waitForFunction(() => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-paragraph]')[1]).fontStyle === 'italic')
   assert.equal((await look(page, 1)).color, 'rgb(214, 71, 122)')
   log('typed CSS applied')
 
@@ -185,13 +185,13 @@ async function main() {
   // every use of Body text: back to controls, choose “every use”, change the size of all body text
   await page.keyboard.press('Escape')
   await page.waitForSelector('[data-testid=style-menu]', { state: 'detached' })
-  await page.locator('[data-testid=text] [data-block]').nth(2).click()
-  await page.locator('[data-testid=text] [data-block]').nth(2).click({ button: 'right' })
+  await page.locator('[data-testid=text] [data-paragraph]').nth(2).click()
+  await page.locator('[data-testid=text] [data-paragraph]').nth(2).click({ button: 'right' })
   await page.click('[data-testid=view-controls]')
   await page.locator('[data-testid=style-spec] label', { hasText: 'Every use of' }).click()
   const before = (await look(page, 2)).size
   await page.click('[data-testid=size-field] button[aria-label=Larger]')
-  await page.waitForFunction((b) => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-block]')[2]).fontSize !== b, before)
+  await page.waitForFunction((b) => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-paragraph]')[2]).fontSize !== b, before)
   assert.equal((await look(page, 1)).size, (await look(page, 1)).size)
   log('every use: body text got bigger (', before, '→', (await look(page, 2)).size, ')')
   await page.screenshot({ path: `${SHOTS}/styling-5-every.png` })
@@ -207,9 +207,9 @@ async function main() {
   log('styles dialog')
 
   // undo takes the style change back (the size), then the naming and the rest
-  await page.click('[data-testid=text] [data-block] >> nth=2')
+  await page.click('[data-testid=text] [data-paragraph] >> nth=2')
   await page.keyboard.press('Control+z')
-  await page.waitForFunction((b) => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-block]')[2]).fontSize === b, before)
+  await page.waitForFunction((b) => getComputedStyle(document.querySelectorAll('[data-testid=text] [data-paragraph]')[2]).fontSize === b, before)
   log('undo restored the size')
 
   assert.deepEqual(errors, [])

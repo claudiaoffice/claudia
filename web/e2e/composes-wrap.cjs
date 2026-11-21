@@ -33,7 +33,7 @@ async function open(browser, [user, password], create) {
 
 // The text of the paragraphs: what the model holds, without what only the screen shows (carets, previews of suggestions)
 const textOf = () =>
-  [...document.querySelectorAll('[data-testid=text] [data-block]')].map((e) => {
+  [...document.querySelectorAll('[data-testid=text] [data-paragraph]')].map((e) => {
     const copy = e.cloneNode(true)
     copy.querySelectorAll('[data-skip]').forEach((x) => x.remove())
     return copy.textContent
@@ -112,7 +112,7 @@ const objectIds = (page) => page.$$eval('[data-object]', (els) => els.map((e) =>
     await ann.waitForFunction(
       (id) => {
         const o = document.querySelector(`[data-object="${id}"]`).getBoundingClientRect()
-        const first = document.querySelector('[data-testid=text] [data-block]').getBoundingClientRect()
+        const first = document.querySelector('[data-testid=text] [data-paragraph]').getBoundingClientRect()
         return o.top < first.top + 40 // the words are back under it, where the room was
       },
       box,
@@ -145,14 +145,14 @@ const objectIds = (page) => page.$$eval('[data-object]', (els) => els.map((e) =>
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
       'base64',
     )
-    await ann.locator('[data-testid=text] [data-block]').nth(1).click()
+    await ann.locator('[data-testid=text] [data-paragraph]').nth(1).click()
     await ann.keyboard.press('Home')
     await menu(ann, 'Edit', 'Image')
     await ann.setInputFiles('.modal input[type=file]', { name: 'dot.png', mimeType: 'image/png', buffer: png })
     await ann.fill('.modal .field input', 'A small picture')
     await ann.click('.modal button[type=submit]')
     await ann.waitForFunction(() => document.querySelectorAll('[data-testid=object-layer] [data-object]').length === 2)
-    await ann.locator('[data-testid=text] [data-block]').nth(2).click()
+    await ann.locator('[data-testid=text] [data-paragraph]').nth(2).click()
     await ann.keyboard.press('Home')
     await menu(ann, 'Edit', 'Rectangle')
     await ann.waitForFunction(() => document.querySelectorAll('[data-testid=object-layer] [data-object]').length === 3)
@@ -176,7 +176,7 @@ const objectIds = (page) => page.$$eval('[data-object]', (els) => els.map((e) =>
     log2('scrolling: ok')
 
     // ---- and typing goes on: the words stay where they are, nothing of the boxes gets into the text
-    await ann.locator('[data-testid=text] [data-block]').nth(0).click()
+    await ann.locator('[data-testid=text] [data-paragraph]').nth(0).click()
     await ann.keyboard.press('Control+Home')
     await ann.keyboard.type('typed on ')
     for (let tries = 0; tries < 50 && !(await paragraphs(ann))[0].startsWith('typed on '); tries++) await ann.waitForTimeout(100)

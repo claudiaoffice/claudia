@@ -705,7 +705,7 @@ describe('lists in text boxes (E9.21, E9.22)', () => {
     state.selected = 'c'
     expect(session.canList()).toBe(true)
     await session.makeList('numbers')
-    expect(link.last('make_list')).toMatchObject({ blocks: ['c'], scheme: 'numbers' })
+    expect(link.last('make_list')).toMatchObject({ paragraphs: ['c'], scheme: 'numbers' })
     state.selected = 'b'
     expect(session.canContinue()).toBe(true)
     state.selected = 'a'

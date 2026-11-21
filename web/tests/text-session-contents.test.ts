@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
-import type { Block } from '~/lib/blocks'
+import type { Paragraph } from '~/lib/paragraphs'
 import type { ContentsEntry, Toc } from '~/lib/contents'
 import { TextSession } from '~/lib/text-session'
 
@@ -52,20 +52,20 @@ class FakeLink implements LinkLike {
 }
 
 const DEFAULT_TOC: Toc = { kind: 'toc', first: 1, last: 3, numbers: true, places: true, leader: 'dots' }
-const plain = (id: string, text: string): Block => ({ id, style: 'body', text, runs: text ? [[text.length, 'ann', null]] : [] })
+const plain = (id: string, text: string): Paragraph => ({ id, style: 'body', text, runs: text ? [[text.length, 'ann', null]] : [] })
 const entry = (target: string, text: string, number: string | null = null): ContentsEntry => ({ target, level: 1, number, text, style: 'contents-1', place: null })
-const table = (id: string, entries: ContentsEntry[] = []): Block => ({ ...plain(id, ''), generated: { ...DEFAULT_TOC }, entries })
+const table = (id: string, entries: ContentsEntry[] = []): Paragraph => ({ ...plain(id, ''), generated: { ...DEFAULT_TOC }, entries })
 
-async function opened(blocks: Block[]) {
+async function opened(paragraphs: Paragraph[]) {
   const link = new FakeLink()
   const answer = { revision: 'main:9' }
   link.handlers = {
-    blocks: () => ({
+    paragraphs: () => ({
       revision: 'main:2',
       styles: [{ id: 'body', name: 'Body text', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }],
       lists: [],
       schemes: [],
-      blocks,
+      paragraphs,
     }),
     suggestions: () => [],
     style_model: () => STYLE_MODEL,
@@ -79,8 +79,8 @@ async function opened(blocks: Block[]) {
     hold: () => ({}),
     look: () => ({}),
     unlock: () => ({}),
-    replace_text: () => ({ ...answer, block: 'b1', offset: 0 }),
-    insert_contents: () => ({ ...answer, block: 'toc' }),
+    replace_text: () => ({ ...answer, paragraph: 'b1', offset: 0 }),
+    insert_contents: () => ({ ...answer, paragraph: 'toc' }),
     remove_contents: () => answer,
     set_contents: () => answer,
     insert_reference: () => answer,
@@ -92,7 +92,7 @@ async function opened(blocks: Block[]) {
   return { link, session }
 }
 
-const at = (offset: number, block = 'b1') => ({ block, offset })
+const at = (offset: number, paragraph = 'b1') => ({ paragraph, offset })
 
 
 beforeEach(() => vi.useFakeTimers())
@@ -101,15 +101,15 @@ afterEach(() => vi.useRealTimers())
 describe('knowing the tables of contents', () => {
   it('keeps a table’s options and entries as the server sends them, and follows its events', async () => {
     const { session, link } = await opened([plain('b1', 'Why'), table('toc', [entry('b1', 'Why', '1')]), plain('b2', 'How')])
-    expect(session.state.blocks[1]!.entries?.map((e) => e.text)).toEqual(['Why'])
+    expect(session.state.paragraphs[1]!.entries?.map((e) => e.text)).toEqual(['Why'])
     link.push('generated', { type: 'generated', paragraph: 'toc', entries: [entry('b1', 'Why'), entry('b2', 'How')] })
-    expect(session.state.blocks[1]!.entries?.map((e) => e.target)).toEqual(['b1', 'b2'])
-    link.push('block_generated', { type: 'block_generated', block: 'toc', generated: null })
-    expect(session.state.blocks[1]!.generated).toBeNull()
-    expect(session.state.blocks[1]!.entries).toBeUndefined()
-    link.push('block_generated', { type: 'block_generated', block: 'b2', generated: DEFAULT_TOC })
+    expect(session.state.paragraphs[1]!.entries?.map((e) => e.target)).toEqual(['b1', 'b2'])
+    link.push('paragraph_generated', { type: 'paragraph_generated', paragraph: 'toc', generated: null })
+    expect(session.state.paragraphs[1]!.generated).toBeNull()
+    expect(session.state.paragraphs[1]!.entries).toBeUndefined()
+    link.push('paragraph_generated', { type: 'paragraph_generated', paragraph: 'b2', generated: DEFAULT_TOC })
     await vi.runAllTimersAsync()
-    expect(link.calls.filter((c) => c.method === 'blocks')).toHaveLength(2) // a paragraph with text cannot be one: reload
+    expect(link.calls.filter((c) => c.method === 'paragraphs')).toHaveLength(2) // a paragraph with text cannot be one: reload
   })
 
   it('knows when the caret is on a table', async () => {
@@ -125,7 +125,7 @@ describe('putting one in, changing and taking it away', () => {
     const { session, link } = await opened([plain('b1', 'Why')])
     session.setSelection(at(2))
     await session.insertContents()
-    expect(link.sent('insert_contents')).toEqual([{ block: 'b1', base: 'main:2' }])
+    expect(link.sent('insert_contents')).toEqual([{ paragraph: 'b1', base: 'main:2' }])
     expect(session.state.selection?.focus).toEqual(at(0, 'toc'))
   })
 
@@ -134,7 +134,7 @@ describe('putting one in, changing and taking it away', () => {
     await session.setContents('toc', { ...DEFAULT_TOC, last: 2 })
     expect(link.sent('set_contents')).toEqual([{ paragraph: 'toc', options: { ...DEFAULT_TOC, last: 2 }, base: 'main:2' }])
     await session.removeContents('toc')
-    expect(link.sent('remove_contents')).toEqual([{ block: 'toc', base: 'main:2' }])
+    expect(link.sent('remove_contents')).toEqual([{ paragraph: 'toc', base: 'main:2' }])
   })
 })
 
@@ -158,7 +158,7 @@ describe('a table is never text', () => {
     expect(link.sent('replace_text')).toEqual([])
     session.deleteBackward()
     await vi.runAllTimersAsync()
-    expect(link.sent('remove_contents')).toEqual([{ block: 'toc', base: 'main:2' }])
+    expect(link.sent('remove_contents')).toEqual([{ paragraph: 'toc', base: 'main:2' }])
   })
 
   it('Delete before a table selects it too', async () => {
@@ -173,7 +173,7 @@ describe('a table is never text', () => {
 
 describe('references (step H)', () => {
   const F = '\ufffc'
-  const referring = (): Block => ({ ...plain('b2', `see ${F}`), fields: [{ kind: 'ref', target: 'b1', show: 'number' }], shown: [{ text: '1', state: 'ok' }] })
+  const referring = (): Paragraph => ({ ...plain('b2', `see ${F}`), fields: [{ kind: 'ref', target: 'b1', show: 'number' }], shown: [{ text: '1', state: 'ok' }] })
 
   it('lists the targets, puts a reference at the caret and puts the caret after it', async () => {
     const { session, link } = await opened([plain('b1', 'Why'), plain('b2', 'see ')])
@@ -186,7 +186,7 @@ describe('references (step H)', () => {
 
   it('finds the reference at a place, changes what it shows, and pastes no U+FFFC', async () => {
     const { session, link } = await opened([plain('b1', 'Why'), referring()])
-    expect(session.referenceAt(at(4, 'b2'))).toMatchObject({ block: 'b2', index: 0, field: { target: 'b1' }, shown: { text: '1' } })
+    expect(session.referenceAt(at(4, 'b2'))).toMatchObject({ paragraph: 'b2', index: 0, field: { target: 'b1' }, shown: { text: '1' } })
     expect(session.referenceAt(at(0, 'b2'))).toBeNull()
     await session.setFieldShow('b2', 0, 'text')
     expect(link.sent('set_field')).toEqual([{ paragraph: 'b2', index: 0, show: 'text', base: 'main:2' }])

@@ -25,7 +25,7 @@ const SERVERS: Record<string, Record<string, (params: any) => unknown>> = {
     style_uses: () => ({ uses: {} }),
   },
   composes: {
-    blocks: () => ({ styles: [STYLE], blocks: [{ id: 'b1', style: 'plain', text: '', runs: [] }], lists: [], schemes: [] }),
+    paragraphs: () => ({ styles: [STYLE], paragraphs: [{ id: 'b1', style: 'plain', text: '', runs: [] }], lists: [], schemes: [] }),
     suggestions: () => [],
     objects: () => ({ objects: [] }),
   },

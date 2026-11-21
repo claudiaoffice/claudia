@@ -95,7 +95,7 @@ export interface CellsRegion {
 /** A stretch of one paragraph; an empty one is a caret. Offsets count characters (code points) as the server does. */
 export interface TextRegion {
   kind: 'text'
-  block: string
+  paragraph: string
   start: number
   end: number
 }

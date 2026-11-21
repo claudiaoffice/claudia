@@ -185,13 +185,13 @@ class Person:
 
     def paragraphs(self) -> list[str]:
         return self.page.eval_on_selector_all(
-            "[data-testid=text] [data-block]", "els => els.map(e => e.textContent.trim())"
+            "[data-testid=text] [data-paragraph]", "els => els.map(e => e.textContent.trim())"
         )
 
     def order(self) -> list[str]:
         """The paragraphs and tables of the text in the order they are on the page; a table is ``TABLE``."""
         return self.page.evaluate(
-            """() => [...document.querySelectorAll('[data-testid=text] [data-block], [data-testid=table]')]
+            """() => [...document.querySelectorAll('[data-testid=text] [data-paragraph], [data-testid=table]')]
                 .map(e => e.getAttribute('data-testid') === 'table' ? 'TABLE' : e.textContent.trim())"""
         )
 
@@ -203,10 +203,10 @@ class Person:
               const s = getSelection(), text = document.querySelector('[data-testid=text]')
               if (!s || !s.focusNode || !text.contains(s.focusNode) || document.activeElement !== text) return null
               const node = s.focusNode.nodeType === 1 ? s.focusNode : s.focusNode.parentElement
-              const block = node.closest('[data-block]')
-              if (!block) return null
-              const r = document.createRange(); r.setStart(block, 0); r.setEnd(s.focusNode, s.focusOffset)
-              return [block.textContent.trim(), r.toString().length]
+              const paragraph = node.closest('[data-paragraph]')
+              if (!paragraph) return null
+              const r = document.createRange(); r.setStart(paragraph, 0); r.setEnd(s.focusNode, s.focusOffset)
+              return [paragraph.textContent.trim(), r.toString().length]
             }"""
         )
         return (found[0], found[1]) if found else None

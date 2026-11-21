@@ -178,7 +178,7 @@ def _ben_refused(world):
 # -- Ann carries on ----------------------------------------------------------------------------------------------
 @then(parsers.parse('Ann\'s window shows the paragraph "{words}"'))
 def _ann_sees(world, words):
-    world.ann.page.locator("[data-testid=text] [data-block]", has_text=words).first.wait_for(timeout=10000)
+    world.ann.page.locator("[data-testid=text] [data-paragraph]", has_text=words).first.wait_for(timeout=10000)
 
 
 @then("Ann can keep typing and the paragraph she types is saved")

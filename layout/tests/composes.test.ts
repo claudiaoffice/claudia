@@ -26,7 +26,7 @@ const STYLE_OF: Record<string, string> = { title: 'title', h1: 'heading-1', body
 
 function doc(n = 30, extra: Partial<TextDocument> = {}): TextDocument {
   return {
-    blocks: sampleParagraphs(n).map((p, i) => ({ id: `b${i + 1}`, style: STYLE_OF[p.style]!, text: p.text })),
+    paragraphs: sampleParagraphs(n).map((p, i) => ({ id: `b${i + 1}`, style: STYLE_OF[p.style]!, text: p.text })),
     styles: STYLES,
     page: A4,
     language: 'de',
@@ -63,7 +63,7 @@ describe('a composes text on pages', () => {
       { id: 'after', style: 'body', text: body },
     ]
     const lastLineOfPageOne = (n: number, heading: number | null) => {
-      const out = layoutText({ blocks: text(n), styles: chapter(heading), page: A4, language: 'de' }, fonts, resolver, GERMAN)
+      const out = layoutText({ paragraphs: text(n), styles: chapter(heading), page: A4, language: 'de' }, fonts, resolver, GERMAN)
       const runs = [...walk(out.list.pages[0]!.items)].filter((r): r is GlyphRun => r.kind === 'glyphs')
       const numberLine = runs.at(-1)!.y
       return runs.filter((r) => r.y !== numberLine).at(-1)!.text // the line above the page number
@@ -94,10 +94,10 @@ describe('a composes text on pages', () => {
   it('draws floating objects where they hang, clipped, and says what it cannot print', () => {
     const d = doc(5, {
       objects: [
-        { id: 'o1', kind: 'text', w: 200, h: 40, style: 'plain-box', paragraph: { style: 'body', text: 'Ein Kasten mit sehr viel Text, der nicht hineinpasst und abgeschnitten wird.' }, shape: null, image: null, rotation: 0, anchor: { kind: 'block', holder: 'b3', offset: 5 } },
-        { id: 'o2', kind: 'shape', w: 100, h: 100, style: 'plain-shape', paragraph: { style: 'shape-label', text: 'Kreis' }, shape: 'circle', image: null, rotation: 10, anchor: { kind: 'block', holder: 'b2', offset: 0 } },
-        { id: 'o3', kind: 'image', w: 70, h: 50, style: 'plain-image', paragraph: null, shape: null, image: 'img1', rotation: 0, anchor: { kind: 'block', holder: 'b4', offset: 0 } },
-        { id: 'o4', kind: 'image', w: 70, h: 50, style: 'plain-image', paragraph: null, shape: null, image: 'svg1', rotation: 0, anchor: { kind: 'block', holder: 'b4', offset: 0 } },
+        { id: 'o1', kind: 'text', w: 200, h: 40, style: 'plain-box', paragraph: { style: 'body', text: 'Ein Kasten mit sehr viel Text, der nicht hineinpasst und abgeschnitten wird.' }, shape: null, image: null, rotation: 0, anchor: { kind: 'paragraph', holder: 'b3', offset: 5 } },
+        { id: 'o2', kind: 'shape', w: 100, h: 100, style: 'plain-shape', paragraph: { style: 'shape-label', text: 'Kreis' }, shape: 'circle', image: null, rotation: 10, anchor: { kind: 'paragraph', holder: 'b2', offset: 0 } },
+        { id: 'o3', kind: 'image', w: 70, h: 50, style: 'plain-image', paragraph: null, shape: null, image: 'img1', rotation: 0, anchor: { kind: 'paragraph', holder: 'b4', offset: 0 } },
+        { id: 'o4', kind: 'image', w: 70, h: 50, style: 'plain-image', paragraph: null, shape: null, image: 'svg1', rotation: 0, anchor: { kind: 'paragraph', holder: 'b4', offset: 0 } },
       ],
       shapes: [{ id: 'circle', path: 'M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z', text_area: { x: 14.6, y: 14.6, w: 70.8, h: 70.8 } }],
       images: [
@@ -119,7 +119,7 @@ describe('a composes text on pages', () => {
   it('moves an object off its anchor character by the offset the model keeps (D1023)', () => {
     const at = (anchor: object) => {
       const d = doc(1, {
-        objects: [{ id: 'o1', kind: 'text', w: 200, h: 40, style: 'plain-box', paragraph: { style: 'body', text: 'Kasten' }, shape: null, image: null, rotation: 0, anchor: { kind: 'block', holder: 'b1', offset: 0, ...anchor } }],
+        objects: [{ id: 'o1', kind: 'text', w: 200, h: 40, style: 'plain-box', paragraph: { style: 'body', text: 'Kasten' }, shape: null, image: null, rotation: 0, anchor: { kind: 'paragraph', holder: 'b1', offset: 0, ...anchor } }],
       })
       const g = layoutText(d, fonts, resolver, GERMAN).list.pages[0]!.items.find((i) => i.kind === 'group')
       return g && g.kind === 'group' ? g.clip! : null
@@ -146,16 +146,16 @@ describe('a composes text on pages', () => {
 describe('a table of contents on pages (E9.31, step F)', () => {
   const withContents = (leader: 'dots' | 'none' = 'dots', places = true): TextDocument => {
     const base = doc(30)
-    const headings = base.blocks.filter((b) => b.style === 'heading-1')
+    const headings = base.paragraphs.filter((b) => b.style === 'heading-1')
     const contents = { entries: headings.map((h) => ({ target: h.id, words: h.text, style: 'contents-1' })), places, leader }
-    return { ...base, blocks: [{ id: 'toc', style: 'body', text: '', contents }, ...base.blocks] }
+    return { ...base, paragraphs: [{ id: 'toc', style: 'body', text: '', contents }, ...base.paragraphs] }
   }
   const runsOf = (items: Parameters<typeof walk>[0]) => [...walk(items)].filter((r): r is GlyphRun => r.kind === 'glyphs')
 
   it('prints each heading’s page right-aligned on its entry’s line, as the page the heading starts on', () => {
     const d = withContents()
     const out = layoutText(d, fonts, resolver, GERMAN)
-    const headings = d.blocks.filter((b) => b.style === 'heading-1')
+    const headings = d.paragraphs.filter((b) => b.style === 'heading-1')
     expect(headings.length).toBeGreaterThan(1)
     const lastHeading = headings.at(-1)!
     expect(out.pageOf.get(lastHeading.id)).toBeGreaterThan(1)
@@ -178,10 +178,10 @@ describe('a table of contents on pages (E9.31, step F)', () => {
   it('makes each entry a link to its heading, and the headings the PDF’s bookmarks', async () => {
     const out = layoutText(withContents(), fonts, resolver, GERMAN)
     const links = out.list.pages[0]!.links ?? []
-    const headings = withContents().blocks.filter((b) => b.style === 'heading-1')
+    const headings = withContents().paragraphs.filter((b) => b.style === 'heading-1')
     expect(links).toHaveLength(headings.length)
     expect(links.at(-1)!.page).toBe(out.pageOf.get(headings.at(-1)!.id)! - 1)
-    expect(out.outline.map((o) => o.title)).toEqual(withContents().blocks.filter((b) => b.style === 'title' || b.style === 'heading-1').map((b) => b.text))
+    expect(out.outline.map((o) => o.title)).toEqual(withContents().paragraphs.filter((b) => b.style === 'title' || b.style === 'heading-1').map((b) => b.text))
     const pdf = new TextDecoder('latin1').decode(writePdf(out.list.pages, fonts, () => undefined, { title: 'Contents' }, { compress: false, outline: out.outline }))
     expect(pdf.match(/\/Subtype \/Link/g)).toHaveLength(headings.length)
     expect(pdf).toContain('/Type /Outlines')
@@ -199,17 +199,17 @@ describe('a table of contents on pages (E9.31, step F)', () => {
 describe('page references in a text (step I)', () => {
   const referring = (at: 'start' | 'end'): TextDocument => {
     const base = doc(30)
-    const last = base.blocks.filter((b) => b.style === 'heading-1').at(-1)!
+    const last = base.paragraphs.filter((b) => b.style === 'heading-1').at(-1)!
     const words = 'Mehr dazu auf Seite '
-    const ref: TextDocument['blocks'][number] = { id: 'ref', style: 'body', text: `${words}.`, pageRefs: [{ at: words.length, target: last.id }] }
-    return { ...base, blocks: at === 'start' ? [ref, ...base.blocks] : [...base.blocks, ref] }
+    const ref: TextDocument['paragraphs'][number] = { id: 'ref', style: 'body', text: `${words}.`, pageRefs: [{ at: words.length, target: last.id }] }
+    return { ...base, paragraphs: at === 'start' ? [ref, ...base.paragraphs] : [...base.paragraphs, ref] }
   }
   const runsOf = (pages: ReturnType<typeof layoutText>['list']['pages']) => pages.flatMap((p) => [...walk(p.items)].filter((r): r is GlyphRun => r.kind === 'glyphs'))
 
   it('fills in the page the target starts on, found by laying the text out', () => {
     const d = referring('start')
     const out = layoutText(d, fonts, resolver, GERMAN)
-    const last = d.blocks.filter((b) => b.style === 'heading-1').at(-1)!
+    const last = d.paragraphs.filter((b) => b.style === 'heading-1').at(-1)!
     const page = out.pageOf.get(last.id)!
     expect(page).toBeGreaterThan(1)
     expect(runsOf(out.list.pages).some((r) => r.text === `${page}.`)).toBe(true)

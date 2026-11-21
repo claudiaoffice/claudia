@@ -182,7 +182,7 @@ describe('what the page draws', () => {
     expect([headingLevel(styles, 'title'), headingLevel(styles, 'h1-x'), headingLevel(styles, 'body'), headingLevel(styles, 'nope')]).toEqual([0, 1, null, null])
   })
   it('counts the paragraphs of each style', () => {
-    const blocks = [{ style: 'body' }, { style: 'heading-1' }, { style: 'body' }] as any
-    expect(styleUses(blocks)).toEqual({ body: 2, 'heading-1': 1 })
+    const paragraphs = [{ style: 'body' }, { style: 'heading-1' }, { style: 'body' }] as any
+    expect(styleUses(paragraphs)).toEqual({ body: 2, 'heading-1': 1 })
   })
 })

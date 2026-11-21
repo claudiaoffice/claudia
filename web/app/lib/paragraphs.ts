@@ -20,7 +20,7 @@ export interface Label {
   path: number[] | null
   number?: string | null
 }
-export interface Block {
+export interface Paragraph {
   id: string
   style: string
   text: string
@@ -41,26 +41,26 @@ export interface Block {
   shown?: Shown[]
 }
 export interface Pos {
-  block: string
+  paragraph: string
   offset: number
 }
 export interface Span {
-  block: string
+  paragraph: string
   start: number
   end: number
 }
 
 /** The events of the text app (the part of the wire protocol that carries the document). */
 export type TextEvent =
-  | { type: 'text'; block: string; offset: number; removed: number; inserted: string; runs: Run[] }
-  | { type: 'split'; block: string; offset: number; new_id: string; style: string }
-  | { type: 'join'; block: string; into: string; at: number }
-  | { type: 'style'; block: string; style: string }
-  | { type: 'item'; block: string; item: ListItem | null }
+  | { type: 'text'; paragraph: string; offset: number; removed: number; inserted: string; runs: Run[] }
+  | { type: 'split'; paragraph: string; offset: number; new_id: string; style: string }
+  | { type: 'join'; paragraph: string; into: string; at: number }
+  | { type: 'style'; paragraph: string; style: string }
+  | { type: 'item'; paragraph: string; item: ListItem | null }
   | { type: 'labels'; labels: Record<string, Label | null> }
-  | { type: 'block_generated'; block: string; generated: Toc | null }
+  | { type: 'paragraph_generated'; paragraph: string; generated: Toc | null }
   | { type: 'generated'; paragraph: string; entries: ContentsEntry[] | null }
-  | { type: 'block_fields'; block: string; fields: RefField[] }
+  | { type: 'paragraph_fields'; paragraph: string; fields: RefField[] }
   | { type: 'fields'; paragraph: string; fields: Shown[] }
 
 // ------------------------------------------------------------------------------ runs
@@ -98,13 +98,13 @@ export function insertRuns(runs: Run[], offset: number, added: Run[]): Run[] {
 }
 
 // ------------------------------------------------------------------------------ the document
-export const indexOf = (blocks: Block[], id: string) => blocks.findIndex((b) => b.id === id)
+export const indexOf = (paragraphs: Paragraph[], id: string) => paragraphs.findIndex((b) => b.id === id)
 
 /** Apply one event of the server to the paragraphs. `false` if the event does not fit (the replica is out of step). */
-export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
+export function applyEvent(paragraphs: Paragraph[], ev: TextEvent): boolean {
   if (ev.type === 'labels') {
     for (const [id, label] of Object.entries(ev.labels)) {
-      const found = blocks[indexOf(blocks, id)]
+      const found = paragraphs[indexOf(paragraphs, id)]
       if (!found) continue // a paragraph that went away in the same step
       if (label) found.label = label
       else delete found.label
@@ -112,75 +112,75 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
     return true
   }
   if (ev.type === 'fields') {
-    const found = blocks[indexOf(blocks, ev.paragraph)]
+    const found = paragraphs[indexOf(paragraphs, ev.paragraph)]
     if (found) found.shown = ev.fields
     return true // the words of a floating object, or a paragraph that went away in the same step
   }
   if (ev.type === 'generated') {
-    const found = blocks[indexOf(blocks, ev.paragraph)]
+    const found = paragraphs[indexOf(paragraphs, ev.paragraph)]
     if (found && ev.entries) found.entries = ev.entries
     else if (found) delete found.entries
     return true // a table that went away in the same step needs nothing
   }
-  const i = indexOf(blocks, ev.type === 'join' ? ev.into : ev.block)
-  const block = blocks[i]
-  if (!block) return false
+  const i = indexOf(paragraphs, ev.type === 'join' ? ev.into : ev.paragraph)
+  const paragraph = paragraphs[i]
+  if (!paragraph) return false
   switch (ev.type) {
     case 'text': {
-      if (ev.offset < 0 || ev.offset + ev.removed > block.text.length) return false
-      block.text = block.text.slice(0, ev.offset) + ev.inserted + block.text.slice(ev.offset + ev.removed)
-      const cut = ev.removed ? deleteRuns(block.runs, ev.offset, ev.offset + ev.removed) : block.runs
-      block.runs = ev.inserted ? insertRuns(cut, ev.offset, ev.runs) : cut
+      if (ev.offset < 0 || ev.offset + ev.removed > paragraph.text.length) return false
+      paragraph.text = paragraph.text.slice(0, ev.offset) + ev.inserted + paragraph.text.slice(ev.offset + ev.removed)
+      const cut = ev.removed ? deleteRuns(paragraph.runs, ev.offset, ev.offset + ev.removed) : paragraph.runs
+      paragraph.runs = ev.inserted ? insertRuns(cut, ev.offset, ev.runs) : cut
       return true
     }
     case 'split': {
-      if (ev.offset < 0 || ev.offset > block.text.length) return false
-      const rest: Block = {
+      if (ev.offset < 0 || ev.offset > paragraph.text.length) return false
+      const rest: Paragraph = {
         id: ev.new_id,
         style: ev.style,
-        text: block.text.slice(ev.offset),
-        runs: sliceRuns(block.runs, ev.offset, block.text.length),
-        ...(block.item ? { item: { ...block.item } } : {}), // an item makes an item; its label comes with the server's count
+        text: paragraph.text.slice(ev.offset),
+        runs: sliceRuns(paragraph.runs, ev.offset, paragraph.text.length),
+        ...(paragraph.item ? { item: { ...paragraph.item } } : {}), // an item makes an item; its label comes with the server's count
       }
-      if (block.fields?.length) {
+      if (paragraph.fields?.length) {
         // the fields go with their characters; what they read as comes again from the server
-        const at = fieldIndex(block.text, ev.offset)
-        rest.fields = block.fields.slice(at)
-        rest.shown = block.shown?.slice(at)
-        block.fields = block.fields.slice(0, at)
-        block.shown = block.shown?.slice(0, at)
+        const at = fieldIndex(paragraph.text, ev.offset)
+        rest.fields = paragraph.fields.slice(at)
+        rest.shown = paragraph.shown?.slice(at)
+        paragraph.fields = paragraph.fields.slice(0, at)
+        paragraph.shown = paragraph.shown?.slice(0, at)
       }
-      block.text = block.text.slice(0, ev.offset)
-      block.runs = sliceRuns(block.runs, 0, ev.offset)
-      blocks.splice(i + 1, 0, rest)
+      paragraph.text = paragraph.text.slice(0, ev.offset)
+      paragraph.runs = sliceRuns(paragraph.runs, 0, ev.offset)
+      paragraphs.splice(i + 1, 0, rest)
       return true
     }
     case 'join': {
-      const next = blocks[i + 1]
-      if (!next || next.id !== ev.block || block.text.length !== ev.at) return false
-      block.text += next.text
-      block.runs = insertRuns(block.runs, ev.at, next.runs)
+      const next = paragraphs[i + 1]
+      if (!next || next.id !== ev.paragraph || paragraph.text.length !== ev.at) return false
+      paragraph.text += next.text
+      paragraph.runs = insertRuns(paragraph.runs, ev.at, next.runs)
       if (next.fields?.length) {
-        block.fields = [...(block.fields ?? []), ...next.fields]
-        block.shown = [...(block.shown ?? []), ...(next.shown ?? [])]
+        paragraph.fields = [...(paragraph.fields ?? []), ...next.fields]
+        paragraph.shown = [...(paragraph.shown ?? []), ...(next.shown ?? [])]
       }
-      blocks.splice(i + 1, 1)
+      paragraphs.splice(i + 1, 1)
       return true
     }
     case 'style':
-      block.style = ev.style
+      paragraph.style = ev.style
       return true
     case 'item':
-      block.item = ev.item
-      if (!ev.item) delete block.label
+      paragraph.item = ev.item
+      if (!ev.item) delete paragraph.label
       return true
-    case 'block_fields':
-      block.fields = ev.fields
+    case 'paragraph_fields':
+      paragraph.fields = ev.fields
       return true
-    case 'block_generated':
-      if (ev.generated && block.text) return false // a table of contents holds no text: the replica is out of step
-      block.generated = ev.generated
-      if (!ev.generated) delete block.entries
+    case 'paragraph_generated':
+      if (ev.generated && paragraph.text) return false // a table of contents holds no text: the replica is out of step
+      paragraph.generated = ev.generated
+      if (!ev.generated) delete paragraph.entries
       return true
   }
 }
@@ -188,58 +188,58 @@ export function applyEvent(blocks: Block[], ev: TextEvent): boolean {
 // ------------------------------------------------------------------------------ where things go
 /** Where a stretch of text is after an event (`follow` of the commands). A cut-away stretch becomes empty. */
 export function followSpan(span: Span, ev: TextEvent): Span {
-  const { block, start, end } = span
+  const { paragraph, start, end } = span
   switch (ev.type) {
     case 'text': {
-      if (block !== ev.block) return span
+      if (paragraph !== ev.paragraph) return span
       if (ev.inserted && !ev.removed) {
         const n = ev.inserted.length
-        if (ev.offset <= start) return { block, start: start + n, end: end + n }
-        if (ev.offset < end) return { block, start, end: end + n }
+        if (ev.offset <= start) return { paragraph, start: start + n, end: end + n }
+        if (ev.offset < end) return { paragraph, start, end: end + n }
         return span
       }
       const moved = (p: number) => p - Math.min(Math.max(p - ev.offset, 0), ev.removed)
-      return { block, start: moved(start), end: moved(end) }
+      return { paragraph, start: moved(start), end: moved(end) }
     }
     case 'split':
-      if (block !== ev.block) return span
-      if (start >= ev.offset) return { block: ev.new_id, start: start - ev.offset, end: end - ev.offset }
-      return { block, start, end: Math.min(end, ev.offset) }
+      if (paragraph !== ev.paragraph) return span
+      if (start >= ev.offset) return { paragraph: ev.new_id, start: start - ev.offset, end: end - ev.offset }
+      return { paragraph, start, end: Math.min(end, ev.offset) }
     case 'join':
-      return block === ev.block ? { block: ev.into, start: start + ev.at, end: end + ev.at } : span
+      return paragraph === ev.paragraph ? { paragraph: ev.into, start: start + ev.at, end: end + ev.at } : span
     case 'style':
     case 'item':
     case 'labels':
-    case 'block_generated':
+    case 'paragraph_generated':
     case 'generated':
-    case 'block_fields':
+    case 'paragraph_fields':
     case 'fields':
       return span
   }
 }
 
 export function followPos(pos: Pos, ev: TextEvent): Pos {
-  const moved = followSpan({ block: pos.block, start: pos.offset, end: pos.offset }, ev)
-  return { block: moved.block, offset: moved.start }
+  const moved = followSpan({ paragraph: pos.paragraph, start: pos.offset, end: pos.offset }, ev)
+  return { paragraph: moved.paragraph, offset: moved.start }
 }
 
 /** Is `a` before `b` in the document? */
-export function before(blocks: Block[], a: Pos, b: Pos): boolean {
-  const [i, j] = [indexOf(blocks, a.block), indexOf(blocks, b.block)]
+export function before(paragraphs: Paragraph[], a: Pos, b: Pos): boolean {
+  const [i, j] = [indexOf(paragraphs, a.paragraph), indexOf(paragraphs, b.paragraph)]
   return i < j || (i === j && a.offset < b.offset)
 }
 
-export function ordered(blocks: Block[], a: Pos, b: Pos): [Pos, Pos] {
-  return before(blocks, b, a) ? [b, a] : [a, b]
+export function ordered(paragraphs: Paragraph[], a: Pos, b: Pos): [Pos, Pos] {
+  return before(paragraphs, b, a) ? [b, a] : [a, b]
 }
 
 /** The text between two positions, paragraphs separated by line breaks. */
-export function textBetween(blocks: Block[], from: Pos, to: Pos): string {
-  const [a, b] = ordered(blocks, from, to)
-  const [i, j] = [indexOf(blocks, a.block), indexOf(blocks, b.block)]
+export function textBetween(paragraphs: Paragraph[], from: Pos, to: Pos): string {
+  const [a, b] = ordered(paragraphs, from, to)
+  const [i, j] = [indexOf(paragraphs, a.paragraph), indexOf(paragraphs, b.paragraph)]
   if (i < 0 || j < 0) return ''
-  if (i === j) return blocks[i]!.text.slice(a.offset, b.offset)
-  return [blocks[i]!.text.slice(a.offset), ...blocks.slice(i + 1, j).map((x) => x.text), blocks[j]!.text.slice(0, b.offset)].join('\n')
+  if (i === j) return paragraphs[i]!.text.slice(a.offset, b.offset)
+  return [paragraphs[i]!.text.slice(a.offset), ...paragraphs.slice(i + 1, j).map((x) => x.text), paragraphs[j]!.text.slice(0, b.offset)].join('\n')
 }
 
 /** The start of the word before `offset` (or of the whitespace and punctuation in between), as Ctrl+Backspace goes. */
@@ -259,9 +259,9 @@ export function wordEnd(text: string, offset: number): number {
 }
 
 /** Words in a text: the count the footer shows. */
-export function countWords(blocks: Block[]): number {
+export function countWords(paragraphs: Paragraph[]): number {
   let n = 0
-  for (const b of blocks) n += b.text.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu)?.length ?? 0
+  for (const b of paragraphs) n += b.text.match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu)?.length ?? 0
   return n
 }
 
@@ -305,9 +305,9 @@ export function runsToPoints(text: string, runs: Run[]): Run[] {
 }
 
 /** An event as the server sent it (code points) in UTF-16 units, judged against the paragraphs it will be applied to. */
-export function eventInUnits(blocks: Block[], ev: TextEvent): TextEvent {
+export function eventInUnits(paragraphs: Paragraph[], ev: TextEvent): TextEvent {
   if (ev.type === 'labels' || ev.type === 'generated' || ev.type === 'fields') return ev
-  const text = blocks.find((b) => b.id === (ev.type === 'join' ? ev.into : ev.block))?.text ?? ''
+  const text = paragraphs.find((b) => b.id === (ev.type === 'join' ? ev.into : ev.paragraph))?.text ?? ''
   switch (ev.type) {
     case 'text': {
       const offset = unitOf(text, ev.offset)
@@ -320,8 +320,8 @@ export function eventInUnits(blocks: Block[], ev: TextEvent): TextEvent {
       return { ...ev, at: unitOf(text, ev.at) }
     case 'style':
     case 'item':
-    case 'block_generated':
-    case 'block_fields':
+    case 'paragraph_generated':
+    case 'paragraph_fields':
       return ev
   }
 }

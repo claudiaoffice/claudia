@@ -136,7 +136,7 @@ describe('the keys', () => {
 describe('where to look', () => {
   const objects = { kind: 'objects', holder: 's2', ids: ['o1'] } as const
   const cells = { kind: 'cells', range: { first: { row: 3, col: 1, sheet: 'sales' }, last: { row: 4, col: 1, sheet: 'sales' } } } as const
-  const text = { kind: 'text', block: 'b4', start: 0, end: 3 } as const
+  const text = { kind: 'text', paragraph: 'b4', start: 0, end: 3 } as const
 
   it('takes the first place a step touched', () => {
     expect(firstFocus([cells, objects])).toBe(cells)

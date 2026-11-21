@@ -71,13 +71,13 @@ const TABLE = {
   used_by: ['o1'],
   totals: { c2: '8' },
 }
-const OBJECT = { id: 'o1', kind: 'table', w: 480, h: 48, style: 'plain-box', paragraph: null, ref: 't1', name: 'Harvest', rotation: 0, anchor: { kind: 'block', holder: 'b1', offset: 0 } }
-const block = (id: string, text: string) => ({ id, style: 'body', text, runs: [[[...text].length, 'ann', null]] })
+const OBJECT = { id: 'o1', kind: 'table', w: 480, h: 48, style: 'plain-box', paragraph: null, ref: 't1', name: 'Harvest', rotation: 0, anchor: { kind: 'paragraph', holder: 'b1', offset: 0 } }
+const paragraph = (id: string, text: string) => ({ id, style: 'body', text, runs: [[[...text].length, 'ann', null]] })
 
 async function opened() {
   const link = new FakeLink()
   link.handlers = {
-    blocks: () => ({ revision: 'main:2', styles: [{ id: 'body', name: 'body', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }], lists: [], schemes: [], blocks: [block('b1', 'Before.'), block('b2', 'After.')] }),
+    paragraphs: () => ({ revision: 'main:2', styles: [{ id: 'body', name: 'body', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }], lists: [], schemes: [], paragraphs: [paragraph('b1', 'Before.'), paragraph('b2', 'After.')] }),
     suggestions: () => [],
     style_model: () => STYLE_MODEL,
     palette: () => ({ type: 'palette', roles: [], readings: [] }),
@@ -91,7 +91,7 @@ async function opened() {
     look: () => ({}),
     objects: () => ({ objects: [OBJECT] }),
     tables: () => [structuredClone(TABLE)], // a copy each time, as the wire gives one: the session may change what it holds
-    replace_text: () => ({ revision: 'main:3', block: 't1/r2/c1', offset: 0 }),
+    replace_text: () => ({ revision: 'main:3', paragraph: 't1/r2/c1', offset: 0 }),
     add_table: () => ({ revision: 'main:3', object: 'o2', table: 't2' }),
   }
   const session = new TextSession(() => link, { retryDelays: [0] })
@@ -126,19 +126,19 @@ describe('the tables of a text', () => {
   it('asks for the tables again when words in a box change, and does not reload the text for it', async () => {
     const { link, session } = await opened()
     const before = calls(link, 'tables').length
-    const loads = calls(link, 'blocks').length
-    link.push('text', { type: 'text', block: 't1/r2/c2', offset: 0, removed: 1, inserted: '9', runs: [[1, 'ann', null]] })
+    const loads = calls(link, 'paragraphs').length
+    link.push('text', { type: 'text', paragraph: 't1/r2/c2', offset: 0, removed: 1, inserted: '9', runs: [[1, 'ann', null]] })
     await Promise.resolve()
     await new Promise((r) => setTimeout(r, 0))
     expect(calls(link, 'tables').length).toBe(before + 1)
-    expect(calls(link, 'blocks').length).toBe(loads)
-    expect(session.state.blocks.map((b) => b.text)).toEqual(['Before.', 'After.'])
+    expect(calls(link, 'paragraphs').length).toBe(loads)
+    expect(session.state.paragraphs.map((b) => b.text)).toEqual(['Before.', 'After.'])
   })
 
   it('types in a box with the box id, replacing what was in it', async () => {
     const { link, session } = await opened()
     expect(await session.setBox('t1', 'r2', 'c1', 'Roof garden')).toBe(true)
-    expect(calls(link, 'replace_text').at(-1)!.params).toMatchObject({ block: 't1/r2/c1', start: 0, end_block: 't1/r2/c1', end: 9, text: 'Roof garden' })
+    expect(calls(link, 'replace_text').at(-1)!.params).toMatchObject({ paragraph: 't1/r2/c1', start: 0, end_paragraph: 't1/r2/c1', end: 9, text: 'Roof garden' })
   })
 
   it('sends one line, and nothing when the words are the same', async () => {
@@ -154,7 +154,7 @@ describe('the tables of a text', () => {
     const { link, session } = await opened()
     await Promise.all([session.setBox('t1', 'r1', 'c1', 'A'), session.setBox('t1', 'r1', 'c1', 'A')])
     expect(calls(link, 'replace_text')).toHaveLength(1)
-    expect(calls(link, 'replace_text')[0]!.params).toMatchObject({ block: 't1/r1/c1', end: 4, text: 'A' })
+    expect(calls(link, 'replace_text')[0]!.params).toMatchObject({ paragraph: 't1/r1/c1', end: 4, text: 'A' })
     await session.setBox('t1', 'r1', 'c1', 'AB')
     expect(calls(link, 'replace_text').at(-1)!.params).toMatchObject({ end: 1, text: 'AB' }) // it knows what the box has now
   })
@@ -171,8 +171,8 @@ describe('the tables of a text', () => {
   it('puts a table after a paragraph, and says which table it made', async () => {
     const { link, session } = await opened()
     link.handlers.add_table = () => ({ revision: 'main:3', object: 'o2', table: 't2' })
-    expect(await session.addTable({ block: 'b1', offset: 3 }, { rows: 3, cols: 2, headerRows: 1 })).toEqual({ object: 'o2', table: 't2' })
-    expect(calls(link, 'add_table').at(-1)!.params).toMatchObject({ block: 'b1', offset: 3, rows: 3, cols: 2, header_rows: 1 })
+    expect(await session.addTable({ paragraph: 'b1', offset: 3 }, { rows: 3, cols: 2, headerRows: 1 })).toEqual({ object: 'o2', table: 't2' })
+    expect(calls(link, 'add_table').at(-1)!.params).toMatchObject({ paragraph: 'b1', offset: 3, rows: 3, cols: 2, header_rows: 1 })
   })
 
   it('asks for rows and columns next to a row or a column, and deletes and sorts by ids', async () => {
