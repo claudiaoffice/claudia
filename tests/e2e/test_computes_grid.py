@@ -10,6 +10,9 @@ Like ``test_greeting.py`` this needs the built web app and a browser and is skip
 
 from __future__ import annotations
 
+import contextlib
+import os
+import signal
 import subprocess
 import sys
 import time
@@ -37,7 +40,10 @@ def port(tmp_path_factory: pytest.TempPathFactory) -> Iterator[int]:
             time.sleep(0.25)
         yield first
     finally:
-        process.kill()
+        # The launcher starts the server as its child, in the session the launcher began: both go, or the server lives
+        # on after the run with its port and folders (PROC-41).
+        with contextlib.suppress(ProcessLookupError):
+            os.killpg(process.pid, signal.SIGKILL)
         process.wait(timeout=30)
 
 

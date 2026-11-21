@@ -228,7 +228,8 @@ jobs:
           uv run python -m claudia_server --no-tls --port 8768 --web web/.output/public \
             --dir "$RUNNER_TEMP/documents-8768" --state-dir "$RUNNER_TEMP/state-8768" >> "$RUNNER_TEMP/servers.log" 2>&1 &
           for _ in $(seq 1 60); do curl -fsS http://127.0.0.1:8768/api/health > /dev/null && break; sleep 1; done
-          cd web && URL=http://127.0.0.1:8768/ FONTS="$RUNNER_TEMP/house-fonts" npm run e2e:admin-fonts
+          # The first administrator needs the setup code the server made at its start (SEC-12, D1371): it is in the state folder.
+          cd web && URL=http://127.0.0.1:8768/ FONTS="$RUNNER_TEMP/house-fonts" SETUP_CODE="$(cat "$RUNNER_TEMP/state-8768/admin/setup-code")" npm run e2e:admin-fonts
           pkill -f "port 8768" || true
       # The Neutralino client's window (D660), minus Neutralino itself: its built shell page and core, the real web app
       # in the frame, once built for Windows and once for macOS (a build behaves like its platform wherever it runs).

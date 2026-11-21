@@ -253,7 +253,7 @@ msgstr "Eine Klammer wird nie geschlossen."
 msgid "A change here changes every use of “{name}”"
 msgstr "Eine Änderung hier ändert jede Verwendung von „{name}“"
 
-#: web/app/components/TextContainers.vue:407
+#: web/app/components/TextContainers.vue:415
 msgid "A chart is not shown in a text yet."
 msgstr "Ein Diagramm wird in einem Text noch nicht angezeigt."
 
@@ -1465,7 +1465,7 @@ msgstr "Das Diagramm konnte nicht eingefügt werden."
 msgid "Could not reach the server."
 msgstr "Der Server ist nicht erreichbar."
 
-#: web/app/components/AdminApp.vue:70
+#: web/app/components/AdminApp.vue:71
 msgid "Could not reach this server."
 msgstr "Dieser Server ist nicht erreichbar."
 
@@ -2417,7 +2417,7 @@ msgstr "Übergeben Sie {doc} an jemanden, der es schon bearbeitet. Sie werden Be
 msgid "Handouts"
 msgstr "Handzettel"
 
-#: web/app/components/TextContainers.vue:445
+#: web/app/components/TextContainers.vue:453
 msgid "Hangs from {where}"
 msgstr "Hängt an {where}"
 
@@ -2993,7 +2993,7 @@ msgstr "Listenpunkt"
 msgid "List, rename, delete and hide the styles of this document"
 msgstr "Die Formate dieses Dokuments auflisten, umbenennen, löschen und ausblenden"
 
-#: web/app/components/AdminApp.vue:95
+#: web/app/components/AdminApp.vue:96
 msgid "Loading…"
 msgstr "Wird geladen…"
 
@@ -3689,7 +3689,7 @@ msgstr "Nummern"
 msgid "Object in paragraph {n}"
 msgstr "Objekt in Absatz {n}"
 
-#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1388 web/app/components/SlideCanvas.vue:658 web/app/components/TextObjectMenu.vue:173
+#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1390 web/app/components/SlideCanvas.vue:658 web/app/components/TextObjectMenu.vue:173
 msgid "Object menu"
 msgstr "Objektmenü"
 
@@ -5013,7 +5013,7 @@ msgstr "Teilen…"
 msgid "Sheet"
 msgstr "Blatt"
 
-#: web/app/components/SheetGrid.vue:1211
+#: web/app/components/SheetGrid.vue:1212
 msgid "Sheet {name}"
 msgstr "Blatt {name}"
 
@@ -5205,7 +5205,7 @@ msgstr "Am Raster ausrichten"
 msgid "Soft Hyphen"
 msgstr "Bedingter Trennstrich"
 
-#: web/app/components/AdminApp.vue:50
+#: web/app/components/AdminApp.vue:51
 msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr "Inzwischen hat jemand den ersten Administrator dieses Servers benannt. Melden Sie sich an, oder bitten Sie darum, hinzugefügt zu werden."
 
@@ -7101,7 +7101,7 @@ msgstr "Das ausgewählte Objekt auf einen Winkel in ganzen Grad drehen"
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr "Drehen: ziehen oder Pfeiltasten (mit Umschalt in 15°-Schritten)"
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:280 web/app/components/SlideCanvas.vue:309 web/app/components/SlideCanvas.vue:317 web/app/components/SlideCanvas.vue:338 web/app/components/TextContainers.vue:342 web/app/components/TextContainers.vue:346 web/app/components/TextObjectMenu.vue:112
+#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:280 web/app/components/SlideCanvas.vue:309 web/app/components/SlideCanvas.vue:317 web/app/components/SlideCanvas.vue:338 web/app/components/TextContainers.vue:350 web/app/components/TextContainers.vue:354 web/app/components/TextObjectMenu.vue:112
 msgid "Turned to {degrees}"
 msgstr "Gedreht auf {degrees}"
 
@@ -8241,7 +8241,7 @@ msgstr "bearbeiten"
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr "eine Zelle bearbeiten (andere bleiben währenddessen ausgeschlossen)"
 
-#: web/app/components/SheetGrid.vue:1372
+#: web/app/components/SheetGrid.vue:1374
 msgid "editing cell"
 msgstr "Zelle wird bearbeitet"
 
@@ -8945,7 +8945,7 @@ msgstr "Drucken erfordert eine sichere Verbindung (https oder dieser Computer)"
 msgid "purpose of {name}"
 msgstr "Zweck von {name}"
 
-#: web/app/components/SheetGrid.vue:1303
+#: web/app/components/SheetGrid.vue:1304
 msgid "purpose of {name} column {n}"
 msgstr "Zweck von {name} Spalte {n}"
 
@@ -9225,7 +9225,7 @@ msgstr "Text"
 msgid "text box"
 msgstr "Textfeld"
 
-#: web/app/components/SlideCanvas.vue:627 web/app/components/TextContainers.vue:417
+#: web/app/components/SlideCanvas.vue:627 web/app/components/TextContainers.vue:425
 msgid "text of the object"
 msgstr "Text des Objekts"
 
@@ -9729,7 +9729,7 @@ msgstr "trace: Fenster zu groß (höchstens {limit} Positionen)"
 msgid "trials"
 msgstr "Versuche"
 
-#: web/app/components/SheetGrid.vue:1239
+#: web/app/components/SheetGrid.vue:1240
 msgid "type here to add a row"
 msgstr "hier tippen, um eine Zeile hinzuzufügen"
 
@@ -10289,7 +10289,7 @@ msgstr "{name} liest den Chat, der den Eigentümern und Bearbeitenden des Dokume
 msgid "{name} reads the history, which is for the document's owners and editors"
 msgstr "{name} liest den Verlauf, der den Eigentümern und Bearbeitenden des Dokuments vorbehalten ist"
 
-#: web/app/components/SheetGrid.vue:1302
+#: web/app/components/SheetGrid.vue:1303
 msgid "{name} · {purpose} — change what this column is for"
 msgstr "{name} · {purpose} – ändern, wofür diese Spalte gedacht ist"
 
@@ -10625,7 +10625,7 @@ msgstr "{who} schlägt vor, zu {line} zu gehen."
 msgid "{width} × {height} px"
 msgstr "{width} × {height} px"
 
-#: web/app/components/SheetGrid.vue:1357
+#: web/app/components/SheetGrid.vue:1359
 msgid "· editing"
 msgstr "· bearbeitet gerade"
 

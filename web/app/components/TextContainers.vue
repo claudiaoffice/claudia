@@ -20,7 +20,7 @@ import { imageDataUrl } from '~/lib/images'
 import { renderedView } from '~/lib/rendering'
 import { columnOf, floatBox, neighbour } from '~/lib/text-containers'
 import type { Frame, Handle } from '~/lib/geometry'
-import { CORNERS, HANDLES } from '~/lib/geometry'
+import { CORNERS, HANDLES, NUDGE, NUDGE_FINE } from '~/lib/geometry'
 import { useObjectInteraction } from '~/lib/object-interaction'
 import { canTurn, degreesText, stepTurn } from '~/lib/turning'
 import { stepsFor, type Place, type Spot } from '~/lib/text-object-host'
@@ -307,12 +307,20 @@ async function onKey(event: KeyboardEvent, id: string) {
     const to = neighbour(state.blocks.map((b) => b.id), o.anchor.container, event.key === 'ArrowDown' ? 1 : -1)
     if (to !== o.anchor.container) await session.moveObject(id, { block: to, offset: 0 })
   }
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    // sideways it stays at its character and moves off it, a step as in creates (the contract's "arrows nudge")
+    event.preventDefault()
+    const place = session.placeOf(o)
+    const by = (event.shiftKey ? NUDGE_FINE : NUDGE) * (event.key === 'ArrowRight' ? 1 : -1)
+    if (place) await session.moveObject(id, place, { dx: (o.anchor.dx ?? 0) + by, dy: o.anchor.dy ?? 0 })
+  }
 }
 
 // ------------------------------------------------------------------------------ the pointer: drag, size, turn (D1221)
 /** A press on the object: it is selected, and dragging moves it. Another button only selects (the menu is its own). */
 function onDown(event: PointerEvent, id: string) {
   select(id, event)
+  if (editing.value !== id) event.preventDefault() // a press is the object's: the browser puts no caret into it, and the text's caret stays
   if (event.button !== 0 || readonly.value || editing.value === id) return
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
   interaction.begin(id, 'move', event)
