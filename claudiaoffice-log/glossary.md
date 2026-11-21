@@ -62,6 +62,14 @@ _avoid_: page, foil
 The kind of file a document is imported from or downloaded as: claudia's own, OpenDocument or MS Office.
 _avoid_: format (on its own), file type
 
+**Server**
+The claudia software that keeps documents for people to open, hosting all three apps.
+_avoid_: host, backend, instance
+
+**Administrator**
+The person who looks after a server; never a role in a document, and sees that documents exist but not what is in them.
+_avoid_: admin, owner
+
 ### People
 
 **User**
@@ -149,7 +157,7 @@ A named grid of cells whose first row names its columns: a named range in comput
 _avoid_: grid, list
 
 **Named range**
-A named rectangle of cells in a computes document, either kept by hand or filled by a formula's result.
+A named rectangle of cells in a computes document, from a single cell up, either kept by hand or filled by a formula's result.
 _avoid_: name (in this sense), defined name, range name
 
 **Style**
@@ -171,3 +179,19 @@ _avoid_: element, styled item, container
 **Purpose**
 What something in a document is for: a style states it in words, and a column of a table takes one of the purposes of a computation (input, data, calculation, result).
 _avoid_: role, function, intent
+
+**Cell**
+One box of a sheet or a table holding one value, with a style and a number format of its own; never a thing by itself, but a named range may be a single cell.
+_avoid_: field, box
+
+**Paragraph**
+A stretch of text that takes one style.
+_avoid_: block, line
+
+**Heading**
+A paragraph whose style gives it a level in the outline of the document; the title is the top level.
+_avoid_: title (except for the top level), caption, header
+
+**Run**
+A stretch of a paragraph written by one author, whatever its style.
+_avoid_: span; and never "run" for a stretch of one formatting, as Word uses it
