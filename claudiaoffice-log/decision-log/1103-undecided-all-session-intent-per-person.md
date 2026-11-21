@@ -4,7 +4,7 @@ title: "A session intent is a private line per person, not a command in the docu
 status: undecided
 applies-to: all
 date: 2026-11-18
-round: "Workflow: focus, corkboard, binder and the private drawer (first round)"
+round: "Workflow: focus, corkboard, scrapbook and the private drawer (first round)"
 supersedes: []
 superseded-by: []
 ---

@@ -77,9 +77,9 @@ Goal, audience and phase are only suggestions and at most document metadata. A u
 
 Another way of helping the users is a deep work mode or focus mode.
 
-The next feature is the binder: a place for notes, links, images, scribbles, anything that the user may wishes to refer to
-or have access to while working on her documents. The binder is private to the user even though it is part of the document
-at hand. Items from the binder can be shared with other editors or the owner.
+The next feature is the scrapbook: a place for notes, links, images, scribbles, anything that the user may wishes to refer to
+or have access to while working on her documents. The scrapbook is private to the user even though it is part of the document
+at hand. Items from the scrapbook can be shared with other editors or the owner.
 
 Another feature is the corkboard view: it allows users to see connections within their document from a birds eye view through 
 a representation of document content in connected 'sticky notes'. 

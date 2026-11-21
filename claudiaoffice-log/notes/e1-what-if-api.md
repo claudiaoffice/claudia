@@ -147,7 +147,7 @@ first): an AI suggestion previewed and accepted in computes, accepted when outda
 
 1. **Private per person, in memory, ending with the session** (default). A proposal stored with a chat record is the
    only thing that lives longer. A *named what-if that survives for days* would be a different feature (a private
-   drawer, like the binder, D1101–D1116) and is not proposed.
+   drawer, like the scrapbook, D1101–D1116) and is not proposed.
 2. **Outdated = overlap with the footprint, or a structural change in the same container** (D263's rule, written as a
    property of the command). Never an automatic rebase.
 3. **Limits** 3 per person, 15 minutes idle.

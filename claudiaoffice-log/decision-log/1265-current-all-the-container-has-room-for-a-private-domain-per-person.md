@@ -25,7 +25,7 @@ E2.4 and must not be built on a format that is frozen without it. This round def
   says so (E16.8).
 - The server holds the domain's key only while that person is connected, and renewing keys for others (D1263) never
   touches it.
-- This round tests the mechanism with a stand-in payload. What goes into the domain (the binder's notes) is E16.8.
+- This round tests the mechanism with a stand-in payload. What goes into the domain (the scrapbook's notes) is E16.8.
 
 **Notes.** Whether a viewer has a private domain is for E16.8; the container does not care about the role.
 

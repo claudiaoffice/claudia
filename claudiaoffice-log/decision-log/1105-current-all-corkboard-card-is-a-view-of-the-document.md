@@ -4,7 +4,7 @@ title: "A corkboard card is a view of the document's structure, with a status an
 status: current
 applies-to: all
 date: 2026-11-18
-round: "Workflow: focus, corkboard, binder and the private drawer (first round)"
+round: "Workflow: focus, corkboard, scrapbook and the private drawer (first round)"
 supersedes: []
 superseded-by: []
 ---
