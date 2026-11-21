@@ -18,3 +18,5 @@ superseded-by: []
 **Notes.** Written in answer to the owner's observation that direct formatting of single words is what makes documents look bad, and that LaTeX keeps content and look apart by making `\emph` the only easy exception. Supersedes the "character styles" item of E9.7, which is replaced by the purpose-named marks; marks are not part of the first implementation.
 
 **Partly superseded** by D379 (2026-11-13): importing a spreadsheet makes provisional styles of its cells' direct formats instead of listing them as unmapped. The rule of no direct formatting stands.
+
+**Wording, 2026-11-21:** "container" here means any part of a document that takes a style, which the glossary now calls a **slot**: every slot has one style. A **container** in the glossary is something else, an object whose content software outside claudia draws (LaTeX, Mermaid). A number format is not direct formatting (D1410).

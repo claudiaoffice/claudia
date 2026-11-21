@@ -133,8 +133,8 @@ Anything in a document that has a name, unique in that document, by which a user
 _avoid_: entity, element, item
 
 **Object**
-A text box, shape, image, diagram, rendered picture or table placed in a page, a slide or a sheet; every object is a thing.
-_avoid_: element, figure, container, shape (for objects of other kinds)
+A text box, shape, image, chart, container or table placed in a page, a slide or a sheet; every object is a thing.
+_avoid_: element, figure, shape (for objects of other kinds)
 
 **Chart**
 A picture drawn from a document's data, shown as an object, as a chart tab of its own, or both.
@@ -153,9 +153,21 @@ A named rectangle of cells in a computes document, either kept by hand or filled
 _avoid_: name (in this sense), defined name, range name
 
 **Style**
-A named look, defined by what it is for, shared by everything that serves the same purpose.
+A named look, defined by its purpose, put into slots; every slot with the same style serves the same purpose.
 _avoid_: format, formatting, theme, look
 
 **Number format**
 How the value of a cell reads (a percentage, an amount in euros, a date, a number of decimals), chosen for the cell itself, apart from its style, and never changing the value.
 _avoid_: format (on its own), cell format, number style
+
+**Container**
+An object whose content is supplied and drawn by software outside claudia, such as LaTeX or Mermaid; its drawing is kept in the document, so that anyone can open it without that software.
+_avoid_: rendered, rendered picture, embed, plug-in
+
+**Slot**
+A part of a document that takes exactly one style: a paragraph, the words of a cell, the box of a text box. Some things have no slot, and many slots belong to no thing.
+_avoid_: element, styled item, container
+
+**Purpose**
+What something in a document is for: a style states it in words, and a column of a table takes one of the purposes of a computation (input, data, calculation, result).
+_avoid_: role, function, intent
