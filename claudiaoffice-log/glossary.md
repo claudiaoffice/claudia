@@ -122,6 +122,18 @@ _avoid_: assistant, bot, agent, AI user
 What a user may do in one document: owner, editor or viewer. The administrator of a server is not a role.
 _avoid_: permission, access level, admin (for owner)
 
+**Hand-over**
+An owner offering her ownership to an editor: when the editor accepts with her own password, she becomes the owner and the one who offered becomes an editor, in the same moment.
+_avoid_: transfer, assign owner, change owner
+
+**Leave**
+To end one's own place in a document, with one's own password: one's key slot and private notes are deleted, and one keeps what one has seen. The last owner cannot leave before a hand-over.
+_avoid_: quit, unsubscribe
+
+**Remove**
+An owner taking an editor or a viewer out of a document: her key slot and private notes are deleted, and the parts she could read get new keys, so that she cannot read what is written from then on. She keeps what she has seen and any copies she holds. Lowering someone to viewer gives the history and the chat new keys in the same way.
+_avoid_: kick, revoke, ban
+
 **Presence**
 Where each user is in a document right now, shown to the others; it is never stored.
 _avoid_: cursor, awareness
