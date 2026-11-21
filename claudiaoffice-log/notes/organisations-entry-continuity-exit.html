@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Organisations and their members: entry, continuity, exit</title>
+<!-- Source of organisations-entry-continuity-exit.pdf. To rebuild, from this folder: google-chrome --headless --no-pdf-header-footer --print-to-pdf=organisations-entry-continuity-exit.pdf organisations-entry-continuity-exit.html -->
+<style>
+@font-face { font-family: Inter; src: url("../../packages/claudia-fonts/src/claudia_fonts/builtin/inter/Inter%5Bopsz,wght%5D.ttf"); font-weight: 100 900; font-style: normal; }
+@font-face { font-family: Inter; src: url("../../packages/claudia-fonts/src/claudia_fonts/builtin/inter/Inter-Italic%5Bopsz,wght%5D.ttf"); font-weight: 100 900; font-style: italic; }
+@font-face { font-family: Fraunces; src: url("../../packages/claudia-fonts/src/claudia_fonts/builtin/fraunces/Fraunces%5BSOFT,WONK,opsz,wght%5D.ttf"); font-weight: 100 900; font-style: normal; }
+@font-face { font-family: "JetBrains Mono"; src: url("../../packages/claudia-fonts/src/claudia_fonts/builtin/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf"); font-weight: 100 900; }
+
+:root { --ink:#1f1a33; --iris:#5b4bc4; --mist:#e7e1f4; --paper:#f7f3ec; --teal:#13917f; --rose:#d6477a; --apricot:#f2a057; --soft:#6b6680; --line:#d9d3e6; }
+@page {
+  size: A4; margin: 22mm 22mm 24mm 22mm;
+  @bottom-left { content: "Organisations: entry, continuity, exit · not decided"; font: 8.5pt Inter, sans-serif; color: #6b6680; }
+  @bottom-right { content: counter(page) " / " counter(pages); font: 8.5pt Inter, sans-serif; color: #6b6680; }
+}
+html { font-family: Inter, sans-serif; font-size: 10.5pt; line-height: 1.55; color: var(--ink); }
+body { margin: 0; }
+h1 { font-family: Fraunces, serif; font-weight: 500; font-size: 24pt; line-height: 1.15; margin: 0 0 4pt; }
+.sub { color: var(--soft); font-size: 10pt; margin: 0 0 12pt; }
+h2 { font-family: Fraunces, serif; font-weight: 500; font-size: 15pt; margin: 18pt 0 6pt; break-after: avoid; }
+h3 { font-size: 10.5pt; font-weight: 600; margin: 10pt 0 3pt; break-after: avoid; }
+p { margin: 0 0 7pt; }
+code { font-family: "JetBrains Mono", monospace; font-size: 9pt; background: var(--mist); padding: 0 3pt; border-radius: 3pt; }
+.status { border: 1.2pt solid var(--rose); background: #fbeef3; border-radius: 6pt; padding: 8pt 11pt; margin: 0 0 12pt; }
+.status b { color: #b8386a; }
+table { border-collapse: collapse; width: 100%; margin: 4pt 0 10pt; font-size: 9.5pt; break-inside: avoid; }
+th { text-align: left; font-weight: 600; border-bottom: 1pt solid var(--ink); padding: 3pt 6pt 3pt 0; }
+td { border-bottom: 0.5pt solid var(--line); padding: 3pt 6pt 3pt 0; vertical-align: top; }
+ol, ul { margin: 0 0 8pt; padding-left: 16pt; }
+li { margin-bottom: 3pt; }
+figure { margin: 8pt 0 10pt; break-inside: avoid; }
+figcaption { font-size: 9pt; color: var(--soft); margin-top: 4pt; }
+.box { background: var(--paper); border-radius: 6pt; padding: 8pt 11pt; margin: 8pt 0 10pt; break-inside: avoid; }
+.box p:last-child { margin-bottom: 0; }
+.box .t { font-weight: 600; margin-bottom: 3pt; }
+.tag { display: inline-block; font-size: 8pt; font-weight: 600; padding: 0 5pt; border-radius: 8pt; }
+.built { background: #e0f2ef; color: #0d7768; }
+.new { background: #fdeedf; color: #9a5a1c; }
+.small { font-size: 9pt; color: var(--soft); }
+.keep { break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<h1>Organisations and their members: entry, continuity, exit</h1>
+<p class="sub">How a team or a company could work with claudia documents when people join, fall ill or go on leave,
+and leave: the atlas and steward model. Reconstructed on 21 November 2026 from sheet 7 of the conversation
+&ldquo;File management&rdquo; of 14 November 2026, in the words of <code>glossary.md</code>.</p>
+
+<div class="status"><b>Not decided.</b> As of 21 November 2026 <b>none of this is decided</b>. It is a proposal that was
+drawn and discussed once and never written down; this note only keeps it from being lost again. It has no decision
+number. Where a part already exists in claudia, the note says so; everything else is new work that nobody has agreed
+to.</div>
+
+<h2>Why organisations need something of their own</h2>
+<p>claudia has no accounts (D20). A person exists only inside each document, as a name and a password that belong to
+that document, and nobody outside a document can see who is in it (D102). That is the privacy model, and it has a
+price for organisations: there is no directory in which IT could switch a person on or off, and no list of the
+documents someone can unlock. The model below works with what a document already has (its key slots, its list of
+people, its history) and adds three things for organisations that want them: an <b>atlas</b>, a <b>steward</b> and a
+<b>hand-over wizard</b>.</p>
+
+<h3>The words</h3>
+<table>
+  <tr><th style="width:22%">On sheet 7</th><th style="width:24%">In the glossary today</th><th>Meaning</th></tr>
+  <tr><td>box</td><td>document</td><td>Sealed; readable only by its users.</td></tr>
+  <tr><td>keyhole</td><td>key slot</td><td>One user's way into a document.</td></tr>
+  <tr><td>key</td><td>password, recovery key</td><td>What unlocks one key slot.</td></tr>
+  <tr><td>map</td><td>Mine (and collections)</td><td>The documents a person knows of, kept on her own client. It holds no keys.</td></tr>
+  <tr><td>place</td><td>place</td><td>A server where documents are kept.</td></tr>
+  <tr><td>register</td><td>history, list of people</td><td>What is recorded inside the document.</td></tr>
+  <tr><td>vault</td><td><i>not a notion yet</i></td><td>A sealed copy of a person's list of places and documents on a server, for her other devices.</td></tr>
+  <tr><td>atlas</td><td><i>not a notion yet</i></td><td>A vault the organisation keeps: its places, read-only for members.</td></tr>
+  <tr><td>steward</td><td><i>not a notion yet</i></td><td>The organisation's own key slot in a document, opened only by the organisation's private key.</td></tr>
+</table>
+
+<figure>
+<svg width="100%" viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#6b6680" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="20" y="20" width="200" height="260" rx="12" fill="#f7f3ec" stroke="#b9b2c9" stroke-width="0.8"/>
+<text x="36" y="46" font-size="15" font-weight="600" fill="#1f1a33">1 · Entry</text>
+<rect x="36" y="62" width="168" height="44" rx="6" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="0.8"/>
+<text x="46" y="80" font-size="11.5" font-weight="600" fill="#3c3489">IT shares the atlas</text>
+<text x="46" y="96" font-size="10.5" fill="#5b4bc4">places only, no keys</text>
+<rect x="36" y="124" width="168" height="44" rx="6" fill="#e0f2ef" stroke="#13917f" stroke-width="0.8"/>
+<text x="46" y="142" font-size="11.5" font-weight="600" fill="#0d7768">Owner adds a key slot</text>
+<text x="46" y="158" font-size="10.5" fill="#13917f">first password elsewhere</text>
+<rect x="36" y="186" width="168" height="44" rx="6" fill="#e0f2ef" stroke="#13917f" stroke-width="0.8"/>
+<text x="46" y="204" font-size="11.5" font-weight="600" fill="#0d7768">She unlocks</text>
+<text x="46" y="220" font-size="10.5" fill="#13917f">and picks her own password</text>
+<line x1="120" y1="106" x2="120" y2="122" stroke="#6b6680" stroke-width="1" marker-end="url(#a)"/>
+<line x1="120" y1="168" x2="120" y2="184" stroke="#6b6680" stroke-width="1" marker-end="url(#a)"/>
+<text x="36" y="258" font-size="10" fill="#6b6680">IT never sees her documents</text>
+
+<rect x="240" y="20" width="200" height="260" rx="12" fill="#f7f3ec" stroke="#b9b2c9" stroke-width="0.8"/>
+<text x="256" y="46" font-size="15" font-weight="600" fill="#1f1a33">2 · Continuity</text>
+<rect x="256" y="62" width="168" height="44" rx="6" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="0.8"/>
+<text x="266" y="80" font-size="11.5" font-weight="600" fill="#3c3489">Steward key slot</text>
+<text x="266" y="96" font-size="10.5" fill="#5b4bc4">in every document, visible</text>
+<rect x="256" y="124" width="168" height="44" rx="6" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="0.8"/>
+<text x="266" y="142" font-size="11.5" font-weight="600" fill="#3c3489">Two custodians</text>
+<text x="266" y="158" font-size="10.5" fill="#5b4bc4">half the key each, offline</text>
+<rect x="256" y="186" width="168" height="44" rx="6" fill="#fdeedf" stroke="#c97a32" stroke-width="0.8"/>
+<text x="266" y="204" font-size="11.5" font-weight="600" fill="#8a4f16">Owner gone for good</text>
+<text x="266" y="220" font-size="10.5" fill="#a86424">steward names a new one</text>
+<line x1="340" y1="106" x2="340" y2="122" stroke="#6b6680" stroke-width="1" marker-end="url(#a)"/>
+<line x1="340" y1="168" x2="340" y2="184" stroke="#6b6680" stroke-width="1" marker-end="url(#a)"/>
+<text x="256" y="258" font-size="10" fill="#6b6680">a last resort, not for holidays</text>
+
+<rect x="460" y="20" width="200" height="260" rx="12" fill="#f7f3ec" stroke="#b9b2c9" stroke-width="0.8"/>
+<text x="476" y="46" font-size="15" font-weight="600" fill="#1f1a33">3 · Exit</text>
+<rect x="476" y="62" width="168" height="44" rx="6" fill="#e0f2ef" stroke="#13917f" stroke-width="0.8"/>
+<text x="486" y="80" font-size="11.5" font-weight="600" fill="#0d7768">Hand-over wizard</text>
+<text x="486" y="96" font-size="10.5" fill="#13917f">walks her own Mine</text>
+<rect x="476" y="124" width="168" height="44" rx="6" fill="#e0f2ef" stroke="#13917f" stroke-width="0.8"/>
+<text x="486" y="142" font-size="11.5" font-weight="600" fill="#0d7768">Hand over or leave</text>
+<text x="486" y="158" font-size="10.5" fill="#13917f">document by document</text>
+<rect x="476" y="186" width="168" height="44" rx="6" fill="#e7e1f4" stroke="#5b4bc4" stroke-width="0.8"/>
+<text x="486" y="204" font-size="11.5" font-weight="600" fill="#3c3489">Steward finishes</text>
+<text x="486" y="220" font-size="10.5" fill="#5b4bc4">remove, renew the keys</text>
+<line x1="560" y1="106" x2="560" y2="122" stroke="#6b6680" stroke-width="1" marker-end="url(#a)"/>
+<line x1="560" y1="168" x2="560" y2="184" stroke="#6b6680" stroke-width="1" marker-end="url(#a)"/>
+<text x="476" y="258" font-size="10" fill="#6b6680">copies she made stay hers</text>
+</svg>
+<figcaption>The three moments. Teal: people in the document act. Iris: the organisation acts. Apricot: the case the
+steward exists for.</figcaption>
+</figure>
+
+<h2>1 · Entry: the places and the key arrive separately</h2>
+<p>Anna joins the team. Nobody gives her an account.</p>
+<ol>
+  <li><b>IT shares the atlas.</b> The organisation keeps one atlas of its places (the team server, the demo server).
+  Anna enters the atlas code, and the places appear among hers. The atlas holds no keys and no document names, so the
+  code may travel by e-mail. Members can read the atlas; only IT can change it.</li>
+  <li><b>An owner adds a key slot for her.</b> Ben, who owns the budget document, adds Anna with her name and a first
+  password (Share&hellip;). The first password reaches her through another channel, never with the atlas. IT is not
+  involved and cannot see which documents she joins.</li>
+  <li><b>She unlocks and makes the password her own.</b> At her first unlock Anna chooses her own password; Ben's
+  first one stops working. The document records that she joined.</li>
+</ol>
+
+<h2>2 · Continuity: a steward key slot in every document</h2>
+<p>People fall ill, forget passwords and leave on bad terms. The organisation keeps one key slot of its own in each of
+its documents.</p>
+<ul>
+  <li><b>Sealed to the organisation, not to a person.</b> The steward key slot is sealed to the organisation's public
+  key. Whoever adds it cannot open it again; only the organisation's private key can.</li>
+  <li><b>Visible, not hidden.</b> Everybody who can unlock the document sees the steward in its list of people. A
+  hidden escrow would break the trust the privacy model rests on. Sheet 7 called it &ldquo;the IAM model returned on
+  purpose, for organisations that want it&rdquo;; individuals, activists and small teams run without it.</li>
+  <li><b>The server can require it.</b> A setting on the organisation's own server could refuse new documents that
+  have no steward key slot. The server can check that the slot is there; it still cannot read anything.</li>
+  <li><b>Two custodians.</b> The private key is split between two people and kept offline, in the organisation's safe.
+  Every use of it is recorded in the document it unlocks.</li>
+  <li><b>What it is for.</b> Ben leaves without handing the budget over. The custodians use the steward to unlock it,
+  make Cara the owner, and the keys are renewed.</li>
+</ul>
+
+<div class="box keep">
+<p class="t">The steward is not the answer to holidays</p>
+<p>Using the steward is a ceremony with two custodians and an offline key. It is a last resort for an owner who is gone
+for good, or on bad terms; it should not be needed because an owner is on parental leave. Everyday continuity (two
+people responsible for a document, so that one can be away) is a different question: whether a document may have more
+than one owner. That question is open as well (see the last section).</p>
+</div>
+
+<h2>3 · Exit: hand over, remove, renew</h2>
+<p>Anna leaves the organisation. Because nobody outside a document can see who is in it, the only complete list of her
+documents is her own: Mine, on her client.</p>
+<ol>
+  <li><b>A hand-over wizard walks her list.</b> For each document she either names a successor (a hand-over to an
+  editor) or leaves it. Both actions exist in every document today; the wizard only puts them in one place. The
+  organisation can ask for this as part of leaving.</li>
+  <li><b>Remove and renew are one action.</b> When an owner removes her, the parts she could read get new keys, so that
+  a copy of the file she might get hold of does not open what is written afterwards. What she has already seen or
+  copied cannot be taken back (D20); the dialog says so.</li>
+  <li><b>The steward finishes what she skipped,</b> using the same two steps, and IT replaces the atlas code so that
+  she no longer receives the organisation's places. Her own devices and her own list stay hers; they hold titles and
+  addresses, never keys.</li>
+</ol>
+
+<h2>What the organisation can and cannot do</h2>
+<table>
+  <tr><th style="width:50%">It can</th><th>It cannot</th></tr>
+  <tr><td>Publish and update an atlas of places for its members.</td><td>List the documents a person can unlock: names are inside the documents.</td></tr>
+  <tr><td>Hold the steward key, and require the steward key slot on its own servers.</td><td>Read a document that has no steward key slot.</td></tr>
+  <tr><td>Ask for the hand-over wizard as part of leaving, and replace the atlas code afterwards.</td><td>Take back what a person has already seen or copied.</td></tr>
+  <tr><td>Ask for signed history, so that who did what is provable inside each document.</td><td>Switch a person off everywhere in one step: each document needs its owner or the steward.</td></tr>
+</table>
+
+<h2>What exists today, and what would be new</h2>
+<table>
+  <tr><th style="width:62%">Part of the model</th><th>Status on 21 November 2026</th></tr>
+  <tr><td>Key slots with hidden names; an owner adds people with a first password (Share&hellip;)</td><td><span class="tag built">built</span> D101, D102</td></tr>
+  <tr><td>Choosing one's own password for a document</td><td><span class="tag built">built</span> (Change password&hellip;); being made to do it at the first unlock is <span class="tag new">not built</span></td></tr>
+  <tr><td>Removing a person renews the keys she held</td><td><span class="tag built">built</span> D1263 (on sheet 7 it was still missing)</td></tr>
+  <tr><td>New keys reach people who are not there, sealed to their public key (the inbox)</td><td><span class="tag built">built</span> D1274; the steward would use the same mechanism</td></tr>
+  <tr><td>Hand-over, leave, recovery key</td><td><span class="tag built">built</span> D142, D105</td></tr>
+  <tr><td>Places, Mine and collections on the client</td><td><span class="tag built">built</span> D443</td></tr>
+  <tr><td>The vault and the atlas</td><td><span class="tag new">new</span></td></tr>
+  <tr><td>The steward key slot, the server setting that requires it, the split private key</td><td><span class="tag new">new</span></td></tr>
+  <tr><td>The hand-over wizard</td><td><span class="tag new">new</span></td></tr>
+  <tr><td>Signed history</td><td><span class="tag new">new</span> (informal PGP-signing ideas only)</td></tr>
+</table>
+
+<h2>Open questions</h2>
+<ol>
+  <li><b>Is a steward key slot acceptable in claudia at all?</b> It brings back a piece of central control, visibly and
+  only where an organisation's server asks for it.</li>
+  <li><b>Who holds the atlas's write key,</b> and may it be IT alone?</li>
+  <li><b>Is signed history a server setting, or a choice per document?</b></li>
+  <li><b>May a document have more than one owner?</b> Raised on 21 November 2026 for everyday continuity (holidays,
+  illness, two people responsible). The document file already allows several owners; the server allows only one today.
+  If co-owners come, the steward stays the last resort and co-owners carry the everyday case.</li>
+</ol>
+
+<p class="small">Sources: the conversation &ldquo;File management&rdquo; of 14 November 2026 (sheet 7, &ldquo;an
+organisation and its members: entry, continuity, exit&rdquo;); decisions D20, D101, D102, D105, D142, D443, D1263,
+D1274; <code>claudiaoffice-log/glossary.md</code>.</p>
+
+</body>
+</html>
