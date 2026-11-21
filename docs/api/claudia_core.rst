@@ -254,10 +254,7 @@ An object is a shared body and a per-app anchor; everything but the anchor is wr
 .. autoclass:: claudia_core.ObjectModel
 .. autoclass:: claudia_core.ObjectSet
 .. autoclass:: claudia_core.ObjectsChanged
-.. autoclass:: claudia_core.ImagesChanged
-.. autoclass:: claudia_core.ShapesChanged
 .. autoclass:: claudia_core.DiagramDefinition
-.. autoclass:: claudia_core.DiagramsChanged
 
 The object commands, the same in all three apps:
 
@@ -272,13 +269,23 @@ The object commands, the same in all three apps:
 .. autoclass:: claudia_core.SetParagraphStyle
 .. autoclass:: claudia_core.SetSnap
 .. autoclass:: claudia_core.DescribeObject
-.. autoclass:: claudia_core.DefineShape
-.. autoclass:: claudia_core.ForgetShape
-.. autoclass:: claudia_core.DefineImage
-.. autoclass:: claudia_core.ForgetImage
-.. autoclass:: claudia_core.DefineDiagram
-.. autoclass:: claudia_core.UpdateDiagram
-.. autoclass:: claudia_core.ForgetDiagram
+
+Assets: what objects show and the document keeps once
+-----------------------------------------------------
+
+An image, a shape's outline, a chart's definition, a container's definition and a table are kept once, by id, so
+that several objects can show the same one (D1431). One store per kind, one change event and the same three commands
+for every kind; a table has commands of its own, since it is edited box by box.
+
+.. autoclass:: claudia_core.AssetStore
+   :members:
+.. autoclass:: claudia_core.AssetKind
+.. autodata:: claudia_core.ASSET_KINDS
+.. autofunction:: claudia_core.asset_kind
+.. autoclass:: claudia_core.AssetsChanged
+.. autoclass:: claudia_core.DefineAsset
+.. autoclass:: claudia_core.UpdateAsset
+.. autoclass:: claudia_core.ForgetAsset
 
 Turning: how far a turned object reaches
 -----------------------------------------
@@ -304,13 +311,9 @@ Rendered text containers
 .. currentmodule:: claudia_core
 
 A rendered text container keeps a text and shows a picture something outside the document made from it (D390); the
-kernel keeps the definition and the picture, and never runs anything (D391).
+kernel keeps the definition and the picture, and never runs anything (D391). The definition is an asset (D1431).
 
 .. autoclass:: claudia_core.RenderedDefinition
-.. autoclass:: claudia_core.RenderingsChanged
-.. autoclass:: claudia_core.DefineRendering
-.. autoclass:: claudia_core.UpdateRendering
-.. autoclass:: claudia_core.ForgetRendering
 
 Shape outlines
 --------------

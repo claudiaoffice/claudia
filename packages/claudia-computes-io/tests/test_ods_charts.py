@@ -62,7 +62,7 @@ def put_chart(
     model: WorkbookModel, spec_id="c1", object_id="o1", *, at=(5, 1), size=(480, 300), description="", **spec
 ):
     fields = {"id": spec_id, "kind": "bar", "range": a_range(), **spec}
-    model.define_diagram(ChartSpec(**fields))
+    model.diagrams.define(ChartSpec(**fields))
     body = ObjectBody(object_id, "diagram", *size, "plain-image", ref=spec_id, description=description)
     model.insert_object(VisualObject(body, CellAnchor(S1, *at)))
 
@@ -269,7 +269,7 @@ def test_a_chart_too_small_for_an_object_of_the_model_is_not_held():
 # -- what a file cannot keep -----------------------------------------------------------------------------------------
 def test_a_chart_tab_is_a_sheet_with_the_chart_in_it_and_that_is_said():
     model = a_workbook()
-    model.define_diagram(ChartSpec(id="c1", kind="bar", range=a_range(), title="Sales"))
+    model.diagrams.define(ChartSpec(id="c1", kind="bar", range=a_range(), title="Sales"))
     model.charts["t1"] = Chart("t1", "Sales chart", "c1")
     data = workbook_to_ods(model)
     back = ods_to_workbook(data)
@@ -281,7 +281,7 @@ def test_a_chart_tab_is_a_sheet_with_the_chart_in_it_and_that_is_said():
 
 def test_a_chart_tab_does_not_take_the_name_of_a_sheet():
     model = a_workbook()
-    model.define_diagram(ChartSpec(id="c1", kind="bar", range=a_range()))
+    model.diagrams.define(ChartSpec(id="c1", kind="bar", range=a_range()))
     model.charts["t1"] = Chart("t1", "data", "c1")
     names = [sheet.name for sheet in ods_to_workbook(workbook_to_ods(model)).sheets.values()]
     assert names == ["Data", "data (2)"]
@@ -290,7 +290,7 @@ def test_a_chart_tab_does_not_take_the_name_of_a_sheet():
 def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
     model = a_workbook()
     model.names.put(NamedRange("Sales", None, a_range(), header=True))
-    model.define_diagram(ChartSpec(id="c1", kind="bar", source="Sales"))
+    model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Sales"))
     body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))
     back = ods_to_workbook(workbook_to_ods(model))
@@ -301,7 +301,7 @@ def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
 
 def test_a_chart_that_reads_nothing_is_not_written_and_that_is_said():
     model = a_workbook()
-    model.define_diagram(ChartSpec(id="c1", kind="bar", source="Gone"))
+    model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Gone"))
     model.insert_object(
         VisualObject(ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1"), CellAnchor(S1, 5, 1))
     )
@@ -412,7 +412,7 @@ def test_a_new_chart_is_a_new_frame_and_a_new_part_in_a_kept_file():
 def test_a_chart_that_was_removed_is_taken_out_with_its_part():
     original, baseline, current = a_kept_file()
     current.delete_object("o1")
-    current.forget_diagram("c1")
+    current.diagrams.forget("c1")
     patched = apply_edits_to_ods(original, baseline, current)
     parts = read_parts(patched)
     assert not [name for name in parts if name.startswith("Object")]
@@ -432,7 +432,7 @@ def test_a_chart_that_was_moved_and_resized_has_its_frame_changed_and_its_part_k
 
 def test_a_chart_whose_definition_changed_is_drawn_again_the_way_it_was_before():
     original, baseline, current = a_kept_file(title="Before")
-    current.replace_diagram(replace(current.diagrams["c1"], title="After", legend=False))
+    current.diagrams.replace(replace(current.diagrams["c1"], title="After", legend=False))
     patched = apply_edits_to_ods(original, baseline, current, losses=(losses := LossLog()))
     assert losses.result() == ()  # (a chart of ours is drawn the way it was)
     spec, _ = the_chart(ods_to_workbook(patched))
@@ -466,7 +466,7 @@ def test_the_description_of_a_chart_is_patched_into_its_frame():
 
 def test_a_chart_tab_that_was_added_is_a_sheet_after_the_last_one():
     original, baseline, current = a_kept_file()
-    current.define_diagram(ChartSpec(id="c7", kind="bar", range=a_range(), title="Tab"))
+    current.diagrams.define(ChartSpec(id="c7", kind="bar", range=a_range(), title="Tab"))
     current.charts["t1"] = Chart("t1", "Tab chart", "c7")
     losses = LossLog()
     patched = apply_edits_to_ods(original, baseline, current, losses=losses)
@@ -480,7 +480,7 @@ def test_a_chart_on_a_sheet_that_was_added_comes_with_the_sheet():
     original, baseline, current = a_kept_file()
     current.sheets[SheetId("s2")] = Sheet(SheetId("s2"), "More")
     current.open_container("s2")
-    current.define_diagram(ChartSpec(id="c7", kind="bar", range=a_range()))
+    current.diagrams.define(ChartSpec(id="c7", kind="bar", range=a_range()))
     current.insert_object(
         VisualObject(ObjectBody("o7", "diagram", 300, 200, "plain-image", ref="c7"), CellAnchor(SheetId("s2"), 1, 1))
     )
@@ -498,7 +498,9 @@ def test_a_chart_goes_with_its_sheet_when_the_sheet_is_removed():
     original = workbook_to_ods(current)
     del current.sheets[S1]
     current.objects.clear()
-    current.diagrams.clear()
+    current.charts.clear()  # a chart tab shows a chart too
+    for chart in list(current.diagrams):
+        current.diagrams.forget(chart)
     patched = apply_edits_to_ods(original, baseline, current)
     assert not [name for name in read_parts(patched) if name.startswith("Object")]
 
@@ -531,7 +533,7 @@ def test_a_chart_libreoffice_saved_is_moved_and_resized_without_being_drawn_agai
 def test_a_chart_libreoffice_saved_is_drawn_our_way_when_its_definition_changed_and_that_is_said():
     original = LIBRARY.read_bytes()
     baseline, current = ods_to_workbook(original), ods_to_workbook(original)
-    current.replace_diagram(replace(current.diagrams["c1"], title="Changed"))
+    current.diagrams.replace(replace(current.diagrams["c1"], title="Changed"))
     losses = LossLog()
     patched = apply_edits_to_ods(original, baseline, current, losses=losses)
     assert kinds(losses.result()) == {"chart:look": 1}

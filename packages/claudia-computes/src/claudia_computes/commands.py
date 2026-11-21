@@ -4,8 +4,8 @@ Everything about floating objects — images, shapes, text boxes, diagrams: defi
 resize, rotate, retext, snap — is shared with composes and creates and lives in :mod:`claudia_core.objects`
 (E10.16). ``AddChart``/``RemoveChart`` below are computes' own: a chart *tab* is a concept this app alone has
 (creates has slides, composes has none of this), so it stays here even though the diagram *definition* it shows
-(a :class:`~claudia_computes.ChartSpec`) is managed by the shared ``DefineDiagram``/``UpdateDiagram``/
-``ForgetDiagram`` (E6.6).
+(a :class:`~claudia_computes.ChartSpec`) is managed by the shared ``DefineAsset``/``UpdateAsset``/
+``ForgetAsset`` (E6.6, D1431).
 
 Every command carries final values and returns its exact inverse, so undo, replay and checkpoints work on the
 kernel without any computes-specific code in it. ``shifted_by`` is what lets one author undo an old step after
@@ -18,7 +18,7 @@ import re
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetDiagram, PageSetup, fits
+from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetAsset, PageSetup, fits
 
 from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
 from .events import (
@@ -693,7 +693,7 @@ class ResizeLines(Command):
 class AddChart(Command):
     """Add a chart tab (E6.6): a name in the tab strip, showing the diagram definition ``spec_id`` names.
 
-    That definition must already be in the document — put there by :class:`~claudia_core.DefineDiagram` — and
+    That definition must already be in the document — put there by :class:`~claudia_core.DefineAsset` — and
     stays shared: a floating diagram object elsewhere may show the very same ``spec_id`` (``Chart``'s own
     docstring says why that mirrors an image asset). A tab is computes' own concept, so this command lives
     here rather than in :mod:`claudia_core.objects`, even though the definition it shows does not."""
@@ -741,7 +741,9 @@ class AddChart(Command):
     def shifted_by(self, other: Command) -> Command | None:
         """Refused once the diagram it would show is gone (the same guard ``AddObject`` keeps for its shape,
         image or diagram, applied here to a tab instead of a floating object)."""
-        return None if isinstance(other, ForgetDiagram) and other.id == self.spec_id else self
+        if isinstance(other, ForgetAsset) and (other.asset_kind, other.id) == ("diagram", self.spec_id):
+            return None
+        return self
 
     def stub(self) -> dict:
         return {"chart": self.id}
@@ -755,7 +757,7 @@ class AddChart(Command):
 @dataclass(frozen=True)
 class RemoveChart(Command):
     """Remove a chart tab. The diagram definition it showed is untouched — it may still be shown elsewhere, the
-    same way removing an object never forgets the image or shape it used (:class:`~claudia_core.ForgetDiagram`
+    same way removing an object never forgets the image or shape it used (:class:`~claudia_core.ForgetAsset`
     is the separate, explicit step for letting the definition itself go)."""
 
     kind: ClassVar[str] = "computes.RemoveChart"

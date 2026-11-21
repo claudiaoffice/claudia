@@ -260,7 +260,7 @@ def put_tables(model: TextModel, placed: list[tuple[str, int, TableDef]]) -> Non
     ``block`` at ``offset`` (a table in the flow is printed after the paragraph it hangs from). ``placed`` is in
     the order of the file, which is the order the objects stack in."""
     for block, offset, definition in placed:
-        model.define_table(definition)
+        model.tables.define(definition)
         object_id = next(f"o{n}" for n in count(1) if f"o{n}" not in model.objects)
         name = free_name("Table", model.names_in_use())
         model.insert_object(VisualObject(table_body(object_id, definition, name), BlockAnchor(block, offset)))
@@ -272,8 +272,9 @@ def tables_after(model: TextModel, block_id: str) -> list[TableDef]:
     found = []
     for object_id in model.stack_of(block_id):
         obj = model.get_object(object_id)
-        if obj.body.kind == "table" and obj.body.table in model.tables:
-            found.append((obj.anchor.offset, model.tables[obj.body.table]))
+        table = obj.body.table
+        if table is not None and table in model.tables:
+            found.append((obj.anchor.offset, model.tables[table]))
     return [definition for _, definition in sorted(found, key=lambda each: each[0])]
 
 

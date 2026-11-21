@@ -96,7 +96,7 @@ def _data(steps: Sequence[tuple[str, str, Paragraph | None]]) -> tuple[tuple[str
 
 def _table(model: ObjectModel, table_id: str) -> TableDef:
     try:
-        return model.get_table(table_id)
+        return model.tables.known(table_id)
     except ValueError:
         raise RequestError("command_error", msg("this document has no table {id!r}", id=table_id)) from None
 
@@ -162,7 +162,7 @@ def table_view(model: ObjectModel, table_id: str) -> dict:
     """One table as `tables` gives it: its plain data, the ids of the objects that show it and its derived totals."""
     definition = model.tables[table_id]
     language = getattr(model, "language", None)
-    return {**definition.to_data(), "used_by": model.users_of_table(table_id), "totals": definition.totals(language)}
+    return {**definition.to_data(), "used_by": model.tables.users(table_id), "totals": definition.totals(language)}
 
 
 def _tables(model_of: Callable[[Context], ObjectModel]):
@@ -234,7 +234,7 @@ def _remove(model_of: Callable[[Context], ObjectModel]):
         """Take a table away with the objects that show it. Undo brings all of it back, words included."""
         model = model_of(ctx)
         _table(model, id)
-        steps = [*(RemoveObject(object_id) for object_id in model.users_of_table(id)), ForgetTable(id)]
+        steps = [*(RemoveObject(object_id) for object_id in model.tables.users(id)), ForgetTable(id)]
         return done(ctx, Batch(tuple(steps), name="Remove table"), base)
 
     return remove_table

@@ -24,14 +24,13 @@ from claudia_creates_io import Rasterise
 from claudia_core import (
     AddObject,
     Batch,
-    DefineImage,
-    DefineRendering,
+    DefineAsset,
     DescribeObject,
-    ForgetImage,
+    ForgetAsset,
     ObjectBody,
     ObjectModel,
     ResizeObject,
-    UpdateRendering,
+    UpdateAsset,
     decode_image,
     new_object_size,
 )
@@ -93,13 +92,15 @@ class RenderDesk:
         asset = decode_image(rendered.svg.encode("utf-8"), checked_drawing=True)
         if (current.image, current.renderer) == (asset.id, rendered.renderer):
             return rendered
-        steps: list = [] if asset.id in model.images else [DefineImage(asset)]
-        steps.append(UpdateRendering(rendering_id, current.with_picture(asset.id, rendered.renderer).to_data()))
+        steps: list = [] if asset.id in model.images else [DefineAsset("image", asset.to_data())]
+        steps.append(
+            UpdateAsset("rendering", rendering_id, current.with_picture(asset.id, rendered.renderer).to_data())
+        )
         old = current.image
         if old and old != asset.id and not self._held_elsewhere(model, old, rendering_id):
-            steps.append(ForgetImage(old))
+            steps.append(ForgetAsset("image", old))
         first = current.image is None
-        for object_id in model.users_of_rendering(rendering_id):
+        for object_id in model.renderings.users(rendering_id):
             shown = model.get_object(object_id)
             if not shown.body.description and not shown.body.decorative:
                 steps.append(DescribeObject(object_id, default_alt(current.type, current.source, rendered.svg), False))
@@ -126,9 +127,7 @@ class RenderDesk:
 
     @staticmethod
     def _held_elsewhere(model: ObjectModel, image_id: str, rendering_id: str) -> bool:
-        return bool(model.users_of_image(image_id)) or any(
-            r.image == image_id for r in model.renderings.values() if r.id != rendering_id
-        )
+        return any(user != rendering_id for user in model.images.users(image_id))
 
 
 def _desk(ctx: Context) -> RenderDesk:
@@ -197,7 +196,9 @@ def _add(model_of: Callable[[Context], ObjectModel], placement: Placement):
             name=default_name(ctx, "rendered"),
         )
         definition = RenderedDefinition(rendering_id, type, source, settings)  # type: ignore[arg-type]
-        command = Batch((DefineRendering(definition.to_data()), AddObject(body, anchor)), name="Add rendered container")
+        command = Batch(
+            (DefineAsset("rendering", definition.to_data()), AddObject(body, anchor)), name="Add rendered container"
+        )
         applied = ctx.document.execute(command, author=ctx.user, base=base)
         if fit:
             desk.cap_first_picture(ctx.document, object_id)
@@ -216,7 +217,7 @@ def _set_source(model_of: Callable[[Context], ObjectModel]):
         current = model.renderings[id]
         settings = desk.check(current.type, source, {**dict(current.params), **(params or {})})
         changed = RenderedDefinition(id, current.type, source, settings, current.image, current.renderer)  # type: ignore[arg-type]
-        applied = ctx.document.execute(UpdateRendering(id, changed.to_data()), author=ctx.user, base=base)
+        applied = ctx.document.execute(UpdateAsset("rendering", id, changed.to_data()), author=ctx.user, base=base)
         return {"rendering": id, "revision": applied.revision.to_data()}
 
     return set_rendering_source

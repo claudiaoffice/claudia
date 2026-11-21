@@ -234,8 +234,10 @@ class TestEditsToAKeptFile:
         data = self.original()
         baseline, current = docx_to_text(data), docx_to_text(data)
         (definition,) = current.tables.values()
-        current.tables[definition.id] = definition.with_entries(
-            [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+        current.tables.put(
+            definition.with_entries(
+                [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+            )
         )
         patched = apply_edits_to_docx(data, baseline, current)
         (found,) = Document(BytesIO(patched)).tables
@@ -247,7 +249,7 @@ class TestEditsToAKeptFile:
         baseline, current = docx_to_text(data), docx_to_text(data)
         (obj,) = [o for o in current.objects.values() if o.body.kind == "table"]
         current.delete_object(obj.id)
-        current.forget_table(obj.body.ref)
+        current.tables.forget(obj.body.ref)
         assert Document(BytesIO(apply_edits_to_docx(data, baseline, current))).tables == []
 
     def test_a_table_that_was_added_is_put_after_its_paragraph(self) -> None:
@@ -278,8 +280,10 @@ class TestWhatIsWritten:
         baseline = docx_to_text(text_to_docx(text_with(table())))
         current = docx_to_text(text_to_docx(text_with(table())))
         (definition,) = current.tables.values()
-        current.tables[definition.id] = definition.with_entries(
-            [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+        current.tables.put(
+            definition.with_entries(
+                [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+            )
         )
         assert docx_unwritten_changes(current, baseline) == ()
         assert odt_unwritten_changes(current, baseline) == ()
@@ -408,8 +412,10 @@ class TestOddFiles:
     def test_edits_measured_from_another_text_are_refused(self) -> None:
         data = text_to_docx(text_with(table()))
         baseline, current = docx_to_text(data), docx_to_text(data)
-        baseline.tables["t1"] = baseline.tables["t1"].with_entries(
-            [("r2", "c1", Paragraph(entry_id("t1", "r2", "c1"), "", "other").written_by(None))]
+        baseline.tables.put(
+            baseline.tables["t1"].with_entries(
+                [("r2", "c1", Paragraph(entry_id("t1", "r2", "c1"), "", "other").written_by(None))]
+            )
         )
         with pytest.raises(UnsupportedEdit):
             apply_edits_to_docx(data, baseline, current)

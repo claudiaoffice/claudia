@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from claudia_core import (
     AddObject,
     Batch,
-    DefineImage,
+    DefineAsset,
     DescribeObject,
     ImageImport,
     MoveObject,
@@ -82,7 +82,7 @@ def add_object_methods(
     say = placement.help
 
     def images(ctx: Context) -> list[dict]:
-        return model_of(ctx).images_to_data()
+        return model_of(ctx).images.to_data()
 
     table.method("images")(
         _documented(
@@ -113,7 +113,7 @@ def add_object_methods(
                 room=model.room_for_new_object(model.anchor_from_data(anchor)),
                 smallest=model.min_object_size,
             )
-        steps: list = [] if asset.id in model.images else [DefineImage(asset)]
+        steps: list = [] if asset.id in model.images else [DefineAsset("image", asset.to_data())]
         imported = ImageImport.from_data(
             {
                 "asset": asset.id,

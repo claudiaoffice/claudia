@@ -142,7 +142,7 @@ def test_the_tables_are_listed_with_the_objects_that_show_them_and_the_derived_t
     (shown,) = call(harvest, "tables")
     assert shown["id"] == tid(harvest) and shown["rows"] == ["r1", "r2", "r3", "r4"]
     assert [c["id"] for c in shown["columns"]] == ["c1", "c2", "c3"]
-    assert shown["used_by"] == harvest.model.users_of_table(tid(harvest))
+    assert shown["used_by"] == harvest.model.tables.users(tid(harvest))
     assert shown["totals"] == {"c3": "629,0"}, "a total is read, never stored (D1203)"
     assert "totals" not in table_of(harvest).to_data()
 
@@ -379,12 +379,12 @@ def test_splitting_a_box_that_is_no_merge_says_so(harvest):
 # -- taking a table away -----------------------------------------------------------------------------------------
 def test_a_table_goes_with_its_object_and_comes_back_with_both_in_one_undo(harvest):
     table = tid(harvest)
-    objects = harvest.model.users_of_table(table)
+    objects = harvest.model.tables.users(table)
     call(harvest, "remove_table", {"id": table})
     assert not harvest.model.tables and not any(o in harvest.model.objects for o in objects)
     harvest.undo("ann")
     assert table_of(harvest).paragraph("r2", "c1").text == "Courtyard"
-    assert harvest.model.users_of_table(table) == objects
+    assert harvest.model.tables.users(table) == objects
 
 
 def test_a_table_that_is_not_there_cannot_be_taken_away(harvest):

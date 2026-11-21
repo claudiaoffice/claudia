@@ -14,11 +14,7 @@ events     what a client that holds the paragraphs needs to follow them
 # ``claudia_core`` (E10.16). They are re-exported here so that an app package names everything it can do.
 from claudia_core import (  # noqa: F401
     AddObject,
-    DefineImage,
-    DefineShape,
     DescribeObject,
-    ForgetImage,
-    ForgetShape,
     LabelsChanged,  # told by the structure every app shares (step C)
     MoveObject,
     ObjectBody,
@@ -89,12 +85,8 @@ __all__ = [
     "TABLE_ROW_HEIGHT",
     "TABLE_STYLE_IDS",
     "DEFAULT_STYLE",
-    "DefineImage",
-    "DefineShape",
     "DescribeObject",
     "DeleteText",
-    "ForgetImage",
-    "ForgetShape",
     "InsertText",
     "ItemChanged",
     "BlockGenerated",

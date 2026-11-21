@@ -9,7 +9,7 @@ commands  AddSlide, RemoveSlide, SetSlideNotes, SetSlideTime, SetPrintSetup — 
           and comes from ``claudia_core``, and so is SetLanguage (D917)
 printing  PrintSetup: how the slides are printed, the layout and the kernel's PageSetup (D917)
 events    SlidesChanged, SlideNotesChanged, SlideTimeChanged, PrintSetupChanged (``ObjectsChanged``,
-          ``ShapesChanged``, ``ImagesChanged`` are core's, re-exported)
+          ``AssetsChanged`` are core's, re-exported)
 
 An object is a shared ``ObjectBody`` plus a ``SlideAnchor``: only the anchor is this app's. Placing, stacking,
 moving, resizing, rotating, styling and the image and shape assets are ``claudia_core.objects``, shared with
@@ -25,11 +25,7 @@ from claudia_core import (  # noqa: F401
     BOX,
     FORMAT,
     AddObject,
-    DefineImage,
-    DefineShape,
     DescribeObject,
-    ForgetImage,
-    ForgetShape,
     MoveObject,
     ObjectBody,
     ObjectSet,
@@ -53,10 +49,8 @@ from . import commands  # noqa: F401  (registers the commands)
 from ._version import __version__
 from .commands import AddSlide, RemoveSlide, SetPrintSetup, SetSlideNotes, SetSlideTime
 from .events import (
-    ImagesChanged,
     ObjectsChanged,
     PrintSetupChanged,
-    ShapesChanged,
     SlideNotesChanged,
     SlidesChanged,
     SlideTimeChanged,
@@ -85,14 +79,9 @@ __all__ = [
     "builtin_styles",
     "BUILTIN_STYLES",
     "DEFAULT_STYLE",
-    "DefineImage",
-    "DefineShape",
     "DescribeObject",
     "FIRST_SLIDE",
-    "ForgetImage",
-    "ForgetShape",
     "FORMAT",
-    "ImagesChanged",
     "LAYOUTS",
     "MAX_NOTES_LENGTH",
     "MAX_SLIDE_SECONDS",
@@ -121,7 +110,6 @@ __all__ = [
     "ShapeDefinition",
     "ShapeError",
     "ShapeLibrary",
-    "ShapesChanged",
     "SLIDE_HEIGHT",
     "SLIDE_WIDTH",
     "SlideAnchor",

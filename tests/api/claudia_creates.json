@@ -52,40 +52,6 @@
  "DEFAULT_STYLE": {
   "value": "'body-text'"
  },
- "DefineImage": {
-  "class": [
-   "Command"
-  ],
-  "init": "(image: 'ImageAsset') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "DefineShape": {
-  "class": [
-   "Command"
-  ],
-  "init": "(shape: 'ShapeDefinition') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineShape'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
  "DescribeObject": {
   "class": [
    "Command"
@@ -110,50 +76,6 @@
  },
  "FORMAT": {
   "value": "1"
- },
- "ForgetImage": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetImage'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "ForgetShape": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetShape'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "ImagesChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "(image_id: 'str', asset: 'ImageAsset | None') -> None",
-  "methods": {
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": []
  },
  "LAYOUTS": {
   "value": "('slides', 'handouts-2', 'handouts-3', 'handouts-4', 'handouts-6', 'handouts-9')"
@@ -508,16 +430,6 @@
   "methods": {
    "get": "(self, shape_id: 'str') -> 'ShapeDefinition | None'",
    "load": "(directories: 'Iterable[Path | str]' = ()) -> 'ShapeLibrary'"
-  },
-  "properties": []
- },
- "ShapesChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "(shape_id: 'str', definition: 'ShapeDefinition | None') -> None",
-  "methods": {
-   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },

@@ -15,7 +15,7 @@ from claudia_composes.search import (
     text_texts,
 )
 from claudia_core import (
-    DefineShape,
+    DefineAsset,
     Document,
     MemoryStore,
     ObjectBody,
@@ -53,7 +53,10 @@ def add_box(d, block="b1", offset=0, words="a red note", description="", kind="t
     shape = None
     if kind == "shape":
         shape = "rectangle"
-        d.execute(DefineShape(ShapeDefinition("rectangle", "Rectangle", "M0 0H100V100H0Z")), author="ann")
+        d.execute(
+            DefineAsset("shape", ShapeDefinition("rectangle", "Rectangle", "M0 0 L100 0 L100 100 L0 100 Z").to_data()),
+            author="ann",
+        )
     body = ObjectBody(
         object_id,
         kind,

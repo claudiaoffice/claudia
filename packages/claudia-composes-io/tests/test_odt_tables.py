@@ -269,8 +269,10 @@ class TestEditsToAKeptFile:
         data = self.original()
         baseline, current = odt_to_text(data), odt_to_text(data)
         (definition,) = current.tables.values()
-        current.tables[definition.id] = definition.with_entries(
-            [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+        current.tables.put(
+            definition.with_entries(
+                [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+            )
         )
         with pytest.raises(UnsupportedEdit):
             apply_edits_to_odt(data, baseline, current)

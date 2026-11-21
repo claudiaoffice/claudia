@@ -511,11 +511,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "lists": self.lists.to_data(),
             "schemes": self.schemes.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
-            "shapes": self.shapes_to_data(),
-            "images": self.images_to_data(),
+            **self.assets_to_data(),  # images, shapes, diagrams, renderings, tables (D1431)
             "objects": self.objects_to_data(),
-            "renderings": self.renderings_to_data(),
-            "tables": self.tables_to_data(),
             "names": dict(self.block_names),
             "descriptions": dict(self.block_descriptions),
             "last": dict(self._last),
@@ -538,14 +535,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         model = cls(blocks, styles, palette, page, state.get("language"), lists, schemes)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
-        model.restore_objects(  # schema 3 and earlier had no objects
-            state.get("objects", ()),
-            state.get("images", ()),
-            state.get("shapes", ()),
-            (),
-            state.get("renderings", ()),
-            state.get("tables", ()),  # schema 14 and earlier: no tables
-        )
+        model.restore_objects(state.get("objects", ()), state)  # schema 3 and earlier had no objects
         model.block_names = dict(state.get("names", {}))  # schema 10 and earlier: no paragraph had a name
         model.block_descriptions = dict(state.get("descriptions", {}))  # schema 15 and earlier: nothing was written
         model._last = dict(state.get("last", model._last))

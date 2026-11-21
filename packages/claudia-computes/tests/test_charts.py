@@ -10,10 +10,7 @@ from claudia_computes import (
     CellRef,
     ChartError,
     ChartSpec,
-    DefineDiagram,
-    DefineImage,
     DeleteRows,
-    ForgetDiagram,
     InsertRows,
     NamedRange,
     RangeRef,
@@ -23,12 +20,11 @@ from claudia_computes import (
     Sheet,
     SheetId,
     Structure,
-    UpdateDiagram,
     WorkbookModel,
 )
-from claudia_computes.events import ChartsChanged, DiagramsChanged, ObjectsChanged
+from claudia_computes.events import ChartsChanged, ObjectsChanged
 from claudia_computes.names import key_of
-from claudia_core import Batch, Document, MemoryStore, encode
+from claudia_core import AssetsChanged, Batch, DefineAsset, Document, ForgetAsset, MemoryStore, UpdateAsset, encode
 
 
 def collect(doc):
@@ -77,7 +73,7 @@ def test_a_chart_definition_rejects_unknown_keys_and_a_wrong_format():
 def test_a_chart_definition_needs_a_sheet_this_document_actually_has(doc):
     spec = chart_spec(sheet="nope")
     with pytest.raises(ValueError, match="does not know the sheet"):
-        doc.execute(DefineDiagram(spec.to_data()), author="ana")
+        doc.execute(DefineAsset("diagram", spec.to_data()), author="ana")
 
 
 def test_a_chart_definitions_range_must_fit_inside_the_sheet(doc):
@@ -85,10 +81,10 @@ def test_a_chart_definitions_range_must_fit_inside_the_sheet(doc):
 
     spec = chart_spec(first=(0, 0), last=(MAX_ROWS, 0))  # one row past the edge
     with pytest.raises(ValueError, match="inside the sheet"):
-        doc.execute(DefineDiagram(spec.to_data()), author="ana")
+        doc.execute(DefineAsset("diagram", spec.to_data()), author="ana")
     spec = chart_spec(first=(0, 0), last=(0, MAX_COLS))
     with pytest.raises(ValueError, match="inside the sheet"):
-        doc.execute(DefineDiagram(spec.to_data()), author="ana")
+        doc.execute(DefineAsset("diagram", spec.to_data()), author="ana")
 
 
 # -- the whole story: define, place as a floating object, move, remove, undo ------------------------------------
@@ -105,7 +101,7 @@ def test_a_definition_may_be_shown_by_a_tab_and_a_floating_object_at_once(doc):
     spec = put_chart_spec(doc)
     doc.execute(add(diagram_object("d1", spec_id=spec.id)), author="ana")
     doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
-    assert set(doc.model.users_of_diagram(spec.id)) == {"d1", "t1"}
+    assert set(doc.model.diagrams.users(spec.id)) == {"d1", "t1"}
     assert len(doc.model.diagrams) == 1, "the definition is only kept once"
 
 
@@ -126,7 +122,7 @@ def test_a_diagram_object_cannot_point_at_a_shape_and_an_image_object_not_at_a_d
     with pytest.raises(ValueError, match="does not know the diagram 'circle'"):
         doc.execute(add(diagram_object(spec_id="circle")), author="ana")
     asset = image_asset()
-    doc.execute(DefineImage(asset), author="ana")
+    doc.execute(DefineAsset("image", asset.to_data()), author="ana")
     bad = image_object(asset=asset, ref="c1")
     with pytest.raises(ValueError, match="does not know the image 'c1'"):
         doc.execute(add(bad), author="ana")
@@ -137,22 +133,22 @@ def test_a_diagram_in_use_cannot_be_forgotten_and_one_that_exists_cannot_be_defi
     spec = put_chart_spec(doc)
     doc.execute(add(diagram_object(spec_id=spec.id)), author="ana")
     with pytest.raises(ValueError, match="in use"):
-        doc.execute(ForgetDiagram(spec.id), author="ana")
+        doc.execute(ForgetAsset("diagram", spec.id), author="ana")
     with pytest.raises(ValueError, match="already"):
-        doc.execute(DefineDiagram(spec.to_data()), author="ana")
+        doc.execute(DefineAsset("diagram", spec.to_data()), author="ana")
     doc.execute(RemoveObject("d1"), author="ana")
-    doc.execute(ForgetDiagram(spec.id), author="ana")
+    doc.execute(ForgetAsset("diagram", spec.id), author="ana")
     assert doc.model.diagrams == {}
 
 
 def test_a_diagram_shown_only_by_a_tab_cannot_be_forgotten_either(doc):
-    """A tab is as much a user of a definition as a floating object is (``WorkbookModel.users_of_diagram``)."""
+    """A tab is as much a user of a definition as a floating object is (``WorkbookModel.users_of``)."""
     spec = put_chart_spec(doc)
     doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
     with pytest.raises(ValueError, match="in use"):
-        doc.execute(ForgetDiagram(spec.id), author="ana")
+        doc.execute(ForgetAsset("diagram", spec.id), author="ana")
     doc.execute(RemoveChart("t1"), author="ana")
-    doc.execute(ForgetDiagram(spec.id), author="ana")  # no user left
+    doc.execute(ForgetAsset("diagram", spec.id), author="ana")  # no user left
 
 
 # -- editing a diagram in place: the one way its content ever changes --------------------------------------------
@@ -161,7 +157,7 @@ def test_updating_a_diagram_changes_it_in_place_for_every_user_and_undo_restores
     doc.execute(add(diagram_object(spec_id=spec.id)), author="ana")
     doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
     changed = spec.to_data() | {"title": "After"}
-    doc.execute(UpdateDiagram(spec.id, changed), author="ana")
+    doc.execute(UpdateAsset("diagram", spec.id, changed), author="ana")
     assert doc.model.diagrams[spec.id].title == "After"
     doc.undo("ana")
     assert doc.model.diagrams[spec.id].title == "Before"
@@ -170,7 +166,7 @@ def test_updating_a_diagram_changes_it_in_place_for_every_user_and_undo_restores
 def test_updating_a_diagram_cannot_change_its_id(doc):
     spec = put_chart_spec(doc)
     with pytest.raises(ValueError, match="cannot change its id"):
-        doc.execute(UpdateDiagram(spec.id, chart_spec("other").to_data()), author="ana")
+        doc.execute(UpdateAsset("diagram", spec.id, chart_spec("other").to_data()), author="ana")
 
 
 # -- chart tabs: add, remove, undo, and what they refuse ---------------------------------------------------------
@@ -236,11 +232,11 @@ def test_removing_a_sheet_removes_its_diagram_objects_but_not_their_definitions(
 def test_views_hear_about_diagrams(doc):
     seen = collect(doc)
     spec = chart_spec()
-    doc.execute(DefineDiagram(spec.to_data()), author="ana")
-    changed = [e for e in seen if isinstance(e, DiagramsChanged)]
+    doc.execute(DefineAsset("diagram", spec.to_data()), author="ana")
+    changed = [e for e in seen if (isinstance(e, AssetsChanged) and e.kind.name == "diagram")]
     assert changed[0].to_data() == {"type": "diagram", "id": spec.id, "definition": spec.to_data()}
-    doc.execute(ForgetDiagram(spec.id), author="ana")
-    assert [e for e in seen if isinstance(e, DiagramsChanged)][-1].to_data() == {
+    doc.execute(ForgetAsset("diagram", spec.id), author="ana")
+    assert [e for e in seen if (isinstance(e, AssetsChanged) and e.kind.name == "diagram")][-1].to_data() == {
         "type": "diagram",
         "id": spec.id,
         "definition": None,
@@ -277,7 +273,7 @@ def test_the_history_has_a_sentence_for_a_diagram_object_and_a_chart_tab():
 def test_command_data_round_trips_for_diagrams_and_charts():
     spec = chart_spec()
     obj = diagram_object(spec_id=spec.id)
-    core_commands = (DefineDiagram(spec.to_data()), ForgetDiagram(spec.id), add(obj))
+    core_commands = (DefineAsset("diagram", spec.to_data()), ForgetAsset("diagram", spec.id), add(obj))
     for command in core_commands:
         # Diagram definitions are shared by all three apps, so their commands are namespaced ``core.`` (E10.16).
         assert command.kind.startswith("core.")
@@ -302,7 +298,9 @@ def test_equal_states_serialize_equally_with_a_shared_definition_whatever_order(
     doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
     other = Document(WorkbookModel(), store=MemoryStore())
     other.execute(AddSheet(S1, "Sheet1"), author="x")
-    other.execute(Batch((DefineDiagram(spec.to_data()), add(diagram_object("d1", spec_id=spec.id)))), author="x")
+    other.execute(
+        Batch((DefineAsset("diagram", spec.to_data()), add(diagram_object("d1", spec_id=spec.id)))), author="x"
+    )
     other.execute(AddChart("t1", "Revenue", spec.id), author="x")
     assert other.model.serialize() == doc.model.serialize()
 
@@ -335,7 +333,7 @@ def test_a_charts_range_may_end_up_pointing_at_rows_that_no_longer_exist():
 def test_a_chart_says_which_cells_it_reads_now():
     model = WorkbookModel()
     model.sheets[SheetId(S1)] = Sheet(SheetId(S1), "Data")
-    model.define_diagram(chart_spec("c1", first=(0, 0), last=(3, 2), header_row=False))
+    model.diagrams.define(chart_spec("c1", first=(0, 0), last=(3, 2), header_row=False))
     cells = model.chart_cells("c1")
     assert cells is not None
     assert (cells[0].sheet, cells[0].first, cells[0].last, cells[1]) == (
@@ -352,7 +350,7 @@ def test_a_chart_that_follows_a_name_says_the_cells_the_name_is_today_and_none_w
     model.names.put(
         NamedRange("Sales", None, RangeRef(CellRef(1, 1, SheetId(S1)), CellRef(4, 2, SheetId(S1))), header=True)
     )
-    model.define_diagram(ChartSpec(id="c1", kind="bar", source="Sales"))
+    model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Sales"))
     cells = model.chart_cells("c1")
     assert cells is not None and (cells[0].first, cells[0].last, cells[1]) == (
         CellRef(1, 1, SheetId(S1)),

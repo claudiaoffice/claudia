@@ -205,10 +205,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "descriptions": dict(self.slide_descriptions),
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
-            "shapes": self.shapes_to_data(),
-            "images": self.images_to_data(),
+            **self.assets_to_data(),  # images, shapes, diagrams, renderings, tables (D1431)
             "objects": self.objects_to_data(),
-            "renderings": self.renderings_to_data(),
             "print_setup": self.print_setup.to_data(),
             "language": self.language,
             "lists": self.lists.to_data(),
@@ -232,9 +230,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model.slide_names = {k: v for k, v in state.get("names", {}).items() if k in model.slides and v}
         # schema 16 and earlier: nothing was written about a slide
         model.slide_descriptions = {k: v for k, v in state.get("descriptions", {}).items() if k in model.slides and v}
-        model.restore_objects(
-            state["objects"], state["images"], state["shapes"], renderings=state.get("renderings", ())
-        )
+        model.restore_objects(state["objects"], state)
         model.lists = ListBook.from_data(state.get("lists", ()))  # schema 12 and earlier: no lists
         model.schemes = SchemeBook.from_data(state.get("schemes"))  # schema 13 and earlier: the built-in ones
         model.structure = TextStructure(model)  # the clients learn the labels with the document

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 
-from claudia_core import AddObject, Batch, DefineShape, ObjectBody, ObjectModel, SetText, paragraph_for, word_changes
+from claudia_core import AddObject, Batch, DefineAsset, ObjectBody, ObjectModel, SetText, paragraph_for, word_changes
 from claudia_creates import ShapeLibrary
 
 from .i18n import msg
@@ -83,7 +83,7 @@ def add_shape_methods(
             outline = library.get(shape)
             if outline is None:
                 raise RequestError("bad_request", msg("add_object: this server has no shape {shape!r}", shape=shape))
-            steps.append(DefineShape(outline))
+            steps.append(DefineAsset("shape", outline.to_data()))
         object_id = fresh_id("o", model.objects)
         words = paragraph_for(object_id, words_styles[kind], text, ctx.user)
         body = ObjectBody(object_id, kind, w, h, STYLE_OF_KIND[kind], words, ref=shape, name=default_name(ctx, kind))

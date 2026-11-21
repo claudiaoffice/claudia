@@ -14,7 +14,7 @@ from claudia_computes import (
     RenameName,
     WorkbookModel,
 )
-from claudia_core import DefineImage, Document, MemoryStore, RenameThing
+from claudia_core import DefineAsset, Document, MemoryStore, RenameThing
 
 
 def ids_of(doc) -> dict[str, str]:
@@ -185,7 +185,7 @@ def test_an_old_object_added_under_the_text_of_a_name_replays():
         registry.decode({"k": "computes.DefineName", "s": 1, "d": {"name": old_name_data("Logo", "A1:B2")}}),
         author="ana",
     )
-    doc.execute(DefineImage(image_asset()), author="ana")
+    doc.execute(DefineAsset("image", image_asset().to_data()), author="ana")
     obj = put_image_command(name="logo")
     command = registry.decode({"k": "core.AddObject", "s": 4, "d": obj.to_data()})
     assert command.legacy_names

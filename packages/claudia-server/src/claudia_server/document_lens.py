@@ -184,7 +184,7 @@ class DocumentLens:
             return ""
         lines = []
         for table_id, definition in sorted(model.tables.items())[:MAX_TABLES]:
-            users = model.users_of_table(table_id)
+            users = model.tables.users(table_id)
             shown = model.get_object(users[0]) if users else None
             name = f' "{_flat(shown.body.name, 40)}"' if shown is not None and shown.body.name else ""
             where = f", hangs from {shown.anchor.block}" if shown is not None else ""
@@ -348,7 +348,7 @@ class TextRecorder:
             if table_id not in model.tables:
                 lines.append(f"Table {table_id} is gone.")
                 continue
-            users = model.users_of_table(table_id)
+            users = model.tables.users(table_id)
             name = model.get_object(users[0]).body.name if users else ""
             lines.append(describe_table(table_view(model, table_id), name or ""))
         if len(self._tables) > MAX_REPORTED_TABLES:

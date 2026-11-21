@@ -25,7 +25,7 @@ def import_checks(model: WorkbookModel) -> None:
 def modify(model: WorkbookModel) -> WorkbookModel:
     moved = model.objects["o1"]
     model.replace_object(VisualObject(replace(moved.body, w=600, h=240), CellAnchor(DATA, 12, 1)))
-    model.define_diagram(replace(model.diagrams["c1"], id="c9", title="Another", series_in="rows"))
+    model.diagrams.define(replace(model.diagrams["c1"], id="c9", title="Another", series_in="rows"))
     body = ObjectBody("o9", "diagram", 300, 200, "plain-image", ref="c9", description="Sales by region")
     model.insert_object(VisualObject(body, CellAnchor(DATA, 20, 1)))
     return model

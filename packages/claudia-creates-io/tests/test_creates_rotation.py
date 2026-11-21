@@ -30,7 +30,7 @@ def a_deck(rotation: int = 0, kind: str = "shape") -> SlideModel:
     model = SlideModel()
     library = ShapeLibrary.load()
     for shape_id in ("circle", "rectangle", "triangle"):
-        model.define_shape(library.get(shape_id))
+        model.shapes.define(library.get(shape_id))
     model.insert_slide("s1")
     if kind == "shape":
         placed = an_object("o1", "s1", "shape", 400, 300, 400, 200, "plain-shape", "boxed", "rectangle")

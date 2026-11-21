@@ -29,6 +29,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- **Breaking** — `DefineImage`, `ForgetImage`, `DefineShape` and `ForgetShape` are no longer re-exported:
+  claudia-core's `DefineAsset` and `ForgetAsset` replace them (D1431).
 - `TextModel.settle` tells the clients a heading's name when it changes (`ThingRenamed`): a paragraph that becomes a
   heading is called by its words at once, a retyped heading by its new words, and a heading that is a paragraph again by
   the name it was given (D1311; the # list showed "Paragraph 1" for a new heading until a reload).

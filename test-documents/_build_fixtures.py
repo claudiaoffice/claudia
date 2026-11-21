@@ -915,7 +915,7 @@ def _library_charts_through_libreoffice(to: str) -> bytes:
     first = ChartSpec(id="c1", kind="bar", range=whole, title="Sales", x_title="Region", y_title="Euro")
     second = ChartSpec(id="c2", kind="bar", range=whole, series_in="rows", legend=False)
     for spec, object_id, anchor in ((first, "o1", (6, 1)), (second, "o2", (6, 8))):
-        model.define_diagram(spec)
+        model.diagrams.define(spec)
         body = ObjectBody(object_id, "diagram", 480, 300, "plain-image", ref=spec.id)
         model.insert_object(VisualObject(body, CellAnchor(sheet_id, *anchor)))
     with tempfile.TemporaryDirectory() as folder:
@@ -978,7 +978,7 @@ def _library_pictures_through_libreoffice(to: str) -> bytes:
         (("b2", 22, "Two cyclists on a hill"), ("b3", 0, "A small mark")), start=1
     ):
         asset = decode_image(gif(number))
-        model.define_image(asset)
+        model.images.define(asset)
         record = ImageImport.from_data(
             {
                 "asset": asset.id,
@@ -1036,7 +1036,7 @@ def _library_boxes_through_libreoffice(to: str) -> bytes:
         ]
     )
     for shape in ("circle", "rectangle", "triangle"):
-        model.define_shape(primitive(shape))
+        model.shapes.define(primitive(shape))
     boxes = (
         ("text", None, "b2", 22, (240, 60), 0, "A note in a box", "A note about the boxes"),
         ("shape", "circle", "b3", 0, (90, 90), 0, "Dot", "A dot"),

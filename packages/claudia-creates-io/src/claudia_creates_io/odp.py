@@ -226,7 +226,7 @@ class _Probe:
             definition = library.get(shape_id)
             if definition is None:  # pragma: no cover - the three ids are always shipped
                 raise ValueError(f"the built-in shape library has no shape {shape_id!r}")
-            self.model.define_shape(definition)
+            self.model.shapes.define(definition)
 
     def holds(
         self,
@@ -242,7 +242,7 @@ class _Probe:
             if asset is None:
                 return False
             if asset.id not in self.model.images:
-                self.model.define_image(asset)
+                self.model.images.define(asset)
             body = picture_body("o0", asset, (box[2], box[3]), rotation=box[4])
         else:
             style, words = _default_styles(kind)
@@ -655,7 +655,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
             if found.kind == "image":
                 assert found.asset is not None  # the scan keeps an image only with its asset
                 if found.asset.id not in model.images:
-                    model.define_image(found.asset)
+                    model.images.define(found.asset)
                 body = picture_body(
                     found.id,
                     found.asset,
@@ -678,7 +678,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                 if shape not in defined and shape is not None:
                     definition = library.get(shape)
                     assert definition is not None  # the three ids are always shipped
-                    model.define_shape(definition)
+                    model.shapes.define(definition)
                     defined.add(shape)
             body = ObjectBody(
                 found.id,

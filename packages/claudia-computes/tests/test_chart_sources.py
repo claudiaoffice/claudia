@@ -7,8 +7,9 @@ from conftest import S1, chart_spec, reopen
 from names_helpers import SALES, define, fill
 from test_sql import QUERY, result_name
 
-from claudia_computes import ChartError, ChartSpec, DefineDiagram, RemoveName, UpdateDiagram
+from claudia_computes import ChartError, ChartSpec, RemoveName
 from claudia_computes.refs import SheetId
+from claudia_core import DefineAsset, UpdateAsset
 
 
 def sourced(spec_id="c1", source="Sales", scope=None, **changes) -> ChartSpec:
@@ -16,7 +17,7 @@ def sourced(spec_id="c1", source="Sales", scope=None, **changes) -> ChartSpec:
 
 
 def draw(doc, spec: ChartSpec) -> dict:
-    doc.execute(DefineDiagram(spec.to_data()), author="ana")
+    doc.execute(DefineAsset("diagram", spec.to_data()), author="ana")
     return doc.model.chart_figure(spec.id)
 
 
@@ -94,7 +95,7 @@ def test_a_named_range_without_a_header_row_reads_its_first_row_as_data(sales):
 
 def test_a_source_survives_the_log_and_may_replace_a_range(sales):
     draw(sales, sourced())
-    sales.execute(UpdateDiagram("c1", sourced().to_data()), author="ana")
+    sales.execute(UpdateAsset("diagram", "c1", sourced().to_data()), author="ana")
     again = reopen(sales)
     assert again.model.chart_figure("c1") == sales.model.chart_figure("c1")
     assert sales.model.charts_reading(SheetId(S1)) == []  # a name, not a sheet, is what it reads

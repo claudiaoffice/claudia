@@ -6,6 +6,9 @@
  "ASPECT_TOLERANCE": {
   "value": "1"
  },
+ "ASSET_KINDS": {
+  "value": "(AssetKind(name='table', object_kind='table', noun='table', read=<function <lambda>>, editable=True, check=<function <lambda>>, blank=None, event_key='definition', in_use='is shown by'), AssetKind(name='shape', object_kind='shape', noun='shape', read=<function <lambda>>, editable=False, check=None, blank=None, event_key='definition', in_use='is in use by'), AssetKind(name='image', object_kind='image', noun='image', read=<function <lambda>>, editable=False, check=None, blank=<function <lambda>>, event_key='asset', in_use='is in use by'), AssetKind(name='diagram', object_kind='diagram', noun='diagram', read=<function <lambda>>, editable=True, check=None, blank=<function <lambda>>, event_key='definition', in_use='is in use by'), AssetKind(name='rendering', object_kind='rendered', noun='rendered text', read=<function <lambda>>, editable=True, check=<function _check_rendering>, blank=<function <lambda>>, event_key='definition', in_use='is in use by'))"
+ },
  "AddObject": {
   "class": [
    "Command"
@@ -44,6 +47,42 @@
   ],
   "init": "(revision: 'Revision', command: 'Command', inverse: 'Command', entry: 'Entry') -> None",
   "methods": {},
+  "properties": []
+ },
+ "AssetKind": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', object_kind: 'str', noun: 'str', read: 'Callable[[Any, dict], Asset]', editable: 'bool' = False, check: 'Callable[[Any, Any, Any], None] | None' = None, blank: 'Callable[[Any, dict], dict] | None' = None, event_key: 'str' = 'definition', in_use: 'str' = 'is in use by') -> None",
+  "methods": {},
+  "properties": []
+ },
+ "AssetStore": {
+  "class": [
+   "Mapping",
+   "Generic"
+  ],
+  "init": "(kind: 'AssetKind', model: 'Any') -> 'None'",
+  "methods": {
+   "define": "(self, asset: 'T') -> 'None'",
+   "forget": "(self, asset_id: 'str') -> 'T'",
+   "known": "(self, asset_id: 'str') -> 'T'",
+   "put": "(self, asset: 'T') -> 'None'",
+   "replace": "(self, asset: 'T') -> 'T'",
+   "restore": "(self, stored: 'Iterable[dict]') -> 'None'",
+   "to_data": "(self) -> 'list[dict]'",
+   "users": "(self, asset_id: 'str') -> 'list[str]'"
+  },
+  "properties": []
+ },
+ "AssetsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(kind: 'AssetKind', asset_id: 'str', asset: 'Asset | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
   "properties": []
  },
  "BASE_FONT_PX": {
@@ -412,67 +451,16 @@
  "DELETE_HOWS": {
   "value": "('assign', 'rebase')"
  },
- "DefineDiagram": {
+ "DefineAsset": {
   "class": [
    "Command"
   ],
-  "init": "(definition: 'dict') -> None",
+  "init": "(asset_kind: 'str', data: 'dict') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineDiagram'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineAsset'",
    "redacted": "(self) -> 'Command'",
-   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "DefineImage": {
-  "class": [
-   "Command"
-  ],
-  "init": "(image: 'ImageAsset') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "DefineRendering": {
-  "class": [
-   "Command"
-  ],
-  "init": "(definition: 'dict') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineRendering'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "DefineShape": {
-  "class": [
-   "Command"
-  ],
-  "init": "(shape: 'ShapeDefinition') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineShape'",
-   "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel] | None') -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -605,16 +593,6 @@
   "properties": [
    "id"
   ]
- },
- "DiagramsChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "(diagram_id: 'str', definition: 'DiagramDefinition | None') -> None",
-  "methods": {
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": []
  },
  "Document": {
   "class": [
@@ -833,65 +811,14 @@
   },
   "properties": []
  },
- "ForgetDiagram": {
+ "ForgetAsset": {
   "class": [
    "Command"
   ],
-  "init": "(id: 'str') -> None",
+  "init": "(asset_kind: 'str', id: 'str') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetDiagram'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "ForgetImage": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetImage'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "ForgetRendering": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetRendering'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "ForgetShape": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetShape'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetAsset'",
    "redacted": "(self) -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
@@ -1038,16 +965,6 @@
    "blanked": "(self) -> 'ImageImport'",
    "from_data": "(data: 'dict') -> 'ImageImport'",
    "masked": "(self, viewer: 'str') -> 'ImageImport'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": []
- },
- "ImagesChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "(image_id: 'str', asset: 'ImageAsset | None') -> None",
-  "methods": {
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
@@ -1413,6 +1330,7 @@
   "init": "() -> 'None'",
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'A'",
+   "assets_to_data": "(self) -> 'dict[str, list[dict]]'",
    "blank_diagram": "(definition: 'dict') -> 'dict'",
    "blank_objects": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "can_turn": "(self, body: 'ObjectBody') -> 'bool'",
@@ -1424,24 +1342,11 @@
    "check_thing_name": "(self, thing_id: 'str', name: 'str', *, shared: 'bool' = True) -> 'None'",
    "close_container": "(self, container: 'str') -> 'None'",
    "containers": "(self) -> 'Iterable[str]'",
-   "define_diagram": "(self, definition: 'DiagramDefinition') -> 'None'",
-   "define_image": "(self, image: 'ImageAsset') -> 'None'",
-   "define_rendering": "(self, definition: 'RenderedDefinition') -> 'None'",
-   "define_shape": "(self, shape: 'ShapeDefinition') -> 'None'",
-   "define_table": "(self, definition: 'TableDef') -> 'None'",
    "delete_object": "(self, object_id: 'str') -> 'tuple[VisualObject[A], int]'",
    "diagram_from_data": "(self, data: 'dict') -> 'DiagramDefinition'",
-   "diagrams_to_data": "(self) -> 'list[dict]'",
    "entry_words": "(self, paragraph_id: 'str') -> 'Paragraph'",
-   "forget_diagram": "(self, diagram_id: 'str') -> 'DiagramDefinition'",
-   "forget_image": "(self, image_id: 'str') -> 'ImageAsset'",
-   "forget_rendering": "(self, rendering_id: 'str') -> 'RenderedDefinition'",
-   "forget_shape": "(self, shape_id: 'str') -> 'ShapeDefinition'",
-   "forget_table": "(self, table_id: 'str') -> 'TableDef'",
    "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
-   "get_table": "(self, table_id: 'str') -> 'TableDef'",
    "has_thing": "(self, thing_id: 'str') -> 'bool'",
-   "images_to_data": "(self) -> 'list[dict]'",
    "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None, *, shared_names: 'bool' = True) -> 'None'",
    "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'ObjectsChanged'",
    "is_entry": "(self, paragraph_id: 'str') -> 'bool'",
@@ -1468,33 +1373,29 @@
    "remove_object_text": "(self, object_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], ObjectsChanged]'",
    "rename_command": "(self, thing_id: 'str', name: 'str') -> 'Command'",
    "rename_thing": "(self, ctx: 'Context', thing_id: 'str', name: 'str') -> 'tuple[str, tuple[Command, ...]]'",
-   "renderings_to_data": "(self) -> 'list[dict]'",
-   "replace_diagram": "(self, definition: 'DiagramDefinition') -> 'DiagramDefinition'",
    "replace_object": "(self, obj: 'VisualObject[A]') -> 'VisualObject[A]'",
-   "replace_rendering": "(self, definition: 'RenderedDefinition') -> 'RenderedDefinition'",
-   "replace_table": "(self, definition: 'TableDef') -> 'TableDef'",
-   "restore_objects": "(self, objects: 'Iterable[dict]', images: 'Iterable[dict]' = (), shapes: 'Iterable[dict]' = (), diagrams: 'Iterable[dict]' = (), renderings: 'Iterable[dict]' = (), tables: 'Iterable[dict]' = ()) -> 'None'",
+   "restore_objects": "(self, objects: 'Iterable[dict]', assets: 'Mapping[str, Iterable[dict]] | None' = None) -> 'None'",
    "restyle_users": "(self, old: 'str', new: 'str') -> 'list[Command]'",
    "room_for_new_object": "(self, anchor: 'A | None') -> 'int | None'",
    "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
    "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
-   "shapes_to_data": "(self) -> 'list[dict]'",
    "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
-   "tables_to_data": "(self) -> 'list[dict]'",
    "thing_description": "(self, thing_id: 'str') -> 'str'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "turn_command": "(self, object_id: 'str', rotation: 'int') -> 'RotateObject'",
    "turned_anchor": "(self, obj: 'VisualObject[A]', rotation: 'int') -> 'A'",
    "unnamed_things": "(self) -> 'Iterator[tuple[str, str]]'",
-   "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
-   "users_of_image": "(self, image_id: 'str') -> 'list[str]'",
-   "users_of_rendering": "(self, rendering_id: 'str') -> 'list[str]'",
-   "users_of_shape": "(self, shape_id: 'str') -> 'list[str]'",
-   "users_of_table": "(self, table_id: 'str') -> 'list[str]'"
+   "users_of": "(self, kind: 'AssetKind', asset_id: 'str') -> 'list[str]'"
   },
-  "properties": []
+  "properties": [
+   "diagrams",
+   "images",
+   "renderings",
+   "shapes",
+   "tables"
+  ]
  },
  "ObjectSet": {
   "class": [
@@ -1913,16 +1814,6 @@
    "redacted": "(self) -> 'RenderedDefinition'",
    "to_data": "(self) -> 'dict'",
    "with_picture": "(self, image: 'str | None', renderer: 'str') -> 'RenderedDefinition'"
-  },
-  "properties": []
- },
- "RenderingsChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "(rendering_id: 'str', definition: 'RenderedDefinition | None') -> None",
-  "methods": {
-   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -2506,16 +2397,6 @@
   "methods": {},
   "properties": []
  },
- "ShapesChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "(shape_id: 'str', definition: 'ShapeDefinition | None') -> None",
-  "methods": {
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": []
- },
  "Show": {
   "value": "<TypeAliasType>"
  },
@@ -2862,33 +2743,16 @@
   "methods": {},
   "properties": []
  },
- "UpdateDiagram": {
+ "UpdateAsset": {
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', definition: 'dict') -> None",
+  "init": "(asset_kind: 'str', id: 'str', data: 'dict') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateDiagram'",
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateAsset'",
    "redacted": "(self) -> 'Command'",
-   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "UpdateRendering": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str', definition: 'dict') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateRendering'",
-   "redacted": "(self) -> 'Command'",
+   "redacted_in": "(self, model: 'type[DocumentModel] | None') -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -2926,6 +2790,9 @@
    "what_if": "(self) -> 'WhatIf'"
   },
   "properties": []
+ },
+ "asset_kind": {
+  "function": "(name: 'str') -> 'AssetKind'"
  },
  "asset_of": {
   "function": "(data: 'bytes | None') -> 'ImageAsset | None'"
