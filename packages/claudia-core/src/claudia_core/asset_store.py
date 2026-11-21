@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from .assets import ImageAsset
 from .renderings import RenderedDefinition
@@ -179,7 +179,7 @@ class AssetStore[T: Asset](Mapping[str, T]):
     def restore(self, stored: Iterable[dict]) -> None:
         """Put back what :meth:`to_data` stored."""
         for data in stored:
-            self.put(self.kind.read(self._model, data))  # type: ignore[arg-type] - a kind reads its own asset type, T
+            self.put(cast("T", self.kind.read(self._model, data)))  # a kind reads its own type of asset
 
 
 @dataclass(frozen=True)
