@@ -48,7 +48,7 @@ columns that differs from creates is a bug or a stated adaptation.
 | Right press elsewhere | The app's own menu (cells, headers, paragraphs) as today; Shift+right button still gives the browser's menu there | built | built | built |
 | Double click, `Enter`, `F2` | Writes in a text box, a shape or a rendered container; a picture or a chart has no words (D1225) | built | rendered only | rendered only |
 | `Delete` | Removes the selected object | built | built | built |
-| Arrow keys | Nudge the object (Shift: larger steps; the exact steps are for the shared module to fix). In composes up/down hang it from the previous or next paragraph (built), left/right change the offset | built (to be checked) | **missing** | partly |
+| Arrow keys | Nudge the object (Shift: larger steps; the exact steps are for the shared module to fix). In composes up/down hang it from the previous or next paragraph, left/right change the offset by 10, with Shift by 1 (D1390) | built | **missing** | partly |
 | `Esc` | Drops a drag or a turn in progress; otherwise deselects; in a table cell it leaves the table for the text (D1224) | built | deselects | deselects |
 | Press elsewhere | Deselects | built | built | built |
 | `Tab`, Edit ▸ Select Next Object, Ctrl+Alt+PageUp/Down | Steps through the objects of the page, sheet or slide, so everything above works without a pointer (BITV) | to be checked | PageUp/Down only | Select Next Object |

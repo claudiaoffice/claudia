@@ -1007,6 +1007,7 @@ const ARROWS: Record<string, [number, number]> = { ArrowUp: [-1, 0], ArrowDown: 
 
 function onKey(event: KeyboardEvent) {
   if (props.edit || containerEditing.value) return
+  if ((event.target as HTMLElement).closest('[role=dialog]')) return // a popover in the grid (Rotate by…) has its own keys: Enter there submits
   if ((event.key === 'Enter' || event.key === 'F2') && selectedObject.value && state.objects[selectedObject.value]?.kind === 'rendered') {
     event.preventDefault()
     return beginContainerEdit(state.objects[selectedObject.value])
@@ -1348,7 +1349,8 @@ defineExpose({
         </div>
 
         <!-- my selection: the handles, drawn once for the three apps (the outline is the object's own) -->
-        <div v-if="selected && selectedBox" class="mine" data-testid="object-frame" :style="mineStyle">
+        <!-- the handles are the object's: their mousedown, which follows the pointerdown, is no cell selection either -->
+        <div v-if="selected && selectedBox" class="mine" data-testid="object-frame" :style="mineStyle" @mousedown.stop>
           <ObjectFrame :handles="handles" :turnable="turnable" :turn="selectedTurn" :turning="interaction.turningNow(selected.id)" :below="handleBelow" @handle="onHandleDown" @turn-down="onTurnDown" @turn-key="onTurnKey" />
         </div>
 

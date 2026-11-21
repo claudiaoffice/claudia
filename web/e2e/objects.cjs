@@ -99,7 +99,7 @@ const APPS = {
     ready: '[data-testid=slide]',
     objects: '[data-testid=slide] .obj',
     below: async () => '', // the slide has nothing under an object but the slide
-    editable: () => true,
+    editable: (kind) => kind !== 'image' && kind !== 'diagram', // a picture and a chart have no words (D1225)
     wrap: false,
     grid: true,
   },
@@ -207,6 +207,14 @@ const entries = (page) => page.locator('ol.log > li.entry').count()
 const box = async (locator) => (await locator.boundingBox()) ?? assert.fail('the object is not on the screen')
 const centre = (b) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 })
 const moved = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
+/** The object leaves the screen at once; its entry in the history comes with the server's answer, a moment later. */
+async function moreEntriesThan(page, n, what) {
+  try {
+    await page.waitForFunction((n) => document.querySelectorAll('ol.log > li.entry').length > n, n, { timeout: 8000 })
+  } catch {
+    throw new Error(`${what}: the history has ${await entries(page)} entries, more than ${n} expected`)
+  }
+}
 async function waitEntries(page, n, what) {
   try {
     await page.waitForFunction((n) => document.querySelectorAll('ol.log > li.entry').length === n, n, { timeout: 8000 })
@@ -223,8 +231,8 @@ async function drag(page, from, to, { steps = 10, release = true } = {}) {
 const frames = (page) => page.locator('[data-handle=se]').count()
 const selectedCount = (page, app) => page.locator(`${APPS[app].objects}.selected`).count()
 const turnAngle = async (page) => Number(await page.locator('[data-handle=turn]').getAttribute('aria-valuenow'))
-const menuLabels = (page) =>
-  page.$$eval('[role=menu][aria-label="Object menu"] > li > button > span:first-child', (els) => els.map((e) => e.textContent.replace(/[✓▸]/g, '').trim()))
+const menuLabels = (page, name = 'Object menu') =>
+  page.$$eval(`[role=menu][aria-label="${name}"] > li > button > span:first-child`, (els) => els.map((e) => e.textContent.replace(/[✓▸]/g, '').trim()))
 // the right press leaves the one menu of the object, not the menu of a cell, a header or a paragraph beside it
 const menusOpen = (page) => page.$$eval('[role=menu]', (els) => els.filter((e) => !e.closest('.menus') && !e.classList.contains('sub')).map((e) => e.getAttribute('aria-label')))
 
@@ -289,12 +297,14 @@ async function battery(app, kind, ann, ben) {
   await obj.click()
   const before = await box(obj)
   const h2 = await entries(ann)
+  // what keeps its proportions shows corner handles only (the contract); a rectangle is free and shows the edges as well
+  const keepsAspect = kind === 'image' || (await ann.locator('[data-handle=n]').count()) === 0
   const se = centre(await box(ann.locator('[data-handle=se]')))
   await drag(ann, se, { x: se.x + 40, y: se.y + 20 })
   await waitEntries(ann, h2 + 1, `${where}: one entry for the size`)
   const after = await box(obj)
   assert.ok(after.width > before.width + 10 && after.height > before.height - 1, `${where}: it grew with the corner (${before.width}x${before.height} -> ${after.width}x${after.height})`)
-  if (kind === 'image' || kind === 'shape') {
+  if (keepsAspect) {
     const was = before.width / before.height
     const is = after.width / after.height
     assert.ok(Math.abs(is - was) / was < 0.03, `${where}: proportions kept (${was.toFixed(2)} -> ${is.toFixed(2)})`)
@@ -313,6 +323,8 @@ async function battery(app, kind, ann, ben) {
     await obj.click({ button: 'right' })
     await ann.getByRole('menuitem', { name: /^Rotate by…/ }).click()
     await ann.waitForSelector('form.rotate input[type=text]')
+    await ann.keyboard.press('Backspace') // the keys typed in the dialog are the dialog's: the object stays (UX-56)
+    assert.equal(await count(ann, app), 1, `${where}: Backspace in the angle field did not delete the object`)
     await ann.fill('form.rotate input[type=text]', '30')
     await ann.keyboard.press('Enter')
     await ann.waitForFunction(() => document.querySelector('[data-handle=turn]')?.getAttribute('aria-valuenow') === '30', null, { timeout: 8000 })
@@ -338,7 +350,7 @@ async function battery(app, kind, ann, ben) {
   const h4 = await entries(ann)
   await ann.keyboard.press('Delete')
   await ann.waitForFunction(([sel]) => document.querySelectorAll(sel).length === 0, [a.objects], { timeout: 8000 })
-  assert.ok((await entries(ann)) > h4, `${where}: Delete is in the history`)
+  await moreEntriesThan(ann, h4, `${where}: Delete is in the history`)
   if (ben) await ben.waitForFunction(([sel]) => document.querySelectorAll(sel).length === 0, [a.objects], { timeout: 8000 })
   await ann.keyboard.press('Control+z')
   await ann.waitForFunction(([sel]) => document.querySelectorAll(sel).length === 1, [a.objects], { timeout: 8000 })
@@ -346,7 +358,7 @@ async function battery(app, kind, ann, ben) {
   await obj.click()
   await ann.keyboard.press('Delete') // and away, for the next kind
   await ann.waitForFunction(([sel]) => document.querySelectorAll(sel).length === 0, [a.objects], { timeout: 8000 })
-  assert.ok((await entries(ann)) > hist0, `${where}: all of it is in the history`)
+  await moreEntriesThan(ann, hist0, `${where}: all of it is in the history`)
   log(`${where}: keyboard, delete, undo, and ben saw it all`)
 }
 
@@ -467,11 +479,11 @@ async function tables(ann, ben) {
 
   // right press on the tab: the table's menu, and no other
   await tab.click({ button: 'right' })
-  await ann.waitForSelector('[role=menu][aria-label="Object menu"]')
-  assert.deepEqual(await menuLabels(ann), ['Name & describe…', 'Table options…', 'Merge cells', 'Split cell', 'Sort', 'Delete table'], `${where}: the table's menu`)
-  assert.deepEqual(await menusOpen(ann), ['Object menu'], `${where}: not the menu of a paragraph beside it`)
+  await ann.waitForSelector('[role=menu][aria-label="Table menu"]')
+  assert.deepEqual(await menuLabels(ann, 'Table menu'), ['Name & describe…', 'Table options…', 'Merge cells', 'Split cell', 'Sort', 'Delete table'], `${where}: the table's menu`)
+  assert.deepEqual(await menusOpen(ann), ['Table menu'], `${where}: not the menu of a paragraph beside it`)
   await ann.keyboard.press('Escape')
-  await ann.waitForSelector('[role=menu][aria-label="Object menu"]', { state: 'detached' })
+  await ann.waitForSelector('[role=menu][aria-label="Table menu"]', { state: 'detached' })
   // a table does not turn: no Rotate by… in its menu above, and Format ▸ Rotate is off with it selected (D1224)
   await rotateOff(ann, `${where}: a table`)
 

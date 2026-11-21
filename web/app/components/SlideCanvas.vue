@@ -9,7 +9,7 @@ import { viewTints } from '~/lib/replay-tint'
 // believed until the server says so: while the pointer is down the frame is a preview here, committed on pointer up.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { pictureOf as clippedImport, useObjectClipboard } from '~/lib/object-clipboard'
-import { CORNERS, GRID_SIZE, HANDLES, SLIDE_BOUNDS, SLIDE_H, SLIDE_W, besideRect, insertFrame, fitScale, moveFrame, toSlide, type Frame, type Handle } from '~/lib/geometry'
+import { CORNERS, GRID_SIZE, HANDLES, SLIDE_BOUNDS, SLIDE_H, SLIDE_W, besideRect, insertFrame, fitScale, moveFrame, toSlide, NUDGE, NUDGE_FINE, type Frame, type Handle } from '~/lib/geometry'
 import { gridOf } from '~/lib/object-gestures'
 import { useObjectInteraction } from '~/lib/object-interaction'
 import { objectName } from '~/lib/descriptions'
@@ -525,7 +525,6 @@ function cancelEdit() {
 }
 
 // ------------------------------------------------------------------------------ keys
-const STEP = 10
 
 // Writing into a text box is a person going on from where a tag took them (D1312); a click on the slide is the same.
 watch(
@@ -537,6 +536,7 @@ watch(
 async function onKey(event: KeyboardEvent) {
   const o = selected.value
   if (editing.value || containerEditing.value) return
+  if ((event.target as HTMLElement).closest('[role=dialog]')) return // a popover on the slide (Rotate by…) has its own keys: Enter submits, Backspace edits the number
   if (event.key === 'Escape') {
     if (cancelTurn()) return
     return void session.select(null)
@@ -555,7 +555,7 @@ async function onKey(event: KeyboardEvent) {
   const arrow = arrows[event.key]
   if (arrow) {
     event.preventDefault()
-    const step = event.shiftKey ? 1 : STEP
+    const step = event.shiftKey ? NUDGE_FINE : NUDGE
     const f = o.rotation ? moveTurned(slideFrame(o), o.rotation, arrow[0] * step, arrow[1] * step, null) : moveFrame(slideFrame(o), arrow[0] * step, arrow[1] * step)
     if (f.x !== o.anchor.x || f.y !== o.anchor.y) await session.move(o.id, f.x, f.y)
   }

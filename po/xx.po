@@ -253,7 +253,7 @@ msgstr "[À bràckét îs névér clôséd.~~~~~~~~~~]"
 msgid "A change here changes every use of “{name}”"
 msgstr "[À chàngé héré chàngés évéry ûsé ôf “{name}”~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextContainers.vue:407
+#: web/app/components/TextContainers.vue:415
 msgid "A chart is not shown in a text yet."
 msgstr "[À chàrt îs nôt shôwn în à téxt yét.~~~~~~~~~~~~~~]"
 
@@ -2413,7 +2413,7 @@ msgstr "[Hànd {doc} ôvér tô sômébôdy whô àlréàdy édîts ît. Yôû w
 msgid "Handouts"
 msgstr "[Hàndôûts~~~]"
 
-#: web/app/components/TextContainers.vue:445
+#: web/app/components/TextContainers.vue:453
 msgid "Hangs from {where}"
 msgstr "[Hàngs frôm {where}~~~~~~~]"
 
@@ -3685,7 +3685,7 @@ msgstr "[Nûmbérs~~~]"
 msgid "Object in paragraph {n}"
 msgstr "[Ôbjéct în pàràgràph {n}~~~~~~~~~]"
 
-#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1388 web/app/components/SlideCanvas.vue:658 web/app/components/TextObjectMenu.vue:173
+#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1390 web/app/components/SlideCanvas.vue:658 web/app/components/TextObjectMenu.vue:173
 msgid "Object menu"
 msgstr "[Ôbjéct ménû~~~~]"
 
@@ -5009,7 +5009,7 @@ msgstr "[Shàré…~~]"
 msgid "Sheet"
 msgstr "[Shéét~~]"
 
-#: web/app/components/SheetGrid.vue:1211
+#: web/app/components/SheetGrid.vue:1212
 msgid "Sheet {name}"
 msgstr "[Shéét {name}~~~~~]"
 
@@ -7101,7 +7101,7 @@ msgstr "[Tûrn thé ôbjéct yôû hàvé séléctéd tô àn ànglé, în whôl
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr "[Tûrn: dràg, ôr àrrôw kéys (Shîft fôr 15°)~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:280 web/app/components/SlideCanvas.vue:309 web/app/components/SlideCanvas.vue:317 web/app/components/SlideCanvas.vue:338 web/app/components/TextContainers.vue:342 web/app/components/TextContainers.vue:346 web/app/components/TextObjectMenu.vue:112
+#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:280 web/app/components/SlideCanvas.vue:309 web/app/components/SlideCanvas.vue:317 web/app/components/SlideCanvas.vue:338 web/app/components/TextContainers.vue:350 web/app/components/TextContainers.vue:354 web/app/components/TextObjectMenu.vue:112
 msgid "Turned to {degrees}"
 msgstr "[Tûrnéd tô {degrees}~~~~~~~~]"
 
@@ -8241,7 +8241,7 @@ msgstr "[édît~~]"
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr "[édît à céll (ôthérs àré képt ôût ôf ît whîlé yôû dô)~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:1372
+#: web/app/components/SheetGrid.vue:1374
 msgid "editing cell"
 msgstr "[édîtîng céll~~~~~]"
 
@@ -8945,7 +8945,7 @@ msgstr "[prîntîng nééds à sécûré cônnéctîôn (https, ôr thîs cômp�
 msgid "purpose of {name}"
 msgstr "[pûrpôsé ôf {name}~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:1303
+#: web/app/components/SheetGrid.vue:1304
 msgid "purpose of {name} column {n}"
 msgstr "[pûrpôsé ôf {name} côlûmn {n}~~~~~~~~~~~]"
 
@@ -9225,7 +9225,7 @@ msgstr "[téxt~~]"
 msgid "text box"
 msgstr "[téxt bôx~~~]"
 
-#: web/app/components/SlideCanvas.vue:627 web/app/components/TextContainers.vue:417
+#: web/app/components/SlideCanvas.vue:627 web/app/components/TextContainers.vue:425
 msgid "text of the object"
 msgstr "[téxt ôf thé ôbjéct~~~~~~~]"
 
@@ -9729,7 +9729,7 @@ msgstr "[tràcé: wîndôw tôô làrgé (àt môst {limit} pôsîtîôns)~~~~~~
 msgid "trials"
 msgstr "[trîàls~~]"
 
-#: web/app/components/SheetGrid.vue:1239
+#: web/app/components/SheetGrid.vue:1240
 msgid "type here to add a row"
 msgstr "[typé héré tô àdd à rôw~~~~~~~~~]"
 
@@ -10289,7 +10289,7 @@ msgstr "[{name} réàds thé chàt, whîch îs fôr thé dôcûmént's ôwnérs 
 msgid "{name} reads the history, which is for the document's owners and editors"
 msgstr "[{name} réàds thé hîstôry, whîch îs fôr thé dôcûmént's ôwnérs ànd édîtôrs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:1302
+#: web/app/components/SheetGrid.vue:1303
 msgid "{name} · {purpose} — change what this column is for"
 msgstr "[{name} · {purpose} — chàngé whàt thîs côlûmn îs fôr~~~~~~~~~~~~~~~~~~~~]"
 
@@ -10625,7 +10625,7 @@ msgstr "[{who} sûggésts gôîng tô {line}.~~~~~~~~~~~~]"
 msgid "{width} × {height} px"
 msgstr "[{width} × {height} px~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:1357
+#: web/app/components/SheetGrid.vue:1359
 msgid "· editing"
 msgstr "[· édîtîng~~~~]"
 

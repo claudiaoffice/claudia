@@ -253,7 +253,7 @@ msgstr ""
 msgid "A change here changes every use of “{name}”"
 msgstr ""
 
-#: web/app/components/TextContainers.vue:407
+#: web/app/components/TextContainers.vue:415
 msgid "A chart is not shown in a text yet."
 msgstr ""
 
@@ -2413,7 +2413,7 @@ msgstr ""
 msgid "Handouts"
 msgstr ""
 
-#: web/app/components/TextContainers.vue:445
+#: web/app/components/TextContainers.vue:453
 msgid "Hangs from {where}"
 msgstr ""
 
@@ -3685,7 +3685,7 @@ msgstr ""
 msgid "Object in paragraph {n}"
 msgstr ""
 
-#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1388 web/app/components/SlideCanvas.vue:658 web/app/components/TextObjectMenu.vue:173
+#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1390 web/app/components/SlideCanvas.vue:658 web/app/components/TextObjectMenu.vue:173
 msgid "Object menu"
 msgstr ""
 
@@ -5009,7 +5009,7 @@ msgstr ""
 msgid "Sheet"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1211
+#: web/app/components/SheetGrid.vue:1212
 msgid "Sheet {name}"
 msgstr ""
 
@@ -7101,7 +7101,7 @@ msgstr ""
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr ""
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:280 web/app/components/SlideCanvas.vue:309 web/app/components/SlideCanvas.vue:317 web/app/components/SlideCanvas.vue:338 web/app/components/TextContainers.vue:342 web/app/components/TextContainers.vue:346 web/app/components/TextObjectMenu.vue:112
+#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:280 web/app/components/SlideCanvas.vue:309 web/app/components/SlideCanvas.vue:317 web/app/components/SlideCanvas.vue:338 web/app/components/TextContainers.vue:350 web/app/components/TextContainers.vue:354 web/app/components/TextObjectMenu.vue:112
 msgid "Turned to {degrees}"
 msgstr ""
 
@@ -8241,7 +8241,7 @@ msgstr ""
 msgid "edit a cell (others are kept out of it while you do)"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1372
+#: web/app/components/SheetGrid.vue:1374
 msgid "editing cell"
 msgstr ""
 
@@ -8945,7 +8945,7 @@ msgstr ""
 msgid "purpose of {name}"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1303
+#: web/app/components/SheetGrid.vue:1304
 msgid "purpose of {name} column {n}"
 msgstr ""
 
@@ -9225,7 +9225,7 @@ msgstr ""
 msgid "text box"
 msgstr ""
 
-#: web/app/components/SlideCanvas.vue:627 web/app/components/TextContainers.vue:417
+#: web/app/components/SlideCanvas.vue:627 web/app/components/TextContainers.vue:425
 msgid "text of the object"
 msgstr ""
 
@@ -9729,7 +9729,7 @@ msgstr ""
 msgid "trials"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1239
+#: web/app/components/SheetGrid.vue:1240
 msgid "type here to add a row"
 msgstr ""
 
@@ -10289,7 +10289,7 @@ msgstr ""
 msgid "{name} reads the history, which is for the document's owners and editors"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1302
+#: web/app/components/SheetGrid.vue:1303
 msgid "{name} · {purpose} — change what this column is for"
 msgstr ""
 
@@ -10625,7 +10625,7 @@ msgstr ""
 msgid "{width} × {height} px"
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:1357
+#: web/app/components/SheetGrid.vue:1359
 msgid "· editing"
 msgstr ""
 
