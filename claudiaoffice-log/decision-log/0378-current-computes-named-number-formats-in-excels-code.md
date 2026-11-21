@@ -32,3 +32,7 @@ the locale of a formula's text is still open (D372).
 **Notes.** Asked of the owner while patch 3 was planned (2026-11-13): "Named formats (Recommended)". A format code the
 renderer does not understand is refused when it is added; one in a file comes in as *General* and is counted as a
 `look` loss (`number-format`). Excel's East Asian built-in formats (27–36, 50–81) are such a case.
+
+**Overtaken in part, 2026-11-21:** a style no longer names a number format, and "a cell has no format of its own" no
+longer holds. A cell has a style and a number format, each its own (D1410). What this decision says about the number
+formats themselves (named, Excel's code, shown the reader's way) stays current.

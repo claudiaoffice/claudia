@@ -1105,10 +1105,6 @@ msgstr "[Chàngé yôûr pàsswôrd~~~~~~~~]"
 msgid "Change {user} to “only look”?"
 msgstr "[Chàngé {user} tô “ônly lôôk”?~~~~~~~~~~~~]"
 
-#: web/app/components/SidePanel.vue:99
-msgid "Changes"
-msgstr "[Chàngés~~~]"
-
 #: web/app/components/PresentShow.vue:190
 msgid "Changes since you started: {n}"
 msgstr "[Chàngés sîncé yôû stàrtéd: {n}~~~~~~~~~~~~]"
@@ -5308,6 +5304,10 @@ msgstr "[Stàrtîng {app}…~~~~~~]"
 #: web/app/components/SidePanel.vue:110
 msgid "Step {at} of {total}"
 msgstr "[Stép {at} ôf {total}~~~~~~~~]"
+
+#: web/app/components/SidePanel.vue:99
+msgid "Steps"
+msgstr "[Stéps~~]"
 
 #: web/app/components/Workspace.vue:1043
 msgid "Stop Following"

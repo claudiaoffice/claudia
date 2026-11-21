@@ -46,6 +46,30 @@ _avoid_: file, container, doc
 One of claudia composes, claudia computes and claudia creates; every document belongs to exactly one app.
 _avoid_: module, app type, product
 
+**Page**
+One piece of paper a document is laid out on, in page view or when printed, in any app.
+_avoid_: sheet
+
+**Sheet**
+A grid of cells in a computes document.
+_avoid_: worksheet, spreadsheet, tab
+
+**Slide**
+One page of a creates document, shown in turn when presenting.
+_avoid_: page, foil
+
+**File format**
+The kind of file a document is imported from or downloaded as: claudia's own, OpenDocument or MS Office.
+_avoid_: format (on its own), file type
+
+**Server**
+The claudia software that keeps documents for people to open, hosting all three apps.
+_avoid_: host, backend, instance
+
+**Administrator**
+The person who looks after a server; never a role in a document, and sees that documents exist but not what is in them.
+_avoid_: admin, owner
+
 ### People
 
 **User**
@@ -63,6 +87,14 @@ _avoid_: assistant, bot, agent, AI user
 **Role**
 What a user may do in one document: owner, editor or viewer. The administrator of a server is not a role.
 _avoid_: permission, access level, admin (for owner)
+
+**Presence**
+Where each user is in a document right now, shown to the others; it is never stored.
+_avoid_: cursor, awareness
+
+**Lock**
+A part of a document a user holds for a while, so that nobody else changes it there; it is never stored.
+_avoid_: hold, reservation
 
 **Author**
 The user who made a step.
@@ -83,9 +115,83 @@ One command as it happened in a document: which command, which author, when, and
 _avoid_: entry, record, change, revision
 
 **Branch**
-One path through a document's history. Main is the main branch; restoring a checkpoint starts a new branch, and the branch left behind stays and can be switched back to.
+One path through a document's history. Main is the main branch; a restore starts a new branch, and the branch left behind stays and can be switched back to.
 _avoid_: line, fork, version
+
+**Restore**
+Going back to the document as it was after a step, usually a checkpoint, for everybody at once; the document continues on a new branch and nothing is lost.
+_avoid_: revert, roll back, undo
+
+**Redaction**
+The permanent removal, by an owner, of what past steps or chat messages contained, leaving behind that they happened.
+_avoid_: delete, erase, censor, remove
 
 **Checkpoint**
 A named point in a document's history that a person set on purpose and can go back to.
 _avoid_: save, version, snapshot
+
+**Chat**
+The messages the users of a document write to each other, to everybody or to one user, each placed at the step when it was written.
+_avoid_: comments, conversation, messages
+
+### Things
+
+**Thing**
+Anything in a document that has a name, unique in that document, by which a user can reference it with # in the chat.
+_avoid_: entity, element, item
+
+**Object**
+A text box, shape, image, chart, container or table placed in a page, a slide or a sheet; every object is a thing.
+_avoid_: element, figure, shape (for objects of other kinds)
+
+**Chart**
+A picture drawn from a document's data, shown as an object, as a chart tab of its own, or both.
+_avoid_: diagram, graph, plot
+
+**Chart tab**
+A tab of a computes document that shows one chart on its own, beside the sheets; a thing, but neither an object nor a sheet.
+_avoid_: chart sheet, diagram tab
+
+**Table**
+A named grid of cells whose first row names its columns: a named range in computes, an object in composes and creates.
+_avoid_: grid, list
+
+**Named range**
+A named rectangle of cells in a computes document, from a single cell up, either kept by hand or filled by a formula's result.
+_avoid_: name (in this sense), defined name, range name
+
+**Style**
+A named look, defined by its purpose, put into slots; every slot with the same style serves the same purpose.
+_avoid_: format, formatting, theme, look
+
+**Number format**
+How the value of a cell reads (a percentage, an amount in euros, a date, a number of decimals), chosen for the cell itself, apart from its style, and never changing the value.
+_avoid_: format (on its own), cell format, number style
+
+**Container**
+An object whose content is supplied and drawn by software outside claudia, such as LaTeX or Mermaid; its drawing is kept in the document, so that anyone can open it without that software.
+_avoid_: rendered, rendered picture, embed, plug-in
+
+**Slot**
+A part of a document that takes exactly one style: a paragraph, the words of a cell, the box of a text box. Some things have no slot, and many slots belong to no thing.
+_avoid_: element, styled item, container
+
+**Purpose**
+What something in a document is for: a style states it in words, and a column of a table takes one of the purposes of a computation (input, data, calculation, result).
+_avoid_: role, function, intent
+
+**Cell**
+One box of a sheet or a table holding one value, with a style and a number format of its own; never a thing by itself, but a named range may be a single cell.
+_avoid_: field, box
+
+**Paragraph**
+A stretch of text that takes one style.
+_avoid_: block, line
+
+**Heading**
+A paragraph whose style gives it a level in the outline of the document; the title is the top level.
+_avoid_: title (except for the top level), caption, header
+
+**Run**
+A stretch of a paragraph written by one author, whatever its style.
+_avoid_: span; and never "run" for a stretch of one formatting, as Word uses it

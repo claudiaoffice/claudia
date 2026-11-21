@@ -59,8 +59,8 @@ describe('the timeline', () => {
 
   it('shows only the changes, or only the conversation, when asked', () => {
     const chat = [say(1, 'main:2')]
-    expect(timeline(entries, chat, 'changes').every((i) => i.kind === 'change')).toBe(true)
-    expect(timeline(entries, chat, 'conversation')).toHaveLength(1)
+    expect(timeline(entries, chat, 'steps').every((i) => i.kind === 'change')).toBe(true)
+    expect(timeline(entries, chat, 'chat')).toHaveLength(1)
   })
 
   it('gives each row the state of the document it stands for', () => {

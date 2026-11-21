@@ -5,7 +5,7 @@ import type { ChatMessage, Entry } from './base-session'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Region, type WireData } from './protocol'
 
 /** Which rows the history shows, and so which the wheel visits: the changes, the conversation, or both. */
-export type Filter = 'all' | 'conversation' | 'changes'
+export type Filter = 'all' | 'chat' | 'steps'
 
 /** One row of the history: a change, or a chat message in the place of the change it was written after. `state` is the
  * revision of the document that row stands for (the last change at or before it), `null` before the first change. */
@@ -34,7 +34,7 @@ export function timeline(entries: readonly Entry[], chat: readonly ChatMessage[]
     items.push({ ...e, kind: 'change', state: e.revision })
     for (const message of after.get(e.revision) ?? []) items.push({ ...message, kind: 'chat', state: e.revision })
   }
-  return filter === 'all' ? items : items.filter((i) => (filter === 'changes' ? i.kind === 'change' : i.kind === 'chat'))
+  return filter === 'all' ? items : items.filter((i) => (filter === 'steps' ? i.kind === 'change' : i.kind === 'chat'))
 }
 
 /** The row `by` rows from `at`, stopping at the ends; with `unit` "author", the start of the next (or previous) run of

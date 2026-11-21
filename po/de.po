@@ -1105,10 +1105,6 @@ msgstr "Ihr Passwort ändern"
 msgid "Change {user} to “only look”?"
 msgstr "{user} auf „nur ansehen“ ändern?"
 
-#: web/app/components/SidePanel.vue:99
-msgid "Changes"
-msgstr "Änderungen"
-
 #: web/app/components/PresentShow.vue:190
 msgid "Changes since you started: {n}"
 msgstr "Änderungen seit dem Start: {n}"
@@ -5308,6 +5304,10 @@ msgstr "{app} wird gestartet…"
 #: web/app/components/SidePanel.vue:110
 msgid "Step {at} of {total}"
 msgstr "Schritt {at} von {total}"
+
+#: web/app/components/SidePanel.vue:99
+msgid "Steps"
+msgstr "Schritte"
 
 #: web/app/components/Workspace.vue:1043
 msgid "Stop Following"
