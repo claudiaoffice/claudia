@@ -541,10 +541,10 @@ def test_an_svg_added_to_a_kept_docx_says_its_fallback_picture_is_empty():
     assert back.images[only(back).body.image].format == "svg"
 
 
-# ------------------------------------------------------------------------------- rendered text containers
+# ------------------------------------------------------------------------------- containers
 def a_container_text(*, pictured: bool = True, svg: bool = True) -> TextModel:
-    """A text with a rendered container (what typst or mermaid made of its source) hanging from the first paragraph."""
-    from claudia_core import RenderedDefinition
+    """A text with a container (what typst or mermaid made of its source) hanging from the first paragraph."""
+    from claudia_core import ContainerDefinition
 
     model = a_text("Hello world", "Second paragraph")
     image = None
@@ -552,8 +552,8 @@ def a_container_text(*, pictured: bool = True, svg: bool = True) -> TextModel:
         asset = an_svg_asset() if svg else a_picture(shade=7)
         model.images.define(asset)
         image = asset.id
-    model.renderings.define(RenderedDefinition("r1", "typst", "= Hi", image=image))
-    body = ObjectBody("c1", "rendered", 200, 100, "plain-image", ref="r1")
+    model.containers.define(ContainerDefinition("r1", "typst", "= Hi", image=image))
+    body = ObjectBody("c1", "container", 200, 100, "plain-image", ref="r1")
     model.insert_object(VisualObject(body, BlockAnchor("b1", 3)))
     return model
 
@@ -568,20 +568,20 @@ def codes(losses) -> set[str]:
     return {loss.kind for loss in losses}
 
 
-def test_a_rendered_container_nobody_has_drawn_yet_is_left_out_and_the_export_says_so():
+def test_a_container_nobody_has_drawn_yet_is_left_out_and_the_export_says_so():
     model = a_container_text(pictured=False)
     assert "rendering-pending" in codes(docx_export_losses(model))
     assert "rendering-pending" in codes(odt_export_losses(model))
     assert docx_to_text(text_to_docx(model)).objects == {} and odt_to_text(text_to_odt(model)).objects == {}
 
 
-def test_a_rendered_container_is_a_picture_of_its_own_in_both_files():
+def test_a_container_is_a_picture_of_its_own_in_both_files():
     model = a_container_text()
     assert docx_to_text(text_to_docx(model)).get_object("o1").body.kind == "image"
     assert odt_to_text(text_to_odt(model)).get_object("o1").body.kind == "image"
 
 
-def test_a_rendered_container_is_drawn_as_a_png_when_there_is_something_to_draw_it_with():
+def test_a_container_is_drawn_as_a_png_when_there_is_something_to_draw_it_with():
     model = a_container_text()
     assert "svg-picture" in codes(odt_export_losses(model))
     assert "svg-picture" not in codes(odt_export_losses(model, rasterised=True))
@@ -594,33 +594,33 @@ def test_a_rendered_container_is_drawn_as_a_png_when_there_is_something_to_draw_
     assert docx_to_text(text_to_docx(model, rasterise=draw)).get_object("o1").body.w == 200
 
 
-def test_two_rendered_containers_of_one_picture_share_one_png():
+def test_two_containers_of_one_picture_share_one_png():
     model = a_container_text()
-    from claudia_core import RenderedDefinition
+    from claudia_core import ContainerDefinition
 
-    model.renderings.define(RenderedDefinition("r2", "typst", "= Hi", image=next(iter(model.images))))
+    model.containers.define(ContainerDefinition("r2", "typst", "= Hi", image=next(iter(model.images))))
     model.insert_object(
-        VisualObject(ObjectBody("c2", "rendered", 200, 100, "plain-image", ref="r2"), BlockAnchor("b2", 1))
+        VisualObject(ObjectBody("c2", "container", 200, 100, "plain-image", ref="r2"), BlockAnchor("b2", 1))
     )
     data = text_to_odt(model, rasterise=draw)
     assert len([name for name in read_parts(data) if name.startswith("Pictures/")]) == 1
     assert len(odt_to_text(data).objects) == 2
 
 
-def test_a_rendered_container_added_to_a_kept_odt_says_what_a_program_without_svg_shows():
+def test_a_container_added_to_a_kept_odt_says_what_a_program_without_svg_shows():
     original = text_to_odt(a_text("Hello world", "Second paragraph"))
     found = LossLog()
     baseline, current = odt_to_text(original), odt_to_text(original)
     container = a_container_text()
     current.images.define(next(iter(container.images.values())))
-    current.renderings.define(container.renderings["r1"])
+    current.containers.define(container.containers["r1"])
     current.insert_object(container.get_object("c1"))
     data = apply_edits_to_odt(original, baseline, current, losses=found)
     assert "svg-picture" in codes(found.result()) and problems(data) == []
     assert len(odt_to_text(data).objects) == 1
 
 
-def test_a_rendered_container_nothing_has_drawn_is_listed_when_a_kept_file_is_patched():
+def test_a_container_nothing_has_drawn_is_listed_when_a_kept_file_is_patched():
     for to_text, patch, text_to in (
         (odt_to_text, apply_edits_to_odt, text_to_odt),
         (docx_to_text, apply_edits_to_docx, text_to_docx),
@@ -629,7 +629,7 @@ def test_a_rendered_container_nothing_has_drawn_is_listed_when_a_kept_file_is_pa
         found = LossLog()
         baseline, current = to_text(original), to_text(original)
         container = a_container_text(pictured=False)
-        current.renderings.define(container.renderings["r1"])
+        current.containers.define(container.containers["r1"])
         current.insert_object(container.get_object("c1"))
         patch(original, baseline, current, losses=found)
         assert "rendering-pending" in codes(found.result())

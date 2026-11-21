@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any
 
-from claudia_core import MAX_RENDERING_SOURCE
+from claudia_core import MAX_CONTAINER_SOURCE
 from claudia_typeset import NEVER_ALLOWED
 
 #: The version of the contract between the server and a plugin. A manifest names the one it was written for.
@@ -421,8 +421,8 @@ def parse_manifest(data: Mapping[str, Any]) -> Manifest:
     if not all(isinstance(name, str) and re.fullmatch(r"[A-Za-z]+", name) for name in elements):
         raise ManifestError("svg_elements: element names")
     limit = data.get("max_source_chars", 200_000)
-    if type(limit) is not int or not 1 <= limit <= MAX_RENDERING_SOURCE:
-        raise ManifestError(f"manifest max_source_chars: a whole number up to {MAX_RENDERING_SOURCE}")
+    if type(limit) is not int or not 1 <= limit <= MAX_CONTAINER_SOURCE:
+        raise ManifestError(f"manifest max_source_chars: a whole number up to {MAX_CONTAINER_SOURCE}")
     return Manifest(
         API_VERSION,
         kind,

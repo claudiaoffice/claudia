@@ -527,7 +527,7 @@ const menus = computed<Menu[]>(() => {
         },
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }, insertTableItems(c, { add: openTableDialog, possible: canInsertTable() })),
+    insertMenu(c, { types: state.containerTypes, add: (type) => addContainer(type) }, { label: t('Table of Contents'), add: insertContents, possible: !readonly.value && !!state.selection }, { add: openPicker, possible: !readonly.value && !!state.selection }, insertTableItems(c, { add: openTableDialog, possible: canInsertTable() })),
     {
       label: t('Format'),
       items: [

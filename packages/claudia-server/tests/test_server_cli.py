@@ -576,10 +576,10 @@ def _write(path, text):
     return str(path)
 
 
-# -- rendered containers (D395) ----------------------------------------------------------------------------------
+# -- containers (D395) ----------------------------------------------------------------------------------
 def test_the_server_offers_the_three_built_in_container_types_and_says_so_at_start_up(tmp_path):
     prepared = plan(tmp_path=tmp_path)
-    assert any(line.startswith("rendered containers: latex, mermaid, typst") for line in prepared.banner)
+    assert any(line.startswith("containers: latex, mermaid, typst") for line in prepared.banner)
 
 
 def test_a_manifest_in_the_plugins_folder_is_offered_and_a_bad_one_is_named_in_the_banner(tmp_path):

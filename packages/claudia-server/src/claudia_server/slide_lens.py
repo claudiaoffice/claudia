@@ -32,7 +32,7 @@ KINDS = {
     "shape": "shape",
     "image": "picture",
     "diagram": "chart",
-    "rendered": "rendered text (picture made from text)",  # D390
+    "container": "container (a picture made from text, such as a formula or a diagram)",  # D390
 }
 
 ORIENTATION = (

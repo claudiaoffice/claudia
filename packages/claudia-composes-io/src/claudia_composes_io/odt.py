@@ -677,8 +677,8 @@ def text_to_odt(
     ``info`` is what the file says about the document in ``meta.xml`` (title, who made it and when, who saved it last
     and when). ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one it has no
     time for is dated by ``info.modified`` (the suggestion is not younger than that), and one with neither by the
-    earliest date there is (D411). A picture floating over the text (an image, a rendered text container) is a frame in
-    the paragraph it hangs from, at its character, with its description; a rendered container is drawn as a PNG by
+    earliest date there is (D411). A picture floating over the text (an image, a container) is a frame in
+    the paragraph it hangs from, at its character, with its description; a container is drawn as a PNG by
     ``rasterise`` when there is one (D464). The tables of the text are written as ``table:table`` after the paragraph
     they hang from (E9.32, D1214). ``annotations`` says which paragraphs are bookmarked with the name a person gave
     them and which get an annotation (a review comment) with what a person wrote about them (E1.13); without it
@@ -807,7 +807,7 @@ def odt_export_losses(
     keep it), a ``"remark"`` (nothing to track), a ``"suggestion"`` that is not written because tracking is off and
     a ``"suggestion-anchor"`` that no longer matches its text, ``"decorative"`` (a picture marked as decoration: ODF 1.3
     has no attribute for it, so a reader of the file sees a picture nobody described), ``"rendering-pending"`` (a
-    rendered text container nothing has been drawn for yet: left out), ``"svg-picture"`` (a rendered container written
+    container nothing has been drawn for yet: left out), ``"svg-picture"`` (a container written
     as the SVG itself because nothing could draw it as a PNG, ``rasterised``), and what :func:`odt_unwritten_changes`
     says of a fresh file."""
     losses = LossLog()
@@ -829,11 +829,11 @@ def odt_export_losses(
     decorative = sum(
         1
         for obj in model.objects.values()
-        if (obj.body.kind in ("image", "rendered") or is_written(obj)) and obj.body.decorative
+        if (obj.body.kind in ("image", "container") or is_written(obj)) and obj.body.decorative
     )
     if decorative:
         losses.add("decorative", count=decorative)
-    picture_losses(model, losses, vector_loss=None if rasterised else "svg-picture", only_rendered=True)
+    picture_losses(model, losses, vector_loss=None if rasterised else "svg-picture", only_containers=True)
     box_losses(model, losses)
     if not track_suggestions:
         if len(open_ones) > remarks:
@@ -955,8 +955,8 @@ class _Patch:
             raise UnsupportedEdit("blocks cannot be moved relative to each other in the file")
 
     def run(self) -> bytes:
-        if self.losses is not None:  # (what a rendered container is that nothing has been drawn for)
-            picture_losses(self.current, self.losses, only_rendered=True)
+        if self.losses is not None:  # (what a container is that nothing has been drawn for)
+            picture_losses(self.current, self.losses, only_containers=True)
         self.plan = self._plan()
         self._remove_dropped()
         self._patch_current()

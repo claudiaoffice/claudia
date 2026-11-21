@@ -78,7 +78,7 @@ from .throttle import Throttle
 if TYPE_CHECKING:
     from claudia_core import Region
 
-    from .rendered import RenderDesk
+    from .containers import RenderDesk
 
 PROTOCOL_VERSION = 2
 INT_MAX = 2**31 - 1
@@ -311,9 +311,9 @@ class Context:
     # Tell the AI of this document how the next request of a person is to be treated (D262); nothing if there is none.
     note_ai_mode: Callable[[str, str | None], None] = field(default=lambda user, mode: None)
     set_locale: Callable[[str], None] = field(default=lambda locale: None)  # change this window's language (D323)
-    renderings: RenderDesk | None = None  # what makes rendered containers (D395); ``None``: this server makes none
+    renderings: RenderDesk | None = None  # what makes containers (D395); ``None``: this server makes none
     original: Callable[[], bytes | None] = field(default=lambda: None)  # the imported file, if it is kept (D439)
-    # What the last try to draw each rendered container said, by container: a window that joins later hears it too.
+    # What the last try to draw each container said, by container: a window that joins later hears it too.
     render_outcomes: Callable[[], dict[str, dict]] = field(default=lambda: {})
     # The fonts this server has, as a ``claudia_fonts.Catalogue`` (anything that ``resolve``s a family), or ``None``.
     font_catalogue: Callable[[], Any] = field(default=lambda: None)

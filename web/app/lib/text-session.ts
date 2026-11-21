@@ -4,7 +4,7 @@
 // Typing is the one thing that is not shown only after the answer: the characters of the word being typed wait in
 // `pending` (drawn at the caret, marked as not yet written) and go out as one request when the word ends, after a pause,
 // or before anything else the person does. So a word is one step in the history, and typing does not wait for the network.
-import { parseFence } from './rendering'
+import { parseFence } from './containers'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import {
   applyEvent,
@@ -77,7 +77,7 @@ export interface TextState extends BaseState {
   sending: Unwritten | null
   /** The page the text is printed on (D904); `null` until loaded or for a server that does not know pages. */
   page: PageSetupData | null
-  /** The floating objects, by id (a rendered container is one): each hangs from a character of a paragraph (D179). */
+  /** The floating objects, by id (a container is one): each hangs from a character of a paragraph (D179). */
   objects: Record<string, VisualObject<BlockAnchor>>
   /** The outlines the shapes among the objects are drawn with, by id (the server's `shapes`). */
   shapes: Record<string, TextShape>
@@ -85,7 +85,7 @@ export interface TextState extends BaseState {
   library: TextShape[]
   /** The object a person has selected here; this is not shared with colleagues. */
   selectedObject: string | null
-  /** The rendered container whose text is being written in its own editor, or `null`; not shared. The object menu's
+  /** The container whose text is being written in its own editor, or `null`; not shared. The object menu's
    * Edit text and Enter set it, and `TextObjectLayer.vue` shows the editor. */
   editingObject: string | null
   /** The tables of the text by id (E9.32): what the objects of kind `table` point at with `ref`. */
@@ -186,7 +186,7 @@ export class TextSession extends BaseSession<TextState> {
    * for a new picture (D1334). */
   async addContainer(type: string, place: { block: string; offset: number }, size: { w: number; h: number }): Promise<string | null> {
     await this.flush()
-    const id = await this.addRendering(type, this.newObjectAt(place), size, undefined, true)
+    const id = await this.addContainerAt(type, this.newObjectAt(place), size, undefined, true)
     if (id) this.state.selectedObject = id
     return id
   }
@@ -199,10 +199,10 @@ export class TextSession extends BaseSession<TextState> {
   /** Pasted text that is one fenced block (```latex … ```) of a type the server makes becomes a container at `place`
    * (D560); its id, or `null` if it is not such a block (the caller pastes it as text then). */
   async pasteFence(text: string, place: { block: string; offset: number }): Promise<string | null> {
-    const fenced = parseFence(text.trim(), this.state.renderTypes.map((k) => k.type))
+    const fenced = parseFence(text.trim(), this.state.containerTypes.map((k) => k.type))
     if (!fenced) return null
     await this.flush()
-    const id = await this.addRendering(fenced.type, this.newObjectAt(place), NEW_OBJECT_CAP, fenced.source, true)
+    const id = await this.addContainerAt(fenced.type, this.newObjectAt(place), NEW_OBJECT_CAP, fenced.source, true)
     if (id) this.state.selectedObject = id
     return id
   }
@@ -238,7 +238,7 @@ export class TextSession extends BaseSession<TextState> {
     return done.object as string
   }
 
-  /** Edit ▸ Text Box: an empty text box, written in as a rendered container is not (its words are a paragraph). */
+  /** Edit ▸ Text Box: an empty text box, written in as a container is not (its words are a paragraph). */
   addTextBox(place: { block: string; offset: number }, size: { w: number; h: number }, wrap?: Wrap): Promise<string | null> {
     return this.addBox({ kind: 'text' }, place, size, wrap)
   }

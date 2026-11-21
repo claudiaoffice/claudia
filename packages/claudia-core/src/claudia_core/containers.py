@@ -1,4 +1,4 @@
-"""A rendered text container's definition: the text a person writes and the picture last made from it (D390).
+"""A container's definition: the text a person writes and the picture last made from it (D390).
 
 A LaTeX formula, a Mermaid diagram and a Typst page are the same thing to the document: *text is the truth*, and a
 picture is made from it by something outside the document. This module is the whole of what the kernel knows about
@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 #: How much text a container may hold. The same bound as a typeset job's (``claudia_typeset.job.MAX_RENDERING_SOURCE``).
-MAX_RENDERING_SOURCE = 200_000
+MAX_CONTAINER_SOURCE = 200_000
 MAX_PARAMS = 32
 MAX_PARAM_TEXT = 200
 MAX_RENDERER_CHARS = 200
@@ -48,8 +48,8 @@ def _check_params(params: Mapping[str, object]) -> None:
 
 
 @dataclass(frozen=True)
-class RenderedDefinition:
-    """The text of one rendered container, and the picture last made from it.
+class ContainerDefinition:
+    """The text of one container, and the picture last made from it.
 
     ``id`` names it in the document and ``type`` says what kind of text it is (a plugin's id, such as ``mermaid``);
     both are plain names, and the type of a definition never changes. ``source`` is the text (it may be empty while
@@ -71,19 +71,19 @@ class RenderedDefinition:
     def __post_init__(self) -> None:
         if not isinstance(self.id, str) or not _ID.fullmatch(self.id):
             raise ValueError(
-                f"rendering id {str(self.id)[:40]!r}: lower-case letters, digits, '-' and '_', first a letter"
+                f"container id {str(self.id)[:40]!r}: lower-case letters, digits, '-' and '_', first a letter"
             )
         if not isinstance(self.type, str) or not _TYPE.fullmatch(self.type):
             raise ValueError(
-                f"rendering type {str(self.type)[:40]!r}: a plain lower-case name of at most 32 characters"
+                f"container type {str(self.type)[:40]!r}: a plain lower-case name of at most 32 characters"
             )
-        if not isinstance(self.source, str) or len(self.source) > MAX_RENDERING_SOURCE:
-            raise ValueError(f"rendering source: text of at most {MAX_RENDERING_SOURCE} characters")
+        if not isinstance(self.source, str) or len(self.source) > MAX_CONTAINER_SOURCE:
+            raise ValueError(f"container source: text of at most {MAX_CONTAINER_SOURCE} characters")
         _check_params(self.params)
         if self.image is not None and (not isinstance(self.image, str) or not _IMAGE.fullmatch(self.image)):
-            raise ValueError(f"rendering image {str(self.image)[:40]!r}: not the id of an image")
+            raise ValueError(f"container image {str(self.image)[:40]!r}: not the id of an image")
         if not isinstance(self.renderer, str) or len(self.renderer) > MAX_RENDERER_CHARS:
-            raise ValueError(f"rendering renderer: text of at most {MAX_RENDERER_CHARS} characters")
+            raise ValueError(f"container renderer: text of at most {MAX_RENDERER_CHARS} characters")
         object.__setattr__(self, "params", MappingProxyType(dict(sorted(self.params.items()))))
 
     def to_data(self) -> dict:
@@ -99,19 +99,19 @@ class RenderedDefinition:
         }
 
     @classmethod
-    def from_data(cls, data: dict) -> RenderedDefinition:
+    def from_data(cls, data: dict) -> ContainerDefinition:
         """Inverse of :meth:`to_data`; ``ValueError`` if the data is not a definition of a format this reads."""
         if data.get("format") != FORMAT:
-            raise ValueError(f"a rendering of format {data.get('format')!r}: this server reads format {FORMAT}")
+            raise ValueError(f"a container of format {data.get('format')!r}: this server reads format {FORMAT}")
         known = {"format", "id", "type", "source", "params", "image", "renderer"}
         if set(data) != known:
-            raise ValueError("a rendering has exactly these fields: " + ", ".join(sorted(known)))
+            raise ValueError("a container has exactly these fields: " + ", ".join(sorted(known)))
         return cls(data["id"], data["type"], data["source"], data["params"], data["image"], data["renderer"])
 
-    def with_picture(self, image: str | None, renderer: str) -> RenderedDefinition:
+    def with_picture(self, image: str | None, renderer: str) -> ContainerDefinition:
         """The same definition with a new picture (or none) and the note of what made it."""
-        return RenderedDefinition(self.id, self.type, self.source, self.params, image, renderer)
+        return ContainerDefinition(self.id, self.type, self.source, self.params, image, renderer)
 
-    def redacted(self) -> RenderedDefinition:
+    def redacted(self) -> ContainerDefinition:
         """The definition with its words gone (redaction, D21): what it is and where it sits stay, the text does not."""
-        return RenderedDefinition(self.id, self.type, "", self.params, self.image, self.renderer)
+        return ContainerDefinition(self.id, self.type, "", self.params, self.image, self.renderer)

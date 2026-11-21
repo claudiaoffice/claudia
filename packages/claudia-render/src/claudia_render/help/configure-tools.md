@@ -3,11 +3,11 @@ id: render.configure-tools
 title: How do I set up the tools behind formulas, diagrams and typeset pages?
 apps: composes, computes, creates
 language: en
-tags: typst, mermaid, mmdc, chrome, latex, tools, plugins, rendered text, diagram, install, path, administrator
-explains: tools.typst.path, tools.mmdc.path, tools.mmdc.chrome, Insert > Rendered text
+tags: typst, mermaid, mmdc, chrome, latex, tools, plugins, container, diagram, install, path, administrator
+explains: tools.typst.path, tools.mmdc.path, tools.mmdc.chrome, Insert > Container
 ---
 
-A *rendered text* object keeps the text you write and shows a picture made from it: a LaTeX formula, a Mermaid
+A *container* keeps the text you write and shows a picture made from it: a LaTeX formula, a Mermaid
 diagram or a Typst page. The pictures are made on the server by programs the administrator installs; Claudia does
 not ship them. A document still opens and prints on a server that lacks a program, with the picture it had last.
 

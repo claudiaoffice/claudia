@@ -64,7 +64,7 @@ class TypesetSettings:
 
 @dataclass
 class RenderSettings:
-    """The tools behind rendered containers (D392): a logical name (``typst``, ``mmdc``) to a program, given as a path
+    """The tools behind containers (D392): a logical name (``typst``, ``mmdc``) to a program, given as a path
     or as a mapping with a ``path`` and the options of that tool (``mmdc`` takes the ``chrome`` to drive and
     ``browser_args``). A tool not named here is looked for on the PATH. ``plugins_dir`` is a folder of manifests (data
     only) that add container types; ``None`` means ``STATE_DIR/plugins``. The LaTeX programs are not here: they are

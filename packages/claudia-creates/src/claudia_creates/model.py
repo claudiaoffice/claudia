@@ -134,7 +134,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 7: how it is printed, and its language (D917)
     # 8: object bodies carry a description (alternative text)
     # 9: speaker notes (Markdown, D342) and planned times (D343) of the slides
-    # 10: rendered text containers (D390)
+    # 10: containers (D390)
     # 11: slides have names, in one namespace with the objects (D550)
     # 12: styles carry heading levels; a new presentation has a slide title style (E9.22, E10.21)
     # 13: the presentation holds lists, whose items are the words of text boxes and shapes (step C, E10.21)
@@ -205,7 +205,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "descriptions": dict(self.slide_descriptions),
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
-            **self.assets_to_data(),  # images, shapes, diagrams, renderings, tables (D1431)
+            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
             "objects": self.objects_to_data(),
             "print_setup": self.print_setup.to_data(),
             "language": self.language,

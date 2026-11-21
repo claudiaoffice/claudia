@@ -77,6 +77,7 @@ from .apps import methods_for
 from .assistant import Assistant
 from .auth import ScryptDirectory, UserDirectory
 from .certs import Certificate, CertificateError, ensure_certificate
+from .containers import RenderDesk
 from .filestore import FileDirectory, FileProvider
 from .folder_lock import FolderLock, FolderLocked
 from .fonts import FontService
@@ -87,7 +88,6 @@ from .idle import IdleWatch
 from .kdf_policy import KdfPolicy
 from .protocol import Limits
 from .rasterise import svg_rasteriser
-from .rendered import RenderDesk
 from .sealed import SealedDocuments
 from .server_settings import ServerSettings, load_admins, load_settings
 from .state import default_state_dir
@@ -438,7 +438,7 @@ def _tool_table(settings: ServerSettings) -> dict[str, object]:
 
 
 def _renderings(settings: ServerSettings, state_dir: Path, fonts: FontService) -> tuple[RenderDesk, list[str]]:
-    """What makes rendered containers (D395): the built-in types, the manifests of the plugins folder and the tools the
+    """What makes containers (D395): the built-in types, the manifests of the plugins folder and the tools the
     administrator registered (the LaTeX programs are those of the typeset settings). The lines are for the start-up
     report: what is offered, and each manifest that could not be taken, with the reason."""
     work = state_dir / "render"
@@ -447,13 +447,13 @@ def _renderings(settings: ServerSettings, state_dir: Path, fonts: FontService) -
     reports = registry.load_directory(folder, work / "plugins")
     tools = _tool_table(settings)
     service = RenderService(registry, ToolRegistry(lambda: _tool_table(settings)), work)
-    lines = ["rendered containers: " + ", ".join(plugin.manifest.type for plugin in registry.plugins())]
+    lines = ["containers: " + ", ".join(plugin.manifest.type for plugin in registry.plugins())]
     lines += [f"  not used, {folder.name}/{r.file}: {r.error}" for r in reports if r.error]
     draw = svg_rasteriser(_program_of(tools.get("rsvg_convert")))
     lines.append(
-        "office files draw rendered containers as pictures"
+        "office files draw containers as pictures"
         if draw
-        else "office files get rendered containers as SVG only (no rsvg-convert; help topic render.configure-tools)"
+        else "office files get containers as SVG only (no rsvg-convert; help topic render.configure-tools)"
     )
     return RenderDesk(service, draw), lines
 

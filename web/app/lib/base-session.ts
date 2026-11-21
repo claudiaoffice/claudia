@@ -5,7 +5,7 @@ import type { AuditRow } from './audit'
 import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
-import { outcomesOf, toOutcome, type RenderingDef, type RenderOutcome, type RenderType } from './rendering'
+import { outcomesOf, toOutcome, type ContainerDef, type RenderOutcome, type RenderType } from './containers'
 import { closeMessage, ProtocolError, type BranchInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
@@ -220,10 +220,10 @@ export interface BaseState extends ObjectLayerState {
   wayBack: WayBack | null
   /** Set by `goBack`: the place the view is asked to scroll to. */
   scrollBack: ScrollBack | null
-  /** What the server can make as a rendered container (`rendering_types`); empty for a server that makes none (D560). */
-  renderTypes: RenderType[]
-  /** The definitions of the rendered containers the document holds, by id; the text is the truth (D390). */
-  renderings: Record<string, RenderingDef>
+  /** What the server can make as a container (`container_types`); empty for a server that makes none (D560). */
+  containerTypes: RenderType[]
+  /** The definitions of the containers the document holds, by id; the text is the truth (D390). */
+  containers: Record<string, ContainerDef>
   /** What the server last said of making a container's picture, by id; gone when its text changes. */
   renderOutcomes: Record<string, RenderOutcome>
 }
@@ -271,8 +271,8 @@ function initialState(): BaseState {
     pointed: null,
     wayBack: null,
     scrollBack: null,
-    renderTypes: [],
-    renderings: {},
+    containerTypes: [],
+    containers: {},
     renderOutcomes: {},
     objects: {},
     order: {},
@@ -485,7 +485,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const s = this.state
     // A viewer holds the content key only, and the server keeps the history and the chat from her (D1261).
     const reads = s.me.role !== 'viewer'
-    const [entries, chat, checkpoints, history, branches, restorePolicy, renderTypes, renderings, audit] = await Promise.all([
+    const [entries, chat, checkpoints, history, branches, restorePolicy, containerTypes, definitions, audit] = await Promise.all([
       reads ? link.request<Step[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Step[]>([]),
       reads ? link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }) : Promise.resolve<ChatMessage[]>([]),
       reads ? link.request<CheckpointInfo[]>('checkpoints') : Promise.resolve<CheckpointInfo[]>([]),
@@ -496,8 +496,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       reads
         ? link.request<{ policy: 'consensus' | 'veto' }>('restore_policy')
         : Promise.resolve<{ policy: 'consensus' | 'veto' }>({ policy: 'consensus' }),
-      this.optional<{ types: RenderType[] }>('rendering_types'),
-      this.optional<RenderingDef[]>('renderings'),
+      this.optional<{ types: RenderType[] }>('container_types'),
+      this.optional<ContainerDef[]>('containers'),
       reads ? this.optional<AuditRow[]>('audit_log') : Promise.resolve<AuditRow[] | null>(null),
       this.loadApp(),
     ]).then(([e, c, k, h, l, p, rt, rd, au]) => [e, c, k, h, l, p, rt, rd, au] as const)
@@ -511,9 +511,9 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.redoLabel = history.redo_label
     s.branches = branches
     s.restorePolicy = restorePolicy.policy
-    s.renderTypes = renderTypes?.types ?? []
-    s.renderings = Object.fromEntries((renderings ?? []).map((d) => [d.id, d]))
-    s.renderOutcomes = outcomesOf(renderings ?? [])
+    s.containerTypes = containerTypes?.types ?? []
+    s.containers = Object.fromEntries((definitions ?? []).map((d) => [d.id, d]))
+    s.renderOutcomes = outcomesOf(definitions ?? [])
     const last = entries.at(-1)
     if (last) s.revision = last.revision
     else if (!reads) s.revision = (await link.request<{ revision: string | null }>('ping')).revision ?? s.revision
@@ -547,8 +547,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       case 'thing_renamed':
         s.renamed[data.id] = data.name
         break
-      case 'rendering':
-        this.onRendering(data.id, data.definition)
+      case 'container':
+        this.onContainer(data.id, data.definition)
         break
       case 'render_result':
         s.renderOutcomes[data.id] = toOutcome(data)
@@ -603,16 +603,16 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     }
   }
 
-  private onRendering(id: string, definition: RenderingDef | null) {
+  private onContainer(id: string, definition: ContainerDef | null) {
     const s = this.state
     if (!definition) {
-      delete s.renderings[id]
+      delete s.containers[id]
       delete s.renderOutcomes[id]
       return
     }
-    const before = s.renderings[id]
+    const before = s.containers[id]
     if (before && (before.source !== definition.source || JSON.stringify(before.params) !== JSON.stringify(definition.params))) delete s.renderOutcomes[id]
-    s.renderings[id] = definition
+    s.containers[id] = definition
   }
 
   private onEphemeral(message: { kind: string; sender: string | null; data: WireData }) {
@@ -1230,21 +1230,21 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return done === false ? false : (done as unknown as ReplaceAnswer)
   }
 
-  // ------------------------------------------------------------------------------ rendered containers (D560)
+  // ------------------------------------------------------------------------------ containers (D560)
   /** Puts a container of `type` at `where` (the app's own place: `{slide, x, y}`, …), its first text the type's example.
    *  Returns the new object's id, or `null` — after telling why — if it was not made. With `fit`, `size` is only the
    *  most it may take: its first picture is shown at its own size if that is smaller (D1229). */
-  async addRendering(type: string, where: Record<string, unknown>, size = { w: 420, h: 240 }, source?: string, fit = false): Promise<string | null> {
-    const kind = this.state.renderTypes.find((k) => k.type === type)
+  async addContainerAt(type: string, where: Record<string, unknown>, size = { w: 420, h: 240 }, source?: string, fit = false): Promise<string | null> {
+    const kind = this.state.containerTypes.find((k) => k.type === type)
     if (!kind) return null
-    const done = await this.write('add_rendering', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, ...(fit ? { fit: true } : {}) })
+    const done = await this.write('add_container', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, ...(fit ? { fit: true } : {}) })
     return done === false ? null : (done.object as string)
   }
 
   /** Changes the text of a container; a text that is the same as it is is not sent. `false` after saying why not. */
-  async setRenderingSource(id: string, source: string, params: Record<string, unknown> | null = null): Promise<boolean> {
-    if (this.state.renderings[id]?.source === source && !params) return true
-    return (await this.write('set_rendering_source', { id, source, params })) !== false
+  async setContainerSource(id: string, source: string, params: Record<string, unknown> | null = null): Promise<boolean> {
+    if (this.state.containers[id]?.source === source && !params) return true
+    return (await this.write('set_container_source', { id, source, params })) !== false
   }
 
   // ------------------------------------------------------------------------------ numbering (E9.21, E9.22)

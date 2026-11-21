@@ -1377,7 +1377,7 @@ msgstr ""
 msgid "Connection to {label}: {word}. Show details."
 msgstr ""
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:194
+#: clients/linux/src/claudia_shell_gtk/manifest.py packages/claudia-server/src/claudia_server/thing_names.py:37 web/app/components/SidePanel.vue:281 web/app/lib/document-menus.ts:194
 msgid "Container"
 msgstr ""
 
@@ -1453,7 +1453,7 @@ msgstr ""
 msgid "Could not connect."
 msgstr ""
 
-#: web/app/lib/rendering.ts:119
+#: web/app/lib/containers.ts:119
 msgid "Could not draw it: {message}"
 msgstr ""
 
@@ -1529,7 +1529,7 @@ msgstr ""
 msgid "Ctrl+Enter"
 msgstr ""
 
-#: web/app/components/RenderedEditor.vue:46
+#: web/app/components/ContainerEditor.vue:46
 msgid "Ctrl+Enter draws it, Escape leaves it as it was"
 msgstr ""
 
@@ -1721,10 +1721,6 @@ msgstr ""
 msgid "Device"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:37 web/app/components/SidePanel.vue:281
-msgid "Diagram"
-msgstr ""
-
 #: web/app/components/ResultNote.vue:50 web/app/components/SqlEditor.vue:157
 msgid "Did you mean {word}?"
 msgstr ""
@@ -1833,7 +1829,7 @@ msgstr ""
 msgid "Draw {n}: draw new random numbers"
 msgstr ""
 
-#: web/app/lib/rendering.ts:115
+#: web/app/lib/containers.ts:115
 msgid "Drawing…"
 msgstr ""
 
@@ -1881,7 +1877,7 @@ msgstr ""
 msgid "Elapsed"
 msgstr ""
 
-#: web/app/lib/rendering.ts:117
+#: web/app/lib/containers.ts:117
 msgid "Empty {type} container: double-click to write"
 msgstr ""
 
@@ -5565,7 +5561,7 @@ msgstr ""
 msgid "Text of the replacement"
 msgstr ""
 
-#: web/app/components/RenderedEditor.vue:45
+#: web/app/components/ContainerEditor.vue:45
 msgid "Text of the {type} container"
 msgstr ""
 
@@ -6973,7 +6969,7 @@ msgstr ""
 msgid "This server has no folder to add fonts to."
 msgstr ""
 
-#: web/app/lib/rendering.ts:121
+#: web/app/lib/containers.ts:121
 msgid "This server has no tool set up to draw {type}."
 msgstr ""
 
@@ -7837,12 +7833,12 @@ msgstr ""
 msgid "add_object: this server has no shape {shape!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/shape_methods.py:37
-msgid "add_object: use add_image to put a picture here"
+#: packages/claudia-server/src/claudia_server/shape_methods.py:39
+msgid "add_object: use add_container to put a container here"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/shape_methods.py:39
-msgid "add_object: use add_rendering to put a container here"
+#: packages/claudia-server/src/claudia_server/shape_methods.py:37
+msgid "add_object: use add_image to put a picture here"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py:575
@@ -8529,7 +8525,7 @@ msgstr ""
 msgid "line height"
 msgstr ""
 
-#: web/app/components/RenderedFace.vue:21
+#: web/app/components/ContainerFace.vue:21
 msgid "line {line}: {message}"
 msgstr ""
 
@@ -9561,6 +9557,10 @@ msgstr ""
 msgid "this computer"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/containers.py:217
+msgid "this document has no container with the id {id!r}"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/structure_methods.py:83
 msgid "this document has no lists"
 msgstr ""
@@ -9575,10 +9575,6 @@ msgstr ""
 
 #: packages/claudia-server/src/claudia_server/tables.py:101
 msgid "this document has no table {id!r}"
-msgstr ""
-
-#: packages/claudia-server/src/claudia_server/rendered.py:217
-msgid "this document has nothing rendered with the id {id!r}"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/replay.py:175 packages/claudia-server/src/claudia_server/thing_names.py:55
@@ -9645,8 +9641,8 @@ msgstr ""
 msgid "this server does not list a document's people this way"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/rendered.py:136
-msgid "this server does not make rendered containers"
+#: packages/claudia-server/src/claudia_server/containers.py:136
+msgid "this server does not make containers"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:1094

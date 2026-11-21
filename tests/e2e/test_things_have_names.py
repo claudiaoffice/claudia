@@ -39,7 +39,7 @@ def live(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Live]:
 
 def renderable(session: Session) -> str | None:
     """A container type this server can make (the tools are the administrator's, D392), or ``None``."""
-    found = [each["type"] for each in session.ok("rendering_types")["types"]]
+    found = [each["type"] for each in session.ok("container_types")["types"]]
     return found[0] if found else None
 
 
@@ -89,7 +89,7 @@ def test_everything_added_to_a_presentation_has_a_name(live: Live) -> None:
         ]
         kind = renderable(session)
         if kind is not None:
-            made = session.ok("add_rendering", slide=second, x=0, y=300, w=200, h=100, type=kind, source="x")
+            made = session.ok("add_container", slide=second, x=0, y=300, w=200, h=100, type=kind, source="x")
             added.append(made["object"])
 
         things = creates_things(session)
@@ -153,7 +153,7 @@ def test_everything_added_to_a_workbook_has_a_name(live: Live) -> None:
         kind = renderable(session)
         if kind is not None:
             added.append(
-                session.ok("add_rendering", sheet=sheet, row=8, col=0, w=200, h=100, type=kind, source="x")["object"]
+                session.ok("add_container", sheet=sheet, row=8, col=0, w=200, h=100, type=kind, source="x")["object"]
             )
 
         things = computes_things(session)
@@ -184,7 +184,7 @@ def test_a_container_in_a_text_has_a_name(live: Live) -> None:
         if kind is None:
             pytest.skip("this server has no tool to render a container with (D392); the text has nothing else to add")
         block = session.ok("snapshot")["state"]["blocks"][0]["id"]
-        made = session.ok("add_rendering", block=block, offset=0, w=200, h=100, type=kind, source="x")["object"]
+        made = session.ok("add_container", block=block, offset=0, w=200, h=100, type=kind, source="x")["object"]
         objects = {obj["id"]: obj["name"] for obj in session.ok("objects")["objects"]}
         assert made in objects
         assert_named(objects)

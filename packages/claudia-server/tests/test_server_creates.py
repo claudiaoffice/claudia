@@ -485,10 +485,10 @@ def test_add_object_refuses_kind_image_and_points_to_add_image(deck):
     assert caught.value.code == "bad_request"
 
 
-@pytest.mark.parametrize(("kind", "pointer"), [("diagram", "computes"), ("rendered", "add_rendering")])
+@pytest.mark.parametrize(("kind", "pointer"), [("diagram", "computes"), ("container", "add_container")])
 def test_add_object_refuses_the_kinds_it_cannot_make_and_says_where_they_come_from(deck, kind, pointer):
-    """A chart or a rendered container is made from a definition, which `add_object` has none of. Since the containers
-    came (D390) the object kinds include "rendered", and both kinds reached a lookup of the kind's style that failed
+    """A chart or a container is made from a definition, which `add_object` has none of. Since the containers
+    came (D390) the object kinds include "container", and both kinds reached a lookup of the kind's style that failed
     with an internal error, after a message that listed them as allowed."""
     with pytest.raises(RequestError, match=pointer) as caught:
         call(deck, "add_object", {"slide": "s1", "kind": kind, "x": 0, "y": 0, "w": 100, "h": 50})

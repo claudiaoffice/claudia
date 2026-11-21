@@ -67,6 +67,7 @@ from .commands import (
     encode,
     new_registry,
 )
+from .containers import MAX_CONTAINER_SOURCE, ContainerDefinition
 from .context import Context
 from .css import (
     ALLOWED_CSS,
@@ -246,7 +247,6 @@ from .paragraphs import (
 from .presence import Hold, Presence
 from .raster import FALLBACK_SIDE, Rasterise, blank_png
 from .region import Region, transform
-from .renderings import MAX_RENDERING_SOURCE, RenderedDefinition
 from .replay import replay, replay_collecting
 from .revision import MAIN, Branch, Revision
 from .schemes import (
@@ -487,7 +487,7 @@ __all__ = [
     "PageSetupError",
     "PAPERS",
     "MAX_ROLES",
-    "MAX_RENDERING_SOURCE",
+    "MAX_CONTAINER_SOURCE",
     "MAX_SELECTION",
     "MAX_THING_NAME",
     "MemoryStore",
@@ -540,7 +540,7 @@ __all__ = [
     "RegionHeld",
     "RemoveObject",
     "RenameThing",
-    "RenderedDefinition",
+    "ContainerDefinition",
     "DefineTable",
     "DeleteColumns",
     "DeleteRows",

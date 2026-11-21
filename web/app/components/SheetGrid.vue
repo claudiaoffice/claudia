@@ -15,7 +15,7 @@ import { pictureOf as clippedImport, useObjectClipboard } from '~/lib/object-cli
 import { nearestLine, stepFor } from '~/lib/sheet-object-host'
 import { canTurn, degreesText, quarterTurn, SHIFT_STEP, stepTurn } from '~/lib/turning'
 import type { MenuItem } from './MenuBar.vue'
-import { renderedView } from '~/lib/rendering'
+import { containerView } from '~/lib/containers'
 import {
   buildSizeTable,
   DEFAULT_COL_WIDTH,
@@ -448,11 +448,11 @@ function stepObject(step: 1 | -1) {
   selectedObject.value = id
   if (id !== null) void nextTick(() => viewport.value?.querySelector(`[data-object="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' }))
 }
-/** What a rendered container shows (D560), and the one whose text is being written, which has an editor of its own. */
-const faceOf = (o: SheetObject) => renderedView(state, o, imageDataUrl)
+/** What a container shows (D560), and the one whose text is being written, which has an editor of its own. */
+const faceOf = (o: SheetObject) => containerView(state, o, imageDataUrl)
 const containerEditing = ref<string | null>(null)
 function beginContainerEdit(o: SheetObject | undefined) {
-  if (!o || o.kind !== 'rendered' || containerEditing.value) return
+  if (!o || o.kind !== 'container' || containerEditing.value) return
   if (state.me.role === 'viewer') return props.session.notice(t('You can only look at this document.'), 'warning')
   selectedObject.value = o.id
   containerEditing.value = o.id
@@ -460,8 +460,8 @@ function beginContainerEdit(o: SheetObject | undefined) {
 async function commitContainer(o: SheetObject, text: string) {
   containerEditing.value = null
   viewport.value?.focus()
-  const rendering = pointer(o, 'rendered')
-  if (rendering) await props.session.setRenderingSource(rendering, text)
+  const definition = pointer(o, 'container')
+  if (definition) await props.session.setContainerSource(definition, text)
 }
 function cancelContainer() {
   containerEditing.value = null
@@ -642,7 +642,7 @@ const objectItems = computed<MenuItem[]>(() => {
       copy: () => void clip.copy(),
       setSnap: () => undefined, // computes has no grid for objects
     },
-    { edit: o.kind === 'rendered' }, // a picture and a chart have no words; a container is written in
+    { edit: o.kind === 'container' }, // a picture and a chart have no words; a container is written in
   )
 })
 async function removeSelected() {
@@ -1008,7 +1008,7 @@ const ARROWS: Record<string, [number, number]> = { ArrowUp: [-1, 0], ArrowDown: 
 function onKey(event: KeyboardEvent) {
   if (props.edit || containerEditing.value) return
   if ((event.target as HTMLElement).closest('[role=dialog]')) return // a popover in the grid (Rotate by…) has its own keys: Enter there submits
-  if ((event.key === 'Enter' || event.key === 'F2') && selectedObject.value && state.objects[selectedObject.value]?.kind === 'rendered') {
+  if ((event.key === 'Enter' || event.key === 'F2') && selectedObject.value && state.objects[selectedObject.value]?.kind === 'container') {
     event.preventDefault()
     return beginContainerEdit(state.objects[selectedObject.value])
   }
@@ -1334,15 +1334,15 @@ defineExpose({
           @mousedown.stop
           @dblclick.stop="beginContainerEdit(o)"
         >
-          <template v-if="o.kind === 'rendered' && faceOf(o)">
-            <RenderedEditor
+          <template v-if="o.kind === 'container' && faceOf(o)">
+            <ContainerEditor
               v-if="containerEditing === o.id"
               :text="faceOf(o)!.definition.source"
               :label="faceOf(o)!.label"
               @commit="commitContainer(o, $event)"
               @cancel="cancelContainer"
             />
-            <RenderedFace v-else :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
+            <ContainerFace v-else :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
           </template>
           <ChartView v-else-if="o.kind === 'diagram' && o.ref" :session="session" :diagram-id="o.ref" :width="o.w" :height="o.h" />
           <img v-else-if="pictureSrc(o)" :src="pictureSrc(o)!" :alt="''" draggable="false" >

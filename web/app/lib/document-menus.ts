@@ -9,7 +9,7 @@
 import type { Menu, MenuItem } from '../components/MenuBar.vue'
 import { copySelection, cutSelection } from './clipboard'
 import { LANGUAGES } from './i18n'
-import type { RenderType } from './rendering'
+import type { RenderType } from './containers'
 import { chordLabel, chordOf, hintOf, sharedShortcuts } from './shortcuts'
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string

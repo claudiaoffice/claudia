@@ -156,7 +156,7 @@ def test_a_snapshot_written_before_descriptions_existed_still_restores(doc):
     put_image(doc)
     state = doc.model.serialize()
     state["objects"] = [
-        body_before_ref(body, "description", "decorative", "rendered", "name", "table") for body in state["objects"]
+        body_before_ref(body, "description", "decorative", "container", "name", "table") for body in state["objects"]
     ]
     restored = SlideModel.restore(state)
     assert restored.get("i1").body.description == "a sample picture"
@@ -183,7 +183,7 @@ def test_a_log_written_before_descriptions_existed_still_replays(doc):
     for envelope in old:
         envelope["s"] = 1
         envelope["d"]["body"] = body_before_ref(
-            envelope["d"]["body"], "description", "decorative", "rendered", "name", "table"
+            envelope["d"]["body"], "description", "decorative", "container", "name", "table"
         )
     replayed = Document.open(SlideModel, CommandLog.from_data(log, SlideModel.registry))
     assert replayed.model.get("i1").body.description == "a sample picture"

@@ -236,7 +236,7 @@ def pptx_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[
     which words of an object: a pptx does not keep it), ``"notes-link"``, ``"notes-image"``, ``"notes-code"`` and
     ``"notes-quote"`` (slides whose notes use what the file shows only as plain words), ``"svg-fallback"`` (a picture
     drawn as SVG, which only PowerPoint 2016 and later show; other programs show an empty picture unless a rasteriser
-    was given, ``rasterised``), ``"rendering-pending"`` (a rendered text container nothing has been drawn for yet:
+    was given, ``rasterised``), ``"rendering-pending"`` (a container nothing has been drawn for yet:
     left out), ``"list-look"`` (a list marker PowerPoint has no automatic number for, such as ``2.1``: left out),
     ``"agenda"`` (an agenda, written as the lines it shows: it no longer follows the slides) and
     what :func:`pptx_unwritten_changes` says of a fresh file (``"planned-time"``...)."""
@@ -254,7 +254,7 @@ def pptx_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[
     for obj in model.objects.values():
         picture = model.picture_of(obj.body)
         asset = model.images.get(picture) if picture else None
-        if obj.body.kind == "rendered" and asset is None:
+        if obj.body.kind == "container" and asset is None:
             losses.add("rendering-pending")
         elif asset is not None and asset.format == "svg" and not rasterised:
             losses.add("svg-fallback")
@@ -407,7 +407,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None, inf
                 write_pptx_mark(shape.text_frame.paragraphs[0]._p, marks.get(body.id))  # noqa: SLF001
                 _turn(shape, body)
                 _describe(shape, body)
-            elif body.kind in ("image", "rendered"):
+            elif body.kind in ("image", "container"):
                 picture = model.picture_of(body)
                 asset = model.images.get(picture) if picture else None
                 if asset is not None:

@@ -31,7 +31,7 @@ Feature: A picture floating on a sheet is in the file I export, where it is, as 
       | xlsx   |
       | ods    |
   @extended @app:computes
-  Scenario Outline: An SVG picture and a rendered container
+  Scenario Outline: An SVG picture and a container
     Given a container whose picture is an SVG, and one that was never drawn
     When I export it as <format> with and without a rasteriser
     Then with one the picture is a PNG; without one the file is told "svg-fallback" and the picture is the SVG

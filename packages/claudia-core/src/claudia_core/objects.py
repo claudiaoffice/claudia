@@ -35,12 +35,12 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeIs, runtime
 from .asset_store import ASSET_KINDS, IMAGE, KIND_BY_OBJECT, AssetKind, AssetStore
 from .assets import MAX_ALT_CHARS, ImageAsset, ImageImport
 from .commands import Batch, Command, CommandRegistry, core_commands
+from .containers import ContainerDefinition
 from .facets import SLOTS, fits
 from .fields import FIELD_CHAR, Field, plain
 from .generated import Generated
 from .names import clean_name, name_key, name_problem
 from .paragraphs import ListItem, Paragraph, Run
-from .renderings import RenderedDefinition
 from .shapes import ShapeDefinition
 from .tables import FILLER, TableDef, parse_entry_id
 
@@ -50,10 +50,10 @@ if TYPE_CHECKING:
 
 #: Kinds of object every app understands. A text box carries only words; a shape carries an outline and may carry
 #: words; an image carries an asset; a diagram carries a :class:`DiagramDefinition` (E6.6) — what it draws is
-#: opaque to the kernel, the same way an anchor's own geometry is (see :class:`DiagramDefinition`); a rendered
-#: container carries a :class:`~claudia_core.RenderedDefinition` — text that something outside the document turns
+#: opaque to the kernel, the same way an anchor's own geometry is (see :class:`DiagramDefinition`); a
+#: container carries a :class:`~claudia_core.ContainerDefinition` — text that something outside the document turns
 #: into a picture (D390); a table carries a :class:`~claudia_core.TableDef` (D1201).
-OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "diagram", "rendered", "table")
+OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "diagram", "container", "table")
 
 MIN_OBJECT_SIZE = 20  # an object is at least this wide and this tall, in its app's own units
 MAX_OBJECTS_PER_HOLDER = 500
@@ -77,13 +77,13 @@ _BODY_FIELDS = (
     "decorative",
     "name",
 )
-#: Bodies were once written with one pointer field per kind (``shape``, ``image``, ``diagram``, ``rendered``,
+#: Bodies were once written with one pointer field per kind (``shape``, ``image``, ``diagram``, ``container``,
 #: ``table``) and grew a generation of field sets with each new field. They still read: the pointer that matches the
 #: body's kind becomes ``ref``, and any other pointer that is set is refused. Nothing new is ever added to this list;
 #: a new kind of object uses ``ref`` and needs no field of its own.
 # The kinds that do not turn, and what the sentence calls them (D1021: a chart; D1224: a table).
 _NOT_TURNED = {"diagram": "chart", "table": "table"}
-_LEGACY_POINTERS = ("shape", "image", "diagram", "rendered", "table")
+_LEGACY_POINTERS = ("shape", "image", "diagram", "container", "table")
 _LEGACY_SETS = (
     frozenset(
         (
@@ -180,10 +180,10 @@ class ObjectBody:
     ``ref`` is the id of the definition the kind points at, in the document's own tables of definitions: a
     ``shape`` object's outline (:class:`~claudia_core.ShapeDefinition`), an ``image``'s asset
     (:class:`~claudia_core.ImageAsset`), a ``diagram``'s :class:`DiagramDefinition` (E6.6, opaque to the kernel, the
-    way an anchor is), a ``rendered`` container's :class:`~claudia_core.RenderedDefinition` (the text it is made from
+    way an anchor is), a container's :class:`~claudia_core.ContainerDefinition` (the text it is made from
     and the picture last made of it, D390) and a ``table``'s :class:`~claudia_core.TableDef` (D1201). A text box
     points at nothing (``None``). The kind says which table ``ref`` is looked up in, so one field serves every kind
-    and a new kind of object needs no new field. :attr:`shape`, :attr:`image`, :attr:`diagram`, :attr:`rendered` and
+    and a new kind of object needs no new field. :attr:`shape`, :attr:`image`, :attr:`diagram`, :attr:`container` and
     :attr:`table` read it by kind. ``imported`` is the record of how an image got there.
     ``rotation`` is whole degrees clockwise. ``snap`` is whether the object holds to its app's grid (E10.15,
     D214): the grid is a helper the view draws, but each object's own choice to follow it is real, persisted
@@ -234,9 +234,9 @@ class ObjectBody:
         return self._pointing("diagram")
 
     @property
-    def rendered(self) -> str | None:
-        """The id of the rendered container's definition, if this is one."""
-        return self._pointing("rendered")
+    def container(self) -> str | None:
+        """The id of the container's definition, if this is one."""
+        return self._pointing("container")
 
     @property
     def table(self) -> str | None:
@@ -486,9 +486,9 @@ class ObjectModel[A: Anchor]:
         return self.assets["diagram"]
 
     @property
-    def renderings(self) -> AssetStore[RenderedDefinition]:
+    def containers(self) -> AssetStore[ContainerDefinition]:
         """The containers' definitions, by id (D390)."""
-        return self.assets["rendering"]
+        return self.assets["container"]
 
     @property
     def tables(self) -> AssetStore[TableDef]:
@@ -500,7 +500,7 @@ class ObjectModel[A: Anchor]:
         is. An app adds what else of its own may show one (computes: a chart tab)."""
         users = [o.id for o in self.objects.values() if o.body.kind == kind.object_kind and o.body.ref == asset_id]
         if kind is IMAGE:
-            users += [rendering.id for rendering in self.renderings.values() if rendering.image == asset_id]
+            users += [definition.id for definition in self.containers.values() if definition.image == asset_id]
         return users
 
     # -- the size of a new object (D1332) ------------------------------------------
@@ -557,7 +557,7 @@ class ObjectModel[A: Anchor]:
         return RotateObject(object_id, turned, None if anchor == obj.anchor else anchor.to_data())
 
     def can_turn(self, body: ObjectBody) -> bool:
-        """Does an object like this turn? Text boxes, shapes, pictures, rendered text do; a chart or table does not."""
+        """Does an object like this turn? Text boxes, shapes, pictures, containers do; a chart or table does not."""
         return body.kind not in _NOT_TURNED
 
     def turned_anchor(self, obj: VisualObject[A], rotation: int) -> A:
@@ -705,13 +705,13 @@ class ObjectModel[A: Anchor]:
         return [name for _kind, _id, name in self.named_things()]
 
     def picture_of(self, body: ObjectBody) -> str | None:
-        """The id of the image asset that draws ``body``: its own picture, or for a rendered container the picture last
+        """The id of the image asset that draws ``body``: its own picture, or for a container the picture last
         made from its text (``None`` for a container nothing has been made for yet, and for kinds drawn otherwise).
-        Everything that draws or exports a picture asks this, so a rendered container is a picture to it (D394)."""
+        Everything that draws or exports a picture asks this, so a container is a picture to it (D394)."""
         if body.image is not None:
             return body.image
-        if body.rendered is not None and body.rendered in self.renderings:
-            return self.renderings[body.rendered].image
+        if body.container is not None and body.container in self.containers:
+            return self.containers[body.container].image
         return None
 
     def style_in_use(self, style_id: str) -> bool:
@@ -812,18 +812,18 @@ class ObjectModel[A: Anchor]:
     def blank_objects(self, parts: frozenset[str] | None) -> None:
         """Blank the objects whose id is in ``parts`` (all of them for ``None``), in place, for redacting an import
         (D723): their words become filler of the same length, their description and import record lose what a
-        person wrote, and the pictures, rendered sources and diagrams they show are blanked with them. Ids, places,
+        person wrote, and the pictures, containers' texts and diagrams they show are blanked with them. Ids, places,
         sizes and styles stay."""
         chosen = [obj for obj in self.objects.values() if parts is None or obj.id in parts]
         for obj in chosen:
             body = obj.body
             if body.image is not None and body.image in self.images:
                 self.images.put(self.images[body.image].blanked())
-            if body.rendered is not None and body.rendered in self.renderings:
-                rendering = self.renderings[body.rendered]
-                if rendering.image is not None and rendering.image in self.images:
-                    self.images.put(self.images[rendering.image].blanked())
-                self.renderings.put(rendering.redacted())
+            if body.container is not None and body.container in self.containers:
+                definition = self.containers[body.container]
+                if definition.image is not None and definition.image in self.images:
+                    self.images.put(self.images[definition.image].blanked())
+                self.containers.put(definition.redacted())
             if body.table is not None and body.table in self.tables:
                 self.tables.put(self.tables[body.table].blanked(keep_length=True))
             if body.diagram is not None and body.diagram in self.diagrams:
@@ -885,7 +885,7 @@ class ObjectModel[A: Anchor]:
             self._check_slot(styles, body.kind, 0, body.style)
         aspect = self._check_visual(body)
         self._check_size(body, aspect)
-        if body.kind in ("image", "diagram", "rendered", "table"):
+        if body.kind in ("image", "diagram", "container", "table"):
             if body.paragraph is not None:
                 raise ValueError(f"a {body.kind} carries no text")
         else:
@@ -934,7 +934,7 @@ class ObjectModel[A: Anchor]:
             "shape": self._check_shape_visual,
             "diagram": self._check_diagram_visual,
             "image": self._check_image_visual,
-            "rendered": self._check_rendered_visual,
+            "container": self._check_container_visual,
             "table": self._check_table_visual,
         }
         return checks[body.kind](body)
@@ -952,8 +952,8 @@ class ObjectModel[A: Anchor]:
         self._check_ref(body, "diagram", self.diagrams)
         # a diagram keeps no fixed aspect ratio (falls through to the implicit ``None``)
 
-    def _check_rendered_visual(self, body: ObjectBody) -> None:
-        self._check_ref(body, "rendered", self.renderings, label="rendering")
+    def _check_container_visual(self, body: ObjectBody) -> None:
+        self._check_ref(body, "container", self.containers, label="container")
         # the picture scales with the frame the person gives it, and keeps no fixed ratio of its own
 
     def _check_table_visual(self, body: ObjectBody) -> None:
@@ -1168,9 +1168,9 @@ class AddObject(Command):
 
     kind: ClassVar[str] = "core.AddObject"
     schema: ClassVar[int] = (
-        6  # 1: a body without ``description`` and ``decorative``; 2: without ``rendered``; 3: without ``name``;
+        6  # 1: a body without ``description`` and ``decorative``; 2: without ``container``; 3: without ``name``;
         # 4: names were not yet shared with named ranges (D552); 5: a body with one pointer field per kind (``shape``,
-        # ``image``, ``diagram``, ``rendered``, ``table``) instead of ``ref``
+        # ``image``, ``diagram``, ``container``, ``table``) instead of ``ref``
     )
     body: ObjectBody
     anchor: dict
@@ -1189,7 +1189,7 @@ class AddObject(Command):
             "shape": "Add shape",
             "image": "Add image",
             "diagram": "Add diagram",
-            "rendered": "Add rendered text",
+            "container": "Add container",
         }
         return labels[self.body.kind]
 
@@ -1205,8 +1205,8 @@ class AddObject(Command):
             return f"Added an image: {_quote(alt)}" if alt.strip() else "Added an image"
         if self.body.kind == "diagram":
             return "Added a diagram"
-        if self.body.kind == "rendered":
-            return "Added a piece of rendered text"
+        if self.body.kind == "container":
+            return "Added a container"
         return f"Added a {self.body.shape}"
 
     def apply(self, ctx: Context) -> Command:
@@ -1721,9 +1721,9 @@ def _objects_with_descriptions(data: dict) -> dict:
 
 
 @core_commands.upcaster("core.AddObject", 2)
-def _objects_without_renderings(data: dict) -> dict:
-    """Schema 2 bodies had no ``rendered``: none of those objects shows a rendered container."""
-    return {**data, "body": {**data["body"], "rendered": None}}
+def _objects_without_containers(data: dict) -> dict:
+    """Schema 2 bodies had no ``container``: none of those objects shows a container."""
+    return {**data, "body": {**data["body"], "container": None}}
 
 
 @core_commands.register

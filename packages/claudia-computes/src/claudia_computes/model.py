@@ -434,7 +434,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 8: the workbook carries the seed and draw number of its random numbers (E6.22, D291)
     # 9: object bodies carry a description
     # 10: the workbook carries its named number formats (D378)
-    # 11: rendered text containers (D390)
+    # 11: containers (D390)
     # 12: how it is printed, and its language (E6.19, D1001)
     # 13: names have ids (D552)
     state_schema: ClassVar[int] = (
@@ -511,7 +511,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "sheets": [sheet.to_data() for sheet in self.sheets.values()],
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
-            **self.assets_to_data(),  # images, shapes, diagrams, renderings, tables (D1431)
+            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
             "objects": self.objects_to_data(),
             "charts": [chart.to_data() for chart in self.charts.values()],
             "names": self.names.to_data(),

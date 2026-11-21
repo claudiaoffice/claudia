@@ -7,7 +7,7 @@
   "value": "1"
  },
  "ASSET_KINDS": {
-  "value": "(AssetKind(name='table', object_kind='table', noun='table', read=<function <lambda>>, editable=True, check=<function <lambda>>, blank=None, event_key='definition', in_use='is shown by'), AssetKind(name='shape', object_kind='shape', noun='shape', read=<function <lambda>>, editable=False, check=None, blank=None, event_key='definition', in_use='is in use by'), AssetKind(name='image', object_kind='image', noun='image', read=<function <lambda>>, editable=False, check=None, blank=<function <lambda>>, event_key='asset', in_use='is in use by'), AssetKind(name='diagram', object_kind='diagram', noun='diagram', read=<function <lambda>>, editable=True, check=None, blank=<function <lambda>>, event_key='definition', in_use='is in use by'), AssetKind(name='rendering', object_kind='rendered', noun='rendered text', read=<function <lambda>>, editable=True, check=<function _check_rendering>, blank=<function <lambda>>, event_key='definition', in_use='is in use by'))"
+  "value": "(AssetKind(name='table', object_kind='table', noun='table', read=<function <lambda>>, editable=True, check=<function <lambda>>, blank=None, event_key='definition', in_use='is shown by'), AssetKind(name='shape', object_kind='shape', noun='shape', read=<function <lambda>>, editable=False, check=None, blank=None, event_key='definition', in_use='is in use by'), AssetKind(name='image', object_kind='image', noun='image', read=<function <lambda>>, editable=False, check=None, blank=<function <lambda>>, event_key='asset', in_use='is in use by'), AssetKind(name='diagram', object_kind='diagram', noun='diagram', read=<function <lambda>>, editable=True, check=None, blank=<function <lambda>>, event_key='definition', in_use='is in use by'), AssetKind(name='container', object_kind='container', noun='container', read=<function <lambda>>, editable=True, check=<function _check_container>, blank=<function <lambda>>, event_key='definition', in_use='is in use by'))"
  },
  "AddObject": {
   "class": [
@@ -370,6 +370,19 @@
    "register": "(self, cls: 'type[Command]') -> 'type[Command]'",
    "schemas": "(self) -> 'dict[str, int]'",
    "upcaster": "(self, kind: 'str', from_schema: 'int') -> 'Callable'"
+  },
+  "properties": []
+ },
+ "ContainerDefinition": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', type: 'str', source: 'str', params: 'Mapping[str, Scalar]' = <factory>, image: 'str | None' = None, renderer: 'str' = '') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'ContainerDefinition'",
+   "redacted": "(self) -> 'ContainerDefinition'",
+   "to_data": "(self) -> 'dict'",
+   "with_picture": "(self, image: 'str | None', renderer: 'str') -> 'ContainerDefinition'"
   },
   "properties": []
  },
@@ -1180,6 +1193,9 @@
  "MAX_COLUMNS": {
   "value": "10"
  },
+ "MAX_CONTAINER_SOURCE": {
+  "value": "200000"
+ },
  "MAX_HEADING_LEVEL": {
   "value": "9"
  },
@@ -1194,9 +1210,6 @@
  },
  "MAX_PARAGRAPH_TEXT": {
   "value": "20000"
- },
- "MAX_RENDERING_SOURCE": {
-  "value": "200000"
  },
  "MAX_ROLES": {
   "value": "64"
@@ -1286,7 +1299,7 @@
   "value": "'none'"
  },
  "OBJECT_KINDS": {
-  "value": "('text', 'shape', 'image', 'diagram', 'rendered', 'table')"
+  "value": "('text', 'shape', 'image', 'diagram', 'container', 'table')"
  },
  "ORIGINS": {
   "value": "{'document': 'document', 'builtin': 'built-in', 'template': 'template'}"
@@ -1305,9 +1318,9 @@
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
   "properties": [
+   "container",
    "diagram",
    "image",
-   "rendered",
    "shape",
    "table"
   ]
@@ -1379,9 +1392,9 @@
    "users_of": "(self, kind: 'AssetKind', asset_id: 'str') -> 'list[str]'"
   },
   "properties": [
+   "containers",
    "diagrams",
    "images",
-   "renderings",
    "shapes",
    "tables"
   ]
@@ -1792,19 +1805,6 @@
    "label",
    "summary"
   ]
- },
- "RenderedDefinition": {
-  "class": [
-   "object"
-  ],
-  "init": "(id: 'str', type: 'str', source: 'str', params: 'Mapping[str, Scalar]' = <factory>, image: 'str | None' = None, renderer: 'str' = '') -> None",
-  "methods": {
-   "from_data": "(data: 'dict') -> 'RenderedDefinition'",
-   "redacted": "(self) -> 'RenderedDefinition'",
-   "to_data": "(self) -> 'dict'",
-   "with_picture": "(self, image: 'str | None', renderer: 'str') -> 'RenderedDefinition'"
-  },
-  "properties": []
  },
  "ReplacePalette": {
   "class": [

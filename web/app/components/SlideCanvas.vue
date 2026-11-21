@@ -26,7 +26,7 @@ import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
 import type { SlideMark } from '~/lib/slide-search-host'
-import { renderedView } from '~/lib/rendering'
+import { containerView } from '~/lib/containers'
 
 const { t } = useI18n()
 
@@ -164,15 +164,15 @@ function pictureSrc(o: SlideObject): string {
   const asset = pictureOf(o)
   return asset ? imageDataUrl(asset) : ''
 }
-/** What a rendered container shows: its picture or why there is none yet (D560). */
-const faceOf = (o: SlideObject) => renderedView(state, o, imageDataUrl)
-/** The container whose text is being written, if any: it has an editor of its own (`RenderedEditor.vue`). */
+/** What a container shows: its picture or why there is none yet (D560). */
+const faceOf = (o: SlideObject) => containerView(state, o, imageDataUrl)
+/** The container whose text is being written, if any: it has an editor of its own (`ContainerEditor.vue`). */
 const containerEditing = ref<string | null>(null)
 async function commitContainer(o: SlideObject, text: string) {
   containerEditing.value = null
   area.value?.focus({ preventScroll: true })
-  const rendering = pointer(o, 'rendered')
-  if (rendering) await session.setRenderingSource(rendering, text)
+  const definition = pointer(o, 'container')
+  if (definition) await session.setContainerSource(definition, text)
 }
 function cancelContainer() {
   containerEditing.value = null
@@ -479,7 +479,7 @@ async function beginEdit(id: string | null = state.selected) {
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
-  if (o.kind === 'rendered') {
+  if (o.kind === 'container') {
     containerEditing.value = o.id // its text is the definition's, in an editor of its own
     return
   }
@@ -601,15 +601,15 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
         @contextmenu="onObjectContext($event, o)"
       >
         <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" >
-        <template v-else-if="o.kind === 'rendered'">
-          <RenderedEditor
+        <template v-else-if="o.kind === 'container'">
+          <ContainerEditor
             v-if="containerEditing === o.id && faceOf(o)"
             :text="faceOf(o)!.definition.source"
             :label="faceOf(o)!.label"
             @commit="commitContainer(o, $event)"
             @cancel="cancelContainer"
           />
-          <RenderedFace v-else-if="faceOf(o)" :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
+          <ContainerFace v-else-if="faceOf(o)" :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
         </template>
         <template v-else>
           <svg v-if="outline(o)" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">

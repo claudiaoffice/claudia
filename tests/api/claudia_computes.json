@@ -425,7 +425,7 @@
   "properties": []
  },
  "OBJECT_KINDS": {
-  "value": "('text', 'shape', 'image', 'diagram', 'rendered', 'table')"
+  "value": "('text', 'shape', 'image', 'diagram', 'container', 'table')"
  },
  "ObjectBody": {
   "class": [
@@ -438,9 +438,9 @@
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
   "properties": [
+   "container",
    "diagram",
    "image",
-   "rendered",
    "shape",
    "table"
   ]

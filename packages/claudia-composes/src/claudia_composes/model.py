@@ -429,7 +429,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     # 7: the text says which language it is written in (D915)
     # 8: paragraphs may be items of lists, which the text holds in a book of its own (E9.21)
     # 11: paragraphs may have names, by their id (D554)
-    # 8: object bodies without a description; 9: no rendered containers; 12: styles carry heading levels (E9.22)
+    # 8: object bodies without a description; 9: no containers; 12: styles carry heading levels (E9.22)
     # 13: the text holds its numbering schemes; styles may name a list that numbers them (E9.22)
     # 14: a paragraph may be generated (a table of contents, E9.31)
     # 15: the text holds tables, shown by objects of the kind table (D1201); an object body has one ``ref`` (see core)
@@ -511,7 +511,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "lists": self.lists.to_data(),
             "schemes": self.schemes.to_data(),
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
-            **self.assets_to_data(),  # images, shapes, diagrams, renderings, tables (D1431)
+            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
             "objects": self.objects_to_data(),
             "names": dict(self.block_names),
             "descriptions": dict(self.block_descriptions),

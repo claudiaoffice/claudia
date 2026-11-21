@@ -21,7 +21,7 @@ from ._styling import unwritten_properties
 #: font, size, colour, weight, slant and alignment, a shape's fill and outline. What else a style says is reported
 #: property by property (:func:`._styling.unwritten_properties`, CODE-58), not as a facet.
 PPTX_WRITTEN: frozenset[str] = frozenset(
-    {"slides", "notes", "styles", "palette", "shapes", "images", "objects", "renderings", "lists", "schemes"}
+    {"slides", "notes", "styles", "palette", "shapes", "images", "objects", "containers", "lists", "schemes"}
 )
 ODP_WRITTEN: frozenset[str] = PPTX_WRITTEN | {"language"}
 

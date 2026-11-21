@@ -1,6 +1,6 @@
 """The picture follows the text: a changed container is rendered in the background and the result comes back as an edit.
 
-The wire methods only change the text (see ``test_server_rendered``). Here a whole hub runs, with a stand-in for the
+The wire methods only change the text (see ``test_server_containers``). Here a whole hub runs, with a stand-in for the
 render service, and what people connected to the document see is checked: the new picture as an ordinary edit, and a
 ``render_result`` event that says whether it worked and, if not, what is wrong with the text and on which line."""
 
@@ -8,15 +8,15 @@ import asyncio
 import json
 
 import pytest
-from test_server_rendered import StubService
+from test_server_containers import StubService
 
 from claudia_creates import SlideModel
 from claudia_render import Diagnostic, RenderFailed, ToolUnavailable
 from claudia_server import hub as hub_module
 from claudia_server.auth import Account
+from claudia_server.containers import RenderDesk
 from claudia_server.creates import creates_methods
 from claudia_server.hub import Hub, MemoryProvider
-from claudia_server.rendered import RenderDesk
 
 ANN = Account("ann", "owner")
 ADD = {"slide": "s1", "x": 10, "y": 10, "w": 300, "h": 120, "type": "boxer", "source": "hello"}
@@ -59,21 +59,21 @@ async def settle():
 
 def test_a_new_container_gets_its_picture_and_everybody_is_told():
     async def body(hosted, ann, service):
-        added = ann.request("add_rendering", ADD)["result"]
-        assert hosted.document.model.renderings[added["rendering"]].image is None
+        added = ann.request("add_container", ADD)["result"]
+        assert hosted.document.model.containers[added["container"]].image is None
         await settle()
-        assert hosted.document.model.renderings[added["rendering"]].image is not None
+        assert hosted.document.model.containers[added["container"]].image is not None
         (told,) = ann.events("render_result")
-        assert told["id"] == added["rendering"] and told["ok"] is True and told["diagnostics"] == []
+        assert told["id"] == added["container"] and told["ok"] is True and told["diagnostics"] == []
 
     scenario(body)
 
 
 def test_a_burst_of_typing_makes_one_picture_of_the_last_text():
     async def body(hosted, ann, service):
-        added = ann.request("add_rendering", ADD)["result"]
+        added = ann.request("add_container", ADD)["result"]
         for text in ("h", "he", "hel"):
-            ann.request("set_rendering_source", {"id": added["rendering"], "source": text})
+            ann.request("set_container_source", {"id": added["container"], "source": text})
         await settle()
         assert [seen[1] for seen in service.seen] == ["hel"]
 
@@ -82,19 +82,19 @@ def test_a_burst_of_typing_makes_one_picture_of_the_last_text():
 
 def test_a_text_the_tool_rejects_is_answered_with_the_line_and_the_old_picture_stays():
     async def body(hosted, ann, service):
-        added = ann.request("add_rendering", ADD)["result"]
+        added = ann.request("add_container", ADD)["result"]
         await settle()
-        before = hosted.document.model.renderings[added["rendering"]].image
+        before = hosted.document.model.containers[added["container"]].image
 
         async def refuse(kind, source, params=None):
             raise RenderFailed("no such box", (Diagnostic("error", "no such box", 2, 5),))
 
         service.render = refuse
-        ann.request("set_rendering_source", {"id": added["rendering"], "source": "FAIL"})
+        ann.request("set_container_source", {"id": added["container"], "source": "FAIL"})
         await settle()
         told = ann.events("render_result")[-1]
         assert told["ok"] is False and told["diagnostics"] == [Diagnostic("error", "no such box", 2, 5).to_data()]
-        assert hosted.document.model.renderings[added["rendering"]].image == before
+        assert hosted.document.model.containers[added["container"]].image == before
 
     scenario(body)
 
@@ -105,7 +105,7 @@ def test_a_missing_tool_is_reported_as_unavailable_with_what_to_do():
             raise ToolUnavailable("boxer", "boxer was not found. Install boxer and set tools.boxer.path.")
 
         service.render = missing
-        ann.request("add_rendering", ADD)
+        ann.request("add_container", ADD)
         await settle()
         told = ann.events("render_result")[-1]
         assert told["ok"] is False and told["unavailable"] == "boxer" and "Install boxer" in told["message"]
@@ -115,7 +115,7 @@ def test_a_missing_tool_is_reported_as_unavailable_with_what_to_do():
 
 def test_a_server_without_a_service_makes_no_pictures_and_says_nothing():
     async def body(hosted, ann, service):
-        assert ann.request("add_rendering", ADD)["error"]["code"] == "unavailable"
+        assert ann.request("add_container", ADD)["error"]["code"] == "unavailable"
         await settle()
         assert ann.events("render_result") == []
 
@@ -124,7 +124,7 @@ def test_a_server_without_a_service_makes_no_pictures_and_says_nothing():
 
 def test_the_picture_that_a_job_took_in_does_not_start_another_job():
     async def body(hosted, ann, service):
-        ann.request("add_rendering", ADD)
+        ann.request("add_container", ADD)
         await settle()
         await settle()
         assert len(service.seen) == 1
@@ -134,26 +134,26 @@ def test_the_picture_that_a_job_took_in_does_not_start_another_job():
 
 def test_undo_after_the_picture_arrived_takes_the_picture_and_then_the_container_away():
     async def body(hosted, ann, service):
-        added = ann.request("add_rendering", ADD)["result"]
+        added = ann.request("add_container", ADD)["result"]
         await settle()
         model = hosted.document.model
         assert model.images
         assert "result" in ann.request("undo")  # the picture, an edit of the same person
-        assert model.renderings[added["rendering"]].image is None
+        assert model.containers[added["container"]].image is None
         await settle()
         assert "result" in ann.request("undo")
-        assert model.objects == {} and model.renderings == {} and model.images == {}
+        assert model.objects == {} and model.containers == {} and model.images == {}
 
     scenario(body)
 
 
 def test_a_picture_comes_back_after_the_text_is_undone_and_redone():
     async def body(hosted, ann, service):
-        added = ann.request("add_rendering", ADD)["result"]
+        added = ann.request("add_container", ADD)["result"]
         await settle()
-        ann.request("set_rendering_source", {"id": added["rendering"], "source": "second"})
+        ann.request("set_container_source", {"id": added["container"], "source": "second"})
         await settle()
-        assert hosted.document.model.renderings[added["rendering"]].source == "second"
+        assert hosted.document.model.containers[added["container"]].source == "second"
         assert service.seen[-1][1] == "second"
 
     scenario(body)
@@ -161,7 +161,7 @@ def test_a_picture_comes_back_after_the_text_is_undone_and_redone():
 
 def test_closing_the_document_stops_what_is_still_waiting():
     async def body(hosted, ann, service):
-        ann.request("add_rendering", ADD)
+        ann.request("add_container", ADD)
         hosted.stop_rendering()
         await settle()
         assert service.seen == []
@@ -191,20 +191,20 @@ def reopening_scenario(body):
 
         service.render = broken
         ann = Client(first, ANN)
-        added = ann.request("add_rendering", ADD)["result"]
+        added = ann.request("add_container", ADD)["result"]
         await settle()
-        assert first.document.model.renderings[added["rendering"]].image is None
+        assert first.document.model.containers[added["container"]].image is None
         service.render = working
-        await body(hub, first, service, added["rendering"])
+        await body(hub, first, service, added["container"])
 
     asyncio.run(run())
 
 
 def test_a_container_without_a_picture_is_drawn_when_the_document_is_opened_again():
-    async def body(hub, first, service, rendering):
+    async def body(hub, first, service, container):
         again = await _reopen(hub, first)
         await settle()
-        assert again.document.model.renderings[rendering].image is not None
+        assert again.document.model.containers[container].image is not None
         assert [seen[1] for seen in service.seen] == ["hello"]
 
     reopening_scenario(body)
@@ -215,7 +215,7 @@ def test_a_container_that_has_its_picture_is_left_alone_when_the_document_is_ope
         service = StubService()
         hub = Hub(MemoryProvider(SlideModel), methods=creates_methods, renderings=RenderDesk(service))
         first = await hub.open("deck", create=True)
-        Client(first, ANN).request("add_rendering", ADD)
+        Client(first, ANN).request("add_container", ADD)
         await settle()
         assert len(service.seen) == 1
         await _reopen(hub, first)
@@ -230,7 +230,7 @@ def test_an_empty_container_is_not_drawn_when_the_document_is_opened():
         service = StubService()
         hub = Hub(MemoryProvider(SlideModel), methods=creates_methods, renderings=RenderDesk(service))
         first = await hub.open("deck", create=True)
-        Client(first, ANN).request("add_rendering", {**ADD, "source": "  "})
+        Client(first, ANN).request("add_container", {**ADD, "source": "  "})
         await _reopen(hub, first)
         await settle()
         assert service.seen == []
@@ -239,33 +239,33 @@ def test_an_empty_container_is_not_drawn_when_the_document_is_opened():
 
 
 def test_a_window_that_joins_after_a_failed_try_is_told_what_went_wrong():
-    async def body(hub, first, service, rendering):
+    async def body(hub, first, service, container):
         late = Client(first, Account("bob", "editor"))
-        (entry,) = late.request("renderings")["result"]
-        assert entry["id"] == rendering and entry["outcome"]["ok"] is False
+        (entry,) = late.request("containers")["result"]
+        assert entry["id"] == container and entry["outcome"]["ok"] is False
         assert "Fatal Package fontspec Error" in entry["outcome"]["message"]
 
     reopening_scenario(body)
 
 
 def test_a_container_that_is_drawn_has_no_failure_left_to_tell():
-    async def body(hub, first, service, rendering):
+    async def body(hub, first, service, container):
         again = await _reopen(hub, first)
         await settle()
-        (entry,) = Client(again, ANN).request("renderings")["result"]
+        (entry,) = Client(again, ANN).request("containers")["result"]
         assert entry["image"] is not None and (entry["outcome"] is None or entry["outcome"]["ok"] is True)
 
     reopening_scenario(body)
 
 
 def test_a_new_text_clears_the_old_failure_until_the_new_try_has_spoken():
-    async def body(hub, first, service, rendering):
+    async def body(hub, first, service, container):
         ann = Client(first, ANN)
-        ann.request("set_rendering_source", {"id": rendering, "source": "second"})
-        (entry,) = ann.request("renderings")["result"]
+        ann.request("set_container_source", {"id": container, "source": "second"})
+        (entry,) = ann.request("containers")["result"]
         assert entry["outcome"] is None  # the old complaint was about the old text
         await settle()
-        (entry,) = ann.request("renderings")["result"]
+        (entry,) = ann.request("containers")["result"]
         assert entry["outcome"]["ok"] is True
 
     reopening_scenario(body)
@@ -283,14 +283,14 @@ def test_a_container_on_a_sheet_is_rendered_and_its_frame_follows_the_picture():
         hosted.document.execute(AddSheet("s1", "Plan"), author="ann")
         (sheet,) = hosted.document.model.sheets
         added = ann.request(
-            "add_rendering", {"sheet": sheet, "row": 2, "col": 3, "w": 300, "h": 120, "type": "boxer", "source": "hi"}
+            "add_container", {"sheet": sheet, "row": 2, "col": 3, "w": 300, "h": 120, "type": "boxer", "source": "hi"}
         )["result"]
         await settle()
         model = hosted.document.model
-        assert model.renderings[added["rendering"]].image is not None
+        assert model.containers[added["container"]].image is not None
         (told,) = ann.events("render_result")
         assert told["ok"] is True
-        (shown,) = model.renderings.users(added["rendering"])
+        (shown,) = model.containers.users(added["container"])
         assert model.get_object(shown).body.h != 120  # fitted to the picture's proportions by a ResizeObject
 
     asyncio.run(run())

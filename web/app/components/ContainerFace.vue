@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// What a rendered container shows when nobody is editing it: its picture, or why there is none yet. The type is named
+// What a container shows when nobody is editing it: its picture, or why there is none yet. The type is named
 // on the corner so it is never colour alone (BITV); a failure is an alert, "Drawing…" a polite status (D560). Once
 // there is a picture, the name shows only under the pointer, so that it never covers a small formula (D1332).
 import { computed } from 'vue'
 import { useI18n } from '~/lib/i18n'
-import { statusText, type RenderStatus } from '~/lib/rendering'
+import { statusText, type RenderStatus } from '~/lib/containers'
 
 const props = defineProps<{ src: string; status: RenderStatus; label: string }>()
 const { t } = useI18n()
@@ -12,7 +12,7 @@ const said = computed(() => statusText(props.status, props.label, t))
 </script>
 
 <template>
-  <div class="face" :class="[props.status.kind, { drawn: !!props.src }]" data-testid="rendered-face">
+  <div class="face" :class="[props.status.kind, { drawn: !!props.src }]" data-testid="container-face">
     <img v-if="props.src" class="picture" :src="props.src" alt="" draggable="false" >
     <p v-if="said.text" class="state" :role="said.urgent ? 'alert' : 'status'">
       {{ said.text }}

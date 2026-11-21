@@ -71,7 +71,7 @@ def text_unwritten_changes(
 
 
 def _objects(model: TextModel) -> dict[str, object]:
-    """The objects of a text as the facets a converter writes or leaves out: the pictures (an image, a rendered text
+    """The objects of a text as the facets a converter writes or leaves out: the pictures (an image, a
     container, and what draws them), the boxes (a text box, a circle, a rectangle or a triangle, and their outlines),
     the tables (their objects and definitions, E9.32), and the other objects with the outlines that shape them."""
     data = model.serialize()
@@ -82,7 +82,7 @@ def _objects(model: TextModel) -> dict[str, object]:
         "pictures": {
             "objects": [each for each in data["objects"] if each["id"] in picture_ids],
             "images": data["images"],
-            "renderings": data["renderings"],
+            "containers": data["containers"],
         },
         "boxes": [each for each in data["objects"] if each["id"] in box_ids],
         "tables": {"objects": [each for each in data["objects"] if each["id"] in table_ids], "tables": data["tables"]},

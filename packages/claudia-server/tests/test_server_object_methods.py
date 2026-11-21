@@ -31,14 +31,14 @@ ADD_OBJECT = "{where} kind:str w:int h:int shape:str? text:text? base:revision?"
 WORDS = {
     "computes": {
         "add_image": f"sheet:str row:int col:int {PICTURE}",
-        "add_rendering": "sheet:str row:int col:int w:int h:int type:str source:text params:dict? alt:text? "
+        "add_container": "sheet:str row:int col:int w:int h:int type:str source:text params:dict? alt:text? "
         "fit:bool? base:revision?",
         "move_object": "id:str row:int col:int base:revision?",
         "resize_object": "id:str row:int col:int w:int h:int base:revision?",
     },
     "creates": {
         "add_image": f"slide:str x:int y:int {PICTURE}",
-        "add_rendering": "slide:str x:int y:int w:int h:int type:str source:text params:dict? alt:text? fit:bool? "
+        "add_container": "slide:str x:int y:int w:int h:int type:str source:text params:dict? alt:text? fit:bool? "
         "base:revision?",
         "add_object": ADD_OBJECT.format(where="slide:str x:int y:int"),
         "move_object": "id:str x:int y:int base:revision?",
@@ -46,7 +46,7 @@ WORDS = {
     },
     "composes": {
         "add_image": f"block:str offset:int wrap:str? gap:int? {PICTURE}",
-        "add_rendering": "block:str offset:int wrap:str? gap:int? w:int h:int type:str source:text params:dict? "
+        "add_container": "block:str offset:int wrap:str? gap:int? w:int h:int type:str source:text params:dict? "
         "alt:text? fit:bool? base:revision?",
         "add_object": ADD_OBJECT.format(where="block:str offset:int wrap:str? gap:int?"),
         "set_wrap": "id:str wrap:str gap:int? base:revision?",
@@ -57,7 +57,7 @@ WORDS = {
 TABLES = {"computes": computes_methods, "creates": creates_methods, "composes": composes_methods}
 WRITES = {
     "add_image",
-    "add_rendering",
+    "add_container",
     "add_object",
     "set_wrap",
     "describe_object",

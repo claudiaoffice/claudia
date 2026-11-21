@@ -62,7 +62,7 @@ EVENT_RULES: dict[str, Rule] = {
             "pivots",
             "print_setup",
             "random",
-            "rendering",
+            "container",
             "schemes",
             "shape",
             "sheets",
@@ -85,7 +85,7 @@ EVENT_RULES: dict[str, Rule] = {
     # What the kernel and the hub say about the document itself.
     "rebuilt": _CONTENT,  # "reload": the state was rebuilt (no word of why)
     "stale": _CONTENT,  # functions the document uses changed
-    "render_result": _CONTENT,  # what the last try to draw a rendered container said
+    "render_result": _CONTENT,  # what the last try to draw a container said
     "joined": _CONTENT,  # the names of the people in the document (D111) and presence
     "left": _CONTENT,
     "ephemeral": _CONTENT,  # by its ``kind``, below

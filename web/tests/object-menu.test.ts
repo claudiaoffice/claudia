@@ -5,7 +5,7 @@ const text = (extra: Partial<MenuSubject> = {}): MenuSubject => ({ kind: 'text',
 const shape = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'shape', ...extra })
 const image = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'image', ...extra })
 const chart = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'diagram', ...extra })
-const container = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'rendered', ...extra })
+const container = (extra: Partial<MenuSubject> = {}): MenuSubject => text({ kind: 'container', ...extra })
 
 const actions = () => ({
   describe: vi.fn(),
@@ -40,7 +40,7 @@ describe('the object menu is one list (D1225)', () => {
     expect(groups(items)).toEqual([['Name & describe…', 'Style…', 'Rotate by…'], ['Cut', 'Copy'], ['Release from grid'], ['Delete']])
   })
 
-  it('for a shape and for a container (rendered text): the same as for a text box', () => {
+  it('for a shape and for a container: the same as for a text box', () => {
     for (const o of [shape(), container()]) expect(labels(contextMenuItems(o, false, actions(), { grid: true }))).toEqual(['Name & describe…', 'Edit text', 'Style…', 'Rotate by…', 'Release from grid', 'Delete'])
   })
 

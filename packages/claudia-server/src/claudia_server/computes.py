@@ -138,13 +138,13 @@ from claudia_core import (
 from claudia_core.asset_store import DIAGRAM
 
 from .computes_search import add_search_methods
+from .containers import add_container_methods
 from .font_report import add_font_report_method
 from .i18n import msg, translate
 from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, RequestError, core_methods
-from .rendered import add_rendering_methods
 from .replay import add_replay_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods
@@ -1186,4 +1186,4 @@ CELLS = Placement(
     },
 )
 add_object_methods(computes_methods, model_of=_workbook, placement=CELLS)
-add_rendering_methods(computes_methods, model_of=_workbook, placement=CELLS)
+add_container_methods(computes_methods, model_of=_workbook, placement=CELLS)

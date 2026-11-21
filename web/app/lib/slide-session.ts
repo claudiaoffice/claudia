@@ -1,7 +1,7 @@
 // One person's view of one presentation (creates): the slides, their objects and the shapes, kept up to date from the
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
 import type { LinkLike, Region, WireData } from './protocol'
-import { parseFence } from './rendering'
+import { parseFence } from './containers'
 import { holderOf, firstFocus, lookOnly } from './replay'
 import type { Thing } from './tags'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
@@ -262,9 +262,9 @@ export class SlideSession extends BaseSession<SlideState> {
     return done.object
   }
 
-  /** Put a rendered container of `type` on the slide that is shown, in `frame`; its id, or null after telling why not. */
+  /** Put a container of `type` on the slide that is shown, in `frame`; its id, or null after telling why not. */
   async addContainer(type: string, frame: Frame): Promise<string | null> {
-    const id = await this.addRendering(type, { slide: this.state.activeSlide, x: frame.x, y: frame.y }, { w: frame.w, h: frame.h }, undefined, true)
+    const id = await this.addContainerAt(type, { slide: this.state.activeSlide, x: frame.x, y: frame.y }, { w: frame.w, h: frame.h }, undefined, true)
     if (id) await this.select(id)
     return id
   }
@@ -274,9 +274,9 @@ export class SlideSession extends BaseSession<SlideState> {
    * are not such a block (nothing is changed then) or the container could not be made (the box stays). */
   async fenceToContainer(id: string, words: string): Promise<string | null> {
     const box = this.state.objects[id]
-    const fenced = parseFence(words, this.state.renderTypes.map((k) => k.type))
+    const fenced = parseFence(words, this.state.containerTypes.map((k) => k.type))
     if (!box || !fenced) return null
-    const made = await this.addRendering(
+    const made = await this.addContainerAt(
       fenced.type,
       { slide: box.anchor.holder, x: box.anchor.x, y: box.anchor.y },
       { w: box.w, h: box.h },

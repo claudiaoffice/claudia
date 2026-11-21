@@ -47,7 +47,7 @@ describe('how an object in a text looks', () => {
     expect(look.unsupported).toBe(true)
     expect(look.picture).toBe('')
   })
-  it('leaves a rendered container to its own face', () => {
-    expect(lookOf(holder(), object({ kind: 'rendered', rendered: 'r1' }))).toMatchObject({ rendered: true, unsupported: false })
+  it('leaves a container to its own face', () => {
+    expect(lookOf(holder(), object({ kind: 'container', ref: 'r1' }))).toMatchObject({ container: true, unsupported: false })
   })
 })

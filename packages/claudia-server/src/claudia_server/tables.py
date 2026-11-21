@@ -1,7 +1,7 @@
 """Tables on the wire: the methods that make and change a table, the same for every app that holds objects (E9.32).
 
 A table is a *definition* (rows, columns, the words of its boxes, merges, a look) and an object that shows it, as a
-rendered container is (:mod:`claudia_server.rendered`). The kernel's commands do the work and carry their exact
+container is (:mod:`claudia_server.containers`). The kernel's commands do the work and carry their exact
 inverses (:mod:`claudia_core.table_commands`); this module is what a request is made of. Rows, columns and boxes are
 named by id, never by position, so a request made against a colleague's newer table cannot hit the wrong row; the
 ids are what ``tables`` lists.

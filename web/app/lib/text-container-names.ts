@@ -5,6 +5,6 @@ type Translate = (msgid: string, vars?: Record<string, string | number>) => stri
 
 /** The name of a container: "LaTeX container: <description>", or without a description the type alone. */
 export function descriptionOf(object: Partial<Pick<Describable, 'description' | 'decorative' | 'imported'>>, type: string, t: Translate): string {
-  const said = pictureAlt({ kind: 'rendered', description: '', decorative: false, imported: null, ...object }).trim()
+  const said = pictureAlt({ kind: 'container', description: '', decorative: false, imported: null, ...object }).trim()
   return said ? t('{type} container: {words}', { type, words: said }) : t('{type} container (no description)', { type })
 }

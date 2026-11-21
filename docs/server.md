@@ -183,7 +183,7 @@ answer `forbidden`. A person who was away gets the new keys at her next login, f
   accept (D262).
 * **Objects (D177, CODE-27).** The three apps answer the same methods for the objects on a sheet, a slide or in a
   text: `images`, `add_image`, `describe_object`, `move_object`, `resize_object`, `rotate_object`, `remove_object`,
-  and the rendered containers' `add_rendering`. Only the words that say where differ: a cell (`sheet`, `row`, `col`),
+  and the containers' `add_container`. Only the words that say where differ: a cell (`sheet`, `row`, `col`),
   a point on a slide (`slide`, `x`, `y`), a character of a text (`block`, `offset`, and for a move `dx`, `dy`). A text also answers `shapes` and `add_object` (a text box or a shape, `add_object` with `kind`, `w`, `h`, optional `shape` and `text`; D1065) and `set_wrap` (`id`, `wrap` one of `over`, `around`, `above-below`, `behind`, optional `gap` in pixels; D1061). `add_object` and `move_object` in a text may carry `wrap` and `gap`. **Breaking, 0.x:** `shapes` of a text answers `{library, document}`, not a list.
 * **Help (E13).** `help_search` (an optional `query`, blank for everything) and `help_topic` (an id from a search result)
   read the help topics, which every app inherits for free the moment it has its own `help/` folder; nothing here needs a

@@ -52,7 +52,7 @@ const CIRCLE = { format: 1, id: 'circle', name: 'Circle', path: 'M0 0Z', aspect:
 const STAR = { ...CIRCLE, id: 'star', name: 'Star', aspect: null }
 const TYPES = { types: [{ type: 'latex', title: 'LaTeX', example: 'x^2' }] }
 const object = (id: string, block = 'b1', offset = 0, extra: object = {}) => ({
-  id, kind: 'rendered', w: 400, h: 200, style: 'plain-image', paragraph: null, ref: 'r1', imported: null,
+  id, kind: 'container', w: 400, h: 200, style: 'plain-image', paragraph: null, ref: 'r1', imported: null,
   rotation: 0, snap: false, anchor: { kind: 'block', holder: block, offset }, ...extra,
 })
 
@@ -69,7 +69,7 @@ async function opened(objects: object[] = [], text = 'a😀b') {
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
     branches: () => [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
     restore_policy: () => ({ policy: 'consensus' }),
-    rendering_types: () => TYPES,
+    container_types: () => TYPES,
     renderings: () => [{ format: 1, id: 'r1', type: 'latex', source: 'x', params: {}, image: null, renderer: '' }],
     objects: () => ({ revision: 'main:2', objects }),
     shapes: () => ({ library: [CIRCLE, STAR], document: [CIRCLE] }),
@@ -77,7 +77,7 @@ async function opened(objects: object[] = [], text = 'a😀b') {
     set_wrap: () => ({ revision: 'main:3' }),
     add_image: () => ({ object: 'o7', revision: 'main:3' }),
     images: () => [{ id: 'i1', format: 'svg', width: 3, height: 2, animated: false, data: 'AA==', first_frame: null }],
-    add_rendering: () => ({ object: 'o9', rendering: 'r9', revision: 'main:3' }),
+    add_container: () => ({ object: 'o9', container: 'r9', revision: 'main:3' }),
     move_object: () => ({ revision: 'main:3' }),
     resize_object: () => ({ revision: 'main:3' }),
     remove_object: () => ({ revision: 'main:3' }),
@@ -93,7 +93,7 @@ describe('the object layer of a text', () => {
     expect(session.objectsIn('b1').map((o) => o.id)).toEqual(['o1'])
     expect(session.objectsIn('b2').map((o) => o.id)).toEqual(['o2'])
     expect(state.images.i1!.width).toBe(3)
-    expect(state.renderTypes.map((t) => t.type)).toEqual(['latex'])
+    expect(state.containerTypes.map((t) => t.type)).toEqual(['latex'])
   })
   it('opens as before with a server that has no objects', async () => {
     const link = new FakeLink()
@@ -101,8 +101,8 @@ describe('the object layer of a text', () => {
     link.handlers = { ...full.handlers }
     delete link.handlers.objects
     delete link.handlers.images
-    delete link.handlers.rendering_types
-    delete link.handlers.renderings
+    delete link.handlers.container_types
+    delete link.handlers.containers
     const session = new TextSession(() => link, { retryDelays: [0] })
     await session.open()
     expect(session.state.status).toBe('open')
@@ -131,8 +131,8 @@ describe('the object layer of a text', () => {
     link.push('shape', { type: 'shape', id: 'star', definition: null })
     expect(state.shapes.star).toBeUndefined()
   })
-  it('keeps the offset of an object off its character, and an object that is not rendered', async () => {
-    const { session } = await opened([object('o1', 'b1', 0, { kind: 'image', rendered: null, image: 'i1', anchor: { kind: 'block', holder: 'b1', offset: 0, dx: 12, dy: -4 } })])
+  it('keeps the offset of an object off its character, and an object that is not a container', async () => {
+    const { session } = await opened([object('o1', 'b1', 0, { kind: 'image', image: 'i1', anchor: { kind: 'block', holder: 'b1', offset: 0, dx: 12, dy: -4 } })])
     expect(session.objectsIn('b1')[0]!.anchor).toMatchObject({ dx: 12, dy: -4 })
   })
   it('tells where an object hangs in the units of the screen, though the server counts characters', async () => {
@@ -165,8 +165,8 @@ describe('the object layer of a text', () => {
     const { link, session, state } = await opened()
     // 'a😀b': after the emoji is unit 3 here, character 2 there
     expect(await session.addContainer('latex', { block: 'b1', offset: 3 }, { w: 300, h: 100 })).toBe('o9')
-    expect(link.last('add_rendering')).toMatchObject({ block: 'b1', offset: 2, w: 300, h: 100, type: 'latex', source: 'x^2', fit: true })
-    expect(link.last('add_rendering')).toMatchObject({ wrap: 'above-below' }) // the words go above and below it (D1334)
+    expect(link.last('add_container')).toMatchObject({ block: 'b1', offset: 2, w: 300, h: 100, type: 'latex', source: 'x^2', fit: true })
+    expect(link.last('add_container')).toMatchObject({ wrap: 'above-below' }) // the words go above and below it (D1334)
     expect(state.selectedObject).toBe('o9')
   })
   it('offers the shapes the server has, and keeps the ones the document uses apart', async () => {
@@ -243,12 +243,12 @@ describe('the object layer of a text', () => {
   it('turns pasted text that is one fenced block into a container at the caret', async () => {
     const { link, session } = await opened()
     expect(await session.pasteFence('```latex\nE=mc^2\n```', { block: 'b2', offset: 1 })).toBe('o9')
-    expect(link.last('add_rendering')).toMatchObject({ block: 'b2', offset: 1, type: 'latex', source: 'E=mc^2', wrap: 'above-below' })
+    expect(link.last('add_container')).toMatchObject({ block: 'b2', offset: 1, type: 'latex', source: 'E=mc^2', wrap: 'above-below' })
   })
   it('leaves other text to be pasted as text', async () => {
     const { link, session } = await opened()
     expect(await session.pasteFence('plain words', { block: 'b1', offset: 0 })).toBeNull()
     expect(await session.pasteFence('```python\nx\n```', { block: 'b1', offset: 0 })).toBeNull()
-    expect(link.last('add_rendering')).toBeUndefined()
+    expect(link.last('add_container')).toBeUndefined()
   })
 })

@@ -73,7 +73,7 @@ def test_the_fields_are_part_of_the_data_the_log_stores():
 # -- documents are forever -------------------------------------------------------------------------------------
 def test_a_body_written_before_the_fields_existed_still_reads():
     old = body_before_ref(
-        picture().to_data(), "description", "decorative", "rendered", "name", "table"
+        picture().to_data(), "description", "decorative", "container", "name", "table"
     )  # none of the five
     assert ObjectBody.from_data(old).description == "a red bicycle"
     assert ObjectBody.from_data(old).decorative is False
@@ -93,7 +93,7 @@ def test_a_body_with_a_field_nobody_knows_is_refused():
 
 def test_adding_an_object_is_schema_5_and_schema_1_data_is_brought_up_to_date():
     assert AddObject.schema == 6
-    old_body = body_before_ref(picture().to_data(), "description", "decorative", "rendered", "name", "table")
+    old_body = body_before_ref(picture().to_data(), "description", "decorative", "container", "name", "table")
     envelope = {"k": "core.AddObject", "s": 1, "d": {"body": old_body, "anchor": {"holder": "s1"}, "at": None}}
     command = core_commands.decode(envelope)
     assert command.body.description == "a red bicycle" and command.body.decorative is False

@@ -946,7 +946,7 @@ def ods_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tupl
     tab, it is a sheet with the chart; ``source``: a chart that follows a name has the cells the name is now; ``empty``:
     it reads nothing and is not written), ``"svg-fallback"`` (a picture drawn as SVG, which other programs may show
     without what its style sheet gives unless there was something to draw it as a PNG with, ``rasterised``),
-    ``"rendering-pending"`` (a rendered container nothing has been drawn for: left out), ``"decorative"`` (a picture
+    ``"rendering-pending"`` (a container nothing has been drawn for: left out), ``"decorative"`` (a picture
     marked as having nothing to say: ODF has no way to say so), ``"object"`` (a text box or shape floating on a sheet,
     which computes does not have, is not written) and ``"look"`` (``too-many-cells``: cells of style ranges too large
     to write one by one)."""

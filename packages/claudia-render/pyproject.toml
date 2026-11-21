@@ -1,7 +1,7 @@
 [project]
 name = "claudia-render"
 dynamic = ["version"]
-description = "claudia-render: rendered text containers of a Claudia server (D390-D349): plugins, tool registry, render service"
+description = "claudia-render: the containers of a Claudia server (D390-D349): plugins, tool registry, render service"
 requires-python = ">=3.14"
 dependencies = ["claudia-fonts", "claudia-typeset"]
 

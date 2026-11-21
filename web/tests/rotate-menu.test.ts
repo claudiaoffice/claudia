@@ -31,7 +31,7 @@ describe('Format ▸ Rotate (D1024, D1232): one submenu in every app that turns 
     expect(item.items!.every((i) => i.disabled)).toBe(true)
   })
 
-  it.each(['text', 'shape', 'image', 'rendered'])('is on for a %s', (kind) => {
+  it.each(['text', 'shape', 'image', 'container'])('is on for a %s', (kind) => {
     const item = rotateItem(t, host(kind))
     expect(item.disabled).toBe(false)
     expect(item.items!.some((i) => i.disabled)).toBe(false)

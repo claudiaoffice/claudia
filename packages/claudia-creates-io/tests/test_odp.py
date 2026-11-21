@@ -1007,7 +1007,7 @@ def test_the_export_report_says_odf_cannot_keep_the_decorative_mark():
     assert odp_export_losses(a_deck_with_picture()) == ()
 
 
-# -- a rendered text container is a picture to a file (D394) ---------------------------------------------------------
+# -- a container is a picture to a file (D394) ---------------------------------------------------------
 GLYPHS = (
     b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30" height="10">'
     b'<defs><symbol id="g"><path d="M0 0L5 5"/></symbol></defs><use xlink:href="#g"/></svg>'
@@ -1015,18 +1015,18 @@ GLYPHS = (
 
 
 def a_deck_with_container(*, pictured: bool = True, **changes) -> SlideModel:
-    from claudia_core import RenderedDefinition
+    from claudia_core import ContainerDefinition
 
     deck = SlideModel.empty()
     asset = decode_image(GLYPHS, checked_drawing=True)
     deck.images.define(asset)
-    deck.renderings.define(RenderedDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
-    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", ref="r1", **changes)
+    deck.containers.define(ContainerDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
+    body = ObjectBody("c1", "container", 300, 100, "plain-image", ref="r1", **changes)
     deck.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     return deck
 
 
-def test_a_rendered_container_is_written_as_the_picture_made_from_its_text(tmp_path):
+def test_a_container_is_written_as_the_picture_made_from_its_text(tmp_path):
     data = slides_to_odp(a_deck_with_container(description="a heading that says Hi"))
     frame = a_picture_frame(data)
     href = frame.find("draw:image", NS).get(f"{{{NS['xlink']}}}href")

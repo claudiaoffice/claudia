@@ -1,6 +1,6 @@
 """Pictures for programs that cannot draw an SVG as it is (D394).
 
-A rendered text container is an SVG, and the programs that open an office file differ in what they draw of one:
+A container is an SVG, and the programs that open an office file differ in what they draw of one:
 PowerPoint 2016 and later draw it; LibreOffice leaves out what a diagram's ``<style>`` colours and text. A caller that
 has a rasteriser (the server, with ``rsvg-convert``) gives it to the export, and the file gets a picture every program
 draws; one that has none gets the SVG alone, and the export report says so.

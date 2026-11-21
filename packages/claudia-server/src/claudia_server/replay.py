@@ -37,8 +37,8 @@ VIEW_READS = frozenset(
         "style_model",
         "style_uses",
         "images",
-        "renderings",
-        "rendering_types",
+        "containers",
+        "container_types",
         "shapes",
         "print_setup",
         # creates

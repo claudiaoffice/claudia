@@ -149,7 +149,7 @@ def test_a_text_box_starts_with_its_words_in_the_body_style(paper):
     "bad",
     [
         {"kind": "image"},
-        {"kind": "rendered"},
+        {"kind": "container"},
         {"kind": "diagram"},
         {"kind": "shape"},
         {"kind": "shape", "shape": "no-such-shape"},

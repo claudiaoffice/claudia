@@ -395,7 +395,7 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Agenda'), add: insertAgenda, possible: !readonly.value && !!state.activeSlide }, { add: () => void openPicker(), possible: !readonly.value && !!state.selected }),
+    insertMenu(c, { types: state.containerTypes, add: (type) => addContainer(type) }, { label: t('Agenda'), add: insertAgenda, possible: !readonly.value && !!state.activeSlide }, { add: () => void openPicker(), possible: !readonly.value && !!state.selected }),
     {
       label: t('Format'),
       items: [

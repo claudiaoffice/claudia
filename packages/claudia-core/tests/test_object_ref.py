@@ -7,7 +7,7 @@ from claudia_core import AddObject, ObjectBody, paragraph_for
 from claudia_core.commands import core_commands
 from claudia_core.testing import body_before_ref
 
-POINTERS = ("shape", "image", "diagram", "rendered", "table")
+POINTERS = ("shape", "image", "diagram", "container", "table")
 
 
 def body(kind: str, ref: str | None = "x1") -> ObjectBody:

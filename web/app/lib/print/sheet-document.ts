@@ -144,7 +144,7 @@ function picturesOf(session: Session, sheet: string, pictures: ReadonlyMap<strin
     const anchor = { kind: 'cell' as const, row: o.anchor.row, col: o.anchor.col }
     const base = { id: o.id, kind: o.kind, w: o.w, h: o.h, style: o.style, paragraph: o.paragraph ? { style: o.paragraph.style, text: o.paragraph.text } : null, shape: pointer(o, 'shape'), image: pointer(o, 'image'), rotation: o.rotation, anchor }
     if (o.kind === 'diagram') return [{ ...base, kind: 'diagram', image: o.ref && pictures.has(o.ref) ? chartImage(o.ref) : null }]
-    // a rendered text container (D390) is the layout's to print: as the picture it shows, or not at all
+    // a container (D390) is the layout's to print: as the picture it shows, or not at all
     return [base as SheetPicture]
   })
 }

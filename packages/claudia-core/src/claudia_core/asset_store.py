@@ -1,7 +1,7 @@
 """The asset store (D1431): what objects show that the document keeps once, by id.
 
 An *asset* is an image, a shape's outline, a chart's definition (``diagram``), a container's definition
-(``rendering``) or a table. Objects point at one by id (``ObjectBody.ref``), so several objects — and in computes a
+(``container``) or a table. Objects point at one by id (``ObjectBody.ref``), so several objects — and in computes a
 chart tab — can show the same one. "Asset" is a word of the code only; people never see it.
 
 The five kinds are kept alike: one :class:`AssetStore` per kind on the object model
@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol, cast
 
 from .assets import ImageAsset
-from .renderings import RenderedDefinition
+from .containers import ContainerDefinition
 from .shapes import ShapeDefinition
 from .tables import TableDef
 
@@ -53,9 +53,9 @@ class AssetKind:
     in_use: str = "is in use by"
 
 
-def _check_rendering(model: Any, new: RenderedDefinition, old: RenderedDefinition | None) -> None:
+def _check_container(model: Any, new: ContainerDefinition, old: ContainerDefinition | None) -> None:
     if old is not None and new.type != old.type:
-        raise ValueError("a rendering cannot change its type: make another container")
+        raise ValueError("a container cannot change its type: make another one")
     if new.image is not None and new.image not in model.images:
         raise ValueError(f"this document does not know the image {new.image!r}")
 
@@ -78,14 +78,14 @@ DIAGRAM = AssetKind(
     # only the app knows what in a chart is anybody's words: without its model nothing is taken away
     blank=lambda model, data: data if model is None else model.blank_diagram(data),
 )
-RENDERING = AssetKind(
-    "rendering",
-    "rendered",
-    "rendered text",
-    lambda _model, data: RenderedDefinition.from_data(data),
+CONTAINER = AssetKind(
+    "container",
+    "container",
+    "container",
+    lambda _model, data: ContainerDefinition.from_data(data),
     editable=True,
-    check=_check_rendering,
-    blank=lambda _model, data: RenderedDefinition.from_data(data).redacted().to_data(),
+    check=_check_container,
+    blank=lambda _model, data: ContainerDefinition.from_data(data).redacted().to_data(),
 )
 TABLE = AssetKind(
     "table",
@@ -98,7 +98,7 @@ TABLE = AssetKind(
 )
 
 #: Every kind, in the order a stored document is read back: a container's picture is an image, so images come first.
-ASSET_KINDS: tuple[AssetKind, ...] = (TABLE, SHAPE, IMAGE, DIAGRAM, RENDERING)
+ASSET_KINDS: tuple[AssetKind, ...] = (TABLE, SHAPE, IMAGE, DIAGRAM, CONTAINER)
 KIND_BY_NAME: Mapping[str, AssetKind] = {kind.name: kind for kind in ASSET_KINDS}
 KIND_BY_OBJECT: Mapping[str, AssetKind] = {kind.object_kind: kind for kind in ASSET_KINDS}
 

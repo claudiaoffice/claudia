@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// The text of a rendered container, while it is being written: Ctrl+Enter or a click outside draws it, Esc leaves it as
+// The text of a container, while it is being written: Ctrl+Enter or a click outside draws it, Esc leaves it as
 // it was, Enter is a new line (formulas and diagrams have many). Labelled for a screen reader with the type's name.
 import { onMounted, ref } from 'vue'
 import { useI18n } from '~/lib/i18n'
@@ -36,7 +36,7 @@ function onKey(event: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="editor" data-testid="rendered-editor" @pointerdown.stop @dblclick.stop>
+  <div class="editor" data-testid="container-editor" @pointerdown.stop @dblclick.stop>
     <span class="type">{{ props.label }}</span>
     <textarea
       ref="box"

@@ -4,7 +4,7 @@ A text box and a shape are objects of the kernel's object layer (:class:`claudia
 are; what differs between apps is only *where* one hangs, and that is the app's :class:`Placement`. So ``shapes`` and
 ``add_object`` are registered here once, for presentations (a point on a slide) and texts (a character of a
 paragraph) alike; sheets do not use them yet. Pictures, containers and charts each come from a request of their
-own (``add_image``, ``add_rendering``, a chart in computes), and ``add_object`` says so when asked for one."""
+own (``add_image``, ``add_container``, a chart in computes), and ``add_object`` says so when asked for one."""
 
 from __future__ import annotations
 
@@ -35,8 +35,8 @@ def check_addable(kind: str, shape: str | None) -> None:
     each come from a definition of their own."""
     if kind == "image":
         raise RequestError("bad_request", msg("add_object: use add_image to put a picture here"))
-    if kind == "rendered":
-        raise RequestError("bad_request", msg("add_object: use add_rendering to put a container here"))
+    if kind == "container":
+        raise RequestError("bad_request", msg("add_object: use add_container to put a container here"))
     if kind == "diagram":
         raise RequestError("bad_request", msg("add_object: a chart is made in computes, not here"))
     if kind not in ADDABLE_KINDS:

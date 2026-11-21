@@ -595,7 +595,7 @@ def test_an_object_that_is_not_decorative_carries_no_decorative_mark():
     assert _properties(_exported_shape(picture)).xpath("./a:extLst") == []
 
 
-# -- a rendered text container is a picture to a file (D394) ---------------------------------------------------------
+# -- a container is a picture to a file (D394) ---------------------------------------------------------
 _GLYPHS = (
     b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30" height="10">'
     b'<defs><symbol id="g"><path d="M0 0L5 5"/></symbol></defs><use xlink:href="#g"/></svg>'
@@ -604,13 +604,13 @@ _PNG = b"\x89PNG\r\n\x1a\n"
 
 
 def _deck_with_container(*, pictured: bool = True, **changes) -> SlideModel:
-    from claudia_core import RenderedDefinition
+    from claudia_core import ContainerDefinition
 
     model = SlideModel.empty()
     asset = decode_image(_GLYPHS, checked_drawing=True)
     model.images.define(asset)
-    model.renderings.define(RenderedDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
-    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", ref="r1", **changes)
+    model.containers.define(ContainerDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
+    body = ObjectBody("c1", "container", 300, 100, "plain-image", ref="r1", **changes)
     model.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     return model
 
@@ -619,7 +619,7 @@ def _package(data: bytes) -> zipfile.ZipFile:
     return zipfile.ZipFile(BytesIO(data))
 
 
-def test_a_rendered_container_is_a_real_picture_with_its_alt_text_and_the_drawing_itself_for_powerpoint():
+def test_a_container_is_a_real_picture_with_its_alt_text_and_the_drawing_itself_for_powerpoint():
     data = slides_to_pptx(_deck_with_container(description="a heading that says Hi"))
     (picture,) = [
         s for s in pptx.Presentation(BytesIO(data)).slides[0].shapes if s.shape_type == MSO_SHAPE_TYPE.PICTURE

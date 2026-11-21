@@ -56,9 +56,9 @@ export interface ObjectBody {
    * runs saying who wrote which part. `null` for an image or a diagram, neither of which carries text. */
   paragraph: Paragraph | null
   /** The id of the definition the kind points at, in the document's own table for that kind: the outline of a
-   * `shape`, the asset of an `image`, the `ChartSpec` of a `diagram` (E6.6, `lib/charts.ts`), the rendered text
-   * definition of a `rendered` container (D390, `renderings` on the wire) or the table definition of a `table`
-   * (D1201). `null` for a text box. A rendered container's picture is its definition's own. Read it with
+   * `shape`, the asset of an `image`, the `ChartSpec` of a `diagram` (E6.6, `lib/charts.ts`), the
+   * definition of a `container` (D390, `containers` on the wire) or the table definition of a `table`
+   * (D1201). `null` for a text box. A container's picture is its definition's own. Read it with
    * `pointer(object, kind)`, which is `null` unless the object is of that kind. */
   ref: string | null
   imported: ImageImport | null

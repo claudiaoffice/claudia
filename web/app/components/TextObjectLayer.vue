@@ -1,12 +1,12 @@
 <script setup lang="ts">
 // The floating objects of a text, over their characters (D179, D560, E10.16): drawn here, in a layer of their own over
 // the page, so that the editing of the words is not touched. An object hangs at the character it is anchored to, moved
-// by the offset the model keeps (`floatBox`), which is where it is printed too. A rendered container, a picture, a
+// by the offset the model keeps (`floatBox`), which is where it is printed too. A container, a picture, a
 // shape and a text box are all drawn (`lookOf`). A table is not drawn here: it is in the flow and `TableView.vue` is its
 // only body (D1201). Click selects (and a click into the words lets go again, in `TextEditor.vue`); dragging moves the
 // object, to where it is dropped (the paragraph nearest and the offset left over, D1023); the handles size it and the
 // handle above turns it (`ObjectFrame.vue`, the same in all three apps, D1221); the right button selects it and opens its
-// menu (D1225); double-click, Enter or F2 writes in a text box, a shape or a rendered container (D1232); Delete removes an object; the arrow keys up and
+// menu (D1225); double-click, Enter or F2 writes in a text box, a shape or a container (D1232); Delete removes an object; the arrow keys up and
 // down hang it from the previous or next paragraph; Esc drops what is being tried.
 //
 // Two of these layers stand in a text (D1063): the one over the words, and one under them for the objects whose
@@ -17,7 +17,7 @@ import { pointer, type BlockAnchor } from '~/lib/objects'
 import { descriptionOf } from '~/lib/text-container-names'
 import { objectName } from '~/lib/descriptions'
 import { imageDataUrl } from '~/lib/images'
-import { renderedView } from '~/lib/rendering'
+import { containerView } from '~/lib/containers'
 import { columnOf, floatBox, neighbour } from '~/lib/text-object-layer'
 import type { Frame, Handle } from '~/lib/geometry'
 import { CORNERS, HANDLES, NUDGE, NUDGE_FINE } from '~/lib/geometry'
@@ -226,14 +226,14 @@ const placed = computed<Placed[]>(() => {
 
 const faceOf = (id: string) => {
   const o = state.objects[id]
-  return o ? renderedView(state, o, imageDataUrl) : null
+  return o ? containerView(state, o, imageDataUrl) : null
 }
 const looks = computed<Record<string, ObjectLook>>(() => Object.fromEntries(Object.values(state.objects).filter((o) => o.kind !== 'table').map((o) => [o.id, lookOf(state, o)])))
 const label = (id: string) => {
   const o = state.objects[id]
   if (!o) return ''
   const name =
-    o.kind === 'rendered'
+    o.kind === 'container'
       ? descriptionOf(o, faceOf(id)?.label ?? '', t)
       : objectName(o, { shape: pointer(o, 'shape') ? state.shapes[pointer(o, 'shape')!]?.name : undefined, words: o.paragraph?.text })
   // a screen-reader user hears how the words go round it, where it matters (BITV 1.3.1)
@@ -247,9 +247,9 @@ function select(id: string, event?: Event) {
   nextTick(() => (layer.value?.querySelector(`[data-object="${CSS.escape(id)}"]`) as HTMLElement | null)?.focus({ preventScroll: true }))
 }
 
-/** The words of a text box or a shape are written in an editor like the one on a slide (D1232); a rendered container has
+/** The words of a text box or a shape are written in an editor like the one on a slide (D1232); a container has
  * its own, for its definition. A picture, a chart and a table have no words (a table is written in its boxes). */
-const WRITTEN_IN = ['rendered', 'text', 'shape']
+const WRITTEN_IN = ['container', 'text', 'shape']
 function beginEdit(id: string) {
   if (!WRITTEN_IN.includes(state.objects[id]?.kind ?? '')) return
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
@@ -262,7 +262,7 @@ const setWordsEditor = (el: unknown) => {
 }
 // the editor of words takes the keyboard whether it was asked for here or by the object's menu (Edit text)
 watch(editing, async (id) => {
-  if (!id || state.objects[id]?.kind === 'rendered') return
+  if (!id || state.objects[id]?.kind === 'container') return
   await nextTick()
   wordsEditor.value?.focus()
 })
@@ -278,9 +278,9 @@ function done() {
 }
 async function commit(id: string, text: string) {
   const object = state.objects[id]
-  const rendering = object ? pointer(object, 'rendered') : null
+  const definition = object ? pointer(object, 'container') : null
   done()
-  if (rendering) await session.setRenderingSource(rendering, text)
+  if (definition) await session.setContainerSource(definition, text)
 }
 
 async function onKey(event: KeyboardEvent, id: string) {
@@ -399,16 +399,16 @@ const turnable = (id: string) => !!state.objects[id] && canTurn(state.objects[id
       @dblclick.stop="beginEdit(p.id)"
       @keydown="onKey($event, p.id)"
     >
-      <template v-if="looks[p.id]?.rendered">
+      <template v-if="looks[p.id]?.container">
         <template v-if="faceOf(p.id)">
-          <RenderedEditor
+          <ContainerEditor
             v-if="editing === p.id"
             :text="faceOf(p.id)!.definition.source"
             :label="faceOf(p.id)!.label"
             @commit="commit(p.id, $event)"
             @cancel="done"
           />
-          <RenderedFace v-else :src="faceOf(p.id)!.src" :status="faceOf(p.id)!.status" :label="faceOf(p.id)!.label" />
+          <ContainerFace v-else :src="faceOf(p.id)!.src" :status="faceOf(p.id)!.status" :label="faceOf(p.id)!.label" />
         </template>
       </template>
       <img v-else-if="looks[p.id]?.picture" class="picture" :src="looks[p.id]!.picture" alt="" draggable="false" >
@@ -536,8 +536,8 @@ const turnable = (id: string) => !!state.objects[id] && canTurn(state.objects[id
   cursor: grabbing;
 }
 
-/* only a rendered container is a framed card; a picture, a shape and a text box bring their own look */
-.object.kind-rendered {
+/* only a container is a framed card; a picture, a shape and a text box bring their own look */
+.object.kind-container {
   background: var(--paper);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);

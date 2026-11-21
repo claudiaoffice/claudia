@@ -46,8 +46,8 @@ export interface PageSetupData {
 }
 
 /** The kinds of floating object, as `claudia_core.OBJECT_KINDS` names them (`tests/test_object_kinds_agree.py` keeps the
- *  two lists the same). A `rendered` object is a text container that shows a picture once somebody drew one. */
-export type ObjectKind = 'text' | 'shape' | 'image' | 'diagram' | 'rendered' | 'table'
+ *  two lists the same). A `container` shows the picture made from its text, once somebody drew one. */
+export type ObjectKind = 'text' | 'shape' | 'image' | 'diagram' | 'container' | 'table'
 
 /** A floating object, the shape all three apps share (without its app's anchor). Lengths in CSS pixels. */
 export interface VisualObject {
@@ -207,7 +207,7 @@ export function objectFonts(objects: readonly VisualObject[], styles: ReadonlyMa
     const face = styleFont(cssOf(styles, o.paragraph.style, fallback), resolver)
     if (face) out.add(face)
   }
-  const used = new Set(objects.filter((o) => (o.kind === 'image' || o.kind === 'rendered') && o.image).map((o) => o.image))
+  const used = new Set(objects.filter((o) => (o.kind === 'image' || o.kind === 'container') && o.image).map((o) => o.image))
   for (const image of images) {
     if (!image.svg || !used.has(image.id)) continue
     try {
@@ -367,10 +367,10 @@ export function drawObject(o: VisualObject, r: Rect, ctx: ObjectContext): GroupI
     }
     return group(items, false)
   }
-  // a rendered text container (D390) prints as the picture it shows; one nothing has drawn a picture for yet is left
+  // a container (D390) prints as the picture it shows; one nothing has drawn a picture for yet is left
   // out, as the office exports leave it out
-  if (o.kind === 'rendered' && !o.image) return null
-  if (o.kind === 'image' || o.kind === 'rendered') {
+  if (o.kind === 'container' && !o.image) return null
+  if (o.kind === 'image' || o.kind === 'container') {
     const info = o.image ? images.get(o.image) : undefined
     const placeholder = () => group([{ kind: 'path', ops: rectPath(r), fill: null, stroke: { r: 150, g: 150, b: 150, a: 255 }, lineWidth: 500, dash: [3000, 2000] }])
     if (info?.format === 'svg' && info.svg !== undefined) {

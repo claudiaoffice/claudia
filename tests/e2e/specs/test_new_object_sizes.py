@@ -73,10 +73,10 @@ def _write_formula(world, source):
     page.keyboard.type("Some words in the body text, then a formula.")
     insert_container(page)
     page.dblclick(OBJECT)
-    page.wait_for_selector("[data-testid=rendered-editor] textarea")
+    page.wait_for_selector("[data-testid=container-editor] textarea")
     page.keyboard.type(source)
     page.keyboard.press("Control+Enter")
-    face = page.locator(f"{OBJECT} [data-testid=rendered-face]").first
+    face = page.locator(f"{OBJECT} [data-testid=container-face]").first
     end = time.monotonic() + DRAWN_WITHIN_S
     while time.monotonic() < end:
         if face.locator("img").count():
@@ -209,7 +209,7 @@ def _proportions(world):
 def _no_label(world, label):
     page = world.ann.page
     shown = page.eval_on_selector(
-        f"{OBJECT} [data-testid=rendered-face] .type",
+        f"{OBJECT} [data-testid=container-face] .type",
         """e => { const s = getComputedStyle(e)
                   return s.display !== 'none' && s.visibility !== 'hidden' && s.opacity !== '0' }""",
     )

@@ -47,6 +47,11 @@ While the major version is 0, a minor version may break the API; every break is 
   `"table"` is one of `OBJECT_KINDS`; the facet slots have a `table` thing.
 
 ### Changed
+- **Breaking** — the glossary's Container (D1430, E1.18): the object kind `container` (was `rendered`),
+  `ContainerDefinition` (was `RenderedDefinition`, module `claudia_core.containers`, was `renderings`),
+  `MAX_CONTAINER_SOURCE` (was `MAX_RENDERING_SOURCE`), the asset kind `CONTAINER` named `container` (was `RENDERING`
+  named `rendering`), `ObjectModel.containers` (was `renderings`), `ObjectBody.container` (was `rendered`). Stored, the
+  state key is `containers` and the change event's `type` is `container`; no reader for the old names.
 - **Breaking** — the glossary's holder (D1430): the slide, sheet or paragraph an object is at is its *holder*.
   `Anchor.holder` (was `container`), `VisualObject.holder`, `ObjectSet.holder`, `ObjectsChanged.holder`,
   `ObjectText.holder`, `Placed.holder`; `ObjectModel.holders()`, `open_holder`, `close_holder`,

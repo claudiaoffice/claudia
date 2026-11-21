@@ -1377,7 +1377,7 @@ msgstr "[Cônnéctîôn détàîls~~~~~~~]"
 msgid "Connection to {label}: {word}. Show details."
 msgstr "[Cônnéctîôn tô {label}: {word}. Shôw détàîls.~~~~~~~~~~~~~~~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:194
+#: clients/linux/src/claudia_shell_gtk/manifest.py packages/claudia-server/src/claudia_server/thing_names.py:37 web/app/components/SidePanel.vue:281 web/app/lib/document-menus.ts:194
 msgid "Container"
 msgstr "[Côntàînér~~~~]"
 
@@ -1453,7 +1453,7 @@ msgstr "[Côûld nôt cônnéct~~~~~~~]"
 msgid "Could not connect."
 msgstr "[Côûld nôt cônnéct.~~~~~~~]"
 
-#: web/app/lib/rendering.ts:119
+#: web/app/lib/containers.ts:119
 msgid "Could not draw it: {message}"
 msgstr "[Côûld nôt dràw ît: {message}~~~~~~~~~~~]"
 
@@ -1529,7 +1529,7 @@ msgstr "[Ctrl+C~~]"
 msgid "Ctrl+Enter"
 msgstr "[Ctrl+Éntér~~~~]"
 
-#: web/app/components/RenderedEditor.vue:46
+#: web/app/components/ContainerEditor.vue:46
 msgid "Ctrl+Enter draws it, Escape leaves it as it was"
 msgstr "[Ctrl+Éntér dràws ît, Éscàpé léàvés ît às ît wàs~~~~~~~~~~~~~~~~~~~]"
 
@@ -1721,10 +1721,6 @@ msgstr "[Détéctéd ôn thîs màchîné~~~~~~~~~~]"
 msgid "Device"
 msgstr "[Dévîcé~~]"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:37 web/app/components/SidePanel.vue:281
-msgid "Diagram"
-msgstr "[Dîàgràm~~~]"
-
 #: web/app/components/ResultNote.vue:50 web/app/components/SqlEditor.vue:157
 msgid "Did you mean {word}?"
 msgstr "[Dîd yôû méàn {word}?~~~~~~~~]"
@@ -1833,7 +1829,7 @@ msgstr "[Dràw {n}~~~]"
 msgid "Draw {n}: draw new random numbers"
 msgstr "[Dràw {n}: dràw néw ràndôm nûmbérs~~~~~~~~~~~~~]"
 
-#: web/app/lib/rendering.ts:115
+#: web/app/lib/containers.ts:115
 msgid "Drawing…"
 msgstr "[Dràwîng…~~~]"
 
@@ -1881,7 +1877,7 @@ msgstr "[Édît {name}~~~~]"
 msgid "Elapsed"
 msgstr "[Élàpséd~~~]"
 
-#: web/app/lib/rendering.ts:117
+#: web/app/lib/containers.ts:117
 msgid "Empty {type} container: double-click to write"
 msgstr "[Émpty {type} côntàînér: dôûblé-clîck tô wrîté~~~~~~~~~~~~~~~~~~]"
 
@@ -5565,7 +5561,7 @@ msgstr "[Téxt în à bàsé (2 tô 36) às à nûmbér.~~~~~~~~~~~~~~~]"
 msgid "Text of the replacement"
 msgstr "[Téxt ôf thé réplàcémént~~~~~~~~~]"
 
-#: web/app/components/RenderedEditor.vue:45
+#: web/app/components/ContainerEditor.vue:45
 msgid "Text of the {type} container"
 msgstr "[Téxt ôf thé {type} côntàînér~~~~~~~~~~~]"
 
@@ -6973,7 +6969,7 @@ msgstr "[Thîs sérvér hàs nô àccéss sécrét, sô évéryôné whô càn r
 msgid "This server has no folder to add fonts to."
 msgstr "[Thîs sérvér hàs nô fôldér tô àdd fônts tô.~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/rendering.ts:121
+#: web/app/lib/containers.ts:121
 msgid "This server has no tool set up to draw {type}."
 msgstr "[Thîs sérvér hàs nô tôôl sét ûp tô dràw {type}.~~~~~~~~~~~~~~~~~~]"
 
@@ -7837,13 +7833,13 @@ msgstr "[àdd_ôbjéct: kînd mûst bé ôné ôf {kinds}~~~~~~~~~~~~~~~~]"
 msgid "add_object: this server has no shape {shape!r}"
 msgstr "[àdd_ôbjéct: thîs sérvér hàs nô shàpé {shàpé!r}~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/shape_methods.py:39
+msgid "add_object: use add_container to put a container here"
+msgstr "[àdd_ôbjéct: ûsé àdd_côntàînér tô pût à côntàînér héré~~~~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/shape_methods.py:37
 msgid "add_object: use add_image to put a picture here"
 msgstr "[àdd_ôbjéct: ûsé àdd_îmàgé tô pût à pîctûré héré~~~~~~~~~~~~~~~~~~~]"
-
-#: packages/claudia-server/src/claudia_server/shape_methods.py:39
-msgid "add_object: use add_rendering to put a container here"
-msgstr "[àdd_ôbjéct: ûsé àdd_réndérîng tô pût à côntàînér héré~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py:575
 msgid "add_sheet: the name must have 1 to {limit} characters"
@@ -8529,7 +8525,7 @@ msgstr "[lîké SÛBTÔTÀL wîth môré fûnctîôns (1-13 às SÛBTÔTÀL bût
 msgid "line height"
 msgstr "[lîné héîght~~~~]"
 
-#: web/app/components/RenderedFace.vue:21
+#: web/app/components/ContainerFace.vue:21
 msgid "line {line}: {message}"
 msgstr "[lîné {line}: {message}~~~~~~~~~]"
 
@@ -9561,6 +9557,10 @@ msgstr "[thésé célls’ ôwn stylé~~~~~~~~~]"
 msgid "this computer"
 msgstr "[thîs cômpûtér~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/containers.py:217
+msgid "this document has no container with the id {id!r}"
+msgstr "[thîs dôcûmént hàs nô côntàînér wîth thé îd {îd!r}~~~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/structure_methods.py:83
 msgid "this document has no lists"
 msgstr "[thîs dôcûmént hàs nô lîsts~~~~~~~~~~]"
@@ -9576,10 +9576,6 @@ msgstr "[thîs dôcûmént hàs nô stylés~~~~~~~~~~~]"
 #: packages/claudia-server/src/claudia_server/tables.py:101
 msgid "this document has no table {id!r}"
 msgstr "[thîs dôcûmént hàs nô tàblé {îd!r}~~~~~~~~~~~~~]"
-
-#: packages/claudia-server/src/claudia_server/rendered.py:217
-msgid "this document has nothing rendered with the id {id!r}"
-msgstr "[thîs dôcûmént hàs nôthîng réndéréd wîth thé îd {îd!r}~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/replay.py:175 packages/claudia-server/src/claudia_server/thing_names.py:55
 msgid "this document has nothing that can be named"
@@ -9645,9 +9641,9 @@ msgstr "[thîs sérvér dôés nôt kéép récôvéry kéys~~~~~~~~~~~~~~~~]"
 msgid "this server does not list a document's people this way"
 msgstr "[thîs sérvér dôés nôt lîst à dôcûmént's péôplé thîs wày~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/rendered.py:136
-msgid "this server does not make rendered containers"
-msgstr "[thîs sérvér dôés nôt màké réndéréd côntàînérs~~~~~~~~~~~~~~~~~~]"
+#: packages/claudia-server/src/claudia_server/containers.py:136
+msgid "this server does not make containers"
+msgstr "[thîs sérvér dôés nôt màké côntàînérs~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py:1094
 msgid "this server does not manage people"

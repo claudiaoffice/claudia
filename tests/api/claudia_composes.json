@@ -251,9 +251,9 @@
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
   "properties": [
+   "container",
    "diagram",
    "image",
-   "rendered",
    "shape",
    "table"
   ]

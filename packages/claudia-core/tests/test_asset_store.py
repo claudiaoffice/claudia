@@ -1,6 +1,6 @@
 """One asset store for what objects show and the document keeps once, by id (D1431).
 
-An image, a shape's outline, a chart's definition (``diagram``) and a container's definition (``rendering``) are
+An image, a shape's outline, a chart's definition (``diagram``) and a container's definition (``container``) are
 defined, changed and forgotten through the same three commands, in every app. A small model with one page is enough to
 show it; each app's own tests show its objects on top of this."""
 
@@ -14,13 +14,13 @@ import pytest
 from claudia_core import (
     AddObject,
     AssetsChanged,
+    ContainerDefinition,
     DefineAsset,
     Document,
     DocumentModel,
     ForgetAsset,
     ObjectBody,
     ObjectModel,
-    RenderedDefinition,
     ShapeDefinition,
     UpdateAsset,
     paragraph_for,
@@ -110,9 +110,9 @@ ASSETS = {
     "image": (lambda: picture().to_data(), lambda m: m.images),
     "shape": (lambda: ShapeDefinition("star", "Star", "M0 0 L100 100 Z").to_data(), lambda m: m.shapes),
     "diagram": (lambda: {"id": "pie1", "label": "Sales"}, lambda m: m.diagrams),
-    "rendering": (
-        lambda: RenderedDefinition("r1", "mermaid", "flowchart LR\n  A --> B").to_data(),
-        lambda m: m.renderings,
+    "container": (
+        lambda: ContainerDefinition("r1", "mermaid", "flowchart LR\n  A --> B").to_data(),
+        lambda m: m.containers,
     ),
 }
 KINDS = list(ASSETS)
@@ -144,7 +144,7 @@ def test_a_defined_asset_is_kept_announced_and_undone_and_redone(doc, kind):
 
 def show(doc: Document, kind: str, ref: str, object_id: str = "o1", author: str = "ann"):
     """Put an object on the page that shows the asset ``ref`` of ``kind``."""
-    object_kind = {"rendering": "rendered"}.get(kind, kind)
+    object_kind = {"container": "container"}.get(kind, kind)
     extra = {"paragraph": paragraph_for("", "plain")} if kind == "shape" else {}
     if kind == "image":
         from claudia_core.assets import ImageImport
@@ -169,7 +169,7 @@ def test_an_asset_an_object_shows_cannot_be_forgotten(doc, kind):
 def test_a_picture_a_container_shows_cannot_be_forgotten(doc):
     image = picture()
     doc.execute(DefineAsset("image", image.to_data()), author="ann")
-    doc.execute(DefineAsset("rendering", ASSETS["rendering"][0]() | {"image": image.id}), author="ann")
+    doc.execute(DefineAsset("container", ASSETS["container"][0]() | {"image": image.id}), author="ann")
 
     with pytest.raises(ValueError, match="is in use by 'r1'"):
         doc.execute(ForgetAsset("image", image.id), author="ann")
@@ -178,7 +178,7 @@ def test_a_picture_a_container_shows_cannot_be_forgotten(doc):
 def test_a_container_cannot_show_a_picture_the_document_does_not_have(doc):
     missing = "a" * 64  # the form of an image's id, which no image here has
     with pytest.raises(ValueError, match=f"does not know the image '{missing}'"):
-        doc.execute(DefineAsset("rendering", ASSETS["rendering"][0]() | {"image": missing}), author="ann")
+        doc.execute(DefineAsset("container", ASSETS["container"][0]() | {"image": missing}), author="ann")
 
 
 def test_undoing_a_definition_is_refused_once_a_colleague_shows_it(doc):
@@ -194,7 +194,7 @@ def test_undoing_a_definition_is_refused_once_a_colleague_shows_it(doc):
 # ----------------------------------------------------------------------------- changed in place
 @pytest.mark.parametrize(
     ("kind", "change"),
-    [("diagram", {"label": "Costs"}), ("rendering", {"source": "flowchart TB\n  B --> A"})],
+    [("diagram", {"label": "Costs"}), ("container", {"source": "flowchart TB\n  B --> A"})],
 )
 def test_a_chart_or_a_container_is_changed_in_place_and_the_undo_puts_it_back(doc, kind, change):
     data, view = ASSETS[kind][0](), ASSETS[kind][1]
@@ -216,11 +216,11 @@ def test_a_picture_or_an_outline_is_not_changed_in_place(doc, kind):
 
 
 def test_a_container_keeps_its_type(doc):
-    data = ASSETS["rendering"][0]()
-    doc.execute(DefineAsset("rendering", data), author="ann")
+    data = ASSETS["container"][0]()
+    doc.execute(DefineAsset("container", data), author="ann")
 
     with pytest.raises(ValueError, match="cannot change its type"):
-        doc.execute(UpdateAsset("rendering", "r1", data | {"type": "latex"}), author="ann")
+        doc.execute(UpdateAsset("container", "r1", data | {"type": "latex"}), author="ann")
 
 
 def test_a_table_has_commands_of_its_own(doc):
@@ -241,10 +241,10 @@ def test_every_kind_is_stored_and_read_back(doc):
 
 
 def test_a_redacted_definition_keeps_no_words_but_the_kind_and_the_id():
-    rendering = DefineAsset("rendering", ASSETS["rendering"][0]()).redacted_in(PageModel)
+    defined = DefineAsset("container", ASSETS["container"][0]()).redacted_in(PageModel)
     chart = DefineAsset("diagram", {"id": "pie1", "label": "Sales"}).redacted_in(PageModel)
     shape = DefineAsset("shape", ASSETS["shape"][0]())
 
-    assert rendering.data["source"] == "" and rendering.data["id"] == "r1"
+    assert defined.data["source"] == "" and defined.data["id"] == "r1"
     assert chart.data == {"id": "pie1", "label": ""}
     assert shape.redacted_in(PageModel) == shape

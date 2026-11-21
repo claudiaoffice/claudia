@@ -65,6 +65,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- **Breaking** — containers on the wire (D1430, E1.18): the methods `container_types`, `containers`,
+  `add_container` (answers `{object, container, revision}`) and `set_container_source` (answers `{container,
+  revision}`) were `rendering_types`, `renderings`, `add_rendering` and `set_rendering_source`; the object kind is
+  `container` and the event `container` (were `rendered` and `rendering`). The module is `claudia_server.containers`
+  (was `rendered`), with `add_container_methods`. A new container is called "Container N" (was "Diagram N").
+  The render desk, `render_result` and the claudia-render package keep their names: rendering is what they do.
 - **Breaking** — on the wire, the slide, sheet or paragraph an object is at is its `holder` (D1430, was
   `container`): in every anchor, in an `objects` region (`presence`, `lock`, a step's focus) and in the `objects` event.
 - **Breaking** — the glossary's words (D1430): `AiTurn` (was `Step`, what the ai says or calls); the methods

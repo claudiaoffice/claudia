@@ -24,8 +24,8 @@ export interface ObjectLook {
   outline: { path: string; paint: Css } | null
   /** The words: their text, their look, and the box they fill (as CSS, in percentages of the object). */
   words: { text: string; css: Css; area: Css } | null
-  /** A rendered container, which has a face of its own (`RenderedFace.vue`). */
-  rendered: boolean
+  /** A container, which has a face of its own (`ContainerFace.vue`). */
+  container: boolean
   /** An object a text cannot show yet (a chart); the layer says so instead of leaving a gap. */
   unsupported: boolean
 }
@@ -39,8 +39,8 @@ export function lookOf(holder: LookHolder, o: VisualObject<BlockAnchor>): Object
   const facet = (css: Css, names: string[]) => facetCss(css, facets, names)
   const imageId = pointer(o, 'image')
   const asset = imageId ? holder.images[imageId] : undefined
-  const look: ObjectLook = { picture: o.kind === 'image' && asset ? imageDataUrl(asset) : '', outline: null, words: null, rendered: o.kind === 'rendered', unsupported: o.kind === 'diagram' }
-  if (o.kind === 'rendered' || o.kind === 'image' || o.kind === 'diagram') return look
+  const look: ObjectLook = { picture: o.kind === 'image' && asset ? imageDataUrl(asset) : '', outline: null, words: null, container: o.kind === 'container', unsupported: o.kind === 'diagram' }
+  if (o.kind === 'container' || o.kind === 'image' || o.kind === 'diagram') return look
   const shapeId = pointer(o, 'shape')
   const outline = shapeId ? (holder.shapes[shapeId] ?? null) : null
   if (o.kind === 'shape' && outline) look.outline = { path: outline.path, paint: facet(withDisplayInk(cssOf(styles, o)), ['outline']) }

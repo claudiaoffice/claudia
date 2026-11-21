@@ -227,7 +227,7 @@ used.menu_help  # (same)
 # claudia-odf-io
 used.StartElementHandler  # expat calls the handlers assigned to these attributes (splice.py's `_spans`)
 used.EndElementHandler  # (same)
-used._objects_without_renderings  # registered as an upcaster by a decorator (claudia_core AddObject 2 -> 3, D390)
+used._objects_without_containers  # registered as an upcaster by a decorator (claudia_core AddObject 2 -> 3, D390)
 used._objects_with_one_pointer  # registered as an upcaster by a decorator (core AddObject 5 -> 6, D1211)
 used._objects_without_names  # registered as an upcaster by a decorator (claudia_core AddObject 3 -> 4, D550)
 used._names_not_yet_shared  # registered as an upcaster by a decorator (computes AddSheet, AddChart 1 -> 2, D550)

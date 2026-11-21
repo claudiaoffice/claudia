@@ -247,9 +247,9 @@ class PictureWriter:
         return frame
 
     def _href(self, asset: ImageAsset, body: ObjectBody) -> str:
-        """The name in the package of the picture ``asset`` shows as: itself, or for a rendered text container the
+        """The name in the package of the picture ``asset`` shows as: itself, or for a container the
         picture ``rasterise`` draws of its SVG when there is one."""
-        if asset.format == "svg" and self.rasterise is not None and body.kind == "rendered":
+        if asset.format == "svg" and self.rasterise is not None and body.kind == "container":
             href = f"Pictures/{asset.id}-{body.w}x{body.h}.png"
             if href not in self.parts:
                 self.parts[href] = self.rasterise(asset.data, body.w, body.h)
@@ -369,7 +369,7 @@ class PicturePlan:
                 self.written += 1
                 if (
                     self.losses is not None
-                    and obj.body.kind == "rendered"
+                    and obj.body.kind == "container"
                     and asset.format == "svg"
                     and not self.rasterised
                 ):

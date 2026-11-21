@@ -1,9 +1,9 @@
-// Rendered text containers, client side (D390–D396, D560): the definitions the server keeps, what it says of making
+// Containers, client side (D390–D396, D560): the definitions the server keeps, what it says of making
 // their pictures, and the Markdown-like fences a text block can be turned into a container from.
 import { pointer, type ObjectBody } from './objects'
 
-/** One container's definition as the server sends it (`renderings`, event `rendering`). */
-export interface RenderingDef {
+/** One container's definition as the server sends it (`containers`, event `container`). */
+export interface ContainerDef {
   format: number
   id: string
   type: string
@@ -11,7 +11,7 @@ export interface RenderingDef {
   params: Record<string, unknown>
   image: string | null
   renderer: string
-  /** What the last try to draw it said, when a window joined after the try (`renderings`); `null`: none yet. */
+  /** What the last try to draw it said, when a window joined after the try (`containers`); `null`: none yet. */
   outcome?: RenderOutcome | null
 }
 
@@ -31,7 +31,7 @@ export interface RenderOutcome {
   unavailable: string | null
 }
 
-/** One thing that can be made (`rendering_types`): the parts of it a client needs. */
+/** One thing that can be made (`container_types`): the parts of it a client needs. */
 export interface RenderType {
   type: string
   title: string
@@ -49,7 +49,7 @@ export function toOutcome(data: Partial<RenderOutcome>): RenderOutcome {
 
 /** What the last tries said, by container, from the definitions the server sent: a window that joins after a try failed
  * must say "could not draw it" and not "drawing…" for ever. */
-export function outcomesOf(definitions: readonly RenderingDef[]): Record<string, RenderOutcome> {
+export function outcomesOf(definitions: readonly ContainerDef[]): Record<string, RenderOutcome> {
   const known: Record<string, RenderOutcome> = {}
   for (const definition of definitions) if (definition.outcome) known[definition.id] = toOutcome(definition.outcome)
   return known
@@ -63,12 +63,12 @@ export type RenderStatus =
   | { kind: 'unavailable'; tool: string; message: string }
 
 /** The id of the picture to show: the one the definition last made, if any. */
-export function pictureOf(definition: RenderingDef | undefined): string | null {
+export function pictureOf(definition: ContainerDef | undefined): string | null {
   return definition?.image ?? null
 }
 
 /** What to tell about a container now: whether its text, its picture and the last outcome agree. */
-export function renderStatus(definition: RenderingDef, outcome: RenderOutcome | undefined): RenderStatus {
+export function renderStatus(definition: ContainerDef, outcome: RenderOutcome | undefined): RenderStatus {
   if (!definition.source.trim()) return { kind: 'empty' }
   if (outcome && !outcome.ok) {
     if (outcome.unavailable) return { kind: 'unavailable', tool: outcome.unavailable, message: outcome.message }
@@ -103,7 +103,7 @@ export function formatFence(type: string, source: string): string {
   return `${ticks}${type}\n${source}\n${ticks}`
 }
 
-export const fenceOf = (definition: RenderingDef): string => formatFence(definition.type, definition.source)
+export const fenceOf = (definition: ContainerDef): string => formatFence(definition.type, definition.source)
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
 
@@ -124,28 +124,28 @@ export function statusText(status: RenderStatus, label: string, t: Translate): {
   }
 }
 
-/** What the three apps' sessions hold of rendered containers (`BaseState` plus the decoded pictures). */
-export interface RenderingHolder {
-  renderings: Record<string, RenderingDef>
+/** What the three apps' sessions hold of containers (`BaseState` plus the decoded pictures). */
+export interface ContainerState {
+  containers: Record<string, ContainerDef>
   renderOutcomes: Record<string, RenderOutcome>
-  renderTypes: RenderType[]
+  containerTypes: RenderType[]
   images: Record<string, { format: string; data: string }>
 }
 
 /** Everything a container's face needs: its definition, the picture's data URL (`''` before there is one), the type's
  * name, and the status. `null` for an object that shows no definition (yet). */
-export function renderedView(
-  holder: RenderingHolder,
+export function containerView(
+  state: ContainerState,
   object: Pick<ObjectBody, 'kind' | 'ref'>,
   toUrl: (asset: { format: string; data: string }) => string,
-): { definition: RenderingDef; src: string; label: string; status: RenderStatus } | null {
-  const id = pointer(object, 'rendered')
-  const definition = id ? holder.renderings[id] : undefined
+): { definition: ContainerDef; src: string; label: string; status: RenderStatus } | null {
+  const id = pointer(object, 'container')
+  const definition = id ? state.containers[id] : undefined
   if (!definition) return null
   const picture = pictureOf(definition)
-  const asset = picture ? holder.images[picture] : undefined
-  const label = holder.renderTypes.find((k) => k.type === definition.type)?.title ?? definition.type
+  const asset = picture ? state.images[picture] : undefined
+  const label = state.containerTypes.find((k) => k.type === definition.type)?.title ?? definition.type
   // "Ready" means a picture the page can show: one that is named but has not arrived yet is still being drawn
-  const status = renderStatus({ ...definition, image: asset ? picture : null }, holder.renderOutcomes[definition.id])
+  const status = renderStatus({ ...definition, image: asset ? picture : null }, state.renderOutcomes[definition.id])
   return { definition, src: asset ? toUrl(asset) : '', label, status }
 }

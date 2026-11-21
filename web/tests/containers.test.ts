@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { fenceOf, formatFence, outcomesOf, parseFence, pictureOf, renderedView, renderStatus, statusText, toOutcome, type RenderingDef } from '../app/lib/rendering'
+import { fenceOf, formatFence, outcomesOf, parseFence, pictureOf, containerView, renderStatus, statusText, toOutcome, type ContainerDef } from '../app/lib/containers'
 
-const def = (over: Partial<RenderingDef> = {}): RenderingDef => ({
+const def = (over: Partial<ContainerDef> = {}): ContainerDef => ({
   format: 1, id: 'r1', type: 'latex', source: 'x^2', params: {}, image: null, renderer: '', ...over,
 })
 
@@ -93,29 +93,29 @@ describe('words for a status', () => {
 })
 
 describe('what a face is drawn from', () => {
-  const holder = () => ({
-    renderings: { r1: def({ image: 'i1' }) },
+  const state = () => ({
+    containers: { r1: def({ image: 'i1' }) },
     renderOutcomes: {},
-    renderTypes: [{ type: 'latex', title: 'LaTeX' }],
+    containerTypes: [{ type: 'latex', title: 'LaTeX' }],
     images: { i1: { format: 'svg', data: 'AA==' } },
   })
   const url = (a: { data: string }) => `u:${a.data}`
   it('has the picture, the type\'s name and a ready status', () => {
-    const v = renderedView(holder(), { kind: 'rendered', ref: 'r1' }, url)!
+    const v = containerView(state(), { kind: 'container', ref: 'r1' }, url)!
     expect(v).toMatchObject({ src: 'u:AA==', label: 'LaTeX', status: { kind: 'ready' } })
   })
   it('has no picture while the asset has not come, and says it is being drawn', () => {
-    const h = holder()
+    const h = state()
     h.images = {}
-    expect(renderedView(h, { kind: 'rendered', ref: 'r1' }, url)).toMatchObject({ src: '', status: { kind: 'drawing' } })
+    expect(containerView(h, { kind: 'container', ref: 'r1' }, url)).toMatchObject({ src: '', status: { kind: 'drawing' } })
   })
   it('is nothing for an object whose definition is not known', () => {
-    expect(renderedView(holder(), { kind: 'rendered', ref: 'nope' }, url)).toBeNull()
-    expect(renderedView(holder(), { kind: 'rendered', ref: null }, url)).toBeNull()
+    expect(containerView(state(), { kind: 'container', ref: 'nope' }, url)).toBeNull()
+    expect(containerView(state(), { kind: 'container', ref: null }, url)).toBeNull()
   })
   it('names an unknown type by its id', () => {
-    const h = holder()
-    h.renderTypes = []
-    expect(renderedView(h, { kind: 'rendered', ref: 'r1' }, url)!.label).toBe('latex')
+    const h = state()
+    h.containerTypes = []
+    expect(containerView(h, { kind: 'container', ref: 'r1' }, url)!.label).toBe('latex')
   })
 })

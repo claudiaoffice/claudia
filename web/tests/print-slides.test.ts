@@ -218,18 +218,18 @@ describe('printing a presentation: its print source', () => {
     expect(doc).toMatchObject({ print: DEFAULT_PRINT, language: 'de' })
     session.close()
   })
-  it('hands a rendered text container to the layout as it is: the layout prints it as the picture it shows (D390)', async () => {
-    const rendered = (id: string, definition: string) => ({ ...box(id, 's1'), kind: 'rendered', paragraph: null, ref: definition })
+  it('hands a container to the layout as it is: the layout prints it as the picture it shows (D390)', async () => {
+    const container = (id: string, definition: string) => ({ ...box(id, 's1'), kind: 'container', paragraph: null, ref: definition })
     const { session, state } = await opened({
       ...PRINTING,
-      slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? [rendered('drawn', 'r1'), rendered('pending', 'r2')] : [] }),
+      slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? [container('drawn', 'r1'), container('pending', 'r2')] : [] }),
     })
     const definition = (id: string, image: string | null) => ({ format: 1, id, type: 'latex', source: 'x', params: {}, image, renderer: '' })
-    state.renderings = { r1: definition('r1', PNG.id), r2: definition('r2', null) } // the picture is the definition's: the object only points at it
+    state.containers = { r1: definition('r1', PNG.id), r2: definition('r2', null) } // the picture is the definition's: the object only points at it
     const [first] = slideDocument(session).slides
     expect(first!.objects.map((o) => [o.id, o.kind, o.image])).toEqual([
-      ['drawn', 'rendered', PNG.id],
-      ['pending', 'rendered', null],
+      ['drawn', 'container', PNG.id],
+      ['pending', 'container', null],
     ])
     session.close()
   })

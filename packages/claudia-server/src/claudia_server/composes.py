@@ -87,13 +87,13 @@ from .composes_annotations import export_annotations
 from .composes_contents import add_contents_methods
 from .composes_search import add_search_methods
 from .composes_words import add_word_methods
+from .containers import add_container_methods
 from .font_report import add_font_report_method
 from .i18n import msg
 from .object_methods import Placement, add_object_methods
 from .office_export import export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
-from .rendered import add_rendering_methods
 from .replay import add_replay_methods
 from .shape_methods import add_shape_methods
 from .structure_methods import add_structure_methods
@@ -473,8 +473,8 @@ add_language_methods(composes_methods)
 def _objects(ctx):
     """The floating objects of the text, the one in front last, as `{revision, objects}`. An object is the shape all
     three apps share (`{id, kind, w, h, style, paragraph, ref, imported, rotation, snap, anchor}`;
-    `ref` is the id of the definition the kind shows: a picture, a rendered container or a table, see `images`,
-    `renderings` and `tables`), with `anchor` `{kind: "block", container: <paragraph id>, offset}`: the character it
+    `ref` is the id of the definition the kind shows: a picture, a container or a table, see `images`,
+    `containers` and `tables`), with `anchor` `{kind: "block", container: <paragraph id>, offset}`: the character it
     hangs from. `w` and `h` are CSS pixels. `imported`'s `source_path` is only sent to the person who imported that
     image."""
     model = _text(ctx)
@@ -587,7 +587,7 @@ def _reject(ctx, *, id, base):
     return done(ctx, ResolveSuggestion(id, state), base)
 
 
-# Objects in a text, rendered containers among them (D390, D395, D560): an object hangs from a character of a paragraph
+# Objects in a text, containers among them (D390, D395, D560): an object hangs from a character of a paragraph
 # and floats over it at an offset from that character, without pushing the words aside (D179, D1023).
 def _paragraph_has(model: TextModel, *, block: str, offset: int) -> None:
     try:
@@ -653,7 +653,7 @@ IN_TEXT = Placement(
 #: The style the words of a new text box and a new shape start in: the text's body style, and a shape's label.
 BOX_WORDS = {"text": DEFAULT_STYLE, "shape": "shape-label"}
 add_object_methods(composes_methods, model_of=_text, placement=IN_TEXT)
-add_rendering_methods(composes_methods, model_of=_text, placement=IN_TEXT)
+add_container_methods(composes_methods, model_of=_text, placement=IN_TEXT)
 add_shape_methods(
     composes_methods, model_of=_text, library=ShapeLibrary.load(), placement=IN_TEXT, words_styles=BOX_WORDS
 )

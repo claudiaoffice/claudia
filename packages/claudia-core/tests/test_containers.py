@@ -1,4 +1,4 @@
-"""A rendered text container: its definition, the field an object body points at it with, and old documents (D390).
+"""A container: its definition, the field an object body points at it with, and old documents (D390).
 
 The definition is the text the person writes (a LaTeX formula, a Mermaid diagram, a Typst page) and the picture last
 made from it. It is plain data, the same in all three apps; the kernel never runs a renderer and never reads the source.
@@ -6,18 +6,18 @@ Documents are forever (docs/versioning.md): a body written before the field exis
 
 import pytest
 
-from claudia_core import AddObject, ObjectBody, RenderedDefinition, paragraph_for
+from claudia_core import AddObject, ContainerDefinition, ObjectBody, paragraph_for
 from claudia_core.commands import core_commands
 from claudia_core.testing import body_before_ref
 
 
-def definition(**changes) -> RenderedDefinition:
+def definition(**changes) -> ContainerDefinition:
     fields = {"id": "r1", "type": "mermaid", "source": "flowchart LR\n  A --> B"}
-    return RenderedDefinition(**{**fields, **changes})
+    return ContainerDefinition(**{**fields, **changes})
 
 
-def rendered_body(**changes) -> ObjectBody:
-    fields = {"id": "o1", "kind": "rendered", "w": 300, "h": 200, "style": "plain-image", "ref": "r1"}
+def container_body(**changes) -> ObjectBody:
+    fields = {"id": "o1", "kind": "container", "w": 300, "h": 200, "style": "plain-image", "ref": "r1"}
     return ObjectBody(**{**fields, **changes})
 
 
@@ -32,13 +32,13 @@ def test_a_definition_round_trips_through_plain_data():
     one = definition(
         params={"theme": "neutral", "scale": 2, "dark": False}, image="a" * 64, renderer="mermaid 1.0 | mmdc 11"
     )
-    assert RenderedDefinition.from_data(one.to_data()) == one
+    assert ContainerDefinition.from_data(one.to_data()) == one
 
 
 def test_the_plain_data_names_its_format_so_that_a_later_one_can_be_told_apart():
     assert definition().to_data()["format"] == 1
     with pytest.raises(ValueError, match="format"):
-        RenderedDefinition.from_data({**definition().to_data(), "format": 2})
+        ContainerDefinition.from_data({**definition().to_data(), "format": 2})
 
 
 def test_parameters_cannot_be_changed_after_the_fact():
@@ -91,46 +91,46 @@ def test_a_picture_is_named_by_the_id_of_an_image_asset():
 
 
 # -- the body --------------------------------------------------------------------------------------------------------
-def test_a_rendered_object_body_names_its_definition_and_carries_no_text():
-    body = rendered_body()
-    assert body.rendered == "r1" and body.paragraph is None
+def test_a_container_body_names_its_definition_and_carries_no_text():
+    body = container_body()
+    assert body.container == "r1" and body.paragraph is None
 
 
 def test_the_field_is_part_of_the_plain_data_of_every_body():
-    assert rendered_body().to_data()["ref"] == "r1"
-    assert ObjectBody.from_data(rendered_body().to_data()) == rendered_body()
+    assert container_body().to_data()["ref"] == "r1"
+    assert ObjectBody.from_data(container_body().to_data()) == container_body()
     plain = ObjectBody("t1", "text", 100, 40, "body-text", paragraph=paragraph_for("t1", "body-text", "hi"))
     assert plain.to_data()["ref"] is None
 
 
-def test_a_body_written_before_rendered_objects_existed_still_reads():
-    text = rendered_body(kind="text", ref=None, paragraph=paragraph_for("o1", "body-text", "x"))
-    old = body_before_ref(text.to_data(), "rendered", "name", "table")  # a body of that time had none of the three
-    assert ObjectBody.from_data(old).rendered is None
+def test_a_body_written_before_containers_existed_still_reads():
+    text = container_body(kind="text", ref=None, paragraph=paragraph_for("o1", "body-text", "x"))
+    old = body_before_ref(text.to_data(), "container", "name", "table")  # a body of that time had none of the three
+    assert ObjectBody.from_data(old).container is None
 
 
 def test_a_body_with_a_field_nobody_knows_is_still_refused():
     with pytest.raises(ValueError, match="exactly these fields"):
-        ObjectBody.from_data({**rendered_body().to_data(), "surprise": 1})
+        ObjectBody.from_data({**container_body().to_data(), "surprise": 1})
 
 
 # -- the command of an old log ---------------------------------------------------------------------------------------
 def test_an_add_object_logged_before_the_field_is_upcast_with_no_definition():
     now = AddObject(
-        rendered_body(kind="text", ref=None, paragraph=paragraph_for("o1", "body-text", "x")), {"kind": "x"}
+        container_body(kind="text", ref=None, paragraph=paragraph_for("o1", "body-text", "x")), {"kind": "x"}
     )
     stored = now.to_data()
     stored["body"] = body_before_ref(
-        stored["body"], "rendered", "table", "name", "description", "decorative"
+        stored["body"], "container", "table", "name", "description", "decorative"
     )  # schema 1
     command = core_commands.decode({"k": "core.AddObject", "s": 1, "d": stored})
-    assert command.body.rendered is None
+    assert command.body.container is None
 
 
 def test_an_add_object_of_schema_two_is_upcast_too():
     now = AddObject(
-        rendered_body(kind="text", ref=None, paragraph=paragraph_for("o1", "body-text", "x")), {"kind": "x"}
+        container_body(kind="text", ref=None, paragraph=paragraph_for("o1", "body-text", "x")), {"kind": "x"}
     )
     stored = now.to_data()
-    stored["body"] = body_before_ref(stored["body"], "rendered", "table", "name")
-    assert core_commands.decode({"k": "core.AddObject", "s": 2, "d": stored}).body.rendered is None
+    stored["body"] = body_before_ref(stored["body"], "container", "table", "name")
+    assert core_commands.decode({"k": "core.AddObject", "s": 2, "d": stored}).body.container is None

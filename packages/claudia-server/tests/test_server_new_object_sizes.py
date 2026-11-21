@@ -21,9 +21,9 @@ from claudia_render import CliPlugin, PluginRegistry, Rendered, parse_manifest
 from claudia_server.auth import Account
 from claudia_server.composes import composes_methods
 from claudia_server.computes import computes_methods
+from claudia_server.containers import RenderDesk
 from claudia_server.creates import creates_methods
 from claudia_server.protocol import Context, Limits
-from claudia_server.rendered import RenderDesk
 
 ANN = Account("ann", "owner")
 MANIFEST = {
@@ -85,8 +85,8 @@ def add_container(app, picture, *, fit=True, where=None, most=(420, 240)):
     make, methods, place = APPS[app]
     doc, desk = make(), RenderDesk(Drawn(*picture))
     params = {**place, **(where or {}), "w": most[0], "h": most[1], "type": "boxer", "source": "x", "fit": fit}
-    added = call(doc, methods, "add_rendering", params, desk)
-    asyncio.run(desk.render_into(doc, "ann", added["rendering"]))
+    added = call(doc, methods, "add_container", params, desk)
+    asyncio.run(desk.render_into(doc, "ann", added["container"]))
     body = doc.model.get_object(added["object"]).body
     return doc, desk, added, (body.w, body.h)
 
@@ -134,8 +134,8 @@ def test_a_long_formula_in_composes_is_as_tall_as_the_body_text_and_no_wider_tha
     doc, desk = text_doc(), RenderDesk(Drawn(300, 12))
     doc.model.styles.set_css("body", {**dict(doc.model.styles.get("body").css), "font-size": "24pt"})
     params = {"block": "b1", "offset": 2, "w": 420, "h": 240, "type": "boxer", "source": "x", "fit": True}
-    added = call(doc, composes_methods, "add_rendering", params, desk)
-    asyncio.run(desk.render_into(doc, "ann", added["rendering"]))
+    added = call(doc, composes_methods, "add_container", params, desk)
+    asyncio.run(desk.render_into(doc, "ann", added["container"]))
     body = doc.model.get_object(added["object"]).body
     assert (body.w, body.h) == (600, 24), "32 high would be 800 wide; the column of an A4 page is 604"
 
@@ -151,8 +151,8 @@ def test_only_the_first_picture_is_fitted_and_a_size_i_set_is_kept(app):
     methods = APPS[app][1]
     shown = doc.model.get_object(added["object"])
     doc.execute(ResizeObject(added["object"], shown.anchor.to_data(), 300, 100), author="ann")
-    call(doc, methods, "set_rendering_source", {"id": added["rendering"], "source": "again"}, desk)
-    asyncio.run(desk.render_into(doc, "ann", added["rendering"]))
+    call(doc, methods, "set_container_source", {"id": added["container"], "source": "again"}, desk)
+    asyncio.run(desk.render_into(doc, "ann", added["container"]))
     assert doc.model.get_object(added["object"]).body.w == 300
 
 

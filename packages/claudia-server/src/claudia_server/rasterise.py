@@ -1,6 +1,6 @@
 """Drawing an SVG as a PNG, for the office files of a document (D394).
 
-A rendered text container is stored as an SVG, which is what every program should draw: PowerPoint does, LibreOffice
+A container is stored as an SVG, which is what every program should draw: PowerPoint does, LibreOffice
 leaves out the colours and text a diagram's style sheet gives. An export that has a rasteriser writes a picture too, so
 that it looks right wherever the file is opened. ``rsvg-convert`` (librsvg) is the one used: small, no browser, and it
 follows no reference outside the picture.

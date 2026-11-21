@@ -164,13 +164,13 @@ Hyphenation patterns for the clients' layout, the same way (D913): ``GET /api/hy
 .. autofunction:: claudia_server.hyphenation.fetch
 .. autodata:: claudia_server.hyphenation.HYPHENATION_FORMAT
 
-Rendered text containers
+Containers
 ------------------------
 
-What makes the picture of a rendered text container (D395; not in ``__all__``, documented so the signatures that name
+What makes the picture of a container (D395; not in ``__all__``, documented so the signatures that name
 it resolve): the methods that put one in a document, and the job that renders it as an ordinary edit.
 
-.. autoclass:: claudia_server.rendered.RenderDesk
+.. autoclass:: claudia_server.containers.RenderDesk
    :members:
 
 Users

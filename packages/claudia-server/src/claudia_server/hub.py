@@ -43,7 +43,7 @@ from claudia_core import (
     ObjectModel,
     Revision,
 )
-from claudia_core.asset_store import RENDERING
+from claudia_core.asset_store import CONTAINER
 from claudia_core.clock import utc_now
 from claudia_render import RenderFailed, ToolUnavailable
 
@@ -67,10 +67,10 @@ from .what_if import drop_person
 from .workers import DEFAULT_MAX_WAITING, DEFAULT_WORKERS, WorkerPool
 
 if TYPE_CHECKING:
-    from claudia_core import RenderedDefinition
+    from claudia_core import ContainerDefinition
 
     from .assistant import Assistant
-    from .rendered import RenderDesk
+    from .containers import RenderDesk
 
 log = logging.getLogger("claudia_server")
 
@@ -79,7 +79,7 @@ log = logging.getLogger("claudia_server")
 PALETTE = ("#d6477a", "#f2a057", "#3d7dd8", "#8d6e63", "#7cb342", "#b0408f", "#607d8b", "#c9a400")
 
 _DOC_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
-#: How long a rendered container's text must stay as it is before its picture is made, so that typing makes one.
+#: How long a container's text must stay as it is before its picture is made, so that typing makes one.
 RENDER_DELAY = 0.4
 #: Who a picture's edit is by when nobody can be said to have asked for it.
 RENDER_AUTHOR = "claudia-render"
@@ -520,7 +520,7 @@ class HostedDocument:
         return everyone
 
     def _on_event(self, event: object) -> None:
-        if isinstance(event, AssetsChanged) and event.kind is RENDERING:
+        if isinstance(event, AssetsChanged) and event.kind is CONTAINER:
             self._schedule_render(event)
         data = event.to_data()  # type: ignore[attr-defined]
         if isinstance(event, EphemeralPublished) and event.message.kind == "presence":
@@ -557,26 +557,26 @@ class HostedDocument:
 
         Typing makes a burst of changes, so a job waits ``RENDER_DELAY`` and a newer change replaces it. The job is
         by the person whose request caused the change, so that undo follows what that person did (D395)."""
-        rendering_id, definition = event.asset_id, cast("RenderedDefinition | None", event.asset)
-        previous = self._render_jobs.pop(rendering_id, None)
+        container_id, definition = event.asset_id, cast("ContainerDefinition | None", event.asset)
+        previous = self._render_jobs.pop(container_id, None)
         if previous is not None and previous is not asyncio.current_task():
             previous.cancel()
-        made = definition is not None and self._made_from(rendering_id, definition)
+        made = definition is not None and self._made_from(container_id, definition)
         if not made:
-            self._outcomes.pop(rendering_id, None)  # what the last try said was about a text that is gone
+            self._outcomes.pop(container_id, None)  # what the last try said was about a text that is gone
         if self.renderings is None or definition is None or not definition.source.strip():
             return
         if made:
             return  # a picture was made of this very text: this event is that picture, or an undo or redo of it
-        self._start_render(rendering_id)
+        self._start_render(container_id)
 
-    def _start_render(self, rendering_id: str) -> None:
+    def _start_render(self, container_id: str) -> None:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             return  # not served by an event loop (a test of the model): there is nobody to make a picture for
         author = self.acting_user or RENDER_AUTHOR
-        self._render_jobs[rendering_id] = loop.create_task(self._render_job(rendering_id, author))
+        self._render_jobs[container_id] = loop.create_task(self._render_job(container_id, author))
 
     def render_unfinished(self) -> None:
         """The document was just loaded: make the picture of each container that has text and no picture.
@@ -587,36 +587,36 @@ class HostedDocument:
         model = self.document.model
         if self.renderings is None or not isinstance(model, ObjectModel):
             return
-        for rendering_id, definition in model.renderings.items():
-            if definition.source.strip() and definition.image is None and rendering_id not in self._render_jobs:
-                self._start_render(rendering_id)
+        for container_id, definition in model.containers.items():
+            if definition.source.strip() and definition.image is None and container_id not in self._render_jobs:
+                self._start_render(container_id)
 
     def render_outcomes(self) -> dict[str, dict]:
         """What the last try to draw each container said, as sent in `render_result`: a window that joins after the
         try needs it to tell "could not draw it" from "not drawn yet"."""
         return self._outcomes
 
-    def _made_from(self, rendering_id: str, definition) -> bool:  # noqa: ANN001 - RenderedDefinition
+    def _made_from(self, container_id: str, definition) -> bool:  # noqa: ANN001 - ContainerDefinition
         """Was the last picture of this container made of exactly this text and these settings?
 
         An undo or a redo of the picture is not a reason to make it again: undoing means going back to what was, and a
         picture that came back would put a new edit on the undo stack in front of the person's own."""
-        return self._rendered.get(rendering_id) == (definition.source, tuple(definition.params.items()))
+        return self._rendered.get(container_id) == (definition.source, tuple(definition.params.items()))
 
-    async def _render_job(self, rendering_id: str, author: str) -> None:
+    async def _render_job(self, container_id: str, author: str) -> None:
         assert self.renderings is not None
-        result: dict = {"id": rendering_id, "ok": False, "diagnostics": [], "message": "", "unavailable": None}
+        result: dict = {"id": container_id, "ok": False, "diagnostics": [], "message": "", "unavailable": None}
         try:
             await asyncio.sleep(RENDER_DELAY)
             model = self.document.model
             assert isinstance(model, ObjectModel)
-            definition = model.renderings[rendering_id]
-            if self._made_from(rendering_id, definition):
+            definition = model.containers[container_id]
+            if self._made_from(container_id, definition):
                 return
-            made = await self.renderings.render_into(self.document, author, rendering_id)
+            made = await self.renderings.render_into(self.document, author, container_id)
             if made is None:
                 return  # the text changed while the tool ran: the job of the newer text speaks for it
-            self._rendered[rendering_id] = (definition.source, tuple(definition.params.items()))
+            self._rendered[container_id] = (definition.source, tuple(definition.params.items()))
             result.update(ok=True, diagnostics=[d.to_data() for d in made.warnings])
         except (KeyError, asyncio.CancelledError):
             return  # the container is gone, or its text changed again
@@ -625,12 +625,12 @@ class HostedDocument:
         except ToolUnavailable as error:
             result.update(message=str(error), unavailable=error.tool)
         except Exception:
-            log.exception("rendering %s failed in %s", rendering_id, self.id)
+            log.exception("rendering %s failed in %s", container_id, self.id)
             result.update(message="the picture could not be made")
         finally:
-            if self._render_jobs.get(rendering_id) is asyncio.current_task():
-                del self._render_jobs[rendering_id]
-        self._outcomes[rendering_id] = result
+            if self._render_jobs.get(container_id) is asyncio.current_task():
+                del self._render_jobs[container_id]
+        self._outcomes[container_id] = result
         self.broadcast({"event": "render_result", "data": result})
 
     def stop_rendering(self) -> None:
@@ -732,7 +732,7 @@ class Hub:
     ):
         self.font_catalogue = font_catalogue  # what fonts this server has, for the font report (E1.9)
         self.provider = provider
-        self.renderings = renderings  # what makes rendered containers (D395); ``None``: this server makes none
+        self.renderings = renderings  # what makes containers (D395); ``None``: this server makes none
         self.methods = methods
         self.limits = limits or Limits()
         self.allow_create = allow_create

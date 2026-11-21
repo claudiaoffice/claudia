@@ -3,7 +3,7 @@
 The kernel's object layer is one for all apps (:class:`claudia_core.ObjectModel`): place an object, move it, size it,
 turn it, describe it, take it away. These are its wire methods, registered once. What differs is only *where* an
 object is: a cell of a sheet, a point on a slide, a character of a text. An app says that with a :class:`Placement`,
-and :func:`add_object_methods` (and :func:`claudia_server.rendered.add_rendering_methods`) build the rest from it.
+and :func:`add_object_methods` (and :func:`claudia_server.containers.add_container_methods`) build the rest from it.
 
 What stays with an app is what is really its own: creates' shapes and text boxes (``add_object``, ``set_text``,
 ``set_snap``), computes' charts, composes' paragraphs. A rule that differs by app, such as a turned object staying

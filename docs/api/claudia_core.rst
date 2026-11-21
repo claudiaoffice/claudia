@@ -302,18 +302,18 @@ outline, worked out in whole numbers from a table of sines (D910, D1022).
 .. autofunction:: claudia_core.turned_extent
 .. autofunction:: claudia_core.nudge_into
 
-Rendered text containers
+Containers
 ------------------------
 
-.. automodule:: claudia_core.renderings
+.. automodule:: claudia_core.containers
    :no-members:
 
 .. currentmodule:: claudia_core
 
-A rendered text container keeps a text and shows a picture something outside the document made from it (D390); the
+A container keeps a text and shows a picture something outside the document made from it (D390); the
 kernel keeps the definition and the picture, and never runs anything (D391). The definition is an asset (D1431).
 
-.. autoclass:: claudia_core.RenderedDefinition
+.. autoclass:: claudia_core.ContainerDefinition
 
 Shape outlines
 --------------

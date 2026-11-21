@@ -74,7 +74,7 @@ const APPS = {
     // the active cell: a press on an object must not move it
     below: (page) => page.$eval('.viewport .active', (e) => e.getAttribute('style')).catch(() => ''),
     // Edit text: only a container is written in (a picture and a chart have no words)
-    editable: (kind) => kind === 'rendered',
+    editable: (kind) => kind === 'container',
     wrap: false,
     grid: false,
   },
@@ -116,7 +116,7 @@ const KINDS = {
   },
   image: { computes: (p) => insertPicture(p), composes: (p) => insertPicture(p), creates: (p) => insertPicture(p) },
   diagram: { computes: (p) => insertChart(p), composes: 'a text has no charts', creates: 'a slide has no charts' },
-  rendered: { computes: (p) => insertContainer(p), composes: (p) => insertContainer(p), creates: (p) => insertContainer(p) },
+  container: { computes: (p) => insertContainer(p), composes: (p) => insertContainer(p), creates: (p) => insertContainer(p) },
   table: { computes: 'a sheet is the table', composes: 'its own battery, below (tables are in the flow)', creates: 'a slide has no tables' },
 }
 // end of KINDS
@@ -365,10 +365,10 @@ async function battery(app, kind, ann, ben) {
 // -- Edit text: one editor, whatever the app (creates' paragraph editor, composes' box, a container's source)
 async function editText(app, kind, ann, ben, obj) {
   const where = `${app} ${kind}`
-  const rendered = kind === 'rendered'
-  const editor = obj.locator(rendered ? '[data-testid=rendered-editor] textarea' : '[role=textbox]')
-  const accept = rendered ? 'Control+Enter' : 'Enter'
-  const words = rendered ? 'x^2 + y^2' : 'words by ann'
+  const isContainer = kind === 'container'
+  const editor = obj.locator(isContainer ? '[data-testid=container-editor] textarea' : '[role=textbox]')
+  const accept = isContainer ? 'Control+Enter' : 'Enter'
+  const words = isContainer ? 'x^2 + y^2' : 'words by ann'
   const h = await entries(ann)
   // from the object's menu
   await obj.click({ button: 'right' })
@@ -379,7 +379,7 @@ async function editText(app, kind, ann, ben, obj) {
   await ann.keyboard.press(accept)
   await editor.waitFor({ state: 'detached' })
   await waitEntries(ann, h + 1, `${where}: one entry for the words`)
-  if (!rendered) {
+  if (!isContainer) {
     assert.ok((await obj.innerText()).includes(words), `${where}: the words are on the object`)
     if (ben) await ben.waitForFunction(([sel, text]) => document.querySelector(sel)?.textContent.includes(text), [APPS[app].objects, words])
   }
@@ -392,7 +392,7 @@ async function editText(app, kind, ann, ben, obj) {
   await editor.waitFor({ state: 'detached' })
   await ann.waitForTimeout(300)
   assert.equal(await entries(ann), h + 1, `${where}: Esc leaves nothing in the history`)
-  if (!rendered) assert.ok(!(await obj.innerText()).includes('not kept'), `${where}: and the words as they were`)
+  if (!isContainer) assert.ok(!(await obj.innerText()).includes('not kept'), `${where}: and the words as they were`)
   // a double press opens it, too
   await obj.dblclick()
   await editor.waitFor()

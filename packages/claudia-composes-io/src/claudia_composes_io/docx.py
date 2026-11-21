@@ -107,7 +107,7 @@ def text_to_docx(
     remark (no replacement) carries no text to track and is left out, same as a withdrawn or resolved suggestion.
     ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one with no time is
     written without a date, which Word shows as undated (D411). The pictures floating over the text (an image, a
-    rendered text container) are written as anchored drawings in the paragraph they hang from, with their alt text;
+    container) are written as anchored drawings in the paragraph they hang from, with their alt text;
     an SVG is shown by the picture ``rasterise`` draws of it, or else by an empty one (D464). The file says in its
     properties who made the document and when and who changed it last, from ``info``; what ``info`` does not know it
     leaves out (D466). The tables of the text are written as real tables after the paragraph they hang from (E9.32,
@@ -641,7 +641,7 @@ def docx_export_losses(
     keep it), a ``"remark"`` (nothing to track), a ``"suggestion"`` that is not written because tracking is off, a
     ``"suggestion-anchor"`` that no longer matches its text, ``"svg-fallback"`` (a picture that is an SVG, which only
     Word 2016 and later draw: another program shows an empty picture unless a rasteriser was given, ``rasterised``),
-    ``"rendering-pending"`` (a rendered text container nothing has been drawn for: left out), and what
+    ``"rendering-pending"`` (a container nothing has been drawn for: left out), and what
     :func:`docx_unwritten_changes` says of a fresh file."""
     losses = LossLog()
     names = WordNames(model.styles)
@@ -815,7 +815,7 @@ def apply_edits_to_docx(
     rewritten = {
         block.id for block in current.blocks if baseline_by_id.get(block.id) != block or block.id in replacements
     }
-    if losses is not None:  # (what a rendered container is that nothing has been drawn for)
+    if losses is not None:  # (what a container is that nothing has been drawn for)
         picture_losses(current, losses)
     pictures = PictureEdits(document, baseline, current, rewritten, rasterise, losses)
     boxes = BoxEdits(document, names, baseline, current, rewritten, pictures.writer, losses)

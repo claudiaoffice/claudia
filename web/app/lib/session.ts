@@ -693,10 +693,10 @@ export class Session extends BaseSession<State> {
     return this.putPicture(picture, { sheet: this.state.activeSheet, ...anchor })
   }
 
-  /** Put a rendered container of `type` on the sheet that is shown, anchored to a cell (D560); its id, or `null` after
+  /** Put a container of `type` on the sheet that is shown, anchored to a cell (D560); its id, or `null` after
    * telling the person why not. */
   addContainer(type: string, anchor: { row: number; col: number; w: number; h: number }): Promise<string | null> {
-    return this.addRendering(type, { sheet: this.state.activeSheet, row: anchor.row, col: anchor.col }, { w: anchor.w, h: anchor.h }, undefined, true)
+    return this.addContainerAt(type, { sheet: this.state.activeSheet, row: anchor.row, col: anchor.col }, { w: anchor.w, h: anchor.h }, undefined, true)
   }
 
   /** Take a new chart definition into the document (E6.6); its id, or `null` after telling the person why not.

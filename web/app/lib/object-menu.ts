@@ -44,7 +44,7 @@ export interface ObjectMenuActions {
 }
 
 /** What an app has: `grid` is creates', `wrap` is composes' (the object's current mode). `edit` and `clipboard` are on
- * unless the app says no: composes can write in a rendered container only. Cut, Copy and Paste of a picture are the same in
+ * unless the app says no: composes can write in a container only. Cut, Copy and Paste of a picture are the same in
  * the three apps (`object-clipboard.ts`, D1229). */
 export interface ObjectMenuApp {
   grid?: boolean
