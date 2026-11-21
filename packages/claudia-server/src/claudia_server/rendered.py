@@ -34,6 +34,7 @@ from claudia_core import (
     decode_image,
     new_object_size,
 )
+from claudia_core.asset_store import IMAGE, RENDERING
 from claudia_core.renderings import RenderedDefinition
 from claudia_render import RenderService, UnknownType, default_alt
 
@@ -92,13 +93,13 @@ class RenderDesk:
         asset = decode_image(rendered.svg.encode("utf-8"), checked_drawing=True)
         if (current.image, current.renderer) == (asset.id, rendered.renderer):
             return rendered
-        steps: list = [] if asset.id in model.images else [DefineAsset("image", asset.to_data())]
+        steps: list = [] if asset.id in model.images else [DefineAsset(IMAGE.name, asset.to_data())]
         steps.append(
-            UpdateAsset("rendering", rendering_id, current.with_picture(asset.id, rendered.renderer).to_data())
+            UpdateAsset(RENDERING.name, rendering_id, current.with_picture(asset.id, rendered.renderer).to_data())
         )
         old = current.image
         if old and old != asset.id and not self._held_elsewhere(model, old, rendering_id):
-            steps.append(ForgetAsset("image", old))
+            steps.append(ForgetAsset(IMAGE.name, old))
         first = current.image is None
         for object_id in model.renderings.users(rendering_id):
             shown = model.get_object(object_id)
@@ -197,7 +198,7 @@ def _add(model_of: Callable[[Context], ObjectModel], placement: Placement):
         )
         definition = RenderedDefinition(rendering_id, type, source, settings)  # type: ignore[arg-type]
         command = Batch(
-            (DefineAsset("rendering", definition.to_data()), AddObject(body, anchor)), name="Add rendered container"
+            (DefineAsset(RENDERING.name, definition.to_data()), AddObject(body, anchor)), name="Add rendered container"
         )
         applied = ctx.document.execute(command, author=ctx.user, base=base)
         if fit:
@@ -217,7 +218,7 @@ def _set_source(model_of: Callable[[Context], ObjectModel]):
         current = model.renderings[id]
         settings = desk.check(current.type, source, {**dict(current.params), **(params or {})})
         changed = RenderedDefinition(id, current.type, source, settings, current.image, current.renderer)  # type: ignore[arg-type]
-        applied = ctx.document.execute(UpdateAsset("rendering", id, changed.to_data()), author=ctx.user, base=base)
+        applied = ctx.document.execute(UpdateAsset(RENDERING.name, id, changed.to_data()), author=ctx.user, base=base)
         return {"rendering": id, "revision": applied.revision.to_data()}
 
     return set_rendering_source

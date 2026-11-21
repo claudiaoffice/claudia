@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from .asset_store import TABLE, AssetKind, AssetsChanged, AssetStore, asset_kind
 from .commands import Command, CommandRegistry, core_commands
-from .objects import AddObject, host_of
+from .objects import AddObject, object_model_of
 
 if TYPE_CHECKING:
     from .context import Context
@@ -27,11 +27,7 @@ def _commanded(name: str) -> AssetKind:
 
 
 def _store(ctx: Context, kind: AssetKind) -> AssetStore:
-    return host_of(ctx).assets[kind.name]
-
-
-def _a(noun: str) -> str:
-    return f"{'an' if noun[0] in 'aeiou' else 'a'} {noun}"
+    return object_model_of(ctx).assets[kind.name]
 
 
 def _blanked(kind: AssetKind, model: type[DocumentModel] | None, data: dict) -> dict:
@@ -54,12 +50,12 @@ class DefineAsset(Command):
 
     @property
     def summary(self) -> str:
-        return f"The document takes {_a(_commanded(self.asset_kind).noun)}"
+        return f"The document takes the {_commanded(self.asset_kind).noun} {self.data.get('id', '')}"
 
     def apply(self, ctx: Context) -> Command:
         kind = _commanded(self.asset_kind)
         store = _store(ctx, kind)
-        asset = kind.read(host_of(ctx), self.data)
+        asset = kind.read(object_model_of(ctx), self.data)
         store.define(asset)
         ctx.emit(AssetsChanged(kind, asset.id, asset))
         return ForgetAsset(kind.name, asset.id)
@@ -100,11 +96,11 @@ class UpdateAsset(Command):
 
     @property
     def summary(self) -> str:
-        return f"Edited {_a(_commanded(self.asset_kind).noun)}"
+        return f"Edited the {_commanded(self.asset_kind).noun} {self.id}"
 
     def apply(self, ctx: Context) -> Command:
         kind = _commanded(self.asset_kind)
-        new = kind.read(host_of(ctx), self.data)
+        new = kind.read(object_model_of(ctx), self.data)
         if new.id != self.id:
             raise ValueError(f"a {kind.name} cannot change its id")
         old = _store(ctx, kind).replace(new)

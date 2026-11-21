@@ -1,7 +1,7 @@
 // Replaying the history (D551): which rows the wheel visits, where the playhead goes, and where a view looks. The
 // views themselves draw the past from the same read requests they always make, answered "as of" a step
 // (`BaseSession.replayAt`); this module is only the logic of the playhead, so it is tested without a window.
-import type { ChatMessage, Entry } from './base-session'
+import type { ChatMessage, Step } from './base-session'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Region, type WireData } from './protocol'
 
 /** Which rows the history shows, and so which the wheel visits: the changes, the conversation, or both. */
@@ -10,7 +10,7 @@ export type Filter = 'all' | 'chat' | 'steps'
 /** One row of the history: a change, or a chat message in the place of the change it was written after. `state` is the
  * revision of the document that row stands for (the last change at or before it), `null` before the first change. */
 export type Item =
-  | (Entry & { kind: 'change'; state: string })
+  | (Step & { kind: 'change'; state: string })
   | (ChatMessage & { kind: 'chat'; state: string | null })
 
 /** The revision a row shows the document at, `null` when there is nothing yet. */
@@ -20,7 +20,7 @@ export function stateOf(item: Item): string | null {
 
 /** The rows of the history in order, for a filter. A chat message is placed after the change whose revision it carries
  * (`at`); one written before any change, or before the history shown, comes first. */
-export function timeline(entries: readonly Entry[], chat: readonly ChatMessage[], filter: Filter): Item[] {
+export function timeline(entries: readonly Step[], chat: readonly ChatMessage[], filter: Filter): Item[] {
   const shown = new Set(entries.map((e) => e.revision))
   const after = new Map<string, ChatMessage[]>()
   const first: ChatMessage[] = []

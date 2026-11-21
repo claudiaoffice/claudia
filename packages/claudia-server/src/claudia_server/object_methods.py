@@ -28,6 +28,7 @@ from claudia_core import (
     decode_image,
     new_object_size,
 )
+from claudia_core.asset_store import IMAGE
 from claudia_core.clock import utc_now
 
 from .images import image_bytes, picture_words
@@ -113,7 +114,7 @@ def add_object_methods(
                 room=model.room_for_new_object(model.anchor_from_data(anchor)),
                 smallest=model.min_object_size,
             )
-        steps: list = [] if asset.id in model.images else [DefineAsset("image", asset.to_data())]
+        steps: list = [] if asset.id in model.images else [DefineAsset(IMAGE.name, asset.to_data())]
         imported = ImageImport.from_data(
             {
                 "asset": asset.id,

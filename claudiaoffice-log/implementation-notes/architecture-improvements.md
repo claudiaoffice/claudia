@@ -17,7 +17,7 @@ the code does not say.
   `_held_elsewhere` asks for users other than the container it is redrawing, or it would never let go of an old picture.
 - **The stored state** of each app is `**self.assets_to_data()`: every kind of asset, under the keys it always had
   (`images`, `shapes`, `diagrams`, `renderings`, `tables`). A text and a slide now also store an empty `diagrams` list,
-  and a slide an empty `tables` list; `restore_objects(objects, state)` reads whatever kinds a stored state has.
+  a slide and a workbook an empty `tables` list; `restore_objects(objects, state)` reads whatever kinds a stored state has.
 - **Tables** share the store (`model.tables.define/known/replace/forget`) and keep their own commands and their own
   `TablesChanged` event; `DefineAsset("table", …)` is refused, so there is one way to define a table.
 - The **wire did not change**: `AssetsChanged.to_data()` is `{type: "image"|"shape"|"diagram"|"rendering", id, asset|definition}`.
@@ -41,7 +41,9 @@ the code does not say.
 
 Done: `Entry` → `Step`, `history.Step` → `UndoUnit`, the assistant's `Step` → `AiTurn`, `Line` → `BranchInfo`,
 `lines()`/`peek_line` → `branches()`/`peek_branch`, `CommandLog.line` → `steps_of`; on the wire `branches`, `peek_branch`,
-`propose_switch(branch)` and `branch`/`branches` in the welcome; in the side panel "Branches" ("Zweige").
+`propose_switch(branch)` and `branch`/`branches` in the welcome, in the answers of `ping`, `snapshot` and `peek_branch`
+and in an open restore proposal; two server messages ("switching branches", "no branch called"); the web's log type
+`Step`; in the side panel "Branches" ("Zweige").
 
 Not done yet (next slices, in this order): holder and the object layer (`Anchor.container`, `TextContainers.vue`), chart
 (`DiagramDefinition`, object kind `diagram`, computes' `Chart` → `ChartTab`), container (object kind `rendered`,

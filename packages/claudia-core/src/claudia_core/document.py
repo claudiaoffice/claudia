@@ -89,8 +89,8 @@ class Changes:
 
 @dataclass(frozen=True)
 class BranchInfo:
-    """One branch of the history (``main``, or ``restore-N`` after a restore), as it is now: its head and whether it is the
-    active one (a view of :class:`~claudia_core.revision.Branch`)."""
+    """One branch of the history (``main``, or ``restore-N`` after a restore), as it is now: its head and whether it is
+    the active one (a view of :class:`~claudia_core.revision.Branch`)."""
 
     name: str
     head: Revision | None

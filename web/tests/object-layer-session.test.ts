@@ -85,7 +85,13 @@ describe.each(APPS)('the $app session', ({ app, make }) => {
     const sent = link.calls.length
 
     expect(await session.renameStyle('plain', 'Calm')).toBe(false)
+    expect(await session.changeStyle('plain', { set: { color: 'red' } })).toBe(false)
     expect(await session.setRole('accent', '#ff0000')).toBe(false)
+    expect(await session.replacePalette([])).toBe(false)
+    expect(await session.removeObject('o1')).toBe(false)
+    expect(await session.rotateObject('o1', 90)).toBe(false)
+    expect(await session.describeObject('o1', 'A chart', false)).toBe(false)
+    expect(await session.setLanguage('de')).toBe(false)
 
     expect(link.calls.length).toBe(sent)
     expect(session.state.notice?.text).toBe('You can only look at this document.')

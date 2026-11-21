@@ -39,6 +39,7 @@ from claudia_core import (
     builtin_palette,
     new_registry,
 )
+from claudia_core.asset_store import DIAGRAM
 
 from .calc import Calculator
 from .cellstyles import CellStyles, Piece
@@ -657,7 +658,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         """As the shared answer (floating objects), plus any chart tab showing a diagram (E6.6): a tab is a user of a
         diagram definition exactly as an object anchored to one is, so forgetting it is refused while either remains."""
         users = super().users_of(kind, asset_id)
-        if kind.name == "diagram":
+        if kind is DIAGRAM:
             users += [chart.id for chart in self.charts.values() if chart.spec_id == asset_id]
         return users
 

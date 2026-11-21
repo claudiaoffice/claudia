@@ -43,6 +43,7 @@ from claudia_core import (
     ObjectModel,
     Revision,
 )
+from claudia_core.asset_store import RENDERING
 from claudia_core.clock import utc_now
 from claudia_render import RenderFailed, ToolUnavailable
 
@@ -519,7 +520,7 @@ class HostedDocument:
         return everyone
 
     def _on_event(self, event: object) -> None:
-        if isinstance(event, AssetsChanged) and event.kind.name == "rendering":
+        if isinstance(event, AssetsChanged) and event.kind is RENDERING:
             self._schedule_render(event)
         data = event.to_data()  # type: ignore[attr-defined]
         if isinstance(event, EphemeralPublished) and event.message.kind == "presence":
