@@ -133,7 +133,7 @@ export const LIVE_REQUESTS: ReadonlySet<string> = new Set([
   'chat',
   'checkpoints',
   'history',
-  'lines',
+  'branches',
   'restore_policy',
   'language',
   'ping',

@@ -6,7 +6,7 @@ import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
 import { outcomesOf, toOutcome, type RenderingDef, type RenderOutcome, type RenderType } from './rendering'
-import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
+import { closeMessage, ProtocolError, type BranchInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
 import { roleName } from './people'
@@ -186,7 +186,8 @@ export interface BaseState extends ObjectLayerState {
   error: string
   me: { user: string; role: string; color: string }
   doc: string
-  line: string
+  /** The branch of the history the document is on now. */
+  branch: string
   revision: string | null
   people: Person[]
   presence: Record<string, { regions: Region[]; locked: boolean }>
@@ -201,8 +202,8 @@ export interface BaseState extends ObjectLayerState {
   undoLabel: string
   redoLabel: string
   notice: Notice | null
-  /** Every line of the document's history: the active one, and the side lines a restore left behind (E3.8). */
-  lines: LineInfo[]
+  /** Every branch of the document's history: the active one, and the ones a restore left behind (E3.8). */
+  branches: BranchInfo[]
   /** A restore/switch suggestion waiting for everybody's answer, if one is open right now (E3.7). */
   proposal: RestoreProposal | null
   /** How silence at a suggestion's deadline is read: `consensus` (must actively agree) or `veto` (must object). */
@@ -247,7 +248,7 @@ function initialState(): BaseState {
     error: '',
     me: { user: '', role: '', color: '' },
     doc: '',
-    line: 'main',
+    branch: 'main',
     revision: null,
     people: [],
     presence: {},
@@ -261,7 +262,7 @@ function initialState(): BaseState {
     undoLabel: '',
     redoLabel: '',
     notice: null,
-    lines: [],
+    branches: [],
     proposal: null,
     restorePolicy: 'consensus',
     replay: null,
@@ -385,7 +386,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.doc = w.doc
     s.aiMode = readAiMode(s.host, w.doc, this.storage)
     s.app = w.app
-    s.line = w.line
+    s.branch = w.branch
     s.revision = w.revision
     s.people = w.people.map((p) => ({ ...p }))
     s.presence = {}
@@ -484,14 +485,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const s = this.state
     // A viewer holds the content key only, and the server keeps the history and the chat from her (D1261).
     const reads = s.me.role !== 'viewer'
-    const [entries, chat, checkpoints, history, lines, restorePolicy, renderTypes, renderings, audit] = await Promise.all([
+    const [entries, chat, checkpoints, history, branches, restorePolicy, renderTypes, renderings, audit] = await Promise.all([
       reads ? link.request<Entry[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Entry[]>([]),
       reads ? link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }) : Promise.resolve<ChatMessage[]>([]),
       reads ? link.request<CheckpointInfo[]>('checkpoints') : Promise.resolve<CheckpointInfo[]>([]),
       reads
         ? link.request<UndoState>('history')
         : Promise.resolve<UndoState>({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
-      reads ? link.request<LineInfo[]>('lines') : Promise.resolve<LineInfo[]>([]),
+      reads ? link.request<BranchInfo[]>('branches') : Promise.resolve<BranchInfo[]>([]),
       reads
         ? link.request<{ policy: 'consensus' | 'veto' }>('restore_policy')
         : Promise.resolve<{ policy: 'consensus' | 'veto' }>({ policy: 'consensus' }),
@@ -508,7 +509,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.canRedo = history.can_redo
     s.undoLabel = history.undo_label
     s.redoLabel = history.redo_label
-    s.lines = lines
+    s.branches = branches
     s.restorePolicy = restorePolicy.policy
     s.renderTypes = renderTypes?.types ?? []
     s.renderings = Object.fromEntries((renderings ?? []).map((d) => [d.id, d]))
@@ -1446,7 +1447,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   /** File ▸ Export… ▸ Claudia, unencrypted (D1270): one zip anybody can read, with the content and, if an owner asks
-   * (`includeHistory`), the history with its hidden lines and the chat. No keys, no passwords, no people. The server
+   * (`includeHistory`), the history with its hidden branches and the chat. No keys, no passwords, no people. The server
    * records the export for you (D1271). `false` after saying why not (an editor or a viewer asking for the history). */
   async exportClaudia(includeHistory = false): Promise<UnprotectedFile | false> {
     return await this.recorded(await this.attempt('export_claudia', includeHistory ? { include_history: true } : {}))
@@ -1483,10 +1484,10 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return await this.attempt('help_topic', { id })
   }
 
-  // ------------------------------------------------------------------------------ lines, and restoring with consent (E3.7, E3.8)
+  // ------------------------------------------------------------------------------ branches, and restoring with consent (E3.7, E3.8)
   /** A read-only look at any line (active or hidden), without switching to it: for previewing before suggesting. */
-  async peekLine(line: string): Promise<{ line: string; revision: string | null; app: string; state_schema: string; state: unknown } | false> {
-    return await this.attempt('peek_line', { line })
+  async peekBranch(branch: string): Promise<{ branch: string; revision: string | null; app: string; state_schema: string; state: unknown } | false> {
+    return await this.attempt('peek_branch', { branch })
   }
 
   /**
@@ -1499,8 +1500,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   /** Suggest making another line active again (the way back after a restore). Same consent as `proposeRestore`. */
-  async proposeSwitch(line: string): Promise<boolean> {
-    return (await this.attempt('propose_switch', { line })) !== false
+  async proposeSwitch(branch: string): Promise<boolean> {
+    return (await this.attempt('propose_switch', { branch })) !== false
   }
 
   /** Agree or decline the open suggestion (`state.proposal`). */

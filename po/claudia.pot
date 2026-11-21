@@ -393,7 +393,7 @@ msgstr ""
 msgid "A table has 1 to {columns} columns and 1 to {rows} rows."
 msgstr ""
 
-#: web/app/lib/text-session.ts:805
+#: web/app/lib/text-session.ts:719
 msgid "A table of contents takes no typing: its entries come from the headings."
 msgstr ""
 
@@ -959,6 +959,10 @@ msgstr ""
 
 #: web/app/lib/cell-styles.ts:101
 msgid "Box {box} · Words {words} — the two slots now differ"
+msgstr ""
+
+#: web/app/components/SidePanel.vue:593
+msgid "Branches"
 msgstr ""
 
 #: web/app/components/StyleSpec.vue:205
@@ -1929,7 +1933,7 @@ msgstr ""
 msgid "Every use of “{name}”"
 msgstr ""
 
-#: web/app/lib/base-session.ts:389
+#: web/app/lib/base-session.ts:421
 msgid "Everybody agreed: now at {label}."
 msgstr ""
 
@@ -2222,7 +2226,7 @@ msgid "Forecast"
 msgstr ""
 
 #: web/app/components/SidePanel.vue:609
-msgid "Forget every hidden line"
+msgid "Forget every hidden branch"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:56 web/app/components/SlideWorkspace.vue:400 web/app/components/TextWorkspace.vue:532 web/app/components/Workspace.vue:1104
@@ -2973,10 +2977,6 @@ msgstr ""
 msgid "Line · soon"
 msgstr ""
 
-#: web/app/components/SidePanel.vue:593
-msgid "Lines"
-msgstr ""
-
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:86 web/app/lib/format-menu.ts:96
 msgid "List"
 msgstr ""
@@ -3501,7 +3501,7 @@ msgstr ""
 msgid "Not available yet"
 msgstr ""
 
-#: web/app/lib/base-session.ts:1018 web/app/lib/base-session.ts:736
+#: web/app/lib/base-session.ts:1200 web/app/lib/base-session.ts:768
 msgid "Not connected to the server."
 msgstr ""
 
@@ -3557,7 +3557,7 @@ msgstr ""
 msgid "Nothing differs from now"
 msgstr ""
 
-#: web/app/lib/base-session.ts:1157
+#: web/app/lib/base-session.ts:1340
 msgid "Nothing has changed since the last checkpoint."
 msgstr ""
 
@@ -3985,7 +3985,7 @@ msgstr ""
 msgid "Paragraph {n}"
 msgstr ""
 
-#: web/app/lib/base-session.ts:556
+#: web/app/lib/base-session.ts:588
 msgid "Part of the history was redacted. The document was reloaded."
 msgstr ""
 
@@ -5165,7 +5165,7 @@ msgstr ""
 msgid "Slide numbers"
 msgstr ""
 
-#: web/app/components/PresentShow.vue:236 web/app/lib/slide-session.ts:532
+#: web/app/components/PresentShow.vue:236 web/app/lib/slide-session.ts:471
 msgid "Slide {n}"
 msgstr ""
 
@@ -5209,7 +5209,7 @@ msgstr ""
 msgid "Something is repeated that is not there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1007 web/app/lib/base-session.ts:1210 web/app/lib/session.ts:653
+#: web/app/lib/base-session.ts:1189 web/app/lib/base-session.ts:1393 web/app/lib/session.ts:579
 msgid "Something went wrong."
 msgstr ""
 
@@ -5613,7 +5613,7 @@ msgstr ""
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:938
+#: web/app/lib/base-session.ts:970
 msgid "That was deleted. This is the last moment it was there."
 msgstr ""
 
@@ -5809,7 +5809,7 @@ msgstr ""
 msgid "The different rows of a range in order of first appearance (columns with by_col TRUE); with exactly_once TRUE only those that occur once."
 msgstr ""
 
-#: web/app/lib/base-session.ts:564 web/app/lib/base-session.ts:568
+#: web/app/lib/base-session.ts:596 web/app/lib/base-session.ts:600
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
 msgstr ""
 
@@ -6513,11 +6513,11 @@ msgstr ""
 msgid "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
 msgstr ""
 
-#: web/app/lib/base-session.ts:390
+#: web/app/lib/base-session.ts:422
 msgid "The suggestion to go to {label} was declined."
 msgstr ""
 
-#: web/app/lib/base-session.ts:391
+#: web/app/lib/base-session.ts:423
 msgid "The suggestion to go to {label} was withdrawn."
 msgstr ""
 
@@ -6721,7 +6721,7 @@ msgstr ""
 msgid "There is nothing in this to redact."
 msgstr ""
 
-#: web/app/lib/base-session.ts:935
+#: web/app/lib/base-session.ts:967
 msgid "There is nothing like that in this document."
 msgstr ""
 
@@ -6845,7 +6845,7 @@ msgstr ""
 msgid "This document uses fonts this server does not have: {list}. They are shown in stand-ins."
 msgstr ""
 
-#: web/app/lib/base-session.ts:617
+#: web/app/lib/base-session.ts:649
 msgid "This document was deleted by its owner."
 msgstr ""
 
@@ -6885,7 +6885,7 @@ msgstr ""
 msgid "This page is not allowed to use that server."
 msgstr ""
 
-#: web/app/lib/text-session.ts:1010
+#: web/app/lib/text-session.ts:917
 msgid "This paragraph"
 msgstr ""
 
@@ -7389,11 +7389,11 @@ msgstr ""
 msgid "Which tags"
 msgstr ""
 
-#: web/app/lib/base-session.ts:383
+#: web/app/lib/base-session.ts:415
 msgid "While you were away, {by} restored to {label} (agreed: {agreed})."
 msgstr ""
 
-#: web/app/lib/base-session.ts:384
+#: web/app/lib/base-session.ts:416
 msgid "While you were away, {by} switched to {label} (agreed: {agreed})."
 msgstr ""
 
@@ -7573,7 +7573,7 @@ msgstr ""
 msgid "You are its owner. What the document does not show stays in the kept file and is listed after it opens."
 msgstr ""
 
-#: web/app/lib/base-session.ts:606
+#: web/app/lib/base-session.ts:638
 msgid "You are no longer a person of this document."
 msgstr ""
 
@@ -7593,7 +7593,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:325 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:479 web/app/components/TextContainers.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:292 web/app/components/Workspace.vue:349 web/app/components/Workspace.vue:400 web/app/components/Workspace.vue:482 web/app/components/Workspace.vue:542 web/app/components/Workspace.vue:548 web/app/components/Workspace.vue:630 web/app/components/Workspace.vue:796 web/app/components/Workspace.vue:850 web/app/components/Workspace.vue:970 web/app/lib/base-session.ts:1016 web/app/lib/text-session.ts:775
+#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:325 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:479 web/app/components/TextContainers.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:292 web/app/components/Workspace.vue:349 web/app/components/Workspace.vue:400 web/app/components/Workspace.vue:482 web/app/components/Workspace.vue:542 web/app/components/Workspace.vue:548 web/app/components/Workspace.vue:630 web/app/components/Workspace.vue:796 web/app/components/Workspace.vue:850 web/app/components/Workspace.vue:970 web/app/lib/base-session.ts:1162 web/app/lib/base-session.ts:1198
 msgid "You can only look at this document."
 msgstr ""
 
@@ -7617,7 +7617,7 @@ msgstr ""
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1013
+#: web/app/lib/base-session.ts:1195
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr ""
 
@@ -7653,7 +7653,7 @@ msgstr ""
 msgid "Your request went to the chat."
 msgstr ""
 
-#: web/app/lib/base-session.ts:599
+#: web/app/lib/base-session.ts:631
 msgid "Your role in this document is now “{role}”."
 msgstr ""
 
@@ -7995,6 +7995,10 @@ msgstr ""
 
 #: web/app/lib/style-deletion.ts:164
 msgid "border"
+msgstr ""
+
+#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:554 web/app/components/TextWorkspace.vue:694
+msgid "branch {branch}"
 msgstr ""
 
 #: web/app/components/OpenDialog.vue:1032
@@ -8523,10 +8527,6 @@ msgstr ""
 
 #: web/app/lib/style-deletion.ts:166
 msgid "line height"
-msgstr ""
-
-#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:554 web/app/components/TextWorkspace.vue:694
-msgid "line {line}"
 msgstr ""
 
 #: web/app/components/RenderedFace.vue:21
@@ -9262,7 +9262,7 @@ msgid "the assistant does not suggest restoring a step"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:751
-msgid "the assistant does not suggest switching lines"
+msgid "the assistant does not suggest switching branches"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:770
@@ -9513,16 +9513,16 @@ msgstr ""
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr ""
 
+#: packages/claudia-server/src/claudia_server/protocol.py:753
+msgid "there is no branch called {branch!r}"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/protocol.py:816
 msgid "there is no chat message of that number for you"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/structure_methods.py:183
 msgid "there is no earlier list of this kind to continue"
-msgstr ""
-
-#: packages/claudia-server/src/claudia_server/protocol.py:753
-msgid "there is no line called {line!r}"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes.py:372 packages/claudia-server/src/claudia_server/composes.py:432 packages/claudia-server/src/claudia_server/composes.py:596 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
@@ -10409,7 +10409,7 @@ msgstr ""
 msgid "{n} without a time"
 msgstr ""
 
-#: web/app/lib/base-session.ts:614
+#: web/app/lib/base-session.ts:646
 msgid "{owner} is now the owner of this document."
 msgstr ""
 
@@ -10513,11 +10513,11 @@ msgstr ""
 msgid "{user} keeps what has already been seen and any copy of the file that was saved."
 msgstr ""
 
-#: web/app/lib/base-session.ts:612
+#: web/app/lib/base-session.ts:644
 msgid "{user} left this document."
 msgstr ""
 
-#: web/app/lib/base-session.ts:602
+#: web/app/lib/base-session.ts:634
 msgid "{user} may now “{role}”."
 msgstr ""
 
@@ -10525,7 +10525,7 @@ msgstr ""
 msgid "{user} selected this"
 msgstr ""
 
-#: web/app/lib/base-session.ts:609
+#: web/app/lib/base-session.ts:641
 msgid "{user} was removed from this document."
 msgstr ""
 

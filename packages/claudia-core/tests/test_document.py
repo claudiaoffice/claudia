@@ -158,9 +158,9 @@ def test_cached_snapshots_speed_up_materialize_without_changing_the_result(make_
 
 def test_replay_error_names_the_revision():
     log = CommandLog()
-    from claudia_core import Entry
+    from claudia_core import Step
 
-    log.append(Entry(Revision("main", 1), None, "ana", "2026-11-01T12:00:00.000Z", Remove(4)))
+    log.append(Step(Revision("main", 1), None, "ana", "2026-11-01T12:00:00.000Z", Remove(4)))
     with pytest.raises(ReplayError) as caught:
         Document.open(ListModel, log)
     assert "main:1" in str(caught.value)

@@ -36,7 +36,7 @@ const SERVERS: Record<string, Record<string, (params: any) => unknown>> = {
     styles: () => [STYLE],
   },
 }
-const EVERY_APP = { images: () => [], palette: () => PALETTE, style_model: () => STYLE_MODEL, log: () => [], chat_log: () => [], checkpoints: () => [], lines: () => [], history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }), restore_policy: () => ({ policy: 'consensus' }), ping: () => ({ revision: 'main:0' }) }
+const EVERY_APP = { images: () => [], palette: () => PALETTE, style_model: () => STYLE_MODEL, log: () => [], chat_log: () => [], checkpoints: () => [], branches: () => [], history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }), restore_policy: () => ({ policy: 'consensus' }), ping: () => ({ revision: 'main:0' }) }
 
 class FakeLink implements LinkLike {
   calls: { method: string; params: any }[] = []
@@ -71,7 +71,7 @@ const APPS = [
 ]
 
 async function opened(app: string, make: (l: () => LinkLike) => BaseSession<BaseState>, role = 'editor') {
-  const welcome = { user: 'ann', role, doc: 'd', app, line: 'main', revision: 'main:0', id: 1, color: '#e6194b', people: [], presence: [], checkpoints: [], limits: { max_text: 32767 }, lines: [], proposal: null, returned: null } as unknown as Welcome
+  const welcome = { user: 'ann', role, doc: 'd', app, branch: 'main', revision: 'main:0', id: 1, color: '#e6194b', people: [], presence: [], checkpoints: [], limits: { max_text: 32767 }, branches: [], proposal: null, returned: null } as unknown as Welcome
   const link = new FakeLink(welcome, { ...EVERY_APP, ...SERVERS[app], rename_style: () => ({ revision: 'main:1' }), set_role: () => ({ revision: 'main:1' }) })
   const session = make(() => link)
   await session.open()

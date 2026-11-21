@@ -7,7 +7,7 @@
     context      what a command works with while it applies
     region       Region: presence, locks and AI edits written once
     presence     holds that move with the edits
-    log          Entry and CommandLog: the source of truth
+    log          Step and CommandLog: the source of truth
     replay       apply a log to a model, deterministically; replay_collecting for a Document-free call site
     history      per-author undo built from the log
     messages     chat records and ephemeral messages (the three message classes)
@@ -81,7 +81,7 @@ from .css import (
     roles_used,
     validate_css,
 )
-from .document import Applied, Changes, CheckpointInfo, Document, Line, Look, RedactionPlan, environment_of
+from .document import Applied, Changes, CheckpointInfo, Document, BranchInfo, Look, RedactionPlan, environment_of
 from .errors import (
     KernelError,
     MissingUpcaster,
@@ -150,7 +150,7 @@ from .generated import (
     Toc,
     generated_from_data,
 )
-from .history import History, Step
+from .history import History, UndoUnit
 from .language import LanguageChanged, LanguageError, SetLanguage, normalize_language
 from .lists import (
     ChangeList,
@@ -164,7 +164,7 @@ from .lists import (
     SetListItem,
     numbering_labels,
 )
-from .log import CommandLog, Entry
+from .log import CommandLog, Step
 from .looks import colour_of, parse_colour, points_of
 from .manifest import (
     Environment,
@@ -446,7 +446,7 @@ __all__ = [
     "DocumentModel",
     "DocumentStore",
     "encode",
-    "Entry",
+    "Step",
     "FILLER",
     "Environment",
     "environment_of",
@@ -474,7 +474,7 @@ __all__ = [
     "insert_runs",
     "KernelError",
     "KINDS",
-    "Line",
+    "BranchInfo",
     "luminance",
     "name_key",
     "name_problem",
@@ -617,7 +617,7 @@ __all__ = [
     "StaleEdit",
     "Proposal",
     "WhatIf",
-    "Step",
+    "UndoUnit",
     "StyleBook",
     "SetHeadingLevel",
     "SetStyleHidden",

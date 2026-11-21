@@ -53,7 +53,7 @@ def test_every_method_is_documented_and_described():
         "redo",
         "save_checkpoint",
         "checkpoints",
-        "lines",
+        "branches",
         "history",
         "presence",
         "lock",
@@ -72,10 +72,10 @@ def test_restoring_and_switching_are_not_on_the_wire_yet():
 # ---------------------------------------------------------------------------------------- reading
 def test_ping_snapshot_and_lines(doc, ann):
     doc.execute(Insert(0, 7), author="ben")
-    assert call(doc, ann, "ping") == {"revision": "main:1", "line": "main"}
+    assert call(doc, ann, "ping") == {"revision": "main:1", "branch": "main"}
     snap = call(doc, ann, "snapshot")
     assert snap["state"] == {"items": [7]} and snap["revision"] == "main:1" and snap["app"] == "test-list"
-    assert call(doc, ann, "lines") == [{"name": "main", "head": "main:1", "active": True, "forked_from": None}]
+    assert call(doc, ann, "branches") == [{"name": "main", "head": "main:1", "active": True, "forked_from": None}]
 
 
 def test_the_empty_document_has_no_revision(doc, ann):
@@ -342,7 +342,7 @@ def test_defaults_and_nulls(doc, ann):
     call(doc, ann, "apply", {"command": INSERT, "base": None})
     call(doc, ann, "save_checkpoint", {"label": None})
     assert doc.checkpoints[0].label == "Checkpoint 1"
-    assert call(doc, ann, "ping", None)["line"] == "main"
+    assert call(doc, ann, "ping", None)["branch"] == "main"
 
 
 def test_unknown_method_and_non_string_method(doc, ann):

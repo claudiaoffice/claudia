@@ -396,22 +396,22 @@ const others = computed(() => state.typing.filter((u) => u !== state.me.user))
 const canWrite = computed(() => state.me.role === 'owner' || state.me.role === 'editor')
 const viewer = computed(() => state.me.role === 'viewer')  // holds the content key only: no history, no chat (D1261)
 const isOwner = computed(() => state.me.role === 'owner')
-const hiddenLines = computed(() => state.lines.filter((l) => !l.active))
+const hiddenBranches = computed(() => state.branches.filter((b) => !b.active))
 const myProposal = computed(() => state.proposal)
 const canWithdraw = computed(() => myProposal.value && (myProposal.value.by === state.me.user || isOwner.value))
 const haveAgreed = computed(() => myProposal.value?.agreed.includes(state.me.user) ?? false)
 const stillWaitingOn = computed(() => myProposal.value ? myProposal.value.group.filter((u) => !myProposal.value!.agreed.includes(u)) : [])
 
-type Peeked = Exclude<Awaited<ReturnType<BaseSession['peekLine']>>, false>
+type Peeked = Exclude<Awaited<ReturnType<BaseSession['peekBranch']>>, false>
 const peeked = ref<Record<string, Peeked>>({})
-async function togglePeek(line: string) {
-  if (peeked.value[line]) {
-    const { [line]: _drop, ...rest } = peeked.value
+async function togglePeek(branch: string) {
+  if (peeked.value[branch]) {
+    const { [branch]: _drop, ...rest } = peeked.value
     peeked.value = rest
     return
   }
-  const result = await props.session.peekLine(line)
-  if (result) peeked.value = { ...peeked.value, [line]: result }
+  const result = await props.session.peekBranch(branch)
+  if (result) peeked.value = { ...peeked.value, [branch]: result }
 }
 
 function suggestRestore(checkpoint: number) {
@@ -428,8 +428,8 @@ const differenceNote = computed(() => {
   if (n === 0) return t('Nothing differs from now')
   return r.changedMore ? t('More than {n} places differ from now', { n }) : t('Places that differ from now: {n}', { n })
 })
-function suggestSwitch(line: string) {
-  void props.session.proposeSwitch(line)
+function suggestSwitch(branch: string) {
+  void props.session.proposeSwitch(branch)
 }
 function agree() {
   void props.session.answerRestore(true)
@@ -588,25 +588,25 @@ const isAi = (user: string) => user.toLowerCase() === 'ai'
       </ol>
     </section>
 
-    <section v-if="state.lines.length > 1 || hiddenLines.length" class="lines">
+    <section v-if="state.branches.length > 1 || hiddenBranches.length" class="branches">
       <h2>
-        {{ t('Lines') }} <span class="count">{{ state.lines.length }}</span>
+        {{ t('Branches') }} <span class="count">{{ state.branches.length }}</span>
         <select v-if="isOwner" class="policy" :value="state.restorePolicy" :title="t('What silence at a suggestion\'s deadline means')" @change="setPolicy(($event.target as HTMLSelectElement).value as 'consensus' | 'veto')">
           <option value="consensus">{{ t('silence = decline') }}</option>
           <option value="veto">{{ t('silence = agree') }}</option>
         </select>
       </h2>
-      <ol class="lineList">
-        <li v-for="line in state.lines" :key="line.name" class="line" :class="{ active: line.active }">
-          <span class="name"><span v-if="line.active" class="dot" />{{ line.name }}</span>
+      <ol class="branchList">
+        <li v-for="branch in state.branches" :key="branch.name" class="branch" :class="{ active: branch.active }">
+          <span class="name"><span v-if="branch.active" class="dot" />{{ branch.name }}</span>
           <span class="actions">
-            <button type="button" @click="togglePeek(line.name)">{{ peeked[line.name] ? t('close') : t('peek') }}</button>
-            <button v-if="!line.active && canWrite && !myProposal" type="button" @click="suggestSwitch(line.name)">{{ t('suggest switching here') }}</button>
+            <button type="button" @click="togglePeek(branch.name)">{{ peeked[branch.name] ? t('close') : t('peek') }}</button>
+            <button v-if="!branch.active && canWrite && !myProposal" type="button" @click="suggestSwitch(branch.name)">{{ t('suggest switching here') }}</button>
           </span>
-          <pre v-if="peeked[line.name]" class="peekBox mono">{{ JSON.stringify(peeked[line.name]!.state, null, 1) }}</pre>
+          <pre v-if="peeked[branch.name]" class="peekBox mono">{{ JSON.stringify(peeked[branch.name]!.state, null, 1) }}</pre>
         </li>
       </ol>
-      <button v-if="isOwner && hiddenLines.length && !myProposal" type="button" class="discard" @click="discard">{{ t('Forget every hidden line') }}</button>
+      <button v-if="isOwner && hiddenBranches.length && !myProposal" type="button" class="discard" @click="discard">{{ t('Forget every hidden branch') }}</button>
     </section>
 
     <section class="chat">
@@ -1085,14 +1085,14 @@ time {
 }
 
 /* -------------------------------------------------------------------------------------------- lines (E3.8) */
-.lines {
+.branches {
   flex: 0 0 auto;
   max-height: 160px;
 }
-.lines h2 {
+.branches h2 {
   justify-content: space-between;
 }
-.lines .policy {
+.branches .policy {
   margin-left: auto;
   background: rgb(255 255 255 / 8%);
   color: rgb(230 224 245 / 80%);
@@ -1101,11 +1101,11 @@ time {
   font-size: 10px;
   padding: 1px 6px;
 }
-.lineList {
+.branchList {
   flex: 0 1 auto;
   overflow: auto;
 }
-.line {
+.branch {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1114,26 +1114,26 @@ time {
   padding: 3px 0;
   font-size: 12px;
 }
-.line .name {
+.branch .name {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-family: var(--font-mono);
 }
-.line:not(.active) .name {
+.branch:not(.active) .name {
   color: rgb(230 224 245 / 65%);
 }
-.line .dot {
+.branch .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--iris);
 }
-.line .actions {
+.branch .actions {
   display: flex;
   gap: 6px;
 }
-.line .actions button {
+.branch .actions button {
   background: none;
   border: 1px solid rgb(231 225 244 / 22%);
   border-radius: 999px;
@@ -1142,7 +1142,7 @@ time {
   padding: 1px 8px;
   cursor: pointer;
 }
-.line .actions button:hover {
+.branch .actions button:hover {
   background: rgb(255 255 255 / 8%);
 }
 .peekBox {

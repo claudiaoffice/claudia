@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .commands import Command
-    from .log import Entry
+    from .log import Step
     from .messages import ChatRecord, Ephemeral
     from .revision import Revision
 
@@ -26,7 +26,7 @@ Event = Any  # anything with a to_data() method; the kernel's own events are bel
 class CommandApplied:
     """A command finished. ``origin`` is do, undo or redo."""
 
-    entry: Entry
+    entry: Step
     inverse: Command
 
     def to_data(self) -> dict:

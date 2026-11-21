@@ -261,7 +261,7 @@ class Connection:
             "uid": self.hosted.uid(),
             "app": doc.model.app,
             "state_schema": doc.model.state_schema,
-            "line": doc.branch,
+            "branch": doc.branch,
             "revision": None if revision is None else revision.to_data(),
             "limits": self.hosted.limits.to_dict(),
             "id": self.id,
@@ -276,10 +276,10 @@ class Connection:
             "checkpoints": (
                 [{"number": c.number, "label": c.label, "author": c.author} for c in doc.checkpoints] if history else []
             ),
-            "lines": (
+            "branches": (
                 [
                     {"name": x.name, "head": None if x.head is None else x.head.to_data(), "active": x.active}
-                    for x in doc.lines()
+                    for x in doc.branches()
                 ]
                 if history
                 else []
@@ -663,7 +663,7 @@ class HostedDocument:
         elif record["kind"] == "restore":
             moved = self.document.restore_checkpoint(record["checkpoint"], author=record["by"]) is not None
         else:
-            moved = self.document.switch_to(record["line"], author=record["by"]) is not None
+            moved = self.document.switch_to(record["branch"], author=record["by"]) is not None
         if moved:
             self.restore.record_resolution(
                 old, Resolution(by=record["by"], kind=record["kind"], label=record["label"], agreed=record["agreed"])

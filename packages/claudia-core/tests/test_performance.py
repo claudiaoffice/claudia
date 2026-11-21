@@ -8,7 +8,7 @@ is O(history) by design is named in the docs (opening a document replays it; E4 
 import gc
 import time
 
-from claudia_core import CommandLog, Document, Entry, MemoryStore
+from claudia_core import CommandLog, Document, MemoryStore, Step
 from claudia_core.testing import Insert, ListModel
 
 SMALL, LARGE = 2_000, 20_000
@@ -20,7 +20,7 @@ def build_log(n: int) -> CommandLog:
     for i in range(n):
         rev = log.next_revision()
         # appending (index i) keeps the toy model itself O(1) per command
-        log.append(Entry(rev, parent, "ana", "2026-11-02T00:00:00Z", Insert(i, i)))
+        log.append(Step(rev, parent, "ana", "2026-11-02T00:00:00Z", Insert(i, i)))
         parent = rev
     return log
 

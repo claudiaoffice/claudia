@@ -691,7 +691,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
           <span><b>{{ state.blocks.length }}</b> {{ state.blocks.length === 1 ? t('paragraph') : t('paragraphs') }}</span>
           <button v-if="openSuggestions" type="button" class="sugs" data-testid="open-suggestions" :title="t('Open the first suggestion')" @click="pickNext()"><b>{{ openSuggestions }}</b> {{ openSuggestions === 1 ? t('suggestion') : t('suggestions') }}</button>
         </div>
-        <span class="rev mono" :title="t('line {line}', { line: state.line })">{{ state.revision ?? t('empty') }}</span>
+        <span class="rev mono" :title="t('branch {branch}', { branch: state.branch })">{{ state.revision ?? t('empty') }}</span>
       </footer>
     </template>
     <template #overlay>

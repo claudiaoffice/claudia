@@ -36,7 +36,7 @@ def restored(worked):
 
 
 def test_lines_lists_every_line_and_marks_the_active_one(restored):
-    lines = restored.lines()
+    lines = restored.branches()
     summary = [(x.name, x.active, str(x.head)) for x in lines]
     assert summary == [("main", False, "main:5"), ("restore-1", True, "restore-1:4")]
     assert lines[1].forked_from == Revision("main", 3) and lines[0].forked_from is None
@@ -44,7 +44,7 @@ def test_lines_lists_every_line_and_marks_the_active_one(restored):
 
 def test_a_document_that_never_restored_has_one_line(doc):
     doc.execute(Insert(0, 1))
-    assert [(x.name, x.active) for x in doc.lines()] == [("main", True)]
+    assert [(x.name, x.active) for x in doc.branches()] == [("main", True)]
 
 
 def test_switching_back_brings_the_old_future_back(restored):
@@ -136,7 +136,7 @@ def test_discarding_after_a_switch_forgets_the_line_left(restored):
     restored.switch_to("main", author="ana")
     removed = restored.discard_side_history()
     assert [str(r) for r in removed] == ["restore-1:4"]
-    assert [x.name for x in restored.lines()] == ["main"]
+    assert [x.name for x in restored.branches()] == ["main"]
 
 
 @pytest.mark.parametrize("seed", range(10))

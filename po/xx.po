@@ -393,7 +393,7 @@ msgstr "[À tàblé àlwàys hàs îts héàdér rôw.~~~~~~~~~~~~~~]"
 msgid "A table has 1 to {columns} columns and 1 to {rows} rows."
 msgstr "[À tàblé hàs 1 tô {columns} côlûmns ànd 1 tô {rows} rôws.~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/text-session.ts:805
+#: web/app/lib/text-session.ts:719
 msgid "A table of contents takes no typing: its entries come from the headings."
 msgstr "[À tàblé ôf cônténts tàkés nô typîng: îts éntrîés cômé frôm thé héàdîngs.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -960,6 +960,10 @@ msgstr "[Bôx~]"
 #: web/app/lib/cell-styles.ts:101
 msgid "Box {box} · Words {words} — the two slots now differ"
 msgstr "[Bôx {box} · Wôrds {words} — thé twô slôts nôw dîffér~~~~~~~~~~~~~~~~~~~~~]"
+
+#: web/app/components/SidePanel.vue:593
+msgid "Branches"
+msgstr "[Brànchés~~~]"
 
 #: web/app/components/StyleSpec.vue:205
 msgid "Break long words at the end of a line where the text's language allows (in the pages and the PDF)"
@@ -1929,7 +1933,7 @@ msgstr "[Évéry ôûtcômé ôf thé àltérnàtîvés thîs céll dépénds ô
 msgid "Every use of “{name}”"
 msgstr "[Évéry ûsé ôf “{name}”~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:389
+#: web/app/lib/base-session.ts:421
 msgid "Everybody agreed: now at {label}."
 msgstr "[Évérybôdy àgrééd: nôw àt {label}.~~~~~~~~~~~~~]"
 
@@ -2222,8 +2226,8 @@ msgid "Forecast"
 msgstr "[Fôrécàst~~~]"
 
 #: web/app/components/SidePanel.vue:609
-msgid "Forget every hidden line"
-msgstr "[Fôrgét évéry hîddén lîné~~~~~~~~~~]"
+msgid "Forget every hidden branch"
+msgstr "[Fôrgét évéry hîddén brànch~~~~~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/ImagePropertiesDialog.vue:56 web/app/components/SlideWorkspace.vue:400 web/app/components/TextWorkspace.vue:532 web/app/components/Workspace.vue:1104
 msgid "Format"
@@ -2973,10 +2977,6 @@ msgstr "[Lîght ûp thé célls thàt tàké pàrt în thîs céll's cômpûtàt
 msgid "Line · soon"
 msgstr "[Lîné · sôôn~~~~]"
 
-#: web/app/components/SidePanel.vue:593
-msgid "Lines"
-msgstr "[Lînés~~]"
-
 #: clients/linux/src/claudia_shell_gtk/manifest.py web/app/components/StyleBar.vue:86 web/app/lib/format-menu.ts:96
 msgid "List"
 msgstr "[Lîst~~]"
@@ -3501,7 +3501,7 @@ msgstr "[Nôt à fônt thàt càn bé réàd.~~~~~~~~~~~]"
 msgid "Not available yet"
 msgstr "[Nôt àvàîlàblé yét~~~~~~~]"
 
-#: web/app/lib/base-session.ts:1018 web/app/lib/base-session.ts:736
+#: web/app/lib/base-session.ts:1200 web/app/lib/base-session.ts:768
 msgid "Not connected to the server."
 msgstr "[Nôt cônnéctéd tô thé sérvér.~~~~~~~~~~~]"
 
@@ -3557,7 +3557,7 @@ msgstr "[Nôthîng ànybôdy séés în thé dôcûmént chàngés: ît îs ônl
 msgid "Nothing differs from now"
 msgstr "[Nôthîng dîfférs frôm nôw~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:1157
+#: web/app/lib/base-session.ts:1340
 msgid "Nothing has changed since the last checkpoint."
 msgstr "[Nôthîng hàs chàngéd sîncé thé làst chéckpôînt.~~~~~~~~~~~~~~~~~~]"
 
@@ -3985,7 +3985,7 @@ msgstr "[Pàràgràph~~~~]"
 msgid "Paragraph {n}"
 msgstr "[Pàràgràph {n}~~~~~]"
 
-#: web/app/lib/base-session.ts:556
+#: web/app/lib/base-session.ts:588
 msgid "Part of the history was redacted. The document was reloaded."
 msgstr "[Pàrt ôf thé hîstôry wàs rédàctéd. Thé dôcûmént wàs rélôàdéd.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5165,7 +5165,7 @@ msgstr "[Slîdé~~]"
 msgid "Slide numbers"
 msgstr "[Slîdé nûmbérs~~~~~]"
 
-#: web/app/components/PresentShow.vue:236 web/app/lib/slide-session.ts:532
+#: web/app/components/PresentShow.vue:236 web/app/lib/slide-session.ts:471
 msgid "Slide {n}"
 msgstr "[Slîdé {n}~~~~]"
 
@@ -5209,7 +5209,7 @@ msgstr "[Sôméôné hàs nàméd thîs sérvér's fîrst àdmînîstràtôr în
 msgid "Something is repeated that is not there."
 msgstr "[Sôméthîng îs répéàtéd thàt îs nôt théré.~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:1007 web/app/lib/base-session.ts:1210 web/app/lib/session.ts:653
+#: web/app/lib/base-session.ts:1189 web/app/lib/base-session.ts:1393 web/app/lib/session.ts:579
 msgid "Something went wrong."
 msgstr "[Sôméthîng wént wrông.~~~~~~~~]"
 
@@ -5613,7 +5613,7 @@ msgstr "[Thàt récôvéry kéy dôés nôt fît thîs dôcûmént.~~~~~~~~~~~~~
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr "[Thàt sérvér rûns {other}. Thîs wîndôw îs {this} — ôpén ît théré.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:938
+#: web/app/lib/base-session.ts:970
 msgid "That was deleted. This is the last moment it was there."
 msgstr "[Thàt wàs délétéd. Thîs îs thé làst mômént ît wàs théré.~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -5809,7 +5809,7 @@ msgstr "[Thé détérmînànt ôf à sqûàré màtrîx ôf nûmbérs.~~~~~~~~~~
 msgid "The different rows of a range in order of first appearance (columns with by_col TRUE); with exactly_once TRUE only those that occur once."
 msgstr "[Thé dîfférént rôws ôf à ràngé în ôrdér ôf fîrst àppéàràncé (côlûmns wîth by_côl TRÛÉ); wîth éxàctly_ôncé TRÛÉ ônly thôsé thàt ôccûr ôncé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:564 web/app/lib/base-session.ts:568
+#: web/app/lib/base-session.ts:596 web/app/lib/base-session.ts:600
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
 msgstr "[Thé dôcûmént chàngéd ûndér yôû (ît wént bàck tô à chéckpôînt ôr wàs rébûîlt). Ît wàs rélôàdéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6513,11 +6513,11 @@ msgstr "[Thé stàndàrd nôrmàl dîstrîbûtîôn (méàn 0, dévîàtîôn 1)
 msgid "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
 msgstr "[Thé stràîght lîné y = m1*x1 + ... + b thrôûgh knôwn y ànd x vàlûés, às à rôw: thé côéffîcîénts în révérsé ôrdér, thén b; wîth stàts TRÛÉ àlsô stàndàrd érrôrs, r sqûàréd, F, dégréés ôf fréédôm ànd sûms ôf sqûàrés.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:390
+#: web/app/lib/base-session.ts:422
 msgid "The suggestion to go to {label} was declined."
 msgstr "[Thé sûggéstîôn tô gô tô {label} wàs déclînéd.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:391
+#: web/app/lib/base-session.ts:423
 msgid "The suggestion to go to {label} was withdrawn."
 msgstr "[Thé sûggéstîôn tô gô tô {label} wàs wîthdràwn.~~~~~~~~~~~~~~~~~~]"
 
@@ -6721,7 +6721,7 @@ msgstr "[Théré îs nô tàblé tô ànàlysé yét. Séléct célls wîth à h
 msgid "There is nothing in this to redact."
 msgstr "[Théré îs nôthîng în thîs tô rédàct.~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:935
+#: web/app/lib/base-session.ts:967
 msgid "There is nothing like that in this document."
 msgstr "[Théré îs nôthîng lîké thàt în thîs dôcûmént.~~~~~~~~~~~~~~~~~~]"
 
@@ -6845,7 +6845,7 @@ msgstr "[Thîs dôcûmént ûsés à fônt thîs sérvér dôés nôt hàvé: {l
 msgid "This document uses fonts this server does not have: {list}. They are shown in stand-ins."
 msgstr "[Thîs dôcûmént ûsés fônts thîs sérvér dôés nôt hàvé: {list}. Théy àré shôwn în stànd-îns.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:617
+#: web/app/lib/base-session.ts:649
 msgid "This document was deleted by its owner."
 msgstr "[Thîs dôcûmént wàs délétéd by îts ôwnér.~~~~~~~~~~~~~~~~]"
 
@@ -6885,7 +6885,7 @@ msgstr "[Thîs ôbjéct ônly~~~~~~]"
 msgid "This page is not allowed to use that server."
 msgstr "[Thîs pàgé îs nôt àllôwéd tô ûsé thàt sérvér.~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/text-session.ts:1010
+#: web/app/lib/text-session.ts:917
 msgid "This paragraph"
 msgstr "[Thîs pàràgràph~~~~~~]"
 
@@ -7389,11 +7389,11 @@ msgstr "[Whîch stéps thé whéél vîsîts~~~~~~~~~~~]"
 msgid "Which tags"
 msgstr "[Whîch tàgs~~~~]"
 
-#: web/app/lib/base-session.ts:383
+#: web/app/lib/base-session.ts:415
 msgid "While you were away, {by} restored to {label} (agreed: {agreed})."
 msgstr "[Whîlé yôû wéré àwày, {by} réstôréd tô {label} (àgrééd: {agreed}).~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:384
+#: web/app/lib/base-session.ts:416
 msgid "While you were away, {by} switched to {label} (agreed: {agreed})."
 msgstr "[Whîlé yôû wéré àwày, {by} swîtchéd tô {label} (àgrééd: {agreed}).~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7573,7 +7573,7 @@ msgstr "[Yôû àré àn ôwnér.~~~~~~~]"
 msgid "You are its owner. What the document does not show stays in the kept file and is listed after it opens."
 msgstr "[Yôû àré îts ôwnér. Whàt thé dôcûmént dôés nôt shôw stàys în thé képt fîlé ànd îs lîstéd àftér ît ôpéns.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:606
+#: web/app/lib/base-session.ts:638
 msgid "You are no longer a person of this document."
 msgstr "[Yôû àré nô lôngér à pérsôn ôf thîs dôcûmént.~~~~~~~~~~~~~~~~~~]"
 
@@ -7593,7 +7593,7 @@ msgstr "[Yôû bécômé thé ôwnér ôf thé néw dôcûmént. Nôbôdy élsé
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "[Yôû càn chàngé ît ànywày — thîs îs à wàrnîng, nôt à réfûsàl.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:325 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:479 web/app/components/TextContainers.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:292 web/app/components/Workspace.vue:349 web/app/components/Workspace.vue:400 web/app/components/Workspace.vue:482 web/app/components/Workspace.vue:542 web/app/components/Workspace.vue:548 web/app/components/Workspace.vue:630 web/app/components/Workspace.vue:796 web/app/components/Workspace.vue:850 web/app/components/Workspace.vue:970 web/app/lib/base-session.ts:1016 web/app/lib/text-session.ts:775
+#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:325 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:479 web/app/components/TextContainers.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:292 web/app/components/Workspace.vue:349 web/app/components/Workspace.vue:400 web/app/components/Workspace.vue:482 web/app/components/Workspace.vue:542 web/app/components/Workspace.vue:548 web/app/components/Workspace.vue:630 web/app/components/Workspace.vue:796 web/app/components/Workspace.vue:850 web/app/components/Workspace.vue:970 web/app/lib/base-session.ts:1162 web/app/lib/base-session.ts:1198
 msgid "You can only look at this document."
 msgstr "[Yôû càn ônly lôôk àt thîs dôcûmént.~~~~~~~~~~~~~~]"
 
@@ -7617,7 +7617,7 @@ msgstr "[Yôû wîll nô lôngér bé àblé tô ôpén {doc}, ûnléss sôméb�
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr "[Yôûr brôwsér wôûld nôt côpy ît: séléct thé kéy ànd côpy ît yôûrsélf.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:1013
+#: web/app/lib/base-session.ts:1195
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr "[Yôûr chàngé wàs nôt àpplîéd: thé dôcûmént chàngéd ûndér yôû. Ît wàs rélôàdéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7653,7 +7653,7 @@ msgstr "[Yôûr récôvéry kéy~~~~~~~]"
 msgid "Your request went to the chat."
 msgstr "[Yôûr réqûést wént tô thé chàt.~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:599
+#: web/app/lib/base-session.ts:631
 msgid "Your role in this document is now “{role}”."
 msgstr "[Yôûr rôlé în thîs dôcûmént îs nôw “{role}”.~~~~~~~~~~~~~~~~~]"
 
@@ -7996,6 +7996,10 @@ msgstr "[bôld~~]"
 #: web/app/lib/style-deletion.ts:164
 msgid "border"
 msgstr "[bôrdér~~]"
+
+#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:554 web/app/components/TextWorkspace.vue:694
+msgid "branch {branch}"
+msgstr "[brànch {branch}~~~~~~]"
 
 #: web/app/components/OpenDialog.vue:1032
 msgid "budget-2027"
@@ -8524,10 +8528,6 @@ msgstr "[lîké SÛBTÔTÀL wîth môré fûnctîôns (1-13 às SÛBTÔTÀL bût
 #: web/app/lib/style-deletion.ts:166
 msgid "line height"
 msgstr "[lîné héîght~~~~]"
-
-#: web/app/components/FooterBar.vue:71 web/app/components/SlideWorkspace.vue:554 web/app/components/TextWorkspace.vue:694
-msgid "line {line}"
-msgstr "[lîné {line}~~~~]"
 
 #: web/app/components/RenderedFace.vue:21
 msgid "line {line}: {message}"
@@ -9262,8 +9262,8 @@ msgid "the assistant does not suggest restoring a step"
 msgstr "[thé àssîstànt dôés nôt sûggést réstôrîng à stép~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py:751
-msgid "the assistant does not suggest switching lines"
-msgstr "[thé àssîstànt dôés nôt sûggést swîtchîng lînés~~~~~~~~~~~~~~~~~~]"
+msgid "the assistant does not suggest switching branches"
+msgstr "[thé àssîstànt dôés nôt sûggést swîtchîng brànchés~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py:770
 msgid "the assistant does not vote"
@@ -9513,6 +9513,10 @@ msgstr "[théré îs à tàblé ôf cônténts héré àlréàdy~~~~~~~~~~~~~~~~
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr "[théré îs àn ôpén sûggéstîôn; ànswér ôr wîthdràw ît fîrst~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-server/src/claudia_server/protocol.py:753
+msgid "there is no branch called {branch!r}"
+msgstr "[théré îs nô brànch càlléd {brànch!r}~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/protocol.py:816
 msgid "there is no chat message of that number for you"
 msgstr "[théré îs nô chàt méssàgé ôf thàt nûmbér fôr yôû~~~~~~~~~~~~~~~~~~~]"
@@ -9520,10 +9524,6 @@ msgstr "[théré îs nô chàt méssàgé ôf thàt nûmbér fôr yôû~~~~~~~~~
 #: packages/claudia-server/src/claudia_server/structure_methods.py:183
 msgid "there is no earlier list of this kind to continue"
 msgstr "[théré îs nô éàrlîér lîst ôf thîs kînd tô côntînûé~~~~~~~~~~~~~~~~~~~~]"
-
-#: packages/claudia-server/src/claudia_server/protocol.py:753
-msgid "there is no line called {line!r}"
-msgstr "[théré îs nô lîné càlléd {lîné!r}~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/composes.py:372 packages/claudia-server/src/claudia_server/composes.py:432 packages/claudia-server/src/claudia_server/composes.py:596 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
 msgid "there is no paragraph {block!r}"
@@ -10409,7 +10409,7 @@ msgstr "[{n} thîngs tô pôînt àt. Ûsé thé àrrôw kéys, thén Éntér.~~
 msgid "{n} without a time"
 msgstr "[{n} wîthôût à tîmé~~~~~~~]"
 
-#: web/app/lib/base-session.ts:614
+#: web/app/lib/base-session.ts:646
 msgid "{owner} is now the owner of this document."
 msgstr "[{owner} îs nôw thé ôwnér ôf thîs dôcûmént.~~~~~~~~~~~~~~~~~]"
 
@@ -10513,11 +10513,11 @@ msgstr "[{user} îs wôrkîng ôn thîs~~~~~~~~~~]"
 msgid "{user} keeps what has already been seen and any copy of the file that was saved."
 msgstr "[{user} kééps whàt hàs àlréàdy béén séén ànd àny côpy ôf thé fîlé thàt wàs sàvéd.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:612
+#: web/app/lib/base-session.ts:644
 msgid "{user} left this document."
 msgstr "[{user} léft thîs dôcûmént.~~~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:602
+#: web/app/lib/base-session.ts:634
 msgid "{user} may now “{role}”."
 msgstr "[{user} mày nôw “{role}”.~~~~~~~~~~]"
 
@@ -10525,7 +10525,7 @@ msgstr "[{user} mày nôw “{role}”.~~~~~~~~~~]"
 msgid "{user} selected this"
 msgstr "[{user} séléctéd thîs~~~~~~~~]"
 
-#: web/app/lib/base-session.ts:609
+#: web/app/lib/base-session.ts:641
 msgid "{user} was removed from this document."
 msgstr "[{user} wàs rémôvéd frôm thîs dôcûmént.~~~~~~~~~~~~~~~]"
 

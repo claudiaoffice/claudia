@@ -19,7 +19,7 @@ const welcome = (app: string, role: Welcome['role'] = 'owner'): Welcome => ({
   role,
   doc: 'd',
   app,
-  line: 'main',
+  branch: 'main',
   revision: null,
   id: 1,
   color: '#e6194b',
@@ -27,7 +27,7 @@ const welcome = (app: string, role: Welcome['role'] = 'owner'): Welcome => ({
   presence: [],
   checkpoints: [],
   limits: { max_text: 100 },
-  lines: [{ name: 'main', head: null, active: true, forked_from: null }],
+  branches: [{ name: 'main', head: null, active: true, forked_from: null }],
   proposal: null,
   returned: null,
 })
@@ -71,7 +71,7 @@ class FakeLink implements LinkLike {
       case 'log':
       case 'chat_log':
       case 'checkpoints':
-      case 'lines':
+      case 'branches':
         return []
       case 'history':
         return { can_undo: false, can_redo: false, undo_label: '', redo_label: '' }

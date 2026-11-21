@@ -618,7 +618,7 @@ def _set_locale(ctx, *, locale):
 @core_methods.method("ping")
 def _ping(ctx):
     """The current revision of the document's line (and a cheap liveness check)."""
-    return {"revision": _rev_text(ctx.document.revision), "line": ctx.document.branch}
+    return {"revision": _rev_text(ctx.document.revision), "branch": ctx.document.branch}
 
 
 def _rev_text(revision: Revision | None) -> str | None:
@@ -631,36 +631,36 @@ def _snapshot(ctx):
     doc = ctx.document
     return {
         "revision": _rev_text(doc.revision),
-        "line": doc.branch,
+        "branch": doc.branch,
         "app": doc.model.app,
         "state_schema": doc.model.state_schema,
         "state": doc.model.serialize(),
     }
 
 
-@core_methods.method("lines", reads="history")
-def _lines(ctx):
-    """The lines of the document's history: the active one and the side lines a restore left behind."""
+@core_methods.method("branches", reads="history")
+def _branches(ctx):
+    """The branches of the document's history: the active one and the ones a restore left behind."""
     return [
         {
-            "name": line.name,
-            "head": _rev_text(line.head),
-            "active": line.active,
-            "forked_from": _rev_text(line.forked_from),
+            "name": branch.name,
+            "head": _rev_text(branch.head),
+            "active": branch.active,
+            "forked_from": _rev_text(branch.forked_from),
         }
-        for line in ctx.document.lines()
+        for branch in ctx.document.branches()
     ]
 
 
-@core_methods.method("peek_line", "line:str", reads="history")
-def _peek_line(ctx, line):
-    """A read-only look at any line (active or hidden), without switching to it (E3.8): its revision and full
+@core_methods.method("peek_branch", "branch:str", reads="history")
+def _peek_branch(ctx, branch):
+    """A read-only look at any branch (active or hidden), without switching to it (E3.8): its revision and full
     state, in the shape of `snapshot`. For previewing before suggesting a restore or a switch. `command_error` for
-    a name that is not a line of this document."""
-    model = ctx.document.peek_line(line)
+    a name that is not a branch of this document."""
+    model = ctx.document.peek_branch(branch)
     return {
-        "line": line,
-        "revision": _rev_text(ctx.document.log.head(line)),
+        "branch": branch,
+        "revision": _rev_text(ctx.document.log.head(branch)),
         "app": model.app,
         "state_schema": model.state_schema,
         "state": model.serialize(),
@@ -703,7 +703,7 @@ def _propose_restore(ctx, checkpoint):
             kind="restore",
             by=ctx.user,
             checkpoint=checkpoint,
-            line=None,
+            branch=None,
             label=f"checkpoint “{info.label}”",
             group=ctx.editors(),
         )
@@ -731,7 +731,7 @@ def _propose_restore_step(ctx, revision):
             by=ctx.user,
             checkpoint=None,
             revision=revision.to_data(),
-            line=None,
+            branch=None,
             label=f"step {revision.seq} “{label}”",
             group=ctx.editors(),
         )
@@ -742,18 +742,18 @@ def _propose_restore_step(ctx, revision):
     return {"applied": applied, "proposal": None if proposal is None else proposal.to_data()}
 
 
-@core_methods.method("propose_switch", "line:str", write=True)
-def _propose_switch(ctx, line):
-    """Suggest making another line active again, such as the way back after a restore (E3.7). Same consent as
-    `propose_restore`. `command_error` for a name that is not a line of this document, or if a suggestion is
+@core_methods.method("propose_switch", "branch:str", write=True)
+def _propose_switch(ctx, branch):
+    """Suggest making another branch active again, such as the way back after a restore (E3.7). Same consent as
+    `propose_restore`. `command_error` for a name that is not a branch of this document, or if a suggestion is
     already open."""
     if ctx.account.system:
-        raise RequestError("forbidden", msg("the assistant does not suggest switching lines"))
-    if line not in {x.name for x in ctx.document.lines()}:
-        raise RequestError("command_error", msg("there is no line called {line!r}", line=line))
+        raise RequestError("forbidden", msg("the assistant does not suggest switching branches"))
+    if branch not in {x.name for x in ctx.document.branches()}:
+        raise RequestError("command_error", msg("there is no branch called {branch!r}", branch=branch))
     try:
         proposal, applied = ctx.restore.propose(
-            kind="switch", by=ctx.user, checkpoint=None, line=line, label=f"line “{line}”", group=ctx.editors()
+            kind="switch", by=ctx.user, checkpoint=None, branch=branch, label=f"branch “{branch}”", group=ctx.editors()
         )
     except RestoreError as exc:
         raise RequestError("command_error", str(exc)) from exc

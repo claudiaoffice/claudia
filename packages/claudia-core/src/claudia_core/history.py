@@ -17,14 +17,14 @@ from typing import TYPE_CHECKING
 from .commands import Command
 
 if TYPE_CHECKING:
-    from .log import Entry
+    from .log import Step
     from .revision import Revision
 
 LIMIT = 200
 
 
 @dataclass(frozen=True)
-class Step:
+class UndoUnit:
     label: str
     command: Command  # executing it undoes (or redoes) the step
     rev: Revision  # the revision whose effect this step reverses
@@ -36,8 +36,8 @@ class History:
     def __init__(self, author: str | None, limit: int = LIMIT):
         self.author = author
         self.limit = limit
-        self._undo: list[Step] = []
-        self._redo: list[Step] = []
+        self._undo: list[UndoUnit] = []
+        self._redo: list[UndoUnit] = []
 
     # -- state ---------------------------------------------------------------
     @property
@@ -60,11 +60,11 @@ class History:
         """What redoing would redo, for a menu item (empty if nothing)."""
         return self._redo[-1].label if self._redo else ""
 
-    def next_undo(self) -> Step | None:
+    def next_undo(self) -> UndoUnit | None:
         """The step undo would take, without taking it."""
         return self._undo[-1] if self._undo else None
 
-    def next_redo(self) -> Step | None:
+    def next_redo(self) -> UndoUnit | None:
         """The step redo would take, without taking it."""
         return self._redo[-1] if self._redo else None
 
@@ -74,25 +74,25 @@ class History:
         self._redo.clear()
 
     # -- driven by the log -----------------------------------------------------
-    def record(self, entry: Entry, inverse: Command) -> bool:
+    def record(self, entry: Step, inverse: Command) -> bool:
         """Called for every entry that was applied. Returns True if this author's stacks changed."""
         if entry.author != self.author or not entry.command.undoable:
             return False
         if entry.origin == "do":
-            self._undo.append(Step(entry.command.label, inverse, entry.rev))
+            self._undo.append(UndoUnit(entry.command.label, inverse, entry.rev))
             del self._undo[: -self.limit]
             self._redo.clear()
         elif entry.origin == "undo":  # the step keeps its name: "Undo Insert 7" / "Redo Insert 7"
             taken = self._take(self._undo, entry.of)
-            self._redo.append(Step(taken.label if taken else entry.command.label, inverse, entry.rev))
+            self._redo.append(UndoUnit(taken.label if taken else entry.command.label, inverse, entry.rev))
         elif entry.origin == "redo":
             taken = self._take(self._redo, entry.of)
-            self._undo.append(Step(taken.label if taken else entry.command.label, inverse, entry.rev))
+            self._undo.append(UndoUnit(taken.label if taken else entry.command.label, inverse, entry.rev))
             del self._undo[: -self.limit]
         return True
 
     @staticmethod
-    def _take(stack: list[Step], rev: Revision | None) -> Step | None:
+    def _take(stack: list[UndoUnit], rev: Revision | None) -> UndoUnit | None:
         """Remove the step an undo/redo entry consumed (normally the top one)."""
         for index in range(len(stack) - 1, -1, -1):
             if stack[index].rev == rev:
