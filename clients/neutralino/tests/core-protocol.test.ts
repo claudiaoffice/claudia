@@ -19,6 +19,7 @@ describe('isRequest', () => {
 describe('isCoreMessage', () => {
   it('accepts the four messages', () => {
     expect(isCoreMessage({ kind: 'show', origin: 'https://a.example' })).toBe(true)
+    expect(isCoreMessage({ kind: 'show', origin: 'http://127.0.0.1:8765', setupCode: 'K7QM-4TXR-92HB' })).toBe(true)
     expect(isCoreMessage({ kind: 'status', title: 'x', error: false })).toBe(true)
     expect(isCoreMessage({ kind: 'status', title: 'x', details: 'y', error: true })).toBe(true)
     expect(isCoreMessage({ kind: 'servers', servers: [] })).toBe(true)
@@ -26,7 +27,7 @@ describe('isCoreMessage', () => {
   })
 
   it('refuses everything else', () => {
-    for (const value of [null, 5, [], {}, { kind: 'show' }, { kind: 'show', origin: '' }, { kind: 'status', title: 'x' }, { kind: 'status', title: 'x', details: 5, error: false }, { kind: 'servers' }, { kind: 'connect_failed', code: 5, message: 'x' }, { kind: 'other' }]) {
+    for (const value of [null, 5, [], {}, { kind: 'show' }, { kind: 'show', origin: '' }, { kind: 'show', origin: 'https://a.example', setupCode: 5 }, { kind: 'show', origin: 'https://a.example', setupCode: 'not a code' }, { kind: 'status', title: 'x' }, { kind: 'status', title: 'x', details: 5, error: false }, { kind: 'servers' }, { kind: 'connect_failed', code: 5, message: 'x' }, { kind: 'other' }]) {
       expect(isCoreMessage(value)).toBe(false)
     }
   })

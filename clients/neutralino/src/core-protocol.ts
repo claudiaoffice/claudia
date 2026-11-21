@@ -14,6 +14,9 @@ export const TO_CORE = 'claudia.core'
 /** The event the core broadcasts to the page. */
 export const FROM_CORE = 'claudiaCore'
 
+/** A setup code as the server writes it (D1371): three groups of four of Crockford's base32. */
+export const SETUP_CODE = /^[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
@@ -38,7 +41,11 @@ export function isCoreMessage(value: unknown): value is CoreMessage {
   if (!isRecord(value)) return false
   switch (value.kind) {
     case 'show':
-      return typeof value.origin === 'string' && value.origin.length > 0
+      return (
+        typeof value.origin === 'string' &&
+        value.origin.length > 0 &&
+        (value.setupCode === undefined || (typeof value.setupCode === 'string' && SETUP_CODE.test(value.setupCode)))
+      )
     case 'status':
       return (
         typeof value.title === 'string' &&

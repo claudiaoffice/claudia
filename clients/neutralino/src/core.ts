@@ -37,17 +37,28 @@ export type CoreRequest =
 
 /** What the core tells the shell page. */
 export type CoreMessage =
-  | { kind: 'show'; origin: string }
+  | { kind: 'show'; origin: string; setupCode?: string }
   | { kind: 'status'; title: string; details?: string; error: boolean }
   | { kind: 'servers'; servers: Entry[] }
   | { kind: 'connect_failed'; code: string; message: string }
   | FileMessage
+
+/** Do `a` and `b` name the same origin (scheme, host and port)? */
+function sameOrigin(a: string, b: string): boolean {
+  try {
+    return new URL(a).origin === new URL(b).origin
+  } catch {
+    return false
+  }
+}
 
 export interface ServerLike {
   /** Find or start the server; its address once it answers. */
   start(): Promise<string>
   /** Let go of the server (the window is gone). The server is shared and ends by itself. */
   stop(): Promise<void>
+  /** Its setup code while it has no administrator (D1373), read anew at every call. */
+  setupCode?(): string | null
 }
 
 export interface CoreOptions {
@@ -80,7 +91,7 @@ export class Core {
     this.book = new ServerBook(options.identity.name, options.settings)
     this.connector = new Connector(options.identity.name, {
       book: this.book,
-      switchTo: (origin) => this.say({ kind: 'show', origin }),
+      switchTo: (origin) => this.show(origin),
       fail: (code, message) => this.emit({ kind: 'connect_failed', code, message }),
       check: options.check,
       log: options.log,
@@ -101,6 +112,13 @@ export class Core {
   private say(message: CoreMessage): void {
     this.current = message
     this.emit(message)
+  }
+
+  /** Show the server at `origin`; its own server with the setup code it has now, for its settings pages (D1373). */
+  private show(origin: string): void {
+    const own = this.server !== null && this.book.localOrigin !== null && sameOrigin(origin, this.book.localOrigin)
+    const code = own ? this.server?.setupCode?.() : null
+    this.say({ kind: 'show', origin, ...(code ? { setupCode: code } : {}) })
   }
 
   private status(title: string, details?: string, error = false): void {
@@ -151,7 +169,7 @@ export class Core {
       const url = await server.start()
       if (this.stopped) return
       this.book.localOrigin = url // "This computer" in the page's list, from now on
-      this.say({ kind: 'show', origin: url })
+      this.show(url)
     } catch (problem) {
       if (this.stopped) return
       const title =

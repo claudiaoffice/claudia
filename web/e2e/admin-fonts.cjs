@@ -1,7 +1,7 @@
 // Server settings ▸ Fonts (E3.13 f, D1041): the page lists the catalogue, Add fonts… checks first and then adds, a
 // collection added here can be renamed and removed. FONTS is a folder of font files to add (one of them forbidding
 // embedding), as `uv run python scripts/make_admin_fonts_sample.py DIR` makes them.
-// Run: URL=http://127.0.0.1:8766/ FONTS=/tmp/house-fonts npm run e2e:admin-fonts
+// Run: URL=http://127.0.0.1:8766/ FONTS=/tmp/house-fonts SETUP_CODE=<the server's setup code> npm run e2e:admin-fonts
 const { chromium } = require('playwright')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -24,6 +24,8 @@ async function main() {
 
   // the first administrator, or sign in
   if (await page.locator('text=Create administrator').count()) {
+    // the server's setup code (SEC-12, D1370): the runner reads it in the server's state folder
+    if (await page.locator('#setup-code').count()) await page.fill('#setup-code', process.env.SETUP_CODE ?? '')
     await page.fill('input[autocomplete=username]', ADMIN[0])
     for (const field of await page.locator('input[type=password]').all()) await field.fill(ADMIN[1])
     await page.click('text=Create administrator') // the settings follow without a reload (CODE-48)

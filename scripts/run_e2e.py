@@ -414,11 +414,16 @@ class Runner:
                 stderr=subprocess.STDOUT,
             )
             self._wait_for([8768], [process])
+            code = work / "state" / "admin" / "setup-code"  # the server's setup code, for naming its administrator
             self._record(
                 "e2e-admin-fonts",
                 ["npm", "run", "--silent", "e2e:admin-fonts"],
                 cwd=WEB,
-                env={"URL": "http://127.0.0.1:8768/", "FONTS": str(work / "house-fonts")},
+                env={
+                    "URL": "http://127.0.0.1:8768/",
+                    "FONTS": str(work / "house-fonts"),
+                    "SETUP_CODE": code.read_text(encoding="utf-8").strip() if code.is_file() else "",
+                },
             )
         finally:
             if process:

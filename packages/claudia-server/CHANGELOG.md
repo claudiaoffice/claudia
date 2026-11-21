@@ -5,7 +5,22 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Security (SEC-12)
+- **The first administrator needs the setup code** (D1370, D1371), on every server: `POST /api/admin/setup` takes
+  `code` and answers 403 for a wrong one, 429 with `Retry-After` after too many tries (the sign-in's waits) and 409
+  once somebody is named. The code is made at every start that ends with no administrator, printed in the start-up
+  report with a link (`/admin#setup=...`, D1372) and written to `admin/setup-code` of the state folder (0600); no
+  answer contains it. **Breaking** for a client that called `setup` without it.
+- A server behind a proxy counts as exposed whatever its `--host` (D1374, `hosts.is_exposed`).
+
 ### Added
+- `GET /api/admin/status` says `setup_code` (whether one is asked for); `POST /api/admin/setup-code` checks a code
+  without naming anybody; `GET` and `DELETE /api/admin/reset-note` (signed in): the note of the last reset (D1375).
+- Start options `--reset-administrators` (D1375: the administrators only; `admins.json` is kept aside, settings, fonts
+  and documents stay) and `--admin NAME` with `--admin-password-file FILE` (`CLAUDIA_ADMIN`,
+  `CLAUDIA_ADMIN_PASSWORD_FILE`; D1376: only while there is nobody). Modules `setup_code` and `admin_start`;
+  `AdminContext.setup_code` and `AdminContext.reset_note`; `AdminDirectory.check_new` and `AdminDirectory.clear`.
+- The container takes `CLAUDIA_ADMIN` and `CLAUDIA_ADMIN_PASSWORD` (`docker/entrypoint.sh`).
 - `add_paragraph_after` (`block`) in composes (D1331): an empty paragraph after a paragraph and after what hangs from
   its end, such as a table at the end of the text; returns `{revision, block, offset}`. It reads the content (D1261).
 - `add_image` takes `fit` in every app (D1332): `w` × `h` are then only the most; the picture is shown at its own size

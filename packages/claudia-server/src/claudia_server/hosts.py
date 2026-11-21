@@ -68,6 +68,18 @@ def is_loopback(host: str) -> bool:
     return address.is_loopback if address is not None else host.lower().rstrip(".") == LOCALHOST
 
 
+def is_unspecified(host: str) -> bool:
+    """Does ``host`` mean every address of this computer (``0.0.0.0``, ``::``)?"""
+    address = _address(host.strip("[]"))
+    return address is not None and address.is_unspecified
+
+
+def is_exposed(host: str, *, behind_proxy: bool) -> bool:
+    """Can other computers reach a server listening on ``host``? Yes beyond loopback, and also on loopback behind a
+    proxy, which forwards to it what everybody sends the proxy (D1374)."""
+    return behind_proxy or not is_loopback(host)
+
+
 def machine_names() -> list[str]:
     """The name this computer goes by on its network, if it is a plain host name (so ``http://nas:8765`` works).
 

@@ -4,7 +4,7 @@
 // at the bottom.
 import { createServer, type Server } from 'node:net'
 import { createServer as createHttpServer, type Server as HttpServer } from 'node:http'
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -16,6 +16,7 @@ import {
   isPortFree,
   probeHealth,
   readPort,
+  readSetupCode,
   writePort,
   type Health,
   type PresenceSocket,
@@ -375,5 +376,23 @@ describe('probeHealth', () => {
     await new Promise<void>((resolve) => http!.close(() => resolve()))
     http = null
     expect(await probeHealth(url)).toEqual({ kind: 'none' })
+  })
+})
+
+describe('the setup code of the server (D1373)', () => {
+  it('is read from the state folder each time, and only when it is a code', () => {
+    const state = mkdtempSync(join(tmpdir(), 'claudia-code-'))
+    try {
+      expect(readSetupCode(state)).toBeNull()
+      mkdirSync(join(state, 'admin'))
+      writeFileSync(join(state, 'admin', 'setup-code'), 'K7QM-4TXR-92HB\n')
+      expect(readSetupCode(state)).toBe('K7QM-4TXR-92HB')
+      writeFileSync(join(state, 'admin', 'setup-code'), '2W9C-HQ4M-7KXA\n') // the server restarted
+      expect(readSetupCode(state)).toBe('2W9C-HQ4M-7KXA')
+      writeFileSync(join(state, 'admin', 'setup-code'), 'not a code\n')
+      expect(readSetupCode(state)).toBeNull()
+    } finally {
+      rmSync(state, { recursive: true, force: true })
+    }
   })
 })

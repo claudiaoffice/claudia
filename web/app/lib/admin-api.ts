@@ -25,6 +25,14 @@ export interface AdminStatus {
   /** The earliest-added administrator's name, or `null` if there is none yet. A hint for a default label
    *  (server-bookmarks.ts), never a credential and never required to be signed in. */
   administrator: string | null
+  /** Does `setup` ask for the setup code (SEC-12, D1371)? Never the code itself. Missing from an older server. */
+  setup_code?: boolean
+}
+
+/** When the administrators were last reset from the server's console, and who they were (D1375). */
+export interface ResetNote {
+  at: string
+  previous: string[]
 }
 
 /** Whether to offer becoming this server's first administrator (`FirstAdminSetup.vue`) — true whenever nobody
@@ -139,7 +147,12 @@ export function createAdminApi(fetchImpl: typeof fetch = fetch) {
 
   return {
     status: (): Promise<AdminStatus> => call('GET', '/status'),
-    setup: (name: string, password: string): Promise<{ token: string; admin: AdminAccount }> => call('POST', '/setup', { name, password }),
+    setup: (name: string, password: string, code: string): Promise<{ token: string; admin: AdminAccount }> =>
+      call('POST', '/setup', { name, password, code }),
+    /** 204 if `code` is this run's setup code (a try, D1371); throws 403, 409 or 429 otherwise. */
+    checkSetupCode: (code: string): Promise<void> => call('POST', '/setup-code', { code }),
+    resetNote: (token: string): Promise<ResetNote | null> => call('GET', '/reset-note', undefined, token),
+    dismissResetNote: (token: string): Promise<void> => call('DELETE', '/reset-note', undefined, token),
     login: (name: string, password: string): Promise<{ token: string; admin: AdminAccount }> => call('POST', '/login', { name, password }),
     logout: (token: string): Promise<void> => call('POST', '/logout', undefined, token),
     me: (token: string): Promise<{ name: string }> => call('GET', '/me', undefined, token),

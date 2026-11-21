@@ -31,7 +31,7 @@
   "class": [
    "object"
   ],
-  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool, fonts: claudia_server.fonts.FontService | None = None, kdf: claudia_server.kdf_policy.KdfPolicy | None = None) -> None",
+  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool, fonts: claudia_server.fonts.FontService | None = None, kdf: claudia_server.kdf_policy.KdfPolicy | None = None, setup_code: claudia_server.setup_code.SetupCode | None = None, reset_note: claudia_server.admin_start.ResetNote | None = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -43,6 +43,8 @@
   "methods": {
    "add": "(self, name: 'str', password: 'str', *, added: 'str') -> 'AdminAccount'",
    "change_password": "(self, name: 'str', password: 'str') -> 'None'",
+   "check_new": "(self, name: 'str', password: 'str') -> 'None'",
+   "clear": "(self) -> 'None'",
    "dump": "(self) -> 'dict'",
    "list_admins": "(self) -> 'list[AdminAccount]'",
    "load": "(self, data: 'dict') -> 'None'",

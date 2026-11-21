@@ -302,6 +302,32 @@ documents there are. The secret is compared in constant time and never printed. 
 Redaction rewrites the document file and its journal (D725; `redaction_plan` and `redact`, owners on anything and editors on their own work, D727). Not there yet: unencrypted export and import (E2.9), the sealed inbox that gives everybody renewed keys after a role change or key renewal (E2.3, slice C).
 
 
+## The first administrator (SEC-12)
+
+The server settings (`/admin`, `/api/admin/*`) are for the server's administrators, a different identity from any
+document's people. An administrator can make the server run programs (the LaTeX programs, SEC-16), so naming the first
+one is kept to whoever runs the server, on every server, this computer's included (D1370):
+
+* **The setup code.** At every start that ends with no administrator, the server makes a code of 12 characters
+  (`K7QM-4TXR-92HB`; case, dashes and spaces do not matter, D1371) and says it only where its operator looks: in the
+  start-up report, with a link to the settings pages that carries it in the fragment (`/admin#setup=...`, never sent
+  to a server or a proxy, D1372), and in `admin/setup-code` of the state folder (`--state-dir`), readable by the
+  server's account only. `POST /api/admin/setup` takes it as `code`; `POST /api/admin/setup-code` checks one without
+  naming anybody. A wrong code is 403, a code from too many tries 429 with `Retry-After` (the sign-in's waits, D1266),
+  and a code that comes after somebody was named 409. `GET /api/admin/status` says `"setup_code": true` while one is
+  asked for; no answer contains the code. It dies when the first administrator is named or the server stops.
+* **The desktop apps** read the code of their own server and hand it to their own page (`welcome.setup_code` of the
+  shell contract, D1373): there nobody types it.
+* **At start, for deployments:** `--admin NAME` (or `CLAUDIA_ADMIN`) with `--admin-password-file FILE` (or
+  `CLAUDIA_ADMIN_PASSWORD_FILE`; the password is the file's first line) names NAME if there is nobody yet and never
+  changes an administrator who exists (D1376). The container also takes `CLAUDIA_ADMIN_PASSWORD` as a variable and
+  turns it into a private file.
+* **Locked out:** `--reset-administrators` forgets every administrator at start (`admins.json` is kept aside as
+  `admins-before-reset-<time>.json`); settings, fonts and documents stay (D1375). The next administrators see a note
+  with the date and the names until one of them dismisses it (`GET` and `DELETE /api/admin/reset-note`).
+
+A server behind a proxy counts as reachable from other computers whatever its `--host` (D1374).
+
 ## Presentations (creates)
 
 The creates module hosts presentations. Its methods (see `GET /api/protocol`

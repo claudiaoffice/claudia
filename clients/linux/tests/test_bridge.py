@@ -90,6 +90,17 @@ def test_a_page_that_shows_another_app_is_refused(rig) -> None:
     assert not bridge.ready
 
 
+def test_the_welcome_carries_the_setup_code_the_window_gives_and_asks_for_it_at_every_hello() -> None:
+    """D1373: the window says which code its page may have (none for another server's page), at the time of the
+    hello: another window may have restarted the shared server, which then has a new code."""
+    recorder = Recorder()
+    codes = ["K7QM-4TXR-92HB", None, "2W9C-HQ4M-7KXA"]
+    bridge = Bridge(manifest.composes(), recorder.send, shell_version="0.1.0", setup_code=lambda: codes.pop(0))
+    for _ in range(3):
+        bridge.receive(hello())
+    assert [message.get("setup_code") for message in recorder.sent] == ["K7QM-4TXR-92HB", None, "2W9C-HQ4M-7KXA"]
+
+
 def test_a_page_that_reloads_says_hello_again_and_is_welcomed_again(rig) -> None:
     bridge, recorder = rig
     bridge.receive(hello())

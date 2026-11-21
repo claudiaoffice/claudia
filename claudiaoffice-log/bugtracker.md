@@ -35,13 +35,12 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (82)
+### Open (81)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
-| SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **new, open** |  |  |
 | WEB-01 | P1 | Website | The website describes features the product does not have | needs decision |  |  |
 | SEC-06 | P2 | Security | The server's self-signed certificate is a CA with no name constraints | verified open |  |  |
 | SEC-19 | P2 | Security / Perf | Imports run on the worker pool with no memory cap; `check_package` bounds the input, not the parsed model | **new, open** |  |  |
@@ -124,7 +123,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (131)
+### Fixed (133)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -139,6 +138,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | SEC-08 | P3 | Security | `npm audit` / `pip-audit` are not run by the gate or CI | **fixed** 2026-11-17 (npm audit 2026-11-11; `pip-audit` in CI since 2026-11-17, job `pip-audit`; clean when run by hand) |  | 2026-11-17 |
 | SEC-10 | P2 | Security / Arch | The AI's method allow-list is enforced in the model parser, not at dispatch | fixed 2026-11-06 |  | 2026-11-06 |
 | SEC-11 | P3 | Security | No per-address back-off on failed logins (now also the admin sign-in) | **fixed** 2026-11-19 (D1266, D1275, D1276; admin sign-in too; on `main` with `e2-document-sec` since 2026-11-20) |  | 2026-11-19 |
+| SEC-12 | **P1** | Security | Anyone who reaches an exposed server with no administrator can become its administrator | **fixed** 2026-11-20 on `sec-12-setup-code` (D1370–D1376: every server asks for its setup code; the desktop apps hand it over; `--reset-administrators`, `--admin`) |  | 2026-11-20 |
 | SEC-13 | P2 | Security | The web app is served without CSP, frame-ancestors, nosniff or referrer headers | **fixed** 2026-11-12 |  | 2026-11-12 |
 | SEC-15 | P2 | Security | Office import reads every zip part whole and parses some XML with default parsers | **fixed** 2026-11-17 (`claudia_opc_io.check_package`, `parse_xml`) |  | 2026-11-17 |
 | SEC-17 | P2 | Security | A viewer's connection receives the whole history and chat (E2.4), which the file itself withholds | open since 2026-11-05; **fixed** 2026-11-19 (D1261; on `main` with `e2-document-sec` since 2026-11-20); one part left, see SEC-22 | 2026-11-05 | 2026-11-19 |
@@ -184,6 +184,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-41 | P2 | UX / composes | Headings, list items and paragraphs could not be pointed at with `#` in the chat | **fixed** 2026-11-15 (D554) |  | 2026-11-15 |
 | UX-44 | P3 | UX / BITV | The blinking dots of the side panel ignored `prefers-reduced-motion` (WCAG 2.3.3) | **fixed** 2026-11-17 |  | 2026-11-17 |
 | UX-55 | P2 | UX / record | After its own export, print or PDF the window that did it was not shown its own line in History & Chat: the server tells the other windows only | **fixed** 2026-11-19 in slice B (found by the first end-to-end run; `BaseSession.recorded` reads the record again) |  | 2026-11-19 |
+| UX-61 | P3 | UX / admin | The first-administrator page and Access & documents called the access secret a recovery key for administrators: there is no such recovery, and nobody signs in with it | **fixed** 2026-11-20 (`web/tests/admin-wording.test.ts`; size 3) | 2026-11-20 | 2026-11-20 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -391,7 +392,7 @@ either; with SEC-12 fixed it becomes the way in, so it needs the same per-addres
 **Re-checked 2026-11-20 at `f34365f`.** `e2-document-sec` was merged into `main` on 2026-11-20 (`1d8415a`);
 `login_throttle.py` guards the document logins and `admin_api.py` `login` the admin sign-in (429 with `Retry-After`).
 
-### SEC-12 · Anyone who reaches an exposed server with no administrator can become its administrator · P1 · new, open
+### SEC-12 · Anyone who reaches an exposed server with no administrator can become its administrator · P1 · fixed 2026-11-20
 **Evidence (measured, `7e619a2`).** `admin_api.py` `setup` needs nothing but a name and a password while
 `len(context.admins) == 0`. A server bound beyond loopback (`exposed`: every Docker container, the Scaleway demo) asks
 for its first administrator, and the first anonymous visitor wins. Reproduced with
@@ -410,6 +411,14 @@ the proxy.
 **Acceptance.** `test_admin_api`: on an exposed server `setup` without the code → 403, with a wrong code → 403 and the
 same time as a right one, with the code → 200 once; with an access secret, the code alone → 403. The banner test shows
 the code exactly once.
+**Agreed 2026-11-20 (D1370–D1376), replacing the recommendation above:** every server asks for the code, loopback
+included (the desktop apps hand it over); the code alone is enough, also with an access secret; a server behind a proxy
+counts as exposed; `--reset-administrators` and `--admin` with a password file are in scope. Branch `sec-12-setup-code`;
+scenarios in `specs/server/administrators.feature`.
+**Fixed 2026-11-20** on `sec-12-setup-code`: `setup_code.py`, `admin_start.py`, the admin API and `cli.py`; the setup
+page, the sign-in and Access & documents; `welcome.setup_code` in both desktop apps. 18 scenarios of
+`administrators.feature` pass in Chromium, the other 6 are checked by the unit tests they name. Implementation note:
+`implementation-notes/sec-12-setup-code.md`.
 
 ### SEC-13 · The web app is served without security headers · P2 · fixed 2026-11-12
 **Evidence (measured).** `curl -I /` on a server with `--web`: only `cache-control`, `etag`, `content-type`. No
@@ -2409,3 +2418,14 @@ the paragraph, in the user's language.
 about them. E1 is merged, so its `@pending` tags are also stale. **Fix.** A test in `tests/` that fails when a feature
 file is neither bound nor has a test tag on every scenario; then bind the four (step code first for names and
 requirements). **Acceptance.** That test, red today, green after.
+
+### UX-61 · The access secret was called a recovery key · P3 · fixed 2026-11-20
+Found while drawing the mock-up for SEC-12. `FirstAdminSetup.vue` said "The access secret you set earlier stays as a
+recovery key — only needed if every administrator is ever locked out", and the hint under Access & documents began "A
+recovery key, not needed day to day". The server has no recovery of administrators at all (today only deleting
+`admins.json` in the state folder brings back the first-administrator page), and nobody signs in with the access
+secret: it lets people make documents and read their list. **Fixed:** the setup page says to keep the password safe
+and that only someone with access to the computer the server runs on can name a new first administrator (true now, and
+with SEC-12's reset); the hint says what the secret does. German translations included. **Test:**
+`web/tests/admin-wording.test.ts` (scenarios in `specs/server/administrators.feature`).
+

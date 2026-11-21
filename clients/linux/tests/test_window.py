@@ -131,6 +131,18 @@ def test_a_page_that_does_not_say_what_it_is_gets_the_whole_menu(window) -> None
     assert visible_menus(window) == ["File", "Edit", "Insert", "Format", "View", "Tools", "Config", "Help"]
 
 
+def test_the_page_of_the_shells_own_server_is_handed_its_setup_code_and_another_servers_page_is_not(window) -> None:
+    """D1373: the settings pages of the desktop's own server do not ask the person for the code; a server the window
+    was connected to never gets it."""
+    window.local_setup_code = lambda: "K7QM-4TXR-92HB"
+    window.show_page("http://127.0.0.1:1")
+    window.fake_pages[0].says(hello())
+    assert window.fake_pages[0].sent[0]["setup_code"] == "K7QM-4TXR-92HB"
+    window.switch_to("https://claudia.example.org")
+    window.fake_pages[0].says(hello())
+    assert "setup_code" not in window.fake_pages[0].sent[-1]
+
+
 def test_the_shell_actions_work_without_a_page(window) -> None:
     assert window.lookup_action("file.quit").get_enabled()
     assert window.lookup_action("help.about").get_enabled()

@@ -33,6 +33,8 @@ used.hyphenation_listing  # FastAPI route /api/hyphenation (hyphenation.py)
 used.hyphenation_file  # FastAPI route /api/hyphenation/{sha256} (hyphenation.py)
 # admin_api.py: the /api/admin/* routes, registered the same way
 used.setup  # POST /api/admin/setup
+used.check_setup_code  # POST /api/admin/setup-code (D1372)
+used.dismiss_reset  # DELETE /api/admin/reset-note (D1375)
 used.logout  # POST /api/admin/logout
 used.add_admin  # POST /api/admin/admins
 used.remove_admin  # DELETE /api/admin/admins/{name}

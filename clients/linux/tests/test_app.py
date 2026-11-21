@@ -33,6 +33,9 @@ class FakeServer:
     def stop(self) -> None:
         self.stopped += 1
 
+    def setup_code(self) -> str | None:
+        return "K7QM-4TXR-92HB"
+
 
 class FakePage:
     def __init__(self, **callbacks):

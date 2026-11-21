@@ -5,6 +5,11 @@ two systems had a package each, `clients/macos` and `clients/windows`; their his
 
 ## [0.3.0] - unreleased
 
+### Added (SEC-12, D1373): the setup code of the desktop's own server
+- The core sends its own server's setup code with `show` (`setupCode`, read in the state folder whenever it shows that
+  server); the shell page hands it to the page in `welcome` (`setup_code`), never for another server.
+  `DesktopServer.setupCode`, `readSetupCode`; `BridgeOptions.setupCode`; `contract.welcome({ setupCode })`.
+
 ### Added (E9.32): the table entries of composes
 - The generated menu of Claudia Composes has Insert ▸ Table… and Edit ▸ Row ▸, Column ▸, Sort ▸, Merge Cells, Split Cell and Table Options…, with their Ctrl+… shortcuts.
 

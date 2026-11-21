@@ -1,0 +1,157 @@
+<svg viewBox="0 0 1560 1180" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#5b4bc4"/></marker></defs>
+<rect width="1560" height="1180" fill="#f3f1ea"/>
+<text x="40" y="44" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start" xml:space="preserve">claudia — SEC-12: where the setup code, the reset and naming at start live (D1370–D1376)</text>
+<text x="40" y="68" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start" xml:space="preserve">+ new member   ~ changed member.   Blue: new module, ink: changed module. Arrows: where the code goes.</text>
+<text x="40" y="108" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start" xml:space="preserve">Server</text>
+<text x="40" y="126" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" xml:space="preserve">packages/claudia-server</text>
+<text x="600" y="108" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start" xml:space="preserve">Web app</text>
+<text x="600" y="126" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" xml:space="preserve">web/app</text>
+<text x="1140" y="108" font-family="Fraunces, Georgia, serif" font-size="17" font-weight="600" fill="#1f1a33" text-anchor="start" xml:space="preserve">Desktop shells</text>
+<text x="1140" y="126" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" xml:space="preserve">clients/linux, clients/neutralino</text>
+<rect x="40" y="142" width="510" height="180" rx="9" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.3"/>
+<rect x="40" y="142" width="510" height="26" rx="9" fill="#5b4bc4"/>
+<rect x="40" y="158" width="510" height="10" fill="#5b4bc4"/>
+<text x="50" y="160" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">setup_code.py</text>
+<text x="540" y="160" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">NEW</text>
+<text x="52" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" xml:space="preserve">The code itself, and the one file it is written to.</text>
+<text x="52" y="205" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ class SetupCode         frozen: 12 Crockford base32 characters</text>
+<text x="52" y="222" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+   make() -&gt; SetupCode    secrets.choice, 60 bits</text>
+<text x="52" y="239" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+   normalize(text) -&gt; str upper case, no - or space, O→0, I/L→1</text>
+<text x="52" y="256" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+   matches(text) -&gt; bool  hmac.compare_digest after normalize</text>
+<text x="52" y="273" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+   __str__                K7QM-4TXR-92HB</text>
+<text x="52" y="290" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ write_code(state_dir, code)   admin/setup-code, 0600</text>
+<text x="52" y="307" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ read_code(state_dir), remove_code(state_dir)</text>
+<rect x="40" y="338" width="510" height="197" rx="9" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.3"/>
+<rect x="40" y="338" width="510" height="26" rx="9" fill="#5b4bc4"/>
+<rect x="40" y="354" width="510" height="10" fill="#5b4bc4"/>
+<text x="50" y="356" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">admin_start.py</text>
+<text x="540" y="356" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">NEW</text>
+<text x="52" y="384" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" xml:space="preserve">What happens to the administrators before the server listens.</text>
+<text x="52" y="401" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ class ResetNote     at, previous names; admin/reset.json</text>
+<text x="52" y="418" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+   load / save / dismiss(state_dir)</text>
+<text x="52" y="435" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ reset_administrators(state_dir, admins, now) -&gt; ResetNote</text>
+<text x="52" y="452" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+     admins.json → admins-before-reset-&lt;UTC&gt;.json</text>
+<text x="52" y="469" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ name_at_start(admins, name, password_file)    (D1376)</text>
+<text x="52" y="486" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ class AdminStart    code, reset, named, banner_lines</text>
+<text x="52" y="503" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ prepare_administrators(state_dir, admins, options, now) -&gt; AdminStart</text>
+<text x="52" y="520" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+     reset, then --admin, then a code if there is still nobody</text>
+<rect x="40" y="551" width="510" height="146" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="40" y="551" width="510" height="26" rx="9" fill="#1f1a33"/>
+<rect x="40" y="567" width="510" height="10" fill="#1f1a33"/>
+<text x="50" y="569" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">cli.py</text>
+<text x="540" y="569" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="52" y="597" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ --reset-administrators</text>
+<text x="52" y="614" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ --admin NAME (CLAUDIA_ADMIN), --admin-password-file FILE</text>
+<text x="52" y="631" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+     (CLAUDIA_ADMIN_PASSWORD_FILE)</text>
+<text x="52" y="648" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ exposed = hosts.is_exposed(host, behind_proxy)        (D1374)</text>
+<text x="52" y="665" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ prepare_administrators(...) before create_app; its banner lines,</text>
+<text x="52" y="682" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~     the link only when the server serves the web app (--web)</text>
+<rect x="40" y="713" width="510" height="146" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="40" y="713" width="510" height="26" rx="9" fill="#1f1a33"/>
+<rect x="40" y="729" width="510" height="10" fill="#1f1a33"/>
+<text x="50" y="731" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">admin_api.py</text>
+<text x="540" y="731" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="52" y="759" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ AdminContext + setup_code: SetupCode | None, reset_note</text>
+<text x="52" y="776" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ GET  /status   + setup_code: bool, reset: {at, previous} | null</text>
+<text x="52" y="793" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ POST /setup    + code: 403 wrong, 429 too often, 409 taken;</text>
+<text x="52" y="810" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~                  on success: code forgotten, file removed</text>
+<text x="52" y="827" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ POST /setup-code  {code} → 204 or 403 (counts as a try)</text>
+<text x="52" y="844" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ DELETE /reset-note   signed in only</text>
+<rect x="40" y="875" width="510" height="95" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="40" y="875" width="510" height="26" rx="9" fill="#1f1a33"/>
+<rect x="40" y="891" width="510" height="10" fill="#1f1a33"/>
+<text x="50" y="893" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">hosts.py · login_throttle.py · docker/entrypoint.sh</text>
+<text x="540" y="893" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="52" y="921" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ is_exposed(host, behind_proxy): not loopback, or behind a proxy</text>
+<text x="52" y="938" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ ADMIN_SETUP: tries at /setup and /setup-code, per address</text>
+<text x="52" y="955" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ CLAUDIA_ADMIN + CLAUDIA_ADMIN_PASSWORD → a 0600 file → --admin</text>
+<rect x="600" y="142" width="500" height="163" rx="9" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.3"/>
+<rect x="600" y="142" width="500" height="26" rx="9" fill="#5b4bc4"/>
+<rect x="600" y="158" width="500" height="10" fill="#5b4bc4"/>
+<text x="610" y="160" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">lib/setup-code.ts</text>
+<text x="1090" y="160" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">NEW</text>
+<text x="612" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" xml:space="preserve">Where the page got a code from, for this tab only.</text>
+<text x="612" y="205" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ normalizeSetupCode(text): string</text>
+<text x="612" y="222" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ takeCodeFromAddress(loc, history): string | null</text>
+<text x="612" y="239" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+     reads #setup=…, then history.replaceState without it</text>
+<text x="612" y="256" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ rememberSetupCode(code, from: &#x27;link&#x27; | &#x27;app&#x27;)</text>
+<text x="612" y="273" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ rememberedSetupCode(): {code, from} | null   (sessionStorage,</text>
+<text x="612" y="290" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+     guarded as elsewhere; in memory where it throws)</text>
+<rect x="600" y="321" width="500" height="78" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="600" y="321" width="500" height="26" rx="9" fill="#1f1a33"/>
+<rect x="600" y="337" width="500" height="10" fill="#1f1a33"/>
+<text x="610" y="339" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">app.vue · lib/shell-bridge.ts</text>
+<text x="1090" y="339" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="612" y="367" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ app.vue: takeCodeFromAddress at start, on every route</text>
+<text x="612" y="384" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ shell-bridge: welcome.setup_code → rememberSetupCode(c, &#x27;app&#x27;)</text>
+<rect x="600" y="415" width="500" height="112" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="600" y="415" width="500" height="26" rx="9" fill="#1f1a33"/>
+<rect x="600" y="431" width="500" height="10" fill="#1f1a33"/>
+<text x="610" y="433" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">lib/admin-api.ts</text>
+<text x="1090" y="433" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="612" y="461" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ AdminStatus + setup_code: boolean, reset: ResetNote | null</text>
+<text x="612" y="478" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ setup(name, password, code)</text>
+<text x="612" y="495" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ checkSetupCode(code): &#x27;ok&#x27; | &#x27;wrong&#x27; | {retryAfter}</text>
+<text x="612" y="512" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ dismissResetNote()</text>
+<rect x="600" y="543" width="500" height="146" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="600" y="543" width="500" height="26" rx="9" fill="#1f1a33"/>
+<rect x="600" y="559" width="500" height="10" fill="#1f1a33"/>
+<text x="610" y="561" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">FirstAdminSetup.vue</text>
+<text x="1090" y="561" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="612" y="589" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ the Setup code field first (mock 2); none when status says</text>
+<text x="612" y="606" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~     setup_code: false (an older server)</text>
+<text x="612" y="623" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ from &#x27;link&#x27;: filled, checked, &quot;Use another code&quot; (mock 3)</text>
+<text x="612" y="640" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ from &#x27;app&#x27; and checked: no field at all (mock 5)</text>
+<text x="612" y="657" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ 403 / 429 under the field; 409 → sign-in with a line (mock 4)</text>
+<text x="612" y="674" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ exposed wording as today, exposed now per D1374</text>
+<rect x="600" y="705" width="500" height="78" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="600" y="705" width="500" height="26" rx="9" fill="#1f1a33"/>
+<rect x="600" y="721" width="500" height="10" fill="#1f1a33"/>
+<text x="610" y="723" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">AdminLogin.vue · AdminAccessDocuments.vue</text>
+<text x="1090" y="723" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="612" y="751" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ AdminLogin: an optional line on top (after a 409)</text>
+<text x="612" y="768" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ Administrators: the reset note with Dismiss (mock 8)</text>
+<rect x="1140" y="142" width="380" height="112" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="1140" y="142" width="380" height="26" rx="9" fill="#1f1a33"/>
+<rect x="1140" y="158" width="380" height="10" fill="#1f1a33"/>
+<text x="1150" y="160" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">clients/contract</text>
+<text x="1510" y="160" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="1152" y="188" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" xml:space="preserve">Additive inside version 1 (the schema allows it).</text>
+<text x="1152" y="205" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ welcome.setup_code?: string</text>
+<text x="1152" y="222" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+   only for the shell&#x27;s own server, never</text>
+<text x="1152" y="239" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+   for a server connected through &#x27;connect&#x27;</text>
+<rect x="1140" y="270" width="380" height="146" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="1140" y="270" width="380" height="26" rx="9" fill="#1f1a33"/>
+<rect x="1140" y="286" width="380" height="10" fill="#1f1a33"/>
+<text x="1150" y="288" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">linux: desktop_server.py · bridge.py</text>
+<text x="1510" y="288" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="1152" y="316" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ DesktopServer.setup_code() -&gt; str | None</text>
+<text x="1152" y="333" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+     reads &lt;state&gt;/admin/setup-code at</text>
+<text x="1152" y="350" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+     each welcome (the server may restart)</text>
+<text x="1152" y="367" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ bridge: welcome(..., setup_code=...) when</text>
+<text x="1152" y="384" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~     the page&#x27;s origin is book.local_origin</text>
+<text x="1152" y="401" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ contract.welcome: + setup_code</text>
+<rect x="1140" y="432" width="380" height="112" rx="9" fill="#ffffff" stroke="#1f1a33" stroke-width="1.3"/>
+<rect x="1140" y="432" width="380" height="26" rx="9" fill="#1f1a33"/>
+<rect x="1140" y="448" width="380" height="10" fill="#1f1a33"/>
+<text x="1150" y="450" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#ffffff" text-anchor="start" xml:space="preserve">neutralino: desktop-server.ts · bridge.ts</text>
+<text x="1510" y="450" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="600" fill="#ffffff" text-anchor="end" xml:space="preserve">CHANGED</text>
+<text x="1152" y="478" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start" xml:space="preserve">Windows and macOS, one code base (D660).</text>
+<text x="1152" y="495" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">+ DesktopServer.setupCode(): string | null</text>
+<text x="1152" y="512" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~ bridge: welcome with setupCode for the</text>
+<text x="1152" y="529" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">~     local origin only; contract.ts + field</text>
+<path d="M550 156 L600 156" stroke="#5b4bc4" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+<text x="575" y="140" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="middle" xml:space="preserve">link</text>
+<path d="M1140 283 L1100 334" stroke="#5b4bc4" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+<text x="1120" y="266" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="middle" xml:space="preserve">welcome</text>
+<path d="M1140 445 L1100 341" stroke="#5b4bc4" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+<path d="M600 556 L550 726" stroke="#5b4bc4" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+<text x="575" y="539" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#5b4bc4" text-anchor="middle" xml:space="preserve">POST /setup</text>
+<rect x="40" y="1000" width="1480" height="150" rx="12" fill="#ffffff" stroke="#d8d2e6"/>
+<text x="60" y="1028" font-family="Fraunces, Georgia, serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start" xml:space="preserve">Why so</text>
+<text x="60" y="1054" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">• The code lives in its own module so that admin_api.py only asks &quot;does this match?&quot;: the rule (length, alphabet, compare) is tested once, and the shells read a file, not a protocol.</text>
+<text x="60" y="1076" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">• admin_start.py runs before the app exists and before the port is open: no request can reach a half-reset server, and cli.py stays a list of options and banner lines.</text>
+<text x="60" y="1098" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">• The shells read the file at each welcome instead of making the code themselves: one of several windows may revive the shared server (D445), and each window must still hand over the code that server has now.</text>
+<text x="60" y="1120" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start" xml:space="preserve">• The page keeps the code in sessionStorage (this tab only), never in localStorage or a cookie, and drops it once an administrator exists. Documents, their keys and settings.json are not touched by any of this.</text>
+</svg>

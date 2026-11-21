@@ -14,7 +14,7 @@ import { useLoginWait } from '~/lib/login-wait'
 
 const { t } = useI18n()
 
-const props = defineProps<{ label: string; session: ReturnType<typeof useAdminSession> }>()
+const props = defineProps<{ label: string; notice?: string; session: ReturnType<typeof useAdminSession> }>()
 const emit = defineEmits<{ close: [] }>()
 
 const name = ref('')
@@ -47,6 +47,7 @@ async function signIn() {
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--iris)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shield">
         <path d="M12 2l8 3.5v5.3c0 5-3.4 8.9-8 10.2-4.6-1.3-8-5.2-8-10.2V5.5L12 2z" /><path d="M9.5 12l1.8 1.8 3.2-3.6" />
       </svg>
+      <p v-if="notice" class="notice" role="status" data-testid="login-notice">{{ notice }}</p>
       <h1>{{ t('Sign in to {label}', { label }) }}</h1>
       <p class="lead">{{ t('These settings are for administrators only. Sign in with your name and password to continue.') }}</p>
 
@@ -67,6 +68,16 @@ async function signIn() {
 </template>
 
 <style scoped>
+.notice {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  max-width: 520px;
+  border-radius: 9px;
+  border: 1px solid var(--apricot);
+  background: color-mix(in srgb, var(--apricot) 10%, var(--surface));
+  font-size: 13px;
+  line-height: 1.5;
+}
 .login {
   height: 100%;
   display: flex;

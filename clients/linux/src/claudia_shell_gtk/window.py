@@ -29,6 +29,7 @@ from .bridge import Bridge
 from .connection import Outcome
 from .connection import check as default_check
 from .connector import Connector, ServerBook, Work, run_threaded
+from .desktop_server import setup_code_for_page
 from .files import Chosen, Dialogs, Failed, Files
 from .i18n import translate as _
 from .identity import AppIdentity
@@ -227,6 +228,9 @@ class ClaudiaWindow(Adw.ApplicationWindow):
         )
         # D501, D502: the page's files go through the shell's own dialogs; the answers go back through the bridge.
         self.files = Files(dialogs or GtkDialogs(self), self, documents=documents_dir())
+        self.local_setup_code: Callable[[], str | None] = lambda: None
+        """The setup code of the shell's own server (``DesktopServer.setup_code``, set by the application), D1373."""
+        self._shown: str | None = None  # the origin of the server the page shows
         self._bridge = Bridge(
             manifest,
             self._send_to_page,
@@ -238,6 +242,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
             on_servers=self.book.replace,
             server_list=self.book.entries,
             files=self.files,
+            setup_code=lambda: setup_code_for_page(self._shown, self.book.local_origin, self.local_setup_code),
         )
         # GTK emits "destroy" only when the object is finally disposed, which can be long after the window is gone:
         # the page is released when the window is closed (and by the application on shutdown), "destroy" is the net.
@@ -304,6 +309,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
     def show_page(self, url: str) -> None:
         """Show the web page of the server at ``url`` (made and loaded on the first call)."""
         if self._page is None:
+            self._shown = url
             self._page = self._page_factory(
                 origin=url,
                 on_message=self._bridge.receive,
@@ -319,6 +325,7 @@ class ClaudiaWindow(Adw.ApplicationWindow):
 
     def switch_to(self, origin: str) -> None:
         """Show the server at ``origin`` (a server this window has just been connected to)."""
+        self._shown = origin
         if self._page is None:
             self.show_page(origin)
         else:

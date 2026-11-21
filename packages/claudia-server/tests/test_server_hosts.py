@@ -220,3 +220,16 @@ def test_the_lifespan_has_no_host_and_passes_through():
 
     call(HostGuard(application, AllowedHosts()), {"type": "lifespan", "headers": []})
     assert reached == ["lifespan"]
+
+
+# ---------------------------------------------------------------------------------------------- exposed (D1374)
+def test_a_server_is_exposed_beyond_loopback_or_behind_a_proxy():
+    from claudia_server.hosts import is_exposed
+
+    assert not is_exposed("127.0.0.1", behind_proxy=False)
+    assert not is_exposed("localhost", behind_proxy=False)
+    assert not is_exposed("::1", behind_proxy=False)
+    assert is_exposed("0.0.0.0", behind_proxy=False)
+    assert is_exposed("192.168.1.20", behind_proxy=False)
+    # a proxy on the same machine forwards to 127.0.0.1 what everybody sends it
+    assert is_exposed("127.0.0.1", behind_proxy=True)

@@ -103,6 +103,8 @@ export class ShellPage {
   private readonly bridge: Bridge
   /** The origin of the web app in the frame; messages from any other are refused. `null` while no page is shown. */
   private frameOrigin: string | null = null
+  /** The setup code the core sent with the server shown now: its own server's, for its settings pages (D1373). */
+  private setupCode: string | undefined
   private menuPending = false
   /** Has the core said anything yet? Until then the page cannot know that it is there at all. */
   private coreSeen = false
@@ -129,6 +131,7 @@ export class ShellPage {
       onConnect: (address) => this.ask({ kind: 'connect', address }),
       onServers: (servers) => this.ask({ kind: 'servers', servers }),
       // D501, D502: the core shows the dialogs and reads and writes the files; this page only passes the pieces on.
+      setupCode: () => this.setupCode,
       files: {
         pick: (request, accept, title) => this.ask({ kind: 'pick_file', request, accept, ...(title !== undefined ? { title } : {}) }),
         begin: (request, name, size, purpose) => this.ask({ kind: 'save_begin', request, name, size, purpose }),
@@ -262,6 +265,7 @@ export class ShellPage {
       case 'show': {
         this.bridge.reset()
         this.frameOrigin = new URL(message.origin).origin
+        this.setupCode = message.setupCode
         this.env.status.show('Opening…', undefined, false)
         this.env.frame.src = `${this.frameOrigin}/`
         return

@@ -10,6 +10,11 @@
 #   CLAUDIA_DEMO=1      a demo for serverless platforms: documents live in memory (gone when the container stops,
 #                       at most 100 of them), no disk is needed, and the traffic is plain HTTP because the platform
 #                       encrypts in front of the container (--no-tls --behind-proxy)
+#   CLAUDIA_ADMIN and CLAUDIA_ADMIN_PASSWORD
+#                       name the first administrator at start if there is none (D1376), as a platform's secret
+#                       variables give them: the password goes to a file only the server's account can read, and the
+#                       variable is removed before the server starts. Without them the server says a setup code in its
+#                       log (D1371). CLAUDIA_ADMIN with CLAUDIA_ADMIN_PASSWORD_FILE works as well (the server reads both)
 #
 # Arguments after the image name are passed on to `python -m claudia_server` and win over the
 # defaults below (for example `--no-tls --behind-proxy` behind a TLS proxy, `--tls-name claudia.example.org`,
@@ -45,6 +50,17 @@ if [ -n "${CLAUDIA_ALLOW_HOST:-}" ]; then
     done
     IFS=$old_ifs
     set +f
+fi
+
+if [ -n "${CLAUDIA_ADMIN_PASSWORD:-}" ]; then
+    if [ -z "${CLAUDIA_ADMIN:-}" ]; then
+        echo "error: CLAUDIA_ADMIN_PASSWORD needs CLAUDIA_ADMIN, the name of the first administrator" >&2
+        exit 2
+    fi
+    password_file=$(umask 077 && mktemp)
+    printf '%s\n' "$CLAUDIA_ADMIN_PASSWORD" >"$password_file"
+    unset CLAUDIA_ADMIN_PASSWORD
+    set -- --admin "$CLAUDIA_ADMIN" --admin-password-file "$password_file" "$@"
 fi
 
 if [ -n "$model" ]; then
