@@ -46,6 +46,8 @@ nitpick_ignore_regex = [
     (r"py:class", r"claudia_shell_gtk\.connector\.T"),
     # WorkerPool.submit's own TypeVar/ParamSpec (P, R): not a class to link to
     (r"py:class", r"claudia_server\.workers\.[PR]"),
+    # AssetStore's type parameter T and its bound, the module-private protocol every asset meets (D1431)
+    (r"py:class", r"T|claudia_core\.asset_store\.Asset"),
     # `type` aliases (PEP 695) for the per-app object types and a rendering's setting values: an alias is not a class
     (r"py:class", r"claudia_(creates|computes|composes)\.model\.(Slide|Sheet|Text)Object"),
     (r"py:class", r"claudia_core\.renderings\.Scalar"),

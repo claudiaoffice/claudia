@@ -121,7 +121,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (141)
+### Fixed (142)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -269,6 +269,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
 | DOC-04 | P3 | Docs | `docs/versioning.md` said the protocol version is "now 1"; the code says 2 | **fixed** 2026-11-19, with a test that compares them |  | 2026-11-19 |
+| DOC-05 | P3 | Docs | The docs build of the gate failed: Sphinx could not resolve `T` and `asset_store.Asset` in `AssetStore[T: Asset]` | **fixed** on `architecture-improvements` | 2026-11-21 | 2026-11-21 |
 
 ---
 
@@ -2474,3 +2475,10 @@ change goes through `BaseSession.write()`, which refuses before anything is sent
 ### CODE-76 · The sheet session did not take in outlines · P3 · size 3 · fixed 2026-11-21
 **Found** by the same test: the `shape` event was reduced by the text and the slide session, not by the sheet's. **Fixed**
 with the one reducer of D1432. Escaped because: missing test (three copies of the reducer, each tested where it was).
+
+### DOC-05 · The docs build failed on the asset store's type parameter · P3 · size 3 · fixed 2026-11-21
+**Found** when the gate was run before the holder slice of E1.18: `docs` failed with ten warnings since `8874e30a` ("A
+typed read-back in the asset store"), which made the store generic (`AssetStore[T: Asset]`). Sphinx links every type
+in a signature (`nitpicky`), and `T` and the module's own protocol `Asset` are not documented classes. Evidence:
+**measured** on the branch before any change of the slice. **Fixed.** Both are ignored in `docs/conf.py`, as the type
+parameters `M` and `A` already are. Escaped because: test passed but wrong (the gate was run before that last commit).
