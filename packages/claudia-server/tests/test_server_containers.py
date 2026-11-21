@@ -143,27 +143,27 @@ def text():
         document,
         composes_methods,
         "replace_text",
-        {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "Hello world"},
+        {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "Hello world"},
     )
     return document
 
 
 def put_in_text(text, desk, **changes):
-    given = {"block": "b1", "offset": 5, "w": 400, "h": 200, "type": "boxer", "source": "hello", **changes}
+    given = {"paragraph": "b1", "offset": 5, "w": 400, "h": 200, "type": "boxer", "source": "hello", **changes}
     return call(text, composes_methods, "add_container", given, desk=desk)
 
 
 def test_a_container_in_a_text_hangs_from_a_character_of_its_paragraph(text, desk):
     added = put_in_text(text, desk)
     anchor = text.model.get_object(added["object"]).anchor
-    assert (anchor.block, anchor.offset) == ("b1", 5)
+    assert (anchor.paragraph, anchor.offset) == ("b1", 5)
     assert text.model.containers[added["container"]].source == "hello"
     text.undo("ann")
     assert text.model.objects == {} and text.model.containers == {}
 
 
 def test_a_container_cannot_hang_from_nowhere(text, desk):
-    for changes in ({"block": "nope"}, {"offset": 99}, {"offset": -1}):
+    for changes in ({"paragraph": "nope"}, {"offset": 99}, {"offset": -1}):
         with pytest.raises(RequestError):
             put_in_text(text, desk, **changes)
     assert text.model.objects == {}
@@ -171,7 +171,7 @@ def test_a_container_cannot_hang_from_nowhere(text, desk):
 
 def test_a_container_in_a_text_is_moved_sized_and_taken_away(text, desk):
     object_id = put_in_text(text, desk)["object"]
-    call(text, composes_methods, "move_object", {"id": object_id, "block": "b1", "offset": 2})
+    call(text, composes_methods, "move_object", {"id": object_id, "paragraph": "b1", "offset": 2})
     assert text.model.get_object(object_id).anchor.offset == 2
     call(text, composes_methods, "resize_object", {"id": object_id, "w": 320, "h": 120})
     body = text.model.get_object(object_id).body
@@ -185,9 +185,9 @@ def test_a_container_in_a_text_is_moved_sized_and_taken_away(text, desk):
 def test_a_container_is_not_moved_out_of_the_text(text, desk):
     object_id = put_in_text(text, desk)["object"]
     with pytest.raises(RequestError):
-        call(text, composes_methods, "move_object", {"id": object_id, "block": "b1", "offset": 99})
+        call(text, composes_methods, "move_object", {"id": object_id, "paragraph": "b1", "offset": 99})
     with pytest.raises(RequestError):
-        call(text, composes_methods, "move_object", {"id": object_id, "block": "nope", "offset": 0})
+        call(text, composes_methods, "move_object", {"id": object_id, "paragraph": "nope", "offset": 0})
 
 
 def test_in_the_text_the_assistant_as_deployed_does_not_place_containers(text, desk):
@@ -196,7 +196,7 @@ def test_in_the_text_the_assistant_as_deployed_does_not_place_containers(text, d
             text,
             composes_methods,
             "add_container",
-            {"block": "b1", "offset": 0, "w": 9, "h": 9, "type": "boxer", "source": "x"},
+            {"paragraph": "b1", "offset": 0, "w": 9, "h": 9, "type": "boxer", "source": "x"},
             account=Account.assistant(MODEL_METHODS["composes"]),
             desk=desk,
         )

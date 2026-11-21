@@ -1381,7 +1381,7 @@ msgstr "Verbindung zu {label}: {word}. Details anzeigen."
 msgid "Container"
 msgstr "Container"
 
-#: packages/claudia-server/src/claudia_server/composes_contents.py:80 web/app/components/PrintPreview.vue:314
+#: packages/claudia-server/src/claudia_server/composes_contents.py:81 web/app/components/PrintPreview.vue:314
 msgid "Contents"
 msgstr "Inhalt"
 
@@ -7741,7 +7741,7 @@ msgstr "Eine Palette enthält höchstens {limit} Farbrollen"
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 msgstr "eine Zufallszahl aus der genannten Verteilung, zum Beispiel RANDOM(\"normal\", 1000, 150). Ohne Argumente ist es RAND(). ``low`` und ``high`` schneiden die Verteilung ab (nur stetige). Verteilungen: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 
-#: packages/claudia-server/src/claudia_server/composes.py:370
+#: packages/claudia-server/src/claudia_server/composes.py:371
 msgid "a range stays inside one box of a table"
 msgstr "Ein Bereich bleibt innerhalb eines Tabellenfelds"
 
@@ -7749,7 +7749,7 @@ msgstr "Ein Bereich bleibt innerhalb eines Tabellenfelds"
 msgid "a recovery key, a name and a new password are needed"
 msgstr "Ein Wiederherstellungsschlüssel, ein Name und ein neues Passwort sind nötig"
 
-#: packages/claudia-server/src/claudia_server/composes.py:574
+#: packages/claudia-server/src/claudia_server/composes.py:575
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "Eine Bemerkung schlägt keine Änderung vor; weisen Sie sie stattdessen ab"
 
@@ -7773,7 +7773,7 @@ msgstr "Eine Zeile kann nicht vor sich selbst verschoben werden"
 msgid "a space"
 msgstr "ein Leerzeichen"
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:203
+#: packages/claudia-server/src/claudia_server/composes_words.py:205
 msgid "a suggestion stays inside its paragraph; remark on new paragraphs instead"
 msgstr "ein Vorschlag bleibt in seinem Absatz; zu neuen Absätzen ist eine Bemerkung möglich"
 
@@ -7977,14 +7977,6 @@ msgstr "zwischen"
 msgid "blank"
 msgstr "abdunkeln"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:99
-msgid "blocks must be a list of 1 to {limit} paragraph ids"
-msgstr "blocks muss eine Liste von 1 bis {limit} Absatz-IDs sein"
-
-#: packages/claudia-server/src/claudia_server/composes.py:498
-msgid "blocks must be a list of at most {limit} paragraph ids"
-msgstr "blocks muss eine Liste von höchstens {limit} Absatz-IDs sein"
-
 #: web/app/lib/style-deletion.ts:157
 msgid "bold"
 msgstr "fett"
@@ -8005,7 +7997,7 @@ msgstr "budget-2027"
 msgid "bullets"
 msgstr "Aufzählungszeichen"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:411
+#: packages/claudia-server/src/claudia_server/structure_methods.py:413
 msgid "by is 1 (in) or -1 (out)"
 msgstr "by ist 1 (einrücken) oder -1 (ausrücken)"
 
@@ -8289,7 +8281,7 @@ msgstr "genau"
 msgid "example.com:8420"
 msgstr "example.com:8420"
 
-#: packages/claudia-server/src/claudia_server/composes.py:238
+#: packages/claudia-server/src/claudia_server/composes.py:239
 msgid "export_office: format must be \"docx\" or \"odt\""
 msgstr "export_office: format muss „docx“ oder „odt“ sein"
 
@@ -8489,9 +8481,9 @@ msgstr "leave: höchstens {limit} auf einmal"
 msgid "leave: each is {at, match}, at being a cell {sheet, row, col} and match a number or null"
 msgstr "leave: jeder Eintrag ist {at, match}, at eine Zelle {sheet, row, col} und match eine Zahl oder null"
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:142
-msgid "leave: each is {at, match}, at being a place the search listed ({block}, {block, object, source} or {block, table, row, col}) and match a number or null"
-msgstr "leave: jedes ist {at, match}, at ist ein Ort, den die Suche genannt hat ({block}, {block, object, source} oder {block, table, row, col}), match eine Zahl oder null"
+#: packages/claudia-server/src/claudia_server/composes_search.py:141
+msgid "leave: each is {at, match}, at being a place the search listed ({paragraph}, {paragraph, object, source} or {paragraph, table, row, col}) and match a number or null"
+msgstr "leave: jedes ist {at, match}, at ist ein Ort, den die Suche genannt hat ({paragraph}, {paragraph, object, source} oder {paragraph, table, row, col}), match eine Zahl oder null"
 
 #: packages/claudia-server/src/claudia_server/creates_search.py:117
 msgid "leave: each is {at, match}, at being a place the search listed ({slide, object, source} or {slide, source}) and match a number or null"
@@ -8677,7 +8669,7 @@ msgstr "Keine Methode {name!r}"
 msgid "no ownership transfer is waiting for you with that password"
 msgstr "Mit diesem Passwort wartet keine Eigentümerübergabe auf Sie"
 
-#: packages/claudia-server/src/claudia_server/composes_contents.py:36 packages/claudia-server/src/claudia_server/structure_methods.py:104 packages/claudia-server/src/claudia_server/structure_methods.py:266
+#: packages/claudia-server/src/claudia_server/composes_contents.py:37 packages/claudia-server/src/claudia_server/structure_methods.py:106 packages/claudia-server/src/claudia_server/structure_methods.py:268
 msgid "no paragraph {id!r}"
 msgstr "kein Absatz {id!r}"
 
@@ -8689,7 +8681,7 @@ msgstr "kein eigenes Format"
 msgid "none"
 msgstr "ohne"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:219
+#: packages/claudia-server/src/claudia_server/structure_methods.py:221
 msgid "not a numbering scheme: {reason}"
 msgstr "kein Nummerierungsschema: {reason}"
 
@@ -8705,7 +8697,7 @@ msgstr "nicht verbunden"
 msgid "not numbered"
 msgstr "nicht nummeriert"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:238
+#: packages/claudia-server/src/claudia_server/structure_methods.py:240
 msgid "not the options of a table of contents: {reason}"
 msgstr "keine Optionen eines Inhaltsverzeichnisses: {reason}"
 
@@ -8733,7 +8725,7 @@ msgstr "objects muss eine Liste von höchstens {limit} Objekt-IDs sein"
 msgid "occurrence counts from 1"
 msgstr "occurrence zählt ab 1"
 
-#: packages/claudia-server/src/claudia_server/composes.py:598
+#: packages/claudia-server/src/claudia_server/composes.py:601
 msgid "offset is outside the paragraph"
 msgstr "Die Position liegt außerhalb des Absatzes"
 
@@ -8757,7 +8749,7 @@ msgstr "nur der Sonntag ist frei"
 msgid "only Sunday is off: Saturday is a workday"
 msgstr "nur der Sonntag ist frei: der Samstag ist ein Arbeitstag"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:481
+#: packages/claudia-server/src/claudia_server/structure_methods.py:484
 msgid "only a built-in scheme can be reset"
 msgstr "nur ein vorgegebenes Schema kann zurückgesetzt werden"
 
@@ -8789,7 +8781,7 @@ msgstr "Schwärzen dürfen nur Eigentümer, und Bearbeiter bei ihrer eigenen Arb
 msgid "only something that is drawn can be marked as decoration"
 msgstr "Nur etwas Gezeichnetes kann als Dekoration markiert werden"
 
-#: packages/claudia-server/src/claudia_server/composes.py:560 packages/claudia-server/src/claudia_server/composes_words.py:200
+#: packages/claudia-server/src/claudia_server/composes.py:561 packages/claudia-server/src/claudia_server/composes_words.py:202
 msgid "only the assistant makes suggestions"
 msgstr "Nur der Assistent macht Vorschläge"
 
@@ -8864,6 +8856,14 @@ msgstr "Absatz"
 #: web/app/components/TextWorkspace.vue:691
 msgid "paragraphs"
 msgstr "Absätze"
+
+#: packages/claudia-server/src/claudia_server/structure_methods.py:100
+msgid "paragraphs must be a list of 1 to {limit} paragraph ids"
+msgstr "paragraphs muss eine Liste von 1 bis {limit} Absatz-IDs sein"
+
+#: packages/claudia-server/src/claudia_server/composes.py:499
+msgid "paragraphs must be a list of at most {limit} paragraph ids"
+msgstr "paragraphs muss eine Liste von höchstens {limit} Absatz-IDs sein"
 
 #: web/app/lib/redaction.ts:168
 msgid "paragraphs, pictures and boxes"
@@ -9061,7 +9061,7 @@ msgstr "Hilfe durchsuchen"
 msgid "search_replace: that would change {count} cells, at most {limit} at a time: narrow the search"
 msgstr "search_replace: Das würde {count} Zellen ändern, höchstens {limit} auf einmal: Grenzen Sie die Suche ein"
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:137 packages/claudia-server/src/claudia_server/creates_search.py:112
+#: packages/claudia-server/src/claudia_server/composes_search.py:136 packages/claudia-server/src/claudia_server/creates_search.py:112
 msgid "search_replace: that would change {count} texts, at most {limit} at a time: narrow the search"
 msgstr "search_replace: Das würde {count} Texte ändern, höchstens {limit} auf einmal: Grenzen Sie die Suche ein"
 
@@ -9113,7 +9113,7 @@ msgstr "Blätter"
 msgid "sheets, cell ranges, charts and objects"
 msgstr "Blätter, Zellbereiche, Diagramme und Objekte"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:331
+#: packages/claudia-server/src/claudia_server/structure_methods.py:333
 msgid "show must be one of {shows}"
 msgstr "show muss eines von {shows} sein"
 
@@ -9233,7 +9233,7 @@ msgstr "das sind mehr Ausdrucke und PDFs, als das Dokument in einer Minute festh
 msgid "that is not your current password"
 msgstr "Das ist nicht Ihr aktuelles Passwort"
 
-#: packages/claudia-server/src/claudia_server/composes.py:331
+#: packages/claudia-server/src/claudia_server/composes.py:332
 msgid "that would make too many paragraphs"
 msgstr "Das ergäbe zu viele Absätze"
 
@@ -9305,7 +9305,7 @@ msgstr "die Verbindung wurde geschlossen ({code})"
 msgid "the date and time as a day number with the time of day as its fraction."
 msgstr "das Datum und die Uhrzeit als Tageszahl, mit der Uhrzeit als Bruchteil."
 
-#: packages/claudia-server/src/claudia_server/composes.py:244
+#: packages/claudia-server/src/claudia_server/composes.py:245
 msgid "the descriptions are written as comments, which the kept file cannot take"
 msgstr "Die Beschreibungen werden als Kommentare geschrieben, die die aufbewahrte Datei nicht aufnehmen kann"
 
@@ -9365,7 +9365,7 @@ msgstr "der größte Wert"
 msgid "the mean of the values"
 msgstr "der Mittelwert der Werte"
 
-#: packages/claudia-server/src/claudia_server/composes.py:514 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:225
+#: packages/claudia-server/src/claudia_server/composes.py:515 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:225
 msgid "the new style would look just like “{name}”"
 msgstr "Der neue Stil sähe genauso aus wie „{name}“"
 
@@ -9389,7 +9389,7 @@ msgstr "die Position (ab 1) des Wertes in einer Zeile oder Spalte. Typ 0 ist ein
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr "die Position (ab 1) des Wertes. Vergleichsmodus 0 ist genau, -1 der genaue Wert oder sonst der nächstkleinere, 1 oder sonst der nächstgrößere, 2 genau mit Platzhaltern. Suchmodus 1 sucht vom ersten, -1 vom letzten. Nicht gefunden ergibt #N/A."
 
-#: packages/claudia-server/src/claudia_server/composes.py:326 packages/claudia-server/src/claudia_server/composes.py:382
+#: packages/claudia-server/src/claudia_server/composes.py:327 packages/claudia-server/src/claudia_server/composes.py:383
 msgid "the range ends before it starts"
 msgstr "Der Bereich endet vor seinem Anfang"
 
@@ -9498,10 +9498,10 @@ msgid "the whole table, header included"
 msgstr "die ganze Tabelle, einschließlich Kopfzeile"
 
 #: packages/claudia-server/src/claudia_server/composes_words.py:71
-msgid "the words {find!r} are not in paragraph {block}; read it again and quote it exactly"
-msgstr "die Wörter {find!r} stehen nicht in Absatz {block}; bitte erneut lesen und genau zitieren"
+msgid "the words {find!r} are not in paragraph {paragraph}; read it again and quote it exactly"
+msgstr "die Wörter {find!r} stehen nicht in Absatz {paragraph}; bitte erneut lesen und genau zitieren"
 
-#: packages/claudia-server/src/claudia_server/composes_contents.py:43
+#: packages/claudia-server/src/claudia_server/composes_contents.py:44
 msgid "there is a table of contents here already"
 msgstr "hier steht schon ein Inhaltsverzeichnis"
 
@@ -9517,13 +9517,13 @@ msgstr "Es gibt keinen Zweig namens {branch!r}"
 msgid "there is no chat message of that number for you"
 msgstr "Für Sie gibt es keine Chat-Nachricht mit dieser Nummer"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:183
+#: packages/claudia-server/src/claudia_server/structure_methods.py:185
 msgid "there is no earlier list of this kind to continue"
 msgstr "Es gibt keine frühere Liste dieser Art, die sich fortsetzen ließe"
 
-#: packages/claudia-server/src/claudia_server/composes.py:372 packages/claudia-server/src/claudia_server/composes.py:432 packages/claudia-server/src/claudia_server/composes.py:596 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
-msgid "there is no paragraph {block!r}"
-msgstr "Es gibt keinen Absatz {block!r}"
+#: packages/claudia-server/src/claudia_server/composes.py:373 packages/claudia-server/src/claudia_server/composes.py:433 packages/claudia-server/src/claudia_server/composes.py:599 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
+msgid "there is no paragraph {paragraph!r}"
+msgstr "Es gibt keinen Absatz {paragraph!r}"
 
 #: packages/claudia-server/src/claudia_server/computes.py:1144
 msgid "there is no pivot table called {name!r}"
@@ -9533,11 +9533,11 @@ msgstr "Es gibt keine Pivot-Tabelle namens {name!r}"
 msgid "there is no step {revision} on this line"
 msgstr "Auf diesem Verlauf gibt es keinen Schritt {revision}"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:371
+#: packages/claudia-server/src/claudia_server/structure_methods.py:373
 msgid "there is no such reference here"
 msgstr "hier gibt es keinen solchen Verweis"
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:170
+#: packages/claudia-server/src/claudia_server/composes_words.py:172
 msgid "there is no text to add"
 msgstr "es gibt keinen Text zum Hinzufügen"
 
@@ -9585,7 +9585,7 @@ msgstr "Dieses Dokument enthält nichts, was einen Namen haben kann"
 msgid "this document is not a presentation"
 msgstr "Dieses Dokument ist keine Präsentation"
 
-#: packages/claudia-server/src/claudia_server/composes.py:120 packages/claudia-server/src/claudia_server/composes_contents.py:28 packages/claudia-server/src/claudia_server/composes_search.py:84 packages/claudia-server/src/claudia_server/composes_words.py:42
+#: packages/claudia-server/src/claudia_server/composes.py:121 packages/claudia-server/src/claudia_server/composes_contents.py:29 packages/claudia-server/src/claudia_server/composes_search.py:83 packages/claudia-server/src/claudia_server/composes_words.py:42
 msgid "this document is not a text"
 msgstr "Dieses Dokument ist kein Text"
 
@@ -9597,11 +9597,11 @@ msgstr "Dieses Dokument ist keine Arbeitsmappe"
 msgid "this level"
 msgstr "diese Ebene"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:175
+#: packages/claudia-server/src/claudia_server/structure_methods.py:177
 msgid "this paragraph is not a list item"
 msgstr "Dieser Absatz ist kein Listeneintrag"
 
-#: packages/claudia-server/src/claudia_server/composes_contents.py:62 packages/claudia-server/src/claudia_server/structure_methods.py:268
+#: packages/claudia-server/src/claudia_server/composes_contents.py:63 packages/claudia-server/src/claudia_server/structure_methods.py:270
 msgid "this paragraph is not a table of contents"
 msgstr "dieser Absatz ist kein Inhaltsverzeichnis"
 
@@ -9677,7 +9677,7 @@ msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "dieser Server hält seine Dokumente nur im Speicher und kann keine Datei aufnehmen"
 
-#: packages/claudia-server/src/claudia_server/composes.py:585
+#: packages/claudia-server/src/claudia_server/composes.py:588
 msgid "this suggestion is not open any more"
 msgstr "Dieser Vorschlag ist nicht mehr offen"
 
@@ -9797,7 +9797,7 @@ msgstr "Wort"
 msgid "words"
 msgstr "Wörter"
 
-#: packages/claudia-server/src/claudia_server/composes.py:528
+#: packages/claudia-server/src/claudia_server/composes.py:529
 msgid "words must be from 0 to {limit}"
 msgstr "words muss von 0 bis {limit} gehen"
 
@@ -10042,8 +10042,8 @@ msgid "{file} is not used."
 msgstr "{file} wird nicht genutzt."
 
 #: packages/claudia-server/src/claudia_server/composes_words.py:80
-msgid "{find!r} is {count} times in paragraph {block}, not {occurrence}"
-msgstr "{find!r} steht {count}-mal in Absatz {block}, nicht {occurrence}-mal"
+msgid "{find!r} is {count} times in paragraph {paragraph}, not {occurrence}"
+msgstr "{find!r} steht {count}-mal in Absatz {paragraph}, nicht {occurrence}-mal"
 
 #: web/app/lib/search.ts:283
 msgid "{first} and {next}"
@@ -10217,7 +10217,7 @@ msgstr "{method}: Parameter {parameter!r} fehlt"
 msgid "{method}: {parameter} {reason}"
 msgstr "{method}: {parameter} {reason}"
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:92 packages/claudia-server/src/claudia_server/creates_search.py:80
+#: packages/claudia-server/src/claudia_server/composes_search.py:91 packages/claudia-server/src/claudia_server/creates_search.py:80
 msgid "{method}: {why}"
 msgstr "{method}: {why}"
 
@@ -10533,7 +10533,7 @@ msgstr "{user} kann dieses Dokument nicht mehr öffnen und nichts mehr lesen, wa
 msgid "{what} (kept as “{name}”)"
 msgstr "{what} (behalten als „{name}“)"
 
-#: packages/claudia-server/src/claudia_server/composes.py:158 packages/claudia-server/src/claudia_server/composes.py:380
+#: packages/claudia-server/src/claudia_server/composes.py:159 packages/claudia-server/src/claudia_server/composes.py:381
 msgid "{what} is outside the paragraph"
 msgstr "{what} liegt außerhalb des Absatzes"
 

@@ -10,17 +10,17 @@ from claudia_composes import (
     DEFAULT_WRAP_GAP,
     MAX_WRAP_GAP,
     WRAPS,
-    BlockAnchor,
     InsertText,
-    JoinBlocks,
+    JoinParagraphs,
+    ParagraphAnchor,
     SetObjectWrap,
-    SplitBlock,
+    SplitParagraph,
     TextModel,
 )
 from claudia_core import Document, MemoryStore, ObjectBody, VisualObject, paragraph_for
 
 
-def text_with_a_box(anchor: BlockAnchor) -> Document:
+def text_with_a_box(anchor: ParagraphAnchor) -> Document:
     d = Document(TextModel(), store=MemoryStore())
     d.execute(InsertText("b1", 0, "Hello world"), author="ann")
     box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
@@ -38,27 +38,27 @@ def test_the_four_modes_are_the_ones_the_mock_up_shows_in_the_order_the_key_cycl
 
 
 def test_an_anchor_floats_over_the_text_unless_told_otherwise_and_stores_nothing_for_it():
-    a = BlockAnchor("b1", 4)
+    a = ParagraphAnchor("b1", 4)
     assert (a.wrap, a.gap) == ("over", DEFAULT_WRAP_GAP)
-    assert a.to_data() == {"kind": "block", "holder": "b1", "offset": 4, "dx": 0, "dy": 0}
+    assert a.to_data() == {"kind": "paragraph", "holder": "b1", "offset": 4, "dx": 0, "dy": 0}
 
 
 def test_a_wrap_and_a_gap_are_stored_once_they_differ_from_the_default():
-    assert BlockAnchor("b1", 4, wrap="around").to_data()["wrap"] == "around"
-    assert "gap" not in BlockAnchor("b1", 4, wrap="around").to_data()
-    data = BlockAnchor("b1", 4, wrap="above-below", gap=20).to_data()
+    assert ParagraphAnchor("b1", 4, wrap="around").to_data()["wrap"] == "around"
+    assert "gap" not in ParagraphAnchor("b1", 4, wrap="around").to_data()
+    data = ParagraphAnchor("b1", 4, wrap="above-below", gap=20).to_data()
     assert (data["wrap"], data["gap"]) == ("above-below", 20)
 
 
 @pytest.mark.parametrize("wrap", WRAPS)
 def test_a_wrap_round_trips(wrap):
-    a = BlockAnchor("b1", 4, dx=10, dy=-5, wrap=wrap, gap=0)
-    assert BlockAnchor.from_data(a.to_data()) == a
+    a = ParagraphAnchor("b1", 4, dx=10, dy=-5, wrap=wrap, gap=0)
+    assert ParagraphAnchor.from_data(a.to_data()) == a
 
 
 def test_an_anchor_from_before_wrapping_existed_reads_as_over_the_text():
-    old = {"kind": "block", "holder": "b1", "offset": 4, "dx": 3, "dy": 4}
-    assert BlockAnchor.from_data(old) == BlockAnchor("b1", 4, 3, 4)
+    old = {"kind": "paragraph", "holder": "b1", "offset": 4, "dx": 3, "dy": 4}
+    assert ParagraphAnchor.from_data(old) == ParagraphAnchor("b1", 4, 3, 4)
 
 
 @pytest.mark.parametrize(
@@ -74,11 +74,11 @@ def test_an_anchor_from_before_wrapping_existed_reads_as_over_the_text():
 )
 def test_a_wrap_must_be_one_of_the_four_and_a_gap_a_whole_number_within_reach(bad, word):
     with pytest.raises(ValueError, match=word):
-        BlockAnchor.from_data({"kind": "block", "holder": "b1", "offset": 0, **bad})
+        ParagraphAnchor.from_data({"kind": "paragraph", "holder": "b1", "offset": 0, **bad})
 
 
 def test_typing_before_the_object_keeps_its_wrap():
-    d = text_with_a_box(BlockAnchor("b1", 6, wrap="around", gap=12))
+    d = text_with_a_box(ParagraphAnchor("b1", 6, wrap="around", gap=12))
     d.execute(InsertText("b1", 0, "Oh. "), author="ben")
     assert wrap_of(d) == ("around", 12)
     d.undo("ben")
@@ -86,22 +86,22 @@ def test_typing_before_the_object_keeps_its_wrap():
 
 
 def test_splitting_and_joining_the_paragraph_keeps_the_wrap():
-    d = text_with_a_box(BlockAnchor("b1", 6, wrap="above-below", gap=3))
-    d.execute(SplitBlock("b1", 3, "b2", "body"), author="ann")
-    assert d.model.objects["o1"].anchor.block == "b2"
+    d = text_with_a_box(ParagraphAnchor("b1", 6, wrap="above-below", gap=3))
+    d.execute(SplitParagraph("b1", 3, "b2", "body"), author="ann")
+    assert d.model.objects["o1"].anchor.paragraph == "b2"
     assert wrap_of(d) == ("above-below", 3)
-    d.execute(JoinBlocks("b2", "b1", 3), author="ann")
+    d.execute(JoinParagraphs("b2", "b1", 3), author="ann")
     assert wrap_of(d) == ("above-below", 3)
 
 
 def test_setting_the_wrap_changes_nothing_else_about_the_anchor_and_undo_takes_it_back():
-    d = text_with_a_box(BlockAnchor("b1", 6, dx=40, dy=-10))
+    d = text_with_a_box(ParagraphAnchor("b1", 6, dx=40, dy=-10))
     d.execute(SetObjectWrap("o1", "around", 16), author="ann")
     a = d.model.objects["o1"].anchor
-    assert (a.block, a.offset, a.dx, a.dy, a.wrap, a.gap) == ("b1", 6, 40, -10, "around", 16)
+    assert (a.paragraph, a.offset, a.dx, a.dy, a.wrap, a.gap) == ("b1", 6, 40, -10, "around", 16)
     d.undo("ann")
     a = d.model.objects["o1"].anchor
-    assert (a.block, a.offset, a.dx, a.dy, a.wrap, a.gap) == ("b1", 6, 40, -10, "over", DEFAULT_WRAP_GAP)
+    assert (a.paragraph, a.offset, a.dx, a.dy, a.wrap, a.gap) == ("b1", 6, 40, -10, "over", DEFAULT_WRAP_GAP)
 
 
 def test_the_history_says_what_was_done():
@@ -123,14 +123,14 @@ def test_a_command_survives_the_log():
 
 
 def test_a_wrap_nobody_knows_is_refused_and_leaves_the_text_as_it_was():
-    d = text_with_a_box(BlockAnchor("b1", 6))
+    d = text_with_a_box(ParagraphAnchor("b1", 6))
     with pytest.raises(ValueError, match="wrap"):
         d.execute(SetObjectWrap("o1", "tight", 8), author="ann")
     assert wrap_of(d) == ("over", DEFAULT_WRAP_GAP)
 
 
 def test_the_model_refuses_a_wrap_built_in_code_too():
-    d = text_with_a_box(BlockAnchor("b1", 6))
+    d = text_with_a_box(ParagraphAnchor("b1", 6))
     box = d.model.objects["o1"]
     with pytest.raises(ValueError, match="wrap"):
-        d.model.check_anchor(BlockAnchor("b1", 6, wrap="tight"), box.body)
+        d.model.check_anchor(ParagraphAnchor("b1", 6, wrap="tight"), box.body)

@@ -29,8 +29,12 @@ def call(doc, name, params=None, account=ANN, methods=composes_methods):
 
 
 def with_a_box(paper):
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "a text with a box"})
-    answer = call(paper, "add_object", {"block": "b1", "offset": 2, "kind": "text", "w": 200, "h": 80})
+    call(
+        paper,
+        "replace_text",
+        {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "a text with a box"},
+    )
+    answer = call(paper, "add_object", {"paragraph": "b1", "offset": 2, "kind": "text", "w": 200, "h": 80})
     return answer["object"]
 
 
@@ -42,15 +46,15 @@ def anchor_of(paper, object_id):
 # ----------------------------------------------------------------------------------------------- set_wrap
 def test_an_object_that_says_nothing_floats_over_the_text_and_the_wire_shows_no_wrap(paper):
     object_id = with_a_box(paper)
-    assert anchor_of(paper, object_id) == {"kind": "block", "holder": "b1", "offset": 2, "dx": 0, "dy": 0}
+    assert anchor_of(paper, object_id) == {"kind": "paragraph", "holder": "b1", "offset": 2, "dx": 0, "dy": 0}
 
 
 def test_set_wrap_changes_how_the_text_flows_and_nothing_else(paper):
     object_id = with_a_box(paper)
-    call(paper, "move_object", {"id": object_id, "block": "b1", "offset": 4, "dx": 30, "dy": 5})
+    call(paper, "move_object", {"id": object_id, "paragraph": "b1", "offset": 4, "dx": 30, "dy": 5})
     call(paper, "set_wrap", {"id": object_id, "wrap": "around"})
     assert anchor_of(paper, object_id) == {
-        "kind": "block",
+        "kind": "paragraph",
         "holder": "b1",
         "offset": 4,
         "dx": 30,
@@ -69,7 +73,7 @@ def test_set_wrap_can_set_the_gap_and_keeps_it_when_it_is_left_out(paper):
 def test_moving_an_object_keeps_how_the_text_flows_round_it(paper):
     object_id = with_a_box(paper)
     call(paper, "set_wrap", {"id": object_id, "wrap": "behind", "gap": 3})
-    call(paper, "move_object", {"id": object_id, "block": "b1", "offset": 6})
+    call(paper, "move_object", {"id": object_id, "paragraph": "b1", "offset": 6})
     assert (anchor_of(paper, object_id)["wrap"], anchor_of(paper, object_id)["gap"]) == ("behind", 3)
 
 
@@ -104,17 +108,17 @@ def test_an_object_that_is_not_there_is_refused(paper):
 
 # ----------------------------------------------------------------------- a new object says how the text flows
 def test_a_new_object_may_say_how_the_text_flows_round_it_in_the_call_that_adds_it(paper):
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "a text"})
+    call(paper, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "a text"})
     answer = call(
-        paper, "add_object", {"block": "b1", "offset": 1, "kind": "text", "w": 100, "h": 50, "wrap": "above-below"}
+        paper, "add_object", {"paragraph": "b1", "offset": 1, "kind": "text", "w": 100, "h": 50, "wrap": "above-below"}
     )
     assert anchor_of(paper, answer["object"])["wrap"] == "above-below"
 
 
 def test_a_wrap_nobody_knows_is_refused_when_adding_too(paper):
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "a text"})
+    call(paper, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "a text"})
     with pytest.raises(RequestError):
-        call(paper, "add_object", {"block": "b1", "offset": 1, "kind": "text", "w": 100, "h": 50, "wrap": "tight"})
+        call(paper, "add_object", {"paragraph": "b1", "offset": 1, "kind": "text", "w": 100, "h": 50, "wrap": "tight"})
 
 
 # ----------------------------------------------------------------------------- a text box or a shape in a text
@@ -125,11 +129,11 @@ def test_the_shapes_a_text_can_take_are_the_servers_library_and_the_ones_the_doc
 
 
 def test_a_shape_comes_into_the_document_with_the_first_object_that_uses_it_and_keeps_its_proportions(paper):
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "a text"})
+    call(paper, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "a text"})
     library = call(paper, "shapes")["library"]
     shape = library[0]["id"]
     answer = call(
-        paper, "add_object", {"block": "b1", "offset": 3, "kind": "shape", "shape": shape, "w": 120, "h": 120}
+        paper, "add_object", {"paragraph": "b1", "offset": 3, "kind": "shape", "shape": shape, "w": 120, "h": 120}
     )
     assert [s["id"] for s in call(paper, "shapes")["document"]] == [shape]
     (obj,) = [o for o in call(paper, "objects")["objects"] if o["id"] == answer["object"]]
@@ -138,8 +142,10 @@ def test_a_shape_comes_into_the_document_with_the_first_object_that_uses_it_and_
 
 
 def test_a_text_box_starts_with_its_words_in_the_body_style(paper):
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "a text"})
-    answer = call(paper, "add_object", {"block": "b1", "offset": 0, "kind": "text", "w": 200, "h": 60, "text": "Hello"})
+    call(paper, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "a text"})
+    answer = call(
+        paper, "add_object", {"paragraph": "b1", "offset": 0, "kind": "text", "w": 200, "h": 60, "text": "Hello"}
+    )
     (obj,) = [o for o in call(paper, "objects")["objects"] if o["id"] == answer["object"]]
     assert obj["style"] == "plain-box"
     assert obj["paragraph"]["text"] == "Hello"
@@ -157,17 +163,17 @@ def test_a_text_box_starts_with_its_words_in_the_body_style(paper):
     ],
 )
 def test_what_add_object_does_not_make_is_refused_saying_where_to_go(paper, bad):
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "a text"})
+    call(paper, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "a text"})
     with pytest.raises(RequestError) as caught:
-        call(paper, "add_object", {"block": "b1", "offset": 0, "w": 100, "h": 100, **bad})
+        call(paper, "add_object", {"paragraph": "b1", "offset": 0, "w": 100, "h": 100, **bad})
     assert caught.value.code == "bad_request"
 
 
 def test_an_object_must_hang_from_a_place_in_the_text(paper):
     with pytest.raises(RequestError):
-        call(paper, "add_object", {"block": "b1", "offset": 99, "kind": "text", "w": 100, "h": 50})
+        call(paper, "add_object", {"paragraph": "b1", "offset": 99, "kind": "text", "w": 100, "h": 50})
     with pytest.raises(RequestError):
-        call(paper, "add_object", {"block": "nope", "offset": 0, "kind": "text", "w": 100, "h": 50})
+        call(paper, "add_object", {"paragraph": "nope", "offset": 0, "kind": "text", "w": 100, "h": 50})
 
 
 def test_a_server_with_its_own_library_offers_that_one(paper):

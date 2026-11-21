@@ -13,7 +13,7 @@ from claudia_test_documents.case import Case
 def import_checks(model: TextModel) -> None:
     # python-docx gives the image its own paragraph (empty text -- a drawing is not a `w:t` run), between the
     # two with real text; claudia imports it the same way, as an ordinary, if empty, body paragraph.
-    assert [(b.style, b.text) for b in model.blocks] == [
+    assert [(b.style, b.text) for b in model.paragraphs] == [
         (DEFAULT_STYLE, "Photo attached."),
         (DEFAULT_STYLE, ""),
         (DEFAULT_STYLE, "See above."),
@@ -21,16 +21,16 @@ def import_checks(model: TextModel) -> None:
 
 
 def modify(model: TextModel) -> TextModel:
-    # a block is immutable (D181); swap its whole text in through the same remove/insert the model builds
+    # a paragraph is immutable (D181); swap its whole text in through the same remove/insert the model builds
     # character edits from.
-    block_id, new_text = model.blocks[0].id, "Photo attached below."
-    model.remove(block_id, 0, len(model.block(block_id).text))
-    model.insert(block_id, 0, new_text, [Run(len(new_text), None)])
+    paragraph_id, new_text = model.paragraphs[0].id, "Photo attached below."
+    model.remove(paragraph_id, 0, len(model.paragraph(paragraph_id).text))
+    model.insert(paragraph_id, 0, new_text, [Run(len(new_text), None)])
     return model
 
 
 def after_checks(model: TextModel) -> None:
-    assert [(b.style, b.text) for b in model.blocks] == [
+    assert [(b.style, b.text) for b in model.paragraphs] == [
         (DEFAULT_STYLE, "Photo attached below."),
         (DEFAULT_STYLE, ""),
         (DEFAULT_STYLE, "See above."),

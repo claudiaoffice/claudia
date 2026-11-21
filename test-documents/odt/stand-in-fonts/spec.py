@@ -27,14 +27,14 @@ def import_checks(model: TextModel) -> None:
 
 
 def modify(model: TextModel) -> TextModel:
-    body = next(block for block in model.blocks if block.style == "body")
+    body = next(paragraph for paragraph in model.paragraphs if paragraph.style == "body")
     model.insert(body.id, len(body.text), " (edited)", [Run(len(" (edited)"), None)])
     return model
 
 
 def after_checks(model: TextModel) -> None:
     import_checks(model)
-    assert any(block.text.endswith("(edited)") for block in model.blocks)
+    assert any(paragraph.text.endswith("(edited)") for paragraph in model.paragraphs)
 
 
 def no_stand_in_is_written(exported: bytes) -> None:

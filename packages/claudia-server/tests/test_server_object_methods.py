@@ -45,12 +45,12 @@ WORDS = {
         "resize_object": "id:str x:int y:int w:int h:int base:revision?",
     },
     "composes": {
-        "add_image": f"block:str offset:int wrap:str? gap:int? {PICTURE}",
-        "add_container": "block:str offset:int wrap:str? gap:int? w:int h:int type:str source:text params:dict? "
+        "add_image": f"paragraph:str offset:int wrap:str? gap:int? {PICTURE}",
+        "add_container": "paragraph:str offset:int wrap:str? gap:int? w:int h:int type:str source:text params:dict? "
         "alt:text? fit:bool? base:revision?",
-        "add_object": ADD_OBJECT.format(where="block:str offset:int wrap:str? gap:int?"),
+        "add_object": ADD_OBJECT.format(where="paragraph:str offset:int wrap:str? gap:int?"),
         "set_wrap": "id:str wrap:str gap:int? base:revision?",
-        "move_object": "id:str block:str offset:int dx:int? dy:int? base:revision?",
+        "move_object": "id:str paragraph:str offset:int dx:int? dy:int? base:revision?",
         "resize_object": "id:str w:int h:int base:revision?",
     },
 }
@@ -83,7 +83,7 @@ def test_the_object_methods_speak_the_same_words_in_every_app_but_where(app):
 
 @pytest.mark.parametrize("app", sorted(TABLES))
 def test_the_help_of_a_move_explains_the_words_of_its_app(app):
-    word = {"computes": "`row`", "creates": "`x`", "composes": "`block`"}[app]
+    word = {"computes": "`row`", "creates": "`x`", "composes": "`paragraph`"}[app]
     assert word in TABLES[app].describe()["methods"]["move_object"]["doc"]
 
 
@@ -106,7 +106,7 @@ def a_deck():
 
 def a_text():
     document = Document(TextModel(), store=MemoryStore())
-    params = {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "a text with a picture"}
+    params = {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "a text with a picture"}
     call("composes", document, "replace_text", params)
     return document
 
@@ -115,7 +115,7 @@ APPS = {
     # how to make a document, where a new object goes, where it moves, its new frame
     "computes": (a_workbook, {"sheet": "s1", "row": 2, "col": 3}, {"row": 4, "col": 1}, {"row": 4, "col": 1}),
     "creates": (a_deck, {"slide": "s1", "x": 100, "y": 80}, {"x": 300, "y": 200}, {"x": 300, "y": 200}),
-    "composes": (a_text, {"block": "b1", "offset": 2}, {"block": "b1", "offset": 9, "dx": 30, "dy": 4}, {}),
+    "composes": (a_text, {"paragraph": "b1", "offset": 2}, {"paragraph": "b1", "offset": 9, "dx": 30, "dy": 4}, {}),
 }
 
 

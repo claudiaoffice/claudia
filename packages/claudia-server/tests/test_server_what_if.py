@@ -14,7 +14,7 @@ from claudia_server.protocol import Context, Limits, RequestError
 @pytest.fixture
 def paper():
     doc = Document(TextModel(), store=MemoryStore())
-    call(doc, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "Hello world"})
+    call(doc, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "Hello world"})
     return doc
 
 
@@ -23,29 +23,29 @@ def start(doc, account=ANN, params=None):
 
 
 def replace(doc, token, text, account=ANN, *, at=0, end=5):
-    params = {"block": "b1", "start": at, "end_block": "b1", "end": end, "text": text}
+    params = {"paragraph": "b1", "start": at, "end_paragraph": "b1", "end": end, "text": text}
     return call(doc, "what_if_apply", {"token": token, "method": "replace_text", "params": params}, account)
 
 
-def blocks_in(doc, token, account=ANN):
-    return call(doc, "as_what_if", {"token": token, "method": "blocks"}, account)["blocks"]
+def paragraphs_in(doc, token, account=ANN):
+    return call(doc, "as_what_if", {"token": token, "method": "paragraphs"}, account)["paragraphs"]
 
 
 def text_of(doc):
-    return doc.model.block("b1").text
+    return doc.model.paragraph("b1").text
 
 
 def test_what_if_writes_through_the_apps_own_methods_and_the_live_document_does_not_change(paper):
     token = start(paper)
     replace(paper, token, "Howdy")
     assert text_of(paper) == "Hello world"
-    assert [b["text"] for b in blocks_in(paper, token)] == ["Howdy world"]
+    assert [b["text"] for b in paragraphs_in(paper, token)] == ["Howdy world"]
 
 
 def test_the_views_the_app_has_read_the_what_if_with_the_same_requests(paper):
     token = start(paper)
-    live = call(paper, "as_what_if", {"token": token, "method": "blocks"})
-    assert live == call(paper, "blocks")
+    live = call(paper, "as_what_if", {"token": token, "method": "paragraphs"})
+    assert live == call(paper, "paragraphs")
 
 
 def test_only_the_reads_of_a_view_can_be_asked_of_a_what_if(paper):
@@ -87,7 +87,7 @@ def test_somebody_else_may_not_use_or_commit_it(paper):
     token = start(paper)
     replace(paper, token, "Howdy")
     for method, params in (
-        ("as_what_if", {"token": token, "method": "blocks"}),
+        ("as_what_if", {"token": token, "method": "paragraphs"}),
         ("what_if_apply", {"token": token, "method": "replace_text", "params": {}}),
         ("what_if_changes", {"token": token}),
         ("what_if_commit", {"token": token}),
@@ -102,11 +102,11 @@ def test_somebody_else_may_not_use_or_commit_it(paper):
 def test_outdated_is_answered_with_a_sentence_and_the_places_and_changes_nothing(paper):
     token = start(paper)
     replace(paper, token, "Howdy")
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 5, "text": "Hey"}, BEN)
+    call(paper, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 5, "text": "Hey"}, BEN)
     answer = call(paper, "what_if_commit", {"token": token})
     assert answer["applied"] is False and answer["reason"] and answer["conflicts"]
     assert text_of(paper) == "Hey world"
-    assert call(paper, "as_what_if", {"token": token, "method": "blocks"})  # still there to look at
+    assert call(paper, "as_what_if", {"token": token, "method": "paragraphs"})  # still there to look at
 
 
 def test_a_viewer_cannot_change_the_copy_either(paper):
@@ -140,33 +140,33 @@ def test_dropping_one_makes_room_and_an_idle_one_is_dropped(paper, monkeypatch):
     first = start(paper)
     call(paper, "what_if_drop", {"token": first})
     with pytest.raises(RequestError):
-        call(paper, "as_what_if", {"token": first, "method": "blocks"})
+        call(paper, "as_what_if", {"token": first, "method": "paragraphs"})
     kept = start(paper)
     now = what_if.time.monotonic() + what_if.IDLE_SECONDS + 1
     monkeypatch.setattr(what_if.time, "monotonic", lambda: now)
     with pytest.raises(RequestError):
-        call(paper, "as_what_if", {"token": kept, "method": "blocks"})
+        call(paper, "as_what_if", {"token": kept, "method": "paragraphs"})
 
 
 def test_a_person_who_leaves_takes_theirs_with_them(paper):
     token = start(paper)
     what_if.drop_person(paper, "ann")
     with pytest.raises(RequestError):
-        call(paper, "as_what_if", {"token": token, "method": "blocks"})
+        call(paper, "as_what_if", {"token": token, "method": "paragraphs"})
 
 
 def test_a_what_if_can_start_from_an_earlier_step(paper):
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 5, "text": "Howdy"}, BEN)
+    call(paper, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 5, "text": "Howdy"}, BEN)
     first = paper.log.path(paper.revision)[0].rev.to_data()
     token = start(paper, params={"at": first})
-    assert [b["text"] for b in blocks_in(paper, token)] == ["Hello world"]
+    assert [b["text"] for b in paragraphs_in(paper, token)] == ["Hello world"]
 
 
 def test_a_viewer_cannot_start_a_what_if_from_an_earlier_step(paper):
     """An earlier step is the history, which a viewer's key does not open (D1261); the document as it is now is hers."""
     from claudia_server.auth import Account
 
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 5, "text": "Howdy"}, BEN)
+    call(paper, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 5, "text": "Howdy"}, BEN)
     first = paper.log.path(paper.revision)[0].rev.to_data()
     with pytest.raises(RequestError) as refused:
         start(paper, Account("vera", "viewer"), params={"at": first})
@@ -192,7 +192,7 @@ def test_the_context_of_a_what_if_cannot_reach_the_other_windows(paper):
         {
             "token": token,
             "method": "replace_text",
-            "params": {"block": "b1", "start": 0, "end_block": "b1", "end": 5, "text": "Howdy"},
+            "params": {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 5, "text": "Howdy"},
         },
     )
     assert heard == []

@@ -26,9 +26,9 @@ from claudia_core import (
 )
 
 from .events import (
-    BlocksJoined,
-    BlockSplit,
     PageSetupChanged,
+    ParagraphsJoined,
+    ParagraphSplit,
     StyleChanged,
     SuggestionsChanged,
 )
@@ -55,20 +55,21 @@ def _moved(ctx: Context[TextModel], command: TextCommand) -> None:
 # ------------------------------------------------------------------------------ structure
 @register
 @dataclass(frozen=True)
-class SplitBlock(TextCommand):
-    """Cut the paragraph ``block`` at ``offset``: the rest becomes the new paragraph ``new_id``, in ``style``.
+class SplitParagraph(TextCommand):
+    """Cut the paragraph ``paragraph`` at ``offset``: the rest becomes the new paragraph ``new_id``, in ``style``.
 
     What hangs from the rest goes along with it, and so does what hangs exactly at the cut, unless ``keep``: then that
     stays where it is (D1331: an empty paragraph after a table that hangs at the end of its paragraph)."""
 
-    kind: ClassVar[str] = "composes.SplitBlock"
-    block: str
+    kind: ClassVar[str] = "composes.SplitParagraph"
+    paragraph: str
     offset: int
     new_id: str
     style: str
     #: What the new paragraph is called (D1310); ``""`` for what an older log wrote, which gave it none.
     name: str = ""
-    #: What hangs exactly at the cut stays in ``block`` (D1331); not written when false, so older logs read the same.
+    #: What hangs exactly at the cut stays in ``paragraph`` (D1331); not written when false, so older logs read the
+    #: same.
     keep: bool = False
 
     @property
@@ -80,13 +81,13 @@ class SplitBlock(TextCommand):
         return "new paragraph"
 
     def apply(self, ctx: Context[TextModel]) -> Command:
-        ctx.model.split(self.block, self.offset, self.new_id, self.style, self.name)
-        ctx.emit(BlockSplit(self.block, self.offset, self.new_id, self.style))
+        ctx.model.split(self.paragraph, self.offset, self.new_id, self.style, self.name)
+        ctx.emit(ParagraphSplit(self.paragraph, self.offset, self.new_id, self.style))
         _moved(ctx, self)
-        return JoinBlocks(self.new_id, self.block, self.offset)
+        return JoinParagraphs(self.new_id, self.paragraph, self.offset)
 
     def to_data(self) -> dict:
-        data: dict = {"block": self.block, "offset": self.offset, "new_id": self.new_id, "style": self.style}
+        data: dict = {"paragraph": self.paragraph, "offset": self.offset, "new_id": self.new_id, "style": self.style}
         if self.name:
             data["name"] = self.name
         if self.keep:
@@ -94,43 +95,48 @@ class SplitBlock(TextCommand):
         return data
 
     @classmethod
-    def from_data(cls, data, registry) -> SplitBlock:
+    def from_data(cls, data, registry) -> SplitParagraph:
         return cls(
-            data["block"], data["offset"], data["new_id"], data["style"], data.get("name", ""), data.get("keep", False)
+            data["paragraph"],
+            data["offset"],
+            data["new_id"],
+            data["style"],
+            data.get("name", ""),
+            data.get("keep", False),
         )
 
     def regions(self, model) -> tuple[Region, ...]:
-        return (TextRange(self.block, self.offset, self.offset + 1),)
+        return (TextRange(self.paragraph, self.offset, self.offset + 1),)
 
     def follow(self, span: Span) -> Span:
-        block, start, end = span
-        if block != self.block:
+        paragraph, start, end = span
+        if paragraph != self.paragraph:
             return span
         if start > self.offset or (start == self.offset and not (self.keep and end == start)):
             return (self.new_id, start - self.offset, end - self.offset)
-        return (block, start, min(end, self.offset))
+        return (paragraph, start, min(end, self.offset))
 
     def breaks(self, span: Span) -> bool:
-        block, start, end = span
-        return block == self.block and start < self.offset < end
+        paragraph, start, end = span
+        return paragraph == self.paragraph and start < self.offset < end
 
     def shifted_by(self, other: Command) -> Command | None:
         if not isinstance(other, TextCommand):
             return self
-        span = (self.block, self.offset, self.offset)
+        span = (self.paragraph, self.offset, self.offset)
         if other.breaks(span):
             return None
-        block, offset, _ = other.follow(span)
-        return replace(self, block=block, offset=offset)
+        paragraph, offset, _ = other.follow(span)
+        return replace(self, paragraph=paragraph, offset=offset)
 
 
 @register
 @dataclass(frozen=True)
-class JoinBlocks(TextCommand):
-    """Put the paragraph ``block`` at the end of ``into``, the one right before it, whose text is ``at`` long."""
+class JoinParagraphs(TextCommand):
+    """Put the paragraph ``paragraph`` at the end of ``into``, the one right before it, whose text is ``at`` long."""
 
-    kind: ClassVar[str] = "composes.JoinBlocks"
-    block: str
+    kind: ClassVar[str] = "composes.JoinParagraphs"
+    paragraph: str
     into: str
     at: int
 
@@ -143,33 +149,34 @@ class JoinBlocks(TextCommand):
         return "joined paragraphs"
 
     def apply(self, ctx: Context[TextModel]) -> Command:
-        # Undone, the join is a split at ``at``. What hangs there now came from ``into`` (its end) or from ``block``
-        # (its start). When ``block`` had nothing hanging from it, it was all ``into``'s, and the split keeps it there.
-        kept = not ctx.model.objects_on(self.block)
-        gone = ctx.model.join(self.block, self.into, self.at)
-        ctx.emit(BlocksJoined(self.block, self.into, self.at))
+        # Undone, the join is a split at ``at``. What hangs there now came from ``into`` (its end) or from ``paragraph``
+        # (its start). When ``paragraph`` had nothing hanging from it, it was all ``into``'s, and the split keeps it
+        # there.
+        kept = not ctx.model.objects_on(self.paragraph)
+        gone = ctx.model.join(self.paragraph, self.into, self.at)
+        ctx.emit(ParagraphsJoined(self.paragraph, self.into, self.at))
         _moved(ctx, self)
-        split = SplitBlock(self.into, self.at, self.block, gone.style, keep=kept)
-        if gone.item == ctx.model.block(self.into).item:
+        split = SplitParagraph(self.into, self.at, self.paragraph, gone.style, keep=kept)
+        if gone.item == ctx.model.paragraph(self.into).item:
             return split  # a split gives the new paragraph that item anyway
-        return Batch((split, SetListItem(self.block, gone.item)))  # the paragraph that went away was another kind
+        return Batch((split, SetListItem(self.paragraph, gone.item)))  # the paragraph that went away was another kind
 
     def to_data(self) -> dict:
-        return {"block": self.block, "into": self.into, "at": self.at}
+        return {"paragraph": self.paragraph, "into": self.into, "at": self.at}
 
     def ends_paragraph(self, paragraph_id: str) -> bool:
-        return paragraph_id == self.block  # it is part of ``into`` now
+        return paragraph_id == self.paragraph  # it is part of ``into`` now
 
     @classmethod
-    def from_data(cls, data, registry) -> JoinBlocks:
-        return cls(data["block"], data["into"], data["at"])
+    def from_data(cls, data, registry) -> JoinParagraphs:
+        return cls(data["paragraph"], data["into"], data["at"])
 
     def regions(self, model) -> tuple[Region, ...]:
-        return (TextRange(self.into, self.at, self.at + 1), TextRange(self.block, 0, 1))
+        return (TextRange(self.into, self.at, self.at + 1), TextRange(self.paragraph, 0, 1))
 
     def follow(self, span: Span) -> Span:
-        block, start, end = span
-        if block == self.block:
+        paragraph, start, end = span
+        if paragraph == self.paragraph:
             return (self.into, start + self.at, end + self.at)
         return span
 
@@ -189,7 +196,7 @@ class SetStyle(TextCommand):
     """Give a paragraph another named style."""
 
     kind: ClassVar[str] = "composes.SetStyle"
-    block: str
+    paragraph: str
     style: str
 
     @property
@@ -203,25 +210,25 @@ class SetStyle(TextCommand):
     def apply(self, ctx: Context[TextModel]) -> Command:
         model = ctx.model
         model.check_style(self.style)
-        block = model.block(self.block)
-        old = block.style
-        ctx.model.restyle(block.id, self.style)
-        ctx.emit(StyleChanged(self.block, self.style))
-        return SetStyle(self.block, old)
+        paragraph = model.paragraph(self.paragraph)
+        old = paragraph.style
+        ctx.model.restyle(paragraph.id, self.style)
+        ctx.emit(StyleChanged(self.paragraph, self.style))
+        return SetStyle(self.paragraph, old)
 
     def to_data(self) -> dict:
-        return {"block": self.block, "style": self.style}
+        return {"paragraph": self.paragraph, "style": self.style}
 
     @classmethod
     def from_data(cls, data, registry) -> SetStyle:
-        return cls(data["block"], data["style"])
+        return cls(data["paragraph"], data["style"])
 
     def regions(self, model) -> tuple[Region, ...]:
-        length = len(model.block(self.block).text) if isinstance(model, TextModel) else 0
-        return (TextRange(self.block, 0, max(1, length)),)
+        length = len(model.paragraph(self.paragraph).text) if isinstance(model, TextModel) else 0
+        return (TextRange(self.paragraph, 0, max(1, length)),)
 
     def shifted_by(self, other: Command) -> Command | None:
-        if isinstance(other, JoinBlocks) and other.block == self.block:
+        if isinstance(other, JoinParagraphs) and other.paragraph == self.paragraph:
             return None  # the paragraph is part of another one now; its style is that one's
         return self
 
@@ -278,7 +285,7 @@ class ProposeSuggestion(Command):
     kind: ClassVar[str] = "composes.ProposeSuggestion"
     undoable = False
     id: str
-    block: str
+    paragraph: str
     start: int
     end: int
     original: str
@@ -299,7 +306,7 @@ class ProposeSuggestion(Command):
         suggestion = Suggestion(
             self.id,
             ctx.author,
-            TextRange(self.block, self.start, self.end),
+            TextRange(self.paragraph, self.start, self.end),
             self.original,
             self.replacement,
             self.reason,
@@ -311,7 +318,7 @@ class ProposeSuggestion(Command):
     def to_data(self) -> dict:
         return {
             "id": self.id,
-            "block": self.block,
+            "paragraph": self.paragraph,
             "start": self.start,
             "end": self.end,
             "original": self.original,
@@ -322,7 +329,13 @@ class ProposeSuggestion(Command):
     @classmethod
     def from_data(cls, data, registry) -> ProposeSuggestion:
         return cls(
-            data["id"], data["block"], data["start"], data["end"], data["original"], data["replacement"], data["reason"]
+            data["id"],
+            data["paragraph"],
+            data["start"],
+            data["end"],
+            data["original"],
+            data["replacement"],
+            data["reason"],
         )
 
     def redacted(self) -> Command:
@@ -338,7 +351,7 @@ class ProposeSuggestion(Command):
 class ResolveSuggestion(Command):
     """Set the state of a suggestion: rejected, dismissed (a remark), accepted, open again, or withdrawn.
 
-    ``anchor`` puts the suggestion back where it was (``[block, start, end]``); the inverse of an accept uses it."""
+    ``anchor`` puts the suggestion back where it was (``[paragraph, start, end]``); the inverse of an accept uses it."""
 
     kind: ClassVar[str] = "composes.ResolveSuggestion"
     id: str
@@ -401,7 +414,7 @@ class AcceptSuggestion(TextCommand):
 
     kind: ClassVar[str] = "composes.AcceptSuggestion"
     id: str
-    block: str
+    paragraph: str
     start: int
     end: int
     replacement: str
@@ -420,10 +433,10 @@ class AcceptSuggestion(TextCommand):
     def _steps(self, by: str | None) -> list[Command]:
         steps: list[Command] = []
         if self.end > self.start:
-            steps.append(DeleteText(self.block, self.start, self.end - self.start))
+            steps.append(DeleteText(self.paragraph, self.start, self.end - self.start))
         if self.replacement:
             runs = (Run(len(self.replacement), by, self.suggested_by),)
-            steps.append(InsertText(self.block, self.start, self.replacement, runs))
+            steps.append(InsertText(self.paragraph, self.start, self.replacement, runs))
         return steps
 
     def leaves(self):
@@ -437,8 +450,8 @@ class AcceptSuggestion(TextCommand):
             raise ValueError("only an open suggestion that proposes a change can be accepted")
         if model.is_outdated(suggestion):
             raise ValueError("the text changed since this was suggested; look at it again")
-        if (anchor.block, anchor.start, anchor.end, suggestion.replacement) != (
-            self.block,
+        if (anchor.paragraph, anchor.start, anchor.end, suggestion.replacement) != (
+            self.paragraph,
             self.start,
             self.end,
             self.replacement,
@@ -451,7 +464,7 @@ class AcceptSuggestion(TextCommand):
     def to_data(self) -> dict:
         return {
             "id": self.id,
-            "block": self.block,
+            "paragraph": self.paragraph,
             "start": self.start,
             "end": self.end,
             "replacement": self.replacement,
@@ -460,10 +473,10 @@ class AcceptSuggestion(TextCommand):
 
     @classmethod
     def from_data(cls, data, registry) -> AcceptSuggestion:
-        return cls(data["id"], data["block"], data["start"], data["end"], data["replacement"], data["suggested_by"])
+        return cls(data["id"], data["paragraph"], data["start"], data["end"], data["replacement"], data["suggested_by"])
 
     def regions(self, model) -> tuple[Region, ...]:
-        return (TextRange(self.block, self.start, max(self.end, self.start + 1)),)
+        return (TextRange(self.paragraph, self.start, max(self.end, self.start + 1)),)
 
     def follow(self, span: Span) -> Span:
         for leaf in self.leaves():
@@ -482,7 +495,7 @@ class AcceptSuggestion(TextCommand):
 @TextModel.registry.upcaster("composes.DeleteText", 1)
 def _paragraph_by_id(data: dict) -> dict:
     """Schema 1 named the paragraph by its number. The only paragraph there ever was is ``b1``."""
-    return {**data, "block": "b1" if data["block"] == 0 else f"b{data['block'] + 1}"}
+    return {**data, "paragraph": "b1" if data["paragraph"] == 0 else f"b{data['paragraph'] + 1}"}
 
 
 _WRAP_SUMMARY = {

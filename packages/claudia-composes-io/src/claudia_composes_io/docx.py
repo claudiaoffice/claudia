@@ -13,7 +13,7 @@ like any other tracked change, even though Claudia's own UI shows it as a sugges
 back. ``apply_edits_to_docx`` closes the loop D217 set out to fix: re-exporting an *edited* imported document by
 patching only the changed paragraphs onto the original bytes (through ``claudia_opc_io.reconcile``), instead of
 rebuilding the file from the model alone and losing everything claudia never modeled -- a table, an image, a
-custom style. Paragraphs can be changed, added and removed; blocks cannot be moved (D456).
+custom style. Paragraphs can be changed, added and removed; paragraphs cannot be moved (D456).
 """
 
 from __future__ import annotations
@@ -28,13 +28,13 @@ from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.oxml.xmlchemy import BaseOxmlElement
-from docx.text.paragraph import Paragraph
+from docx.text.paragraph import Paragraph as DocxParagraph
 
 from claudia_composes import (
     DEFAULT_STYLE,
     TABLE_STYLE_IDS,
-    Block,
-    BlockAnchor,
+    Paragraph,
+    ParagraphAnchor,
     Run,
     Suggestion,
     TextModel,
@@ -47,13 +47,13 @@ from claudia_opc_io import owns, reconcile
 from ._annotations import Annotations, name_paragraphs, word_bookmark_names
 from ._boxes import box_losses, is_written, look_of
 from ._boxes import has_references as has_box_references
-from ._docx_blocks import hidden_content, place, remove
 from ._docx_boxes import BoxEdits, BoxWriter, FileBox, file_boxes, restyled_words
 from ._docx_comments import write_comment
 from ._docx_contents import body_order, write_contents
 from ._docx_fonts import style_fonts
 from ._docx_links import Carried, carry_links
 from ._docx_lists import ListWriter, numbering_in, read_lists
+from ._docx_paragraphs import hidden_content, place, remove
 from ._docx_pictures import (
     FilePicture,
     PictureEdits,
@@ -88,7 +88,7 @@ _CLAUDIA_STYLE = {word_name: claudia_id for claudia_id, word_name in WORD_NAMES.
 
 
 class UnsupportedEdit(Exception):
-    """Raised by :func:`apply_edits_to_docx` for an edit it cannot patch onto the original file: blocks moved
+    """Raised by :func:`apply_edits_to_docx` for an edit it cannot patch onto the original file: paragraphs moved
     relative to each other, and a baseline that is not what the file holds. Changing, adding and removing paragraphs
     is supported (D456)."""
 
@@ -102,23 +102,23 @@ def text_to_docx(
     info: DocumentInfo | None = None,
     annotations: Annotations | None = None,
 ) -> bytes:
-    """``model`` as docx bytes: one paragraph per block. When ``track_suggestions`` (the default), every open
-    suggestion that proposes a replacement is written as a tracked change instead of being silently dropped; a
+    """``model`` as docx bytes: one paragraph of the file per paragraph. When ``track_suggestions`` (the default), every
+    open suggestion that proposes a replacement is written as a tracked change instead of being silently dropped; a
     remark (no replacement) carries no text to track and is left out, same as a withdrawn or resolved suggestion.
-    ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one with no time is
-    written without a date, which Word shows as undated (D411). The pictures floating over the text (an image, a
-    container) are written as anchored drawings in the paragraph they hang from, with their alt text;
-    an SVG is shown by the picture ``rasterise`` draws of it, or else by an empty one (D464). The file says in its
-    properties who made the document and when and who changed it last, from ``info``; what ``info`` does not know it
-    leaves out (D466). The tables of the text are written as real tables after the paragraph they hang from (E9.32,
-    D1214). ``annotations`` says which paragraphs are bookmarked with the name a person gave them and which get a
-    review comment with what a person wrote about them (E1.13); without it neither is written."""
+    ``change_times`` has when each suggestion was made, by id, and dates its tracked change; one with no time is written
+    without a date, which Word shows as undated (D411). The pictures floating over the text (an image, a container) are
+    written as anchored drawings in the paragraph they hang from, with their alt text; an SVG is shown by the picture
+    ``rasterise`` draws of it, or else by an empty one (D464). The file says in its properties who made the document and
+    when and who changed it last, from ``info``; what ``info`` does not know it leaves out (D466). The tables of the
+    text are written as real tables after the paragraph they hang from (E9.32, D1214). ``annotations`` says which
+    paragraphs are bookmarked with the name a person gave them and which get a review comment with what a person wrote
+    about them (E1.13); without it neither is written."""
     document = Document()
     write_page(document, None, model.page)
     write_language(document, model.language)
     names = _word_names(document, model)
     write_styles(document, model.styles, names, model.palette.colours())
-    by_block = open_replacements(model, track=track_suggestions)
+    by_paragraph = open_replacements(model, track=track_suggestions)
     change_ids, when = count(1), when_made(change_times)
     lists = ListWriter(document, model.lists, model.schemes)
     write_style_numbering(document, model.styles, names, lists)
@@ -127,30 +127,32 @@ def text_to_docx(
     targets = _targets(model)
     bookmarks = count(1)
     notes = annotations or Annotations()
-    given = [block.id for block in model.blocks if block.id in notes.names]
+    given = [paragraph.id for paragraph in model.paragraphs if paragraph.id in notes.names]
     word_names = dict(zip(given, word_bookmark_names(notes.names[each] for each in given), strict=True))
     boxes = BoxWriter(document, names, model, pictures)
     style_ids = _style_ids(document, names)
-    for block in model.blocks:
-        paragraph = document.add_paragraph(style=names.of(block.style))
-        if block.generated is not None:
-            write_contents(document, paragraph, block.generated, entries.get(block.id, ()), style_ids)
-            _write_tables(document, model, block.id, style_ids)
+    for paragraph in model.paragraphs:
+        docx_paragraph = document.add_paragraph(style=names.of(paragraph.style))
+        if paragraph.generated is not None:
+            write_contents(document, docx_paragraph, paragraph.generated, entries.get(paragraph.id, ()), style_ids)
+            _write_tables(document, model, paragraph.id, style_ids)
             continue
-        if block.item is not None:
-            lists.write(paragraph, block.item)
-        marks = _floating_runs(model, block.id, pictures, boxes)
-        _fill_paragraph(paragraph, block.text, by_block.get(block.id, []), change_ids, when, marks)
-        if block.fields:
-            said = shown.get(block.id, ())
-            swap_fields(paragraph, [reference_runs(f, s, targets) for f, s in zip(block.fields, said, strict=True)])
-        if block.id in targets:
-            mark_targets(paragraph, bookmark_name(block.id), bookmarks)
-        if block.id in word_names:
-            mark_targets(paragraph, word_names[block.id], bookmarks)
-        if text := notes.comments.get(block.id):
-            write_comment(document, paragraph, text, notes)
-        _write_tables(document, model, block.id, style_ids)
+        if paragraph.item is not None:
+            lists.write(docx_paragraph, paragraph.item)
+        marks = _floating_runs(model, paragraph.id, pictures, boxes)
+        _fill_paragraph(docx_paragraph, paragraph.text, by_paragraph.get(paragraph.id, []), change_ids, when, marks)
+        if paragraph.fields:
+            said = shown.get(paragraph.id, ())
+            swap_fields(
+                docx_paragraph, [reference_runs(f, s, targets) for f, s in zip(paragraph.fields, said, strict=True)]
+            )
+        if paragraph.id in targets:
+            mark_targets(docx_paragraph, bookmark_name(paragraph.id), bookmarks)
+        if paragraph.id in word_names:
+            mark_targets(docx_paragraph, word_names[paragraph.id], bookmarks)
+        if text := notes.comments.get(paragraph.id):
+            write_comment(document, docx_paragraph, text, notes)
+        _write_tables(document, model, paragraph.id, style_ids)
     out = BytesIO()
     document.save(out)
     return stamp_office_meta(out.getvalue(), info)
@@ -159,23 +161,25 @@ def text_to_docx(
 def _write_tables(
     document: Any,  # noqa: ANN401
     model: TextModel,
-    block_id: str,
+    paragraph_id: str,
     style_ids: Callable[[str], str | None],
 ) -> None:
-    """The tables that hang from the paragraph ``block_id``, one after the other right after it. Two tables with nothing
-    between them would be one table to Word, so an empty paragraph keeps them apart."""
-    for number, definition in enumerate(tables_after(model, block_id)):
+    """The tables that hang from the paragraph ``paragraph_id``, one after the other right after it. Two tables with
+    nothing between them would be one table to Word, so an empty paragraph keeps them apart."""
+    for number, definition in enumerate(tables_after(model, paragraph_id)):
         if number:
             document.add_paragraph()
         write_table(document, model, definition, style_ids)
 
 
-def _floating_runs(model: TextModel, block_id: str, pictures: PictureWriter, boxes: BoxWriter) -> list[tuple[int, Any]]:
-    """The runs of what floats over the paragraph ``block_id`` (pictures and boxes, the one in front last), each with
-    the character it stands at."""
-    assets = {obj.id: asset for obj, asset in pictures_of(model, block_id)}
+def _floating_runs(
+    model: TextModel, paragraph_id: str, pictures: PictureWriter, boxes: BoxWriter
+) -> list[tuple[int, Any]]:
+    """The runs of what floats over the paragraph ``paragraph_id`` (pictures and boxes, the one in front last), each
+    with the character it stands at."""
+    assets = {obj.id: asset for obj, asset in pictures_of(model, paragraph_id)}
     runs = []
-    for object_id in model.stack_of(block_id):
+    for object_id in model.stack_of(paragraph_id):
         obj = model.get_object(object_id)
         if object_id in assets:
             runs.append((obj.anchor.offset, pictures.run(obj, assets[object_id])))
@@ -203,8 +207,8 @@ def _patch_lists(
 
 def _targets(model: TextModel) -> set[str]:
     """The paragraphs of the text that a reference points at: they get a bookmark."""
-    blocks = {block.id for block in model.blocks}
-    return {f.target for block in model.blocks for f in block.fields if f.target in blocks}
+    paragraphs = {paragraph.id for paragraph in model.paragraphs}
+    return {f.target for paragraph in model.paragraphs for f in paragraph.fields if f.target in paragraphs}
 
 
 def _patch_setup(document: Any, baseline: TextModel, current: TextModel) -> tuple[WordNames, set[str]]:
@@ -244,11 +248,11 @@ def _patch_tables(
     file and those it has now are written right after it; every other table is left as it is, and so is each table of
     the file that is not regular. What a table looks like is not compared: a table whose look alone changed stays as it
     was written."""
-    for block_id, (before, after) in table_changes(baseline, current).items():
+    for paragraph_id, (before, after) in table_changes(baseline, current).items():
         for definition in before:
             element = file_tables[definition.id]
             element.getparent().remove(element)
-        anchor = elements[block_id] if after else None
+        anchor = elements[paragraph_id] if after else None
         for number, definition in enumerate(after):
             if number and anchor is not None:
                 separator = OxmlElement("w:p")
@@ -257,8 +261,8 @@ def _patch_tables(
             anchor = write_table(document, current, definition, style_ids, after=anchor)
 
 
-class _BlockWriter:
-    """Writes the paragraphs of the blocks that were added or changed into a kept document."""
+class _ParagraphWriter:
+    """Writes the file's paragraphs of the paragraphs that were added or changed into a kept document."""
 
     def __init__(
         self,
@@ -271,50 +275,51 @@ class _BlockWriter:
         marks: Mapping[str, list[tuple[int, Any]]],
     ) -> None:
         self.document, self.names, self.lists = document, names, lists
-        self.marks = marks  # the pictures of each block that are written with its words (by block id)
+        self.marks = marks  # the pictures of each paragraph that are written with its words (by paragraph id)
         self.replacements, self.when, self.losses = replacements, when, losses
         self.change_ids = count(1)
 
-    def add(self, block: Block, after: Any, before: Any) -> Any:
-        """A new paragraph for ``block`` after the element ``after`` or else before ``before``; its element."""
-        paragraph = self.document.add_paragraph(style=self.names.of(block.style))
-        place(paragraph._p, after, before)
-        if block.style not in self.names and self.losses is not None:
-            self.losses.add("style", block.style)
-        if block.item is not None:
-            self.lists.write(paragraph, block.item)
-        self._fill(paragraph, block)
-        return paragraph._p
+    def add(self, paragraph: Paragraph, after: Any, before: Any) -> Any:
+        """A new paragraph of the file for ``paragraph`` after the element ``after`` or else before ``before``; its
+        element."""
+        docx_paragraph = self.document.add_paragraph(style=self.names.of(paragraph.style))
+        place(docx_paragraph._p, after, before)
+        if paragraph.style not in self.names and self.losses is not None:
+            self.losses.add("style", paragraph.style)
+        if paragraph.item is not None:
+            self.lists.write(docx_paragraph, paragraph.item)
+        self._fill(docx_paragraph, paragraph)
+        return docx_paragraph._p
 
-    def edit(self, paragraph: Paragraph, before: Block, after: Block) -> Any:
-        """``paragraph`` as the changes from ``before`` to ``after`` have it (as it is when there are none); its
+    def edit(self, docx_paragraph: DocxParagraph, before: Paragraph, after: Paragraph) -> Any:
+        """``docx_paragraph`` as the changes from ``before`` to ``after`` have it (as it is when there are none); its
         element."""
         if before == after and after.id not in self.replacements:
-            return paragraph._p  # neither the text/style nor its suggestions changed: leave it exactly as it is
+            return docx_paragraph._p  # neither the text/style nor its suggestions changed: leave it exactly as it is
         if before.style != after.style:  # a style the model does not know stays as the file has it
-            paragraph.style = self.names.of(after.style)
+            docx_paragraph.style = self.names.of(after.style)
         if before.item != after.item:
-            self.lists.write(paragraph, after.item)
+            self.lists.write(docx_paragraph, after.item)
         carried, dropped = carry_links(
-            paragraph._p,
+            docx_paragraph._p,
             before.text,
             after.text,
             [(s.anchor.start, s.anchor.end) for s in self.replacements.get(after.id, [])],
         )
         if dropped and self.losses is not None:
             self.losses.add("removed-link", count=dropped)
-        _clear_runs(paragraph)
-        self._fill(paragraph, after, carried)
-        return paragraph._p
+        _clear_runs(docx_paragraph)
+        self._fill(docx_paragraph, after, carried)
+        return docx_paragraph._p
 
-    def _fill(self, paragraph: Paragraph, block: Block, carried: list[Carried] | None = None) -> None:
+    def _fill(self, docx_paragraph: DocxParagraph, paragraph: Paragraph, carried: list[Carried] | None = None) -> None:
         _fill_paragraph(
-            paragraph,
-            block.text,
-            self.replacements.get(block.id, []),
+            docx_paragraph,
+            paragraph.text,
+            self.replacements.get(paragraph.id, []),
             self.change_ids,
             self.when,
-            self.marks.get(block.id, []),
+            self.marks.get(paragraph.id, []),
             carried,
         )
 
@@ -324,7 +329,7 @@ class _BlockWriter:
 _TEXT_ONLY = tuple(qn(tag) for tag in ("w:rPr", "w:t", "w:tab", "w:br", "w:cr", "w:noBreakHyphen", "w:softHyphen"))
 
 
-def _clear_runs(paragraph: Paragraph) -> None:
+def _clear_runs(paragraph: DocxParagraph) -> None:
     """Take the runs of words out of ``paragraph``: the new text is written after what stays."""
     for run in list(paragraph.runs):
         if any(child.tag not in _TEXT_ONLY for child in run._element):
@@ -336,7 +341,7 @@ def _clear_runs(paragraph: Paragraph) -> None:
         parent.remove(run._element)
 
 
-def _remove_block(element: Any, losses: LossLog | None) -> None:
+def _remove_paragraph(element: Any, losses: LossLog | None) -> None:
     if losses is not None:
         for kind in hidden_content(element):
             losses.add(f"removed-{kind}")
@@ -351,7 +356,7 @@ def _word_names(document: Any, model: TextModel, baseline: TextModel | None = No
 
 
 def _fill_paragraph(
-    paragraph: Paragraph,
+    paragraph: DocxParagraph,
     text: str,
     suggestions: list[Suggestion],
     change_ids: Iterator[int],
@@ -429,65 +434,66 @@ def _tracked_change(
 
 
 def docx_to_text(docx_bytes: bytes) -> TextModel:
-    """``docx_bytes`` as a :class:`~claudia_composes.TextModel`: one block per paragraph, in order, Word's
-    built-in styles mapped back to claudia's (anything else -- "Normal", a custom style, no style at all --
-    becomes body text, the same fallback ``text_to_docx`` uses going the other way), each of those styles with the font
-    the file gives it (E3.13: a style's own, the one it is based on, the document defaults, a theme font). A picture the
-    model can show as it
-    is (an image the app decodes, not cropped or flipped, in its own proportions) comes in as an image object hanging
-    from its paragraph, with its alt text (D464). A regular table (E9.32, D1214: a rectangular grid of cells with at
-    most one paragraph of words each) is an own table that hangs from the paragraph it follows; any other table is left
-    in the file and listed by :func:`docx_import_losses`. A tracked change's own text
-    is not seen here: python-docx's own ``paragraph.text`` already skips it (only runs that are direct children
-    of the paragraph count), and re-importing an existing tracked change is not this slice's job."""
+    """``docx_bytes`` as a :class:`~claudia_composes.TextModel`: one paragraph of the text per paragraph of the file, in
+    order, Word's built-in styles mapped back to claudia's (anything else -- "Normal", a custom style, no style at all
+    -- becomes body text, the same fallback ``text_to_docx`` uses going the other way), each of those styles with the
+    font the file gives it (E3.13: a style's own, the one it is based on, the document defaults, a theme font). A
+    picture the model can show as it is (an image the app decodes, not cropped or flipped, in its own proportions) comes
+    in as an image object hanging from its paragraph, with its alt text (D464). A regular table (E9.32, D1214: a
+    rectangular grid of cells with at most one paragraph of words each) is an own table that hangs from the paragraph it
+    follows; any other table is left in the file and listed by :func:`docx_import_losses`. A tracked change's own text
+    is not seen here: python-docx's own ``paragraph.text`` already skips it (only runs that are direct children of the
+    paragraph count), and re-importing an existing tracked change is not this slice's job."""
     document = Document(BytesIO(docx_bytes))
     reading = read_lists(document.paragraphs, numbering_in(document))
     setup = read_setup(document)
     styles = builtin_styles()
     numbered: dict[str, str] = {}  # the list a heading style is numbered in, by style id
-    blocks = []
-    paragraphs = document.paragraphs
-    tables = count(len(paragraphs) + 1)  # a table of contents' id comes after every paragraph's
+    paragraphs = []
+    docx_paragraphs = document.paragraphs
+    tables = count(len(docx_paragraphs) + 1)  # a table of contents' id comes after every paragraph's
     marked: dict[str, str] = {}  # the paragraph each bookmark starts, by name
     named: dict[str, list[str]] = {}  # the bookmarks around the words of exactly one paragraph, by its id
     referring: list[tuple[int, list[ReadReference]]] = []
     for at, toc in body_order(document):
         if toc is not None:
-            blocks.append(Block(f"b{next(tables)}", DEFAULT_STYLE, generated=toc))
+            paragraphs.append(Paragraph(f"b{next(tables)}", DEFAULT_STYLE, generated=toc))
             continue
         assert at is not None  # a paragraph of the body
-        index, paragraph = at + 1, paragraphs[at]
-        style = paragraph.style
+        index, docx_paragraph = at + 1, docx_paragraphs[at]
+        style = docx_paragraph.style
         style_id = _CLAUDIA_STYLE.get(style.name, DEFAULT_STYLE) if style is not None else DEFAULT_STYLE
-        text, found = read_words(paragraph._p) if has_references(paragraph._p) else (plain(paragraph.text), [])
-        for name in bookmarks_starting(paragraph._p):
+        text, found = (
+            read_words(docx_paragraph._p) if has_references(docx_paragraph._p) else (plain(docx_paragraph.text), [])
+        )
+        for name in bookmarks_starting(docx_paragraph._p):
             marked[name] = f"b{index}"
-        if around := bookmarks_around(paragraph._p):
+        if around := bookmarks_around(docx_paragraph._p):
             named[f"b{index}"] = around
         if found:
-            referring.append((len(blocks), found))
+            referring.append((len(paragraphs), found))
         runs = (Run(len(text), None),) if text else ()
-        item = reading.items.get(paragraph._p)
-        if _style_numbers(paragraph._p in reading.styled, styles, style_id, item, numbered):
+        item = reading.items.get(docx_paragraph._p)
+        if _style_numbers(docx_paragraph._p in reading.styled, styles, style_id, item, numbered):
             item = None  # the style numbers it: Word's numbered headings
-        blocks.append(Block(f"b{index}", style_id, text, runs, item))
+        paragraphs.append(Paragraph(f"b{index}", style_id, text, runs, item))
     for at, found in referring:  # now that every bookmark is known
-        blocks[at] = with_references(blocks[at], found, marked)
+        paragraphs[at] = with_references(paragraphs[at], found, marked)
     model = TextModel(
-        blocks or None,
+        paragraphs or None,
         styles,
         page=setup.page,
         language=setup.language,
-        lists=reading.book if blocks else None,
+        lists=reading.book if paragraphs else None,
         schemes=reading.schemes,
     )
     for style_id, list_id in numbered.items():
         model.styles.set_numbering(style_id, list_id)
     take_fonts(model, style_fonts(document, WORD_NAMES))
     floating: list[tuple[int, int, int, FilePicture | FileBox]] = [
-        (each.block, each.offset, 0, each) for each in file_pictures(document)
+        (each.paragraph, each.offset, 0, each) for each in file_pictures(document)
     ]
-    floating += [(each.block, each.offset, 1, each) for each in file_boxes(document)]
+    floating += [(each.paragraph, each.offset, 1, each) for each in file_boxes(document)]
     for _, _, _, each in sorted(floating, key=lambda found: found[:3]):
         if isinstance(each, FileBox):
             if each.body.shape is not None and each.body.shape not in model.shapes:
@@ -497,7 +503,9 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
         model.insert_object(
             VisualObject(
                 each.body,
-                BlockAnchor(f"b{each.block + 1}", each.offset, wrap=each.wrap, gap=each.gap, dx=each.dx, dy=each.dy),
+                ParagraphAnchor(
+                    f"b{each.paragraph + 1}", each.offset, wrap=each.wrap, gap=each.gap, dx=each.dx, dy=each.dy
+                ),
             )
         )
     put_tables(model, _file_tables(document, model, setup.language))
@@ -507,12 +515,12 @@ def docx_to_text(docx_bytes: bytes) -> TextModel:
 
 def _file_tables(document: Any, model: TextModel, language: str | None) -> list[tuple[str, int, TableDef]]:  # noqa: ANN401
     """The regular tables of the file with the paragraph each follows (E9.32): what the text holds of its tables."""
-    by_id = {block.id: block for block in model.blocks}
+    by_id = {paragraph.id: paragraph for paragraph in model.paragraphs}
     placed = []
     for each, definition in read_tables(document, language):
-        if definition is not None and each.block is not None:
-            block = by_id[f"b{each.block + 1}"]
-            placed.append((block.id, len(block.text), definition))
+        if definition is not None and each.paragraph is not None:
+            paragraph = by_id[f"b{each.paragraph + 1}"]
+            placed.append((paragraph.id, len(paragraph.text), definition))
     return placed
 
 
@@ -637,7 +645,7 @@ def docx_export_losses(
     model: TextModel, *, track_suggestions: bool = True, rasterised: bool = False
 ) -> tuple[Loss, ...]:
     """What :func:`text_to_docx` cannot put into the file for ``model``, each as a code with how many: a ``"style"``
-    (named by its id) that is written as Normal, ``"authorship"`` (who wrote which run of a block: a docx does not
+    (named by its id) that is written as Normal, ``"authorship"`` (who wrote which run of a paragraph: a docx does not
     keep it), a ``"remark"`` (nothing to track), a ``"suggestion"`` that is not written because tracking is off, a
     ``"suggestion-anchor"`` that no longer matches its text, ``"svg-fallback"`` (a picture that is an SVG, which only
     Word 2016 and later draw: another program shows an empty picture unless a rasteriser was given, ``rasterised``),
@@ -645,13 +653,13 @@ def docx_export_losses(
     :func:`docx_unwritten_changes` says of a fresh file."""
     losses = LossLog()
     names = WordNames(model.styles)
-    for block in model.blocks:
-        if block.style not in names:
-            losses.add("style", block.style)
+    for paragraph in model.paragraphs:
+        if paragraph.style not in names:
+            losses.add("style", paragraph.style)
     for style_id, prop in _unsaid_properties(model):
         if style_id not in TABLE_STYLE_IDS:
             losses.add("style-property", f"{style_id}: {prop}")
-    authored = sum(1 for block in model.blocks if any(run.author is not None for run in block.runs))
+    authored = sum(1 for paragraph in model.paragraphs if any(run.author is not None for run in paragraph.runs))
     if authored:
         losses.add("authorship", count=authored)
     open_ones = [s for s in model.suggestions.values() if s.state == "open"]
@@ -674,8 +682,8 @@ def _write_changed_styles(document: Any, baseline: TextModel, current: TextModel
     """Write the styles of ``current`` that look other than they did in ``baseline`` (or did not exist), and those a
     restyled paragraph now has that the file lacks; ``True`` when the file's styles changed."""
     colours, before_colours = current.palette.colours(), baseline.palette.colours()
-    known = {block.id: block.style for block in baseline.blocks}
-    wanted = {block.style for block in current.blocks if known.get(block.id) != block.style}
+    known = {paragraph.id: paragraph.style for paragraph in baseline.paragraphs}
+    wanted = {paragraph.style for paragraph in current.paragraphs if known.get(paragraph.id) != paragraph.style}
     wanted = wanted | restyled_words(baseline, current)
     for _, written in table_changes(baseline, current).values():
         wanted |= {style for definition in written for style in table_styles(definition)}
@@ -716,11 +724,12 @@ def _unsaid_properties(model: TextModel) -> list[tuple[str, str]]:
 
 
 def _unplaced(model: TextModel) -> int:
-    """How many open replacements ``text_to_docx`` skips: those whose anchor no longer matches their block's text."""
-    blocks = {block.id: block for block in model.blocks}
+    """How many open replacements ``text_to_docx`` skips: those whose anchor no longer matches their paragraph's
+    text."""
+    paragraphs = {paragraph.id: paragraph for paragraph in model.paragraphs}
     skipped = 0
-    for block_id, suggestions in open_replacements(model).items():
-        owner = blocks.get(block_id)
+    for paragraph_id, suggestions in open_replacements(model).items():
+        owner = paragraphs.get(paragraph_id)
         position = 0
         for suggestion in suggestions:
             start, end = suggestion.anchor.start, suggestion.anchor.end
@@ -754,9 +763,9 @@ def _numbering(model: TextModel, style_id: str) -> tuple[int | None, str | None]
 
 def _no_contents(*models: TextModel) -> None:
     """:class:`UnsupportedEdit` for a text with a table of contents: it is not a paragraph of the file."""
-    if any(b.generated is not None for model in models for b in model.blocks):
+    if any(b.generated is not None for model in models for b in model.paragraphs):
         raise UnsupportedEdit("a text with a table of contents is written anew, not patched")
-    if any(b.fields for model in models for b in model.blocks) or any(map(has_box_references, models)):
+    if any(b.fields for model in models for b in model.paragraphs) or any(map(has_box_references, models)):
         raise UnsupportedEdit("a text with references is written anew, not patched")
 
 
@@ -774,15 +783,15 @@ def apply_edits_to_docx(
     right after :func:`docx_to_text` imported ``original_bytes``) onto those same bytes, instead of rebuilding
     the file from the model alone -- so a table, an image, a custom style, anything claudia never modeled,
     survives untouched (D217). Reopens ``original_bytes`` fresh, rewrites the paragraphs whose text or style
-    changed (and any block an open suggestion now touches, rendered as a tracked change same as
+    changed (and any paragraph an open suggestion now touches, rendered as a tracked change same as
     ``text_to_docx``), then calls :func:`claudia_opc_io.reconcile` so every other part of the package -- and
     every paragraph this call did not touch -- comes back exactly as it was.
 
-    A block that was added is a new paragraph right after the paragraph of the block before it (or right before that
-    of the one after it, when it comes first); a block that was removed takes its paragraph with it, and ``losses`` gets
-    a ``removed-...`` entry for each picture, note, comment, link or tracked change that went with it. A paragraph that
-    ends a section of the file is only emptied, so that the section stays. ``losses`` also gets a ``style`` entry for
-    a block whose style the text does not have.
+    A paragraph that was added is a new paragraph right after the file's paragraph of the paragraph before it (or right
+    before that of the one after it, when it comes first); a paragraph that was removed takes its paragraph in the file
+    with it, and ``losses`` gets a ``removed-...`` entry for each picture, note, comment, link or tracked change that
+    went with it. A paragraph that ends a section of the file is only emptied, so that the section stays. ``losses``
+    also gets a ``style`` entry for a paragraph whose style the text does not have.
 
     The pictures of the text are kept in step (D464): a picture that was removed takes its drawing out of the file, one
     that was added is drawn into the paragraph it hangs from (an SVG as ``rasterise`` draws it, else an empty picture),
@@ -794,48 +803,52 @@ def apply_edits_to_docx(
     the file and those it has now are written right after it; every other table, and each table of the file that the
     text does not hold, stays as it was.
 
-    Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, blocks
+    Raises :class:`UnsupportedEdit` for what cannot be patched: a baseline that is not what the file holds, paragraphs
     moved relative to each other (a move would have to carry what is inside a paragraph, which it does not know), and
     a table of contents in either model (it is not a paragraph of the file; the file is written anew, E9.31)."""
     _no_contents(baseline, current)
-    held = baseline.blocks
+    held = baseline.paragraphs
     document = Document(BytesIO(original_bytes))
     paragraphs = document.paragraphs
     if len(paragraphs) != len(held):
         raise UnsupportedEdit("the text the edits are measured from is not what the file holds")
     baseline_by_id = {b.id: b for b in held}
-    current_ids = {b.id for b in current.blocks}
-    kept = [block.id for block in current.blocks if block.id in baseline_by_id]
-    if kept != [block.id for block in held if block.id in current_ids]:
-        raise UnsupportedEdit("blocks cannot be moved relative to each other in the file")
-    paragraph_of = {block.id: paragraph for block, paragraph in zip(held, paragraphs, strict=True)}
+    current_ids = {b.id for b in current.paragraphs}
+    kept = [paragraph.id for paragraph in current.paragraphs if paragraph.id in baseline_by_id]
+    if kept != [paragraph.id for paragraph in held if paragraph.id in current_ids]:
+        raise UnsupportedEdit("paragraphs cannot be moved relative to each other in the file")
+    paragraph_of = {paragraph.id: docx_paragraph for paragraph, docx_paragraph in zip(held, paragraphs, strict=True)}
     names, owned = _patch_setup(document, baseline, current)
     lists = _patch_lists(document, paragraphs, baseline, current, names, owned)
     replacements = open_replacements(current, track=track_suggestions)
     rewritten = {
-        block.id for block in current.blocks if baseline_by_id.get(block.id) != block or block.id in replacements
+        paragraph.id
+        for paragraph in current.paragraphs
+        if baseline_by_id.get(paragraph.id) != paragraph or paragraph.id in replacements
     }
     if losses is not None:  # (what a container is that nothing has been drawn for)
         picture_losses(current, losses)
     pictures = PictureEdits(document, baseline, current, rewritten, rasterise, losses)
     boxes = BoxEdits(document, names, baseline, current, rewritten, pictures.writer, losses)
-    for block_id, runs in boxes.marks.items():
-        pictures.marks.setdefault(block_id, []).extend(runs)
+    for paragraph_id, runs in boxes.marks.items():
+        pictures.marks.setdefault(paragraph_id, []).extend(runs)
     file_tables = _kept_tables(document, baseline)
-    for block in held:
-        if block.id not in current_ids:
-            _remove_block(paragraph_of[block.id]._p, losses)
-    writer = _BlockWriter(document, names, lists, replacements, when_made(change_times), losses, pictures.marks)
-    last: Any = None  # the element of the block before the one at hand, in the text
+    for paragraph in held:
+        if paragraph.id not in current_ids:
+            _remove_paragraph(paragraph_of[paragraph.id]._p, losses)
+    writer = _ParagraphWriter(document, names, lists, replacements, when_made(change_times), losses, pictures.marks)
+    last: Any = None  # the element of the paragraph before the one at hand, in the text
     added: dict[str, Any] = {}
-    for index, after in enumerate(current.blocks):
+    for index, after in enumerate(current.paragraphs):
         before = baseline_by_id.get(after.id)
         if before is None:
-            following = next((paragraph_of[b.id]._p for b in current.blocks[index + 1 :] if b.id in paragraph_of), None)
+            following = next(
+                (paragraph_of[b.id]._p for b in current.paragraphs[index + 1 :] if b.id in paragraph_of), None
+            )
             last = added[after.id] = writer.add(after, last, following)
         else:
             last = writer.edit(paragraph_of[after.id], before, after)
-    elements = {block_id: paragraph._p for block_id, paragraph in paragraph_of.items()}
+    elements = {paragraph_id: docx_paragraph._p for paragraph_id, docx_paragraph in paragraph_of.items()}
     _patch_tables(document, baseline, current, file_tables, {**elements, **added}, _style_ids(document, names))
     pictures.settle(elements)
     boxes.settle(elements)

@@ -7,10 +7,10 @@ from claudia_composes import (
     AcceptSuggestion,
     DeleteText,
     InsertText,
-    JoinBlocks,
+    JoinParagraphs,
     ProposeSuggestion,
     ResolveSuggestion,
-    SplitBlock,
+    SplitParagraph,
     TextModel,
     TextRange,
 )
@@ -27,11 +27,11 @@ def propose(doc, sid="s1", start=QUICK, end=QUICK + 5, replacement="fast", *, re
 def accept(doc, sid="s1", who="ann"):
     s = doc.model.suggestion(sid)
     a = s.anchor
-    return doc.execute(AcceptSuggestion(sid, a.block, a.start, a.end, s.replacement, s.author), author=who)
+    return doc.execute(AcceptSuggestion(sid, a.paragraph, a.start, a.end, s.replacement, s.author), author=who)
 
 
 def runs(doc):
-    return [(r.length, r.author, r.via) for r in doc.model.block("b1").runs]
+    return [(r.length, r.author, r.via) for r in doc.model.paragraph("b1").runs]
 
 
 def test_a_suggestion_changes_no_text(doc):
@@ -138,17 +138,17 @@ def test_a_suggestion_whose_text_was_deleted_is_outdated(doc):
 
 def test_suggestions_move_with_a_split_and_a_join(doc):
     propose(doc, "s1", SENTENCE.index("lazy"), SENTENCE.index("lazy") + 4, "idle")
-    doc.execute(SplitBlock("b1", 9, "b2", "body"), author="ben")
+    doc.execute(SplitParagraph("b1", 9, "b2", "body"), author="ben")
     (item,) = doc.model.visible_suggestions()
-    assert (item["block"], item["start"], item["outdated"]) == ("b2", SENTENCE.index("lazy") - 9, False)
-    doc.execute(JoinBlocks("b2", "b1", 9), author="ben")
+    assert (item["paragraph"], item["start"], item["outdated"]) == ("b2", SENTENCE.index("lazy") - 9, False)
+    doc.execute(JoinParagraphs("b2", "b1", 9), author="ben")
     (item,) = doc.model.visible_suggestions()
-    assert (item["block"], item["start"], item["outdated"]) == ("b1", SENTENCE.index("lazy"), False)
+    assert (item["paragraph"], item["start"], item["outdated"]) == ("b1", SENTENCE.index("lazy"), False)
 
 
 def test_a_split_through_the_suggested_text_makes_it_outdated(doc):
     propose(doc)
-    doc.execute(SplitBlock("b1", QUICK + 2, "b2", "body"), author="ben")
+    doc.execute(SplitParagraph("b1", QUICK + 2, "b2", "body"), author="ben")
     assert doc.model.visible_suggestions()[0]["outdated"] is True
 
 
@@ -212,5 +212,5 @@ def test_a_suggestion_that_was_taken_back_by_the_log_is_not_listed(doc):
 
 def test_the_ids_of_the_two_kinds_are_counted_apart(doc):
     propose(doc, "s5")
-    doc.execute(SplitBlock("b1", 3, "b2", "body"), author="ann")
+    doc.execute(SplitParagraph("b1", 3, "b2", "body"), author="ann")
     assert (doc.model.fresh_id(), doc.model.fresh_suggestion_id()) == ("b3", "s6")

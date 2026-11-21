@@ -1,7 +1,7 @@
 """claudia-composes: the text app (E9.1).
 
 model      TextModel, TextObject: paragraphs, authorship, open suggestions, styles, and floating objects (E10.16)
-anchors    BlockAnchor: where an object hangs in a text and how far it floats from there; why it follows the text
+anchors    ParagraphAnchor: where an object hangs in a text and how far it floats from there; why it follows the text
 commands   the text and structure commands (SetStyle, SetPageSetup, SetLanguage, …), suggestions (D63)
 page       PageSetup (the kernel's, D917): the paper, orientation, margins and page numbers a text prints on
 language   normalize_language, SetLanguage (the kernel's, D917): the language a text is written in (D915)
@@ -33,21 +33,21 @@ from claudia_core import (  # noqa: F401
 
 from . import commands  # noqa: F401  (registers the commands)
 from ._version import __version__
-from .anchors import DEFAULT_WRAP_GAP, MAX_ANCHOR_OFFSET, MAX_WRAP_GAP, WRAPS, BlockAnchor
+from .anchors import DEFAULT_WRAP_GAP, MAX_ANCHOR_OFFSET, MAX_WRAP_GAP, WRAPS, ParagraphAnchor
 from .commands import (
     AcceptSuggestion,
     DeleteText,
     InsertText,
-    JoinBlocks,
+    JoinParagraphs,
     ProposeSuggestion,
     ResolveSuggestion,
     SetLanguage,
     SetObjectWrap,
     SetPageSetup,
     SetStyle,
-    SplitBlock,
+    SplitParagraph,
 )
-from .events import BlockGenerated, FieldsPut, ItemChanged
+from .events import FieldsPut, ItemChanged, ParagraphGenerated
 from .language import LanguageError, normalize_language
 from .model import (
     BUILTIN_STYLES,
@@ -58,7 +58,6 @@ from .model import (
     TABLE_OBJECT_WIDTH,
     TABLE_ROW_HEIGHT,
     TABLE_STYLE_IDS,
-    Block,
     Suggestion,
     TextModel,
     TextObject,
@@ -74,8 +73,7 @@ __all__ = [
     "__version__",
     "AcceptSuggestion",
     "AddObject",
-    "Block",
-    "BlockAnchor",
+    "ParagraphAnchor",
     "builtin_styles",
     "BUILTIN_STYLES",
     "DEFAULT_LOOK",
@@ -89,9 +87,9 @@ __all__ = [
     "DeleteText",
     "InsertText",
     "ItemChanged",
-    "BlockGenerated",
+    "ParagraphGenerated",
     "FieldsPut",
-    "JoinBlocks",
+    "JoinParagraphs",
     "LanguageError",
     "LabelsChanged",
     "DEFAULT_WRAP_GAP",
@@ -122,7 +120,7 @@ __all__ = [
     "SetSnap",
     "SetStyle",
     "SetText",
-    "SplitBlock",
+    "SplitParagraph",
     "Suggestion",
     "TextCommand",
     "TextModel",

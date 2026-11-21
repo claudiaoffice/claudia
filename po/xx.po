@@ -1381,7 +1381,7 @@ msgstr "[Cônnéctîôn tô {label}: {word}. Shôw détàîls.~~~~~~~~~~~~~~~~~~
 msgid "Container"
 msgstr "[Côntàînér~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes_contents.py:80 web/app/components/PrintPreview.vue:314
+#: packages/claudia-server/src/claudia_server/composes_contents.py:81 web/app/components/PrintPreview.vue:314
 msgid "Contents"
 msgstr "[Cônténts~~~]"
 
@@ -7741,7 +7741,7 @@ msgstr "[à pàlétté hôlds àt môst {limit} côlôûr rôlés~~~~~~~~~~~~~~~
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
 msgstr "[à ràndôm nûmbér frôm thé nàméd dîstrîbûtîôn, fôr éxàmplé RÀNDÔM(\"nôrmàl\", 1000, 150). Wîthôût àrgûménts ît îs RÀND(). ``lôw`` ànd ``hîgh`` cût thé dîstrîbûtîôn (côntînûôûs ônés ônly). Dîstrîbûtîôns: ûnîfôrm, nôrmàl, lôgnôrmàl, trîàngûlàr, pért, éxpônéntîàl, wéîbûll, bétà, gàmmà, bînômîàl, pôîssôn, dîscrété.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:370
+#: packages/claudia-server/src/claudia_server/composes.py:371
 msgid "a range stays inside one box of a table"
 msgstr "[à ràngé stàys însîdé ôné bôx ôf à tàblé~~~~~~~~~~~~~~~~]"
 
@@ -7749,7 +7749,7 @@ msgstr "[à ràngé stàys însîdé ôné bôx ôf à tàblé~~~~~~~~~~~~~~~~]"
 msgid "a recovery key, a name and a new password are needed"
 msgstr "[à récôvéry kéy, à nàmé ànd à néw pàsswôrd àré néédéd~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:574
+#: packages/claudia-server/src/claudia_server/composes.py:575
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "[à rémàrk sûggésts nô chàngé; dîsmîss ît înstéàd~~~~~~~~~~~~~~~~~~~]"
 
@@ -7773,7 +7773,7 @@ msgstr "[à rôw cànnôt bé môvéd în frônt ôf îtsélf~~~~~~~~~~~~~~~~]"
 msgid "a space"
 msgstr "[à spàcé~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:203
+#: packages/claudia-server/src/claudia_server/composes_words.py:205
 msgid "a suggestion stays inside its paragraph; remark on new paragraphs instead"
 msgstr "[à sûggéstîôn stàys însîdé îts pàràgràph; rémàrk ôn néw pàràgràphs înstéàd~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7977,14 +7977,6 @@ msgstr "[bétwéén~~~]"
 msgid "blank"
 msgstr "[blànk~~]"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:99
-msgid "blocks must be a list of 1 to {limit} paragraph ids"
-msgstr "[blôcks mûst bé à lîst ôf 1 tô {limit} pàràgràph îds~~~~~~~~~~~~~~~~~~~~]"
-
-#: packages/claudia-server/src/claudia_server/composes.py:498
-msgid "blocks must be a list of at most {limit} paragraph ids"
-msgstr "[blôcks mûst bé à lîst ôf àt môst {limit} pàràgràph îds~~~~~~~~~~~~~~~~~~~~~~]"
-
 #: web/app/lib/style-deletion.ts:157
 msgid "bold"
 msgstr "[bôld~~]"
@@ -8005,7 +7997,7 @@ msgstr "[bûdgét-2027~~~~]"
 msgid "bullets"
 msgstr "[bûlléts~~~]"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:411
+#: packages/claudia-server/src/claudia_server/structure_methods.py:413
 msgid "by is 1 (in) or -1 (out)"
 msgstr "[by îs 1 (în) ôr -1 (ôût)~~~~~~~~~~]"
 
@@ -8289,7 +8281,7 @@ msgstr "[éxàctly~~~]"
 msgid "example.com:8420"
 msgstr "[éxàmplé.côm:8420~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:238
+#: packages/claudia-server/src/claudia_server/composes.py:239
 msgid "export_office: format must be \"docx\" or \"odt\""
 msgstr "[éxpôrt_ôffîcé: fôrmàt mûst bé \"dôcx\" ôr \"ôdt\"~~~~~~~~~~~~~~~~~~]"
 
@@ -8489,9 +8481,9 @@ msgstr "[léàvé: àt môst {limit} àt à tîmé~~~~~~~~~~~~~]"
 msgid "leave: each is {at, match}, at being a cell {sheet, row, col} and match a number or null"
 msgstr "[léàvé: éàch îs {àt, màtch}, àt béîng à céll {shéét, rôw, côl} ànd màtch à nûmbér ôr nûll~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:142
-msgid "leave: each is {at, match}, at being a place the search listed ({block}, {block, object, source} or {block, table, row, col}) and match a number or null"
-msgstr "[léàvé: éàch îs {àt, màtch}, àt béîng à plàcé thé séàrch lîstéd ({block}, {blôck, ôbjéct, sôûrcé} ôr {blôck, tàblé, rôw, côl}) ànd màtch à nûmbér ôr nûll~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+#: packages/claudia-server/src/claudia_server/composes_search.py:141
+msgid "leave: each is {at, match}, at being a place the search listed ({paragraph}, {paragraph, object, source} or {paragraph, table, row, col}) and match a number or null"
+msgstr "[léàvé: éàch îs {àt, màtch}, àt béîng à plàcé thé séàrch lîstéd ({paragraph}, {pàràgràph, ôbjéct, sôûrcé} ôr {pàràgràph, tàblé, rôw, côl}) ànd màtch à nûmbér ôr nûll~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/creates_search.py:117
 msgid "leave: each is {at, match}, at being a place the search listed ({slide, object, source} or {slide, source}) and match a number or null"
@@ -8677,7 +8669,7 @@ msgstr "[nô méthôd {nàmé!r}~~~~~~~]"
 msgid "no ownership transfer is waiting for you with that password"
 msgstr "[nô ôwnérshîp trànsfér îs wàîtîng fôr yôû wîth thàt pàsswôrd~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes_contents.py:36 packages/claudia-server/src/claudia_server/structure_methods.py:104 packages/claudia-server/src/claudia_server/structure_methods.py:266
+#: packages/claudia-server/src/claudia_server/composes_contents.py:37 packages/claudia-server/src/claudia_server/structure_methods.py:106 packages/claudia-server/src/claudia_server/structure_methods.py:268
 msgid "no paragraph {id!r}"
 msgstr "[nô pàràgràph {îd!r}~~~~~~~~]"
 
@@ -8689,7 +8681,7 @@ msgstr "[nô stylé ôf théîr ôwn~~~~~~~~]"
 msgid "none"
 msgstr "[nôné~~]"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:219
+#: packages/claudia-server/src/claudia_server/structure_methods.py:221
 msgid "not a numbering scheme: {reason}"
 msgstr "[nôt à nûmbérîng schémé: {reason}~~~~~~~~~~~~~]"
 
@@ -8705,7 +8697,7 @@ msgstr "[nôt cônnéctéd~~~~~]"
 msgid "not numbered"
 msgstr "[nôt nûmbéréd~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:238
+#: packages/claudia-server/src/claudia_server/structure_methods.py:240
 msgid "not the options of a table of contents: {reason}"
 msgstr "[nôt thé ôptîôns ôf à tàblé ôf cônténts: {reason}~~~~~~~~~~~~~~~~~~~]"
 
@@ -8733,7 +8725,7 @@ msgstr "[ôbjécts mûst bé à lîst ôf àt môst {limit} ôbjéct îds~~~~~~~
 msgid "occurrence counts from 1"
 msgstr "[ôccûrréncé côûnts frôm 1~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:598
+#: packages/claudia-server/src/claudia_server/composes.py:601
 msgid "offset is outside the paragraph"
 msgstr "[ôffsét îs ôûtsîdé thé pàràgràph~~~~~~~~~~~~]"
 
@@ -8757,7 +8749,7 @@ msgstr "[ônly Sûndày îs ôff~~~~~~~]"
 msgid "only Sunday is off: Saturday is a workday"
 msgstr "[ônly Sûndày îs ôff: Sàtûrdày îs à wôrkdày~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:481
+#: packages/claudia-server/src/claudia_server/structure_methods.py:484
 msgid "only a built-in scheme can be reset"
 msgstr "[ônly à bûîlt-în schémé càn bé rését~~~~~~~~~~~~~~]"
 
@@ -8789,7 +8781,7 @@ msgstr "[ônly ôwnérs, ànd édîtôrs ôn théîr ôwn wôrk, rédàct~~~~~~~
 msgid "only something that is drawn can be marked as decoration"
 msgstr "[ônly sôméthîng thàt îs dràwn càn bé màrkéd às décôràtîôn~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:560 packages/claudia-server/src/claudia_server/composes_words.py:200
+#: packages/claudia-server/src/claudia_server/composes.py:561 packages/claudia-server/src/claudia_server/composes_words.py:202
 msgid "only the assistant makes suggestions"
 msgstr "[ônly thé àssîstànt màkés sûggéstîôns~~~~~~~~~~~~~~]"
 
@@ -8864,6 +8856,14 @@ msgstr "[pàràgràph~~~~]"
 #: web/app/components/TextWorkspace.vue:691
 msgid "paragraphs"
 msgstr "[pàràgràphs~~~~]"
+
+#: packages/claudia-server/src/claudia_server/structure_methods.py:100
+msgid "paragraphs must be a list of 1 to {limit} paragraph ids"
+msgstr "[pàràgràphs mûst bé à lîst ôf 1 tô {limit} pàràgràph îds~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/composes.py:499
+msgid "paragraphs must be a list of at most {limit} paragraph ids"
+msgstr "[pàràgràphs mûst bé à lîst ôf àt môst {limit} pàràgràph îds~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/redaction.ts:168
 msgid "paragraphs, pictures and boxes"
@@ -9061,7 +9061,7 @@ msgstr "[séàrch hélp~~~~]"
 msgid "search_replace: that would change {count} cells, at most {limit} at a time: narrow the search"
 msgstr "[séàrch_réplàcé: thàt wôûld chàngé {count} célls, àt môst {limit} àt à tîmé: nàrrôw thé séàrch~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:137 packages/claudia-server/src/claudia_server/creates_search.py:112
+#: packages/claudia-server/src/claudia_server/composes_search.py:136 packages/claudia-server/src/claudia_server/creates_search.py:112
 msgid "search_replace: that would change {count} texts, at most {limit} at a time: narrow the search"
 msgstr "[séàrch_réplàcé: thàt wôûld chàngé {count} téxts, àt môst {limit} àt à tîmé: nàrrôw thé séàrch~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9113,7 +9113,7 @@ msgstr "[shééts~~]"
 msgid "sheets, cell ranges, charts and objects"
 msgstr "[shééts, céll ràngés, chàrts ànd ôbjécts~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:331
+#: packages/claudia-server/src/claudia_server/structure_methods.py:333
 msgid "show must be one of {shows}"
 msgstr "[shôw mûst bé ôné ôf {shows}~~~~~~~~~~~]"
 
@@ -9233,7 +9233,7 @@ msgstr "[thàt îs môré prînts ànd PDFs thàn thé dôcûmént récôrds în
 msgid "that is not your current password"
 msgstr "[thàt îs nôt yôûr cûrrént pàsswôrd~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:331
+#: packages/claudia-server/src/claudia_server/composes.py:332
 msgid "that would make too many paragraphs"
 msgstr "[thàt wôûld màké tôô màny pàràgràphs~~~~~~~~~~~~~~]"
 
@@ -9305,7 +9305,7 @@ msgstr "[thé cônnéctîôn clôséd ({code})~~~~~~~~~~~~]"
 msgid "the date and time as a day number with the time of day as its fraction."
 msgstr "[thé dàté ànd tîmé às à dày nûmbér wîth thé tîmé ôf dày às îts fràctîôn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:244
+#: packages/claudia-server/src/claudia_server/composes.py:245
 msgid "the descriptions are written as comments, which the kept file cannot take"
 msgstr "[thé déscrîptîôns àré wrîttén às cômménts, whîch thé képt fîlé cànnôt tàké~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9365,7 +9365,7 @@ msgstr "[thé làrgést vàlûé~~~~~~~]"
 msgid "the mean of the values"
 msgstr "[thé méàn ôf thé vàlûés~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:514 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:225
+#: packages/claudia-server/src/claudia_server/composes.py:515 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:225
 msgid "the new style would look just like “{name}”"
 msgstr "[thé néw stylé wôûld lôôk jûst lîké “{name}”~~~~~~~~~~~~~~~~~]"
 
@@ -9389,7 +9389,7 @@ msgstr "[thé pôsîtîôn (frôm 1) ôf thé vàlûé în à rôw ôr côlûmn.
 msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact value or else the next smaller, 1 or else the next larger, 2 exact with wildcards. Search mode 1 looks from the first, -1 from the last. Not found is #N/A."
 msgstr "[thé pôsîtîôn (frôm 1) ôf thé vàlûé. Màtch môdé 0 îs éxàct, -1 thé éxàct vàlûé ôr élsé thé néxt smàllér, 1 ôr élsé thé néxt làrgér, 2 éxàct wîth wîldcàrds. Séàrch môdé 1 lôôks frôm thé fîrst, -1 frôm thé làst. Nôt fôûnd îs #N/À.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:326 packages/claudia-server/src/claudia_server/composes.py:382
+#: packages/claudia-server/src/claudia_server/composes.py:327 packages/claudia-server/src/claudia_server/composes.py:383
 msgid "the range ends before it starts"
 msgstr "[thé ràngé énds béfôré ît stàrts~~~~~~~~~~~~]"
 
@@ -9498,10 +9498,10 @@ msgid "the whole table, header included"
 msgstr "[thé whôlé tàblé, héàdér înclûdéd~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/composes_words.py:71
-msgid "the words {find!r} are not in paragraph {block}; read it again and quote it exactly"
-msgstr "[thé wôrds {fînd!r} àré nôt în pàràgràph {block}; réàd ît àgàîn ànd qûôté ît éxàctly~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "the words {find!r} are not in paragraph {paragraph}; read it again and quote it exactly"
+msgstr "[thé wôrds {fînd!r} àré nôt în pàràgràph {paragraph}; réàd ît àgàîn ànd qûôté ît éxàctly~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes_contents.py:43
+#: packages/claudia-server/src/claudia_server/composes_contents.py:44
 msgid "there is a table of contents here already"
 msgstr "[théré îs à tàblé ôf cônténts héré àlréàdy~~~~~~~~~~~~~~~~]"
 
@@ -9517,13 +9517,13 @@ msgstr "[théré îs nô brànch càlléd {brànch!r}~~~~~~~~~~~~~~]"
 msgid "there is no chat message of that number for you"
 msgstr "[théré îs nô chàt méssàgé ôf thàt nûmbér fôr yôû~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:183
+#: packages/claudia-server/src/claudia_server/structure_methods.py:185
 msgid "there is no earlier list of this kind to continue"
 msgstr "[théré îs nô éàrlîér lîst ôf thîs kînd tô côntînûé~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:372 packages/claudia-server/src/claudia_server/composes.py:432 packages/claudia-server/src/claudia_server/composes.py:596 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
-msgid "there is no paragraph {block!r}"
-msgstr "[théré îs nô pàràgràph {blôck!r}~~~~~~~~~~~~]"
+#: packages/claudia-server/src/claudia_server/composes.py:373 packages/claudia-server/src/claudia_server/composes.py:433 packages/claudia-server/src/claudia_server/composes.py:599 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
+msgid "there is no paragraph {paragraph!r}"
+msgstr "[théré îs nô pàràgràph {pàràgràph!r}~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py:1144
 msgid "there is no pivot table called {name!r}"
@@ -9533,11 +9533,11 @@ msgstr "[théré îs nô pîvôt tàblé càlléd {nàmé!r}~~~~~~~~~~~~~~~~]"
 msgid "there is no step {revision} on this line"
 msgstr "[théré îs nô stép {revision} ôn thîs lîné~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:371
+#: packages/claudia-server/src/claudia_server/structure_methods.py:373
 msgid "there is no such reference here"
 msgstr "[théré îs nô sûch référéncé héré~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes_words.py:170
+#: packages/claudia-server/src/claudia_server/composes_words.py:172
 msgid "there is no text to add"
 msgstr "[théré îs nô téxt tô àdd~~~~~~~~~]"
 
@@ -9585,7 +9585,7 @@ msgstr "[thîs dôcûmént hàs nôthîng thàt càn bé nàméd~~~~~~~~~~~~~~~~
 msgid "this document is not a presentation"
 msgstr "[thîs dôcûmént îs nôt à préséntàtîôn~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:120 packages/claudia-server/src/claudia_server/composes_contents.py:28 packages/claudia-server/src/claudia_server/composes_search.py:84 packages/claudia-server/src/claudia_server/composes_words.py:42
+#: packages/claudia-server/src/claudia_server/composes.py:121 packages/claudia-server/src/claudia_server/composes_contents.py:29 packages/claudia-server/src/claudia_server/composes_search.py:83 packages/claudia-server/src/claudia_server/composes_words.py:42
 msgid "this document is not a text"
 msgstr "[thîs dôcûmént îs nôt à téxt~~~~~~~~~~~]"
 
@@ -9597,11 +9597,11 @@ msgstr "[thîs dôcûmént îs nôt à wôrkbôôk~~~~~~~~~~~~]"
 msgid "this level"
 msgstr "[thîs lévél~~~~]"
 
-#: packages/claudia-server/src/claudia_server/structure_methods.py:175
+#: packages/claudia-server/src/claudia_server/structure_methods.py:177
 msgid "this paragraph is not a list item"
 msgstr "[thîs pàràgràph îs nôt à lîst îtém~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes_contents.py:62 packages/claudia-server/src/claudia_server/structure_methods.py:268
+#: packages/claudia-server/src/claudia_server/composes_contents.py:63 packages/claudia-server/src/claudia_server/structure_methods.py:270
 msgid "this paragraph is not a table of contents"
 msgstr "[thîs pàràgràph îs nôt à tàblé ôf cônténts~~~~~~~~~~~~~~~~]"
 
@@ -9677,7 +9677,7 @@ msgstr "[thîs sérvér hôlds {limit} dôcûménts, thé môst ît mày hôld~~
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "[thîs sérvér kééps îts dôcûménts în mémôry ànd cànnôt tàké în à fîlé~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:585
+#: packages/claudia-server/src/claudia_server/composes.py:588
 msgid "this suggestion is not open any more"
 msgstr "[thîs sûggéstîôn îs nôt ôpén àny môré~~~~~~~~~~~~~~]"
 
@@ -9797,7 +9797,7 @@ msgstr "[wôrd~~]"
 msgid "words"
 msgstr "[wôrds~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:528
+#: packages/claudia-server/src/claudia_server/composes.py:529
 msgid "words must be from 0 to {limit}"
 msgstr "[wôrds mûst bé frôm 0 tô {limit}~~~~~~~~~~~~]"
 
@@ -10042,8 +10042,8 @@ msgid "{file} is not used."
 msgstr "[{file} îs nôt ûséd.~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/composes_words.py:80
-msgid "{find!r} is {count} times in paragraph {block}, not {occurrence}"
-msgstr "[{fînd!r} îs {count} tîmés în pàràgràph {block}, nôt {occurrence}~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "{find!r} is {count} times in paragraph {paragraph}, not {occurrence}"
+msgstr "[{fînd!r} îs {count} tîmés în pàràgràph {paragraph}, nôt {occurrence}~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/search.ts:283
 msgid "{first} and {next}"
@@ -10217,7 +10217,7 @@ msgstr "[{method}: mîssîng pàràmétér {pàràmétér!r}~~~~~~~~~~~~~~~~]"
 msgid "{method}: {parameter} {reason}"
 msgstr "[{method}: {parameter} {reason}~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes_search.py:92 packages/claudia-server/src/claudia_server/creates_search.py:80
+#: packages/claudia-server/src/claudia_server/composes_search.py:91 packages/claudia-server/src/claudia_server/creates_search.py:80
 msgid "{method}: {why}"
 msgstr "[{method}: {why}~~~~~~]"
 
@@ -10533,7 +10533,7 @@ msgstr "[{user} wîll nô lôngér bé àblé tô ôpén thîs dôcûmént ôr r
 msgid "{what} (kept as “{name}”)"
 msgstr "[{what} (képt às “{name}”)~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:158 packages/claudia-server/src/claudia_server/composes.py:380
+#: packages/claudia-server/src/claudia_server/composes.py:159 packages/claudia-server/src/claudia_server/composes.py:381
 msgid "{what} is outside the paragraph"
 msgstr "[{what} îs ôûtsîdé thé pàràgràph~~~~~~~~~~~~]"
 

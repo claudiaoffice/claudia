@@ -41,9 +41,13 @@ def deck():
 @pytest.fixture
 def paper():
     doc = Document(TextModel(), store=MemoryStore())
-    call(doc, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "Why\none\nAsked\nHow"})
-    for block, style in (("b1", "heading-1"), ("b3", "heading-2"), ("b4", "heading-1")):
-        call(doc, "set_style", {"block": block, "style": style})
+    call(
+        doc,
+        "replace_text",
+        {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "Why\none\nAsked\nHow"},
+    )
+    for paragraph, style in (("b1", "heading-1"), ("b3", "heading-2"), ("b4", "heading-1")):
+        call(doc, "set_style", {"paragraph": paragraph, "style": style})
     return doc
 
 
@@ -60,17 +64,17 @@ def test_both_apps_have_the_methods():
 
 def test_a_list_runs_on_across_the_text_boxes_of_a_presentation(deck):
     ids = deck.ids
-    call(deck, "make_list", {"blocks": [ids["a"], ids["b"], ids["c"]], "scheme": "numbers"})
+    call(deck, "make_list", {"paragraphs": [ids["a"], ids["b"], ids["c"]], "scheme": "numbers"})
     assert markers(deck) == {ids["a"]: "1.", ids["b"]: "2.", ids["c"]: "3."}
-    call(deck, "indent_item", {"blocks": [ids["c"]], "by": 1})
+    call(deck, "indent_item", {"paragraphs": [ids["c"]], "by": 1})
     assert markers(deck)[ids["c"]] == "a."
-    call(deck, "make_list", {"blocks": [ids["b"]], "scheme": "numbers"})  # asked for what it is: out of the list
+    call(deck, "make_list", {"paragraphs": [ids["b"]], "scheme": "numbers"})  # asked for what it is: out of the list
     assert ids["b"] not in markers(deck)
 
 
 def test_a_paragraph_the_document_does_not_have_is_a_command_error(deck):
     with pytest.raises(RequestError) as caught:
-        call(deck, "make_list", {"blocks": ["o-nothing"], "scheme": "numbers"})
+        call(deck, "make_list", {"paragraphs": ["o-nothing"], "scheme": "numbers"})
     assert caught.value.code == "command_error"
 
 
@@ -87,9 +91,13 @@ def test_number_all_slide_titles_numbers_the_title_style_and_switching_it_off_ta
 
 def test_number_headings_numbers_every_heading_style_as_one_outline_in_one_step(paper):
     call(paper, "number_headings", {"on": True})
-    blocks = {b["id"]: b for b in call(paper, "blocks")["blocks"]}
-    assert {i: b["label"]["marker"] for i, b in blocks.items() if "label" in b} == {"b1": "1", "b3": "1.1", "b4": "2"}
-    assert "item" not in blocks["b1"], "a numbered heading is numbered by its style, not an item of its own"
+    paragraphs = {b["id"]: b for b in call(paper, "paragraphs")["paragraphs"]}
+    assert {i: b["label"]["marker"] for i, b in paragraphs.items() if "label" in b} == {
+        "b1": "1",
+        "b3": "1.1",
+        "b4": "2",
+    }
+    assert "item" not in paragraphs["b1"], "a numbered heading is numbered by its style, not an item of its own"
     call(paper, "undo")
     assert markers(paper) == {}, "the list, the scheme and the styles were one step"
 
@@ -124,7 +132,7 @@ def test_a_scheme_in_use_cannot_be_removed_and_a_bad_one_is_refused_with_a_sente
 
 
 def test_a_heading_style_is_numbered_in_a_list_by_hand(paper):
-    call(paper, "make_list", {"blocks": ["b2"], "scheme": "numbers"})
+    call(paper, "make_list", {"paragraphs": ["b2"], "scheme": "numbers"})
     (list_id,) = [each["id"] for each in call(paper, "lists")["lists"]]
     call(paper, "set_style_numbering", {"style": "heading-1", "numbering": list_id})
     assert markers(paper) == {"b1": "1.", "b2": "2.", "b4": "3."}
@@ -145,9 +153,9 @@ def entries_of(doc, paragraph):
 
 def test_a_table_of_contents_goes_in_after_a_paragraph_with_its_title_in_one_step(paper):
     call(paper, "number_headings", {"on": True})
-    made = call(paper, "insert_contents", {"block": "b1"})["block"]
-    blocks = call(paper, "blocks")["blocks"]
-    title, table = blocks[1], blocks[2]
+    made = call(paper, "insert_contents", {"paragraph": "b1"})["paragraph"]
+    paragraphs = call(paper, "paragraphs")["paragraphs"]
+    title, table = paragraphs[1], paragraphs[2]
     assert (title["style"], title["text"]) == ("contents-title", "Contents")
     assert table["id"] == made and table["generated"]["kind"] == "toc"
     assert [(e["target"], e["number"], e["style"]) for e in table["entries"]] == [
@@ -156,12 +164,14 @@ def test_a_table_of_contents_goes_in_after_a_paragraph_with_its_title_in_one_ste
         ("b4", "2", "contents-1"),
     ]
     call(paper, "undo")
-    assert len(call(paper, "blocks")["blocks"]) == 4, "title and table were one step"
+    assert len(call(paper, "paragraphs")["paragraphs"]) == 4, "title and table were one step"
 
 
 def test_its_entries_follow_the_headings_and_its_options_change_in_one_step(paper):
-    made = call(paper, "insert_contents", {"block": "b4"})["block"]
-    call(paper, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 3, "text": "Why we did it"})
+    made = call(paper, "insert_contents", {"paragraph": "b4"})["paragraph"]
+    call(
+        paper, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 3, "text": "Why we did it"}
+    )
     assert entries_of(paper, made)[0] == ("b1", None, "Why we did it", None)
     call(
         paper,
@@ -193,14 +203,14 @@ def test_its_entries_follow_the_headings_and_its_options_change_in_one_step(pape
 
 
 def test_typing_into_a_table_of_contents_is_refused_and_removing_it_keeps_its_title(paper):
-    made = call(paper, "insert_contents", {"block": "b4"})["block"]
+    made = call(paper, "insert_contents", {"paragraph": "b4"})["paragraph"]
     with pytest.raises(RequestError):
-        call(paper, "replace_text", {"block": made, "start": 0, "end_block": made, "end": 0, "text": "x"})
-    call(paper, "remove_contents", {"block": made})
-    blocks = call(paper, "blocks")["blocks"]
-    assert [b["text"] for b in blocks][-1] == "Contents" and all("generated" not in b for b in blocks)
+        call(paper, "replace_text", {"paragraph": made, "start": 0, "end_paragraph": made, "end": 0, "text": "x"})
+    call(paper, "remove_contents", {"paragraph": made})
+    paragraphs = call(paper, "paragraphs")["paragraphs"]
+    assert [b["text"] for b in paragraphs][-1] == "Contents" and all("generated" not in b for b in paragraphs)
     with pytest.raises(RequestError, match="not a table of contents"):
-        call(paper, "remove_contents", {"block": "b1"})
+        call(paper, "remove_contents", {"paragraph": "b1"})
 
 
 def test_an_agenda_lists_the_slide_titles_with_their_slide_numbers(deck):
@@ -222,7 +232,7 @@ def test_both_apps_have_the_reference_methods():
 
 def test_the_picker_lists_headings_with_their_numbers_then_numbered_items_then_named_things(paper):
     call(paper, "number_headings", {"on": True})
-    call(paper, "make_list", {"blocks": ["b2"], "scheme": "numbers"})
+    call(paper, "make_list", {"paragraphs": ["b2"], "scheme": "numbers"})
     targets = call(paper, "reference_targets")
     assert [(t["id"], t["kind"], t["level"], t["number"], t["text"]) for t in targets[:3]] == [
         ("b1", "heading", 1, "1", "Why"),
@@ -236,11 +246,11 @@ def test_the_picker_lists_headings_with_their_numbers_then_numbered_items_then_n
 def test_a_reference_is_put_in_shows_its_target_and_its_show_can_change(paper):
     call(paper, "number_headings", {"on": True})
     call(paper, "insert_reference", {"paragraph": "b2", "offset": 3, "target": "b3"})
-    blocks = {b["id"]: b for b in call(paper, "blocks")["blocks"]}
-    assert blocks["b2"]["text"] == "one￼" and blocks["b2"]["fields"] == [
+    paragraphs = {b["id"]: b for b in call(paper, "paragraphs")["paragraphs"]}
+    assert paragraphs["b2"]["text"] == "one￼" and paragraphs["b2"]["fields"] == [
         {"kind": "ref", "target": "b3", "show": "number"}
     ]
-    assert blocks["b2"]["shown"] == [{"text": "1.1", "state": "ok"}]
+    assert paragraphs["b2"]["shown"] == [{"text": "1.1", "state": "ok"}]
     assert call(paper, "fields")["fields"] == {"b2": [{"text": "1.1", "state": "ok"}]}
     call(paper, "set_field", {"paragraph": "b2", "index": 0, "show": "text"})
     assert call(paper, "fields")["fields"]["b2"] == [{"text": "Asked", "state": "ok"}]
@@ -253,8 +263,8 @@ def test_a_reference_is_put_in_shows_its_target_and_its_show_can_change(paper):
 
 
 def test_typed_words_make_no_reference(paper):
-    call(paper, "replace_text", {"block": "b2", "start": 0, "end_block": "b2", "end": 0, "text": "x￼y"})
-    assert call(paper, "blocks")["blocks"][1]["text"] == "xyone"
+    call(paper, "replace_text", {"paragraph": "b2", "start": 0, "end_paragraph": "b2", "end": 0, "text": "x￼y"})
+    assert call(paper, "paragraphs")["paragraphs"][1]["text"] == "xyone"
 
 
 def test_a_reference_in_a_text_box_to_a_slide_title_shows_its_words_or_its_slide(deck):

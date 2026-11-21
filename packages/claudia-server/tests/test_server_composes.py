@@ -29,11 +29,11 @@ def call(doc, name, params=None, account=ANN):
     return composes_methods.dispatch(ctx, name, params)
 
 
-def type_(doc, text, at=0, *, block="b1", account=ANN, end=None, end_block=None):
+def type_(doc, text, at=0, *, paragraph="b1", account=ANN, end=None, end_paragraph=None):
     params = {
-        "block": block,
+        "paragraph": paragraph,
         "start": at,
-        "end_block": end_block or block,
+        "end_paragraph": end_paragraph or paragraph,
         "end": at if end is None else end,
         "text": text,
     }
@@ -41,18 +41,18 @@ def type_(doc, text, at=0, *, block="b1", account=ANN, end=None, end_block=None)
 
 
 def texts(doc):
-    return [b["text"] for b in call(doc, "blocks")["blocks"]]
+    return [b["text"] for b in call(doc, "paragraphs")["paragraphs"]]
 
 
 # ----------------------------------------------------------------------------- reading
 def test_composes_has_everything_the_core_has_and_more():
     assert core_methods.names() <= composes_methods.names()
-    assert {"blocks", "replace_text", "set_style", "look", "hold", "suggestions"} <= composes_methods.names()
+    assert {"paragraphs", "replace_text", "set_style", "look", "hold", "suggestions"} <= composes_methods.names()
 
 
 def test_a_new_document_has_one_empty_body_paragraph_and_the_styles(paper):
-    answer = call(paper, "blocks")
-    assert [(b["id"], b["style"], b["text"]) for b in answer["blocks"]] == [("b1", "body", "")]
+    answer = call(paper, "paragraphs")
+    assert [(b["id"], b["style"], b["text"]) for b in answer["paragraphs"]] == [("b1", "body", "")]
     assert [s["id"] for s in answer["styles"]][:3] == ["body", "title", "heading-1"]
     assert all({"name", "purpose", "css", "computed", "based_on", "to_name"} <= set(s) for s in answer["styles"])
     assert answer["revision"] is None
@@ -61,25 +61,25 @@ def test_a_new_document_has_one_empty_body_paragraph_and_the_styles(paper):
 # ----------------------------------------------------------------------------- typing
 def test_typing_returns_where_the_cursor_ends_up(paper):
     answer = type_(paper, "Hello")
-    assert answer["revision"] == "main:1" and (answer["block"], answer["offset"]) == ("b1", 5)
+    assert answer["revision"] == "main:1" and (answer["paragraph"], answer["offset"]) == ("b1", 5)
     assert texts(paper) == ["Hello"]
-    assert call(paper, "blocks")["blocks"][0]["runs"] == [[5, "ann", None]]
+    assert call(paper, "paragraphs")["paragraphs"][0]["runs"] == [[5, "ann", None]]
 
 
 def test_a_newline_in_the_text_starts_a_new_paragraph(paper):
     type_(paper, "one\ntwo\n\nthree")
     assert texts(paper) == ["one", "two", "", "three"]
-    answer = call(paper, "blocks")
-    assert [b["id"] for b in answer["blocks"]] == ["b1", "b2", "b3", "b4"]
+    answer = call(paper, "paragraphs")
+    assert [b["id"] for b in answer["paragraphs"]] == ["b1", "b2", "b3", "b4"]
 
 
 def test_enter_in_the_middle_splits_and_keeps_the_style_enter_at_the_end_follows_the_style_rule(paper):
     type_(paper, "Title words")
-    call(paper, "set_style", {"block": "b1", "style": "title"})
+    call(paper, "set_style", {"paragraph": "b1", "style": "title"})
     type_(paper, "\n", at=5)  # in the middle: both halves are a title
-    assert [b["style"] for b in call(paper, "blocks")["blocks"]] == ["title", "title"]
-    type_(paper, "\n", at=len(" words"), block="b2")  # at the end: what follows a title is body text
-    assert [b["style"] for b in call(paper, "blocks")["blocks"]] == ["title", "title", "body"]
+    assert [b["style"] for b in call(paper, "paragraphs")["paragraphs"]] == ["title", "title"]
+    type_(paper, "\n", at=len(" words"), paragraph="b2")  # at the end: what follows a title is body text
+    assert [b["style"] for b in call(paper, "paragraphs")["paragraphs"]] == ["title", "title", "body"]
 
 
 def test_replacing_a_range_inside_one_paragraph(paper):
@@ -90,25 +90,25 @@ def test_replacing_a_range_inside_one_paragraph(paper):
 
 def test_deleting_across_paragraphs_joins_what_is_left(paper):
     type_(paper, "one\ntwo\nthree\nfour")
-    answer = type_(paper, "", at=2, end=2, end_block="b4")  # from "on|e" to "fo|ur"
-    assert texts(paper) == ["onur"] and (answer["block"], answer["offset"]) == ("b1", 2)
+    answer = type_(paper, "", at=2, end=2, end_paragraph="b4")  # from "on|e" to "fo|ur"
+    assert texts(paper) == ["onur"] and (answer["paragraph"], answer["offset"]) == ("b1", 2)
 
 
 def test_backspace_at_the_start_of_a_paragraph_joins_it_to_the_one_before(paper):
     type_(paper, "one\ntwo")
-    type_(paper, "", at=3, end=0, end_block="b2")
+    type_(paper, "", at=3, end=0, end_paragraph="b2")
     assert texts(paper) == ["onetwo"]
 
 
 def test_pasting_several_lines_over_a_selection(paper):
     type_(paper, "alpha beta\ngamma")
-    type_(paper, "X\nY\nZ", at=6, end=5, end_block="b2")  # replaces "beta\ngamma"
+    type_(paper, "X\nY\nZ", at=6, end=5, end_paragraph="b2")  # replaces "beta\ngamma"
     assert texts(paper) == ["alpha X", "Y", "Z"]
 
 
 def test_one_edit_is_one_undo_step(paper):
     type_(paper, "one\ntwo\nthree")
-    type_(paper, "", at=1, end=2, end_block="b3")
+    type_(paper, "", at=1, end=2, end_paragraph="b3")
     assert texts(paper) == ["oree"]
     call(paper, "undo")
     assert texts(paper) == ["one", "two", "three"]
@@ -122,10 +122,10 @@ def test_nothing_to_do_is_not_an_edit(paper):
 def test_bad_ranges_are_refused_and_change_nothing(paper):
     type_(paper, "one\ntwo")
     for params in (
-        {"block": "b9", "start": 0, "end_block": "b9", "end": 0, "text": "x"},
-        {"block": "b1", "start": 9, "end_block": "b1", "end": 9, "text": "x"},
-        {"block": "b2", "start": 0, "end_block": "b1", "end": 0, "text": "x"},  # backwards
-        {"block": "b1", "start": 2, "end_block": "b1", "end": 1, "text": "x"},
+        {"paragraph": "b9", "start": 0, "end_paragraph": "b9", "end": 0, "text": "x"},
+        {"paragraph": "b1", "start": 9, "end_paragraph": "b1", "end": 9, "text": "x"},
+        {"paragraph": "b2", "start": 0, "end_paragraph": "b1", "end": 0, "text": "x"},  # backwards
+        {"paragraph": "b1", "start": 2, "end_paragraph": "b1", "end": 1, "text": "x"},
     ):
         with pytest.raises(RequestError) as caught:
             call(paper, "replace_text", params)
@@ -138,8 +138,8 @@ def test_a_viewer_cannot_edit_but_can_read_and_look(paper):
     with pytest.raises(RequestError) as caught:
         type_(paper, "x", account=VERA)
     assert caught.value.code == "forbidden"
-    assert call(paper, "blocks", account=VERA)["blocks"][0]["text"] == "abc"
-    call(paper, "look", {"block": "b1", "offset": 1}, VERA)
+    assert call(paper, "paragraphs", account=VERA)["paragraphs"][0]["text"] == "abc"
+    call(paper, "look", {"paragraph": "b1", "offset": 1}, VERA)
 
 
 def test_a_stale_view_is_refused(paper):
@@ -147,7 +147,7 @@ def test_a_stale_view_is_refused(paper):
     call(paper, "save_checkpoint", {"label": "first"})
     type_(paper, "d", at=3)
     paper.restore_checkpoint(1, author="ann")
-    params = {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "x", "base": "main:3"}
+    params = {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "x", "base": "main:3"}
     with pytest.raises(RequestError) as caught:
         call(paper, "replace_text", params)
     assert caught.value.code == "stale"
@@ -156,9 +156,9 @@ def test_a_stale_view_is_refused(paper):
 # ----------------------------------------------------------------------------- styles
 def test_setting_a_style(paper):
     type_(paper, "Intro")
-    call(paper, "set_style", {"block": "b1", "style": "heading-1"})
-    assert call(paper, "blocks")["blocks"][0]["style"] == "heading-1"
-    for bad in ({"block": "b1", "style": "sparkly"}, {"block": "b9", "style": "title"}):
+    call(paper, "set_style", {"paragraph": "b1", "style": "heading-1"})
+    assert call(paper, "paragraphs")["paragraphs"][0]["style"] == "heading-1"
+    for bad in ({"paragraph": "b1", "style": "sparkly"}, {"paragraph": "b9", "style": "title"}):
         with pytest.raises(RequestError) as caught:
             call(paper, "set_style", bad)
         assert caught.value.code == "command_error"
@@ -221,7 +221,7 @@ def test_the_language_is_read_and_set_in_one_step_for_everybody(paper):
 def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing(paper):
     from pathlib import Path
 
-    from claudia_composes import BlockAnchor
+    from claudia_composes import ParagraphAnchor
     from claudia_core import ImageImport, ObjectBody, VisualObject, decode_image, paragraph_for
 
     type_(paper, "a text with a note")
@@ -231,12 +231,12 @@ def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing
     box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
     record = ImageImport(asset.id, "a picture", "ann", "2026-11-12T10:00:00Z", "disk", "rgb.png")
     picture = ObjectBody("o2", "image", 70, 50, "plain-image", ref=asset.id, imported=record)
-    paper.model.insert_object(VisualObject(box, BlockAnchor("b1", 2)))
-    paper.model.insert_object(VisualObject(picture, BlockAnchor("b1", 7)))
+    paper.model.insert_object(VisualObject(box, ParagraphAnchor("b1", 2)))
+    paper.model.insert_object(VisualObject(picture, ParagraphAnchor("b1", 7)))
     objects = call(paper, "objects", account=VERA)["objects"]
     assert [(o["id"], o["anchor"]) for o in objects] == [
-        ("o1", {"kind": "block", "holder": "b1", "offset": 2, "dx": 0, "dy": 0}),
-        ("o2", {"kind": "block", "holder": "b1", "offset": 7, "dx": 0, "dy": 0}),
+        ("o1", {"kind": "paragraph", "holder": "b1", "offset": 2, "dx": 0, "dy": 0}),
+        ("o2", {"kind": "paragraph", "holder": "b1", "offset": 7, "dx": 0, "dy": 0}),
     ]
     assert objects[0]["paragraph"]["text"] == "a note"
     images = call(paper, "images", account=VERA)
@@ -247,7 +247,7 @@ def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing
 # ----------------------------------------------------------------------------- cursors and zones
 def test_looking_shows_the_zone_and_the_caret_but_locks_nothing(paper):
     type_(paper, "the quick brown fox jumps")
-    call(paper, "look", {"block": "b1", "offset": 12, "words": 1})
+    call(paper, "look", {"paragraph": "b1", "offset": 12, "words": 1})
     zone, caret = paper.presence.of("ann").regions
     assert (zone.start, zone.end, caret.start, caret.end) == (4, 19, 12, 12)
     type_(paper, "!", at=5, account=BEN)  # nothing is held, so the edit goes through
@@ -255,7 +255,7 @@ def test_looking_shows_the_zone_and_the_caret_but_locks_nothing(paper):
 
 def test_holding_locks_the_zone_for_the_others_and_says_why(paper):
     type_(paper, "the quick brown fox jumps")
-    call(paper, "hold", {"block": "b1", "offset": 12, "words": 1})
+    call(paper, "hold", {"paragraph": "b1", "offset": 12, "words": 1})
     with pytest.raises(RequestError) as caught:
         type_(paper, "!", at=5, account=BEN)
     assert caught.value.code == "locked" and "ann" in caught.value.message
@@ -266,15 +266,19 @@ def test_holding_locks_the_zone_for_the_others_and_says_why(paper):
 
 def test_two_people_cannot_hold_overlapping_zones(paper):
     type_(paper, "the quick brown fox jumps")
-    call(paper, "hold", {"block": "b1", "offset": 12, "words": 1})
+    call(paper, "hold", {"paragraph": "b1", "offset": 12, "words": 1})
     with pytest.raises(RequestError) as caught:
-        call(paper, "hold", {"block": "b1", "offset": 14, "words": 1}, BEN)
+        call(paper, "hold", {"paragraph": "b1", "offset": 14, "words": 1}, BEN)
     assert caught.value.code == "locked"
 
 
 def test_the_zone_width_is_limited_and_the_place_must_exist(paper):
     type_(paper, "abc")
-    for bad in ({"block": "b1", "offset": 1, "words": 99}, {"block": "b1", "offset": 9}, {"block": "b9", "offset": 0}):
+    for bad in (
+        {"paragraph": "b1", "offset": 1, "words": 99},
+        {"paragraph": "b1", "offset": 9},
+        {"paragraph": "b9", "offset": 0},
+    ):
         with pytest.raises(RequestError):
             call(paper, "look", bad)
 
@@ -284,7 +288,7 @@ def suggest(doc, start=4, end=9, replacement="fast", account=AI):
     return call(
         doc,
         "suggest",
-        {"block": "b1", "start": start, "end": end, "replacement": replacement, "reason": "shorter"},
+        {"paragraph": "b1", "start": start, "end": end, "replacement": replacement, "reason": "shorter"},
         account,
     )
 
@@ -296,7 +300,7 @@ def test_only_the_assistant_suggests_and_in_act_mode_it_writes_the_text_too(pape
             suggest(paper, account=account)
         assert caught.value.code == "forbidden"
     type_(paper, "a ", account=AI_AS_DEPLOYED)
-    call(paper, "set_style", {"block": "b1", "style": "title"}, AI_AS_DEPLOYED)
+    call(paper, "set_style", {"paragraph": "b1", "style": "title"}, AI_AS_DEPLOYED)
     assert texts(paper) == ["a the quick brown fox"], "D640: in a text the AI writes as in the other apps"
 
 
@@ -311,7 +315,7 @@ def test_a_suggestion_is_listed_and_changes_no_text(paper):
 
 def test_a_remark_has_no_replacement(paper):
     type_(paper, "the quick brown fox")
-    call(paper, "suggest", {"block": "b1", "start": 0, "end": 9, "reason": "long"}, AI)
+    call(paper, "suggest", {"paragraph": "b1", "start": 0, "end": 9, "reason": "long"}, AI)
     assert call(paper, "suggestions")[0]["replacement"] is None
 
 
@@ -319,8 +323,8 @@ def test_accepting_edits_as_the_accepter(paper):
     type_(paper, "the quick brown fox")
     suggest(paper)
     call(paper, "accept_suggestion", {"id": "s1"}, BEN)
-    block = call(paper, "blocks")["blocks"][0]
-    assert block["text"] == "the fast brown fox" and [4, "ben", "ai"] in block["runs"]
+    paragraph = call(paper, "paragraphs")["paragraphs"][0]
+    assert paragraph["text"] == "the fast brown fox" and [4, "ben", "ai"] in paragraph["runs"]
     assert call(paper, "suggestions") == []
 
 
@@ -337,7 +341,7 @@ def test_an_outdated_suggestion_cannot_be_accepted(paper):
 def test_rejecting_and_dismissing(paper):
     type_(paper, "the quick brown fox")
     suggest(paper)
-    call(paper, "suggest", {"block": "b1", "start": 0, "end": 9, "reason": "long"}, AI)
+    call(paper, "suggest", {"paragraph": "b1", "start": 0, "end": 9, "reason": "long"}, AI)
     call(paper, "reject_suggestion", {"id": "s1"})
     call(paper, "reject_suggestion", {"id": "s2"})
     assert call(paper, "suggestions") == []
@@ -350,8 +354,8 @@ def test_unknown_suggestions_and_ranges_are_refused(paper):
     for name, params, account in (
         ("accept_suggestion", {"id": "s9"}, ANN),
         ("reject_suggestion", {"id": "s9"}, ANN),
-        ("suggest", {"block": "b1", "start": 2, "end": 9, "replacement": "x", "reason": "r"}, AI),
-        ("suggest", {"block": "b9", "start": 0, "end": 1, "replacement": "x", "reason": "r"}, AI),
+        ("suggest", {"paragraph": "b1", "start": 2, "end": 9, "replacement": "x", "reason": "r"}, AI),
+        ("suggest", {"paragraph": "b9", "start": 0, "end": 1, "replacement": "x", "reason": "r"}, AI),
     ):
         with pytest.raises(RequestError) as caught:
             call(paper, name, params, account)
@@ -363,14 +367,14 @@ def style(doc, style_id):
     return next(s for s in call(doc, "styles") if s["id"] == style_id)
 
 
-def test_the_styles_come_with_their_css_and_the_blocks_answer_lists_the_same(paper):
+def test_the_styles_come_with_their_css_and_the_paragraphs_answer_lists_the_same(paper):
     listed = call(paper, "styles")
     assert [s["id"] for s in listed][:3] == ["body", "title", "heading-1"]
     heading = style(paper, "heading-1")
     assert heading["based_on"] == "body" and heading["css"]["font-size"] == "19pt"
     assert heading["computed"]["color"] == style(paper, "body")["css"]["color"]  # inherited from Body text
     assert heading["to_name"] is False and heading["purpose"]
-    assert call(paper, "blocks")["styles"] == listed
+    assert call(paper, "paragraphs")["styles"] == listed
 
 
 def test_changing_a_style_by_properties(paper):
@@ -419,21 +423,21 @@ def test_checking_css_names_the_lines_and_changes_nothing_so_viewers_may_do_it(p
 
 def test_deviating_makes_a_style_with_a_provisional_name_and_applies_it_in_one_step(paper):
     type_(paper, "Intro")
-    answer = call(paper, "deviate_style", {"parent": "heading-1", "blocks": ["b1"], "set": {"color": "#D6477A"}})
+    answer = call(paper, "deviate_style", {"parent": "heading-1", "paragraphs": ["b1"], "set": {"color": "#D6477A"}})
     assert answer["style"] == "heading-1-changed" and answer["name"] == "Heading 1 (changed)"
     made = style(paper, answer["style"])
     assert (made["based_on"], made["to_name"], made["css"]) == ("heading-1", True, {"color": "#D6477A"})
     assert made["kind"] == "paragraph"  # a deviation keeps its parent's kind (D305)
-    assert call(paper, "blocks")["blocks"][0]["style"] == answer["style"]
+    assert call(paper, "paragraphs")["paragraphs"][0]["style"] == answer["style"]
     call(paper, "undo")
-    assert call(paper, "blocks")["blocks"][0]["style"] == "body"
+    assert call(paper, "paragraphs")["paragraphs"][0]["style"] == "body"
     assert all(s["id"] != answer["style"] for s in call(paper, "styles"))
 
 
 def test_a_second_deviation_from_the_same_style_gets_the_next_free_name(paper):
-    first = call(paper, "deviate_style", {"parent": "quote", "blocks": [], "set": {"font-size": "16pt"}})
-    second = call(paper, "deviate_style", {"parent": "quote", "blocks": [], "set": {"font-size": "17pt"}})
-    third = call(paper, "deviate_style", {"parent": first["style"], "blocks": [], "text": "color: red"})
+    first = call(paper, "deviate_style", {"parent": "quote", "paragraphs": [], "set": {"font-size": "16pt"}})
+    second = call(paper, "deviate_style", {"parent": "quote", "paragraphs": [], "set": {"font-size": "17pt"}})
+    third = call(paper, "deviate_style", {"parent": first["style"], "paragraphs": [], "text": "color: red"})
     assert [first["name"], second["name"], third["name"]] == [
         "Quote (changed)",
         "Quote (changed 2)",
@@ -445,10 +449,10 @@ def test_a_second_deviation_from_the_same_style_gets_the_next_free_name(paper):
 def test_a_deviation_must_differ_from_its_parent(paper):
     parent = style(paper, "quote")["computed"]
     for params in (
-        {"parent": "quote", "blocks": [], "set": {}},
-        {"parent": "quote", "blocks": [], "set": {"font-size": parent["font-size"]}},
-        {"parent": "nope", "blocks": [], "set": {"color": "red"}},
-        {"parent": "quote", "blocks": ["b9"], "set": {"color": "red"}},
+        {"parent": "quote", "paragraphs": [], "set": {}},
+        {"parent": "quote", "paragraphs": [], "set": {"font-size": parent["font-size"]}},
+        {"parent": "nope", "paragraphs": [], "set": {"color": "red"}},
+        {"parent": "quote", "paragraphs": ["b9"], "set": {"color": "red"}},
     ):
         with pytest.raises(RequestError) as caught:
             call(paper, "deviate_style", params)
@@ -457,7 +461,7 @@ def test_a_deviation_must_differ_from_its_parent(paper):
 
 
 def test_naming_a_style_ends_the_invitation(paper):
-    made = call(paper, "deviate_style", {"parent": "quote", "blocks": [], "set": {"font-size": "16pt"}})
+    made = call(paper, "deviate_style", {"parent": "quote", "paragraphs": [], "set": {"font-size": "16pt"}})
     call(paper, "rename_style", {"style": made["style"], "name": "Epigraph"})
     assert (style(paper, made["style"])["name"], style(paper, made["style"])["to_name"]) == ("Epigraph", False)
     with pytest.raises(RequestError) as caught:
@@ -489,7 +493,7 @@ def test_a_heading_level_that_does_not_change_is_no_edit(paper):
 def test_viewers_and_the_assistant_as_deployed_do_not_change_styles(paper):
     calls = (
         ("change_style", {"style": "quote", "set": {"color": "red"}}),
-        ("deviate_style", {"parent": "quote", "blocks": [], "set": {"color": "red"}}),
+        ("deviate_style", {"parent": "quote", "paragraphs": [], "set": {"color": "red"}}),
         ("rename_style", {"style": "quote", "name": "Cite"}),
         ("set_heading_level", {"style": "quote", "level": 1}),
     )
@@ -505,9 +509,9 @@ def test_viewers_and_the_assistant_as_deployed_do_not_change_styles(paper):
 
 def test_enter_at_the_end_of_a_deviated_heading_starts_body_text(paper):
     type_(paper, "Intro")
-    made = call(paper, "deviate_style", {"parent": "heading-1", "blocks": ["b1"], "set": {"color": "#D6477A"}})
+    made = call(paper, "deviate_style", {"parent": "heading-1", "paragraphs": ["b1"], "set": {"color": "#D6477A"}})
     type_(paper, "\n", at=5)
-    assert [b["style"] for b in call(paper, "blocks")["blocks"]] == [made["style"], "body"]
+    assert [b["style"] for b in call(paper, "paragraphs")["paragraphs"]] == [made["style"], "body"]
 
 
 # ----------------------------------------------------------------------------- export to Word (D212)
@@ -520,16 +524,16 @@ def test_export_office_returns_docx_bytes_that_round_trip(paper):
     assert answer["content_type"] == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     raw = base64.b64decode(answer["data"])
     assert raw[:2] == b"PK"  # a docx is a zip
-    assert [b.text for b in docx_to_text(raw).blocks] == ["Hello there"]
+    assert [b.text for b in docx_to_text(raw).paragraphs] == ["Hello there"]
 
 
 def test_export_office_drops_open_suggestions_rather_than_tracking_them(paper):
     from claudia_composes_io import docx_to_text
 
     type_(paper, "Hello there")
-    call(paper, "suggest", {"block": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
+    call(paper, "suggest", {"paragraph": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
     raw = base64.b64decode(call(paper, "export_office", {"format": "docx"})["data"])
-    assert [b.text for b in docx_to_text(raw).blocks] == ["Hello there"]
+    assert [b.text for b in docx_to_text(raw).paragraphs] == ["Hello there"]
 
 
 def test_export_office_returns_an_odt_that_round_trips_and_says_what_it_lost(paper):
@@ -543,7 +547,7 @@ def test_export_office_returns_an_odt_that_round_trips_and_says_what_it_lost(pap
     assert answer["content_type"] == "application/vnd.oasis.opendocument.text"
     raw = base64.b64decode(answer["data"])
     assert problems(raw) == []
-    assert [b.text for b in odt_to_text(raw).blocks] == ["Hello there"]
+    assert [b.text for b in odt_to_text(raw).paragraphs] == ["Hello there"]
     # who typed which words is not something an odt keeps: the one thing this text loses
     assert answer["losses"] == [{"kind": "authorship", "detail": "", "count": 1}]
 
@@ -569,9 +573,9 @@ def test_export_office_to_odt_drops_open_suggestions_rather_than_tracking_them(p
     from claudia_composes_io import odt_to_text
 
     type_(paper, "Hello there")
-    call(paper, "suggest", {"block": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
+    call(paper, "suggest", {"paragraph": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
     raw = base64.b64decode(call(paper, "export_office", {"format": "odt"})["data"])
-    assert [b.text for b in odt_to_text(raw).blocks] == ["Hello there"]
+    assert [b.text for b in odt_to_text(raw).paragraphs] == ["Hello there"]
     assert b"tracked-changes" not in read_parts(raw)["content.xml"]
 
 
@@ -587,7 +591,7 @@ def dated_paper():
     times = iter(["2026-01-02T03:04:05Z", "2026-03-04T05:06:07Z", "2026-11-11T17:13:05Z"])
     doc = Document(TextModel(), store=MemoryStore(), clock=lambda: next(times))
     type_(doc, "Hello there")
-    call(doc, "suggest", {"block": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
+    call(doc, "suggest", {"paragraph": "b1", "start": 0, "end": 5, "reason": "greeting", "replacement": "Hi"}, AI)
     type_(doc, "!", at=11)
     return doc
 
@@ -650,12 +654,12 @@ def test_tracked_changes_default_to_off(dated_paper):
 
 # --------------------------------------------------------------------- floating and turning objects (rotation-ui)
 def text_with_a_note(paper):
-    from claudia_composes import BlockAnchor
+    from claudia_composes import ParagraphAnchor
     from claudia_core import ObjectBody, VisualObject, paragraph_for
 
     type_(paper, "a text with a note")
     box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
-    paper.model.insert_object(VisualObject(box, BlockAnchor("b1", 2)))
+    paper.model.insert_object(VisualObject(box, ParagraphAnchor("b1", 2)))
 
 
 def anchor_of(paper):
@@ -665,27 +669,27 @@ def anchor_of(paper):
 
 def test_an_object_floats_at_an_offset_from_the_character_it_hangs_from(paper):
     text_with_a_note(paper)
-    call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 260, "dy": -48})
-    assert anchor_of(paper) == {"kind": "block", "holder": "b1", "offset": 7, "dx": 260, "dy": -48}
+    call(paper, "move_object", {"id": "o1", "paragraph": "b1", "offset": 7, "dx": 260, "dy": -48})
+    assert anchor_of(paper) == {"kind": "paragraph", "holder": "b1", "offset": 7, "dx": 260, "dy": -48}
 
 
 def test_moving_to_another_character_without_an_offset_keeps_the_offset_the_object_has(paper):
     text_with_a_note(paper)
-    call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 260, "dy": -48})
-    call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 9})
-    assert anchor_of(paper) == {"kind": "block", "holder": "b1", "offset": 9, "dx": 260, "dy": -48}
+    call(paper, "move_object", {"id": "o1", "paragraph": "b1", "offset": 7, "dx": 260, "dy": -48})
+    call(paper, "move_object", {"id": "o1", "paragraph": "b1", "offset": 9})
+    assert anchor_of(paper) == {"kind": "paragraph", "holder": "b1", "offset": 9, "dx": 260, "dy": -48}
 
 
 def test_an_offset_out_of_reach_is_refused(paper):
     text_with_a_note(paper)
     with pytest.raises(RequestError, match="offset") as caught:
-        call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 10001})
+        call(paper, "move_object", {"id": "o1", "paragraph": "b1", "offset": 7, "dx": 10001})
     assert caught.value.code == "command_error"
 
 
 def test_an_object_in_a_text_turns_and_keeps_its_anchor(paper):
     text_with_a_note(paper)
-    call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 40, "dy": 10})
+    call(paper, "move_object", {"id": "o1", "paragraph": "b1", "offset": 7, "dx": 40, "dy": 10})
     call(paper, "rotate_object", {"id": "o1", "rotation": -90})
     (obj,) = call(paper, "objects")["objects"]
     assert obj["rotation"] == 270

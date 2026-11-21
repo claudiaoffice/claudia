@@ -10,18 +10,21 @@ from dataclasses import replace
 from claudia_composes_io import docx_unwritten_changes, odt_unwritten_changes
 from claudia_composes_io._unwritten import text_unwritten_changes
 
-from claudia_composes import Block, PageSetup, TextModel
+from claudia_composes import PageSetup, Paragraph, TextModel
 from claudia_core import ListBook, ListDef, ListItem
 from claudia_odf_io import NOT_WRITTEN, Loss
 
 #: A converter that writes the words and nothing else: every other facet that changes is a loss (the converters of
 #: today write all the facets of a text but its floating objects, so these tests stand one in for the others).
-TEXT_ONLY = frozenset({"blocks", "suggestions"})
+TEXT_ONLY = frozenset({"paragraphs", "suggestions"})
 
 
 def a_text(**changes) -> TextModel:
-    blocks = changes.pop("blocks", None) or [Block("b1", "body", "Hello"), Block("b2", "heading-1", "World")]
-    return TextModel(blocks, **changes)
+    paragraphs = changes.pop("paragraphs", None) or [
+        Paragraph("b1", "body", "Hello"),
+        Paragraph("b2", "heading-1", "World"),
+    ]
+    return TextModel(paragraphs, **changes)
 
 
 def test_a_model_that_did_not_change_has_no_unwritten_changes():
@@ -32,15 +35,17 @@ def test_a_model_that_did_not_change_has_no_unwritten_changes():
 
 def test_edited_words_and_styles_are_written_so_they_are_no_loss():
     before = a_text()
-    after = a_text(blocks=[Block("b1", "quote", "Hello again"), Block("b3", "body", "New")])
+    after = a_text(paragraphs=[Paragraph("b1", "quote", "Hello again"), Paragraph("b3", "body", "New")])
     assert odt_unwritten_changes(after, before) == ()
     assert docx_unwritten_changes(after, before) == ()
 
 
-def test_authors_of_runs_are_not_a_change_of_the_blocks_facet():
-    # authorship has its own loss code (odt_export_losses); a different author alone does not make a "blocks" loss
+def test_authors_of_runs_are_not_a_change_of_the_paragraphs_facet():
+    # authorship has its own loss code (odt_export_losses); a different author alone does not make a "paragraphs" loss
     before = a_text()
-    after = a_text(blocks=[Block("b1", "body", "Hello").written_by("ada"), Block("b2", "heading-1", "World")])
+    after = a_text(
+        paragraphs=[Paragraph("b1", "body", "Hello").written_by("ada"), Paragraph("b2", "heading-1", "World")]
+    )
     assert odt_unwritten_changes(after, before) == ()
 
 
@@ -64,8 +69,11 @@ def test_page_language_styles_and_palette_are_written_to_both_formats():
 
 
 def test_lists_are_written_to_both_formats():
-    items = [Block("b1", "body", "one", item=ListItem("l1", 0)), Block("b2", "body", "two", item=ListItem("l1", 1))]
-    after = a_text(blocks=items, lists=ListBook([ListDef("l1", "bullets")]))
+    items = [
+        Paragraph("b1", "body", "one", item=ListItem("l1", 0)),
+        Paragraph("b2", "body", "two", item=ListItem("l1", 1)),
+    ]
+    after = a_text(paragraphs=items, lists=ListBook([ListDef("l1", "bullets")]))
     assert odt_unwritten_changes(after, a_text()) == ()
     assert docx_unwritten_changes(after, a_text()) == ()
     assert Loss(NOT_WRITTEN, "lists", 3) in text_unwritten_changes(after, a_text(), written=TEXT_ONLY)

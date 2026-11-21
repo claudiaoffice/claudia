@@ -18,7 +18,7 @@ from claudia_composes_io import (
     text_to_odt,
 )
 
-from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, TextModel
+from claudia_composes import DEFAULT_STYLE, Paragraph, ParagraphAnchor, TextModel
 from claudia_core import ObjectBody, VisualObject, paragraph_for, picture_body
 from claudia_core.assets import ImageAsset
 
@@ -38,9 +38,9 @@ def png() -> ImageAsset:
 
 def a_text(wrap="over", gap=8, *, picture=False) -> TextModel:
     model = TextModel(
-        [Block("b1", DEFAULT_STYLE, "Hello world and some more words"), Block("b2", DEFAULT_STYLE, "Next")]
+        [Paragraph("b1", DEFAULT_STYLE, "Hello world and some more words"), Paragraph("b2", DEFAULT_STYLE, "Next")]
     )
-    anchor = BlockAnchor("b1", 5, wrap=wrap, gap=gap)
+    anchor = ParagraphAnchor("b1", 5, wrap=wrap, gap=gap)
     if picture:
         asset = png()
         model.images.define(asset)

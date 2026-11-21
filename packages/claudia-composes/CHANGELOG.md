@@ -29,6 +29,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- **Breaking** — a paragraph is called a paragraph (D1430, E1.18): the alias `Block` is gone (`Paragraph`, from
+  claudia-core, is the class); `TextModel.paragraphs`, `paragraph()`, `paragraph_names`, `paragraph_descriptions`,
+  `paragraph_kind` and the other `block_*` names say `paragraph`; `ParagraphAnchor` (anchor kind `paragraph`, its
+  holder the paragraph), the commands `SplitParagraph` and `JoinParagraphs` (kinds `composes.SplitParagraph`,
+  `composes.JoinParagraphs`) and the events `ParagraphSplit`, `ParagraphsJoined`, `ParagraphGenerated`. Stored, every
+  command and event says `paragraph` (was `block`), the state key is `paragraphs`, and the event types are
+  `paragraph_fields` and `paragraph_generated`; no reader for the old names.
 - **Breaking** — the glossary's holder (D1430, see `claudia-core`): `BlockAnchor.holder` (was `container`),
   `TextModel.holders()`; an anchor's data says `holder`.
 - **Breaking** — `DefineImage`, `ForgetImage`, `DefineShape` and `ForgetShape` are no longer re-exported:

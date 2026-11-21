@@ -18,7 +18,14 @@ from collections.abc import Callable
 from typing import Any
 
 from claudia_composes import TextModel, TextRange
-from claudia_composes.events import BlocksJoined, BlockSplit, ItemChanged, StyleChanged, SuggestionsChanged, TextChanged
+from claudia_composes.events import (
+    ItemChanged,
+    ParagraphsJoined,
+    ParagraphSplit,
+    StyleChanged,
+    SuggestionsChanged,
+    TextChanged,
+)
 from claudia_core import Document, TableDef, TablesChanged, parse_entry_id
 
 from .composes_words import paragraph_view
@@ -51,11 +58,12 @@ TABLES_HELP = (
     "(table/row/column)."
 )
 ACT_EXAMPLE = (
-    ' A request looks like {"method": "replace_words", "params": {"block": "b3", "find": "in order to", "text": "to"}}.'
+    ' A request looks like {"method": "replace_words", "params": {"paragraph": "b3", "find": "in order to", '
+    '"text": "to"}}.'
 )
 SUGGEST_EXAMPLE = (
     ' You may only propose changes, which people accept or reject. A request looks like {"method": "suggest_words", '
-    '"params": {"block": "b3", "find": "in order to", "replacement": "to", "reason": "shorter"}}.'
+    '"params": {"paragraph": "b3", "find": "in order to", "replacement": "to", "reason": "shorter"}}.'
 )  # neither when the asker's mode or role lets the AI change nothing: it would only invite a refused request
 
 
@@ -119,7 +127,7 @@ def describe_suggestion(item: dict) -> str:
         change = f"remark on {original}"
     else:
         change = f'{original} -> "{_flat(item["replacement"], 80)}"'
-    line = f"{item['id']} by {item.get('author') or 'somebody'} on {item['block']}: {change}"
+    line = f"{item['id']} by {item.get('author') or 'somebody'} on {item['paragraph']}: {change}"
     if item.get("reason"):
         line += f" ({_flat(item['reason'], 80)})"
     return line + (" [outdated]" if item.get("outdated") else "")
@@ -128,7 +136,7 @@ def describe_suggestion(item: dict) -> str:
 class DocumentLens:
     """The lens for composes."""
 
-    look_methods: tuple[str, ...] = ("paragraphs", "outline", "styles", "suggestions", "tables")
+    look_methods: tuple[str, ...] = ("read_paragraphs", "outline", "styles", "suggestions", "tables")
 
     # -- where the model starts
     def orient(
@@ -145,27 +153,28 @@ class DocumentLens:
         assert isinstance(model, TextModel)
         text = ORIENTATION.format(example=self._example(can_write, writes))
         labels = model.labels()
-        blocks = model.blocks
-        text += f"\nThe text has {len(blocks)} paragraph{'s' if len(blocks) != 1 else ''}."
+        paragraphs = model.paragraphs
+        text += f"\nThe text has {len(paragraphs)} paragraph{'s' if len(paragraphs) != 1 else ''}."
         text += self._tables(model)
         text += "\nParagraph styles (id: name, what it is for):\n" + self._styles(model)
-        headings = [at for at, block in enumerate(blocks) if model.block_kind(block) == "heading"]
+        headings = [at for at, paragraph in enumerate(paragraphs) if model.paragraph_kind(paragraph) == "heading"]
         if headings:
             shown = [describe_paragraph(paragraph_view(model, at, labels), 80) for at in headings[:MAX_OUTLINE]]
             if len(headings) > MAX_OUTLINE:
                 shown.append(f"... and {len(headings) - MAX_OUTLINE} more headings (ask for the outline)")
             text += "\nHeadings:\n" + fence("\n".join(shown))
         first = [
-            describe_paragraph(paragraph_view(model, at, labels)) for at in range(min(PREVIEW_PARAGRAPHS, len(blocks)))
+            describe_paragraph(paragraph_view(model, at, labels))
+            for at in range(min(PREVIEW_PARAGRAPHS, len(paragraphs)))
         ]
-        if len(blocks) > PREVIEW_PARAGRAPHS:
-            first.append(f"... {len(blocks) - PREVIEW_PARAGRAPHS} more paragraphs (read them with paragraphs)")
+        if len(paragraphs) > PREVIEW_PARAGRAPHS:
+            first.append(f"... {len(paragraphs) - PREVIEW_PARAGRAPHS} more paragraphs (read them with paragraphs)")
         text += "\nThe start of the text:\n" + fence("\n".join(first))
         here = self._asker_at(document, model, asker)
         if here is not None:
-            text += f"\n{asker}'s cursor is in paragraph {blocks[here].id}"
+            text += f"\n{asker}'s cursor is in paragraph {paragraphs[here].id}"
             if here >= PREVIEW_PARAGRAPHS:
-                around = range(max(here - AROUND_ASKER, 0), min(here + AROUND_ASKER + 1, len(blocks)))
+                around = range(max(here - AROUND_ASKER, 0), min(here + AROUND_ASKER + 1, len(paragraphs)))
                 text += ", here with the paragraphs around it:\n" + fence(
                     "\n".join(describe_paragraph(paragraph_view(model, at, labels)) for at in around)
                 )
@@ -187,7 +196,7 @@ class DocumentLens:
             users = model.tables.users(table_id)
             shown = model.get_object(users[0]) if users else None
             name = f' "{_flat(shown.body.name, 40)}"' if shown is not None and shown.body.name else ""
-            where = f", hangs from {shown.anchor.block}" if shown is not None else ""
+            where = f", hangs from {shown.anchor.paragraph}" if shown is not None else ""
             header = " | ".join(
                 _flat(definition.paragraph(definition.rows[definition.header_rows - 1], c).text, 20)
                 for c in definition.column_ids()
@@ -230,7 +239,7 @@ class DocumentLens:
         for region in hold.regions if hold else ():
             if isinstance(region, TextRange):
                 try:
-                    return model.index_of(region.block)
+                    return model.index_of(region.paragraph)
                 except KeyError:
                     continue
         return None
@@ -238,7 +247,7 @@ class DocumentLens:
     # -- what the read requests show
     def show(self, method: str, params: dict, result: Any) -> str:
         """The answer of a read request, fenced as data."""
-        if method == "paragraphs":
+        if method == "read_paragraphs":
             lines = [describe_paragraph(view, MAX_READ_TEXT) for view in result["paragraphs"]]
             if not lines:
                 lines.append("No paragraph" + (" contains that." if params.get("containing") else " here."))
@@ -297,8 +306,8 @@ class TextRecorder:
             self._stop()
             self._stop = None
 
-    def _touch(self, *blocks: str) -> None:
-        self._touched += [block for block in blocks if block not in self._touched]
+    def _touch(self, *paragraphs: str) -> None:
+        self._touched += [paragraph for paragraph in paragraphs if paragraph not in self._touched]
 
     def _table_touched(self, table_id: str) -> None:
         if table_id not in self._tables:
@@ -307,15 +316,15 @@ class TextRecorder:
     def _hear(self, event: object) -> None:
         if isinstance(event, TablesChanged):
             self._table_touched(event.table_id)
-        elif isinstance(event, (TextChanged, StyleChanged, ItemChanged)) and (box := parse_entry_id(event.block)):
+        elif isinstance(event, (TextChanged, StyleChanged, ItemChanged)) and (box := parse_entry_id(event.paragraph)):
             self._table_touched(box[0])  # the words of a box, not a paragraph of the text
         elif isinstance(event, (TextChanged, StyleChanged, ItemChanged)):
-            self._touch(event.block)
-        elif isinstance(event, BlockSplit):
-            self._touch(event.block, event.new_id)
-        elif isinstance(event, BlocksJoined):
+            self._touch(event.paragraph)
+        elif isinstance(event, ParagraphSplit):
+            self._touch(event.paragraph, event.new_id)
+        elif isinstance(event, ParagraphsJoined):
             self._touch(event.into)
-            self._joined.append(event.block)
+            self._joined.append(event.paragraph)
         elif isinstance(event, SuggestionsChanged):
             for item in event.items:
                 self._suggestions[item["id"]] = item
@@ -325,12 +334,18 @@ class TextRecorder:
         model = self._document.model
         assert isinstance(model, TextModel)
         labels = model.labels()
-        where = {block: model.index_of(block) for block in self._touched if block in {b.id for b in model.blocks}}
+        where = {
+            paragraph: model.index_of(paragraph)
+            for paragraph in self._touched
+            if paragraph in {b.id for b in model.paragraphs}
+        }
         order = sorted(where, key=where.__getitem__)
-        lines = [describe_paragraph(paragraph_view(model, where[block], labels)) for block in order[:MAX_REPORTED]]
+        lines = [
+            describe_paragraph(paragraph_view(model, where[paragraph], labels)) for paragraph in order[:MAX_REPORTED]
+        ]
         if len(order) > MAX_REPORTED:
             lines.append(f"... and {len(order) - MAX_REPORTED} more paragraphs changed.")
-        gone = [block for block in self._joined if block not in where]
+        gone = [paragraph for paragraph in self._joined if paragraph not in where]
         if gone:
             lines.append("Joined into the paragraph before them, so gone: " + ", ".join(gone))
         lines += self._table_report(model)

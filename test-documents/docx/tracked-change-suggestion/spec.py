@@ -14,7 +14,7 @@ from claudia_test_documents.case import Case
 
 
 def import_checks(model: TextModel) -> None:
-    assert [(b.style, b.text) for b in model.blocks] == [("body", "The committee rejected the proposal.")]
+    assert [(b.style, b.text) for b in model.paragraphs] == [("body", "The committee rejected the proposal.")]
 
 
 def modify(model: TextModel) -> TextModel:
@@ -26,7 +26,7 @@ def modify(model: TextModel) -> TextModel:
 def after_checks(model: TextModel) -> None:
     # python-docx's own `.text` skips a run under `w:ins`/`w:del`, so the tracked word is simply gone from here --
     # expected, not a bug, and exactly what `apply_edits_to_docx`'s own docstring and tests already document.
-    assert model.blocks[0].text == "The committee  the proposal."
+    assert model.paragraphs[0].text == "The committee  the proposal."
 
 
 def export_checks(edited_bytes: bytes) -> None:

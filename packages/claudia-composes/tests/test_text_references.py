@@ -3,7 +3,7 @@ its number, its words or its name, so it never goes stale."""
 
 import pytest
 
-from claudia_composes import Block, FieldsPut, JoinBlocks, SplitBlock, TextModel
+from claudia_composes import FieldsPut, JoinParagraphs, Paragraph, SplitParagraph, TextModel
 from claudia_core import (
     FIELD_CHAR,
     CreateList,
@@ -23,8 +23,12 @@ from claudia_core import (
 
 @pytest.fixture
 def text():
-    blocks = [Block("b1", "heading-1", "Why we did it"), Block("b2", "body", "Collect"), Block("b3", "body", "see ")]
-    d = Document(TextModel(blocks), store=MemoryStore())
+    paragraphs = [
+        Paragraph("b1", "heading-1", "Why we did it"),
+        Paragraph("b2", "body", "Collect"),
+        Paragraph("b3", "body", "see "),
+    ]
+    d = Document(TextModel(paragraphs), store=MemoryStore())
     d.execute(CreateList(ListDef("l1", "numbers")), author="ann")
     d.execute(SetListItem("b2", ListItem("l1", 0)), author="ann")
     return d
@@ -42,7 +46,7 @@ def test_a_reference_shows_its_target_s_number_words_or_both_and_follows_them(te
     events = []
     text.subscribe(events.append)
     refer(text, "b2")
-    assert text.model.block("b3").fields == (RefField("b2"),)
+    assert text.model.paragraph("b3").fields == (RefField("b2"),)
     assert shown(text) == (Shown("1"),)
     assert any(isinstance(e, FieldsPut) for e in events) and any(isinstance(e, FieldsChanged) for e in events)
     text.execute(SetField("b3", 0, RefField("b2", "number-text")), author="ann")
@@ -53,7 +57,7 @@ def test_a_reference_shows_its_target_s_number_words_or_both_and_follows_them(te
     assert shown(text) == (Shown("Collect results"),)
     assert FieldsChanged("b3", (Shown("Collect results"),)) in events
     text.undo("ann")
-    assert text.model.block("b3").fields[0].show == "number-text"
+    assert text.model.paragraph("b3").fields[0].show == "number-text"
 
 
 def test_an_unnumbered_heading_shows_its_words_and_a_missing_target_is_broken_until_undo_mends_it(text):
@@ -63,7 +67,7 @@ def test_an_unnumbered_heading_shows_its_words_and_a_missing_target_is_broken_un
     assert shown(text)[1] == Shown("", "broken")
     refer(text, "b2", show="text", at=6)
     text.execute(DeleteText("b2", 0, 7), author="ann")
-    text.execute(JoinBlocks("b2", "b1", 13), author="ann")  # the item is joined away: its references break
+    text.execute(JoinParagraphs("b2", "b1", 13), author="ann")  # the item is joined away: its references break
     assert shown(text)[2].state == "broken"
     text.undo("ann")
     assert shown(text)[2] == Shown("")
@@ -74,19 +78,19 @@ def test_an_unnumbered_heading_shows_its_words_and_a_missing_target_is_broken_un
 def test_deleting_takes_the_field_with_its_character_and_undo_puts_it_back(text):
     refer(text, "b2")
     text.execute(DeleteText("b3", 3, 2), author="ann")
-    assert text.model.block("b3").fields == () and FIELD_CHAR not in text.model.block("b3").text
+    assert text.model.paragraph("b3").fields == () and FIELD_CHAR not in text.model.paragraph("b3").text
     text.undo("ann")
-    assert text.model.block("b3").fields == (RefField("b2"),)
+    assert text.model.paragraph("b3").fields == (RefField("b2"),)
 
 
 def test_splitting_and_joining_share_the_fields_out_by_their_characters(text):
     refer(text, "b1", at=0)
     refer(text, "b2", at=5)
-    text.execute(SplitBlock("b3", 3, "b9", "body"), author="ann")
-    assert text.model.block("b3").fields == (RefField("b1"),)
-    assert text.model.block("b9").fields == (RefField("b2"),)
+    text.execute(SplitParagraph("b3", 3, "b9", "body"), author="ann")
+    assert text.model.paragraph("b3").fields == (RefField("b1"),)
+    assert text.model.paragraph("b9").fields == (RefField("b2"),)
     text.undo("ann")
-    assert text.model.block("b3").fields == (RefField("b1"), RefField("b2"))
+    assert text.model.paragraph("b3").fields == (RefField("b1"), RefField("b2"))
 
 
 def test_a_field_and_its_character_go_together_or_not_at_all(text):
@@ -101,7 +105,7 @@ def test_a_field_and_its_character_go_together_or_not_at_all(text):
 def test_a_reference_is_written_down_and_read_back_and_redacting_keeps_it(text):
     refer(text, "b2")
     restored = TextModel.restore(text.model.serialize())
-    assert restored.block("b3").fields == (RefField("b2"),)
+    assert restored.paragraph("b3").fields == (RefField("b2"),)
     typed = InsertText("b3", 0, f"ab{FIELD_CHAR}", fields=(RefField("b2"),))
     assert typed.redacted().text == f"██{FIELD_CHAR}"
     assert SetField("b3", 0, RefField("b2", "text")).to_data()["field"] == {

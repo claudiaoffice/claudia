@@ -54,7 +54,7 @@ _FIXED = {
 
 def inline_script_hashes(pages: Iterable[str]) -> tuple[str, ...]:
     """The CSP sources (``'sha256-…'``) of the inline scripts a browser would run in ``pages`` (HTML text), sorted and
-    without repeats. A ``<script src>`` and a data block (``type="application/json"``) are not inline scripts."""
+    without repeats. A ``<script src>`` and a data paragraph (``type="application/json"``) are not inline scripts."""
     found: set[str] = set()
     for page in pages:
         for match in _INLINE_SCRIPT.finditer(page):
@@ -81,7 +81,7 @@ class WebScriptHashes:
     """:func:`web_script_hashes` that follows the web app when it is built again while the server runs.
 
     Every build of the web app writes a new inline script (its build id is in it), and a policy with the hashes of the
-    build the server started with blocks it: the page stays blank. That happened to the desktop apps (2026-11-15):
+    build the server started with paragraphs it: the page stays blank. That happened to the desktop apps (2026-11-15):
     their server outlives its windows (D445), and the start scripts build the web app again before each window. So
     the pages are looked at again (their size and time, which is cheap) before each answer, and read again only when
     one changed."""

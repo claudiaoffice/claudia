@@ -13,7 +13,7 @@ def a_document() -> Document:
 
 
 def type_text(document: Document, text: str, author: str, time: str) -> None:
-    document.execute(InsertText("b1", len(document.model.blocks[0].text), text), author=author, time=time)
+    document.execute(InsertText("b1", len(document.model.paragraphs[0].text), text), author=author, time=time)
 
 
 def propose(document: Document, suggestion_id: str, author: str, time: str) -> ProposeSuggestion:

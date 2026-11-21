@@ -1,7 +1,7 @@
-"""BlockAnchor: where an object sits in a text (E10.16, D179).
+"""ParagraphAnchor: where an object sits in a text (E10.16, D179).
 
 A text has no fixed page the way a slide has a stage, and no cell grid the way a sheet has one. What it has is
-paragraphs, so an object is anchored to one: ``block`` is the paragraph and ``offset`` the character in it the
+paragraphs, so an object is anchored to one: ``paragraph`` is the paragraph and ``offset`` the character in it the
 object hangs from.
 
 Things this anchor settles as decisions rather than leaving to chance:
@@ -51,14 +51,14 @@ def _is_whole(value: object) -> TypeIs[int]:
 
 
 @dataclass(frozen=True)
-class BlockAnchor:
-    """Where an object hangs in a text: character ``offset`` of the paragraph ``block``, and where its top-left
+class ParagraphAnchor:
+    """Where an object hangs in a text: character ``offset`` of the paragraph ``paragraph``, and where its top-left
     corner floats relative to that character: ``dx`` to the right and ``dy`` down (negative: left and up). ``wrap``
     is how the text flows round it (one of :data:`~claudia_composes.anchors.WRAPS`) and ``gap`` how far it keeps from
     it."""
 
-    kind: ClassVar[str] = "block"
-    block: str
+    kind: ClassVar[str] = "paragraph"
+    paragraph: str
     offset: int = 0
     dx: int = 0
     dy: int = 0
@@ -68,25 +68,26 @@ class BlockAnchor:
     @property
     def holder(self) -> str:
         """The paragraph this object belongs to."""
-        return self.block
+        return self.paragraph
 
     @property
     def span(self) -> Span:
-        """The anchor as an empty ``(block, start, end)`` span, so that it can follow a text command."""
-        return (self.block, self.offset, self.offset)
+        """The anchor as an empty ``(paragraph, start, end)`` span, so that it can follow a text command."""
+        return (self.paragraph, self.offset, self.offset)
 
-    def followed(self, span: Span) -> BlockAnchor:
+    def followed(self, span: Span) -> ParagraphAnchor:
         """The anchor at the place ``span`` (the output of ``TextCommand.follow`` on :attr:`span`) now names."""
-        block, start, _ = span
-        return replace(self, block=block, offset=start)
+        paragraph, start, _ = span
+        return replace(self, paragraph=paragraph, offset=start)
 
-    def carried_to(self, block: str, shift: int) -> BlockAnchor:
-        """The anchor ``shift`` characters further along, in the paragraph ``block`` (a join carries its objects)."""
-        return replace(self, block=block, offset=self.offset + shift)
+    def carried_to(self, paragraph: str, shift: int) -> ParagraphAnchor:
+        """The anchor ``shift`` characters further along, in the paragraph ``paragraph`` (a join carries its
+        objects)."""
+        return replace(self, paragraph=paragraph, offset=self.offset + shift)
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores and clients are sent."""
-        data = {"kind": self.kind, "holder": self.block, "offset": self.offset, "dx": self.dx, "dy": self.dy}
+        data = {"kind": self.kind, "holder": self.paragraph, "offset": self.offset, "dx": self.dx, "dy": self.dy}
         if self.wrap != "over":  # an anchor that does nothing special stays as it was written before wrapping existed
             data["wrap"] = self.wrap
         if self.gap != DEFAULT_WRAP_GAP:
@@ -94,16 +95,16 @@ class BlockAnchor:
         return data
 
     @classmethod
-    def from_data(cls, data: dict) -> BlockAnchor:
+    def from_data(cls, data: dict) -> ParagraphAnchor:
         """Read an anchor sent by a client or stored in the log; ``ValueError`` if it is not one. An anchor written
         before objects could float has no ``dx`` and ``dy`` and reads as sitting on its character."""
         if data.get("kind") != cls.kind:
-            raise ValueError(f"composes knows only block anchors, not {data.get('kind')!r}")
-        block, offset = data.get("holder"), data.get("offset")
-        if not isinstance(block, str) or not _is_whole(offset):
-            raise ValueError("a block anchor names a paragraph and a whole offset")
+            raise ValueError(f"composes knows only paragraph anchors, not {data.get('kind')!r}")
+        paragraph, offset = data.get("holder"), data.get("offset")
+        if not isinstance(paragraph, str) or not _is_whole(offset):
+            raise ValueError("a paragraph anchor names a paragraph and a whole offset")
         anchor = cls(
-            block,
+            paragraph,
             offset,
             data.get("dx", 0),
             data.get("dy", 0),

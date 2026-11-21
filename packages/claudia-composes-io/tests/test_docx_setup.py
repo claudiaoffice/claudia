@@ -13,7 +13,7 @@ from docx.enum.section import WD_ORIENT
 from docx.oxml.ns import qn
 from docx.shared import Twips
 
-from claudia_composes import Block, PageSetup, TextModel
+from claudia_composes import PageSetup, Paragraph, TextModel
 from claudia_odf_io import Loss
 
 
@@ -221,13 +221,13 @@ def test_a_language_that_is_no_tag_is_no_language():
 
 
 def test_a_text_edited_in_the_same_run_is_edited_too():
-    original = text_to_docx(TextModel([Block("b1", "body", "words")]))
+    original = text_to_docx(TextModel([Paragraph("b1", "body", "words")]))
     baseline, current = docx_to_text(original), docx_to_text(original)
     current.page = PageSetup.preset("a5")
     current.language = "de"
-    current.blocks[0] = Block("b1", "body", "so words", current.blocks[0].runs)
+    current.paragraphs[0] = Paragraph("b1", "body", "so words", current.paragraphs[0].runs)
     read = docx_to_text(apply_edits_to_docx(original, baseline, current))
-    assert (read.page.paper, read.language, read.blocks[0].text) == ("a5", "de", "so words")
+    assert (read.page.paper, read.language, read.paragraphs[0].text) == ("a5", "de", "so words")
 
 
 def test_whatever_is_changed_about_the_setup_the_file_says_it():

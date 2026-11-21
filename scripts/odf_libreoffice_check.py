@@ -10,7 +10,7 @@ and the new file -- an odt to plain text, an odp to a PowerPoint file, whose sha
 to an Excel file whose cells are then read -- and checks that
 
 * ``soffice`` accepts the file (exit code 0, a file comes out),
-* every word of every block (every object) of the edited model is in what LibreOffice read, in order. (Words, not
+* every word of every paragraph (every object) of the edited model is in what LibreOffice read, in order. (Words, not
   the exact text: LibreOffice prints a footnote's number inside the sentence and a tracked deletion and its insertion
   run together, and writes a tab or a break as it likes.), and
 * every cell of an edited or new workbook has in LibreOffice the value the model computes for it -- also where the
@@ -132,9 +132,9 @@ def shows(read: str, expected: str) -> bool:
 
 
 def texts_of(fmt: str, model) -> list[str]:
-    """The words of ``model`` the file must show, one entry per block or object."""
+    """The words of ``model`` the file must show, one entry per paragraph or object."""
     if fmt == "odt":
-        return [block.text for block in model.blocks if block.text.strip()]
+        return [paragraph.text for paragraph in model.paragraphs if paragraph.text.strip()]
     return [
         o.body.paragraph.text
         for slide in model.slides
@@ -171,20 +171,20 @@ def new_file() -> tuple[bytes, list[str]]:
     """A file made from a model: every style, white space, a suggestion."""
     from claudia_composes_io import odt_to_text, text_to_odt
 
-    from claudia_composes import Block, Suggestion, TextModel, TextRange
+    from claudia_composes import Paragraph, Suggestion, TextModel, TextRange
 
     model = TextModel(
         [
-            Block("b1", "title", "Annual report"),
-            Block("b2", "heading-1", "Summary"),
-            Block("b3", "heading-2", "Details"),
-            Block("b4", "body", "The committee rejected the proposal.  Two  spaces\tand a tab\nand a break."),
-            Block("b5", "quote", "Words of someone else"),
+            Paragraph("b1", "title", "Annual report"),
+            Paragraph("b2", "heading-1", "Summary"),
+            Paragraph("b3", "heading-2", "Details"),
+            Paragraph("b4", "body", "The committee rejected the proposal.  Two  spaces\tand a tab\nand a break."),
+            Paragraph("b5", "quote", "Words of someone else"),
         ]
     )
     model.suggestions["s1"] = Suggestion("s1", "Claudia AI", TextRange("b4", 14, 22), "rejected", "approved", "tone")
     data = text_to_odt(model)
-    return data, [block.text for block in odt_to_text(data).blocks]
+    return data, [paragraph.text for paragraph in odt_to_text(data).paragraphs]
 
 
 def new_deck() -> tuple[bytes, list[str]]:

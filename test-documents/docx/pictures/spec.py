@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from claudia_composes import BlockAnchor, TextModel
+from claudia_composes import ParagraphAnchor, TextModel
 from claudia_core import VisualObject
 from claudia_test_documents.case import Case
 
@@ -17,12 +17,12 @@ PICTURES = ["word/media/image1.gif", "word/media/image2.gif"]
 def import_checks(model: TextModel) -> None:
     first, second = model.get_object("o1"), model.get_object("o2")
     assert (first.anchor, first.body.description, (first.body.w, first.body.h)) == (
-        BlockAnchor("b2", 22),
+        ParagraphAnchor("b2", 22),
         "Two cyclists on a hill",
         (180, 90),
     )
-    assert (second.anchor, second.body.description) == (BlockAnchor("b3", 0), "A small mark")
-    assert [block.text for block in model.blocks][0] == "Pictures"
+    assert (second.anchor, second.body.description) == (ParagraphAnchor("b3", 0), "A small mark")
+    assert [paragraph.text for paragraph in model.paragraphs][0] == "Pictures"
 
 
 def modify(model: TextModel) -> TextModel:
@@ -39,8 +39,12 @@ def after_checks(model: TextModel) -> None:
         (360, 180),
         90,
     )
-    assert (second.anchor, second.body.description, second.body.rotation) == (BlockAnchor("b3", 0), "A small mark", 0)
-    assert model.blocks[2].text == "Nothing here changes."
+    assert (second.anchor, second.body.description, second.body.rotation) == (
+        ParagraphAnchor("b3", 0),
+        "A small mark",
+        0,
+    )
+    assert model.paragraphs[2].text == "Nothing here changes."
 
 
 CASE = Case(import_checks=import_checks, modify=modify, after_checks=after_checks, preserve_parts=PICTURES)

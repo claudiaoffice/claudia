@@ -282,7 +282,7 @@ def test_a_viewer_still_reads_the_content_and_the_names(room):
 
 
 def test_looking_back_reads_the_history():
-    """``as_of`` shows the document as it was after a step, which is what the history blocks hold."""
+    """``as_of`` shows the document as it was after a step, which is what the history paragraphs hold."""
     tables = [table for table in _METHODS.values() if "as_of" in table.names()]
     assert tables and all(table._methods["as_of"].reads == "history" for table in tables)
 

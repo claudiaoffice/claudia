@@ -2,7 +2,7 @@
 
 What is shared by every app lives in :mod:`claudia_server.search_methods`; this is what a text brings: its kinds of
 text (paragraphs by their style, the words and the descriptions of floating objects), its scope (a section or a
-selection), a place as ``{block}`` or ``{block, object, source}`` (CODE-18) and who holds a stretch of text.
+selection), a place as ``{paragraph}`` or ``{paragraph, object, source}`` (CODE-18) and who holds a stretch of text.
 """
 
 from __future__ import annotations
@@ -11,8 +11,8 @@ from claudia_composes import TextModel
 from claudia_composes.search import (
     EXTRA_PARTS,
     KINDS,
-    block_of,
     object_of,
+    paragraph_of,
     plan_replacement,
     replace_command,
     scan_text,
@@ -29,33 +29,32 @@ from .search_methods import add_search_methods as _add
 MAX_REPLACED_TEXTS = 10_000  # paragraphs and object texts one replacement may change
 
 FIND_DOC = """Search and replace, the looking (E9.28). `query` is what a person described: `{mode: "text", text}` (what
-        is typed is what is found), `{mode: "builder", parts, conditions, combine}` or `{mode: "pattern", find,
-        filter}` (her own pattern); each may carry `match_case`, and the first two `whole` (`none`, `entire` or
-        `word`) and, to show what a replacement would do, `replace`. A part is `{what, ...}`: `text`, `any_of`,
-        `none_of`, `letter`, `digit`, `space`, `any`, `number`, `start`, `end` or, in a text, `word`. `kinds` is any of
-        `text`, `heading`, `remark`, `object`, `description` and `table` (default `["text"]`): paragraphs in a body
-        style, in a title or heading style, in the remark style (or a style based on one of them), the words in an
-        object floating over the text (a text box, a shape's label), what an object says to somebody who cannot see
-        it, and the words in the boxes of a table (row by row, a box a merge covers has none).
-        `scope` is `{}` (the whole text), `{section: paragraph}` (the section that paragraph is in: from its heading
-        to the next heading of the same or a higher level) or `{range: {from: {block, offset}, to: {block, offset}}}`
-        (a selection).
+        is typed is what is found), `{mode: "builder", parts, conditions, combine}` or `{mode: "pattern", find, filter}`
+        (her own pattern); each may carry `match_case`, and the first two `whole` (`none`, `entire` or `word`) and, to
+        show what a replacement would do, `replace`. A part is `{what, ...}`: `text`, `any_of`, `none_of`, `letter`,
+        `digit`, `space`, `any`, `number`, `start`, `end` or, in a text, `word`. `kinds` is any of `text`, `heading`,
+        `remark`, `object`, `description` and `table` (default `["text"]`): paragraphs in a body style, in a title or
+        heading style, in the remark style (or a style based on one of them), the words in an object floating over the
+        text (a text box, a shape's label), what an object says to somebody who cannot see it, and the words in the
+        boxes of a table (row by row, a box a merge covers has none). `scope` is `{}` (the whole text), `{section:
+        paragraph}` (the section that paragraph is in: from its heading to the next heading of the same or a higher
+        level) or `{range: {from: {paragraph, offset}, to: {paragraph, offset}}}` (a selection).
 
         Answers `{revision, matches, left_out, counts, total, truncated, timed_out, pattern}`. A match is `{at, kind,
-        number, start, end, parts, after, text, excerpt, clipped}`: `at` is the place, `{block}` for a paragraph
-        (`{block, offset}` when only the part from `offset` on was searched, a selection's first or last paragraph:
-        `start` and `end` count from there), `{block, object, source}` for an object (`block` the paragraph it hangs
-        from), `source` being `box`, `label` or `description`, and `{block, table, row, col}` for a box of a table
-        (`block` the paragraph its table hangs from; the ids are those `tables` lists); `kind` is one of the kinds
-        above, `number` the match's place among those of its text, `start`/`end` where it is in that text,
-        `parts` what the kept parts matched, `after` what a replacement would
-        make of it (`null` without one), `text` the stretch around it, `excerpt` the match inside that and `clipped`
-        whether the text goes on before and after it. `left_out` are texts that look like matches but fail a
-        condition, `{at, kind, why}`. `counts` are texts with a match, by kind; `total` all matches, of which at most
-        2000 are listed. `pattern` is `{find, filter, replace}`, the three fields that say the same search as text.
-        A search that cannot run, a mistake in the person's pattern, is not an error: it answers `error: {message,
-        field, position}` and finds nothing, so that a client can say so while she types. `timed_out` says the search
-        stopped after two seconds, before it had seen everything; what it found by then is listed."""
+        number, start, end, parts, after, text, excerpt, clipped}`: `at` is the place, `{paragraph}` for a paragraph
+        (`{paragraph, offset}` when only the part from `offset` on was searched, a selection's first or last paragraph:
+        `start` and `end` count from there), `{paragraph, object, source}` for an object (`paragraph` the paragraph it
+        hangs from), `source` being `box`, `label` or `description`, and `{paragraph, table, row, col}` for a box of a
+        table (`paragraph` the paragraph its table hangs from; the ids are those `tables` lists); `kind` is one of the
+        kinds above, `number` the match's place among those of its text, `start`/`end` where it is in that text, `parts`
+        what the kept parts matched, `after` what a replacement would make of it (`null` without one), `text` the
+        stretch around it, `excerpt` the match inside that and `clipped` whether the text goes on before and after it.
+        `left_out` are texts that look like matches but fail a condition, `{at, kind, why}`. `counts` are texts with a
+        match, by kind; `total` all matches, of which at most 2000 are listed. `pattern` is `{find, filter, replace}`,
+        the three fields that say the same search as text. A search that cannot run, a mistake in the person's pattern,
+        is not an error: it answers `error: {message, field, position}` and finds nothing, so that a client can say so
+        while she types. `timed_out` says the search stopped after two seconds, before it had seen everything; what it
+        found by then is listed."""
 
 PREVIEW_DOC = """What `search_replace` with the same parameters would do, without doing it: `{revision, changes,
         skipped, total, timed_out}`. A change is `{at, kind, before, after}` (`at` as in `search_find`; at most 2000
@@ -95,15 +94,15 @@ def _scope(ctx: Context, scope: dict | None, method: str) -> dict | None:
 
 def _place(at) -> Location:
     try:
-        block, offset = block_of(at)
+        paragraph, offset = paragraph_of(at)
     except ValueError:
         try:
-            block, object_id, source = object_of(at)
+            paragraph, object_id, source = object_of(at)
         except ValueError:
-            block, table, row, col = table_of(at)
-            return {"block": block, "table": table, "row": row, "col": col}
-        return {"block": block, "object": object_id, "source": source}
-    return {"block": block} if "offset" not in at else {"block": block, "offset": offset}
+            paragraph, table, row, col = table_of(at)
+            return {"paragraph": paragraph, "table": table, "row": row, "col": col}
+        return {"paragraph": paragraph, "object": object_id, "source": source}
+    return {"paragraph": paragraph} if "offset" not in at else {"paragraph": paragraph, "offset": offset}
 
 
 def add_search_methods(table: MethodTable) -> None:
@@ -140,8 +139,8 @@ def add_search_methods(table: MethodTable) -> None:
                 limit=limit,
             ),
             bad_place=lambda: msg(
-                "leave: each is {at, match}, at being a place the search listed ({block}, "
-                "{block, object, source} or {block, table, row, col}) and match a number or null"
+                "leave: each is {at, match}, at being a place the search listed ({paragraph}, "
+                "{paragraph, object, source} or {paragraph, table, row, col}) and match a number or null"
             ),
             max_replaced=lambda: MAX_REPLACED_TEXTS,
             find_doc=FIND_DOC,

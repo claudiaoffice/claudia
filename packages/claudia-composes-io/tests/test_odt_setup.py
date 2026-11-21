@@ -247,7 +247,7 @@ def test_the_text_edited_in_the_same_run_is_edited_too():
     current.insert("b1", 0, "so ", [Run(3, None)])
     edited = apply_edits_to_odt(original, baseline, current)
     again_ = odt_to_text(edited)
-    assert (again_.page.paper, again_.language, again_.blocks[0].text) == ("a5", "de", "so words")
+    assert (again_.page.paper, again_.language, again_.paragraphs[0].text) == ("a5", "de", "so words")
 
 
 def test_whatever_is_changed_about_the_setup_the_file_says_it():

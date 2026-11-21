@@ -165,9 +165,9 @@ def _kind_of(model: ObjectModel, thing_id: str) -> str:
     for kind, thing in model.unnamed_things():
         if thing == thing_id:
             return kind
-    block_kind = getattr(model, "block_kind", None)  # a paragraph without a name is in neither list (D554)
-    if block_kind is not None:
-        return block_kind(model.block(thing_id))  # type: ignore[attr-defined]
+    paragraph_kind = getattr(model, "paragraph_kind", None)  # a paragraph without a name is in neither list (D554)
+    if paragraph_kind is not None:
+        return paragraph_kind(model.paragraph(thing_id))  # type: ignore[attr-defined]
     raise KeyError(thing_id)
 
 

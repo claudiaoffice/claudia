@@ -21,7 +21,7 @@ _FENCES = re.compile(r"`{3,}")
 
 
 def fence(text: str) -> str:
-    """``text`` as a block of data: a fence round it, and no fence inside that could end it early."""
+    """``text`` as a paragraph of data: a fence round it, and no fence inside that could end it early."""
     return f"{FENCE}data\n{_FENCES.sub("'''", text)}\n{FENCE}"
 
 

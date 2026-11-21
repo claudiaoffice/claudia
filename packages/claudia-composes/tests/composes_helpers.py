@@ -3,9 +3,9 @@
 SENTENCE = "the quick brown fox jumps over the lazy dog"
 
 
-def text_of(doc, block="b1"):
-    return doc.model.block(block).text
+def text_of(doc, paragraph="b1"):
+    return doc.model.paragraph(paragraph).text
 
 
 def texts(doc):
-    return [b.text for b in doc.model.blocks]
+    return [b.text for b in doc.model.paragraphs]

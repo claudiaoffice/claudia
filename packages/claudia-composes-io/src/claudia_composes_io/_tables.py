@@ -21,7 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from itertools import count
 
-from claudia_composes import BlockAnchor, TextModel, table_body
+from claudia_composes import ParagraphAnchor, TextModel, table_body
 from claudia_core import (
     MAX_COLUMNS,
     MAX_ROWS,
@@ -257,20 +257,21 @@ def cell_look(model: TextModel, style_id: str) -> CellLook:
 # --------------------------------------------------------------------------------------------------- in the model
 def put_tables(model: TextModel, placed: list[tuple[str, int, TableDef]]) -> None:
     """Take the tables a file had into ``model``, each shown by an object of its own that hangs from the paragraph
-    ``block`` at ``offset`` (a table in the flow is printed after the paragraph it hangs from). ``placed`` is in
+    ``paragraph`` at ``offset`` (a table in the flow is printed after the paragraph it hangs from). ``placed`` is in
     the order of the file, which is the order the objects stack in."""
-    for block, offset, definition in placed:
+    for paragraph, offset, definition in placed:
         model.tables.define(definition)
         object_id = next(f"o{n}" for n in count(1) if f"o{n}" not in model.objects)
         name = free_name("Table", model.names_in_use())
-        model.insert_object(VisualObject(table_body(object_id, definition, name), BlockAnchor(block, offset)))
+        model.insert_object(VisualObject(table_body(object_id, definition, name), ParagraphAnchor(paragraph, offset)))
 
 
-def tables_after(model: TextModel, block_id: str) -> list[TableDef]:
-    """The tables that hang from the paragraph ``block_id``, in the order they are drawn after it: by where they hang,
-    and one that hangs where another does, in the order they stack. A floating table is written in the flow too."""
+def tables_after(model: TextModel, paragraph_id: str) -> list[TableDef]:
+    """The tables that hang from the paragraph ``paragraph_id``, in the order they are drawn after it: by where they
+    hang, and one that hangs where another does, in the order they stack. A floating table is written in the flow
+    too."""
     found = []
-    for object_id in model.stack_of(block_id):
+    for object_id in model.stack_of(paragraph_id):
         obj = model.get_object(object_id)
         table = obj.body.table
         if table is not None and table in model.tables:
@@ -293,8 +294,8 @@ def table_changes(baseline: TextModel, current: TextModel) -> dict[str, tuple[li
     added), each with the tables that hung from it and those that hang from it now. A paragraph that is gone has
     no tables left."""
     changes = {}
-    for block_id in dict.fromkeys([*(b.id for b in baseline.blocks), *(b.id for b in current.blocks)]):
-        before, after = tables_after(baseline, block_id), tables_after(current, block_id)
+    for paragraph_id in dict.fromkeys([*(b.id for b in baseline.paragraphs), *(b.id for b in current.paragraphs)]):
+        before, after = tables_after(baseline, paragraph_id), tables_after(current, paragraph_id)
         if before != after:
-            changes[block_id] = (before, after)
+            changes[paragraph_id] = (before, after)
     return changes

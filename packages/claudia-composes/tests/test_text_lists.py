@@ -6,9 +6,9 @@ from composes_helpers import texts
 from claudia_composes import (
     InsertText,
     ItemChanged,
-    JoinBlocks,
+    JoinParagraphs,
     LabelsChanged,
-    SplitBlock,
+    SplitParagraph,
     TextModel,
 )
 from claudia_composes.region import TextRange
@@ -34,9 +34,9 @@ def listed(clock):
     """Three paragraphs, b1..b3, and the two lists ``l1`` (numbers) and ``l2`` (bullets) in the book."""
     d = Document(TextModel(), store=MemoryStore(), clock=clock.time, lock_clock=clock.lock_time)
     d.execute(InsertText("b1", 0, "one"), author="ann")
-    d.execute(SplitBlock("b1", 3, "b2", "body"), author="ann")
+    d.execute(SplitParagraph("b1", 3, "b2", "body"), author="ann")
     d.execute(InsertText("b2", 0, "two"), author="ann")
-    d.execute(SplitBlock("b2", 3, "b3", "body"), author="ann")
+    d.execute(SplitParagraph("b2", 3, "b3", "body"), author="ann")
     d.execute(InsertText("b3", 0, "three"), author="ann")
     d.execute(CreateList(NUMBERS), author="ann")
     d.execute(CreateList(BULLETS), author="ann")
@@ -57,9 +57,9 @@ def markers(doc):
 def test_making_a_paragraph_an_item_tells_the_clients_the_item_and_its_label(listed):
     events = collect(listed, ItemChanged, LabelsChanged)
     listed.execute(SetListItem("b1", ListItem("l1", 0)), author="ann")
-    assert listed.model.block("b1").item == ListItem("l1", 0)
+    assert listed.model.paragraph("b1").item == ListItem("l1", 0)
     item, labels = events
-    assert item.to_data() == {"type": "item", "block": "b1", "item": {"list": "l1", "level": 0}}
+    assert item.to_data() == {"type": "item", "paragraph": "b1", "item": {"list": "l1", "level": 0}}
     assert labels.to_data() == {"type": "labels", "labels": {"b1": {"marker": "1.", "path": [1], "number": "1"}}}
 
 
@@ -67,13 +67,13 @@ def test_undo_gives_the_paragraph_its_old_item_back_and_the_label_goes(listed):
     listed.execute(SetListItem("b1", ListItem("l1")), author="ann")
     events = collect(listed, ItemChanged, LabelsChanged)
     listed.undo("ann")
-    assert listed.model.block("b1").item is None
+    assert listed.model.paragraph("b1").item is None
     assert [e.to_data() for e in events] == [
-        {"type": "item", "block": "b1", "item": None},
+        {"type": "item", "paragraph": "b1", "item": None},
         {"type": "labels", "labels": {"b1": None}},
     ]
     listed.redo("ann")
-    assert listed.model.block("b1").item == ListItem("l1")
+    assert listed.model.paragraph("b1").item == ListItem("l1")
 
 
 def test_an_item_needs_a_list_the_document_has_and_a_level_that_exists(listed):
@@ -82,7 +82,7 @@ def test_an_item_needs_a_list_the_document_has_and_a_level_that_exists(listed):
             listed.execute(SetListItem("b1", bad), author="ann")
     with pytest.raises(KeyError):
         listed.execute(SetListItem("b9", ListItem("l1")), author="ann")
-    assert listed.model.block("b1").item is None
+    assert listed.model.paragraph("b1").item is None
 
 
 def test_the_history_says_what_happened():
@@ -99,8 +99,8 @@ def test_the_command_survives_a_trip_through_the_log():
 
 # ----------------------------------------------------------------------------- counting is told, not guessed
 def test_only_the_labels_that_changed_are_told(listed):
-    for block in ("b1", "b2", "b3"):
-        listed.execute(SetListItem(block, ListItem("l1")), author="ann")
+    for paragraph in ("b1", "b2", "b3"):
+        listed.execute(SetListItem(paragraph, ListItem("l1")), author="ann")
     assert markers(listed) == {"b1": "1.", "b2": "2.", "b3": "3."}
     events = collect(listed, LabelsChanged)
     listed.execute(SetListItem("b1", None), author="ann")  # the others count one less
@@ -122,8 +122,8 @@ def test_typing_changes_no_label_and_so_tells_nothing(listed):
 def test_changing_a_list_renumbers_its_items(listed):
     from claudia_core import ChangeList
 
-    for block in ("b1", "b2"):
-        listed.execute(SetListItem(block, ListItem("l1")), author="ann")
+    for paragraph in ("b1", "b2"):
+        listed.execute(SetListItem(paragraph, ListItem("l1")), author="ann")
     listed.execute(ChangeList(ListDef("l1", "numbers", 5, "Steps")), author="ann")
     assert markers(listed) == {"b1": "5.", "b2": "6."}
     listed.execute(ChangeList(ListDef("l1", "bullets")), author="ann")
@@ -135,54 +135,54 @@ def test_a_failed_command_tells_nothing_and_changes_nothing(listed):
     events = collect(listed, ItemChanged, LabelsChanged)
     with pytest.raises(ValueError, match="no list"):
         listed.execute(Batch((SetListItem("b2", ListItem("l1")), SetListItem("b3", ListItem("ghost")))), author="ann")
-    assert events == [] and listed.model.block("b2").item is None
+    assert events == [] and listed.model.paragraph("b2").item is None
     assert markers(listed) == {"b1": "1."}
 
 
 # ----------------------------------------------------------------------------- split and join
 def test_enter_in_an_item_makes_another_item_of_the_same_list_and_level(listed):
     listed.execute(SetListItem("b1", ListItem("l1", 1)), author="ann")
-    listed.execute(SplitBlock("b1", 1, "b4", "body"), author="ann")
-    assert listed.model.block("b4").item == ListItem("l1", 1)
+    listed.execute(SplitParagraph("b1", 1, "b4", "body"), author="ann")
+    assert listed.model.paragraph("b4").item == ListItem("l1", 1)
     assert texts(listed)[:2] == ["o", "ne"]
     assert markers(listed) == {"b1": "a.", "b4": "b."}  # no level-0 item above them: the missing parent counts as one
 
 
 def test_undoing_a_split_takes_the_new_item_and_its_label_away(listed):
     listed.execute(SetListItem("b1", ListItem("l1")), author="ann")
-    listed.execute(SplitBlock("b1", 1, "b4", "body"), author="ann")
+    listed.execute(SplitParagraph("b1", 1, "b4", "body"), author="ann")
     listed.undo("ann")
-    assert "b4" not in [b.id for b in listed.model.blocks]
+    assert "b4" not in [b.id for b in listed.model.paragraphs]
     assert markers(listed) == {"b1": "1."}
 
 
 def test_a_join_keeps_the_item_of_the_first_paragraph(listed):
     listed.execute(SetListItem("b1", ListItem("l1")), author="ann")
     listed.execute(SetListItem("b2", ListItem("l2")), author="ann")
-    listed.execute(JoinBlocks("b2", "b1", 3), author="ann")
-    assert listed.model.block("b1").item == ListItem("l1")
+    listed.execute(JoinParagraphs("b2", "b1", 3), author="ann")
+    assert listed.model.paragraph("b1").item == ListItem("l1")
     assert markers(listed) == {"b1": "1."}
 
 
 def test_undoing_a_join_brings_the_removed_paragraphs_own_item_back(listed):
     listed.execute(SetListItem("b2", ListItem("l2", 2)), author="ann")  # b1 is no item, b2 is
-    listed.execute(JoinBlocks("b2", "b1", 3), author="ann")
-    assert listed.model.block("b1").item is None
+    listed.execute(JoinParagraphs("b2", "b1", 3), author="ann")
+    assert listed.model.paragraph("b1").item is None
     listed.undo("ann")
-    assert [b.item for b in listed.model.blocks[:2]] == [None, ListItem("l2", 2)]
+    assert [b.item for b in listed.model.paragraphs[:2]] == [None, ListItem("l2", 2)]
     assert markers(listed) == {"b2": "▪"}
 
 
 def test_a_join_that_changes_nothing_about_the_item_has_the_plain_inverse(listed):
     listed.execute(SetListItem("b1", ListItem("l1")), author="ann")
     listed.execute(SetListItem("b2", ListItem("l1")), author="ann")
-    applied = listed.execute(JoinBlocks("b2", "b1", 3), author="ann")
-    assert isinstance(applied.inverse, SplitBlock)
+    applied = listed.execute(JoinParagraphs("b2", "b1", 3), author="ann")
+    assert isinstance(applied.inverse, SplitParagraph)
 
 
 def test_undoing_a_change_of_an_item_that_was_joined_away_is_refused(listed):
     listed.execute(SetListItem("b2", ListItem("l1")), author="ann")
-    listed.execute(JoinBlocks("b2", "b1", 3), author="ben")
+    listed.execute(JoinParagraphs("b2", "b1", 3), author="ben")
     with pytest.raises(UndoConflict):
         listed.undo("ann")
 
@@ -221,8 +221,8 @@ def test_items_and_lists_are_part_of_the_state_and_come_back(listed):
 
 def test_replaying_the_log_gives_the_same_items_and_lists(listed):
     listed.execute(SetListItem("b1", ListItem("l1")), author="ann")
-    listed.execute(SplitBlock("b1", 1, "b4", "body"), author="ann")
-    listed.execute(JoinBlocks("b4", "b1", 1), author="ben")
+    listed.execute(SplitParagraph("b1", 1, "b4", "body"), author="ann")
+    listed.execute(JoinParagraphs("b4", "b1", 1), author="ben")
     listed.undo("ben")
     rebuilt = listed.materialize(listed.revision)
     assert rebuilt.serialize() == listed.model.serialize()
@@ -239,14 +239,14 @@ def test_the_words_of_an_object_hanging_from_the_text_are_read_after_their_parag
     """The text is a ParagraphHost: its paragraphs in order, each followed by the objects hanging from it."""
     from dataclasses import replace
 
-    from claudia_composes import BlockAnchor
+    from claudia_composes import ParagraphAnchor
     from claudia_core import ObjectBody, VisualObject, paragraph_for
 
     listed.execute(SetListItem("b1", ListItem("l1", 0)), author="ann")
     listed.execute(SetListItem("b2", ListItem("l1", 0)), author="ann")
     words = replace(paragraph_for("o1", "body", "a note"), item=ListItem("l1", 0))
     listed.model.insert_object(
-        VisualObject(ObjectBody("o1", "text", 200, 80, "plain-box", words), BlockAnchor("b1", 1))
+        VisualObject(ObjectBody("o1", "text", 200, 80, "plain-box", words), ParagraphAnchor("b1", 1))
     )
     order = [(placed.paragraph.id, placed.holder, placed.main) for placed in listed.model.reading_order()]
     assert order[:3] == [("b1", "b1", True), ("o1", "b1", False), ("b2", "b2", True)]
@@ -265,8 +265,8 @@ def test_numbered_heading_styles_number_their_paragraphs_as_one_outline(listed):
     from claudia_composes import SetStyle
     from claudia_core import SetStyleNumbering
 
-    for block, style in (("b1", "heading-1"), ("b2", "heading-2"), ("b3", "heading-1")):
-        listed.execute(SetStyle(block, style), author="ann")
+    for paragraph, style in (("b1", "heading-1"), ("b2", "heading-2"), ("b3", "heading-1")):
+        listed.execute(SetStyle(paragraph, style), author="ann")
     listed.execute(CreateList(ListDef("outline", "chapters")), author="ann")
     listed.execute(SetStyleNumbering("heading-1", "outline"), author="ann")
     listed.execute(SetStyleNumbering("heading-2", "outline"), author="ann")
@@ -276,11 +276,11 @@ def test_numbered_heading_styles_number_their_paragraphs_as_one_outline(listed):
 
 
 def test_the_words_of_a_floating_object_become_an_item_through_the_same_command(listed):
-    from claudia_composes import BlockAnchor
+    from claudia_composes import ParagraphAnchor
     from claudia_core import AddObject, ObjectBody, paragraph_for
 
     body = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
-    listed.execute(AddObject(body, BlockAnchor("b1", 1).to_data()), author="ann")
+    listed.execute(AddObject(body, ParagraphAnchor("b1", 1).to_data()), author="ann")
     listed.execute(SetListItem("o1", ListItem("l1")), author="ann")
     assert markers(listed) == {"o1": "1."} and listed.model.list_in_use("l1")
     listed.undo("ann")

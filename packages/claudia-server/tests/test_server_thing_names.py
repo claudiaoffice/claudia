@@ -229,12 +229,12 @@ def _image_params() -> dict:
 # -- paragraphs of a text (D554) -------------------------------------------------------------------------------------
 @pytest.fixture
 def text():
-    from claudia_composes import InsertText, SetStyle, SplitBlock, TextModel
+    from claudia_composes import InsertText, SetStyle, SplitParagraph, TextModel
 
     doc = Document(TextModel(), store=MemoryStore())
     doc.execute(InsertText("b1", 0, "Introduction"), author="ann")
     doc.execute(SetStyle("b1", "heading-1"), author="ann")
-    doc.execute(SplitBlock("b1", 12, "b2", "body"), author="ann")
+    doc.execute(SplitParagraph("b1", 12, "b2", "body"), author="ann")
     doc.execute(InsertText("b2", 0, "The quick brown fox."), author="ann")
     return doc
 
@@ -281,8 +281,8 @@ def test_naming_something_that_is_not_there_is_refused(text):
 
 def test_the_paragraphs_say_their_names(text):
     on_text(text, "rename_thing", {"id": "b2", "name": "Fox"})
-    blocks = {b["id"]: b for b in on_text(text, "blocks")["blocks"]}
-    assert blocks["b2"]["name"] == "Fox" and blocks["b1"]["name"] == "Introduction"
+    paragraphs = {b["id"]: b for b in on_text(text, "paragraphs")["paragraphs"]}
+    assert paragraphs["b2"]["name"] == "Fox" and paragraphs["b1"]["name"] == "Introduction"
 
 
 def test_a_viewer_cannot_name_a_paragraph(text):
@@ -299,23 +299,25 @@ def test_name_thing_names_an_object_too(deck):
 
 # -- a new paragraph has a name from the start (D1310) ---------------------------------------------------------------
 def test_a_paragraph_made_by_typing_enter_has_a_name_at_once(text):
-    answer = on_text(text, "replace_text", {"block": "b2", "start": 20, "end_block": "b2", "end": 20, "text": "\n"})
-    assert name_of(text, answer["block"]) == "Paragraph 1"
+    answer = on_text(
+        text, "replace_text", {"paragraph": "b2", "start": 20, "end_paragraph": "b2", "end": 20, "text": "\n"}
+    )
+    assert name_of(text, answer["paragraph"]) == "Paragraph 1"
 
 
 def test_a_paste_of_lines_names_each_new_paragraph_with_the_next_free_number(text):
     on_text(text, "rename_thing", {"id": "b2", "name": "Paragraph 2"})
     answer = on_text(
-        text, "replace_text", {"block": "b2", "start": 20, "end_block": "b2", "end": 20, "text": "\nA\nB\nC"}
+        text, "replace_text", {"paragraph": "b2", "start": 20, "end_paragraph": "b2", "end": 20, "text": "\nA\nB\nC"}
     )
-    names = [name_of(text, b.id) for b in text.model.blocks if b.id != "b1"]
+    names = [name_of(text, b.id) for b in text.model.paragraphs if b.id != "b1"]
     assert names == ["Paragraph 2", "Paragraph 1", "Paragraph 3", "Paragraph 4"]
-    assert answer["block"] == text.model.blocks[-1].id
+    assert answer["paragraph"] == text.model.paragraphs[-1].id
 
 
 def test_added_paragraphs_have_names_in_the_language_of_the_one_who_adds_them(text):
     on_text(text, "add_paragraphs", {"text": "one\ntwo", "after": "b2"}, locale="de")
-    names = [name_of(text, b.id) for b in text.model.blocks[2:]]
+    names = [name_of(text, b.id) for b in text.model.paragraphs[2:]]
     assert names == [translate("Paragraph", "de") + " 1", translate("Paragraph", "de") + " 2"]
 
 
@@ -324,12 +326,14 @@ def test_a_list_item_made_by_typing_enter_is_a_paragraph_by_name(text):
 
     text.execute(CreateList(ListDef("l1", "bullets")), author="ann")
     text.execute(SetListItem("b2", ListItem("l1")), author="ann")
-    answer = on_text(text, "replace_text", {"block": "b2", "start": 20, "end_block": "b2", "end": 20, "text": "\n"})
-    assert name_of(text, answer["block"]) == "Paragraph 1"
+    answer = on_text(
+        text, "replace_text", {"paragraph": "b2", "start": 20, "end_paragraph": "b2", "end": 20, "text": "\n"}
+    )
+    assert name_of(text, answer["paragraph"]) == "Paragraph 1"
 
 
 def test_the_name_of_a_paragraph_that_is_made_is_part_of_the_one_step(text):
-    on_text(text, "replace_text", {"block": "b2", "start": 20, "end_block": "b2", "end": 20, "text": "\n"})
+    on_text(text, "replace_text", {"paragraph": "b2", "start": 20, "end_paragraph": "b2", "end": 20, "text": "\n"})
     text.undo("ann")
     assert text.model.names_in_use() == ["Introduction"]
 

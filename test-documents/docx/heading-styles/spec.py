@@ -9,7 +9,7 @@ from claudia_test_documents.case import Case
 
 
 def import_checks(model: TextModel) -> None:
-    assert [(b.style, b.text) for b in model.blocks] == [
+    assert [(b.style, b.text) for b in model.paragraphs] == [
         ("title", "Claudia Field Notes"),
         ("heading-1", "Introduction"),
         (DEFAULT_STYLE, "This is the introduction."),
@@ -19,17 +19,17 @@ def import_checks(model: TextModel) -> None:
 
 
 def modify(model: TextModel) -> TextModel:
-    # a block (a paragraph, D181) is immutable -- replace its whole text through the same remove/insert the
+    # a paragraph (a paragraph, D181) is immutable -- replace its whole text through the same remove/insert the
     # model itself builds character edits from, rather than reaching for a private part of the model.
-    block_id = model.blocks[1].id
+    paragraph_id = model.paragraphs[1].id
     new_text = "Introduction (revised)"
-    model.remove(block_id, 0, len(model.block(block_id).text))
-    model.insert(block_id, 0, new_text, [Run(len(new_text), None)])
+    model.remove(paragraph_id, 0, len(model.paragraph(paragraph_id).text))
+    model.insert(paragraph_id, 0, new_text, [Run(len(new_text), None)])
     return model
 
 
 def after_checks(model: TextModel) -> None:
-    assert [(b.style, b.text) for b in model.blocks] == [
+    assert [(b.style, b.text) for b in model.paragraphs] == [
         ("title", "Claudia Field Notes"),
         ("heading-1", "Introduction (revised)"),
         (DEFAULT_STYLE, "This is the introduction."),

@@ -18,7 +18,7 @@ sys.modules["odf_libreoffice_check"] = check
 SPEC.loader.exec_module(check)
 
 
-def test_the_new_text_is_made_and_reads_back_with_every_block():
+def test_the_new_text_is_made_and_reads_back_with_every_paragraph():
     data, shown = check.new_file()
     assert data.startswith(b"PK")
     assert shown[0] == "Annual report"

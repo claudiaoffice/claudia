@@ -59,7 +59,7 @@ def _param(param: dict) -> str:
     return text if param["default"] is None else f"{text} = {param['default']}"
 
 
-CARRY_ON = "Carry on with more requests, or give your final answer to the person (without a commands block)."
+CARRY_ON = "Carry on with more requests, or give your final answer to the person (without a commands paragraph)."
 ANSWER_NOW = "You have used all the requests you may make for this question. Give your final answer to the person now."
 
 

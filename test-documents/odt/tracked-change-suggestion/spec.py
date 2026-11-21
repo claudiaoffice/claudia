@@ -11,7 +11,7 @@ from claudia_test_documents.case import Case
 
 
 def import_checks(model: TextModel) -> None:
-    assert [(b.style, b.text) for b in model.blocks] == [("body", "The committee rejected the proposal.")]
+    assert [(b.style, b.text) for b in model.paragraphs] == [("body", "The committee rejected the proposal.")]
 
 
 def modify(model: TextModel) -> TextModel:
@@ -20,7 +20,7 @@ def modify(model: TextModel) -> TextModel:
 
 
 def after_checks(model: TextModel) -> None:
-    assert model.blocks[0].text == "The committee approved the proposal."
+    assert model.paragraphs[0].text == "The committee approved the proposal."
 
 
 def export_checks(edited: bytes) -> None:

@@ -15,7 +15,7 @@ from claudia_test_documents.case import Case
 def import_checks(model: TextModel) -> None:
     assert (model.page.paper, model.page.orientation) == ("a4", "landscape")
     assert model.language == "de-DE"
-    assert [(b.style, b.text) for b in model.blocks] == [
+    assert [(b.style, b.text) for b in model.paragraphs] == [
         ("heading-1", "Minutes of the meeting"),
         ("body", "We met on Tuesday."),
     ]

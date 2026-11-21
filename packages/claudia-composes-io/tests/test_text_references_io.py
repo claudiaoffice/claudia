@@ -16,15 +16,15 @@ from claudia_composes_io import (
     text_to_odt,
 )
 
-from claudia_composes import Block, TextModel
+from claudia_composes import Paragraph, TextModel
 from claudia_core import FIELD_CHAR, CreateList, Document, ListDef, ListItem, MemoryStore, RefField, SetListItem
 
 
 def referring() -> TextModel:
-    blocks = [
-        Block("b1", "heading-1", "Why we did it"),
-        Block("b2", "body", "Collect"),
-        Block(
+    paragraphs = [
+        Paragraph("b1", "heading-1", "Why we did it"),
+        Paragraph("b2", "body", "Collect"),
+        Paragraph(
             "b3",
             "body",
             f"see {FIELD_CHAR} and {FIELD_CHAR} on {FIELD_CHAR}.",
@@ -35,7 +35,7 @@ def referring() -> TextModel:
             ),
         ),
     ]
-    d = Document(TextModel(blocks), store=MemoryStore())
+    d = Document(TextModel(paragraphs), store=MemoryStore())
     d.execute(CreateList(ListDef("l1", "numbers")), author="ann")
     d.execute(SetListItem("b2", ListItem("l1", 0)), author="ann")
     return d.model
@@ -48,9 +48,9 @@ def part(data: bytes, name: str) -> str:
 @pytest.mark.parametrize(("write", "read"), [(text_to_docx, docx_to_text), (text_to_odt, odt_to_text)])
 def test_references_come_back_as_references_to_the_same_paragraphs(write, read):
     back = read(write(referring()))
-    (third,) = [b for b in back.blocks if b.fields]
+    (third,) = [b for b in back.paragraphs if b.fields]
     assert third.text.count(FIELD_CHAR) == 3
-    targets = {b.id: b.text for b in back.blocks}
+    targets = {b.id: b.text for b in back.paragraphs}
     assert [(targets[f.target], f.show) for f in third.fields] == [
         ("Collect", "number"),
         ("Why we did it", "text"),
@@ -82,7 +82,7 @@ def test_a_reference_whose_bookmark_starts_no_paragraph_comes_in_as_its_words():
             if name == "content.xml":
                 body = body.replace(b'<text:bookmark text:name="ref-b1"/>', b"")
             copy.writestr(files.getinfo(name), body)
-    third = odt_to_text(out.getvalue()).blocks[2]
+    third = odt_to_text(out.getvalue()).paragraphs[2]
     assert third.fields == (RefField("b2"),)
     assert third.text.startswith(f"see {FIELD_CHAR} and Why we did it on ")
 
@@ -95,17 +95,17 @@ def test_a_kept_file_with_references_is_written_anew_not_patched(write, patch):
 
 @pytest.mark.parametrize(("write", "read"), [(text_to_docx, docx_to_text), (text_to_odt, odt_to_text)])
 def test_a_reference_to_a_thing_that_is_no_paragraph_is_written_as_its_words(write, read):
-    from claudia_composes import BlockAnchor
+    from claudia_composes import ParagraphAnchor
     from claudia_core import ObjectBody, VisualObject, paragraph_for
 
     model = TextModel(
-        [Block("b1", "body", f"{FIELD_CHAR} and\t{FIELD_CHAR}", fields=(RefField("o1", "name"), RefField("b1")))]
+        [Paragraph("b1", "body", f"{FIELD_CHAR} and\t{FIELD_CHAR}", fields=(RefField("o1", "name"), RefField("b1")))]
     )
     box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"), name="Budget")
-    model.insert_object(VisualObject(box, BlockAnchor("b1", 0)))
+    model.insert_object(VisualObject(box, ParagraphAnchor("b1", 0)))
     back = read(write(model))
-    assert back.blocks[0].text.startswith("Budget and\t")
-    assert back.blocks[0].fields == (RefField("b1"),)
+    assert back.paragraphs[0].text.startswith("Budget and\t")
+    assert back.paragraphs[0].fields == (RefField("b1"),)
 
 
 def test_other_word_fields_are_read_as_what_they_show():
@@ -120,16 +120,16 @@ def test_other_word_fields_are_read_as_what_they_show():
     out = io.BytesIO()
     document.save(out)
     back = docx_to_text(out.getvalue())
-    assert back.blocks[2].text.endswith(".7") and len(back.blocks[2].fields) == 3
+    assert back.paragraphs[2].text.endswith(".7") and len(back.paragraphs[2].fields) == 3
 
 
 @pytest.mark.parametrize(("write", "name"), [(text_to_docx, "word/document.xml"), (text_to_odt, "content.xml")])
 def test_a_reference_in_the_words_of_a_text_box_is_written_as_what_it_reads_as(write, name):
-    from claudia_composes import BlockAnchor
+    from claudia_composes import ParagraphAnchor
     from claudia_core import ObjectBody, VisualObject, paragraph_for
 
     model = referring()
     words = replace(paragraph_for("o1", "body", f"see {FIELD_CHAR}"), fields=(RefField("b2"),))
-    model.insert_object(VisualObject(ObjectBody("o1", "text", 200, 80, "plain-box", words), BlockAnchor("b1", 0)))
+    model.insert_object(VisualObject(ObjectBody("o1", "text", 200, 80, "plain-box", words), ParagraphAnchor("b1", 0)))
     xml = part(write(model), name)
     assert "see 1" in xml and FIELD_CHAR not in xml

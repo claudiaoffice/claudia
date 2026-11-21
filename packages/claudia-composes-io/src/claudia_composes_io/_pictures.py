@@ -11,11 +11,11 @@ from claudia_odf_io import LossLog
 PICTURE_KINDS = frozenset({"image", "container"})
 
 
-def pictures_of(model: TextModel, block_id: str) -> list[tuple[VisualObject, ImageAsset]]:
-    """The pictures hanging from the paragraph ``block_id`` with the asset each shows, the one in front last. A
+def pictures_of(model: TextModel, paragraph_id: str) -> list[tuple[VisualObject, ImageAsset]]:
+    """The pictures hanging from the paragraph ``paragraph_id`` with the asset each shows, the one in front last. A
     container nothing has been drawn for is not among them (``rendering-pending`` says so)."""
     found = []
-    for object_id in model.stack_of(block_id):
+    for object_id in model.stack_of(paragraph_id):
         obj = model.get_object(object_id)
         picture = model.picture_of(obj.body) if obj.body.kind in PICTURE_KINDS else None
         if picture is not None and picture in model.images:
@@ -25,7 +25,7 @@ def pictures_of(model: TextModel, block_id: str) -> list[tuple[VisualObject, Ima
 
 def all_pictures(model: TextModel) -> dict[str, tuple[VisualObject, ImageAsset]]:
     """Every picture of the text by object id (see :func:`pictures_of`)."""
-    return {obj.id: (obj, asset) for block in model.blocks for obj, asset in pictures_of(model, block.id)}
+    return {obj.id: (obj, asset) for paragraph in model.paragraphs for obj, asset in pictures_of(model, paragraph.id)}
 
 
 def picture_losses(

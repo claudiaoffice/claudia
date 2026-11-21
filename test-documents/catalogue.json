@@ -446,7 +446,7 @@
       "feature": "lists-and-sections",
       "source": "odt/lists-and-sections/source.odt",
       "spec": "odt/lists-and-sections/spec.py",
-      "summary": "Paragraphs in a list and in a section are blocks of the model; a block added after the list and a paragraph emptied inside the section leave the list, its list style and the section exactly as they were.",
+      "summary": "Paragraphs in a list and in a section are paragraphs of the model; a paragraph added after the list and a paragraph emptied inside the section leave the list, its list style and the section exactly as they were.",
       "backlog": "E9.5",
       "tags": [
         "tier2",

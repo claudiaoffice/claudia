@@ -15,6 +15,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   `ref-`; a clash gets `(2)`; a heading keeps its title); comments are not read back as descriptions.
 
 ### Changed
+- **Breaking** — the facet of a text's paragraphs in the unwritten-changes report is `paragraphs` (was `blocks`),
+  following claudia-composes (D1430, E1.18).
 - The docx and odt exports leave the box properties of the table looks out of the style-by-style check
   (`TABLE_STYLE_IDS`), and the paragraph styles of the table roles are written **without** their lines, fill and
   padding: a table writes them as the properties of its cells (E9.32, D1214). Objects are built with `ref=` (see

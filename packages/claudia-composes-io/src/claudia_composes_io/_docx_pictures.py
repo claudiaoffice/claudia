@@ -92,7 +92,7 @@ class FilePicture:
     """A picture of a file the model holds: where it is, the run that carries it, what the file says of it."""
 
     object_id: str
-    block: int  # the index of the paragraph among the paragraphs of the document
+    paragraph: int  # the index of the paragraph among the paragraphs of the document
     offset: int  # the characters of the paragraph before the run
     run: Any  # the ``w:r`` that holds the drawing
     drawing: Any  # the ``w:drawing``
@@ -435,9 +435,9 @@ class PictureEdits:
     that went are taken out, those that changed get their alt text, size and turn, those that moved or hang from a
     paragraph whose words are written again are lifted out to be put back where the text says, and new ones are drawn.
 
-    ``rewritten`` says which paragraphs (by block id) get their words written again: the pictures of those are handed
-    over as ``marks`` for the writer of the paragraph; those of the others are put in place afterwards (:meth:`settle`).
-    ``changed`` says whether the package's relationships and content types changed too."""
+    ``rewritten`` says which paragraphs (by paragraph id) get their words written again: the pictures of those are
+    handed over as ``marks`` for the writer of the paragraph; those of the others are put in place afterwards
+    (:meth:`settle`). ``changed`` says whether the package's relationships and content types changed too."""
 
     def __init__(
         self,
@@ -489,16 +489,16 @@ class PictureEdits:
             docx_set_wrap(_FRAME(picture.drawing)[0], obj.anchor)
         if (obj.anchor.dx, obj.anchor.dy) != (before.anchor.dx, before.anchor.dy):
             docx_set_position(_FRAME(picture.drawing)[0], obj.anchor)
-        if obj.anchor.block in self.rewritten or obj.anchor != before.anchor:
+        if obj.anchor.paragraph in self.rewritten or obj.anchor != before.anchor:
             picture.run.getparent().remove(picture.run)
             self._route(obj, picture.run)
 
     def _route(self, obj: VisualObject, run: Any) -> None:  # noqa: ANN401
-        where = self.marks if obj.anchor.block in self.rewritten else self.loose
-        where.setdefault(obj.anchor.block, []).append((obj.anchor.offset, run))
+        where = self.marks if obj.anchor.paragraph in self.rewritten else self.loose
+        where.setdefault(obj.anchor.paragraph, []).append((obj.anchor.offset, run))
 
     def settle(self, paragraph_of: Mapping[str, Any]) -> None:
         """Put the pictures of the paragraphs that were not written again into them (``paragraph_of``: the ``w:p`` of
-        each block id)."""
-        for block_id, marks in self.loose.items():
-            interleave(paragraph_of[block_id], marks)
+        each paragraph id)."""
+        for paragraph_id, marks in self.loose.items():
+            interleave(paragraph_of[paragraph_id], marks)

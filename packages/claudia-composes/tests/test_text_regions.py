@@ -6,9 +6,9 @@ from composes_helpers import SENTENCE, text_of
 from claudia_composes import (
     DeleteText,
     InsertText,
-    JoinBlocks,
+    JoinParagraphs,
     SetStyle,
-    SplitBlock,
+    SplitParagraph,
     TextModel,
     TextRange,
     word_window,
@@ -19,7 +19,7 @@ from claudia_core import RegionHeld, UndoRefused
 def shown(doc, owner):
     """The text the first region of ``owner`` covers."""
     (region, *_) = doc.presence.of(owner).regions
-    return text_of(doc, region.block)[region.start : region.end]
+    return text_of(doc, region.paragraph)[region.start : region.end]
 
 
 def test_word_window_is_plus_minus_n_words():
@@ -29,7 +29,7 @@ def test_word_window_is_plus_minus_n_words():
     assert SENTENCE[word_window(SENTENCE, 0, 2).start : word_window(SENTENCE, 0, 2).end] == "the quick"
     assert SENTENCE[word_window(SENTENCE, len(SENTENCE), 1).start :].strip() == "dog"
     assert word_window(SENTENCE, 10, 0) == TextRange("b1", 10, 10)
-    assert word_window(SENTENCE, 10, 1, block="b7").block == "b7"
+    assert word_window(SENTENCE, 10, 1, paragraph="b7").paragraph == "b7"
 
 
 def test_a_range_overlaps_only_in_the_same_paragraph_and_never_when_empty():
@@ -44,8 +44,8 @@ def test_regions_travel_as_data(doc):
     assert doc.model.region_from_data(zone.to_data()) == zone
     for bad in (
         {"kind": "cells"},
-        {"kind": "text", "block": 1, "start": 0, "end": 1},
-        {"kind": "text", "block": "b1", "start": 5, "end": 2},
+        {"kind": "text", "paragraph": 1, "start": 0, "end": 1},
+        {"kind": "text", "paragraph": "b1", "start": 5, "end": 2},
     ):
         with pytest.raises((ValueError, KeyError)):
             doc.model.region_from_data(bad)
@@ -67,15 +67,15 @@ def test_a_caret_survives_deletions_around_it(doc):
 
 def test_a_zone_follows_a_split_and_a_join(doc):
     doc.show_presence("ben", [TextRange("b1", 20, 25), TextRange("b1", 22, 22)])
-    doc.execute(SplitBlock("b1", 10, "b2", "body"), author="ann")
+    doc.execute(SplitParagraph("b1", 10, "b2", "body"), author="ann")
     assert doc.presence.of("ben").regions == (TextRange("b2", 10, 15), TextRange("b2", 12, 12))
-    doc.execute(JoinBlocks("b2", "b1", 10), author="ann")
+    doc.execute(JoinParagraphs("b2", "b1", 10), author="ann")
     assert doc.presence.of("ben").regions == (TextRange("b1", 20, 25), TextRange("b1", 22, 22))
 
 
 def test_a_zone_cut_by_a_split_keeps_the_part_before_it(doc):
     doc.show_presence("ben", [TextRange("b1", 4, 14)])
-    doc.execute(SplitBlock("b1", 9, "b2", "body"), author="ann")
+    doc.execute(SplitParagraph("b1", 9, "b2", "body"), author="ann")
     assert doc.presence.of("ben").regions == (TextRange("b1", 4, 9),)
 
 
@@ -93,7 +93,7 @@ def test_a_lock_keeps_colleagues_out_of_the_zone_but_not_from_the_rest(doc):
 def test_splitting_inside_a_zone_is_refused(doc):
     doc.lock("ben", [TextRange("b1", 4, 14)], ttl=5)
     with pytest.raises(RegionHeld):
-        doc.execute(SplitBlock("b1", 9, "b2", "body"), author="ann")
+        doc.execute(SplitParagraph("b1", 9, "b2", "body"), author="ann")
 
 
 def test_the_zone_is_a_lock_for_undo(doc):

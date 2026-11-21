@@ -171,8 +171,8 @@ composes
 .. currentmodule:: claudia_composes
 
 The page setup and the language (``PageSetup``, ``SetLanguage`` and the rest) are :doc:`claudia_core`'s and
-re-exported here (D917). ``BlockAnchor`` is documented with the rest of the package above. ``TextObject`` is ``VisualObject[BlockAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor
-(E10.16, D179). Unlike a sheet anchor, a block anchor follows the text.
+re-exported here (D917). ``ParagraphAnchor`` is documented with the rest of the package above. ``TextObject`` is ``VisualObject[ParagraphAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor
+(E10.16, D179). Unlike a sheet anchor, a paragraph anchor follows the text.
 
 Import/export
 ~~~~~~~~~~~~~~

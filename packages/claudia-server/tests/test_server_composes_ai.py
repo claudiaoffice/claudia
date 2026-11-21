@@ -56,11 +56,11 @@ def scenario(test, model=None, assistant=None):
 
 def write(person, *paragraphs):
     text = "\n".join(paragraphs)
-    person.request("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": text})
+    person.request("replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": text})
 
 
 def texts(person):
-    return [b["text"] for b in person.request("blocks", {})["result"]["blocks"]]
+    return [b["text"] for b in person.request("paragraphs", {})["result"]["paragraphs"]]
 
 
 def system_prompt(model, call=0):
@@ -92,7 +92,7 @@ def test_the_model_is_told_about_words_not_offsets():
         await hosted.assistant.idle()
         prompt = system_prompt(model)
         tools = tool_names(prompt)
-        assert {"paragraphs", "outline", "styles", "suggestions"} <= tools
+        assert {"read_paragraphs", "outline", "styles", "suggestions"} <= tools
         assert {"replace_words", "add_paragraphs", "set_style", "suggest_words"} <= tools
         assert "suggest" not in tools and "replace_text" not in tools, "offsets are never offered to a model"
         assert "Never count characters" in prompt and '"method": "replace_words"' in prompt
@@ -102,7 +102,7 @@ def test_the_model_is_told_about_words_not_offsets():
 
 
 def test_in_act_the_model_changes_words_and_sees_the_paragraph_as_it_is_now():
-    change = {"method": "replace_words", "params": {"block": "b2", "find": "in order to", "text": "to"}}
+    change = {"method": "replace_words", "params": {"paragraph": "b2", "find": "in order to", "text": "to"}}
 
     async def test(hosted, model):
         ann = Person(hosted, ANN)
@@ -118,9 +118,9 @@ def test_in_act_the_model_changes_words_and_sees_the_paragraph_as_it_is_now():
 
 
 def test_a_misquoted_change_fails_and_the_model_reads_and_corrects():
-    wrong = {"method": "replace_words", "params": {"block": "b1", "find": "recieve", "text": "receive"}}
-    read = {"method": "paragraphs", "params": {"containing": "recieve"}}
-    right = {"method": "replace_words", "params": {"block": "b2", "find": "recieve", "text": "receive"}}
+    wrong = {"method": "replace_words", "params": {"paragraph": "b1", "find": "recieve", "text": "receive"}}
+    read = {"method": "read_paragraphs", "params": {"containing": "recieve"}}
+    right = {"method": "replace_words", "params": {"paragraph": "b2", "find": "recieve", "text": "receive"}}
 
     async def test(hosted, model):
         ann = Person(hosted, ANN)
@@ -142,8 +142,8 @@ def test_it_drafts_new_paragraphs_with_a_style():
         write(ann, "Intro.")
         ann.request("chat", {"text": "@ai add a heading for the results"})
         await hosted.assistant.idle()
-        blocks = ann.request("blocks", {})["result"]["blocks"]
-        assert [(b["text"], b["style"]) for b in blocks] == [("Intro.", "body"), ("Results", "heading-1")]
+        paragraphs = ann.request("paragraphs", {})["result"]["paragraphs"]
+        assert [(b["text"], b["style"]) for b in paragraphs] == [("Intro.", "body"), ("Results", "heading-1")]
         assert '(heading-1): "Results"' in last_user(model)
 
     scenario(test, FakeModel(script(commands(add), "I added the heading.")))
@@ -152,7 +152,7 @@ def test_it_drafts_new_paragraphs_with_a_style():
 def test_in_suggest_mode_it_proposes_and_the_text_stays_as_it_is():
     propose = {
         "method": "suggest_words",
-        "params": {"block": "b1", "find": "utilize", "replacement": "use", "reason": "plainer"},
+        "params": {"paragraph": "b1", "find": "utilize", "replacement": "use", "reason": "plainer"},
     }
 
     async def test(hosted, model):
@@ -173,7 +173,7 @@ def test_in_suggest_mode_it_proposes_and_the_text_stays_as_it_is():
 
 
 def test_in_suggest_mode_a_direct_change_is_refused_and_the_model_is_told():
-    change = {"method": "replace_words", "params": {"block": "b1", "find": "", "text": "Gone."}}
+    change = {"method": "replace_words", "params": {"paragraph": "b1", "find": "", "text": "Gone."}}
 
     async def test(hosted, model):
         ann = Person(hosted, ANN, ai_mode="suggest")
@@ -190,7 +190,7 @@ def test_the_model_is_told_where_the_askers_cursor_is():
     async def test(hosted, model):
         ann = Person(hosted, ANN)
         write(ann, *[f"Paragraph {n}." for n in range(1, 21)])
-        ann.request("look", {"block": "b18", "offset": 0})
+        ann.request("look", {"paragraph": "b18", "offset": 0})
         ann.request("chat", {"text": "@ai shorten this paragraph"})
         await hosted.assistant.idle()
         prompt = system_prompt(model)
@@ -209,7 +209,7 @@ def test_text_that_looks_like_an_order_arrives_as_fenced_data_it_cannot_close():
         results = last_user(model)
         assert results.count("```data") == 1 and results.count("```") == 2
 
-    scenario(test, FakeModel(script(commands({"method": "paragraphs", "params": {}}), "It says something odd.")))
+    scenario(test, FakeModel(script(commands({"method": "read_paragraphs", "params": {}}), "It says something odd.")))
 
 
 # -- the lens on its own
@@ -220,7 +220,7 @@ def test_a_paragraph_is_described_with_its_id_style_marker_and_name():
 
 
 def test_a_suggestion_and_a_remark_are_described():
-    item = {"id": "s1", "author": "ai", "block": "b2", "original": "a", "replacement": "b", "reason": "r"}
+    item = {"id": "s1", "author": "ai", "paragraph": "b2", "original": "a", "replacement": "b", "reason": "r"}
     assert describe_suggestion(item) == 's1 by ai on b2: "a" -> "b" (r)'
     remark = {**item, "replacement": None, "outdated": True}
     assert describe_suggestion(remark) == 's1 by ai on b2: remark on "a" (r) [outdated]'
@@ -230,11 +230,11 @@ def test_the_report_names_paragraphs_that_were_joined_away():
     doc = Document(TextModel(), store=MemoryStore())
     ctx = Context(doc, Account("ann", "owner"), Limits(), users=lambda: ["ann"], lock_seconds=30.0)
     composes_methods.dispatch(
-        ctx, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "One\nTwo\nThree"}
+        ctx, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "One\nTwo\nThree"}
     )
     with DocumentLens().recorder(doc) as recorded:
         composes_methods.dispatch(
-            ctx, "replace_text", {"block": "b1", "start": 3, "end_block": "b3", "end": 0, "text": " "}
+            ctx, "replace_text", {"paragraph": "b1", "start": 3, "end_paragraph": "b3", "end": 0, "text": " "}
         )
     report = recorded.report()
     assert 'b1 (body): "One Three"' in report and "gone: b2, b3" in report
@@ -246,23 +246,23 @@ def lens_paper(*paragraphs):
     ctx = Context(doc, Account("ann", "owner"), Limits(), users=lambda: ["ann"], lock_seconds=30.0)
     text = "\n".join(paragraphs)
     composes_methods.dispatch(
-        ctx, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": text}
+        ctx, "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": text}
     )
     return doc, ctx
 
 
 def test_the_read_answers_are_written_for_a_model():
     doc, ctx = lens_paper("Intro", "Body text.", "More")
-    composes_methods.dispatch(ctx, "set_style", {"block": "b1", "style": "heading-1"})
+    composes_methods.dispatch(ctx, "set_style", {"paragraph": "b1", "style": "heading-1"})
     lens = DocumentLens()
 
     def shown(method, params=None):
         params = params or {}
         return lens.show(method, params, composes_methods.dispatch(ctx, method, params))
 
-    window = shown("paragraphs", {"count": 2})
+    window = shown("read_paragraphs", {"count": 2})
     assert "3 paragraphs in all." in window and "more from b3 (ask with first=b3)" in window
-    assert "No paragraph contains that." in shown("paragraphs", {"containing": "nowhere"})
+    assert "No paragraph contains that." in shown("read_paragraphs", {"containing": "nowhere"})
     assert 'b1 (heading-1): "Intro"' in shown("outline")
     assert "heading-1: " in shown("styles") and "(paragraph)" in shown("styles")
     assert "No suggestion is open." in shown("suggestions")
@@ -281,11 +281,11 @@ def test_without_headings_the_outline_says_so_and_a_long_text_is_cut_at_the_star
 
 def test_the_orientation_lists_headings_and_open_suggestions_and_stays_short():
     doc, ctx = lens_paper(*[f"Part {n}" for n in range(1, 36)])
-    for block in [b.id for b in doc.model.blocks]:
-        composes_methods.dispatch(ctx, "set_style", {"block": block, "style": "heading-2"})
+    for paragraph in [b.id for b in doc.model.paragraphs]:
+        composes_methods.dispatch(ctx, "set_style", {"paragraph": paragraph, "style": "heading-2"})
     ai = Context(doc, Account.assistant(), Limits(), users=lambda: ["ann"], lock_seconds=30.0)
     for n in (1, 2):
-        composes_methods.dispatch(ai, "suggest_words", {"block": f"b{n}", "find": "Part", "reason": "why?"})
+        composes_methods.dispatch(ai, "suggest_words", {"paragraph": f"b{n}", "find": "Part", "reason": "why?"})
     start = DocumentLens().orient(doc, can_write=True, writes=frozenset({"set_style"}))
     assert "5 more headings (ask for the outline)" in start
     assert "2 suggestions are open" in start
@@ -297,7 +297,7 @@ def test_the_orientation_lists_headings_and_open_suggestions_and_stays_short():
 def test_many_open_suggestions_are_cut_and_a_large_change_is_reported_briefly():
     doc, ctx = lens_paper("x")
     lens = DocumentLens()
-    items = [{"id": f"s{n}", "author": "ai", "block": "b1", "original": "x", "replacement": "y"} for n in range(40)]
+    items = [{"id": f"s{n}", "author": "ai", "paragraph": "b1", "original": "x", "replacement": "y"} for n in range(40)]
     assert "... and 10 more" in lens.show("suggestions", {}, items)
     with lens.recorder(doc) as recorded:
         composes_methods.dispatch(ctx, "add_paragraphs", {"after": "b1", "text": "\n".join(["new"] * 30)})
@@ -329,7 +329,7 @@ TABLE_METHODS = {
 def paper_with_table(*cells):
     doc, ctx = lens_paper("Our beds.", "More text.")
     rows = list(cells) or [["Site", "Beds"], ["Roof", "8"], ["Yard", "26"]]
-    made = composes_methods.dispatch(ctx, "add_table", {"block": "b1", "offset": 4, "cells": rows})
+    made = composes_methods.dispatch(ctx, "add_table", {"paragraph": "b1", "offset": 4, "cells": rows})
     return doc, ctx, made["table"]
 
 
@@ -386,7 +386,7 @@ def test_a_long_table_is_cut_and_words_that_look_like_orders_stay_data():
 def test_the_report_of_a_change_in_a_box_shows_the_table_as_it_is_now():
     doc, ctx, table = paper_with_table()
     with DocumentLens().recorder(doc) as recorded:
-        composes_methods.dispatch(ctx, "replace_words", {"block": f"{table}/r2/c2", "find": "8", "text": "9"})
+        composes_methods.dispatch(ctx, "replace_words", {"paragraph": f"{table}/r2/c2", "find": "8", "text": "9"})
     report = recorded.report()
     assert f"Table {table}" in report and "r2: Roof | 9" in report
 
@@ -402,7 +402,7 @@ def test_in_act_the_model_changes_a_box_by_its_id_and_sees_the_table_as_it_is_no
     async def test(hosted, model):
         ann = Person(hosted, ANN)
         write(ann, "Our beds.")
-        made = ann.request("add_table", {"block": "b1", "offset": 3, "cells": [["Site", "Beds"], ["Roof", "8"]]})
+        made = ann.request("add_table", {"paragraph": "b1", "offset": 3, "cells": [["Site", "Beds"], ["Roof", "8"]]})
         table = made["result"]["table"]
         change = {"method": "set_entries", "params": {"table": table, "changes": [["r2", "c2", "9"]]}}
         model.answer = script(commands(change), "Done.")

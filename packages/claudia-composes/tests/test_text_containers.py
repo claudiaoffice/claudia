@@ -3,7 +3,7 @@
 
 import pytest
 
-from claudia_composes import BlockAnchor, InsertText, TextModel
+from claudia_composes import InsertText, ParagraphAnchor, TextModel
 from claudia_core import (
     AddObject,
     Batch,
@@ -22,7 +22,7 @@ def text_with_a_formula(words: str = "Einstein wrote E = mc2 once") -> Document:
     body = ObjectBody("c1", "container", 120, 40, "plain-image", ref="r1")
     definition = ContainerDefinition("r1", "latex", "E = mc^2")
     d.execute(
-        Batch((DefineAsset("container", definition.to_data()), AddObject(body, BlockAnchor("b1", 15).to_data()))),
+        Batch((DefineAsset("container", definition.to_data()), AddObject(body, ParagraphAnchor("b1", 15).to_data()))),
         author="ann",
     )
     return d
@@ -41,7 +41,7 @@ def test_a_container_in_a_text_refuses_a_definition_nobody_knows():
     d.execute(InsertText("b1", 0, "hello"), author="ann")
     body = ObjectBody("c1", "container", 120, 40, "plain-image", ref="r1")
     with pytest.raises(ValueError, match="does not know the container"):
-        d.execute(AddObject(body, BlockAnchor("b1", 2).to_data()), author="ann")
+        d.execute(AddObject(body, ParagraphAnchor("b1", 2).to_data()), author="ann")
 
 
 def test_the_text_of_the_container_is_kept_in_the_snapshot_and_in_the_log():

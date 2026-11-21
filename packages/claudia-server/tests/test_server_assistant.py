@@ -322,7 +322,7 @@ def test_a_composes_assistant_may_suggest_but_not_replace_text_set_style_or_appl
         hosted = await hub.open("essay", create=True)
         Assistant(Rogue(step), pause=0, allowed_methods=("suggest",)).attach(hosted)
         ann = Person(hosted, ANN)
-        ann.request("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "hi"})
+        ann.request("replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "hi"})
         before = hosted.document.revision
         ann.request("chat", {"text": "@ai go"})
         await hosted.assistant.idle()
@@ -333,10 +333,16 @@ def test_a_composes_assistant_may_suggest_but_not_replace_text_set_style_or_appl
             assert hosted.document.revision == before, "nothing further changed"
 
     asyncio.run(
-        run(Call("suggest", {"block": "b1", "start": 0, "end": 2, "reason": "r", "replacement": "Hi"}), suggests=True)
+        run(
+            Call("suggest", {"paragraph": "b1", "start": 0, "end": 2, "reason": "r", "replacement": "Hi"}),
+            suggests=True,
+        )
     )
     asyncio.run(
-        run(Call("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "x"}), suggests=False)
+        run(
+            Call("replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "x"}),
+            suggests=False,
+        )
     )
-    asyncio.run(run(Call("set_style", {"block": "b1", "style": "title"}), suggests=False))
+    asyncio.run(run(Call("set_style", {"paragraph": "b1", "style": "title"}), suggests=False))
     asyncio.run(run(Call("apply", {"command": {}}), suggests=False))

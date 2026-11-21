@@ -18,7 +18,7 @@ from claudia_composes_io import (
 )
 from test_composes_wrap_io import a_text, only, part, replace_part
 
-from claudia_composes import BlockAnchor
+from claudia_composes import ParagraphAnchor
 from claudia_core import VisualObject
 
 OFFSETS = [(0, 0), (40, 25), (-30, 12), (7, -19)]
@@ -31,11 +31,11 @@ def placed(wrap: str, dx: int, dy: int, *, picture: bool):
     return model
 
 
-def seen(data: bytes, reader) -> BlockAnchor:
+def seen(data: bytes, reader) -> ParagraphAnchor:
     return only(reader(data)).anchor
 
 
-def close(anchor: BlockAnchor, dx: int, dy: int) -> bool:
+def close(anchor: ParagraphAnchor, dx: int, dy: int) -> bool:
     return abs(anchor.dx - dx) <= 1 and abs(anchor.dy - dy) <= 1
 
 

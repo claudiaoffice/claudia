@@ -65,6 +65,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- **Breaking** — a paragraph on the wire (D1430, E1.18): composes' `blocks` is `paragraphs`, and the ai's paged
+  reader that was called `paragraphs` is `read_paragraphs`; every parameter and answer that named a paragraph `block`
+  says `paragraph` (`add_paragraph_after`, `replace_text`, `set_style`, `move_object`, the object methods' place, the
+  list methods, `continue_list`, search places, the style target `{paragraph}`); the anchor kind is `paragraph`; the
+  events `paragraph_fields` and `paragraph_generated` (were `block_fields` and `block_generated`).
 - **Breaking** — containers on the wire (D1430, E1.18): the methods `container_types`, `containers`,
   `add_container` (answers `{object, container, revision}`) and `set_container_source` (answers `{container,
   revision}`) were `rendering_types`, `renderings`, `add_rendering` and `set_rendering_source`; the object kind is

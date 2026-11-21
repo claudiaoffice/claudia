@@ -173,7 +173,7 @@ answer `forbidden`. A person who was away gets the new keys at her next login, f
   pattern comes back as `error: {message, field, position}` so that a client can show it while a person types. Every
   place in an answer is `at`, the app's own description of it (a cell: `{sheet, row, col}`), and `leave` sends the
   same `at` back (`{at, match}`). One request searches for two seconds at most, inside a pattern too (`regex` with a
-  timeout, SEC-18): `timed_out` says it stopped, and `search_replace` then refuses rather than replace part of it. Texts (`--model claudia_composes:TextModel`) add `blocks`, `suggestions`,
+  timeout, SEC-18): `timed_out` says it stopped, and `search_replace` then refuses rather than replace part of it. Texts (`--model claudia_composes:TextModel`) add `paragraphs`, `suggestions`,
   `replace_text` (a range replaced by text; line breaks start paragraphs; one request is one history step),
   `set_style`, the style methods `styles`, `change_style`, `deviate_style`, `rename_style`, `set_heading_level` and
   `check_css` (a style is CSS from the kernel's allow-list; a change either alters the style for all its uses or deviates
@@ -184,7 +184,7 @@ answer `forbidden`. A person who was away gets the new keys at her next login, f
 * **Objects (D177, CODE-27).** The three apps answer the same methods for the objects on a sheet, a slide or in a
   text: `images`, `add_image`, `describe_object`, `move_object`, `resize_object`, `rotate_object`, `remove_object`,
   and the containers' `add_container`. Only the words that say where differ: a cell (`sheet`, `row`, `col`),
-  a point on a slide (`slide`, `x`, `y`), a character of a text (`block`, `offset`, and for a move `dx`, `dy`). A text also answers `shapes` and `add_object` (a text box or a shape, `add_object` with `kind`, `w`, `h`, optional `shape` and `text`; D1065) and `set_wrap` (`id`, `wrap` one of `over`, `around`, `above-below`, `behind`, optional `gap` in pixels; D1061). `add_object` and `move_object` in a text may carry `wrap` and `gap`. **Breaking, 0.x:** `shapes` of a text answers `{library, document}`, not a list.
+  a point on a slide (`slide`, `x`, `y`), a character of a text (`paragraph`, `offset`, and for a move `dx`, `dy`). A text also answers `shapes` and `add_object` (a text box or a shape, `add_object` with `kind`, `w`, `h`, optional `shape` and `text`; D1065) and `set_wrap` (`id`, `wrap` one of `over`, `around`, `above-below`, `behind`, optional `gap` in pixels; D1061). `add_object` and `move_object` in a text may carry `wrap` and `gap`. **Breaking, 0.x:** `shapes` of a text answers `{library, document}`, not a list.
 * **Help (E13).** `help_search` (an optional `query`, blank for everything) and `help_topic` (an id from a search result)
   read the help topics, which every app inherits for free the moment it has its own `help/` folder; nothing here needs a
   role, so the `ai` user can read it too. `help_search` only returns topics meant for the document's own app — a topic
@@ -210,7 +210,7 @@ answer `forbidden`. A person who was away gets the new keys at her next login, f
   shapes), `set_text`, `set_paragraph_style`, `move_object`, `resize_object` and `remove_object`, and it reads
   `slides`, `slide`, `shapes` and `styles` (`claudia_server.slide_lens`); in a text (E7.10, D680) for `replace_words`,
   `add_paragraphs` and `set_style` when the asker chose *act* and `suggest_words` when she chose *suggest*, naming
-  paragraphs by id and words by quoting them (D681), and it reads `paragraphs`, `outline`, `styles` and `suggestions`
+  paragraphs by id and words by quoting them (D681), and it reads `read_paragraphs`, `outline`, `styles` and `suggestions`
   (`claudia_server.document_lens`); it is told how in its prompt, built from
   the method table, and may ask for nothing else (`apps.MODEL_METHODS`). Each request that fails is reported to the
   asker with the reason. A presentation server without a model answers `@ai` that it has none. It remembers the last six exchanges with each person while the document is loaded.

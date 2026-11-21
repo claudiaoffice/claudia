@@ -4,7 +4,7 @@ string beside the name, changed by a logged command, undone with it, seen by eve
 import pytest
 from composes_helpers import SENTENCE
 
-from claudia_composes import BlockAnchor, InsertText, JoinBlocks, SplitBlock, TextModel
+from claudia_composes import InsertText, JoinParagraphs, ParagraphAnchor, SplitParagraph, TextModel
 from claudia_core import (
     DescribeObject,
     DescribeThing,
@@ -22,7 +22,7 @@ from claudia_core.assets import MAX_ALT_CHARS
 def text(clock):
     d = Document(TextModel(), store=MemoryStore(), clock=clock.time, lock_clock=clock.lock_time)
     d.execute(InsertText("b1", 0, SENTENCE), author="ann")
-    d.execute(SplitBlock("b1", 9, "b2", "body", name="Paragraph 2"), author="ann")
+    d.execute(SplitParagraph("b1", 9, "b2", "body", name="Paragraph 2"), author="ann")
     return d
 
 
@@ -53,13 +53,13 @@ def test_empty_words_take_the_description_away(text):
     text.execute(DescribeThing("b2", "first"), author="ann")
     text.execute(DescribeThing("b2", ""), author="ann")
     assert text.model.thing_description("b2") == ""
-    assert "b2" not in text.model.block_descriptions
+    assert "b2" not in text.model.paragraph_descriptions
 
 
 def test_it_stays_with_the_paragraph_through_edits_and_a_join_that_is_undone(text):
     text.execute(DescribeThing("b2", "kept"), author="ann")
     text.execute(InsertText("b2", 0, "Look: "), author="ben")
-    text.execute(JoinBlocks("b2", "b1", 9), author="ben")
+    text.execute(JoinParagraphs("b2", "b1", 9), author="ben")
     text.undo("ben")
     assert text.model.thing_description("b2") == "kept"
 
@@ -94,7 +94,7 @@ def test_the_command_survives_the_log():
 
 def test_an_object_is_described_by_describe_object_which_says_whether_it_is_decoration(text):
     box = ObjectBody("o1", "text", 200, 80, "plain-box", paragraph_for("o1", "body", "a note"))
-    text.model.insert_object(VisualObject(box, BlockAnchor("b2", 3)))
+    text.model.insert_object(VisualObject(box, ParagraphAnchor("b2", 3)))
     assert text.model.thing_description("o1") == ""
     with pytest.raises(ValueError, match="DescribeObject"):
         text.execute(DescribeThing("o1", "words"), author="ann")

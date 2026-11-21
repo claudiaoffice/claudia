@@ -59,14 +59,14 @@ from claudia_core import (
     slice_runs,
 )
 
-from .anchors import BlockAnchor
-from .events import BlockGenerated, FieldsPut, ItemChanged, SuggestionsChanged, TextChanged
+from .anchors import ParagraphAnchor
+from .events import FieldsPut, ItemChanged, ParagraphGenerated, SuggestionsChanged, TextChanged
 from .page import PageSetup
 from .region import TextRange
 from .spans import TextCommand
 
 DEFAULT_STYLE = "body"
-FIRST_BLOCK = "b1"
+FIRST_PARAGRAPH = "b1"
 _NUMBERED = re.compile(r"[bs](\d+)")
 
 
@@ -385,16 +385,11 @@ def next_style(styles: StyleBook, style_id: str) -> str:
     return style_id if root.id == DEFAULT_STYLE else DEFAULT_STYLE
 
 
-#: One paragraph of a document. Since E10.17 this is ``claudia_core``'s :class:`~claudia_core.Paragraph`, the
-#: same entity a creates text box and a shape's label carry (D181) — the name ``Block`` stays because that is
-#: what this app has always called it, and because a paragraph in a flowing document is a block in a way one
-#: inside a shape is not: only these can be split and joined.
-#:
-#: It is immutable, so the model replaces a paragraph in :attr:`TextModel.blocks` rather than editing it in
-#: place (``_put``, below). The reason is undo: a command builds its own inverse from the state it found, and a
-#: paragraph changed under it would hand that inverse the new text.
-#: (a plain alias, not a `type` statement: Block(...) is called as a constructor)
-Block = Paragraph
+# A paragraph of a document is ``claudia_core``'s :class:`~claudia_core.Paragraph` (E10.17, D181), the same entity a
+# creates text box and a shape's label carry; only those of a flowing text can be split and joined. It is immutable,
+# so the model replaces a paragraph in :attr:`TextModel.paragraphs` rather than editing it in place (``_put``, below):
+# a command builds its own inverse from the state it found, and a paragraph changed under it would hand that inverse
+# the new text.
 
 
 @dataclass(frozen=True)
@@ -414,10 +409,10 @@ class Suggestion:
 
 
 #: One floating thing in a text: a text box, a shape or an image, hanging from a place in a paragraph.
-type TextObject = VisualObject[BlockAnchor]
+type TextObject = VisualObject[ParagraphAnchor]
 
 
-class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
+class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
     """The paragraphs of a document, its suggestions and the objects floating over it."""
 
     app: ClassVar[str] = "composes"
@@ -439,7 +434,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
 
     def __init__(
         self,
-        blocks: list[Block] | None = None,
+        paragraphs: list[Paragraph] | None = None,
         styles: StyleBook | None = None,
         palette: Palette | None = None,
         page: PageSetup | None = None,
@@ -448,7 +443,9 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         schemes: SchemeBook | None = None,
     ):
         super().__init__()
-        self.blocks: list[Block] = blocks if blocks is not None else [Block(FIRST_BLOCK, DEFAULT_STYLE)]
+        self.paragraphs: list[Paragraph] = (
+            paragraphs if paragraphs is not None else [Paragraph(FIRST_PARAGRAPH, DEFAULT_STYLE)]
+        )
         self.styles: StyleBook = styles if styles is not None else builtin_styles()
         #: The colours of this document, by what they mean. Part of the document, so it looks the same on
         #: whichever server it is opened (D200); the built-in styles are written entirely in terms of it.
@@ -465,19 +462,19 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         #: The names of paragraphs, by id (D554). A paragraph id is never given twice, so a name stays with its
         #: paragraph through every edit; one whose paragraph was joined away is kept, unused, until undo brings the
         #: paragraph back.
-        self.block_names: dict[str, str] = {}
+        self.paragraph_names: dict[str, str] = {}
         #: The names of the headings as the clients were last told them (``settle``): a heading is called by its words
         #: (D1311), so typing in it or giving it a heading style renames it without a rename command.
         self._told_titles: dict[str, str] | None = None
         #: What was written about a paragraph, by id (see D1317 and D1318). It has the same pattern as the description
         #: of an object, a plain string beside the name. Kept like a name when the paragraph is joined away, for undo.
-        self.block_descriptions: dict[str, str] = {}
+        self.paragraph_descriptions: dict[str, str] = {}
         #: ``name_key`` of every stored name of a paragraph that is in the text, worked out when first needed and kept
         #: up as paragraphs are made: a paste of two thousand lines would otherwise read every name for each.
         self._stored_keys: set[str] | None = None
-        self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
-        for block in self.blocks:
-            self.open_holder(block.id)
+        self._last = {"b": _highest(b.id for b in self.paragraphs), "s": 0}
+        for paragraph in self.paragraphs:
+            self.open_holder(paragraph.id)
         #: Changes of the structure that numbering depends on (an item set, a paragraph split or joined). Typing
         #: does not count, so it never makes the labels be worked out again.
         self._structure = 0
@@ -503,7 +500,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     def serialize(self) -> dict:
         """The state as plain data (a snapshot is a cache of it)."""
         return {
-            "blocks": [b.to_data() for b in self.blocks],
+            "paragraphs": [b.to_data() for b in self.paragraphs],
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
             "page": self.page.to_data(),
@@ -513,31 +510,33 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             "suggestions": [self.suggestion_data(s, with_state=True) for s in self.suggestions.values()],
             **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
             "objects": self.objects_to_data(),
-            "names": dict(self.block_names),
-            "descriptions": dict(self.block_descriptions),
+            "names": dict(self.paragraph_names),
+            "descriptions": dict(self.paragraph_descriptions),
             "last": dict(self._last),
         }
 
     @classmethod
     def restore(cls, state: dict) -> Self:
         """Build a model from ``serialize()``'s output; the older shape (a list of strings) is understood too."""
-        raw = state["blocks"]
+        raw = state["paragraphs"]
         if raw and isinstance(raw[0], str):  # state schema 1: the stub, which could not hold more than strings
-            blocks = [Block(f"b{i}", DEFAULT_STYLE, t, (Run(len(t), None),) if t else ()) for i, t in enumerate(raw, 1)]
-            return cls(blocks)
+            paragraphs = [
+                Paragraph(f"b{i}", DEFAULT_STYLE, t, (Run(len(t), None),) if t else ()) for i, t in enumerate(raw, 1)
+            ]
+            return cls(paragraphs)
         styles = StyleBook.from_data(state["styles"]) if "styles" in state else None  # schema 2 had the built-in ones
-        blocks = [Block.from_data(b) for b in raw]
+        paragraphs = [Paragraph.from_data(b) for b in raw]
         palette = Palette.from_data(state["palette"]) if "palette" in state else None  # schema 4 and earlier
         page = PageSetup.from_data(state["page"]) if "page" in state else None  # schema 5 and earlier: A4
         lists = ListBook.from_data(state["lists"]) if "lists" in state else None  # schema 7 and earlier
         schemes = SchemeBook.from_data(state.get("schemes"))  # schema 12 and earlier: the built-in ones
         # schema 6 and earlier: no language
-        model = cls(blocks, styles, palette, page, state.get("language"), lists, schemes)
+        model = cls(paragraphs, styles, palette, page, state.get("language"), lists, schemes)
         for item in state.get("suggestions", []):
             model.suggestions[item["id"]] = _suggestion_from_data(item)
         model.restore_objects(state.get("objects", ()), state)  # schema 3 and earlier had no objects
-        model.block_names = dict(state.get("names", {}))  # schema 10 and earlier: no paragraph had a name
-        model.block_descriptions = dict(state.get("descriptions", {}))  # schema 15 and earlier: nothing was written
+        model.paragraph_names = dict(state.get("names", {}))  # schema 10 and earlier: no paragraph had a name
+        model.paragraph_descriptions = dict(state.get("descriptions", {}))  # schema 15 and earlier: nothing was written
         model._last = dict(state.get("last", model._last))
         model.structure = TextStructure(model)  # with the objects in: the clients learn the labels with the document
         return model
@@ -547,17 +546,17 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         (D723): every character becomes :data:`~claudia_core.FILLER`, so lengths, places and who wrote what stay; what
         was written about a paragraph goes; the suggestions on a blanked paragraph lose their words and reasons.
         ``ValueError`` for a name that is neither."""
-        blocks = {block.id for block in self.blocks}
-        if parts is not None and (unknown := sorted(parts - blocks - set(self.objects))):
+        paragraphs = {paragraph.id for paragraph in self.paragraphs}
+        if parts is not None and (unknown := sorted(parts - paragraphs - set(self.objects))):
             raise ValueError(f"the text has no paragraph or object {unknown[0]!r}")
-        chosen = blocks if parts is None else blocks & parts
-        self.block_descriptions = {k: v for k, v in self.block_descriptions.items() if k not in chosen}
-        self.blocks = [
-            block.with_text(FILLER * len(block.text), block.runs) if block.id in chosen else block
-            for block in self.blocks
+        chosen = paragraphs if parts is None else paragraphs & parts
+        self.paragraph_descriptions = {k: v for k, v in self.paragraph_descriptions.items() if k not in chosen}
+        self.paragraphs = [
+            paragraph.with_text(FILLER * len(paragraph.text), paragraph.runs) if paragraph.id in chosen else paragraph
+            for paragraph in self.paragraphs
         ]
         for key, suggestion in self.suggestions.items():
-            if suggestion.anchor.block in chosen:
+            if suggestion.anchor.paragraph in chosen:
                 self.suggestions[key] = replace(
                     suggestion,
                     original=FILLER * len(suggestion.original),
@@ -576,39 +575,39 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             raise ValueError(
                 f"composes knows text regions, table regions and object selections, not {data.get('kind')!r}"
             )
-        block, start, end = data["block"], data["start"], data["end"]
-        if not (isinstance(block, str) and isinstance(start, int) and isinstance(end, int) and 0 <= start <= end):
+        paragraph, start, end = data["paragraph"], data["start"], data["end"]
+        if not (isinstance(paragraph, str) and isinstance(start, int) and isinstance(end, int) and 0 <= start <= end):
             raise ValueError("a text region names a paragraph and 0 <= start <= end")
-        return TextRange(block, start, end)
+        return TextRange(paragraph, start, end)
 
     # -- the object seam ---------------------------------------------------------
     def holders(self) -> list[str]:
         """The paragraphs objects may hang from, in order."""
-        return [block.id for block in self.blocks]
+        return [paragraph.id for paragraph in self.paragraphs]
 
-    def anchor_from_data(self, data: dict) -> BlockAnchor:
-        """Read a block anchor; ``ValueError`` if the data is not one."""
-        return BlockAnchor.from_data(data)
+    def anchor_from_data(self, data: dict) -> ParagraphAnchor:
+        """Read a paragraph anchor; ``ValueError`` if the data is not one."""
+        return ParagraphAnchor.from_data(data)
 
-    def place_regions(self, anchor: BlockAnchor) -> tuple[TextRange, ...]:
+    def place_regions(self, anchor: ParagraphAnchor) -> tuple[TextRange, ...]:
         """The character an object is dropped on in another paragraph (D1351): a colleague writing there holds it."""
-        length = len(self.block(anchor.block).text)
+        length = len(self.paragraph(anchor.paragraph).text)
         start = min(anchor.offset, max(length - 1, 0))
-        return (TextRange(anchor.block, start, start + 1),)
+        return (TextRange(anchor.paragraph, start, start + 1),)
 
-    def room_for_new_object(self, anchor: BlockAnchor | None) -> int | None:  # noqa: ARG002 - the column is one width
+    def room_for_new_object(self, anchor: ParagraphAnchor | None) -> int | None:  # noqa: ARG002 - the column is one width
         """The text column of the page, in CSS pixels (the units of a text's objects): a new object is no wider
         (D1332). The page is in mpt; 1 pt is 4/3 px."""
         page = self.page
         across = page.height if page.orientation == "landscape" else page.width
         return int((across - page.margin_left - page.margin_right) / 1000 * 4 / 3)
 
-    def check_anchor(self, anchor: BlockAnchor, body: ObjectBody) -> None:
+    def check_anchor(self, anchor: ParagraphAnchor, body: ObjectBody) -> None:
         """An object hangs from a character of its paragraph, so the offset must lie inside that paragraph.
 
         A text has no edge an object could fall off, unlike a slide: only the offset, how far it floats from there and
         how the text flows round it are checked, never the size."""
-        if not 0 <= anchor.offset <= len(self.block(anchor.block).text):
+        if not 0 <= anchor.offset <= len(self.paragraph(anchor.paragraph).text):
             raise IndexError("an object must hang from a place inside its paragraph")
         anchor.check_floating()
         anchor.check_wrap()
@@ -642,25 +641,25 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             self.check_style(style)
 
     # -- names (D550, D554) ---------------------------------------------------------
-    def heading_level(self, block: Block) -> int | None:
+    def heading_level(self, paragraph: Paragraph) -> int | None:
         """The heading level of a paragraph (E9.22): 0 the title, 1 to 9 a section, ``None`` no heading. Its style
         decides, through :meth:`~claudia_core.StyleBook.heading_level`; a style the text lacks gives none."""
         try:
-            return self.styles.heading_level(block.style)
+            return self.styles.heading_level(paragraph.style)
         except (KeyError, ValueError):
             return None
 
-    def block_kind(self, block: Block) -> str:
+    def paragraph_kind(self, paragraph: Paragraph) -> str:
         """What a paragraph is, as a thing: ``heading`` (its style has a heading level), ``item`` (of a list), or
         ``paragraph``."""
-        if self.heading_level(block) is not None:
+        if self.heading_level(paragraph) is not None:
             return "heading"
-        return "item" if block.item is not None else "paragraph"
+        return "item" if paragraph.item is not None else "paragraph"
 
-    def _title_of(self, block: Block) -> str:
+    def _title_of(self, paragraph: Paragraph) -> str:
         """What a heading is called by: its words, tidied and cut to the longest name; ``""`` when they make no name
         (a heading with no words yet)."""
-        words = clean_name(block.text)[:MAX_THING_NAME].strip()
+        words = clean_name(paragraph.text)[:MAX_THING_NAME].strip()
         return words if words and name_problem(words) is None else ""
 
     def _names_of_paragraphs(self) -> dict[str, str]:
@@ -670,114 +669,116 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         name it was given."""
         names: dict[str, str] = {}
         titled: list[tuple[str, str]] = []
-        for block in self.blocks:
-            title = self._title_of(block) if self.heading_level(block) is not None else ""
+        for paragraph in self.paragraphs:
+            title = self._title_of(paragraph) if self.heading_level(paragraph) is not None else ""
             if title:
-                titled.append((block.id, title))
-            elif stored := self.block_names.get(block.id):
-                names[block.id] = stored
+                titled.append((paragraph.id, title))
+            elif stored := self.paragraph_names.get(paragraph.id):
+                names[paragraph.id] = stored
         taken = [name for _kind, _id, name in super().named_things()]
         taken.extend(names.values())
-        for block_id, title in titled:
-            names[block_id] = distinct_name(title, taken)
-            taken.append(names[block_id])
+        for paragraph_id, title in titled:
+            names[paragraph_id] = distinct_name(title, taken)
+            taken.append(names[paragraph_id])
         return names
 
     def named_things(self):
         """The objects with names, then the paragraphs with names, in the order of the text: one namespace."""
         yield from super().named_things()
         names = self._names_of_paragraphs()
-        for block in self.blocks:
-            name = names.get(block.id)
+        for paragraph in self.paragraphs:
+            name = names.get(paragraph.id)
             if name:
-                yield self.block_kind(block), block.id, name
+                yield self.paragraph_kind(paragraph), paragraph.id, name
 
     def unnamed_things(self):
         """The objects without a name, then the paragraphs without one: what a text from before paragraphs had names
         holds (D1310). A heading with a title has its title for a name, and a table of contents is not a paragraph a
         person points at."""
         yield from super().unnamed_things()
-        for block in self.blocks:
-            if block.generated is not None or self.block_names.get(block.id):
+        for paragraph in self.paragraphs:
+            if paragraph.generated is not None or self.paragraph_names.get(paragraph.id):
                 continue
-            if self.heading_level(block) is not None and self._title_of(block):
+            if self.heading_level(paragraph) is not None and self._title_of(paragraph):
                 continue
-            yield self.block_kind(block), block.id
+            yield self.paragraph_kind(paragraph), paragraph.id
 
-    def _has_block(self, block_id: str) -> bool:
-        return any(block.id == block_id for block in self.blocks)
+    def _has_paragraph(self, paragraph_id: str) -> bool:
+        return any(paragraph.id == paragraph_id for paragraph in self.paragraphs)
 
     def has_thing(self, thing_id: str) -> bool:
         """Is there an object or a paragraph with this id, named or not?"""
-        return self._has_block(thing_id) or super().has_thing(thing_id)
+        return self._has_paragraph(thing_id) or super().has_thing(thing_id)
 
     def thing_name(self, thing_id: str) -> str:
         """The name of a paragraph or an object, ``""`` if it has none; ``ValueError`` if there is neither."""
-        if self._has_block(thing_id):
+        if self._has_paragraph(thing_id):
             if self.name_is_fixed(thing_id):
                 return self._names_of_paragraphs()[thing_id]
-            return self.block_names.get(thing_id, "")
+            return self.paragraph_names.get(thing_id, "")
         return super().thing_name(thing_id)
 
     def set_thing_name(self, thing_id: str, name: str) -> str:
         """Name a paragraph or an object (``""``: no name); returns the name it had. A heading keeps the name it is
         given for when it is a paragraph again; it is called by its title meanwhile."""
-        if not self._has_block(thing_id):
+        if not self._has_paragraph(thing_id):
             return super().set_thing_name(thing_id, name)
-        old = self.block_names.get(thing_id, "")
+        old = self.paragraph_names.get(thing_id, "")
         if name:
-            self.block_names[thing_id] = name
+            self.paragraph_names[thing_id] = name
         else:
-            self.block_names.pop(thing_id, None)
+            self.paragraph_names.pop(thing_id, None)
         self._stored_keys = None
         return old
 
     def name_is_fixed(self, thing_id: str) -> bool:
         """A heading with a title is called by it, and so cannot be renamed (D1311)."""
-        if not self._has_block(thing_id):
+        if not self._has_paragraph(thing_id):
             return super().name_is_fixed(thing_id)
-        block = self.block(thing_id)
-        return self.heading_level(block) is not None and bool(self._title_of(block))
+        paragraph = self.paragraph(thing_id)
+        return self.heading_level(paragraph) is not None and bool(self._title_of(paragraph))
 
     def thing_description(self, thing_id: str) -> str:
         """What is written about a paragraph or an object, ``""`` if nothing; ``ValueError`` if there is neither."""
-        if self._has_block(thing_id):
-            return self.block_descriptions.get(thing_id, "")
+        if self._has_paragraph(thing_id):
+            return self.paragraph_descriptions.get(thing_id, "")
         return super().thing_description(thing_id)
 
     def set_thing_description(self, thing_id: str, description: str) -> str:
         """Write something about a paragraph (``""``: nothing); returns what was written. An object is described by
         :class:`~claudia_core.DescribeObject`."""
-        if not self._has_block(thing_id):
+        if not self._has_paragraph(thing_id):
             return super().set_thing_description(thing_id, description)
-        old = self.block_descriptions.get(thing_id, "")
+        old = self.paragraph_descriptions.get(thing_id, "")
         if description:
-            self.block_descriptions[thing_id] = description
+            self.paragraph_descriptions[thing_id] = description
         else:
-            self.block_descriptions.pop(thing_id, None)
+            self.paragraph_descriptions.pop(thing_id, None)
         return old
 
     def _taken_keys(self) -> set[str]:
         """``name_key`` of every name a paragraph of the text was given, and of every object: what a new name must
         differ from. The headings' titles are not in it: a title gives way to a name, not the other way round."""
         if self._stored_keys is None:
-            here = {block.id for block in self.blocks}
-            self._stored_keys = {name_key(name) for block_id, name in self.block_names.items() if block_id in here}
+            here = {paragraph.id for paragraph in self.paragraphs}
+            self._stored_keys = {
+                name_key(name) for paragraph_id, name in self.paragraph_names.items() if paragraph_id in here
+            }
         objects = {name_key(name) for _kind, _id, name in super().named_things()}
         return self._stored_keys | objects
 
     # -- reading -----------------------------------------------------------------
-    def block(self, block_id: str) -> Block:
+    def paragraph(self, paragraph_id: str) -> Paragraph:
         """The paragraph with this id; ``KeyError`` if there is none."""
-        for block in self.blocks:
-            if block.id == block_id:
-                return block
-        raise KeyError(f"no paragraph {block_id!r}")
+        for paragraph in self.paragraphs:
+            if paragraph.id == paragraph_id:
+                return paragraph
+        raise KeyError(f"no paragraph {paragraph_id!r}")
 
-    def index_of(self, block_id: str) -> int:
+    def index_of(self, paragraph_id: str) -> int:
         """The place of the paragraph in the document; ``KeyError`` if there is none."""
-        self.block(block_id)
-        return next(i for i, b in enumerate(self.blocks) if b.id == block_id)
+        self.paragraph(paragraph_id)
+        return next(i for i, b in enumerate(self.paragraphs) if b.id == paragraph_id)
 
     def fresh_ids(self, count: int) -> list[str]:
         """``count`` ids for new paragraphs. Ids are never used twice, not even after a join, so undo can bring one
@@ -791,20 +792,20 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
     def style_in_use(self, style_id: str) -> bool:
         """Does any paragraph, or any object in the text (itself or its words), have this style? (Asked by the
         style commands before they take a style back.)"""
-        return any(b.style == style_id for b in self.blocks) or ObjectModel.style_in_use(self, style_id)
+        return any(b.style == style_id for b in self.paragraphs) or ObjectModel.style_in_use(self, style_id)
 
     def restyle_users(self, old: str, new: str) -> list[Command]:
         """The commands that put every paragraph, and every object (itself or its words), that has the style ``old``
         under ``new`` instead (asked by the deletion of a style, D226)."""
         from .commands import SetStyle  # noqa: PLC0415  (commands import this module)
 
-        paragraphs: list[Command] = [SetStyle(b.id, new) for b in self.blocks if b.style == old]
+        paragraphs: list[Command] = [SetStyle(b.id, new) for b in self.paragraphs if b.style == old]
         return [*paragraphs, *ObjectModel.restyle_users(self, old, new)]
 
     def list_in_use(self, list_id: str) -> bool:
         """Is any paragraph, or the words of any object, an item of this list? (Asked by the list commands before
         they take a list back.)"""
-        return any(b.item is not None and b.item.list == list_id for b in self.blocks) or self.object_list_in_use(
+        return any(b.item is not None and b.item.list == list_id for b in self.paragraphs) or self.object_list_in_use(
             list_id
         )
 
@@ -813,7 +814,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """The item of a paragraph of the text or of the words of an object."""
         if paragraph_id in self.objects:
             return self.object_item(paragraph_id)
-        return self.block(paragraph_id).item
+        return self.paragraph(paragraph_id).item
 
     def put_item(self, paragraph_id: str, item: ListItem | None) -> object:
         """Make a paragraph, or an object's words, an item; the event that tells the clients."""
@@ -835,7 +836,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         if not text:
             return ()
         changed = TextChanged(paragraph_id, offset, 0, text, tuple(runs))
-        return (changed, FieldsPut(paragraph_id, self.block(paragraph_id).fields)) if fields else (changed,)
+        return (changed, FieldsPut(paragraph_id, self.paragraph(paragraph_id).fields)) if fields else (changed,)
 
     def remove_text(
         self, paragraph_id: str, start: int, end: int
@@ -849,7 +850,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         text, runs, fields = self.remove(paragraph_id, start, end)
         events: tuple[object, ...] = (TextChanged(paragraph_id, start, end - start, ""),) if end > start else ()
         if fields:
-            events = (*events, FieldsPut(paragraph_id, self.block(paragraph_id).fields))
+            events = (*events, FieldsPut(paragraph_id, self.paragraph(paragraph_id).fields))
         return text, runs, fields, events
 
     def _type_in_entry(
@@ -883,7 +884,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             return self.object_fields(paragraph_id)
         if self.is_entry(paragraph_id):
             return self.entry_words(paragraph_id).fields
-        return self.block(paragraph_id).fields
+        return self.paragraph(paragraph_id).fields
 
     def put_fields(self, paragraph_id: str, fields: tuple[Field, ...]) -> tuple[object, ...]:
         """Give a paragraph other fields at its U+FFFC; the event that tells the clients."""
@@ -892,7 +893,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         if self.is_entry(paragraph_id):
             self.put_entry_words(paragraph_id, self.entry_words(paragraph_id).with_fields(fields))
             return (FieldsPut(paragraph_id, fields),)
-        self._put(self.block(paragraph_id).with_fields(fields))
+        self._put(self.paragraph(paragraph_id).with_fields(fields))
         return (FieldsPut(paragraph_id, fields),)
 
     def text_regions(self, paragraph_id: str, start: int, end: int) -> tuple[Region, ...]:
@@ -920,34 +921,34 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """The options of a table of contents, a paragraph of the text or the words of an object."""
         if paragraph_id in self.objects:
             return self.object_generated(paragraph_id)
-        return self.block(paragraph_id).generated
+        return self.paragraph(paragraph_id).generated
 
     def put_generated(self, paragraph_id: str, generated: Generated | None) -> object:
         """Make an empty paragraph (or an object's words) a table of contents, or plain again; the event that tells
         the clients."""
         if paragraph_id in self.objects:
             return self.put_object_generated(paragraph_id, generated)
-        self._put(self.block(paragraph_id).with_generated(generated))
+        self._put(self.paragraph(paragraph_id).with_generated(generated))
         self._structure += 1
-        return BlockGenerated(paragraph_id, generated)
+        return ParagraphGenerated(paragraph_id, generated)
 
     def item_regions(self, paragraph_id: str) -> tuple[Region, ...]:
         """A paragraph's whole text, or the object; a paragraph that is not (yet) there holds its first character
         (the inverse of a join sets the item of the paragraph it splits off)."""
         if paragraph_id in self.objects:
             return self.selection_of(paragraph_id)
-        block = next((b for b in self.blocks if b.id == paragraph_id), None)
-        return (TextRange(paragraph_id, 0, max(1, 0 if block is None else len(block.text))),)
+        paragraph = next((b for b in self.paragraphs if b.id == paragraph_id), None)
+        return (TextRange(paragraph_id, 0, max(1, 0 if paragraph is None else len(paragraph.text))),)
 
     # -- the shared text structure (step C): the text as a ParagraphHost ---------------------
     def reading_order(self) -> Iterator[Placed]:
         """The paragraphs in the order they are read: each paragraph of the text, then the words of the objects that
         hang from it, in stacking order. Only the text's own paragraphs are its main text."""
-        for block in self.blocks:
-            yield Placed(block, block.id, True, None)
-            for obj in self.objects_on(block.id):
+        for paragraph in self.paragraphs:
+            yield Placed(paragraph, paragraph.id, True, None)
+            for obj in self.objects_on(paragraph.id):
                 if obj.body.paragraph is not None:
-                    yield Placed(obj.body.paragraph, block.id, False, None)
+                    yield Placed(obj.body.paragraph, paragraph.id, False, None)
 
     @property
     def structure_version(self) -> tuple[int, int]:
@@ -967,24 +968,24 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self._settle_titles(ctx)
 
     def _settle_titles(self, ctx: Context) -> None:
-        titles = {b.id for b in self.blocks if self.heading_level(b) is not None and self._title_of(b)}
+        titles = {b.id for b in self.paragraphs if self.heading_level(b) is not None and self._title_of(b)}
         was = self._told_titles or {}
         if not titles and not was:
             self._told_titles = {}
             return
         names = self._names_of_paragraphs()
-        now = {block_id: names[block_id] for block_id in titles}
-        for block_id, name in now.items():
-            if was.get(block_id) != name:
-                ctx.emit(ThingRenamed(block_id, name))
-        for block_id in was.keys() - now.keys():
-            if self._has_block(block_id):  # a heading no longer: it is called what it was given, or nothing
-                ctx.emit(ThingRenamed(block_id, self.block_names.get(block_id, "")))
+        now = {paragraph_id: names[paragraph_id] for paragraph_id in titles}
+        for paragraph_id, name in now.items():
+            if was.get(paragraph_id) != name:
+                ctx.emit(ThingRenamed(paragraph_id, name))
+        for paragraph_id in was.keys() - now.keys():
+            if self._has_paragraph(paragraph_id):  # a heading no longer: it is called what it was given, or nothing
+                ctx.emit(ThingRenamed(paragraph_id, self.paragraph_names.get(paragraph_id, "")))
         self._told_titles = now
 
     def style_uses(self) -> dict[str, int]:
         """How many paragraphs have each style that is in use."""
-        return dict(Counter(b.style for b in self.blocks))
+        return dict(Counter(b.style for b in self.paragraphs))
 
     def fresh_suggestion_id(self) -> str:
         """An id for a new suggestion."""
@@ -1001,7 +1002,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         """Has the text under a suggestion changed since it was made? It then cannot be accepted any more."""
         a = suggestion.anchor
         try:
-            current = self.block(a.block).text[a.start : a.end]
+            current = self.paragraph(a.paragraph).text[a.start : a.end]
         except KeyError:
             return True
         return current != suggestion.original
@@ -1012,7 +1013,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         data = {
             "id": suggestion.id,
             "author": suggestion.author,
-            "block": a.block,
+            "paragraph": a.paragraph,
             "start": a.start,
             "end": a.end,
             "original": suggestion.original,
@@ -1029,38 +1030,40 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         return [self.suggestion_data(s) for s in self.suggestions.values() if s.state == "open"]
 
     # -- changing text (used by the commands) ------------------------------------
-    def restyle(self, block_id: str, style: str) -> None:
+    def restyle(self, paragraph_id: str, style: str) -> None:
         """Put a paragraph under another style (a paragraph is immutable, so this replaces it)."""
-        self._put(self.block(block_id).with_style(style))
+        self._put(self.paragraph(paragraph_id).with_style(style))
 
-    def set_item(self, block_id: str, item: ListItem | None) -> None:
+    def set_item(self, paragraph_id: str, item: ListItem | None) -> None:
         """Make a paragraph an item of a list, or (``None``) take it out of its list. The list must exist."""
         if item is not None:
             item.check()
             if item.list not in self.lists:
                 raise ValueError(f"no list {item.list!r}")
-        self._put(self.block(block_id).with_item(item))
+        self._put(self.paragraph(paragraph_id).with_item(item))
         self._structure += 1
 
-    def _put(self, block: Block) -> None:
+    def _put(self, paragraph: Paragraph) -> None:
         """Swap a changed paragraph into place. A paragraph is immutable (D181), so every edit below builds a new
         one and puts it where the old one was."""
-        self.blocks[self.index_of(block.id)] = block
+        self.paragraphs[self.index_of(paragraph.id)] = paragraph
 
-    def insert(self, block_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...] = ()) -> None:
+    def insert(
+        self, paragraph_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...] = ()
+    ) -> None:
         """Put ``text`` into a paragraph at ``offset``; ``runs`` say who wrote it, ``fields`` are its U+FFFC's."""
-        block = self.block(block_id)
-        if block.generated is not None:
+        paragraph = self.paragraph(paragraph_id)
+        if paragraph.generated is not None:
             raise ValueError("a table of contents takes no typing: its entries come from the headings")
-        self._put(block.typed(offset, text, runs, fields))
+        self._put(paragraph.typed(offset, text, runs, fields))
 
-    def remove(self, block_id: str, start: int, end: int) -> tuple[str, list[Run], tuple[Field, ...]]:
+    def remove(self, paragraph_id: str, start: int, end: int) -> tuple[str, list[Run], tuple[Field, ...]]:
         """Cut ``start <= i < end`` out of a paragraph; returns what was cut, with its runs and fields."""
-        kept, text, runs, fields = self.block(block_id).cut(start, end)
+        kept, text, runs, fields = self.paragraph(paragraph_id).cut(start, end)
         self._put(kept)
         return text, runs, fields
 
-    def split(self, block_id: str, offset: int, new_id: str, style: str, name: str = "") -> None:
+    def split(self, paragraph_id: str, offset: int, new_id: str, style: str, name: str = "") -> None:
         """Cut a paragraph at ``offset``; the rest becomes the paragraph ``new_id`` right behind it, in ``style``
         and, if the paragraph is a list item, an item of the same list at the same level.
 
@@ -1068,42 +1071,45 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         maker, made by the server. Another that is called that already (somebody made one at the same moment, or a
         name kept for a paragraph that came back) gives way with a number in brackets. Without a name the paragraph
         has the one it had before, if any."""
-        block = self.block(block_id)
-        if not 0 <= offset <= len(block.text):
+        paragraph = self.paragraph(paragraph_id)
+        if not 0 <= offset <= len(paragraph.text):
             raise IndexError("split outside the text")
-        if any(b.id == new_id for b in self.blocks):
+        if any(b.id == new_id for b in self.paragraphs):
             raise ValueError(f"the paragraph {new_id!r} exists already")
         self.check_style(style)
-        wanted = name or self.block_names.get(new_id, "")
+        wanted = name or self.paragraph_names.get(new_id, "")
         made = distinct_name(wanted, self._taken_keys()) if wanted else ""  # before the paragraph is among them
-        at = fields_before(block.text, offset)
-        rest = Block(
+        at = fields_before(paragraph.text, offset)
+        rest = Paragraph(
             new_id,
             style,
-            block.text[offset:],
-            tuple(slice_runs(block.runs, offset, len(block.text))),
-            block.item,
-            fields=block.fields[at:],
+            paragraph.text[offset:],
+            tuple(slice_runs(paragraph.runs, offset, len(paragraph.text))),
+            paragraph.item,
+            fields=paragraph.fields[at:],
         )
         self._put(
-            replace(block.with_text(block.text[:offset], slice_runs(block.runs, 0, offset)), fields=block.fields[:at])
+            replace(
+                paragraph.with_text(paragraph.text[:offset], slice_runs(paragraph.runs, 0, offset)),
+                fields=paragraph.fields[:at],
+            )
         )
-        self.blocks.insert(self.index_of(block_id) + 1, rest)
+        self.paragraphs.insert(self.index_of(paragraph_id) + 1, rest)
         self.open_holder(new_id)
         self._note_id(new_id)
         self._structure += 1
         if made:
-            self.block_names[new_id] = made
+            self.paragraph_names[new_id] = made
             if self._stored_keys is not None:
                 self._stored_keys.add(name_key(made))
 
-    def join(self, block_id: str, into: str, at: int) -> Block:
-        """Put paragraph ``block_id`` at the end of ``into`` (the one right before it, ``at`` characters long).
+    def join(self, paragraph_id: str, into: str, at: int) -> Paragraph:
+        """Put paragraph ``paragraph_id`` at the end of ``into`` (the one right before it, ``at`` characters long).
         The joined paragraph is the first one's: its style and its place in a list win.
 
         Returns the paragraph that went away, as it was."""
-        first, second = self.block(into), self.block(block_id)
-        if self.index_of(block_id) != self.index_of(into) + 1:
+        first, second = self.paragraph(into), self.paragraph(paragraph_id)
+        if self.index_of(paragraph_id) != self.index_of(into) + 1:
             raise ValueError("a paragraph can only be joined to the one right before it")
         if second.generated is not None:
             raise ValueError("a table of contents cannot be joined to a paragraph; remove it instead")
@@ -1113,9 +1119,9 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             raise ValueError("the paragraph before it is not as long as the command says")
         joined = first.with_text(first.text + second.text, insert_runs(first.runs, at, second.runs))
         self._put(replace(joined, fields=first.fields + second.fields))
-        self.carry_objects(block_id, into, shift=at)
-        self.blocks.remove(second)
-        self.close_holder(block_id)
+        self.carry_objects(paragraph_id, into, shift=at)
+        self.paragraphs.remove(second)
+        self.close_holder(paragraph_id)
         self._structure += 1
         self._stored_keys = None
         return second
@@ -1147,7 +1153,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         if suggestion.id in self.suggestions:
             raise ValueError(f"the suggestion {suggestion.id!r} exists already")
         a = suggestion.anchor
-        if not 0 <= a.start <= a.end <= len(self.block(a.block).text):
+        if not 0 <= a.start <= a.end <= len(self.paragraph(a.paragraph).text):
             raise IndexError("a suggestion must lie inside the text")
         self.suggestions[suggestion.id] = suggestion
         self._note_id(suggestion.id)
@@ -1181,7 +1187,7 @@ def _highest(ids) -> int:
 
 
 def _suggestion_from_data(item: dict) -> Suggestion:
-    anchor = TextRange(item["block"], item["start"], item["end"])
+    anchor = TextRange(item["paragraph"], item["start"], item["end"])
     return Suggestion(
         item["id"], item["author"], anchor, item["original"], item["replacement"], item["reason"], item["state"]
     )

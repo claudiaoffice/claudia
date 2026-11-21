@@ -1,7 +1,7 @@
-"""Paragraphs inside a list and a section are blocks of the model (so they can be edited and styled); the section itself
-is structure the model does not have. Adding a paragraph before the list and emptying the one in the section must
-leave the list -- its style, its items -- exactly as it was, and the section as it was. (A paragraph added *after*
-the last item of a list is a paragraph after the list; lists are written by D453, see the `lists` case.)"""
+"""Paragraphs inside a list and a section are paragraphs of the model (so they can be edited and styled); the section
+itself is structure the model does not have. Adding a paragraph before the list and emptying the one in the section must
+leave the list -- its style, its items -- exactly as it was, and the section as it was. (A paragraph added *after* the
+last item of a list is a paragraph after the list; lists are written by D453, see the `lists` case.)"""
 
 from __future__ import annotations
 
@@ -17,19 +17,19 @@ LIST = (
 
 
 def import_checks(model: TextModel) -> None:
-    assert [b.text for b in model.blocks] == ["Shopping.", "Bread", "Milk", "Remember the bag.", "Done."]
+    assert [b.text for b in model.paragraphs] == ["Shopping.", "Bread", "Milk", "Remember the bag.", "Done."]
 
 
 def modify(model: TextModel) -> TextModel:
-    model.remove(model.blocks[3].id, 0, len("Remember the bag."))  # the paragraph in the section: emptied...
+    model.remove(model.paragraphs[3].id, 0, len("Remember the bag."))  # the paragraph in the section: emptied...
     new_id = model.fresh_id()
-    model.split(model.blocks[0].id, len("Shopping."), new_id, "body")  # ...and one added before the list
+    model.split(model.paragraphs[0].id, len("Shopping."), new_id, "body")  # ...and one added before the list
     model.insert(new_id, 0, "Check the list.", [Run(15, None)])
     return model
 
 
 def after_checks(model: TextModel) -> None:
-    assert [b.text for b in model.blocks] == ["Shopping.", "Check the list.", "Bread", "Milk", "", "Done."]
+    assert [b.text for b in model.paragraphs] == ["Shopping.", "Check the list.", "Bread", "Milk", "", "Done."]
 
 
 def preserve_the_list(original: bytes, edited: bytes) -> None:

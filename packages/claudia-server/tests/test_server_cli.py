@@ -118,7 +118,7 @@ def test_a_text_server_offers_the_text_methods_and_the_text_assistant(tmp_path):
 
     served = plan("--no-tls", "--model", "claudia_composes:TextModel", tmp_path=tmp_path)
     methods = set(TestClient(served.app).get("/api/protocol").json()["methods"])
-    assert {"blocks", "replace_text", "suggest"} <= methods and "cells" not in methods
+    assert {"paragraphs", "replace_text", "suggest"} <= methods and "cells" not in methods
 
     async def users():
         return (await served.app.state.hub.open("x", create=True)).users()

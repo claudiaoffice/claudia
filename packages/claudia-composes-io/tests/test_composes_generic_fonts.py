@@ -11,7 +11,7 @@ from claudia_composes_io import text_to_docx, text_to_odt
 from docx import Document
 from lxml import etree
 
-from claudia_composes import Block, TextModel
+from claudia_composes import Paragraph, TextModel
 from claudia_core import StyleDef
 from claudia_odf_io import NS
 from claudia_opc_io import read_parts
@@ -21,7 +21,7 @@ GENERIC_FAMILIES = json.loads(SAMPLE.read_text(encoding="utf-8"))["generic_famil
 
 
 def with_font(css_family: str) -> TextModel:
-    model = TextModel([Block("b1", "callout", "words")])
+    model = TextModel([Paragraph("b1", "callout", "words")])
     model.styles.add(StyleDef("callout", "Call out", "", "body", {"font-family": css_family}))
     return model
 

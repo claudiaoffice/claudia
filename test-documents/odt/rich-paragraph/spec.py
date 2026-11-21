@@ -13,7 +13,7 @@ TEXT = "Read the manual and note the examples carefully."
 
 
 def import_checks(model: TextModel) -> None:
-    assert [(b.style, b.text) for b in model.blocks] == [
+    assert [(b.style, b.text) for b in model.paragraphs] == [
         ("heading-1", "Reading list"),
         ("body", TEXT),
         ("body", "Nothing here changes."),
@@ -21,16 +21,16 @@ def import_checks(model: TextModel) -> None:
 
 
 def modify(model: TextModel) -> TextModel:
-    block_id = model.blocks[1].id
+    paragraph_id = model.paragraphs[1].id
     start = TEXT.index("carefully")
-    model.remove(block_id, start, start + len("carefully"))
-    model.insert(block_id, start, "slowly", [Run(len("slowly"), None)])
+    model.remove(paragraph_id, start, start + len("carefully"))
+    model.insert(paragraph_id, start, "slowly", [Run(len("slowly"), None)])
     return model
 
 
 def after_checks(model: TextModel) -> None:
-    assert model.blocks[1].text == "Read the manual and note the examples slowly."
-    assert model.blocks[2].text == "Nothing here changes."
+    assert model.paragraphs[1].text == "Read the manual and note the examples slowly."
+    assert model.paragraphs[2].text == "Nothing here changes."
 
 
 def preserve_inside_the_paragraph(original: bytes, edited: bytes) -> None:

@@ -3,12 +3,12 @@ changes, and what it must leave alone. The engine is claudia-search's; this is c
 
 import pytest
 
-from claudia_composes import BlockAnchor, InsertText, SetStyle, SplitBlock, TextModel, TextRange
+from claudia_composes import InsertText, ParagraphAnchor, SetStyle, SplitParagraph, TextModel, TextRange
 from claudia_composes.search import (
     EXTRA_PARTS,
     KINDS,
-    block_at,
     object_at,
+    paragraph_at,
     plan_replacement,
     replace_command,
     scan_text,
@@ -40,7 +40,8 @@ def document(*paragraphs):
     for number, (style, text) in enumerate(paragraphs):
         if number:
             d.execute(
-                SplitBlock(f"b{number}", len(d.model.block(f"b{number}").text), f"b{number + 1}", style), author="ann"
+                SplitParagraph(f"b{number}", len(d.model.paragraph(f"b{number}").text), f"b{number + 1}", style),
+                author="ann",
             )
         elif style != "body":
             d.execute(SetStyle("b1", style), author="ann")
@@ -48,7 +49,7 @@ def document(*paragraphs):
     return d
 
 
-def add_box(d, block="b1", offset=0, words="a red note", description="", kind="text", object_id="o1"):
+def add_box(d, paragraph="b1", offset=0, words="a red note", description="", kind="text", object_id="o1"):
     style, words_style = ("plain-box", "body") if kind == "text" else ("plain-shape", "shape-label")
     shape = None
     if kind == "shape":
@@ -67,7 +68,7 @@ def add_box(d, block="b1", offset=0, words="a red note", description="", kind="t
         ref=shape,
         description=description,
     )
-    d.model.insert_object(VisualObject(body, BlockAnchor(block, offset)))
+    d.model.insert_object(VisualObject(body, ParagraphAnchor(paragraph, offset)))
 
 
 def places(found):
@@ -78,10 +79,10 @@ def places(found):
 def test_a_paragraph_is_text_a_heading_or_a_remark_by_its_style_and_the_styles_it_is_based_on():
     d = document(("title", "red title"), ("heading-1", "red section"), ("body", "red body"), ("remark", "red remark"))
     assert [(t.at, t.kind) for t in text_texts(d.model, KINDS)] == [
-        (block_at("b1"), "heading"),
-        (block_at("b2"), "heading"),
-        (block_at("b3"), "text"),
-        (block_at("b4"), "remark"),
+        (paragraph_at("b1"), "heading"),
+        (paragraph_at("b2"), "heading"),
+        (paragraph_at("b3"), "text"),
+        (paragraph_at("b4"), "remark"),
     ]
 
 
@@ -104,7 +105,7 @@ def test_only_the_kinds_asked_for_are_offered():
 
 def test_an_empty_paragraph_offers_nothing():
     d = document(("body", ""), ("body", "red"))
-    assert [t.at for t in text_texts(d.model, KINDS)] == [block_at("b2")]
+    assert [t.at for t in text_texts(d.model, KINDS)] == [paragraph_at("b2")]
 
 
 def test_the_words_and_the_description_of_an_object_are_texts_of_their_own():
@@ -112,7 +113,7 @@ def test_the_words_and_the_description_of_an_object_are_texts_of_their_own():
     add_box(d, words="a red box", description="a red box on a desk")
     items = [(t.at, t.kind, t.text) for t in text_texts(d.model, KINDS)]
     assert items == [
-        (block_at("b1"), "text", "red"),
+        (paragraph_at("b1"), "text", "red"),
         (object_at("b1", "o1", "box"), "object", "a red box"),
         (object_at("b1", "o1", "description"), "description", "a red box on a desk"),
     ]
@@ -141,25 +142,25 @@ def test_a_section_runs_from_its_heading_to_the_next_heading_of_the_same_or_a_hi
         ("body", "red body two"),
     )
     found = scan_text(d.model, search("red"), kinds=KINDS, scope={"section": "b4"})
-    assert [m.at["block"] for m in found.matches] == ["b4", "b5"]  # the subsection only
+    assert [m.at["paragraph"] for m in found.matches] == ["b4", "b5"]  # the subsection only
     found = scan_text(d.model, search("red"), kinds=KINDS, scope={"section": "b3"})
-    assert [m.at["block"] for m in found.matches] == ["b2", "b3", "b4", "b5"]  # one, with its subsection
+    assert [m.at["paragraph"] for m in found.matches] == ["b2", "b3", "b4", "b5"]  # one, with its subsection
 
 
 def test_text_before_the_first_section_heading_is_a_section_of_its_own():
     d = document(("title", "red title"), ("body", "red intro"), ("heading-1", "red one"))
     found = scan_text(d.model, search("red"), kinds=KINDS, scope={"section": "b2"})
-    assert [m.at["block"] for m in found.matches] == ["b1", "b2"]
+    assert [m.at["paragraph"] for m in found.matches] == ["b1", "b2"]
 
 
 def test_a_selection_searches_only_what_is_selected_and_says_where_in_the_paragraph_that_starts():
     d = document(("body", "red one red"), ("body", "red two"), ("body", "red three"))
-    scope = {"range": {"from": {"block": "b1", "offset": 4}, "to": {"block": "b3", "offset": 3}}}
+    scope = {"range": {"from": {"paragraph": "b1", "offset": 4}, "to": {"paragraph": "b3", "offset": 3}}}
     found = scan_text(d.model, search("red"), kinds=KINDS, scope=scope)
     assert places(found) == [
-        ({"block": "b1", "offset": 4}, "text"),
-        ({"block": "b2"}, "text"),
-        ({"block": "b3", "offset": 0}, "text"),
+        ({"paragraph": "b1", "offset": 4}, "text"),
+        ({"paragraph": "b2"}, "text"),
+        ({"paragraph": "b3", "offset": 0}, "text"),
     ]
     assert [(m.start, m.end) for m in found.matches] == [(4, 7), (0, 3), (0, 3)]
 
@@ -210,10 +211,10 @@ def replaced(d, query, author="ben", **options):
 def test_a_replacement_is_one_step_that_undo_takes_back_whole():
     d = document(("body", "red fox"), ("body", "a red hen, a red cow"))
     made = replaced(d, search("red", "blue"))
-    assert [b.text for b in d.model.blocks] == ["blue fox", "a blue hen, a blue cow"]
+    assert [b.text for b in d.model.paragraphs] == ["blue fox", "a blue hen, a blue cow"]
     assert len(made.changes) == 2
     d.undo("ben")
-    assert [b.text for b in d.model.blocks] == ["red fox", "a red hen, a red cow"]
+    assert [b.text for b in d.model.paragraphs] == ["red fox", "a red hen, a red cow"]
 
 
 def test_the_history_names_the_step_by_its_size():
@@ -225,23 +226,23 @@ def test_the_history_names_the_step_by_its_size():
 def test_the_words_around_a_replacement_keep_their_author_and_the_new_words_are_the_replacers():
     d = document(("body", "the red fox"))
     replaced(d, search("red", "grey"), author="ben")
-    block = d.model.block("b1")
-    assert block.text == "the grey fox"
-    assert [(r.length, r.author) for r in block.runs] == [(4, "ann"), (4, "ben"), (4, "ann")]
+    paragraph = d.model.paragraph("b1")
+    assert paragraph.text == "the grey fox"
+    assert [(r.length, r.author) for r in paragraph.runs] == [(4, "ann"), (4, "ben"), (4, "ann")]
 
 
 def test_a_paragraph_keeps_its_style_and_an_object_hanging_in_it_stays_with_its_word():
     d = document(("heading-1", "the red fox"))
     add_box(d, offset=8, words="note")
     replaced(d, search("red", "grey"), kinds=["heading"])
-    assert d.model.block("b1").style == "heading-1"
-    assert d.model.objects["o1"].anchor.block == "b1"
+    assert d.model.paragraph("b1").style == "heading-1"
+    assert d.model.objects["o1"].anchor.paragraph == "b1"
 
 
 def test_only_the_kinds_chosen_are_replaced():
     d = document(("heading-1", "red"), ("body", "red"))
     replaced(d, search("red", "blue"), kinds=["text"])
-    assert [b.text for b in d.model.blocks] == ["red", "blue"]
+    assert [b.text for b in d.model.paragraphs] == ["red", "blue"]
 
 
 def test_the_words_of_an_object_are_rewritten_in_place_and_keep_their_authors():
@@ -264,7 +265,7 @@ def test_a_pattern_with_kept_parts_is_stored_as_text_not_as_a_pattern():
     d = document(("body", "€12 and €30"))
     query = Query.from_data({"mode": "pattern", "find": "€(\\d+)", "replace": "\\1 EUR"}).compile()
     replaced(d, query)
-    assert d.model.block("b1").text == "12 EUR and 30 EUR"
+    assert d.model.paragraph("b1").text == "12 EUR and 30 EUR"
 
 
 def test_nothing_to_change_makes_no_command():
@@ -275,16 +276,16 @@ def test_nothing_to_change_makes_no_command():
 
 def test_matches_a_person_left_alone_stay():
     d = document(("body", "red, red"))
-    made = replaced(d, search("red", "blue"), leave=[(block_at("b1"), 0)])
-    assert d.model.block("b1").text == "red, blue"
+    made = replaced(d, search("red", "blue"), leave=[(paragraph_at("b1"), 0)])
+    assert d.model.paragraph("b1").text == "red, blue"
     assert made.skipped == []
 
 
 def test_a_paragraph_typed_into_since_the_person_looked_is_skipped_not_guessed_at():
     d = document(("body", "red hen"))
-    made = replaced(d, search("red|hen", "x"), leave=[(block_at("b1"), 1, "red")])
-    assert d.model.block("b1").text == "red hen"
-    assert [(s.at, s.reason) for s in made.skipped] == [(block_at("b1"), "changed")]
+    made = replaced(d, search("red|hen", "x"), leave=[(paragraph_at("b1"), 1, "red")])
+    assert d.model.paragraph("b1").text == "red hen"
+    assert [(s.at, s.reason) for s in made.skipped] == [(paragraph_at("b1"), "changed")]
 
 
 # -------------------------------------------------------------------------------------------------- the locks
@@ -294,8 +295,8 @@ def test_a_match_inside_the_zone_somebody_else_holds_is_skipped_and_named():
     made = plan_replacement(
         d.model, search("red", "blue"), kinds=KINDS, conflicts=lambda regions: d.presence.conflicts("ben", regions)
     )
-    assert [(s.at, s.reason, s.by) for s in made.skipped] == [(block_at("b1"), "locked", "ann")]
-    assert [c.at for c in made.changes] == [block_at("b2")]
+    assert [(s.at, s.reason, s.by) for s in made.skipped] == [(paragraph_at("b1"), "locked", "ann")]
+    assert [c.at for c in made.changes] == [paragraph_at("b2")]
 
 
 def test_a_zone_held_elsewhere_in_the_paragraph_does_not_stop_the_replacement():
@@ -326,7 +327,7 @@ def test_a_result_that_is_too_long_is_skipped():
 def test_a_section_starts_at_any_heading_by_its_level_and_the_title_starts_none():
     d = document(("title", "red title"), ("heading-3", "red three"), ("body", "red body"), ("heading-4", "red four"))
     found = scan_text(d.model, search("red"), kinds=KINDS, scope={"section": "b4"})
-    assert [m.at["block"] for m in found.matches] == ["b4"]
+    assert [m.at["paragraph"] for m in found.matches] == ["b4"]
     found = scan_text(d.model, search("red"), kinds=KINDS, scope={"section": "b3"})
-    assert [m.at["block"] for m in found.matches] == ["b2", "b3", "b4"]
+    assert [m.at["paragraph"] for m in found.matches] == ["b2", "b3", "b4"]
     assert [t.kind for t in text_texts(d.model, KINDS)][:2] == ["heading", "heading"]

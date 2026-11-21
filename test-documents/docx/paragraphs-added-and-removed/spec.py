@@ -14,17 +14,17 @@ WORDS = ["Quarterly report", "Sales rose. Costs fell.", "The chart:", "", "Thank
 
 
 def import_checks(model: TextModel) -> None:
-    assert [b.text for b in model.blocks] == WORDS  # the picture's paragraph is an empty block
+    assert [b.text for b in model.paragraphs] == WORDS  # the picture's paragraph is an empty paragraph
 
 
 def modify(model: TextModel) -> TextModel:
-    model.split(model.blocks[1].id, 11, "n1", "body")  # "Sales rose." / " Costs fell."
-    model.join(model.blocks[-1].id, model.blocks[-2].id, 0)  # "Thank you." goes into the picture's paragraph
+    model.split(model.paragraphs[1].id, 11, "n1", "body")  # "Sales rose." / " Costs fell."
+    model.join(model.paragraphs[-1].id, model.paragraphs[-2].id, 0)  # "Thank you." goes into the picture's paragraph
     return model
 
 
 def after_checks(model: TextModel) -> None:
-    assert [b.text for b in model.blocks] == [
+    assert [b.text for b in model.paragraphs] == [
         "Quarterly report",
         "Sales rose.",
         " Costs fell.",

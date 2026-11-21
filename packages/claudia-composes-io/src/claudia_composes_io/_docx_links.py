@@ -39,13 +39,13 @@ def carry_links(
     whose words are in ``after``, whole and in one piece, and not under one of the ``anchors`` (``(start, end)`` of
     the tracked changes written into the text), as what to put back, and how many were left out. The elements of
     both are detached."""
-    blocks = _same_stretches(before, after)
+    paragraphs = _same_stretches(before, after)
     carried: list[Carried] = []
     dropped, position = 0, 0
     for child in list(paragraph):
         length = text_length(child)
         if child.tag == qn("w:hyperlink"):
-            start = _moved(blocks, position, length)
+            start = _moved(paragraphs, position, length)
             if start is None or any(first < start + length and start < last for first, last in anchors):
                 dropped += 1
             else:
@@ -55,10 +55,10 @@ def carry_links(
     return carried, dropped
 
 
-def _moved(blocks: Sequence[tuple[int, int, int]], start: int, length: int) -> int | None:
+def _moved(paragraphs: Sequence[tuple[int, int, int]], start: int, length: int) -> int | None:
     """Where the characters ``start`` to ``start + length`` of the old text are in the new one: ``None`` unless they
     are all in one stretch the two texts have in common."""
-    for old, new, size in blocks:
+    for old, new, size in paragraphs:
         if old <= start and start + length <= old + size:
             return new + start - old
     return None

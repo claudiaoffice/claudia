@@ -19,7 +19,7 @@ from claudia_composes_io._tables import put_tables
 from docx import Document
 from docx.oxml.ns import qn
 
-from claudia_composes import Block, TextModel
+from claudia_composes import TextModel
 from claudia_core import Column, Merge, Paragraph, TableDef, entry_id
 
 
@@ -45,7 +45,7 @@ def table(table_id: str = "t1", **options) -> TableDef:
 
 
 def text_with(*definitions: TableDef, language: str = "en") -> TextModel:
-    model = TextModel([Block("b1", "body", "Before"), Block("b2", "body", "After")], language=language)
+    model = TextModel([Paragraph("b1", "body", "Before"), Paragraph("b2", "body", "After")], language=language)
     put_tables(model, [("b1", len("Before"), definition) for definition in definitions])
     return model
 
@@ -143,7 +143,7 @@ class TestReading:
         assert [column.kind for column in found.columns] == ["text", "number", "number"]
         assert found.width == 6000
         (obj,) = [o for o in back.objects.values() if o.body.kind == "table"]
-        assert (obj.anchor.block, obj.body.ref) == ("b1", found.id)
+        assert (obj.anchor.paragraph, obj.body.ref) == ("b1", found.id)
 
     def test_the_merges_of_a_written_file_come_back(self) -> None:
         merged = TableDef.blank("t1", 3, 3, header_rows=0, merges=(Merge("r1", "c1", 2, 2), Merge("r3", "c1", 1, 3)))
