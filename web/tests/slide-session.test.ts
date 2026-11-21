@@ -357,12 +357,12 @@ describe('making changes', () => {
   })
   it('describes an object, trimmed, as its own step', async () => {
     const { link, session } = await opened([text('a')])
-    expect(await session.describe('a', '  the greeting ', false)).toBe(true)
+    expect(await session.describeObject('a', '  the greeting ', false)).toBe(true)
     expect(link.last('describe_object')).toEqual({ id: 'a', description: 'the greeting', decorative: false, base: 'main:0' })
   })
   it('marks an object as decoration and sends no words with it', async () => {
     const { link, session } = await opened([text('a')])
-    await session.describe('a', 'typed before the tick', true)
+    await session.describeObject('a', 'typed before the tick', true)
     expect(link.last('describe_object')).toEqual({ id: 'a', description: '', decorative: true, base: 'main:0' })
   })
   it('does not select anything when importing a picture failed, and says why', async () => {
@@ -394,17 +394,17 @@ describe('making changes', () => {
     expect(link.last('write_words')).toEqual({ id: 'a', text: 'Hello', base: 'main:0' })
     await session.setSnap('a', false)
     expect(link.last('set_snap')).toEqual({ id: 'a', snap: false, base: 'main:0' })
-    await session.remove('a')
+    await session.removeObject('a')
     expect(link.last('remove_object')).toEqual({ id: 'a', base: 'main:0' })
   })
   it('turns an object by sending the whole-degree turn, and is told when the server says no', async () => {
     const { link, session, state } = await opened([text('a')])
-    expect(await session.rotate('a', 30)).toBe(true)
+    expect(await session.rotateObject('a', 30)).toBe(true)
     expect(link.last('rotate_object')).toEqual({ id: 'a', rotation: 30, base: 'main:0' })
     link.handlers.rotate_object = () => {
       throw new ProtocolError('command_error', 'this object is too large to turn that way')
     }
-    expect(await session.rotate('a', 45)).toBe(false)
+    expect(await session.rotateObject('a', 45)).toBe(false)
     expect(state.notice).toMatchObject({ kind: 'error', text: 'this object is too large to turn that way' })
   })
   it('a colleague holding the object refuses the change and the person is told', async () => {

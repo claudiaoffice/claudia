@@ -116,7 +116,7 @@ describe('opening', () => {
   it('loads the paragraphs, the styles and puts the caret at the start', async () => {
     const { session } = await opened()
     expect(text(session)).toEqual(['hello world'])
-    expect(session.state.styles.map((s) => s.id)).toEqual(['body', 'title'])
+    expect(Object.keys(session.state.styles)).toEqual(['body', 'title'])
     expect(session.state.selection).toEqual({ anchor: at(0), focus: at(0) })
     expect(session.state.status).toBe('open')
   })
@@ -418,7 +418,7 @@ describe('styles', () => {
     const { link, session } = await opened()
     expect(session.styleView('title')?.based_on).toBe('body')
     link.push('styles', { type: 'styles', styles: [...STYLES, view('note', 'Note', { color: 'red' }, 'body')] })
-    expect(session.state.styles.map((s) => s.id)).toEqual(['body', 'title', 'note'])
+    expect(Object.keys(session.state.styles)).toEqual(['body', 'title', 'note'])
   })
 
   it('counts how many paragraphs use each style', async () => {

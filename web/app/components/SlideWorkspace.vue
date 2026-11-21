@@ -280,7 +280,7 @@ const agendaHost = computed<ContentsHost | null>(() => {
     looks: looksOf(entries, Object.values(state.styles)),
     readOnly: readonly.value,
     set: (next) => session.setContents(id, next),
-    remove: () => session.remove(id),
+    remove: () => session.removeObject(id),
   }
 })
 function openAgenda(id: string) {
@@ -329,7 +329,7 @@ function imageInserted() {
   canvas.value?.focus()
 }
 async function remove() {
-  if (state.selected) await session.remove(state.selected)
+  if (state.selected) await session.removeObject(state.selected)
   canvas.value?.focus()
 }
 

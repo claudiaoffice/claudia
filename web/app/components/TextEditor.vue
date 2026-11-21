@@ -56,10 +56,10 @@ const scroller = ref<HTMLElement | null>(null)
 const renderKey = ref(0)
 let composing = false
 // A paragraph is drawn from the CSS of its style (D73); the element only says what it is (a heading, a quote).
-const tagOf = (style: string) => semanticTag(state.styles, style)
-const headingOf = (style: string) => headingAttrs(state.styles, style)
+const tagOf = (style: string) => semanticTag(Object.values(state.styles), style)
+const headingOf = (style: string) => headingAttrs(Object.values(state.styles), style)
 // `resolved`, not `computed`: a palette role is a colour by the time it reaches the page (D200).
-const cssOf = (style: string) => paragraphCss(state.styles.find((s) => s.id === style)?.resolved ?? {})
+const cssOf = (style: string) => paragraphCss(state.styles[style]?.resolved ?? {})
 
 /** A list item's indent and gap, from the scheme of its list (E9.21), or a numbered heading's marker gap (E9.22); the
  * marker itself is drawn by CSS. */

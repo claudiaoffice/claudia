@@ -16,8 +16,12 @@ import type { ThingDetails } from './name-and-describe'
 import type { SchemeInfo } from './numbering'
 import type { Toc } from './contents'
 import type { Deleted, DeleteHow, StyleDeletion } from './style-deletion'
-import { nearest, PastLink, PlannedLink, step as stepRow, timeline, type Filter, type Item } from './replay'
+import { lookOnly, nearest, PastLink, PlannedLink, step as stepRow, timeline, type Filter, type Item } from './replay'
 import { requestOf, type Picked, type RedactionPlan } from './redaction'
+import type { ImageAsset } from './images'
+import { describeParams } from './descriptions'
+import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, VisualObject } from './objects'
+import type { CssCheck, CssEdit } from './style-css'
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
 
@@ -148,7 +152,27 @@ export interface ScrollBack {
 
 export const rowKey = (item: Item): string => (item.kind === 'change' ? `c:${item.revision}` : `m:${item.number}`)
 
-export interface BaseState {
+/** What all three apps keep of the object layer, the styles, the palette and the language, the same way (D1432). An app's
+ *  state narrows the types (its own anchor, its own style type). */
+export interface ObjectLayerState {
+  /** The objects, by id. */
+  objects: Record<string, VisualObject>
+  /** By holder (a sheet, a paragraph, a slide): the ids of its objects, the one in front last. */
+  order: Record<string, string[]>
+  /** The decoded pictures the document holds, by id. */
+  images: Record<string, ImageAsset>
+  /** The outlines the shapes among the objects are drawn with, by id. */
+  shapes: Record<string, { id: string }>
+  /** The document's styles, by id, in the order the server lists them; they carry the resolved colours (D200). */
+  styles: Record<string, { id: string }>
+  /** The document's colour roles and how they read against each other (D200). */
+  palette: PaletteEvent | null
+  /** The language the document is written in (D915), a BCP 47 tag; `null` when not set, `undefined` for a server that
+   *  does not know languages. */
+  language: string | null | undefined
+}
+
+export interface BaseState extends ObjectLayerState {
   /** Which app the document belongs to (`computes`, `composes`): the server says so when it welcomes us. */
   app: string
   /** The server's own address (`host` or `host:port`, as `location.host`/`socketUrl` use it) — whichever one this
@@ -249,6 +273,13 @@ function initialState(): BaseState {
     renderTypes: [],
     renderings: {},
     renderOutcomes: {},
+    objects: {},
+    order: {},
+    images: {},
+    shapes: {},
+    styles: {},
+    palette: null,
+    language: undefined,
   }
 }
 
@@ -501,7 +532,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   private onEvent(name: string, data: WireData) {
     const s = this.state
     // while looking at the past or at a preview, the present does not disturb the views
-    if (!s.replay && !s.preview && this.onAppEvent(name, data)) return
+    if (!s.replay && !s.preview && (this.onObjectLayerEvent(name, data) || this.onAppEvent(name, data))) return
     switch (name) {
       case 'command':
         s.revision = data.revision
@@ -832,7 +863,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Write the words of an object (a text box or a shape on a slide or in a text) as a person typed them (step G): the
    * server changes only what differs, so the words that stay keep who wrote them. One step in the history (D1232). */
   async writeWords(id: string, text: string): Promise<boolean> {
-    return (await this.attempt('write_words', { id, text, base: this.state.revision })) !== false
+    return (await this.write('write_words', { id, text })) !== false
   }
 
   /** Is this thing known to be gone from the document as shown (a tag to it then says so)? */
@@ -843,7 +874,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Give a thing (a sheet, a slide, a chart tab, an object) another name, as one step of the history. The server
    * refuses a name somebody else has, a named range included, with a sentence that is shown here. */
   async renameThing(id: string, name: string): Promise<boolean> {
-    return (await this.attempt('rename_thing', { id, name, base: this.state.revision })) !== false
+    return (await this.write('rename_thing', { id, name })) !== false
   }
 
   /** The fonts this document asks for that the server does not have (D1306); an answer that says nothing when the server
@@ -874,12 +905,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** The one dialog of Name & describe… (D1317): name and description together, one step in the history, so one Undo
    * takes both back. The server refuses a name somebody else has with a sentence that is shown here. */
   async nameAndDescribe(params: { id: string; name: string; description: string; decorative: boolean }): Promise<boolean> {
-    return (await this.attempt('name_and_describe', { ...params, base: this.state.revision })) !== false
+    return (await this.write('name_and_describe', { ...params })) !== false
   }
 
   /** Name everything that has no name (a document from before names) in one step of the history; how many were named. */
   async nameUnnamed(): Promise<number> {
-    const done = await this.attempt('name_unnamed', { base: this.state.revision })
+    const done = await this.write('name_unnamed')
     return done === false ? 0 : done.named
   }
 
@@ -993,6 +1024,156 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     }
   }
 
+  /** The events every app takes in alike (D1432): the objects, their pictures and outlines, the styles, the palette and
+   *  the language. `true` if it was one. */
+  private onObjectLayerEvent(name: string, data: WireData): boolean {
+    const s = this.state
+    switch (name) {
+      case 'objects': {
+        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
+        for (const o of e.changed) s.objects[o.id] = o
+        for (const id of e.removed) delete s.objects[id]
+        s.order[e.container] = e.order
+        this.objectsChanged(e)
+        return true
+      }
+      case 'image':
+        if (data.asset) s.images[data.id] = data.asset as ImageAsset
+        else delete s.images[data.id]
+        return true
+      case 'shape':
+        if (data.definition) s.shapes[data.id] = data.definition as { id: string }
+        else delete s.shapes[data.id]
+        return true
+      case 'styles':
+        // A style a colleague changed, and a palette role anybody changed, both arrive here: the styles carry the
+        // resolved colours a document is drawn with, and a client cannot work them out for itself (D200).
+        s.styles = Object.fromEntries((data.styles as { id: string }[]).map((x) => [x.id, x]))
+        this.stylesChanged()
+        return true
+      case 'palette':
+        // Only the styles are drawn from, and they arrive with the event above; the roles are kept for the controls
+        // that offer them by name (D200).
+        s.palette = data as PaletteEvent
+        return true
+      case 'language':
+        s.language = (data.language as string | null) ?? null
+        return true
+    }
+    return false
+  }
+
+  /** What else an app does when objects of one holder changed (the event is in the state already). */
+  protected objectsChanged(_event: ObjectsEvent): void {}
+
+  /** What else an app does when the styles changed (they are in the state already). */
+  protected stylesChanged(): void {}
+
+  // ------------------------------------------------------------------------------ the object layer, the styles, the palette
+  /** The styles as a style menu wants them, in the order the server lists them. */
+  styleViews() {
+    return Object.values(this.state.styles) as S['styles'][string][]
+  }
+
+  /** Every object of the document, for the use counts beside the style names. The client's `VisualObject` is flat
+   *  (`ObjectBody & { anchor }`), so an object is already a body. */
+  bodies(): ObjectBody[] {
+    return Object.values(this.state.objects)
+  }
+
+  /** Put a picture from disk at `where` (the app's holder and place, as the wire has them, and the size); its id, or
+   *  `null` after telling the person why not. `data` is the file's bytes, base64; `sourcePath` is the file's full path
+   *  if the caller could get one (a plain web browser cannot) and `null` if not. */
+  protected async putPicture(
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
+    where: Record<string, unknown>,
+  ): Promise<string | null> {
+    const done = await this.write('add_image', {
+      ...where,
+      data: picture.data,
+      alt: picture.alt,
+      source_name: picture.sourceName,
+      source_path: picture.sourcePath,
+      ...(picture.decorative ? { decorative: true } : {}),
+      ...(picture.fit ? { fit: true } : {}), // from a file: the server sizes it (D1332)
+    })
+    return done === false ? null : (done.object as string)
+  }
+
+  /** Turn an object to `rotation` whole degrees clockwise about its centre (D1021): one step in the history. The server
+   *  keeps it where it must be (on its slide or page, D1022) and refuses a turn that cannot fit, or a chart's. */
+  async rotateObject(id: string, rotation: number): Promise<boolean> {
+    return (await this.write('rotate_object', { id, rotation })) !== false
+  }
+
+  /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the
+   *  history. A picture needs one or the other, which the server insists on. */
+  async describeObject(id: string, description: string, decorative: boolean): Promise<boolean> {
+    return (await this.write('describe_object', { id, ...describeParams(description, decorative) })) !== false
+  }
+
+  async removeObject(id: string): Promise<boolean> {
+    return (await this.write('remove_object', { id })) !== false
+  }
+
+  /** Change a style for everything that has it — and for the styles based on it, where they say nothing (D73). */
+  async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
+    return (await this.write('change_style', { style, ...edit })) !== false
+  }
+
+  async renameStyle(style: string, name: string): Promise<boolean> {
+    return (await this.write('rename_style', { style, name })) !== false
+  }
+
+  /** Give a colour role another colour: every style that meant it follows, and so does every object (D200). */
+  async setRole(role: string, colour: string): Promise<boolean> {
+    return (await this.write('set_role', { role, colour })) !== false
+  }
+
+  /** Put a whole palette in place of this document's — what "the colours it started with" does (D200). */
+  async replacePalette(roles: ColourRole[]): Promise<boolean> {
+    return (await this.write('replace_palette', { roles })) !== false
+  }
+
+  /** What the server makes of this CSS text, line by line. A read: viewers may ask it too. */
+  async checkCss(text: string): Promise<CssCheck | null> {
+    try {
+      return await this.need().request<CssCheck>('check_css', { text })
+    } catch {
+      return null
+    }
+  }
+
+  /** Say which language the document is written in (D915), or `null` for not known: one step, for everybody. */
+  async setLanguage(language: string | null): Promise<boolean> {
+    return (await this.write('set_language', { language })) !== false
+  }
+
+  // ------------------------------------------------------------------------------ changing the document (D1432)
+  /** Whether this person may only look: a viewer, or anybody while looking at the past or at a preview. */
+  get readOnly(): boolean {
+    return lookOnly(this.state)
+  }
+
+  /** Refuse a change for someone who may only look, and tell her so; `true` when refused. Nothing is sent. */
+  protected refused(): boolean {
+    if (!this.readOnly) return false
+    this.notice(t('You can only look at this document.'), 'warning')
+    return true
+  }
+
+  /** Run a change. An app whose changes must wait for something (composes: the words still being typed) overrides it. */
+  protected run<T>(job: () => Promise<T>): Promise<T> {
+    return job()
+  }
+
+  /** The one door every change of the document goes through (D1432): refused before anything is sent for someone who
+   *  may only look (CODE-75); otherwise sent through `run`, based on the revision she sees when it leaves. */
+  protected async write(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
+    if (this.refused()) return false
+    return this.run(() => this.attempt(method, { ...params, base: this.state.revision }))
+  }
+
   /** Run a request; `false` after telling the person why it did not work. */
   protected async attempt(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
     try {
@@ -1044,7 +1225,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Replaces, in one step of the history; `false` after telling the person why it did not work. */
   async searchReplace(query: SearchQuery, kinds: string[], scope: object, leave: SearchLeave[]): Promise<ReplaceAnswer | false> {
-    const done = await this.attempt('search_replace', { query, kinds, scope, leave, base: this.state.revision })
+    const done = await this.write('search_replace', { query, kinds, scope, leave })
     return done === false ? false : (done as unknown as ReplaceAnswer)
   }
 
@@ -1055,14 +1236,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   async addRendering(type: string, where: Record<string, unknown>, size = { w: 420, h: 240 }, source?: string, fit = false): Promise<string | null> {
     const kind = this.state.renderTypes.find((k) => k.type === type)
     if (!kind) return null
-    const done = await this.attempt('add_rendering', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, ...(fit ? { fit: true } : {}), base: this.state.revision })
+    const done = await this.write('add_rendering', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, ...(fit ? { fit: true } : {}) })
     return done === false ? null : (done.object as string)
   }
 
   /** Changes the text of a container; a text that is the same as it is is not sent. `false` after saying why not. */
   async setRenderingSource(id: string, source: string, params: Record<string, unknown> | null = null): Promise<boolean> {
     if (this.state.renderings[id]?.source === source && !params) return true
-    return (await this.attempt('set_rendering_source', { id, source, params, base: this.state.revision })) !== false
+    return (await this.write('set_rendering_source', { id, source, params })) !== false
   }
 
   // ------------------------------------------------------------------------------ numbering (E9.21, E9.22)
@@ -1070,39 +1251,39 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   // come back as `labels` events, the lists as `lists` and the schemes as `schemes`.
   /** Number every heading style (in creates: every slide title), or no longer. */
   async numberHeadings(on: boolean): Promise<boolean> {
-    return (await this.attempt('number_headings', { on, base: this.state.revision })) !== false
+    return (await this.write('number_headings', { on })) !== false
   }
 
   /** A new scheme drawn as `like` is, named `name`; its id, or `null` after saying why not. */
   async newScheme(like: string, name: string): Promise<string | null> {
-    const done = await this.attempt('new_scheme', { like, name, base: this.state.revision })
+    const done = await this.write('new_scheme', { like, name })
     return done === false ? null : (done.scheme as string)
   }
 
   /** Give a scheme another definition (as the server sends it). */
   async changeScheme(scheme: SchemeInfo): Promise<boolean> {
-    return (await this.attempt('change_scheme', { scheme, base: this.state.revision })) !== false
+    return (await this.write('change_scheme', { scheme })) !== false
   }
 
   /** Draw a built-in scheme as it was built in again. */
   async resetScheme(scheme: string): Promise<boolean> {
-    return (await this.attempt('reset_scheme', { scheme, base: this.state.revision })) !== false
+    return (await this.write('reset_scheme', { scheme })) !== false
   }
 
   /** Take a scheme no list uses out of the document. */
   async removeScheme(scheme: string): Promise<boolean> {
-    return (await this.attempt('remove_scheme', { scheme, base: this.state.revision })) !== false
+    return (await this.write('remove_scheme', { scheme })) !== false
   }
 
   /** Number a heading style in a list (`"none"`: not numbered; `null`: as its parent). */
   async setStyleNumbering(style: string, numbering: string | null): Promise<boolean> {
-    return (await this.attempt('set_style_numbering', { style, numbering, base: this.state.revision })) !== false
+    return (await this.write('set_style_numbering', { style, numbering })) !== false
   }
 
   // ------------------------------------------------------------------------------ tables of contents (E9.31)
   /** Give a table of contents (in creates: an agenda) other options; the entries come back as a `generated` event. */
   async setContents(paragraph: string, options: Toc): Promise<boolean> {
-    return (await this.attempt('set_contents', { paragraph, options, base: this.state.revision })) !== false
+    return (await this.write('set_contents', { paragraph, options })) !== false
   }
 
   // ------------------------------------------------------------------------------ deleting and hiding styles (E1.10)
@@ -1120,6 +1301,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    *  nothing has). A refusal that is about this very deletion comes back as its sentence; anything else is told as a
    *  notice, and is `false`. */
   async deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
+    if (this.refused()) return false
     const params: Record<string, unknown> = { style, how, base: this.state.revision }
     if (target) params.target = target
     try {
@@ -1134,7 +1316,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Hide a style from the menus a style is picked from, or show it again (D780). */
   async hideStyle(style: string, hidden: boolean): Promise<boolean> {
-    return (await this.attempt('hide_style', { style, hidden, base: this.state.revision })) !== false
+    return (await this.write('hide_style', { style, hidden })) !== false
   }
 
   async undo(): Promise<boolean> {

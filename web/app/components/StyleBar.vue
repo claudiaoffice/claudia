@@ -30,7 +30,7 @@ function close() {
   at.value = null
 }
 
-const current = () => state.styles.find((s) => s.id === props.session.currentStyle()) ?? state.styles[0]
+const current = () => state.styles[props.session.currentStyle()] ?? Object.values(state.styles)[0]
 
 function choose(id: string) {
   close()
@@ -72,7 +72,7 @@ const writers = () => [state.me.user, ...state.people.map((p) => p.user)].filter
       </button>
       <Popover v-if="at" :x="at.x" :y="at.y" :width="300" :anchor="button" :label="t('Styles')" @close="close">
         <ul class="style-list" role="listbox" :aria-label="t('Styles')">
-          <li v-for="s in state.styles" :key="s.id" role="option" :aria-selected="s.id === current()?.id">
+          <li v-for="s in Object.values(state.styles)" :key="s.id" role="option" :aria-selected="s.id === current()?.id">
             <button class="style-opt" :class="{ current: s.id === current()?.id }" type="button" :data-style="s.id" @click="choose(s.id)">
               <span class="name">{{ s.name }}</span
               ><span class="purpose">{{ s.purpose }}</span>

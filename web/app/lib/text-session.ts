@@ -25,8 +25,7 @@ import {
   type TextEvent,
 } from './blocks'
 import { NEW_OBJECT_CAP, type ImageAsset } from './images'
-import type { BlockAnchor, ObjectBody, ObjectsEvent, PaletteEvent, StyleModel, StyleTarget, VisualObject } from './objects'
-import { describeParams } from './descriptions'
+import type { BlockAnchor, PaletteEvent, StyleModel, StyleTarget, VisualObject } from './objects'
 import { NEW_OBJECT_WRAP, nextWrap, wrapOf, wrapParams, type Wrap } from './wrap'
 import { DEFAULT_STYLE, type PageSetupData, type ShapeOutline, type TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
@@ -34,11 +33,10 @@ import type { ListInfo, SchemeInfo } from './numbering'
 import { FIELD_CHAR, fieldIndex, plain, type ReferenceTarget, type RefField, type Show, type Shown } from './references'
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
 import type { Deleted, DeleteHow } from './style-deletion'
-import { headingLevel, styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
+import { headingLevel, styleUses, type CssEdit, type StyleView } from './style-css'
 import { isBoxId, oneLine, type TableEntry, type TableEvent, type TableInfo, withEvent } from './tables'
-
 import { translate as t } from './i18n'
-import { lookOnly } from './replay'
+
 
 export interface SuggestionInfo {
   id: string
@@ -64,10 +62,8 @@ export interface Unwritten {
   text: string
 }
 export interface TextState extends BaseState {
-  styles: StyleView[]
-  /** The document's colour roles and how they read against each other (D200); a paragraph style names them, and
-   * the resolved colours arrive with the styles themselves. */
-  palette: PaletteEvent | null
+  /** The document's styles, by id, in the order the server lists them (D1432). */
+  styles: Record<string, StyleView>
   /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
   styleModel: StyleModel | null
   blocks: Block[]
@@ -81,13 +77,8 @@ export interface TextState extends BaseState {
   sending: Unwritten | null
   /** The page the text is printed on (D904); `null` until loaded or for a server that does not know pages. */
   page: PageSetupData | null
-  /** The language the text is written in (D915), a BCP 47 tag; `null` when it is not set. `undefined` for a server
-   *  that does not know languages. */
-  language: string | null | undefined
   /** The floating objects, by id (a rendered container is one): each hangs from a character of a paragraph (D179). */
   objects: Record<string, VisualObject<BlockAnchor>>
-  /** The decoded pictures the document holds, by id: what its containers are drawn with. */
-  images: Record<string, ImageAsset>
   /** The outlines the shapes among the objects are drawn with, by id (the server's `shapes`). */
   shapes: Record<string, TextShape>
   /** The outlines the server offers for insertion (Edit ▸ the shapes), as creates has them. */
@@ -164,11 +155,7 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, shapes: {}, library: [], images: {}, selectedObject: null, editingObject: null, tables: {}, box: null })
-  }
-
-  get readOnly(): boolean {
-    return lookOnly(this.state)
+    super(makeLink, options, { styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, library: [], selectedObject: null, editingObject: null, tables: {}, box: null })
   }
 
   // ------------------------------------------------------------------------------ floating objects (D560)
@@ -232,22 +219,9 @@ export class TextSession extends BaseSession<TextState> {
     size: { w: number; h: number },
     wrap?: Wrap,
   ): Promise<string | null> {
-    await this.flush()
-    const done = await this.attempt('add_image', {
-      ...this.placeOnWire(place),
-      ...(wrap ? wrapParams(wrap) : {}),
-      ...size,
-      data: picture.data,
-      alt: picture.alt,
-      source_name: picture.sourceName,
-      source_path: picture.sourcePath,
-      ...(picture.decorative ? { decorative: true } : {}),
-      ...(picture.fit ? { fit: true } : {}), // from a file: the server sizes it (D1332)
-      base: this.state.revision,
-    })
-    if (done === false) return null
-    this.state.selectedObject = done.object as string
-    return done.object as string
+    const id = await this.putPicture(picture, { ...this.placeOnWire(place), ...(wrap ? wrapParams(wrap) : {}), ...size })
+    if (id) this.state.selectedObject = id
+    return id
   }
 
   /** Hang a text box (`kind` `text`) or a shape (with the id of its outline, from the library or the document) from
@@ -258,14 +232,7 @@ export class TextSession extends BaseSession<TextState> {
     size: { w: number; h: number },
     wrap?: Wrap,
   ): Promise<string | null> {
-    await this.flush()
-    const done = await this.attempt('add_object', {
-      ...this.placeOnWire(place),
-      ...(wrap ? wrapParams(wrap) : {}),
-      ...kind,
-      ...size,
-      base: this.state.revision,
-    })
+    const done = await this.write('add_object', { ...this.placeOnWire(place), ...(wrap ? wrapParams(wrap) : {}), ...kind, ...size })
     if (done === false) return null
     this.state.selectedObject = done.object as string
     return done.object as string
@@ -283,7 +250,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** How the text flows round an object (D1061); `gap` is how far it keeps from it (left out: the object's own). */
   async setWrap(id: string, wrap: Wrap, gap?: number): Promise<boolean> {
-    return (await this.attempt('set_wrap', { id, ...wrapParams(wrap, gap), base: this.state.revision })) !== false
+    return (await this.write('set_wrap', { id, ...wrapParams(wrap, gap) })) !== false
   }
 
   /** What the key of Format ▸ Wrap Text does (D1064): the object `id` goes on to the next mode; the mode it has now, or
@@ -298,48 +265,24 @@ export class TextSession extends BaseSession<TextState> {
   /** Hang an object from another place of the text. `away` is how far it floats from that character (D1023): left out,
    * the object keeps the offset it has. */
   async moveObject(id: string, place: { block: string; offset: number }, away?: { dx: number; dy: number }): Promise<boolean> {
-    return (await this.attempt('move_object', { id, ...this.placeOnWire(place), ...(away ?? {}), base: this.state.revision })) !== false
+    return (await this.write('move_object', { id, ...this.placeOnWire(place), ...(away ?? {}) })) !== false
   }
 
   async resizeObject(id: string, w: number, h: number): Promise<boolean> {
-    return (await this.attempt('resize_object', { id, w, h, base: this.state.revision })) !== false
-  }
-
-  /** Turn an object to `rotation` whole degrees clockwise (D1021); a chart does not turn, and the server says so. */
-  async rotateObject(id: string, rotation: number): Promise<boolean> {
-    return (await this.attempt('rotate_object', { id, rotation, base: this.state.revision })) !== false
-  }
-
-  /** What an object shows to someone who cannot see it, or that it is decoration (BITV 1.1.1). */
-  async describeObject(id: string, description: string, decorative: boolean): Promise<boolean> {
-    return (await this.attempt('describe_object', { id, ...describeParams(description, decorative), base: this.state.revision })) !== false
+    return (await this.write('resize_object', { id, w, h })) !== false
   }
 
   // -- the style of an object: the one style API every app has (`apply_style`, `deviate`, D304); a paragraph's own
   // styling is above. These two are what `object-style-host.ts` needs besides `changeStyle`, `renameStyle`, `setRole`
   // and `checkCss`.
-  /** The styles as the object style menu wants them. */
-  styleViews(): StyleView[] {
-    return this.state.styles
-  }
-
-  /** Every object of the document, for the use counts beside the style names. */
-  bodies(): ObjectBody[] {
-    return Object.values(this.state.objects)
-  }
-
   /** Put a style into one slot of these targets (`apply_style`). */
   async applyObjectStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
-    return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
+    return (await this.write('apply_style', { targets, style, slot })) !== false
   }
 
   /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
   async deviateObjectStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
-    return (await this.attempt('deviate', { parent, targets, slot, ...edit, base: this.state.revision })) !== false
-  }
-
-  async removeObject(id: string): Promise<boolean> {
-    return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
+    return (await this.write('deviate', { parent, targets, slot, ...edit })) !== false
   }
 
   // ------------------------------------------------------------------------------ tables (E9.32)
@@ -367,8 +310,7 @@ export class TextSession extends BaseSession<TextState> {
   /** Put a table after the paragraph `place` is in: `rows` by `cols` boxes, the first `headerRows` the header. Its
    *  object's and its own id, or `null` when the server refused (the person is told why). */
   async addTable(place: { block: string; offset: number }, size: { rows: number; cols: number; headerRows: number }): Promise<{ object: string; table: string } | null> {
-    if (this.denied()) return null
-    const done = await this.act(() => this.attempt('add_table', { ...this.placeOnWire(place), rows: size.rows, cols: size.cols, header_rows: size.headerRows, base: this.state.revision }))
+    const done = await this.write('add_table', { ...this.placeOnWire(place), rows: size.rows, cols: size.cols, header_rows: size.headerRows })
     if (done === false) return null
     return { object: done.object as string, table: done.table as string }
   }
@@ -376,8 +318,7 @@ export class TextSession extends BaseSession<TextState> {
   /** An empty paragraph after `block` and after what hangs from its end, such as a table at the end of the text
    *  (D1331); the caret goes to it. Its id, or `null` when the server refused (the person is told why). */
   async addParagraphAfter(block: string): Promise<string | null> {
-    if (this.denied()) return null
-    const done = await this.act(() => this.attempt('add_paragraph_after', { block, base: this.state.revision }))
+    const done = await this.write('add_paragraph_after', { block })
     if (done === false) return null
     const made = done.block as string
     if (!this.state.blocks.some((b) => b.id === made)) await this.reload() // the event did not come before the answer
@@ -387,11 +328,11 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Type `text` into a box, in place of the words it has. One line: a line break becomes a space (D1212). */
   async setBox(table: string, row: string, col: string, text: string): Promise<boolean> {
-    if (this.denied()) return false
+    if (this.refused()) return false
     const words = oneLine(text)
     // What the box has is looked at when this job runs, after the ones before it: a commit by Enter and the one by
     // leaving the box come close together, and the second must see what the first did (B1: the words were doubled).
-    return this.act(async () => {
+    return this.run(async () => {
       const old = this.boxText(table, row, col)
       if (words === old) return true
       const block = `${table}/${row}/${col}`
@@ -417,8 +358,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** One of the server's table methods for table `table`: false when it was refused or the person may not. */
   private async changeTable(method: string, table: string, params: Record<string, unknown> = {}): Promise<boolean> {
-    if (this.denied()) return false
-    return this.act(async () => (await this.attempt(method, { table, ...params, base: this.state.revision })) !== false)
+    return this.write(method, { table, ...params }).then((done) => done !== false)
   }
   /** `place` is `{ after: id }` or `{ before: id }`. */
   insertRows(table: string, place: { after: string } | { before: string }, count = 1): Promise<boolean> {
@@ -452,8 +392,7 @@ export class TextSession extends BaseSession<TextState> {
   }
   /** Take a table away with the object that shows it; undo brings it back. */
   async removeTable(table: string): Promise<boolean> {
-    if (this.denied()) return false
-    return this.act(async () => (await this.attempt('remove_table', { id: table, base: this.state.revision })) !== false)
+    return this.write('remove_table', { id: table }).then((done) => done !== false)
   }
 
   // ------------------------------------------------------------------------------ loading
@@ -488,7 +427,7 @@ export class TextSession extends BaseSession<TextState> {
     s.tables = Object.fromEntries(tables.map((x) => [x.id, x]))
     if (s.box && !s.tables[s.box.table]) s.box = null
     if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
-    s.styles = answer.styles
+    s.styles = Object.fromEntries(answer.styles.map((x) => [x.id, x]))
     s.lists = answer.lists
     s.schemes = answer.schemes
     s.palette = palette
@@ -540,6 +479,12 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   // ------------------------------------------------------------------------------ events
+  /** A selected object that went is no longer selected. */
+  protected override objectsChanged(): void {
+    const s = this.state
+    if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
+  }
+
   protected onAppEvent(name: string, data: WireData): boolean {
     const s = this.state
     switch (name) {
@@ -564,22 +509,9 @@ export class TextSession extends BaseSession<TextState> {
         else this.follow(event)
         return true
       }
-      case 'styles':
-        s.styles = data.styles as StyleView[]
-        return true
       case 'page':
         s.page = data.setup as PageSetupData
         return true
-      case 'language':
-        s.language = (data.language as string | null) ?? null
-        return true
-      case 'objects': {
-        const e = data as unknown as ObjectsEvent
-        for (const o of e.changed as VisualObject<BlockAnchor>[]) s.objects[o.id] = o
-        for (const id of e.removed) delete s.objects[id]
-        if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
-        return true
-      }
       case 'table': {
         withEvent(s.tables, data as unknown as TableEvent)
         const table = s.tables[data.id as string]
@@ -587,24 +519,11 @@ export class TextSession extends BaseSession<TextState> {
         else if (table?.columns.some((c) => c.total !== null)) this.track(this.reloadTables()) // the totals are derived
         return true
       }
-      case 'image':
-        if (data.asset) s.images[data.id] = data.asset as ImageAsset
-        else delete s.images[data.id]
-        return true
-      case 'shape':
-        if (data.definition) s.shapes[data.id] = data.definition as TextShape
-        else delete s.shapes[data.id]
-        return true
       case 'lists':
         s.lists = data.lists as ListInfo[]
         return true
       case 'schemes':
         s.schemes = data.schemes as SchemeInfo[]
-        return true
-      case 'palette':
-        // Only the styles are drawn from, and they travel with this event; the roles are kept for the controls
-        // that offer them by name (D200).
-        s.palette = data as PaletteEvent
         return true
       case 'suggestions': {
         for (const item of data.items as SuggestionInfo[]) {
@@ -724,7 +643,7 @@ export class TextSession extends BaseSession<TextState> {
     s.sending = unwritten
     // The caret goes behind the words only if it has not been moved since they were typed: a click that came before
     // the words went out (they wait for the word end, or for an earlier request) is where the person wants to be.
-    await this.write(unwritten.at, unwritten.at, unwritten.text, this.typedAt)
+    await this.replaceText(unwritten.at, unwritten.at, unwritten.text, this.typedAt)
     s.sending = null
     const put = this.unsentCaret
     this.unsentCaret = null
@@ -763,22 +682,17 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   /** Run a change after whatever was typed before it has been sent. */
-  private act<T>(job: () => Promise<T>): Promise<T> {
+  /** A change waits for the words typed before it, and for every change queued before it (D1432). */
+  protected override run<T>(job: () => Promise<T>): Promise<T> {
     return this.enqueue(async () => {
       await this.sendPending()
       return job()
     })
   }
 
-  private denied(): boolean {
-    if (!this.readOnly) return false
-    this.notice(t('You can only look at this document.'), 'warning')
-    return true
-  }
-
   // ------------------------------------------------------------------------------ writing
-  /** Replace the text between two positions; the caret ends up behind what was put in. */
-  private async write(from: Pos, to: Pos, text: string, version = this.moved): Promise<boolean> {
+  /** Replace the text between two positions; the caret ends up behind what was put in. Runs as a job (`run`). */
+  private async replaceText(from: Pos, to: Pos, text: string, version = this.moved): Promise<boolean> {
     const s = this.state
     const [a, b] = ordered(s.blocks, from, to)
     if (indexOf(s.blocks, a.block) < 0 || indexOf(s.blocks, b.block) < 0) return false
@@ -808,7 +722,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Type: the characters appear at once, and are sent when the word ends. */
   type(text: string) {
-    if (!text || this.denied() || this.onContents()) return
+    if (!text || this.refused() || this.onContents()) return
     const caret = this.state.selection?.focus
     const pending = this.state.pending
     if (this.jobs > 0 || !this.isCollapsed() || (pending && caret && !same(pending.at, caret))) {
@@ -825,7 +739,7 @@ export class TextSession extends BaseSession<TextState> {
     if (!this.isCollapsed()) {
       const [a, b] = this.range()!
       const [first = ''] = text
-      await this.write(a, b, first)
+      await this.replaceText(a, b, first)
       text = text.slice(first.length)
     }
     if (text) this.append(text)
@@ -853,22 +767,22 @@ export class TextSession extends BaseSession<TextState> {
    * same item; an *empty* item is the way out instead: one level out, and at the first level out of the list (E9.21).
    */
   newline(): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => {
+    if (this.refused()) return undefined
+    return this.run(async () => {
       const r = this.range()
       if (!r) return false
       const block = this.state.blocks.find((b) => b.id === r[0].block)
       if (block?.item && !block.text && same(r[0], r[1])) return this.leaveList(block)
-      return this.write(r[0], r[1], '\n')
+      return this.replaceText(r[0], r[1], '\n')
     })
   }
 
   /** Put text in place of the selection (paste; Enter). */
   replaceSelection(text: string): Promise<boolean> | undefined {
-    if (this.denied() || (text && this.onContents())) return undefined
-    return this.act(async () => {
+    if (this.refused() || (text && this.onContents())) return undefined
+    return this.run(async () => {
       const r = this.range()
-      return r ? this.write(r[0], r[1], text) : false
+      return r ? this.replaceText(r[0], r[1], text) : false
     })
   }
 
@@ -879,32 +793,32 @@ export class TextSession extends BaseSession<TextState> {
   /** The selected text, which is then taken out. */
   cut(): string {
     const text = this.selectedText()
-    if (text && !this.denied()) void this.replaceSelection('')
+    if (text && !this.refused()) void this.replaceSelection('')
     return text
   }
 
   /** Backspace (`word`: Ctrl+Backspace). Before the first character it joins the paragraph to the one before. */
   deleteBackward(word = false) {
-    if (this.denied()) return
+    if (this.refused()) return
     const s = this.state
     if (this.jobs === 0 && s.pending && this.isCollapsed()) {
       const text = word ? s.pending.text.slice(0, wordStart(s.pending.text, s.pending.text.length)) : [...s.pending.text].slice(0, -1).join('')
       s.pending = text ? { at: s.pending.at, text } : null
       return
     }
-    void this.act(async () => this.deleteAround(word, -1))
+    void this.run(async () => this.deleteAround(word, -1))
   }
 
   /** Delete (`word`: Ctrl+Delete). At the end of a paragraph it joins the next one to it. */
   deleteForward(word = false) {
-    if (this.denied()) return
-    void this.act(async () => this.deleteAround(word, 1))
+    if (this.refused()) return
+    void this.run(async () => this.deleteAround(word, 1))
   }
 
   private async deleteAround(word: boolean, direction: -1 | 1): Promise<boolean> {
     const r = this.range()
     if (!r) return false
-    if (!same(r[0], r[1])) return this.write(r[0], r[1], '')
+    if (!same(r[0], r[1])) return this.replaceText(r[0], r[1], '')
     const { blocks } = this.state
     const i = indexOf(blocks, r[0].block)
     if (blocks[i]!.generated) return this.removeContentsNow(r[0].block) // the second key on a table takes it away
@@ -924,24 +838,24 @@ export class TextSession extends BaseSession<TextState> {
     if (direction < 0) {
       if (r[0].offset > 0) {
         const start = word ? wordStart(text, r[0].offset) : r[0].offset - (text.codePointAt(r[0].offset - 2)! > 0xffff ? 2 : 1)
-        return this.write({ block: r[0].block, offset: Math.max(0, start) }, r[0], '')
+        return this.replaceText({ block: r[0].block, offset: Math.max(0, start) }, r[0], '')
       }
       if (blocks[i]!.item) return this.leaveList(blocks[i]!) // out of the list first, as every editor does
       const before = blocks[i - 1]
-      return before ? this.write({ block: before.id, offset: before.text.length }, r[0], '') : false
+      return before ? this.replaceText({ block: before.id, offset: before.text.length }, r[0], '') : false
     }
     if (r[0].offset < text.length) {
       const end = word ? wordEnd(text, r[0].offset) : r[0].offset + (text.codePointAt(r[0].offset)! > 0xffff ? 2 : 1)
-      return this.write(r[0], { block: r[0].block, offset: end }, '')
+      return this.replaceText(r[0], { block: r[0].block, offset: end }, '')
     }
     const after = blocks[i + 1]
-    return after ? this.write(r[0], { block: after.id, offset: 0 }, '') : false
+    return after ? this.replaceText(r[0], { block: after.id, offset: 0 }, '') : false
   }
 
   /** Give the paragraphs of the selection this style. */
   setStyle(style: string): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => {
+    if (this.refused()) return undefined
+    return this.run(async () => {
       const r = this.range()
       if (!r) return false
       const { blocks } = this.state
@@ -955,14 +869,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Lay the text out on another page (D904): one step in the history, for everybody. */
   setPage(setup: PageSetupData): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => (await this.attempt('set_page', { setup, base: this.state.revision })) !== false)
-  }
-
-  /** Say which language the text is written in (D915), or `null` for not known: one step, for everybody. */
-  setLanguage(language: string | null): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => (await this.attempt('set_language', { language, base: this.state.revision })) !== false)
+    return this.write('set_page', { setup }).then((done) => done !== false)
   }
 
   // -- tags (E5.20, D551). This replica keeps no objects: they are asked for when a tag needs them, and the names they
@@ -983,7 +890,7 @@ export class TextSession extends BaseSession<TextState> {
   /** What a paragraph is, as a thing (D554): a heading (its style gives a heading level, E9.22), an item of a list, or
    * a paragraph. The level comes worked out from the server with the styles, so this is no second rule. */
   blockKind(block: Block): ThingKind {
-    if (headingLevel(this.state.styles, block.style) !== null) return 'heading'
+    if (headingLevel(this.styleViews(), block.style) !== null) return 'heading'
     return block.item ? 'item' : 'paragraph'
   }
   /** The named paragraphs: from the replica, which `blocks` and `thing_renamed` keep current. */
@@ -1063,11 +970,11 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Put a reference to `target` at the caret (in place of the selection), showing `show`; the caret goes after it. */
   insertReference(target: string, show: Show): Promise<boolean> {
-    if (this.denied() || this.onContents()) return Promise.resolve(false)
-    return this.act(async () => {
+    if (this.refused() || this.onContents()) return Promise.resolve(false)
+    return this.run(async () => {
       const r = this.range()
       if (!r) return false
-      if (!same(r[0], r[1]) && !(await this.write(r[0], r[1], ''))) return false
+      if (!same(r[0], r[1]) && !(await this.replaceText(r[0], r[1], ''))) return false
       const at = this.state.selection?.focus ?? r[0]
       const params = { paragraph: at.block, offset: pointOf(this.textOf(at.block), at.offset), target, show, base: this.state.revision }
       if ((await this.attempt('insert_reference', params)) === false) return false
@@ -1078,8 +985,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Make the `index`-th reference of a paragraph show `show` (Show As). */
   setFieldShow(block: string, index: number, show: Show): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('set_field', { paragraph: block, index, show, base: this.state.revision })) !== false)
+    return this.write('set_field', { paragraph: block, index, show }).then((done) => done !== false)
   }
 
   /** The reference at a place of the text (the character after `at`), as `{block, index, field, shown}`, or `null`. */
@@ -1101,8 +1007,8 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Put a "Contents" paragraph and a table of contents at the caret, as one step; the caret goes onto the table. */
   insertContents(): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => {
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => {
       const at = this.state.selection?.focus
       if (!at) return false
       const done = await this.attempt('insert_contents', { block: at.block, base: this.state.revision })
@@ -1114,8 +1020,8 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Take a table of contents away (its "Contents" paragraph stays, as the author's words). */
   removeContents(block: string): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => this.removeContentsNow(block))
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => this.removeContentsNow(block))
   }
 
   private async removeContentsNow(block: string): Promise<boolean> {
@@ -1151,8 +1057,8 @@ export class TextSession extends BaseSession<TextState> {
   /** Bullets or numbers for the selected paragraphs, or (`null`) plain paragraphs. Asking for what they are takes them
    * out of their list; the server decides (`make_list`). */
   makeList(scheme: string | null): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => {
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => {
       const blocks = this.selectedBlocks().map((b) => b.id)
       if (!blocks.length) return false
       return (await this.attempt('make_list', { blocks, scheme, base: this.state.revision })) !== false
@@ -1161,8 +1067,8 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Move the selected items one level in (`1`) or out (`-1`). */
   indent(by: 1 | -1): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => {
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => {
       const blocks = this.selectedBlocks().filter((b) => b.item).map((b) => b.id)
       if (!blocks.length) return false
       return (await this.attempt('indent_item', { blocks, by, base: this.state.revision })) !== false
@@ -1179,15 +1085,15 @@ export class TextSession extends BaseSession<TextState> {
   /** Let the list of the caret's item go on where the nearest earlier list of its kind ends. */
   continueList(): Promise<boolean> {
     const block = this.state.selection?.focus.block
-    if (this.denied() || !block || !this.currentItem()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('continue_list', { block, base: this.state.revision })) !== false)
+    if (this.refused() || !block || !this.currentItem()) return Promise.resolve(false)
+    return this.run(async () => (await this.attempt('continue_list', { block, base: this.state.revision })) !== false)
   }
 
   /** Number the first level of the caret's list from `start` on. */
   startAt(start: number): Promise<boolean> {
     const item = this.currentItem()
-    if (this.denied() || !item) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('list_start', { list: item.list, start, base: this.state.revision })) !== false)
+    if (this.refused() || !item) return Promise.resolve(false)
+    return this.run(async () => (await this.attempt('list_start', { list: item.list, start, base: this.state.revision })) !== false)
   }
 
   /** The way out of a list from an item with nothing in it: one level out, at the first level out of the list. */
@@ -1208,7 +1114,7 @@ export class TextSession extends BaseSession<TextState> {
 
   // -- styles (CSS, E9.7)
   styleView(id: string): StyleView | undefined {
-    return this.state.styles.find((s) => s.id === id)
+    return this.state.styles[id]
   }
 
   /** How many paragraphs have each style. */
@@ -1216,19 +1122,13 @@ export class TextSession extends BaseSession<TextState> {
     return styleUses(this.state.blocks)
   }
 
-  /** Change a style for everything that has it: properties to set and remove, or the complete text of its CSS. */
-  changeStyle(style: string, edit: CssEdit): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false)
-  }
-
   /**
    * Change only the selected paragraphs: each style among them is deviated from, which makes a new style that is named
    * later (D75). Paragraphs that had the same style get the same new style.
    */
   deviateStyle(edit: CssEdit): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => {
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => {
       const r = this.range()
       if (!r) return false
       const { blocks } = this.state
@@ -1243,58 +1143,24 @@ export class TextSession extends BaseSession<TextState> {
     })
   }
 
-  /** Give a colour role another colour: every paragraph style that meant it follows (D200). */
-  setRole(role: string, colour: string): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false)
-  }
-
-  /** Put a whole palette in place of this document's — what "the colours it started with" does. */
-  replacePalette(roles: unknown[]): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false)
-  }
-
   /** A deletion or a hiding goes after whatever was typed before it, like every change that is not typing. */
   override deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(() => super.deleteStyle(style, how, target))
-  }
-
-  override hideStyle(style: string, hidden: boolean): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(() => super.hideStyle(style, hidden))
-  }
-
-  renameStyle(style: string, name: string): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false)
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(() => super.deleteStyle(style, how, target))
   }
 
   /** Make a style give its paragraphs a heading level (E9.22): a level, `'body'` for none, `null` as its parent. */
   setHeadingLevel(style: string, level: number | 'body' | null): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('set_heading_level', { style, level, base: this.state.revision })) !== false)
-  }
-
-  /** What the server makes of this CSS text, line by line. A read: it does not wait for typing or other changes. */
-  async checkCss(text: string): Promise<CssCheck | null> {
-    try {
-      return await this.need().request<CssCheck>('check_css', { text })
-    } catch {
-      return null
-    }
+    return this.write('set_heading_level', { style, level }).then((done) => done !== false)
   }
 
   // -- suggestions
   accept(id: string): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => (await this.attempt('accept_suggestion', { id, base: this.state.revision })) !== false)
+    return this.write('accept_suggestion', { id }).then((done) => done !== false)
   }
 
   reject(id: string): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => (await this.attempt('reject_suggestion', { id, base: this.state.revision })) !== false)
+    return this.write('reject_suggestion', { id }).then((done) => done !== false)
   }
 
   // -- undo and redo wait for what was typed

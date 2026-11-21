@@ -5,7 +5,7 @@ import type { VisualObject, BlockAnchor } from '~/lib/objects'
 const FACETS = { text: ['color', 'font-size'], paragraph: ['text-align'], box: ['background-color', 'padding-top'], outline: ['fill', 'stroke'] }
 const style = (id: string, resolved: Record<string, string>) => ({ id, name: id, purpose: '', based_on: null, css: {}, computed: resolved, resolved, to_name: false, kind: 'paragraph' })
 const holder = (extra: Partial<LookHolder> = {}): LookHolder => ({
-  styles: [style('plain-box', { 'background-color': '#fff', 'padding-top': '4px', fill: 'red' }), style('plain-shape', { fill: '#eee', stroke: '#333' }), style('body', { color: '#123456', 'font-size': '16px', 'text-align': 'center', fill: 'blue' })],
+  styles: Object.fromEntries([style('plain-box', { 'background-color': '#fff', 'padding-top': '4px', fill: 'red' }), style('plain-shape', { fill: '#eee', stroke: '#333' }), style('body', { color: '#123456', 'font-size': '16px', 'text-align': 'center', fill: 'blue' })].map((s) => [s.id, s])),
   styleModel: { facets: FACETS, kinds: {}, slots: {}, targets: [] },
   shapes: { circle: { id: 'circle', path: 'M0 0Z', text_area: { x: 10, y: 20, w: 80, h: 60 } } },
   images: { i1: { id: 'i1', format: 'svg', width: 3, height: 2, animated: false, data: 'AA==', first_frame: null } },

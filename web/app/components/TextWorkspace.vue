@@ -138,7 +138,7 @@ function closeSuggestion() {
 /** File ▸ Export… (D212, D401): Markdown is built here from `state.blocks`, Word and OpenDocument text by the server. The window sends what is
  * still being typed before it opens the dialog (`DocumentFrame.openDialog`), so both see the text as it stands. */
 const exportFormats = [
-  { value: 'md', get label() { return t('Markdown (.md)') }, mimeType: 'text/markdown', local: () => toMarkdown(state.blocks, state.styles) },
+  { value: 'md', get label() { return t('Markdown (.md)') }, mimeType: 'text/markdown', local: () => toMarkdown(state.blocks, Object.values(state.styles)) },
   { value: 'docx', get label() { return t('Word document (.docx)') } },
   { value: 'odt', get label() { return t('OpenDocument text (.odt)') } },
 ]
@@ -397,7 +397,7 @@ const listStart = () => String(state.lists.find((l) => l.id === session.currentI
 const numberingHost = computed<NumberingHost>(() => ({
   schemes: state.schemes,
   lists: state.lists,
-  styles: state.styles,
+  styles: Object.values(state.styles),
   readOnly: readonly.value,
   newScheme: (like, name) => session.newScheme(like, name),
   changeScheme: (scheme) => session.changeScheme(scheme),
@@ -455,7 +455,7 @@ const contentsHost = computed<ContentsHost | null>(() => {
     paragraph: block.id,
     options: block.generated,
     entries: block.entries ?? [],
-    looks: looksOf(block.entries ?? [], state.styles),
+    looks: looksOf(block.entries ?? [], Object.values(state.styles)),
     readOnly: readonly.value,
     set: (options) => session.setContents(block.id, options),
     remove: () => session.removeContents(block.id),
@@ -531,7 +531,7 @@ const menus = computed<Menu[]>(() => {
     {
       label: t('Format'),
       items: [
-        ...(state.styles.length === 0
+        ...(Object.keys(state.styles).length === 0
           ? [{ label: t('No styles yet'), disabled: true }]
           : formatItems(t, {
               // D127's groups — structure · running text · called-out blocks — and then any style of the text's own.
@@ -563,9 +563,9 @@ const menus = computed<Menu[]>(() => {
                 outdent: () => void session.indent(-1),
                 headings: {
                   label: t('Number Headings'),
-                  on: headingsNumbered(state.styles),
-                  possible: hasHeadingStyles(state.styles),
-                  toggle: () => void session.numberHeadings(!headingsNumbered(state.styles)),
+                  on: headingsNumbered(Object.values(state.styles)),
+                  possible: hasHeadingStyles(Object.values(state.styles)),
+                  toggle: () => void session.numberHeadings(!headingsNumbered(Object.values(state.styles))),
                 },
                 allNumbering: () => (dialog.value = 'numbering'),
               },
@@ -623,11 +623,11 @@ const menus = computed<Menu[]>(() => {
 
 /** The built-in styles of one of D127's groups (structure · running text · called-out blocks), by id, in order. */
 function builtins(ids: string[]): StyleView[] {
-  return ids.map((id) => state.styles.find((s) => s.id === id)).filter((s): s is StyleView => !!s)
+  return ids.map((id) => state.styles[id]).filter((s): s is StyleView => !!s)
 }
 /** The styles that make a paragraph a heading, by their level: the title first. */
 function headingStyles(): StyleView[] {
-  return state.styles
+  return Object.values(state.styles)
     .filter((s) => s.heading !== null && s.heading !== undefined && forParagraphs(s))
     .sort((a, b) => a.heading! - b.heading!)
 }
@@ -651,7 +651,7 @@ const forParagraphs = (s: StyleView) => s.kind === 'paragraph' && !OBJECT_WORDS_
  * — D127 only grouped the built-ins, so anything else gets its own trailing group rather than being folded silently
  * into one of them. A style that gives a heading level is in the structure group instead, whoever made it (E9.22). */
 function customStyles(): StyleView[] {
-  return state.styles.filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && (s.heading === null || s.heading === undefined) && forParagraphs(s))
+  return Object.values(state.styles).filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && (s.heading === null || s.heading === undefined) && forParagraphs(s))
 }
 
 // Config ▸ Shortcuts (D122/D126): the things that are not a `keydown` shortcut at all — typing itself, and native
