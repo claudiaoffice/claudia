@@ -65,6 +65,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- **Breaking** — the glossary's words (D1430): `AiTurn` (was `Step`, what the ai says or calls); the methods
+  `branches` and `peek_branch(branch)` (were `lines` and `peek_line(line)`), `propose_switch(branch)`, and `branch`/
+  `branches` in the welcome and in the answers (were `line`/`lines`).
 - `move_object` in composes may take an object to another paragraph (D1351); it is refused with `locked` where a
   colleague is writing.
 - The first picture of a container added with `fit` is sized by `claudia_core.new_object_size` (D1332, D1333): at least

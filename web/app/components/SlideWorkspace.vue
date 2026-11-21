@@ -551,7 +551,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
           <span v-if="plan.planned" class="plan" data-testid="plan-total" :title="t('The planned times of the slides, added up')">
             {{ t('Planned {time}', { time: formatTime(plan.seconds) }) }}<template v-if="plan.unplanned"> · {{ t('{n} without a time', { n: plan.unplanned }) }}</template>
           </span>
-          <span class="rev" :title="t('line {line}', { line: state.line })">{{ state.revision ?? t('empty') }}</span>
+          <span class="rev" :title="t('branch {branch}', { branch: state.branch })">{{ state.revision ?? t('empty') }}</span>
         </div>
       </footer>
     </template>

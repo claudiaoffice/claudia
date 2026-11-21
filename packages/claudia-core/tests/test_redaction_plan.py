@@ -223,7 +223,7 @@ def test_a_step_on_a_hidden_line_can_be_redacted(make_doc):
     assert not plan.changes_now
     doc.redact(plan, author="ana")
     assert doc.log.get(r(3)).redacted
-    assert doc.peek_line("main").items == [1, 0]
+    assert doc.peek_branch("main").items == [1, 0]
     assert str(SECRET) not in stored_text(doc.store)
 
 

@@ -17,14 +17,14 @@ from collections.abc import Callable, Iterable
 from .commands import Command
 from .context import Context
 from .errors import KernelError, ReplayError
-from .log import Entry
+from .log import Step
 from .model import DocumentModel
 
 
 def replay(
     model: DocumentModel,
-    entries: Iterable[Entry],
-    on_applied: Callable[[Entry, Command], object] | None = None,
+    entries: Iterable[Step],
+    on_applied: Callable[[Step, Command], object] | None = None,
 ) -> DocumentModel:
     """Apply ``entries`` in order. Time, author and origin come from the entry, so the result is deterministic.
 
@@ -43,13 +43,13 @@ def replay(
     return model
 
 
-def replay_collecting(model: DocumentModel, entries: Iterable[Entry]) -> list[tuple[Entry, Command]]:
+def replay_collecting(model: DocumentModel, entries: Iterable[Step]) -> list[tuple[Step, Command]]:
     """Like :func:`replay`, but returns the ``(entry, inverse)`` pairs instead of taking a callback.
 
     ``model`` is mutated in place, exactly as :func:`replay` would; the difference is only in how the caller
     gets its inverses back. That makes this call -- unlike handing :func:`replay` a bound method such as
     ``document._record_history`` -- a pure function of plain data (a model and a log), fit to run somewhere
     else entirely (see the module docstring, D1315)."""
-    applied: list[tuple[Entry, Command]] = []
+    applied: list[tuple[Step, Command]] = []
     replay(model, entries, lambda entry, inverse: applied.append((entry, inverse)))
     return applied

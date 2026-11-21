@@ -8,7 +8,7 @@ from claudia_ai import ModelRunner
 from claudia_core import Document, DocumentModel
 from claudia_creates import ShapeLibrary
 
-from .assistant import Assistant, Engine, Say, Step, Task
+from .assistant import AiTurn, Assistant, Engine, Say, Task
 from .composes import composes_methods, composes_methods_with
 from .computes import computes_methods
 from .creates import creates_methods, creates_methods_with
@@ -38,7 +38,7 @@ class NoModelEngine:
     """Creates' answer while its server has no language model (E7.9, D265). There is no scripted stand-in for slides
     (D265), but ``@ai`` must say why nothing happens instead of failing with "ai is not here"."""
 
-    def plan(self, task: Task) -> list[Step]:
+    def plan(self, task: Task) -> list[AiTurn]:
         """The one answer, whatever was asked."""
         return [Say(NO_MODEL)]
 

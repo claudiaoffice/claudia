@@ -136,7 +136,7 @@ def test_the_welcome_describes_the_document_and_the_people_in_it(hosted):
     first.request("save_checkpoint", {"label": "start"})
     welcome = Client(hosted, Account("cleo", "viewer")).connection.welcome()
     assert (welcome["user"], welcome["role"], welcome["doc"], welcome["app"]) == ("cleo", "viewer", "plan", "test-list")
-    assert welcome["revision"] == "main:2" and welcome["line"] == "main" and welcome["limits"]["max_text"] > 0
+    assert welcome["revision"] == "main:2" and welcome["branch"] == "main" and welcome["limits"]["max_text"] > 0
     assert sorted(p["user"] for p in welcome["people"]) == ["ann", "ben"]
     assert welcome["checkpoints"] == [], "a viewer's welcome carries no history (D1261)"
     assert [c["label"] for c in first.connection.welcome()["checkpoints"]] == ["start"]
@@ -245,7 +245,7 @@ def test_a_restore_moves_everybody_and_edits_in_flight_are_refused(hosted):
         assert [e["new"] for e in client.events("branch")] == ["restore-1"] and client.events("rebuilt")
     stale = ben.request("apply", {"command": INSERT, "base": seen_by_ben})
     assert stale["error"]["code"] == "stale" and hosted.document.model.items == [5]
-    assert ben.request("snapshot")["result"]["line"] == "restore-1"
+    assert ben.request("snapshot")["result"]["branch"] == "restore-1"
     assert ben.request("apply", {"command": INSERT, "base": ben.request("ping")["result"]["revision"]})["ok"]
 
 

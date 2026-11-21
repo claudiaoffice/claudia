@@ -28,7 +28,7 @@ SERVER_SRC = PACKAGES / "claudia-server" / "src"
 # ------------------------------------------------------------------------------------------ the table
 COMMAND = {
     "type": "command",
-    "revision": {"line": "main", "number": 3},
+    "revision": {"branch": "main", "number": 3},
     "author": "ann",
     "origin": "do",
     "time": "2026-11-19T10:00:00Z",
@@ -53,7 +53,7 @@ def test_a_viewer_gets_nothing_from_the_history_or_the_chat(event):
 
 
 def test_a_viewer_is_told_that_the_document_moved_but_not_where_from_or_to():
-    data = {"type": "branch", "old": "main", "new": "side-2", "fork_point": {"line": "main", "number": 4}}
+    data = {"type": "branch", "old": "main", "new": "side-2", "fork_point": {"branch": "main", "number": 4}}
     assert shape_for("viewer", "branch", data) == {"type": "branch"}
 
 
@@ -226,7 +226,7 @@ def test_the_welcome_of_a_viewer_carries_no_history(hosted):
     ann.request("save_checkpoint", {"label": "good"})
     vera = Client(hosted, Account("vera", "viewer"))
     welcome = vera.connection.welcome()
-    assert welcome["checkpoints"] == [] and welcome["lines"] == [] and welcome["proposal"] is None
+    assert welcome["checkpoints"] == [] and welcome["branches"] == [] and welcome["proposal"] is None
     assert welcome["returned"] is None
     assert welcome["revision"] is not None, "the revision of the content is what the snapshot is of"
     assert welcome["role"] == "viewer"
@@ -237,11 +237,11 @@ def test_the_welcome_of_a_viewer_carries_no_history(hosted):
 HISTORY_METHODS = [
     ("log", {"limit": 5}),
     ("checkpoints", None),
-    ("lines", None),
+    ("branches", None),
     ("history", None),
     ("changes_since", {"revision": None}),
     ("peek_revision", {"revision": "main:1"}),
-    ("peek_line", {"line": "main"}),
+    ("peek_branch", {"branch": "main"}),
     ("redaction_plan", {"revisions": []}),
     ("restore_policy", None),
 ]

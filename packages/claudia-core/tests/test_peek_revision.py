@@ -1,6 +1,6 @@
 """``peek_revision``: the document as it was after one step of its history, and where that step touched it (D551).
 
-What scrubbing shows: the state at the playhead, and the places the view has to bring into sight. Like ``peek_line`` it
+What scrubbing shows: the state at the playhead, and the places the view has to bring into sight. Like ``peek_branch`` it
 is a look: the live model, the active line and everybody's undo steps stay as they are."""
 
 import pytest

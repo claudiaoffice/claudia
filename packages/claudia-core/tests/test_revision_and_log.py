@@ -1,11 +1,11 @@
 import pytest
 
-from claudia_core import MAIN, CommandLog, Entry, Revision, RevisionMismatch
+from claudia_core import MAIN, CommandLog, Revision, RevisionMismatch, Step
 from claudia_core.testing import Insert, ListModel
 
 
 def entry(rev, parent, value=1):
-    return Entry(rev, parent, "ana", "2026-11-01T12:00:00.000Z", Insert(0, value))
+    return Step(rev, parent, "ana", "2026-11-01T12:00:00.000Z", Insert(0, value))
 
 
 def test_revision_text_roundtrip():

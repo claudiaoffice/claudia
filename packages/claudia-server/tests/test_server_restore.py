@@ -36,7 +36,7 @@ LABEL = 'checkpoint "good"'
 
 
 def propose_restore(coord, by="ana", group=(), checkpoint=1):
-    return coord.propose(kind="restore", by=by, checkpoint=checkpoint, line=None, label=LABEL, group=group)
+    return coord.propose(kind="restore", by=by, checkpoint=checkpoint, branch=None, label=LABEL, group=group)
 
 
 def restore_record(by="ana", checkpoint=1, agreed=("ana",)):
@@ -46,7 +46,7 @@ def restore_record(by="ana", checkpoint=1, agreed=("ana",)):
         "by": by,
         "checkpoint": checkpoint,
         "revision": None,
-        "line": None,
+        "branch": None,
         "label": LABEL,
         "agreed": list(agreed),
     }
@@ -75,14 +75,14 @@ def test_only_one_proposal_may_be_open_at_a_time(coord):
 
 
 def test_a_switch_proposal_carries_its_own_fields(coord, applied):
-    coord.propose(kind="switch", by="ana", checkpoint=None, line="main", label='line "main"', group=())
+    coord.propose(kind="switch", by="ana", checkpoint=None, branch="main", label='line "main"', group=())
     assert applied == [
         {
             "kind": "switch",
             "by": "ana",
             "checkpoint": None,
             "revision": None,
-            "line": "main",
+            "branch": "main",
             "label": 'line "main"',
             "agreed": ["ana"],
         }
@@ -252,7 +252,7 @@ def test_a_second_departure_can_get_a_notice_of_its_own(coord):
 # ------------------------------------------------------------------ a step instead of a checkpoint (D553)
 def test_a_step_is_proposed_and_carried_out_like_a_checkpoint(coord, applied):
     proposal, applied_now = coord.propose(
-        kind="restore", by="ana", checkpoint=None, revision="main:3", line=None, label="step 3", group=["ben"]
+        kind="restore", by="ana", checkpoint=None, revision="main:3", branch=None, label="step 3", group=["ben"]
     )
     assert applied_now is False and proposal.revision == "main:3"
     assert proposal.to_data()["revision"] == "main:3"

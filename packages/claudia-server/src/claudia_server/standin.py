@@ -21,7 +21,7 @@ from claudia_computes import (
     parse_range_ref,
 )
 
-from .assistant import Call, Say, Step, Task
+from .assistant import AiTurn, Call, Say, Task
 
 MAX_CELLS = 2_000  # cells one instruction may touch
 _CELL = r"[A-Za-z]{1,3}[0-9]{1,7}"
@@ -76,7 +76,7 @@ def _area(row: int, first_col: int, last_col: int) -> RangeRef:
 class ScriptedEngine:
     """Reads one instruction and turns it into steps."""
 
-    def plan(self, task: Task) -> list[Step]:
+    def plan(self, task: Task) -> list[AiTurn]:
         """The steps for what the asker wrote."""
         text = task.text.strip()
         if _HELP.match(text):
@@ -87,7 +87,7 @@ class ScriptedEngine:
             return [Call("add_sheet", {"name": name}), Say(f"I added the sheet {name}.")]
         model = task.document.model
         assert isinstance(model, WorkbookModel)
-        rules: tuple[tuple[re.Pattern[str], Callable[..., list[Step]]], ...] = (
+        rules: tuple[tuple[re.Pattern[str], Callable[..., list[AiTurn]]], ...] = (
             (_FILL, self._fill),
             (_SET_TO, self._fill),
             (_WRITE, self._write),
@@ -117,20 +117,20 @@ class ScriptedEngine:
         return next(iter(model.sheets), None)
 
     @staticmethod
-    def _put(sheet: SheetId, area: RangeRef, text: str, said: str) -> list[Step]:
+    def _put(sheet: SheetId, area: RangeRef, text: str, said: str) -> list[AiTurn]:
         count = (area.last.row - area.first.row + 1) * (area.last.col - area.first.col + 1)
         if count > MAX_CELLS:
             return [Say(f"That is {count} cells; I touch at most {MAX_CELLS} at a time.")]
         return [Call("set_cells", {"sheet": sheet, "cells": _cells(area, text)}, _focus(sheet, area)), Say(said)]
 
-    def _fill(self, model: WorkbookModel, sheet: SheetId, where: str, value: str) -> list[Step]:
+    def _fill(self, model: WorkbookModel, sheet: SheetId, where: str, value: str) -> list[AiTurn]:
         area, text = parse_range_ref(where), _clean(value)
         return self._put(sheet, area, text, f"{_label(area)} now says {text}.")
 
-    def _write(self, model: WorkbookModel, sheet: SheetId, value: str, where: str) -> list[Step]:
+    def _write(self, model: WorkbookModel, sheet: SheetId, value: str, where: str) -> list[AiTurn]:
         return self._fill(model, sheet, where, value)
 
-    def _clear(self, model: WorkbookModel, sheet: SheetId, where: str) -> list[Step]:
+    def _clear(self, model: WorkbookModel, sheet: SheetId, where: str) -> list[AiTurn]:
         area = parse_range_ref(where)
         return self._put(sheet, area, "", f"I cleared {_label(area)}.")
 
@@ -144,7 +144,7 @@ class ScriptedEngine:
         "count": "COUNT",
     }
 
-    def _summary(self, model: WorkbookModel, sheet: SheetId, how: str, source: str, target: str) -> list[Step]:
+    def _summary(self, model: WorkbookModel, sheet: SheetId, how: str, source: str, target: str) -> list[AiTurn]:
         area, into = parse_range_ref(source), parse_range_ref(target)
         grid = model.sheet(sheet).grid  # what the cells show: a number that a formula calculated counts too
         numbers = [
@@ -159,8 +159,8 @@ class ScriptedEngine:
         said = f"I wrote {formula} into {_label(into)}: it follows the numbers in {_label(area)} when they change."
         return self._put(sheet, into, formula, said)
 
-    def _example(self, model: WorkbookModel, sheet: SheetId) -> list[Step]:
-        steps: list[Step] = [Say("I will type a small monthly budget into A1:B6.")]
+    def _example(self, model: WorkbookModel, sheet: SheetId) -> list[AiTurn]:
+        steps: list[AiTurn] = [Say("I will type a small monthly budget into A1:B6.")]
         last = len(BUDGET)
         for row, (item, amount) in enumerate((*BUDGET, ("Total", f"=SUM(B2:B{last})"))):
             cells = [{"row": row, "col": 0, "input": item}, {"row": row, "col": 1, "input": str(amount)}]

@@ -32,7 +32,7 @@ def test_it_continues_on_a_new_line_and_keeps_what_came_after(worked):
     worked.restore_revision(rev("main:2"), author="ana")
     assert worked.branch != "main"
     assert worked.log.head("main") == after
-    assert worked.peek_line("main").items == [20, 30]
+    assert worked.peek_branch("main").items == [20, 30]
 
 
 def test_the_first_entry_of_the_new_line_says_who_went_back_to_what(worked):

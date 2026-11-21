@@ -1,4 +1,4 @@
-"""Going back to a checkpoint, or back to a line, with the agreement of a live session (E3.7).
+"""Going back to a checkpoint, or back to a branch, with the agreement of a live session (E3.7).
 
 The kernel allows a restore or a switch outright (``Document.restore_checkpoint``, ``Document.switch_to``): nothing
 here changes what it does or how the result is stored, and once one happens it is ordinary kernel history, same as
@@ -9,7 +9,7 @@ person, in which case it happens at once.
 
 Anybody in the group may decline outright, which ends the suggestion. At most one is open at a time. What silence
 at the deadline means is the document's own choice (``policy``): ``"consensus"`` reads it as a decline, ``"veto"``
-as agreement. Nothing here is persisted: an open suggestion, and who has left since a line they were on stopped
+as agreement. Nothing here is persisted: an open suggestion, and who has left since a branch they were on stopped
 being the active one, live only as long as the document is held open in memory (``HostedDocument``); there is
 nothing to recover if the server restarts, same as presence and locks.
 """
@@ -30,14 +30,14 @@ class RestoreError(Exception):
 
 @dataclass
 class Proposal:
-    """One open suggestion to restore a checkpoint or a step of the history, or switch to a line."""
+    """One open suggestion to restore a checkpoint or a step of the history, or switch to a branch."""
 
     id: int
     kind: str  # "restore" | "switch"
     by: str
     checkpoint: int | None  # set when kind == "restore" to a checkpoint
-    line: str | None  # set when kind == "switch"
-    label: str  # a sentence for the banner, e.g. 'checkpoint "good"' or 'line "main"'
+    branch: str | None  # set when kind == "switch"
+    label: str  # a sentence for the banner, e.g. 'checkpoint "good"' or 'branch "main"'
     opened_at: float
     expires_at: float
     policy: str
@@ -53,7 +53,7 @@ class Proposal:
             "by": self.by,
             "checkpoint": self.checkpoint,
             "revision": self.revision,
-            "line": self.line,
+            "branch": self.branch,
             "label": self.label,
             "opened_at": self.opened_at,
             "expires_at": self.expires_at,
@@ -65,7 +65,7 @@ class Proposal:
 
 @dataclass
 class Resolution:
-    """What happened to a line that stopped being active, for the notice a returning person gets (E3.7)."""
+    """What happened to a branch that stopped being active, for the notice a returning person gets (E3.7)."""
 
     by: str
     kind: str
@@ -82,7 +82,7 @@ class _Record:
     kind: str
     by: str
     checkpoint: int | None
-    line: str | None
+    branch: str | None
     label: str
     agreed: list[str] = field(default_factory=list)
     revision: str | None = None
@@ -91,8 +91,8 @@ class _Record:
 class RestoreCoordinator:
     """One document's open restore/switch suggestion, if any, and the bookkeeping around it.
 
-    ``apply`` carries out an agreed suggestion: given ``{kind, by, checkpoint, revision, line}`` it calls the kernel
-    (``Document.restore_checkpoint``, ``restore_revision`` or ``switch_to``) and, if that line's head actually moved,
+    ``apply`` carries out an agreed suggestion: given ``{kind, by, checkpoint, revision, branch}`` it calls the kernel
+    (``Document.restore_checkpoint``, ``restore_revision`` or ``switch_to``) and, if that branch's head actually moved,
     records the resolution (``record_resolution``) under the branch name that was active just before — the caller
     knows that name and this module does not, since it is the kernel's, not a concept of its own."""
 
@@ -103,8 +103,8 @@ class RestoreCoordinator:
         self.policy = "consensus"
         self._proposal: Proposal | None = None
         self._next_id = 0
-        self._left_on: dict[str, str] = {}  # user -> the line they were on when their last window closed
-        self._resolutions: dict[str, Resolution] = {}  # old line name -> what happened to it
+        self._left_on: dict[str, str] = {}  # user -> the branch they were on when their last window closed
+        self._resolutions: dict[str, Resolution] = {}  # old branch name -> what happened to it
 
     @property
     def open_proposal(self) -> Proposal | None:
@@ -118,7 +118,7 @@ class RestoreCoordinator:
         kind: str,
         by: str,
         checkpoint: int | None,
-        line: str | None,
+        branch: str | None,
         label: str,
         group: Iterable[str],
         revision: str | None = None,
@@ -133,7 +133,7 @@ class RestoreCoordinator:
         everybody = set(group)
         everybody.add(by)
         if len(everybody) <= 1:
-            self._carry_out(_Record(kind, by, checkpoint, line, label, [by], revision))
+            self._carry_out(_Record(kind, by, checkpoint, branch, label, [by], revision))
             return None, True
         now = self._clock()
         self._next_id += 1
@@ -142,7 +142,7 @@ class RestoreCoordinator:
             kind,
             by,
             checkpoint,
-            line,
+            branch,
             label,
             now,
             now + self.timeout,
@@ -207,8 +207,8 @@ class RestoreCoordinator:
 
     # ------------------------------------------------------------------ the returning-person notice
     def notice_for(self, user: str, current_line: str) -> dict | None:
-        """The one-time notice ``user`` should see on return: what happened to the line they were on, if it is not
-        the active one any more. Delivered once — calling this again before they leave on the (new) current line
+        """The one-time notice ``user`` should see on return: what happened to the branch they were on, if it is not
+        the active one any more. Delivered once — calling this again before they leave on the (new) current branch
         again gives ``None``."""
         left_on = self._left_on.get(user)
         if left_on is None or left_on == current_line:
@@ -230,7 +230,7 @@ class RestoreCoordinator:
     def _resolve(self, p: Proposal, outcome: str) -> str:
         self._proposal = None
         if outcome == "agreed":
-            self._carry_out(_Record(p.kind, p.by, p.checkpoint, p.line, p.label, sorted(p.agreed), p.revision))
+            self._carry_out(_Record(p.kind, p.by, p.checkpoint, p.branch, p.label, sorted(p.agreed), p.revision))
         return outcome
 
     def _carry_out(self, record: _Record) -> None:
@@ -240,7 +240,7 @@ class RestoreCoordinator:
                 "by": record.by,
                 "checkpoint": record.checkpoint,
                 "revision": record.revision,
-                "line": record.line,
+                "branch": record.branch,
                 "label": record.label,
                 "agreed": record.agreed,
             }

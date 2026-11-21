@@ -11,7 +11,7 @@ Documents
 
 .. autoclass:: claudia_core.Document
 .. autoclass:: claudia_core.Applied
-.. autoclass:: claudia_core.Line
+.. autoclass:: claudia_core.BranchInfo
 .. autoclass:: claudia_core.CheckpointInfo
 .. autoclass:: claudia_core.Look
 .. autoclass:: claudia_core.Changes
@@ -339,12 +339,12 @@ Log and revisions
 .. autoclass:: claudia_core.Revision
 .. autoclass:: claudia_core.Branch
 .. autodata:: claudia_core.MAIN
-.. autoclass:: claudia_core.Entry
+.. autoclass:: claudia_core.Step
 .. autoclass:: claudia_core.CommandLog
 .. autofunction:: claudia_core.replay
 .. autofunction:: claudia_core.replay_collecting
 .. autoclass:: claudia_core.History
-.. autoclass:: claudia_core.Step
+.. autoclass:: claudia_core.UndoUnit
 
 Regions, presence and locks
 ---------------------------

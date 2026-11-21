@@ -195,9 +195,9 @@ def test_a_step_says_by_what_it_was_made_and_the_log_keeps_it(make_doc):
     entries = doc.log.path(doc.revision)
     assert [e.via for e in entries] == ["ai", None]
     assert [e.to_data().get("via") for e in entries] == ["ai", None]
-    from claudia_core import Entry
+    from claudia_core import Step
 
-    assert Entry.from_data(entries[0].to_data(), lists).via == "ai"
+    assert Step.from_data(entries[0].to_data(), lists).via == "ai"
 
 
 def test_the_tag_is_kept_when_a_step_is_redacted_and_when_the_document_is_opened_again(make_doc):

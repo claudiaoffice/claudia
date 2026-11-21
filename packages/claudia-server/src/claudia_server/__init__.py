@@ -11,7 +11,7 @@ from .admin_api import AdminContext, AiRuntime, admin_router
 from .admin_sessions import AdminSession, AdminSessions
 from .app import Gateway, create_app
 from .apps import methods_for, model_assistant_for, stand_in_assistant_for
-from .assistant import Assistant, AsyncEngine, Call, Engine, Say, Step, Task
+from .assistant import AiTurn, Assistant, AsyncEngine, Call, Engine, Say, Task
 from .auth import AI_USER, Account, AuthRefused, Credentials, ScryptDirectory, UserDirectory, WarmableDirectory
 from .certs import Certificate, CertificateError, ensure_certificate
 from .composes import composes_methods
@@ -115,7 +115,7 @@ __all__ = [
     "SealedDocuments",
     "SecuritySettings",
     "ServerSettings",
-    "Step",
+    "AiTurn",
     "ScryptDirectory",
     "StoredInfo",
     "Suite",

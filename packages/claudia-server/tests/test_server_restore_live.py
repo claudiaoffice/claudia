@@ -72,21 +72,21 @@ def worked(hosted):
 # ------------------------------------------------------------------------------------------ peek_line
 def test_peeking_the_active_line_matches_snapshot(worked):
     hosted, ana, _ = worked
-    peeked = ana.request("peek_line", {"line": "main"})["result"]
+    peeked = ana.request("peek_branch", {"branch": "main"})["result"]
     snap = ana.request("snapshot")["result"]
     assert peeked["state"] == snap["state"] and peeked["revision"] == snap["revision"]
 
 
 def test_peeking_an_unknown_line_is_a_command_error(worked):
     _, ana, _ = worked
-    error = ana.request("peek_line", {"line": "nowhere"})["error"]
+    error = ana.request("peek_branch", {"branch": "nowhere"})["error"]
     assert error["code"] == "command_error"
 
 
 def test_a_viewer_may_not_peek(hosted):
     """Another line is history, which a viewer does not read (D1261)."""
     vera = Client(hosted, Account("vera", "viewer"))
-    assert vera.request("peek_line", {"line": "main"})["error"]["code"] == "forbidden"
+    assert vera.request("peek_branch", {"branch": "main"})["error"]["code"] == "forbidden"
 
 
 # ------------------------------------------------------------------------------------------ restore_policy
@@ -176,7 +176,7 @@ def test_two_editors_vote_on_a_step_too(worked):
     assert proposal["kind"] == "restore" and proposal["revision"] == "main:1" and proposal["checkpoint"] is None
     assert ben.events("restore_proposed")[-1] == proposal
     ben.request("answer_restore", {"agree": True})
-    assert ana.request("snapshot")["result"]["line"] == "restore-1"
+    assert ana.request("snapshot")["result"]["branch"] == "restore-1"
 
 
 def test_a_step_the_line_does_not_have_is_a_command_error(worked):
@@ -197,21 +197,21 @@ def test_propose_switch_suggests_a_line_instead(worked):
     assert hosted.document.branch == "restore-1"
     ana.forget()
     ben.forget()
-    answer = ana.request("propose_switch", {"line": "main"})["result"]
+    answer = ana.request("propose_switch", {"branch": "main"})["result"]
     assert answer["applied"] is False
-    assert answer["proposal"]["kind"] == "switch" and answer["proposal"]["line"] == "main"
+    assert answer["proposal"]["kind"] == "switch" and answer["proposal"]["branch"] == "main"
     assert ben.events("restore_proposed")[-1] == answer["proposal"]
 
 
 def test_switching_to_an_unknown_line_is_a_command_error(worked):
     _, ana, _ = worked
-    assert ana.request("propose_switch", {"line": "nowhere"})["error"]["code"] == "command_error"
+    assert ana.request("propose_switch", {"branch": "nowhere"})["error"]["code"] == "command_error"
 
 
 def test_the_assistant_may_not_propose_answer_or_withdraw(hosted):
     ai = Client(hosted, Account.assistant())
     assert ai.request("propose_restore", {"checkpoint": 1})["error"]["code"] == "forbidden"
-    assert ai.request("propose_switch", {"line": "main"})["error"]["code"] == "forbidden"
+    assert ai.request("propose_switch", {"branch": "main"})["error"]["code"] == "forbidden"
     assert ai.request("answer_restore", {"agree": True})["error"]["code"] == "forbidden"
     assert ai.request("withdraw_restore")["error"]["code"] == "forbidden"
 
@@ -392,7 +392,7 @@ def test_under_veto_a_forgotten_vote_is_agreed_at_the_deadline(worked, clock):
 def test_welcome_lists_the_lines(worked):
     _, ana, _ = worked
     welcome = ana.connection.welcome()
-    assert welcome["lines"] == [{"name": "main", "head": welcome["revision"], "active": True}]
+    assert welcome["branches"] == [{"name": "main", "head": welcome["revision"], "active": True}]
 
 
 def test_a_returning_person_is_told_what_happened_while_they_were_away(worked):
@@ -424,7 +424,7 @@ def test_an_owner_discards_every_hidden_line(worked):
     removed = ana.request("discard_side_history")["result"]["discarded"]
     # "main" survives: it still holds the ancestry it shares with restore-1, up to the checkpoint.
     assert removed and hosted.document.side_revisions() == []
-    assert {x.name for x in hosted.document.lines()} == {"main", "restore-1"}
+    assert {x.name for x in hosted.document.branches()} == {"main", "restore-1"}
 
 
 def test_only_an_owner_discards(worked):
@@ -438,6 +438,6 @@ def test_discarding_is_refused_while_a_suggestion_is_open(worked):
     hosted, ana, ben = worked
     ana.request("propose_restore", {"checkpoint": 1})
     ben.request("answer_restore", {"agree": True})
-    ana.request("propose_switch", {"line": "main"})
+    ana.request("propose_switch", {"branch": "main"})
     assert ana.request("discard_side_history")["error"]["code"] == "command_error"
     assert hosted.document.side_revisions() != []

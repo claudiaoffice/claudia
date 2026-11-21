@@ -47,6 +47,9 @@ While the major version is 0, a minor version may break the API; every break is 
   `"table"` is one of `OBJECT_KINDS`; the facet slots have a `table` thing.
 
 ### Changed
+- **Breaking** — the glossary's words for the history (D1430): `Step` (was `Entry`, one command as it happened),
+  `UndoUnit` (was `history.Step`), `BranchInfo` (was `Line`), `Document.branches()` (was `lines()`),
+  `Document.peek_branch(branch)` (was `peek_line(line)`), `CommandLog.steps_of(name)` (was `line(name)`).
 - **Breaking** — one asset store (D1431): `ObjectModel.assets` holds an `AssetStore` per kind (`image`, `shape`,
   `diagram`, `rendering`, `table`); `images`, `shapes`, `diagrams`, `renderings` and `tables` are those stores, read like
   a dict and changed with `define`, `replace`, `forget`, `put`, `users`, `known`, `to_data` and `restore`.

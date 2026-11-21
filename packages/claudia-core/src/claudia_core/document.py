@@ -46,7 +46,7 @@ from .events import (
     ResultsStale,
 )
 from .history import History
-from .log import CommandLog, Entry
+from .log import CommandLog, Step
 from .manifest import Environment, Manifest, RequirementReport, check
 from .messages import ChatRecord, Ephemeral, parse_chat
 from .model import DocumentModel, Snapshot
@@ -65,7 +65,7 @@ class Applied:
     revision: Revision
     command: Command
     inverse: Command
-    entry: Entry
+    entry: Step
 
 
 @dataclass(frozen=True)
@@ -74,7 +74,7 @@ class Look:
 
     revision: Revision
     model: DocumentModel  # the state after the step, on a scratch model
-    entry: Entry  # the step itself: who, when, what
+    entry: Step  # the step itself: who, when, what
     focus: tuple[Region, ...]  # where the step touched the document, the places a view brings into sight
 
 
@@ -88,8 +88,9 @@ class Changes:
 
 
 @dataclass(frozen=True)
-class Line:
-    """One line of the log (``main``, or ``restore-N`` after a restore)."""
+class BranchInfo:
+    """One branch of the history (``main``, or ``restore-N`` after a restore), as it is now: its head and whether it is the
+    active one (a view of :class:`~claudia_core.revision.Branch`)."""
 
     name: str
     head: Revision | None
@@ -242,7 +243,7 @@ class Document:
         self.check_free(author, command)
         return self._commit(command, author, time, "do", None, via=via)
 
-    def apply_entry(self, entry: Entry, *, persist: bool = True) -> Applied:
+    def apply_entry(self, entry: Step, *, persist: bool = True) -> Applied:
         """Replay an entry made elsewhere (a replica following the server). Must be exactly the next one."""
         expected = self.log.next_revision(self.branch)
         if entry.rev != expected or entry.parent != self.revision:
@@ -258,7 +259,7 @@ class Document:
             via=entry.via,
         )
 
-    def entries_since(self, revision: Revision | None) -> list[Entry]:
+    def entries_since(self, revision: Revision | None) -> list[Step]:
         """What a replica that has everything up to ``revision`` still needs."""
         return self.log.since(revision, self.branch)
 
@@ -285,7 +286,7 @@ class Document:
             self.model.settle(ctx)  # a rolled-back command may leave derived state to recompute
             raise
         self.model.settle(ctx)
-        entry = Entry(rev, parent, author, when, command, origin, of, redacted, via)
+        entry = Step(rev, parent, author, when, command, origin, of, redacted, via)
         if persist and self.store is not None:
             try:
                 self.store.append_entry(entry)
@@ -318,7 +319,7 @@ class Document:
         for entry in self.log.path(self.revision):
             self._index(entry)
 
-    def _index(self, entry: Entry) -> None:
+    def _index(self, entry: Step) -> None:
         if not entry.command.meta:
             self._state_head = entry.rev
         command = entry.command
@@ -329,7 +330,7 @@ class Document:
                 )
             )
 
-    def _record_history(self, entry: Entry, inverse: Command) -> bool:
+    def _record_history(self, entry: Step, inverse: Command) -> bool:
         return self.history_for(entry.author).record(entry, inverse)
 
     # ------------------------------------------------------------------ undo / redo (E1.4)
@@ -503,7 +504,7 @@ class Document:
             state = self.materialize(base)
             conflicts: list[Region] = []
 
-            def look(entry: Entry, inverse: Command) -> None:
+            def look(entry: Step, inverse: Command) -> None:
                 touched = [r for each in (entry.command, inverse) for r in _regions_of(each, state)]
                 for region in footprint:
                     moved = transform(region, entry.command)
@@ -573,22 +574,22 @@ class Document:
         return self._commit(Restore(label, marks, old), author, None, "do", None)
 
     # ------------------------------------------------------------------ lines: the way back
-    def lines(self) -> list[Line]:
-        """Every line of the log: the active one, and the side lines a restore left behind."""
+    def branches(self) -> list[BranchInfo]:
+        """Every branch of the history: the active one, and the ones a restore left behind."""
         return [
-            Line(name, self.log.head(name), name == self.branch, branch.fork_point)
+            BranchInfo(name, self.log.head(name), name == self.branch, branch.fork_point)
             for name, branch in self.log.branches.items()
         ]
 
-    def peek_line(self, line: str) -> DocumentModel:
+    def peek_branch(self, branch: str) -> DocumentModel:
         """A read-only look at ``line`` without switching to it (E3.8): the state at its head, on a scratch model.
 
         Like ``materialize`` the live model, the active line and everybody's undo steps are untouched; this is how a
         person previews a hidden line (or the active one) before asking to make it current. ``KernelError`` for a
         name that is not a line of this document."""
-        if line not in self.log.branches:
-            raise KernelError(f"there is no line called {line!r}")
-        return self.materialize(self.log.head(line))
+        if branch not in self.log.branches:
+            raise KernelError(f"there is no branch called {branch!r}")
+        return self.materialize(self.log.head(branch))
 
     def peek_revision(self, rev: Revision) -> Look:
         """A read-only look at the document after one step of its history, on any line (D551): the state at ``rev``, the
@@ -636,7 +637,7 @@ class Document:
         truncated = False
         model = self.materialize(rev)
 
-        def look(entry: Entry, inverse: Command) -> None:
+        def look(entry: Step, inverse: Command) -> None:
             nonlocal truncated
             for command in (entry.command, inverse):
                 try:
@@ -663,7 +664,7 @@ class Document:
         model = type(self.model).empty()
         seen: Revision | None = None
 
-        def look(entry: Entry, _inverse: Command) -> None:
+        def look(entry: Step, _inverse: Command) -> None:
             nonlocal seen
             if present(model):
                 seen = entry.rev
@@ -886,7 +887,7 @@ class Document:
         except (ValueError, KeyError, TypeError) as exc:
             raise RedactionError(f"{rev} cannot be blanked: {exc}") from exc
 
-    def _with(self, replacements: Mapping[Revision, Command], head: Revision | None) -> list[Entry]:
+    def _with(self, replacements: Mapping[Revision, Command], head: Revision | None) -> list[Step]:
         return [
             replace(e, command=replacements[e.rev], redacted=True) if e.rev in replacements else e
             for e in self.log.path(head)
@@ -900,7 +901,7 @@ class Document:
         model = type(self.model).empty()
         places: dict[str, Region] = {}
 
-        def look(entry: Entry, _inverse: Command) -> None:
+        def look(entry: Step, _inverse: Command) -> None:
             if entry.rev not in replacements or len(places) >= REDACTION_PLACES:
                 return
             for command in (entry.command, self.log.get(entry.rev).command):
@@ -923,7 +924,7 @@ class Document:
                 continue
             done = 0
 
-            def count(_entry: Entry, _inverse: Command) -> None:
+            def count(_entry: Step, _inverse: Command) -> None:
                 nonlocal done
                 done += 1
 
@@ -997,10 +998,10 @@ def environment_of(model_cls: type[DocumentModel], *, functions=None, fonts=(), 
     )
 
 
-def _standing(entries: Iterable[Entry]) -> Iterator[Entry]:
+def _standing(entries: Iterable[Step]) -> Iterator[Step]:
     """The entries in order, without each step that was undone (or redone) by the very next entry, nor that entry: the
     two together changed nothing."""
-    pending: Entry | None = None
+    pending: Step | None = None
     for entry in entries:
         if (
             pending is not None

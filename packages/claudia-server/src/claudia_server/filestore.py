@@ -33,9 +33,9 @@ from claudia_core import (
     CommandLog,
     Document,
     DocumentModel,
-    Entry,
     Revision,
     Snapshot,
+    Step,
 )
 from claudia_file_writer import write_atomically
 
@@ -73,7 +73,7 @@ class JournalStore:
         if self._handle is not None:
             self._handle.close()
 
-    def append_entry(self, entry: Entry) -> None:
+    def append_entry(self, entry: Step) -> None:
         """As ``DocumentStore.append_entry``."""
         self._write("entry", entry.to_data())
 

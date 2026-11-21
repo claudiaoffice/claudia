@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from claudia_composes import TextModel, TextRange
 
 from .ai_mode import ACT
-from .assistant import Call, Say, Step, Task
+from .assistant import AiTurn, Call, Say, Task
 
 LONG_SENTENCE_WORDS = 35  # more words than this in one sentence earns a remark
 MAX_SUGGESTIONS = 20  # one instruction makes at most this many
@@ -137,7 +137,7 @@ def findings(text: str) -> list[Finding]:
 class TextEngine:
     """Reads one instruction about a text and turns it into suggestions, or in act mode into edits."""
 
-    def plan(self, task: Task) -> list[Step]:
+    def plan(self, task: Task) -> list[AiTurn]:
         """The steps for what the asker wrote."""
         text = task.text.strip()
         if _HELP.match(text):

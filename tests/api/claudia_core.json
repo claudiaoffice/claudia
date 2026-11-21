@@ -45,7 +45,7 @@
   "class": [
    "object"
   ],
-  "init": "(revision: 'Revision', command: 'Command', inverse: 'Command', entry: 'Entry') -> None",
+  "init": "(revision: 'Revision', command: 'Command', inverse: 'Command', entry: 'Step') -> None",
   "methods": {},
   "properties": []
  },
@@ -127,6 +127,14 @@
    "from_data": "(data: 'dict') -> 'Branch'",
    "to_data": "(self) -> 'dict'"
   },
+  "properties": []
+ },
+ "BranchInfo": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', head: 'Revision | None', active: 'bool', forked_from: 'Revision | None') -> None",
+  "methods": {},
   "properties": []
  },
  "BranchSwitched": {
@@ -316,7 +324,7 @@
   "class": [
    "object"
   ],
-  "init": "(entry: 'Entry', inverse: 'Command') -> None",
+  "init": "(entry: 'Step', inverse: 'Command') -> None",
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
@@ -329,20 +337,20 @@
   "init": "()",
   "methods": {
    "activate": "(self, name: 'str') -> 'None'",
-   "append": "(self, entry: 'Entry') -> 'None'",
+   "append": "(self, entry: 'Step') -> 'None'",
    "discard_off_path": "(self, keep: 'Revision | None') -> 'list[Revision]'",
    "fork": "(self, name: 'str', at: 'Revision') -> 'Branch'",
    "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'CommandLog'",
-   "get": "(self, rev: 'Revision') -> 'Entry'",
+   "get": "(self, rev: 'Revision') -> 'Step'",
    "has": "(self, rev: 'Revision') -> 'bool'",
    "head": "(self, branch: 'str' = 'main') -> 'Revision | None'",
-   "line": "(self, name: 'str') -> 'tuple[Entry, ...]'",
    "next_revision": "(self, branch: 'str' = 'main') -> 'Revision'",
    "on_path": "(self, rev: 'Revision', head: 'Revision | None') -> 'bool'",
-   "path": "(self, rev: 'Revision | None') -> 'list[Entry]'",
-   "replace_command": "(self, rev: 'Revision', command: 'Command') -> 'Entry'",
-   "restore_entry": "(self, entry: 'Entry') -> 'None'",
-   "since": "(self, rev: 'Revision | None', branch: 'str' = 'main') -> 'list[Entry]'",
+   "path": "(self, rev: 'Revision | None') -> 'list[Step]'",
+   "replace_command": "(self, rev: 'Revision', command: 'Command') -> 'Step'",
+   "restore_entry": "(self, entry: 'Step') -> 'None'",
+   "since": "(self, rev: 'Revision | None', branch: 'str' = 'main') -> 'list[Step]'",
+   "steps_of": "(self, name: 'str') -> 'tuple[Step, ...]'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -600,27 +608,27 @@
   ],
   "init": "(model: 'DocumentModel', *, log: 'CommandLog | None' = None, store: 'DocumentStore | None' = None, branch: 'str | None' = None, clock: 'Callable[[], str]' = <function utc_now>, lock_clock: 'Callable[[], float]' = <function monotonic>, chat: 'Iterable[ChatRecord]' = ())",
   "methods": {
-   "apply_entry": "(self, entry: 'Entry', *, persist: 'bool' = True) -> 'Applied'",
+   "apply_entry": "(self, entry: 'Step', *, persist: 'bool' = True) -> 'Applied'",
    "apply_proposal": "(self, proposal: 'Proposal', *, author: 'str | None' = None, via: 'str | None' = None) -> 'Applied'",
    "apply_report": "(self, report: 'RequirementReport') -> 'None'",
+   "branches": "(self) -> 'list[BranchInfo]'",
    "cache_snapshot": "(self) -> 'Snapshot | None'",
    "changes_since": "(self, rev: 'Revision', limit: 'int' = 500) -> 'Changes'",
    "check_free": "(self, author: 'str | None', command: 'Command') -> 'None'",
    "check_requirements": "(self, env: 'Environment') -> 'RequirementReport'",
    "discard_side_history": "(self) -> 'list[Revision]'",
-   "entries_since": "(self, revision: 'Revision | None') -> 'list[Entry]'",
+   "entries_since": "(self, revision: 'Revision | None') -> 'list[Step]'",
    "execute": "(self, command: 'Command', *, author: 'str | None' = None, time: 'str | None' = None, base: 'Revision | None' = None, via: 'str | None' = None) -> 'Applied'",
    "footprint": "(self, proposal: 'Proposal') -> 'tuple[Region, ...]'",
    "history_for": "(self, author: 'str | None') -> 'History'",
    "history_revisions": "(self) -> 'list[Revision]'",
    "last_seen": "(self, present: 'Callable[[DocumentModel], bool]') -> 'Revision | None'",
-   "lines": "(self) -> 'list[Line]'",
    "lock": "(self, owner: 'str', regions: 'Iterable[Region]', ttl: 'float') -> 'Ephemeral'",
    "manifest": "(self) -> 'Manifest'",
    "materialize": "(self, rev: 'Revision | None') -> 'DocumentModel'",
    "on_purge": "(self, hook: 'Callable[[tuple[Revision, ...]], None]') -> 'None'",
    "open": "(model_cls: 'type[DocumentModel]', log: 'CommandLog', *, snapshot: 'Snapshot | None' = None, branch: 'str | None' = None, **options) -> 'Document'",
-   "peek_line": "(self, line: 'str') -> 'DocumentModel'",
+   "peek_branch": "(self, branch: 'str') -> 'DocumentModel'",
    "peek_revision": "(self, rev: 'Revision') -> 'Look'",
    "plan_redaction": "(self, revisions: 'Iterable[Revision]' = (), *, chat: 'Iterable[int]' = (), parts: 'Mapping[Revision, Iterable[str]] | None' = None) -> 'RedactionPlan'",
    "post_chat": "(self, author: 'str', raw: 'str', *, users: 'Iterable[str]' = ()) -> 'ChatRecord'",
@@ -674,7 +682,7 @@
   "init": "(*args, **kwargs)",
   "methods": {
    "append_chat": "(self, record: 'ChatRecord') -> 'None'",
-   "append_entry": "(self, entry: 'Entry') -> 'None'",
+   "append_entry": "(self, entry: 'Step') -> 'None'",
    "discard_entries": "(self, revisions: 'Sequence[Revision]') -> 'None'",
    "rewrite": "(self, log: 'CommandLog', chat: 'Sequence[ChatRecord]') -> 'None'",
    "write_branch": "(self, branch: 'Branch', active: 'bool') -> 'None'",
@@ -689,17 +697,6 @@
   "init": "(*args, **kwargs)",
   "methods": {
    "emit": "(self, event: 'object') -> 'None'"
-  },
-  "properties": []
- },
- "Entry": {
-  "class": [
-   "object"
-  ],
-  "init": "(rev: 'Revision', parent: 'Revision | None', author: 'str | None', time: 'str', command: 'Command', origin: 'str' = 'do', of: 'Revision | None' = None, redacted: 'bool' = False, via: 'str | None' = None) -> None",
-  "methods": {
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Entry'",
-   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -897,10 +894,10 @@
   "init": "(author: 'str | None', limit: 'int' = 200)",
   "methods": {
    "clear": "(self) -> 'None'",
-   "next_redo": "(self) -> 'Step | None'",
-   "next_undo": "(self) -> 'Step | None'",
+   "next_redo": "(self) -> 'UndoUnit | None'",
+   "next_undo": "(self) -> 'UndoUnit | None'",
    "purge": "(self, revisions: 'set[Revision]') -> 'bool'",
-   "record": "(self, entry: 'Entry', inverse: 'Command') -> 'bool'"
+   "record": "(self, entry: 'Step', inverse: 'Command') -> 'bool'"
   },
   "properties": [
    "can_redo",
@@ -1118,14 +1115,6 @@
    "counts"
   ]
  },
- "Line": {
-  "class": [
-   "object"
-  ],
-  "init": "(name: 'str', head: 'Revision | None', active: 'bool', forked_from: 'Revision | None') -> None",
-  "methods": {},
-  "properties": []
- },
  "ListBook": {
   "class": [
    "object"
@@ -1181,7 +1170,7 @@
   "class": [
    "object"
   ],
-  "init": "(revision: 'Revision', model: 'DocumentModel', entry: 'Entry', focus: 'tuple[Region, ...]') -> None",
+  "init": "(revision: 'Revision', model: 'DocumentModel', entry: 'Step', focus: 'tuple[Region, ...]') -> None",
   "methods": {},
   "properties": []
  },
@@ -1248,7 +1237,7 @@
   "init": "()",
   "methods": {
    "append_chat": "(self, record: 'ChatRecord') -> 'None'",
-   "append_entry": "(self, entry: 'Entry') -> 'None'",
+   "append_entry": "(self, entry: 'Step') -> 'None'",
    "discard_entries": "(self, revisions: 'Sequence[Revision]') -> 'None'",
    "rewrite": "(self, log: 'CommandLog', chat: 'Sequence[ChatRecord]') -> 'None'",
    "write_branch": "(self, branch: 'Branch', active: 'bool') -> 'None'",
@@ -2460,8 +2449,11 @@
   "class": [
    "object"
   ],
-  "init": "(label: 'str', command: 'Command', rev: 'Revision') -> None",
-  "methods": {},
+  "init": "(rev: 'Revision', parent: 'Revision | None', author: 'str | None', time: 'str', command: 'Command', origin: 'str' = 'do', of: 'Revision | None' = None, redacted: 'bool' = False, via: 'str | None' = None) -> None",
+  "methods": {
+   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'Step'",
+   "to_data": "(self) -> 'dict'"
+  },
   "properties": []
  },
  "StyleBook": {
@@ -2735,6 +2727,14 @@
   "methods": {},
   "properties": []
  },
+ "UndoUnit": {
+  "class": [
+   "object"
+  ],
+  "init": "(label: 'str', command: 'Command', rev: 'Revision') -> None",
+  "methods": {},
+  "properties": []
+ },
  "UnknownCommand": {
   "class": [
    "KernelError"
@@ -2966,10 +2966,10 @@
   "function": "(paragraph: 'Paragraph', edits: 'Iterable[tuple[int, int, str]]', author: 'str | None') -> 'Paragraph'"
  },
  "replay": {
-  "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]', on_applied: 'Callable[[Entry, Command], object] | None' = None) -> 'DocumentModel'"
+  "function": "(model: 'DocumentModel', entries: 'Iterable[Step]', on_applied: 'Callable[[Step, Command], object] | None' = None) -> 'DocumentModel'"
  },
  "replay_collecting": {
-  "function": "(model: 'DocumentModel', entries: 'Iterable[Entry]') -> 'list[tuple[Entry, Command]]'"
+  "function": "(model: 'DocumentModel', entries: 'Iterable[Step]') -> 'list[tuple[Step, Command]]'"
  },
  "resolve_css": {
   "function": "(css: 'Mapping[str, str]', colours: 'Mapping[str, str]') -> 'dict[str, str]'"

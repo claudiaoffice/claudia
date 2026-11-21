@@ -8,7 +8,7 @@ const WELCOME: Welcome = {
   role: 'owner',
   doc: 'talk',
   app: 'creates',
-  line: 'main',
+  branch: 'main',
   revision: 'main:3',
   id: 1,
   color: '#e6194b',
@@ -16,7 +16,7 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
-  lines: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
+  branches: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
   proposal: null,
   returned: null,
 }
@@ -43,7 +43,7 @@ class FakeLink implements LinkLike {
         return []
       case 'history':
         return { can_undo: true, can_redo: false, undo_label: '', redo_label: '' }
-      case 'lines':
+      case 'branches':
         return [{ name: 'main', head: 'main:3', active: true, forked_from: null }]
       case 'restore_policy':
         return { policy: 'consensus' }

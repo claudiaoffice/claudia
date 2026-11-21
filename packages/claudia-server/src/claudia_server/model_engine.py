@@ -21,7 +21,7 @@ from dataclasses import dataclass, replace
 
 from claudia_ai import Message, ModelRunner, Request, ToolCall, ToolSpec, Turn
 
-from .assistant import Say, Step, Task
+from .assistant import AiTurn, Say, Task
 from .lens import Lens, cut
 from .protocol import MethodTable, RequestError
 
@@ -82,7 +82,7 @@ class ModelEngine:
         self._budget = budget
         self._memory: dict[str, deque[Message]] = {}
 
-    async def plan_async(self, task: Task) -> list[Step]:
+    async def plan_async(self, task: Task) -> list[AiTurn]:
         """The answer to what the asker wrote, after whatever the model looked at and did on the way. Raises
         ``ModelError`` (the assistant tells the asker)."""
         if task.call is None:

@@ -72,7 +72,7 @@ class Call:
     focus: tuple[dict, ...] = ()
 
 
-Step = Say | Call
+AiTurn = Say | Call
 
 SUGGEST_REFUSAL = (
     "You asked me in suggest mode, and I cannot prepare a proposal in this app yet, so I changed nothing. "
@@ -83,7 +83,7 @@ SUGGEST_REFUSAL = (
 class Engine(Protocol):
     """What decides what the assistant does."""
 
-    def plan(self, task: Task) -> list[Step]:
+    def plan(self, task: Task) -> list[AiTurn]:
         """The steps that answer ``task``. May raise: the assistant then says it could not answer."""
 
 
@@ -91,7 +91,7 @@ class Engine(Protocol):
 class AsyncEngine(Protocol):
     """An engine that waits for something slow, such as a language model, and so is awaited."""
 
-    async def plan_async(self, task: Task) -> list[Step]:
+    async def plan_async(self, task: Task) -> list[AiTurn]:
         """The steps that answer ``task``. May raise: the assistant then says it could not answer."""
 
 
@@ -212,12 +212,12 @@ class Assistant:
         finally:
             document.publish("typing", AI_USER, {"on": False})
 
-    async def _plan(self, task: Task) -> list[Step]:
+    async def _plan(self, task: Task) -> list[AiTurn]:
         if isinstance(self.engine, AsyncEngine):
             return await self.engine.plan_async(task)
         return self.engine.plan(task)
 
-    def _run(self, step: Step, asker: str, account: Account | None = None, mode: AiMode = DEFAULT_MODE) -> bool:
+    def _run(self, step: AiTurn, asker: str, account: Account | None = None, mode: AiMode = DEFAULT_MODE) -> bool:
         """Do one step as ``account`` (the AI's own when none is given); ``False`` if the rest of the plan should be
         dropped."""
         if isinstance(step, Say):

@@ -243,7 +243,7 @@ class FakeLink implements LinkLike {
   handlers: Record<string, (params: any) => any> = {}
   events: EventHandler[] = []
   async connect() {
-    return { user: 'ann', role: 'owner', doc: 'essay', app: 'composes', line: 'main', revision: 'main:2', id: 1, color: '#e6194b', people: [], presence: [], checkpoints: [], limits: { max_text: 32767 }, lines: [{ name: 'main', head: 'main:2', active: true, forked_from: null }], proposal: null, returned: null } as never
+    return { user: 'ann', role: 'owner', doc: 'essay', app: 'composes', branch: 'main', revision: 'main:2', id: 1, color: '#e6194b', people: [], presence: [], checkpoints: [], limits: { max_text: 32767 }, branches: [{ name: 'main', head: 'main:2', active: true, forked_from: null }], proposal: null, returned: null } as never
   }
   async request(method: string, params: any = {}) {
     this.calls.push({ method, params })
@@ -272,7 +272,7 @@ async function opened(role = 'owner') {
     chat_log: () => [],
     checkpoints: () => [],
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
-    lines: () => [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
+    branches: () => [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
     restore_policy: () => ({ policy: 'consensus' }),
     hold: () => ({}),
     look: () => ({}),
