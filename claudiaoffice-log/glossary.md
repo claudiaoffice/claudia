@@ -195,3 +195,23 @@ _avoid_: title (except for the top level), caption, header
 **Run**
 A stretch of a paragraph written by one author, whatever its style.
 _avoid_: span; and never "run" for a stretch of one formatting, as Word uses it
+
+**List**
+A numbered or bulleted sequence of paragraphs that counts across the document; a list is a thing.
+_avoid_: bullets, enumeration, numbering
+
+**Item**
+A paragraph that belongs to a list, at one of its levels.
+_avoid_: bullet, point, entry
+
+**Reference**
+Words in a document that point at a heading, an item or a thing, and always show it as it is now.
+_avoid_: link, field, cross-reference
+
+**Tag**
+A reference to a thing in the chat, written with #.
+_avoid_: mention, hashtag
+
+**Mention**
+The @ in a chat message that addresses it to one user.
+_avoid_: ping, address, tag
