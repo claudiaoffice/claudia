@@ -198,6 +198,10 @@ _avoid_: name (in this sense), defined name, range name
 A named look, defined by its purpose, put into slots; every slot with the same style serves the same purpose.
 _avoid_: format, formatting, theme, look
 
+**Facet**
+One of four sides of a look, naming what can be set for it: text (how characters look), paragraph (how a stretch of text is laid out), box (the background, border and padding around content) and outline (a shape's paint). The values are always a style's own.
+_avoid_: property group, aspect, CSS
+
 **Style kind**
 Which facets a style may hold, and so which slots it fits: a paragraph style (text, paragraph and box), a box style or an outline style. A style and the style it is based on are always of the same kind.
 _avoid_: style type, category
