@@ -246,6 +246,14 @@ _avoid_: bullets, enumeration, numbering
 A paragraph that belongs to a list, at one of its levels.
 _avoid_: bullet, point, entry
 
+**Marker**
+The bullet, dash, number or letter in front of an item, coming from its list, never typed.
+_avoid_: bullet (for markers in general), numbering, label
+
+**Marker scheme**
+How a list's markers look, level by level.
+_avoid_: numbering scheme, numbering, list style, bullet style
+
 **Reference**
 Words in a document's text or chat that point at a thing and always show it as it is now: in the text by its number, words, page or name, in the chat (written with #) by its name.
 _avoid_: link, field, cross-reference, tag
