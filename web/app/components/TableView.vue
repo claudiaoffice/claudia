@@ -31,7 +31,7 @@ const title = computed(() => props.object.name || t('Table'))
 const description = computed(() => (props.object.decorative ? '' : props.object.description))
 
 // ------------------------------------------------------------------------------ how a box looks
-const styleCss = (id: string) => paragraphCss(state.styles.find((s) => s.id === id)?.resolved ?? {})
+const styleCss = (id: string) => paragraphCss(state.styles[id]?.resolved ?? {})
 /** The style of a box: the person's own choice, or the look's for the row's role (D1206). */
 const boxCss = (box: Box, role: 'header' | 'body' | 'band' | 'total'): Record<string, string> => ({
   ...styleCss(box.style || `table-${props.table.look}-${role}`),

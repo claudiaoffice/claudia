@@ -11,7 +11,7 @@ type Css = Record<string, string>
 
 /** The part of the session state that draws an object. */
 export interface LookHolder {
-  styles: readonly StyleDef[]
+  styles: Readonly<Record<string, StyleDef>>
   styleModel: StyleModel | null
   shapes: Record<string, { id: string; path: string; text_area: { x: number; y: number; w: number; h: number } }>
   images: Record<string, { format: string; data: string }>
@@ -34,7 +34,7 @@ export interface ObjectLook {
 const SHAPE_PAD = 8
 
 export function lookOf(holder: LookHolder, o: VisualObject<BlockAnchor>): ObjectLook {
-  const styles = Object.fromEntries(holder.styles.map((s) => [s.id, s]))
+  const styles = holder.styles
   const facets = holder.styleModel?.facets
   const facet = (css: Css, names: string[]) => facetCss(css, facets, names)
   const imageId = pointer(o, 'image')
