@@ -40,11 +40,11 @@ function table(words: string[][]): TableData {
 const picture = (): TextObject =>
   ({
     id: 'o1', kind: 'text', w: 200, h: 150, style: 'plain-box', paragraph: { style: 'body', text: 'Bild' }, rotation: 0,
-    anchor: { kind: 'block', container: 'b1', offset: 0, dx: 200, dy: 0, wrap: 'around', gap: 8 },
+    anchor: { kind: 'block', holder: 'b1', offset: 0, dx: 200, dy: 0, wrap: 'around', gap: 8 },
   }) as TextObject
 
 const tableObject = (): TextObject =>
-  ({ id: 'o2', kind: 'table', w: 480, h: 96, style: 'plain-box', paragraph: null, rotation: 0, ref: 't1', anchor: { kind: 'block', container: 'b1', offset: 0 } }) as TextObject
+  ({ id: 'o2', kind: 'table', w: 480, h: 96, style: 'plain-box', paragraph: null, rotation: 0, ref: 't1', anchor: { kind: 'block', holder: 'b1', offset: 0 } }) as TextObject
 
 /** b1 flows round the picture and the table hangs from it; b2 follows both. */
 const doc = (objects: TextObject[]): TextDocument => ({

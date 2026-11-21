@@ -164,7 +164,7 @@ def test_an_id_can_only_be_used_once(doc):
 
 
 def test_there_is_a_limit_to_the_objects_on_a_slide(doc, monkeypatch):
-    monkeypatch.setattr(model_module.SlideModel, "max_objects_per_container", 2)
+    monkeypatch.setattr(model_module.SlideModel, "max_objects_per_holder", 2)
     put(doc, text_box("a"))
     put(doc, text_box("b"))
     with pytest.raises(ValueError, match="at most 2"):
@@ -392,14 +392,14 @@ def test_views_are_told_what_changed_and_the_new_stacking_order(doc):
     doc.execute(move("a", 20, 30), author="ana")
     doc.execute(RemoveObject("b"), author="ana")
     told = [e for e in seen if isinstance(e, ObjectsChanged)]
-    assert [(e.container, [o.id for o in e.changed], list(e.removed), list(e.order)) for e in told] == [
+    assert [(e.holder, [o.id for o in e.changed], list(e.removed), list(e.order)) for e in told] == [
         (SLIDE, ["a"], [], ["a"]),
         (SLIDE, ["b"], [], ["a", "b"]),
         (SLIDE, ["a"], [], ["a", "b"]),
         (SLIDE, [], ["b"], ["a"]),
     ]
     data = told[2].to_data()
-    assert data["type"] == "objects" and data["container"] == SLIDE and data["order"] == ["a", "b"]
+    assert data["type"] == "objects" and data["holder"] == SLIDE and data["order"] == ["a", "b"]
     assert data["changed"][0]["anchor"]["x"] == 20 and data["removed"] == []
 
 
@@ -585,7 +585,7 @@ def test_a_slide_object_knows_what_it_is_made_of():
         "name",  # D550: what people call it
         "anchor",
     }
-    assert box.to_data()["anchor"] == {"kind": "slide", "container": SLIDE, "x": 100, "y": 100}
+    assert box.to_data()["anchor"] == {"kind": "slide", "holder": SLIDE, "x": 100, "y": 100}
     assert define().to_data()["data"]["id"] == "rectangle"
 
 

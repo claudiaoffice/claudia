@@ -34,7 +34,7 @@ the total row), the others ``value`` (``total`` on the total row and in the tota
 
 An object is a shared ``ObjectBody`` plus a ``CellAnchor`` (E10.16): the body — kind, size, style, text, shape,
 image, rotation, snap — travels the wire identically in all three apps, and only ``anchor`` differs, as
-``{"kind": "cell", "container": <sheet>, "row": r, "col": c}``. An image is anchored to a cell and neither the
+``{"kind": "cell", "holder": <sheet>, "row": r, "col": c}``. An image is anchored to a cell and neither the
 anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only ``move_object`` (dragging it
 to another cell) moves it, and ``resize_object`` resizes it (E6.17).
 

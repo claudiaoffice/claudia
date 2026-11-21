@@ -519,7 +519,7 @@ class SetObjectWrap(Command):
         anchor.check_wrap()
         new = replace(old, anchor=anchor)
         model.replace_object(new)
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return SetObjectWrap(self.id, old.anchor.wrap, old.anchor.gap)
 
     def to_data(self) -> dict:

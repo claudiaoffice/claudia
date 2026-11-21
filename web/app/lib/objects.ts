@@ -13,16 +13,16 @@ import type { ImageImport } from './images'
 import type { Toc } from './contents'
 import type { RefField } from './references'
 
-/** Where an object sits, in the terms of one app. `container` is its slide, sheet or paragraph. */
+/** Where an object sits, in the terms of one app. `holder` is its slide, sheet or paragraph. */
 export interface SlideAnchor {
   kind: 'slide'
-  container: string
+  holder: string
   x: number
   y: number
 }
 export interface CellAnchor {
   kind: 'cell'
-  container: string
+  holder: string
   row: number
   col: number
 }
@@ -32,7 +32,7 @@ export interface CellAnchor {
  * the usual 8). */
 export interface BlockAnchor {
   kind: 'block'
-  container: string
+  holder: string
   offset: number
   dx?: number
   dy?: number
@@ -178,16 +178,16 @@ export interface PaletteEvent {
 /** The `objects` event, as the server sends it in every app (`claudia_core.ObjectsChanged`).
  *
  * Typed rather than read off an `any`, because `onAppEvent` takes `any` and so the compiler cannot otherwise
- * catch a renamed field: when `slide`/`sheet` became the one `container` (D177), a handler still reading
+ * catch a renamed field: when `slide`/`sheet` became the one `holder` (D177, D1430), a handler still reading
  * `data.slide` filed the stacking order under `undefined`, which made a freshly inserted object invisible and
  * unselectable until the document was reopened. Each app's handler narrows `data` to this before touching it. */
 export interface ObjectsEvent {
   type: 'objects'
   /** The slide, sheet or paragraph these objects are on. */
-  container: string
+  holder: string
   changed: VisualObject[]
   removed: string[]
-  /** The whole container's stacking order afterwards, bottom first. */
+  /** The whole holder's stacking order afterwards, bottom first. */
   order: string[]
 }
 
@@ -205,8 +205,8 @@ export function slideFrame(obj: VisualObject<SlideAnchor>): Frame {
 }
 
 /** The slide anchor a frame implies (the inverse of `slideFrame`). */
-export function slideAnchor(container: string, frame: Frame): SlideAnchor {
-  return { kind: 'slide', container, x: frame.x, y: frame.y }
+export function slideAnchor(holder: string, frame: Frame): SlideAnchor {
+  return { kind: 'slide', holder, x: frame.x, y: frame.y }
 }
 
 /** The look to draw an object with: the *resolved* CSS of its style, or nothing if the style is unknown.

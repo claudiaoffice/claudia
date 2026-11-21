@@ -183,7 +183,7 @@ from .object_texts import ObjectText, edit_object_text, object_texts
 from .objects import (
     ASPECT_TOLERANCE,
     FILLER,
-    MAX_OBJECTS_PER_CONTAINER,
+    MAX_OBJECTS_PER_HOLDER,
     MAX_SELECTION,
     MIN_OBJECT_SIZE,
     OBJECT_KINDS,
@@ -481,7 +481,7 @@ __all__ = [
     "MAIN",
     "Manifest",
     "MAX_IMAGE_BYTES",
-    "MAX_OBJECTS_PER_CONTAINER",
+    "MAX_OBJECTS_PER_HOLDER",
     "MAX_PARAGRAPH_TEXT",
     "PageSetup",
     "PageSetupError",

@@ -206,7 +206,7 @@ class RemoveSheet(Command):
         objects = tuple(model.objects_on(self.id))  # bottom first; a removed sheet takes its objects with it
         for obj in objects:
             model.delete_object(obj.id)
-        model.close_container(str(self.id))
+        model.close_holder(str(self.id))
         restores, name_restores = model.drop_sheet(
             self.id
         )  # formulas elsewhere that pointed here, and names, as they were

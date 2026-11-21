@@ -131,7 +131,7 @@ describe('paragraphs as things (D554)', () => {
     const { session } = await opened()
     session.state.selection = { anchor: { block: 'b5', offset: 0 }, focus: { block: 'b5', offset: 0 } }
     await session.goToThing('b2')
-    expect(session.state.pointed).toMatchObject({ id: 'b2', container: 'b2' })
+    expect(session.state.pointed).toMatchObject({ id: 'b2', holder: 'b2' })
     expect(session.state.wayBack).toBeNull()
   })
 })

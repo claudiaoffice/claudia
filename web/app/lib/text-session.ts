@@ -86,7 +86,7 @@ export interface TextState extends BaseState {
   /** The object a person has selected here; this is not shared with colleagues. */
   selectedObject: string | null
   /** The rendered container whose text is being written in its own editor, or `null`; not shared. The object menu's
-   * Edit text and Enter set it, and `TextContainers.vue` shows the editor. */
+   * Edit text and Enter set it, and `TextObjectLayer.vue` shows the editor. */
   editingObject: string | null
   /** The tables of the text by id (E9.32): what the objects of kind `table` point at with `ref`. */
   tables: Record<string, TableInfo>
@@ -161,7 +161,7 @@ export class TextSession extends BaseSession<TextState> {
   // ------------------------------------------------------------------------------ floating objects (D560)
   /** The objects that hang from the paragraph `block`, in the order the server sent them. */
   objectsIn(block: string): VisualObject<BlockAnchor>[] {
-    return Object.values(this.state.objects).filter((o) => o.anchor.container === block)
+    return Object.values(this.state.objects).filter((o) => o.anchor.holder === block)
   }
 
   /** The server counts a place in a paragraph in characters, the screen in UTF-16 units. */
@@ -173,7 +173,7 @@ export class TextSession extends BaseSession<TextState> {
   /** Where an object hangs, in the units of the screen (the server counts characters, the page UTF-16 units), or `null`
    * while its paragraph is not known here. */
   placeOf(o: VisualObject<BlockAnchor>): { block: string; offset: number } | null {
-    const block = this.state.blocks.find((b) => b.id === o.anchor.container)
+    const block = this.state.blocks.find((b) => b.id === o.anchor.holder)
     return block ? { block: block.id, offset: Math.min(unitOf(block.text, o.anchor.offset), block.text.length) } : null
   }
 
@@ -932,10 +932,10 @@ export class TextSession extends BaseSession<TextState> {
   override async unnamedInView(): Promise<number> {
     return (await this.floating()).filter((o) => !o.name).length
   }
-  protected override async locate(id: string): Promise<{ container: string | null } | null> {
-    if (this.state.blocks.some((b) => b.id === id)) return { container: id }
+  protected override async locate(id: string): Promise<{ holder: string | null } | null> {
+    if (this.state.blocks.some((b) => b.id === id)) return { holder: id }
     const found = (await this.floating()).find((o) => o.id === id)
-    return found ? { container: found.anchor.container } : null
+    return found ? { holder: found.anchor.holder } : null
   }
 
   /** The floating objects, their outlines and their images, for printing (D907). Read when the preview opens. */

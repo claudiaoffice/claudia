@@ -4,7 +4,7 @@ An object carries two texts, the same in every app: the *words* in it (a text bo
 its *description*, what it says to somebody who cannot see it (BITV 1.1.1). Both are stored contents, so both may be
 replaced. This module offers them to a search as plain tuples and builds the command that stores an edit, so that
 composes and creates search and replace in objects the same way and neither repeats it. It knows no pattern and no
-slide or paragraph: the app names the containers (a slide, a paragraph) and what it calls each kind of text.
+slide or paragraph: the app names the holders (a slide, a paragraph) and what it calls each kind of text.
 
 A replacement keeps what it does not touch: a paragraph's words are rewritten with :func:`replace_spans`, so who
 wrote the rest of them, and the style, stay as they were; whoever replaced is the author of what they put in.
@@ -28,32 +28,30 @@ SOURCES = (BOX, LABEL, DESCRIPTION)
 
 @dataclass(frozen=True)
 class ObjectText:
-    """One text of one object: which, in which container (a slide, a paragraph), what kind of text, and the text."""
+    """One text of one object: which, in which holder (a slide, a paragraph), what kind of text, and the text."""
 
     object_id: str
-    container: str
+    holder: str
     source: str
     text: str
 
 
-def object_texts(
-    model: ObjectModel, containers: Iterable[str], sources: Iterable[str] = SOURCES
-) -> Iterator[ObjectText]:
-    """The texts the objects of these containers have, container by container (in the order given) and object by
+def object_texts(model: ObjectModel, holders: Iterable[str], sources: Iterable[str] = SOURCES) -> Iterator[ObjectText]:
+    """The texts the objects of these holders have, holder by holder (in the order given) and object by
     object (back to front, as the model stacks them); an empty text is not offered. ``ValueError`` for a source that
     does not exist."""
     wanted = set(sources)
     unknown = wanted - set(SOURCES)
     if unknown:
         raise ValueError(f"an object has {', '.join(SOURCES)}; not {sorted(unknown)[0]!r}")
-    for container in containers:
-        for obj in model.objects_on(container):
+    for holder in holders:
+        for obj in model.objects_on(holder):
             words = obj.body.paragraph
             source = BOX if obj.body.kind == "text" else LABEL
             if words is not None and words.text and source in wanted:
-                yield ObjectText(obj.id, container, source, words.text)
+                yield ObjectText(obj.id, holder, source, words.text)
             if DESCRIPTION in wanted and obj.body.description:
-                yield ObjectText(obj.id, container, DESCRIPTION, obj.body.description)
+                yield ObjectText(obj.id, holder, DESCRIPTION, obj.body.description)
 
 
 def edit_object_text(

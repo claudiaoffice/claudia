@@ -235,8 +235,8 @@ def test_the_floating_objects_their_images_and_outlines_can_be_read_for_printing
     paper.model.insert_object(VisualObject(picture, BlockAnchor("b1", 7)))
     objects = call(paper, "objects", account=VERA)["objects"]
     assert [(o["id"], o["anchor"]) for o in objects] == [
-        ("o1", {"kind": "block", "container": "b1", "offset": 2, "dx": 0, "dy": 0}),
-        ("o2", {"kind": "block", "container": "b1", "offset": 7, "dx": 0, "dy": 0}),
+        ("o1", {"kind": "block", "holder": "b1", "offset": 2, "dx": 0, "dy": 0}),
+        ("o2", {"kind": "block", "holder": "b1", "offset": 7, "dx": 0, "dy": 0}),
     ]
     assert objects[0]["paragraph"]["text"] == "a note"
     images = call(paper, "images", account=VERA)
@@ -666,14 +666,14 @@ def anchor_of(paper):
 def test_an_object_floats_at_an_offset_from_the_character_it_hangs_from(paper):
     text_with_a_note(paper)
     call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 260, "dy": -48})
-    assert anchor_of(paper) == {"kind": "block", "container": "b1", "offset": 7, "dx": 260, "dy": -48}
+    assert anchor_of(paper) == {"kind": "block", "holder": "b1", "offset": 7, "dx": 260, "dy": -48}
 
 
 def test_moving_to_another_character_without_an_offset_keeps_the_offset_the_object_has(paper):
     text_with_a_note(paper)
     call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 7, "dx": 260, "dy": -48})
     call(paper, "move_object", {"id": "o1", "block": "b1", "offset": 9})
-    assert anchor_of(paper) == {"kind": "block", "container": "b1", "offset": 9, "dx": 260, "dy": -48}
+    assert anchor_of(paper) == {"kind": "block", "holder": "b1", "offset": 9, "dx": 260, "dy": -48}
 
 
 def test_an_offset_out_of_reach_is_refused(paper):

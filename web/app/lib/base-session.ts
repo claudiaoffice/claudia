@@ -131,7 +131,7 @@ export interface ReplayState {
  * marks the thing for a moment (`POINT_MS`); the way back (`WayBack`) lives longer. */
 export interface Pointed {
   id: string
-  container: string | null
+  holder: string | null
 }
 export const POINT_MS = 3000
 
@@ -139,7 +139,7 @@ export const POINT_MS = 3000
  * was showing at the top (a paragraph id, a cell, a slide id: the view's own words; `null` if it said none). It lasts
  * until it is used, the person types or clicks into the text, or the next jump takes its place. */
 export interface WayBack {
-  container: string | null
+  holder: string | null
   anchor: string | null
 }
 
@@ -824,18 +824,18 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return 0
   }
   /** The slide, sheet or paragraph a thing is on (itself, for a slide or sheet); `null` where there is none. */
-  protected containerOf(_id: string): string | null {
+  protected holderOf(_id: string): string | null {
     return null
   }
-  /** Where the view is now, in the same terms as `containerOf`. */
-  protected currentContainer(): string | null {
+  /** Where the view is now, in the same terms as `holderOf`. */
+  protected currentHolder(): string | null {
     return null
   }
   /** Take the view to a slide, sheet or paragraph. */
-  protected showContainer(_id: string): void {}
+  protected showHolder(_id: string): void {}
   /** Where a thing is, if it is in this view's document as it is shown. */
-  protected async locate(id: string): Promise<{ container: string | null } | null> {
-    return this.things().some((t) => t.id === id) ? { container: this.containerOf(id) } : null
+  protected async locate(id: string): Promise<{ holder: string | null } | null> {
+    return this.things().some((t) => t.id === id) ? { holder: this.holderOf(id) } : null
   }
 
   /** The things a `#` in the chat may offer: those with a name, in sight. */
@@ -921,10 +921,10 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const s = this.state
     const found = await this.locate(id)
     if (!found) return this.goToMissing(id, retry)
-    const before = { container: this.currentContainer(), anchor: this.anchorProvider?.() ?? null }
-    s.wayBack = before.container === null && before.anchor === null ? null : before // nothing to go back to: no chip
-    if (found.container !== null && found.container !== before.container) this.showContainer(found.container)
-    s.pointed = { id, container: found.container }
+    const before = { holder: this.currentHolder(), anchor: this.anchorProvider?.() ?? null }
+    s.wayBack = before.holder === null && before.anchor === null ? null : before // nothing to go back to: no chip
+    if (found.holder !== null && found.holder !== before.holder) this.showHolder(found.holder)
+    s.pointed = { id, holder: found.holder }
     const pointed = s.pointed // as the reactive state hands it out: the raw object would never equal what is read back
     setTimeout(() => {
       if (s.pointed === pointed) s.pointed = null
@@ -937,14 +937,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     this.anchorProvider = provider
   }
 
-  /** "Back where I was" (D1312): show the container the person was in, and ask the view for the place it was at. */
+  /** "Back where I was" (D1312): show the holder the person was in, and ask the view for the place it was at. */
   goBack(): void {
     const s = this.state
     const back = s.wayBack
     if (!back) return
     s.wayBack = null
     s.pointed = null
-    if (back.container) this.showContainer(back.container)
+    if (back.holder) this.showHolder(back.holder)
     if (back.anchor) s.scrollBack = { anchor: back.anchor, nonce: (s.scrollBack?.nonce ?? 0) + 1 }
   }
 
@@ -1034,7 +1034,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
         const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
         for (const o of e.changed) s.objects[o.id] = o
         for (const id of e.removed) delete s.objects[id]
-        s.order[e.container] = e.order
+        s.order[e.holder] = e.order
         this.objectsChanged(e)
         return true
       }

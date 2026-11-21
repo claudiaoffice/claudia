@@ -62,10 +62,10 @@ def test_joining_its_paragraph_away_takes_it_to_the_one_that_survives():
 def test_an_anchor_round_trips_and_refuses_what_is_not_one():
     a = BlockAnchor("b1", 4)
     assert BlockAnchor.from_data(a.to_data()) == a
-    assert a.container == "b1" and a.span == ("b1", 4, 4)
+    assert a.holder == "b1" and a.span == ("b1", 4, 4)
     for bad in (
-        {"kind": "slide", "container": "b1", "offset": 0},
-        {"kind": "block", "container": "b1", "offset": True},
+        {"kind": "slide", "holder": "b1", "offset": 0},
+        {"kind": "block", "holder": "b1", "offset": True},
     ):
         with pytest.raises(ValueError):
             BlockAnchor.from_data(bad)

@@ -6,7 +6,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Added
-- An object can be moved to another paragraph (D1351): `TextModel.objects_change_container`; a move into another
+- An object can be moved to another paragraph (D1351): `TextModel.objects_change_holder`; a move into another
   paragraph takes the character it is dropped on (`TextModel.place_regions`), so a colleague's zone refuses it.
 - `SplitBlock.keep` (D1331): what hangs exactly at the cut stays in the paragraph that is cut, so that a paragraph can
   be made after a table at the end of the text; written only when set, so older logs read the same.
@@ -29,6 +29,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- **Breaking** — the glossary's holder (D1430, see `claudia-core`): `BlockAnchor.holder` (was `container`),
+  `TextModel.holders()`; an anchor's data says `holder`.
 - **Breaking** — `DefineImage`, `ForgetImage`, `DefineShape` and `ForgetShape` are no longer re-exported:
   claudia-core's `DefineAsset` and `ForgetAsset` replace them (D1431).
 - `TextModel.settle` tells the clients a heading's name when it changes (`ThingRenamed`): a paragraph that becomes a

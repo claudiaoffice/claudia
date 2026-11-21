@@ -110,7 +110,7 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
-   "container"
+   "holder"
   ]
  },
  "CellRef": {
@@ -449,7 +449,7 @@
   "class": [
    "object"
   ],
-  "init": "(container: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
+  "init": "(holder: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectSet'",
    "overlaps": "(self, other: 'object') -> 'bool'",
@@ -462,7 +462,7 @@
   "class": [
    "object"
   ],
-  "init": "(container: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
+  "init": "(holder: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
   "methods": {
    "to_data": "(self) -> 'dict'",
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
@@ -1099,7 +1099,7 @@
    "with_body": "(self, **changes: 'Any') -> 'Self'"
   },
   "properties": [
-   "container",
+   "holder",
    "id"
   ]
  },
@@ -1123,7 +1123,6 @@
    "check_name": "(self, named: 'NamedRange', *, shared: 'bool' = True) -> 'None'",
    "check_writable": "(self, sheet: 'Sheet', positions) -> 'None'",
    "columns_of": "(self, named: 'NamedRange', sample: 'int' = 2000) -> 'list[tuple[str, str]]'",
-   "containers": "(self) -> 'list[str]'",
    "diagram_from_data": "(self, data: 'dict') -> 'ChartSpec'",
    "drop_sheet": "(self, sheet_id: 'SheetId') -> 'tuple[dict[SheetId, Cells], NameRestores]'",
    "empty": "() -> 'Self'",
@@ -1131,6 +1130,7 @@
    "grow_names": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'NameRestores'",
    "header_edited": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'None'",
    "header_texts": "(self, region: 'Rect') -> 'list[str]'",
+   "holders": "(self) -> 'list[str]'",
    "load_state": "(self, state: 'dict') -> 'None'",
    "name_with_id": "(self, thing_id: 'str') -> 'NamedRange | None'",
    "named_things": "(self)",

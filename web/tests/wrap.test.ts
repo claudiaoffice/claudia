@@ -6,8 +6,8 @@ describe('how the text flows round an object (D1061)', () => {
     expect(WRAPS).toEqual(['over', 'around', 'above-below', 'behind'])
   })
   it('reads an anchor that says nothing as floating over the text, with the usual gap', () => {
-    expect(wrapOf({ kind: 'block', container: 'b1', offset: 0 })).toEqual({ wrap: 'over', gap: DEFAULT_WRAP_GAP })
-    expect(wrapOf({ kind: 'block', container: 'b1', offset: 0, wrap: 'around', gap: 20 })).toEqual({ wrap: 'around', gap: 20 })
+    expect(wrapOf({ kind: 'block', holder: 'b1', offset: 0 })).toEqual({ wrap: 'over', gap: DEFAULT_WRAP_GAP })
+    expect(wrapOf({ kind: 'block', holder: 'b1', offset: 0, wrap: 'around', gap: 20 })).toEqual({ wrap: 'around', gap: 20 })
   })
   it('steps from one mode to the next and from the last back to the first', () => {
     expect(nextWrap('over')).toBe('around')

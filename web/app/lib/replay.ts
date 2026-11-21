@@ -118,9 +118,9 @@ export function firstFocus(focus: readonly Region[]): Region | null {
 }
 
 /** The slide, sheet or paragraph a place lies in; `null` for no place. */
-export function containerOf(region: Region | null): string | null {
+export function holderOf(region: Region | null): string | null {
   if (region === null) return null
-  if (region.kind === 'objects') return region.container
+  if (region.kind === 'objects') return region.holder
   if (region.kind === 'cells') return region.range.first.sheet ?? null
   return region.block
 }

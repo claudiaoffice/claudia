@@ -117,7 +117,7 @@ class RemoveSlide(Command):
 
     def shifted_by(self, other: Command) -> Command | None:
         """A colleague put something on the slide meanwhile: it is no longer mine to take away."""
-        return None if isinstance(other, AddObject) and other.anchor.get("container") == self.id else self
+        return None if isinstance(other, AddObject) and other.anchor.get("holder") == self.id else self
 
     def redacted(self) -> Command:
         return self

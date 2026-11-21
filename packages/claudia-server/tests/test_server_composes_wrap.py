@@ -42,7 +42,7 @@ def anchor_of(paper, object_id):
 # ----------------------------------------------------------------------------------------------- set_wrap
 def test_an_object_that_says_nothing_floats_over_the_text_and_the_wire_shows_no_wrap(paper):
     object_id = with_a_box(paper)
-    assert anchor_of(paper, object_id) == {"kind": "block", "container": "b1", "offset": 2, "dx": 0, "dy": 0}
+    assert anchor_of(paper, object_id) == {"kind": "block", "holder": "b1", "offset": 2, "dx": 0, "dy": 0}
 
 
 def test_set_wrap_changes_how_the_text_flows_and_nothing_else(paper):
@@ -51,7 +51,7 @@ def test_set_wrap_changes_how_the_text_flows_and_nothing_else(paper):
     call(paper, "set_wrap", {"id": object_id, "wrap": "around"})
     assert anchor_of(paper, object_id) == {
         "kind": "block",
-        "container": "b1",
+        "holder": "b1",
         "offset": 4,
         "dx": 30,
         "dy": 5,

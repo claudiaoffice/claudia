@@ -306,7 +306,7 @@ def test_notes_and_times_are_steps_of_the_history(deck):
 
 def test_a_selection_can_be_held_and_then_only_the_holder_changes_the_object(deck):
     box = add_text(deck)
-    selection = {"kind": "objects", "container": "s1", "ids": [box]}
+    selection = {"kind": "objects", "holder": "s1", "ids": [box]}
     call(deck, "lock", {"regions": [selection]})
     with pytest.raises(RequestError) as caught:
         call(deck, "move_object", {"id": box, "x": 5, "y": 5}, account=BEN)
@@ -319,7 +319,7 @@ def test_a_selection_can_be_held_and_then_only_the_holder_changes_the_object(dec
 
 def test_a_selection_must_look_like_one(deck):
     with pytest.raises(RequestError) as caught:
-        call(deck, "presence", {"regions": [{"kind": "objects", "container": "s1", "ids": "all"}]})
+        call(deck, "presence", {"regions": [{"kind": "objects", "holder": "s1", "ids": "all"}]})
     assert caught.value.code == "bad_request"
 
 

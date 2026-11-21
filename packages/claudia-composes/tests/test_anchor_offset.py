@@ -26,7 +26,7 @@ def placed(d: Document) -> tuple[str, int, int, int]:
 def test_an_anchor_sits_on_its_character_unless_told_otherwise():
     a = BlockAnchor("b1", 4)
     assert (a.dx, a.dy) == (0, 0)
-    assert a.to_data() == {"kind": "block", "container": "b1", "offset": 4, "dx": 0, "dy": 0}
+    assert a.to_data() == {"kind": "block", "holder": "b1", "offset": 4, "dx": 0, "dy": 0}
 
 
 def test_an_offset_round_trips():
@@ -35,7 +35,7 @@ def test_an_offset_round_trips():
 
 
 def test_an_anchor_from_before_offsets_existed_reads_as_sitting_on_its_character():
-    old = {"kind": "block", "container": "b1", "offset": 4}
+    old = {"kind": "block", "holder": "b1", "offset": 4}
     assert BlockAnchor.from_data(old) == BlockAnchor("b1", 4)
 
 
@@ -51,12 +51,12 @@ def test_an_anchor_from_before_offsets_existed_reads_as_sitting_on_its_character
 )
 def test_an_offset_must_be_a_whole_number_within_reach(bad):
     with pytest.raises(ValueError, match="offset"):
-        BlockAnchor.from_data({"kind": "block", "container": "b1", "offset": 0, **bad})
+        BlockAnchor.from_data({"kind": "block", "holder": "b1", "offset": 0, **bad})
 
 
 def test_the_limits_themselves_are_allowed():
     a = BlockAnchor.from_data(
-        {"kind": "block", "container": "b1", "offset": 0, "dx": MAX_ANCHOR_OFFSET, "dy": -MAX_ANCHOR_OFFSET}
+        {"kind": "block", "holder": "b1", "offset": 0, "dx": MAX_ANCHOR_OFFSET, "dy": -MAX_ANCHOR_OFFSET}
     )
     assert (a.dx, a.dy) == (MAX_ANCHOR_OFFSET, -MAX_ANCHOR_OFFSET)
 

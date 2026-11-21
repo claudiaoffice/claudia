@@ -53,7 +53,7 @@ const STAR = { ...CIRCLE, id: 'star', name: 'Star', aspect: null }
 const TYPES = { types: [{ type: 'latex', title: 'LaTeX', example: 'x^2' }] }
 const object = (id: string, block = 'b1', offset = 0, extra: object = {}) => ({
   id, kind: 'rendered', w: 400, h: 200, style: 'plain-image', paragraph: null, ref: 'r1', imported: null,
-  rotation: 0, snap: false, anchor: { kind: 'block', container: block, offset }, ...extra,
+  rotation: 0, snap: false, anchor: { kind: 'block', holder: block, offset }, ...extra,
 })
 
 async function opened(objects: object[] = [], text = 'a😀b') {
@@ -87,7 +87,7 @@ async function opened(objects: object[] = [], text = 'a😀b') {
   return { link, session, state: session.state }
 }
 
-describe('containers in a text', () => {
+describe('the object layer of a text', () => {
   it('knows the objects and their pictures, by paragraph', async () => {
     const { session, state } = await opened([object('o1'), object('o2', 'b2', 1)])
     expect(session.objectsIn('b1').map((o) => o.id)).toEqual(['o1'])
@@ -110,12 +110,12 @@ describe('containers in a text', () => {
   })
   it('follows the server when objects change, move to another paragraph or go', async () => {
     const { link, session } = await opened([object('o1')])
-    link.push('objects', { type: 'objects', container: 'b1', changed: [object('o3', 'b1', 2)], removed: [], order: ['o1', 'o3'] })
+    link.push('objects', { type: 'objects', holder: 'b1', changed: [object('o3', 'b1', 2)], removed: [], order: ['o1', 'o3'] })
     expect(session.objectsIn('b1').map((o) => o.id)).toEqual(['o1', 'o3'])
-    link.push('objects', { type: 'objects', container: 'b2', changed: [object('o1', 'b2', 0)], removed: [], order: ['o1'] })
+    link.push('objects', { type: 'objects', holder: 'b2', changed: [object('o1', 'b2', 0)], removed: [], order: ['o1'] })
     expect(session.objectsIn('b1').map((o) => o.id)).toEqual(['o3'])
     expect(session.objectsIn('b2').map((o) => o.id)).toEqual(['o1'])
-    link.push('objects', { type: 'objects', container: 'b1', changed: [], removed: ['o3'], order: [] })
+    link.push('objects', { type: 'objects', holder: 'b1', changed: [], removed: ['o3'], order: [] })
     expect(session.objectsIn('b1')).toEqual([])
   })
   it('takes in a picture when the server sends one', async () => {
@@ -132,7 +132,7 @@ describe('containers in a text', () => {
     expect(state.shapes.star).toBeUndefined()
   })
   it('keeps the offset of an object off its character, and an object that is not rendered', async () => {
-    const { session } = await opened([object('o1', 'b1', 0, { kind: 'image', rendered: null, image: 'i1', anchor: { kind: 'block', container: 'b1', offset: 0, dx: 12, dy: -4 } })])
+    const { session } = await opened([object('o1', 'b1', 0, { kind: 'image', rendered: null, image: 'i1', anchor: { kind: 'block', holder: 'b1', offset: 0, dx: 12, dy: -4 } })])
     expect(session.objectsIn('b1')[0]!.anchor).toMatchObject({ dx: 12, dy: -4 })
   })
   it('tells where an object hangs in the units of the screen, though the server counts characters', async () => {
@@ -214,7 +214,7 @@ describe('containers in a text', () => {
       const now = await session.cycleWrap('o1')
       seen.push(now!)
       // the server tells everyone (this window too) what the object is now
-      link.push('objects', { type: 'objects', container: 'b1', changed: [object('o1', 'b1', 0, { anchor: { kind: 'block', container: 'b1', offset: 0, wrap: now } })], removed: [], order: ['o1'] })
+      link.push('objects', { type: 'objects', holder: 'b1', changed: [object('o1', 'b1', 0, { anchor: { kind: 'block', holder: 'b1', offset: 0, wrap: now } })], removed: [], order: ['o1'] })
     }
     expect(seen).toEqual(['around', 'above-below', 'behind', 'over', 'around'])
     expect(state.objects.o1!.anchor.wrap).toBe('around')
@@ -237,7 +237,7 @@ describe('containers in a text', () => {
     const { link, session, state } = await opened([object('o1')])
     session.selectObject('o1')
     expect(state.selectedObject).toBe('o1')
-    link.push('objects', { type: 'objects', container: 'b1', changed: [], removed: ['o1'], order: [] })
+    link.push('objects', { type: 'objects', holder: 'b1', changed: [], removed: ['o1'], order: [] })
     expect(state.selectedObject).toBeNull()
   })
   it('turns pasted text that is one fenced block into a container at the caret', async () => {

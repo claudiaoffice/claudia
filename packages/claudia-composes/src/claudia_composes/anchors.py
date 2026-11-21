@@ -66,7 +66,7 @@ class BlockAnchor:
     gap: int = DEFAULT_WRAP_GAP
 
     @property
-    def container(self) -> str:
+    def holder(self) -> str:
         """The paragraph this object belongs to."""
         return self.block
 
@@ -86,7 +86,7 @@ class BlockAnchor:
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores and clients are sent."""
-        data = {"kind": self.kind, "container": self.block, "offset": self.offset, "dx": self.dx, "dy": self.dy}
+        data = {"kind": self.kind, "holder": self.block, "offset": self.offset, "dx": self.dx, "dy": self.dy}
         if self.wrap != "over":  # an anchor that does nothing special stays as it was written before wrapping existed
             data["wrap"] = self.wrap
         if self.gap != DEFAULT_WRAP_GAP:
@@ -99,7 +99,7 @@ class BlockAnchor:
         before objects could float has no ``dx`` and ``dy`` and reads as sitting on its character."""
         if data.get("kind") != cls.kind:
             raise ValueError(f"composes knows only block anchors, not {data.get('kind')!r}")
-        block, offset = data.get("container"), data.get("offset")
+        block, offset = data.get("holder"), data.get("offset")
         if not isinstance(block, str) or not _is_whole(offset):
             raise ValueError("a block anchor names a paragraph and a whole offset")
         anchor = cls(

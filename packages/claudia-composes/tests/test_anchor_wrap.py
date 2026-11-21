@@ -40,7 +40,7 @@ def test_the_four_modes_are_the_ones_the_mock_up_shows_in_the_order_the_key_cycl
 def test_an_anchor_floats_over_the_text_unless_told_otherwise_and_stores_nothing_for_it():
     a = BlockAnchor("b1", 4)
     assert (a.wrap, a.gap) == ("over", DEFAULT_WRAP_GAP)
-    assert a.to_data() == {"kind": "block", "container": "b1", "offset": 4, "dx": 0, "dy": 0}
+    assert a.to_data() == {"kind": "block", "holder": "b1", "offset": 4, "dx": 0, "dy": 0}
 
 
 def test_a_wrap_and_a_gap_are_stored_once_they_differ_from_the_default():
@@ -57,7 +57,7 @@ def test_a_wrap_round_trips(wrap):
 
 
 def test_an_anchor_from_before_wrapping_existed_reads_as_over_the_text():
-    old = {"kind": "block", "container": "b1", "offset": 4, "dx": 3, "dy": 4}
+    old = {"kind": "block", "holder": "b1", "offset": 4, "dx": 3, "dy": 4}
     assert BlockAnchor.from_data(old) == BlockAnchor("b1", 4, 3, 4)
 
 
@@ -74,7 +74,7 @@ def test_an_anchor_from_before_wrapping_existed_reads_as_over_the_text():
 )
 def test_a_wrap_must_be_one_of_the_four_and_a_gap_a_whole_number_within_reach(bad, word):
     with pytest.raises(ValueError, match=word):
-        BlockAnchor.from_data({"kind": "block", "container": "b1", "offset": 0, **bad})
+        BlockAnchor.from_data({"kind": "block", "holder": "b1", "offset": 0, **bad})
 
 
 def test_typing_before_the_object_keeps_its_wrap():

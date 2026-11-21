@@ -3,7 +3,7 @@
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
-import { containerOf, firstFocus } from './replay'
+import { holderOf, firstFocus } from './replay'
 import type { Thing } from './tags'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
@@ -600,7 +600,7 @@ export class Session extends BaseSession<State> {
   /** The sheet being looked at, the chart tabs beside it, the named ranges on it and what floats on it. */
   protected override async inView(): Promise<Thing[]> {
     const here = this.state.activeSheet
-    return this.things().filter((t) => t.kind === 'chart' || this.containerOf(t.id) === here)
+    return this.things().filter((t) => t.kind === 'chart' || this.holderOf(t.id) === here)
   }
   override async unnamedInView(): Promise<number> {
     return this.objectsOn(this.state.activeSheet).filter((o) => !o.name).length
@@ -608,23 +608,23 @@ export class Session extends BaseSession<State> {
   protected override tracksThings(): boolean {
     return true
   }
-  protected override containerOf(id: string): string | null {
+  protected override holderOf(id: string): string | null {
     const s = this.state
     if (s.sheets.some((x) => x.id === id)) return id
     const named = s.names.find((n) => n.id === id)
     if (named) return named.sheet
-    return s.objects[id]?.anchor.container ?? null
+    return s.objects[id]?.anchor.holder ?? null
   }
-  protected override currentContainer(): string | null {
+  protected override currentHolder(): string | null {
     return this.state.activeSheet || null
   }
-  protected override showContainer(id: string): void {
+  protected override showHolder(id: string): void {
     if (this.state.sheets.some((x) => x.id === id)) this.state.activeSheet = id
   }
 
   /** A step of the replay is shown on the sheet it touched (D551); the grid scrolls to it from `state.replay.focus`. */
   protected override followReplay(focus: Region[]): void {
-    const sheet = containerOf(firstFocus(focus))
+    const sheet = holderOf(firstFocus(focus))
     if (sheet && this.state.sheets.some((x) => x.id === sheet)) this.state.activeSheet = sheet
   }
 

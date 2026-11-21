@@ -39,7 +39,7 @@ class Spot:
     y: int
 
     @property
-    def container(self) -> str:
+    def holder(self) -> str:
         return "page"
 
     def to_data(self) -> dict:
@@ -63,7 +63,7 @@ class PageModel(DocumentModel, ObjectModel[Spot]):
 
     def __init__(self) -> None:
         ObjectModel.__init__(self)
-        self.open_container("page")
+        self.open_holder("page")
 
     @classmethod
     def empty(cls) -> Self:
@@ -78,7 +78,7 @@ class PageModel(DocumentModel, ObjectModel[Spot]):
         model.restore_objects(state["objects"], state["assets"])
         return model
 
-    def containers(self):
+    def holders(self):
         return ["page"]
 
     def check_anchor(self, anchor: Spot, body: ObjectBody) -> None:

@@ -35,7 +35,7 @@ def test_the_focus_names_the_slide_and_the_object_the_step_touched(deck):
 
     look = call(deck, "peek_revision", {"revision": "main:2"})
 
-    assert look["focus"] == [{"kind": "objects", "container": "s1", "ids": [shape]}]
+    assert look["focus"] == [{"kind": "objects", "holder": "s1", "ids": [shape]}]
 
 
 def test_the_state_may_be_left_out_when_only_the_place_is_wanted(deck):

@@ -104,7 +104,7 @@ def test_the_words_around_a_replacement_keep_their_author(deck):
 
 def test_an_object_somebody_selected_is_skipped_and_named(deck):
     box = deck.ids["box"]
-    call(deck, "lock", {"regions": [{"kind": "objects", "container": "s1", "ids": [box]}]}, ANN)
+    call(deck, "lock", {"regions": [{"kind": "objects", "holder": "s1", "ids": [box]}]}, ANN)
     answer = call(deck, "search_replace", {"query": text("red", "blue"), "kinds": ["text", "label"]})
     assert answer["replaced"] == 1
     assert [(s["at"]["object"], s["reason"], s["by"]) for s in answer["skipped"]] == [(box, "locked", "ann")]

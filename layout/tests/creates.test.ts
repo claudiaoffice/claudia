@@ -34,7 +34,7 @@ const text = (id: string, slide: string, words: string, x = 100, y = 80, w = 140
   shape: null,
   image: null,
   rotation: 0,
-  anchor: { kind: 'slide', container: slide, x, y },
+  anchor: { kind: 'slide', holder: slide, x, y },
 })
 const shape = (id: string, slide: string, words: string): SlideObject => ({
   id,
@@ -46,7 +46,7 @@ const shape = (id: string, slide: string, words: string): SlideObject => ({
   shape: 'rectangle',
   image: null,
   rotation: 0,
-  anchor: { kind: 'slide', container: slide, x: 500, y: 400 },
+  anchor: { kind: 'slide', holder: slide, x: 500, y: 400 },
 })
 function deck(n: number, print: PrintSetupData = SLIDE_PAGE, extra: Partial<SlideDocument> = {}): SlideDocument {
   return {

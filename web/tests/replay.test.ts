@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   WheelStepper,
-  containerOf,
+  holderOf,
   firstFocus,
   groupStart,
   keyStep,
@@ -134,7 +134,7 @@ describe('the keys', () => {
 })
 
 describe('where to look', () => {
-  const objects = { kind: 'objects', container: 's2', ids: ['o1'] } as const
+  const objects = { kind: 'objects', holder: 's2', ids: ['o1'] } as const
   const cells = { kind: 'cells', range: { first: { row: 3, col: 1, sheet: 'sales' }, last: { row: 4, col: 1, sheet: 'sales' } } } as const
   const text = { kind: 'text', block: 'b4', start: 0, end: 3 } as const
 
@@ -144,10 +144,10 @@ describe('where to look', () => {
   })
 
   it('says which slide, sheet or paragraph a place lies in', () => {
-    expect(containerOf(objects)).toBe('s2')
-    expect(containerOf(cells)).toBe('sales')
-    expect(containerOf(text)).toBe('b4')
-    expect(containerOf(null)).toBeNull()
+    expect(holderOf(objects)).toBe('s2')
+    expect(holderOf(cells)).toBe('sales')
+    expect(holderOf(text)).toBe('b4')
+    expect(holderOf(null)).toBeNull()
   })
 })
 

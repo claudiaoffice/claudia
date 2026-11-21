@@ -76,7 +76,7 @@ export interface OutlineEntry {
 export interface TextObject extends VisualObject {
   /** `dx`/`dy` move the object off its anchor character, in the same units as `w`/`h` (D1023). `wrap` says how the text
    *  flows round it (D1061; none saved: over the text) and `gap` how far from it, in the same units. */
-  anchor: { kind: 'block'; container: string; offset: number; dx?: number; dy?: number; wrap?: Wrap; gap?: number }
+  anchor: { kind: 'block'; holder: string; offset: number; dx?: number; dy?: number; wrap?: Wrap; gap?: number }
 }
 
 export interface TextDocument {
@@ -340,7 +340,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   const laidTables = new Map<string, FlowTable>()
   const tablesAfter = (paragraph: string): FlowTable[] =>
     tableObjects
-      .filter((o) => o.anchor.container === paragraph && shown.has(o.id))
+      .filter((o) => o.anchor.holder === paragraph && shown.has(o.id))
       .sort((a, b) => a.anchor.offset - b.anchor.offset)
       .map((o) => {
         let laid = laidTables.get(o.id)
@@ -443,7 +443,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   /** An object's frame on the page its anchor character stands on in `at`, kept inside the margins across and above the
    *  bottom margin, or `null` when the character is nowhere. */
   const standing = (o: TextObject, at: { flow: readonly FlowPage[]; blocks: readonly FlowItem[] }): Standing | null => {
-    const index = at.blocks.findIndex((b) => b.id === o.anchor.container)
+    const index = at.blocks.findIndex((b) => b.id === o.anchor.holder)
     const spot = index < 0 ? null : locate(at.flow, at.blocks, index, o.anchor.offset)
     if (!spot) return null
     const w = px(o.w)

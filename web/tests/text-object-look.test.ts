@@ -12,7 +12,7 @@ const holder = (extra: Partial<LookHolder> = {}): LookHolder => ({
   ...extra,
 })
 const object = (extra: object): VisualObject<BlockAnchor> =>
-  ({ id: 'o1', kind: 'image', w: 100, h: 50, style: 'plain-image', paragraph: null, ref: null, imported: null, rotation: 0, snap: false, description: '', decorative: false, anchor: { kind: 'block', container: 'b1', offset: 0 }, ...extra }) as VisualObject<BlockAnchor>
+  ({ id: 'o1', kind: 'image', w: 100, h: 50, style: 'plain-image', paragraph: null, ref: null, imported: null, rotation: 0, snap: false, description: '', decorative: false, anchor: { kind: 'block', holder: 'b1', offset: 0 }, ...extra }) as VisualObject<BlockAnchor>
 
 describe('how an object in a text looks', () => {
   it('shows a picture by its data URL, and nothing before the asset has arrived', () => {

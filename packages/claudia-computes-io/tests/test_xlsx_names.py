@@ -32,7 +32,7 @@ def a_model(*names: NamedRange, sheet_name: str = "Data") -> WorkbookModel:
     model = WorkbookModel()
     for sheet_id, name in ((DATA, sheet_name), (OTHER, "Other")):
         model.sheets[sheet_id] = Sheet(sheet_id, name)
-        model.open_container(str(sheet_id))
+        model.open_holder(str(sheet_id))
     data = model.sheets[DATA]
     for position, content in {
         (0, 0): {"t": "text", "v": "Item"},

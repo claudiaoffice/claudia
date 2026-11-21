@@ -248,7 +248,7 @@ def test_the_words_of_an_object_hanging_from_the_text_are_read_after_their_parag
     listed.model.insert_object(
         VisualObject(ObjectBody("o1", "text", 200, 80, "plain-box", words), BlockAnchor("b1", 1))
     )
-    order = [(placed.paragraph.id, placed.container, placed.main) for placed in listed.model.reading_order()]
+    order = [(placed.paragraph.id, placed.holder, placed.main) for placed in listed.model.reading_order()]
     assert order[:3] == [("b1", "b1", True), ("o1", "b1", False), ("b2", "b2", True)]
     assert markers(listed) == {"b1": "1.", "o1": "2.", "b2": "3."}
 

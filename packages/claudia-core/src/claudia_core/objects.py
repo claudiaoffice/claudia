@@ -19,7 +19,7 @@ An anchor crosses the wire and the log as plain data, exactly as a :class:`~clau
 read back by the one app-specific door, :meth:`~claudia_core.ObjectModel.anchor_from_data`. A command
 therefore stays what the kernel requires it to be: immutable plain data, buildable without a model.
 
-What an app brings: its anchor type, ``containers()``, ``check_anchor``, ``anchor_from_data``, and whatever its
+What an app brings: its anchor type, ``holders()``, ``check_anchor``, ``anchor_from_data``, and whatever its
 own geometry needs. What it does *not* bring is its own copy of place-an-object, take-it-away, stack-it, size-it
 or style-it.
 """
@@ -56,7 +56,7 @@ if TYPE_CHECKING:
 OBJECT_KINDS: tuple[str, ...] = ("text", "shape", "image", "diagram", "rendered", "table")
 
 MIN_OBJECT_SIZE = 20  # an object is at least this wide and this tall, in its app's own units
-MAX_OBJECTS_PER_CONTAINER = 500
+MAX_OBJECTS_PER_HOLDER = 500
 MAX_SELECTION = 64  # objects in one selection that arrives from a client
 ASPECT_TOLERANCE = 1  # units a width may differ from height * aspect (whole units cannot match exactly)
 MAX_LISTED_TEXT = 40  # characters of an object's text that a history sentence quotes
@@ -128,14 +128,14 @@ def _quote(text: str) -> str:
 class Anchor(Protocol):
     """Where an object sits, in the terms of one app only (see the module description).
 
-    ``container`` is the thing the object belongs to — a slide, a sheet, a paragraph — by id. The kernel uses it
+    ``holder`` is the thing the object belongs to — a slide, a sheet, a paragraph — by id. The kernel uses it
     to group objects for events and locks; it never interprets it. ``to_data`` must round-trip through the app's
     :meth:`~claudia_core.ObjectModel.anchor_from_data`."""
 
     kind: ClassVar[str]
 
     @property
-    def container(self) -> str:
+    def holder(self) -> str:
         """The id of the slide, sheet or paragraph this object belongs to."""
 
     def to_data(self) -> dict:
@@ -307,9 +307,9 @@ class VisualObject[A: Anchor]:
         return self.body.id
 
     @property
-    def container(self) -> str:
+    def holder(self) -> str:
         """The slide, sheet or paragraph this object belongs to (its anchor's)."""
-        return self.anchor.container
+        return self.anchor.holder
 
     def with_body(self, **changes: Any) -> Self:
         """The same object with these body fields changed."""
@@ -342,38 +342,38 @@ class ReadAnchor[A: Anchor](Protocol):
 # --------------------------------------------------------------------------- the region
 @dataclass(frozen=True)
 class ObjectSet:
-    """Some objects of one container (a selection, an area the AI is working on). It is also what a lock holds
-    (D67). The same :class:`~claudia_core.Region` in all three apps: objects are named by id, and which container
+    """Some objects of one holder (a selection, an area the AI is working on). It is also what a lock holds
+    (D67). The same :class:`~claudia_core.Region` in all three apps: objects are named by id, and which holder
     they live in is the anchor's business, not this one's."""
 
     kind: ClassVar[str] = "objects"
-    container: str
+    holder: str
     ids: frozenset[str] = frozenset()
 
     def overlaps(self, other: object) -> bool:
-        """Do the two selections share an object of the same container?"""
-        return isinstance(other, ObjectSet) and self.container == other.container and bool(self.ids & other.ids)
+        """Do the two selections share an object of the same holder?"""
+        return isinstance(other, ObjectSet) and self.holder == other.holder and bool(self.ids & other.ids)
 
     def transformed(self, command: Command) -> ObjectSet | None:
         """The selection after a command: it loses an object that was removed, and is gone when none is left."""
         if isinstance(command, RemoveObject) and command.id in self.ids:
             rest = self.ids - {command.id}
-            return ObjectSet(self.container, rest) if rest else None
+            return ObjectSet(self.holder, rest) if rest else None
         return self
 
     def to_data(self) -> dict:
         """The plain-data form for the wire (regions are never stored in the log)."""
-        return {"kind": self.kind, "container": self.container, "ids": sorted(self.ids)}
+        return {"kind": self.kind, "holder": self.holder, "ids": sorted(self.ids)}
 
     @classmethod
     def from_data(cls, data: dict) -> ObjectSet:
         """Read a selection sent by a client; ``ValueError`` if it is not one."""
-        container, ids = data.get("container"), data.get("ids")
-        if not isinstance(container, str) or not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
-            raise ValueError("not a selection: it names a container and a list of object ids")
+        holder, ids = data.get("holder"), data.get("ids")
+        if not isinstance(holder, str) or not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
+            raise ValueError("not a selection: it names a holder and a list of object ids")
         if len(ids) > MAX_SELECTION:
             raise ValueError(f"a selection holds at most {MAX_SELECTION} objects")
-        return cls(container, frozenset(ids))
+        return cls(holder, frozenset(ids))
 
 
 # --------------------------------------------------------------------------- the events
@@ -403,11 +403,11 @@ class ThingDescribed:
 
 @dataclass(frozen=True)
 class ObjectsChanged:
-    """Objects of one container changed. ``changed`` are their new state (added or altered), ``removed`` their
-    ids, and ``order`` is the stacking order of the whole container afterwards (bottom first), so a view needs
+    """Objects of one holder changed. ``changed`` are their new state (added or altered), ``removed`` their
+    ids, and ``order`` is the stacking order of the whole holder afterwards (bottom first), so a view needs
     no query."""
 
-    container: str
+    holder: str
     changed: tuple[VisualObject, ...]
     removed: tuple[str, ...]
     order: tuple[str, ...]
@@ -418,7 +418,7 @@ class ObjectsChanged:
         the log is."""
         return {
             "type": "objects",
-            "container": self.container,
+            "holder": self.holder,
             "changed": [obj.to_data() for obj in self.changed],
             "removed": list(self.removed),
             "order": list(self.order),
@@ -437,7 +437,7 @@ class ObjectModel[A: Anchor]:
 
     An app's model inherits this next to :class:`~claudia_core.DocumentModel` and brings only what is its own:
 
-    * ``containers()`` — the ids of the slides, sheets or paragraphs objects may sit on, in order.
+    * ``holders()`` — the ids of the slides, sheets or paragraphs objects may sit on, in order.
     * ``check_anchor(anchor, body)`` — whether an object with this body fits where the anchor says it does (a
       slide's bounds, a cell of the sheet, an offset inside a paragraph). Raise ``ValueError`` with a sentence.
     * ``anchor_from_data(data)`` — read its own anchor.
@@ -445,17 +445,17 @@ class ObjectModel[A: Anchor]:
       among its ``object_kinds`` (an app that does not need raise the default ``NotImplementedError``).
     * ``styles`` — a :class:`~claudia_core.StyleBook`, which ``check_object`` looks a style up in.
 
-    The stacking order is per container, bottom first; the last object is in front."""
+    The stacking order is per holder, bottom first; the last object is in front."""
 
     #: How many objects one slide, sheet or paragraph may hold.
-    max_objects_per_container: ClassVar[int] = MAX_OBJECTS_PER_CONTAINER
+    max_objects_per_holder: ClassVar[int] = MAX_OBJECTS_PER_HOLDER
     #: The smallest an object may be, in the app's own units.
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
     #: The style whose letters are "the body text" a new picture is at least as tall as (D1332).
     body_text_style: ClassVar[str] = "body-text"
-    #: Whether a move may take an object to another container (D1351). In a text it may go to another paragraph; on
+    #: Whether a move may take an object to another holder (D1351). In a text it may go to another paragraph; on
     #: a slide or a sheet it may not, since there that would make it another object for locks and the stacking order.
-    objects_change_container: ClassVar[bool] = False
+    objects_change_holder: ClassVar[bool] = False
     #: The kinds of object this app offers (a subset of ``OBJECT_KINDS``).
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
 
@@ -463,9 +463,9 @@ class ObjectModel[A: Anchor]:
         self.objects: dict[str, VisualObject[A]] = {}
         #: What the objects show and the document keeps once, kind by kind (D1431).
         self.assets: dict[str, AssetStore] = {kind.name: AssetStore(kind, self) for kind in ASSET_KINDS}
-        self._stack: dict[str, list[str]] = {}  # container id -> object ids, bottom first
+        self._stack: dict[str, list[str]] = {}  # holder id -> object ids, bottom first
         #: Changes whenever the objects' paragraphs may be read in another order or be another list item. An object
-        #: came, went or moved to another container, or its paragraph's item or style changed; typing in an object
+        #: came, went or moved to another holder, or its paragraph's item or style changed; typing in an object
         #: does not count. Part of what a ``ParagraphHost`` reports as its ``structure_version``.
         self.paragraph_order = 0
 
@@ -522,8 +522,8 @@ class ObjectModel[A: Anchor]:
         return None
 
     # -- what the app brings -----------------------------------------------------
-    def containers(self) -> Iterable[str]:
-        """The ids of the containers objects may sit on (slides, sheets, paragraphs), in order."""
+    def holders(self) -> Iterable[str]:
+        """The ids of the holders objects may sit on (slides, sheets, paragraphs), in order."""
         raise NotImplementedError
 
     def check_anchor(self, anchor: A, body: ObjectBody) -> None:
@@ -562,28 +562,28 @@ class ObjectModel[A: Anchor]:
 
     def turned_anchor(self, obj: VisualObject[A], rotation: int) -> A:
         """Where ``obj`` has to sit for a turn to ``rotation`` to be allowed: its own anchor unless this app keeps what
-        is in a container inside it (a slide does), in which case the nearest place that keeps the turned outline in.
+        is in a holder inside it (a slide does), in which case the nearest place that keeps the turned outline in.
         ``ValueError`` with a sentence when there is no such place."""
         return obj.anchor
 
     # -- the stack ---------------------------------------------------------------
-    def open_container(self, container: str) -> None:
-        """Make room for a container's objects (called when a slide, sheet or paragraph appears)."""
-        self._stack.setdefault(container, [])
+    def open_holder(self, holder: str) -> None:
+        """Make room for a holder's objects (called when a slide, sheet or paragraph appears)."""
+        self._stack.setdefault(holder, [])
 
-    def close_container(self, container: str) -> None:
-        """Forget a container; refused while it still holds objects."""
-        if self._stack.get(container):
-            raise ValueError(f"{container!r} still has objects; remove them first")
-        self._stack.pop(container, None)
+    def close_holder(self, holder: str) -> None:
+        """Forget a holder; refused while it still holds objects."""
+        if self._stack.get(holder):
+            raise ValueError(f"{holder!r} still has objects; remove them first")
+        self._stack.pop(holder, None)
 
-    def objects_on(self, container: str) -> list[VisualObject[A]]:
-        """The objects of a container, bottom first (the last one is in front)."""
-        return [self.objects[object_id] for object_id in self._stack.get(container, [])]
+    def objects_on(self, holder: str) -> list[VisualObject[A]]:
+        """The objects of a holder, bottom first (the last one is in front)."""
+        return [self.objects[object_id] for object_id in self._stack.get(holder, [])]
 
-    def stack_of(self, container: str) -> tuple[str, ...]:
-        """The stacking order of a container, bottom first."""
-        return tuple(self._stack.get(container, ()))
+    def stack_of(self, holder: str) -> tuple[str, ...]:
+        """The stacking order of a holder, bottom first."""
+        return tuple(self._stack.get(holder, ()))
 
     # -- reading -----------------------------------------------------------------
     def get_object(self, object_id: str) -> VisualObject[A]:
@@ -596,7 +596,7 @@ class ObjectModel[A: Anchor]:
     def selection_of(self, object_id: str) -> tuple[ObjectSet, ...]:
         """The one-object selection a command about this object touches, or ``()`` if it is gone."""
         obj = self.objects.get(object_id)
-        return () if obj is None else (ObjectSet(obj.container, frozenset({object_id})),)
+        return () if obj is None else (ObjectSet(obj.holder, frozenset({object_id})),)
 
     # -- names (D550, D551) --------------------------------------------------------
     def named_things(self) -> Iterator[tuple[str, str, str]]:
@@ -747,7 +747,7 @@ class ObjectModel[A: Anchor]:
         """Make the words of this object an item as ``item`` says (``None``: none); the event tells the clients."""
         new = self.get_object(object_id).with_body(paragraph=self._words(object_id).with_item(item))
         self.replace_object(new)
-        return self.objects_changed(new.container, changed=(new,))
+        return self.objects_changed(new.holder, changed=(new,))
 
     def object_generated(self, object_id: str) -> Generated | None:
         """The options of the table of contents (agenda) the words of this object are, or ``None``."""
@@ -758,7 +758,7 @@ class ObjectModel[A: Anchor]:
         an object without words can become one. The event tells the clients."""
         new = self.get_object(object_id).with_body(paragraph=self._words(object_id).with_generated(generated))
         self.replace_object(new)
-        return self.objects_changed(new.container, changed=(new,))
+        return self.objects_changed(new.holder, changed=(new,))
 
     def insert_object_text(
         self, object_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...] = ()
@@ -789,7 +789,7 @@ class ObjectModel[A: Anchor]:
     def _put_words(self, object_id: str, words: Paragraph) -> ObjectsChanged:
         new = self.get_object(object_id).with_body(paragraph=words)
         self.replace_object(new)
-        return self.objects_changed(new.container, changed=(new,))
+        return self.objects_changed(new.holder, changed=(new,))
 
     def object_list_in_use(self, list_id: str) -> bool:
         """Are the words of any object an item of this list?"""
@@ -874,10 +874,10 @@ class ObjectModel[A: Anchor]:
         body = obj.body
         if not isinstance(body.id, str) or not _ID.fullmatch(body.id):
             raise ValueError(f"object id {body.id!r}: lower-case letters, digits, '-' and '_', starting with a letter")
-        if obj.container not in self._stack:
-            # ``_stack`` has a key for every container that exists (``open_container``/``close_container``), so
-            # this is O(1). Asking ``containers()`` instead would walk every paragraph of a text on every check.
-            raise ValueError(f"unknown container {obj.container!r}")
+        if obj.holder not in self._stack:
+            # ``_stack`` has a key for every holder that exists (``open_holder``/``close_holder``), so
+            # this is O(1). Asking ``holders()`` instead would walk every paragraph of a text on every check.
+            raise ValueError(f"unknown holder {obj.holder!r}")
         if body.kind not in self.object_kinds:
             raise ValueError(f"unknown kind {body.kind!r}: an object is one of {', '.join(self.object_kinds)}")
         styles = getattr(self, "styles", None)
@@ -990,13 +990,13 @@ class ObjectModel[A: Anchor]:
 
     # -- changing (used by the commands) -----------------------------------------
     def insert_object(self, obj: VisualObject[A], at: int | None = None, *, shared_names: bool = True) -> None:
-        """Add a checked object on top of its container, or at stacking place ``at``."""
+        """Add a checked object on top of its holder, or at stacking place ``at``."""
         if obj.id in self.objects:
             raise ValueError(f"object {obj.id!r} exists already")
         self.check_object(obj, shared_names=shared_names)
-        stack = self._stack[obj.container]
-        if len(stack) >= self.max_objects_per_container:
-            raise ValueError(f"a container holds at most {self.max_objects_per_container} objects")
+        stack = self._stack[obj.holder]
+        if len(stack) >= self.max_objects_per_holder:
+            raise ValueError(f"a holder has at most {self.max_objects_per_holder} objects")
         if at is not None and not 0 <= at <= len(stack):
             raise ValueError(f"there is no stacking place {at} among {len(stack)} objects")
         stack.insert(len(stack) if at is None else at, obj.id)
@@ -1006,7 +1006,7 @@ class ObjectModel[A: Anchor]:
     def delete_object(self, object_id: str) -> tuple[VisualObject[A], int]:
         """Take an object away; returns it and the stacking place it had."""
         obj = self.get_object(object_id)
-        stack = self._stack[obj.container]
+        stack = self._stack[obj.holder]
         place = stack.index(object_id)
         del stack[place]
         del self.objects[object_id]
@@ -1016,11 +1016,11 @@ class ObjectModel[A: Anchor]:
     def replace_object(self, obj: VisualObject[A]) -> VisualObject[A]:
         """Swap in a changed (checked) version of an object that exists; returns the one it replaces.
 
-        An object may move inside its container but never to another one: that would be a different object as far
+        An object may move inside its holder but never to another one: that would be a different object as far
         as locks and stacking are concerned."""
         old = self.get_object(obj.id)
-        if obj.container != old.container:
-            raise ValueError("an object cannot change its container")
+        if obj.holder != old.holder:
+            raise ValueError("an object cannot change its holder")
         self.check_object(obj)
         self.objects[obj.id] = obj
         before, after = old.body.paragraph, obj.body.paragraph
@@ -1033,20 +1033,20 @@ class ObjectModel[A: Anchor]:
         return old
 
     def rehang_object(self, obj: VisualObject[A], at: int | None = None) -> int:
-        """Put a changed (checked) version of an object that exists into another container (D1351): out of the old
+        """Put a changed (checked) version of an object that exists into another holder (D1351): out of the old
         stack, into the new one at ``at`` (on top when ``None``). Returns the place it had in the old stack, which
-        the inverse of the move gives back. ``ValueError`` where the app keeps its objects in their container."""
+        the inverse of the move gives back. ``ValueError`` where the app keeps its objects in their holder."""
         old = self.get_object(obj.id)
-        if obj.container == old.container:
+        if obj.holder == old.holder:
             self.replace_object(obj)
-            return self._stack[old.container].index(obj.id)
-        if not self.objects_change_container:
-            raise ValueError("an object cannot change its container")
+            return self._stack[old.holder].index(obj.id)
+        if not self.objects_change_holder:
+            raise ValueError("an object cannot change its holder")
         self.check_object(obj)
-        stack = self._stack.setdefault(obj.container, [])
-        if len(stack) >= self.max_objects_per_container:
-            raise ValueError(f"a container holds at most {self.max_objects_per_container} objects")
-        was = self._stack[old.container]
+        stack = self._stack.setdefault(obj.holder, [])
+        if len(stack) >= self.max_objects_per_holder:
+            raise ValueError(f"a holder has at most {self.max_objects_per_holder} objects")
+        was = self._stack[old.holder]
         place = was.index(obj.id)
         del was[place]
         stack.insert(len(stack) if at is None else max(0, min(at, len(stack))), obj.id)
@@ -1055,31 +1055,31 @@ class ObjectModel[A: Anchor]:
         return place
 
     def place_regions(self, anchor: A) -> tuple[Any, ...]:  # noqa: ARG002 - an app with places others hold uses it
-        """The regions a move to ``anchor`` in another container also takes: what a colleague may hold there (in a text,
+        """The regions a move to ``anchor`` in another holder also takes: what a colleague may hold there (in a text,
         the words where it is dropped, D1351). None by default."""
         return ()
 
     def objects_changed(
         self,
-        container: str,
+        holder: str,
         *,
         changed: tuple[VisualObject[A], ...] = (),
         removed: tuple[str, ...] = (),
     ) -> ObjectsChanged:
-        """The event that tells views what happened on ``container``, with its stacking order as it is now."""
-        return ObjectsChanged(container, changed, removed, self.stack_of(container))
+        """The event that tells views what happened on ``holder``, with its stacking order as it is now."""
+        return ObjectsChanged(holder, changed, removed, self.stack_of(holder))
 
     # -- serialization helpers ---------------------------------------------------
     def objects_to_data(self) -> list[dict]:
-        """Every object, container by container in stacking order: what ``serialize`` stores."""
-        return [obj.to_data() for container in self.containers() for obj in self.objects_on(container)]
+        """Every object, holder by holder in stacking order: what ``serialize`` stores."""
+        return [obj.to_data() for holder in self.holders() for obj in self.objects_on(holder)]
 
     def assets_to_data(self) -> dict[str, list[dict]]:
         """Every asset, kind by kind (``images``, ``shapes``, ...): what ``serialize`` stores beside the objects."""
         return {f"{store.kind.name}s": store.to_data() for store in self.assets.values()}
 
     def restore_objects(self, objects: Iterable[dict], assets: Mapping[str, Iterable[dict]] | None = None) -> None:
-        """Put back what ``objects_to_data`` and ``assets_to_data`` stored (the containers must already exist); a kind
+        """Put back what ``objects_to_data`` and ``assets_to_data`` stored (the holders must already exist); a kind
         of asset the stored form does not have is empty."""
         assets = assets or {}
         for kind in ASSET_KINDS:  # in reading order: a container's picture is an image
@@ -1087,7 +1087,7 @@ class ObjectModel[A: Anchor]:
         for data in objects:
             obj = VisualObject.from_data(data, self.anchor_from_data)
             self.objects[obj.id] = obj
-            self._stack.setdefault(obj.container, []).append(obj.id)
+            self._stack.setdefault(obj.holder, []).append(obj.id)
         self.paragraph_order += 1
 
 
@@ -1213,7 +1213,7 @@ class AddObject(Command):
         model = object_model_of(ctx)
         obj = VisualObject(self.body, _anchor_of(ctx, self.anchor))
         model.insert_object(obj, self.at, shared_names=not self.legacy_names)
-        ctx.emit(model.objects_changed(obj.container, changed=(obj,)))
+        ctx.emit(model.objects_changed(obj.holder, changed=(obj,)))
         return RemoveObject(obj.id)
 
     def to_data(self) -> dict:
@@ -1229,8 +1229,8 @@ class AddObject(Command):
         )
 
     def regions(self, model: object) -> tuple[ObjectSet, ...]:
-        container = self.anchor.get("container")
-        return (ObjectSet(container, frozenset({self.object_id})),) if isinstance(container, str) else ()
+        holder = self.anchor.get("holder")
+        return (ObjectSet(holder, frozenset({self.object_id})),) if isinstance(holder, str) else ()
 
     def shifted_by(self, other: Command) -> Command | None:
         """Bringing an object back is refused when somebody made another one with its id, or took its shape,
@@ -1268,7 +1268,7 @@ class RemoveObject(Command):
     def apply(self, ctx: Context) -> Command:
         model = object_model_of(ctx)
         obj, place = model.delete_object(self.id)
-        ctx.emit(model.objects_changed(obj.container, removed=(obj.id,)))
+        ctx.emit(model.objects_changed(obj.holder, removed=(obj.id,)))
         return AddObject(obj.body, obj.anchor.to_data(), place)
 
     def to_data(self) -> dict:
@@ -1303,7 +1303,7 @@ class MoveObject(Command):
     kind: ClassVar[str] = "core.MoveObject"
     id: str
     anchor: dict
-    #: Where in the stack of the new container it goes, when the move changes container (D1351); ``None``: on top.
+    #: Where in the stack of the new holder it goes, when the move changes holder (D1351); ``None``: on top.
     #: Set by the inverse of such a move, so that undo puts the object back at its place; written only when set.
     at: int | None = None
 
@@ -1319,13 +1319,13 @@ class MoveObject(Command):
         model = object_model_of(ctx)
         old = model.get_object(self.id)
         new = replace(old, anchor=_anchor_of(ctx, self.anchor))
-        if new.container == old.container:
+        if new.holder == old.holder:
             model.replace_object(new)
-            ctx.emit(model.objects_changed(new.container, changed=(new,)))
+            ctx.emit(model.objects_changed(new.holder, changed=(new,)))
             return MoveObject(self.id, old.anchor.to_data())
         place = model.rehang_object(new, self.at)
-        ctx.emit(model.objects_changed(old.container))  # its stack without the object; it is not removed (D1351)
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(old.holder))  # its stack without the object; it is not removed (D1351)
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return MoveObject(self.id, old.anchor.to_data(), at=place)
 
     def to_data(self) -> dict:
@@ -1345,7 +1345,7 @@ class MoveObject(Command):
         if self.id not in model.objects:
             return own
         anchor = model.anchor_from_data(dict(self.anchor))
-        if anchor.container == model.get_object(self.id).container:
+        if anchor.holder == model.get_object(self.id).holder:
             return own
         return own + tuple(model.place_regions(anchor))  # into a paragraph a colleague holds: refused (D1351)
 
@@ -1380,7 +1380,7 @@ class ResizeObject(Command):
         old = model.get_object(self.id)
         new = replace(old, anchor=_anchor_of(ctx, self.anchor)).with_body(w=self.w, h=self.h)
         model.replace_object(new)
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return ResizeObject(self.id, old.anchor.to_data(), old.body.w, old.body.h)
 
     def to_data(self) -> dict:
@@ -1429,7 +1429,7 @@ class RotateObject(Command):
         if self.anchor is not None:
             new = replace(new, anchor=_anchor_of(ctx, self.anchor))
         model.replace_object(new)
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return RotateObject(self.id, old.body.rotation, None if self.anchor is None else old.anchor.to_data())
 
     def to_data(self) -> dict:
@@ -1485,7 +1485,7 @@ class SetText(Command):
         written = replace(old.body.paragraph, text=plain(self.text), fields=()).written_by(ctx.author)
         new = old.with_body(paragraph=written)
         model.replace_object(new)
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         # The inverse restores the whole paragraph, not just its words: see SetParagraph.
         return SetParagraph(self.id, old.body.paragraph)
 
@@ -1540,7 +1540,7 @@ class SetParagraph(Command):
             raise ValueError("an image carries no text")
         model.replace_object(old.with_body(paragraph=self.paragraph))
         new = model.get_object(self.id)
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return SetParagraph(self.id, old.body.paragraph)
 
     def to_data(self) -> dict:
@@ -1593,7 +1593,7 @@ class SetObjectStyle(Command):
         old = model.get_object(self.id)
         new = old.with_body(style=self.style)
         model.replace_object(new)  # checks that the style exists, as it checks everything else about an object
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return SetObjectStyle(self.id, old.body.style)
 
     def to_data(self) -> dict:
@@ -1642,7 +1642,7 @@ class SetParagraphStyle(Command):
             raise ValueError("an image carries no text")
         new = old.with_body(paragraph=old.body.paragraph.with_style(self.style))
         model.replace_object(new)
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return SetParagraphStyle(self.id, old.body.paragraph.style)
 
     def to_data(self) -> dict:
@@ -1688,7 +1688,7 @@ class SetSnap(Command):
         old = model.get_object(self.id)
         new = old.with_body(snap=self.snap)
         model.replace_object(new)
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return SetSnap(self.id, old.body.snap)
 
     def to_data(self) -> dict:
@@ -1755,7 +1755,7 @@ class RenameThing(Command):
         ctx.emit(ThingRenamed(self.id, name))
         if self.id in model.objects:
             changed = model.objects[self.id]
-            ctx.emit(model.objects_changed(changed.container, changed=(changed,)))
+            ctx.emit(model.objects_changed(changed.holder, changed=(changed,)))
         undo = RenameThing(self.id, old)
         return Batch((undo, *restores)) if restores else undo
 
@@ -1831,7 +1831,7 @@ class DescribeObject(Command):
         old = model.get_object(self.id)
         new = old.with_body(description=self.description, decorative=self.decorative)
         model.replace_object(new)
-        ctx.emit(model.objects_changed(new.container, changed=(new,)))
+        ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return DescribeObject(self.id, old.body.description, old.body.decorative)
 
     def to_data(self) -> dict:

@@ -2,7 +2,7 @@
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
 import type { LinkLike, Region, WireData } from './protocol'
 import { parseFence } from './rendering'
-import { containerOf, firstFocus, lookOnly } from './replay'
+import { holderOf, firstFocus, lookOnly } from './replay'
 import type { Thing } from './tags'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { translate as t } from './i18n'
@@ -155,7 +155,7 @@ export class SlideSession extends BaseSession<SlideState> {
   }
   protected override async inView(): Promise<Thing[]> {
     const here = this.state.activeSlide
-    return this.things().filter((t) => this.containerOf(t.id) === here)
+    return this.things().filter((t) => this.holderOf(t.id) === here)
   }
   override async unnamedInView(): Promise<number> {
     const s = this.state
@@ -165,21 +165,21 @@ export class SlideSession extends BaseSession<SlideState> {
   protected override tracksThings(): boolean {
     return true
   }
-  protected override containerOf(id: string): string | null {
+  protected override holderOf(id: string): string | null {
     const s = this.state
     if (s.slides.some((x) => x.id === id)) return id
-    return s.objects[id]?.anchor.container ?? null
+    return s.objects[id]?.anchor.holder ?? null
   }
-  protected override currentContainer(): string | null {
+  protected override currentHolder(): string | null {
     return this.state.activeSlide || null
   }
-  protected override showContainer(id: string): void {
+  protected override showHolder(id: string): void {
     if (this.state.slides.some((x) => x.id === id)) this.state.activeSlide = id
   }
 
   /** A step of the replay is shown on the slide it touched (D551). */
   protected override followReplay(focus: Region[]): void {
-    const slide = containerOf(firstFocus(focus))
+    const slide = holderOf(firstFocus(focus))
     if (slide && this.state.slides.some((x) => x.id === slide)) this.state.activeSlide = slide
   }
 
@@ -194,7 +194,7 @@ export class SlideSession extends BaseSession<SlideState> {
     for (const [user, here] of Object.entries(this.state.presence)) {
       if (user === this.state.me.user) continue
       for (const region of here.regions) {
-        if (region.kind === 'objects' && region.container === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
+        if (region.kind === 'objects' && region.holder === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
       }
     }
     return found
@@ -204,7 +204,7 @@ export class SlideSession extends BaseSession<SlideState> {
   /** A slide's tab shows how many objects it has; a selected object that went is let go of. */
   protected override objectsChanged(e: ObjectsEvent): void {
     const s = this.state
-    const info = s.slides.find((x) => x.id === e.container)
+    const info = s.slides.find((x) => x.id === e.holder)
     if (info) info.objects = e.order.length
     if (e.removed.includes(s.selected ?? '')) {
       s.selected = null
@@ -278,7 +278,7 @@ export class SlideSession extends BaseSession<SlideState> {
     if (!box || !fenced) return null
     const made = await this.addRendering(
       fenced.type,
-      { slide: box.anchor.container, x: box.anchor.x, y: box.anchor.y },
+      { slide: box.anchor.holder, x: box.anchor.x, y: box.anchor.y },
       { w: box.w, h: box.h },
       fenced.source,
     )
@@ -511,7 +511,7 @@ export class SlideSession extends BaseSession<SlideState> {
 
   // -- the selection: shown to the others, and held so that nobody changes the object under my hands
   private regionOf(id: string): Region[] {
-    return [{ kind: 'objects', container: this.state.objects[id]?.anchor.container ?? this.state.activeSlide, ids: [id] }]
+    return [{ kind: 'objects', holder: this.state.objects[id]?.anchor.holder ?? this.state.activeSlide, ids: [id] }]
   }
 
   /** Select an object (null: nothing). Selecting holds it; a colleague who holds it first keeps it. */

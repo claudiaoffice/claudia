@@ -22,7 +22,7 @@ export type Step =
   | { kind: 'rotate'; rotation: number }
 
 /** How far a box at `at` (in the layer's own coordinates) floats from the character at `spot` (on the screen), whole
- * pixels, as `floatBox` (`text-containers.ts`) will read it back. */
+ * pixels, as `floatBox` (`text-object-layer.ts`) will read it back. */
 export function awayFrom(at: { x: number; y: number }, spot: Spot, layer: { left: number; top: number }): { dx: number; dy: number } {
   return { dx: Math.round(at.x - (spot.left - layer.left)), dy: Math.round(at.y - (spot.top - layer.top)) }
 }

@@ -24,7 +24,7 @@ const WELCOME: Welcome = {
 }
 
 const entry = (n: number, author = 'bob'): Step => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '', kind: 'creates.AddObject', redacted: false })
-const place: Region = { kind: 'objects', container: 's1', ids: ['t1'] } as Region
+const place: Region = { kind: 'objects', holder: 's1', ids: ['t1'] } as Region
 const PLAN: RedactionPlan = {
   targets: ['main:2'],
   dependents: [],
@@ -107,7 +107,7 @@ class TestSession extends BaseSession<TestState> {
     return true
   }
   protected followReplay(focus: Region[]) {
-    this.state.followed = focus.map((r) => (r.kind === 'objects' ? r.container : ''))
+    this.state.followed = focus.map((r) => (r.kind === 'objects' ? r.holder : ''))
   }
   async change() {
     return this.attempt('add_slide')

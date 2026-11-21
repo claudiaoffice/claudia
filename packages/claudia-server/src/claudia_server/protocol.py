@@ -957,7 +957,7 @@ def _entry_view(entry) -> dict:
 def _peek_revision(ctx, revision, state):
     """A read-only look at the document after one step of its history, on any line, for replaying it (D551): `{revision,
     entry, focus, app, state_schema, state}`. `entry` is the step as `log` gives it; `focus` lists the regions the step
-    touched (`{kind: "objects", container, ids}` for things on a slide or sheet, `{kind: "cells", ...}` for cells), the
+    touched (`{kind: "objects", holder, ids}` for things on a slide or sheet, `{kind: "cells", ...}` for cells), the
     places a view brings into sight; `state` is the full state in the shape of `snapshot` and is left out when `state`
     is false, for a client that only wants to know where. Nothing changes; anybody who may read may look.
     `command_error` for a revision the document does not have."""

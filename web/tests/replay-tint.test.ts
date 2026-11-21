@@ -23,7 +23,7 @@ describe('what a replay tints', () => {
   })
 
   it('tints objects by id, and what the step did wins over what came later', () => {
-    const t = tintsOf([{ kind: 'objects', container: 'p', ids: ['a'] }], [{ kind: 'objects', container: 'p', ids: ['a', 'b'] }])
+    const t = tintsOf([{ kind: 'objects', holder: 'p', ids: ['a'] }], [{ kind: 'objects', holder: 'p', ids: ['a', 'b'] }])
     expect([t.object('a'), t.object('b'), t.object('c')]).toEqual(['now', 'since', null])
   })
 
@@ -33,7 +33,7 @@ describe('what a replay tints', () => {
   })
 
   it('counts the places that differ from now, for the person who cannot see the tint', () => {
-    expect(tintsOf([], [cells('s1', 0, 0), { kind: 'objects', container: 'p', ids: ['a', 'b'] }]).count).toBe(3)
+    expect(tintsOf([], [cells('s1', 0, 0), { kind: 'objects', holder: 'p', ids: ['a', 'b'] }]).count).toBe(3)
     expect(tintsOf([cells('s1', 0, 0)], []).count).toBe(0)
   })
 })

@@ -18,7 +18,7 @@ import { descriptionOf } from '~/lib/text-container-names'
 import { objectName } from '~/lib/descriptions'
 import { imageDataUrl } from '~/lib/images'
 import { renderedView } from '~/lib/rendering'
-import { columnOf, floatBox, neighbour } from '~/lib/text-containers'
+import { columnOf, floatBox, neighbour } from '~/lib/text-object-layer'
 import type { Frame, Handle } from '~/lib/geometry'
 import { CORNERS, HANDLES, NUDGE, NUDGE_FINE } from '~/lib/geometry'
 import { useObjectInteraction } from '~/lib/object-interaction'
@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
 /** The wrap an object says it has: only an object hung in the words has one; a slide's or a cell's is never behind. */
 const wrapOfObject = (id: string) => {
   const a = state.objects[id]?.anchor as Partial<BlockAnchor> | undefined
-  return a && 'container' in a ? wrapOf(a).wrap : 'over'
+  return a && 'holder' in a ? wrapOf(a).wrap : 'over'
 }
 const mine = (id: string) => (wrapOfObject(id) === 'behind') === !!props.behind
 
@@ -304,8 +304,8 @@ async function onKey(event: KeyboardEvent, id: string) {
   }
   if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
     event.preventDefault()
-    const to = neighbour(state.blocks.map((b) => b.id), o.anchor.container, event.key === 'ArrowDown' ? 1 : -1)
-    if (to !== o.anchor.container) await session.moveObject(id, { block: to, offset: 0 })
+    const to = neighbour(state.blocks.map((b) => b.id), o.anchor.holder, event.key === 'ArrowDown' ? 1 : -1)
+    if (to !== o.anchor.holder) await session.moveObject(id, { block: to, offset: 0 })
   }
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
     // sideways it stays at its character and moves off it, a step as in creates (the contract's "arrows nudge")
@@ -377,7 +377,7 @@ const turnable = (id: string) => !!state.objects[id] && canTurn(state.objects[id
     ref="layer"
     class="layer"
     :class="{ behind, grab: behind && grabbable('behind', ctrl) }"
-    :data-testid="behind ? 'containers-behind' : 'containers'"
+    :data-testid="behind ? 'object-layer-behind' : 'object-layer'"
   >
     <p class="sr" role="status" aria-live="polite">{{ turnSaid }}</p>
     <div

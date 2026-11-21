@@ -101,7 +101,7 @@ def test_the_import_records_asset_must_match_the_objects_image(doc):
 def test_an_object_must_sit_on_a_known_sheet(doc):
     asset = image_asset()
     doc.execute(DefineAsset("image", asset.to_data()), author="ana")
-    with pytest.raises(ValueError, match="unknown container"):  # a sheet is a container (E10.16)
+    with pytest.raises(ValueError, match="unknown holder"):  # a sheet is a holder (E10.16)
         doc.execute(add(image_object(sheet="nope", asset=asset)), author="ana")
 
 

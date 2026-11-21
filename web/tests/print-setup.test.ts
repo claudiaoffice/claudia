@@ -40,7 +40,7 @@ describe('from a session to the layout library', () => {
       entries: [['r1', 'c1', { style: '', text: 'kg' }], ['r2', 'c1', { style: '', text: '4' }]] as [string, string, { style: string; text: string }][],
       merges: [], header_rows: 1, banded: false, look: 'rules', placement: 'flow' as const, width: null, next_row: 2, next_col: 1, used_by: ['o1'], totals: { c1: '4' },
     }
-    const object = { id: 'o1', kind: 'table' as const, w: 480, h: 48, style: 'plain-box', paragraph: null, shape: null, image: null, rotation: 0, ref: 't1', anchor: { kind: 'block' as const, container: 'b1', offset: 0 } }
+    const object = { id: 'o1', kind: 'table' as const, w: 480, h: 48, style: 'plain-box', paragraph: null, shape: null, image: null, rotation: 0, ref: 't1', anchor: { kind: 'block' as const, holder: 'b1', offset: 0 } }
     const doc = textDocument([{ id: 'b1', style: 'body', text: 'Hallo', runs: [] }], [], DEFAULT_PAGE, { objects: [object], shapes: [], images: [], tables: [table] }, 'de')
     expect(doc.tables).toEqual([{ ...table, total_label: 'Total' }]) // the word the view shows in the total row
     expect(doc.objects).toEqual([object])

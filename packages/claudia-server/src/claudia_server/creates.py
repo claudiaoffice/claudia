@@ -194,7 +194,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         """One slide as `{revision, slide, objects, notes, seconds}`: its objects, the one in front last, its speaker
         notes in Markdown (`""` if none, D342) and its planned time in seconds (`null` if none, D343). An object is
         `{id, kind, w, h, style, text, shape, image, imported, rotation, snap, anchor}` — the same shape in all
-        three apps except for `anchor`, which here is `{kind: "slide", container: <slide>, x, y}` (E10.16).
+        three apps except for `anchor`, which here is `{kind: "slide", holder: <slide>, x, y}` (E10.16).
         `imported`'s `source_path` is only sent to the person who imported that image (everyone else sees `null`
         there, not the path). `snap` is whether the object holds to the grid, a helper the view draws and is free
         to show or hide on its own — `snap` is unaffected by that and is the document's own state, set with

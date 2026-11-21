@@ -39,7 +39,7 @@ def test_a_redacted_object_loses_its_words_its_description_and_its_import_words(
     body = ObjectBody(
         "i1", "image", 40, 30, "plain-image", ref="ab" * 32, imported=picture_import(), description="the CEO's face"
     )
-    command = AddObject(body, {"container": "s1"}).redacted()
+    command = AddObject(body, {"holder": "s1"}).redacted()
     assert command.body.description == "" and command.body.imported.alt == ""
     assert command.body.imported.source_name == "" and command.body.image == "ab" * 32
 

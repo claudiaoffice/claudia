@@ -46,7 +46,7 @@ def test_the_words_are_read_slide_by_slide_in_stacking_order_with_the_slide_numb
     deck.execute(add(text_box("a", text="A")), author="ann")
     deck.execute(add(text_box("b", text="B"), at=0), author="ann")  # under "a": read first
     deck.execute(add(text_box("c", slide="s2", text="C")), author="ann")
-    read = [(p.paragraph.id, p.container, p.main, p.place) for p in deck.model.reading_order()]
+    read = [(p.paragraph.id, p.holder, p.main, p.place) for p in deck.model.reading_order()]
     assert read == [("b", SLIDE, True, "1"), ("a", SLIDE, True, "1"), ("c", "s2", True, "2")]
     assert isinstance(deck.model.structure, TextStructure)
 

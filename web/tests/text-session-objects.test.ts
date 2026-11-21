@@ -50,7 +50,7 @@ class FakeLink implements LinkLike {
 const BODY = { id: 'body', name: 'Body text', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }
 const object = (id: string, kind = 'image') => ({
   id, kind, w: 400, h: 200, style: 'plain-image', paragraph: null, ref: null, imported: null,
-  rotation: 0, snap: false, anchor: { kind: 'block', container: 'b1', offset: 0 },
+  rotation: 0, snap: false, anchor: { kind: 'block', holder: 'b1', offset: 0 },
 })
 
 async function opened() {

@@ -222,7 +222,7 @@ function onTabMove(event: PointerEvent) {
 async function onTabUp() {
   const d = dragging.value
   dragging.value = null
-  if (d?.moved && d.after && d.after !== props.object.anchor.container && !readonly.value) await props.session.moveObject(props.object.id, { block: d.after, offset: 0 })
+  if (d?.moved && d.after && d.after !== props.object.anchor.holder && !readonly.value) await props.session.moveObject(props.object.id, { block: d.after, offset: 0 })
 }
 function onTabKey(event: KeyboardEvent) {
   if (event.key === 'Escape') {

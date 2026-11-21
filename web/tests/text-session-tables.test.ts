@@ -71,7 +71,7 @@ const TABLE = {
   used_by: ['o1'],
   totals: { c2: '8' },
 }
-const OBJECT = { id: 'o1', kind: 'table', w: 480, h: 48, style: 'plain-box', paragraph: null, ref: 't1', name: 'Harvest', rotation: 0, anchor: { kind: 'block', container: 'b1', offset: 0 } }
+const OBJECT = { id: 'o1', kind: 'table', w: 480, h: 48, style: 'plain-box', paragraph: null, ref: 't1', name: 'Harvest', rotation: 0, anchor: { kind: 'block', holder: 'b1', offset: 0 } }
 const block = (id: string, text: string) => ({ id, style: 'body', text, runs: [[[...text].length, 'ann', null]] })
 
 async function opened() {

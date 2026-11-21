@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { awayFrom, nearestBlock, nearestGap, stepsFor } from '~/lib/text-object-host'
-import { floatBox } from '~/lib/text-containers'
+import { floatBox } from '~/lib/text-object-layer'
 
 const layer = { left: 100, top: 50 }
 const start = { x: 40, y: 30, w: 200, h: 100 }

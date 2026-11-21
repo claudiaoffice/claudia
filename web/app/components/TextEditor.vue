@@ -14,7 +14,7 @@ import { FIELD_CHAR, fieldIndex, partsOf, type Shown } from '~/lib/references'
 import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
 import { usePointed } from '~/lib/pointed'
-import { columnOf, letsGoOfObject } from '~/lib/text-containers'
+import { columnOf, letsGoOfObject } from '~/lib/text-object-layer'
 import { nearestBlock } from '~/lib/text-object-host'
 import { wrapOf } from '~/lib/wrap'
 import { floatStyle, measureFloats, takesRoom, type Hung, type WrapFloat, type WrapPage } from '~/lib/wrap-flow'
@@ -426,7 +426,7 @@ onUpdated(() => {
   before = null
   placeSelection()
 })
-// Where the paragraphs are on the page changes when the text wraps differently, so the containers hanging from them
+// Where the paragraphs are on the page changes when the text wraps differently, so the objects hanging from them
 // (D560) are placed again whenever the text's box changes size, and after a pause when the paragraphs change.
 const layoutTick = ref(0)
 let watcher: ResizeObserver | null = null
@@ -628,7 +628,7 @@ const hung = computed<Hung[]>(() => {
   const order = new Map(state.blocks.map((b, at) => [b.id, at]))
   const out: Hung[] = []
   for (const o of Object.values(state.objects)) {
-    if (!('container' in o.anchor) || !takesRoom(wrapOf(o.anchor).wrap)) continue
+    if (!('holder' in o.anchor) || !takesRoom(wrapOf(o.anchor).wrap)) continue
     const place = props.session.placeOf(o)
     if (place) out.push({ id: o.id, block: place.block, offset: place.offset, ...wrapOf(o.anchor), dx: o.anchor.dx, dy: o.anchor.dy, w: o.w, h: o.h })
   }
@@ -733,7 +733,7 @@ function placeAt(x: number, y: number): Pos | null {
   if (!id || !el) return null
   const r = el.getBoundingClientRect()
   if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-    const layers = [...(scroller.value?.querySelectorAll<HTMLElement>('[data-testid^="containers"]') ?? [])]
+    const layers = [...(scroller.value?.querySelectorAll<HTMLElement>('[data-testid^="object-layer"]') ?? [])]
     const kept = layers.map((l) => l.style.visibility)
     layers.forEach((l) => (l.style.visibility = 'hidden'))
     try {
@@ -821,7 +821,7 @@ usePointed(props.session.state, root, (id) => `[data-block="${CSS.escape(id)}"]`
 watch(
   () => props.session.state.pointed,
   (pointed) => {
-    if (pointed?.container) scrollToBlock(pointed.container)
+    if (pointed?.holder) scrollToBlock(pointed.holder)
   },
 )
 
@@ -852,7 +852,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
 <template>
   <div ref="scroller" class="scroller" :class="view" data-testid="text-scroller" @contextmenu.capture="onContextMenu" @pointerdown.capture="letGoOfObject" @focusin="letGoOfObject">
     <div class="sheet">
-      <TextContainers behind :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
+      <TextObjectLayer behind :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
       <div
         :key="renderKey"
         ref="root"
@@ -980,7 +980,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
         <!-- the text ends with a table: a click below it writes after it (D1331); the keys get there too, so it is hidden from a screen reader -->
         <div v-if="tailIsTable && !session.readOnly" class="after-tables" data-skip contenteditable="false" aria-hidden="true" data-testid="after-tables" @mousedown.prevent="writeAfterTables" />
       </div>
-      <TextContainers :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
+      <TextObjectLayer :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
     </div>
   </div>
 </template>
@@ -992,7 +992,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
   background: var(--page);
 }
 .sheet {
-  position: relative; /* the containers float over it (D560) */
+  position: relative; /* the object layer floats over it (D560) */
   margin: 0 auto;
   padding: 36px 40px 160px;
   max-width: 820px;
@@ -1010,7 +1010,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
   border-radius: 2px;
 }
 .doc {
-  position: relative; /* over the layer of the objects behind the words, under the one over them (TextContainers.vue) */
+  position: relative; /* over the layer of the objects behind the words, under the one over them (TextObjectLayer.vue) */
   z-index: 1;
   outline: none;
   font: 400 16.5px/1.75 var(--font-ui);

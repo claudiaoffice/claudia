@@ -422,7 +422,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
 
     app: ClassVar[str] = "composes"
     body_text_style: ClassVar[str] = DEFAULT_STYLE
-    objects_change_container: ClassVar[bool] = True  # an object can be dragged to another paragraph (D1351)
+    objects_change_holder: ClassVar[bool] = True  # an object can be dragged to another paragraph (D1351)
     # 4: a text also carries objects, images and shapes (E10.16)
     # 5: the text carries its own colour palette (D200)
     # 6: the text says which page it is printed on (D904)
@@ -477,7 +477,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self._stored_keys: set[str] | None = None
         self._last = {"b": _highest(b.id for b in self.blocks), "s": 0}
         for block in self.blocks:
-            self.open_container(block.id)
+            self.open_holder(block.id)
         #: Changes of the structure that numbering depends on (an item set, a paragraph split or joined). Typing
         #: does not count, so it never makes the labels be worked out again.
         self._structure = 0
@@ -582,7 +582,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         return TextRange(block, start, end)
 
     # -- the object seam ---------------------------------------------------------
-    def containers(self) -> list[str]:
+    def holders(self) -> list[str]:
         """The paragraphs objects may hang from, in order."""
         return [block.id for block in self.blocks]
 
@@ -622,7 +622,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             if span == obj.anchor.span:
                 continue
             placed = obj.anchor.followed(span)
-            was, now = obj.container, placed.container
+            was, now = obj.holder, placed.holder
             self.objects[obj.id] = replace(obj, anchor=placed)
             if was != now:  # the paragraph went away, or the anchor crossed into another one
                 self._stack.setdefault(now, []).append(obj.id)
@@ -911,8 +911,8 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         moved = self.move_suggestions(command)
         if moved:
             events.append(SuggestionsChanged(tuple(moved)))
-        containers = dict.fromkeys(obj["anchor"]["container"] for obj in self.move_objects(command))
-        events.extend(self.objects_changed(c, changed=tuple(self.objects_on(c))) for c in containers)
+        holders = dict.fromkeys(obj["anchor"]["holder"] for obj in self.move_objects(command))
+        events.extend(self.objects_changed(c, changed=tuple(self.objects_on(c))) for c in holders)
         return tuple(events)
 
     # -- generated paragraphs (claudia_core.GeneratedHost) ----------------------------------------
@@ -1089,7 +1089,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
             replace(block.with_text(block.text[:offset], slice_runs(block.runs, 0, offset)), fields=block.fields[:at])
         )
         self.blocks.insert(self.index_of(block_id) + 1, rest)
-        self.open_container(new_id)
+        self.open_holder(new_id)
         self._note_id(new_id)
         self._structure += 1
         if made:
@@ -1115,7 +1115,7 @@ class TextModel(DocumentModel, ObjectModel[BlockAnchor]):
         self._put(replace(joined, fields=first.fields + second.fields))
         self.carry_objects(block_id, into, shift=at)
         self.blocks.remove(second)
-        self.close_container(block_id)
+        self.close_holder(block_id)
         self._structure += 1
         self._stored_keys = None
         return second

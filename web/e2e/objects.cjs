@@ -81,7 +81,7 @@ const APPS = {
   composes: {
     url: process.env.URL_COMPOSES ?? 'http://127.0.0.1:8766/',
     ready: '[data-testid=text]',
-    objects: '[data-testid=containers] .object[data-object]',
+    objects: '[data-testid=object-layer] .object[data-object]',
     // the caret: a press on an object must not move it
     below: (page) =>
       page.evaluate(() => {
@@ -465,7 +465,7 @@ async function tables(ann, ben) {
   await table.waitFor()
   if (ben) await ben.locator('[data-testid=table]').waitFor()
   assert.equal(await table.count(), 1, `${where}: a table was made`)
-  assert.equal(await ann.locator('[data-testid=containers] [data-object][data-testid=table]').count(), 0, `${where}: the layer of objects does not draw it a second time`)
+  assert.equal(await ann.locator('[data-testid=object-layer] [data-object][data-testid=table]').count(), 0, `${where}: the layer of objects does not draw it a second time`)
 
   // select with a press on the tab; Options... is its chip; no other kind of frame is drawn around it
   const tab = ann.locator('[data-testid=table-tab]')

@@ -371,7 +371,7 @@ def a_workbook() -> WorkbookModel:
     first, second = Sheet(SheetId("s1"), "Data & more"), Sheet(SheetId("s2"), "Other")
     for sheet in (first, second):
         model.sheets[sheet.id] = sheet
-        model.open_container(str(sheet.id))
+        model.open_holder(str(sheet.id))
     first.cells.update(
         {
             (0, 0): {"t": "int", "v": 2},

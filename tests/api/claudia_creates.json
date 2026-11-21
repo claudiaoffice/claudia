@@ -126,7 +126,7 @@
   "class": [
    "object"
   ],
-  "init": "(container: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
+  "init": "(holder: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectSet'",
    "overlaps": "(self, other: 'object') -> 'bool'",
@@ -139,7 +139,7 @@
   "class": [
    "object"
   ],
-  "init": "(container: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
+  "init": "(holder: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
   "methods": {
    "to_data": "(self) -> 'dict'",
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
@@ -443,7 +443,7 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
-   "container"
+   "holder"
   ]
  },
  "SlideModel": {
@@ -456,12 +456,12 @@
    "anchor_from_data": "(self, data: 'dict') -> 'SlideAnchor'",
    "blank": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "check_anchor": "(self, anchor: 'SlideAnchor', body: 'ObjectBody') -> 'None'",
-   "containers": "(self) -> 'list[str]'",
    "delete_slide": "(self, slide: 'str') -> 'int'",
    "empty": "() -> 'Self'",
    "fields_of": "(self, paragraph_id: 'str') -> 'tuple[Field, ...]'",
    "generated_of": "(self, paragraph_id: 'str') -> 'Generated | None'",
    "get": "(self, object_id: 'str') -> 'SlideObject'",
+   "holders": "(self) -> 'list[str]'",
    "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '', description: 'str' = '') -> 'None'",
    "insert_text": "(self, paragraph_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'tuple[object, ...]'",
    "item_of": "(self, paragraph_id: 'str') -> 'ListItem | None'",
@@ -544,7 +544,7 @@
    "with_body": "(self, **changes: 'Any') -> 'Self'"
   },
   "properties": [
-   "container",
+   "holder",
    "id"
   ]
  },

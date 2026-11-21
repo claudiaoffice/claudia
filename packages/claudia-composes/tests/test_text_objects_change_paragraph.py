@@ -2,7 +2,7 @@
 ``specs/composes/object-anchor.feature``).
 
 B8 (2026-11-20): a drop near another paragraph was refused with "an object cannot change its container", since the
-kernel kept every object in its container. A text lets its objects change paragraph; a slide or a sheet does not.
+kernel kept every object in its holder. A text lets its objects change paragraph; a slide or a sheet does not.
 """
 
 import pytest
@@ -56,9 +56,9 @@ def test_the_clients_hear_both_paragraphs_and_the_object_is_never_removed(text):
     events: list = []
     text.subscribe(lambda e: events.append(e) if isinstance(e, ObjectsChanged) else None)
     move(text, "o1", "b3", 4)
-    by_container = {e.container: e for e in events}
-    assert by_container["b1"].order == ("o2",) and by_container["b1"].removed == ()
-    assert [o.id for o in by_container["b3"].changed] == ["o1"]
+    by_holder = {e.holder: e for e in events}
+    assert by_holder["b1"].order == ("o2",) and by_holder["b1"].removed == ()
+    assert [o.id for o in by_holder["b3"].changed] == ["o1"]
 
 
 def test_undo_puts_it_back_in_its_place_in_the_old_stack_and_redo_moves_it_again(text):
@@ -97,5 +97,5 @@ def test_on_a_slide_an_object_still_cannot_change_its_container():
     deck = Document(SlideModel.empty(), store=MemoryStore())
     deck.execute(AddSlide("s2"), author="ann")
     deck.model.insert_object(VisualObject(box("o1", "body-text"), SlideAnchor("s1", 10, 10)))
-    with pytest.raises(ValueError, match="cannot change its container"):
+    with pytest.raises(ValueError, match="cannot change its holder"):
         deck.execute(MoveObject("o1", SlideAnchor("s2", 10, 10).to_data()), author="ann")

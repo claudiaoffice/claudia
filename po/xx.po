@@ -253,7 +253,7 @@ msgstr "[À bràckét îs névér clôséd.~~~~~~~~~~]"
 msgid "A change here changes every use of “{name}”"
 msgstr "[À chàngé héré chàngés évéry ûsé ôf “{name}”~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextContainers.vue:415
+#: web/app/components/TextObjectLayer.vue:415
 msgid "A chart is not shown in a text yet."
 msgstr "[À chàrt îs nôt shôwn în à téxt yét.~~~~~~~~~~~~~~]"
 
@@ -2417,7 +2417,7 @@ msgstr "[Hànd {doc} ôvér tô sômébôdy whô àlréàdy édîts ît. Yôû w
 msgid "Handouts"
 msgstr "[Hàndôûts~~~]"
 
-#: web/app/components/TextContainers.vue:453
+#: web/app/components/TextObjectLayer.vue:453
 msgid "Hangs from {where}"
 msgstr "[Hàngs frôm {where}~~~~~~~]"
 
@@ -3981,7 +3981,7 @@ msgstr "[Pàpér~~]"
 msgid "Paragraph"
 msgstr "[Pàràgràph~~~~]"
 
-#: web/app/components/TextContainers.vue:173 web/app/lib/text-search-host.ts:95
+#: web/app/components/TextObjectLayer.vue:173 web/app/lib/text-search-host.ts:95
 msgid "Paragraph {n}"
 msgstr "[Pàràgràph {n}~~~~~]"
 
@@ -7101,7 +7101,7 @@ msgstr "[Tûrn thé ôbjéct yôû hàvé séléctéd tô àn ànglé, în whôl
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr "[Tûrn: dràg, ôr àrrôw kéys (Shîft fôr 15°)~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:280 web/app/components/SlideCanvas.vue:309 web/app/components/SlideCanvas.vue:317 web/app/components/SlideCanvas.vue:338 web/app/components/TextContainers.vue:350 web/app/components/TextContainers.vue:354 web/app/components/TextObjectMenu.vue:112
+#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:570 web/app/components/SheetGrid.vue:578 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:605 web/app/components/SlideCanvas.vue:280 web/app/components/SlideCanvas.vue:309 web/app/components/SlideCanvas.vue:317 web/app/components/SlideCanvas.vue:338 web/app/components/TextObjectLayer.vue:350 web/app/components/TextObjectLayer.vue:354 web/app/components/TextObjectMenu.vue:112
 msgid "Turned to {degrees}"
 msgstr "[Tûrnéd tô {degrees}~~~~~~~~]"
 
@@ -7593,7 +7593,7 @@ msgstr "[Yôû bécômé thé ôwnér ôf thé néw dôcûmént. Nôbôdy élsé
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "[Yôû càn chàngé ît ànywày — thîs îs à wàrnîng, nôt à réfûsàl.~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:325 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:479 web/app/components/TextContainers.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:292 web/app/components/Workspace.vue:349 web/app/components/Workspace.vue:400 web/app/components/Workspace.vue:482 web/app/components/Workspace.vue:542 web/app/components/Workspace.vue:548 web/app/components/Workspace.vue:630 web/app/components/Workspace.vue:796 web/app/components/Workspace.vue:850 web/app/components/Workspace.vue:970 web/app/lib/base-session.ts:1162 web/app/lib/base-session.ts:1198
+#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:316 web/app/components/SlideCanvas.vue:325 web/app/components/SlideCanvas.vue:456 web/app/components/SlideCanvas.vue:479 web/app/components/TextObjectLayer.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:292 web/app/components/Workspace.vue:349 web/app/components/Workspace.vue:400 web/app/components/Workspace.vue:482 web/app/components/Workspace.vue:542 web/app/components/Workspace.vue:548 web/app/components/Workspace.vue:630 web/app/components/Workspace.vue:796 web/app/components/Workspace.vue:850 web/app/components/Workspace.vue:970 web/app/lib/base-session.ts:1162 web/app/lib/base-session.ts:1198
 msgid "You can only look at this document."
 msgstr "[Yôû càn ônly lôôk àt thîs dôcûmént.~~~~~~~~~~~~~~]"
 
@@ -9225,7 +9225,7 @@ msgstr "[téxt~~]"
 msgid "text box"
 msgstr "[téxt bôx~~~]"
 
-#: web/app/components/SlideCanvas.vue:627 web/app/components/TextContainers.vue:425
+#: web/app/components/SlideCanvas.vue:627 web/app/components/TextObjectLayer.vue:425
 msgid "text of the object"
 msgstr "[téxt ôf thé ôbjéct~~~~~~~]"
 
@@ -10413,15 +10413,15 @@ msgstr "[{n} wîthôût à tîmé~~~~~~~]"
 msgid "{owner} is now the owner of this document."
 msgstr "[{owner} îs nôw thé ôwnér ôf thîs dôcûmént.~~~~~~~~~~~~~~~~~]"
 
-#: web/app/components/TextContainers.vue:176
+#: web/app/components/TextObjectLayer.vue:176
 msgid "{paragraph} · after “{word}”"
 msgstr "[{paragraph} · àftér “{word}”~~~~~~~~~~~]"
 
-#: web/app/components/TextContainers.vue:175
+#: web/app/components/TextObjectLayer.vue:175
 msgid "{paragraph} · at its start"
 msgstr "[{paragraph} · àt îts stàrt~~~~~~~~~~]"
 
-#: web/app/components/TextContainers.vue:176
+#: web/app/components/TextObjectLayer.vue:176
 msgid "{paragraph} · in “{word}”"
 msgstr "[{paragraph} · în “{word}”~~~~~~~~~~]"
 

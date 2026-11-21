@@ -18,7 +18,7 @@ const image = (id: string, extra: object = {}) => ({
   imported: IMPORT,
   rotation: 0,
   snap: true,
-  anchor: { kind: 'cell', container: 's1', row: 0, col: 0 },
+  anchor: { kind: 'cell', holder: 's1', row: 0, col: 0 },
   ...extra,
 })
 
@@ -332,7 +332,7 @@ describe('cell styles (E6.13, D307, D317)', () => {
     await session.refreshUses()
     expect(session.state.styleUses).toEqual({ input: 2 })
     const before = link.count('style_uses')
-    for (const event of ['cell_styles', 'objects', 'styles']) link.push(event, event === 'objects' ? { changed: [], removed: [], order: [], container: 's1' } : { sheet: 's1', area: [0, 0, 0, 0], styles: [] })
+    for (const event of ['cell_styles', 'objects', 'styles']) link.push(event, event === 'objects' ? { changed: [], removed: [], order: [], holder: 's1' } : { sheet: 's1', area: [0, 0, 0, 0], styles: [] })
     await session.settled()
     expect(link.count('style_uses')).toBe(before + 3)
   })
@@ -367,11 +367,11 @@ describe('floating objects (images, E6.17)', () => {
 
   it('follows the stacking order the server sends, and takes objects away', async () => {
     const { link, session } = await opened()
-    link.push('objects', { type: 'objects', container: 's1', changed: [image('a'), image('b')], removed: [], order: ['a', 'b'] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [image('a'), image('b')], removed: [], order: ['a', 'b'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b'])
-    link.push('objects', { type: 'objects', container: 's1', changed: [image('a', { anchor: { kind: 'cell', container: 's1', row: 3, col: 2 } })], removed: [], order: ['a', 'b'] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [image('a', { anchor: { kind: 'cell', holder: 's1', row: 3, col: 2 } })], removed: [], order: ['a', 'b'] })
     expect(session.objectsOn('s1')[0]?.anchor).toMatchObject({ row: 3, col: 2 })
-    link.push('objects', { type: 'objects', container: 's1', changed: [], removed: ['a'], order: ['b'] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [], removed: ['a'], order: ['b'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
     expect(session.state.objects.a).toBeUndefined()
   })
@@ -1754,7 +1754,7 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
       revision: 'main:3',
       sheet: p.sheet,
       objects: [
-        { id: `${p.sheet}-pic`, name: `Logo ${p.sheet}`, kind: 'image', anchor: { kind: 'cell', container: p.sheet, row: 0, col: 0, dx: 0, dy: 0 }, w: 10, h: 10 },
+        { id: `${p.sheet}-pic`, name: `Logo ${p.sheet}`, kind: 'image', anchor: { kind: 'cell', holder: p.sheet, row: 0, col: 0, dx: 0, dy: 0 }, w: 10, h: 10 },
       ],
     })
     const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
@@ -1762,8 +1762,8 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
     expect((await session.taggableThings()).map((t) => t.name).sort()).toEqual(['Budget', 'Logo s1', 'Revenue'])
     await session.goToThing('s2-pic')
     expect(session.state.activeSheet).toBe('s2')
-    expect(session.state.pointed).toMatchObject({ id: 's2-pic', container: 's2' })
-    expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
+    expect(session.state.pointed).toMatchObject({ id: 's2-pic', holder: 's2' })
+    expect(session.state.wayBack).toEqual({ holder: 's1', anchor: null })
   })
 
   it('offers the named ranges on the sheet in sight, and goes to one on another sheet (D552)', async () => {
@@ -1797,8 +1797,8 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
     expect(offered.filter((t) => t.kind === 'range')).toEqual([{ id: 'r1', name: 'Revenue', kind: 'range' }])
     await session.goToThing('r2')
     expect(session.state.activeSheet).toBe('s2')
-    expect(session.state.pointed).toMatchObject({ id: 'r2', container: 's2' })
-    expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
+    expect(session.state.pointed).toMatchObject({ id: 'r2', holder: 's2' })
+    expect(session.state.wayBack).toEqual({ holder: 's1', anchor: null })
   })
 
   it('knows a range is gone once its name is, and keeps the name a tag was written with current', async () => {

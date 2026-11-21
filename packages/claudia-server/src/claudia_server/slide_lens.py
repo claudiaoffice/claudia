@@ -155,8 +155,8 @@ class SlideRecorder:
 
     def _hear(self, event: object) -> None:
         if isinstance(event, ObjectsChanged):
-            if event.container not in self._slides:
-                self._slides.append(event.container)
+            if event.holder not in self._slides:
+                self._slides.append(event.holder)
             self._removed += [r for r in event.removed if r not in self._removed]
         elif isinstance(event, SlidesChanged):
             self._slides_changed = True

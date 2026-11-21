@@ -87,7 +87,7 @@ class FakeLink implements LinkLike {
 const STYLE = { id: 'body-text', name: 'Body text', purpose: '', based_on: null, to_name: false, kind: 'paragraph', css: {}, computed: {}, resolved: { color: '#1f1a33' } }
 const SVG = { id: 'v'.repeat(64), format: 'svg', width: 10, height: 10, animated: false, data: btoa('<svg/>'), first_frame: null }
 const PNG = { id: 'p'.repeat(64), format: 'png', width: 10, height: 10, animated: false, data: 'iVBO', first_frame: null }
-const box = (id: string, slide: string) => ({ id, kind: 'text', w: 400, h: 100, style: 'plain-box', paragraph: { style: 'body-text', text: id, runs: [] }, ref: null, imported: null, rotation: 0, snap: true, anchor: { kind: 'slide', container: slide, x: 0, y: 0 } })
+const box = (id: string, slide: string) => ({ id, kind: 'text', w: 400, h: 100, style: 'plain-box', paragraph: { style: 'body-text', text: id, runs: [] }, ref: null, imported: null, rotation: 0, snap: true, anchor: { kind: 'slide', holder: slide, x: 0, y: 0 } })
 const HANDOUTS: PrintSetupData = { layout: 'handouts-6', page: { ...DEFAULT_PAGE, margins: [36000, 36000, 36000, 36000] } }
 
 function server(link: FakeLink, extra: Record<string, (params: any) => any> = {}) {

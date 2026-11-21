@@ -65,6 +65,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- **Breaking** — on the wire, the slide, sheet or paragraph an object is at is its `holder` (D1430, was
+  `container`): in every anchor, in an `objects` region (`presence`, `lock`, a step's focus) and in the `objects` event.
 - **Breaking** — the glossary's words (D1430): `AiTurn` (was `Step`, what the ai says or calls); the methods
   `branches` and `peek_branch(branch)` (were `lines` and `peek_line(line)`), `propose_switch(branch)`, and `branch`/
   `branches` in the welcome and in the answers (were `line`/`lines`).

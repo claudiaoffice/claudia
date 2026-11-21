@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { descriptionOf } from '~/lib/text-container-names'
-import { columnOf, floatBox, letsGoOfObject, neighbour } from '~/lib/text-containers'
+import { columnOf, floatBox, letsGoOfObject, neighbour } from '~/lib/text-object-layer'
 
-describe('where a container floats', () => {
+describe('where an object floats', () => {
   const layer = { left: 10, top: 20, width: 900, height: 900 }
   it('hangs at its anchor character, not at the edge of the paragraph (D907)', () => {
     expect(floatBox(layer, { left: 130, top: 160 }, {}, 200, 100)).toEqual({ left: 120, top: 140, width: 200, height: 100 })

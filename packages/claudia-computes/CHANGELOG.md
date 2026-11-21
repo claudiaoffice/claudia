@@ -19,6 +19,8 @@ Heavy functions in worker processes (E4.4, D37, D1314).
   copy at that moment, and the cell keeps showing what it showed before.
 
 ### Changed
+- **Breaking** — the glossary's holder (D1430, see `claudia-core`): `CellAnchor.holder` (was `container`),
+  `WorkbookModel.holders()`, `max_objects_per_holder`; an anchor's data says `holder`.
 - **Breaking** — `DefineDiagram`, `UpdateDiagram`, `ForgetDiagram`, `DefineImage`, `ForgetImage`, `DefineShape`,
   `ForgetShape`, `DiagramsChanged`, `ImagesChanged` and `ShapesChanged` are no longer re-exported: claudia-core's
   `DefineAsset`, `UpdateAsset`, `ForgetAsset` and `AssetsChanged` replace them (D1431). `WorkbookModel.users_of(kind,

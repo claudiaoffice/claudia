@@ -621,7 +621,7 @@ def _model_of(
         sheet.cells = dict(table.cells)
         _dress(dressing, sheet, table)
         model.sheets[sheet.id] = sheet
-        model.open_container(str(sheet.id))
+        model.open_holder(str(sheet.id))
     places = _places(_spreadsheet(content))
     for named in read_names(_spreadsheet(content), places).names:
         model.names.put(named)

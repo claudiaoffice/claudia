@@ -22,7 +22,7 @@ const WELCOME: Welcome = {
 }
 
 const entry = (n: number, author = 'ann'): Step => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '' })
-const slideRegion = (container: string): Region => ({ kind: 'objects', container, ids: [] }) as Region
+const slideRegion = (holder: string): Region => ({ kind: 'objects', holder, ids: [] }) as Region
 
 class FakeLink implements LinkLike {
   calls: { method: string; params: any }[] = []
@@ -96,7 +96,7 @@ class TestSession extends BaseSession<TestState> {
     return true
   }
   protected followReplay(focus: Region[]) {
-    this.state.followed = focus.map((r) => (r.kind === 'objects' ? r.container : ''))
+    this.state.followed = focus.map((r) => (r.kind === 'objects' ? r.holder : ''))
   }
   // reaches the protected link the way an app's own changes do
   async change() {

@@ -109,11 +109,11 @@ describe.each(APPS)('the $app session', ({ app, make }) => {
     const { link, session } = await opened(app, make)
     const box = { id: 'o1', kind: 'text', w: 10, h: 10, style: 'plain', anchor: {} }
 
-    link.push('objects', { type: 'objects', container: 'h1', changed: [box], removed: [], order: ['o1'] })
+    link.push('objects', { type: 'objects', holder: 'h1', changed: [box], removed: [], order: ['o1'] })
     expect(session.state.objects.o1).toEqual(box)
     expect(session.state.order.h1).toEqual(['o1'])
 
-    link.push('objects', { type: 'objects', container: 'h1', changed: [], removed: ['o1'], order: [] })
+    link.push('objects', { type: 'objects', holder: 'h1', changed: [], removed: ['o1'], order: [] })
     expect(session.state.objects.o1).toBeUndefined()
     expect(session.state.order.h1).toEqual([])
   })

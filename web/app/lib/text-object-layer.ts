@@ -1,4 +1,4 @@
-// Where a container hangs in the text, on the screen (D560, D1023): at the character it is anchored to, moved by the
+// Where an object hangs in the text, on the screen (D560, D1023): at the character it is anchored to, moved by the
 // offset the model keeps (`dx`, `dy`), floating over the words without pushing any aside (D179). That is the rule the
 // printed page follows (`layoutText`, D907), so what is seen here is what is printed, up to the small differences
 // between the browser's lines and the layout engine's. Pure arithmetic over rectangles, so it can be tested.

@@ -24,7 +24,7 @@ type Wrap = 'over' | 'around' | 'above-below' | 'behind'
 function picture(wrap: Wrap | undefined, extra: object = {}): TextObject {
   return {
     id: 'o1', kind: 'text', w: 200, h: 150, style: 'plain-box', paragraph: { style: 'body', text: 'Bild' }, shape: null, image: null, rotation: 0,
-    anchor: { kind: 'block', container: 'b1', offset: 0, dx: 200, dy: 0, ...(wrap ? { wrap, gap: 8 } : {}), ...extra },
+    anchor: { kind: 'block', holder: 'b1', offset: 0, dx: 200, dy: 0, ...(wrap ? { wrap, gap: 8 } : {}), ...extra },
   } as TextObject
 }
 
@@ -120,7 +120,7 @@ describe('text flowing around a floating object (D1061)', () => {
   })
 
   it('wraps round two objects, one in each paragraph, without a line on either', () => {
-    const second = { ...picture('around'), id: 'o2', anchor: { kind: 'block', container: 'b2', offset: 0, dx: 0, dy: 0, wrap: 'around', gap: 8 } } as TextObject
+    const second = { ...picture('around'), id: 'o2', anchor: { kind: 'block', holder: 'b2', offset: 0, dx: 0, dy: 0, wrap: 'around', gap: 8 } } as TextObject
     const out = layoutText(doc([picture('around'), second]), fonts, resolver, GERMAN)
     for (const page of out.list.pages) {
       const groups = page.items.filter((i) => i.kind === 'group')
@@ -135,7 +135,7 @@ describe('text flowing around a floating object (D1061)', () => {
   })
   it('settles with several objects of every kind over many pages, and puts no word inside any of them', () => {
     const at = (id: string, block: string, wrap: Wrap, dx: number, dy: number, w = 180, h = 120): TextObject =>
-      ({ ...picture(wrap), id, w, h, anchor: { kind: 'block', container: block, offset: 0, dx, dy, wrap, gap: 8 } }) as TextObject
+      ({ ...picture(wrap), id, w, h, anchor: { kind: 'block', holder: block, offset: 0, dx, dy, wrap, gap: 8 } }) as TextObject
     const objects = [at('a', 'b2', 'around', 0, 20), at('b', 'b5', 'above-below', 100, 0, 300, 90), at('c', 'b9', 'around', 330, 10), at('d', 'b12', 'around', 150, 40, 120, 200)]
     const out = layoutText(doc(objects, 18), fonts, resolver, GERMAN)
     expect(out.notes).toEqual([])

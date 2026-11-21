@@ -87,13 +87,13 @@ class TestSession extends BaseSession<BaseState & { here: string }> {
   protected override async inView(): Promise<Thing[]> {
     return this.things().filter((t) => this.on[t.id] === this.state.here)
   }
-  protected override containerOf(id: string): string | null {
+  protected override holderOf(id: string): string | null {
     return this.on[id] ?? null
   }
-  protected override currentContainer(): string | null {
+  protected override currentHolder(): string | null {
     return this.state.here
   }
-  protected override showContainer(id: string): void {
+  protected override showHolder(id: string): void {
     this.state.here = id
   }
 }
@@ -129,8 +129,8 @@ describe('going to what a tag points at', () => {
     const { session, state } = await opened()
     await session.goToThing('o2')
     expect(state.here).toBe('s2')
-    expect(state.pointed).toEqual({ id: 'o2', container: 's2' })
-    expect(state.wayBack).toEqual({ container: 's1', anchor: null })
+    expect(state.pointed).toEqual({ id: 'o2', holder: 's2' })
+    expect(state.wayBack).toEqual({ holder: 's1', anchor: null })
     session.goBack()
     expect(state.here).toBe('s1')
     expect(state.pointed).toBeNull()
@@ -141,8 +141,8 @@ describe('going to what a tag points at', () => {
     session.setAnchorProvider(() => 'top')
     await session.goToThing('o1')
     expect(state.here).toBe('s1')
-    expect(state.pointed).toEqual({ id: 'o1', container: 's1' })
-    expect(state.wayBack).toEqual({ container: 's1', anchor: 'top' })
+    expect(state.pointed).toEqual({ id: 'o1', holder: 's1' })
+    expect(state.wayBack).toEqual({ holder: 's1', anchor: 'top' })
   })
   it('takes a tag to something deleted to the last step it was there, in a replay', async () => {
     const { session, state } = await opened()

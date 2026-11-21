@@ -516,7 +516,7 @@ def test_a_new_workbook_writes_excels_name_for_a_newer_function():
     sheet.cells[(0, 0)] = {"t": "int", "v": 1}
     sheet.cells[(0, 1)] = {"t": "formula", "v": '=IFS(A1>0,"yes",TRUE,"no")'}
     model.sheets[sheet.id] = sheet
-    model.open_container("s1")
+    model.open_holder("s1")
     model._calculate_loaded()  # noqa: SLF001
     assert b"_xlfn.IFS(" in part(workbook_to_xlsx(model), "xl/worksheets/sheet1.xml")
 
@@ -727,6 +727,6 @@ def test_a_file_claudia_wrote_is_not_reported_as_a_protected_workbook():
     """openpyxl writes an empty ``workbookProtection``: it protects nothing, so the import says nothing (IEW-15)."""
     model = WorkbookModel()
     model.sheets[SheetId("s1")] = Sheet(SheetId("s1"), "Data")
-    model.open_container("s1")
+    model.open_holder("s1")
     assert b"<workbookProtection/>" in read_parts(workbook_to_xlsx(model))["xl/workbook.xml"]
     assert xlsx_import_losses(workbook_to_xlsx(model)) == ()

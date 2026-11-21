@@ -37,13 +37,13 @@ from .styles import StyleBook
 
 
 class Placed(NamedTuple):
-    """A paragraph where it is read: its ``container`` (a paragraph of the body, a slide, a sheet), whether it is part
+    """A paragraph where it is read: its ``holder`` (a paragraph of the body, a slide, a sheet), whether it is part
     of the ``main`` text (it counts for the outline and a table of contents; a floating object's words in a text do
     not), and the ``place`` a reader finds it at when the app knows it without laying anything out (a slide's number),
     else ``None``."""
 
     paragraph: Paragraph
-    container: str
+    holder: str
     main: bool
     place: str | None
 

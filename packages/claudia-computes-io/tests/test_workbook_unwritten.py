@@ -33,7 +33,7 @@ def a_workbook() -> WorkbookModel:
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "Data")
     model.sheets[sheet.id] = sheet
-    model.open_container("s1")
+    model.open_holder("s1")
     sheet.cells[(0, 0)] = {"t": "int", "v": 1}
     return model
 

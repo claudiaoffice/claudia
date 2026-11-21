@@ -192,7 +192,7 @@ describe('rendered containers in a session', () => {
   it('turns a text box that holds a fenced block into a container in the same place', async () => {
     const { link, session } = await withRenderings()
     link.handlers.add_rendering = (p: any) => ({ object: 'o7', rendering: 'r7', revision: 'main:3', p })
-    const box = { id: 't1', kind: 'text', w: 400, h: 120, anchor: { kind: 'slide', container: 's1', x: 30, y: 40 } }
+    const box = { id: 't1', kind: 'text', w: 400, h: 120, anchor: { kind: 'slide', holder: 's1', x: 30, y: 40 } }
     ;(session.state.objects as any).t1 = box
     expect(await session.fenceToContainer('t1', '```latex\n\\frac{a}{b}\n```')).toBe('o7')
     expect(link.last('add_rendering')).toMatchObject({ slide: 's1', x: 30, y: 40, w: 400, h: 120, type: 'latex', source: '\\frac{a}{b}' })
@@ -200,7 +200,7 @@ describe('rendered containers in a session', () => {
   })
   it('leaves a text that is not a fence of a type the server makes alone', async () => {
     const { link, session } = await withRenderings()
-    ;(session.state.objects as any).t1 = { id: 't1', kind: 'text', w: 400, h: 120, anchor: { kind: 'slide', container: 's1', x: 0, y: 0 } }
+    ;(session.state.objects as any).t1 = { id: 't1', kind: 'text', w: 400, h: 120, anchor: { kind: 'slide', holder: 's1', x: 0, y: 0 } }
     expect(await session.fenceToContainer('t1', 'just words')).toBeNull()
     expect(await session.fenceToContainer('t1', '```typst\nx\n```')).toBeNull() // the server makes no typst here
     expect(link.count('add_rendering')).toBe(0)

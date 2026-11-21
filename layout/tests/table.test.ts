@@ -224,7 +224,7 @@ describe('a table on pages', () => {
 })
 
 describe('a table in a composes text', () => {
-  const objects = (extra: Record<string, unknown> = {}) => [{ id: 'o1', kind: 'table' as const, w: 480, h: 96, style: 'plain-box', paragraph: null, shape: null, image: null, rotation: 0, ref: 't1', anchor: { kind: 'block' as const, container: 'b1', offset: 0 }, ...extra }]
+  const objects = (extra: Record<string, unknown> = {}) => [{ id: 'o1', kind: 'table' as const, w: 480, h: 96, style: 'plain-box', paragraph: null, shape: null, image: null, rotation: 0, ref: 't1', anchor: { kind: 'block' as const, holder: 'b1', offset: 0 }, ...extra }]
   const doc = (n: number, data = table(GARDEN), extra: Partial<TextDocument> = {}): TextDocument => ({
     blocks: [{ id: 'b1', style: 'body', text: 'Vor der Tabelle.' }, { id: 'b2', style: 'body', text: 'Nach der Tabelle.' }].slice(0, n),
     styles: STYLES,

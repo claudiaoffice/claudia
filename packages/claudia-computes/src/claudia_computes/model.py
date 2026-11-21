@@ -105,20 +105,20 @@ class CellAnchor:
     col: int
 
     @property
-    def container(self) -> str:
+    def holder(self) -> str:
         """The sheet this object belongs to."""
         return str(self.sheet)
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores and clients are sent."""
-        return {"kind": self.kind, "container": str(self.sheet), "row": self.row, "col": self.col}
+        return {"kind": self.kind, "holder": str(self.sheet), "row": self.row, "col": self.col}
 
     @classmethod
     def from_data(cls, data: dict) -> CellAnchor:
         """Read an anchor sent by a client or stored in the log; ``ValueError`` if it is not one."""
         if data.get("kind") != cls.kind:
             raise ValueError(f"computes knows only cell anchors, not {data.get('kind')!r}")
-        sheet, row, col = data.get("container"), data.get("row"), data.get("col")
+        sheet, row, col = data.get("holder"), data.get("row"), data.get("col")
         if not isinstance(sheet, str) or not _is_whole(row) or not _is_whole(col):
             raise ValueError("a cell anchor names a sheet and whole row and col")
         return cls(SheetId(sheet), row, col)
@@ -445,7 +445,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
-    max_objects_per_container: ClassVar[int] = MAX_OBJECTS_PER_SHEET
+    max_objects_per_holder: ClassVar[int] = MAX_OBJECTS_PER_SHEET
 
     def __init__(
         self,
@@ -534,7 +534,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             sheet.col_widths = dict(item["col_widths"])
             sheet.cell_styles = CellStyles.from_data(item["cell_styles"])  # no upcast before the first release (D308)
             model.sheets[sheet.id] = sheet
-            model.open_container(str(sheet.id))
+            model.open_holder(str(sheet.id))
         model.restore_objects(state["objects"], state)
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
@@ -618,7 +618,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         ]
         return [*ranges, *ObjectModel.restyle_users(self, old, new)]
 
-    def containers(self) -> list[str]:
+    def holders(self) -> list[str]:
         """The sheets objects may sit on, in order."""
         return [str(sheet) for sheet in self.sheets]
 
@@ -1229,7 +1229,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         ordered.insert(len(ordered) if index is None else index, sheet)
         self.sheets = {s.id: s for s in ordered}
         self._ids = None
-        self.open_container(str(sheet.id))
+        self.open_holder(str(sheet.id))
 
     def restructure(
         self, edit: StructuralEdit

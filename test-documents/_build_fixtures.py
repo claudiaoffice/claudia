@@ -903,7 +903,7 @@ def _library_charts_through_libreoffice(to: str) -> bytes:
     sheet_id = SheetId("s1")
     model = WorkbookModel()
     model.sheets[sheet_id] = Sheet(sheet_id, "Data")
-    model.open_container("s1")
+    model.open_holder("s1")
     table = (("Region", "Amount", "Cost"), ("North", 100, 60), ("South", 200, 120), ("East", 130, 90))
     for row, line in enumerate(table):
         for col, value in enumerate(line):

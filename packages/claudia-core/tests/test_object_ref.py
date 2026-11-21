@@ -61,6 +61,6 @@ def test_a_body_with_a_field_nobody_knows_is_refused_whichever_form_it_has():
 
 def test_an_add_object_of_schema_5_is_brought_up_to_date():
     assert AddObject.schema == 6
-    stored = {"body": legacy("table"), "anchor": {"container": "s1"}, "at": None}
+    stored = {"body": legacy("table"), "anchor": {"holder": "s1"}, "at": None}
     command = core_commands.decode({"k": "core.AddObject", "s": 5, "d": stored})
     assert command.body == body("table")

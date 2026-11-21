@@ -32,7 +32,7 @@ export const takesRoom = (wrap: Wrap): boolean => wrap === 'around' || wrap === 
 
 /**
  * The box of an object `w` by `h` anchored at `spot`, moved by `away`, kept inside the text `column` across (as the
- * printed pages keep it): where the object is drawn (`floatBox` of text-containers.ts, in page coordinates).
+ * printed pages keep it): where the object is drawn (`floatBox` of text-object-layer.ts, in page coordinates).
  */
 export function objectRect(spot: { left: number; top: number }, away: { dx?: number; dy?: number }, w: number, h: number, column?: Rect): Rect {
   let left = spot.left + (away.dx ?? 0)

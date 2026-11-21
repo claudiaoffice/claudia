@@ -57,7 +57,7 @@ const text = (id: string, extra: object = {}) => ({
   imported: null,
   rotation: 0,
   snap: true,
-  anchor: { kind: 'slide', container: 's1', x: 100, y: 100 },
+  anchor: { kind: 'slide', holder: 's1', x: 100, y: 100 },
   ...extra,
 })
 const ASSET = { id: 'a'.repeat(64), format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }
@@ -73,7 +73,7 @@ const image = (id: string, extra: object = {}) => ({
   imported: IMPORT,
   rotation: 0,
   snap: true,
-  anchor: { kind: 'slide', container: 's1', x: 0, y: 0 },
+  anchor: { kind: 'slide', holder: 's1', x: 0, y: 0 },
   ...extra,
 })
 
@@ -188,15 +188,15 @@ describe('opening a presentation', () => {
 describe('what the server tells', () => {
   it('adds and changes objects, in the stacking order it sends', async () => {
     const { link, session, state } = await opened([text('a'), text('b')])
-    link.push('objects', { type: 'objects', container: 's1', changed: [text('c')], removed: [], order: ['a', 'b', 'c'] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [text('c')], removed: [], order: ['a', 'b', 'c'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b', 'c'])
-    link.push('objects', { type: 'objects', container: 's1', changed: [text('a', { anchor: { kind: 'slide', container: 's1', x: 7, y: 100 } })], removed: [], order: ['a', 'b', 'c'] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [text('a', { anchor: { kind: 'slide', holder: 's1', x: 7, y: 100 } })], removed: [], order: ['a', 'b', 'c'] })
     expect(session.objectsOn('s1')[0]!.anchor.x).toBe(7)
     expect(state.slides[0]!.objects).toBe(3)
   })
   it('takes objects away', async () => {
     const { link, session, state } = await opened([text('a'), text('b')])
-    link.push('objects', { type: 'objects', container: 's1', changed: [], removed: ['a'], order: ['b'] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [], removed: ['a'], order: ['b'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
     expect(state.objects.a).toBeUndefined()
     expect(state.slides[0]!.objects).toBe(1)
@@ -246,7 +246,7 @@ describe('what the server tells', () => {
   it('drops the selection of an object that somebody else removed', async () => {
     const { link, session, state } = await opened([text('a')])
     await session.select('a')
-    link.push('objects', { type: 'objects', container: 's1', changed: [], removed: ['a'], order: [] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [], removed: ['a'], order: [] })
     expect(state.selected).toBeNull()
     await session.settled()
     expect(link.count('unlock')).toBe(1)
@@ -300,13 +300,13 @@ describe('making changes', () => {
   it('adds a text box where it is told to and selects it', async () => {
     const { link, session, state } = await opened()
     link.handlers.add_object = () => {
-      link.push('objects', { type: 'objects', container: 's1', changed: [text('o1')], removed: [], order: ['o1'] })
+      link.push('objects', { type: 'objects', holder: 's1', changed: [text('o1')], removed: [], order: ['o1'] })
       return { object: 'o1', revision: 'main:1' }
     }
     expect(await session.addText({ x: 160, y: 120, w: 640, h: 140 })).toBe('o1')
     expect(link.last('add_object')).toEqual({ slide: 's1', kind: 'text', x: 160, y: 120, w: 640, h: 140, base: 'main:0' })
     expect(state.selected).toBe('o1')
-    expect(link.last('lock').regions).toEqual([{ kind: 'objects', container: 's1', ids: ['o1'] }])
+    expect(link.last('lock').regions).toEqual([{ kind: 'objects', holder: 's1', ids: ['o1'] }])
   })
   it('adds a shape by the id of its outline', async () => {
     const { link, session } = await opened()
@@ -316,7 +316,7 @@ describe('making changes', () => {
   it('imports a picture from disk and selects it (E10.8)', async () => {
     const { link, session, state } = await opened()
     link.handlers.add_image = () => {
-      link.push('objects', { type: 'objects', container: 's1', changed: [image('i1')], removed: [], order: ['i1'] })
+      link.push('objects', { type: 'objects', holder: 's1', changed: [image('i1')], removed: [], order: ['i1'] })
       return { object: 'i1', revision: 'main:1' }
     }
     const id = await session.addImage(
@@ -427,7 +427,7 @@ describe('selecting', () => {
     const { link, session, state } = await opened([text('a'), text('b')])
     await session.select('a')
     expect(state.selected).toBe('a')
-    expect(link.last('lock').regions).toEqual([{ kind: 'objects', container: 's1', ids: ['a'] }])
+    expect(link.last('lock').regions).toEqual([{ kind: 'objects', holder: 's1', ids: ['a'] }])
     await session.select(null)
     expect(state.selected).toBeNull()
     expect(link.count('unlock')).toBe(1)
@@ -459,12 +459,12 @@ describe('selecting', () => {
     await session.select('a')
     expect(session.state.selected).toBe('a')
     expect(link.count('lock')).toBe(0)
-    expect(link.last('presence').regions).toEqual([{ kind: 'objects', container: 's1', ids: ['a'] }])
+    expect(link.last('presence').regions).toEqual([{ kind: 'objects', holder: 's1', ids: ['a'] }])
     expect(session.state.notice).toBeNull()
   })
   it('tells which objects colleagues have selected', async () => {
     const { link, session } = await opened([text('a'), text('b')])
-    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'objects', container: 's1', ids: ['b'] }], locked: true } })
+    link.push('ephemeral', { kind: 'presence', sender: 'ben', data: { regions: [{ kind: 'objects', holder: 's1', ids: ['b'] }], locked: true } })
     expect(session.selectedByOthers('s1')).toEqual([{ id: 'b', user: 'ben', locked: true }])
     expect(session.selectedByOthers('s2')).toEqual([])
   })
@@ -562,7 +562,7 @@ describe('speaker notes and planned times (D342, D343)', () => {
 })
 
 describe('tags to things on slides (E5.20, D551)', () => {
-  const named = (id: string, name: string, slide = 's1') => text(id, { name, anchor: { kind: 'slide', container: slide, x: 100, y: 100 } })
+  const named = (id: string, name: string, slide = 's1') => text(id, { name, anchor: { kind: 'slide', holder: slide, x: 100, y: 100 } })
 
   it('offers the named things on the slide in sight, and the slide itself', async () => {
     const { link, session } = await opened([named('t1', 'Title'), text('t2')])
@@ -592,8 +592,8 @@ describe('tags to things on slides (E5.20, D551)', () => {
     expect(session.state.activeSlide).toBe('s1')
     await session.goToThing('t9')
     expect(session.state.activeSlide).toBe('s2')
-    expect(session.state.pointed).toEqual({ id: 't9', container: 's2' })
-    expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
+    expect(session.state.pointed).toEqual({ id: 't9', holder: 's2' })
+    expect(session.state.wayBack).toEqual({ holder: 's1', anchor: null })
     session.goBack()
     expect(session.state.activeSlide).toBe('s1')
     expect(session.state.wayBack).toBeNull()
@@ -624,19 +624,19 @@ describe('tags to things on slides (E5.20, D551)', () => {
       await session.goToThing('t9')
       vi.advanceTimersByTime(POINT_MS + 10)
       expect(session.state.pointed).toBeNull()
-      expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
+      expect(session.state.wayBack).toEqual({ holder: 's1', anchor: null })
     })
     it('is kept even when the view does not move, with the place the view reports', async () => {
       const session = await two()
       session.setAnchorProvider(() => 'top-of-s1')
       await session.goToThing('t1')
-      expect(session.state.wayBack).toEqual({ container: 's1', anchor: 'top-of-s1' })
+      expect(session.state.wayBack).toEqual({ holder: 's1', anchor: 'top-of-s1' })
     })
     it('is taken afresh by the next jump, so that it leads to where the person was last', async () => {
       const session = await two()
       await session.goToThing('t9')
       await session.goToThing('t1')
-      expect(session.state.wayBack).toEqual({ container: 's2', anchor: null })
+      expect(session.state.wayBack).toEqual({ holder: 's2', anchor: null })
     })
     it('asks the view to scroll to the place it was, once, when used', async () => {
       const session = await two()

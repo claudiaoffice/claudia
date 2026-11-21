@@ -27,9 +27,9 @@ from claudia_core import (
 
 @dataclass
 class Host:
-    """A ParagraphHost by hand: containers in order, each with its paragraphs in the order they are read."""
+    """A ParagraphHost by hand: holders in order, each with its paragraphs in the order they are read."""
 
-    containers: dict[str, list[Paragraph]]
+    holders: dict[str, list[Paragraph]]
     lists: ListBook = field(default_factory=lambda: ListBook([ListDef("l1", "numbers"), ListDef("l2", "bullets")]))
     styles: StyleBook = field(default_factory=lambda: StyleBook([StyleDef("body", "Body", "", None, {})]))
     schemes: SchemeBook = field(default_factory=SchemeBook)
@@ -37,9 +37,9 @@ class Host:
     order: int = 0
 
     def reading_order(self):
-        for container, paragraphs in self.containers.items():
+        for holder, paragraphs in self.holders.items():
             for paragraph in paragraphs:
-                yield Placed(paragraph, container, container not in self.asides, None)
+                yield Placed(paragraph, holder, holder not in self.asides, None)
 
     @property
     def structure_version(self):
@@ -70,7 +70,7 @@ def test_the_labels_are_worked_out_again_only_when_the_structure_or_the_lists_ch
     structure = TextStructure(host)
     first = structure.labels()
     assert structure.labels() is first, "nothing changed: the same answer, not counted again"
-    host.containers["s1"].append(p("t2", ListItem("l1")))
+    host.holders["s1"].append(p("t2", ListItem("l1")))
     assert structure.labels() is first, "the host has not said that its structure changed"
     host.order += 1
     assert {k: v.marker for k, v in structure.labels().items()} == {"t1": "1.", "t2": "2."}
@@ -85,7 +85,7 @@ def test_settling_tells_only_what_changed_and_a_label_that_went_away_as_none():
     events = Events()
     structure.settle(events)
     assert events.seen == [], "the clients learn the first labels with the document"
-    host.containers["s1"][0] = p("t1")
+    host.holders["s1"][0] = p("t1")
     host.order += 1
     structure.settle(events)
     (event,) = events.seen
@@ -102,7 +102,7 @@ def test_a_paragraph_that_is_no_longer_there_is_not_told_about():
     host = Host({"s1": [p("t1", ListItem("l1"))], "s2": [p("t2", ListItem("l1"))]})
     structure = TextStructure(host)
     events = Events()
-    del host.containers["s1"]
+    del host.holders["s1"]
     host.order += 1
     structure.settle(events)
     assert events.seen[0].to_data()["labels"] == {"t2": {"marker": "1.", "path": [1], "number": "1"}}
@@ -111,7 +111,7 @@ def test_a_paragraph_that_is_no_longer_there_is_not_told_about():
 def test_where_a_paragraph_is_read_and_whether_it_is_part_of_the_main_text_is_the_hosts_word():
     host = Host({"b1": [p("b1"), p("o1")]}, asides=frozenset())
     placed = list(TextStructure(host).reading_order())
-    assert [(x.paragraph.id, x.container, x.main, x.place) for x in placed] == [
+    assert [(x.paragraph.id, x.holder, x.main, x.place) for x in placed] == [
         ("b1", "b1", True, None),
         ("o1", "b1", True, None),
     ]
@@ -182,7 +182,7 @@ def test_an_own_item_wins_over_the_one_the_style_gives():
 
 def test_words_beside_the_main_text_are_not_numbered_as_headings():
     host = outline_host(styled("a", "h1"))
-    host.containers["box"] = [styled("o1", "h1")]
+    host.holders["box"] = [styled("o1", "h1")]
     host.asides = frozenset({"box"})
     assert markers(host) == {"a": "1"}
 

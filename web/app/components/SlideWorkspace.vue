@@ -261,7 +261,7 @@ async function goToTarget() {
   const found = state.selected ? session.referenceIn(state.selected) : null
   const target = found && found.shown?.state !== 'broken' ? state.objects[found.field.target] : undefined
   if (!target) return
-  await session.showSlide(target.anchor.container)
+  await session.showSlide(target.anchor.holder)
   await session.select(target.id)
 }
 

@@ -38,7 +38,7 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
-   "container"
+   "holder"
   ]
  },
  "Applied": {
@@ -1189,7 +1189,7 @@
  "MAX_LIST_LEVEL": {
   "value": "8"
  },
- "MAX_OBJECTS_PER_CONTAINER": {
+ "MAX_OBJECTS_PER_HOLDER": {
   "value": "500"
  },
  "MAX_PARAGRAPH_TEXT": {
@@ -1329,13 +1329,13 @@
    "check_object": "(self, obj: 'VisualObject[A]', *, shared_names: 'bool' = True) -> 'None'",
    "check_table": "(self, definition: 'TableDef') -> 'None'",
    "check_thing_name": "(self, thing_id: 'str', name: 'str', *, shared: 'bool' = True) -> 'None'",
-   "close_container": "(self, container: 'str') -> 'None'",
-   "containers": "(self) -> 'Iterable[str]'",
+   "close_holder": "(self, holder: 'str') -> 'None'",
    "delete_object": "(self, object_id: 'str') -> 'tuple[VisualObject[A], int]'",
    "diagram_from_data": "(self, data: 'dict') -> 'DiagramDefinition'",
    "entry_words": "(self, paragraph_id: 'str') -> 'Paragraph'",
    "get_object": "(self, object_id: 'str') -> 'VisualObject[A]'",
    "has_thing": "(self, thing_id: 'str') -> 'bool'",
+   "holders": "(self) -> 'Iterable[str]'",
    "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None, *, shared_names: 'bool' = True) -> 'None'",
    "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'ObjectsChanged'",
    "is_entry": "(self, paragraph_id: 'str') -> 'bool'",
@@ -1348,10 +1348,10 @@
    "object_generated": "(self, object_id: 'str') -> 'Generated | None'",
    "object_item": "(self, object_id: 'str') -> 'ListItem | None'",
    "object_list_in_use": "(self, list_id: 'str') -> 'bool'",
-   "objects_changed": "(self, container: 'str', *, changed: 'tuple[VisualObject[A], ...]' = (), removed: 'tuple[str, ...]' = ()) -> 'ObjectsChanged'",
-   "objects_on": "(self, container: 'str') -> 'list[VisualObject[A]]'",
+   "objects_changed": "(self, holder: 'str', *, changed: 'tuple[VisualObject[A], ...]' = (), removed: 'tuple[str, ...]' = ()) -> 'ObjectsChanged'",
+   "objects_on": "(self, holder: 'str') -> 'list[VisualObject[A]]'",
    "objects_to_data": "(self) -> 'list[dict]'",
-   "open_container": "(self, container: 'str') -> 'None'",
+   "open_holder": "(self, holder: 'str') -> 'None'",
    "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
    "place_regions": "(self, anchor: 'A') -> 'tuple[Any, ...]'",
    "put_entry_words": "(self, paragraph_id: 'str', words: 'Paragraph') -> 'None'",
@@ -1369,7 +1369,7 @@
    "selection_of": "(self, object_id: 'str') -> 'tuple[ObjectSet, ...]'",
    "set_thing_description": "(self, thing_id: 'str', description: 'str') -> 'str'",
    "set_thing_name": "(self, thing_id: 'str', name: 'str') -> 'str'",
-   "stack_of": "(self, container: 'str') -> 'tuple[str, ...]'",
+   "stack_of": "(self, holder: 'str') -> 'tuple[str, ...]'",
    "style_in_use": "(self, style_id: 'str') -> 'bool'",
    "thing_description": "(self, thing_id: 'str') -> 'str'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
@@ -1390,7 +1390,7 @@
   "class": [
    "object"
   ],
-  "init": "(container: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
+  "init": "(holder: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectSet'",
    "overlaps": "(self, other: 'object') -> 'bool'",
@@ -1403,7 +1403,7 @@
   "class": [
    "object"
   ],
-  "init": "(object_id: 'str', container: 'str', source: 'str', text: 'str') -> None",
+  "init": "(object_id: 'str', holder: 'str', source: 'str', text: 'str') -> None",
   "methods": {},
   "properties": []
  },
@@ -1411,7 +1411,7 @@
   "class": [
    "object"
   ],
-  "init": "(container: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
+  "init": "(holder: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
   "methods": {
    "to_data": "(self) -> 'dict'",
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
@@ -1518,7 +1518,7 @@
   "class": [
    "tuple"
   ],
-  "init": "(paragraph: Paragraph, container: str, main: bool, place: str | None)",
+  "init": "(paragraph: Paragraph, holder: str, main: bool, place: str | None)",
   "methods": {},
   "properties": []
  },
@@ -2773,7 +2773,7 @@
    "with_body": "(self, **changes: 'Any') -> 'Self'"
   },
   "properties": [
-   "container",
+   "holder",
    "id"
   ]
  },
@@ -2924,7 +2924,7 @@
   "function": "(entries: 'Iterable[tuple[str, ListItem | None]]', lists: 'ListBook', schemes: 'SchemeBook') -> 'dict[str, Label]'"
  },
  "object_texts": {
-  "function": "(model: 'ObjectModel', containers: 'Iterable[str]', sources: 'Iterable[str]' = ('box', 'label', 'description')) -> 'Iterator[ObjectText]'"
+  "function": "(model: 'ObjectModel', holders: 'Iterable[str]', sources: 'Iterable[str]' = ('box', 'label', 'description')) -> 'Iterator[ObjectText]'"
  },
  "paragraph_for": {
   "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"

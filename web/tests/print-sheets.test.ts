@@ -85,7 +85,7 @@ const LANDSCAPE: SheetPrintData = { ...DEFAULT_SHEET_PRINT_DATA, orientation: 'l
 const style = (id: string, css: Record<string, string>, extra: object = {}) => ({ id, name: id, purpose: '', based_on: null, css, computed: css, resolved: css, to_name: false, kind: 'paragraph', ...extra })
 const OBJECT = (id: string, extra: object = {}) => ({
   id, kind: 'image', w: 120, h: 80, style: 'plain-image', paragraph: null, ref: 'pic', imported: null, rotation: 0, snap: true, description: 'a picture', decorative: false,
-  anchor: { kind: 'cell', container: 's1', row: 2, col: 1 }, ...extra,
+  anchor: { kind: 'cell', holder: 's1', row: 2, col: 1 }, ...extra,
 })
 const CELLS: Record<string, [number, number, any]> = {
   a: [0, 0, { t: 'text', v: 'Item' }],

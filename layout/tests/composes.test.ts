@@ -94,10 +94,10 @@ describe('a composes text on pages', () => {
   it('draws floating objects where they hang, clipped, and says what it cannot print', () => {
     const d = doc(5, {
       objects: [
-        { id: 'o1', kind: 'text', w: 200, h: 40, style: 'plain-box', paragraph: { style: 'body', text: 'Ein Kasten mit sehr viel Text, der nicht hineinpasst und abgeschnitten wird.' }, shape: null, image: null, rotation: 0, anchor: { kind: 'block', container: 'b3', offset: 5 } },
-        { id: 'o2', kind: 'shape', w: 100, h: 100, style: 'plain-shape', paragraph: { style: 'shape-label', text: 'Kreis' }, shape: 'circle', image: null, rotation: 10, anchor: { kind: 'block', container: 'b2', offset: 0 } },
-        { id: 'o3', kind: 'image', w: 70, h: 50, style: 'plain-image', paragraph: null, shape: null, image: 'img1', rotation: 0, anchor: { kind: 'block', container: 'b4', offset: 0 } },
-        { id: 'o4', kind: 'image', w: 70, h: 50, style: 'plain-image', paragraph: null, shape: null, image: 'svg1', rotation: 0, anchor: { kind: 'block', container: 'b4', offset: 0 } },
+        { id: 'o1', kind: 'text', w: 200, h: 40, style: 'plain-box', paragraph: { style: 'body', text: 'Ein Kasten mit sehr viel Text, der nicht hineinpasst und abgeschnitten wird.' }, shape: null, image: null, rotation: 0, anchor: { kind: 'block', holder: 'b3', offset: 5 } },
+        { id: 'o2', kind: 'shape', w: 100, h: 100, style: 'plain-shape', paragraph: { style: 'shape-label', text: 'Kreis' }, shape: 'circle', image: null, rotation: 10, anchor: { kind: 'block', holder: 'b2', offset: 0 } },
+        { id: 'o3', kind: 'image', w: 70, h: 50, style: 'plain-image', paragraph: null, shape: null, image: 'img1', rotation: 0, anchor: { kind: 'block', holder: 'b4', offset: 0 } },
+        { id: 'o4', kind: 'image', w: 70, h: 50, style: 'plain-image', paragraph: null, shape: null, image: 'svg1', rotation: 0, anchor: { kind: 'block', holder: 'b4', offset: 0 } },
       ],
       shapes: [{ id: 'circle', path: 'M50 0 A50 50 0 1 1 50 100 A50 50 0 1 1 50 0 Z', text_area: { x: 14.6, y: 14.6, w: 70.8, h: 70.8 } }],
       images: [
@@ -119,7 +119,7 @@ describe('a composes text on pages', () => {
   it('moves an object off its anchor character by the offset the model keeps (D1023)', () => {
     const at = (anchor: object) => {
       const d = doc(1, {
-        objects: [{ id: 'o1', kind: 'text', w: 200, h: 40, style: 'plain-box', paragraph: { style: 'body', text: 'Kasten' }, shape: null, image: null, rotation: 0, anchor: { kind: 'block', container: 'b1', offset: 0, ...anchor } }],
+        objects: [{ id: 'o1', kind: 'text', w: 200, h: 40, style: 'plain-box', paragraph: { style: 'body', text: 'Kasten' }, shape: null, image: null, rotation: 0, anchor: { kind: 'block', holder: 'b1', offset: 0, ...anchor } }],
       })
       const g = layoutText(d, fonts, resolver, GERMAN).list.pages[0]!.items.find((i) => i.kind === 'group')
       return g && g.kind === 'group' ? g.clip! : null
