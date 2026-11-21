@@ -5,6 +5,7 @@ could ask in a loop. The hashing is done in a thread, behind the same cap as a l
 handled; the handler then finds the result ready.
 """
 
+import functools
 import json
 import threading
 import time
@@ -14,13 +15,28 @@ from starlette.testclient import TestClient
 from test_server_app import Peer
 
 from claudia_container import KdfParams
+from claudia_container.kdf import calibrate
 from claudia_core.testing import ListModel
 from claudia_server.app import create_app
 from claudia_server.hub import Hub
 from claudia_server.login_throttle import LoginThrottle
 from claudia_server.sealed import SealedDocuments
 
-SLOW = KdfParams(iterations=3, memory_kib=64 * 1024, lanes=1)  # a few tenths of a second here
+SLOW = KdfParams(iterations=3, memory_kib=64 * 1024, lanes=1)  # the least: a tenth of a second on a fast machine
+SEEN_AFTER = 0.15
+"""Hashing must take longer than this for "another window is answered quickly" to mean anything (PROC-38)."""
+
+
+@functools.cache
+def slow_enough() -> KdfParams:
+    """``SLOW``, with as many passes as this machine needs to take about twice ``SEEN_AFTER`` per hash (PROC-38).
+
+    A fixed cost took 0.12 s on the runners of CI, below what the test needs, and 0.15 s or more on a slower machine;
+    what the test needs is a time, not a number of passes, so it measures the machine like the server does (D1267).
+    """
+    return calibrate(2 * SEEN_AFTER, max_memory_kib=SLOW.memory_kib, floor=SLOW)
+
+
 ANN, ANN_PW = "Annabelle", "Correct-Horse-9"
 BEN, BEN_PW = "Bertram", "Battery-Staple-7"
 NEW_PW = "Fresh-Start-42"
@@ -38,7 +54,7 @@ def window(client, **kw):
 
 @pytest.fixture
 def served(tmp_path):
-    store = SealedDocuments(tmp_path, ListModel, kdf=SLOW)
+    store = SealedDocuments(tmp_path, ListModel, kdf=slow_enough())
     app = create_app(Hub(store), store, login_throttle=LoginThrottle(free_tries=10**6))
     with TestClient(app) as client:
         try:
@@ -91,7 +107,8 @@ def two_windows(client):
 def test_another_window_is_answered_quickly_while_a_password_is_hashed(served, call):
     client, store = served
     first, second = two_windows(client)
-    assert hashing_takes_long_enough_to_see(store) > 0.15, "this machine hashes too fast for the test to mean anything"
+    took = hashing_takes_long_enough_to_see(store)
+    assert took > SEEN_AFTER, f"this machine hashes too fast for the test to mean anything ({took:.3f} s)"
     waited = pings_while(second, (first, *call))
     assert waited < 0.05, f"{call[0]} stopped the other window for {waited:.3f} s"
 

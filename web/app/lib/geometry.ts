@@ -109,6 +109,9 @@ function resizeKeeping(start: Frame, handle: Handle, dx: number, dy: number, asp
 const TEXT_BOX = { w: 640, h: 140 }
 const SHAPE_HEIGHT = 240
 const SHAPE_WIDTH = 360
+/** How far an arrow key moves a selected object, in every app that has pixels to move it by; with Shift, the fine step. */
+export const NUDGE = 10
+export const NUDGE_FINE = 1
 const STEP = 32 // how far each new object is shifted from the one before
 const STEPS = 8
 
