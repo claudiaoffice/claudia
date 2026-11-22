@@ -228,3 +228,15 @@ against a floor of 0.15 s). The earlier list stands: SEC-22, PROC-37, CODE-74, U
   without reaching into a private name. No other change.
 * Could not be run: a log from real use (several people, apps, undo, pasting) does not exist yet; that measurement is
   the follow-up named in the story.
+
+## E2.7 closed (2026-11-22)
+
+* Keys never in logs: `test_server_keys_stay_out_of_logs.py`. One test drives a whole session through the WebSocket door
+  at DEBUG (create, invite, five edits packed every two, chat, a wrong password, `remove_person` which renews the keys,
+  leave, come back) and looks for every key before and after the renewal as bytes, hex and base64 in the captured log.
+  The other checks the text of `_Held`.
+* SEC-23: `_Held.keys` (server) and `Renewed.keys` (document file) are `field(repr=False)`, like the other key-holding
+  dataclasses. No line moved, so the translation catalogues are unchanged.
+* The rest of the acceptance was already built (back-off, idle release, memory only); the story's evidence says where.
+* Not run: a check of the logs of a real server over days (uvicorn's access log, the reverse proxy's); the tests capture
+  Python logging only.
