@@ -6117,7 +6117,7 @@ msgstr "Name oder Passwort stimmen nicht (oder es gibt kein solches Dokument)."
 msgid "The name or password is not right."
 msgstr "Name oder Passwort stimmen nicht."
 
-#: packages/claudia-server/src/claudia_server/auth.py:338 packages/claudia-server/src/claudia_server/sealed.py:313
+#: packages/claudia-server/src/claudia_server/auth.py:338 packages/claudia-server/src/claudia_server/sealed.py:314
 msgid "The name “{name}” belongs to the AI assistant. Choose another name."
 msgstr "Der Name „{name}“ gehört dem KI-Assistenten. Wählen Sie einen anderen Namen."
 
