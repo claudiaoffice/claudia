@@ -3,8 +3,8 @@ Feature: Slides in computes (E6.31)
   As someone who builds charts in a workbook, I want a slide among my sheets that holds a chart together with text
   boxes and shapes, so that a chart can have a page of its own with words beside it, and works like a slide in creates.
   A slide comes into existence only for a chart, and goes with its last object. The screens are
-  `notes/mockups/computes-slides-*.svg`, the architecture `notes/e6-31-slides-in-computes.md`. `Q<n>` points to a
-  question in `slides.review.md`; a scenario tagged `@needs-decision` says what I propose and waits for the answer.
+  `notes/mockups/computes-slides-*.svg`, the architecture `notes/e6-31-slides-in-computes.md`. The owner's answers
+  to the review of 2026-11-22 are written into the scenarios (`Q<n>` names the question they answer).
   What every object does (selecting, moving, scaling, naming, the object menu as such) is in `specs/objects/` and is
   not repeated here.
 
@@ -28,8 +28,9 @@ Feature: Slides in computes (E6.31)
       When I insert a bar chart of A1:B4 as a slide named "Sales chart"
       Then the tabs read "Sheet1", "Sales chart", "Costs"
       And the tab "Sales chart" is marked as a slide
-      # Q3
+      # Q3: the slide is shown with nothing selected
       And the slide "Sales chart" is shown, and the chart fills its frame
+      And nothing is selected
       And instead of the formula bar there are the tools Text, Image, Circle, Rectangle and Triangle
       And there are no speaker notes and there is no Present
 
@@ -65,13 +66,12 @@ Feature: Slides in computes (E6.31)
       When I open the object menu of the chart
       Then it offers "Name & describe…", "Style…", "Move to Slide" and "Delete"
 
-    @needs-decision
-    Scenario: The chart moves to a new slide named after it
-      # Q1: names are one namespace (D550), so the slide and the chart cannot both be called "Sales"
+    Scenario: The chart moves to a new slide and keeps its name
+      # Q1: the chart keeps the name people may already use for it; the new slide gets the next free "Slide N"
       When I choose "Move to Slide" in the object menu of the chart
-      Then the tabs read "Sheet1", "Sales"
-      And the slide "Sales" is shown, and the chart fills its frame
-      And the chart on it is called "Chart 1"
+      Then the tabs read "Sheet1", "Slide 1"
+      And the slide "Slide 1" is shown, and the chart fills its frame
+      And the chart on it is still called "Sales"
       And Sheet1 has no chart
 
     Scenario: One undo puts the chart back where it was
@@ -80,6 +80,18 @@ Feature: Slides in computes (E6.31)
       And I undo
       Then the chart floats on Sheet1 at the place and in the size it had
       And the tabs read "Sheet1"
+      And Sheet1 is shown
+
+    @extended @two-users
+    Scenario: Undoing the move keeps the slide when a colleague put something on it
+      # Q4: the slide goes with the undo only when it is empty
+      Given Ben, an editor, has the document open
+      When I choose "Move to Slide" in the object menu of the chart
+      And Ben adds a text box saying "Note" to the slide "Slide 1"
+      And I undo
+      Then the chart floats on Sheet1 at the place and in the size it had
+      And the tabs read "Sheet1", "Slide 1"
+      And the slide "Slide 1" shows the text box "Note"
 
   # ================================================================ more on a slide
 
@@ -101,9 +113,8 @@ Feature: Slides in computes (E6.31)
     Background:
       Given I inserted a bar chart of A1:B4 as a slide named "Sales chart"
 
-    @needs-decision
     Scenario: Deleting the only chart deletes the slide
-      # Q2: which tab is shown afterwards
+      # Q2: the tab before it is shown (the one after it, if the slide was the first)
       When I delete the chart
       Then the tabs read "Sheet1"
       And Sheet1 is shown
@@ -150,7 +161,7 @@ Feature: Slides in computes (E6.31)
       When I undo
       Then Ben's tabs read "Sheet1"
 
-    @two-users @needs-decision
+    @two-users
     Scenario: A viewer sees the slide and cannot move a chart
       # Q5
       Given Vera, a viewer, has the document open
@@ -163,13 +174,12 @@ Feature: Slides in computes (E6.31)
   @extended @io:packages/claudia-computes-io/tests/test_slide_plan.py
   Rule: A slide is written to ods and xlsx as a sheet with its objects on it
 
-    @needs-decision
     Scenario: Downloading as xlsx or ods says that a slide became a sheet
-      # Q6: the words
+      # Q6
       Given I inserted a bar chart of A1:B4 as a slide named "Sales chart"
       When I export the document as xlsx
       Then the file has the sheets "Sheet1" and "Sales chart", and the chart is on "Sales chart"
-      And I am told that the slide "Sales chart" was written as a sheet
+      And I am told "The slide “Sales chart” was written as a sheet: a workbook in this format has no slides."
 
     Scenario: Read back, what was a slide is a sheet
       Given an xlsx file written from a workbook with the slide "Sales chart"
@@ -177,7 +187,7 @@ Feature: Slides in computes (E6.31)
       Then the tabs read "Sheet1", "Sales chart"
       And "Sales chart" is a sheet with the chart floating on it
 
-  @extended @needs-decision
+  @extended
   Rule: A slide is printed as a page of its own
 
     Scenario: Printing while a slide is shown
@@ -185,3 +195,10 @@ Feature: Slides in computes (E6.31)
       Given I inserted a bar chart of A1:B4 as a slide named "Sales chart"
       When I open the print preview
       Then it shows one landscape page with the chart, as a slide in creates is printed
+
+    Scenario: Printing the whole workbook puts the slide between the sheets
+      # Q7
+      Given there is a second sheet "Costs"
+      And I inserted a bar chart of A1:B4 as a slide named "Sales chart" while Sheet1 was shown
+      When I print the whole workbook
+      Then the pages are Sheet1, the slide "Sales chart" on a landscape page, then Costs
