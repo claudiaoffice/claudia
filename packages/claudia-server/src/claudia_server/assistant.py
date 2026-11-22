@@ -100,6 +100,14 @@ class AsyncEngine(Protocol):
         """The steps that answer ``task``. May raise: the assistant then says it could not answer."""
 
 
+@runtime_checkable
+class Answering(Protocol):
+    """An engine that can say who would answer the next question, given what the owners allowed."""
+
+    def answering(self, consent: AiConsent) -> Via:
+        """Who answers, with the sentence for the chat that goes with it."""
+
+
 class Assistant:
     """The AI participant of one document.
 
@@ -129,6 +137,10 @@ class Assistant:
         self.connection: Connection | None = None
         self._queue: deque[tuple[ChatRecord, AiMode]] = deque()
         self._worker: asyncio.Task | None = None
+
+    def answering(self, consent: AiConsent) -> Via | None:
+        """Who would answer the next question, if the engine says (the router does); ``None`` otherwise."""
+        return self.engine.answering(consent) if isinstance(self.engine, Answering) else None
 
     # -- joining ---------------------------------------------------------------------------
     def attach(self, hosted: HostedDocument) -> Connection:

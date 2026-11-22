@@ -275,3 +275,20 @@ def test_after_the_stop_the_next_question_goes_to_the_servers_own_provider(anthr
         assert anthropic.requests == []
 
     served(test, claude_desk(anthropic, local=runner_of("the local model")))
+
+
+# -- the windows are told who answers here now
+def test_the_consent_says_who_answers_here_now_and_why_it_is_not_claude(anthropic):
+    async def test(hosted, ann, desk):
+        before = ann.request("ai_consent")["result"]
+        assert before["answering"] == {
+            "provider": "local",
+            "label": "Qwen2.5-7B",
+            "remote": False,
+            "note": NOTE_NOT_ALLOWED,
+        }
+        after = ann.request("set_ai_consent", {"allowed": True})["result"]
+        assert after["answering"] == CLAUDE_VIA
+        assert ann.request("ai_consent")["result"]["answering"] == CLAUDE_VIA
+
+    served(test, claude_desk(anthropic, local=runner_of("the local model")))

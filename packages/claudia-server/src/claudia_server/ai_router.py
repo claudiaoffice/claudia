@@ -77,6 +77,12 @@ class AiRouter:
         self._parts = parts
         self._memory = ConversationMemory()
 
+    def answering(self, consent: AiConsent) -> Via:
+        """Who answers a question in a document whose owners decided ``consent``, and why not Claude where it is
+        not (the note), for the badge."""
+        decision, note = self._desk.decide(consent)
+        return replace(decision.via, note=note)
+
     async def plan_async(self, task: Task) -> list[AiTurn]:
         """The steps that answer ``task``, each ``Say`` marked with who answered."""
         decision, note = self._desk.decide(task.consent() if task.consent else AiConsent())

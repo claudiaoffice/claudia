@@ -320,6 +320,8 @@ class Context:
     font_catalogue: Callable[[], Any] = field(default=lambda: None)
     # What the owners allowed a remote AI provider in this document (E7.11); ``None``: a context that keeps none.
     consent: ConsentBook | None = None
+    # Who answers `@ai` in this document now, as `Via.to_data` says it; ``None`` when nobody does.
+    answering: Callable[[], dict | None] = field(default=lambda: None)
 
     @property
     def user(self) -> str:
@@ -1389,10 +1391,11 @@ def _audit_log(ctx):
 def _ai_consent(ctx):
     """Whether the owners allowed Claude to be sent this document's content when somebody asks `@ai` here (D264): off
     until an owner says so. Any role may read it, a viewer too. Returns `{provider, allowed, by, at, owners,
-    history}`: `by` and `at` are who decided last and when, `owners` the people who can change it, `history` every
-    decision (`{allowed, who, when}`) oldest first."""
+    history, answering}`: `by` and `at` are who decided last and when, `owners` the people who can change it,
+    `history` every decision (`{allowed, who, when}`) oldest first, `answering` who answers `@ai` here now (`{provider,
+    label, remote, note}`; `note` says why it is not Claude where it is not)."""
     state = ctx.consent.state if ctx.consent is not None else AiConsent()
-    return consent_view(state, CLAUDE, _owners(ctx))
+    return {**consent_view(state, CLAUDE, _owners(ctx)), "answering": ctx.answering()}
 
 
 @core_methods.method("set_ai_consent", "allowed:bool", write=True)
@@ -1412,7 +1415,7 @@ def _set_ai_consent(ctx, allowed):
         raise RequestError(
             "unavailable", msg("this server cannot keep the owners' consent, so Claude is not allowed")
         ) from None
-    view = consent_view(ctx.consent.state, CLAUDE, _owners(ctx))
+    view = {**consent_view(ctx.consent.state, CLAUDE, _owners(ctx)), "answering": ctx.answering()}
     if record is not None:
         ctx.document.publish("ai_consent_changed", ctx.user, {"allowed": allowed, "by": ctx.user, "at": record.when})
     return view

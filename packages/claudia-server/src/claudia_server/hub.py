@@ -348,6 +348,7 @@ class Connection:
                 hosted.render_outcomes,
                 hosted.font_catalogue,
                 hosted.consent,
+                hosted.answering,
             )
             hosted.acting_user = self.account.user
             result = hosted.methods.dispatch(context, name, params)
@@ -504,6 +505,13 @@ class HostedDocument:
         for connection in list(self.connections):
             if connection is not skip:
                 connection.deliver(message)
+
+    def answering(self) -> dict | None:
+        """Who answers ``@ai`` here now (``Via.to_data``), for the windows' badge; ``None`` without an assistant."""
+        if self.assistant is None:
+            return None
+        via = self.assistant.answering(self.consent.state)
+        return via.to_data() if via is not None else None
 
     def touch(self) -> None:
         """Note that something happened (for unloading idle documents)."""
