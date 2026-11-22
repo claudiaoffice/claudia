@@ -73,8 +73,9 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
   * A viewer (15 rows), waiting for UX-69: Vera clicks the entries even when they are greyed, tries the rename and the
     colour controls if there are any, drags the object and a handle, Format ▸ Rotate, Delete. Nothing is sent, the
     document and the colleague's page stay as they were (all of that passes today); she is not told (UX-69).
-  * A container needs LaTeX on the server: where the entry is off the scenario is skipped with that reason (CI's
-    end-to-end job installs no LaTeX, so the six container rows of the two-people and undo scenarios skip there).
+  * A container is a LaTeX one, left empty: where a server offers no LaTeX container (the entry is off) the scenario is
+    skipped with that reason. CI's end-to-end job offers it and ran all six container rows (2026-11-22, run
+    45048969323: 120 passed, 125 skipped, 19 xfailed in `tests/e2e`, as here).
 * `tests/e2e/specs/conftest.py`: `suite` (a server of all three apps, D430) and `suite_world`; `Person` takes an app,
   picks the kind of a new document on a server of several apps, waits for that app's page, keeps `sent` and `events`,
   and has `reopen()`; `menu(title, *path)` opens submenus; `world` and `suite_world` share `looked_after`.
