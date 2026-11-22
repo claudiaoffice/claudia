@@ -27,7 +27,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from conftest import BROWSER, SHOTS
+from conftest import BROWSER, SHOTS, eventually
 from live import server
 from pytest_bdd import given, parsers, scenarios, then, when
 from test_greeting import BUILT, SKIP
@@ -190,18 +190,6 @@ def visit(browser, site, request) -> Iterator[Visit]:
     errors = list(made.errors)
     made.close()
     assert not errors, "the browser reported errors:\n" + "\n".join(errors)
-
-
-def eventually(check, seconds: float = 8.0) -> None:
-    end = time.monotonic() + seconds
-    while True:
-        try:
-            check()
-            return
-        except AssertionError:
-            if time.monotonic() > end:
-                raise
-            time.sleep(0.1)
 
 
 # ------------------------------------------------------------------------------------------------------------ given

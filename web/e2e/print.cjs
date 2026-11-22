@@ -1,7 +1,7 @@
 // File ▸ Print… in composes (D906): the pages are laid out in the browser by @claudia/layout, the page setup is the
 // document's (D904), and the PDF the preview prints is the one it shows; the text is hyphenated by its language
 // (D912, D915) (server: --model claudia_composes:TextModel with --fonts and --hyphenation). Run: URL=http://127.0.0.1:8766/ npm run e2e:print
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 const crypto = require('node:crypto')
 const fs = require('node:fs')
@@ -46,7 +46,7 @@ async function download(page) {
 
 ;(async () => {
   fs.mkdirSync(SHOTS, { recursive: true })
-  const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {})
+  const browser = await launch()
   try {
     const ann = await open(browser, ANN, true)
     await ann.click('[data-testid=text]')

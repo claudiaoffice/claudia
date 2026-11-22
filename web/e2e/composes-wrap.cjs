@@ -1,5 +1,5 @@
 // Text goes round a text box in the flowing editor (CODE-64, D1068), and the one key goes round the wrap modes (D1064), in a real browser (server: --model claudia_composes:TextModel).
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8766/'
@@ -77,7 +77,7 @@ const objectIds = (page) => page.$$eval('[data-object]', (els) => els.map((e) =>
 
 
 ;(async () => {
-  const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME, args: ['--no-sandbox'] } : {})
+  const browser = await launch()
   try {
     const ann = await open(browser, ANN, true)
     await ann.click('[data-testid=text]')

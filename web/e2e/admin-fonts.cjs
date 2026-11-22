@@ -2,7 +2,7 @@
 // collection added here can be renamed and removed. FONTS is a folder of font files to add (one of them forbidding
 // embedding), as `uv run python scripts/make_admin_fonts_sample.py DIR` makes them.
 // Run: URL=http://127.0.0.1:8766/ FONTS=/tmp/house-fonts SETUP_CODE=<the server's setup code> npm run e2e:admin-fonts
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -15,7 +15,7 @@ const log = (...a) => console.log(...a)
 
 async function main() {
   fs.mkdirSync(SHOTS, { recursive: true })
-  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM }) // CHROMIUM: a browser of your own, if Playwright's is not installed
+  const browser = await launch()
   const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } })
   const errors = []
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message))

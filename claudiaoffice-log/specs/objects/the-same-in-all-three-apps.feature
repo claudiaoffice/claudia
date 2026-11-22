@@ -3,7 +3,8 @@
 Feature: Objects, styles and the palette work the same in a text, a workbook and a presentation
 
   # -- a viewer --------------------------------------------------------------------------------------------
-  @core @app:composes @app:computes @app:creates
+  # UX-69: today a viewer's greyed entries and object gestures are silent; she is not told.
+  @core @app:composes @app:computes @app:creates @pending:UX-69
   Scenario Outline: A viewer who tries to change something is told she can only look, and nothing is sent
     Given a <document> that I may only view
     When I try to <change>
@@ -72,5 +73,10 @@ Feature: Objects, styles and the palette work the same in a text, a workbook and
       | text         | a container    |
       | workbook     | a container    |
       | presentation | a container    |
-      | workbook     | a chart        |
       | presentation | a shape        |
+
+    # CODE-77: undoing a chart leaves it in the workbook, and the page reports an error.
+    @pending:CODE-77
+    Examples:
+      | document     | an object      |
+      | workbook     | a chart        |

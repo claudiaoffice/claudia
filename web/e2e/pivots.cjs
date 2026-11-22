@@ -1,7 +1,7 @@
 // Tools ▸ Pivot Table… in a real browser (E6.30, D624): make a pivot table from a named table, fill it with the field
 // panel (ticks, a chip's ▾ menu), watch it follow the source, change a value field, look at its SQL, delete it and take
 // the deletion back. Every step by keyboard or by the controls the person sees; no mock of the server.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const { spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -81,7 +81,7 @@ const tick = (page, field) => page.locator(`[data-testid=pivot-panel] .fields li
 ;(async () => {
   fs.mkdirSync(SHOTS, { recursive: true })
   const server = startServer()
-  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM })
+  const browser = await launch()
   const errors = []
   try {
     await ready()

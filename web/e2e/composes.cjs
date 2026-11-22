@@ -1,5 +1,5 @@
 // Two people and the assistant in one text, in two real browser windows (server: --model claudia_composes:TextModel).
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8766/'
@@ -68,7 +68,7 @@ async function menu(page, title, ...path) {
 }
 
 ;(async () => {
-  const browser = await chromium.launch()
+  const browser = await launch()
   try {
     // ---- ann makes a text and writes
     const ann = await open(browser, ANN, true)
