@@ -95,9 +95,15 @@ export function withScale(setup: SheetPrintData, id: string): SheetPrintData {
 
 /** The status line under the pages: "3 pages · Sheet1 · A4 portrait" or, for more than one sheet, "5 pages · 2 sheets ·
  * A4" (the sheets lie each their way, so no orientation is said). */
-export function describeSheets(pages: number, sheets: number, name: string, paper: string, orientation: 'portrait' | 'landscape' | null): string {
+/** "1 sheet", "3 slides": a count of tabs of one kind, for the status line. */
+function counted(count: number, kind: 'sheet' | 'slide'): string {
+  if (kind === 'sheet') return count === 1 ? t('1 sheet') : t('{count} sheets', { count })
+  return count === 1 ? t('1 slide') : t('{count} slides', { count })
+}
+
+export function describeSheets(pages: number, sheets: number, name: string, paper: string, orientation: 'portrait' | 'landscape' | null, slides = 0): string {
   const what = pages === 1 ? t('1 page') : t('{count} pages', { count: pages })
-  const of = sheets === 1 ? name : t('{count} sheets', { count: sheets })
+  const of = sheets + slides === 1 ? name : slides === 0 ? t('{count} sheets', { count: sheets }) : t('{sheets} and {slides}', { sheets: counted(sheets, 'sheet'), slides: counted(slides, 'slide') })
   const lies = orientation === null ? '' : ` ${orientation === 'landscape' ? t('landscape') : t('portrait')}`
   return `${what} · ${of} · ${paper}${lies}`
 }

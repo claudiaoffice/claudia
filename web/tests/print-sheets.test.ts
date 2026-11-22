@@ -417,11 +417,11 @@ describe('the print source of a workbook', () => {
     expect(charts).toHaveBeenCalledTimes(1) // one definition, the floating chart and the tab share its picture
     expect(charts).toHaveBeenCalledWith('d1', 300, 200)
     expect(doc.images.some((i) => i.id === 'chart:d1')).toBe(true)
-    expect(pages.printed).toEqual({ sheets: 3, name: 'Budget', orientation: null })
+    expect(pages.printed).toEqual({ sheets: 3, slides: 0, name: 'Budget', orientation: null })
     expect(source.status(pages, PAGE as any)).toBe('1 page · 3 sheets · A4')
     source.contents!.set('sheet')
     const one = await source.layOut(assets)
-    expect(one.printed).toEqual({ sheets: 1, name: 'Budget', orientation: 'landscape' })
+    expect(one.printed).toEqual({ sheets: 1, slides: 0, name: 'Budget', orientation: 'landscape' })
     expect(source.status(one, PAGE as any)).toBe('1 page · Budget · A4 landscape')
   })
 
@@ -479,6 +479,20 @@ describe('a slide among the sheets', () => {
     expect(slide).toMatchObject({ kind: 'slide', id: 'p1', name: 'Sales chart' })
     if (slide.kind !== 'slide') return
     expect(slide.objects.map((o) => [o.id, o.image])).toEqual([['o9', 'pic'], ['o8', 'chart:d1']])
+  })
+
+  it('offers "This slide" while a slide is shown, and no selection (UX-73)', async () => {
+    const { session } = await opened(withSlide)
+    const source = sheetSource(session, { shown: () => shown('p1', 'slide'), selection: () => null, charts: async () => null })
+    expect(source.contents!.options.map((o) => [o.value, o.label])).toEqual([['sheet', 'This slide'], ['workbook', 'Whole workbook']])
+    const onSheet = sheetSource(session, { shown: () => shown('s1'), selection: () => null, charts: async () => null })
+    expect(onSheet.contents!.options.map((o) => o.label)).toEqual(['This sheet', 'Selection', 'Whole workbook'])
+  })
+
+  it('counts the sheets and the slides apart in the status line (UX-73)', () => {
+    expect(describeSheets(2, 2, 'Budget', 'A4', null, 1)).toBe('2 pages · 2 sheets and 1 slide · A4')
+    expect(describeSheets(2, 1, 'Budget', 'A4', null, 2)).toBe('2 pages · 1 sheet and 2 slides · A4')
+    expect(describeSheets(1, 0, 'Sales chart', 'A4', 'landscape', 1)).toBe('1 page · Sales chart · A4 landscape')
   })
 
   it('lies the way a slide does: the bar cannot turn it', async () => {

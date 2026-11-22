@@ -54,8 +54,8 @@ export interface PrintPages {
   embedded: Map<string, Uint8Array>
   /** a presentation's slide count, for the status line */
   slides?: number
-  /** a workbook's sheets and chart tabs that were printed, for the status line */
-  printed?: { sheets: number; name: string; orientation: 'portrait' | 'landscape' | null }
+  /** a workbook's sheets and chart tabs, and its slides, that were printed, for the status line */
+  printed?: { sheets: number; slides: number; name: string; orientation: 'portrait' | 'landscape' | null }
   /** a text's headings, the PDF's bookmarks, and the page each of its paragraphs starts on (E9.31) */
   outline?: OutlineEntry[]
   pageOf?: ReadonlyMap<string, number>
@@ -267,7 +267,10 @@ export function sheetSource(session: Session, window: SheetWindow): PrintSource 
     margins: MARGINS,
     ...ONE_WAY,
     contents: {
-      options: CONTENTS,
+      // with a slide shown it is "This slide", and there are no cells to select (UX-73)
+      get options() {
+        return window.shown().kind === 'slide' ? CONTENTS.filter((c) => c.value !== 'selection').map((c) => (c.value === 'sheet' ? { value: c.value, label: t('This slide') } : c)) : CONTENTS
+      },
       value: () => contents.value,
       set: (value) => void (contents.value = value as Contents),
       enabled: (value) => value !== 'selection' || selected(),
@@ -314,10 +317,15 @@ export function sheetSource(session: Session, window: SheetWindow): PrintSource 
         geometry: out.geometry,
         notes: out.notes,
         embedded: out.embedded,
-        printed: { sheets: doc.sheets.length, name: first?.name ?? '', orientation: doc.sheets.length === 1 && first ? (first.kind === 'sheet' ? first.print.orientation : first.kind === 'chart' ? first.orientation : 'landscape') : null },
+        printed: {
+          sheets: doc.sheets.filter((s) => s.kind !== 'slide').length,
+          slides: doc.sheets.filter((s) => s.kind === 'slide').length,
+          name: first?.name ?? '',
+          orientation: doc.sheets.length === 1 && first ? (first.kind === 'sheet' ? first.print.orientation : first.kind === 'chart' ? first.orientation : 'landscape') : null,
+        },
       }
     },
-    status: (pages, page) => (pages.printed ? describeSheets(pages.list.pages.length, pages.printed.sheets, pages.printed.name, PAPER_SIZES.find((p) => p.id === page.paper)?.name ?? `${mm(page.width)} × ${mm(page.height)} mm`, pages.printed.orientation) : describe(page, pages.list.pages.length)),
+    status: (pages, page) => (pages.printed ? describeSheets(pages.list.pages.length, pages.printed.sheets, pages.printed.name, PAPER_SIZES.find((p) => p.id === page.paper)?.name ?? `${mm(page.width)} × ${mm(page.height)} mm`, pages.printed.orientation, pages.printed.slides) : describe(page, pages.list.pages.length)),
     producer: 'claudia computes',
     report: (kind, pages) => void session.reportOutput(kind, pages),
   }
