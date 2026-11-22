@@ -3,7 +3,8 @@
 Story: `Projects/claudia-office/_tasks/e6.31-slides-in-computes.md`. Glossary: Slide, Tab, Chart, Holder, Object layer.
 Screens: `notes/mockups/computes-slides-1-a-slide-among-the-sheets.svg`, `-2-insert-chart-as-a-slide.svg`,
 `-3-move-a-chart-to-a-slide.svg`, and the page "E6.31 Slides in computes" of `penpot/claudia.penpot` (branch `penpot`).
-Agreed with the owner on 2026-11-22 (see "Agreed").
+Agreed with the owner on 2026-11-22 (see "Agreed"); decisions D1470 (A1, A2), D1471 (A3′, A4, A10), D1472 (A5)
+and D1473 (A6 to A9, superseding D204).
 
 ## What the code does today
 

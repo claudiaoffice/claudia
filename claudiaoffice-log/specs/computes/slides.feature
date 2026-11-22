@@ -4,7 +4,8 @@ Feature: Slides in computes (E6.31)
   boxes and shapes, so that a chart can have a page of its own with words beside it, and works like a slide in creates.
   A slide comes into existence only for a chart, and goes with its last object. The screens are
   `notes/mockups/computes-slides-*.svg`, the architecture `notes/e6-31-slides-in-computes.md`. The owner's answers
-  to the review of 2026-11-22 are written into the scenarios (`Q<n>` names the question they answer).
+  to the review of 2026-11-22 are written into the scenarios (`Q<n>` names the question they answer); the decisions
+  are D1470 to D1473.
   What every object does (selecting, moving, scaling, naming, the object menu as such) is in `specs/objects/` and is
   not repeated here.
 
