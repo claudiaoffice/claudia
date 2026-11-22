@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800"><defs><filter id="sh" x="-20%" y="-20%" width="140%" height="155%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="7" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#F7F3EC"/>
+<rect x="0" y="0" width="1280" height="50" rx="0" fill="#FFFFFF"/>
+<text x="16" y="32" font-family="Georgia, serif" font-size="22" fill="#1F1A33" font-weight="400" text-anchor="start">claudia</text>
+<line x1="100" y1="14" x2="100" y2="38" stroke="#E3DED5" stroke-width="1"/>
+<rect x="116" y="14" width="22" height="22" rx="5" fill="#13917F"/>
+<text x="146" y="30" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="400" text-anchor="start">computes</text>
+<text x="236" y="31" font-family="Georgia, serif" font-size="18" fill="#1F1A33" font-weight="500" text-anchor="start">sales-2027</text>
+<circle cx="1052" cy="25" r="11" fill="#D6477A"/>
+<text x="1052" y="29" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">A</text>
+<circle cx="1074" cy="25" r="11" fill="#5B4BC4"/>
+<text x="1074" y="29" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">ai</text>
+<rect x="1124" y="10" width="140" height="30" rx="15" fill="#E9E5F7"/>
+<text x="1194" y="30" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="middle">History &amp; chat</text>
+<line x1="0" y1="50" x2="1280" y2="50" stroke="#E3DED5" stroke-width="1"/>
+<rect x="0" y="51" width="1280" height="32" rx="0" fill="#FFFFFF"/>
+<text x="18" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">File</text>
+<text x="72" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Edit</text>
+<text x="126" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Insert</text>
+<text x="196" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Format</text>
+<text x="266" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">View</text>
+<text x="320" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Tools</text>
+<text x="382" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Config</text>
+<text x="452" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Help</text>
+<line x1="0" y1="83" x2="1280" y2="83" stroke="#E3DED5" stroke-width="1"/>
+<rect x="0" y="84" width="1280" height="42" rx="0" fill="#FFFFFF"/>
+<text x="18" y="110" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">T  Text</text>
+<text x="100" y="110" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">▣  Image</text>
+<text x="190" y="110" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">○  Circle</text>
+<text x="288" y="110" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">□  Rectangle</text>
+<text x="410" y="110" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">△  Triangle</text>
+<line x1="0" y1="126" x2="1280" y2="126" stroke="#E3DED5" stroke-width="1"/>
+<rect x="980" y="127" width="300" height="637" rx="0" fill="#211C38"/>
+<text x="994" y="152" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#B9B3D0" font-weight="400" text-anchor="start">When I ask the AI, in this document:</text>
+<rect x="994" y="162" width="272" height="28" rx="6" fill="none" stroke="#4A4466" stroke-width="1"/>
+<rect x="1130.0" y="162" width="136.0" height="28" rx="6" fill="#5B4BC4"/>
+<text x="1062.0" y="181" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#FFFFFF" font-weight="400" text-anchor="middle">Act at once</text>
+<text x="1198.0" y="181" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">Suggest first</text>
+<text x="994" y="232" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#B9B3D0" font-weight="400" text-anchor="start">HISTORY</text>
+<text x="994" y="540" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#B9B3D0" font-weight="400" text-anchor="start">CHAT</text>
+<rect x="16" y="136" width="948" height="616" rx="0" fill="#ECE8E1"/>
+<rect x="46" y="150" width="888" height="499.5" rx="0" fill="#FFFFFF" stroke="#DAD5CC" stroke-width="1"/>
+<line x1="73.75" y1="150" x2="73.75" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="101.5" y1="150" x2="101.5" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="129.25" y1="150" x2="129.25" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="157.0" y1="150" x2="157.0" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="184.75" y1="150" x2="184.75" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="212.5" y1="150" x2="212.5" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="240.25" y1="150" x2="240.25" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="268.0" y1="150" x2="268.0" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="295.75" y1="150" x2="295.75" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="323.5" y1="150" x2="323.5" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="351.25" y1="150" x2="351.25" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="379.0" y1="150" x2="379.0" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="406.75" y1="150" x2="406.75" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="434.5" y1="150" x2="434.5" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="462.25" y1="150" x2="462.25" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="490.0" y1="150" x2="490.0" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="517.75" y1="150" x2="517.75" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="545.5" y1="150" x2="545.5" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="573.25" y1="150" x2="573.25" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="601.0" y1="150" x2="601.0" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="628.75" y1="150" x2="628.75" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="656.5" y1="150" x2="656.5" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="684.25" y1="150" x2="684.25" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="712.0" y1="150" x2="712.0" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="739.75" y1="150" x2="739.75" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="767.5" y1="150" x2="767.5" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="795.25" y1="150" x2="795.25" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="823.0" y1="150" x2="823.0" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="850.75" y1="150" x2="850.75" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="878.5" y1="150" x2="878.5" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="906.25" y1="150" x2="906.25" y2="649.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="177.75" x2="934" y2="177.75" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="205.5" x2="934" y2="205.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="233.25" x2="934" y2="233.25" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="261.0" x2="934" y2="261.0" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="288.75" x2="934" y2="288.75" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="316.5" x2="934" y2="316.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="344.25" x2="934" y2="344.25" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="372.0" x2="934" y2="372.0" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="399.75" x2="934" y2="399.75" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="427.5" x2="934" y2="427.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="455.25" x2="934" y2="455.25" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="483.0" x2="934" y2="483.0" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="510.75" x2="934" y2="510.75" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="538.5" x2="934" y2="538.5" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="566.25" x2="934" y2="566.25" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="594.0" x2="934" y2="594.0" stroke="#F1EEE8" stroke-width="0.8"/>
+<line x1="46" y1="621.75" x2="934" y2="621.75" stroke="#F1EEE8" stroke-width="0.8"/>
+<rect x="86" y="220" width="540" height="380" rx="0" fill="#FFFFFF"/>
+<text x="356.0" y="244" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="500" text-anchor="middle">Sales by region</text>
+<line x1="132" y1="566.0" x2="612" y2="566.0" stroke="#EEEAE3" stroke-width="1"/>
+<text x="124" y="570.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#6B6580" font-weight="400" text-anchor="end">0</text>
+<line x1="132" y1="464.0" x2="612" y2="464.0" stroke="#EEEAE3" stroke-width="1"/>
+<text x="124" y="468.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#6B6580" font-weight="400" text-anchor="end">100</text>
+<line x1="132" y1="362.0" x2="612" y2="362.0" stroke="#EEEAE3" stroke-width="1"/>
+<text x="124" y="366.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#6B6580" font-weight="400" text-anchor="end">200</text>
+<line x1="132" y1="260.0" x2="612" y2="260.0" stroke="#EEEAE3" stroke-width="1"/>
+<text x="124" y="264.0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#6B6580" font-weight="400" text-anchor="end">300</text>
+<rect x="151.2" y="260.0" width="121.6" height="306.0" rx="0" fill="#13917F"/>
+<text x="212.0" y="581" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#6B6580" font-weight="400" text-anchor="middle">East</text>
+<rect x="311.2" y="443.6" width="121.6" height="122.4" rx="0" fill="#13917F"/>
+<text x="372.0" y="581" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#6B6580" font-weight="400" text-anchor="middle">West</text>
+<rect x="471.2" y="494.6" width="121.6" height="71.4" rx="0" fill="#13917F"/>
+<text x="532.0" y="581" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#6B6580" font-weight="400" text-anchor="middle">North</text>
+<line x1="132" y1="566" x2="612" y2="566" stroke="#1F1A33" stroke-width="0.8"/>
+<rect x="86" y="220" width="540" height="380" rx="0" fill="none" stroke="#5B4BC4" stroke-width="1.4"/>
+<rect x="82" y="216" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
+<rect x="82" y="406.0" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
+<rect x="82" y="596" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
+<rect x="352.0" y="216" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
+<rect x="352.0" y="596" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
+<rect x="622" y="216" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
+<rect x="622" y="406.0" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
+<rect x="622" y="596" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
+<rect x="656" y="260" width="240" height="96" rx="0" fill="#FFFFFF" stroke="#C9C3B8" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="672" y="290" font-family="Inter, Helvetica, Arial, sans-serif" font-size="15" fill="#1F1A33" font-weight="400" text-anchor="start">East leads with 300,</text>
+<text x="672" y="312" font-family="Inter, Helvetica, Arial, sans-serif" font-size="15" fill="#1F1A33" font-weight="400" text-anchor="start">more than West and</text>
+<text x="672" y="334" font-family="Inter, Helvetica, Arial, sans-serif" font-size="15" fill="#1F1A33" font-weight="400" text-anchor="start">North together.</text>
+<text x="86" y="194" font-family="Inter, Helvetica, Arial, sans-serif" font-size="24" fill="#1F1A33" font-weight="500" text-anchor="start">Q1 review</text>
+<rect x="0" y="764" width="1280" height="36" rx="0" fill="#FFFFFF"/>
+<line x1="0" y1="764" x2="1280" y2="764" stroke="#E3DED5" stroke-width="1"/>
+<text x="26" y="786" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Sheet1</text>
+<rect x="94" y="768" width="128" height="28" rx="4" fill="#E3F2EF"/>
+<line x1="94" y1="796" x2="222" y2="796" stroke="#13917F" stroke-width="2"/>
+<rect x="104" y="776" width="14" height="10" rx="2" fill="none" stroke="#13917F" stroke-width="1.3"/>
+<text x="124" y="786" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start">Sales chart</text>
+<text x="242" y="786" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Costs</text>
+<text x="310" y="787" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#6B6580" font-weight="400" text-anchor="start">+</text>
+<text x="1266" y="787" font-family="JetBrains Mono, Menlo, monospace" font-size="12" fill="#6B6580" font-weight="400" text-anchor="end">main:14</text>
+<rect x="656" y="382" width="250" height="99" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
+<circle cx="656" cy="382" r="10" fill="#E0B84A"/>
+<text x="656" y="386" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">1</text>
+<text x="670" y="404" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">A slide among the sheets, in one</text>
+<text x="670" y="421" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">tab order; its icon tells it apart.</text>
+<text x="670" y="438" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">No cells: the toolbar is creates'.</text>
+<text x="670" y="455" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">Beside the chart, text boxes,</text>
+<text x="670" y="472" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">shapes and images can be added.</text>
+<rect x="656" y="512" width="250" height="65" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
+<circle cx="656" cy="512" r="10" fill="#E0B84A"/>
+<text x="656" y="516" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">2</text>
+<text x="670" y="534" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">Same 16:9 frame and grid as a</text>
+<text x="670" y="551" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">slide in creates; no speaker notes</text>
+<text x="670" y="568" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">and no Present in computes.</text>
+<rect x="380" y="676" width="440" height="48" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
+<circle cx="380" cy="676" r="10" fill="#E0B84A"/>
+<text x="380" y="680" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">3</text>
+<text x="394" y="698" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">A slide comes only from a chart: Insert chart "Show as: A slide",</text>
+<text x="394" y="715" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">or "Move to Slide" on a chart on a sheet. "+" adds sheets only.</text>
+</svg>

@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (78)
+### Open (79)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -53,6 +53,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
+| UX-64 | P2 | UX / computes | A sheet or a chart tab (after E6.31: a slide) cannot be deleted: nothing in the menus or the tab strip reaches `RemoveSheet` or `remove_chart` | **new, open** (read; size 2) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -2485,7 +2486,7 @@ in a signature (`nitpicky`), and `T` and the module's own protocol `Asset` are n
 **measured** on the branch before any change of the slice. **Fixed.** Both are ignored in `docs/conf.py`, as the type
 parameters `M` and `A` already are. Escaped because: test passed but wrong (the gate was run before that last commit).
 
-## Round of 2026-11-22 (CI of `main` after merging `architecture-improvements`)
+## Round of 2026-11-22 (CI of `main` after merging `architecture-improvements`; the E6.31 mockups)
 
 ### PROC-45 · The Linux client's end-to-end test looked for the old paragraph attribute · P2 · size 3 · fixed 2026-11-22
 **Found** in the CI of `main` after `architecture-improvements` was merged (run 45011761530): the job "Linux client
@@ -2495,3 +2496,14 @@ paragraph carries in the page from `data-block` to `data-paragraph`; the test's 
 found nothing and never typed. Evidence: **measured**, red locally on `main` and green after the fix (713 passed, 6
 skipped). **Fixed.** The selector names `[data-paragraph]`. Escaped because: test not run (the slice's gate does not run
 the GTK client's tests, and GTK 4 and WebKitGTK were not installed in the agent's environment; they are now, as in CI).
+
+### UX-64 · A sheet or a chart tab cannot be deleted in computes · P2 · size 2 · new, open
+**Found** while drawing the mockups of E6.31 (slides in computes): the tab strip (`web/app/components/FooterBar.vue`)
+renames a tab on double-click and does nothing else, and no menu entry deletes a sheet or a chart tab. The model can
+(`RemoveSheet`, which refuses to orphan a chart that reads the sheet) and so can the server (`remove_chart`), but no
+client calls either. A person who added a sheet by mistake keeps it. Evidence: **read** (the web client, the GTK
+manifest and the web menus searched for `removeSheet`, `remove_sheet`, `removeChart`, "Delete"). After E6.31 the same
+holds for a slide, except that a slide goes by itself with its last object (owner, Q20 of the chart session).
+**Acceptance:** a person deletes the sheet she is on (with a question first when it holds cells or objects, and one undo
+step), and is told why when a chart still reads it. The menu entry and its key wait for the menu rework against
+`notes/claudia-menus.xlsx` (owner, 2026-11-22).
