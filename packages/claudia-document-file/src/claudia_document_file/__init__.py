@@ -12,6 +12,7 @@ from ._version import __version__
 from .audit import KINDS as AUDIT_KINDS
 from .audit import PARTS as AUDIT_PARTS
 from .audit import AuditRecord
+from .consent import ConsentRecord
 from .crypto import (
     DecryptionError,
     KdfParams,
@@ -51,6 +52,7 @@ from .file import (
     new_uid,
     pack_journal,
     read_audit,
+    read_consent,
     read_manifest,
     read_original,
     read_people,
@@ -58,6 +60,7 @@ from .file import (
     read_snapshot,
     read_state,
     record_audit,
+    record_consent,
     recover_access,
     remove_user,
     rewrite_journal,
@@ -116,6 +119,7 @@ __all__ = [
     "AUDIT_KINDS",
     "AUDIT_PARTS",
     "AuditRecord",
+    "ConsentRecord",
     "ExportFile",
     "ExportRefused",
     "DocumentFileError",
@@ -166,6 +170,7 @@ __all__ = [
     "password_problems",
     "random_key",
     "read_audit",
+    "read_consent",
     "read_export",
     "read_journal",
     "read_manifest",
@@ -174,6 +179,7 @@ __all__ = [
     "read_snapshot",
     "read_state",
     "record_audit",
+    "record_consent",
     "recover_access",
     "remove_user",
     "rewrite_journal",

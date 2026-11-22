@@ -54,6 +54,7 @@ from .blocks import (
     seal_chain_head,
     seal_head,
 )
+from .consent import ConsentRecord
 from .crypto import (
     KEY_SIZE,
     DecryptionError,
@@ -81,8 +82,10 @@ from .slots import (
     open_slot,
 )
 
-FORMAT_TEXT = "claudia-document 2"
-FORMAT_VERSION = 2
+FORMAT_TEXT = "claudia-document 3"
+FORMAT_VERSION = 3
+"""Format 3 (E7.11): the file may hold the owners' consent (``consent/``). An older Claudia refuses a file of format 3
+as a newer one; this one reads format 2 as it is (it has no consent) and writes 3 from the next change on."""
 OLDEST_FORMAT = 2
 """The oldest format this version reads. A file of an older one is refused with a sentence (D1274: the slots and the
 people list changed before there was a release, so nothing migrates them)."""
@@ -184,7 +187,10 @@ class Manifest:
     def from_dict(cls, data: object) -> Manifest:
         """Read a manifest; ``ValueError`` if it is not a sound one."""
         try:
-            if data["format"] != FORMAT_VERSION or data["ciphers"] != {"kdf": "argon2id", "aead": "aes-256-gcm"}:  # type: ignore[index]
+            if data["format"] not in range(OLDEST_FORMAT, FORMAT_VERSION + 1) or data["ciphers"] != {
+                "kdf": "argon2id",
+                "aead": "aes-256-gcm",
+            }:  # type: ignore[index]
                 raise ValueError("unknown format or ciphers")
             manifest = cls(
                 name=data["name"],  # type: ignore[index]
@@ -363,16 +369,17 @@ def _check_listing(path: Path, infos: list[zipfile.ZipInfo]) -> None:
 def _check_format(path: Path, entries: dict[str, bytes]) -> None:
     """The format line says this is a document of a version we can read, and the required entries are there."""
     declared = entries["format"].decode("utf-8", "replace")
-    if declared != FORMAT_TEXT:
-        match = re.fullmatch(r"claudia-document (\d+)", declared)
-        if match and int(match.group(1)) > FORMAT_VERSION:
-            raise UnsupportedFormat(f"{path.name} was written by a newer version of Claudia (format {match.group(1)})")
-        if match and int(match.group(1)) < OLDEST_FORMAT:
-            raise OutdatedFormat(
-                f"{path.name} was written by an older version of Claudia (format {match.group(1)}), "
-                "which this version cannot open: its keys are kept in another way"
-            )
+    match = re.fullmatch(r"claudia-document (\d+)", declared)
+    if match is None:
         raise NotAClaudiaDocument(f"{path.name} is not a Claudia document")
+    version = int(match.group(1))
+    if version > FORMAT_VERSION:
+        raise UnsupportedFormat(f"{path.name} was written by a newer version of Claudia (format {version})")
+    if version < OLDEST_FORMAT:
+        raise OutdatedFormat(
+            f"{path.name} was written by an older version of Claudia (format {version}), "
+            "which this version cannot open: its keys are kept in another way"
+        )
     for required in ("manifest.json", "slots.json", "people.bin"):
         if required not in entries:
             raise NotAClaudiaDocument(f"{path.name} is damaged: {required} is missing")
@@ -822,30 +829,42 @@ def _without_private(entries: Mapping[str, bytes], private_id: str | None) -> di
     return {n: d for n, d in entries.items() if not n.startswith(folder)}
 
 
+def _open_folder_chain(key: bytes, binding: str, stream: str, entries: Mapping[str, bytes]) -> list[bytes] | None:
+    """The payloads of the chain ``stream`` that has a folder of its own and a head of its own (private notes, the
+    consent), or ``None`` if the file has no head for it. :class:`TamperedDocument` if a block or the head does not
+    fit."""
+    folder = f"{stream}/"
+    names = {n: d for n, d in entries.items() if n.startswith(folder)}
+    head = names.get(f"{folder}head.bin")
+    if head is None:
+        if names:
+            raise TamperedDocument(f"the {stream} has blocks but no head")
+        return None
+    try:
+        end = open_chain_head(key, binding, stream, head)
+        numbered = sorted(n for n in names if n != f"{folder}head.bin")
+        if numbered != [f"{folder}{number:06d}.blk" for number in range(1, end.blocks + 1)]:
+            raise BlockError(f"a block of the {stream} is missing or added")
+        payloads, previous = [], GENESIS
+        for number, name in enumerate(numbered, start=1):
+            payloads.extend(open_block(key, Place(binding, stream, number, previous), names[name]))
+            previous = block_hash(names[name])
+        if previous != end.last:
+            raise BlockError("the last block is not the one that the head names")
+    except BlockError as error:
+        raise TamperedDocument(f"the {stream} does not open: {error}") from error
+    return payloads
+
+
 def read_private(path: Path, private: PrivateNotesKey) -> list[bytes]:
     """What is in these private notes, in order. Whoever holds their key may read them, and nobody else: no role and no
     recovery key opens another person's private notes (D1265). :class:`TamperedDocument` if they are not in the file or
     a block or the head does not fit."""
     entries = _read_entries(path)
     binding = _manifest_of(entries, path).binding
-    stream, folder = f"{blocks.PRIVATE}/{private.id}", _private_folder(private.id)
-    names = {n: d for n, d in entries.items() if n.startswith(folder)}
-    head = names.get(f"{folder}head.bin")
-    if head is None:
+    payloads = _open_folder_chain(private.key, binding, f"{blocks.PRIVATE}/{private.id}", entries)
+    if payloads is None:
         raise TamperedDocument("these private notes are not in the file")
-    try:
-        end = open_chain_head(private.key, binding, stream, head)
-        numbered = sorted(n for n in names if n != f"{folder}head.bin")
-        if numbered != [f"{folder}{number:06d}.blk" for number in range(1, end.blocks + 1)]:
-            raise BlockError("a block of the private notes is missing or added")
-        payloads, previous = [], GENESIS
-        for number, name in enumerate(numbered, start=1):
-            payloads.extend(open_block(private.key, Place(binding, stream, number, previous), names[name]))
-            previous = block_hash(names[name])
-        if previous != end.last:
-            raise BlockError("the last block is not the one that the head names")
-    except BlockError as error:
-        raise TamperedDocument(f"the private notes do not open: {error}") from error
     return payloads
 
 
@@ -1285,6 +1304,50 @@ def record_audit(path: Path, keys: Mapping[Part, bytes], record: AuditRecord) ->
             **{n: d for n, d in _carried(entries).items() if n not in replaced},
             **audit_blocks,
             _HEAD: seal_head(keys[Part.HISTORY], manifest.binding, head),
+        }
+        _write_zip(path, _changed(manifest), _slots_of(entries, path), entries["people.bin"], others, exclusive=False)
+
+
+# --- the owners' consent to a remote AI provider (E7.11, D264) -----------------------------------------------------
+
+
+def _consent_entries(key: bytes, binding: str, payloads: Sequence[bytes]) -> dict[str, bytes]:
+    stored, end = _sealed_chain(key, binding, blocks.CONSENT, [], payloads)
+    stored[f"{blocks.CONSENT}/head.bin"] = seal_chain_head(key, binding, blocks.CONSENT, end)
+    return stored
+
+
+def _consent_payloads(entries: Mapping[str, bytes], manifest: Manifest, keys: Mapping[Part, bytes]) -> list[bytes]:
+    key = keys.get(Part.CONTENT)
+    if key is None:
+        raise PermissionError("the consent is sealed with the content key")
+    return _open_folder_chain(key, manifest.binding, blocks.CONSENT, entries) or []
+
+
+def read_consent(path: Path, keys: Mapping[Part, bytes]) -> list[ConsentRecord]:
+    """Every decision of the owners about a remote AI provider, oldest first; none if nobody ever decided (which means
+    *not allowed*). Needs the content key, so a viewer reads it too.
+
+    :class:`TamperedDocument` if a block or the head of the list is missing, changed or from elsewhere."""
+    entries = _read_entries(path)
+    payloads = _consent_payloads(entries, _manifest_of(entries, path), keys)
+    return [ConsentRecord.from_bytes(payload) for payload in payloads]
+
+
+def record_consent(path: Path, keys: Mapping[Part, bytes], record: ConsentRecord) -> None:
+    """Add ``record`` to the owners' consent and write the file. It is not a command: no revision, no undo step, and the
+    journal is not touched. Needs the content key (``PermissionError``); that only an owner may do it is the server's
+    rule (see :mod:`consent`).
+
+    ``ValueError`` if the record is not a sound one; nothing changes then."""
+    payload = record.to_bytes()
+    with _WRITE_LOCK:
+        entries = _read_entries(path)
+        manifest = _manifest_of(entries, path)
+        payloads = [*_consent_payloads(entries, manifest, keys), payload]
+        others = {
+            **{n: d for n, d in _carried(entries).items() if not n.startswith(f"{blocks.CONSENT}/")},
+            **_consent_entries(keys[Part.CONTENT], manifest.binding, payloads),
         }
         _write_zip(path, _changed(manifest), _slots_of(entries, path), entries["people.bin"], others, exclusive=False)
 
