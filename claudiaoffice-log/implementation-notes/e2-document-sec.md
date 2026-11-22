@@ -223,7 +223,7 @@ against a floor of 0.15 s). The earlier list stands: SEC-22, PROC-37, CODE-74, U
 * `scripts/measure_blocks.py` keeps the measurement against sealing every change on its own. `--typing N…` makes a
   computes typing log in process; `--document FILE --name NAME` reads a document's history (asks for the password,
   changes nothing). Both pack through `pack_journal` into a throw-away document, so the script follows the block code
-  rather than copying it. Typing logs of 200, 2 000 and 6 000 changes: 15.4, 17.3, 17.6 times smaller in blocks.
+  rather than copying it. Typing logs of 200, 2 000 and 6 000 changes: about 15, 17 and 18 times smaller in blocks (a little different on every run).
 * `claudia_server.sealed._payload` is public now as `record_bytes`, so the script makes the records the server seals
   without reaching into a private name. No other change.
 * Could not be run: a log from real use (several people, apps, undo, pasting) does not exist yet; that measurement is
