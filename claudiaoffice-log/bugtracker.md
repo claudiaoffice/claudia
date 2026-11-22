@@ -127,7 +127,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (144)
+### Fixed (145)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -272,6 +272,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-43 | P2 | Process / E2E | The job "End to end (Chromium)" was red from 2026-11-17: each first failure hid the next, and four lines of `objects.cjs` were stale (proportions of a free rectangle, the name of a table's menu, "Edit text" for a picture in creates, a race on the history entry of Delete) | **fixed** 2026-11-21 (the script follows the contract; it ran six times in a row; size 2) | 2026-11-21 | 2026-11-21 |
 | PROC-44 | P3 | Process / CI | Two timing flakes on shared runners: `test_the_anchor_is_shown_when_the_object_is_selected` (setup clicked before the layout settled; fixed with `settled_box`) and `test_calculating_a_long_chain_is_linear` (one run 44x instead of ~10x, green on rerun; **open**, the retry in the test is too thin) | anchor spec **fixed** 2026-11-21; perf test **open** (size 3) | 2026-11-21 | |
 | PROC-45 | P2 | Process / CI | The Linux client's end-to-end test still looked for `[data-block]` after the paragraph rename of E1.18 made it `data-paragraph`, so the job "Linux client" was red on `main` | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
+| PROC-49 | P2 | Process / CI | The Penpot generator on `main` made the Python jobs red: its `package-lock.json` was neither audited nor watched by dependabot, and `tools/transplant.py` failed ruff | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2500,6 +2501,16 @@ paragraph carries in the page from `data-block` to `data-paragraph`; the test's 
 found nothing and never typed. Evidence: **measured**, red locally on `main` and green after the fix (713 passed, 6
 skipped). **Fixed.** The selector names `[data-paragraph]`. Escaped because: test not run (the slice's gate does not run
 the GTK client's tests, and GTK 4 and WebKitGTK were not installed in the agent's environment; they are now, as in CI).
+
+### PROC-49 · The Penpot generator made the Python jobs red · P2 · size 3 · fixed 2026-11-22
+**Found** in the CI of `main` (runs 45029955355 and 45031675372, the three Python jobs): "Design files, first setup"
+brought `penpot/generator` with an npm lockfile and Python tools. `test_no_package_lock_in_the_repository_escapes_the_audit`
+and `test_every_lockfile_is_watched_by_dependabot` failed (the lockfile was in neither list), and ruff and ruff format
+failed on `tools/transplant.py`, which also ran `zip` through the shell with an unquoted path. Evidence: **measured**
+(the CI logs, then the same failures locally). **Fixed.** `scripts/check_npm_audit.py` audits the generator's lockfile
+(no advisory at moderate or above), `.github/dependabot.yml` watches it, and `transplant.py` is clean and calls `zip`
+without a shell (checked on a real file, an output path with a space). The number skips PROC-46 to PROC-48, which the
+range of `e2e-guard` names. Escaped because: test not run (the gate was not run before the design files were pushed).
 
 ### UX-68 · A sheet or a chart tab cannot be deleted in computes · P2 · size 2 · new, open
 **Found** while drawing the mockups of E6.31 (slides in computes): the tab strip (`web/app/components/FooterBar.vue`)
