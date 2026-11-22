@@ -19,7 +19,7 @@ const WEIGHTS = { regular: 400, medium: 500, semibold: 600, bold: 700 }
 
 // Sizes in px; the name is the size, a hyphen stands for the decimal point (token names have no dot but groups).
 const sizeName = (n) => String(n).replace('.', '-')
-const FONT_SIZES = [11, 11.5, 12, 12.5, 13, 13.5, 14, 34, 40, 10, 10.5, 15, 16, 20, 24]
+const FONT_SIZES = [11, 11.5, 12, 12.5, 13, 13.5, 14, 34, 40, 10, 10.5, 15, 16, 20, 24, 17, 18, 19]
 const SPACE = [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 24, 28, 32, 36, 40, 5, 26]
 const RADIUS = {
   'input-small': [7, 'inputs in the sidebar, row actions'],
@@ -34,6 +34,10 @@ const RADIUS = {
   chip: [6, 'an icon button, a segment of a switch, a match row'],
   swatch: [5, 'the colour swatch of a colour button'],
   mark: [3, 'the mark on a found text, a check box'],
+  // the workspace (MenuBar.vue, ContextMenu.vue, FooterBar.vue, InsertBar.vue, ObjectFrame.vue)
+  'menu-item': [6, 'a menu title and a menu entry'],
+  tab: [8, 'a tab of the strip below a document, a tool button'],
+  handle: [3, 'a handle of a selected object'],
 }
 const BORDER = { 1: 'every outline', 2: 'the chosen kind of a new document' }
 const SIZING = {
@@ -49,6 +53,21 @@ const SIZING = {
   check: [16, 'a check box or a radio button'],
   control: [30, 'the height of a control in the style editor (.font-btn, .marks, .stepper)'],
   segment: [30, 'the width of one button of a group of marks'],
+  // the workspace
+  'top-bar': [52, 'the bar with the wordmark, the app and the document (TopBar.vue .bar)'],
+  'menu-bar': [32, 'the menu bar (MenuBar.vue .menus)'],
+  'menu-title': [28, 'a menu title (MenuBar.vue .title)'],
+  'menu-min': [250, 'the least width of a menu (MenuBar.vue .drop)'],
+  tool: [30, 'a tool button and the name box (InsertBar.vue .tool, FormulaBar.vue .icon)'],
+  foot: [36, 'the strip below a document (FooterBar.vue .foot)'],
+  dock: [340, 'the History & Chat panel (DocumentFrame.vue --dock-width)'],
+  avatar: [28, 'a person in the top bar (TopBar.vue .people li)'],
+  handle: [11, 'a handle of a selected object (ObjectFrame.vue .handle)'],
+  'name-box': [96, 'the name box of computes (FormulaBar.vue .name)'],
+  'grid-header': [52, 'the column of row numbers of a sheet (SheetGrid.vue .rowhead)'],
+  'grid-row': [26, 'a row of a sheet, the row of column letters (SheetGrid.vue .colhead)'],
+  'grid-column': [96, 'a column of a sheet'],
+  'dialog-chart': [520, 'the Insert chart dialog (SheetChartInsertDialog.vue :width)'],
 }
 const OPACITY = { disabled: [0.45, 'a disabled button (.btn:disabled)'], baseline: [0.55, 'the baseline in the composes icon'] }
 
@@ -102,6 +121,31 @@ export const TYPE = {
   'pick-display': { font: 'display', size: 14, weight: 'medium', lh: 1.3, ls: -0.01, note: 'a style sample while editing, display look' },
   'pick-bold': { font: 'display', size: 14, weight: 'bold', lh: 1.3, ls: -0.01, note: 'a style sample while editing, bold display look' },
   'pick-italic': { font: 'display', size: 14, weight: 'medium', lh: 1.3, style: 'italic', note: 'a style sample while editing, italic look' },
+  // --- the workspace ---
+  'doc-title': { font: 'display', size: 19, weight: 'medium', lh: 1, note: "the document's name in the top bar (TopBar.vue .doc)" },
+  'app-name': { font: 'ui', size: 14, weight: 'medium', lh: 1.45, note: 'the app next to the wordmark (TopBar.vue .app)' },
+  'tab-on': { font: 'ui', size: 14, weight: 'medium', lh: 1.45, note: 'the tab that is shown (FooterBar.vue .tabs button.on)' },
+  'tab-add': { font: 'ui', size: 18, weight: 'regular', lh: 1, note: 'the + that adds a sheet (FooterBar.vue .add)' },
+  'menu-key': { font: 'mono', size: 12, weight: 'regular', lh: 'normal', note: 'a key in a menu (MenuBar.vue, ContextMenu.vue kbd)' },
+  legend: { font: 'ui', size: 13, weight: 'regular', lh: 1.45, note: 'a group label in a dialog (SheetChartInsertDialog.vue fieldset legend)' },
+  chip: { font: 'ui', size: 12, weight: 'regular', lh: 1.45, note: 'a kind of chart (SheetChartInsertDialog.vue .kind)' },
+  'panel-label': { font: 'ui', size: 11.5, weight: 'regular', lh: 1.45, note: 'a label in the History & Chat panel (SidePanel.vue .aiMode)' },
+  'panel-tab': { font: 'ui', size: 11.5, weight: 'medium', lh: 1.45, ls: 0.02, note: 'a tab of the History & Chat panel (SidePanel.vue .tabs button)' },
+  formula: { font: 'mono', size: 13, weight: 'regular', lh: 1.45, note: 'the name box and the formula (FormulaBar.vue)' },
+  equals: { font: 'display', size: 17, weight: 'medium', lh: 1, note: 'the = of the formula bar (FormulaBar.vue .eq)' },
+  cell: { font: 'ui', size: 13, weight: 'regular', lh: 1.45, note: 'text in a cell (SheetGrid.vue .stage)' },
+  'slide-title': { font: 'ui', size: 24, weight: 'medium', lh: 1.2, note: 'sample text in the designs: a title on a slide, as the editor shows it in a 1360px window' },
+  'slide-body': { font: 'ui', size: 15, weight: 'regular', lh: 1.45, note: 'sample text in the designs: a text box on a slide, at the same scale' },
+  'chart-label': { font: 'ui', size: 11, weight: 'regular', lh: 'normal', note: 'the labels of a chart (Plotly in ChartView.vue)' },
+  'chart-title': { font: 'ui', size: 14, weight: 'medium', lh: 'normal', note: 'the title of a chart (Plotly in ChartView.vue)' },
+}
+
+/** Text styles and radii added for the workspace (E6.31). The Foundations page leaves them out and the page "Workspace
+ * foundations" shows them: Foundations is built before the dialogs, and one more sample there would move the ids of
+ * every shape made after it, which the owner's hand-corrected file keeps (tools/extend.py). */
+export const LATER = {
+  type: new Set(['doc-title', 'app-name', 'tab-on', 'tab-add', 'menu-key', 'legend', 'chip', 'panel-label', 'panel-tab', 'formula', 'equals', 'cell', 'slide-title', 'slide-body', 'chart-label', 'chart-title']),
+  radius: new Set(['radius.menu-item', 'radius.tab', 'radius.handle']),
 }
 
 // --- the colours -----------------------------------------------------------------------------------------------

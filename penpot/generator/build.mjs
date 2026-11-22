@@ -5,8 +5,9 @@ import { buildTokens, TYPE, fontSpecOf } from './src/tokens.mjs'
 import { createMeasurer } from './src/measure.mjs'
 import { configure, emit, layout, newId, parseColorText } from './src/model.mjs'
 import { buildLibrary } from './src/library.mjs'
-import { foundations, frontPage, librarySheets } from './src/pages.mjs'
+import { foundations, frontPage, laterFoundations, librarySheets } from './src/pages.mjs'
 import { buildDialogLibrary, searchPages, stylesPages } from './src/dialogs.mjs'
+import { buildWorkspaceLibrary, slidesInComputes } from './src/workspace.mjs'
 
 const REPO = process.env.CLAUDIA_REPO ?? '/home/claude/claudia'
 const OUT = process.argv[2] ?? 'out/claudia-front-page.penpot'
@@ -50,6 +51,11 @@ const pages = {
   'Styles dialog': await stack(stylesPages(dialogs, lib)),
   'Search & replace': await stack(searchPages(dialogs)),
 }
+// the workspace after everything above, pages included (they make shapes too), for the same reason
+pages['Workspace foundations'] = await stack(laterFoundations(T))
+const workspace = buildWorkspaceLibrary()
+pages['Workspace components'] = await stack(Object.values(workspace))
+pages['E6.31 Slides in computes'] = await stack(slidesInComputes(workspace, dialogs, lib), 120)
 void librarySheets
 
 // 3. the file

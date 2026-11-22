@@ -8,7 +8,7 @@ import { board, circle, component, instance, pick, rect, text, variantSet } from
 import { line, vector } from './library.mjs'
 
 /** The shell of a modal dialog (Modal.vue): a title bar, what the dialog says, a row of buttons. */
-const dialogShell = (name, width, ...children) =>
+export const dialogShell = (name, width, ...children) =>
   board(name, { w: width, h: 'auto', layout: 'column', gap: 'space.14', pad: ['space.24', 'space.26'], radius: 'radius.dialog', fill: 'color.surface', stroke: { color: 'color.line-field', width: 'border.1' }, shadow: 'shadow.card' }, ...children)
 
 // --- the parts -------------------------------------------------------------------------------------------------
