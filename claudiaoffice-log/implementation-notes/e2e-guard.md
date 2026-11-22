@@ -11,10 +11,11 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
     failure says the three ways out.
   * `NOT_BOUND_YET`: approved files that wait, each with its story. `test_the_list_of_files_not_bound_yet_only_shrinks`
     fails when an entry is run (or gone). Today: `objects/names.feature` (E1.13), `document-file/requirements.feature`
-    (E1.9), `invariants/objects-in-composes.feature` (PROC-40).
+    (E1.9), `invariants/objects-in-composes.feature` (PROC-40), `computes/slides.feature` (E6.31, merged from `main`
+    while this branch was open: the guard caught it).
   * `test_a_draft_is_not_run_before_the_owner_has_approved_it`: bound and `@draft` at once fails.
   * `test_a_test_tag_names_a_test_that_exists_and_is_run`: `@unit:`/`@io:` paths exist; `@e2e:<script>` exists in
-    `web/e2e/` and is in `SCRIPTS`.
+    `web/e2e/` and is in `SCRIPTS`. Only for files that run: a draft's or a waiting file's tags are promises.
   * `test_a_pending_tag_names_a_story_that_is_not_done`: `@pending:<story>` whose `_tasks/<story>-*.md` says
     `status: done` fails.
 * `claudiaoffice-log/specs/objects/the-same-in-all-three-apps.feature`: `@draft` on its `Feature:` line (it says
@@ -33,7 +34,7 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
   `test_ci_runs_the_browser_scripts_through_the_one_list` replace the old grep of `ci.yml` (PROC-19's test).
 * `scripts/run_e2e.py`, after the code review: `_record` says whether its command passed (the window scripts run only
   when their build did); `_stop_on_ci` makes a missing browser or font a stop on CI; `_free` probes a port with
-  `SO_REUSEADDR` except on Windows (PROC-49, `tests/test_run_e2e.py`). `tests/conftest.py` (new) loads the runner once
+  `SO_REUSEADDR` except on Windows (PROC-51, `tests/test_run_e2e.py`). `tests/conftest.py` (new) loads the runner once
   for the three tests that read it.
 * `tests/e2e/specs/conftest.py` (PROC-48): `_launch(play)` picks the browser; the `browser` fixture skips with a reason
   when Playwright cannot start it.

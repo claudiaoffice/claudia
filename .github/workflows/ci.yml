@@ -146,7 +146,7 @@ jobs:
   # Real browsers against real servers: tests/e2e (with the specs), the scripts in web/e2e that walk two people through
   # each app, and the Windows and macOS client's window. They are the only tests that see the rendered page. CI runs
   # them as a computer does, through ./run-e2e.sh and its one list of scripts (D1452), so a script cannot run in one
-  # place and not in the other (PROC-44).
+  # place and not in the other (PROC-50).
   e2e:
     name: End to end (Chromium)
     runs-on: ubuntu-24.04

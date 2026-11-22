@@ -14,7 +14,7 @@ def _runner(run_e2e):
 def test_a_port_a_stopped_server_has_just_closed_is_free(run_e2e):
     """A server that closed its connections first leaves them in TIME_WAIT; the next server binds its port anyway
     (SO_REUSEADDR), so the runner must not call the port busy. It did, and every run stopped after the shared servers
-    with "port 8766 is in use" (PROC-49)."""
+    with "port 8766 is in use" (PROC-51)."""
     with socket.socket() as server:
         if os.name != "nt":
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # as uvicorn's asyncio server does

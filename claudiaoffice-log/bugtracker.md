@@ -272,7 +272,12 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-43 | P2 | Process / E2E | The job "End to end (Chromium)" was red from 2026-11-17: each first failure hid the next, and four lines of `objects.cjs` were stale (proportions of a free rectangle, the name of a table's menu, "Edit text" for a picture in creates, a race on the history entry of Delete) | **fixed** 2026-11-21 (the script follows the contract; it ran six times in a row; size 2) | 2026-11-21 | 2026-11-21 |
 | PROC-44 | P3 | Process / CI | Two timing flakes on shared runners: `test_the_anchor_is_shown_when_the_object_is_selected` (setup clicked before the layout settled; fixed with `settled_box`) and `test_calculating_a_long_chain_is_linear` (one run 44x instead of ~10x, green on rerun; **open**, the retry in the test is too thin) | anchor spec **fixed** 2026-11-21; perf test **open** (size 3) | 2026-11-21 | |
 | PROC-45 | P2 | Process / CI | The Linux client's end-to-end test still looked for `[data-block]` after the paragraph rename of E1.18 made it `data-paragraph`, so the job "Linux client" was red on `main` | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
+| PROC-46 | P3 | Process / E2E | `./run-e2e.sh --list`, its help and `running.md` said the step code was not built ("11 of 97") | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-21 | 2026-11-22 |
+| PROC-47 | P2 | Process / CI | Firefox never runs in CI, though 20 scenarios are tagged `@firefox` | open (recommendation 3 of the tester review, held back) | 2026-11-21 |  |
+| PROC-48 | P3 | Process / E2E | Without the browser, the spec scenarios failed instead of skipping with a reason | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-21 | 2026-11-22 |
 | PROC-49 | P2 | Process / CI | The Penpot generator on `main` made the Python jobs red: its `package-lock.json` was neither audited nor watched by dependabot, and `tools/transplant.py` failed ruff | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
+| PROC-50 | P2 | Process / E2E | `./run-e2e.sh regression` ran 27 browser scripts, CI 30: `objects.cjs` and the two client windows ran only in CI | **fixed** 2026-11-22 (D1452, `e2e-guard`) | 2026-11-21 | 2026-11-22 |
+| PROC-51 | P2 | Process / E2E | Every full local regression stopped after the shared servers with "port 8766 is in use" (TIME_WAIT, no `SO_REUSEADDR` in the runner's probe) | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-22 | 2026-11-22 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2570,7 +2575,7 @@ nowhere: `objects/names.feature` (28), `document-file/requirements.feature` (6),
 `NOT_BOUND_YET` with the story that binds each, and the entry has to go when that happens. PROC-40 is closed when the
 list is empty.
 
-### PROC-44 · `./run-e2e.sh regression` ran fewer browser scripts than CI · P2 · size 2 · fixed 2026-11-22
+### PROC-50 · `./run-e2e.sh regression` ran fewer browser scripts than CI · P2 · size 2 · fixed 2026-11-22
 **Measured** (2026-11-21, `d18c4e4`): the runner's lists named 27 scripts, CI's job 30; `objects.cjs` (the object
 contract of all three apps, D1221–D1230) and `windows-shell.cjs`, `macos-shell.cjs` ran only in CI. The `@e2e:objects.cjs`
 scenarios of `specs/objects/` were therefore "checked by" a script that "use it before delivery" never ran.
@@ -2599,7 +2604,7 @@ playwright install chromium`, or set $CLAUDIA_CHROMIUM)", or the same for Firefo
 (5 failed → 5 skipped); a fixture's reaction to a missing browser is not worth a test of its own. Escaped because: the
 fixture launched the browser itself and did not share `test_greeting.py`'s check.
 
-### PROC-49 · `./run-e2e.sh regression` stopped after the shared servers with "port 8766 is in use" · P2 · size 2 · fixed 2026-11-22
+### PROC-51 · `./run-e2e.sh regression` stopped after the shared servers with "port 8766 is in use" · P2 · size 2 · fixed 2026-11-22
 **Measured** (2026-11-22, `main` at `f216c15` and the branch): every full local run ended with exit 2 after the scripts
 against the three shared servers, before the scripts with servers of their own, the fonts server and the client
 windows. Nothing listened on 8766: the runner's port check bound a socket without `SO_REUSEADDR`, which Linux refuses

@@ -1,4 +1,4 @@
-"""CI runs what the repository says it can run (PROC-19, PROC-44).
+"""CI runs what the repository says it can run (PROC-19, PROC-50).
 
 At ``cfa2d91`` six of the eighteen browser scripts in ``web/package.json`` (lists, regions, the grid's accessibility,
 describing objects in computes and creates, the macOS shell window) were never run by CI, and the macOS client's own
@@ -20,7 +20,7 @@ def _e2e_scripts() -> list[str]:
 
 
 def test_every_browser_script_of_the_web_app_is_in_the_one_list(run_e2e):
-    """``./run-e2e.sh`` and CI run the same scripts from one list (PROC-44, D1452)."""
+    """``./run-e2e.sh`` and CI run the same scripts from one list (PROC-50, D1452)."""
     listed = sorted(script.npm for script in run_e2e.SCRIPTS)
     assert listed == _e2e_scripts(), (
         "web/package.json and SCRIPTS in scripts/run_e2e.py name different browser scripts:"
@@ -30,7 +30,7 @@ def test_every_browser_script_of_the_web_app_is_in_the_one_list(run_e2e):
 
 
 def test_ci_runs_the_browser_scripts_through_the_one_list():
-    """A script CI calls by itself would be a second list, and a computer would not run it (objects.cjs, PROC-44)."""
+    """A script CI calls by itself would be a second list, and a computer would not run it (objects.cjs, PROC-50)."""
     assert re.search(r"^\s*run: \./run-e2e\.sh regression\b", CI, re.MULTILINE), (
         "CI does not run ./run-e2e.sh regression"
     )

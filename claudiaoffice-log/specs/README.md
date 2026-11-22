@@ -48,7 +48,7 @@ A feature file starts with a `# title` comment line, then `Feature:`. Which test
 - **Every file is run, or says why not** (D1450). `tests/test_specs_are_bound.py` fails when a `.feature` file is not
   bound by a `test_<feature>.py`, its scenarios do not all carry `@unit:`, `@io:` or `@e2e:`, and it is not a `@draft`.
   An approved file that cannot be bound yet stands in that test's `NOT_BOUND_YET` with the story that binds it; the list
-  only shrinks, and adding to it is the owner's call. A test tag must name a test that exists and runs, and
+  only shrinks, and adding to it is the owner's call. In a file that runs, a test tag must name a test that exists and runs, and
   `@pending:<story>` a story that is not done.
 - **A step that has no code skips its scenario**, with its words. The list of skips is the list of what the specs
   promise and the tests do not yet check; it is shown in every run.

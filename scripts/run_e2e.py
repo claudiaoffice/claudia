@@ -282,7 +282,7 @@ class Runner:
 
     def _free(self, port: int) -> bool:
         """Free if a server could listen on it now. Like the server, the probe may reuse a port whose old connections
-        still wait in TIME_WAIT (PROC-49); Windows allows that without being asked, and there the option would let
+        still wait in TIME_WAIT (PROC-51); Windows allows that without being asked, and there the option would let
         the probe share a port someone listens on."""
         with closing(socket.socket()) as probe:
             if os.name != "nt":

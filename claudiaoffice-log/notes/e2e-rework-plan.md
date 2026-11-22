@@ -9,7 +9,7 @@ came out differently from this draft: the JSON list WP2 proposed became `SCRIPTS
 branch, story and decision ids are to be agreed again then.
 
 **Written:** 2026-11-21, as a draft for the owner's review. **Source:** the tester review of 2026-11-21 (recommendations
-1–5; findings PROC-40, PROC-44, PROC-46 to PROC-48; PROC-45 went to another fix first and the later ids moved by one).
+1–5; findings PROC-40, PROC-46 to PROC-48, PROC-50; the first draft's ids were renumbered where other work had taken them).
 
 This note is written for an orchestrating agent that starts cold and spawns sub-agents. Read the project instructions,
 `CONTRIBUTING.md`, `claudiaoffice-log/specs/README.md`, `claudiaoffice-log/specs/running.md` and
@@ -22,7 +22,7 @@ This note is written for an orchestrating agent that starts cold and spawns sub-
 **In scope (recommendations 1–5 of the review):**
 
 1. Every scenario in `claudiaoffice-log/specs` is run somewhere, or the build fails (PROC-40, widened).
-2. Running the E2E tests on a computer runs what CI runs (PROC-44, PROC-46, PROC-48).
+2. Running the E2E tests on a computer runs what CI runs (PROC-50, PROC-46, PROC-48).
 3. Firefox runs in CI (PROC-47).
 4. The invariants file becomes the backbone: every kind of object, in every app that has it, passes the same scenarios.
 5. First spec-first journeys for computes and creates, plus four cross-app journeys, **drafted** for the owner's review;
@@ -164,7 +164,7 @@ WP.
 1. One list of the `web/e2e` scripts, `web/e2e/scripts.json`: name, which server(s), extra environment, minutes. Both
    `scripts/run_e2e.py` and the CI `e2e` job read it (CI through a small step that loops over it, or a test that fails
    when `ci.yml` and the list differ; choose the smaller change and say why). `objects`, `windows-shell` and
-   `macos-shell` join the local `regression` run (PROC-44).
+   `macos-shell` join the local `regression` run (PROC-50).
 2. Fix the stale texts: the help and `--list` of `run_e2e.py`, and `running.md` ("11 of 97") (PROC-46). `--list`
    prints the real counts by collecting with pytest, so it cannot go stale again.
 3. The `browser` fixture of `tests/e2e/specs/conftest.py` skips with the same reason as `test_greeting.py` when no

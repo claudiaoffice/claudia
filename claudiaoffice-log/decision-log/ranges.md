@@ -68,7 +68,7 @@ Unused numbers in a closed block stay unused.
 | D1390–D1409 | bug fixes after SEC-12: the red CI, the keys of dialogs on the grid and the slide, the arrow keys of composes objects (branch `main`; D1390 used) | 2026-11-21 | open |
 | D1410–D1429 | glossary session: domain notions and what follows from them, starting with the number format of a cell (glossary.md; D1410–D1413 used) | 2026-11-21 | open |
 | D1430–D1449 | architecture improvements and the glossary words in the code: one asset store in the object layer, one web document session (with CODE-75), then the renames of E1.18 (branch `architecture-improvements`, merged; D1430–D1433 used); the remaining renames of E1.18, part, ai and proposal (branch `e1-18-remaining-names`, from D1434) | 2026-11-21 | open |
-| D1450–D1469 | the E2E guard: every spec runs somewhere or says why, and a computer runs the browser scripts CI runs (E11.8, PROC-40, PROC-44, PROC-46, PROC-48; branch `e2e-guard`) | 2026-11-22 | open |
+| D1450–D1469 | the E2E guard: every spec runs somewhere or says why, and a computer runs the browser scripts CI runs (E11.8, PROC-40, PROC-50, PROC-46, PROC-48, PROC-51; branch `e2e-guard`) | 2026-11-22 | open |
 | D1470–D1489 | E6.31 Slides in computes: the slide in the core, two collections and one tab order in computes, a chart as a slide, Move to Slide, the chart names of E1.18 (branch `e6-31-slides-in-computes`) | 2026-11-22 | open |
 
 ## Never to be used

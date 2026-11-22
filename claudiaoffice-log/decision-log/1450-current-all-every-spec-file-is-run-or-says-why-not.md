@@ -25,10 +25,13 @@ On 2026-11-21 four approved files in `claudiaoffice-log/specs` were read by no t
 An approved file that cannot be bound yet stands in `NOT_BOUND_YET` in that test, with the story or bug that binds it.
 The test fails when an entry is no longer needed, so the list only shrinks; adding to it is the owner's call, not a way
 to get CI green. On 2026-11-22: `objects/names.feature` (E1.13, after the chart renames of E1.18),
-`document-file/requirements.feature` (E1.9), `invariants/objects-in-composes.feature` (PROC-40).
+`document-file/requirements.feature` (E1.9), `invariants/objects-in-composes.feature` (PROC-40), and
+`computes/slides.feature` (E6.31: approved the same day, its step code comes with the feature on its own branch, which
+takes the entry out when it binds the file).
 
 The same test checks that a test tag names a file that exists and, for `@e2e:`, a script `./run-e2e.sh regression`
-runs (D1452); and that `@pending:<story>` does not wait for a story whose file says `status: done`.
+runs (D1452), for the files that run: in a draft or a waiting file a tag may name a test its feature's branch will write
+first; and that `@pending:<story>` does not wait for a story whose file says `status: done`.
 
 **Notes.** The test reads the files with the Gherkin parser pytest-bdd uses (`gherkin-official`), so it needs no browser
 and runs in the Python gate on all three systems. Implementation note: `implementation-notes/e2e-guard.md`.

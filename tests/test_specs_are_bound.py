@@ -28,6 +28,7 @@ NOT_BOUND_YET = {
     "objects/names.feature": "E1.13 Names of things, after the renames of E1.18 (charts in computes)",
     "document-file/requirements.feature": "E1.9 Document manifest and requirements",
     "invariants/objects-in-composes.feature": "PROC-40, recommendation 4 of notes/e2e-rework-plan.md",
+    "computes/slides.feature": "E6.31 Slides in computes, approved 2026-11-22; branch e6-31-slides-in-computes",
 }
 HOW_TO_FIX = (
     "Bind the file in a tests/e2e/specs/test_<feature>.py with scenarios(...); or tag every scenario with the test that"
@@ -126,9 +127,9 @@ def test_a_draft_is_not_run_before_the_owner_has_approved_it():
     assert not early, f"bound but still marked @draft (approved? then take @draft off): {early}"
 
 
-def _all_tags() -> set[str]:
+def _all_tags(paths: list[Path]) -> set[str]:
     found = set()
-    for path in _features():
+    for path in paths:
         feature = _feature(path)
         found.update(_tags(feature))
         for _, tags, examples in _scenarios(feature, []):
@@ -138,11 +139,17 @@ def _all_tags() -> set[str]:
     return found
 
 
+def _files_that_run() -> list[Path]:
+    """The files that run now. A draft or a file in NOT_BOUND_YET may name a test that its feature's branch will write
+    first, so its tags are promises, checked once it runs."""
+    return [path for path in _features() if _name(path) not in NOT_BOUND_YET and not _is_draft(path)]
+
+
 def test_a_test_tag_names_a_test_that_exists_and_is_run(run_e2e):
     """``@e2e:<script>`` must name a script of ``SCRIPTS``, which ``./run-e2e.sh regression`` and CI run (D1452)."""
     scripts = {script.name for script in run_e2e.SCRIPTS}
     wrong = []
-    for tag in sorted(t for t in _all_tags() if t.startswith(TEST_TAGS)):
+    for tag in sorted(t for t in _all_tags(_files_that_run()) if t.startswith(TEST_TAGS)):
         kind, target = tag[1:].split(":", 1)
         if kind == "e2e":
             name = target.removesuffix(".cjs")
@@ -158,7 +165,7 @@ def test_a_test_tag_names_a_test_that_exists_and_is_run(run_e2e):
 def test_a_pending_tag_names_a_story_that_is_not_done():
     """``@pending:<story>`` waits for a story; when the story is done the scenario should run, not wait."""
     stale = []
-    for tag in sorted(t for t in _all_tags() if t.startswith("@pending:")):
+    for tag in sorted(t for t in _all_tags(_features()) if t.startswith("@pending:")):
         story = tag.removeprefix("@pending:").lower()
         for task in TASKS.glob(f"{story}-*.md"):
             status = re.search(r'^status:\s*"?([\w-]+)', task.read_text(encoding="utf-8"), re.MULTILINE)
