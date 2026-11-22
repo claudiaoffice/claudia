@@ -47,7 +47,20 @@ Nothing to build: *All Styles…* is a page action (D301). Only its description 
 
 * Upcasting of dropped properties: not wanted before the first release (D308).
 * A command to define a colour role of one's own: it belongs to the colour axis (D200–D202), not to the style model; to be its own story.
-* Re-basing is refused when the look needs font, size, colour, alignment and the like: there is no neutral value to write (D781). Open question to the owner.
+* Re-basing is refused when the look needs font, size, colour, alignment and the like: there is no neutral value to write (D781). Settled by D1301: the refusal stays, and the dialog names the property and offers *Assign another style*.
+
+## Spec (2026-11-22, closes E1.10)
+
+`claudiaoffice-log/specs/composes/deleting-a-style.feature`, step code `tests/e2e/specs/test_deleting_a_style.py`,
+run by `./run-e2e.sh extended --feature deleting`. It covers assigning (with the count of what will look different),
+Undo, re-basing with the stand-in `<name> (kept)`, D1300 (a style based on the deleted one keeps its name and look) and
+hiding/showing a built-in style.
+
+The D1301 scenario is tagged `@unit:` and not driven in a browser. A re-base can only be refused under a style that
+sets a property with no neutral value which the deleted style's look does not set. Every style a person can make is
+built on the plain style of its kind, which sets all of those properties, in all three apps (checked 2026-11-22 for
+every built-in style of composes, creates and computes). So no screen reaches the refusal today. It becomes reachable
+only if a style with no parent can be made or imported; then the scenario should get step code.
 
 ## For the next agent
 
