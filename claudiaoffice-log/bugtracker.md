@@ -64,7 +64,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
 | SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |  |  |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |  |  |
-| PERF-06 | P3 | Performance | Packing rewrites the whole zip; threshold packing on the event loop | verified open |  |  |
+| PERF-06 | P3 | Performance | Threshold packing blocks the event loop (rewriting the whole zip is accepted up to ~50 MB, D1269) | verified open; narrowed 2026-11-22: the rewrite itself is accepted (D1269) |  |  |
 | PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |  |  |
 | PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |  |  |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |  |  |
@@ -272,7 +272,12 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-43 | P2 | Process / E2E | The job "End to end (Chromium)" was red from 2026-11-17: each first failure hid the next, and four lines of `objects.cjs` were stale (proportions of a free rectangle, the name of a table's menu, "Edit text" for a picture in creates, a race on the history entry of Delete) | **fixed** 2026-11-21 (the script follows the contract; it ran six times in a row; size 2) | 2026-11-21 | 2026-11-21 |
 | PROC-44 | P3 | Process / CI | Two timing flakes on shared runners: `test_the_anchor_is_shown_when_the_object_is_selected` (setup clicked before the layout settled; fixed with `settled_box`) and `test_calculating_a_long_chain_is_linear` (one run 44x instead of ~10x, green on rerun; **open**, the retry in the test is too thin) | anchor spec **fixed** 2026-11-21; perf test **open** (size 3) | 2026-11-21 | |
 | PROC-45 | P2 | Process / CI | The Linux client's end-to-end test still looked for `[data-block]` after the paragraph rename of E1.18 made it `data-paragraph`, so the job "Linux client" was red on `main` | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
+| PROC-46 | P3 | Process / E2E | `./run-e2e.sh --list`, its help and `running.md` said the step code was not built ("11 of 97") | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-21 | 2026-11-22 |
+| PROC-47 | P2 | Process / CI | Firefox never runs in CI, though 20 scenarios are tagged `@firefox` | open (recommendation 3 of the tester review, held back) | 2026-11-21 |  |
+| PROC-48 | P3 | Process / E2E | Without the browser, the spec scenarios failed instead of skipping with a reason | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-21 | 2026-11-22 |
 | PROC-49 | P2 | Process / CI | The Penpot generator on `main` made the Python jobs red: its `package-lock.json` was neither audited nor watched by dependabot, and `tools/transplant.py` failed ruff | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
+| PROC-50 | P2 | Process / E2E | `./run-e2e.sh regression` ran 27 browser scripts, CI 30: `objects.cjs` and the two client windows ran only in CI | **fixed** 2026-11-22 (D1452, `e2e-guard`) | 2026-11-21 | 2026-11-22 |
+| PROC-51 | P2 | Process / E2E | Every full local regression stopped after the shared servers with "port 8766 is in use" (TIME_WAIT, no `SO_REUSEADDR` in the runner's probe) | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-22 | 2026-11-22 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -551,7 +556,11 @@ column), or cache it per revision.
 **Re-checked 2026-11-12: fixed.** `Sheet.extent()` is amortized O(1) (`_rows_live`/`_cols_live`); 0.001 ms at 500k
 cells.
 
-### PERF-06 · Packing rewrites the whole zip; threshold packing on the event loop · P3 · verified open
+### PERF-06 · Threshold packing blocks the event loop · P3 · verified open (narrowed 2026-11-22)
+**Narrowed 2026-11-22 (E2.1 closed).** Rewriting the whole zip is accepted up to about 50 MB (D1269); above that,
+appending is the trigger for a story. **What stays open:** `_after_change` → `_pack` in `claudia_server/sealed.py` packs
+on the event loop every 500 changes, so every other document on the server waits while a large file is rewritten. The
+way out is a worker thread behind the document's lock, as D1282 describes for renewal.
 **Evidence (documented, E2 slice 3 notes).** Packing writes the whole zip again every 500 changes and at release.
 Release runs in a thread; threshold packing does not. Fine up to some tens of megabytes; larger documents need
 appending or a split.
@@ -2434,7 +2443,7 @@ CODE-31 (how the history speaks). Related assumption of the same branch: a selec
 names the paragraph the object was in before the move. **Acceptance.** The entry names the object and, when it changes,
 the paragraph, in the user's language.
 
-### PROC-40 · Four spec files run nowhere · P2 · new, open
+### PROC-40 · Four spec files run nowhere · P2 · guarded 2026-11-22, three files still wait (see the round of 2026-11-22, E2E guard)
 **Measured** (2026-11-20): of the `.feature` files in `claudiaoffice-log/specs`, four are bound by no `scenarios(...)` in
 `tests/e2e/specs/` and none of their scenarios has `@unit:`, `@io:` or `@e2e:`: `objects/names.feature` (28 scenarios,
 `@pending:e1.13`), `container/requirements.feature` (6, `@pending:e1.9`), `invariants/objects-in-composes.feature` (12),
@@ -2556,3 +2565,56 @@ BITV divergence (visible focus, contrast and target size of the native control w
 the control is drawn as the "Select / native" variant to show it. **Acceptance.** Either a decision that native
 selects are the standard (and the other selects follow), or a styled select with the same keyboard behaviour; BITV
 check of the result.
+
+## Round of 2026-11-22 (E2E guard, branch `e2e-guard`, E11.8)
+
+From the tester review of 2026-11-21 (recommendations 1 and 2; the plan is `notes/e2e-rework-plan.md`). Measured on
+`main` at `f216c15` and on the branch.
+
+**PROC-40, re-measured.** `computes/pictures-in-files.feature` is not lost: its `Feature:` line carries
+`@io:packages/claudia-computes-io/tests/test_pictures.py`, which covers all five scenarios. Three approved files run
+nowhere: `objects/names.feature` (28), `document-file/requirements.feature` (6), `invariants/objects-in-composes.feature`
+(12); a fourth, `objects/the-same-in-all-three-apps.feature` (4), is a draft for the owner's review and now says so
+(`@draft`, D1451); the owner approved it the same day, and it waits too. `tests/test_specs_are_bound.py` (D1450) fails
+for any new file in that state; the waiting files stand in its `NOT_BOUND_YET` with the story that binds each, and the
+entry has to go when that happens. PROC-40 is closed when its entries are gone.
+
+### PROC-50 · `./run-e2e.sh regression` ran fewer browser scripts than CI · P2 · size 2 · fixed 2026-11-22
+**Measured** (2026-11-21, `d18c4e4`): the runner's lists named 27 scripts, CI's job 30; `objects.cjs` (the object
+contract of all three apps, D1221–D1230) and `windows-shell.cjs`, `macos-shell.cjs` ran only in CI. The `@e2e:objects.cjs`
+scenarios of `specs/objects/` were therefore "checked by" a script that "use it before delivery" never ran.
+**Fixed** (D1452): one list, `SCRIPTS` in `scripts/run_e2e.py`; CI runs `./run-e2e.sh setup` and `./run-e2e.sh
+regression`. **Test:** `tests/test_ci_workflow.py` (`web/package.json` and `SCRIPTS` agree; CI calls no script by
+itself) and `tests/test_specs_are_bound.py` (an `@e2e:` tag names a script the runner runs). Escaped because: two lists,
+and no test compared them.
+
+### PROC-46 · `./run-e2e.sh --list`, its help and `running.md` said the step code was not built · P3 · size 3 · fixed 2026-11-22
+**Measured** (2026-11-21): `--list` printed "specs (written, under review; step code not built yet)", the help said
+"core" and "extended" would stop, and `running.md` said "11 of 97" while 76 scenarios passed. **Fixed:** `--list`
+counts the scenarios by collecting them with pytest each time; the stale sentences are gone, and the dead branch of
+`specs()` for a missing `tests/e2e/specs` with them. Escaped because: hand-written counts.
+
+### PROC-47 · Firefox never runs in CI · P2 · size 2 · open
+**Measured** (2026-11-21): 20 scenarios are tagged `@firefox` and every `@core` scenario should be (specs/README.md),
+but CI installs and runs only Chromium; Firefox is the owner's main browser. Left for later on purpose (recommendation 3
+of the review, held back because of parallel work). **Fix.** A job that runs the `@firefox` scenarios on every push and
+every `@core` one nightly (proposal in `notes/e2e-rework-plan.md`, WP3).
+
+### PROC-48 · Without the browser, the spec scenarios failed instead of skipping · P3 · size 3 · fixed 2026-11-22
+**Measured:** with `$CLAUDIA_CHROMIUM` pointing at nothing, `tests/e2e/specs/test_caret.py` gave "5 failed" (Playwright's
+launch error), while `test_greeting.py` skips with a reason in the same situation, as `specs/README.md` promises.
+**Fixed:** the `browser` fixture of `tests/e2e/specs/conftest.py` skips with "no chromium for playwright (`uv run
+playwright install chromium`, or set $CLAUDIA_CHROMIUM)", or the same for Firefox. Evidence: red then green by hand
+(5 failed → 5 skipped); a fixture's reaction to a missing browser is not worth a test of its own. Escaped because: the
+fixture launched the browser itself and did not share `test_greeting.py`'s check.
+
+### PROC-51 · `./run-e2e.sh regression` stopped after the shared servers with "port 8766 is in use" · P2 · size 2 · fixed 2026-11-22
+**Measured** (2026-11-22, `main` at `f216c15` and the branch): every full local run ended with exit 2 after the scripts
+against the three shared servers, before the scripts with servers of their own, the fonts server and the client
+windows. Nothing listened on 8766: the runner's port check bound a socket without `SO_REUSEADDR`, which Linux refuses
+while the stopped server's connections wait in TIME_WAIT; the server itself (uvicorn) binds with it and would have
+started. CI never noticed because it started its servers by hand; with D1452 CI runs the runner, so this had to be fixed
+here. **Fixed:** `_free` sets `SO_REUSEADDR` (not on Windows, where it would let the probe share a listening port).
+**Test:** `tests/test_run_e2e.py`, red before, green after. Escaped because: test not run (nobody ran the whole local
+regression to its end; the summary was never printed).
+

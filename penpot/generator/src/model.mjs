@@ -367,7 +367,7 @@ function fillsOf(f, rect) {
 
 function strokeOf(s) {
   if (!s) return { strokes: [] }
-  const c = s.raw ? { hex: s.raw, opacity: 1 } : color(s.color)
+  const c = s.raw ? { hex: s.raw, opacity: s.opacity ?? 1 } : color(s.color)
   const width = num(s.width)
   return {
     strokes: [
@@ -490,7 +490,8 @@ function textParams(n, parent) {
   const { box } = { box: n.laid }
   const m = box.m
   const spec = m.spec
-  const c = color(n.color)
+  // a colour token, or { raw: '#hex', opacity } for a colour a stylesheet writes as a literal (SidePanel.vue)
+  const c = n.color?.raw ? { hex: n.color.raw, opacity: n.color.opacity ?? 1 } : color(n.color)
   const weight = String(spec.weight)
   const italic = spec.style === 'italic'
   const variant = (weight === '400' ? '' : weight) + (italic ? 'italic' : '')
@@ -503,7 +504,7 @@ function textParams(n, parent) {
     textAlign: n.align,
     lineHeight: String(lhFactor),
     letterSpacing: String(spec.ls),
-    textDecoration: n.underline ? 'underline' : 'none',
+    textDecoration: n.strike ? 'line-through' : n.underline ? 'underline' : 'none',
     textTransform: spec.transform,
     direction: 'ltr',
     fills: [fill1(c.hex, c.opacity)],
@@ -542,7 +543,7 @@ function textParams(n, parent) {
     }
   })
   tokens.typography = `type.${n.style}`
-  tokens.fill = n.color
+  if (!n.color?.raw) tokens.fill = n.color
   p.appliedTokens = tokens
   return p
 }
