@@ -28,17 +28,16 @@ def test_a_description_is_written_told_and_undone(deck):
     assert deck.model.thing_description("s2") == ""
 
 
-def test_it_survives_a_snapshot_and_a_state_from_before_descriptions(deck):
+def test_it_survives_a_snapshot_and_a_slide_without_one_is_stored_without_one(deck):
     deck.execute(DescribeThing("s2", "kept"), author="ann")
     state = deck.model.serialize()
     assert SlideModel.restore(state).thing_description("s2") == "kept"
-    del state["descriptions"]
-    assert SlideModel.restore(state).thing_description("s2") == ""
+    assert state["slides"] == [{"id": "s1"}, {"id": "s2", "name": "Agenda", "description": "kept"}]
 
 
 def test_it_goes_with_the_slide_and_comes_back_with_an_undo(deck):
     deck.execute(DescribeThing("s2", "gone"), author="ann")
     deck.execute(RemoveSlide("s2"), author="ann")
-    assert "s2" not in deck.model.slide_descriptions
+    assert "s2" not in deck.model.slide_records
     deck.undo("ann")
     assert deck.model.thing_description("s2") == "gone"

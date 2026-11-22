@@ -302,6 +302,24 @@ outline, worked out in whole numbers from a table of sines (D910, D1022).
 .. autofunction:: claudia_core.turned_extent
 .. autofunction:: claudia_core.nudge_into
 
+Slides
+------
+
+A slide is a page of objects in a fixed 16:9 frame, in creates and in computes (D1470). The order of the slides is the
+app's: the presentation in creates, the tabs in computes.
+
+.. autodata:: claudia_core.SLIDE_WIDTH
+.. autodata:: claudia_core.SLIDE_HEIGHT
+.. autoclass:: claudia_core.SlideAnchor
+   :members:
+.. autofunction:: claudia_core.check_on_slide
+.. autofunction:: claudia_core.turned_on_slide
+.. autofunction:: claudia_core.room_on_slide
+.. autoclass:: claudia_core.Slide
+   :members:
+.. autoclass:: claudia_core.Slides
+   :members:
+
 Containers
 ------------------------
 

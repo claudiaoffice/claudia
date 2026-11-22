@@ -7,6 +7,10 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- The slide, shared by creates and computes (E6.31, D1470): `claudia_core.slides` with `SLIDE_WIDTH`, `SLIDE_HEIGHT`
+  and `SlideAnchor` (until now creates'), the rule that keeps an object on a slide (`check_on_slide`,
+  `turned_on_slide`, `room_on_slide`), `Slide` (id, name, description) and `Slides`, the slides of a document by id,
+  without an order of their own.
 - Objects that may change holder (D1351): `ObjectModel.objects_change_holder` (false by default),
   `ObjectModel.rehang_object(obj, at=None)` (out of the old stack, into the new one, returns the old place) and
   `ObjectModel.place_regions(anchor)` (what a move into another holder also takes, for locks). `MoveObject.at`: the

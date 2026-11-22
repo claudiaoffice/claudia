@@ -6,6 +6,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Changed
+- **Breaking** — the slide is claudia-core's (E6.31, D1470): `SLIDE_WIDTH`, `SLIDE_HEIGHT` and `SlideAnchor` come from
+  `claudia_core.slides` (still re-exported here); `SlideModel.slide_names` and `SlideModel.slide_descriptions` are
+  replaced by `SlideModel.slide_records` (`claudia_core.Slides`), and `SlideModel.slides` stays the order of the
+  presentation. The state (schema 18) stores the slides as records in that order; an older state is not read.
 - **Breaking** — the glossary's holder (D1430, see `claudia-core`): `SlideAnchor.holder` (was `container`),
   `SlideModel.holders()`; an anchor's data says `holder`.
 - **Breaking** — `DefineImage`, `ForgetImage`, `DefineShape`, `ForgetShape`, `ImagesChanged` and `ShapesChanged` are

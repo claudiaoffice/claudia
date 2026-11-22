@@ -55,8 +55,8 @@ namespace claudia_core {
 }
 namespace claudia_creates {
   class SlideModel {
-    slides: Slides
-    order: list of ids
+    slides: list of ids, the order
+    slide_records: Slides
     notes, times
     AddSlide, RemoveSlide
   }
@@ -103,8 +103,9 @@ WorkbookModel ..> ChartSpec
 (moved from creates), the rule that keeps an object on the slide (creates' `check_anchor`/`turned_anchor`, as
 functions), `Slide(id, name, description)` and `Slides`, a keyed collection without an order of its own that refuses to
 remove a slide that still has objects. Why: two apps have slides now, as all three have paragraphs. Creates' stored state
-changes from a list of ids plus name and description maps to its order plus slide records: a new state schema, no
-upgrade (pre-release, E1.16).
+changes from a list of ids plus name and description maps to slide records in the order of the presentation (the
+order stays `SlideModel.slides`, as today; the records are `slide_records`): a new state schema, no upgrade (pre-release,
+D1430).
 
 **A2 · Each app keeps its own `AddSlide`/`RemoveSlide`.** Creates' carry the notes and the planned time, computes' the
 place in the tab order; `Slides` has the shared rules. A core command with optional extras would mix the two apps.

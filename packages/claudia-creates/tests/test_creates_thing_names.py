@@ -117,12 +117,6 @@ def test_names_survive_a_rebuild_from_the_log_and_a_snapshot(doc):
     assert restored.thing_name("s1") == "Method"
 
 
-def test_a_snapshot_written_before_names_still_restores(doc):
-    state = doc.model.serialize()
-    del state["names"]
-    assert type(doc.model).restore(state).thing_name("s1") == ""
-
-
 def test_clean_name_is_what_the_command_stores():
     assert clean_name("  a  b ") == "a b"
 

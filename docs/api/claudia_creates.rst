@@ -48,12 +48,12 @@ An image object's ``image`` and ``imported`` are a :class:`claudia_core.ImageAss
 its proportions, exactly as it does for a shape with an ``aspect``.
 
 .. autoclass:: claudia_creates.SlideModel
-.. autoclass:: claudia_creates.SlideAnchor
 
-``SlideObject`` is ``VisualObject[SlideAnchor]``: a shared
-:class:`~claudia_core.ObjectBody` and that anchor (E10.16, D177).
-.. autodata:: claudia_creates.SLIDE_WIDTH
-.. autodata:: claudia_creates.SLIDE_HEIGHT
+``SlideObject`` is ``VisualObject[SlideAnchor]``: a shared :class:`~claudia_core.ObjectBody` and a
+:class:`~claudia_core.SlideAnchor` (E10.16, D177). The anchor, the frame (:data:`~claudia_core.SLIDE_WIDTH` by
+:data:`~claudia_core.SLIDE_HEIGHT`) and the slide records are claudia-core's, shared with computes (D1470); they are
+re-exported here.
+
 .. autodata:: claudia_creates.MIN_OBJECT_SIZE
 .. autodata:: claudia_creates.MAX_OBJECT_TEXT
 .. autodata:: claudia_creates.MAX_OBJECTS_PER_SLIDE

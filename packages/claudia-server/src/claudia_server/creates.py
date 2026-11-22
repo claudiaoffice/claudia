@@ -184,7 +184,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
                 "objects": len(deck.objects_on(slide)),
                 "seconds": deck.times.get(slide),
                 "has_notes": slide in deck.notes,
-                "name": deck.slide_names.get(slide, ""),
+                "name": deck.slide_records[slide].name,
             }
             for slide in deck.slides
         ]

@@ -263,6 +263,16 @@ from .schemes import (
 )
 from .shapes import BOX, FORMAT, PRIMITIVES, ShapeDefinition, ShapeError, parse_shape, primitive
 from .sizing import BASE_FONT_PX, font_size_px, new_object_size
+from .slides import (
+    SLIDE_HEIGHT,
+    SLIDE_WIDTH,
+    Slide,
+    SlideAnchor,
+    Slides,
+    check_on_slide,
+    room_on_slide,
+    turned_on_slide,
+)
 from .store import DocumentStore, MemoryStore
 from .structure import Emitter, LabelsChanged, ParagraphHost, Placed, TextStructure
 from .styles import (
@@ -326,6 +336,14 @@ from .what_if import Proposal, WhatIf
 from .writing import DeleteText, InsertText, Span, TextCommand, TypingHost, word_changes
 
 __all__ = [
+    "SLIDE_HEIGHT",
+    "SLIDE_WIDTH",
+    "Slide",
+    "SlideAnchor",
+    "Slides",
+    "check_on_slide",
+    "room_on_slide",
+    "turned_on_slide",
     "ASSET_KINDS",
     "AssetKind",
     "AssetStore",

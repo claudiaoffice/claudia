@@ -16,10 +16,9 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from claudia_core import Document, ObjectsChanged
+from claudia_core import SLIDE_HEIGHT, SLIDE_WIDTH, Document, ObjectsChanged
 from claudia_creates import SlideModel
 from claudia_creates.events import SlidesChanged
-from claudia_creates.model import SLIDE_HEIGHT, SLIDE_WIDTH
 
 from .lens import fence, shorten
 
