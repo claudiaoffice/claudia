@@ -7,7 +7,7 @@ import type { Commit } from './object-gestures'
 import type { Frame } from './geometry'
 
 export interface Place {
-  block: string
+  paragraph: string
   offset: number
 }
 /** A point on the screen: the top-left corner of the character an object hangs from. */
@@ -22,14 +22,14 @@ export type Step =
   | { kind: 'rotate'; rotation: number }
 
 /** How far a box at `at` (in the layer's own coordinates) floats from the character at `spot` (on the screen), whole
- * pixels, as `floatBox` (`text-containers.ts`) will read it back. */
+ * pixels, as `floatBox` (`text-object-layer.ts`) will read it back. */
 export function awayFrom(at: { x: number; y: number }, spot: Spot, layer: { left: number; top: number }): { dx: number; dy: number } {
   return { dx: Math.round(at.x - (spot.left - layer.left)), dy: Math.round(at.y - (spot.top - layer.top)) }
 }
 
 /** The paragraph a drop at screen height `y` belongs to: the one whose box holds it, else the nearest by distance; the
  * first of two that are equally near. `null` when there are no paragraphs. */
-export function nearestBlock(rects: readonly { id: string; top: number; bottom: number }[], y: number): string | null {
+export function nearestParagraph(rects: readonly { id: string; top: number; bottom: number }[], y: number): string | null {
   let best: { id: string; distance: number } | null = null
   for (const r of rects) {
     const distance = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0

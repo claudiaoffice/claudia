@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Block } from '~/lib/blocks'
+import type { Paragraph } from '~/lib/paragraphs'
 import { itemLayout } from '~/lib/list-layout'
 import type { ListInfo, SchemeInfo } from '~/lib/text-session'
 
@@ -11,9 +11,9 @@ const lists: ListInfo[] = [
   { id: 'l1', scheme: 'bullets', start: 1, name: null },
   { id: 'l2', scheme: 'numbers', start: 1, name: null },
 ]
-const plain = (id: string): Block => ({ id, style: 'body', text: id, runs: [] })
-const item = (id: string, list: string, level = 0): Block => ({ ...plain(id), item: { list, level } })
-const layout = (blocks: Block[], at: number) => itemLayout(blocks, at, lists, schemes)
+const plain = (id: string): Paragraph => ({ id, style: 'body', text: id, runs: [] })
+const item = (id: string, list: string, level = 0): Paragraph => ({ ...plain(id), item: { list, level } })
+const layout = (paragraphs: Paragraph[], at: number) => itemLayout(paragraphs, at, lists, schemes)
 
 describe('where a list item sits', () => {
   it('a plain paragraph has no layout of its own', () => {
@@ -26,10 +26,10 @@ describe('where a list item sits', () => {
   })
 
   it('between two items of one list the gap is the scheme’s, whatever their levels', () => {
-    const blocks = [item('a', 'l2', 0), item('b', 'l2', 1), item('c', 'l2', 0)]
-    expect(layout(blocks, 0)!['--item-gap']).toBe('0.5em')
-    expect(layout(blocks, 1)!['--item-gap']).toBe('0.5em')
-    expect(layout(blocks, 2)!['--item-gap']).toBeUndefined() // the last keeps the paragraph's own margin
+    const paragraphs = [item('a', 'l2', 0), item('b', 'l2', 1), item('c', 'l2', 0)]
+    expect(layout(paragraphs, 0)!['--item-gap']).toBe('0.5em')
+    expect(layout(paragraphs, 1)!['--item-gap']).toBe('0.5em')
+    expect(layout(paragraphs, 2)!['--item-gap']).toBeUndefined() // the last keeps the paragraph's own margin
   })
 
   it('a note or another list after an item ends the tight run', () => {

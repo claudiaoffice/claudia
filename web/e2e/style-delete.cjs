@@ -10,7 +10,7 @@ const DOC = `style-delete-${Date.now() % 100000}`
 const log = (...a) => console.log(...a)
 
 const look = (page, n) =>
-  page.$$eval('[data-testid=text] [data-block]', (els, n) => {
+  page.$$eval('[data-testid=text] [data-paragraph]', (els, n) => {
     const c = getComputedStyle(els[n])
     return { cls: els[n].className, weight: c.fontWeight }
   }, n)
@@ -48,12 +48,12 @@ async function main() {
   await page.waitForTimeout(900)
 
   // a style of the document's own: bold, this paragraph only, and named
-  const second = page.locator('[data-testid=text] [data-block]').nth(1)
+  const second = page.locator('[data-testid=text] [data-paragraph]').nth(1)
   await second.click()
   await second.click({ button: 'right' })
   await page.waitForSelector('[data-testid=style-menu]')
   await page.click('[data-testid=bold]')
-  await page.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-block]')[1].className.includes('changed'))
+  await page.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-paragraph]')[1].className.includes('changed'))
   await page.fill('[data-testid=name-invitation] input', 'Pull note')
   await page.click('[data-testid=name-invitation] button[type=submit]')
   await page.waitForSelector('[data-testid=name-invitation]', { state: 'detached' })
@@ -90,13 +90,13 @@ async function main() {
   // assign Body text: the paragraph looks like it, one announcement, Undo puts it back
   await page.click('[data-testid=delete-style]')
   await page.waitForSelector('[data-testid=style-delete]', { state: 'detached' })
-  await page.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-block]')[1].className.includes('st-body'))
+  await page.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-paragraph]')[1].className.includes('st-body'))
   assert.equal((await look(page, 1)).weight, '400', 'assigning Body text changes the look, as said')
   assert.match(await page.locator('[data-testid=deleted]').innerText(), /deleted\. What had it now has “Body text”/)
   assert.equal(await row(own).count(), 0)
   await page.screenshot({ path: `${SHOTS}/style-delete-3-assigned.png` })
   await page.click('[data-testid=undo-delete]')
-  await page.waitForFunction((id) => document.querySelectorAll('[data-testid=text] [data-block]')[1].className.includes(`st-${id}`), own)
+  await page.waitForFunction((id) => document.querySelectorAll('[data-testid=text] [data-paragraph]')[1].className.includes(`st-${id}`), own)
   assert.equal((await look(page, 1)).weight, '700')
   await page.waitForSelector(`[data-testid=styles-list] [data-style=${own}]`)
   log('assigning Body text changed the look and Undo brought everything back')

@@ -8,12 +8,12 @@ from claudia_composes.commands import (
     AcceptSuggestion,
     DeleteText,
     InsertText,
-    JoinBlocks,
+    JoinParagraphs,
     ProposeSuggestion,
     ResolveSuggestion,
     SetPageSetup,
     SetStyle,
-    SplitBlock,
+    SplitParagraph,
 )
 from claudia_composes.page import PageSetup
 
@@ -38,39 +38,39 @@ def test_typing_follows_a_delete_before_it_and_lands_where_a_delete_around_it_be
 def test_deleting_follows_typing_before_it_and_is_refused_when_typed_into():
     cut = DeleteText("b", 4, 2)
     assert cut.shifted_by(InsertText("b", 0, "ab")) == DeleteText("b", 6, 2)
-    assert cut.shifted_by(SplitBlock("b", 5, "c", "body")) is None
+    assert cut.shifted_by(SplitParagraph("b", 5, "c", "body")) is None
     assert cut.shifted_by(SetPageSetup(PageSetup())) is cut
     assert cut.redacted() is cut
 
 
 def test_a_split_sends_what_follows_into_the_new_paragraph():
-    split = SplitBlock("b", 4, "c", "body")
+    split = SplitParagraph("b", 4, "c", "body")
     assert split.follow(("b", 6, 9)) == ("c", 2, 5)
     assert split.follow(("b", 1, 9)) == ("b", 1, 4)
     assert split.follow(("x", 1, 2)) == ("x", 1, 2)
     assert split.breaks(("b", 2, 6))
     assert not split.breaks(("b", 4, 6))
-    assert split.shifted_by(InsertText("b", 0, "ab")) == SplitBlock("b", 6, "c", "body")
-    assert split.shifted_by(DeleteText("b", 3, 2)) == SplitBlock("b", 3, "c", "body")
+    assert split.shifted_by(InsertText("b", 0, "ab")) == SplitParagraph("b", 6, "c", "body")
+    assert split.shifted_by(DeleteText("b", 3, 2)) == SplitParagraph("b", 3, "c", "body")
     assert split.shifted_by(SetPageSetup(PageSetup())) is split
 
 
 def test_a_join_moves_the_second_paragraph_into_the_first():
-    join = JoinBlocks("c", "b", 5)
+    join = JoinParagraphs("c", "b", 5)
     assert join.follow(("c", 1, 2)) == ("b", 6, 7)
     assert join.follow(("b", 1, 2)) == ("b", 1, 2)
-    assert join.to_data() == {"block": "c", "into": "b", "at": 5}
-    assert JoinBlocks.from_data(join.to_data(), None) == join
+    assert join.to_data() == {"paragraph": "c", "into": "b", "at": 5}
+    assert JoinParagraphs.from_data(join.to_data(), None) == join
     assert join.summary == "joined paragraphs"
-    assert join.shifted_by(InsertText("b", 0, "ab")) == JoinBlocks("c", "b", 7)
-    assert join.shifted_by(DeleteText("b", 4, 2)) == JoinBlocks("c", "b", 4)
+    assert join.shifted_by(InsertText("b", 0, "ab")) == JoinParagraphs("c", "b", 7)
+    assert join.shifted_by(DeleteText("b", 4, 2)) == JoinParagraphs("c", "b", 4)
     assert join.shifted_by(SetPageSetup(PageSetup())) is join
 
 
 def test_styling_a_paragraph_that_was_joined_into_another_is_refused():
     style = SetStyle("c", "heading-1")
-    assert style.shifted_by(JoinBlocks("c", "b", 5)) is None
-    assert style.shifted_by(JoinBlocks("d", "c", 5)) is style
+    assert style.shifted_by(JoinParagraphs("c", "b", 5)) is None
+    assert style.shifted_by(JoinParagraphs("d", "c", 5)) is style
 
 
 def test_a_resolved_suggestion_keeps_its_anchor_on_the_text_it_was_about():

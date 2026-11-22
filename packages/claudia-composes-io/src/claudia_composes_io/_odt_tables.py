@@ -68,11 +68,11 @@ def text_width_in(page: PageSetup | None) -> float | None:
 # --------------------------------------------------------------------------------------------------- reading
 @dataclass(frozen=True)
 class OdtTable:
-    """A ``table:table`` of the flow: ``block`` is the index (among the paragraphs of the flow) of the paragraph it
+    """A ``table:table`` of the flow: ``paragraph`` is the index (among the paragraphs of the flow) of the paragraph it
     follows, and ``grid`` what the file says of it, ``None`` when it is not a regular table."""
 
     element: etree._Element
-    block: int | None
+    paragraph: int | None
     grid: FileTable | None
 
 
@@ -89,10 +89,10 @@ def styles_of(*roots: etree._Element | None) -> dict[str, etree._Element]:
 
 
 def file_table(
-    element: etree._Element, block: int | None, styles: dict[str, etree._Element], text_inches: float | None
+    element: etree._Element, paragraph: int | None, styles: dict[str, etree._Element], text_inches: float | None
 ) -> OdtTable:
     """What ``element`` is: its grid when it is a regular table."""
-    return OdtTable(element, block, _read(element, styles, text_inches))
+    return OdtTable(element, paragraph, _read(element, styles, text_inches))
 
 
 def _read(element: etree._Element, styles: dict[str, etree._Element], text_inches: float | None) -> FileTable | None:
@@ -240,7 +240,7 @@ def read_tables(tables: Iterable[OdtTable], language: str | None) -> list[tuple[
     taken = 0
     for each in tables:
         definition = (
-            None if each.grid is None or each.block is None else read_table(each.grid, f"t{taken + 1}", language)
+            None if each.grid is None or each.paragraph is None else read_table(each.grid, f"t{taken + 1}", language)
         )
         taken += definition is not None
         out.append((each, definition))

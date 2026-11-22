@@ -756,7 +756,7 @@ def _insert_menu(contents: tuple[str, str], *, tables: bool = False) -> Menu:
     """Insert ▸ Cross-Reference… (step H, Ctrl+F2, LibreOffice's Fields key; in computes off) and Table of Contents
     (E9.31; in creates Agenda, ``contents`` is its label and tooltip), then Container ▸
     LaTeX, Mermaid, Typst (D560): the same in every app. Computes shows Table of Contents and the page reports it off,
-    as it does List ▸. A container is a rendered text: the person writes the text and the server draws it (D390). The
+    as it does List ▸. A container: the person writes the text and the server draws its picture (D390). The
     keys are the weighty ones, Ctrl+Alt+Shift+I (index), F (formula), G (graph) and Y (Typst), because the plain
     Ctrl+Alt letters are used up or belong to the desktop (see above). Composes alone has Table… (E9.32, D1208,
     ``tables``): the other two apps have their grid already."""

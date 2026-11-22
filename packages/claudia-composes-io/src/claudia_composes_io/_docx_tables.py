@@ -37,11 +37,11 @@ _EMU_PER_POINT = 12700
 
 @dataclass(frozen=True)
 class DocxTable:
-    """A ``w:tbl`` of the body: ``block`` is the index (into ``document.paragraphs``) of the paragraph it follows, and
-    ``grid`` what the file says of it, ``None`` when it is not a regular table."""
+    """A ``w:tbl`` of the body: ``paragraph`` is the index (into ``document.paragraphs``) of the paragraph it follows,
+    and ``grid`` what the file says of it, ``None`` when it is not a regular table."""
 
     element: Any
-    block: int | None
+    paragraph: int | None
     grid: FileTable | None
 
 

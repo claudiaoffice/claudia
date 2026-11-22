@@ -26,7 +26,7 @@ import type { SlideObject, SlideSession } from '~/lib/slide-session'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
 import type { SlideMark } from '~/lib/slide-search-host'
-import { renderedView } from '~/lib/rendering'
+import { containerView } from '~/lib/containers'
 
 const { t } = useI18n()
 
@@ -47,7 +47,7 @@ const clip = useObjectClipboard({
     return o ? { id: o.id, body: o, asset: o.ref ? state.images[o.ref] : undefined } : null
   },
   readonly: () => session.readOnly,
-  remove: (id) => session.remove(id),
+  remove: (id) => session.removeObject(id),
   add: async (c) => {
     const w = Math.min(c.w, SLIDE_W)
     const h = Math.min(c.h, SLIDE_H)
@@ -164,15 +164,15 @@ function pictureSrc(o: SlideObject): string {
   const asset = pictureOf(o)
   return asset ? imageDataUrl(asset) : ''
 }
-/** What a rendered container shows: its picture or why there is none yet (D560). */
-const faceOf = (o: SlideObject) => renderedView(state, o, imageDataUrl)
-/** The container whose text is being written, if any: it has an editor of its own (`RenderedEditor.vue`). */
+/** What a container shows: its picture or why there is none yet (D560). */
+const faceOf = (o: SlideObject) => containerView(state, o, imageDataUrl)
+/** The container whose text is being written, if any: it has an editor of its own (`ContainerEditor.vue`). */
 const containerEditing = ref<string | null>(null)
 async function commitContainer(o: SlideObject, text: string) {
   containerEditing.value = null
   area.value?.focus({ preventScroll: true })
-  const rendering = pointer(o, 'rendered')
-  if (rendering) await session.setRenderingSource(rendering, text)
+  const definition = pointer(o, 'container')
+  if (definition) await session.setContainerSource(definition, text)
 }
 function cancelContainer() {
   containerEditing.value = null
@@ -202,7 +202,7 @@ const interaction = useObjectInteraction({
   async commit(change) {
     if (change.kind === 'move') return session.move(change.id, change.x, change.y)
     if (change.kind === 'resize') return session.resize(change.id, change.frame)
-    return session.rotate(change.id, change.rotation)
+    return session.rotateObject(change.id, change.rotation)
   },
 })
 /** A turn being tried from Rotate By… (open to Done): a ref, so the template unwraps it. */
@@ -306,7 +306,7 @@ async function onTurnKey(event: KeyboardEvent) {
   if (to === null) return
   event.preventDefault()
   event.stopPropagation()
-  if (to !== o.rotation && (await session.rotate(o.id, to))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? to) })
+  if (to !== o.rotation && (await session.rotateObject(o.id, to))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? to) })
 }
 
 /** Format ▸ Rotate ▸ Rotate Right 90° / Rotate Left 90°, and the same two in the context menu. */
@@ -314,7 +314,7 @@ async function quarter(direction: 1 | -1, id: string | null = state.selected) {
   const o = id ? state.objects[id] : null
   if (!o || !canTurn(o.kind)) return
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
-  if (await session.rotate(o.id, quarterTurn(o.rotation, direction))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? 0) })
+  if (await session.rotateObject(o.id, quarterTurn(o.rotation, direction))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? 0) })
 }
 
 /** Rotate By…: the popover, beside the object. Its angles are previews on the slide until Done. */
@@ -378,7 +378,7 @@ const contextItems = computed<MenuItem[]>(() => {
         contextMenu.value = null
         openRotateBy(o.id, at ? { x: at.x, y: at.y } : undefined)
       },
-      remove: () => session.remove(o.id),
+      remove: () => session.removeObject(o.id),
       cut: () => void clip.cut(),
       copy: () => void clip.copy(),
       setSnap: (snap) => session.setSnap(o.id, snap),
@@ -479,7 +479,7 @@ async function beginEdit(id: string | null = state.selected) {
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   await session.select(o.id)
   if (state.selected !== o.id) return // a colleague holds it
-  if (o.kind === 'rendered') {
+  if (o.kind === 'container') {
     containerEditing.value = o.id // its text is the definition's, in an editor of its own
     return
   }
@@ -549,7 +549,7 @@ async function onKey(event: KeyboardEvent) {
   if (readonly.value) return
   if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault()
-    return void session.remove(o.id)
+    return void session.removeObject(o.id)
   }
   const arrows: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
   const arrow = arrows[event.key]
@@ -601,15 +601,15 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
         @contextmenu="onObjectContext($event, o)"
       >
         <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" >
-        <template v-else-if="o.kind === 'rendered'">
-          <RenderedEditor
+        <template v-else-if="o.kind === 'container'">
+          <ContainerEditor
             v-if="containerEditing === o.id && faceOf(o)"
             :text="faceOf(o)!.definition.source"
             :label="faceOf(o)!.label"
             @commit="commitContainer(o, $event)"
             @cancel="cancelContainer"
           />
-          <RenderedFace v-else-if="faceOf(o)" :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
+          <ContainerFace v-else-if="faceOf(o)" :src="faceOf(o)!.src" :status="faceOf(o)!.status" :label="faceOf(o)!.label" />
         </template>
         <template v-else>
           <svg v-if="outline(o)" class="shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">

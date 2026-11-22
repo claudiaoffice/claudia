@@ -38,16 +38,16 @@ export interface ItemGeometry {
 }
 
 export function itemGeometry(
-  blocks: readonly { item?: ListItemRef | null }[],
+  paragraphs: readonly { item?: ListItemRef | null }[],
   index: number,
   lists: readonly ListRef[],
   schemes: readonly SchemeGeometry[],
 ): ItemGeometry | null {
-  const item = blocks[index]?.item
+  const item = paragraphs[index]?.item
   if (!item) return null
   const scheme = schemes.find((s) => s.id === lists.find((l) => l.id === item.list)?.scheme)
   const step = scheme?.indent ?? DEFAULT_STEP
-  const next = blocks[index + 1]?.item
+  const next = paragraphs[index + 1]?.item
   return {
     left: item.level * step,
     step,

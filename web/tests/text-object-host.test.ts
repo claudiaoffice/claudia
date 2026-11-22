@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { awayFrom, nearestBlock, nearestGap, stepsFor } from '~/lib/text-object-host'
-import { floatBox } from '~/lib/text-containers'
+import { awayFrom, nearestParagraph, nearestGap, stepsFor } from '~/lib/text-object-host'
+import { floatBox } from '~/lib/text-object-layer'
 
 const layer = { left: 100, top: 50 }
 const start = { x: 40, y: 30, w: 200, h: 100 }
-const here = { place: { block: 'b1', offset: 3 }, spot: { left: 140, top: 80 } } // the character is at (40, 30) of the layer
+const here = { place: { paragraph: 'b1', offset: 3 }, spot: { left: 140, top: 80 } } // the character is at (40, 30) of the layer
 
 describe('awayFrom', () => {
   it('is how far a box floats from its character, in whole pixels', () => {
@@ -17,23 +17,23 @@ describe('awayFrom', () => {
   })
 })
 
-describe('nearestBlock', () => {
+describe('nearestParagraph', () => {
   const rects = [
     { id: 'a', top: 0, bottom: 40 },
     { id: 'b', top: 50, bottom: 90 },
     { id: 'c', top: 100, bottom: 140 },
   ]
-  it('is the paragraph that holds the height', () => expect(nearestBlock(rects, 70)).toBe('b'))
+  it('is the paragraph that holds the height', () => expect(nearestParagraph(rects, 70)).toBe('b'))
   it('is the nearest one in the gap between two, the first when it is a tie', () => {
-    expect(nearestBlock(rects, 43)).toBe('a')
-    expect(nearestBlock(rects, 45)).toBe('a')
-    expect(nearestBlock(rects, 48)).toBe('b')
+    expect(nearestParagraph(rects, 43)).toBe('a')
+    expect(nearestParagraph(rects, 45)).toBe('a')
+    expect(nearestParagraph(rects, 48)).toBe('b')
   })
   it('is the first above the text and the last below it', () => {
-    expect(nearestBlock(rects, -500)).toBe('a')
-    expect(nearestBlock(rects, 900)).toBe('c')
+    expect(nearestParagraph(rects, -500)).toBe('a')
+    expect(nearestParagraph(rects, 900)).toBe('c')
   })
-  it('is null without paragraphs', () => expect(nearestBlock([], 10)).toBeNull())
+  it('is null without paragraphs', () => expect(nearestParagraph([], 10)).toBeNull())
 })
 
 describe('nearestGap', () => {
@@ -60,9 +60,9 @@ describe('stepsFor', () => {
     expect(steps).toEqual([{ kind: 'move', place: here.place, away: { dx: 50, dy: 30 } }])
   })
   it('a move that is dropped nearer another character hangs from that one, with what is left over', () => {
-    const dropped = { place: { block: 'b2', offset: 0 }, spot: { left: 140, top: 380 } }
+    const dropped = { place: { paragraph: 'b2', offset: 0 }, spot: { left: 140, top: 380 } }
     const steps = stepsFor({ kind: 'move', id: 'o', x: 60, y: 340 }, { layer, start, current: here, dropped })
-    expect(steps).toEqual([{ kind: 'move', place: { block: 'b2', offset: 0 }, away: { dx: 20, dy: 10 } }])
+    expect(steps).toEqual([{ kind: 'move', place: { paragraph: 'b2', offset: 0 }, away: { dx: 20, dy: 10 } }])
   })
   it('a turn is one rotate step', () => {
     expect(stepsFor({ kind: 'rotate', id: 'o', rotation: 45 }, { layer, start, current: here })).toEqual([{ kind: 'rotate', rotation: 45 }])

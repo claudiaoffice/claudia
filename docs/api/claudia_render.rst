@@ -3,8 +3,8 @@ claudia-render API reference
 
 .. module:: claudia_render
 
-The public API is exactly what ``claudia_render.__all__`` lists (see :doc:`../versioning`). A *rendered text
-container* keeps a text and shows a picture made from it (D390). This package turns the text into a checked SVG: a
+The public API is exactly what ``claudia_render.__all__`` lists (see :doc:`../versioning`). A *container*
+keeps a text and shows a picture made from it (D390). This package turns the text into a checked SVG: a
 plugin says what it needs and how to ask for it, the administrator's tool registry says which program stands behind
 each name, and the service enforces every safety rule in one place (D391-D393). The help topic
 ``render.configure-tools`` explains the installation to administrators.

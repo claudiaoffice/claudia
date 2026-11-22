@@ -36,14 +36,14 @@ async function open(browser, [user, password], create) {
 
 // The text of the paragraphs: what the model holds, without what only the screen shows (carets, previews of suggestions)
 const textOf = () =>
-  [...document.querySelectorAll('[data-testid=text] [data-block]')].map((e) => {
+  [...document.querySelectorAll('[data-testid=text] [data-paragraph]')].map((e) => {
     const copy = e.cloneNode(true)
     copy.querySelectorAll('[data-skip]').forEach((x) => x.remove())
     return copy.textContent
   })
 const paragraphs = (page) => page.evaluate(textOf)
 const INIT = `window.__text = ${textOf.toString()}`
-const styles = (page) => page.$$eval('[data-testid=text] [data-block]', (els) => els.map((e) => e.className.replace(/.*st-(\S+).*/, '$1')))
+const styles = (page) => page.$$eval('[data-testid=text] [data-paragraph]', (els) => els.map((e) => e.className.replace(/.*st-(\S+).*/, '$1')))
 async function waitFor(page, fn, arg, what) {
   try {
     await page.waitForFunction(fn, arg, { timeout: 8000 })
@@ -85,7 +85,7 @@ async function menu(page, title, ...path) {
     log('ann typed three paragraphs')
 
     // a heading: the style of the first paragraph
-    await ann.click('[data-testid=text] [data-block]:first-child')
+    await ann.click('[data-testid=text] [data-paragraph]:first-child')
     await ann.click('[data-testid=style-button]')
     await ann.click('[data-style=title]')
     await waitFor(ann, () => document.querySelector('[data-testid=text] h1'), null, 'a title')
@@ -106,11 +106,11 @@ async function menu(page, title, ...path) {
     log('ben sees the same text and the title style')
 
     // ---- both write at once, in different paragraphs
-    const lastOf = (page) => page.locator('[data-testid=text] [data-block]').last()
+    const lastOf = (page) => page.locator('[data-testid=text] [data-paragraph]').last()
     await lastOf(ann).click()
     await ann.keyboard.press('End')
     await ann.keyboard.type(' Ann adds this.')
-    await ben.locator('[data-testid=text] [data-block]').nth(1).click()
+    await ben.locator('[data-testid=text] [data-paragraph]').nth(1).click()
     await ben.keyboard.press('Home')
     await ben.keyboard.type('Ben: ')
     await ann.waitForTimeout(1500)

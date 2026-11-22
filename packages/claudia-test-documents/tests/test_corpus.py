@@ -20,7 +20,7 @@ class FakeModel:
         self.text = text
 
     def serialize(self) -> dict:
-        return {"blocks": [{"text": self.text}]}
+        return {"paragraphs": [{"text": self.text}]}
 
 
 def _import(data: bytes) -> FakeModel:
@@ -132,7 +132,7 @@ def test_a_model_that_changes_through_a_no_op_edit_fails_the_round_trip_and_says
     result = run_file(path, tmp_path, adapters=_adapters(_garble_text))
     assert result.status == "fail"
     assert result.stages["round_trip"] == "fail"
-    assert "blocks[0].text" in (result.detail or "")
+    assert "paragraphs[0].text" in (result.detail or "")
 
 
 def test_a_file_that_is_not_a_package_is_rejected_not_failed(tmp_path: Path):

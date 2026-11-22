@@ -1,7 +1,7 @@
 """The pictures floating on a sheet, as a file format needs them (D1233): where each is pinned, how big it is, how it is
 turned, what it is called and says, and the bytes that are embedded for it.
 
-A *picture* is an image object, or a rendered container (its picture is the one last made of its text, D390). Computes
+A *picture* is an image object, or a container (its picture is the one last made of its text, D390). Computes
 has no text boxes and no shapes (D1232), so these are the floating objects that are not charts. Both converters take
 their pictures from here and differ only in how a file holds them (:mod:`.xlsx_pictures`, :mod:`.ods_pictures`).
 """
@@ -16,7 +16,7 @@ from claudia_core import ImageAsset, Rasterise, blank_png
 from claudia_odf_io import Loss, LossLog
 
 #: The kinds of floating object that show a picture.
-PICTURE_KINDS = ("image", "rendered")
+PICTURE_KINDS = ("image", "container")
 MEDIA_TYPES = {
     "jpeg": "image/jpeg",
     "png": "image/png",
@@ -54,7 +54,7 @@ class WrittenPicture:
 
 def _shown(model: WorkbookModel) -> Iterator[tuple[SheetId, int, VisualObject, ImageAsset | None]]:
     """Every picture of every sheet, bottom first: the object, its place in the stack of its sheet and the image it
-    shows (``None``: a rendered container nothing has been drawn for, or an image the model lost)."""
+    shows (``None``: a container nothing has been drawn for, or an image the model lost)."""
     for sheet_id in model.sheets:
         for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
             obj = model.get_object(object_id)
@@ -64,13 +64,13 @@ def _shown(model: WorkbookModel) -> Iterator[tuple[SheetId, int, VisualObject, I
 
 
 def picture_losses(model: WorkbookModel, *, rasterised: bool) -> tuple[Loss, ...]:
-    """What cannot be kept of the pictures of ``model``: ``rendering-pending`` (a rendered container nothing has been
+    """What cannot be kept of the pictures of ``model``: ``rendering-pending`` (a container nothing has been
     drawn for: left out), ``image-missing`` and ``svg-fallback`` (an SVG nothing draws as a PNG, ``rasterised``: other
     programs may show it empty or leave out what its style sheet gives)."""
     lost = LossLog()
     for _, _, obj, asset in _shown(model):
         if asset is None:
-            lost.add("rendering-pending" if obj.body.kind == "rendered" else "image-missing")
+            lost.add("rendering-pending" if obj.body.kind == "container" else "image-missing")
         elif asset.format == "svg" and not rasterised:
             lost.add("svg-fallback")
     return lost.result()

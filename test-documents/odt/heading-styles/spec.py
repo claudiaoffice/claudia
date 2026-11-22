@@ -11,7 +11,7 @@ from claudia_core import Run
 from claudia_opc_io import read_parts
 from claudia_test_documents.case import Case
 
-BLOCKS = [
+PARAGRAPHS = [
     ("title", "Claudia Field Notes"),
     ("heading-1", "Introduction"),
     ("body", "This is the introduction."),
@@ -21,21 +21,21 @@ BLOCKS = [
 
 
 def import_checks(model: TextModel) -> None:
-    assert [(b.style, b.text) for b in model.blocks] == BLOCKS
+    assert [(b.style, b.text) for b in model.paragraphs] == PARAGRAPHS
 
 
 def modify(model: TextModel) -> TextModel:
-    block_id, new_text = model.blocks[2].id, "This is the revised introduction."
-    model.remove(block_id, 0, len(model.block(block_id).text))
-    model.insert(block_id, 0, new_text, [Run(len(new_text), None)])
+    paragraph_id, new_text = model.paragraphs[2].id, "This is the revised introduction."
+    model.remove(paragraph_id, 0, len(model.paragraph(paragraph_id).text))
+    model.insert(paragraph_id, 0, new_text, [Run(len(new_text), None)])
     return model
 
 
 def after_checks(model: TextModel) -> None:
-    assert [(b.style, b.text) for b in model.blocks] == [
-        *BLOCKS[:2],
+    assert [(b.style, b.text) for b in model.paragraphs] == [
+        *PARAGRAPHS[:2],
         ("body", "This is the revised introduction."),
-        *BLOCKS[3:],
+        *PARAGRAPHS[3:],
     ]
 
 

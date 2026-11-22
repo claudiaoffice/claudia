@@ -903,7 +903,7 @@ def _library_charts_through_libreoffice(to: str) -> bytes:
     sheet_id = SheetId("s1")
     model = WorkbookModel()
     model.sheets[sheet_id] = Sheet(sheet_id, "Data")
-    model.open_container("s1")
+    model.open_holder("s1")
     table = (("Region", "Amount", "Cost"), ("North", 100, 60), ("South", 200, 120), ("East", 130, 90))
     for row, line in enumerate(table):
         for col, value in enumerate(line):
@@ -915,7 +915,7 @@ def _library_charts_through_libreoffice(to: str) -> bytes:
     first = ChartSpec(id="c1", kind="bar", range=whole, title="Sales", x_title="Region", y_title="Euro")
     second = ChartSpec(id="c2", kind="bar", range=whole, series_in="rows", legend=False)
     for spec, object_id, anchor in ((first, "o1", (6, 1)), (second, "o2", (6, 8))):
-        model.define_diagram(spec)
+        model.diagrams.define(spec)
         body = ObjectBody(object_id, "diagram", 480, 300, "plain-image", ref=spec.id)
         model.insert_object(VisualObject(body, CellAnchor(sheet_id, *anchor)))
     with tempfile.TemporaryDirectory() as folder:
@@ -951,7 +951,7 @@ def _library_pictures_through_libreoffice(to: str) -> bytes:
 
     from claudia_composes_io import text_to_docx, text_to_odt
 
-    from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, TextModel
+    from claudia_composes import DEFAULT_STYLE, Paragraph, ParagraphAnchor, TextModel
     from claudia_core import ImageImport, ObjectBody, VisualObject, decode_image
 
     def gif(shade: int) -> bytes:
@@ -969,16 +969,16 @@ def _library_pictures_through_libreoffice(to: str) -> bytes:
 
     model = TextModel(
         [
-            Block("b1", "heading-1", "Pictures"),
-            Block("b2", DEFAULT_STYLE, "A paragraph with a picture in the middle of it."),
-            Block("b3", DEFAULT_STYLE, "Nothing here changes."),
+            Paragraph("b1", "heading-1", "Pictures"),
+            Paragraph("b2", DEFAULT_STYLE, "A paragraph with a picture in the middle of it."),
+            Paragraph("b3", DEFAULT_STYLE, "Nothing here changes."),
         ]
     )
-    for number, (block, offset, description) in enumerate(
+    for number, (paragraph, offset, description) in enumerate(
         (("b2", 22, "Two cyclists on a hill"), ("b3", 0, "A small mark")), start=1
     ):
         asset = decode_image(gif(number))
-        model.define_image(asset)
+        model.images.define(asset)
         record = ImageImport.from_data(
             {
                 "asset": asset.id,
@@ -993,7 +993,7 @@ def _library_pictures_through_libreoffice(to: str) -> bytes:
         body = ObjectBody(
             f"o{number}", "image", 180, 90, "plain-image", ref=asset.id, imported=record, description=description
         )
-        model.insert_object(VisualObject(body, BlockAnchor(block, offset)))
+        model.insert_object(VisualObject(body, ParagraphAnchor(paragraph, offset)))
     with tempfile.TemporaryDirectory() as folder:
         source = Path(folder) / "in" / f"pictures.{to}"
         source.parent.mkdir()
@@ -1025,31 +1025,31 @@ def _library_boxes_through_libreoffice(to: str) -> bytes:
 
     from claudia_composes_io import text_to_docx, text_to_odt
 
-    from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, TextModel
+    from claudia_composes import DEFAULT_STYLE, Paragraph, ParagraphAnchor, TextModel
     from claudia_core import ObjectBody, VisualObject, paragraph_for, primitive
 
     model = TextModel(
         [
-            Block("b1", "heading-1", "Boxes"),
-            Block("b2", DEFAULT_STYLE, "A paragraph with a text box in the middle of it."),
-            Block("b3", DEFAULT_STYLE, "Nothing here changes."),
+            Paragraph("b1", "heading-1", "Boxes"),
+            Paragraph("b2", DEFAULT_STYLE, "A paragraph with a text box in the middle of it."),
+            Paragraph("b3", DEFAULT_STYLE, "Nothing here changes."),
         ]
     )
     for shape in ("circle", "rectangle", "triangle"):
-        model.define_shape(primitive(shape))
+        model.shapes.define(primitive(shape))
     boxes = (
         ("text", None, "b2", 22, (240, 60), 0, "A note in a box", "A note about the boxes"),
         ("shape", "circle", "b3", 0, (90, 90), 0, "Dot", "A dot"),
         ("shape", "triangle", "b3", 7, (120, 100), 0, "Up", ""),
         ("shape", "rectangle", "b3", 9, (120, 60), 20, "Turned", ""),
     )
-    for number, (kind, shape, block, offset, size, turn, words, description) in enumerate(boxes, start=1):
-        paragraph = paragraph_for(f"o{number}", "body" if kind == "text" else "shape-label", words)
+    for number, (kind, shape, paragraph, offset, size, turn, words, description) in enumerate(boxes, start=1):
+        box_paragraph = paragraph_for(f"o{number}", "body" if kind == "text" else "shape-label", words)
         style = "plain-box" if kind == "text" else "plain-shape"
         body = ObjectBody(
-            f"o{number}", kind, *size, style, paragraph, ref=shape, rotation=turn, description=description
+            f"o{number}", kind, *size, style, box_paragraph, ref=shape, rotation=turn, description=description
         )
-        model.insert_object(VisualObject(body, BlockAnchor(block, offset)))
+        model.insert_object(VisualObject(body, ParagraphAnchor(paragraph, offset)))
     with tempfile.TemporaryDirectory() as folder:
         source = Path(folder) / "in" / f"boxes.{to}"
         source.parent.mkdir()

@@ -68,7 +68,7 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
         <TransText :text="t('Average {value}')"><template #value><b>{{ shownAverage }}</b></template></TransText>
       </template>
       <TransText v-if="summary.count > 1" :text="t('Count {value}')"><template #value><b>{{ summary.count }}</b></template></TransText>
-      <span class="rev" :title="t('line {line}', { line: state.line })">{{ state.revision ?? t('empty') }}</span>
+      <span class="rev" :title="t('branch {branch}', { branch: state.branch })">{{ state.revision ?? t('empty') }}</span>
     </div>
   </footer>
 </template>

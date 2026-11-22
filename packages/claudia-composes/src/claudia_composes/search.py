@@ -12,15 +12,15 @@ A search looks in one or more *kinds* of text:
 ``description``  what an object says to somebody who cannot see it (BITV 1.1.1)
 ``table``        the words in the boxes of a table (D1210), row by row; a box a merge covers has none
 
-All of them are stored text and may be replaced. A place (``at``) is ``{"block"}`` for a paragraph, with ``"offset"``
-when only the part of it from there on was searched (a selection starts or ends in it: the matches count from there),
-``{"block", "object", "source"}`` for the words or the description of an object and ``{"block", "table", "row",
-"col"}`` for a box of a table, ``block`` being the paragraph the object hangs from (so that a client can take a person
-there).
+All of them are stored text and may be replaced. A place (``at``) is ``{"paragraph"}`` for a paragraph, with
+``"offset"`` when only the part of it from there on was searched (a selection starts or ends in it: the matches count
+from there), ``{"paragraph", "object", "source"}`` for the words or the description of an object and ``{"paragraph",
+"table", "row", "col"}`` for a box of a table, ``paragraph`` being the paragraph the object hangs from (so that a client
+can take a person there).
 
 A search covers the whole text, one *section* (``{"section": paragraph}``: from the heading the paragraph is under to
 the next heading of the same or a higher level, subsections included) or a selection
-(``{"range": {"from": {block, offset}, "to": {block, offset}}}``).
+(``{"range": {"from": {paragraph, offset}, "to": {paragraph, offset}}}``).
 
 A replacement is planned first (:func:`plan_replacement`), then made by :func:`replace_command` as one command that
 stores the changed stretches as typing and deleting: whoever wrote the words around a match stays their author, and
@@ -36,7 +36,7 @@ from claudia_core import Batch, Command, Region, edit_object_text, entry_id, obj
 from claudia_search import CompiledSearch, Location, Plan, Scan, SearchError, Skip, Text, plan, scan
 
 from .commands import DeleteText, InsertText
-from .model import Block, TextModel
+from .model import Paragraph, TextModel
 from .region import TextRange
 
 KINDS = ("text", "heading", "remark", "object", "description", "table")
@@ -51,45 +51,47 @@ _OBJECT_KIND = {"box": "object", "label": "object", "description": "description"
 Conflicts = Callable[[Sequence[Region]], Sequence[tuple[str, Region]]]  # the locks of other people on these regions
 
 
-def block_at(block: str, offset: int | None = None) -> Location:
+def paragraph_at(paragraph: str, offset: int | None = None) -> Location:
     """Where a paragraph is, as every answer of a search names it; ``offset`` when only the paragraph from there on
     was searched."""
-    return {"block": block} if offset is None else {"block": block, "offset": offset}
+    return {"paragraph": paragraph} if offset is None else {"paragraph": paragraph, "offset": offset}
 
 
-def object_at(block: str, object_id: str, source: str) -> Location:
+def object_at(paragraph: str, object_id: str, source: str) -> Location:
     """Where the words (``box``, ``label``) or the description of an object are, and the paragraph it hangs from."""
-    return {"block": block, "object": object_id, "source": source}
+    return {"paragraph": paragraph, "object": object_id, "source": source}
 
 
-def block_of(at: Location) -> tuple[str, int]:
+def paragraph_of(at: Location) -> tuple[str, int]:
     """``(paragraph, offset)`` of a place a client sent back; ``ValueError`` if it is not a paragraph's."""
     keys = set(at) if isinstance(at, Mapping) else set()
-    offset = at.get("offset", 0) if keys <= {"block", "offset"} else None
-    if "block" not in keys or not isinstance(at["block"], str) or offset is None or not _natural(offset):
-        raise ValueError("a place in a paragraph is {block} or {block, offset}")
-    return at["block"], int(offset)
+    offset = at.get("offset", 0) if keys <= {"paragraph", "offset"} else None
+    if "paragraph" not in keys or not isinstance(at["paragraph"], str) or offset is None or not _natural(offset):
+        raise ValueError("a place in a paragraph is {paragraph} or {paragraph, offset}")
+    return at["paragraph"], int(offset)
 
 
 def object_of(at: Location) -> tuple[str, str, str]:
     """``(paragraph, object, source)`` of a place a client sent back; ``ValueError`` if it is not an object's."""
-    ok = isinstance(at, Mapping) and set(at) == {"block", "object", "source"}
+    ok = isinstance(at, Mapping) and set(at) == {"paragraph", "object", "source"}
     if not ok or not all(isinstance(at[k], str) for k in at) or at["source"] not in _OBJECT_KIND:
-        raise ValueError("a place in an object is {block, object, source}, the source being box, label or description")
-    return at["block"], at["object"], at["source"]
+        raise ValueError(
+            "a place in an object is {paragraph, object, source}, the source being box, label or description"
+        )
+    return at["paragraph"], at["object"], at["source"]
 
 
-def table_at(block: str, table: str, row: str, col: str) -> Location:
+def table_at(paragraph: str, table: str, row: str, col: str) -> Location:
     """Where a box of a table is, and the paragraph the table hangs from."""
-    return {"block": block, "table": table, "row": row, "col": col}
+    return {"paragraph": paragraph, "table": table, "row": row, "col": col}
 
 
 def table_of(at: Location) -> tuple[str, str, str, str]:
     """``(paragraph, table, row, column)`` of a place a client sent back; ``ValueError`` if it is not a box's."""
-    ok = isinstance(at, Mapping) and set(at) == {"block", "table", "row", "col"}
+    ok = isinstance(at, Mapping) and set(at) == {"paragraph", "table", "row", "col"}
     if not ok or not all(isinstance(at[k], str) for k in at):
-        raise ValueError("a place in a box of a table is {block, table, row, col}")
-    return at["block"], at["table"], at["row"], at["col"]
+        raise ValueError("a place in a box of a table is {paragraph, table, row, col}")
+    return at["paragraph"], at["table"], at["row"], at["col"]
 
 
 def _natural(value: object) -> bool:
@@ -97,11 +99,11 @@ def _natural(value: object) -> bool:
 
 
 # --------------------------------------------------------------------------------------------------------- looking
-def kind_of(model: TextModel, block: Block) -> str:
+def kind_of(model: TextModel, paragraph: Paragraph) -> str:
     """``heading``, ``remark`` or ``text``: what a paragraph is by its style and the styles that style is based on."""
-    if model.heading_level(block) is not None:
+    if model.heading_level(paragraph) is not None:
         return "heading"
-    return "remark" if _REMARK in _chain(model, block.style) else "text"
+    return "remark" if _REMARK in _chain(model, paragraph.style) else "text"
 
 
 def _chain(model: TextModel, style: str) -> list[str]:
@@ -111,10 +113,10 @@ def _chain(model: TextModel, style: str) -> list[str]:
         return [style]
 
 
-def _level(model: TextModel, block: Block) -> int | None:
+def _level(model: TextModel, paragraph: Paragraph) -> int | None:
     """The level of a section heading (1 to 9), or ``None`` for a paragraph that starts no section (the title, which
     names the whole text, starts none)."""
-    level = model.heading_level(block)
+    level = model.heading_level(paragraph)
     return level if level else None
 
 
@@ -124,21 +126,21 @@ def _check_kinds(kinds: Sequence[str]) -> None:
         raise ValueError(f"cannot look in {unknown[0]!r}: choose from {', '.join(KINDS)}")
 
 
-def _block_index(model: TextModel, block_id: str) -> int:
+def _paragraph_index(model: TextModel, paragraph_id: str) -> int:
     try:
-        return model.index_of(block_id)
+        return model.index_of(paragraph_id)
     except KeyError:
-        raise ValueError(f"no such paragraph: {block_id!r}") from None
+        raise ValueError(f"no such paragraph: {paragraph_id!r}") from None
 
 
-Stretch = tuple[Block, int, int | None, bool]  # paragraph, first character searched, end (None: its end), partial?
+Stretch = tuple[Paragraph, int, int | None, bool]  # paragraph, first character searched, end (None: its end), partial?
 
 
 def _stretches(model: TextModel, scope: Mapping | None) -> list[Stretch]:
     """The paragraphs a scope covers, and for a selection which part of its first and last."""
-    blocks = model.blocks
+    paragraphs = model.paragraphs
     if not scope:
-        return [(b, 0, None, False) for b in blocks]
+        return [(b, 0, None, False) for b in paragraphs]
     if set(scope) == {"section"}:
         return [(b, 0, None, False) for b in _section(model, scope["section"])]
     if set(scope) == {"range"} and isinstance(scope["range"], Mapping):
@@ -146,18 +148,18 @@ def _stretches(model: TextModel, scope: Mapping | None) -> list[Stretch]:
     raise ValueError("a scope is {section: paragraph} or {range: {from, to}}")
 
 
-def _section(model: TextModel, block_id: str) -> list[Block]:
-    blocks = model.blocks
-    here = _block_index(model, block_id)
+def _section(model: TextModel, paragraph_id: str) -> list[Paragraph]:
+    paragraphs = model.paragraphs
+    here = _paragraph_index(model, paragraph_id)
     start, level = 0, None
     for index in range(here, -1, -1):  # the heading this paragraph is under (or is)
-        level = _level(model, blocks[index])
+        level = _level(model, paragraphs[index])
         if level is not None:
             start = index
             break
-    end = len(blocks)
-    for index in range(start + 1, len(blocks)):
-        after = _level(model, blocks[index])
+    end = len(paragraphs)
+    for index in range(start + 1, len(paragraphs)):
+        after = _level(model, paragraphs[index])
         if after is not None and (level is None or after <= level):
             end = index
             break
@@ -165,24 +167,24 @@ def _section(model: TextModel, block_id: str) -> list[Block]:
             end = index
             break
     if level is None:  # before the first heading: up to it
-        end = next((i for i, b in enumerate(blocks) if _level(model, b) is not None), len(blocks))
-    return blocks[start:end]
+        end = next((i for i, b in enumerate(paragraphs) if _level(model, b) is not None), len(paragraphs))
+    return paragraphs[start:end]
 
 
 def _selection(model: TextModel, spec: Mapping) -> list[Stretch]:
     ends = []
     for key in ("from", "to"):
         end = spec.get(key)
-        if not isinstance(end, Mapping) or not isinstance(end.get("block"), str) or not _natural(end.get("offset")):
-            raise ValueError("a selection is {from: {block, offset}, to: {block, offset}}")
-        ends.append((_block_index(model, end["block"]), end["offset"]))
+        if not isinstance(end, Mapping) or not isinstance(end.get("paragraph"), str) or not _natural(end.get("offset")):
+            raise ValueError("a selection is {from: {paragraph, offset}, to: {paragraph, offset}}")
+        ends.append((_paragraph_index(model, end["paragraph"]), end["offset"]))
     first, last = sorted(ends)
     stretches: list[Stretch] = []
     for index in range(first[0], last[0] + 1):
-        block = model.blocks[index]
+        paragraph = model.paragraphs[index]
         start = first[1] if index == first[0] else 0
         stop = last[1] if index == last[0] else None
-        stretches.append((block, start, stop, index in (first[0], last[0])))
+        stretches.append((paragraph, start, stop, index in (first[0], last[0])))
     return stretches
 
 
@@ -196,9 +198,9 @@ def text_texts(model: TextModel, kinds: Sequence[str] = ("text",), scope: Mappin
     return _texts(model, wanted, sources, _stretches(model, scope))
 
 
-def _box_texts(model: TextModel, block: Block, start: int, stop: int | None) -> Iterator[Text]:
-    """The words of the boxes of the tables that hang from ``block`` (from a place inside the stretch), by row."""
-    for shown in model.objects_on(block.id):
+def _box_texts(model: TextModel, paragraph: Paragraph, start: int, stop: int | None) -> Iterator[Text]:
+    """The words of the boxes of the tables that hang from ``paragraph`` (from a place inside the stretch), by row."""
+    for shown in model.objects_on(paragraph.id):
         table_id = shown.body.table
         if table_id is None or table_id not in model.tables:
             continue
@@ -209,24 +211,24 @@ def _box_texts(model: TextModel, block: Block, start: int, stop: int | None) -> 
             for col in definition.column_ids():
                 words = definition.paragraph(row, col).text
                 if words and not definition.covered(row, col):
-                    yield Text(table_at(block.id, table_id, row, col), "table", words)
+                    yield Text(table_at(paragraph.id, table_id, row, col), "table", words)
 
 
 def _texts(model: TextModel, wanted: set[str], sources: list[str], stretches: list[Stretch]) -> Iterator[Text]:
-    for block, start, stop, partial in stretches:
-        kind = kind_of(model, block)
-        text = block.text[start:stop]
+    for paragraph, start, stop, partial in stretches:
+        kind = kind_of(model, paragraph)
+        text = paragraph.text[start:stop]
         if kind in wanted and text:
-            yield Text(block_at(block.id, start if partial else None), kind, text)
+            yield Text(paragraph_at(paragraph.id, start if partial else None), kind, text)
         if "table" in wanted:
-            yield from _box_texts(model, block, start, stop)
+            yield from _box_texts(model, paragraph, start, stop)
         if not sources:
             continue
-        for item in object_texts(model, [block.id], sources):
+        for item in object_texts(model, [paragraph.id], sources):
             offset = model.get_object(item.object_id).anchor.offset
             if offset < start or (stop is not None and offset > stop):
                 continue  # hangs from a place outside the selection
-            yield Text(object_at(block.id, item.object_id, item.source), _OBJECT_KIND[item.source], item.text)
+            yield Text(object_at(paragraph.id, item.object_id, item.source), _OBJECT_KIND[item.source], item.text)
 
 
 def scan_text(
@@ -288,8 +290,8 @@ def _holder(model: TextModel, at: Location, edits: Sequence, conflicts: Conflict
     elif "object" in at:
         regions = list(model.selection_of(object_of(at)[1]))
     else:
-        block, origin = block_of(at)
-        regions = [TextRange(block, origin + e.start, origin + max(e.end, e.start + 1)) for e in edits]
+        paragraph, origin = paragraph_of(at)
+        regions = [TextRange(paragraph, origin + e.start, origin + max(e.end, e.start + 1)) for e in edits]
     held = conflicts(regions) if regions else []
     return held[0][0] if held else None
 
@@ -321,12 +323,12 @@ def replace_command(model: TextModel, made: Plan, author: str | None) -> Command
             _, object_id, source = object_of(change.at)
             steps.append(edit_object_text(model, object_id, source, [(e.start, e.end, e.after) for e in edits], author))
             continue
-        block, origin = block_of(change.at)
+        paragraph, origin = paragraph_of(change.at)
         for e in sorted(edits, key=lambda e: e.start, reverse=True):  # from the end, so offsets in front still hold
             if e.end > e.start:
-                steps.append(DeleteText(block, origin + e.start, e.end - e.start))
+                steps.append(DeleteText(paragraph, origin + e.start, e.end - e.start))
             if e.after:
-                steps.append(InsertText(block, origin + e.start, e.after))
+                steps.append(InsertText(paragraph, origin + e.start, e.after))
     if not steps:
         return None
     count = len(made.changes)
@@ -337,8 +339,8 @@ __all__ = [
     "EXTRA_PARTS",
     "KINDS",
     "SearchError",
-    "block_at",
-    "block_of",
+    "paragraph_at",
+    "paragraph_of",
     "kind_of",
     "object_at",
     "object_of",

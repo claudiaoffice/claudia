@@ -2,9 +2,17 @@
 
 import zipfile
 
-from claudia_container import KdfParams, journal_path, read_journal, read_manifest, read_original, read_state, unlock
 from claudia_core import Import, Revision
 from claudia_core.testing import Insert, ListModel
+from claudia_document_file import (
+    KdfParams,
+    journal_path,
+    read_journal,
+    read_manifest,
+    read_original,
+    read_state,
+    unlock,
+)
 from claudia_server.auth import Credentials
 from claudia_server.filestore import FileProvider
 from claudia_server.sealed import SealedDocuments

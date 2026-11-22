@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BaseSession, type BaseState, type Entry } from '~/lib/base-session'
+import { BaseSession, type BaseState, type Step } from '~/lib/base-session'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Region, type Welcome, type WireData } from '~/lib/protocol'
 import { PlannedLink, lookOnly, roleNow } from '~/lib/replay'
 import type { RedactionPlan } from '~/lib/redaction'
@@ -10,7 +10,7 @@ const WELCOME: Welcome = {
   role: 'owner',
   doc: 'pay',
   app: 'creates',
-  line: 'main',
+  branch: 'main',
   revision: 'main:2',
   id: 1,
   color: '#e6194b',
@@ -18,13 +18,13 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
-  lines: [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
+  branches: [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
   proposal: null,
   returned: null,
 }
 
-const entry = (n: number, author = 'bob'): Entry => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '', kind: 'creates.AddObject', redacted: false })
-const place: Region = { kind: 'objects', container: 's1', ids: ['t1'] } as Region
+const entry = (n: number, author = 'bob'): Step => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '', kind: 'creates.AddObject', redacted: false })
+const place: Region = { kind: 'objects', holder: 's1', ids: ['t1'] } as Region
 const PLAN: RedactionPlan = {
   targets: ['main:2'],
   dependents: [],
@@ -58,7 +58,7 @@ class FakeLink implements LinkLike {
         return []
       case 'history':
         return { can_undo: true, can_redo: false, undo_label: '', redo_label: '' }
-      case 'lines':
+      case 'branches':
         return WELCOME.lines
       case 'restore_policy':
         return { policy: 'consensus' }
@@ -107,7 +107,7 @@ class TestSession extends BaseSession<TestState> {
     return true
   }
   protected followReplay(focus: Region[]) {
-    this.state.followed = focus.map((r) => (r.kind === 'objects' ? r.container : ''))
+    this.state.followed = focus.map((r) => (r.kind === 'objects' ? r.holder : ''))
   }
   async change() {
     return this.attempt('add_slide')

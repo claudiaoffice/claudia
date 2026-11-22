@@ -98,7 +98,7 @@ def test_a_host_header_cannot_add_a_directive():
     assert "*" not in policy.replace("127.0.0.1:*", "").replace("localhost:*", "")
 
 
-def test_data_blocks_and_scripts_with_a_source_are_not_hashed():
+def test_data_paragraphs_and_scripts_with_a_source_are_not_hashed():
     page = '<script src="/a.js"></script><script type="application/json">{"a":1}</script><script>go()</script>'
     assert inline_script_hashes([page]) == (sha("go()"),)
     assert inline_script_hashes([page, page]) == (sha("go()"),), "one entry per script, however many pages"

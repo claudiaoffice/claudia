@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 
-from claudia_composes import Block, Run
+from claudia_composes import Paragraph, Run
 from claudia_core import FIELD_CHAR, RefField, Show, plain
 
 
@@ -19,10 +19,10 @@ class ReadReference:
     words: str
 
 
-def with_references(block: Block, found: Sequence[ReadReference], marked: Mapping[str, str]) -> Block:
-    """``block``, whose text has a U+FFFC for each of ``found``, with those references made fields of it, or their
+def with_references(paragraph: Paragraph, found: Sequence[ReadReference], marked: Mapping[str, str]) -> Paragraph:
+    """``paragraph``, whose text has a U+FFFC for each of ``found``, with those references made fields of it, or their
     words where their bookmark starts no paragraph (``marked``: the paragraph each bookmark starts, by name)."""
-    pieces = block.text.split(FIELD_CHAR)
+    pieces = paragraph.text.split(FIELD_CHAR)
     text, fields = pieces[0], []
     for reference, piece in zip(found, pieces[1:], strict=True):
         target = marked.get(reference.bookmark)
@@ -32,4 +32,4 @@ def with_references(block: Block, found: Sequence[ReadReference], marked: Mappin
         else:
             text += plain(reference.words)
         text += piece
-    return replace(block, text=text, runs=(Run(len(text), None),) if text else (), fields=tuple(fields))
+    return replace(paragraph, text=text, runs=(Run(len(text), None),) if text else (), fields=tuple(fields))

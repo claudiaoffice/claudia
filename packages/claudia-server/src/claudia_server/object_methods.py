@@ -3,7 +3,7 @@
 The kernel's object layer is one for all apps (:class:`claudia_core.ObjectModel`): place an object, move it, size it,
 turn it, describe it, take it away. These are its wire methods, registered once. What differs is only *where* an
 object is: a cell of a sheet, a point on a slide, a character of a text. An app says that with a :class:`Placement`,
-and :func:`add_object_methods` (and :func:`claudia_server.rendered.add_rendering_methods`) build the rest from it.
+and :func:`add_object_methods` (and :func:`claudia_server.containers.add_container_methods`) build the rest from it.
 
 What stays with an app is what is really its own: creates' shapes and text boxes (``add_object``, ``set_text``,
 ``set_snap``), computes' charts, composes' paragraphs. A rule that differs by app, such as a turned object staying
@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from claudia_core import (
     AddObject,
     Batch,
-    DefineImage,
+    DefineAsset,
     DescribeObject,
     ImageImport,
     MoveObject,
@@ -28,6 +28,7 @@ from claudia_core import (
     decode_image,
     new_object_size,
 )
+from claudia_core.asset_store import IMAGE
 from claudia_core.clock import utc_now
 
 from .images import image_bytes, picture_words
@@ -82,7 +83,7 @@ def add_object_methods(
     say = placement.help
 
     def images(ctx: Context) -> list[dict]:
-        return model_of(ctx).images_to_data()
+        return model_of(ctx).images.to_data()
 
     table.method("images")(
         _documented(
@@ -113,7 +114,7 @@ def add_object_methods(
                 room=model.room_for_new_object(model.anchor_from_data(anchor)),
                 smallest=model.min_object_size,
             )
-        steps: list = [] if asset.id in model.images else [DefineImage(asset)]
+        steps: list = [] if asset.id in model.images else [DefineAsset(IMAGE.name, asset.to_data())]
         imported = ImageImport.from_data(
             {
                 "asset": asset.id,

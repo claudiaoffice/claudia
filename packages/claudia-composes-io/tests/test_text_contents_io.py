@@ -17,24 +17,24 @@ from claudia_composes_io import (
 )
 from docx import Document
 
-from claudia_composes import Block, TextModel
+from claudia_composes import Paragraph, TextModel
 from claudia_core import Toc
 
 
 def contents() -> TextModel:
     return TextModel(
         [
-            Block("b1", "contents-title", "Contents"),
-            Block("b2", "body", generated=Toc(1, 2)),
-            Block("b3", "heading-1", "Why"),
-            Block("b4", "heading-2", "Asked"),
-            Block("b5", "heading-3", "Deep"),
+            Paragraph("b1", "contents-title", "Contents"),
+            Paragraph("b2", "body", generated=Toc(1, 2)),
+            Paragraph("b3", "heading-1", "Why"),
+            Paragraph("b4", "heading-2", "Asked"),
+            Paragraph("b5", "heading-3", "Deep"),
         ]
     )
 
 
 def shape(model: TextModel) -> list[tuple]:
-    return [(b.style, b.text, b.generated) for b in model.blocks]
+    return [(b.style, b.text, b.generated) for b in model.paragraphs]
 
 
 def part(data: bytes, name: str) -> str:
@@ -45,7 +45,7 @@ def part(data: bytes, name: str) -> str:
 def test_a_table_of_contents_comes_back_as_one_generated_paragraph_in_its_place(write, read):
     back = read(write(contents()))
     assert shape(back) == shape(contents())
-    (table,) = [b for b in back.blocks if b.generated]
+    (table,) = [b for b in back.paragraphs if b.generated]
     assert [e.text for e in back.structure.entries(table.id)] == ["Why", "Asked"]
 
 
@@ -71,7 +71,7 @@ def test_a_word_toc_field_without_a_content_control_is_read_too():
     out = io.BytesIO()
     word.save(out)
     back = docx_to_text(out.getvalue())
-    assert [(b.text, b.generated) for b in back.blocks] == [("Why", None), ("", Toc(2, 3)), ("after", None)]
+    assert [(b.text, b.generated) for b in back.paragraphs] == [("Why", None), ("", Toc(2, 3)), ("after", None)]
 
 
 def _field(kind):
@@ -99,7 +99,7 @@ def test_odt_writes_a_table_of_content_and_says_that_its_pages_are_missing():
     assert "text:table-of-content " in content and 'text:outline-level="2"' in content
     assert [loss.kind for loss in odt_export_losses(contents())] == ["toc-pages"]
     no_places = contents()
-    no_places.blocks[1] = Block("b2", "body", generated=Toc(1, 2, places=False))
+    no_places.paragraphs[1] = Paragraph("b2", "body", generated=Toc(1, 2, places=False))
     assert odt_export_losses(no_places) == ()
 
 

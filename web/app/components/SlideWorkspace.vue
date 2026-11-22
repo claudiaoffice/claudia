@@ -261,7 +261,7 @@ async function goToTarget() {
   const found = state.selected ? session.referenceIn(state.selected) : null
   const target = found && found.shown?.state !== 'broken' ? state.objects[found.field.target] : undefined
   if (!target) return
-  await session.showSlide(target.anchor.container)
+  await session.showSlide(target.anchor.holder)
   await session.select(target.id)
 }
 
@@ -280,7 +280,7 @@ const agendaHost = computed<ContentsHost | null>(() => {
     looks: looksOf(entries, Object.values(state.styles)),
     readOnly: readonly.value,
     set: (next) => session.setContents(id, next),
-    remove: () => session.remove(id),
+    remove: () => session.removeObject(id),
   }
 })
 function openAgenda(id: string) {
@@ -329,7 +329,7 @@ function imageInserted() {
   canvas.value?.focus()
 }
 async function remove() {
-  if (state.selected) await session.remove(state.selected)
+  if (state.selected) await session.removeObject(state.selected)
   canvas.value?.focus()
 }
 
@@ -395,7 +395,7 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.delete', label: t('Delete'), hint: 'Del', action: () => remove(), disabled: readonly.value || !state.selected },
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }, { label: t('Agenda'), add: insertAgenda, possible: !readonly.value && !!state.activeSlide }, { add: () => void openPicker(), possible: !readonly.value && !!state.selected }),
+    insertMenu(c, { types: state.containerTypes, add: (type) => addContainer(type) }, { label: t('Agenda'), add: insertAgenda, possible: !readonly.value && !!state.activeSlide }, { add: () => void openPicker(), possible: !readonly.value && !!state.selected }),
     {
       label: t('Format'),
       items: [
@@ -551,7 +551,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
           <span v-if="plan.planned" class="plan" data-testid="plan-total" :title="t('The planned times of the slides, added up')">
             {{ t('Planned {time}', { time: formatTime(plan.seconds) }) }}<template v-if="plan.unplanned"> · {{ t('{n} without a time', { n: plan.unplanned }) }}</template>
           </span>
-          <span class="rev" :title="t('line {line}', { line: state.line })">{{ state.revision ?? t('empty') }}</span>
+          <span class="rev" :title="t('branch {branch}', { branch: state.branch })">{{ state.revision ?? t('empty') }}</span>
         </div>
       </footer>
     </template>

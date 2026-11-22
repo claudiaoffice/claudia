@@ -242,7 +242,7 @@ def test_an_old_workbook_with_a_sheet_and_a_chart_of_one_name_opens_and_still_wo
     spec = chart_spec().to_data()
     old = [
         {"k": "computes.AddSheet", "s": 1, "d": {"id": "s1", "name": "Sales", "index": None}},
-        {"k": "core.DefineDiagram", "s": 1, "d": {"definition": spec}},
+        {"k": "core.DefineAsset", "s": 1, "d": {"asset_kind": "diagram", "data": spec}},
         {"k": "computes.AddChart", "s": 1, "d": {"id": "t1", "name": "sales", "spec_id": spec["id"], "index": None}},
     ]
     registry = WorkbookModel.registry

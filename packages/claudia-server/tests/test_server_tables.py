@@ -23,7 +23,11 @@ HARVEST = [["Site", "Beds", "Harvest"], ["Courtyard", "12", "212,5"], ["Roof", "
 @pytest.fixture
 def paper():
     d = Document(TextModel(), store=MemoryStore())
-    call(d, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "The gardens\nOur beds."})
+    call(
+        d,
+        "replace_text",
+        {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "The gardens\nOur beds."},
+    )
     return d
 
 
@@ -33,7 +37,7 @@ def call(doc, name, params=None, account=ANN):
 
 
 def add(doc, cells=None, **more):
-    given = {"block": "b1", "offset": 3, **({"cells": cells} if cells else {"rows": 3, "cols": 2}), **more}
+    given = {"paragraph": "b1", "offset": 3, **({"cells": cells} if cells else {"rows": 3, "cols": 2}), **more}
     return call(doc, "add_table", given)
 
 
@@ -87,7 +91,7 @@ def test_a_table_is_put_where_the_person_points_and_gets_a_name_and_ids_from_one
     made = add(paper)
     assert set(made) == {"object", "table", "revision"}
     shown = paper.model.get_object(made["object"])
-    assert (shown.anchor.block, shown.anchor.offset) == ("b1", 3)
+    assert (shown.anchor.paragraph, shown.anchor.offset) == ("b1", 3)
     assert shown.body.kind == "table" and shown.body.table == made["table"]
     assert shown.body.name == "Table 1"
     definition = paper.model.tables[made["table"]]
@@ -114,17 +118,17 @@ def test_the_limits_are_refused_with_a_sentence_and_the_text_is_unchanged(paper)
     before = paper.revision
     for rows, cols in ((101, 2), (2, 11), (0, 2)):
         with pytest.raises(RequestError) as refused:
-            call(paper, "add_table", {"block": "b1", "offset": 0, "rows": rows, "cols": cols})
+            call(paper, "add_table", {"paragraph": "b1", "offset": 0, "rows": rows, "cols": cols})
         assert refused.value.code in ("bad_request", "command_error") and "100 rows" in refused.value.message
     assert paper.revision == before and not paper.model.tables
 
 
 def test_a_table_cannot_hang_from_a_place_that_is_not_there(paper):
     with pytest.raises(RequestError) as refused:
-        call(paper, "add_table", {"block": "b9", "offset": 0, "rows": 2, "cols": 2})
+        call(paper, "add_table", {"paragraph": "b9", "offset": 0, "rows": 2, "cols": 2})
     assert refused.value.code == "command_error"
     with pytest.raises(RequestError):
-        call(paper, "add_table", {"block": "b1", "offset": 999, "rows": 2, "cols": 2})
+        call(paper, "add_table", {"paragraph": "b1", "offset": 999, "rows": 2, "cols": 2})
 
 
 def test_a_viewer_may_read_the_tables_but_not_change_them(harvest):
@@ -142,7 +146,7 @@ def test_the_tables_are_listed_with_the_objects_that_show_them_and_the_derived_t
     (shown,) = call(harvest, "tables")
     assert shown["id"] == tid(harvest) and shown["rows"] == ["r1", "r2", "r3", "r4"]
     assert [c["id"] for c in shown["columns"]] == ["c1", "c2", "c3"]
-    assert shown["used_by"] == harvest.model.users_of_table(tid(harvest))
+    assert shown["used_by"] == harvest.model.tables.users(tid(harvest))
     assert shown["totals"] == {"c3": "629,0"}, "a total is read, never stored (D1203)"
     assert "totals" not in table_of(harvest).to_data()
 
@@ -379,12 +383,12 @@ def test_splitting_a_box_that_is_no_merge_says_so(harvest):
 # -- taking a table away -----------------------------------------------------------------------------------------
 def test_a_table_goes_with_its_object_and_comes_back_with_both_in_one_undo(harvest):
     table = tid(harvest)
-    objects = harvest.model.users_of_table(table)
+    objects = harvest.model.tables.users(table)
     call(harvest, "remove_table", {"id": table})
     assert not harvest.model.tables and not any(o in harvest.model.objects for o in objects)
     harvest.undo("ann")
     assert table_of(harvest).paragraph("r2", "c1").text == "Courtyard"
-    assert harvest.model.users_of_table(table) == objects
+    assert harvest.model.tables.users(table) == objects
 
 
 def test_a_table_that_is_not_there_cannot_be_taken_away(harvest):
@@ -399,16 +403,16 @@ def test_typing_in_a_box_is_replace_text_on_the_boxs_id(harvest):
         harvest,
         "replace_text",
         {
-            "block": box(harvest, "r2", "c1"),
+            "paragraph": box(harvest, "r2", "c1"),
             "start": 0,
-            "end_block": box(harvest, "r2", "c1"),
+            "end_paragraph": box(harvest, "r2", "c1"),
             "end": 5,
             "text": "Yard",
         },
     )
     assert (
         words(harvest, "r2", "c1") == "Yardyard"
-        and answer["block"] == box(harvest, "r2", "c1")
+        and answer["paragraph"] == box(harvest, "r2", "c1")
         and answer["offset"] == 4
     )
     assert table_of(harvest).paragraph("r2", "c1").runs[0].author in ("ann",)
@@ -419,15 +423,15 @@ def test_a_line_break_typed_in_a_box_is_a_space_because_a_box_is_one_paragraph(h
         harvest,
         "replace_text",
         {
-            "block": box(harvest, "r3", "c1"),
+            "paragraph": box(harvest, "r3", "c1"),
             "start": 4,
-            "end_block": box(harvest, "r3", "c1"),
+            "end_paragraph": box(harvest, "r3", "c1"),
             "end": 4,
             "text": "\ntop",
         },
     )
     assert words(harvest, "r3", "c1") == "Roof top"
-    assert len(harvest.model.blocks) == 2
+    assert len(harvest.model.paragraphs) == 2
 
 
 def test_a_typing_that_leaves_its_box_or_misses_it_is_refused(harvest):
@@ -436,9 +440,9 @@ def test_a_typing_that_leaves_its_box_or_misses_it_is_refused(harvest):
             harvest,
             "replace_text",
             {
-                "block": box(harvest, "r2", "c1"),
+                "paragraph": box(harvest, "r2", "c1"),
                 "start": 0,
-                "end_block": box(harvest, "r2", "c2"),
+                "end_paragraph": box(harvest, "r2", "c2"),
                 "end": 1,
                 "text": "",
             },
@@ -448,7 +452,7 @@ def test_a_typing_that_leaves_its_box_or_misses_it_is_refused(harvest):
         call(
             harvest,
             "replace_text",
-            {"block": "b1", "start": 0, "end_block": box(harvest, "r2", "c1"), "end": 1, "text": ""},
+            {"paragraph": "b1", "start": 0, "end_paragraph": box(harvest, "r2", "c1"), "end": 1, "text": ""},
         )
     assert mixed.value.code == "command_error"
     with pytest.raises(RequestError) as beyond:
@@ -456,9 +460,9 @@ def test_a_typing_that_leaves_its_box_or_misses_it_is_refused(harvest):
             harvest,
             "replace_text",
             {
-                "block": box(harvest, "r2", "c1"),
+                "paragraph": box(harvest, "r2", "c1"),
                 "start": 0,
-                "end_block": box(harvest, "r2", "c1"),
+                "end_paragraph": box(harvest, "r2", "c1"),
                 "end": 99,
                 "text": "",
             },
@@ -468,7 +472,13 @@ def test_a_typing_that_leaves_its_box_or_misses_it_is_refused(harvest):
         call(
             harvest,
             "replace_text",
-            {"block": f"{tid(harvest)}/r9/c1", "start": 0, "end_block": f"{tid(harvest)}/r9/c1", "end": 0, "text": "x"},
+            {
+                "paragraph": f"{tid(harvest)}/r9/c1",
+                "start": 0,
+                "end_paragraph": f"{tid(harvest)}/r9/c1",
+                "end": 0,
+                "text": "x",
+            },
         )
 
 
@@ -479,9 +489,9 @@ def test_a_covered_box_takes_no_typing_and_the_sentence_says_where_the_words_go(
             harvest,
             "replace_text",
             {
-                "block": box(harvest, "r1", "c2"),
+                "paragraph": box(harvest, "r1", "c2"),
                 "start": 0,
-                "end_block": box(harvest, "r1", "c2"),
+                "end_paragraph": box(harvest, "r1", "c2"),
                 "end": 0,
                 "text": "x",
             },
@@ -490,11 +500,11 @@ def test_a_covered_box_takes_no_typing_and_the_sentence_says_where_the_words_go(
 
 
 def test_the_ai_quotes_the_words_of_a_box_by_its_id_like_those_of_a_paragraph(harvest):
-    call(harvest, "replace_words", {"block": box(harvest, "r2", "c3"), "find": "212,5", "text": "230"}, account=AI)
+    call(harvest, "replace_words", {"paragraph": box(harvest, "r2", "c3"), "find": "212,5", "text": "230"}, account=AI)
     assert words(harvest, "r2", "c3") == "230"
     assert table_of(harvest).paragraph("r2", "c3").runs[0].author == AI.user
     with pytest.raises(RequestError) as missing:
-        call(harvest, "replace_words", {"block": box(harvest, "r2", "c3"), "find": "zzz", "text": "1"}, account=AI)
+        call(harvest, "replace_words", {"paragraph": box(harvest, "r2", "c3"), "find": "zzz", "text": "1"}, account=AI)
     assert "not in paragraph" in missing.value.message
 
 
@@ -509,49 +519,55 @@ def test_a_change_of_the_table_is_one_event_with_the_whole_table_and_typing_is_a
     call(
         harvest,
         "replace_text",
-        {"block": box(harvest, "r2", "c1"), "start": 0, "end_block": box(harvest, "r2", "c1"), "end": 0, "text": "x"},
+        {
+            "paragraph": box(harvest, "r2", "c1"),
+            "start": 0,
+            "end_paragraph": box(harvest, "r2", "c1"),
+            "end": 0,
+            "text": "x",
+        },
     )
-    assert any(e["type"] == "text" and e["block"] == box(harvest, "r2", "c1") for e in seen)
+    assert any(e["type"] == "text" and e["paragraph"] == box(harvest, "r2", "c1") for e in seen)
     stop()
 
 
 def test_a_table_the_ai_makes_is_the_ais_and_a_name_is_free_for_the_next(paper):
     first = add(paper)
-    second = add(paper, block="b1", offset=1)
+    second = add(paper, paragraph="b1", offset=1)
     names = {paper.model.get_object(first["object"]).body.name, paper.model.get_object(second["object"]).body.name}
     assert names == {"Table 1", "Table 2"}
 
 
 # ------------------------------------------------------------------------------ a paragraph after a table (D1331)
 def test_a_paragraph_after_a_table_at_the_end_of_the_text(paper):
-    second = paper.model.blocks[1].id
-    add(paper, block=second, offset=len("Our beds."))
-    answer = call(paper, "add_paragraph_after", {"block": second})
-    new = answer["block"]
-    assert [b.id for b in paper.model.blocks] == ["b1", second, new]
-    assert paper.model.block(new).text == ""
+    second = paper.model.paragraphs[1].id
+    add(paper, paragraph=second, offset=len("Our beds."))
+    answer = call(paper, "add_paragraph_after", {"paragraph": second})
+    new = answer["paragraph"]
+    assert [b.id for b in paper.model.paragraphs] == ["b1", second, new]
+    assert paper.model.paragraph(new).text == ""
     assert [o.body.kind for o in paper.model.objects_on(second)] == ["table"], (
         "the table still hangs from its paragraph"
     )
     assert paper.model.objects_on(new) == []
-    assert paper.model.block(new).style == paper.model.block(second).style
-    assert paper.model.block_names.get(new), "the new paragraph has a name, as one made with Enter has (D1310)"
+    assert paper.model.paragraph(new).style == paper.model.paragraph(second).style
+    assert paper.model.paragraph_names.get(new), "the new paragraph has a name, as one made with Enter has (D1310)"
 
 
 def test_a_paragraph_after_a_table_is_one_step_and_undoes_cleanly(paper):
-    second = paper.model.blocks[1].id
-    add(paper, block=second, offset=len("Our beds."))
-    new = call(paper, "add_paragraph_after", {"block": second})["block"]
+    second = paper.model.paragraphs[1].id
+    add(paper, paragraph=second, offset=len("Our beds."))
+    new = call(paper, "add_paragraph_after", {"paragraph": second})["paragraph"]
     paper.undo("ann")
-    assert [b.id for b in paper.model.blocks] == ["b1", second]
+    assert [b.id for b in paper.model.paragraphs] == ["b1", second]
     paper.redo("ann")
-    assert [b.id for b in paper.model.blocks] == ["b1", second, new]
+    assert [b.id for b in paper.model.paragraphs] == ["b1", second, new]
     assert [o.body.kind for o in paper.model.objects_on(second)] == ["table"]
 
 
 def test_a_paragraph_after_needs_a_paragraph_of_the_text_and_the_right_to_write(paper):
     with pytest.raises(RequestError):
-        call(paper, "add_paragraph_after", {"block": "nope"})
+        call(paper, "add_paragraph_after", {"paragraph": "nope"})
     with pytest.raises(RequestError) as refused:
-        call(paper, "add_paragraph_after", {"block": "b1"}, Account("vera", "viewer"))
+        call(paper, "add_paragraph_after", {"paragraph": "b1"}, Account("vera", "viewer"))
     assert refused.value.code == "forbidden"

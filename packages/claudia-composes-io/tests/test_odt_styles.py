@@ -7,7 +7,7 @@ from claudia_composes_io import apply_edits_to_odt, odt_export_losses, odt_to_te
 from lxml import etree
 from test_odt import model_of
 
-from claudia_composes import Block, TextModel
+from claudia_composes import Paragraph, TextModel
 from claudia_core import StyleDef
 from claudia_odf_io import NS, Loss
 from claudia_opc_io import read_parts
@@ -68,7 +68,7 @@ def test_the_borders_and_paddings_of_a_style_are_written_by_side():
     assert paragraph["border-left"] == "2.25pt solid #F2A057" and paragraph["padding-left"] == "15.4pt"
 
 
-def test_a_style_of_the_model_that_is_not_built_in_is_written_by_its_name_and_used_by_its_blocks():
+def test_a_style_of_the_model_that_is_not_built_in_is_written_by_its_name_and_used_by_its_paragraphs():
     data = text_to_odt(with_style({"font-weight": "700"}))
     style = style_in(data, "Call_20_out")
     assert style.get(f"{{{NS['style']}}}display-name") is None  # the name spells the display name already
@@ -86,14 +86,14 @@ def test_a_custom_style_never_takes_the_name_of_another():
 
 def test_what_a_file_cannot_say_of_a_style_is_a_loss_and_a_style_the_model_lacks_is_one_too():
     model = with_style({"word-spacing": "3pt"})
-    model.blocks.append(Block("b9", "missing", "x"))
+    model.paragraphs.append(Paragraph("b9", "missing", "x"))
     assert odt_export_losses(model) == (Loss("style", "missing"), Loss("style-property", "callout: word-spacing"))
 
 
 def test_the_look_survives_a_trip_through_the_file():
     model = model_of(("heading-1", "h"), ("body", "b"))
     again = odt_to_text(text_to_odt(model))
-    assert [b.style for b in again.blocks] == ["heading-1", "body"]
+    assert [b.style for b in again.paragraphs] == ["heading-1", "body"]
 
 
 def test_a_kept_file_is_left_as_it_is_when_the_styles_did_not_change():
@@ -115,7 +115,7 @@ def test_a_style_the_file_has_under_the_name_of_a_new_style_is_not_written_over(
     original = text_to_odt(with_style({"color": "@accent"}))  # the file has "Call out", the text read from it does not
     baseline, current = odt_to_text(original), odt_to_text(original)
     current.styles.add(StyleDef("callout", "Call out", "", "body", {"font-style": "italic"}))
-    current.blocks[0] = Block(current.blocks[0].id, "callout", "words")
+    current.paragraphs[0] = Paragraph(current.paragraphs[0].id, "callout", "words")
     patched = apply_edits_to_odt(original, baseline, current)
     assert text_of(style_in(patched, "Call_20_out")) == text_of(style_in(original, "Call_20_out"))
     assert text_of(style_in(patched, "Call_20_out_2"))["font-style"] == "italic"
@@ -126,7 +126,7 @@ def test_a_style_made_after_the_file_was_read_is_added_to_it_and_used_by_the_par
     baseline = odt_to_text(original)
     current = odt_to_text(original)
     current.styles.add(StyleDef("callout", "Call out", "", "body", {"font-style": "italic"}))
-    current.blocks[0] = Block(current.blocks[0].id, "callout", "b")
+    current.paragraphs[0] = Paragraph(current.paragraphs[0].id, "callout", "b")
     patched = apply_edits_to_odt(original, baseline, current)
     assert text_of(style_in(patched, "Call_20_out"))["font-style"] == "italic"
     paragraph = etree.fromstring(read_parts(patched)["content.xml"]).find(".//text:p", NS)

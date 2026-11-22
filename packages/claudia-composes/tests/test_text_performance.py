@@ -8,16 +8,16 @@ import gc
 import time
 
 from claudia_composes import InsertText, TextModel
-from claudia_composes.model import Block
+from claudia_composes.model import Paragraph
 from claudia_core import Document, ListBook, ListDef, ListItem, MemoryStore, SetListItem
 
 SMALL, LARGE = 2_000, 20_000
 
 
-def text_with(paragraphs: int, *, items: bool) -> Document:
+def text_with(count: int, *, items: bool) -> Document:
     item = ListItem("l1") if items else None
-    blocks = [Block(f"b{n}", "body", "x", (), item) for n in range(1, paragraphs + 1)]
-    return Document(TextModel(blocks, lists=ListBook([ListDef("l1", "numbers")])), store=MemoryStore())
+    paragraphs = [Paragraph(f"b{n}", "body", "x", (), item) for n in range(1, count + 1)]
+    return Document(TextModel(paragraphs, lists=ListBook([ListDef("l1", "numbers")])), store=MemoryStore())
 
 
 def best_of(repeat: int, fn) -> float:

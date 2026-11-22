@@ -50,10 +50,10 @@ async function menu(page, title, ...path) {
     await ann.keyboard.type('The quick brown fox jumps over the lazy dog.')
     // what was typed is in the document (a slow server has not answered yet otherwise): the heading goes to the first
     await ann.waitForFunction(() => {
-      const blocks = document.querySelectorAll('[data-testid=text] [data-block]')
-      return blocks.length === 2 && blocks[1].textContent.includes('lazy dog.') && !document.querySelector('[data-testid=text] [data-overlay]')
+      const paragraphs = document.querySelectorAll('[data-testid=text] [data-paragraph]')
+      return paragraphs.length === 2 && paragraphs[1].textContent.includes('lazy dog.') && !document.querySelector('[data-testid=text] [data-overlay]')
     })
-    await ann.click('[data-testid=text] [data-block]:first-child')
+    await ann.click('[data-testid=text] [data-paragraph]:first-child')
     await ann.click('[data-testid=style-button]')
     await ann.click('[data-style=heading-1]')
     await ann.waitForSelector('[data-testid=text] h2.st-heading-1')
@@ -70,7 +70,7 @@ async function menu(page, title, ...path) {
     log('ann tagged the heading; it is called “Introduction”')
 
     // ---- Edit ▸ Reference in Chat: the paragraph with the caret
-    await ann.click('[data-testid=text] [data-block]:nth-child(2)')
+    await ann.click('[data-testid=text] [data-paragraph]:nth-child(2)')
     await menu(ann, 'Edit', 'Reference in Chat')
     await ann.waitForFunction((sel) => document.querySelector(sel)?.querySelector('.chip')?.textContent.includes('Paragraph'), chatBox)
     log('Edit ▸ Reference in Chat put a tag for the paragraph in the box')
@@ -84,8 +84,8 @@ async function menu(page, title, ...path) {
     await ann.keyboard.press('Escape')
     const ben = await open(browser, BEN, false)
     await ben.click('.msg button.tag:text-is("#Introduction")')
-    await ben.waitForSelector('[data-testid=text] [data-block].pointed')
-    const pointed = await ben.$eval('[data-testid=text] [data-block].pointed', (e) => e.textContent.trim())
+    await ben.waitForSelector('[data-testid=text] [data-paragraph].pointed')
+    const pointed = await ben.$eval('[data-testid=text] [data-paragraph].pointed', (e) => e.textContent.trim())
     assert.equal(pointed, 'Introduction')
     log('ben clicked the tag and the heading is outlined')
     await ben.screenshot({ path: `${SHOTS}/dock-text.png` })

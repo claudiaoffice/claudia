@@ -217,7 +217,7 @@ def _state(model: Any) -> Any:
 
 
 def _first_difference(a: Any, b: Any, where: str = "") -> str | None:
-    """Where two plain-data values first differ, as a path like ``blocks[3].text``; ``None`` if they are equal."""
+    """Where two plain-data values first differ, as a path like ``paragraphs[3].text``; ``None`` if they are equal."""
     if isinstance(a, dict) and isinstance(b, dict):
         for key in a.keys() | b.keys():
             if key not in a or key not in b:

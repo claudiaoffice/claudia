@@ -25,7 +25,7 @@ def a_text(model: SlideModel, object_id: str, words_style: str = "body-text", bo
 
 def a_shape(model: SlideModel, object_id: str) -> None:
     if model.shapes.get("circle") is None:
-        model.define_shape(CIRCLE)
+        model.shapes.define(CIRCLE)
     body = ObjectBody(
         object_id, "shape", 200, 200, "plain-shape", paragraph_for(object_id, "shape-label", "", "ana"), ref="circle"
     )

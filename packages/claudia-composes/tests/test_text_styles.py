@@ -2,7 +2,7 @@
 
 import pytest
 
-from claudia_composes import BUILTIN_STYLES, Block, BlockAnchor, SetStyle, TextModel, next_style
+from claudia_composes import BUILTIN_STYLES, Paragraph, ParagraphAnchor, SetStyle, TextModel, next_style
 from claudia_core import (
     Batch,
     ChangeStyle,
@@ -89,7 +89,7 @@ def test_a_deviation_follows_the_style_it_comes_from():
 
 # ----------------------------------------------------------------------------- use
 def test_a_style_is_in_use_while_a_paragraph_has_it():
-    model = TextModel([Block("b1", "body"), Block("b2", "quote")])
+    model = TextModel([Paragraph("b1", "body"), Paragraph("b2", "quote")])
     assert model.style_in_use("quote") and not model.style_in_use("remark")
     assert model.style_uses() == {"body": 1, "quote": 1}
 
@@ -98,7 +98,7 @@ def test_setting_a_style_made_by_a_command_and_refusing_one_that_does_not_exist(
     d = Document(TextModel(), store=MemoryStore())
     d.execute(CreateStyle(StyleDef("note", "Note", "a small note", "body", {"font-size": "9pt"})), author="ann")
     d.execute(SetStyle("b1", "note"), author="ann")
-    assert d.model.block("b1").style == "note"
+    assert d.model.paragraph("b1").style == "note"
     with pytest.raises(ValueError, match="no style"):
         d.execute(SetStyle("b1", "sparkly"), author="ann")
 
@@ -110,7 +110,7 @@ def test_a_paragraph_takes_only_a_paragraph_style():
     for style in ("plain-shape", "plain-box", "plain-image"):
         with pytest.raises(ValueError, match="cannot be put on a paragraph"):
             d.execute(SetStyle("b1", style), author="ann")
-    assert d.model.block("b1").style == "body"
+    assert d.model.paragraph("b1").style == "body"
 
 
 def test_a_style_only_an_object_in_the_text_uses_is_in_use():
@@ -119,28 +119,28 @@ def test_a_style_only_an_object_in_the_text_uses_is_in_use():
     model = TextModel()
     assert not model.style_in_use("plain-box") and not model.style_in_use("body-text")
     box = ObjectBody("t1", "text", 200, 80, "plain-box", paragraph_for("t1", "quote", "hi"))
-    model.insert_object(VisualObject(box, BlockAnchor("b1", 0)))
+    model.insert_object(VisualObject(box, ParagraphAnchor("b1", 0)))
     assert model.style_in_use("plain-box") and model.style_in_use("quote")
     assert not model.style_in_use("remark")
 
 
 # ----------------------------------------------------------------------------- deviating
-def deviate(d, parent="heading-1", block="b1", author="ann", **css):
+def deviate(d, parent="heading-1", paragraph="b1", author="ann", **css):
     book = d.model.styles
     name = book.provisional_name(parent)
     new = StyleDef(book.unique_id(name), name, "", parent, css, to_name=True)
-    return d.execute(Batch((CreateStyle(new), SetStyle(block, new.id)), "Deviate"), author=author), new
+    return d.execute(Batch((CreateStyle(new), SetStyle(paragraph, new.id)), "Deviate"), author=author), new
 
 
 def test_a_deviation_creates_the_style_and_applies_it_in_one_step_and_one_undo():
     d = Document(TextModel(), store=MemoryStore())
     _, new = deviate(d, "body", color="#5B4BC4")
-    assert new.name == "Body text (changed)" and d.model.block("b1").style == new.id
+    assert new.name == "Body text (changed)" and d.model.paragraph("b1").style == new.id
     assert d.model.styles.get(new.id).to_name
     d.undo("ann")
-    assert new.id not in d.model.styles and d.model.block("b1").style == "body"
+    assert new.id not in d.model.styles and d.model.paragraph("b1").style == "body"
     d.redo("ann")
-    assert d.model.block("b1").style == new.id
+    assert d.model.paragraph("b1").style == new.id
 
 
 def test_naming_a_deviation_ends_the_invitation():
@@ -152,12 +152,14 @@ def test_naming_a_deviation_ends_the_invitation():
 
 
 def test_a_deviation_is_not_taken_back_while_somebody_else_uses_it():
-    d = Document(TextModel([Block("b1", "body"), Block("b2", "body")]), store=MemoryStore())
+    d = Document(TextModel([Paragraph("b1", "body"), Paragraph("b2", "body")]), store=MemoryStore())
     _, new = deviate(d, "body", color="#5B4BC4")
     d.execute(SetStyle("b2", new.id), author="ben")
     with pytest.raises(UndoConflict, match="in use"):
         d.undo("ann")
-    assert d.model.block("b1").style == new.id, "the refused undo changed nothing, not even the half that would work"
+    assert d.model.paragraph("b1").style == new.id, (
+        "the refused undo changed nothing, not even the half that would work"
+    )
 
 
 def test_a_deviation_cannot_be_undone_after_a_colleague_changed_the_style():
@@ -181,10 +183,13 @@ def test_the_styles_are_part_of_the_state_and_survive_a_snapshot():
 
 
 def test_an_older_state_without_styles_gets_the_built_in_ones():
-    old = {"blocks": [{"id": "b1", "style": "heading-1", "text": "Hi", "runs": [[2, "ann", None]]}], "suggestions": []}
+    old = {
+        "paragraphs": [{"id": "b1", "style": "heading-1", "text": "Hi", "runs": [[2, "ann", None]]}],
+        "suggestions": [],
+    }
     model = TextModel.restore(old)
     assert model.styles.ids() == [s.id for s in BUILTIN_STYLES]
-    assert model.block("b1").style == "heading-1"
+    assert model.paragraph("b1").style == "heading-1"
 
 
 def test_replaying_the_log_gives_the_same_styles():
@@ -222,9 +227,9 @@ def test_any_paragraph_style_becomes_a_heading_by_its_level_not_by_its_name():
     d = Document(TextModel(), store=MemoryStore())
     d.execute(CreateStyle(StyleDef("chapter", "Chapter", "a chapter", "body", {"font-size": "20pt"})), author="ann")
     d.execute(SetStyle("b1", "chapter"), author="ann")
-    assert d.model.block_kind(d.model.block("b1")) == "paragraph"
+    assert d.model.paragraph_kind(d.model.paragraph("b1")) == "paragraph"
     d.execute(SetHeadingLevel("chapter", 1), author="ann")
-    assert d.model.block_kind(d.model.block("b1")) == "heading"
+    assert d.model.paragraph_kind(d.model.paragraph("b1")) == "heading"
     d.execute(SetHeadingLevel("heading-2", "body"), author="ann")
     d.execute(SetStyle("b1", "heading-2"), author="ann")
-    assert d.model.block_kind(d.model.block("b1")) == "paragraph"
+    assert d.model.paragraph_kind(d.model.paragraph("b1")) == "paragraph"

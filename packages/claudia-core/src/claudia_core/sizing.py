@@ -1,6 +1,6 @@
 """The size a new picture or container is shown at, the same in all three apps (D1229, D1332, D1333).
 
-A picture coming in from a file and the first picture of a rendered container (a formula, a diagram) have a size of
+A picture coming in from a file and the first picture of a container (a formula, a diagram) have a size of
 their own. They are shown at that size, but
 
 1. no larger than *the most* a new object takes (420 × 240, D1229), so that an import does not fill the page;

@@ -2,12 +2,19 @@ import struct
 
 import pytest
 
-from claudia_core import Batch, CommandLog, Document, ImageAsset, ImageImport, MemoryStore, decode_image
+from claudia_core import (
+    Batch,
+    CommandLog,
+    DefineAsset,
+    Document,
+    ImageAsset,
+    ImageImport,
+    MemoryStore,
+    decode_image,
+)
 from claudia_core.testing import FakeClock, pointing_as_ref
 from claudia_creates import (
     AddObject,
-    DefineImage,
-    DefineShape,
     MoveObject,
     ObjectBody,
     ResizeObject,
@@ -81,10 +88,10 @@ def frame(doc, object_id: str) -> tuple[int, int, int, int]:
     return (obj.anchor.x, obj.anchor.y, obj.body.w, obj.body.h)
 
 
-def define(shape_id: str = "rectangle") -> DefineShape:
+def define(shape_id: str = "rectangle") -> DefineAsset:
     shape = ShapeLibrary.load().get(shape_id)
     assert shape is not None
-    return DefineShape(shape)
+    return DefineAsset("shape", shape.to_data())
 
 
 def put(doc, obj: SlideObject, author: str = "ana"):
@@ -140,7 +147,7 @@ def put_image(doc, object_id: str = "i1", author: str = "ana", asset: ImageAsset
     ``doc.model.get(object_id)``."""
     asset = asset or image_asset()
     obj = image_object(object_id, asset=asset, **changes)
-    steps = [add(obj)] if asset.id in doc.model.images else [DefineImage(asset), add(obj)]
+    steps = [add(obj)] if asset.id in doc.model.images else [DefineAsset("image", asset.to_data()), add(obj)]
     return doc.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=author)
 
 

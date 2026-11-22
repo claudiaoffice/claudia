@@ -14,7 +14,7 @@ export function usePageNumbers(session: TextSession, on: () => boolean, after = 
   const pages = shallowRef<ReadonlyMap<string, number> | null>(null)
   const state = session.state
   // a table that shows pages, or a reference to a page (step I)
-  const wanted = () => on() && state.blocks.some((b) => b.generated?.places || b.shown?.some((s) => s.state === 'page'))
+  const wanted = () => on() && state.paragraphs.some((b) => b.generated?.places || b.shown?.some((s) => s.state === 'page'))
   let timer: ReturnType<typeof setTimeout> | null = null
   let run = 0
   async function layOut() {
@@ -27,7 +27,7 @@ export function usePageNumbers(session: TextSession, on: () => boolean, after = 
     }
   }
   watch(
-    () => [wanted(), state.blocks, state.styles, state.page, state.language],
+    () => [wanted(), state.paragraphs, state.styles, state.page, state.language],
     () => {
       if (timer) clearTimeout(timer)
       if (!wanted()) {

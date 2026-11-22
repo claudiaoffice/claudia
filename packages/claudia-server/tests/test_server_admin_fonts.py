@@ -220,7 +220,7 @@ def test_files_let_go_of_free_the_room_for_others(server, monkeypatch):
     upload(client, font)
 
 
-def test_what_one_administrator_holds_neither_blocks_nor_serves_another(server, admins, monkeypatch):
+def test_what_one_administrator_holds_neither_paragraphs_nor_serves_another(server, admins, monkeypatch):
     client, _, tmp_path = server
     monkeypatch.setattr("claudia_server.admin_fonts.MAX_FILES", 1)
     font = made(tmp_path, "City-Regular.ttf")

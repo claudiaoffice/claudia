@@ -146,7 +146,7 @@ def xlsx_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tup
     a sheet with the chart in it; ``source``: a chart that follows a name has the cells the name is now; ``rotation``;
     ``empty``: a chart that reads nothing is not written), ``"svg-fallback"`` (a picture drawn as SVG, which only
     Excel 2016 and later show; other programs show it empty unless there was something to draw it with,
-    ``rasterised``), ``"rendering-pending"`` (a rendered container nothing has been drawn for: left out) and what
+    ``rasterised``), ``"rendering-pending"`` (a container nothing has been drawn for: left out) and what
     :func:`xlsx_unwritten_changes` says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"``."""
     losses = LossLog()
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
@@ -266,12 +266,12 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
         sheet.cells.update(read.cells)
         _dress(dressing, sheet, read)
         model.sheets[sheet.id] = sheet
-        model.open_container(str(sheet.id))
+        model.open_holder(str(sheet.id))
     for named in names:
         model.names.put(named)
     for chart in file_charts(package)[0]:
         if chart.held is not None:
-            model.define_diagram(chart.spec)
+            model.diagrams.define(chart.spec)
             body = ObjectBody(chart.object_id, "diagram", chart.width, chart.height, "plain-image", ref=chart.spec_id)
             if chart.description:
                 body = replace(body, description=chart.description)

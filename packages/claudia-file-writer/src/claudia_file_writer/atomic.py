@@ -1,6 +1,6 @@
 """Writing a file all at once: next to its place, then moved there in one step (CODE-34, D701).
 
-Every writer of the server goes through here: the documents and their journal (``claudia_container``), the server's
+Every writer of the server goes through here: the documents and their journal (``claudia_document_file``), the server's
 state and certificate (``claudia_server.state``), and the files a server makes or fetches (fonts, web fonts, typeset
 results, hyphenation patterns). Before, each did it its own way and only two retried on Windows.
 """

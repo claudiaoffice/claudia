@@ -68,7 +68,7 @@ _CIRCLE = ShapeDefinition(id="circle", name="Circle", path="M50 0 A50 50 0 1 1 5
 def two_slide_deck() -> SlideModel:
     model = SlideModel.empty()  # "s1"
     model.insert_slide("s2")
-    model.define_shape(_CIRCLE)
+    model.shapes.define(_CIRCLE)
     model.insert_object(_object("o1", "s1", "text", 100, 100, 400, 100, "body-text", "Hello"))
     model.insert_object(_object("o2", "s2", "shape", 100, 100, 200, 200, "plain-shape", "Circle", "circle"))
     return model
@@ -93,7 +93,7 @@ def test_shapes_map_to_the_right_autoshape():
 def test_an_image_object_becomes_a_real_picture_not_a_blue_box():
     model = SlideModel.empty()  # "s1"
     asset = _image_asset()  # 40x20, aspect 2 -- the object's own w/h must keep that proportion
-    model.define_image(asset)
+    model.images.define(asset)
     model.insert_object(_image_object("i1", "s1", 150, 300, 400, 200, asset))
     prs = pptx.Presentation(BytesIO(slides_to_pptx(model)))
     shape = prs.slides[0].shapes[0]
@@ -104,7 +104,7 @@ def test_an_image_object_becomes_a_real_picture_not_a_blue_box():
 def test_an_image_object_keeps_its_place_alongside_other_objects():
     model = two_slide_deck()
     asset = _image_asset()
-    model.define_image(asset)
+    model.images.define(asset)
     model.insert_object(_image_object("i1", "s1", 150, 300, 400, 200, asset))
     prs = pptx.Presentation(BytesIO(slides_to_pptx(model)))
     kinds = [shape.shape_type for shape in prs.slides[0].shapes]
@@ -545,9 +545,9 @@ def _properties(shape):
 def _exported_shape(obj, *, shapes=()):
     model = SlideModel.empty()
     for shape in shapes:
-        model.define_shape(shape)
+        model.shapes.define(shape)
     if obj.body.image:
-        model.define_image(_image_asset())
+        model.images.define(_image_asset())
     model.insert_object(obj)
     prs = pptx.Presentation(BytesIO(slides_to_pptx(model)))
     return prs.slides[0].shapes[0]
@@ -595,7 +595,7 @@ def test_an_object_that_is_not_decorative_carries_no_decorative_mark():
     assert _properties(_exported_shape(picture)).xpath("./a:extLst") == []
 
 
-# -- a rendered text container is a picture to a file (D394) ---------------------------------------------------------
+# -- a container is a picture to a file (D394) ---------------------------------------------------------
 _GLYPHS = (
     b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30" height="10">'
     b'<defs><symbol id="g"><path d="M0 0L5 5"/></symbol></defs><use xlink:href="#g"/></svg>'
@@ -604,13 +604,13 @@ _PNG = b"\x89PNG\r\n\x1a\n"
 
 
 def _deck_with_container(*, pictured: bool = True, **changes) -> SlideModel:
-    from claudia_core import RenderedDefinition
+    from claudia_core import ContainerDefinition
 
     model = SlideModel.empty()
     asset = decode_image(_GLYPHS, checked_drawing=True)
-    model.define_image(asset)
-    model.define_rendering(RenderedDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
-    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", ref="r1", **changes)
+    model.images.define(asset)
+    model.containers.define(ContainerDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
+    body = ObjectBody("c1", "container", 300, 100, "plain-image", ref="r1", **changes)
     model.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     return model
 
@@ -619,7 +619,7 @@ def _package(data: bytes) -> zipfile.ZipFile:
     return zipfile.ZipFile(BytesIO(data))
 
 
-def test_a_rendered_container_is_a_real_picture_with_its_alt_text_and_the_drawing_itself_for_powerpoint():
+def test_a_container_is_a_real_picture_with_its_alt_text_and_the_drawing_itself_for_powerpoint():
     data = slides_to_pptx(_deck_with_container(description="a heading that says Hi"))
     (picture,) = [
         s for s in pptx.Presentation(BytesIO(data)).slides[0].shapes if s.shape_type == MSO_SHAPE_TYPE.PICTURE
@@ -663,7 +663,7 @@ def test_an_imported_svg_picture_no_longer_stops_the_export():
         b'<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20"/></svg>'
     )
     model = SlideModel.empty()
-    model.define_image(asset)
+    model.images.define(asset)
     model.insert_object(_image_object("i1", "s1", 150, 300, 400, 200, asset))
     assert any(n.endswith(".svg") for n in _package(slides_to_pptx(model)).namelist())
 

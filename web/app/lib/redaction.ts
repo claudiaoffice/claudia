@@ -2,7 +2,7 @@
 // work goes. Plain functions over the session's own data, no Vue and no DOM, so every rule has a test; the dialog
 // (`RedactionDialog.vue`) and the panel (`SidePanel.vue`) only draw what these decide.
 
-import type { ChatMessage, Entry } from './base-session'
+import type { ChatMessage, Step } from './base-session'
 import type { Region } from './protocol'
 
 type Translate = (msgid: string, vars?: Record<string, string | number>) => string
@@ -37,7 +37,7 @@ export interface RedactionPlan {
   allowed: boolean
   others: string[]
   /** Every step that is blanked, as the history shows it. */
-  steps: Entry[]
+  steps: Step[]
   app: string
   /** The token the views read the planned state with, and the places in it to mark (when allowed). */
   plan?: string
@@ -62,7 +62,7 @@ export function mayRedact(me: Me): boolean {
 }
 
 /** May this person pick this step (D727): an owner any step with content, an editor only her own. */
-export function mayRedactEntry(entry: Entry, me: Me): boolean {
+export function mayRedactEntry(entry: Step, me: Me): boolean {
   if (!mayRedact(me) || entry.redacted || RECORDS.has(entry.kind ?? '')) return false
   return me.role === 'owner' || same(entry.author, me.user)
 }
@@ -116,7 +116,7 @@ export function itemCount(plan: RedactionPlan): number {
 }
 
 /** The steps the person picked and the ones that go with them, apart. */
-export function splitSteps(plan: RedactionPlan): { picked: Entry[]; following: Entry[] } {
+export function splitSteps(plan: RedactionPlan): { picked: Step[]; following: Step[] } {
   const following = new Set(plan.dependents)
   return {
     picked: plan.steps.filter((s) => !following.has(s.revision)),

@@ -7,9 +7,9 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
-- Objects that may change container (D1351): `ObjectModel.objects_change_container` (false by default),
+- Objects that may change holder (D1351): `ObjectModel.objects_change_holder` (false by default),
   `ObjectModel.rehang_object(obj, at=None)` (out of the old stack, into the new one, returns the old place) and
-  `ObjectModel.place_regions(anchor)` (what a move into another container also takes, for locks). `MoveObject.at`: the
+  `ObjectModel.place_regions(anchor)` (what a move into another holder also takes, for locks). `MoveObject.at`: the
   place in the new stack, set by the inverse of such a move and written only when set.
 - The size of a new picture or container (D1229, D1332): `new_object_size(most_w, most_h, picture_w, picture_h, *,
   least, room=None, smallest=MIN_OBJECT_SIZE)` keeps a picture's own size within the most, raises it to `least` high,
@@ -47,6 +47,30 @@ While the major version is 0, a minor version may break the API; every break is 
   `"table"` is one of `OBJECT_KINDS`; the facet slots have a `table` thing.
 
 ### Changed
+- **Breaking** — the glossary's Container (D1430, E1.18): the object kind `container` (was `rendered`),
+  `ContainerDefinition` (was `RenderedDefinition`, module `claudia_core.containers`, was `renderings`),
+  `MAX_CONTAINER_SOURCE` (was `MAX_RENDERING_SOURCE`), the asset kind `CONTAINER` named `container` (was `RENDERING`
+  named `rendering`), `ObjectModel.containers` (was `renderings`), `ObjectBody.container` (was `rendered`). Stored, the
+  state key is `containers` and the change event's `type` is `container`; no reader for the old names.
+- **Breaking** — the glossary's holder (D1430): the slide, sheet or paragraph an object is at is its *holder*.
+  `Anchor.holder` (was `container`), `VisualObject.holder`, `ObjectSet.holder`, `ObjectsChanged.holder`,
+  `ObjectText.holder`, `Placed.holder`; `ObjectModel.holders()`, `open_holder`, `close_holder`,
+  `max_objects_per_holder`, `objects_change_holder`; `MAX_OBJECTS_PER_HOLDER`. Stored and on the wire, an anchor, an
+  `objects` region and the `objects` event say `holder` (was `container`); no reader for the old key (E1.18).
+- **Breaking** — the glossary's words for the history (D1430): `Step` (was `Entry`, one command as it happened),
+  `UndoUnit` (was `history.Step`), `BranchInfo` (was `Line`), `Document.branches()` (was `lines()`),
+  `Document.peek_branch(branch)` (was `peek_line(line)`), `CommandLog.steps_of(name)` (was `line(name)`).
+- **Breaking** — one asset store (D1431): `ObjectModel.assets` holds an `AssetStore` per kind (`image`, `shape`,
+  `diagram`, `rendering`, `table`); `images`, `shapes`, `diagrams`, `renderings` and `tables` are those stores, read like
+  a dict and changed with `define`, `replace`, `forget`, `put`, `users`, `known`, `to_data` and `restore`.
+  `ObjectModel.users_of(kind, asset_id)` replaces `users_of_image`/`_shape`/`_diagram`/`_rendering`/`_table`;
+  `assets_to_data()` and `restore_objects(objects, assets)` replace the five `*_to_data()` and the long
+  `restore_objects`. The commands `DefineAsset(asset_kind, data)`, `UpdateAsset(asset_kind, id, data)` and
+  `ForgetAsset(asset_kind, id)` and the event `AssetsChanged` replace `DefineShape`, `ForgetShape`, `DefineImage`,
+  `ForgetImage`, `DefineDiagram`, `UpdateDiagram`, `ForgetDiagram`, `DefineRendering`, `UpdateRendering`,
+  `ForgetRendering`, `ImagesChanged`, `ShapesChanged`, `DiagramsChanged` and `RenderingsChanged` (their wire form is
+  unchanged). New: `AssetKind`, `ASSET_KINDS`, `asset_kind()`. Logs with the old command kinds are not read
+  (pre-release, E1.18).
 - `MoveObject` to another container moves the object between the stacks where the app allows it (D1351), tells
   the old container its stack and the new one the object, and takes the drop place as a region; elsewhere it is
   refused as before ("an object cannot change its container").

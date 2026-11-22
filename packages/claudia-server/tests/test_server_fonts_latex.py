@@ -71,9 +71,9 @@ def test_a_formula_that_could_not_be_drawn_is_drawn_when_the_document_is_opened_
     from claudia_creates import SlideModel
     from claudia_server import hub as hub_module
     from claudia_server.auth import Account
+    from claudia_server.containers import RenderDesk
     from claudia_server.creates import creates_methods
     from claudia_server.hub import Hub, MemoryProvider
-    from claudia_server.rendered import RenderDesk
 
     fonts = FontService.from_folders(
         [], tmp_path / "webfonts", shipped=[builtin_folder()], added_root=tmp_path / "fonts"
@@ -90,10 +90,10 @@ def test_a_formula_that_could_not_be_drawn_is_drawn_when_the_document_is_opened_
     async def scenario() -> None:
         hub = Hub(MemoryProvider(SlideModel), methods=creates_methods, renderings=RenderDesk(service))
         first = await hub.open("deck", create=True)
-        rendering = Client(first, ann).request("add_rendering", add)["result"]["rendering"]
+        container = Client(first, ann).request("add_container", add)["result"]["container"]
         await asyncio.sleep(1.0)
         late = Client(first, Account("bob", "editor"))
-        (entry,) = late.request("renderings")["result"]
+        (entry,) = late.request("containers")["result"]
         assert entry["image"] is None and entry["outcome"]["ok"] is False
         assert "Latin Modern Roman" in entry["outcome"]["message"]
         add_collection(
@@ -112,9 +112,9 @@ def test_a_formula_that_could_not_be_drawn_is_drawn_when_the_document_is_opened_
         again = await hub.open("deck")
         for _ in range(100):  # real TeX takes a moment
             await asyncio.sleep(0.1)
-            if again.document.model.renderings[rendering].image is not None:
+            if again.document.model.containers[container].image is not None:
                 break
-        assert again.document.model.renderings[rendering].image is not None
-        json.dumps(Client(again, ann).request("renderings")["result"])
+        assert again.document.model.containers[container].image is not None
+        json.dumps(Client(again, ann).request("containers")["result"])
 
     asyncio.run(scenario())

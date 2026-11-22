@@ -1,8 +1,8 @@
 """Who receives and may ask for what in a live document: the roles of the file, applied to the session (D1261, SEC-17).
 
 A document file has three separately encrypted parts, its **content**, its **history** and its **chat**, and a role
-holds the keys of some of them (D101, ``claudia_container.ROLE_DOMAINS``): a viewer holds the content key only. The live
-session must not give a viewer what her key would not open, so every event the server pushes and every method it
+holds the keys of some of them (D101, ``claudia_document_file.ROLE_DOMAINS``): a viewer holds the content key only. The
+live session must not give a viewer what her key would not open, so every event the server pushes and every method it
 answers belongs to one of those domains, and this module says which.
 
 Two tables, one rule:
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from claudia_container import ROLE_DOMAINS, Domain, Role
+from claudia_document_file import ROLE_DOMAINS, Domain, Role
 
 CONTENT, HISTORY, CHAT = Domain.CONTENT, Domain.HISTORY, Domain.CHAT
 
@@ -41,8 +41,8 @@ _CONTENT = Rule(CONTENT)
 EVENT_RULES: dict[str, Rule] = {
     **dict.fromkeys(
         (
-            "block_fields",
-            "block_generated",
+            "paragraph_fields",
+            "paragraph_generated",
             "cell_styles",
             "cells",
             "charts",
@@ -62,7 +62,7 @@ EVENT_RULES: dict[str, Rule] = {
             "pivots",
             "print_setup",
             "random",
-            "rendering",
+            "container",
             "schemes",
             "shape",
             "sheets",
@@ -85,7 +85,7 @@ EVENT_RULES: dict[str, Rule] = {
     # What the kernel and the hub say about the document itself.
     "rebuilt": _CONTENT,  # "reload": the state was rebuilt (no word of why)
     "stale": _CONTENT,  # functions the document uses changed
-    "render_result": _CONTENT,  # what the last try to draw a rendered container said
+    "render_result": _CONTENT,  # what the last try to draw a container said
     "joined": _CONTENT,  # the names of the people in the document (D111) and presence
     "left": _CONTENT,
     "ephemeral": _CONTENT,  # by its ``kind``, below

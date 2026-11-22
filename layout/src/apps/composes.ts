@@ -3,7 +3,7 @@
  * objects where they hang, page numbers. Pure: the caller fetches the fonts the text needs (see
  * {@link fontsNeeded}) and registers them in the {@link FontSet} first.
  *
- * Its input is the wire form of the document (`blocks`, the `resolved` CSS of `styles`, `page`, `objects`,
+ * Its input is the wire form of the document (`paragraphs`, the `resolved` CSS of `styles`, `page`, `objects`,
  * `shapes`, `images`), so any client of a composes server can print exactly the same pages.
  *
  * @module
@@ -45,7 +45,7 @@ export type { ImageInfo, Note, PageSetupData, ShapeOutline, TextStyle } from './
 /** A paragraph: `{id, style, text}` (runs are authorship only and do not change how it looks), and, for a list item,
  *  its place in its list and the marker the server counted for it (E9.21). A paragraph with a label and no item is a
  *  numbered heading (E9.22): its number hangs before it, in its own look. */
-export interface TextBlock {
+export interface TextParagraph {
   id: string
   style: string
   text: string
@@ -76,11 +76,11 @@ export interface OutlineEntry {
 export interface TextObject extends VisualObject {
   /** `dx`/`dy` move the object off its anchor character, in the same units as `w`/`h` (D1023). `wrap` says how the text
    *  flows round it (D1061; none saved: over the text) and `gap` how far from it, in the same units. */
-  anchor: { kind: 'block'; container: string; offset: number; dx?: number; dy?: number; wrap?: Wrap; gap?: number }
+  anchor: { kind: 'paragraph'; holder: string; offset: number; dx?: number; dy?: number; wrap?: Wrap; gap?: number }
 }
 
 export interface TextDocument {
-  blocks: readonly TextBlock[]
+  paragraphs: readonly TextParagraph[]
   /** the tables of the text as `tables` gives them (with `totals`); an object of kind `table` with `ref` the id of one
    *  is where it hangs (E9.32) */
   tables?: readonly TableData[]
@@ -151,8 +151,8 @@ function placeRoom(sheet: Styles, style: ParagraphStyle): number {
 
 /** For each flow block, the paragraph of the text it is (or the entry of a table of contents it draws). */
 interface Origin {
-  block: number
-  /** set for a table: `block` is the paragraph it follows */
+  paragraph: number
+  /** set for a table: `paragraph` is the paragraph it follows */
   table?: true
   entry?: TextContents['entries'][number]
   contents?: TextContents
@@ -160,23 +160,23 @@ interface Origin {
 }
 
 /** The page (from 1) each paragraph of the text starts on, by id. */
-function pagesOf(starts: ReadonlyMap<number, { page: number }>, origins: readonly Origin[], blocks: readonly TextBlock[]): Map<string, number> {
+function pagesOf(starts: ReadonlyMap<number, { page: number }>, origins: readonly Origin[], paragraphs: readonly TextParagraph[]): Map<string, number> {
   const out = new Map<string, number>()
-  for (const [i, at] of starts) if (!origins[i]!.entry && !origins[i]!.table) out.set(blocks[origins[i]!.block]!.id, at.page + 1)
+  for (const [i, at] of starts) if (!origins[i]!.entry && !origins[i]!.table) out.set(paragraphs[origins[i]!.paragraph]!.id, at.page + 1)
   return out
 }
 
 /** A paragraph's words with its page references filled in from `known` ("000", as wide as most pages, before then). */
-function withPages(block: TextBlock, known: ReadonlyMap<string, number> | null): string {
-  const refs = block.pageRefs
-  if (!refs?.length) return block.text
+function withPages(paragraph: TextParagraph, known: ReadonlyMap<string, number> | null): string {
+  const refs = paragraph.pageRefs
+  if (!refs?.length) return paragraph.text
   let out = ''
   let from = 0
   for (const ref of refs) {
-    out += block.text.slice(from, ref.at) + String(known?.get(ref.target) ?? '000')
+    out += paragraph.text.slice(from, ref.at) + String(known?.get(ref.target) ?? '000')
     from = ref.at
   }
-  return out + block.text.slice(from)
+  return out + paragraph.text.slice(from)
 }
 
 /** Where each flow block starts: the page (from 0), and the top of its first line on it, in page coordinates. */
@@ -284,11 +284,11 @@ function shownTables(doc: TextDocument): Map<string, TableData> {
 export function fontsNeeded(doc: TextDocument, resolver: FontResolver): string[] {
   const styles = new Map(doc.styles.map((s) => [s.id, s]))
   const out = new Set<string>()
-  for (const id of new Set(doc.blocks.flatMap((b) => [b.style, ...(b.contents?.entries.map((e) => e.style) ?? [])]))) {
+  for (const id of new Set(doc.paragraphs.flatMap((b) => [b.style, ...(b.contents?.entries.map((e) => e.style) ?? [])]))) {
     const face = styleFont(cssOf(styles, id, BODY), resolver)
     if (face) out.add(face)
   }
-  for (const id of new Set(doc.blocks.filter((b) => b.item && b.label?.marker).map((b) => b.style))) {
+  for (const id of new Set(doc.paragraphs.filter((b) => b.item && b.label?.marker).map((b) => b.style))) {
     const face = styleFont(markerCss(cssOf(styles, id, BODY)), resolver)
     if (face) out.add(face)
   }
@@ -340,7 +340,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   const laidTables = new Map<string, FlowTable>()
   const tablesAfter = (paragraph: string): FlowTable[] =>
     tableObjects
-      .filter((o) => o.anchor.container === paragraph && shown.has(o.id))
+      .filter((o) => o.anchor.holder === paragraph && shown.has(o.id))
       .sort((a, b) => a.anchor.offset - b.anchor.offset)
       .map((o) => {
         let laid = laidTables.get(o.id)
@@ -353,13 +353,13 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   const build = (known: ReadonlyMap<string, number> | null, around: ReadonlyMap<number, Start> | null = null) => {
     const origins: Origin[] = []
     const rows = new Map<number, Rows>()
-    const withTables = (b: TextBlock, index: number, own: FlowBlock[]): FlowItem[] => {
+    const withTables = (b: TextParagraph, index: number, own: FlowBlock[]): FlowItem[] => {
       const after = tablesAfter(b.id)
-      for (let k = 0; k < after.length; k++) origins.push({ block: index, table: true })
+      for (let k = 0; k < after.length; k++) origins.push({ paragraph: index, table: true })
       return [...own, ...after]
     }
     /** the flow blocks of a paragraph (the entries of a table of contents are one each) */
-    const paragraphsOf = (b: TextBlock, index: number): FlowBlock[] => {
+    const paragraphsOf = (b: TextParagraph, index: number): FlowBlock[] => {
       if (b.contents) {
         const contents = b.contents
         const entries = contents.entries.length ? contents.entries : [{ target: '', words: '', style: b.style }]
@@ -369,15 +369,15 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
           const room = contents.places && entry.target ? placeRoom(sheet, r.style) : 0
           const style: ParagraphStyle = { ...r.style, indentRight: r.style.indentRight + room, keepWithNext: k < entries.length - 1 }
           const inset = insets(r.decoration)
-          origins.push({ block: index, entry, contents, room })
+          origins.push({ paragraph: index, entry, contents, room })
           const id = k ? `${b.id}~${k}` : b.id
           return { id, layout: layoutParagraph(fonts, style, entry.words, box.w - inset.left - inset.right, paragraphOptions), decoration: r.decoration }
         })
       }
-      origins.push({ block: index })
+      origins.push({ paragraph: index })
       const flowIndex = origins.length - 1
       const r = sheet.paragraph(b.style)
-      const item = itemGeometry(doc.blocks, index, lists, schemes)
+      const item = itemGeometry(doc.paragraphs, index, lists, schemes)
       const em = r.style.size
       const start = around?.get(flowIndex)
       const style: ParagraphStyle = {
@@ -417,24 +417,24 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
         : paragraphOptions
       return [{ id: b.id, layout: layoutParagraph(fonts, style, words, width, options), decoration: r.decoration, ...(marker ? { marker } : {}) }]
     }
-    const blocks: FlowItem[] = doc.blocks.flatMap((b, index): FlowItem[] => withTables(b, index, paragraphsOf(b, index)))
+    const blocks: FlowItem[] = doc.paragraphs.flatMap((b, index): FlowItem[] => withTables(b, index, paragraphsOf(b, index)))
     return { blocks, origins, rows }
   }
   // ---- at most three passes: a page reference can move a line, and the line a page break (mock-up D, D901)
-  const referring = doc.blocks.some((b) => b.pageRefs?.length)
-  const wanted = new Set(doc.blocks.flatMap((b) => (b.pageRefs ?? []).map((ref) => ref.target)))
+  const referring = doc.paragraphs.some((b) => b.pageRefs?.length)
+  const wanted = new Set(doc.paragraphs.flatMap((b) => (b.pageRefs ?? []).map((ref) => ref.target)))
   let known: Map<string, number> | null = null
   let built = build(null)
   let flow = paginate(built.blocks, geometry)
   let starts = startsOf(flow, built.blocks)
-  let pageOf = pagesOf(starts, built.origins, doc.blocks)
+  let pageOf = pagesOf(starts, built.origins, doc.paragraphs)
   for (let pass = 2; referring && pass <= 3; pass++) {
     if (known && [...wanted].every((target) => known!.get(target) === pageOf.get(target))) break
     known = pageOf
     built = build(known)
     flow = paginate(built.blocks, geometry)
     starts = startsOf(flow, built.blocks)
-    pageOf = pagesOf(starts, built.origins, doc.blocks)
+    pageOf = pagesOf(starts, built.origins, doc.paragraphs)
     if (pass === 3 && [...wanted].some((target) => known!.get(target) !== pageOf.get(target))) {
       notes.push({ kind: 'pages', reason: 'the page references did not settle in three passes; some may be one page off' })
     }
@@ -443,7 +443,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   /** An object's frame on the page its anchor character stands on in `at`, kept inside the margins across and above the
    *  bottom margin, or `null` when the character is nowhere. */
   const standing = (o: TextObject, at: { flow: readonly FlowPage[]; blocks: readonly FlowItem[] }): Standing | null => {
-    const index = at.blocks.findIndex((b) => b.id === o.anchor.container)
+    const index = at.blocks.findIndex((b) => b.id === o.anchor.holder)
     const spot = index < 0 ? null : locate(at.flow, at.blocks, index, o.anchor.offset)
     if (!spot) return null
     const w = px(o.w)
@@ -494,7 +494,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
       built = build(using, from)
       flow = paginate(built.blocks, geometry)
       starts = startsOf(flow, built.blocks)
-      pageOf = pagesOf(starts, built.origins, doc.blocks)
+      pageOf = pagesOf(starts, built.origins, doc.paragraphs)
       const next = reached()
       settled = next.size === from.size && [...next].every(([i, at]) => from.get(i)?.page === at.page && from.get(i)?.top === at.top) && agree() && (!using || [...wanted].every((t) => using.get(t) === pageOf.get(t)))
       from = next
@@ -536,7 +536,7 @@ export function layoutText(doc: TextDocument, fonts: FontSet, resolver: FontReso
   const outline: OutlineEntry[] = []
   for (const [i, at] of starts) {
     if (origins[i]!.table) continue
-    const b = doc.blocks[origins[i]!.block]!
+    const b = doc.paragraphs[origins[i]!.paragraph]!
     const level = origins[i]!.entry ? null : styles.get(b.style)?.heading
     if (level !== null && level !== undefined && b.text.trim()) outline.push({ title: b.text.trim(), level, page: at.page, top: at.top })
   }

@@ -34,7 +34,7 @@ const text = (id: string, slide: string, words: string, x = 100, y = 80, w = 140
   shape: null,
   image: null,
   rotation: 0,
-  anchor: { kind: 'slide', container: slide, x, y },
+  anchor: { kind: 'slide', holder: slide, x, y },
 })
 const shape = (id: string, slide: string, words: string): SlideObject => ({
   id,
@@ -46,7 +46,7 @@ const shape = (id: string, slide: string, words: string): SlideObject => ({
   shape: 'rectangle',
   image: null,
   rotation: 0,
-  anchor: { kind: 'slide', container: slide, x: 500, y: 400 },
+  anchor: { kind: 'slide', holder: slide, x: 500, y: 400 },
 })
 function deck(n: number, print: PrintSetupData = SLIDE_PAGE, extra: Partial<SlideDocument> = {}): SlideDocument {
   return {
@@ -159,11 +159,11 @@ describe('a presentation on pages', () => {
     expect(circle).toBeDefined()
   })
 
-  it('prints a rendered text container as the picture it shows and leaves out one nothing has drawn yet (D390)', () => {
+  it('prints a container as the picture it shows and leaves out one nothing has drawn yet (D390)', () => {
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#3d5a80"/></svg>'
-    const rendered = (id: string, image: string | null): SlideObject => ({ ...text(id, 's1', ''), kind: 'rendered', paragraph: null, image, style: 'plain-image', w: 300, h: 300 })
+    const container = (id: string, image: string | null): SlideObject => ({ ...text(id, 's1', ''), kind: 'container', paragraph: null, image, style: 'plain-image', w: 300, h: 300 })
     const doc = deck(1, SLIDE_PAGE, { images: [{ id: 'i1', format: 'svg', svg }] })
-    ;(doc.slides[0]!.objects as SlideObject[]).push(rendered('drawn', 'i1'), rendered('pending', null))
+    ;(doc.slides[0]!.objects as SlideObject[]).push(container('drawn', 'i1'), container('pending', null))
     const out = layoutSlides(doc, fonts, resolver)
     const circle = [...walk(out.list.pages[0]!.items)].find((i) => i.kind === 'path' && i.fill && !('kind' in i.fill) && i.fill.b === 0x80)
     expect(circle).toBeDefined()

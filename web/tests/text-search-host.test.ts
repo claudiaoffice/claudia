@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { blockOf, marksFor, textSearchHost } from '~/lib/text-search-host'
+import { paragraphOf, marksFor, textSearchHost } from '~/lib/text-search-host'
 import type { SearchMatch } from '~/lib/search'
 import { createTranslator } from '~/lib/i18n'
 
-type Pos = { block: string; offset: number }
+type Pos = { paragraph: string; offset: number }
 function setup(role: 'owner' | 'editor' | 'viewer' = 'editor', selection: { anchor: Pos; focus: Pos } | null = null) {
   const session = {
-    state: { blocks: [{ id: 'b1' }, { id: 'b2' }, { id: 'b3' }], selection, me: { role }, revision: 'main:3' },
+    state: { paragraphs: [{ id: 'b1' }, { id: 'b2' }, { id: 'b3' }], selection, me: { role }, revision: 'main:3' },
     searchFind: vi.fn(async () => ({ matches: [] })),
     searchPreview: vi.fn(async () => ({ changes: [] })),
     searchReplace: vi.fn(async () => ({ replaced: 1 })),
@@ -33,7 +33,7 @@ describe('the search host of a text', () => {
   })
 
   it('turns the scopes of the panel into the scopes of the server', () => {
-    const caret = { anchor: { block: 'b2', offset: 1 }, focus: { block: 'b2', offset: 1 } }
+    const caret = { anchor: { paragraph: 'b2', offset: 1 }, focus: { paragraph: 'b2', offset: 1 } }
     expect(setup('editor', caret).host.scopeOf('all')).toEqual({})
     expect(setup('editor', caret).host.scopeOf('section')).toEqual({ section: 'b2' })
     expect(setup().host.scopeOf('section')).toEqual({ section: 'b1' })
@@ -41,9 +41,9 @@ describe('the search host of a text', () => {
   })
 
   it('reads a selection from its earlier end to its later one, whichever way it was made', () => {
-    const backwards = { anchor: { block: 'b3', offset: 2 }, focus: { block: 'b1', offset: 4 } }
+    const backwards = { anchor: { paragraph: 'b3', offset: 2 }, focus: { paragraph: 'b1', offset: 4 } }
     expect(setup('editor', backwards).host.scopeOf('selection')).toEqual({
-      range: { from: { block: 'b1', offset: 4 }, to: { block: 'b3', offset: 2 } },
+      range: { from: { paragraph: 'b1', offset: 4 }, to: { paragraph: 'b3', offset: 2 } },
     })
   })
 
@@ -58,27 +58,27 @@ describe('the search host of a text', () => {
 
   it('names a place for the person and goes to its paragraph', () => {
     const { host, goTo } = setup()
-    expect(host.where({ block: 'b2' })).toBe('Paragraph 2')
-    expect(host.where({ block: 'b3', object: 'o', source: 'box' })).toBe('Object in paragraph 3')
-    expect(host.where({ block: 'b3', object: 'o', source: 'description' })).toBe('Description of an object in paragraph 3')
-    expect(host.keyOf({ block: 'b2', offset: 5 })).toBe('b2:5')
-    expect(host.keyOf({ block: 'b2', object: 'o', source: 'box' })).toBe('b2/o/box')
-    host.jump({ block: 'b3', object: 'o', source: 'box' })
+    expect(host.where({ paragraph: 'b2' })).toBe('Paragraph 2')
+    expect(host.where({ paragraph: 'b3', object: 'o', source: 'box' })).toBe('Object in paragraph 3')
+    expect(host.where({ paragraph: 'b3', object: 'o', source: 'description' })).toBe('Description of an object in paragraph 3')
+    expect(host.keyOf({ paragraph: 'b2', offset: 5 })).toBe('b2:5')
+    expect(host.keyOf({ paragraph: 'b2', object: 'o', source: 'box' })).toBe('b2/o/box')
+    host.jump({ paragraph: 'b3', object: 'o', source: 'box' })
     expect(goTo).toHaveBeenCalledWith('b3')
-    expect(() => blockOf({ sheet: 'x' })).toThrow('not a place in a text')
+    expect(() => paragraphOf({ sheet: 'x' })).toThrow('not a place in a text')
   })
 })
 
 describe('what the editor draws for a search', () => {
   it('marks stretches of paragraphs, from the offset of a partial paragraph, and skips objects', () => {
     const matches = [
-      match({ block: 'b1' }, 2, 5),
-      match({ block: 'b2', offset: 10 }, 1, 3),
-      match({ block: 'b2', object: 'o', source: 'box' }),
+      match({ paragraph: 'b1' }, 2, 5),
+      match({ paragraph: 'b2', offset: 10 }, 1, 3),
+      match({ paragraph: 'b2', object: 'o', source: 'box' }),
     ]
     expect(marksFor(matches, 1)).toEqual([
-      { block: 'b1', start: 2, end: 5, current: false },
-      { block: 'b2', start: 11, end: 13, current: true },
+      { paragraph: 'b1', start: 2, end: 5, current: false },
+      { paragraph: 'b2', start: 11, end: 13, current: true },
     ])
   })
 })

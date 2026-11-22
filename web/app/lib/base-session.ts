@@ -5,8 +5,8 @@ import type { AuditRow } from './audit'
 import { reactive } from 'vue'
 import { DEFAULT_AI_MODE, readAiMode, safeStorage, storeAiMode, type AiMode, type ModeStorage } from './ai-mode'
 import type { PreviewAnswer, ReplaceAnswer, SearchAnswer, SearchLeave, SearchQuery } from './search'
-import { outcomesOf, toOutcome, type RenderingDef, type RenderOutcome, type RenderType } from './rendering'
-import { closeMessage, ProtocolError, type LineInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
+import { outcomesOf, toOutcome, type ContainerDef, type RenderOutcome, type RenderType } from './containers'
+import { closeMessage, ProtocolError, type BranchInfo, type LinkLike, type Region, type RestoreProposal, type RestoreResolution, type Welcome, type WireData } from './protocol'
 
 import { languageNow, onLanguageChange, translate as t } from './i18n'
 import { roleName } from './people'
@@ -16,8 +16,12 @@ import type { ThingDetails } from './name-and-describe'
 import type { SchemeInfo } from './numbering'
 import type { Toc } from './contents'
 import type { Deleted, DeleteHow, StyleDeletion } from './style-deletion'
-import { nearest, PastLink, PlannedLink, step as stepRow, timeline, type Filter, type Item } from './replay'
+import { lookOnly, nearest, PastLink, PlannedLink, step as stepRow, timeline, type Filter, type Item } from './replay'
 import { requestOf, type Picked, type RedactionPlan } from './redaction'
+import type { ImageAsset } from './images'
+import { describeParams } from './descriptions'
+import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, VisualObject } from './objects'
+import type { CssCheck, CssEdit } from './style-css'
 export const LOG_LIMIT = 500
 const FINAL_CLOSES = new Set([4400, 4401, 4403, 4404, 4408, 1013])
 
@@ -50,7 +54,7 @@ export interface Person {
   user: string
   color: string
 }
-export interface Entry {
+export interface Step {
   revision: string
   author: string | null
   origin: 'do' | 'undo' | 'redo'
@@ -127,7 +131,7 @@ export interface ReplayState {
  * marks the thing for a moment (`POINT_MS`); the way back (`WayBack`) lives longer. */
 export interface Pointed {
   id: string
-  container: string | null
+  holder: string | null
 }
 export const POINT_MS = 3000
 
@@ -135,7 +139,7 @@ export const POINT_MS = 3000
  * was showing at the top (a paragraph id, a cell, a slide id: the view's own words; `null` if it said none). It lasts
  * until it is used, the person types or clicks into the text, or the next jump takes its place. */
 export interface WayBack {
-  container: string | null
+  holder: string | null
   anchor: string | null
 }
 
@@ -148,7 +152,27 @@ export interface ScrollBack {
 
 export const rowKey = (item: Item): string => (item.kind === 'change' ? `c:${item.revision}` : `m:${item.number}`)
 
-export interface BaseState {
+/** What all three apps keep of the object layer, the styles, the palette and the language, the same way (D1432). An app's
+ *  state narrows the types (its own anchor, its own style type). */
+export interface ObjectLayerState {
+  /** The objects, by id. */
+  objects: Record<string, VisualObject>
+  /** By holder (a sheet, a paragraph, a slide): the ids of its objects, the one in front last. */
+  order: Record<string, string[]>
+  /** The decoded pictures the document holds, by id. */
+  images: Record<string, ImageAsset>
+  /** The outlines the shapes among the objects are drawn with, by id. */
+  shapes: Record<string, { id: string }>
+  /** The document's styles, by id, in the order the server lists them; they carry the resolved colours (D200). */
+  styles: Record<string, { id: string }>
+  /** The document's colour roles and how they read against each other (D200). */
+  palette: PaletteEvent | null
+  /** The language the document is written in (D915), a BCP 47 tag; `null` when not set, `undefined` for a server that
+   *  does not know languages. */
+  language: string | null | undefined
+}
+
+export interface BaseState extends ObjectLayerState {
   /** Which app the document belongs to (`computes`, `composes`): the server says so when it welcomes us. */
   app: string
   /** The server's own address (`host` or `host:port`, as `location.host`/`socketUrl` use it) — whichever one this
@@ -162,12 +186,13 @@ export interface BaseState {
   error: string
   me: { user: string; role: string; color: string }
   doc: string
-  line: string
+  /** The branch of the history the document is on now. */
+  branch: string
   revision: string | null
   people: Person[]
   presence: Record<string, { regions: Region[]; locked: boolean }>
   typing: string[]
-  entries: Entry[]
+  entries: Step[]
   chat: ChatMessage[]
   /** What has left the document (exports, prints, PDFs), oldest first; empty for a viewer, who is never sent it (D1271). */
   audit: AuditRow[]
@@ -177,8 +202,8 @@ export interface BaseState {
   undoLabel: string
   redoLabel: string
   notice: Notice | null
-  /** Every line of the document's history: the active one, and the side lines a restore left behind (E3.8). */
-  lines: LineInfo[]
+  /** Every branch of the document's history: the active one, and the ones a restore left behind (E3.8). */
+  branches: BranchInfo[]
   /** A restore/switch suggestion waiting for everybody's answer, if one is open right now (E3.7). */
   proposal: RestoreProposal | null
   /** How silence at a suggestion's deadline is read: `consensus` (must actively agree) or `veto` (must object). */
@@ -195,10 +220,10 @@ export interface BaseState {
   wayBack: WayBack | null
   /** Set by `goBack`: the place the view is asked to scroll to. */
   scrollBack: ScrollBack | null
-  /** What the server can make as a rendered container (`rendering_types`); empty for a server that makes none (D560). */
-  renderTypes: RenderType[]
-  /** The definitions of the rendered containers the document holds, by id; the text is the truth (D390). */
-  renderings: Record<string, RenderingDef>
+  /** What the server can make as a container (`container_types`); empty for a server that makes none (D560). */
+  containerTypes: RenderType[]
+  /** The definitions of the containers the document holds, by id; the text is the truth (D390). */
+  containers: Record<string, ContainerDef>
   /** What the server last said of making a container's picture, by id; gone when its text changes. */
   renderOutcomes: Record<string, RenderOutcome>
 }
@@ -223,7 +248,7 @@ function initialState(): BaseState {
     error: '',
     me: { user: '', role: '', color: '' },
     doc: '',
-    line: 'main',
+    branch: 'main',
     revision: null,
     people: [],
     presence: {},
@@ -237,7 +262,7 @@ function initialState(): BaseState {
     undoLabel: '',
     redoLabel: '',
     notice: null,
-    lines: [],
+    branches: [],
     proposal: null,
     restorePolicy: 'consensus',
     replay: null,
@@ -246,9 +271,16 @@ function initialState(): BaseState {
     pointed: null,
     wayBack: null,
     scrollBack: null,
-    renderTypes: [],
-    renderings: {},
+    containerTypes: [],
+    containers: {},
     renderOutcomes: {},
+    objects: {},
+    order: {},
+    images: {},
+    shapes: {},
+    styles: {},
+    palette: null,
+    language: undefined,
   }
 }
 
@@ -354,7 +386,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.doc = w.doc
     s.aiMode = readAiMode(s.host, w.doc, this.storage)
     s.app = w.app
-    s.line = w.line
+    s.branch = w.branch
     s.revision = w.revision
     s.people = w.people.map((p) => ({ ...p }))
     s.presence = {}
@@ -453,19 +485,19 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const s = this.state
     // A viewer holds the content key only, and the server keeps the history and the chat from her (D1261).
     const reads = s.me.role !== 'viewer'
-    const [entries, chat, checkpoints, history, lines, restorePolicy, renderTypes, renderings, audit] = await Promise.all([
-      reads ? link.request<Entry[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Entry[]>([]),
+    const [entries, chat, checkpoints, history, branches, restorePolicy, containerTypes, definitions, audit] = await Promise.all([
+      reads ? link.request<Step[]>('log', { limit: LOG_LIMIT }) : Promise.resolve<Step[]>([]),
       reads ? link.request<ChatMessage[]>('chat_log', { limit: LOG_LIMIT }) : Promise.resolve<ChatMessage[]>([]),
       reads ? link.request<CheckpointInfo[]>('checkpoints') : Promise.resolve<CheckpointInfo[]>([]),
       reads
         ? link.request<UndoState>('history')
         : Promise.resolve<UndoState>({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
-      reads ? link.request<LineInfo[]>('lines') : Promise.resolve<LineInfo[]>([]),
+      reads ? link.request<BranchInfo[]>('branches') : Promise.resolve<BranchInfo[]>([]),
       reads
         ? link.request<{ policy: 'consensus' | 'veto' }>('restore_policy')
         : Promise.resolve<{ policy: 'consensus' | 'veto' }>({ policy: 'consensus' }),
-      this.optional<{ types: RenderType[] }>('rendering_types'),
-      this.optional<RenderingDef[]>('renderings'),
+      this.optional<{ types: RenderType[] }>('container_types'),
+      this.optional<ContainerDef[]>('containers'),
       reads ? this.optional<AuditRow[]>('audit_log') : Promise.resolve<AuditRow[] | null>(null),
       this.loadApp(),
     ]).then(([e, c, k, h, l, p, rt, rd, au]) => [e, c, k, h, l, p, rt, rd, au] as const)
@@ -477,11 +509,11 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     s.canRedo = history.can_redo
     s.undoLabel = history.undo_label
     s.redoLabel = history.redo_label
-    s.lines = lines
+    s.branches = branches
     s.restorePolicy = restorePolicy.policy
-    s.renderTypes = renderTypes?.types ?? []
-    s.renderings = Object.fromEntries((renderings ?? []).map((d) => [d.id, d]))
-    s.renderOutcomes = outcomesOf(renderings ?? [])
+    s.containerTypes = containerTypes?.types ?? []
+    s.containers = Object.fromEntries((definitions ?? []).map((d) => [d.id, d]))
+    s.renderOutcomes = outcomesOf(definitions ?? [])
     const last = entries.at(-1)
     if (last) s.revision = last.revision
     else if (!reads) s.revision = (await link.request<{ revision: string | null }>('ping')).revision ?? s.revision
@@ -501,7 +533,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   private onEvent(name: string, data: WireData) {
     const s = this.state
     // while looking at the past or at a preview, the present does not disturb the views
-    if (!s.replay && !s.preview && this.onAppEvent(name, data)) return
+    if (!s.replay && !s.preview && (this.onObjectLayerEvent(name, data) || this.onAppEvent(name, data))) return
     switch (name) {
       case 'command':
         s.revision = data.revision
@@ -515,8 +547,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
       case 'thing_renamed':
         s.renamed[data.id] = data.name
         break
-      case 'rendering':
-        this.onRendering(data.id, data.definition)
+      case 'container':
+        this.onContainer(data.id, data.definition)
         break
       case 'render_result':
         s.renderOutcomes[data.id] = toOutcome(data)
@@ -571,16 +603,16 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     }
   }
 
-  private onRendering(id: string, definition: RenderingDef | null) {
+  private onContainer(id: string, definition: ContainerDef | null) {
     const s = this.state
     if (!definition) {
-      delete s.renderings[id]
+      delete s.containers[id]
       delete s.renderOutcomes[id]
       return
     }
-    const before = s.renderings[id]
+    const before = s.containers[id]
     if (before && (before.source !== definition.source || JSON.stringify(before.params) !== JSON.stringify(definition.params))) delete s.renderOutcomes[id]
-    s.renderings[id] = definition
+    s.containers[id] = definition
   }
 
   private onEphemeral(message: { kind: string; sender: string | null; data: WireData }) {
@@ -792,18 +824,18 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return 0
   }
   /** The slide, sheet or paragraph a thing is on (itself, for a slide or sheet); `null` where there is none. */
-  protected containerOf(_id: string): string | null {
+  protected holderOf(_id: string): string | null {
     return null
   }
-  /** Where the view is now, in the same terms as `containerOf`. */
-  protected currentContainer(): string | null {
+  /** Where the view is now, in the same terms as `holderOf`. */
+  protected currentHolder(): string | null {
     return null
   }
   /** Take the view to a slide, sheet or paragraph. */
-  protected showContainer(_id: string): void {}
+  protected showHolder(_id: string): void {}
   /** Where a thing is, if it is in this view's document as it is shown. */
-  protected async locate(id: string): Promise<{ container: string | null } | null> {
-    return this.things().some((t) => t.id === id) ? { container: this.containerOf(id) } : null
+  protected async locate(id: string): Promise<{ holder: string | null } | null> {
+    return this.things().some((t) => t.id === id) ? { holder: this.holderOf(id) } : null
   }
 
   /** The things a `#` in the chat may offer: those with a name, in sight. */
@@ -832,7 +864,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Write the words of an object (a text box or a shape on a slide or in a text) as a person typed them (step G): the
    * server changes only what differs, so the words that stay keep who wrote them. One step in the history (D1232). */
   async writeWords(id: string, text: string): Promise<boolean> {
-    return (await this.attempt('write_words', { id, text, base: this.state.revision })) !== false
+    return (await this.write('write_words', { id, text })) !== false
   }
 
   /** Is this thing known to be gone from the document as shown (a tag to it then says so)? */
@@ -843,7 +875,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** Give a thing (a sheet, a slide, a chart tab, an object) another name, as one step of the history. The server
    * refuses a name somebody else has, a named range included, with a sentence that is shown here. */
   async renameThing(id: string, name: string): Promise<boolean> {
-    return (await this.attempt('rename_thing', { id, name, base: this.state.revision })) !== false
+    return (await this.write('rename_thing', { id, name })) !== false
   }
 
   /** The fonts this document asks for that the server does not have (D1306); an answer that says nothing when the server
@@ -874,12 +906,12 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   /** The one dialog of Name & describe… (D1317): name and description together, one step in the history, so one Undo
    * takes both back. The server refuses a name somebody else has with a sentence that is shown here. */
   async nameAndDescribe(params: { id: string; name: string; description: string; decorative: boolean }): Promise<boolean> {
-    return (await this.attempt('name_and_describe', { ...params, base: this.state.revision })) !== false
+    return (await this.write('name_and_describe', { ...params })) !== false
   }
 
   /** Name everything that has no name (a document from before names) in one step of the history; how many were named. */
   async nameUnnamed(): Promise<number> {
-    const done = await this.attempt('name_unnamed', { base: this.state.revision })
+    const done = await this.write('name_unnamed')
     return done === false ? 0 : done.named
   }
 
@@ -889,10 +921,10 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     const s = this.state
     const found = await this.locate(id)
     if (!found) return this.goToMissing(id, retry)
-    const before = { container: this.currentContainer(), anchor: this.anchorProvider?.() ?? null }
-    s.wayBack = before.container === null && before.anchor === null ? null : before // nothing to go back to: no chip
-    if (found.container !== null && found.container !== before.container) this.showContainer(found.container)
-    s.pointed = { id, container: found.container }
+    const before = { holder: this.currentHolder(), anchor: this.anchorProvider?.() ?? null }
+    s.wayBack = before.holder === null && before.anchor === null ? null : before // nothing to go back to: no chip
+    if (found.holder !== null && found.holder !== before.holder) this.showHolder(found.holder)
+    s.pointed = { id, holder: found.holder }
     const pointed = s.pointed // as the reactive state hands it out: the raw object would never equal what is read back
     setTimeout(() => {
       if (s.pointed === pointed) s.pointed = null
@@ -905,14 +937,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     this.anchorProvider = provider
   }
 
-  /** "Back where I was" (D1312): show the container the person was in, and ask the view for the place it was at. */
+  /** "Back where I was" (D1312): show the holder the person was in, and ask the view for the place it was at. */
   goBack(): void {
     const s = this.state
     const back = s.wayBack
     if (!back) return
     s.wayBack = null
     s.pointed = null
-    if (back.container) this.showContainer(back.container)
+    if (back.holder) this.showHolder(back.holder)
     if (back.anchor) s.scrollBack = { anchor: back.anchor, nonce: (s.scrollBack?.nonce ?? 0) + 1 }
   }
 
@@ -993,6 +1025,156 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     }
   }
 
+  /** The events every app takes in alike (D1432): the objects, their pictures and outlines, the styles, the palette and
+   *  the language. `true` if it was one. */
+  private onObjectLayerEvent(name: string, data: WireData): boolean {
+    const s = this.state
+    switch (name) {
+      case 'objects': {
+        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
+        for (const o of e.changed) s.objects[o.id] = o
+        for (const id of e.removed) delete s.objects[id]
+        s.order[e.holder] = e.order
+        this.objectsChanged(e)
+        return true
+      }
+      case 'image':
+        if (data.asset) s.images[data.id] = data.asset as ImageAsset
+        else delete s.images[data.id]
+        return true
+      case 'shape':
+        if (data.definition) s.shapes[data.id] = data.definition as { id: string }
+        else delete s.shapes[data.id]
+        return true
+      case 'styles':
+        // A style a colleague changed, and a palette role anybody changed, both arrive here: the styles carry the
+        // resolved colours a document is drawn with, and a client cannot work them out for itself (D200).
+        s.styles = Object.fromEntries((data.styles as { id: string }[]).map((x) => [x.id, x]))
+        this.stylesChanged()
+        return true
+      case 'palette':
+        // Only the styles are drawn from, and they arrive with the event above; the roles are kept for the controls
+        // that offer them by name (D200).
+        s.palette = data as PaletteEvent
+        return true
+      case 'language':
+        s.language = (data.language as string | null) ?? null
+        return true
+    }
+    return false
+  }
+
+  /** What else an app does when objects of one holder changed (the event is in the state already). */
+  protected objectsChanged(_event: ObjectsEvent): void {}
+
+  /** What else an app does when the styles changed (they are in the state already). */
+  protected stylesChanged(): void {}
+
+  // ------------------------------------------------------------------------------ the object layer, the styles, the palette
+  /** The styles as a style menu wants them, in the order the server lists them. */
+  styleViews() {
+    return Object.values(this.state.styles) as S['styles'][string][]
+  }
+
+  /** Every object of the document, for the use counts beside the style names. The client's `VisualObject` is flat
+   *  (`ObjectBody & { anchor }`), so an object is already a body. */
+  bodies(): ObjectBody[] {
+    return Object.values(this.state.objects)
+  }
+
+  /** Put a picture from disk at `where` (the app's holder and place, as the wire has them, and the size); its id, or
+   *  `null` after telling the person why not. `data` is the file's bytes, base64; `sourcePath` is the file's full path
+   *  if the caller could get one (a plain web browser cannot) and `null` if not. */
+  protected async putPicture(
+    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
+    where: Record<string, unknown>,
+  ): Promise<string | null> {
+    const done = await this.write('add_image', {
+      ...where,
+      data: picture.data,
+      alt: picture.alt,
+      source_name: picture.sourceName,
+      source_path: picture.sourcePath,
+      ...(picture.decorative ? { decorative: true } : {}),
+      ...(picture.fit ? { fit: true } : {}), // from a file: the server sizes it (D1332)
+    })
+    return done === false ? null : (done.object as string)
+  }
+
+  /** Turn an object to `rotation` whole degrees clockwise about its centre (D1021): one step in the history. The server
+   *  keeps it where it must be (on its slide or page, D1022) and refuses a turn that cannot fit, or a chart's. */
+  async rotateObject(id: string, rotation: number): Promise<boolean> {
+    return (await this.write('rotate_object', { id, rotation })) !== false
+  }
+
+  /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the
+   *  history. A picture needs one or the other, which the server insists on. */
+  async describeObject(id: string, description: string, decorative: boolean): Promise<boolean> {
+    return (await this.write('describe_object', { id, ...describeParams(description, decorative) })) !== false
+  }
+
+  async removeObject(id: string): Promise<boolean> {
+    return (await this.write('remove_object', { id })) !== false
+  }
+
+  /** Change a style for everything that has it — and for the styles based on it, where they say nothing (D73). */
+  async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
+    return (await this.write('change_style', { style, ...edit })) !== false
+  }
+
+  async renameStyle(style: string, name: string): Promise<boolean> {
+    return (await this.write('rename_style', { style, name })) !== false
+  }
+
+  /** Give a colour role another colour: every style that meant it follows, and so does every object (D200). */
+  async setRole(role: string, colour: string): Promise<boolean> {
+    return (await this.write('set_role', { role, colour })) !== false
+  }
+
+  /** Put a whole palette in place of this document's — what "the colours it started with" does (D200). */
+  async replacePalette(roles: ColourRole[]): Promise<boolean> {
+    return (await this.write('replace_palette', { roles })) !== false
+  }
+
+  /** What the server makes of this CSS text, line by line. A read: viewers may ask it too. */
+  async checkCss(text: string): Promise<CssCheck | null> {
+    try {
+      return await this.need().request<CssCheck>('check_css', { text })
+    } catch {
+      return null
+    }
+  }
+
+  /** Say which language the document is written in (D915), or `null` for not known: one step, for everybody. */
+  async setLanguage(language: string | null): Promise<boolean> {
+    return (await this.write('set_language', { language })) !== false
+  }
+
+  // ------------------------------------------------------------------------------ changing the document (D1432)
+  /** Whether this person may only look: a viewer, or anybody while looking at the past or at a preview. */
+  get readOnly(): boolean {
+    return lookOnly(this.state)
+  }
+
+  /** Refuse a change for someone who may only look, and tell her so; `true` when refused. Nothing is sent. */
+  protected refused(): boolean {
+    if (!this.readOnly) return false
+    this.notice(t('You can only look at this document.'), 'warning')
+    return true
+  }
+
+  /** Run a change. An app whose changes must wait for something (composes: the words still being typed) overrides it. */
+  protected run<T>(job: () => Promise<T>): Promise<T> {
+    return job()
+  }
+
+  /** The one door every change of the document goes through (D1432): refused before anything is sent for someone who
+   *  may only look (CODE-75); otherwise sent through `run`, based on the revision she sees when it leaves. */
+  protected async write(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
+    if (this.refused()) return false
+    return this.run(() => this.attempt(method, { ...params, base: this.state.revision }))
+  }
+
   /** Run a request; `false` after telling the person why it did not work. */
   protected async attempt(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
     try {
@@ -1044,25 +1226,25 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Replaces, in one step of the history; `false` after telling the person why it did not work. */
   async searchReplace(query: SearchQuery, kinds: string[], scope: object, leave: SearchLeave[]): Promise<ReplaceAnswer | false> {
-    const done = await this.attempt('search_replace', { query, kinds, scope, leave, base: this.state.revision })
+    const done = await this.write('search_replace', { query, kinds, scope, leave })
     return done === false ? false : (done as unknown as ReplaceAnswer)
   }
 
-  // ------------------------------------------------------------------------------ rendered containers (D560)
+  // ------------------------------------------------------------------------------ containers (D560)
   /** Puts a container of `type` at `where` (the app's own place: `{slide, x, y}`, …), its first text the type's example.
    *  Returns the new object's id, or `null` — after telling why — if it was not made. With `fit`, `size` is only the
    *  most it may take: its first picture is shown at its own size if that is smaller (D1229). */
-  async addRendering(type: string, where: Record<string, unknown>, size = { w: 420, h: 240 }, source?: string, fit = false): Promise<string | null> {
-    const kind = this.state.renderTypes.find((k) => k.type === type)
+  async addContainerAt(type: string, where: Record<string, unknown>, size = { w: 420, h: 240 }, source?: string, fit = false): Promise<string | null> {
+    const kind = this.state.containerTypes.find((k) => k.type === type)
     if (!kind) return null
-    const done = await this.attempt('add_rendering', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, ...(fit ? { fit: true } : {}), base: this.state.revision })
+    const done = await this.write('add_container', { ...where, ...size, type, source: source ?? kind.example ?? '', params: {}, alt: null, ...(fit ? { fit: true } : {}) })
     return done === false ? null : (done.object as string)
   }
 
   /** Changes the text of a container; a text that is the same as it is is not sent. `false` after saying why not. */
-  async setRenderingSource(id: string, source: string, params: Record<string, unknown> | null = null): Promise<boolean> {
-    if (this.state.renderings[id]?.source === source && !params) return true
-    return (await this.attempt('set_rendering_source', { id, source, params, base: this.state.revision })) !== false
+  async setContainerSource(id: string, source: string, params: Record<string, unknown> | null = null): Promise<boolean> {
+    if (this.state.containers[id]?.source === source && !params) return true
+    return (await this.write('set_container_source', { id, source, params })) !== false
   }
 
   // ------------------------------------------------------------------------------ numbering (E9.21, E9.22)
@@ -1070,39 +1252,39 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   // come back as `labels` events, the lists as `lists` and the schemes as `schemes`.
   /** Number every heading style (in creates: every slide title), or no longer. */
   async numberHeadings(on: boolean): Promise<boolean> {
-    return (await this.attempt('number_headings', { on, base: this.state.revision })) !== false
+    return (await this.write('number_headings', { on })) !== false
   }
 
   /** A new scheme drawn as `like` is, named `name`; its id, or `null` after saying why not. */
   async newScheme(like: string, name: string): Promise<string | null> {
-    const done = await this.attempt('new_scheme', { like, name, base: this.state.revision })
+    const done = await this.write('new_scheme', { like, name })
     return done === false ? null : (done.scheme as string)
   }
 
   /** Give a scheme another definition (as the server sends it). */
   async changeScheme(scheme: SchemeInfo): Promise<boolean> {
-    return (await this.attempt('change_scheme', { scheme, base: this.state.revision })) !== false
+    return (await this.write('change_scheme', { scheme })) !== false
   }
 
   /** Draw a built-in scheme as it was built in again. */
   async resetScheme(scheme: string): Promise<boolean> {
-    return (await this.attempt('reset_scheme', { scheme, base: this.state.revision })) !== false
+    return (await this.write('reset_scheme', { scheme })) !== false
   }
 
   /** Take a scheme no list uses out of the document. */
   async removeScheme(scheme: string): Promise<boolean> {
-    return (await this.attempt('remove_scheme', { scheme, base: this.state.revision })) !== false
+    return (await this.write('remove_scheme', { scheme })) !== false
   }
 
   /** Number a heading style in a list (`"none"`: not numbered; `null`: as its parent). */
   async setStyleNumbering(style: string, numbering: string | null): Promise<boolean> {
-    return (await this.attempt('set_style_numbering', { style, numbering, base: this.state.revision })) !== false
+    return (await this.write('set_style_numbering', { style, numbering })) !== false
   }
 
   // ------------------------------------------------------------------------------ tables of contents (E9.31)
   /** Give a table of contents (in creates: an agenda) other options; the entries come back as a `generated` event. */
   async setContents(paragraph: string, options: Toc): Promise<boolean> {
-    return (await this.attempt('set_contents', { paragraph, options, base: this.state.revision })) !== false
+    return (await this.write('set_contents', { paragraph, options })) !== false
   }
 
   // ------------------------------------------------------------------------------ deleting and hiding styles (E1.10)
@@ -1120,6 +1302,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    *  nothing has). A refusal that is about this very deletion comes back as its sentence; anything else is told as a
    *  notice, and is `false`. */
   async deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
+    if (this.refused()) return false
     const params: Record<string, unknown> = { style, how, base: this.state.revision }
     if (target) params.target = target
     try {
@@ -1134,7 +1317,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
 
   /** Hide a style from the menus a style is picked from, or show it again (D780). */
   async hideStyle(style: string, hidden: boolean): Promise<boolean> {
-    return (await this.attempt('hide_style', { style, hidden, base: this.state.revision })) !== false
+    return (await this.write('hide_style', { style, hidden })) !== false
   }
 
   async undo(): Promise<boolean> {
@@ -1264,7 +1447,7 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   /** File ▸ Export… ▸ Claudia, unencrypted (D1270): one zip anybody can read, with the content and, if an owner asks
-   * (`includeHistory`), the history with its hidden lines and the chat. No keys, no passwords, no people. The server
+   * (`includeHistory`), the history with its hidden branches and the chat. No keys, no passwords, no people. The server
    * records the export for you (D1271). `false` after saying why not (an editor or a viewer asking for the history). */
   async exportClaudia(includeHistory = false): Promise<UnprotectedFile | false> {
     return await this.recorded(await this.attempt('export_claudia', includeHistory ? { include_history: true } : {}))
@@ -1301,10 +1484,10 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return await this.attempt('help_topic', { id })
   }
 
-  // ------------------------------------------------------------------------------ lines, and restoring with consent (E3.7, E3.8)
+  // ------------------------------------------------------------------------------ branches, and restoring with consent (E3.7, E3.8)
   /** A read-only look at any line (active or hidden), without switching to it: for previewing before suggesting. */
-  async peekLine(line: string): Promise<{ line: string; revision: string | null; app: string; state_schema: string; state: unknown } | false> {
-    return await this.attempt('peek_line', { line })
+  async peekBranch(branch: string): Promise<{ branch: string; revision: string | null; app: string; state_schema: string; state: unknown } | false> {
+    return await this.attempt('peek_branch', { branch })
   }
 
   /**
@@ -1317,8 +1500,8 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
   }
 
   /** Suggest making another line active again (the way back after a restore). Same consent as `proposeRestore`. */
-  async proposeSwitch(line: string): Promise<boolean> {
-    return (await this.attempt('propose_switch', { line })) !== false
+  async proposeSwitch(branch: string): Promise<boolean> {
+    return (await this.attempt('propose_switch', { branch })) !== false
   }
 
   /** Agree or decline the open suggestion (`state.proposal`). */

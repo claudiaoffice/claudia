@@ -91,7 +91,7 @@ def test_text_shows_a_number_through_a_code_the_english_way():
     sheet.cells[(0, 2)] = {"t": "formula", "v": '=TEXT("abc","0;0;0;""<""@"">""")'}
     sheet.cells[(0, 3)] = {"t": "formula", "v": '=TEXT(1,"")'}
     sheet.cells[(0, 4)] = {"t": "formula", "v": '=TEXT(1/0,"0")'}
-    model.open_container("s1")
+    model.open_holder("s1")
     model._calculate_loaded()  # noqa: SLF001
     grid = sheet.grid
     assert grid.get((0, 0)) == "1,234.50 MWh"

@@ -136,7 +136,7 @@ const partLabels = ref<Record<string, string>>({})
 function labelOf(id: string): string {
   const named = props.session.nameOf(id)
   if (named) return named
-  const el = document.querySelector(`[data-thing="${CSS.escape(id)}"], [data-block="${CSS.escape(id)}"]`)
+  const el = document.querySelector(`[data-thing="${CSS.escape(id)}"], [data-paragraph="${CSS.escape(id)}"]`)
   const words = el?.textContent?.trim().replace(/\s+/g, ' ') ?? ''
   return words ? (words.length > 28 ? `${words.slice(0, 27)}…` : words) : id
 }
@@ -177,9 +177,9 @@ const pickedParts = computed(() => (pickingParts.value ? (partsOf(pickingParts.v
 
 /** The thing under a click while picking parts: a named thing (slide, sheet tab, object) or a paragraph. */
 function partAt(target: EventTarget | null): string | null {
-  const el = (target as HTMLElement | null)?.closest?.('[data-thing], [data-block]') as HTMLElement | null
+  const el = (target as HTMLElement | null)?.closest?.('[data-thing], [data-paragraph]') as HTMLElement | null
   if (!el || el.closest('.partsBar')) return null
-  return el.getAttribute('data-thing') ?? el.getAttribute('data-block')
+  return el.getAttribute('data-thing') ?? el.getAttribute('data-paragraph')
 }
 function onPartClick(event: MouseEvent) {
   if (!pickingParts.value) return
@@ -199,7 +199,7 @@ function onPartPress(event: Event) {
 const partStyle = computed(() =>
   pickedParts.value.length
     ? pickedParts.value
-        .map((id) => `[data-thing="${CSS.escape(id)}"], [data-block="${CSS.escape(id)}"]`)
+        .map((id) => `[data-thing="${CSS.escape(id)}"], [data-paragraph="${CSS.escape(id)}"]`)
         .join(', ') + ' { outline: 3px solid var(--iris) !important; outline-offset: 2px; }'
     : '',
 )

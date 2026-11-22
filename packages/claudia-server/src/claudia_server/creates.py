@@ -49,6 +49,7 @@ from claudia_creates import (
     SlideModel,
 )
 
+from .containers import add_container_methods
 from .creates_search import add_search_methods
 from .font_report import add_font_report_method
 from .i18n import msg
@@ -56,7 +57,6 @@ from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, MethodTable, RequestError, core_methods
-from .rendered import add_rendering_methods
 from .replay import add_replay_methods
 from .shape_methods import PARAGRAPH_STYLE_OF_KIND, STYLE_OF_KIND, add_shape_methods
 from .structure_methods import add_structure_methods
@@ -106,7 +106,7 @@ def _add_object_methods(table: MethodTable) -> None:
     """The methods that change one object, the same in every app (CODE-27), and what only a slide's objects have:
     words of their own and a hold to the grid."""
     add_object_methods(table, model_of=_deck, placement=ON_SLIDE)
-    add_rendering_methods(table, model_of=_deck, placement=ON_SLIDE)
+    add_container_methods(table, model_of=_deck, placement=ON_SLIDE)
     table.method("set_snap", "id:str snap:bool base:revision?", write=True)(_set_snap)
 
 
@@ -194,7 +194,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         """One slide as `{revision, slide, objects, notes, seconds}`: its objects, the one in front last, its speaker
         notes in Markdown (`""` if none, D342) and its planned time in seconds (`null` if none, D343). An object is
         `{id, kind, w, h, style, text, shape, image, imported, rotation, snap, anchor}` — the same shape in all
-        three apps except for `anchor`, which here is `{kind: "slide", container: <slide>, x, y}` (E10.16).
+        three apps except for `anchor`, which here is `{kind: "slide", holder: <slide>, x, y}` (E10.16).
         `imported`'s `source_path` is only sent to the person who imported that image (everyone else sees `null`
         there, not the path). `snap` is whether the object holds to the grid, a helper the view draws and is free
         to show or hide on its own — `snap` is unaffected by that and is the document's own state, set with

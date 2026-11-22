@@ -92,6 +92,9 @@
   "methods": {},
   "properties": []
  },
+ "AiTurn": {
+  "value": "<Union>"
+ },
  "Assistant": {
   "class": [
    "object"
@@ -110,7 +113,7 @@
   ],
   "init": "(*args, **kwargs)",
   "methods": {
-   "plan_async": "(self, task: 'Task') -> 'list[Step]'"
+   "plan_async": "(self, task: 'Task') -> 'list[AiTurn]'"
   },
   "properties": []
  },
@@ -216,7 +219,7 @@
   ],
   "init": "(*args, **kwargs)",
   "methods": {
-   "plan": "(self, task: 'Task') -> 'list[Step]'"
+   "plan": "(self, task: 'Task') -> 'list[AiTurn]'"
   },
   "properties": []
  },
@@ -400,9 +403,9 @@
   "class": [
    "object"
   ],
-  "init": "(target_seconds: float = 0.75, *, max_memory_kib: int = 262144, floor: claudia_container.crypto.KdfParams | None = None, calibrate: collections.abc.Callable[..., claudia_container.crypto.KdfParams] = <function calibrate>)",
+  "init": "(target_seconds: float = 0.75, *, max_memory_kib: int = 262144, floor: claudia_document_file.crypto.KdfParams | None = None, calibrate: collections.abc.Callable[..., claudia_document_file.crypto.KdfParams] = <function calibrate>)",
   "methods": {
-   "current": "(self) -> claudia_container.crypto.KdfParams",
+   "current": "(self) -> claudia_document_file.crypto.KdfParams",
    "describe": "(self) -> dict",
    "retarget": "(self, target_seconds: object) -> None",
    "start": "(self) -> None",
@@ -483,7 +486,7 @@
   ],
   "init": "(runner: 'ModelRunner', tools: 'tuple[ToolSpec, ...]', lens: 'Lens', *, memory_turns: 'int' = 6, budget: 'Budget' = Budget(rounds=8, calls=30, result_chars=3000, round_chars=9000))",
   "methods": {
-   "plan_async": "(self, task: 'Task') -> 'list[Step]'"
+   "plan_async": "(self, task: 'Task') -> 'list[AiTurn]'"
   },
   "properties": []
  },
@@ -512,7 +515,7 @@
   "class": [
    "object"
   ],
-  "init": "(id: 'int', kind: 'str', by: 'str', checkpoint: 'int | None', line: 'str | None', label: 'str', opened_at: 'float', expires_at: 'float', policy: 'str', group: 'set[str]', agreed: 'set[str]', revision: 'str | None' = None) -> None",
+  "init": "(id: 'int', kind: 'str', by: 'str', checkpoint: 'int | None', branch: 'str | None', label: 'str', opened_at: 'float', expires_at: 'float', policy: 'str', group: 'set[str]', agreed: 'set[str]', revision: 'str | None' = None) -> None",
   "methods": {
    "to_data": "(self) -> 'dict'"
   },
@@ -548,7 +551,7 @@
    "joined": "(self, user: 'str', can_write: 'bool') -> 'None'",
    "left": "(self, user: 'str', current_line: 'str') -> 'str | None'",
    "notice_for": "(self, user: 'str', current_line: 'str') -> 'dict | None'",
-   "propose": "(self, *, kind: 'str', by: 'str', checkpoint: 'int | None', line: 'str | None', label: 'str', group: 'Iterable[str]', revision: 'str | None' = None) -> 'tuple[Proposal | None, bool]'",
+   "propose": "(self, *, kind: 'str', by: 'str', checkpoint: 'int | None', branch: 'str | None', label: 'str', group: 'Iterable[str]', revision: 'str | None' = None) -> 'tuple[Proposal | None, bool]'",
    "record_resolution": "(self, old_line: 'str', resolution: 'Resolution') -> 'None'",
    "sweep": "(self) -> 'str | None'",
    "withdraw": "(self, *, user: 'str', is_owner: 'bool') -> 'None'"
@@ -590,7 +593,7 @@
   ],
   "init": "()",
   "methods": {
-   "plan": "(self, task: 'Task') -> 'list[Step]'"
+   "plan": "(self, task: 'Task') -> 'list[AiTurn]'"
   },
   "properties": []
  },
@@ -671,9 +674,6 @@
   },
   "properties": []
  },
- "Step": {
-  "value": "<Union>"
- },
  "StoredInfo": {
   "class": [
    "object"
@@ -727,7 +727,7 @@
   ],
   "init": "()",
   "methods": {
-   "plan": "(self, task: 'Task') -> 'list[Step]'"
+   "plan": "(self, task: 'Task') -> 'list[AiTurn]'"
   },
   "properties": []
  },

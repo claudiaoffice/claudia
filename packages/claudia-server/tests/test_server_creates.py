@@ -306,7 +306,7 @@ def test_notes_and_times_are_steps_of_the_history(deck):
 
 def test_a_selection_can_be_held_and_then_only_the_holder_changes_the_object(deck):
     box = add_text(deck)
-    selection = {"kind": "objects", "container": "s1", "ids": [box]}
+    selection = {"kind": "objects", "holder": "s1", "ids": [box]}
     call(deck, "lock", {"regions": [selection]})
     with pytest.raises(RequestError) as caught:
         call(deck, "move_object", {"id": box, "x": 5, "y": 5}, account=BEN)
@@ -319,7 +319,7 @@ def test_a_selection_can_be_held_and_then_only_the_holder_changes_the_object(dec
 
 def test_a_selection_must_look_like_one(deck):
     with pytest.raises(RequestError) as caught:
-        call(deck, "presence", {"regions": [{"kind": "objects", "container": "s1", "ids": "all"}]})
+        call(deck, "presence", {"regions": [{"kind": "objects", "holder": "s1", "ids": "all"}]})
     assert caught.value.code == "bad_request"
 
 
@@ -485,10 +485,10 @@ def test_add_object_refuses_kind_image_and_points_to_add_image(deck):
     assert caught.value.code == "bad_request"
 
 
-@pytest.mark.parametrize(("kind", "pointer"), [("diagram", "computes"), ("rendered", "add_rendering")])
+@pytest.mark.parametrize(("kind", "pointer"), [("diagram", "computes"), ("container", "add_container")])
 def test_add_object_refuses_the_kinds_it_cannot_make_and_says_where_they_come_from(deck, kind, pointer):
-    """A chart or a rendered container is made from a definition, which `add_object` has none of. Since the containers
-    came (D390) the object kinds include "rendered", and both kinds reached a lookup of the kind's style that failed
+    """A chart or a container is made from a definition, which `add_object` has none of. Since the containers
+    came (D390) the object kinds include "container", and both kinds reached a lookup of the kind's style that failed
     with an internal error, after a message that listed them as allowed."""
     with pytest.raises(RequestError, match=pointer) as caught:
         call(deck, "add_object", {"slide": "s1", "kind": kind, "x": 0, "y": 0, "w": 100, "h": 50})

@@ -226,7 +226,7 @@ class _Probe:
             definition = library.get(shape_id)
             if definition is None:  # pragma: no cover - the three ids are always shipped
                 raise ValueError(f"the built-in shape library has no shape {shape_id!r}")
-            self.model.define_shape(definition)
+            self.model.shapes.define(definition)
 
     def holds(
         self,
@@ -242,7 +242,7 @@ class _Probe:
             if asset is None:
                 return False
             if asset.id not in self.model.images:
-                self.model.define_image(asset)
+                self.model.images.define(asset)
             body = picture_body("o0", asset, (box[2], box[3]), rotation=box[4])
         else:
             style, words = _default_styles(kind)
@@ -655,7 +655,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
             if found.kind == "image":
                 assert found.asset is not None  # the scan keeps an image only with its asset
                 if found.asset.id not in model.images:
-                    model.define_image(found.asset)
+                    model.images.define(found.asset)
                 body = picture_body(
                     found.id,
                     found.asset,
@@ -678,7 +678,7 @@ def odp_to_slides(odp_bytes: bytes) -> SlideModel:
                 if shape not in defined and shape is not None:
                     definition = library.get(shape)
                     assert definition is not None  # the three ids are always shipped
-                    model.define_shape(definition)
+                    model.shapes.define(definition)
                     defined.add(shape)
             body = ObjectBody(
                 found.id,
@@ -928,7 +928,7 @@ class _Writer:
         text = words_of(self.model, body)
         words_css = look(self.model, body.paragraph.style) if body.paragraph is not None else {}
         words = self.looks.paragraph(words_css, over, self.pt_per_unit, _own_font(self.model, words_css))
-        if body.kind in ("image", "rendered"):
+        if body.kind in ("image", "container"):
             return self._picture(body, placing)
         if body.kind == "text":
             graphic = self.looks.graphic({}, over, self.pt_per_unit)
@@ -996,9 +996,9 @@ class _Writer:
         picture = self.model.picture_of(body)
         asset = self.model.images.get(picture) if picture else None
         if asset is None:  # an image object's asset is always held (the model refuses otherwise)
-            self.losses.add("rendering-pending" if body.kind == "rendered" else "image-missing")
+            self.losses.add("rendering-pending" if body.kind == "container" else "image-missing")
             return None
-        if asset.format == "svg" and self.rasterise is not None and body.kind == "rendered":
+        if asset.format == "svg" and self.rasterise is not None and body.kind == "container":
             href = f"Pictures/{asset.id}-{round(body.w)}x{round(body.h)}.png"
             if href not in self.rasters:
                 self.rasters[href] = self.rasterise(asset.data, round(body.w), round(body.h))
@@ -1075,7 +1075,7 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
     """``model`` as odp bytes: a page per slide and, on it, an element per object from the bottom up, so that the last
     one is in front, as in the app. A text box is a frame with a text box, the three shapes are what they are, an image
     is a picture whose own bytes are in the package. What a style says (fill, line, size, colour) is written as an
-    automatic style in values the file can hold. A rendered text container is the picture last made from its text: with
+    automatic style in values the file can hold. A container is the picture last made from its text: with
     ``rasterise`` (see ``claudia_core.raster``) a PNG every program draws, without it the SVG itself. ``info`` is the
     metadata (D411). Anything the file cannot hold is in :func:`odp_export_losses`."""
     cm_per_unit = (_SLIDE_CM[0] / SLIDE_WIDTH, _SLIDE_CM[1] / SLIDE_HEIGHT)
@@ -1123,8 +1123,8 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
 def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[Loss, ...]:
     """What :func:`slides_to_odp` cannot put into the file for ``model``, each as a code with how many: ``"authorship"``
     (who wrote which words of an object: an odp does not keep it), a ``"diagram"`` (written as a rectangle), an
-    ``"image-missing"`` (an image the document has no picture for), ``"rendering-pending"`` (a rendered text container
-    nothing has been drawn for yet: it is left out, and says so here), ``"svg-picture"`` (a rendered container
+    ``"image-missing"`` (an image the document has no picture for), ``"rendering-pending"`` (a container
+    nothing has been drawn for yet: it is left out, and says so here), ``"svg-picture"`` (a container
     written as the SVG itself, because nothing could draw it as a PNG: programs other than PowerPoint may leave out
     colours or text of a diagram; none with ``rasterised``) and ``"decorative"`` (an object marked as
     decoration: ODF 1.3 has no attribute for it, so a reader of the file sees an object nobody described); for notes
@@ -1149,7 +1149,7 @@ def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[L
         elif obj.body.kind == "image" and obj.body.image not in model.images:
             losses.add("image-missing")
     pending = sum(
-        1 for obj in model.objects.values() if obj.body.kind == "rendered" and model.picture_of(obj.body) is None
+        1 for obj in model.objects.values() if obj.body.kind == "container" and model.picture_of(obj.body) is None
     )
     if pending:
         losses.add("rendering-pending", count=pending)
@@ -1157,7 +1157,7 @@ def odp_export_losses(model: SlideModel, *, rasterised: bool = False) -> tuple[L
         vector = sum(
             1
             for obj in model.objects.values()
-            if obj.body.kind == "rendered"
+            if obj.body.kind == "container"
             and (a := model.images.get(model.picture_of(obj.body) or ""))
             and a.format == "svg"
         )

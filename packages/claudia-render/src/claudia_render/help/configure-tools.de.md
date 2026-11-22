@@ -3,12 +3,12 @@ id: render.configure-tools
 title: Wie richte ich die Programme hinter Formeln, Diagrammen und gesetzten Seiten ein?
 apps: composes, computes, creates
 language: de
-source-hash: 95a25b7cd9b4
-tags: typst, mermaid, mmdc, chrome, latex, Programme, Plugins, gerenderter Text, Diagramm, Installation, Pfad, Administrator
-explains: tools.typst.path, tools.mmdc.path, tools.mmdc.chrome, Einfügen > Gerenderter Text
+source-hash: 5ac8fc69060c
+tags: typst, mermaid, mmdc, chrome, latex, Programme, Plugins, Container, Diagramm, Installation, Pfad, Administrator
+explains: tools.typst.path, tools.mmdc.path, tools.mmdc.chrome, Einfügen > Container
 ---
 
-Ein Objekt *Gerenderter Text* behält den Text, den Sie schreiben, und zeigt ein Bild, das daraus gemacht wird: eine
+Ein *Container* behält den Text, den Sie schreiben, und zeigt ein Bild, das daraus gemacht wird: eine
 LaTeX-Formel, ein Mermaid-Diagramm oder eine Typst-Seite. Die Bilder entstehen auf dem Server mit Programmen, die die
 Administratorin oder der Administrator installiert; Claudia liefert sie nicht mit. Ein Dokument lässt sich auch auf
 einem Server öffnen und drucken, dem ein Programm fehlt, und zeigt dann das Bild, das es zuletzt hatte.

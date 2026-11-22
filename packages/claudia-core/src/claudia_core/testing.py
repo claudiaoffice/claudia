@@ -19,7 +19,7 @@ from .region import Region
 
 def pointing_as_ref(fields: dict) -> dict:
     """Flat test fields that name the pointer by its kind (``image=…``) with the one ``ref`` a body has."""
-    pointers = ("shape", "image", "diagram", "rendered", "table")
+    pointers = ("shape", "image", "diagram", "container", "table")
     return {("ref" if name in pointers else name): value for name, value in fields.items()}
 
 

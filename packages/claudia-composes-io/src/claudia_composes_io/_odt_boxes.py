@@ -18,7 +18,7 @@ from typing import cast
 
 from lxml import etree
 
-from claudia_composes import DEFAULT_WRAP_GAP, BlockAnchor, TextModel
+from claudia_composes import DEFAULT_WRAP_GAP, ParagraphAnchor, TextModel
 from claudia_core import (
     ASPECT_TOLERANCE,
     MIN_OBJECT_SIZE,
@@ -69,7 +69,7 @@ class FileBox:
     """A text box or a shape of a file the model holds: where it is and what the file says of it."""
 
     object_id: str
-    block: int  # the index of the paragraph among the paragraphs of the text
+    paragraph: int  # the index of the paragraph among the paragraphs of the text
     offset: int  # the characters of the paragraph before the element
     element: etree._Element
     body: ObjectBody
@@ -250,10 +250,10 @@ class BoxStyles:
         self._by_look: dict[tuple[str, BoxLook, str, int], str] = {}
         self.new: list[bytes] = []  # the styles to add to the file, as XML
 
-    def name_of(self, kind: str, look: BoxLook, anchor: BlockAnchor | None = None) -> str:
+    def name_of(self, kind: str, look: BoxLook, anchor: ParagraphAnchor | None = None) -> str:
         """The name of the style of a box of ``kind`` (``"text"`` or ``"shape"``) that looks like ``look`` and has
         the text flow round it as ``anchor`` says (over it, when there is none)."""
-        anchor = anchor if anchor is not None else BlockAnchor("", 0)
+        anchor = anchor if anchor is not None else ParagraphAnchor("", 0)
         key = (kind, look, anchor.wrap, anchor.gap)
         if key not in self._by_look:
             number = len(self._by_look) + 1
@@ -266,7 +266,7 @@ class BoxStyles:
         return self._by_look[key]
 
     @staticmethod
-    def _xml(name: str, kind: str, look: BoxLook, anchor: BlockAnchor) -> str:
+    def _xml(name: str, kind: str, look: BoxLook, anchor: ParagraphAnchor) -> str:
         fill = f'draw:fill="solid" draw:fill-color="{_colour(look.fill)}"' if look.fill else 'draw:fill="none"'
         if look.line:
             width = f"{look.width / EMU_PER_POINT:.4g}pt"
@@ -377,13 +377,13 @@ class BoxPlan:
     again are put back where the text says, one whose outline or style changed is drawn anew (with the look of its
     style) and new ones are drawn.
 
-    ``block_ids`` are the ids of the blocks of the paragraphs of the file, in order. :attr:`touched` are the blocks
-    whose paragraph has to be written again for the boxes' sake."""
+    ``paragraph_ids`` are the ids of the text's paragraphs for the paragraphs of the file, in order. :attr:`touched` are
+    the paragraphs whose element in the file has to be written again for the boxes' sake."""
 
     def __init__(
         self,
         in_file: list[FileBox],
-        block_ids: list[str],
+        paragraph_ids: list[str],
         baseline: TextModel,
         current: TextModel,
         writer: BoxWriter,
@@ -398,38 +398,38 @@ class BoxPlan:
         self.touched: set[str] = set()
         wanted = all_boxes(current)
         for box in in_file:
-            block = block_ids[box.block]
-            self.in_file.setdefault(block, []).append(box)
+            paragraph = paragraph_ids[box.paragraph]
+            self.in_file.setdefault(paragraph, []).append(box)
             now = wanted.get(box.object_id)
             before = baseline.get_object(box.object_id)
             if now is None or not _same_but(before.body, now.body):  # gone, or drawn anew where it hangs now
-                self.touched.add(block)
+                self.touched.add(paragraph)
                 if now is not None:
-                    self.touched.add(now.anchor.block)
+                    self.touched.add(now.anchor.paragraph)
                     if self.losses is not None and not box.look.matches(look_of(baseline, before.body)):
                         self.losses.add("look")
                 continue
             self.kept[box.object_id] = box
             if now.anchor != before.anchor or _look(now.body) != _look(before.body):
-                self.touched |= {block, now.anchor.block}
-        self.touched |= {obj.anchor.block for obj_id, obj in wanted.items() if obj_id not in self.kept}
+                self.touched |= {paragraph, now.anchor.paragraph}
+        self.touched |= {obj.anchor.paragraph for obj_id, obj in wanted.items() if obj_id not in self.kept}
 
-    def has_any(self, block_id: str) -> bool:
-        """Does the paragraph of ``block_id`` have boxes, or is it to get some?"""
-        return block_id in self.in_file or bool(boxes_of(self.current, block_id))
+    def has_any(self, paragraph_id: str) -> bool:
+        """Does the paragraph of ``paragraph_id`` have boxes, or is it to get some?"""
+        return paragraph_id in self.in_file or bool(boxes_of(self.current, paragraph_id))
 
-    def take_out(self, paragraph: etree._Element, original: etree._Element, block_id: str) -> None:
+    def take_out(self, paragraph: etree._Element, original: etree._Element, paragraph_id: str) -> None:
         """Take the elements of the boxes the file had out of ``paragraph`` (a copy of ``original``), to be put back by
         :meth:`hang` once its words are written."""
         mine, theirs = _drawn(original), _drawn(paragraph)
-        for box in self.in_file.get(block_id, []):
+        for box in self.in_file.get(paragraph_id, []):
             detach(theirs[mine.index(box.element)])
 
-    def hang(self, paragraph: etree._Element, block_id: str, at: Callable[[int], int]) -> None:
-        """Put the elements of the boxes of ``block_id`` into ``paragraph`` at ``at(offset)``: those the file had (a
+    def hang(self, paragraph: etree._Element, paragraph_id: str, at: Callable[[int], int]) -> None:
+        """Put the elements of the boxes of ``paragraph_id`` into ``paragraph`` at ``at(offset)``: those the file had (a
         copy of the element, changed as the box changed), the new ones drawn."""
         marks: list[tuple[int, etree._Element]] = []
-        for obj in boxes_of(self.current, block_id):
+        for obj in boxes_of(self.current, paragraph_id):
             box = self.kept.get(obj.id)
             if box is not None:
                 element = copy.deepcopy(box.element)

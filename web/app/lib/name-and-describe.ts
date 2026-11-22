@@ -10,7 +10,7 @@ import { nameProblem as rangeNameProblem } from './names'
 export const MAX_THING_NAME = 60
 
 /** What `thing_details` sends. `name_fixed`: the name is worked out (a heading is called by its words) and is shown
- * locked; `drawn`: it can be marked decorative (a picture, a chart, a shape, rendered words, a text box). */
+ * locked; `drawn`: it can be marked decorative (a picture, a chart, a shape, a container, a text box). */
 export interface ThingDetails {
   id: string
   kind: string

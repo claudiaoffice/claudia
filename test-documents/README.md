@@ -92,7 +92,7 @@ that hold for any document:
 
 1. **import** -- it reads into claudia's model without crashing;
 2. **round trip** -- an edit that changes nothing, written back through the format's own edit-and-reexport path and
-   read again, leaves the model exactly as it was; a failure names where the model first differs (`blocks[3].text`);
+   read again, leaves the model exactly as it was; a failure names where the model first differs (`paragraphs[3].text`);
 3. **preserve** -- no package part of the original is missing from the re-exported file. Parts that were *rewritten*
    are listed (`rewritten parts: ...`) but are not a failure.
 

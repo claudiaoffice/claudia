@@ -61,7 +61,7 @@ def test_a_turn_without_a_place_undoes_as_it_always_did(doc):
 
 def test_a_turn_command_without_a_place_is_stored_as_it_always_was():
     assert RotateObject("t1", 90).to_data() == {"id": "t1", "rotation": 90}
-    carried = RotateObject("t1", 90, {"kind": "slide", "container": SLIDE, "x": 0, "y": 100})
+    carried = RotateObject("t1", 90, {"kind": "slide", "holder": SLIDE, "x": 0, "y": 100})
     assert RotateObject.from_data(carried.to_data(), registry=None) == carried  # type: ignore[arg-type]
 
 

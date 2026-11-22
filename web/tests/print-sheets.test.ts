@@ -40,7 +40,7 @@ const WELCOME: Welcome = {
   role: 'owner',
   doc: 'plan',
   app: 'computes',
-  line: 'main',
+  branch: 'main',
   revision: 'main:3',
   id: 1,
   color: '#e6194b',
@@ -48,7 +48,7 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
-  lines: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
+  branches: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
   proposal: null,
   returned: null,
 }
@@ -85,7 +85,7 @@ const LANDSCAPE: SheetPrintData = { ...DEFAULT_SHEET_PRINT_DATA, orientation: 'l
 const style = (id: string, css: Record<string, string>, extra: object = {}) => ({ id, name: id, purpose: '', based_on: null, css, computed: css, resolved: css, to_name: false, kind: 'paragraph', ...extra })
 const OBJECT = (id: string, extra: object = {}) => ({
   id, kind: 'image', w: 120, h: 80, style: 'plain-image', paragraph: null, ref: 'pic', imported: null, rotation: 0, snap: true, description: 'a picture', decorative: false,
-  anchor: { kind: 'cell', container: 's1', row: 2, col: 1 }, ...extra,
+  anchor: { kind: 'cell', holder: 's1', row: 2, col: 1 }, ...extra,
 })
 const CELLS: Record<string, [number, number, any]> = {
   a: [0, 0, { t: 'text', v: 'Item' }],
@@ -119,7 +119,7 @@ function server(link: FakeLink, extra: Record<string, (p: any) => any> = {}) {
     number_formats: () => FORMATS,
     log: () => [], chat_log: () => [], checkpoints: () => [], presence: () => ({}), lock: () => ({}), unlock: () => ({}),
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
-    lines: () => [], restore_policy: () => ({ policy: 'consensus' }), ping: () => ({ revision: 'main:3', line: 'main' }),
+    branches: () => [], restore_policy: () => ({ policy: 'consensus' }), ping: () => ({ revision: 'main:3', branch: 'main' }),
     cells: (p: any) => ({ revision: 'main:3', cells: p.sheet === 's1' ? Object.values(CELLS).filter(([r, c]) => r >= p.row0 && r <= p.row1 && c >= p.col0 && c <= p.col1) : [] }),
     sizes: () => ({ revision: 'main:3', rows: [[0, 40]], cols: [[0, 150]] }),
     cell_styles: () => ({ revision: 'main:3', ranges: RANGES }),

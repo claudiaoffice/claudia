@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BaseSession, type BaseState, type Entry } from '~/lib/base-session'
+import { BaseSession, type BaseState, type Step } from '~/lib/base-session'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome, type WireData } from '~/lib/protocol'
 import type { Thing } from '~/lib/tags'
 
@@ -8,7 +8,7 @@ const WELCOME: Welcome = {
   role: 'owner',
   doc: 'talk',
   app: 'creates',
-  line: 'main',
+  branch: 'main',
   revision: 'main:3',
   id: 1,
   color: '#e6194b',
@@ -16,11 +16,11 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
-  lines: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
+  branches: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
   proposal: null,
   returned: null,
 }
-const entry = (n: number): Entry => ({ revision: `main:${n}`, author: 'ann', origin: 'do', time: '', label: `step ${n}`, summary: '' })
+const entry = (n: number): Step => ({ revision: `main:${n}`, author: 'ann', origin: 'do', time: '', label: `step ${n}`, summary: '' })
 
 class FakeLink implements LinkLike {
   calls: { method: string; params: any }[] = []
@@ -39,7 +39,7 @@ class FakeLink implements LinkLike {
         return []
       case 'history':
         return { can_undo: false, can_redo: false, undo_label: '', redo_label: '' }
-      case 'lines':
+      case 'branches':
         return [{ name: 'main', head: 'main:3', active: true, forked_from: null }]
       case 'restore_policy':
         return { policy: 'consensus' }
@@ -87,13 +87,13 @@ class TestSession extends BaseSession<BaseState & { here: string }> {
   protected override async inView(): Promise<Thing[]> {
     return this.things().filter((t) => this.on[t.id] === this.state.here)
   }
-  protected override containerOf(id: string): string | null {
+  protected override holderOf(id: string): string | null {
     return this.on[id] ?? null
   }
-  protected override currentContainer(): string | null {
+  protected override currentHolder(): string | null {
     return this.state.here
   }
-  protected override showContainer(id: string): void {
+  protected override showHolder(id: string): void {
     this.state.here = id
   }
 }
@@ -129,8 +129,8 @@ describe('going to what a tag points at', () => {
     const { session, state } = await opened()
     await session.goToThing('o2')
     expect(state.here).toBe('s2')
-    expect(state.pointed).toEqual({ id: 'o2', container: 's2' })
-    expect(state.wayBack).toEqual({ container: 's1', anchor: null })
+    expect(state.pointed).toEqual({ id: 'o2', holder: 's2' })
+    expect(state.wayBack).toEqual({ holder: 's1', anchor: null })
     session.goBack()
     expect(state.here).toBe('s1')
     expect(state.pointed).toBeNull()
@@ -141,8 +141,8 @@ describe('going to what a tag points at', () => {
     session.setAnchorProvider(() => 'top')
     await session.goToThing('o1')
     expect(state.here).toBe('s1')
-    expect(state.pointed).toEqual({ id: 'o1', container: 's1' })
-    expect(state.wayBack).toEqual({ container: 's1', anchor: 'top' })
+    expect(state.pointed).toEqual({ id: 'o1', holder: 's1' })
+    expect(state.wayBack).toEqual({ holder: 's1', anchor: 'top' })
   })
   it('takes a tag to something deleted to the last step it was there, in a replay', async () => {
     const { session, state } = await opened()

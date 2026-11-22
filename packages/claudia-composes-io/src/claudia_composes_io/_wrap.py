@@ -21,7 +21,7 @@ from collections.abc import Mapping
 
 from lxml import etree
 
-from claudia_composes import DEFAULT_WRAP_GAP, MAX_WRAP_GAP, BlockAnchor
+from claudia_composes import DEFAULT_WRAP_GAP, MAX_WRAP_GAP, ParagraphAnchor
 from claudia_odf_io import NS
 from claudia_odf_io.transform import transform_of, turned_box
 
@@ -41,7 +41,7 @@ def clamped(pixels: int) -> int:
 
 
 # ------------------------------------------------------------------------------------------------------------- docx
-def _distances(anchor: BlockAnchor) -> dict[str, str]:
+def _distances(anchor: ParagraphAnchor) -> dict[str, str]:
     """The ``distT`` ``distB`` ``distL`` ``distR`` of a ``wp:anchor`` (EMU): how far the words keep away."""
     around, above_below = anchor.wrap == "around", anchor.wrap == "above-below"
     side = anchor.gap * EMU if around else 0
@@ -49,7 +49,7 @@ def _distances(anchor: BlockAnchor) -> dict[str, str]:
     return {"distT": str(vertical), "distB": str(vertical), "distL": str(side), "distR": str(side)}
 
 
-def docx_wrap_element(anchor: BlockAnchor) -> str:
+def docx_wrap_element(anchor: ParagraphAnchor) -> str:
     """The ``wp:wrap…`` element of ``anchor``, written as XML."""
     return {
         "around": '<wp:wrapSquare wrapText="bothSides"/>',
@@ -57,7 +57,7 @@ def docx_wrap_element(anchor: BlockAnchor) -> str:
     }.get(anchor.wrap, "<wp:wrapNone/>")
 
 
-def docx_frame_open(anchor: BlockAnchor, number: int) -> str:
+def docx_frame_open(anchor: ParagraphAnchor, number: int) -> str:
     """The opening tag of the ``wp:anchor`` of a drawing numbered ``number`` that floats as ``anchor`` says."""
     distances = " ".join(f'{name}="{value}"' for name, value in _distances(anchor).items())
     behind = "1" if anchor.wrap == "behind" else "0"
@@ -67,7 +67,7 @@ def docx_frame_open(anchor: BlockAnchor, number: int) -> str:
     )
 
 
-def docx_position(anchor: BlockAnchor) -> str:
+def docx_position(anchor: ParagraphAnchor) -> str:
     """The ``wp:positionH`` and ``wp:positionV`` of a ``wp:anchor``: the object's top left corner sits ``dx`` to the
     right of its character and ``dy`` below its line (D1067)."""
     return (
@@ -94,7 +94,7 @@ def docx_offset_of(frame: etree._Element) -> tuple[int, int]:
     return _offset(frame, "positionH", "character"), _offset(frame, "positionV", "line")
 
 
-def docx_set_position(frame: etree._Element, anchor: BlockAnchor) -> None:
+def docx_set_position(frame: etree._Element, anchor: ParagraphAnchor) -> None:
     """Make an existing ``wp:anchor`` measure its place from the character and the line, as ``anchor`` says."""
     if frame.tag != _wp("anchor"):
         return
@@ -121,7 +121,7 @@ def docx_wrap_of(frame: etree._Element) -> tuple[str, int]:
     return ("behind" if behind else "over"), DEFAULT_WRAP_GAP
 
 
-def docx_set_wrap(frame: etree._Element, anchor: BlockAnchor) -> None:
+def docx_set_wrap(frame: etree._Element, anchor: ParagraphAnchor) -> None:
     """Make an existing ``wp:anchor`` say what ``anchor`` says about its wrapping: its distances, ``behindDoc`` and its
     ``wp:wrap…`` element, which stays where it is among the others (the schema orders them)."""
     if frame.tag != _wp("anchor"):
@@ -159,7 +159,7 @@ _ODF = {
 _ODF_AROUND = {"parallel", "dynamic", "left", "right", "biggest"}
 
 
-def odf_name(base: str, anchor: BlockAnchor) -> str:
+def odf_name(base: str, anchor: ParagraphAnchor) -> str:
     """The name of the graphic style that ``base`` (the style of a picture or a box) is given to wrap as ``anchor``
     says: ``base`` itself where the words stay over the text, else ``base`` and the mode, and the gap if it is not the
     usual one."""
@@ -169,7 +169,7 @@ def odf_name(base: str, anchor: BlockAnchor) -> str:
     return f"{base}_{anchor.wrap.replace('-', '_')}{gap}"
 
 
-def odf_attributes(anchor: BlockAnchor) -> str:
+def odf_attributes(anchor: ParagraphAnchor) -> str:
     """``style:wrap``, ``style:run-through`` and the margins of the graphic properties for ``anchor``."""
     wrap, through = _ODF[anchor.wrap]
     cm = f"{anchor.gap / 96 * 2.54:.3f}cm"
@@ -279,7 +279,7 @@ def odf_properties(element: etree._Element, graphics: Mapping[str, etree._Elemen
 
 
 def odf_wrap_style_xml(
-    name: str, anchor: BlockAnchor, parent: str | None = None, *, wrap: bool = True, position: bool = False
+    name: str, anchor: ParagraphAnchor, parent: str | None = None, *, wrap: bool = True, position: bool = False
 ) -> str:
     """A graphic style called ``name`` that says only how the words flow round a frame as ``anchor`` says (when
     ``wrap``) and that its place is measured from its character and line (when ``position``), on top of its
@@ -300,7 +300,9 @@ class WrapStyles:
         self.taken = taken if taken is not None else set()
         self.new: dict[str, bytes] = {}  # by name
 
-    def give(self, element: etree._Element, anchor: BlockAnchor, *, wrap: bool = True, position: bool = False) -> None:
+    def give(
+        self, element: etree._Element, anchor: ParagraphAnchor, *, wrap: bool = True, position: bool = False
+    ) -> None:
         """Make ``element`` (a frame or a shape, a copy of the file's) wrap as ``anchor`` says (when ``wrap``) and have
         its place measured from its character and line (when ``position``, D1067)."""
         key = f"{{{NS['draw']}}}style-name"

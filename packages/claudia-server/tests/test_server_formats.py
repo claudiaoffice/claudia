@@ -44,7 +44,7 @@ def test_every_format_is_recognised_by_its_bytes_and_imports_into_its_app(fmt):
 
 
 def test_a_claudia_document_is_recognised_by_its_first_entry(tmp_path):
-    from claudia_container import KdfParams, create_document
+    from claudia_document_file import KdfParams, create_document
 
     path = tmp_path / "plan.claudia"
     create_document(

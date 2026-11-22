@@ -4,8 +4,8 @@ import zipfile
 
 import pytest
 
-from claudia_container import KdfParams, journal_path, read_snapshot, read_state, unlock
 from claudia_core.testing import Insert, ListModel
+from claudia_document_file import KdfParams, journal_path, read_snapshot, read_state, unlock
 from claudia_server.auth import Credentials
 from claudia_server.sealed import SealedDocuments
 
@@ -171,7 +171,7 @@ def test_a_long_session_is_packed_every_so_often_and_loses_nothing(tmp_path):
 
 
 def test_after_a_packing_the_journal_carries_on_with_the_next_generation(tmp_path):
-    from claudia_container import journal_generation
+    from claudia_document_file import journal_generation
 
     store = store_in(tmp_path, pack_every=3)
     doc = start(store)

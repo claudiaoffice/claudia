@@ -33,7 +33,7 @@ import { plotlyPictures } from './chart-picture'
 import { chartSizes, loadForPrint, setupOf, sheetDocument, type ChartPictures, type SheetRequest } from './sheet-document'
 import { entryWords, type ContentsEntry } from '../contents'
 import { pointer } from '../objects'
-import { pictureOf } from '../rendering'
+import { pictureOf } from '../containers'
 import { readAs, type Shown } from '../references'
 import { CONTENTS, describeSheets, SCALES, scaleId, withScale, type Contents } from './sheet'
 
@@ -140,7 +140,7 @@ export function textSource(session: TextSession): PrintSource {
     language: () => state.language,
     canSetLanguage: () => !session.readOnly && state.language !== undefined,
     setLanguage: (tag) => void session.setLanguage(tag),
-    watched: () => [state.blocks, state.styles, state.page, state.language],
+    watched: () => [state.paragraphs, state.styles, state.page, state.language],
     async prepare() {
       try {
         extras = await session.printExtras()
@@ -150,7 +150,7 @@ export function textSource(session: TextSession): PrintSource {
     },
     images: () => extras?.images ?? [],
     async layOut(assets) {
-      const doc = textDocument(state.blocks, state.styles, state.page ?? DEFAULT_PAGE, extras, state.language, { lists: state.lists, schemes: state.schemes })
+      const doc = textDocument(state.paragraphs, Object.values(state.styles), state.page ?? DEFAULT_PAGE, extras, state.language, { lists: state.lists, schemes: state.schemes })
       const [hyphenator] = await Promise.all([assets.hyphenator(doc.language), assets.ensure(fontsNeeded(doc, assets.resolver))])
       return layoutText(doc, assets.fonts, assets.resolver, { hyphenator })
     },
@@ -161,7 +161,7 @@ export function textSource(session: TextSession): PrintSource {
 }
 
 // ------------------------------------------------------------------------------ creates
-/** The objects of a slide as the layout library knows them (it prints a rendered text container, D390, as the picture
+/** The objects of a slide as the layout library knows them (it prints a container, D390, as the picture
  * it shows, and leaves out one nothing has drawn yet). The words of a list
  * item or a numbered title carry their marker, and an agenda its lines (E9.31), so the pages draw what the slide does
  * (E9.21, E9.22). */
@@ -188,7 +188,7 @@ function printable(
 export function slideDocument(session: SlideSession): SlideDocument {
   const state = session.state
   return {
-    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id), (id) => session.agendaOf(id), (id) => state.referenced[id], (o) => pointer(o, 'image') ?? pictureOf(state.renderings[pointer(o, 'rendered') ?? '']) ) })),
+    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id), (id) => session.agendaOf(id), (id) => state.referenced[id], (o) => pointer(o, 'image') ?? pictureOf(state.containers[pointer(o, 'container') ?? '']) ) })),
     styles: Object.values(state.styles).map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved })),
     shapes: Object.values(state.shapes),
     // an SVG picture is drawn from its text (D914); the others from their bytes

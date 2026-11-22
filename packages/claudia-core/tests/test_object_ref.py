@@ -7,7 +7,7 @@ from claudia_core import AddObject, ObjectBody, paragraph_for
 from claudia_core.commands import core_commands
 from claudia_core.testing import body_before_ref
 
-POINTERS = ("shape", "image", "diagram", "rendered", "table")
+POINTERS = ("shape", "image", "diagram", "container", "table")
 
 
 def body(kind: str, ref: str | None = "x1") -> ObjectBody:
@@ -36,7 +36,12 @@ def legacy(kind: str, **more) -> dict:
     return {**body_before_ref(body(kind).to_data()), **more}
 
 
-@pytest.mark.parametrize("kind", POINTERS)
+#: The kinds old bodies had under the names they still have. A container's was ``rendered`` then, a kind that is not
+#: read any more (E1.18, D1430): there is no old body of the kind ``container``.
+OLD_KINDS = ("shape", "image", "diagram", "table")
+
+
+@pytest.mark.parametrize("kind", OLD_KINDS)
 def test_a_body_written_with_a_field_for_each_kind_reads_with_its_pointer_as_ref(kind):
     assert ObjectBody.from_data(legacy(kind)) == body(kind)
 
@@ -61,6 +66,6 @@ def test_a_body_with_a_field_nobody_knows_is_refused_whichever_form_it_has():
 
 def test_an_add_object_of_schema_5_is_brought_up_to_date():
     assert AddObject.schema == 6
-    stored = {"body": legacy("table"), "anchor": {"container": "s1"}, "at": None}
+    stored = {"body": legacy("table"), "anchor": {"holder": "s1"}, "at": None}
     command = core_commands.decode({"k": "core.AddObject", "s": 5, "d": stored})
     assert command.body == body("table")

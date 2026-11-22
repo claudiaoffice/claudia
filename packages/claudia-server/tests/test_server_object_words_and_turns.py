@@ -25,7 +25,9 @@ BEN = Account("ben", "editor")
 def paper():
     document = Document(TextModel(), store=MemoryStore())
     call(
-        document, "replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "a text with a box"}
+        document,
+        "replace_text",
+        {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "a text with a box"},
     )
     return document
 
@@ -36,7 +38,7 @@ def call(doc, name, params=None, account=ANN):
 
 
 def add_box(doc, kind="text", **params):
-    given = {"block": "b1", "offset": 2, "kind": kind, "w": 200, "h": 80, **params}
+    given = {"paragraph": "b1", "offset": 2, "kind": kind, "w": 200, "h": 80, **params}
     return call(doc, "add_object", given)["object"]
 
 
@@ -63,7 +65,7 @@ def test_a_picture_in_a_text_has_no_words_to_write(paper):
         paper,
         "add_image",
         {
-            "block": "b1",
+            "paragraph": "b1",
             "offset": 1,
             "w": 40,
             "h": 40,
@@ -77,7 +79,7 @@ def test_a_picture_in_a_text_has_no_words_to_write(paper):
 
 
 def test_a_table_does_not_turn_on_the_server_either(paper):
-    table = call(paper, "add_table", {"block": "b1", "offset": 4, "cells": [["a", "b"], ["c", "d"]]})["object"]
+    table = call(paper, "add_table", {"paragraph": "b1", "offset": 4, "cells": [["a", "b"], ["c", "d"]]})["object"]
     with pytest.raises(RequestError, match="table does not turn"):
         call(paper, "rotate_object", {"id": table, "rotation": 90})
 

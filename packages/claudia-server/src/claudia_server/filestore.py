@@ -1,8 +1,8 @@
-"""A file store for the demo server: documents and users survive a restart (stand-in for the container, E2).
+"""A file store for the demo server: documents and users survive a restart (stand-in for the document file, E2).
 
 **Not the real thing.** Nothing here is encrypted or compressed, and there is one journal file per document. The
-container (E2.1) replaces it, with encryption, key slots and blocks. It exists so that a demo server keeps what people
-made.
+document file (E2.1) replaces it, with encryption, key slots and blocks. It exists so that a demo server keeps what
+people made.
 
 Layout under the root folder::
 
@@ -33,9 +33,9 @@ from claudia_core import (
     CommandLog,
     Document,
     DocumentModel,
-    Entry,
     Revision,
     Snapshot,
+    Step,
 )
 from claudia_file_writer import write_atomically
 
@@ -73,7 +73,7 @@ class JournalStore:
         if self._handle is not None:
             self._handle.close()
 
-    def append_entry(self, entry: Entry) -> None:
+    def append_entry(self, entry: Step) -> None:
         """As ``DocumentStore.append_entry``."""
         self._write("entry", entry.to_data())
 

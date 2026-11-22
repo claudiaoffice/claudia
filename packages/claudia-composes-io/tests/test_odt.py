@@ -16,7 +16,7 @@ from claudia_composes_io import (
 )
 from lxml import etree
 
-from claudia_composes import DEFAULT_STYLE, Block, Suggestion, TextModel, TextRange
+from claudia_composes import DEFAULT_STYLE, Paragraph, Suggestion, TextModel, TextRange
 from claudia_core import StyleDef
 from claudia_odf_io import (
     MIME,
@@ -55,8 +55,8 @@ def an_odt(body: str, *, automatic: str = "", styles: str = STYLES) -> bytes:
     return new_package("text", content.encode(), styles.encode())
 
 
-def model_of(*blocks: tuple[str, str]) -> TextModel:
-    return TextModel([Block(f"b{i}", style, text) for i, (style, text) in enumerate(blocks, start=1)])
+def model_of(*paragraphs: tuple[str, str]) -> TextModel:
+    return TextModel([Paragraph(f"b{i}", style, text) for i, (style, text) in enumerate(paragraphs, start=1)])
 
 
 def body_of(data: bytes) -> etree._Element:
@@ -126,13 +126,13 @@ def test_the_file_has_a_page_so_that_a_program_can_lay_it_out():
 
 def test_spaces_tabs_and_line_breaks_survive_the_trip():
     text = "a  b\tc\nd  "
-    assert odt_to_text(text_to_odt(model_of((DEFAULT_STYLE, text)))).blocks[0].text == text
+    assert odt_to_text(text_to_odt(model_of((DEFAULT_STYLE, text)))).paragraphs[0].text == text
 
 
 def test_characters_xml_cannot_hold_do_not_break_the_file():
     data = text_to_odt(model_of((DEFAULT_STYLE, "a\x00b\x0cc")))
     assert problems(data) == []
-    assert odt_to_text(data).blocks[0].text == "a�b�c"
+    assert odt_to_text(data).paragraphs[0].text == "a�b�c"
 
 
 def test_the_same_model_gives_the_same_bytes():
@@ -186,7 +186,7 @@ def test_a_remark_with_no_replacement_is_left_out():
 def test_track_suggestions_false_exports_plain_text():
     data = text_to_odt(suggestion_model(), track_suggestions=False)
     assert body_of(data).find("text:tracked-changes", NS) is None
-    assert odt_to_text(data).blocks[0].text == "The committee rejected the proposal."
+    assert odt_to_text(data).paragraphs[0].text == "The committee rejected the proposal."
 
 
 def test_a_suggestion_that_only_inserts_has_no_deletion():
@@ -200,7 +200,7 @@ def test_two_suggestions_in_one_paragraph_keep_their_places():
     model = model_of((DEFAULT_STYLE, "one two three"))
     model.suggestions["s1"] = Suggestion("s1", "Claudia AI", TextRange("b1", 0, 3), "one", "1", "")
     model.suggestions["s2"] = Suggestion("s2", "Claudia AI", TextRange("b1", 8, 13), "three", "3", "")
-    assert odt_to_text(text_to_odt(model)).blocks[0].text == "1 two 3"
+    assert odt_to_text(text_to_odt(model)).paragraphs[0].text == "1 two 3"
 
 
 def test_the_losses_of_an_export_name_what_the_file_cannot_hold():
@@ -217,19 +217,19 @@ def test_an_export_without_losses_reports_none():
 def test_authorship_of_runs_is_a_loss_because_opendocument_text_has_nowhere_for_it():
     from claudia_composes import Run
 
-    model = TextModel([Block("b1", DEFAULT_STYLE, "ab", (Run(1, "ann"), Run(1, "ben")))])
+    model = TextModel([Paragraph("b1", DEFAULT_STYLE, "ab", (Run(1, "ann"), Run(1, "ben")))])
     assert odt_export_losses(model) == (Loss("authorship", "", 1),)
 
 
 # -- import --------------------------------------------------------------------------------------------------------
-def test_an_imported_text_has_one_block_per_paragraph_in_order():
+def test_an_imported_text_has_one_paragraph_per_paragraph_in_order():
     model = odt_to_text(an_odt('<text:p text:style-name="Standard">One</text:p><text:p>Two</text:p>'))
-    assert [(b.id, b.style, b.text) for b in model.blocks] == [("b1", "body", "One"), ("b2", "body", "Two")]
-    assert model.blocks[0].runs[0].length == 3
+    assert [(b.id, b.style, b.text) for b in model.paragraphs] == [("b1", "body", "One"), ("b2", "body", "Two")]
+    assert model.paragraphs[0].runs[0].length == 3
 
 
 def test_an_empty_text_imports_as_an_empty_model():
-    assert odt_to_text(an_odt("")).blocks == TextModel().blocks
+    assert odt_to_text(an_odt("")).paragraphs == TextModel().paragraphs
 
 
 @pytest.mark.parametrize(
@@ -248,20 +248,20 @@ def test_an_empty_text_imports_as_an_empty_model():
     ],
 )
 def test_styles_map_back_to_the_styles_of_the_text_app(markup, style):
-    assert odt_to_text(an_odt(markup)).blocks[0].style == style
+    assert odt_to_text(an_odt(markup)).paragraphs[0].style == style
 
 
 def test_a_style_made_by_formatting_is_the_style_it_is_based_on():
     automatic = '<style:style style:name="P1" style:family="paragraph" style:parent-style-name="Heading_20_1"/>'
     assert (
-        odt_to_text(an_odt('<text:p text:style-name="P1">x</text:p>', automatic=automatic)).blocks[0].style
+        odt_to_text(an_odt('<text:p text:style-name="P1">x</text:p>', automatic=automatic)).paragraphs[0].style
         == "heading-1"
     )
 
 
 def test_a_heading_deeper_than_the_text_has_styles_for_is_body_text_and_says_so():
     data = an_odt('<text:h text:outline-level="7">x</text:h>')
-    assert odt_to_text(data).blocks[0].style == "body"
+    assert odt_to_text(data).paragraphs[0].style == "body"
     assert Loss("heading-level", "7") in odt_import_losses(data)
 
 
@@ -274,13 +274,13 @@ def test_a_style_of_the_writers_own_is_a_heading_in_the_file_when_it_has_a_headi
     ]
 
 
-def test_paragraphs_in_lists_and_sections_are_blocks_too():
+def test_paragraphs_in_lists_and_sections_are_paragraphs_too():
     data = an_odt(
         "<text:list><text:list-item><text:p>a</text:p><text:list><text:list-item><text:p>b</text:p>"
         "</text:list-item></text:list></text:list-item></text:list>"
         '<text:section text:name="S"><text:p>c</text:p></text:section><text:p>d</text:p>'
     )
-    assert [b.text for b in odt_to_text(data).blocks] == ["a", "b", "c", "d"]
+    assert [b.text for b in odt_to_text(data).paragraphs] == ["a", "b", "c", "d"]
 
 
 def test_a_table_is_not_in_the_model_and_is_reported():
@@ -288,7 +288,7 @@ def test_a_table_is_not_in_the_model_and_is_reported():
         "<text:p>before</text:p><table:table table:name='T'><table:table-row><table:table-cell>"
         "<text:p>in a cell</text:p></table:table-cell></table:table-row></table:table><text:p>after</text:p>"
     )
-    assert [b.text for b in odt_to_text(data).blocks] == ["before", "after"]
+    assert [b.text for b in odt_to_text(data).paragraphs] == ["before", "after"]
     assert Loss("table", "", 1) in odt_import_losses(data)
 
 
@@ -316,7 +316,7 @@ def test_existing_tracked_changes_are_reported():
 
 def test_an_unknown_style_is_body_text_and_named_in_the_losses():
     data = an_odt('<text:p text:style-name="Mystery_20_Style">x</text:p>')
-    assert odt_to_text(data).blocks[0].style == "body"
+    assert odt_to_text(data).paragraphs[0].style == "body"
     assert Loss("style", "Mystery Style") in odt_import_losses(data)
 
 
@@ -330,7 +330,7 @@ def test_a_file_that_is_not_opendocument_text_is_an_error_with_a_sentence():
 def test_a_text_survives_the_trip_through_export_and_import():
     model = model_of(("title", "T"), ("heading-1", "H"), ("body", "b"), ("quote", "q"))
     again = odt_to_text(text_to_odt(model))
-    assert [(b.id, b.style, b.text) for b in again.blocks] == [(b.id, b.style, b.text) for b in model.blocks]
+    assert [(b.id, b.style, b.text) for b in again.paragraphs] == [(b.id, b.style, b.text) for b in model.paragraphs]
 
 
 # -- edit and re-export ----------------------------------------------------------------------------------------
@@ -354,10 +354,10 @@ def edit(original: bytes, change) -> tuple[bytes, TextModel, TextModel]:
     return apply_edits_to_odt(original, baseline, current), baseline, current
 
 
-def retext(model: TextModel, block_id: str, text: str, style: str | None = None) -> None:
-    index = next(i for i, b in enumerate(model.blocks) if b.id == block_id)
-    old = model.blocks[index]
-    model.blocks[index] = Block(old.id, style or old.style, text, ())
+def retext(model: TextModel, paragraph_id: str, text: str, style: str | None = None) -> None:
+    index = next(i for i, b in enumerate(model.paragraphs) if b.id == paragraph_id)
+    old = model.paragraphs[index]
+    model.paragraphs[index] = Paragraph(old.id, style or old.style, text, ())
 
 
 def test_without_edits_the_file_comes_back_exactly_as_it_was():
@@ -424,12 +424,12 @@ def test_a_heading_changed_to_body_text_becomes_a_paragraph():
     assert first.tag == f"{{{NS['text']}}}p" and first.get(f"{{{NS['text']}}}outline-level") is None
 
 
-def test_a_block_added_in_the_middle_goes_where_it_was_added():
+def test_a_paragraph_added_in_the_middle_goes_where_it_was_added():
     def add(model: TextModel) -> None:
-        model.blocks.insert(1, Block("b9", "body", "inserted"))
+        model.paragraphs.insert(1, Paragraph("b9", "body", "inserted"))
 
     edited, *_ = edit(an_odt(RICH), add)
-    assert [b.text for b in odt_to_text(edited).blocks] == [
+    assert [b.text for b in odt_to_text(edited).paragraphs] == [
         "Title",
         "inserted",
         "Hello bold world and a link.",
@@ -438,14 +438,14 @@ def test_a_block_added_in_the_middle_goes_where_it_was_added():
     ]
 
 
-def test_blocks_added_at_the_start_the_end_and_in_a_row_keep_their_order():
+def test_paragraphs_added_at_the_start_the_end_and_in_a_row_keep_their_order():
     def add(model: TextModel) -> None:
-        model.blocks.insert(0, Block("n1", "body", "first"))
-        model.blocks.append(Block("n2", "body", "x"))
-        model.blocks.append(Block("n3", "body", "y"))
+        model.paragraphs.insert(0, Paragraph("n1", "body", "first"))
+        model.paragraphs.append(Paragraph("n2", "body", "x"))
+        model.paragraphs.append(Paragraph("n3", "body", "y"))
 
     edited, *_ = edit(an_odt(RICH), add)
-    assert [b.text for b in odt_to_text(edited).blocks] == [
+    assert [b.text for b in odt_to_text(edited).paragraphs] == [
         "first",
         "Title",
         "Hello bold world and a link.",
@@ -456,14 +456,14 @@ def test_blocks_added_at_the_start_the_end_and_in_a_row_keep_their_order():
     ]
 
 
-def test_blocks_added_to_an_empty_text_are_all_there():
+def test_paragraphs_added_to_an_empty_text_are_all_there():
     original = an_odt("")
 
     def add(model: TextModel) -> None:
-        model.blocks.extend([Block("n1", "body", "a"), Block("n2", "heading-1", "b")])
+        model.paragraphs.extend([Paragraph("n1", "body", "a"), Paragraph("n2", "heading-1", "b")])
 
     edited, *_ = edit(original, add)
-    assert [(b.style, b.text) for b in odt_to_text(edited).blocks] == [("body", "a"), ("heading-1", "b")]
+    assert [(b.style, b.text) for b in odt_to_text(edited).paragraphs] == [("body", "a"), ("heading-1", "b")]
     assert problems(edited) == []
 
 
@@ -471,22 +471,22 @@ def test_a_paragraph_added_after_the_last_item_of_a_list_is_after_the_list():
     """It is no item (the model says so), so it does not go into the list or its item: it follows the list."""
 
     def add(model: TextModel) -> None:
-        model.blocks.insert(3, Block("n1", "body", "after the item"))
+        model.paragraphs.insert(3, Paragraph("n1", "body", "after the item"))
 
     edited, *_ = edit(an_odt(RICH), add)
     assert body_of(edited).find("text:list/text:list-item", NS) is not None
     assert [shown(p).count("item") for p in body_of(edited).find("text:list/text:list-item", NS)] == [1]
-    assert [b.text for b in odt_to_text(edited).blocks][3] == "after the item"
+    assert [b.text for b in odt_to_text(edited).paragraphs][3] == "after the item"
 
 
-def test_a_removed_block_is_gone_and_the_rest_is_untouched():
+def test_a_removed_paragraph_is_gone_and_the_rest_is_untouched():
     original = an_odt(RICH)
     losses = LossLog()
     baseline = odt_to_text(original)
     current = odt_to_text(original)
-    current.blocks.pop(2)  # the list item
+    current.paragraphs.pop(2)  # the list item
     edited = apply_edits_to_odt(original, baseline, current, losses=losses)
-    assert [b.text for b in odt_to_text(edited).blocks] == ["Title", "Hello bold world and a link.", "Last 'one'"]
+    assert [b.text for b in odt_to_text(edited).paragraphs] == ["Title", "Hello bold world and a link.", "Last 'one'"]
     assert b"<table:table " in read_parts(edited)["content.xml"]
     assert losses.result() == ()
 
@@ -495,15 +495,15 @@ def test_removing_a_paragraph_with_a_note_says_the_note_went_with_it():
     original = an_odt(RICH)
     losses = LossLog()
     baseline, current = odt_to_text(original), odt_to_text(original)
-    current.blocks.pop(1)
+    current.paragraphs.pop(1)
     apply_edits_to_odt(original, baseline, current, losses=losses)
     assert Loss("removed-footnote", "", 1) in losses.result()
 
 
-def test_every_block_removed_leaves_a_valid_text_without_paragraphs():
+def test_every_paragraph_removed_leaves_a_valid_text_without_paragraphs():
     original = an_odt("<text:p>a</text:p><text:p>b</text:p>")
     baseline, current = odt_to_text(original), odt_to_text(original)
-    current.blocks.clear()
+    current.paragraphs.clear()
     edited = apply_edits_to_odt(original, baseline, current)
     assert paragraph_markup(edited) == [] and problems(edited) == []
 
@@ -513,10 +513,10 @@ def test_an_unchanged_empty_text_stays_as_it_is():
     assert apply_edits_to_odt(original, odt_to_text(original), odt_to_text(original)) == original
 
 
-def test_reordering_blocks_is_not_patched_onto_a_file():
+def test_reordering_paragraphs_is_not_patched_onto_a_file():
     original = an_odt(RICH)
     baseline, current = odt_to_text(original), odt_to_text(original)
-    current.blocks[0], current.blocks[1] = current.blocks[1], current.blocks[0]
+    current.paragraphs[0], current.paragraphs[1] = current.paragraphs[1], current.paragraphs[0]
     with pytest.raises(UnsupportedEdit):
         apply_edits_to_odt(original, baseline, current)
 
@@ -568,22 +568,24 @@ def test_random_edits_of_a_rich_file_always_give_the_edited_text_and_leave_the_r
     old = content(original)
     for _ in range(150):
         baseline, current = odt_to_text(original), odt_to_text(original)
-        for index in range(len(current.blocks)):
+        for index in range(len(current.paragraphs)):
             kind = rng.random()
-            block = current.blocks[index]
+            paragraph = current.paragraphs[index]
             if kind < 0.35:
                 text = "".join(rng.choice(words) + rng.choice([" ", ""]) for _ in range(rng.randint(0, 5)))
-                current.blocks[index] = Block(block.id, rng.choice(styles), text.strip(" "), ())
+                current.paragraphs[index] = Paragraph(paragraph.id, rng.choice(styles), text.strip(" "), ())
         for number in range(rng.randint(0, 2)):
-            current.blocks.insert(
-                rng.randint(0, len(current.blocks)), Block(f"n{number}", rng.choice(styles), f"new {number}")
+            current.paragraphs.insert(
+                rng.randint(0, len(current.paragraphs)), Paragraph(f"n{number}", rng.choice(styles), f"new {number}")
             )
-        if rng.random() < 0.3 and len(current.blocks) > 1:
-            current.blocks.pop(rng.randrange(len(current.blocks)))
+        if rng.random() < 0.3 and len(current.paragraphs) > 1:
+            current.paragraphs.pop(rng.randrange(len(current.paragraphs)))
         edited = apply_edits_to_odt(original, baseline, current)
         assert problems(edited) == []
         again = odt_to_text(edited)
-        assert [(b.style, b.text) for b in again.blocks] == [(b.style, xml_safe(b.text)) for b in current.blocks]
+        assert [(b.style, b.text) for b in again.paragraphs] == [
+            (b.style, xml_safe(b.text)) for b in current.paragraphs
+        ]
         new = content(edited)
         assert new.endswith("</office:text></office:body></office:document-content>")
         assert old[old.index("<table:table") : old.index("</table:table>")] in new  # the table is never touched

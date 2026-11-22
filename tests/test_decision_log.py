@@ -1,7 +1,7 @@
 """The decision log is one file per decision, and every ``D<number>`` anywhere resolves to exactly one of them.
 
 DOC-01 began this test: D70-D82 and D97-D99 had each been allocated twice, and the collision was live in the source
-(``claudia_container/crypto.py`` cited D74 meaning the cryptographic primitives while ``claudia_server/composes.py``
+(``claudia_document_file/crypto.py`` cited D74 meaning the cryptographic primitives while ``claudia_server/composes.py``
 cited D75 meaning the styling details). It happened again with D151, D160, D177-D179 and D204, because branches
 written in parallel each picked "the next free number". Since 2026-11-10 the log is a folder
 (``claudiaoffice-log/decision-log/``, see its ``README.md``) and numbers are handed out in ranges (``ranges.md``).

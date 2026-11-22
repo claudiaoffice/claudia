@@ -18,7 +18,7 @@ from itertools import count
 
 from lxml import etree
 
-from claudia_composes import DEFAULT_WRAP_GAP, BlockAnchor, TextModel
+from claudia_composes import DEFAULT_WRAP_GAP, ParagraphAnchor, TextModel
 from claudia_core import (
     MIN_OBJECT_SIZE,
     ImageAsset,
@@ -62,7 +62,7 @@ _CM_PER_INCH = 2.54
 PICTURE_STYLE = "Claudia_20_picture"
 
 
-def picture_style_xml(anchor: BlockAnchor) -> str:
+def picture_style_xml(anchor: ParagraphAnchor) -> str:
     """The graphic style of a picture that has the text flow round it as ``anchor`` says, its place measured from its
     character and its line; its name is :func:`picture_style_name`."""
     return (
@@ -72,7 +72,7 @@ def picture_style_xml(anchor: BlockAnchor) -> str:
     )
 
 
-def picture_style_name(anchor: BlockAnchor) -> str:
+def picture_style_name(anchor: ParagraphAnchor) -> str:
     """The name of the graphic style of a picture that has the text flow round it as ``anchor`` says."""
     return odf_name(PICTURE_STYLE, anchor)
 
@@ -103,7 +103,7 @@ class FilePicture:
     """A picture of a file the model holds: where it is and what the file says of it."""
 
     object_id: str
-    block: int  # the index of the paragraph among the paragraphs of the text
+    paragraph: int  # the index of the paragraph among the paragraphs of the text
     offset: int  # the characters of the paragraph before the frame
     frame: etree._Element
     asset: ImageAsset
@@ -247,9 +247,9 @@ class PictureWriter:
         return frame
 
     def _href(self, asset: ImageAsset, body: ObjectBody) -> str:
-        """The name in the package of the picture ``asset`` shows as: itself, or for a rendered text container the
+        """The name in the package of the picture ``asset`` shows as: itself, or for a container the
         picture ``rasterise`` draws of its SVG when there is one."""
-        if asset.format == "svg" and self.rasterise is not None and body.kind == "rendered":
+        if asset.format == "svg" and self.rasterise is not None and body.kind == "container":
             href = f"Pictures/{asset.id}-{body.w}x{body.h}.png"
             if href not in self.parts:
                 self.parts[href] = self.rasterise(asset.data, body.w, body.h)
@@ -297,13 +297,14 @@ class PicturePlan:
     went are taken out (and their image, when nothing else shows it), those that changed get their description, size and
     turn, those whose paragraph is written again are put back where the text says, and new ones are drawn.
 
-    ``block_ids`` are the ids of the blocks of the paragraphs of the file, in order; ``taken`` the names of the parts
-    the package has. :attr:`touched` are the blocks whose paragraph has to be written again for the pictures' sake."""
+    ``paragraph_ids`` are the ids of the text's paragraphs for the paragraphs of the file, in order; ``taken`` the names
+    of the parts the package has. :attr:`touched` are the paragraphs whose element in the file has to be written again
+    for the pictures' sake."""
 
     def __init__(
         self,
         in_file: list[FilePicture],
-        block_ids: list[str],
+        paragraph_ids: list[str],
         baseline: TextModel,
         current: TextModel,
         rasterise: Rasterise | None,
@@ -321,36 +322,36 @@ class PicturePlan:
         self.removed: set[str] = set()  # the names in the package of the pictures that went
         wanted = all_pictures(current)
         for picture in in_file:
-            block = block_ids[picture.block]
-            self.in_file.setdefault(block, []).append(picture)
+            paragraph = paragraph_ids[picture.paragraph]
+            self.in_file.setdefault(paragraph, []).append(picture)
             now = wanted.get(picture.object_id)
             before = baseline.get_object(picture.object_id)
             if now is None or now[1].id != before.body.image:  # gone, or another picture: the old one goes
-                self.touched.add(block)
+                self.touched.add(paragraph)
                 self.removed.add(picture.href)
                 continue
             self.kept[picture.object_id] = picture
             if now[0].anchor != before.anchor or _look(now[0].body) != _look(before.body):
-                self.touched |= {block, now[0].anchor.block}
-        self.touched |= {obj.anchor.block for obj_id, (obj, _) in wanted.items() if obj_id not in self.kept}
+                self.touched |= {paragraph, now[0].anchor.paragraph}
+        self.touched |= {obj.anchor.paragraph for obj_id, (obj, _) in wanted.items() if obj_id not in self.kept}
 
-    def has_any(self, block_id: str) -> bool:
-        """Does the paragraph of ``block_id`` have frames of pictures, or is it to get some?"""
-        return block_id in self.in_file or bool(pictures_of(self.current, block_id))
+    def has_any(self, paragraph_id: str) -> bool:
+        """Does the paragraph of ``paragraph_id`` have frames of pictures, or is it to get some?"""
+        return paragraph_id in self.in_file or bool(pictures_of(self.current, paragraph_id))
 
-    def take_out(self, paragraph: etree._Element, original: etree._Element, block_id: str) -> None:
+    def take_out(self, paragraph: etree._Element, original: etree._Element, paragraph_id: str) -> None:
         """Take the frames of the pictures the file had out of ``paragraph`` (a copy of ``original``), to be put back
         by :meth:`hang` once its words are written (in the paragraph they hang from now, which can be another)."""
         mine, theirs = frames_of(original), frames_of(paragraph)
-        for picture in self.in_file.get(block_id, []):
+        for picture in self.in_file.get(paragraph_id, []):
             detach(theirs[mine.index(picture.frame)])
 
-    def hang(self, paragraph: etree._Element, block_id: str, at: Callable[[int], int]) -> None:
-        """Put the frames of the pictures of ``block_id`` into ``paragraph`` at ``at(offset)`` -- where the text says
-        each hangs, in the words as written: those the file had (a copy of the frame, taken out of its paragraph
+    def hang(self, paragraph: etree._Element, paragraph_id: str, at: Callable[[int], int]) -> None:
+        """Put the frames of the pictures of ``paragraph_id`` into ``paragraph`` at ``at(offset)`` -- where the text
+        says each hangs, in the words as written: those the file had (a copy of the frame, taken out of its paragraph
         before) changed as they changed, the new ones drawn."""
         marks: list[tuple[int, etree._Element]] = []
-        for obj, asset in pictures_of(self.current, block_id):
+        for obj, asset in pictures_of(self.current, paragraph_id):
             picture = self.kept.get(obj.id)
             if picture is not None:
                 frame = copy.deepcopy(picture.frame)
@@ -369,7 +370,7 @@ class PicturePlan:
                 self.written += 1
                 if (
                     self.losses is not None
-                    and obj.body.kind == "rendered"
+                    and obj.body.kind == "container"
                     and asset.format == "svg"
                     and not self.rasterised
                 ):

@@ -19,7 +19,7 @@ from claudia_composes_io._tables import put_tables
 from docx import Document
 from docx.oxml.ns import qn
 
-from claudia_composes import Block, TextModel
+from claudia_composes import TextModel
 from claudia_core import Column, Merge, Paragraph, TableDef, entry_id
 
 
@@ -45,7 +45,7 @@ def table(table_id: str = "t1", **options) -> TableDef:
 
 
 def text_with(*definitions: TableDef, language: str = "en") -> TextModel:
-    model = TextModel([Block("b1", "body", "Before"), Block("b2", "body", "After")], language=language)
+    model = TextModel([Paragraph("b1", "body", "Before"), Paragraph("b2", "body", "After")], language=language)
     put_tables(model, [("b1", len("Before"), definition) for definition in definitions])
     return model
 
@@ -143,7 +143,7 @@ class TestReading:
         assert [column.kind for column in found.columns] == ["text", "number", "number"]
         assert found.width == 6000
         (obj,) = [o for o in back.objects.values() if o.body.kind == "table"]
-        assert (obj.anchor.block, obj.body.ref) == ("b1", found.id)
+        assert (obj.anchor.paragraph, obj.body.ref) == ("b1", found.id)
 
     def test_the_merges_of_a_written_file_come_back(self) -> None:
         merged = TableDef.blank("t1", 3, 3, header_rows=0, merges=(Merge("r1", "c1", 2, 2), Merge("r3", "c1", 1, 3)))
@@ -234,8 +234,10 @@ class TestEditsToAKeptFile:
         data = self.original()
         baseline, current = docx_to_text(data), docx_to_text(data)
         (definition,) = current.tables.values()
-        current.tables[definition.id] = definition.with_entries(
-            [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+        current.tables.put(
+            definition.with_entries(
+                [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+            )
         )
         patched = apply_edits_to_docx(data, baseline, current)
         (found,) = Document(BytesIO(patched)).tables
@@ -247,7 +249,7 @@ class TestEditsToAKeptFile:
         baseline, current = docx_to_text(data), docx_to_text(data)
         (obj,) = [o for o in current.objects.values() if o.body.kind == "table"]
         current.delete_object(obj.id)
-        current.forget_table(obj.body.ref)
+        current.tables.forget(obj.body.ref)
         assert Document(BytesIO(apply_edits_to_docx(data, baseline, current))).tables == []
 
     def test_a_table_that_was_added_is_put_after_its_paragraph(self) -> None:
@@ -278,8 +280,10 @@ class TestWhatIsWritten:
         baseline = docx_to_text(text_to_docx(text_with(table())))
         current = docx_to_text(text_to_docx(text_with(table())))
         (definition,) = current.tables.values()
-        current.tables[definition.id] = definition.with_entries(
-            [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+        current.tables.put(
+            definition.with_entries(
+                [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+            )
         )
         assert docx_unwritten_changes(current, baseline) == ()
         assert odt_unwritten_changes(current, baseline) == ()
@@ -408,8 +412,10 @@ class TestOddFiles:
     def test_edits_measured_from_another_text_are_refused(self) -> None:
         data = text_to_docx(text_with(table()))
         baseline, current = docx_to_text(data), docx_to_text(data)
-        baseline.tables["t1"] = baseline.tables["t1"].with_entries(
-            [("r2", "c1", Paragraph(entry_id("t1", "r2", "c1"), "", "other").written_by(None))]
+        baseline.tables.put(
+            baseline.tables["t1"].with_entries(
+                [("r2", "c1", Paragraph(entry_id("t1", "r2", "c1"), "", "other").written_by(None))]
+            )
         )
         with pytest.raises(UnsupportedEdit):
             apply_edits_to_docx(data, baseline, current)

@@ -13,16 +13,16 @@ import type { ImageImport } from './images'
 import type { Toc } from './contents'
 import type { RefField } from './references'
 
-/** Where an object sits, in the terms of one app. `container` is its slide, sheet or paragraph. */
+/** Where an object sits, in the terms of one app. `holder` is its slide, sheet or paragraph. */
 export interface SlideAnchor {
   kind: 'slide'
-  container: string
+  holder: string
   x: number
   y: number
 }
 export interface CellAnchor {
   kind: 'cell'
-  container: string
+  holder: string
   row: number
   col: number
 }
@@ -30,16 +30,16 @@ export interface CellAnchor {
  * and absent for an object that sits exactly at its character. `wrap` says how the text flows round the object (D1061:
  * absent is `over`, the words do not give way) and `gap` how far the words keep from it, in the same units (absent is
  * the usual 8). */
-export interface BlockAnchor {
-  kind: 'block'
-  container: string
+export interface ParagraphAnchor {
+  kind: 'paragraph'
+  holder: string
   offset: number
   dx?: number
   dy?: number
   wrap?: 'over' | 'around' | 'above-below' | 'behind'
   gap?: number
 }
-export type Anchor = SlideAnchor | CellAnchor | BlockAnchor
+export type Anchor = SlideAnchor | CellAnchor | ParagraphAnchor
 
 /** What an object is and how it looks: the same fields in all three apps. */
 export interface ObjectBody {
@@ -56,9 +56,9 @@ export interface ObjectBody {
    * runs saying who wrote which part. `null` for an image or a diagram, neither of which carries text. */
   paragraph: Paragraph | null
   /** The id of the definition the kind points at, in the document's own table for that kind: the outline of a
-   * `shape`, the asset of an `image`, the `ChartSpec` of a `diagram` (E6.6, `lib/charts.ts`), the rendered text
-   * definition of a `rendered` container (D390, `renderings` on the wire) or the table definition of a `table`
-   * (D1201). `null` for a text box. A rendered container's picture is its definition's own. Read it with
+   * `shape`, the asset of an `image`, the `ChartSpec` of a `diagram` (E6.6, `lib/charts.ts`), the
+   * definition of a `container` (D390, `containers` on the wire) or the table definition of a `table`
+   * (D1201). `null` for a text box. A container's picture is its definition's own. Read it with
    * `pointer(object, kind)`, which is `null` unless the object is of that kind. */
   ref: string | null
   imported: ImageImport | null
@@ -178,16 +178,16 @@ export interface PaletteEvent {
 /** The `objects` event, as the server sends it in every app (`claudia_core.ObjectsChanged`).
  *
  * Typed rather than read off an `any`, because `onAppEvent` takes `any` and so the compiler cannot otherwise
- * catch a renamed field: when `slide`/`sheet` became the one `container` (D177), a handler still reading
+ * catch a renamed field: when `slide`/`sheet` became the one `holder` (D177, D1430), a handler still reading
  * `data.slide` filed the stacking order under `undefined`, which made a freshly inserted object invisible and
  * unselectable until the document was reopened. Each app's handler narrows `data` to this before touching it. */
 export interface ObjectsEvent {
   type: 'objects'
   /** The slide, sheet or paragraph these objects are on. */
-  container: string
+  holder: string
   changed: VisualObject[]
   removed: string[]
-  /** The whole container's stacking order afterwards, bottom first. */
+  /** The whole holder's stacking order afterwards, bottom first. */
   order: string[]
 }
 
@@ -205,8 +205,8 @@ export function slideFrame(obj: VisualObject<SlideAnchor>): Frame {
 }
 
 /** The slide anchor a frame implies (the inverse of `slideFrame`). */
-export function slideAnchor(container: string, frame: Frame): SlideAnchor {
-  return { kind: 'slide', container, x: frame.x, y: frame.y }
+export function slideAnchor(holder: string, frame: Frame): SlideAnchor {
+  return { kind: 'slide', holder, x: frame.x, y: frame.y }
 }
 
 /** The look to draw an object with: the *resolved* CSS of its style, or nothing if the style is unknown.
@@ -237,7 +237,7 @@ export interface StyleModel {
 }
 
 /** Something a style is put into, in the app's own terms (`apply_style`, `deviate`). */
-export type StyleTarget = { object: string } | { block: string } | { sheet: string; range: [number, number, number, number] }
+export type StyleTarget = { object: string } | { paragraph: string } | { sheet: string; range: [number, number, number, number] }
 
 /** What an object's *words* look like: its paragraph's own style, resolved — not the object's style, which is its
  * box or outline (D181, D304). A shape's outline and its words are two slots with a style each (D310). Empty for an

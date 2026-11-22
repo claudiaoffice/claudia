@@ -1099,7 +1099,7 @@ const menus = computed<Menu[]>(() => {
         { id: 'edit.clear', label: t('Clear Cells'), hint: 'Del', action: () => clearSelection(), disabled: readonly.value },
       ],
     },
-    insertMenu(c, { types: state.renderTypes, add: (type) => addContainer(type) }),
+    insertMenu(c, { types: state.containerTypes, add: (type) => addContainer(type) }),
     {
       label: t('Format'),
       items: [

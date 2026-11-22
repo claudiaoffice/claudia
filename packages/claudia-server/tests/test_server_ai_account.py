@@ -122,11 +122,11 @@ def test_a_message_that_is_not_for_the_ai_leaves_no_mode_behind():
 
 
 def text_with(person, words):
-    person.request("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": words})
+    person.request("replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": words})
 
 
 def words_of(person):
-    return person.request("blocks")["result"]["blocks"][0]["text"]
+    return person.request("paragraphs")["result"]["paragraphs"][0]["text"]
 
 
 def test_in_a_text_act_mode_writes_and_suggest_mode_suggests():

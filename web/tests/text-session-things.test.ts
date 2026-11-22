@@ -11,7 +11,7 @@ const WELCOME: Welcome = {
   role: 'owner',
   doc: 'essay',
   app: 'composes',
-  line: 'main',
+  branch: 'main',
   revision: 'main:2',
   id: 1,
   color: '#e6194b',
@@ -19,7 +19,7 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
-  lines: [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
+  branches: [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
   proposal: null,
   returned: null,
 }
@@ -50,23 +50,23 @@ class FakeLink implements LinkLike {
 // `heading` is the level the server worked out for each style (E9.22): the client never walks the parents itself.
 const view = (id: string, based_on: string | null = null, heading: number | null = null) => ({ id, name: id, purpose: '', based_on, css: {}, computed: {}, to_name: false, heading })
 const STYLES = [view('body'), view('heading-1', 'body', 1), view('chapter', 'heading-1', 1), view('aside', 'body', 3)]
-const block = (id: string, style: string, text: string, extra: object = {}) => ({ id, style, text, runs: [[[...text].length, 'ann', null]], ...extra })
+const paragraph = (id: string, style: string, text: string, extra: object = {}) => ({ id, style, text, runs: [[[...text].length, 'ann', null]], ...extra })
 
 async function opened() {
   const link = new FakeLink()
   link.handlers = {
-    blocks: () => ({
+    paragraphs: () => ({
       revision: 'main:2',
       styles: STYLES,
       lists: [{ id: 'l1', scheme: 'bullets', start: 1, name: '' }],
       schemes: [],
-      blocks: [
-        block('b1', 'heading-1', 'Introduction'),
-        block('b2', 'body', 'First words.', { name: 'Opening' }),
-        block('b3', 'body', 'a point', { item: { list: 'l1', level: 0 } }),
-        block('b4', 'chapter', 'Results'),
-        block('b5', 'body', 'Plain text here.'),
-        block('b6', 'aside', 'A heading by its level, not its name'),
+      paragraphs: [
+        paragraph('b1', 'heading-1', 'Introduction'),
+        paragraph('b2', 'body', 'First words.', { name: 'Opening' }),
+        paragraph('b3', 'body', 'a point', { item: { list: 'l1', level: 0 } }),
+        paragraph('b4', 'chapter', 'Results'),
+        paragraph('b5', 'body', 'Plain text here.'),
+        paragraph('b6', 'aside', 'A heading by its level, not its name'),
       ],
     }),
     suggestions: () => [],
@@ -76,7 +76,7 @@ async function opened() {
     chat_log: () => [],
     checkpoints: () => [],
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
-    lines: () => [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
+    branches: () => [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
     restore_policy: () => ({ policy: 'consensus' }),
     hold: () => ({}),
     look: () => ({}),
@@ -91,12 +91,12 @@ async function opened() {
 describe('paragraphs as things (D554)', () => {
   it('knows what kind of paragraph each is, a style based on a heading included', async () => {
     const { session } = await opened()
-    expect(session.state.blocks.map((b) => session.blockKind(b))).toEqual(['heading', 'paragraph', 'item', 'heading', 'paragraph', 'heading'])
+    expect(session.state.paragraphs.map((b) => session.paragraphKind(b))).toEqual(['heading', 'paragraph', 'item', 'heading', 'paragraph', 'heading'])
   })
 
   it('offers the named paragraphs, the headings, and the paragraph with the caret', async () => {
     const { session } = await opened()
-    session.state.selection = { anchor: { block: 'b5', offset: 0 }, focus: { block: 'b5', offset: 0 } }
+    session.state.selection = { anchor: { paragraph: 'b5', offset: 0 }, focus: { paragraph: 'b5', offset: 0 } }
     const offered = await session.taggableThings()
     expect(offered).toEqual([
       { id: 'b2', name: 'Opening', kind: 'paragraph' },
@@ -129,9 +129,9 @@ describe('paragraphs as things (D554)', () => {
 
   it('goes to a paragraph a tag points at (the editor scrolls there; the caret stays; with no place reported there is no way back to offer)', async () => {
     const { session } = await opened()
-    session.state.selection = { anchor: { block: 'b5', offset: 0 }, focus: { block: 'b5', offset: 0 } }
+    session.state.selection = { anchor: { paragraph: 'b5', offset: 0 }, focus: { paragraph: 'b5', offset: 0 } }
     await session.goToThing('b2')
-    expect(session.state.pointed).toMatchObject({ id: 'b2', container: 'b2' })
+    expect(session.state.pointed).toMatchObject({ id: 'b2', holder: 'b2' })
     expect(session.state.wayBack).toBeNull()
   })
 })

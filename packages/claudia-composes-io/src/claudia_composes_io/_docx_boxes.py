@@ -101,7 +101,7 @@ class FileBox:
     """A text box or a shape of a file the model holds: where it is, the run that carries it and what the file says."""
 
     object_id: str
-    block: int  # the index of the paragraph among the paragraphs of the document
+    paragraph: int  # the index of the paragraph among the paragraphs of the document
     offset: int  # the characters of the paragraph before the run
     run: Any  # the ``w:r`` that holds the drawing
     holder: Any  # what the run holds it in: the ``w:drawing`` or the ``mc:AlternateContent`` around it
@@ -414,7 +414,7 @@ class BoxEdits:
     pictures, whose numbers for the drawings the boxes continue.
 
     The interface is that of :class:`~claudia_composes_io._docx_pictures.PictureEdits`: ``marks`` are the runs for the
-    paragraphs ``rewritten`` (by block id), :meth:`settle` puts the others in place."""
+    paragraphs ``rewritten`` (by paragraph id), :meth:`settle` puts the others in place."""
 
     def __init__(  # noqa: PLR0913
         self,
@@ -452,16 +452,16 @@ class BoxEdits:
             docx_set_wrap(_FRAME(box.drawing)[0], now.anchor)
         if (now.anchor.dx, now.anchor.dy) != (before.anchor.dx, before.anchor.dy):
             docx_set_position(_FRAME(box.drawing)[0], now.anchor)
-        if now.anchor.block in self.rewritten or now.anchor != before.anchor:
+        if now.anchor.paragraph in self.rewritten or now.anchor != before.anchor:
             box.run.getparent().remove(box.run)
             self._route(now, box.run)
 
     def _route(self, obj: VisualObject, run: Any) -> None:  # noqa: ANN401
-        where = self.marks if obj.anchor.block in self.rewritten else self.loose
-        where.setdefault(obj.anchor.block, []).append((obj.anchor.offset, run))
+        where = self.marks if obj.anchor.paragraph in self.rewritten else self.loose
+        where.setdefault(obj.anchor.paragraph, []).append((obj.anchor.offset, run))
 
     def settle(self, paragraph_of: Mapping[str, Any]) -> None:
         """Put the boxes of the paragraphs that were not written again into them (``paragraph_of``: the ``w:p`` of each
-        block id)."""
-        for block_id, marks in self.loose.items():
-            interleave(paragraph_of[block_id], marks)
+        paragraph id)."""
+        for paragraph_id, marks in self.loose.items():
+            interleave(paragraph_of[paragraph_id], marks)

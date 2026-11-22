@@ -95,7 +95,7 @@ sliders, encryption of the file store, column resizing.
 
 `./start.sh composes` serves texts (documents in `./.claudia/composes/documents`, because a directory holds one
 app's documents). The text view lives in `TextWorkspace.vue` and `TextEditor.vue`; its state is `lib/text-session.ts`
-(`TextSession`, next to the workbook's `Session`, both built on `lib/base-session.ts`) and `lib/blocks.ts` (pure:
+(`TextSession`, next to the workbook's `Session`, both built on `lib/base-session.ts`) and `lib/paragraphs.ts` (pure:
 the paragraphs, the events that change them, where a caret or zone goes when somebody else writes).
 
 * **Paragraphs with named styles** (Body text, Title, Heading 1/2, Quote, Remark, Definition). You mark text by what

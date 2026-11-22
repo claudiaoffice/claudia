@@ -76,14 +76,14 @@ def name_paragraphs(model, bookmarks: Mapping[str, list[str]], *, spaces: bool) 
     exactly one paragraph, by its id. The first that gives a name is taken; a name somebody has already gets a number
     (``distinct_name``); a heading keeps being called by its title."""
     taken = [name for _kind, _thing, name in model.named_things()]
-    for block in model.blocks:
-        if model.name_is_fixed(block.id):
+    for paragraph in model.paragraphs:
+        if model.name_is_fixed(paragraph.id):
             continue
-        for bookmark in bookmarks.get(block.id, ()):
+        for bookmark in bookmarks.get(paragraph.id, ()):
             name = name_of_bookmark(bookmark, spaces=spaces)
             if name is None:
                 continue
             name = distinct_name(name, taken)
-            model.set_thing_name(block.id, name)
+            model.set_thing_name(paragraph.id, name)
             taken.append(name)
             break

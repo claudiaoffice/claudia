@@ -60,12 +60,12 @@ def write_annotation(paragraph: etree._Element, number: int, text: str, notes: A
     _wrap(paragraph, start, end)
 
 
-def annotate(paragraph: etree._Element, number: int, block_id: str, notes: Annotations) -> None:
-    """Write what ``notes`` says about the paragraph ``block_id``, the ``number``-th of the text: the comment first, so
-    that the name's bookmark is the outermost."""
-    if comment := notes.comments.get(block_id):
+def annotate(paragraph: etree._Element, number: int, paragraph_id: str, notes: Annotations) -> None:
+    """Write what ``notes`` says about the paragraph ``paragraph_id``, the ``number``-th of the text: the comment first,
+    so that the name's bookmark is the outermost."""
+    if comment := notes.comments.get(paragraph_id):
         write_annotation(paragraph, number, comment, notes)
-    if name := notes.names.get(block_id):
+    if name := notes.names.get(paragraph_id):
         mark_name(paragraph, name)
 
 

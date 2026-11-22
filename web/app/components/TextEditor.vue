@@ -6,7 +6,7 @@ import { computed, nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdat
 import { leaderCss } from '@claudia/layout'
 import { viewTints } from '~/lib/replay-tint'
 import { colorOf } from '~/lib/people'
-import type { Block, Pos } from '~/lib/blocks'
+import type { Paragraph, Pos } from '~/lib/paragraphs'
 import { headingNumberLayout, itemLayout } from '~/lib/list-layout'
 import { headingAttrs, paragraphCss, semanticTag } from '~/lib/style-css'
 import type { TextSession } from '~/lib/text-session'
@@ -14,13 +14,13 @@ import { FIELD_CHAR, fieldIndex, partsOf, type Shown } from '~/lib/references'
 import type { TextMark } from '~/lib/text-search-host'
 import { useI18n } from '~/lib/i18n'
 import { usePointed } from '~/lib/pointed'
-import { columnOf, letsGoOfObject } from '~/lib/text-containers'
-import { nearestBlock } from '~/lib/text-object-host'
+import { columnOf, letsGoOfObject } from '~/lib/text-object-layer'
+import { nearestParagraph } from '~/lib/text-object-host'
 import { wrapOf } from '~/lib/wrap'
 import { floatStyle, measureFloats, takesRoom, type Hung, type WrapFloat, type WrapPage } from '~/lib/wrap-flow'
 import { pointer } from '~/lib/objects'
 import TableView from './TableView.vue'
-import { endsWithTable, pastTable, tableAbove, tableBelow, type Landing, type PathBlock } from '~/lib/table-path'
+import { endsWithTable, pastTable, tableAbove, tableBelow, type Landing, type PathParagraph } from '~/lib/table-path'
 
 const { t } = useI18n()
 
@@ -37,8 +37,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   suggestion: [id: string]
   'style-menu': [at: { x: number; y: number }]
-  contents: [block: string]
-  'reference-menu': [at: { block: string; index: number; x: number; y: number }]
+  contents: [paragraph: string]
+  'reference-menu': [at: { paragraph: string; index: number; x: number; y: number }]
   'table-options': [table: string]
   /** The right button on a floating object or on a table: its menu opens there (D1225, D1224). */
   'object-menu': [at: { id: string; x: number; y: number }]
@@ -48,7 +48,7 @@ const state = props.session.state
 /** What a replay marks (D553): a paragraph as a whole, whichever stretch of it changed. */
 const tints = computed(() => viewTints(state))
 const replayClass = (id: string) => {
-  const tint = tints.value.block(id)
+  const tint = tints.value.paragraph(id)
   return tint && `replay-${tint}`
 }
 const root = ref<HTMLElement | null>(null)
@@ -56,14 +56,14 @@ const scroller = ref<HTMLElement | null>(null)
 const renderKey = ref(0)
 let composing = false
 // A paragraph is drawn from the CSS of its style (D73); the element only says what it is (a heading, a quote).
-const tagOf = (style: string) => semanticTag(state.styles, style)
-const headingOf = (style: string) => headingAttrs(state.styles, style)
+const tagOf = (style: string) => semanticTag(Object.values(state.styles), style)
+const headingOf = (style: string) => headingAttrs(Object.values(state.styles), style)
 // `resolved`, not `computed`: a palette role is a colour by the time it reaches the page (D200).
-const cssOf = (style: string) => paragraphCss(state.styles.find((s) => s.id === style)?.resolved ?? {})
+const cssOf = (style: string) => paragraphCss(state.styles[style]?.resolved ?? {})
 
 /** A list item's indent and gap, from the scheme of its list (E9.21), or a numbered heading's marker gap (E9.22); the
  * marker itself is drawn by CSS. */
-const layoutOf = (at: number) => itemLayout(state.blocks, at, state.lists, state.schemes, cssOf(state.blocks[at]?.style ?? '')) ?? (state.blocks[at]?.label ? headingNumberLayout() : {})
+const layoutOf = (at: number) => itemLayout(state.paragraphs, at, state.lists, state.schemes, cssOf(state.paragraphs[at]?.style ?? '')) ?? (state.paragraphs[at]?.label ? headingNumberLayout() : {})
 
 // ------------------------------------------------------------------------------ what is drawn
 interface TextSeg {
@@ -102,19 +102,19 @@ type Seg = TextSeg | OtherSeg | FieldSeg
 
 const clamp = (n: number, max: number) => Math.max(0, Math.min(n, max))
 
-function segmentsOf(block: Block): Seg[] {
-  const len = block.text.length
+function segmentsOf(paragraph: Paragraph): Seg[] {
+  const len = paragraph.text.length
   const cuts = new Set([0, len])
   if (props.authors) {
     let at = 0
-    for (const run of block.runs) cuts.add((at += run[0]))
+    for (const run of paragraph.runs) cuts.add((at += run[0]))
   }
-  const marks = state.suggestions.filter((s) => s.block === block.id)
+  const marks = state.suggestions.filter((s) => s.paragraph === paragraph.id)
   for (const s of marks) {
     cuts.add(clamp(s.start, len))
     cuts.add(clamp(s.end, len))
   }
-  const hits = (props.marks ?? []).filter((m) => m.block === block.id)
+  const hits = (props.marks ?? []).filter((m) => m.paragraph === paragraph.id)
   for (const h of hits) {
     cuts.add(clamp(h.start, len))
     cuts.add(clamp(h.end, len))
@@ -123,7 +123,7 @@ function segmentsOf(block: Block): Seg[] {
   const carets: { user: string; at: number }[] = []
   for (const [user, hold] of Object.entries(state.presence)) {
     for (const r of hold.regions) {
-      if (r.kind !== 'text' || r.block !== block.id) continue
+      if (r.kind !== 'text' || r.paragraph !== paragraph.id) continue
       const [start, end] = [clamp(r.start, len), clamp(r.end, len)]
       if (start < end) {
         zones.push({ user, start, end })
@@ -135,9 +135,9 @@ function segmentsOf(block: Block): Seg[] {
       }
     }
   }
-  const unwritten = [state.sending, state.pending].filter((u) => u && u.at.block === block.id)
+  const unwritten = [state.sending, state.pending].filter((u) => u && u.at.paragraph === paragraph.id)
   for (const u of unwritten) cuts.add(clamp(u!.at.offset, len))
-  for (const part of partsOf(block.text)) {
+  for (const part of partsOf(paragraph.text)) {
     if (part.kind !== 'field') continue
     cuts.add(part.start)
     cuts.add(part.start + 1)
@@ -155,27 +155,27 @@ function segmentsOf(block: Block): Seg[] {
     })
   }
   let run = 0
-  let runEnd = block.runs[0]?.[0] ?? 0
+  let runEnd = paragraph.runs[0]?.[0] ?? 0
   points.forEach((from, i) => {
     markers(from)
     const to = points[i + 1]
     if (to === undefined || to <= from) return
-    while (run < block.runs.length && runEnd <= from) runEnd += block.runs[++run]?.[0] ?? Infinity
-    const origin = block.runs[run]
+    while (run < paragraph.runs.length && runEnd <= from) runEnd += paragraph.runs[++run]?.[0] ?? Infinity
+    const origin = paragraph.runs[run]
     const sug = marks.find((s) => s.start <= from && s.end >= to && s.end > s.start)
     const zone = zones.find((z) => z.start <= from && z.end >= to)
     const hit = hits.find((h) => h.start <= from && h.end >= to && h.end > h.start)
-    if (block.text[from] === FIELD_CHAR && to === from + 1) {
-      const index = fieldIndex(block.text, from)
-      const shown = block.shown?.[index]
-      out.push({ kind: 'field', key: `f${from}`, start: from, index, text: shown?.text ?? '', state: shown?.state ?? 'ok', target: block.fields?.[index]?.target ?? '' })
+    if (paragraph.text[from] === FIELD_CHAR && to === from + 1) {
+      const index = fieldIndex(paragraph.text, from)
+      const shown = paragraph.shown?.[index]
+      out.push({ kind: 'field', key: `f${from}`, start: from, index, text: shown?.text ?? '', state: shown?.state ?? 'ok', target: paragraph.fields?.[index]?.target ?? '' })
       return
     }
     out.push({
       kind: 'text',
       key: `t${from}`,
       start: from,
-      text: block.text.slice(from, to),
+      text: paragraph.text.slice(from, to),
       author: origin?.[1] ?? null,
       via: origin?.[2] ?? null,
       sug: sug?.id ?? null,
@@ -188,7 +188,7 @@ function segmentsOf(block: Block): Seg[] {
   return out
 }
 
-const hasOverlay = (block: Block) => [state.sending, state.pending].some((u) => u && u.at.block === block.id)
+const hasOverlay = (paragraph: Paragraph) => [state.sending, state.pending].some((u) => u && u.at.paragraph === paragraph.id)
 
 function title(seg: TextSeg): string | undefined {
   if (seg.via) return t('{author}, from a suggestion of {via}', { author: seg.author ?? t('someone'), via: seg.via })
@@ -197,7 +197,7 @@ function title(seg: TextSeg): string | undefined {
 }
 
 // ------------------------------------------------------------------------------ page <-> model
-const blockEl = (id: string) => root.value?.querySelector<HTMLElement>(`[data-block="${CSS.escape(id)}"]`) ?? null
+const paragraphEl = (id: string) => root.value?.querySelector<HTMLElement>(`[data-paragraph="${CSS.escape(id)}"]`) ?? null
 
 /** How many characters of the text (not counting what only the screen shows) lie before a point of the page. A
  * reference is one character, whatever it reads as (step H). */
@@ -221,20 +221,20 @@ function posFromDom(node: Node, offset: number): Pos | null {
   const container = root.value
   if (!container || !container.contains(node)) return null
   if (node === container) {
-    const blocks = state.blocks
-    if (!blocks.length) return null
-    const block = blocks[Math.min(offset, blocks.length - 1)]!
-    return { block: block.id, offset: offset >= blocks.length ? block.text.length : 0 }
+    const paragraphs = state.paragraphs
+    if (!paragraphs.length) return null
+    const paragraph = paragraphs[Math.min(offset, paragraphs.length - 1)]!
+    return { paragraph: paragraph.id, offset: offset >= paragraphs.length ? paragraph.text.length : 0 }
   }
-  const el = (node.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node.parentElement)?.closest<HTMLElement>('[data-block]')
-  if (!el?.dataset.block) return null
-  const block = state.blocks.find((b) => b.id === el.dataset.block)
-  if (!block) return null
-  return { block: block.id, offset: Math.min(textBefore(el, node, offset), block.text.length) }
+  const el = (node.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node.parentElement)?.closest<HTMLElement>('[data-paragraph]')
+  if (!el?.dataset.paragraph) return null
+  const paragraph = state.paragraphs.find((b) => b.id === el.dataset.paragraph)
+  if (!paragraph) return null
+  return { paragraph: paragraph.id, offset: Math.min(textBefore(el, node, offset), paragraph.text.length) }
 }
 
 function domPoint(pos: Pos, afterOverlay: boolean): [Node, number] | null {
-  const el = blockEl(pos.block)
+  const el = paragraphEl(pos.paragraph)
   if (!el) return null
   if (afterOverlay) {
     const overlays = [...el.querySelectorAll<HTMLElement>('[data-overlay]')].filter((o) => Number(o.dataset.at) === pos.offset)
@@ -255,7 +255,7 @@ const tableViews = new Map<string, InstanceType<typeof TableView>>()
 const tableRef = (id: string) => (el: unknown) => (el ? tableViews.set(id, el as InstanceType<typeof TableView>) : tableViews.delete(id))
 
 /** The paragraphs and the tables after each, as the arrow keys go through them. */
-const path = (): PathBlock[] => state.blocks.map((b) => ({ id: b.id, length: b.text.length, tables: tablesAfter(b.id).map((t) => t.object.id) }))
+const path = (): PathParagraph[] => state.paragraphs.map((b) => ({ id: b.id, length: b.text.length, tables: tablesAfter(b.id).map((t) => t.object.id) }))
 const tailIsTable = computed(() => endsWithTable(path()))
 
 /** Put the caret where `to` says: into a table, at a place in the words, or into a paragraph made for it first. */
@@ -266,7 +266,7 @@ async function land(to: Landing | null) {
     tableViews.get(to.object)?.enter(to.where)
     return
   }
-  if (to.kind === 'text') props.session.setSelection({ block: to.block, offset: to.offset })
+  if (to.kind === 'text') props.session.setSelection({ paragraph: to.paragraph, offset: to.offset })
   else if (!(await props.session.addParagraphAfter(to.after))) return
   await nextTick()
   focus()
@@ -279,13 +279,13 @@ function onTableExit(object: string, side: 'before' | 'after') {
 
 /** The space below a table that ends the text: a click there writes after it. */
 function writeAfterTables() {
-  const last = state.blocks.at(-1)
+  const last = state.paragraphs.at(-1)
   if (last && !props.session.readOnly) void land({ kind: 'new', after: last.id })
 }
 
-/** Whether the caret is on the first or the last line of the paragraph `block` (where an arrow leaves it). */
-function onEdgeLine(block: string, which: 'first' | 'last', offset: number, length: number): boolean {
-  const el = root.value?.querySelector<HTMLElement>(`[data-block="${CSS.escape(block)}"]`)
+/** Whether the caret is on the first or the last line of the paragraph `paragraph` (where an arrow leaves it). */
+function onEdgeLine(paragraph: string, which: 'first' | 'last', offset: number, length: number): boolean {
+  const el = root.value?.querySelector<HTMLElement>(`[data-paragraph="${CSS.escape(paragraph)}"]`)
   const sel = document.getSelection()
   const caret = sel?.rangeCount ? sel.getRangeAt(0).getClientRects()[0] : undefined
   if (!el || !caret) return which === 'last' ? offset === length : offset === 0 // no line to measure: the ends of the words
@@ -297,26 +297,26 @@ function onEdgeLine(block: string, which: 'first' | 'last', offset: number, leng
 /** The keys that lead from the words into a table, or past a table that ends the text; `true` when one did. */
 function leadsThroughTable(event: KeyboardEvent): boolean {
   if (event.altKey || event.metaKey || event.shiftKey || props.session.readOnly) return false
-  const blocks = path()
+  const paragraphs = path()
   if (event.ctrlKey) {
-    if (event.key !== 'End' || !endsWithTable(blocks)) return false
+    if (event.key !== 'End' || !endsWithTable(paragraphs)) return false
     event.preventDefault()
-    void land({ kind: 'new', after: blocks.at(-1)!.id })
+    void land({ kind: 'new', after: paragraphs.at(-1)!.id })
     return true
   }
   if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' && event.key !== 'Backspace') return false
   adoptSelection()
   const sel = state.selection
-  if (!sel || sel.anchor.block !== sel.focus.block || sel.anchor.offset !== sel.focus.offset) return false
+  if (!sel || sel.anchor.paragraph !== sel.focus.paragraph || sel.anchor.offset !== sel.focus.offset) return false
   const at = sel.focus
-  const length = state.blocks.find((b) => b.id === at.block)?.text.length ?? 0
+  const length = state.paragraphs.find((b) => b.id === at.paragraph)?.text.length ?? 0
   let to: Landing | null = null
   if (event.key === 'ArrowDown') {
-    const table = tableBelow(blocks, at.block)
-    if (table && onEdgeLine(at.block, 'last', at.offset, length)) to = { kind: 'table', object: table, where: 'first' }
+    const table = tableBelow(paragraphs, at.paragraph)
+    if (table && onEdgeLine(at.paragraph, 'last', at.offset, length)) to = { kind: 'table', object: table, where: 'first' }
   } else {
-    const table = tableAbove(blocks, at.block)
-    const edge = event.key === 'Backspace' ? at.offset === 0 && !props.session.state.pending : onEdgeLine(at.block, 'first', at.offset, length)
+    const table = tableAbove(paragraphs, at.paragraph)
+    const edge = event.key === 'Backspace' ? at.offset === 0 && !props.session.state.pending : onEdgeLine(at.paragraph, 'first', at.offset, length)
     if (table && edge) to = { kind: 'table', object: table, where: event.key === 'Backspace' ? 'lastBox' : 'lastRow' }
   }
   if (!to) return false
@@ -326,9 +326,9 @@ function leadsThroughTable(event: KeyboardEvent): boolean {
 }
 
 /** The tables that hang from a paragraph, in the order of their anchors (E9.32). */
-function tablesAfter(block: string) {
+function tablesAfter(paragraph: string) {
   return props.session
-    .objectsIn(block)
+    .objectsIn(paragraph)
     .filter((o) => o.kind === 'table')
     .sort((a, b) => a.anchor.offset - b.anchor.offset)
     .flatMap((object) => {
@@ -345,7 +345,7 @@ function placeSelection() {
   if (!container || !sel || !mine || composing) return
   if (document.activeElement?.closest('[data-table]')) return // the caret is in a box of a table, not in the words
   if (document.activeElement !== container && !(sel.anchorNode && container.contains(sel.anchorNode))) return
-  const same = mine.anchor.block === mine.focus.block && mine.anchor.offset === mine.focus.offset
+  const same = mine.anchor.paragraph === mine.focus.paragraph && mine.anchor.offset === mine.focus.offset
   const a = domPoint(mine.anchor, false)
   const f = domPoint(mine.focus, same)
   if (!a || !f) return
@@ -371,7 +371,7 @@ function keepInView(point: [Node, number]) {
 
 /** What we last put on the page: a page that still shows it has not been touched by the person since. */
 let placed: string | null = null
-const key = (a: Pos, f: Pos): string => `${a.block}:${a.offset}-${f.block}:${f.offset}`
+const key = (a: Pos, f: Pos): string => `${a.paragraph}:${a.offset}-${f.paragraph}:${f.offset}`
 
 /** Take the selection of the page as the person's. `always`: a click or key was seen; otherwise only if the page
  *  shows something other than what we put there (the model is ahead of the page for a moment after each change). */
@@ -418,7 +418,7 @@ onBeforeUpdate(() => {
 })
 
 watch(
-  () => [state.selection?.anchor.block, state.selection?.anchor.offset, state.selection?.focus.block, state.selection?.focus.offset],
+  () => [state.selection?.anchor.paragraph, state.selection?.anchor.offset, state.selection?.focus.paragraph, state.selection?.focus.offset],
   () => nextTick(placeSelection),
 )
 onUpdated(() => {
@@ -426,13 +426,13 @@ onUpdated(() => {
   before = null
   placeSelection()
 })
-// Where the paragraphs are on the page changes when the text wraps differently, so the containers hanging from them
+// Where the paragraphs are on the page changes when the text wraps differently, so the objects hanging from them
 // (D560) are placed again whenever the text's box changes size, and after a pause when the paragraphs change.
 const layoutTick = ref(0)
 let watcher: ResizeObserver | null = null
 onMounted(() => {
   document.addEventListener('selectionchange', onSelectionChange)
-  props.session.setAnchorProvider(firstVisibleBlock)
+  props.session.setAnchorProvider(firstVisibleParagraph)
   if (typeof ResizeObserver === 'undefined') return
   watcher = new ResizeObserver(() => layoutTick.value++)
   if (root.value) watcher.observe(root.value)
@@ -444,7 +444,7 @@ onBeforeUnmount(() => {
   watcher?.disconnect()
 })
 watch(
-  () => Object.keys(state.objects).length + state.blocks.length,
+  () => Object.keys(state.objects).length + state.paragraphs.length,
   () => nextTick(() => layoutTick.value++),
 )
 watch(renderKey, () => nextTick(() => {
@@ -507,18 +507,18 @@ function onBeforeInput(event: InputEvent) {
 function keepsCaretInText(event: KeyboardEvent): boolean {
   if ((event.key !== 'ArrowUp' && event.key !== 'ArrowDown') || event.ctrlKey || event.altKey || event.metaKey) return false
   const up = event.key === 'ArrowUp'
-  const edge = up ? state.blocks[0] : state.blocks.at(-1)
+  const edge = up ? state.paragraphs[0] : state.paragraphs.at(-1)
   if (!edge) return false
   adoptSelection()
   const sel = state.selection
-  if (!sel || sel.focus.block !== edge.id) return false
+  if (!sel || sel.focus.paragraph !== edge.id) return false
   const unsent = props.session.state.pending?.text.length ?? 0
   if (!onEdgeLine(edge.id, up ? 'first' : 'last', sel.focus.offset, edge.text.length + unsent)) return false
   event.preventDefault()
   void (async () => {
     await props.session.flush() // words typed just now are in the paragraph before its end is worked out
-    const length = state.blocks.find((b) => b.id === edge.id)?.text.length ?? 0
-    const to = { block: edge.id, offset: up ? 0 : length }
+    const length = state.paragraphs.find((b) => b.id === edge.id)?.text.length ?? 0
+    const to = { paragraph: edge.id, offset: up ? 0 : length }
     props.session.setSelection(event.shiftKey ? (state.selection?.anchor ?? to) : to, to)
     placeSelection()
   })()
@@ -594,7 +594,7 @@ function letGoOfObject(event: Event) {
 /** The top-left corner, on the screen, of the character `place` is in front of: where an object anchored there
  * hangs (D907 prints it at the same place). A paragraph with nothing to measure — no words — gives its own corner. */
 function liveSpot(place: Pos): { left: number; top: number } | null {
-  const el = blockEl(place.block)
+  const el = paragraphEl(place.paragraph)
   if (!el) return null
   const at = domPoint(place, false)
   if (at) {
@@ -611,7 +611,7 @@ function liveSpot(place: Pos): { left: number; top: number } | null {
 /** Where an object hangs: the place measured when the words were made to go round the objects (below), for an object
  * the words go round, else the place the words have now. */
 function spotOf(place: Pos): { left: number; top: number } | null {
-  const kept = wrapSpots.get(`${place.block}:${place.offset}`)
+  const kept = wrapSpots.get(`${place.paragraph}:${place.offset}`)
   if (!kept || !root.value) return liveSpot(place)
   const at = root.value.getBoundingClientRect() // (kept from the top left of the text, which the page scrolls)
   return { left: at.left + kept.left, top: at.top + kept.top }
@@ -625,16 +625,16 @@ function spotOf(place: Pos): { left: number; top: number } | null {
 // and the same text always gives the same boxes.
 /** The objects the words go round, in the order of the text. */
 const hung = computed<Hung[]>(() => {
-  const order = new Map(state.blocks.map((b, at) => [b.id, at]))
+  const order = new Map(state.paragraphs.map((b, at) => [b.id, at]))
   const out: Hung[] = []
   for (const o of Object.values(state.objects)) {
-    if (!('container' in o.anchor) || !takesRoom(wrapOf(o.anchor).wrap)) continue
+    if (!('holder' in o.anchor) || !takesRoom(wrapOf(o.anchor).wrap)) continue
     const place = props.session.placeOf(o)
-    if (place) out.push({ id: o.id, block: place.block, offset: place.offset, ...wrapOf(o.anchor), dx: o.anchor.dx, dy: o.anchor.dy, w: o.w, h: o.h })
+    if (place) out.push({ id: o.id, paragraph: place.paragraph, offset: place.offset, ...wrapOf(o.anchor), dx: o.anchor.dx, dy: o.anchor.dy, w: o.w, h: o.h })
   }
-  return out.sort((a, b) => (order.get(a.block) ?? 0) - (order.get(b.block) ?? 0) || a.offset - b.offset || a.id.localeCompare(b.id))
+  return out.sort((a, b) => (order.get(a.paragraph) ?? 0) - (order.get(b.paragraph) ?? 0) || a.offset - b.offset || a.id.localeCompare(b.id))
 })
-const wrapSlots = (block: string) => hung.value.filter((h) => h.block === block).map((h) => h.id)
+const wrapSlots = (paragraph: string) => hung.value.filter((h) => h.paragraph === paragraph).map((h) => h.id)
 const wrapFloats = shallowRef<Record<string, WrapFloat>>({})
 /** Where each object the words go round hangs, from the top left of the text (the page scrolls; this does not). */
 const wrapSpots = new Map<string, { left: number; top: number }>()
@@ -659,9 +659,9 @@ function pageOfWords(host: HTMLElement): WrapPage {
       const css = getComputedStyle(host)
       return columnOf({ left: r.left, top: r.top, width: r.width, height: r.height }, parseFloat(css.paddingLeft) || 0, parseFloat(css.paddingRight) || 0)
     },
-    spotOf: (block, offset) => liveSpot({ block, offset }),
-    paragraphOf: (block) => {
-      const el = blockEl(block)
+    spotOf: (paragraph, offset) => liveSpot({ paragraph, offset }),
+    paragraphOf: (paragraph) => {
+      const el = paragraphEl(paragraph)
       if (!el) return null
       const r = el.getBoundingClientRect()
       const css = getComputedStyle(el)
@@ -707,11 +707,11 @@ function onContextMenu(event: MouseEvent) {
   if ((event.target as Element | null)?.closest?.('[data-object]')) return
   event.preventDefault()
   const atom = (event.target as HTMLElement).closest<HTMLElement>('[data-atom]')
-  const at = atom?.closest<HTMLElement>('[data-block]')?.dataset.block
+  const at = atom?.closest<HTMLElement>('[data-paragraph]')?.dataset.paragraph
   if (atom && at) {
     // on a reference: its own menu (Show As, Go to Target, Remove), mock-up C
-    props.session.setSelection({ block: at, offset: Number(atom.dataset.off) }, { block: at, offset: Number(atom.dataset.off) + 1 })
-    emit('reference-menu', { block: at, index: Number(atom.dataset.field), x: event.clientX, y: event.clientY })
+    props.session.setSelection({ paragraph: at, offset: Number(atom.dataset.off) }, { paragraph: at, offset: Number(atom.dataset.off) + 1 })
+    emit('reference-menu', { paragraph: at, index: Number(atom.dataset.field), x: event.clientX, y: event.clientY })
     return
   }
   adoptSelection(true)
@@ -724,28 +724,28 @@ function onContextMenu(event: MouseEvent) {
  * height, and within it the character the browser says the point is over; the start of the paragraph where the point
  * is not over its words. The object layers are let through for a moment, so that the words under a dragged object answer. */
 function placeAt(x: number, y: number): Pos | null {
-  const blocks = [...(root.value?.querySelectorAll<HTMLElement>('[data-block]') ?? [])].map((el) => {
+  const paragraphs = [...(root.value?.querySelectorAll<HTMLElement>('[data-paragraph]') ?? [])].map((el) => {
     const r = el.getBoundingClientRect()
-    return { id: el.dataset.block!, top: r.top, bottom: r.bottom }
+    return { id: el.dataset.paragraph!, top: r.top, bottom: r.bottom }
   })
-  const id = nearestBlock(blocks, y)
-  const el = id ? blockEl(id) : null
+  const id = nearestParagraph(paragraphs, y)
+  const el = id ? paragraphEl(id) : null
   if (!id || !el) return null
   const r = el.getBoundingClientRect()
   if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-    const layers = [...(scroller.value?.querySelectorAll<HTMLElement>('[data-testid^="containers"]') ?? [])]
+    const layers = [...(scroller.value?.querySelectorAll<HTMLElement>('[data-testid^="object-layer"]') ?? [])]
     const kept = layers.map((l) => l.style.visibility)
     layers.forEach((l) => (l.style.visibility = 'hidden'))
     try {
       const hit = document.caretPositionFromPoint?.(x, y)
       const found = hit ? ([hit.offsetNode, hit.offset] as const) : null
       const pos = found && el.contains(found[0]) ? posFromDom(found[0], found[1]) : null
-      if (pos && pos.block === id) return pos
+      if (pos && pos.paragraph === id) return pos
     } finally {
       layers.forEach((l, i) => (l.style.visibility = kept[i]!))
     }
   }
-  return { block: id, offset: 0 }
+  return { paragraph: id, offset: 0 }
 }
 
 /** Where the caret is on the window (to open the style menu from the keyboard or a menu). */
@@ -776,52 +776,52 @@ function onReferenceClick(event: MouseEvent, seg: FieldSeg) {
 
 /** Follow an entry of a table of contents: the caret goes to the start of its heading (E9.31). */
 function goTo(target: string) {
-  if (!state.blocks.some((b) => b.id === target)) return // a reference to an object or a slide: nothing to scroll to here
-  props.session.setSelection({ block: target, offset: 0 })
-  scrollToBlock(target)
+  if (!state.paragraphs.some((b) => b.id === target)) return // a reference to an object or a slide: nothing to scroll to here
+  props.session.setSelection({ paragraph: target, offset: 0 })
+  scrollToParagraph(target)
   focus()
 }
 
 /** The page a table's entry leads to, in Page view once the text is laid out (step F); `null` in flow, which has no
  * pages, and for a table that shows none. */
-function pageOf(block: Block, target: string): number | null {
-  return (block.generated?.places && props.pages?.get(target)) || null
+function pageOf(paragraph: Paragraph, target: string): number | null {
+  return (paragraph.generated?.places && props.pages?.get(target)) || null
 }
 
 /** What a table's chip says: what it is and the levels it lists. */
-function chipOf(block: Block): string {
-  const g = block.generated!
+function chipOf(paragraph: Paragraph): string {
+  const g = paragraph.generated!
   const levels = g.first === g.last ? t('level {n}', { n: g.first }) : t('levels {first}–{last}', { first: g.first, last: g.last })
   return `${t('Table of contents')} · ${levels}`
 }
 
 /** Show a paragraph (a search found something in an object that hangs from it) without moving the caret. */
-function scrollToBlock(id: string) {
-  blockEl(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+function scrollToParagraph(id: string) {
+  paragraphEl(id)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
 }
 
 /** The paragraph at the top of what is in sight: where the person was, for "Back where I was" (D1312). */
-function firstVisibleBlock(): string | null {
+function firstVisibleParagraph(): string | null {
   const top = scroller.value?.getBoundingClientRect().top ?? 0
-  for (const el of root.value?.querySelectorAll<HTMLElement>('[data-block]') ?? []) {
-    if (el.getBoundingClientRect().bottom > top) return el.dataset.block ?? null
+  for (const el of root.value?.querySelectorAll<HTMLElement>('[data-paragraph]') ?? []) {
+    if (el.getBoundingClientRect().bottom > top) return el.dataset.paragraph ?? null
   }
   return null
 }
 watch(
   () => props.session.state.scrollBack,
   (back) => {
-    if (back) blockEl(back.anchor)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    if (back) paragraphEl(back.anchor)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   },
 )
 
 // A tag in the chat that points at a paragraph marks it (D554); one that points at something hanging from a paragraph
 // brings the paragraph into view.
-usePointed(props.session.state, root, (id) => `[data-block="${CSS.escape(id)}"]`)
+usePointed(props.session.state, root, (id) => `[data-paragraph="${CSS.escape(id)}"]`)
 watch(
   () => props.session.state.pointed,
   (pointed) => {
-    if (pointed?.container) scrollToBlock(pointed.container)
+    if (pointed?.holder) scrollToParagraph(pointed.holder)
   },
 )
 
@@ -846,13 +846,13 @@ function scrollToSuggestion(id: string) {
 function syncCaret() {
   adoptSelection(true)
 }
-defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncCaret })
+defineExpose({ focus, scrollToSuggestion, scrollToParagraph, caretPoint, goTo, syncCaret })
 </script>
 
 <template>
   <div ref="scroller" class="scroller" :class="view" data-testid="text-scroller" @contextmenu.capture="onContextMenu" @pointerdown.capture="letGoOfObject" @focusin="letGoOfObject">
     <div class="sheet">
-      <TextContainers behind :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
+      <TextObjectLayer behind :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
       <div
         :key="renderKey"
         ref="root"
@@ -877,20 +877,20 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
         @dragstart.prevent
         @blur="session.flush()"
       >
-        <template v-for="(block, at) in state.blocks" :key="`${block.id}:${block.generated ? 'nav' : tagOf(block.style)}`">
+        <template v-for="(paragraph, at) in state.paragraphs" :key="`${paragraph.id}:${paragraph.generated ? 'nav' : tagOf(paragraph.style)}`">
         <!-- a table of contents (E9.31): a navigation landmark of links, not text; the caret steps over it -->
         <nav
-          v-if="block.generated"
+          v-if="paragraph.generated"
           class="para toc"
-          :class="[`st-${block.style}`, { picked: state.selection?.focus.block === block.id }, replayClass(block.id)]"
+          :class="[`st-${paragraph.style}`, { picked: state.selection?.focus.paragraph === paragraph.id }, replayClass(paragraph.id)]"
           contenteditable="false"
-          :data-block="block.id"
+          :data-paragraph="paragraph.id"
           :aria-label="t('Table of contents')"
           data-testid="contents"
           @keydown.stop
         >
           <a
-            v-for="entry in block.entries ?? []"
+            v-for="entry in paragraph.entries ?? []"
             :key="entry.target"
             data-skip
             class="toc-entry"
@@ -899,27 +899,27 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
             :href="`#${entry.target}`"
             @click.prevent.stop="goTo(entry.target)"
             ><span v-if="entry.number" class="toc-number">{{ entry.number }}</span><span class="toc-words">{{ entry.text }}</span
-            ><template v-if="pageOf(block, entry.target)"
-              ><span class="toc-leader" :style="leaderCss(block.generated.leader)" aria-hidden="true" /><span class="toc-page">{{ pageOf(block, entry.target) }}</span></template
+            ><template v-if="pageOf(paragraph, entry.target)"
+              ><span class="toc-leader" :style="leaderCss(paragraph.generated.leader)" aria-hidden="true" /><span class="toc-page">{{ pageOf(paragraph, entry.target) }}</span></template
             ></a
           >
-          <p v-if="!block.entries?.length" data-skip class="toc-empty">{{ t('No headings yet: the table lists them as they are written.') }}</p>
-          <button type="button" data-skip class="toc-chip" data-testid="contents-chip" @click.stop="emit('contents', block.id)">
-            {{ chipOf(block) }} · {{ t('Options…') }}
+          <p v-if="!paragraph.entries?.length" data-skip class="toc-empty">{{ t('No headings yet: the table lists them as they are written.') }}</p>
+          <button type="button" data-skip class="toc-chip" data-testid="contents-chip" @click.stop="emit('contents', paragraph.id)">
+            {{ chipOf(paragraph) }} · {{ t('Options…') }}
           </button>
         </nav>
         <component
-          :is="tagOf(block.style)"
+          :is="tagOf(paragraph.style)"
           v-else
           class="para"
-          :class="[`st-${block.style}`, { item: block.item, numbered: !block.item && block.label }, replayClass(block.id)]"
-          :style="{ ...cssOf(block.style), ...layoutOf(at) }"
-          v-bind="headingOf(block.style)"
-          :data-block="block.id"
-          :data-marker="block.label?.marker"
+          :class="[`st-${paragraph.style}`, { item: paragraph.item, numbered: !paragraph.item && paragraph.label }, replayClass(paragraph.id)]"
+          :style="{ ...cssOf(paragraph.style), ...layoutOf(at) }"
+          v-bind="headingOf(paragraph.style)"
+          :data-paragraph="paragraph.id"
+          :data-marker="paragraph.label?.marker"
         >
           <span
-            v-for="id in wrapSlots(block.id)"
+            v-for="id in wrapSlots(paragraph.id)"
             :key="`float-${id}`"
             data-skip
             data-wrap-float
@@ -929,7 +929,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
             class="wrap-float"
             :style="floatOf(id)"
           />
-          <template v-for="seg in segmentsOf(block)" :key="seg.key">
+          <template v-for="seg in segmentsOf(paragraph)" :key="seg.key">
             <span
               v-if="seg.kind === 'text'"
               data-seg
@@ -961,11 +961,11 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
             <span v-else-if="seg.kind === 'reply'" data-skip contenteditable="false" class="reply" :data-sug="seg.id" :class="{ hot: seg.id === active }" @click.stop="emit('suggestion', seg.id!)">{{ seg.text }}</span>
             <span v-else data-skip contenteditable="false" class="peer-caret" :style="{ '--c': seg.color }"><i /><b>{{ seg.text }}</b></span>
           </template>
-          <br v-if="!block.text && !hasOverlay(block)" data-skip >
+          <br v-if="!paragraph.text && !hasOverlay(paragraph)" data-skip >
         </component>
         <!-- the tables that hang from this paragraph, in the flow after it (E9.32): a real table, boxes edited in place -->
         <TableView
-          v-for="shown in tablesAfter(block.id)"
+          v-for="shown in tablesAfter(paragraph.id)"
           :key="shown.object.id"
           :ref="tableRef(shown.object.id)"
           :session="session"
@@ -980,7 +980,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
         <!-- the text ends with a table: a click below it writes after it (D1331); the keys get there too, so it is hidden from a screen reader -->
         <div v-if="tailIsTable && !session.readOnly" class="after-tables" data-skip contenteditable="false" aria-hidden="true" data-testid="after-tables" @mousedown.prevent="writeAfterTables" />
       </div>
-      <TextContainers :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
+      <TextObjectLayer :session="session" :host="root" :tick="layoutTick + wrapVersion" :spot-of="spotOf" :place-at="placeAt" :turning="turning" @menu="emit('object-menu', $event)" @leave="focus()" />
     </div>
   </div>
 </template>
@@ -992,7 +992,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
   background: var(--page);
 }
 .sheet {
-  position: relative; /* the containers float over it (D560) */
+  position: relative; /* the object layer floats over it (D560) */
   margin: 0 auto;
   padding: 36px 40px 160px;
   max-width: 820px;
@@ -1010,7 +1010,7 @@ defineExpose({ focus, scrollToSuggestion, scrollToBlock, caretPoint, goTo, syncC
   border-radius: 2px;
 }
 .doc {
-  position: relative; /* over the layer of the objects behind the words, under the one over them (TextContainers.vue) */
+  position: relative; /* over the layer of the objects behind the words, under the one over them (TextObjectLayer.vue) */
   z-index: 1;
   outline: none;
   font: 400 16.5px/1.75 var(--font-ui);

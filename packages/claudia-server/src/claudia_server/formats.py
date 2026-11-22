@@ -19,7 +19,7 @@ import zipfile
 from dataclasses import dataclass
 from xml.etree import ElementTree
 
-from claudia_container import MAX_DESCRIPTION, MAX_TAGS, clean_details, read_export
+from claudia_document_file import MAX_DESCRIPTION, MAX_TAGS, clean_details, read_export
 from claudia_opc_io import check_package
 
 from .i18n import DEFAULT_LOCALE

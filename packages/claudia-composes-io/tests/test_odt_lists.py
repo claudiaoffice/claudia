@@ -15,7 +15,7 @@ from claudia_composes_io import (
 from lxml import etree
 from test_odt import RICH, an_odt, body_of, content, shown
 
-from claudia_composes import Block, TextModel
+from claudia_composes import Paragraph, TextModel
 from claudia_core import ListBook, ListDef, ListItem
 from claudia_odf_io import NS, Loss, LossLog, problems
 from claudia_opc_io import read_parts
@@ -25,11 +25,11 @@ T = f"{{{NS['text']}}}"
 
 def text_of(*rows: tuple, lists: tuple[ListDef, ...] = (ListDef("l1", "bullets"),)) -> TextModel:
     """A text from ``(text, list id | None, level)`` rows."""
-    blocks = [
-        Block(f"b{n}", "body", row[0], item=ListItem(row[1], row[2]) if len(row) > 1 and row[1] else None)
+    paragraphs = [
+        Paragraph(f"b{n}", "body", row[0], item=ListItem(row[1], row[2]) if len(row) > 1 and row[1] else None)
         for n, row in enumerate(rows, start=1)
     ]
-    return TextModel(blocks, lists=ListBook(lists))
+    return TextModel(paragraphs, lists=ListBook(lists))
 
 
 def shape(model: TextModel) -> list[tuple]:
@@ -37,11 +37,11 @@ def shape(model: TextModel) -> list[tuple]:
     paragraphs with their items, and the lists that are used with their scheme, start and name."""
     names: dict[str, str] = {}
     rows = []
-    for block in model.blocks:
+    for paragraph in model.paragraphs:
         item = None
-        if block.item is not None:
-            item = (names.setdefault(block.item.list, f"L{len(names) + 1}"), block.item.level)
-        rows.append((block.style, block.text, item))
+        if paragraph.item is not None:
+            item = (names.setdefault(paragraph.item.list, f"L{len(names) + 1}"), paragraph.item.level)
+        rows.append((paragraph.style, paragraph.text, item))
     used = {names[list_id]: (d.scheme, d.start, d.name) for list_id in names for d in [model.lists.get(list_id)]}
     return [*rows, ("lists", sorted(used.items()))]
 
@@ -109,7 +109,7 @@ def test_a_list_nobody_uses_is_not_in_the_file():
 
 def test_a_heading_in_a_list_is_still_a_heading():
     model = TextModel(
-        [Block("b1", "heading-1", "H", item=ListItem("l1", 0))], lists=ListBook([ListDef("l1", "bullets")])
+        [Paragraph("b1", "heading-1", "H", item=ListItem("l1", 0))], lists=ListBook([ListDef("l1", "bullets")])
     )
     assert shape(again(model)) == shape(model)
     assert body_of(text_to_odt(model)).find("text:list/text:list-item/text:h", NS) is not None
@@ -135,14 +135,14 @@ def test_a_numbered_list_of_a_file_is_a_numbered_list_of_the_model():
         automatic=NUMBERED,
     )
     model = odt_to_text(data)
-    assert [(b.text, b.item.level) for b in model.blocks if b.item] == [("a", 0), ("b", 1), ("c", 0)]
+    assert [(b.text, b.item.level) for b in model.paragraphs if b.item] == [("a", 0), ("b", 1), ("c", 0)]
     assert model.lists.get("l1") == ListDef("l1", "numbers", 5, None)
     assert odt_import_losses(data) == ()
 
 
 def test_a_second_paragraph_of_an_item_is_not_an_item():
     data = an_odt("<text:list><text:list-item><text:p>a</text:p><text:p>more</text:p></text:list-item></text:list>")
-    assert [b.item is not None for b in odt_to_text(data).blocks] == [True, False]
+    assert [b.item is not None for b in odt_to_text(data).paragraphs] == [True, False]
 
 
 def test_a_list_without_a_style_is_a_bullet_list_whose_look_is_reported():
@@ -192,7 +192,7 @@ def test_a_list_that_continues_another_is_one_list():
         automatic=NUMBERED,
     )
     model = odt_to_text(data)
-    assert [b.item.list for b in model.blocks if b.item] == ["l1", "l1"]
+    assert [b.item.list for b in model.paragraphs if b.item] == ["l1", "l1"]
     assert len(model.lists) == 1
 
 
@@ -202,14 +202,14 @@ def test_a_list_that_only_follows_another_of_the_same_style_is_a_new_list():
         '<text:list text:style-name="WWNum1"><text:list-item><text:p>b</text:p></text:list-item></text:list>',
         automatic=NUMBERED,
     )
-    assert [b.item.list for b in odt_to_text(data).blocks] == ["l1", "l2"]
+    assert [b.item.list for b in odt_to_text(data).paragraphs] == ["l1", "l2"]
 
 
 def test_levels_deeper_than_the_model_has_are_the_deepest_and_say_so():
     nest = "".join("<text:list><text:list-item>" for _ in range(11))
     close = "</text:list-item></text:list>" * 11
     data = an_odt(f"{nest}<text:p>deep</text:p>{close}")
-    assert odt_to_text(data).blocks[0].item.level == 8
+    assert odt_to_text(data).paragraphs[0].item.level == 8
     assert Loss("list-depth", "", 1) in odt_import_losses(data)
 
 
@@ -233,7 +233,7 @@ def an_edited(original: bytes, change, **options) -> tuple[bytes, TextModel]:
 
 
 def index(model: TextModel, text: str) -> int:
-    return next(i for i, b in enumerate(model.blocks) if b.text == text)
+    return next(i for i, b in enumerate(model.paragraphs) if b.text == text)
 
 
 def test_a_file_with_lists_comes_back_as_it_was_when_nothing_changed():
@@ -245,8 +245,8 @@ def test_editing_the_words_of_an_item_changes_that_paragraph_only():
     original = an_odt(LIST_FILE, automatic=NUMBERED)
 
     def edit(model: TextModel) -> None:
-        old = model.blocks[index(model, "two")]
-        model.blocks[index(model, "two")] = Block(old.id, old.style, "second", (), old.item)
+        old = model.paragraphs[index(model, "two")]
+        model.paragraphs[index(model, "two")] = Paragraph(old.id, old.style, "second", (), old.item)
 
     edited, _ = an_edited(original, edit)
     old, new = content(original), content(edited)
@@ -255,7 +255,7 @@ def test_editing_the_words_of_an_item_changes_that_paragraph_only():
 
 def test_an_item_added_after_the_last_item_is_the_next_item_of_the_list():
     def add(model: TextModel) -> None:
-        model.blocks.insert(index(model, "two") + 1, Block("n1", "body", "three", item=ListItem("l1", 0)))
+        model.paragraphs.insert(index(model, "two") + 1, Paragraph("n1", "body", "three", item=ListItem("l1", 0)))
 
     edited, _ = an_edited(an_odt(LIST_FILE, automatic=NUMBERED), add)
     assert len(body_of(edited).findall("text:list", NS)) == 1
@@ -263,7 +263,7 @@ def test_an_item_added_after_the_last_item_is_the_next_item_of_the_list():
 
 def test_an_item_added_below_an_item_goes_one_level_deeper():
     def add(model: TextModel) -> None:
-        model.blocks.insert(index(model, "two") + 1, Block("n1", "body", "two-a", item=ListItem("l1", 1)))
+        model.paragraphs.insert(index(model, "two") + 1, Paragraph("n1", "body", "two-a", item=ListItem("l1", 1)))
 
     an_edited(an_odt(LIST_FILE, automatic=NUMBERED), add)
 
@@ -271,7 +271,7 @@ def test_an_item_added_below_an_item_goes_one_level_deeper():
 def test_an_item_added_at_the_top_of_the_text_starts_a_list_of_its_own():
     def add(model: TextModel) -> None:
         model.lists.add(ListDef("l9", "numbers"))
-        model.blocks.insert(0, Block("n1", "body", "first", item=ListItem("l9", 0)))
+        model.paragraphs.insert(0, Paragraph("n1", "body", "first", item=ListItem("l9", 0)))
 
     edited, _ = an_edited(an_odt(LIST_FILE, automatic=NUMBERED), add)
     assert next(iter(body_of(edited))).tag == f"{T}list"
@@ -280,8 +280,8 @@ def test_an_item_added_at_the_top_of_the_text_starts_a_list_of_its_own():
 def test_a_paragraph_that_becomes_an_item_is_wrapped_in_a_list():
     def add(model: TextModel) -> None:
         model.lists.add(ListDef("l7", "bullets"))
-        old = model.blocks[index(model, "before")]
-        model.blocks[index(model, "before")] = Block(old.id, old.style, old.text, old.runs, ListItem("l7", 0))
+        old = model.paragraphs[index(model, "before")]
+        model.paragraphs[index(model, "before")] = Paragraph(old.id, old.style, old.text, old.runs, ListItem("l7", 0))
 
     edited, _ = an_edited(an_odt(LIST_FILE, automatic=NUMBERED), add)
     assert content(edited).count("<text:list ") == content(an_odt(LIST_FILE)).count("<text:list ") + 1
@@ -289,8 +289,8 @@ def test_a_paragraph_that_becomes_an_item_is_wrapped_in_a_list():
 
 def test_an_item_that_stops_being_one_is_a_paragraph():
     def unlist(model: TextModel) -> None:
-        old = model.blocks[index(model, "two")]
-        model.blocks[index(model, "two")] = Block(old.id, old.style, old.text, old.runs, None)
+        old = model.paragraphs[index(model, "two")]
+        model.paragraphs[index(model, "two")] = Paragraph(old.id, old.style, old.text, old.runs, None)
 
     edited, _ = an_edited(an_odt(LIST_FILE, automatic=NUMBERED), unlist)
     assert "<text:list-item><text:p" in content(edited)
@@ -298,15 +298,15 @@ def test_an_item_that_stops_being_one_is_a_paragraph():
 
 def test_an_item_moved_a_level_is_in_the_other_list_of_the_tree():
     def indent(model: TextModel) -> None:
-        old = model.blocks[index(model, "two")]
-        model.blocks[index(model, "two")] = Block(old.id, old.style, old.text, old.runs, ListItem("l1", 1))
+        old = model.paragraphs[index(model, "two")]
+        model.paragraphs[index(model, "two")] = Paragraph(old.id, old.style, old.text, old.runs, ListItem("l1", 1))
 
     an_edited(an_odt(LIST_FILE, automatic=NUMBERED), indent)
 
 
 def test_a_removed_item_leaves_no_empty_item_behind():
     def remove(model: TextModel) -> None:
-        del model.blocks[index(model, "two")]
+        del model.paragraphs[index(model, "two")]
 
     edited, _ = an_edited(an_odt(LIST_FILE, automatic=NUMBERED), remove)
     assert "<text:list-item/>" not in content(edited) and "<text:list-item></text:list-item>" not in content(edited)
@@ -315,7 +315,7 @@ def test_a_removed_item_leaves_no_empty_item_behind():
 def test_a_list_all_of_whose_items_are_removed_is_gone():
     def remove(model: TextModel) -> None:
         for text in ("one", "one-a", "two"):
-            del model.blocks[index(model, text)]
+            del model.paragraphs[index(model, text)]
 
     edited, _ = an_edited(an_odt(LIST_FILE, automatic=NUMBERED), remove)
     assert body_of(edited).find("text:list", NS) is None
@@ -333,7 +333,7 @@ def test_a_list_changed_from_bullets_to_numbers_gets_a_style_that_counts():
 
 def test_a_paragraph_after_the_last_item_is_after_the_list_not_in_its_item():
     def add(model: TextModel) -> None:
-        model.blocks.insert(index(model, "two") + 1, Block("n1", "body", "between"))
+        model.paragraphs.insert(index(model, "two") + 1, Paragraph("n1", "body", "between"))
 
     edited, _ = an_edited(an_odt(LIST_FILE, automatic=NUMBERED), add)
     assert [child.tag for child in body_of(edited)][:3] == [f"{T}p", f"{T}list", f"{T}p"]
@@ -341,7 +341,7 @@ def test_a_paragraph_after_the_last_item_is_after_the_list_not_in_its_item():
 
 def test_a_paragraph_between_two_items_splits_the_list_and_both_parts_are_one_list():
     def add(model: TextModel) -> None:
-        model.blocks.insert(index(model, "two"), Block("n1", "body", "between"))
+        model.paragraphs.insert(index(model, "two"), Paragraph("n1", "body", "between"))
 
     edited, _ = an_edited(an_odt(LIST_FILE, automatic=NUMBERED), add)
     assert len(body_of(edited).findall("text:list", NS)) == 2
@@ -354,7 +354,7 @@ def test_a_list_with_a_table_in_an_item_cannot_be_restructured():
     )
     original = an_odt(f"<text:list><text:list-item><text:p>a</text:p>{table}</text:list-item></text:list>")
     baseline, current = odt_to_text(original), odt_to_text(original)
-    current.blocks[0] = Block("b1", "body", "a", (), None)
+    current.paragraphs[0] = Paragraph("b1", "body", "a", (), None)
     with pytest.raises(UnsupportedEdit, match="list"):
         apply_edits_to_odt(original, baseline, current)
 
@@ -366,7 +366,7 @@ def test_removing_an_item_says_what_went_with_it():
         "</text:list-item></text:list>"
     )
     baseline, current = odt_to_text(original), odt_to_text(original)
-    current.blocks.clear()
+    current.paragraphs.clear()
     losses = LossLog()
     apply_edits_to_odt(original, baseline, current, losses=losses)
     assert Loss("removed-footnote", "", 1) in losses.result()
@@ -381,23 +381,25 @@ def test_a_file_that_is_rich_in_lists_and_everything_else_survives_any_edit():
     for _ in range(200):
         baseline, current = odt_to_text(original), odt_to_text(original)
         current.lists.add(ListDef("l9", "numbers"))
-        for position in range(len(current.blocks)):
-            block = current.blocks[position]
+        for position in range(len(current.paragraphs)):
+            paragraph = current.paragraphs[position]
             roll = rng.random()
             if roll < 0.25:
                 item = rng.choice([None, ListItem("l1", rng.randint(0, 3)), ListItem("l9", rng.randint(0, 2))])
-                if block.item is not None and item is not None and item.list == "l1" and "l1" not in baseline.lists:
+                if paragraph.item is not None and item is not None and item.list == "l1" and "l1" not in baseline.lists:
                     item = None
-                current.blocks[position] = Block(block.id, block.style, block.text, (), item)
+                current.paragraphs[position] = Paragraph(paragraph.id, paragraph.style, paragraph.text, (), item)
             elif roll < 0.4:
-                current.blocks[position] = Block(block.id, block.style, block.text + "!", (), block.item)
+                current.paragraphs[position] = Paragraph(
+                    paragraph.id, paragraph.style, paragraph.text + "!", (), paragraph.item
+                )
         for number in range(rng.randint(0, 3)):
             item = rng.choice([None, ListItem("l9", rng.randint(0, 2)), ListItem("l1", rng.randint(0, 2))])
-            current.blocks.insert(
-                rng.randint(0, len(current.blocks)), Block(f"n{number}", "body", f"new {number}", item=item)
+            current.paragraphs.insert(
+                rng.randint(0, len(current.paragraphs)), Paragraph(f"n{number}", "body", f"new {number}", item=item)
             )
-        if rng.random() < 0.4 and current.blocks:
-            current.blocks.pop(rng.randrange(len(current.blocks)))
+        if rng.random() < 0.4 and current.paragraphs:
+            current.paragraphs.pop(rng.randrange(len(current.paragraphs)))
         edited = apply_edits_to_odt(original, baseline, current)
         assert problems(edited) == []
         assert shape(odt_to_text(edited)) == shape(current)
@@ -409,7 +411,11 @@ def test_numbered_headings_are_written_as_the_outline_style_and_read_back_as_suc
     from claudia_composes_io import apply_edits_to_odt
 
     model = TextModel(
-        [Block("b1", "heading-1", "Why"), Block("b2", "heading-2", "Asked"), Block("b3", "heading-1", "How")]
+        [
+            Paragraph("b1", "heading-1", "Why"),
+            Paragraph("b2", "heading-2", "Asked"),
+            Paragraph("b3", "heading-1", "How"),
+        ]
     )
     model.lists.add(ListDef("outline", "chapters"))
     model.styles.set_numbering("heading-1", "outline")
@@ -428,6 +434,6 @@ def test_numbered_headings_are_written_as_the_outline_style_and_read_back_as_suc
 
 
 def test_a_text_whose_headings_are_not_numbered_writes_no_outline_numbers():
-    data = text_to_odt(TextModel([Block("b1", "heading-1", "Why")]))
+    data = text_to_odt(TextModel([Paragraph("b1", "heading-1", "Why")]))
     assert b"outline-style" not in read_parts(data)["styles.xml"]
     assert odt_to_text(data).labels() == {}

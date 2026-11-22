@@ -38,7 +38,7 @@ def flat(model: WorkbookModel, *, shift: int = 0, filter_row: bool = False) -> W
         if filter_row and sheet.id == PIVOT:
             copy.cells[(0, 0)] = {"t": "text", "v": "Filter"}
         out.sheets[sheet.id] = copy
-        out.open_container(str(sheet.id))
+        out.open_holder(str(sheet.id))
     for named in model.names:
         if not named.is_result:
             out.names.put(named)

@@ -23,7 +23,7 @@ from claudia_composes_io import (
 from docx import Document
 from docx.oxml.ns import qn
 
-from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, TextModel
+from claudia_composes import DEFAULT_STYLE, Paragraph, ParagraphAnchor, TextModel
 from claudia_core import ImageAsset, ImageImport, ObjectBody, VisualObject, decode_image
 from claudia_odf_io import Loss, LossLog, problems, read_manifest
 from claudia_opc_io import read_parts
@@ -51,14 +51,14 @@ def an_import(asset: ImageAsset) -> ImageImport:
 
 
 def a_text(*texts: str) -> TextModel:
-    return TextModel([Block(f"b{n}", DEFAULT_STYLE, text) for n, text in enumerate(texts, start=1)])
+    return TextModel([Paragraph(f"b{n}", DEFAULT_STYLE, text) for n, text in enumerate(texts, start=1)])
 
 
 def put_picture(model: TextModel, object_id="o1", *, at=("b1", 5), size=(200, 100), shade=0, **changes) -> ImageAsset:
     asset = a_picture(shade=shade)
-    model.define_image(asset)
+    model.images.define(asset)
     body = ObjectBody(object_id, "image", *size, "plain-image", ref=asset.id, imported=an_import(asset), **changes)
-    model.insert_object(VisualObject(body, BlockAnchor(*at)))
+    model.insert_object(VisualObject(body, ParagraphAnchor(*at)))
     return asset
 
 
@@ -83,10 +83,10 @@ def test_a_picture_comes_back_as_an_image_object_with_its_bytes_its_place_and_it
     back = to_model(to_file(model))
     found = only(back)
     assert found.body.kind == "image"
-    assert (found.anchor, found.body.w, found.body.h) == (BlockAnchor("b1", 5), 200, 100)
+    assert (found.anchor, found.body.w, found.body.h) == (ParagraphAnchor("b1", 5), 200, 100)
     assert found.body.description == "two cyclists"
     assert back.images[found.body.image].data == asset.data
-    assert [block.text for block in back.blocks] == ["Hello world", "Second paragraph"]
+    assert [paragraph.text for paragraph in back.paragraphs] == ["Hello world", "Second paragraph"]
 
 
 @FORMATS
@@ -95,14 +95,14 @@ def test_a_picture_at_the_start_and_at_the_end_of_a_paragraph_keeps_its_place(to
     put_picture(model, "o1", at=("b1", 0))
     put_picture(model, "o2", at=("b2", 16), shade=1)
     back = to_model(to_file(model))
-    assert sorted((o.anchor.block, o.anchor.offset) for o in back.objects.values()) == [("b1", 0), ("b2", 16)]
+    assert sorted((o.anchor.paragraph, o.anchor.offset) for o in back.objects.values()) == [("b1", 0), ("b2", 16)]
 
 
 @FORMATS
 def test_a_picture_in_a_paragraph_with_nothing_in_it_is_written(to_file, to_model):
     model = a_text("", "Second")
     put_picture(model, at=("b1", 0))
-    assert only(to_model(to_file(model))).anchor == BlockAnchor("b1", 0)
+    assert only(to_model(to_file(model))).anchor == ParagraphAnchor("b1", 0)
 
 
 @FORMATS
@@ -112,7 +112,7 @@ def test_two_pictures_in_one_paragraph_keep_their_order(to_file, to_model):
     put_picture(model, "o2", at=("b1", 2), shade=1)
     back = to_model(to_file(model))
     assert sorted(o.anchor.offset for o in back.objects.values()) == [2, 8]
-    assert back.blocks[0].text == "Hello world"
+    assert back.paragraphs[0].text == "Hello world"
 
 
 @FORMATS
@@ -147,7 +147,7 @@ def test_the_same_picture_twice_is_one_file_in_the_package(to_file, to_model):
     model = a_text("Hello world")
     asset = put_picture(model, "o1", at=("b1", 1))
     body = ObjectBody("o2", "image", 100, 50, "plain-image", ref=asset.id, imported=an_import(asset))
-    model.insert_object(VisualObject(body, BlockAnchor("b1", 3)))
+    model.insert_object(VisualObject(body, ParagraphAnchor("b1", 3)))
     data = to_file(model)
     media = [name for name in read_parts(data) if name.startswith(("word/media/", "Pictures/"))]
     assert len(media) == 1
@@ -181,7 +181,7 @@ def test_a_picture_that_is_not_edited_comes_back_as_it_was_byte_for_byte():
     original, data, back = patched_docx(lambda model: None)
     assert media(data) == media(original)
     assert [etree_text(each) for each in drawings(data)] == [etree_text(each) for each in drawings(original)]
-    assert only(back).anchor == BlockAnchor("b1", 5)
+    assert only(back).anchor == ParagraphAnchor("b1", 5)
 
 
 def etree_text(element) -> bytes:
@@ -198,7 +198,7 @@ def test_a_new_description_is_written_into_the_drawing_and_nothing_else_changes(
     original, data, back = patched_docx(edit)
     assert only(back).body.description == "two cyclists on a hill"
     assert media(data) == media(original)
-    assert [block.text for block in back.blocks] == ["Hello world", "Second paragraph"]
+    assert [paragraph.text for paragraph in back.paragraphs] == ["Hello world", "Second paragraph"]
 
 
 def test_a_picture_made_decorative_loses_its_description_and_carries_the_mark():
@@ -213,10 +213,10 @@ def test_a_picture_made_decorative_loses_its_description_and_carries_the_mark():
 def test_a_picture_moved_to_another_paragraph_and_place_is_drawn_there():
     def edit(model: TextModel) -> None:
         found = model.delete_object("o1")[0]  # (an object never changes its paragraph: it is put there anew)
-        model.insert_object(VisualObject(found.body, BlockAnchor("b2", 6)))
+        model.insert_object(VisualObject(found.body, ParagraphAnchor("b2", 6)))
 
     original, data, back = patched_docx(edit)
-    assert only(back).anchor == BlockAnchor("b2", 6)
+    assert only(back).anchor == ParagraphAnchor("b2", 6)
     assert media(data) == media(original)
 
 
@@ -232,10 +232,10 @@ def test_a_picture_moved_inside_its_paragraph_keeps_the_formatting_of_the_words_
 
     def edit(current: TextModel) -> None:
         found = only(current)
-        current.replace_object(VisualObject(found.body, BlockAnchor("b1", 7)))
+        current.replace_object(VisualObject(found.body, ParagraphAnchor("b1", 7)))
 
     _, data, back = patched_docx(edit, original=out.getvalue())
-    assert only(back).anchor == BlockAnchor("b1", 7)
+    assert only(back).anchor == ParagraphAnchor("b1", 7)
     runs = Document(BytesIO(data)).paragraphs[0].runs
     assert "".join(run.text for run in runs) == "Hello world"  # (the cut of the first place stays: it is only a cut)
     assert all(run.bold for run in runs if run.text)
@@ -257,7 +257,7 @@ def test_a_picture_that_is_removed_takes_its_drawing_out_of_the_file():
 
     _, data, back = patched_docx(edit)
     assert back.objects == {} and drawings(data) == []
-    assert [block.text for block in back.blocks] == ["Hello world", "Second paragraph"]
+    assert [paragraph.text for paragraph in back.paragraphs] == ["Hello world", "Second paragraph"]
 
 
 def test_a_picture_added_to_a_kept_file_is_drawn_where_the_text_says():
@@ -268,19 +268,19 @@ def test_a_picture_added_to_a_kept_file_is_drawn_where_the_text_says():
 
     _, data, back = patched_docx(edit, original=original)
     found = only(back)
-    assert (found.anchor, found.body.description) == (BlockAnchor("b2", 3), "a new one")
+    assert (found.anchor, found.body.description) == (ParagraphAnchor("b2", 3), "a new one")
     assert len(media(data)) == 1
-    assert [block.text for block in back.blocks] == ["Hello world", "Second paragraph"]
+    assert [paragraph.text for paragraph in back.paragraphs] == ["Hello world", "Second paragraph"]
 
 
 def test_a_picture_follows_the_words_of_its_paragraph_when_they_change():
     def edit(model: TextModel) -> None:
-        model.blocks[0] = replace(model.blocks[0], text="Hello wide world")
+        model.paragraphs[0] = replace(model.paragraphs[0], text="Hello wide world")
         found = only(model)
-        model.replace_object(VisualObject(found.body, BlockAnchor("b1", 11)))
+        model.replace_object(VisualObject(found.body, ParagraphAnchor("b1", 11)))
 
     original, data, back = patched_docx(edit)
-    assert (only(back).anchor, back.blocks[0].text) == (BlockAnchor("b1", 11), "Hello wide world")
+    assert (only(back).anchor, back.paragraphs[0].text) == (ParagraphAnchor("b1", 11), "Hello wide world")
     assert media(data) == media(original)
 
 
@@ -325,7 +325,7 @@ def a_foreign_docx(*, crop: bool = False, in_table: bool = False, size_cm=(4.0, 
 def test_an_inline_picture_of_a_file_comes_in_as_an_image_object_where_the_words_are():
     back = docx_to_text(a_foreign_docx())
     found = only(back)
-    assert found.anchor == BlockAnchor("b2", 5)  # (after "Here:")
+    assert found.anchor == ParagraphAnchor("b2", 5)  # (after "Here:")
     assert (found.body.w, found.body.h) == (151, 76)  # 4 cm by 2 cm at 96 to the inch
     assert docx_import_losses(a_foreign_docx()) == ()
 
@@ -351,8 +351,8 @@ def test_a_picture_stretched_to_other_proportions_is_not_held():
 def test_a_picture_the_model_does_not_hold_survives_an_edit_of_its_paragraph_and_the_one_it_holds_stays_too():
     data = a_foreign_docx(crop=True)
     baseline, current = docx_to_text(data), docx_to_text(data)
-    block = current.blocks[1]
-    current.blocks[1] = replace(block, text="Changed:")
+    paragraph = current.paragraphs[1]
+    current.paragraphs[1] = replace(paragraph, text="Changed:")
     patched = apply_edits_to_docx(data, baseline, current)
     assert len(drawings(patched)) == 1
     assert media(patched) == media(data)
@@ -361,12 +361,12 @@ def test_a_picture_the_model_does_not_hold_survives_an_edit_of_its_paragraph_and
 def test_an_edit_of_a_foreign_file_with_a_held_picture_keeps_the_picture_in_its_paragraph_after_the_new_words():
     data = a_foreign_docx()
     baseline, current = docx_to_text(data), docx_to_text(data)
-    current.blocks[1] = replace(current.blocks[1], text="Now there:")
+    current.paragraphs[1] = replace(current.paragraphs[1], text="Now there:")
     found = only(current)
-    current.replace_object(VisualObject(found.body, BlockAnchor("b2", 10)))
+    current.replace_object(VisualObject(found.body, ParagraphAnchor("b2", 10)))
     patched = apply_edits_to_docx(data, baseline, current)
     back = docx_to_text(patched)
-    assert (back.blocks[1].text, only(back).anchor) == ("Now there:", BlockAnchor("b2", 10))
+    assert (back.paragraphs[1].text, only(back).anchor) == ("Now there:", ParagraphAnchor("b2", 10))
     assert media(patched) == media(data)
 
 
@@ -419,7 +419,7 @@ def test_a_new_description_is_written_into_the_frame_and_the_image_stays():
     original, data, back = patched_odt(edit)
     assert only(back).body.description == "two cyclists on a hill"
     assert odt_media(data) == odt_media(original)
-    assert [block.text for block in back.blocks] == ["Hello world", "Second paragraph"]
+    assert [paragraph.text for paragraph in back.paragraphs] == ["Hello world", "Second paragraph"]
 
 
 def test_an_odt_picture_resized_and_turned_changes_its_size_and_turn_only():
@@ -435,18 +435,18 @@ def test_an_odt_picture_resized_and_turned_changes_its_size_and_turn_only():
 def test_an_odt_picture_moved_to_another_paragraph_is_drawn_there():
     def edit(model: TextModel) -> None:
         found = model.delete_object("o1")[0]
-        model.insert_object(VisualObject(found.body, BlockAnchor("b2", 6)))
+        model.insert_object(VisualObject(found.body, ParagraphAnchor("b2", 6)))
 
     _, data, back = patched_odt(edit)
-    assert only(back).anchor == BlockAnchor("b2", 6)
+    assert only(back).anchor == ParagraphAnchor("b2", 6)
     assert len(frames(data)) == 1
 
 
 def test_an_odt_picture_moved_inside_its_paragraph_keeps_the_words():
     _, data, back = patched_odt(
-        lambda model: model.replace_object(VisualObject(only(model).body, BlockAnchor("b1", 8)))
+        lambda model: model.replace_object(VisualObject(only(model).body, ParagraphAnchor("b1", 8)))
     )
-    assert (only(back).anchor, back.blocks[0].text) == (BlockAnchor("b1", 8), "Hello world")
+    assert (only(back).anchor, back.paragraphs[0].text) == (ParagraphAnchor("b1", 8), "Hello world")
 
 
 def test_an_odt_picture_that_is_removed_takes_its_frame_and_its_image_out_of_the_file():
@@ -456,7 +456,7 @@ def test_an_odt_picture_that_is_removed_takes_its_frame_and_its_image_out_of_the
     assert not [
         name for name in read_manifest(read_parts(data)["META-INF/manifest.xml"]) if name.startswith("Pictures/")
     ]
-    assert [block.text for block in back.blocks] == ["Hello world", "Second paragraph"]
+    assert [paragraph.text for paragraph in back.paragraphs] == ["Hello world", "Second paragraph"]
 
 
 def test_a_picture_added_to_a_kept_odt_is_drawn_where_the_text_says_and_its_image_is_listed():
@@ -465,30 +465,30 @@ def test_a_picture_added_to_a_kept_odt_is_drawn_where_the_text_says_and_its_imag
         lambda model: put_picture(model, "o1", at=("b2", 3), description="a new one"), original=original
     )
     found = only(back)
-    assert (found.anchor, found.body.description) == (BlockAnchor("b2", 3), "a new one")
+    assert (found.anchor, found.body.description) == (ParagraphAnchor("b2", 3), "a new one")
     (name,) = odt_media(data)
     assert read_manifest(read_parts(data)["META-INF/manifest.xml"])[name] == "image/gif"
-    assert [block.text for block in back.blocks] == ["Hello world", "Second paragraph"]
+    assert [paragraph.text for paragraph in back.paragraphs] == ["Hello world", "Second paragraph"]
 
 
 def test_an_odt_picture_follows_the_words_of_its_paragraph_when_they_change():
     def edit(model: TextModel) -> None:
-        model.blocks[0] = replace(model.blocks[0], text="Hello wide world")
-        model.replace_object(VisualObject(only(model).body, BlockAnchor("b1", 11)))
+        model.paragraphs[0] = replace(model.paragraphs[0], text="Hello wide world")
+        model.replace_object(VisualObject(only(model).body, ParagraphAnchor("b1", 11)))
 
     original, data, back = patched_odt(edit)
-    assert (only(back).anchor, back.blocks[0].text) == (BlockAnchor("b1", 11), "Hello wide world")
+    assert (only(back).anchor, back.paragraphs[0].text) == (ParagraphAnchor("b1", 11), "Hello wide world")
     assert odt_media(data) == odt_media(original)
 
 
 def test_an_odt_picture_whose_image_is_swapped_for_another_leaves_one_image_behind():
     def edit(model: TextModel) -> None:
         found = model.delete_object("o1")[0]
-        put_picture(model, "o2", at=(found.anchor.block, found.anchor.offset), shade=5)
+        put_picture(model, "o2", at=(found.anchor.paragraph, found.anchor.offset), shade=5)
 
     original, data, back = patched_odt(edit)
     assert len(odt_media(data)) == 1 and odt_media(data) != odt_media(original)
-    assert only(back).anchor == BlockAnchor("b1", 5)
+    assert only(back).anchor == ParagraphAnchor("b1", 5)
 
 
 def test_the_package_of_a_patched_odt_is_the_original_except_for_what_changed():
@@ -528,11 +528,11 @@ def test_an_svg_added_to_a_kept_docx_says_its_fallback_picture_is_empty():
 
     def edit(model: TextModel) -> None:
         asset = an_svg_asset()
-        model.define_image(asset)
+        model.images.define(asset)
         model.insert_object(
             VisualObject(
                 ObjectBody("o1", "image", 80, 40, "plain-image", ref=asset.id, imported=an_import(asset)),
-                BlockAnchor("b1", 1),
+                ParagraphAnchor("b1", 1),
             )
         )
 
@@ -541,20 +541,20 @@ def test_an_svg_added_to_a_kept_docx_says_its_fallback_picture_is_empty():
     assert back.images[only(back).body.image].format == "svg"
 
 
-# ------------------------------------------------------------------------------- rendered text containers
+# ------------------------------------------------------------------------------- containers
 def a_container_text(*, pictured: bool = True, svg: bool = True) -> TextModel:
-    """A text with a rendered container (what typst or mermaid made of its source) hanging from the first paragraph."""
-    from claudia_core import RenderedDefinition
+    """A text with a container (what typst or mermaid made of its source) hanging from the first paragraph."""
+    from claudia_core import ContainerDefinition
 
     model = a_text("Hello world", "Second paragraph")
     image = None
     if pictured:
         asset = an_svg_asset() if svg else a_picture(shade=7)
-        model.define_image(asset)
+        model.images.define(asset)
         image = asset.id
-    model.define_rendering(RenderedDefinition("r1", "typst", "= Hi", image=image))
-    body = ObjectBody("c1", "rendered", 200, 100, "plain-image", ref="r1")
-    model.insert_object(VisualObject(body, BlockAnchor("b1", 3)))
+    model.containers.define(ContainerDefinition("r1", "typst", "= Hi", image=image))
+    body = ObjectBody("c1", "container", 200, 100, "plain-image", ref="r1")
+    model.insert_object(VisualObject(body, ParagraphAnchor("b1", 3)))
     return model
 
 
@@ -568,20 +568,20 @@ def codes(losses) -> set[str]:
     return {loss.kind for loss in losses}
 
 
-def test_a_rendered_container_nobody_has_drawn_yet_is_left_out_and_the_export_says_so():
+def test_a_container_nobody_has_drawn_yet_is_left_out_and_the_export_says_so():
     model = a_container_text(pictured=False)
     assert "rendering-pending" in codes(docx_export_losses(model))
     assert "rendering-pending" in codes(odt_export_losses(model))
     assert docx_to_text(text_to_docx(model)).objects == {} and odt_to_text(text_to_odt(model)).objects == {}
 
 
-def test_a_rendered_container_is_a_picture_of_its_own_in_both_files():
+def test_a_container_is_a_picture_of_its_own_in_both_files():
     model = a_container_text()
     assert docx_to_text(text_to_docx(model)).get_object("o1").body.kind == "image"
     assert odt_to_text(text_to_odt(model)).get_object("o1").body.kind == "image"
 
 
-def test_a_rendered_container_is_drawn_as_a_png_when_there_is_something_to_draw_it_with():
+def test_a_container_is_drawn_as_a_png_when_there_is_something_to_draw_it_with():
     model = a_container_text()
     assert "svg-picture" in codes(odt_export_losses(model))
     assert "svg-picture" not in codes(odt_export_losses(model, rasterised=True))
@@ -594,33 +594,33 @@ def test_a_rendered_container_is_drawn_as_a_png_when_there_is_something_to_draw_
     assert docx_to_text(text_to_docx(model, rasterise=draw)).get_object("o1").body.w == 200
 
 
-def test_two_rendered_containers_of_one_picture_share_one_png():
+def test_two_containers_of_one_picture_share_one_png():
     model = a_container_text()
-    from claudia_core import RenderedDefinition
+    from claudia_core import ContainerDefinition
 
-    model.define_rendering(RenderedDefinition("r2", "typst", "= Hi", image=next(iter(model.images))))
+    model.containers.define(ContainerDefinition("r2", "typst", "= Hi", image=next(iter(model.images))))
     model.insert_object(
-        VisualObject(ObjectBody("c2", "rendered", 200, 100, "plain-image", ref="r2"), BlockAnchor("b2", 1))
+        VisualObject(ObjectBody("c2", "container", 200, 100, "plain-image", ref="r2"), ParagraphAnchor("b2", 1))
     )
     data = text_to_odt(model, rasterise=draw)
     assert len([name for name in read_parts(data) if name.startswith("Pictures/")]) == 1
     assert len(odt_to_text(data).objects) == 2
 
 
-def test_a_rendered_container_added_to_a_kept_odt_says_what_a_program_without_svg_shows():
+def test_a_container_added_to_a_kept_odt_says_what_a_program_without_svg_shows():
     original = text_to_odt(a_text("Hello world", "Second paragraph"))
     found = LossLog()
     baseline, current = odt_to_text(original), odt_to_text(original)
     container = a_container_text()
-    current.define_image(next(iter(container.images.values())))
-    current.define_rendering(container.renderings["r1"])
+    current.images.define(next(iter(container.images.values())))
+    current.containers.define(container.containers["r1"])
     current.insert_object(container.get_object("c1"))
     data = apply_edits_to_odt(original, baseline, current, losses=found)
     assert "svg-picture" in codes(found.result()) and problems(data) == []
     assert len(odt_to_text(data).objects) == 1
 
 
-def test_a_rendered_container_nothing_has_drawn_is_listed_when_a_kept_file_is_patched():
+def test_a_container_nothing_has_drawn_is_listed_when_a_kept_file_is_patched():
     for to_text, patch, text_to in (
         (odt_to_text, apply_edits_to_odt, text_to_odt),
         (docx_to_text, apply_edits_to_docx, text_to_docx),
@@ -629,7 +629,7 @@ def test_a_rendered_container_nothing_has_drawn_is_listed_when_a_kept_file_is_pa
         found = LossLog()
         baseline, current = to_text(original), to_text(original)
         container = a_container_text(pictured=False)
-        current.define_rendering(container.renderings["r1"])
+        current.containers.define(container.containers["r1"])
         current.insert_object(container.get_object("c1"))
         patch(original, baseline, current, losses=found)
         assert "rendering-pending" in codes(found.result())
@@ -794,7 +794,7 @@ def test_a_picture_swapped_for_another_in_a_kept_docx_leaves_one_picture():
     def edit(model: TextModel) -> None:
         found = only(model)
         other = a_picture(shade=9)
-        model.define_image(other)
+        model.images.define(other)
         body = replace(found.body, ref=other.id, imported=an_import(other))
         model.replace_object(VisualObject(body, found.anchor))
 
@@ -813,7 +813,7 @@ def test_a_picture_taken_out_of_a_run_that_has_words_leaves_the_words():
     document.save(out)
     original = out.getvalue()
     _, data, back = patched_docx(lambda model: model.delete_object("o1"), original=original)
-    assert back.objects == {} and back.blocks[0].text == "Words"
+    assert back.objects == {} and back.paragraphs[0].text == "Words"
 
 
 def test_a_picture_put_into_a_paragraph_with_a_tab_and_a_link_lands_after_what_cannot_be_cut():
@@ -825,15 +825,15 @@ def test_a_picture_put_into_a_paragraph_with_a_tab_and_a_link_lands_after_what_c
     document.save(out)
     original = out.getvalue()
     _, data, back = patched_docx(lambda model: put_picture(model, "o1", at=("b1", 1)), original=original)
-    assert only(back).anchor.block == "b1" and back.blocks[0].text == "a\tb"
+    assert only(back).anchor.paragraph == "b1" and back.paragraphs[0].text == "a\tb"
 
 
 def test_two_svg_pictures_of_one_asset_share_the_svg_part_of_a_docx():
     model = a_text("Hello world")
     asset = an_svg_asset()
-    model.define_image(asset)
+    model.images.define(asset)
     for number, offset in ((1, 1), (2, 5)):
         body = ObjectBody(f"o{number}", "image", 80, 40, "plain-image", ref=asset.id, imported=an_import(asset))
-        model.insert_object(VisualObject(body, BlockAnchor("b1", offset)))
+        model.insert_object(VisualObject(body, ParagraphAnchor("b1", offset)))
     parts = read_parts(text_to_docx(model))
     assert len([name for name in parts if name.endswith(".svg")]) == 1

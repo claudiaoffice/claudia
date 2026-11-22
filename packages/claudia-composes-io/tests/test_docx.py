@@ -9,36 +9,36 @@ import pytest
 from claudia_composes_io import UnsupportedEdit, apply_edits_to_docx, docx_to_text, text_to_docx
 from claudia_composes_io._tables import put_tables
 
-from claudia_composes import DEFAULT_STYLE, Block, Suggestion, TextModel, TextRange
+from claudia_composes import DEFAULT_STYLE, Paragraph, Suggestion, TextModel, TextRange
 
 
-def model_with_blocks(*texts: str) -> TextModel:
-    blocks = [Block(f"b{i}", DEFAULT_STYLE, text) for i, text in enumerate(texts, start=1)]
-    return TextModel(blocks)
+def model_with_paragraphs(*texts: str) -> TextModel:
+    paragraphs = [Paragraph(f"b{i}", DEFAULT_STYLE, text) for i, text in enumerate(texts, start=1)]
+    return TextModel(paragraphs)
 
 
 def test_paragraphs_keep_their_text_and_order():
-    model = model_with_blocks("First paragraph.", "Second paragraph.")
+    model = model_with_paragraphs("First paragraph.", "Second paragraph.")
     document = docx.Document(BytesIO(text_to_docx(model)))
     assert [p.text for p in document.paragraphs] == ["First paragraph.", "Second paragraph."]
 
 
-def test_a_title_block_maps_to_words_title_style():
-    model = TextModel([Block("b1", "title", "Claudia")])
+def test_a_title_paragraph_maps_to_words_title_style():
+    model = TextModel([Paragraph("b1", "title", "Claudia")])
     document = docx.Document(BytesIO(text_to_docx(model)))
     style = document.paragraphs[0].style
     assert style is not None and style.name == "Title"
 
 
 def test_a_custom_style_falls_back_to_normal():
-    model = TextModel([Block("b1", "my-custom-style", "Text")])
+    model = TextModel([Paragraph("b1", "my-custom-style", "Text")])
     document = docx.Document(BytesIO(text_to_docx(model)))
     style = document.paragraphs[0].style
     assert style is not None and style.name == "Normal"
 
 
 def test_an_open_suggestion_becomes_a_tracked_change_and_the_plain_text_is_gone():
-    model = model_with_blocks("The committee rejected the proposal.")
+    model = model_with_paragraphs("The committee rejected the proposal.")
     anchor = TextRange("b1", 14, 22)  # "rejected"
     model.suggestions["s1"] = Suggestion("s1", "Claudia AI", anchor, "rejected", "approved", "tone")
     document = docx.Document(BytesIO(text_to_docx(model)))
@@ -52,7 +52,7 @@ def test_an_open_suggestion_becomes_a_tracked_change_and_the_plain_text_is_gone(
 
 
 def test_a_remark_with_no_replacement_is_left_out():
-    model = model_with_blocks("Some text here.")
+    model = model_with_paragraphs("Some text here.")
     anchor = TextRange("b1", 0, 4)
     model.suggestions["s1"] = Suggestion("s1", "Claudia AI", anchor, "Some", None, "just a remark")
     document = docx.Document(BytesIO(text_to_docx(model)))
@@ -60,7 +60,7 @@ def test_a_remark_with_no_replacement_is_left_out():
 
 
 def test_track_suggestions_false_exports_plain_text():
-    model = model_with_blocks("The committee rejected the proposal.")
+    model = model_with_paragraphs("The committee rejected the proposal.")
     anchor = TextRange("b1", 14, 22)
     model.suggestions["s1"] = Suggestion("s1", "Claudia AI", anchor, "rejected", "approved", "tone")
     document = docx.Document(BytesIO(text_to_docx(model, track_suggestions=False)))
@@ -68,7 +68,7 @@ def test_track_suggestions_false_exports_plain_text():
 
 
 def test_markup_survives_a_python_docx_round_trip():
-    model = model_with_blocks("The committee rejected the proposal.")
+    model = model_with_paragraphs("The committee rejected the proposal.")
     anchor = TextRange("b1", 14, 22)
     model.suggestions["s1"] = Suggestion("s1", "Claudia AI", anchor, "rejected", "approved", "tone")
     out = BytesIO(text_to_docx(model))
@@ -92,15 +92,15 @@ def test_docx_to_text_imports_paragraphs_in_order():
     document.add_paragraph("First.")
     document.add_paragraph("Second.")
     model = docx_to_text(_docx_bytes(document))
-    assert [b.id for b in model.blocks] == ["b1", "b2"]
-    assert [b.text for b in model.blocks] == ["First.", "Second."]
+    assert [b.id for b in model.paragraphs] == ["b1", "b2"]
+    assert [b.text for b in model.paragraphs] == ["First.", "Second."]
 
 
 def test_docx_to_text_maps_a_built_in_style_back_to_claudias_id():
     document = docx.Document()
     document.add_paragraph("Claudia", style="Title")
     model = docx_to_text(_docx_bytes(document))
-    assert model.blocks[0].style == "title"
+    assert model.paragraphs[0].style == "title"
 
 
 def test_docx_to_text_falls_back_to_default_style_for_normal_and_unmapped_styles():
@@ -108,20 +108,20 @@ def test_docx_to_text_falls_back_to_default_style_for_normal_and_unmapped_styles
     document.add_paragraph("Plain text.")  # Word's own default is "Normal"
     document.add_paragraph("A bullet.", style="List Bullet")  # a real style, just not one _WORD_STYLE knows
     model = docx_to_text(_docx_bytes(document))
-    assert model.blocks[0].style == DEFAULT_STYLE
-    assert model.blocks[1].style == DEFAULT_STYLE
+    assert model.paragraphs[0].style == DEFAULT_STYLE
+    assert model.paragraphs[1].style == DEFAULT_STYLE
 
 
 def test_docx_to_text_round_trips_through_text_to_docx():
     original = TextModel(
         [
-            Block("b1", "title", "Claudia"),
-            Block("b2", "heading-1", "Introduction"),
-            Block("b3", DEFAULT_STYLE, "Body text."),
+            Paragraph("b1", "title", "Claudia"),
+            Paragraph("b2", "heading-1", "Introduction"),
+            Paragraph("b3", DEFAULT_STYLE, "Body text."),
         ]
     )
     model = docx_to_text(text_to_docx(original))
-    assert [(b.style, b.text) for b in model.blocks] == [
+    assert [(b.style, b.text) for b in model.paragraphs] == [
         ("title", "Claudia"),
         ("heading-1", "Introduction"),
         (DEFAULT_STYLE, "Body text."),
@@ -132,7 +132,7 @@ def test_docx_to_text_on_a_fresh_document_imports_its_one_default_empty_paragrap
     # python-docx's own blank template already has one paragraph (empty, "Normal"); there is no zero-paragraph
     # case to import, so this is what "empty document" actually means.
     model = docx_to_text(_docx_bytes(docx.Document()))
-    assert [(b.style, b.text, b.runs) for b in model.blocks] == [(DEFAULT_STYLE, "", ())]
+    assert [(b.style, b.text, b.runs) for b in model.paragraphs] == [(DEFAULT_STYLE, "", ())]
 
 
 def test_apply_edits_patches_only_the_changed_paragraph_and_preserves_a_table():
@@ -147,8 +147,8 @@ def test_apply_edits_patches_only_the_changed_paragraph_and_preserves_a_table():
     baseline = docx_to_text(original_bytes)
     current = TextModel(
         [
-            Block("b1", baseline.blocks[0].style, "Edited first paragraph."),
-            Block("b2", baseline.blocks[1].style, baseline.blocks[1].text),
+            Paragraph("b1", baseline.paragraphs[0].style, "Edited first paragraph."),
+            Paragraph("b2", baseline.paragraphs[1].style, baseline.paragraphs[1].text),
         ]
     )
     put_tables(current, [("b1", len("Edited first paragraph."), d) for d in baseline.tables.values()])
@@ -161,13 +161,13 @@ def test_apply_edits_patches_only_the_changed_paragraph_and_preserves_a_table():
     assert reopened.tables[0].rows[0].cells[1].text == "B"
 
 
-def test_apply_edits_changes_a_blocks_style():
+def test_apply_edits_changes_a_paragraphs_style():
     document = docx.Document()
     document.add_paragraph("Body text.")
     original_bytes = _docx_bytes(document)
 
     baseline = docx_to_text(original_bytes)
-    current = TextModel([Block("b1", "heading-1", baseline.blocks[0].text)])
+    current = TextModel([Paragraph("b1", "heading-1", baseline.paragraphs[0].text)])
 
     out = apply_edits_to_docx(original_bytes, baseline, current)
     reopened = docx.Document(BytesIO(out))
@@ -181,7 +181,7 @@ def test_apply_edits_renders_a_new_open_suggestion_as_a_tracked_change():
     original_bytes = _docx_bytes(document)
 
     baseline = docx_to_text(original_bytes)
-    current = TextModel([Block("b1", baseline.blocks[0].style, baseline.blocks[0].text)])
+    current = TextModel([Paragraph("b1", baseline.paragraphs[0].style, baseline.paragraphs[0].text)])
     anchor = TextRange("b1", 14, 22)  # "rejected"
     current.suggestions["s1"] = Suggestion("s1", "Claudia AI", anchor, "rejected", "approved", "tone")
 
@@ -199,7 +199,7 @@ def test_apply_edits_raises_unsupported_edit_when_the_baseline_is_not_the_file()
     original_bytes = _docx_bytes(document)
 
     baseline = docx_to_text(original_bytes)
-    elsewhere = TextModel([baseline.blocks[0]])
+    elsewhere = TextModel([baseline.paragraphs[0]])
 
     with pytest.raises(UnsupportedEdit):
         apply_edits_to_docx(original_bytes, elsewhere, elsewhere)
@@ -207,7 +207,7 @@ def test_apply_edits_raises_unsupported_edit_when_the_baseline_is_not_the_file()
 
 # -- when a tracked change was made (D411) ---------------------------------------------------------------------------
 def suggestion_text() -> TextModel:
-    model = model_with_blocks("The committee rejected the proposal.")
+    model = model_with_paragraphs("The committee rejected the proposal.")
     model.suggestions["s1"] = Suggestion("s1", "Claudia AI", TextRange("b1", 14, 22), "rejected", "approved", "tone")
     return model
 
@@ -233,7 +233,7 @@ def test_apply_edits_dates_a_tracked_change_too():
     document.add_paragraph("The committee rejected the proposal.")
     original_bytes = _docx_bytes(document)
     baseline = docx_to_text(original_bytes)
-    current = TextModel([Block("b1", baseline.blocks[0].style, baseline.blocks[0].text)])
+    current = TextModel([Paragraph("b1", baseline.paragraphs[0].style, baseline.paragraphs[0].text)])
     current.suggestions["s1"] = suggestion_text().suggestions["s1"]
     out = apply_edits_to_docx(original_bytes, baseline, current, change_times={"s1": "2026-11-10T08:30:00Z"})
     assert dates_in(out) == ["2026-11-10T08:30:00Z"] * 2

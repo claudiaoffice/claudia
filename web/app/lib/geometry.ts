@@ -1,5 +1,6 @@
 // The arithmetic of the slide: the screen scale, what a click hits, and how dragging moves or resizes a frame.
 // Everything is in slide units (1600 by 900), whole numbers, as the server wants them. These are pure functions.
+import type { ObjectKind } from '@claudia/layout'
 import { NEW_OBJECT_CAP, pictureSize } from './images'
 
 export const SLIDE_W = 1600
@@ -115,10 +116,13 @@ export const NUDGE_FINE = 1
 const STEP = 32 // how far each new object is shifted from the one before
 const STEPS = 8
 
+/** The kinds a frame is made for here: a chart and a table get their place otherwise. */
+export type FramedKind = Exclude<ObjectKind, 'diagram' | 'table'>
+
 /** Where a new object goes: the `index`-th one added gets a little further from the first so none hides another.
  * An image is sized the same way a shape is (it always has an aspect, since every decoded picture has a width and
  * height); it is not its own branch below. */
-export function insertFrame(kind: 'text' | 'shape' | 'image' | 'container', aspect: number | null, index: number, natural?: { width: number; height: number }): Frame {
+export function insertFrame(kind: FramedKind, aspect: number | null, index: number, natural?: { width: number; height: number }): Frame {
   const shift = (index % STEPS) * STEP
   if (kind === 'text') return { x: 160 + shift, y: 120 + shift, ...TEXT_BOX }
   // a picture is no bigger than 420 × 240 or its own size (D1229); a container asks for 420 × 240 and the server fits

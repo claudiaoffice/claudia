@@ -65,6 +65,24 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 
 ### Changed
+- It depends on `claudia-document-file` (was `claudia-container`, D1430, E1.18): imports and `ContainerError` →
+  `DocumentFileError` follow; nothing on the wire changes.
+- **Breaking** — a paragraph on the wire (D1430, E1.18): composes' `blocks` is `paragraphs`, and the ai's paged
+  reader that was called `paragraphs` is `read_paragraphs`; every parameter and answer that named a paragraph `block`
+  says `paragraph` (`add_paragraph_after`, `replace_text`, `set_style`, `move_object`, the object methods' place, the
+  list methods, `continue_list`, search places, the style target `{paragraph}`); the anchor kind is `paragraph`; the
+  events `paragraph_fields` and `paragraph_generated` (were `block_fields` and `block_generated`).
+- **Breaking** — containers on the wire (D1430, E1.18): the methods `container_types`, `containers`,
+  `add_container` (answers `{object, container, revision}`) and `set_container_source` (answers `{container,
+  revision}`) were `rendering_types`, `renderings`, `add_rendering` and `set_rendering_source`; the object kind is
+  `container` and the event `container` (were `rendered` and `rendering`). The module is `claudia_server.containers`
+  (was `rendered`), with `add_container_methods`. A new container is called "Container N" (was "Diagram N").
+  The render desk, `render_result` and the claudia-render package keep their names: rendering is what they do.
+- **Breaking** — on the wire, the slide, sheet or paragraph an object is at is its `holder` (D1430, was
+  `container`): in every anchor, in an `objects` region (`presence`, `lock`, a step's focus) and in the `objects` event.
+- **Breaking** — the glossary's words (D1430): `AiTurn` (was `Step`, what the ai says or calls); the methods
+  `branches` and `peek_branch(branch)` (were `lines` and `peek_line(line)`), `propose_switch(branch)`, and `branch`/
+  `branches` in the welcome and in the answers (were `line`/`lines`).
 - `move_object` in composes may take an object to another paragraph (D1351); it is refused with `locked` where a
   colleague is writing.
 - The first picture of a container added with `fit` is sized by `claudia_core.new_object_size` (D1332, D1333): at least

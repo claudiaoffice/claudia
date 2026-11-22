@@ -7,7 +7,7 @@
     context      what a command works with while it applies
     region       Region: presence, locks and AI edits written once
     presence     holds that move with the edits
-    log          Entry and CommandLog: the source of truth
+    log          Step and CommandLog: the source of truth
     replay       apply a log to a model, deterministically; replay_collecting for a Document-free call site
     history      per-author undo built from the log
     messages     chat records and ephemeral messages (the three message classes)
@@ -28,6 +28,8 @@
     object_texts the words and descriptions of objects as texts a search can look in and replace, for any app
     looks        colours and lengths of a resolved style as values a file format holds (D465)
     shapes       ShapeDefinition: one outline in a 100 by 100 box, the same format in all three apps (E10.7)
+    asset_store  AssetStore, AssetKind, AssetsChanged: what objects show and the document keeps once, by id (D1431)
+    asset_commands  DefineAsset, UpdateAsset, ForgetAsset: the same three commands for every kind of asset (D1431)
     objects      the shared object layer: ObjectBody, Anchor, VisualObject, ObjectModel and their commands
                  (E10.16); DiagramDefinition is the same split applied to a diagram's own data (E6.6)
     file_boxes   the text boxes and shapes of an office file as the model holds them (D465)
@@ -41,6 +43,8 @@ The kernel contains no spreadbook, text or slide code and does no I/O.
 """
 
 from ._version import __version__
+from .asset_commands import DefineAsset, ForgetAsset, UpdateAsset
+from .asset_store import ASSET_KINDS, AssetKind, AssetsChanged, AssetStore, asset_kind
 from .assets import (
     MAX_IMAGE_BYTES,
     SUPPORTED_IMAGE_FORMATS,
@@ -63,6 +67,7 @@ from .commands import (
     encode,
     new_registry,
 )
+from .containers import MAX_CONTAINER_SOURCE, ContainerDefinition
 from .context import Context
 from .css import (
     ALLOWED_CSS,
@@ -77,7 +82,7 @@ from .css import (
     roles_used,
     validate_css,
 )
-from .document import Applied, Changes, CheckpointInfo, Document, Line, Look, RedactionPlan, environment_of
+from .document import Applied, BranchInfo, Changes, CheckpointInfo, Document, Look, RedactionPlan, environment_of
 from .errors import (
     KernelError,
     MissingUpcaster,
@@ -146,7 +151,7 @@ from .generated import (
     Toc,
     generated_from_data,
 )
-from .history import History, Step
+from .history import History, UndoUnit
 from .language import LanguageChanged, LanguageError, SetLanguage, normalize_language
 from .lists import (
     ChangeList,
@@ -160,7 +165,7 @@ from .lists import (
     SetListItem,
     numbering_labels,
 )
-from .log import CommandLog, Entry
+from .log import CommandLog, Step
 from .looks import colour_of, parse_colour, points_of
 from .manifest import (
     Environment,
@@ -179,25 +184,15 @@ from .object_texts import ObjectText, edit_object_text, object_texts
 from .objects import (
     ASPECT_TOLERANCE,
     FILLER,
-    MAX_OBJECTS_PER_CONTAINER,
+    MAX_OBJECTS_PER_HOLDER,
     MAX_SELECTION,
     MIN_OBJECT_SIZE,
     OBJECT_KINDS,
     AddObject,
     Anchor,
-    DefineDiagram,
-    DefineImage,
-    DefineRendering,
-    DefineShape,
     DescribeObject,
     DescribeThing,
     DiagramDefinition,
-    DiagramsChanged,
-    ForgetDiagram,
-    ForgetImage,
-    ForgetRendering,
-    ForgetShape,
-    ImagesChanged,
     MoveObject,
     ObjectBody,
     ObjectModel,
@@ -205,7 +200,6 @@ from .objects import (
     ObjectSet,
     RemoveObject,
     RenameThing,
-    RenderingsChanged,
     ResizeObject,
     RotateObject,
     SetObjectStyle,
@@ -213,11 +207,8 @@ from .objects import (
     SetParagraphStyle,
     SetSnap,
     SetText,
-    ShapesChanged,
     ThingDescribed,
     ThingRenamed,
-    UpdateDiagram,
-    UpdateRendering,
     VisualObject,
     paragraph_for,
 )
@@ -256,7 +247,6 @@ from .paragraphs import (
 from .presence import Hold, Presence
 from .raster import FALLBACK_SIDE, Rasterise, blank_png
 from .region import Region, transform
-from .renderings import MAX_RENDERING_SOURCE, RenderedDefinition
 from .replay import replay, replay_collecting
 from .revision import MAIN, Branch, Revision
 from .schemes import (
@@ -336,6 +326,14 @@ from .what_if import Proposal, WhatIf
 from .writing import DeleteText, InsertText, Span, TextCommand, TypingHost, word_changes
 
 __all__ = [
+    "ASSET_KINDS",
+    "AssetKind",
+    "AssetStore",
+    "AssetsChanged",
+    "DefineAsset",
+    "ForgetAsset",
+    "UpdateAsset",
+    "asset_kind",
     "BASE_FONT_PX",
     "font_size_px",
     "new_object_size",
@@ -438,22 +436,17 @@ __all__ = [
     "distinct_name",
     "free_name",
     "free_names",
-    "DefineDiagram",
-    "DefineImage",
-    "DefineRendering",
-    "DefineShape",
     "DescribeObject",
     "DescribeThing",
     "delete_runs",
     "edit_object_text",
     "DiagramDefinition",
-    "DiagramsChanged",
     "Document",
     "Look",
     "DocumentModel",
     "DocumentStore",
     "encode",
-    "Entry",
+    "Step",
     "FILLER",
     "Environment",
     "environment_of",
@@ -466,10 +459,6 @@ __all__ = [
     "FACETS",
     "fits",
     "FontRequirement",
-    "ForgetDiagram",
-    "ForgetImage",
-    "ForgetRendering",
-    "ForgetShape",
     "FORMAT",
     "format_css",
     "FunctionInfo",
@@ -482,24 +471,23 @@ __all__ = [
     "ImageAsset",
     "ImageError",
     "ImageImport",
-    "ImagesChanged",
     "insert_runs",
     "KernelError",
     "KINDS",
-    "Line",
+    "BranchInfo",
     "luminance",
     "name_key",
     "name_problem",
     "MAIN",
     "Manifest",
     "MAX_IMAGE_BYTES",
-    "MAX_OBJECTS_PER_CONTAINER",
+    "MAX_OBJECTS_PER_HOLDER",
     "MAX_PARAGRAPH_TEXT",
     "PageSetup",
     "PageSetupError",
     "PAPERS",
     "MAX_ROLES",
-    "MAX_RENDERING_SOURCE",
+    "MAX_CONTAINER_SOURCE",
     "MAX_SELECTION",
     "MAX_THING_NAME",
     "MemoryStore",
@@ -552,7 +540,7 @@ __all__ = [
     "RegionHeld",
     "RemoveObject",
     "RenameThing",
-    "RenderedDefinition",
+    "ContainerDefinition",
     "DefineTable",
     "DeleteColumns",
     "DeleteRows",
@@ -584,7 +572,6 @@ __all__ = [
     "format_number",
     "parse_entry_id",
     "parse_number",
-    "RenderingsChanged",
     "RebaseStyle",
     "RemoveStyle",
     "RenameStyle",
@@ -618,7 +605,6 @@ __all__ = [
     "SetText",
     "ShapeDefinition",
     "ShapeError",
-    "ShapesChanged",
     "ThingDescribed",
     "ThingRenamed",
     "slice_runs",
@@ -631,7 +617,7 @@ __all__ = [
     "StaleEdit",
     "Proposal",
     "WhatIf",
-    "Step",
+    "UndoUnit",
     "StyleBook",
     "SetHeadingLevel",
     "SetStyleHidden",
@@ -656,8 +642,6 @@ __all__ = [
     "UndoConflict",
     "UndoRefused",
     "UnknownCommand",
-    "UpdateDiagram",
-    "UpdateRendering",
     "validate_css",
     "VisualObject",
 ]

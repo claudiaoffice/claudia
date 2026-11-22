@@ -70,7 +70,7 @@ def test_every_app_sends_the_slot_table_and_the_targets_it_takes(deck, paper):
     assert model["kinds"]["paragraph"] == ["text", "paragraph", "box"]
     assert [s["name"] for s in model["slots"]["text"]] == ["box", "words"]
     assert model["targets"] == ["object"]
-    assert call(paper, "style_model", methods=composes_methods)["targets"] == ["block", "object"]
+    assert call(paper, "style_model", methods=composes_methods)["targets"] == ["paragraph", "object"]
     assert (
         "object"
         in call(Document(SlideModel.empty(), store=MemoryStore()), "style_model", methods=computes_methods)["targets"]
@@ -104,10 +104,10 @@ def test_one_slot_only(deck):
 
 
 def test_a_paragraph_of_a_text_is_a_target_like_any_other(paper):
-    call(paper, "apply_style", {"targets": [{"block": "b1"}], "style": "quote"}, methods=composes_methods)
-    assert paper.model.block("b1").style == "quote"
+    call(paper, "apply_style", {"targets": [{"paragraph": "b1"}], "style": "quote"}, methods=composes_methods)
+    assert paper.model.paragraph("b1").style == "quote"
     with pytest.raises(RequestError, match="outline style and does not fit"):
-        call(paper, "apply_style", {"targets": [{"block": "b1"}], "style": "plain-shape"}, methods=composes_methods)
+        call(paper, "apply_style", {"targets": [{"paragraph": "b1"}], "style": "plain-shape"}, methods=composes_methods)
 
 
 def test_many_targets_change_in_one_step(deck):
@@ -148,7 +148,7 @@ def test_the_assistant_as_deployed_does_not_restyle_a_text(paper):
         call(
             paper,
             "apply_style",
-            {"targets": [{"block": "b1"}], "style": "quote"},
+            {"targets": [{"paragraph": "b1"}], "style": "quote"},
             methods=composes_methods,
             account=deployed,
         )

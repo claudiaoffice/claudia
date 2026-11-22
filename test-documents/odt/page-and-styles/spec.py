@@ -13,7 +13,7 @@ def import_checks(model: TextModel) -> None:
     assert (model.page.paper, model.page.orientation) == ("a4", "landscape")
     assert (model.page.margin_left, model.page.margin_top) == (56693, 56693)
     assert model.language == "de-DE"
-    assert [b.text for b in model.blocks] == ["Minutes of the meeting", "We met on Tuesday."]
+    assert [b.text for b in model.paragraphs] == ["Minutes of the meeting", "We met on Tuesday."]
 
 
 def modify(model: TextModel) -> TextModel:

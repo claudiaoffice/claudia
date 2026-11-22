@@ -133,7 +133,7 @@ def a_deck() -> SlideModel:
     model = SlideModel()
     library = ShapeLibrary.load()
     for shape_id in ("circle", "rectangle", "triangle"):
-        model.define_shape(library.get(shape_id))
+        model.shapes.define(library.get(shape_id))
     model.insert_slide("s1")
     model.insert_slide("s2")
     model.insert_object(an_object("o1", "s1", "text", 160, 90, 800, 120, "body-text", "Hello & <welcome>"))
@@ -202,7 +202,7 @@ def test_what_a_style_says_is_written_as_automatic_styles_in_values_a_file_can_h
 def test_an_image_is_a_picture_with_its_own_bytes_in_the_package():
     asset = a_gif()
     model = a_deck()
-    model.define_image(asset)
+    model.images.define(asset)
     body = ObjectBody("o9", "image", 400, 200, "plain-image", ref=asset.id, imported=an_import(asset))
     model.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     data = slides_to_odp(model)
@@ -975,7 +975,7 @@ def test_bold_notes_add_one_text_style_and_the_notes_frame_keeps_its_place():
 def a_deck_with_picture(**changes) -> SlideModel:
     deck = SlideModel.empty()
     asset = a_gif()
-    deck.define_image(asset)
+    deck.images.define(asset)
     body = ObjectBody("o1", "image", 40, 20, "plain-image", ref=asset.id, imported=an_import(asset), **changes)
     deck.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     return deck
@@ -1007,7 +1007,7 @@ def test_the_export_report_says_odf_cannot_keep_the_decorative_mark():
     assert odp_export_losses(a_deck_with_picture()) == ()
 
 
-# -- a rendered text container is a picture to a file (D394) ---------------------------------------------------------
+# -- a container is a picture to a file (D394) ---------------------------------------------------------
 GLYPHS = (
     b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30" height="10">'
     b'<defs><symbol id="g"><path d="M0 0L5 5"/></symbol></defs><use xlink:href="#g"/></svg>'
@@ -1015,18 +1015,18 @@ GLYPHS = (
 
 
 def a_deck_with_container(*, pictured: bool = True, **changes) -> SlideModel:
-    from claudia_core import RenderedDefinition
+    from claudia_core import ContainerDefinition
 
     deck = SlideModel.empty()
     asset = decode_image(GLYPHS, checked_drawing=True)
-    deck.define_image(asset)
-    deck.define_rendering(RenderedDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
-    body = ObjectBody("c1", "rendered", 300, 100, "plain-image", ref="r1", **changes)
+    deck.images.define(asset)
+    deck.containers.define(ContainerDefinition("r1", "typst", "= Hi", image=asset.id if pictured else None))
+    body = ObjectBody("c1", "container", 300, 100, "plain-image", ref="r1", **changes)
     deck.insert_object(VisualObject(body, SlideAnchor("s1", 10, 10)))
     return deck
 
 
-def test_a_rendered_container_is_written_as_the_picture_made_from_its_text(tmp_path):
+def test_a_container_is_written_as_the_picture_made_from_its_text(tmp_path):
     data = slides_to_odp(a_deck_with_container(description="a heading that says Hi"))
     frame = a_picture_frame(data)
     href = frame.find("draw:image", NS).get(f"{{{NS['xlink']}}}href")
@@ -1088,7 +1088,7 @@ def a_turned_deck(x: int, y: int, w: int, h: int, rotation: int, kind: str = "te
     shape = None
     if kind == "shape":
         shape = "rectangle"
-        model.define_shape(ShapeLibrary.load().get(shape))
+        model.shapes.define(ShapeLibrary.load().get(shape))
     body = ObjectBody("o1", kind, w, h, style, paragraph_for("o1", words, "turned"), ref=shape, rotation=rotation)
     model.insert_object(VisualObject(body, SlideAnchor("s1", x, y)))
     return model

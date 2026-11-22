@@ -11,7 +11,7 @@ from claudia_composes_io import docx_to_text, odt_to_text
 from docx import Document as WordDocument
 from test_server_thing_names import ANN, on_text
 
-from claudia_composes import InsertText, SetStyle, SplitBlock, TextModel
+from claudia_composes import InsertText, SetStyle, SplitParagraph, TextModel
 from claudia_core import Document, MemoryStore
 
 
@@ -21,7 +21,7 @@ def text():
     doc = Document(TextModel(), store=MemoryStore())
     doc.execute(InsertText("b1", 0, "Introduction"), author="ann")
     doc.execute(SetStyle("b1", "heading-1"), author="ann")
-    doc.execute(SplitBlock("b1", 12, "b2", "body"), author="ann")
+    doc.execute(SplitParagraph("b1", 12, "b2", "body"), author="ann")
     doc.execute(InsertText("b2", 0, "The quick brown fox."), author="ann")
     return doc
 
@@ -66,7 +66,7 @@ def test_a_name_that_was_only_worked_out_is_not_written(text, fmt):
 
 
 def test_a_generic_name_in_another_language_is_not_written_either(text):
-    text.execute(SplitBlock("b2", 3, "b3", "body", name="Absatz 7"), author="ann")
+    text.execute(SplitParagraph("b2", 3, "b3", "body", name="Absatz 7"), author="ann")
     data, _ = exported(text, locale="de")
     assert "Absatz" not in parts(data)["word/document.xml"]
 

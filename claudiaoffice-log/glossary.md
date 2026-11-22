@@ -244,6 +244,14 @@ _avoid_: entity, element, item
 A text box, shape, image, chart, container or table placed in a page, a slide or a sheet; every object is a thing.
 _avoid_: element, figure, shape (for objects of other kinds)
 
+**Holder**
+The slide, sheet or paragraph that an object is at.
+_avoid_: container, parent, owner
+
+**Object layer**
+The invisible layer of a page, a slide or a sheet that floating objects sit on, the same in all three apps.
+_avoid_: canvas, overlay, drawing layer
+
 **Chart**
 A picture drawn from a document's data, shown as an object, as a chart tab of its own, or both.
 _avoid_: diagram, graph, plot

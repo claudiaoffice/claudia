@@ -5,9 +5,9 @@ from contextlib import contextmanager
 
 from starlette.testclient import TestClient
 
-from claudia_container import KdfParams
 from claudia_core.testing import Insert, ListModel
 from claudia_creates import SlideModel
+from claudia_document_file import KdfParams
 from claudia_server import Hub, MemoryProvider, ScryptDirectory, create_app
 from claudia_server.filestore import FileProvider
 from claudia_server.sealed import SealedDocuments
@@ -149,7 +149,7 @@ def test_the_owner_sets_description_and_tags_and_anyone_can_read_them_in_the_lis
 
 
 def test_details_are_plain_in_the_file_so_that_they_need_no_password(tmp_path):
-    from claudia_container import read_manifest
+    from claudia_document_file import read_manifest
 
     provider, client = sealed_server(tmp_path)
     with client, made(client, "alpha") as sock:

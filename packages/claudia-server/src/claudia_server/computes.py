@@ -34,7 +34,7 @@ the total row), the others ``value`` (``total`` on the total row and in the tota
 
 An object is a shared ``ObjectBody`` plus a ``CellAnchor`` (E10.16): the body — kind, size, style, text, shape,
 image, rotation, snap — travels the wire identically in all three apps, and only ``anchor`` differs, as
-``{"kind": "cell", "container": <sheet>, "row": r, "col": c}``. An image is anchored to a cell and neither the
+``{"kind": "cell", "holder": <sheet>, "row": r, "col": c}``. An image is anchored to a cell and neither the
 anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only ``move_object`` (dragging it
 to another cell) moves it, and ``resize_object`` resizes it (E6.17).
 
@@ -125,25 +125,26 @@ from claudia_core import (
     AddObject,
     Batch,
     Command,
-    DefineDiagram,
+    DefineAsset,
     DescribeThing,
-    ForgetDiagram,
+    ForgetAsset,
     ObjectBody,
     PageSetup,
     PageSetupError,
-    UpdateDiagram,
+    UpdateAsset,
     clean_name,
     name_problem,
 )
+from claudia_core.asset_store import DIAGRAM
 
 from .computes_search import add_search_methods
+from .containers import add_container_methods
 from .font_report import add_font_report_method
 from .i18n import msg, translate
 from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
 from .protocol import Context, RequestError, core_methods
-from .rendered import add_rendering_methods
 from .replay import add_replay_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods
@@ -686,7 +687,7 @@ def _define_diagram(ctx, *, definition, base):
         raise RequestError("bad_request", msg("define_diagram: id and format are assigned by the server"))
     workbook = _workbook(ctx)
     diagram_id = fresh_id("g", workbook.diagrams)
-    command = DefineDiagram({**definition, "id": diagram_id, "format": 1})
+    command = DefineAsset(DIAGRAM.name, {**definition, "id": diagram_id, "format": 1})
     return done(ctx, command, base, diagram=diagram_id)
 
 
@@ -695,7 +696,7 @@ def _update_diagram(ctx, *, id, definition, base):
     """Redefine a chart in place (E6.6): what a tab or floating object already showing `id` updates to, with
     nothing to re-place. Same shape as `define_diagram`'s `definition`; the id and format are unchanged."""
     _diagram_definition(_workbook(ctx), id, "update_diagram")
-    command = UpdateDiagram(id, {**definition, "id": id, "format": 1})
+    command = UpdateAsset(DIAGRAM.name, id, {**definition, "id": id, "format": 1})
     return done(ctx, command, base)
 
 
@@ -703,7 +704,7 @@ def _update_diagram(ctx, *, id, definition, base):
 def _forget_diagram(ctx, *, id, base):
     """Let a chart definition go. Refused while a tab or a floating object still shows it — remove or repoint
     those first (`remove_chart`, `remove_object`, or `update_diagram`/`add_chart` onto another definition)."""
-    return done(ctx, ForgetDiagram(id), base)
+    return done(ctx, ForgetAsset(DIAGRAM.name, id), base)
 
 
 @computes_methods.method(
@@ -1185,4 +1186,4 @@ CELLS = Placement(
     },
 )
 add_object_methods(computes_methods, model_of=_workbook, placement=CELLS)
-add_rendering_methods(computes_methods, model_of=_workbook, placement=CELLS)
+add_container_methods(computes_methods, model_of=_workbook, placement=CELLS)

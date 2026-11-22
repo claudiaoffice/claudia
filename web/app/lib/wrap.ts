@@ -3,7 +3,7 @@
 // engine does the wrapping (print and the page view); the server keeps the choice (`set_wrap`).
 import type { Wrap } from '@claudia/layout'
 import { translate as t } from './i18n'
-import type { BlockAnchor } from './objects'
+import type { ParagraphAnchor } from './objects'
 
 export type { Wrap }
 /** The modes, in the order the one key cycles through them: over, around, above and below, behind, and over again. */
@@ -15,7 +15,7 @@ export const MAX_WRAP_GAP = 200
 export const NEW_OBJECT_WRAP: Wrap = 'above-below'
 
 /** The wrap and the gap an anchor says; an anchor that says nothing floats over the text. */
-export function wrapOf(anchor: Pick<BlockAnchor, 'wrap' | 'gap'>): { wrap: Wrap; gap: number } {
+export function wrapOf(anchor: Pick<ParagraphAnchor, 'wrap' | 'gap'>): { wrap: Wrap; gap: number } {
   return { wrap: anchor.wrap ?? 'over', gap: anchor.gap ?? DEFAULT_WRAP_GAP }
 }
 

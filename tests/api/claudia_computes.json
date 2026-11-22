@@ -110,7 +110,7 @@
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
-   "container"
+   "holder"
   ]
  },
  "CellRef": {
@@ -229,41 +229,6 @@
  "DEFAULT_STYLE": {
   "value": "'body-text'"
  },
- "DefineDiagram": {
-  "class": [
-   "Command"
-  ],
-  "init": "(definition: 'dict') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineDiagram'",
-   "redacted": "(self) -> 'Command'",
-   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "DefineImage": {
-  "class": [
-   "Command"
-  ],
-  "init": "(image: 'ImageAsset') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineImage'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
  "DefineName": {
   "class": [
    "Command"
@@ -273,23 +238,6 @@
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'DefineName'",
    "regions": "(self, model) -> 'tuple[CellRegion, ...]'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "DefineShape": {
-  "class": [
-   "Command"
-  ],
-  "init": "(shape: 'ShapeDefinition') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'DefineShape'",
-   "redacted": "(self) -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
    "to_data": "(self) -> 'dict'"
   },
@@ -345,67 +293,6 @@
    "id"
   ]
  },
- "DiagramsChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "(diagram_id: 'str', definition: 'DiagramDefinition | None') -> None",
-  "methods": {
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": []
- },
- "ForgetDiagram": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetDiagram'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "ForgetImage": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetImage'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
- "ForgetShape": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'ForgetShape'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
  "FunctionHelp": {
   "class": [
    "object"
@@ -413,16 +300,6 @@
   "init": "(name: 'str', signature: 'str', description: 'str', tooltip: 'str', help: 'str', source: 'str', examples: 'tuple[Example, ...]' = ()) -> None",
   "methods": {
    "translated": "(self, translate: 'Translate') -> 'FunctionHelp'"
-  },
-  "properties": []
- },
- "ImagesChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "(image_id: 'str', asset: 'ImageAsset | None') -> None",
-  "methods": {
-   "to_data": "(self) -> 'dict'"
   },
   "properties": []
  },
@@ -548,7 +425,7 @@
   "properties": []
  },
  "OBJECT_KINDS": {
-  "value": "('text', 'shape', 'image', 'diagram', 'rendered', 'table')"
+  "value": "('text', 'shape', 'image', 'diagram', 'container', 'table')"
  },
  "ObjectBody": {
   "class": [
@@ -561,9 +438,9 @@
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
   },
   "properties": [
+   "container",
    "diagram",
    "image",
-   "rendered",
    "shape",
    "table"
   ]
@@ -572,7 +449,7 @@
   "class": [
    "object"
   ],
-  "init": "(container: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
+  "init": "(holder: 'str', ids: 'frozenset[str]' = frozenset()) -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'ObjectSet'",
    "overlaps": "(self, other: 'object') -> 'bool'",
@@ -585,7 +462,7 @@
   "class": [
    "object"
   ],
-  "init": "(container: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
+  "init": "(holder: 'str', changed: 'tuple[VisualObject, ...]', removed: 'tuple[str, ...]', order: 'tuple[str, ...]') -> None",
   "methods": {
    "to_data": "(self) -> 'dict'",
    "to_data_for": "(self, viewer: 'str') -> 'dict'"
@@ -1122,16 +999,6 @@
    "summary"
   ]
  },
- "ShapesChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "(shape_id: 'str', definition: 'ShapeDefinition | None') -> None",
-  "methods": {
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": []
- },
  "Sheet": {
   "class": [
    "object"
@@ -1212,24 +1079,6 @@
    "connected"
   ]
  },
- "UpdateDiagram": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str', definition: 'dict') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context') -> 'Command'",
-   "from_data": "(data: 'dict', registry: 'CommandRegistry') -> 'UpdateDiagram'",
-   "redacted": "(self) -> 'Command'",
-   "redacted_in": "(self, model: 'type[DocumentModel]') -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
  "ValueField": {
   "class": [
    "object"
@@ -1250,7 +1099,7 @@
    "with_body": "(self, **changes: 'Any') -> 'Self'"
   },
   "properties": [
-   "container",
+   "holder",
    "id"
   ]
  },
@@ -1274,7 +1123,6 @@
    "check_name": "(self, named: 'NamedRange', *, shared: 'bool' = True) -> 'None'",
    "check_writable": "(self, sheet: 'Sheet', positions) -> 'None'",
    "columns_of": "(self, named: 'NamedRange', sample: 'int' = 2000) -> 'list[tuple[str, str]]'",
-   "containers": "(self) -> 'list[str]'",
    "diagram_from_data": "(self, data: 'dict') -> 'ChartSpec'",
    "drop_sheet": "(self, sheet_id: 'SheetId') -> 'tuple[dict[SheetId, Cells], NameRestores]'",
    "empty": "() -> 'Self'",
@@ -1282,6 +1130,7 @@
    "grow_names": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'NameRestores'",
    "header_edited": "(self, sheet_id: 'SheetId', positions: 'list[Position]') -> 'None'",
    "header_texts": "(self, region: 'Rect') -> 'list[str]'",
+   "holders": "(self) -> 'list[str]'",
    "load_state": "(self, state: 'dict') -> 'None'",
    "name_with_id": "(self, thing_id: 'str') -> 'NamedRange | None'",
    "named_things": "(self)",
@@ -1314,7 +1163,7 @@
    "thing_description": "(self, thing_id: 'str') -> 'str'",
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "trace": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, reach: 'str' = 'group', window: 'Window | None' = None) -> 'Trace'",
-   "users_of_diagram": "(self, diagram_id: 'str') -> 'list[str]'",
+   "users_of": "(self, kind: 'AssetKind', asset_id: 'str') -> 'list[str]'",
    "value": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Value'"
   },
   "properties": []

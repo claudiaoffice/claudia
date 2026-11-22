@@ -12,10 +12,10 @@ export function textStyleHost(session: TextSession): StyleHost {
   }
   return {
     get styles() {
-      return session.state.styles
+      return Object.values(session.state.styles)
     },
     get current() {
-      return session.styleView(session.currentStyle()) ?? session.state.styles[0]
+      return session.styleView(session.currentStyle()) ?? Object.values(session.state.styles)[0]
     },
     get readOnly() {
       return session.readOnly

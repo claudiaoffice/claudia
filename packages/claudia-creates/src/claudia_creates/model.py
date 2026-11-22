@@ -99,20 +99,20 @@ class SlideAnchor:
     y: int
 
     @property
-    def container(self) -> str:
+    def holder(self) -> str:
         """The slide this object belongs to."""
         return self.slide
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores and clients are sent."""
-        return {"kind": self.kind, "container": self.slide, "x": self.x, "y": self.y}
+        return {"kind": self.kind, "holder": self.slide, "x": self.x, "y": self.y}
 
     @classmethod
     def from_data(cls, data: dict) -> SlideAnchor:
         """Read an anchor sent by a client or stored in the log; ``ValueError`` if it is not one."""
         if data.get("kind") != cls.kind:
             raise ValueError(f"creates knows only slide anchors, not {data.get('kind')!r}")
-        slide, x, y = data.get("container"), data.get("x"), data.get("y")
+        slide, x, y = data.get("holder"), data.get("x"), data.get("y")
         if not isinstance(slide, str) or not _is_whole(x) or not _is_whole(y):
             raise ValueError("a slide anchor names a slide and whole x and y")
         return cls(slide, x, y)
@@ -134,7 +134,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 7: how it is printed, and its language (D917)
     # 8: object bodies carry a description (alternative text)
     # 9: speaker notes (Markdown, D342) and planned times (D343) of the slides
-    # 10: rendered text containers (D390)
+    # 10: containers (D390)
     # 11: slides have names, in one namespace with the objects (D550)
     # 12: styles carry heading levels; a new presentation has a slide title style (E9.22, E10.21)
     # 13: the presentation holds lists, whose items are the words of text boxes and shapes (step C, E10.21)
@@ -205,10 +205,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "descriptions": dict(self.slide_descriptions),
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
-            "shapes": self.shapes_to_data(),
-            "images": self.images_to_data(),
+            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
             "objects": self.objects_to_data(),
-            "renderings": self.renderings_to_data(),
             "print_setup": self.print_setup.to_data(),
             "language": self.language,
             "lists": self.lists.to_data(),
@@ -224,7 +222,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         )
         model.slides = list(state["slides"])
         for slide in model.slides:
-            model.open_container(slide)
+            model.open_holder(slide)
         # schema 8 and earlier: no notes and no planned times
         model.notes = {k: v for k, v in state.get("notes", {}).items() if k in model.slides and v}
         model.times = {k: v for k, v in state.get("times", {}).items() if k in model.slides}
@@ -232,9 +230,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model.slide_names = {k: v for k, v in state.get("names", {}).items() if k in model.slides and v}
         # schema 16 and earlier: nothing was written about a slide
         model.slide_descriptions = {k: v for k, v in state.get("descriptions", {}).items() if k in model.slides and v}
-        model.restore_objects(
-            state["objects"], state["images"], state["shapes"], renderings=state.get("renderings", ())
-        )
+        model.restore_objects(state["objects"], state)
         model.lists = ListBook.from_data(state.get("lists", ()))  # schema 12 and earlier: no lists
         model.schemes = SchemeBook.from_data(state.get("schemes"))  # schema 13 and earlier: the built-in ones
         model.structure = TextStructure(model)  # the clients learn the labels with the document
@@ -260,7 +256,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return ObjectSet.from_data(data)
 
     # -- the object seam -------------------------------------------------------
-    def containers(self) -> list[str]:
+    def holders(self) -> list[str]:
         """The slides objects may sit on, in order."""
         return self.slides
 
@@ -323,7 +319,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             _check_seconds(seconds)
         self.check_thing_name(slide, name)
         self.slides.insert(len(self.slides) if at is None else at, slide)
-        self.open_container(slide)
+        self.open_holder(slide)
         self._slide_order += 1
         if notes:
             self.notes[slide] = notes
@@ -342,7 +338,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             raise ValueError(f"slide {slide!r} still has objects; remove them first")
         place = self.slides.index(slide)
         del self.slides[place]
-        self.close_container(slide)
+        self.close_holder(slide)
         self._slide_order += 1
         self.notes.pop(slide, None)
         self.times.pop(slide, None)

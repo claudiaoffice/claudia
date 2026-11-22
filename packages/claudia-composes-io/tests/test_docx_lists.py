@@ -18,7 +18,7 @@ from docx import Document
 from docx.oxml.ns import qn
 from test_odt_lists import shape, text_of
 
-from claudia_composes import Block, TextModel
+from claudia_composes import Paragraph, TextModel
 from claudia_core import ListDef, ListItem
 from claudia_odf_io import Loss
 from claudia_opc_io import read_parts, write_parts
@@ -110,14 +110,17 @@ def test_a_fresh_file_has_a_look_for_every_level():
 
 def test_a_style_that_carries_a_list_makes_its_paragraphs_items():
     model = docx_to_text(foreign_file())
-    assert [(b.text, b.item is not None) for b in model.blocks] == [
+    assert [(b.text, b.item is not None) for b in model.paragraphs] == [
         ("bullet", True),
         ("plain", False),
         ("bullet again", True),
         ("number", True),
     ]
-    assert model.blocks[0].item.list == model.blocks[2].item.list != model.blocks[3].item.list
-    assert [model.lists.get(b.item.list).scheme for b in (model.blocks[0], model.blocks[3])] == ["bullets", "numbers"]
+    assert model.paragraphs[0].item.list == model.paragraphs[2].item.list != model.paragraphs[3].item.list
+    assert [model.lists.get(b.item.list).scheme for b in (model.paragraphs[0], model.paragraphs[3])] == [
+        "bullets",
+        "numbers",
+    ]
 
 
 def test_a_list_the_model_draws_otherwise_is_reported_with_how_many():
@@ -133,13 +136,13 @@ def test_a_paragraph_that_switches_numbering_off_is_no_item():
     document = Document(BytesIO(foreign_file()))
     properties = document.paragraphs[0]._p.get_or_add_pPr()
     properties.get_or_add_numPr().get_or_add_numId().val = 0
-    assert docx_to_text(saved(document)).blocks[0].item is None
+    assert docx_to_text(saved(document)).paragraphs[0].item is None
 
 
 def test_a_number_the_file_does_not_define_is_no_item():
     document = Document(BytesIO(foreign_file()))
     document.paragraphs[1]._p.get_or_add_pPr().get_or_add_numPr().get_or_add_numId().val = 4242
-    assert docx_to_text(saved(document)).blocks[1].item is None
+    assert docx_to_text(saved(document)).paragraphs[1].item is None
 
 
 def without_numbering(data: bytes) -> bytes:
@@ -163,7 +166,7 @@ def test_a_changed_text_in_an_item_keeps_the_item():
     original = text_to_docx(text_of(("one", "l1", 0), ("two", "l1", 0)))
     baseline = docx_to_text(original)
     current = docx_to_text(original)
-    current.blocks[1] = Block("b2", "body", "two!", current.blocks[1].runs, current.blocks[1].item)
+    current.paragraphs[1] = Paragraph("b2", "body", "two!", current.paragraphs[1].runs, current.paragraphs[1].item)
     assert shape(docx_to_text(apply_edits_to_docx(original, baseline, current)))[1][1] == "two!"
     assert numbering_of(apply_edits_to_docx(original, baseline, current)) == numbering_of(original)
 
@@ -171,7 +174,7 @@ def test_a_changed_text_in_an_item_keeps_the_item():
 def test_a_paragraph_made_an_item_joins_the_list_of_the_file():
     original = text_to_docx(text_of(("one", "l1", 0), ("plain",)))
     baseline, current = docx_to_text(original), docx_to_text(original)
-    current.blocks[1] = Block("b2", "body", "plain", (), ListItem(current.blocks[0].item.list, 1))
+    current.paragraphs[1] = Paragraph("b2", "body", "plain", (), ListItem(current.paragraphs[0].item.list, 1))
     first, second = numbering_of(apply_edits_to_docx(original, baseline, current))
     assert first[0] == second[0] and second[1] == 1
 
@@ -179,22 +182,22 @@ def test_a_paragraph_made_an_item_joins_the_list_of_the_file():
 def test_an_item_made_a_paragraph_is_no_item():
     original = text_to_docx(text_of(("one", "l1", 0), ("two", "l1", 0)))
     baseline, current = docx_to_text(original), docx_to_text(original)
-    current.blocks[0] = Block("b1", "body", "one", (), None)
+    current.paragraphs[0] = Paragraph("b1", "body", "one", (), None)
     assert numbering_of(apply_edits_to_docx(original, baseline, current))[0] == (None, None)
 
 
 def test_an_item_of_a_style_that_carries_a_list_made_a_paragraph_stays_one_no_longer():
     original = foreign_file()
     baseline, current = docx_to_text(original), docx_to_text(original)
-    current.blocks[0] = Block("b1", "body", "bullet", (), None)
-    assert docx_to_text(apply_edits_to_docx(original, baseline, current)).blocks[0].item is None
+    current.paragraphs[0] = Paragraph("b1", "body", "bullet", (), None)
+    assert docx_to_text(apply_edits_to_docx(original, baseline, current)).paragraphs[0].item is None
 
 
 def test_a_new_list_gets_its_own_number():
     original = text_to_docx(text_of(("one", "l1", 0), ("plain",)))
     baseline, current = docx_to_text(original), docx_to_text(original)
     current.lists.add(ListDef("l9", "numbers", 4))
-    current.blocks[1] = Block("b2", "body", "plain", (), ListItem("l9", 0))
+    current.paragraphs[1] = Paragraph("b2", "body", "plain", (), ListItem("l9", 0))
     edited = apply_edits_to_docx(original, baseline, current)
     assert numbering_of(edited)[0][0] != numbering_of(edited)[1][0]
     assert shape(docx_to_text(edited))[-1] == ("lists", [("L1", ("bullets", 1, None)), ("L2", ("numbers", 4, None))])
@@ -213,7 +216,7 @@ def test_a_list_drawn_otherwise_follows_its_definition_without_touching_its_para
 def test_a_text_that_changes_nothing_about_lists_leaves_the_numbering_as_it_was():
     original = text_to_docx(text_of(("one", "l1", 0), ("plain",)))
     baseline, current = docx_to_text(original), docx_to_text(original)
-    current.blocks[1] = Block("b2", "body", "plain!", current.blocks[1].runs, None)
+    current.paragraphs[1] = Paragraph("b2", "body", "plain!", current.paragraphs[1].runs, None)
     assert (
         parts(apply_edits_to_docx(original, baseline, current))["word/numbering.xml"]
         == parts(original)["word/numbering.xml"]
@@ -226,14 +229,14 @@ def test_a_file_without_a_list_gets_no_numbering_part_it_does_not_need():
     original = saved(document)
     package = dict(parts(original))
     baseline, current = docx_to_text(original), docx_to_text(original)
-    current.blocks[0] = Block("b1", "body", "plain!", current.blocks[0].runs, None)
+    current.paragraphs[0] = Paragraph("b1", "body", "plain!", current.paragraphs[0].runs, None)
     assert set(parts(apply_edits_to_docx(original, baseline, current))) == set(package)
 
 
 def test_a_style_a_file_has_is_kept_when_only_the_text_changes():
     original = foreign_file()
     baseline, current = docx_to_text(original), docx_to_text(original)
-    current.blocks[0] = Block("b1", "body", "bullet!", current.blocks[0].runs, current.blocks[0].item)
+    current.paragraphs[0] = Paragraph("b1", "body", "bullet!", current.paragraphs[0].runs, current.paragraphs[0].item)
     document = Document(BytesIO(apply_edits_to_docx(original, baseline, current)))
     assert document.paragraphs[0].style.name == "List Bullet"
 
@@ -242,7 +245,7 @@ def test_a_list_made_in_a_file_that_had_none_is_in_the_package():
     original = without_numbering(text_to_docx(text_of(("one",), ("two",), lists=())))
     baseline, current = docx_to_text(original), docx_to_text(original)
     current.lists.add(ListDef("l1", "numbers", 2))
-    current.blocks[1] = Block("b2", "body", "two", (), ListItem("l1", 0))
+    current.paragraphs[1] = Paragraph("b2", "body", "two", (), ListItem("l1", 0))
     edited = apply_edits_to_docx(original, baseline, current)
     assert shape(docx_to_text(edited))[-1] == ("lists", [("L1", ("numbers", 2, None))])
     assert b"numbering" in parts(edited)["[Content_Types].xml"] and "word/numbering.xml" in parts(edited)
@@ -252,10 +255,10 @@ def test_a_list_made_in_a_file_that_had_none_is_in_the_package():
 def test_a_paragraph_added_to_a_list_is_an_item_of_it():
     original = text_to_docx(text_of(("one", "l1", 0)))
     baseline, current = docx_to_text(original), docx_to_text(original)
-    current.blocks.append(Block("n1", "body", "new", (), ListItem(baseline.blocks[0].item.list, 0)))
+    current.paragraphs.append(Paragraph("n1", "body", "new", (), ListItem(baseline.paragraphs[0].item.list, 0)))
     again = docx_to_text(apply_edits_to_docx(original, baseline, current))
-    assert [b.text for b in again.blocks] == ["one", "new"]
-    assert again.blocks[0].item.list == again.blocks[1].item.list
+    assert [b.text for b in again.paragraphs] == ["one", "new"]
+    assert again.paragraphs[0].item.list == again.paragraphs[1].item.list
 
 
 def test_whatever_is_done_to_the_lists_of_a_file_it_says_the_same_lists_as_the_model():
@@ -276,15 +279,19 @@ def test_whatever_is_done_to_the_lists_of_a_file_it_says_the_same_lists_as_the_m
         baseline, current = docx_to_text(original), docx_to_text(original)
         current.lists.add(ListDef("l9", "numbers", 3))
         ids = baseline.lists.ids()
-        for position, block in enumerate(current.blocks):
+        for position, paragraph in enumerate(current.paragraphs):
             roll = rng.random()
             if roll < 0.35:
                 item = rng.choice(
                     [None, ListItem(rng.choice(ids), rng.randint(0, 3)), ListItem("l9", rng.randint(0, 2))]
                 )
-                current.blocks[position] = Block(block.id, block.style, block.text, block.runs, item)
+                current.paragraphs[position] = Paragraph(
+                    paragraph.id, paragraph.style, paragraph.text, paragraph.runs, item
+                )
             elif roll < 0.5:
-                current.blocks[position] = Block(block.id, block.style, block.text + "!", (), block.item)
+                current.paragraphs[position] = Paragraph(
+                    paragraph.id, paragraph.style, paragraph.text + "!", (), paragraph.item
+                )
         if rng.random() < 0.3:
             scheme = rng.choice(["bullets", "numbers"])  # where nothing counts, there is no number to start at
             current.lists.replace(ListDef(ids[0], scheme, rng.randint(1, 5) if scheme == "numbers" else 1))
@@ -298,13 +305,13 @@ def headed_text() -> TextModel:
     scheme the document changed: "Step 1)"."""
     from dataclasses import replace
 
-    blocks = [
-        Block("b1", "heading-1", "Why"),
-        Block("b2", "heading-2", "Asked"),
-        Block("b3", "body", "one", item=ListItem("l1")),
-        Block("b4", "heading-1", "How"),
+    paragraphs = [
+        Paragraph("b1", "heading-1", "Why"),
+        Paragraph("b2", "heading-2", "Asked"),
+        Paragraph("b3", "body", "one", item=ListItem("l1")),
+        Paragraph("b4", "heading-1", "How"),
     ]
-    model = TextModel(blocks)
+    model = TextModel(paragraphs)
     model.lists.add(ListDef("outline", "chapters", name="Outline"))
     model.lists.add(ListDef("l1", "numbers"))
     numbers = model.schemes.get("numbers")
@@ -322,7 +329,7 @@ def test_numbered_headings_are_written_as_numbered_word_styles_and_read_back_as_
     assert said is not None and said.find(qn("w:ilvl")).get(qn("w:val")) == "1"
     assert numbering_of(data)[0] == (None, None), "a heading is numbered by its style, not by itself"
     model = docx_to_text(data)
-    assert {b.id: b.item for b in model.blocks}["b1"] is None
+    assert {b.id: b.item for b in model.paragraphs}["b1"] is None
     assert model.styles.numbering("heading-1") == model.styles.numbering("heading-2") is not None
     assert {k: v.marker for k, v in model.labels().items()} == {"b1": "1", "b2": "1.1", "b3": "Step 1)", "b4": "2"}
 
@@ -334,7 +341,7 @@ def test_a_changed_scheme_is_written_into_the_list_and_comes_back():
 
 
 def test_numbering_the_headings_of_an_imported_file_patches_its_styles():
-    plain = TextModel([Block("b1", "heading-1", "Why"), Block("b2", "body", "text")])
+    plain = TextModel([Paragraph("b1", "heading-1", "Why"), Paragraph("b2", "body", "text")])
     original = text_to_docx(plain)
     baseline = docx_to_text(original)
     current = docx_to_text(original)

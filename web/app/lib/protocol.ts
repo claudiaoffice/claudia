@@ -28,7 +28,7 @@ export interface Welcome {
   role: 'owner' | 'editor' | 'viewer'
   doc: string
   app: string
-  line: string
+  branch: string
   revision: string | null
   id: number
   color: string
@@ -44,29 +44,29 @@ export interface Welcome {
   /** The file this document was just made from (D438, D439): its name, format, whether it is kept inside, and what
    *  the document does not show, as loss codes. Only in the welcome of the hello that imported it. */
   imported?: { name: string; format: string; kept: boolean; losses: { kind: string; detail: string; count: number }[] }
-  /** Every line of the document's history: the active one and the side lines a restore left behind (E3.8). */
-  lines: LineInfo[]
+  /** Every branch of the document's history: the active one and the ones a restore left behind (E3.8). */
+  branches: BranchInfo[]
   /** A restore/switch suggestion waiting for everybody's answer, if one is open right now (E3.7). */
   proposal: RestoreProposal | null
-  /** One-time notice of what happened, while this person was away, to the line they were on (E3.7). */
+  /** One-time notice of what happened, while this person was away, to the branch they were on (E3.7). */
   returned: RestoreResolution | null
 }
 
-/** One line of a document's history, as `lines` and a `Welcome` carry it. */
-export interface LineInfo {
+/** One branch of a document's history, as `branches` and a `Welcome` carry it. */
+export interface BranchInfo {
   name: string
   head: string | null
   active: boolean
   forked_from: string | null
 }
 
-/** A suggestion to restore a checkpoint or switch the line, open and waiting for answers (E3.7). */
+/** A suggestion to restore a checkpoint or switch the branch, open and waiting for answers (E3.7). */
 export interface RestoreProposal {
   id: number
   kind: 'restore' | 'switch'
   by: string
   checkpoint: number | null
-  line: string | null
+  branch: string | null
   label: string
   opened_at: number
   expires_at: number
@@ -75,7 +75,7 @@ export interface RestoreProposal {
   agreed: string[]
 }
 
-/** What became of a line that stopped being active while somebody was away (the `Welcome.returned` notice). */
+/** What became of a branch that stopped being active while somebody was away (the `Welcome.returned` notice). */
 export interface RestoreResolution {
   by: string
   kind: 'restore' | 'switch'
@@ -95,7 +95,7 @@ export interface CellsRegion {
 /** A stretch of one paragraph; an empty one is a caret. Offsets count characters (code points) as the server does. */
 export interface TextRegion {
   kind: 'text'
-  block: string
+  paragraph: string
   start: number
   end: number
 }
@@ -105,7 +105,7 @@ export interface TextRegion {
 export interface ObjectsRegion {
   kind: 'objects'
   /** The slide, sheet or paragraph the objects are on: one field in all three apps (E10.16, D177). */
-  container: string
+  holder: string
   ids: string[]
 }
 export type Region = CellsRegion | TextRegion | ObjectsRegion

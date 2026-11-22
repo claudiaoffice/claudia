@@ -45,7 +45,7 @@ export type SlideLayout = (typeof SLIDE_LAYOUTS)[number]
 
 /** An object on a slide as the server sends it: the shared body and where on its slide it sits (CSS pixels). */
 export interface SlideObject extends VisualObject {
-  anchor: { kind: 'slide'; container: string; x: number; y: number }
+  anchor: { kind: 'slide'; holder: string; x: number; y: number }
 }
 /** The `print_setup` answer of a creates server (D917). */
 export interface PrintSetupData {

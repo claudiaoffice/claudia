@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ChatMessage, Entry } from '~/lib/base-session'
+import type { ChatMessage, Step } from '~/lib/base-session'
 import {
   askOwnerNote,
   authorsReached,
@@ -21,7 +21,7 @@ import {
 } from '~/lib/redaction'
 
 const t = (msgid: string, vars: Record<string, string | number> = {}) => msgid.replace(/\{(\w+)\}/g, (_m, k) => String(vars[k]))
-const step = (n: number, author: string | null = 'bob', extra: Partial<Entry> = {}): Entry => ({
+const step = (n: number, author: string | null = 'bob', extra: Partial<Step> = {}): Step => ({
   revision: `main:${n}`,
   author,
   origin: 'do',

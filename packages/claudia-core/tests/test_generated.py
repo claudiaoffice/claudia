@@ -42,9 +42,9 @@ def styles() -> StyleBook:
 
 @dataclass
 class Host:
-    """Paragraphs in containers, read in order; a container's name is its place (a slide number) when ``places``."""
+    """Paragraphs in holders, read in order; a holder's name is its place (a slide number) when ``places``."""
 
-    containers: dict[str, list[Paragraph]]
+    holders: dict[str, list[Paragraph]]
     places: bool = False
     asides: frozenset[str] = frozenset()
     styles: StyleBook = field(default_factory=styles)
@@ -53,9 +53,9 @@ class Host:
     order: int = 0
 
     def reading_order(self):
-        for container, paragraphs in self.containers.items():
+        for holder, paragraphs in self.holders.items():
             for paragraph in paragraphs:
-                yield Placed(paragraph, container, container not in self.asides, container if self.places else None)
+                yield Placed(paragraph, holder, holder not in self.asides, holder if self.places else None)
 
     @property
     def structure_version(self):
@@ -108,9 +108,9 @@ def test_the_title_is_never_listed_a_style_the_document_lacks_falls_back_and_num
 
 def test_words_beside_the_main_text_and_other_tables_are_not_headings():
     host = a_text()
-    host.containers["box"] = [para("o", "h1", "A heading in a box")]
+    host.holders["box"] = [para("o", "h1", "A heading in a box")]
     host.asides = frozenset({"box"})
-    host.containers["body"].append(para("c2", toc=Toc()))
+    host.holders["body"].append(para("c2", toc=Toc()))
     assert "o" not in [e.target for e in TextStructure(host).entries("c")]
     assert TextStructure(host).entries("c2") == TextStructure(host).entries("c")
 
@@ -118,7 +118,7 @@ def test_words_beside_the_main_text_and_other_tables_are_not_headings():
 def test_in_a_presentation_an_entry_carries_its_place_unless_places_are_off():
     host = Host({"1": [para("ag", toc=Toc(1, 1))], "2": [para("t2", "h1", "Results")]}, places=True)
     assert lines(TextStructure(host).entries("ag")) == [("t2", 1, "1", "Results", "contents-1", "2")]
-    host.containers["1"][0] = para("ag", toc=Toc(1, 1, places=False))
+    host.holders["1"][0] = para("ag", toc=Toc(1, 1, places=False))
     host.order += 1
     assert TextStructure(host).entries("ag")[0].place is None
 
@@ -128,11 +128,11 @@ def test_settle_tells_the_entries_that_changed_and_a_table_that_went_away():
     structure, seen = TextStructure(host), Events()
     structure.settle(seen)
     assert seen == []
-    host.containers["body"][2] = para("a", "h1", "Why we did it")  # retyped: text changes need no structure change
+    host.holders["body"][2] = para("a", "h1", "Why we did it")  # retyped: text changes need no structure change
     structure.settle(seen)
     assert len(seen) == 1 and isinstance(seen[0], GeneratedChanged) and seen[0].entries[0].text == "Why we did it"
     assert seen[0].to_data()["type"] == "generated" and seen[0].to_data()["entries"][0]["target"] == "a"
-    host.containers["body"][1] = para("c", text="")
+    host.holders["body"][1] = para("c", text="")
     host.order += 1
     seen.clear()
     structure.settle(seen)
@@ -141,7 +141,7 @@ def test_settle_tells_the_entries_that_changed_and_a_table_that_went_away():
 
 def test_a_document_without_a_table_of_contents_derives_nothing():
     host = a_text()
-    host.containers["body"].pop(1)
+    host.holders["body"].pop(1)
     assert TextStructure(host).all_entries() == {}
 
 

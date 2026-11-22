@@ -12,7 +12,7 @@ from claudia_composes_io import Annotations, docx_to_text, odt_to_text, text_to_
 from docx import Document
 from lxml import etree
 
-from claudia_composes import Block, TextModel
+from claudia_composes import Paragraph, TextModel
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
@@ -20,9 +20,9 @@ W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 def text() -> TextModel:
     return TextModel(
         [
-            Block("b1", "heading-1", "Why we did it"),
-            Block("b2", "body", "Collect the figures"),
-            Block("b3", "body", "Send them round"),
+            Paragraph("b1", "heading-1", "Why we did it"),
+            Paragraph("b2", "body", "Collect the figures"),
+            Paragraph("b3", "body", "Send them round"),
         ]
     )
 
@@ -62,7 +62,7 @@ NOTES = Annotations(
 def test_a_given_name_comes_back_as_the_name_of_the_same_paragraph(write, read):
     back = read(write(text(), annotations=NAMES))
     assert names_of(back)["b2"] == "Budget summary"
-    assert back.block("b2").text == "Collect the figures"
+    assert back.paragraph("b2").text == "Collect the figures"
 
 
 @pytest.mark.parametrize("write", [text_to_docx, text_to_odt])
@@ -226,8 +226,8 @@ def test_no_comments_unless_asked_for(write):
 @pytest.mark.parametrize(("write", "read"), [(text_to_docx, docx_to_text), (text_to_odt, odt_to_text)])
 def test_comments_are_not_read_back_as_descriptions(write, read):
     back = read(write(text(), annotations=NOTES))
-    assert back.block_descriptions == {}
-    assert back.block("b2").text == "Collect the figures"
+    assert back.paragraph_descriptions == {}
+    assert back.paragraph("b2").text == "Collect the figures"
 
 
 @pytest.mark.parametrize(("write", "read"), [(text_to_docx, docx_to_text), (text_to_odt, odt_to_text)])
@@ -235,7 +235,7 @@ def test_a_comment_text_with_markup_characters_comes_out_as_it_went_in(write, re
     notes = Annotations(comments={"b2": 'a < b & "c" > d'}, author="A & B", when="2026-11-19T10:30:00Z")
     data = write(text(), annotations=notes)
     etree.fromstring(part(data, "word/comments.xml" if write is text_to_docx else "content.xml").encode())
-    assert read(data).block("b2").text == "Collect the figures"
+    assert read(data).paragraph("b2").text == "Collect the figures"
 
 
 @pytest.mark.parametrize(("write", "read"), [(text_to_docx, docx_to_text), (text_to_odt, odt_to_text)])
@@ -244,8 +244,8 @@ def test_a_named_and_commented_paragraph_is_still_found_by_a_reference(write, re
 
     model = TextModel(
         [
-            Block("b1", "body", "Collect"),
-            Block("b2", "body", f"see {FIELD_CHAR}", fields=(RefField("b1", "text"),)),
+            Paragraph("b1", "body", "Collect"),
+            Paragraph("b2", "body", f"see {FIELD_CHAR}", fields=(RefField("b1", "text"),)),
         ]
     )
     back = read(
@@ -256,6 +256,6 @@ def test_a_named_and_commented_paragraph_is_still_found_by_a_reference(write, re
             ),
         )
     )
-    (referring,) = [b for b in back.blocks if b.fields]
+    (referring,) = [b for b in back.paragraphs if b.fields]
     assert referring.fields[0].target == "b1"
     assert names_of(back)["b1"] == "Source"

@@ -1,9 +1,10 @@
 """What password hashing costs for the documents this server makes from now on (D1267).
 
 A server measures what it can bear once at start, in a background thread so that it is up at once (``calibrate`` in
-``claudia_container.kdf``), and an administrator can change the target time in Server settings ▸ Security, which
-measures again. Until a measuring is done the floor (the container's default) is used, so a document made in the first
-seconds is never made with less than the minimum. A document keeps the cost it was made with: this applies to new ones.
+``claudia_document_file.kdf``), and an administrator can change the target time in Server settings ▸ Security, which
+measures again. Until a measuring is done the floor (claudia-document-file's default) is used, so a document made in the
+first seconds is never made with less than the minimum. A document keeps the cost it was made with: this applies to new
+ones.
 """
 
 import logging
@@ -11,8 +12,8 @@ import math
 import threading
 from collections.abc import Callable
 
-from claudia_container import KdfParams, calibrate
-from claudia_container.kdf import DEFAULT_MAX_MEMORY_KIB, DEFAULT_TARGET_SECONDS
+from claudia_document_file import KdfParams, calibrate
+from claudia_document_file.kdf import DEFAULT_MAX_MEMORY_KIB, DEFAULT_TARGET_SECONDS
 
 log = logging.getLogger("claudia_server")
 

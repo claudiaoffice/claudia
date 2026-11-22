@@ -3,7 +3,7 @@ name = "claudia-server"
 dynamic = ["version"]
 description = "claudia-server: hosts documents, authenticates people and speaks the live protocol (E3.1)"
 requires-python = ">=3.14"
-dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-composes-io", "claudia-computes-io", "claudia-creates-io", "claudia-container", "claudia-opc-io", "claudia-ai", "claudia-typeset", "claudia-render", "claudia-fonts", "claudia-search", "claudia-file-writer", "fastapi>=0.115", "uvicorn>=0.30", "websockets>=13", "cryptography>=44"]
+dependencies = ["claudia-core", "claudia-computes", "claudia-composes", "claudia-creates", "claudia-composes-io", "claudia-computes-io", "claudia-creates-io", "claudia-document-file", "claudia-opc-io", "claudia-ai", "claudia-typeset", "claudia-render", "claudia-fonts", "claudia-search", "claudia-file-writer", "fastapi>=0.115", "uvicorn>=0.30", "websockets>=13", "cryptography>=44"]
 
 [project.optional-dependencies]
 openvino = ["claudia-ai[openvino]"]  # the language model of --ai
@@ -23,7 +23,7 @@ claudia-file-writer = { workspace = true }
 claudia-core = { workspace = true }
 claudia-search = { workspace = true }
 claudia-computes = { workspace = true }
-claudia-container = { workspace = true }
+claudia-document-file = { workspace = true }
 claudia-composes = { workspace = true }
 claudia-creates = { workspace = true }
 claudia-composes-io = { workspace = true }

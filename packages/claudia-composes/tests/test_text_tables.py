@@ -4,7 +4,7 @@ carry their exact inverse (D1201–D1210)."""
 import pytest
 from composes_helpers import SENTENCE
 
-from claudia_composes import BlockAnchor, DeleteText, InsertText, TextModel
+from claudia_composes import DeleteText, InsertText, ParagraphAnchor, TextModel
 from claudia_core import (
     AddObject,
     Batch,
@@ -43,7 +43,7 @@ def table_in_a_text(rows: int = 4, cols: int = 3, **options) -> Document:
     d.execute(InsertText("b1", 0, SENTENCE), author="ann")
     table = TableDef.blank("t1", rows, cols, **options)
     body = ObjectBody("tb1", "table", 480, 120, "plain-box", ref="t1", name="Harvest")
-    d.execute(Batch((DefineTable(table.to_data()), AddObject(body, BlockAnchor("b1", 9).to_data()))), author="ann")
+    d.execute(Batch((DefineTable(table.to_data()), AddObject(body, ParagraphAnchor("b1", 9).to_data()))), author="ann")
     return d
 
 
@@ -82,10 +82,11 @@ def test_a_table_object_needs_a_definition_the_document_has():
     d = Document(TextModel(), store=MemoryStore())
     body = ObjectBody("tb1", "table", 480, 120, "plain-box", ref="t1")
     with pytest.raises(ValueError, match="does not know the table"):
-        d.execute(AddObject(body, BlockAnchor("b1", 0).to_data()), author="ann")
+        d.execute(AddObject(body, ParagraphAnchor("b1", 0).to_data()), author="ann")
     with pytest.raises(ValueError, match="needs a table"):
         d.execute(
-            AddObject(ObjectBody("tb1", "table", 480, 120, "plain-box"), BlockAnchor("b1", 0).to_data()), author="ann"
+            AddObject(ObjectBody("tb1", "table", 480, 120, "plain-box"), ParagraphAnchor("b1", 0).to_data()),
+            author="ann",
         )
 
 
@@ -97,7 +98,7 @@ def test_a_table_object_has_no_import_record_and_no_words_of_its_own():
         d.execute(
             AddObject(
                 ObjectBody("tb1", "table", 480, 120, "plain-box", ref="t1", imported=record),
-                BlockAnchor("b1", 0).to_data(),
+                ParagraphAnchor("b1", 0).to_data(),
             ),
             author="ann",
         )
@@ -105,7 +106,7 @@ def test_a_table_object_has_no_import_record_and_no_words_of_its_own():
     with pytest.raises(ValueError, match="carries no text"):
         d.execute(
             AddObject(
-                ObjectBody("tb1", "table", 480, 120, "plain-box", words, ref="t1"), BlockAnchor("b1", 0).to_data()
+                ObjectBody("tb1", "table", 480, 120, "plain-box", words, ref="t1"), ParagraphAnchor("b1", 0).to_data()
             ),
             author="ann",
         )
@@ -141,7 +142,7 @@ def test_a_table_is_a_named_thing_in_the_shared_namespace():
         d.execute(
             AddObject(
                 ObjectBody("tb2", "table", 480, 120, "plain-box", ref="t1", name="harvest"),
-                BlockAnchor("b1", 0).to_data(),
+                ParagraphAnchor("b1", 0).to_data(),
             ),
             author="ann",
         )
@@ -186,7 +187,7 @@ def test_the_clients_are_told_with_the_text_event_and_the_boxs_id():
     ) else None
     d.execute(InsertText(box("r1", "c2"), 0, "Beds"), author="ann")
     if seen:
-        assert any(e.get("type") == "text" and e.get("block") == box("r1", "c2") for e in seen)
+        assert any(e.get("type") == "text" and e.get("paragraph") == box("r1", "c2") for e in seen)
 
 
 def test_a_covered_box_takes_no_typing_but_its_top_left_box_does():
@@ -450,13 +451,13 @@ def test_a_box_may_hold_a_reference_which_is_a_field_like_in_any_paragraph():
     d.subscribe(seen.append)
     d.execute(InsertText(box("r2", "c1"), 0, "see " + FIELD_CHAR, fields=(RefField("b1"),)), author="ann")
     assert d.model.fields_of(box("r2", "c1")) == (RefField("b1"),)
-    assert any(e.to_data()["type"] == "block_fields" for e in seen if hasattr(e, "to_data"))
+    assert any(e.to_data()["type"] == "paragraph_fields" for e in seen if hasattr(e, "to_data"))
     d.execute(SetField(box("r2", "c1"), 0, RefField("b1", "text")), author="ann")
     assert d.model.fields_of(box("r2", "c1")) == (RefField("b1", "text"),)
     seen.clear()
     d.execute(DeleteText(box("r2", "c1"), 3, 2), author="ann")
     assert d.model.fields_of(box("r2", "c1")) == () and words(d, "r2", "c1") == "see"
-    assert any(e.to_data()["type"] == "block_fields" for e in seen if hasattr(e, "to_data"))
+    assert any(e.to_data()["type"] == "paragraph_fields" for e in seen if hasattr(e, "to_data"))
     d.undo("ann")
     assert d.model.fields_of(box("r2", "c1")) == (RefField("b1", "text"),)
     d.execute(SetField(box("r2", "c1"), 0, RefField("b1")), author="ann")

@@ -32,7 +32,7 @@ export const takesRoom = (wrap: Wrap): boolean => wrap === 'around' || wrap === 
 
 /**
  * The box of an object `w` by `h` anchored at `spot`, moved by `away`, kept inside the text `column` across (as the
- * printed pages keep it): where the object is drawn (`floatBox` of text-containers.ts, in page coordinates).
+ * printed pages keep it): where the object is drawn (`floatBox` of text-object-layer.ts, in page coordinates).
  */
 export function objectRect(spot: { left: number; top: number }, away: { dx?: number; dy?: number }, w: number, h: number, column?: Rect): Rect {
   let left = spot.left + (away.dx ?? 0)
@@ -67,7 +67,7 @@ export function floatStyle(f: WrapFloat | undefined): Record<string, string> {
 /** An object the words go round, with what decides how: where it hangs, how it is moved off there, how large it is. */
 export interface Hung {
   id: string
-  block: string
+  paragraph: string
   offset: number
   wrap: Wrap
   gap: number
@@ -88,9 +88,9 @@ export interface WrapPage {
   /** The text column objects are kept inside across, as the lines are now. */
   column(): Rect
   /** The top-left corner of the character an object hangs from, as the lines are now. */
-  spotOf(block: string, offset: number): { left: number; top: number } | null
+  spotOf(paragraph: string, offset: number): { left: number; top: number } | null
   /** The content box of a paragraph, as the lines are now. */
-  paragraphOf(block: string): Pick<Rect, 'left' | 'top' | 'width'> | null
+  paragraphOf(paragraph: string): Pick<Rect, 'left' | 'top' | 'width'> | null
   /** Put the float of `id` into the lines (`null`: it takes no room). */
   put(id: string, f: WrapFloat | null): void
 }
@@ -109,10 +109,10 @@ export function measureFloats(
   for (const h of hung) {
     // all of it read at the same moment: the lines do not change between the reads
     const origin = page.origin()
-    const spot = page.spotOf(h.block, h.offset)
-    const paragraph = page.paragraphOf(h.block)
+    const spot = page.spotOf(h.paragraph, h.offset)
+    const paragraph = page.paragraphOf(h.paragraph)
     if (!spot || !paragraph) continue
-    spots.set(`${h.block}:${h.offset}`, { left: spot.left - origin.left, top: spot.top - origin.top })
+    spots.set(`${h.paragraph}:${h.offset}`, { left: spot.left - origin.left, top: spot.top - origin.top })
     const f = floatFor(h.wrap, h.gap, objectRect(spot, h, h.w, h.h, page.column()), paragraph)
     page.put(h.id, f)
     if (f) floats[h.id] = f

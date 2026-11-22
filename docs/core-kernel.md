@@ -2,7 +2,7 @@
 
 State: kernel `claudia-core` 0.3.0 (draft 3), server `claudia-server` 0.1.0, client trust `claudia-client` 0.1.0 (removed since: no client used it, D700). 443 tests green on Python 3.14.6; ruff, mypy, vulture, the Sphinx build and the performance guards are clean (`uv run python scripts/check_debt.py`). Kernel: Locks are enforced in `execute`, restoring forks, the way back exists (`switch_to`), edits in flight are refused (`StaleEdit`), and the project hygiene is in place (Sphinx docs, versioned API, debt checks, CI). The network layer is described in the section "Server (E3.1)" below. Written 2026-11-02.
 Scope agreed: kernel only (E1.1–E1.9), proven by a mini-computes port plus composes/creates stubs.
-No sockets, encryption or container in the kernel (E2); no formulas (E6.1). The hub, protocol and authentication are in the separate package `claudia-server` (E3.1).
+No sockets, encryption or document file in the kernel (E2); no formulas (E6.1). The hub, protocol and authentication are in the separate package `claudia-server` (E3.1).
 
 ## What is where
 
@@ -61,7 +61,7 @@ Built after the kernel as separate packages (the backlog first said "in claudia-
 
 ## Not done, on purpose
 
-Container, key slots, encryption (E2); persistence of hosted documents (E2); the AI participant (E3.6/E7); formulas, recalculation, names, SQL, layout, drawing (E6.1); font and function services. Free-form what-if branches have no API yet (only the restore fork). Opening replays the whole log (snapshots shorten it, E4).
+The document file, key slots, encryption (E2); persistence of hosted documents (E2); the AI participant (E3.6/E7); formulas, recalculation, names, SQL, layout, drawing (E6.1); font and function services. Free-form what-if branches have no API yet (only the restore fork). Opening replays the whole log (snapshots shorten it, E4).
 
 ## Decision-log text
 

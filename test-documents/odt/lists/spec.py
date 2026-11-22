@@ -13,8 +13,8 @@ STEPS = ["Open the box", "Cut the tape", "Take out the parts", "Mind the screws.
 
 
 def import_checks(model: TextModel) -> None:
-    assert [b.text for b in model.blocks] == STEPS
-    assert [(b.item.list, b.item.level) if b.item else None for b in model.blocks] == [
+    assert [b.text for b in model.paragraphs] == STEPS
+    assert [(b.item.list, b.item.level) if b.item else None for b in model.paragraphs] == [
         ("l1", 0), ("l1", 1), ("l1", 0), None, ("l1", 0)
     ]  # fmt: skip
     assert model.lists.get("l1").scheme == "numbers"
@@ -22,7 +22,7 @@ def import_checks(model: TextModel) -> None:
 
 def modify(model: TextModel) -> TextModel:
     new_id = model.fresh_id()
-    last = model.blocks[-1]
+    last = model.paragraphs[-1]
     model.split(last.id, len(last.text), new_id, "body")  # a paragraph after the last item...
     model.insert(new_id, 0, "Check it stands", [Run(15, None)])
     model.set_item(new_id, ListItem("l1", 0))  # ...made an item of the same list
@@ -30,8 +30,8 @@ def modify(model: TextModel) -> TextModel:
 
 
 def after_checks(model: TextModel) -> None:
-    assert [b.text for b in model.blocks] == [*STEPS, "Check it stands"]
-    assert [b.item.list for b in model.blocks if b.item] == ["l1"] * 5  # one list, whatever lies between its items
+    assert [b.text for b in model.paragraphs] == [*STEPS, "Check it stands"]
+    assert [b.item.list for b in model.paragraphs if b.item] == ["l1"] * 5  # one list, whatever lies between its items
 
 
 def the_list_style_stays(original: bytes, edited: bytes) -> None:

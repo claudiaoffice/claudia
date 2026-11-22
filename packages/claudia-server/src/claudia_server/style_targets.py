@@ -1,7 +1,7 @@
 """One style API for all three apps: put a style into the slots of anything that can be styled (D304, D309, D316).
 
-A request names *targets* in the app's own terms — ``{"block": id}`` for a composes paragraph, ``{"object": id}`` for
-a floating object in any app, ``{"sheet": id, "range": [r0, c0, r1, c1]}`` for cells in computes — and the server
+A request names *targets* in the app's own terms — ``{"paragraph": id}`` for a composes paragraph, ``{"object": id}``
+for a floating object in any app, ``{"sheet": id, "range": [r0, c0, r1, c1]}`` for cells in computes — and the server
 turns each into commands through a :class:`StyleTarget`: a small adapter per kind of target that says which kind of
 thing it is (a row of :data:`claudia_core.SLOTS`), which style each of its slots holds, and the command that puts a
 style into one slot. Everything else — which slots a style fits, deviating, counting uses — is written once here.
@@ -207,13 +207,13 @@ def add_target_methods(
         """What a style property means and where a style can go (D303-D305, D312, D316): `{facets, kinds, slots,
         targets}`. `facets` maps each facet to its properties, `kinds` each kind to the facets it may hold, `slots`
         each kind of thing to its slots `{name, reads, kind, takes}` — `takes` lists the kinds of style that fit the
-        slot. `targets` are the target keys this app accepts (`object`, `block`, `cell`). A client draws and filters
+        slot. `targets` are the target keys this app accepts (`object`, `paragraph`, `cell`). A client draws and filters
         with this and keeps no copy of its own."""
         return {**slots.to_data(), "targets": list(adapters)}
 
     @table.method("apply_style", "targets:list style:str slot:str? base:revision?", write=True)
     def _apply_style(ctx, *, targets, style, slot, base):
-        """Put `style` into the slots of `targets`, in one step. A target is `{"object": id}`, `{"block": id}` or
+        """Put `style` into the slots of `targets`, in one step. A target is `{"object": id}`, `{"paragraph": id}` or
         `{"sheet": id, "range": [r0, c0, r1, c1]}` (see `style_model`'s `targets`). With `slot`, only that slot of
         each target; without, every slot of it the style fits — one bundle fills both slots of a cell or a text box
         (D309, D311, D316). `command_error` if the style fits no chosen slot of a target, or a target is not there."""

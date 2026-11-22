@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BaseSession, type BaseState, type Entry } from '~/lib/base-session'
+import { BaseSession, type BaseState, type Step } from '~/lib/base-session'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Region, type Welcome, type WireData } from '~/lib/protocol'
 import { PastLink } from '~/lib/replay'
 
@@ -8,7 +8,7 @@ const WELCOME: Welcome = {
   role: 'owner',
   doc: 'talk',
   app: 'creates',
-  line: 'main',
+  branch: 'main',
   revision: 'main:3',
   id: 1,
   color: '#e6194b',
@@ -16,13 +16,13 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
-  lines: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
+  branches: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
   proposal: null,
   returned: null,
 }
 
-const entry = (n: number, author = 'ann'): Entry => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '' })
-const slideRegion = (container: string): Region => ({ kind: 'objects', container, ids: [] }) as Region
+const entry = (n: number, author = 'ann'): Step => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '' })
+const slideRegion = (holder: string): Region => ({ kind: 'objects', holder, ids: [] }) as Region
 
 class FakeLink implements LinkLike {
   calls: { method: string; params: any }[] = []
@@ -43,7 +43,7 @@ class FakeLink implements LinkLike {
         return []
       case 'history':
         return { can_undo: true, can_redo: false, undo_label: '', redo_label: '' }
-      case 'lines':
+      case 'branches':
         return [{ name: 'main', head: 'main:3', active: true, forked_from: null }]
       case 'restore_policy':
         return { policy: 'consensus' }
@@ -96,7 +96,7 @@ class TestSession extends BaseSession<TestState> {
     return true
   }
   protected followReplay(focus: Region[]) {
-    this.state.followed = focus.map((r) => (r.kind === 'objects' ? r.container : ''))
+    this.state.followed = focus.map((r) => (r.kind === 'objects' ? r.holder : ''))
   }
   // reaches the protected link the way an app's own changes do
   async change() {

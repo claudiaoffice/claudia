@@ -266,8 +266,8 @@ export function headingAttrs(styles: StyleView[], id: string): Record<string, st
   return level !== null && level + 1 > DEEPEST_TAG ? { role: 'heading', 'aria-level': String(level + 1) } : {}
 }
 
-export function styleUses(blocks: { style: string }[]): Record<string, number> {
+export function styleUses(paragraphs: { style: string }[]): Record<string, number> {
   const uses: Record<string, number> = {}
-  for (const block of blocks) uses[block.style] = (uses[block.style] ?? 0) + 1
+  for (const paragraph of paragraphs) uses[paragraph.style] = (uses[paragraph.style] ?? 0) + 1
   return uses
 }

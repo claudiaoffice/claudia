@@ -366,15 +366,15 @@ describe('a search in a text or a presentation says it in words for texts, not c
   })
 
   it('shows the kinds of a text that are switched on, and a kind it has no switch for as on', () => {
-    const at = (row: number, kind: string) => ({ at: { block: `b${row}` }, kind, number: 0, start: 0, end: 1, parts: [], after: null, text: 'x', excerpt: [0, 1] as [number, number], clipped: [false, false] as [boolean, boolean] })
+    const at = (row: number, kind: string) => ({ at: { paragraph: `b${row}` }, kind, number: 0, start: 0, end: 1, parts: [], after: null, text: 'x', excerpt: [0, 1] as [number, number], clipped: [false, false] as [boolean, boolean] })
     const found = [at(1, 'heading'), at(2, 'text'), at(3, 'remark')]
-    expect(shownMatches(found, { text: true, heading: false, remark: true }).map((m) => m.at.block)).toEqual(['b2', 'b3'])
-    expect(shownMatches(found, { text: true }).map((m) => m.at.block)).toEqual(['b1', 'b2', 'b3'])
+    expect(shownMatches(found, { text: true, heading: false, remark: true }).map((m) => m.at.paragraph)).toEqual(['b2', 'b3'])
+    expect(shownMatches(found, { text: true }).map((m) => m.at.paragraph)).toEqual(['b1', 'b2', 'b3'])
   })
 
   it('sends what a match said so that the server can tell a text typed into since', () => {
     // (the panel builds `{ at, match, said }`; the shape is the wire's, see SearchLeave)
-    const leave: SearchLeave = { at: { block: 'b1' }, match: 0, said: 'red' }
+    const leave: SearchLeave = { at: { paragraph: 'b1' }, match: 0, said: 'red' }
     expect(leave.said).toBe('red')
   })
 })

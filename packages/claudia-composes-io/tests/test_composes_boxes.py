@@ -25,13 +25,13 @@ from claudia_composes_io import (
 from docx import Document
 from docx.oxml.ns import qn
 
-from claudia_composes import DEFAULT_STYLE, Block, BlockAnchor, TextModel
+from claudia_composes import DEFAULT_STYLE, Paragraph, ParagraphAnchor, TextModel
 from claudia_core import ObjectBody, Run, VisualObject, paragraph_for, primitive
 from claudia_odf_io import Loss, LossLog
 
 
 def a_text(*texts: str) -> TextModel:
-    return TextModel([Block(f"b{n}", DEFAULT_STYLE, text) for n, text in enumerate(texts, start=1)])
+    return TextModel([Paragraph(f"b{n}", DEFAULT_STYLE, text) for n, text in enumerate(texts, start=1)])
 
 
 def put_box(model: TextModel, object_id="o1", *, at=("b1", 5), size=(300, 100), words="Some words", **changes):
@@ -41,10 +41,10 @@ def put_box(model: TextModel, object_id="o1", *, at=("b1", 5), size=(300, 100), 
         body = ObjectBody(object_id, "text", *size, "plain-box", paragraph_for(object_id, "body", words), **changes)
     else:
         if shape not in model.shapes:
-            model.define_shape(primitive(shape))
+            model.shapes.define(primitive(shape))
         paragraph = paragraph_for(object_id, changes.pop("words_style", "shape-label"), words)
         body = ObjectBody(object_id, "shape", *size, "plain-shape", paragraph, ref=shape, **changes)
-    model.insert_object(VisualObject(body, BlockAnchor(*at)))
+    model.insert_object(VisualObject(body, ParagraphAnchor(*at)))
 
 
 def a_box_text(**changes) -> TextModel:
@@ -79,12 +79,12 @@ def test_a_text_box_comes_back_as_a_text_box_with_its_words_its_place_and_its_si
     found = only(back)
     assert (found.body.kind, found.body.style, words(found)) == ("text", "plain-box", "Some words")
     assert (found.anchor, found.body.w, found.body.h, found.body.description) == (
-        BlockAnchor("b1", 5),
+        ParagraphAnchor("b1", 5),
         300,
         100,
         "a note",
     )
-    assert [block.text for block in back.blocks] == ["Hello world", "Second paragraph"]
+    assert [paragraph.text for paragraph in back.paragraphs] == ["Hello world", "Second paragraph"]
 
 
 @pytest.mark.parametrize("shape", ["circle", "rectangle", "triangle"])
@@ -138,11 +138,11 @@ def test_a_box_is_not_a_loss_of_the_export_and_an_outline_of_the_model_is_writte
 
 def test_a_shape_the_model_has_but_files_do_not_know_is_not_written_and_the_export_says_so():
     model = a_text("Hello world")
-    model.define_shape(
+    model.shapes.define(
         replace(primitive("rectangle"), id="arrow", name="Arrow", path="M0 0 L100 50 L0 100 Z"),
     )
     body = ObjectBody("o1", "shape", 100, 60, "plain-shape", paragraph_for("o1", "shape-label", "x"), ref="arrow")
-    model.insert_object(VisualObject(body, BlockAnchor("b1", 0)))
+    model.insert_object(VisualObject(body, ParagraphAnchor("b1", 0)))
     data = text_to_docx(model)
     assert not docx_to_text(data).objects
     assert Loss("not-written", "objects", 1) in docx_export_losses(model)
@@ -194,7 +194,7 @@ def a_word_box() -> bytes:
 def test_a_text_box_the_way_word_writes_it_comes_in_and_is_one_text_box_of_the_file_not_two_frames():
     data = a_word_box()
     found = only(docx_to_text(data))
-    assert (found.body.kind, words(found), found.anchor) == ("text", "Some words", BlockAnchor("b1", 5))
+    assert (found.body.kind, words(found), found.anchor) == ("text", "Some words", ParagraphAnchor("b1", 5))
     assert [loss.kind for loss in docx_import_losses(data)] == ["look"]
 
 
@@ -272,7 +272,7 @@ def body_xml(data: bytes) -> str:
 def test_a_box_that_is_not_edited_comes_back_as_it_was_byte_for_byte():
     original, data, back = patched_docx(lambda model: None)
     assert body_xml(data) == body_xml(original)
-    assert only(back).anchor == BlockAnchor("b1", 5)
+    assert only(back).anchor == ParagraphAnchor("b1", 5)
 
 
 def test_new_words_are_written_into_the_box_and_nothing_else_changes():
@@ -332,19 +332,19 @@ def test_a_box_given_back_its_upright_place_loses_its_turn():
 def test_a_box_moved_to_another_paragraph_is_drawn_there():
     def edit(model: TextModel) -> None:
         found = model.delete_object("x1")[0]
-        model.insert_object(VisualObject(replace(found.body, id="x9"), BlockAnchor("b2", 3)))
+        model.insert_object(VisualObject(replace(found.body, id="x9"), ParagraphAnchor("b2", 3)))
 
     back = patched_docx(edit)[2]
-    assert (only(back).anchor, words(only(back))) == (BlockAnchor("b2", 3), "Some words")
+    assert (only(back).anchor, words(only(back))) == (ParagraphAnchor("b2", 3), "Some words")
 
 
 def test_a_box_moved_inside_its_paragraph_keeps_the_words_it_cuts():
     def edit(model: TextModel) -> None:
         found = only(model)
-        model.replace_object(VisualObject(found.body, BlockAnchor("b1", 8)))
+        model.replace_object(VisualObject(found.body, ParagraphAnchor("b1", 8)))
 
     back = patched_docx(edit)[2]
-    assert (only(back).anchor, back.blocks[0].text) == (BlockAnchor("b1", 8), "Hello world")
+    assert (only(back).anchor, back.paragraphs[0].text) == (ParagraphAnchor("b1", 8), "Hello world")
 
 
 def test_a_box_that_is_removed_takes_its_drawing_out_of_the_file():
@@ -353,7 +353,7 @@ def test_a_box_that_is_removed_takes_its_drawing_out_of_the_file():
 
     _, data, back = patched_docx(edit)
     assert not back.objects and "wps:wsp" not in body_xml(data)
-    assert [block.text for block in back.blocks] == ["Hello world", "Second paragraph"]
+    assert [paragraph.text for paragraph in back.paragraphs] == ["Hello world", "Second paragraph"]
 
 
 def test_a_box_added_to_a_kept_file_is_drawn_where_the_text_says():
@@ -362,18 +362,18 @@ def test_a_box_added_to_a_kept_file_is_drawn_where_the_text_says():
 
     back = patched_docx(edit)[2]
     new = [o for o in back.objects.values() if o.body.kind == "shape"]
-    assert [(words(o), o.anchor, o.body.shape) for o in new] == [("New", BlockAnchor("b2", 4), "circle")]
+    assert [(words(o), o.anchor, o.body.shape) for o in new] == [("New", ParagraphAnchor("b2", 4), "circle")]
     assert len(back.objects) == 2
 
 
 def test_a_box_follows_the_words_of_its_paragraph_when_they_change():
     def edit(model: TextModel) -> None:
-        model.blocks[0] = replace(model.blocks[0], text="Hello there, world")
+        model.paragraphs[0] = replace(model.paragraphs[0], text="Hello there, world")
         found = only(model)
-        model.replace_object(VisualObject(found.body, BlockAnchor("b1", 11)))
+        model.replace_object(VisualObject(found.body, ParagraphAnchor("b1", 11)))
 
     back = patched_docx(edit)[2]
-    assert (back.blocks[0].text, only(back).anchor) == ("Hello there, world", BlockAnchor("b1", 11))
+    assert (back.paragraphs[0].text, only(back).anchor) == ("Hello there, world", ParagraphAnchor("b1", 11))
 
 
 def test_a_box_whose_outline_changes_is_drawn_anew_and_a_foreign_look_is_said_to_be_lost():
@@ -384,7 +384,7 @@ def test_a_box_whose_outline_changes_is_drawn_anew_and_a_foreign_look_is_said_to
 
     def edit(model: TextModel) -> None:
         found = only(model)
-        model.define_shape(primitive("triangle"))
+        model.shapes.define(primitive("triangle"))
         model.replace_object(VisualObject(replace(found.body, ref="triangle"), found.anchor))
 
     losses = LossLog()
@@ -417,7 +417,7 @@ def test_a_box_the_model_does_not_hold_survives_an_edit_next_to_one_it_holds():
         text_to_docx(a_box_text()), lambda xml: xml.replace("</w:p></w:txbxContent>", "</w:p><w:p/></w:txbxContent>", 1)
     )
     _, patched, _ = patched_docx(
-        lambda model: model.blocks.__setitem__(1, replace(model.blocks[1], text="Edited")), original=data
+        lambda model: model.paragraphs.__setitem__(1, replace(model.paragraphs[1], text="Edited")), original=data
     )
     assert "txbxContent" in body_xml(patched)
 
@@ -449,7 +449,11 @@ def test_a_text_box_and_a_shape_come_back_with_their_place_size_turn_and_descrip
         ("shape", "triangle", 120, 90, 45),
         ("shape", "circle", 80, 80, 0),
     ]
-    assert [o.anchor for o in found.values()] == [BlockAnchor("b1", 5), BlockAnchor("b2", 0), BlockAnchor("b2", 16)]
+    assert [o.anchor for o in found.values()] == [
+        ParagraphAnchor("b1", 5),
+        ParagraphAnchor("b2", 0),
+        ParagraphAnchor("b2", 16),
+    ]
     assert [words(o) for o in found.values()] == ["Some words", "Tri", ""]
     assert [o.body.description for o in found.values()] == ["a note", "", "a dot"]
 
@@ -457,9 +461,9 @@ def test_a_text_box_and_a_shape_come_back_with_their_place_size_turn_and_descrip
 @FORMATS
 def test_a_shape_the_model_has_but_files_do_not_know_is_not_written_and_the_export_says_so_in_both(to_file, to_model):
     model = a_text("Hello world")
-    model.define_shape(replace(primitive("rectangle"), id="arrow", name="Arrow", path="M0 0 L100 50 L0 100 Z"))
+    model.shapes.define(replace(primitive("rectangle"), id="arrow", name="Arrow", path="M0 0 L100 50 L0 100 Z"))
     body = ObjectBody("o1", "shape", 100, 60, "plain-shape", paragraph_for("o1", "shape-label", "x"), ref="arrow")
-    model.insert_object(VisualObject(body, BlockAnchor("b1", 0)))
+    model.insert_object(VisualObject(body, ParagraphAnchor("b1", 0)))
     assert not to_model(to_file(model)).objects
 
 
@@ -467,7 +471,7 @@ def test_a_shape_the_model_has_but_files_do_not_know_is_not_written_and_the_expo
 def test_a_box_hanging_from_a_paragraph_with_nothing_in_it_is_written(to_file, to_model):
     model = a_text("", "Second")
     put_box(model, at=("b1", 0))
-    assert only(to_model(to_file(model))).anchor == BlockAnchor("b1", 0)
+    assert only(to_model(to_file(model))).anchor == ParagraphAnchor("b1", 0)
 
 
 def test_the_export_to_odt_says_a_decorative_box_has_no_mark_and_that_authors_are_not_kept():
@@ -572,7 +576,7 @@ def patched_odt(edit, *, original: bytes | None = None, losses: LossLog | None =
 def test_an_odt_box_that_is_not_edited_leaves_the_file_as_it_was():
     original, data, back = patched_odt(lambda model: None)
     assert data == original
-    assert only(back).anchor == BlockAnchor("b1", 5)
+    assert only(back).anchor == ParagraphAnchor("b1", 5)
 
 
 def test_new_words_are_written_into_the_odt_box_and_nothing_else_changes():
@@ -628,18 +632,18 @@ def test_an_odt_box_given_back_its_upright_place_loses_its_turn_and_a_descriptio
 def test_an_odt_box_moved_to_another_paragraph_is_drawn_there():
     def edit(model: TextModel) -> None:
         found = model.delete_object("x1")[0]
-        model.insert_object(VisualObject(replace(found.body, id="x9"), BlockAnchor("b2", 3)))
+        model.insert_object(VisualObject(replace(found.body, id="x9"), ParagraphAnchor("b2", 3)))
 
     back = patched_odt(edit)[2]
-    assert (only(back).anchor, words(only(back))) == (BlockAnchor("b2", 3), "Some words")
+    assert (only(back).anchor, words(only(back))) == (ParagraphAnchor("b2", 3), "Some words")
 
 
 def test_an_odt_box_moved_inside_its_paragraph_keeps_the_words_it_cuts():
     def edit(model: TextModel) -> None:
-        model.replace_object(VisualObject(only(model).body, BlockAnchor("b1", 8)))
+        model.replace_object(VisualObject(only(model).body, ParagraphAnchor("b1", 8)))
 
     back = patched_odt(edit)[2]
-    assert (only(back).anchor, back.blocks[0].text) == (BlockAnchor("b1", 8), "Hello world")
+    assert (only(back).anchor, back.paragraphs[0].text) == (ParagraphAnchor("b1", 8), "Hello world")
 
 
 def test_an_odt_box_that_is_removed_takes_its_frame_out_of_the_file():
@@ -653,7 +657,7 @@ def test_a_box_added_to_a_kept_odt_is_drawn_where_the_text_says_with_a_style_of_
 
     original, data, back = patched_odt(edit)
     new = [o for o in back.objects.values() if o.body.kind == "shape"]
-    assert [(words(o), o.anchor, o.body.shape) for o in new] == [("New", BlockAnchor("b2", 4), "circle")]
+    assert [(words(o), o.anchor, o.body.shape) for o in new] == [("New", ParagraphAnchor("b2", 4), "circle")]
     assert len(back.objects) == 2
     assert (
         content_xml(data).count('style:name="Claudia_box_')
@@ -674,11 +678,11 @@ def test_the_styles_of_two_new_boxes_that_look_alike_are_one_style():
 
 def test_an_odt_box_follows_the_words_of_its_paragraph_when_they_change():
     def edit(model: TextModel) -> None:
-        model.blocks[0] = replace(model.blocks[0], text="Hello there, world")
-        model.replace_object(VisualObject(only(model).body, BlockAnchor("b1", 11)))
+        model.paragraphs[0] = replace(model.paragraphs[0], text="Hello there, world")
+        model.replace_object(VisualObject(only(model).body, ParagraphAnchor("b1", 11)))
 
     back = patched_odt(edit)[2]
-    assert (back.blocks[0].text, only(back).anchor) == ("Hello there, world", BlockAnchor("b1", 11))
+    assert (back.paragraphs[0].text, only(back).anchor) == ("Hello there, world", ParagraphAnchor("b1", 11))
 
 
 def test_an_odt_box_whose_outline_changes_is_drawn_anew_and_a_foreign_look_is_said_to_be_lost():
@@ -689,7 +693,7 @@ def test_an_odt_box_whose_outline_changes_is_drawn_anew_and_a_foreign_look_is_sa
 
     def edit(model: TextModel) -> None:
         found = only(model)
-        model.define_shape(primitive("triangle"))
+        model.shapes.define(primitive("triangle"))
         model.replace_object(VisualObject(replace(found.body, ref="triangle"), found.anchor))
 
     losses = LossLog()
@@ -725,7 +729,7 @@ def test_an_odt_box_the_model_does_not_hold_survives_an_edit_next_to_one_it_hold
         a_box_odt(), lambda xml: xml.replace("</draw:text-box>", "<text:p>more</text:p></draw:text-box>", 1)
     )
     _, patched, _ = patched_odt(
-        lambda model: model.blocks.__setitem__(1, replace(model.blocks[1], text="Edited")), original=data
+        lambda model: model.paragraphs.__setitem__(1, replace(model.paragraphs[1], text="Edited")), original=data
     )
     assert "more" in content_xml(patched)
 

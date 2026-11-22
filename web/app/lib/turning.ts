@@ -160,7 +160,7 @@ export function resizeTurned(start: Frame, rotation: number, handle: Handle, dx:
 }
 
 /** Does an object of this kind turn? Charts (kind `diagram`, D1021) and tables (D1224) do not; text boxes, shapes,
- * pictures and rendered text do. The server decides for itself (`turn_command`) — this only keeps the handle and the
+ * pictures and containers do. The server decides for itself (`turn_command`) — this only keeps the handle and the
  * menu entries off what it would refuse. */
 export const canTurn = (kind: string): boolean => kind !== 'diagram' && kind !== 'table'
 

@@ -261,9 +261,9 @@ def test_the_import_counts_only_the_charts_the_model_does_not_hold():
 def test_a_chart_tab_is_a_sheet_with_the_chart_in_it_and_that_is_said():
     model = WorkbookModel()
     model.sheets[S1] = Sheet(S1, "Data")
-    model.open_container("s1")
+    model.open_holder("s1")
     model.store(model.sheets[S1], 0, 0, {"t": "int", "v": 3})
-    model.define_diagram(ChartSpec(id="c1", kind="bar", range=a_range((0, 0), (0, 0)), title="Sales"))
+    model.diagrams.define(ChartSpec(id="c1", kind="bar", range=a_range((0, 0), (0, 0)), title="Sales"))
     model.charts["t1"] = Chart("t1", "Sales chart", "c1")
     data = workbook_to_xlsx(model)
     back = xlsx_to_workbook(data)
@@ -285,7 +285,7 @@ def test_a_chart_tab_takes_a_name_excel_allows_that_no_sheet_has():
 def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
     model = a_workbook()
     model.names.put(NamedRange("Sales", None, a_range(), header=True))
-    model.define_diagram(ChartSpec(id="c1", kind="bar", source="Sales"))
+    model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Sales"))
     body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))
     spec, _ = the_chart(xlsx_to_workbook(workbook_to_xlsx(model)))
@@ -296,8 +296,8 @@ def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
 def test_a_chart_that_reads_nothing_is_not_written_and_that_is_said():
     model = WorkbookModel()
     model.sheets[S1] = Sheet(S1, "Data")
-    model.open_container("s1")
-    model.define_diagram(ChartSpec(id="c1", kind="bar", source="Gone"))
+    model.open_holder("s1")
+    model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Gone"))
     body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))
     data = workbook_to_xlsx(model)
@@ -412,7 +412,7 @@ def test_the_first_chart_of_a_kept_file_that_has_none_makes_the_drawing_of_the_s
 def test_a_chart_that_was_removed_is_taken_out_with_its_part():
     original, baseline, current = a_kept_file()
     current.delete_object("o1")
-    current.forget_diagram("c1")
+    current.diagrams.forget("c1")
     patched = apply_edits_to_xlsx(original, baseline, current)
     parts = read_parts(patched)
     assert not [name for name in parts if name.startswith("xl/charts/")]
@@ -432,7 +432,7 @@ def test_a_chart_that_was_moved_and_resized_has_its_anchor_changed_and_its_part_
 
 def test_a_chart_whose_definition_changed_is_drawn_again_the_way_it_was_before():
     original, baseline, current = a_kept_file(title="Before")
-    current.replace_diagram(replace(current.diagrams["c1"], title="After", legend=False))
+    current.diagrams.replace(replace(current.diagrams["c1"], title="After", legend=False))
     losses = LossLog()
     patched = apply_edits_to_xlsx(original, baseline, current, losses=losses)
     assert losses.result() == ()
@@ -512,7 +512,7 @@ def test_a_chart_libreoffice_saved_is_moved_and_resized_without_being_drawn_agai
 def test_a_chart_libreoffice_saved_is_drawn_our_way_when_its_definition_changed_and_that_is_said():
     original = LIBRARY.read_bytes()
     baseline, current = xlsx_to_workbook(original), xlsx_to_workbook(original)
-    current.replace_diagram(replace(current.diagrams["c1"], title="Changed"))
+    current.diagrams.replace(replace(current.diagrams["c1"], title="Changed"))
     losses = LossLog()
     patched = apply_edits_to_xlsx(original, baseline, current, losses=losses)
     assert kinds(losses.result()) == {"chart:look": 1}

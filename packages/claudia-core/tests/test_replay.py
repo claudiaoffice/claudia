@@ -2,14 +2,14 @@
 
 import pytest
 
-from claudia_core import Entry, ReplayError, Revision
+from claudia_core import ReplayError, Revision, Step
 from claudia_core.replay import replay_collecting
 from claudia_core.testing import Insert, ListModel, Remove
 
 
-def _entry(seq: int, command, *, author: str = "ana", of=None, origin: str = "do") -> Entry:
+def _entry(seq: int, command, *, author: str = "ana", of=None, origin: str = "do") -> Step:
     parent = Revision("main", seq - 1) if seq > 1 else None
-    return Entry(Revision("main", seq), parent, author, f"2026-11-01T12:00:{seq:02d}.000Z", command, origin, of, False)
+    return Step(Revision("main", seq), parent, author, f"2026-11-01T12:00:{seq:02d}.000Z", command, origin, of, False)
 
 
 def test_returns_the_entry_inverse_pairs_in_order():

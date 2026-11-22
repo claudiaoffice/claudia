@@ -8,8 +8,8 @@ import pytest
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from claudia_container import KdfParams
 from claudia_core.testing import FakeClock, ListModel
+from claudia_document_file import KdfParams
 from claudia_server import Hub, MemoryProvider, ScryptDirectory, create_app
 from claudia_server.admin import AdminDirectory
 from claudia_server.admin_api import AdminContext, AiRuntime

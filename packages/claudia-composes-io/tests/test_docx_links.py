@@ -38,8 +38,8 @@ def a_file(*pieces: str | tuple[str, str]) -> bytes:
 
 def reworded(original: bytes, text: str, losses: LossLog | None = None) -> bytes:
     baseline, current = docx_to_text(original), docx_to_text(original)
-    block = current.blocks[0]
-    current.blocks[0] = type(block)(block.id, block.style, text)
+    paragraph = current.paragraphs[0]
+    current.paragraphs[0] = type(paragraph)(paragraph.id, paragraph.style, text)
     return apply_edits_to_docx(original, baseline, current, losses=losses)
 
 

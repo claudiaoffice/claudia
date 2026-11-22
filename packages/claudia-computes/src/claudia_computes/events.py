@@ -1,7 +1,7 @@
 """State events the computes model raises through ``Context.emit`` (the kernel adds its own).
 
-``ObjectsChanged``, ``ImagesChanged``, ``ShapesChanged`` and ``DiagramsChanged`` are the same events in all
-three apps and live in :mod:`claudia_core.objects` (E10.16); they are re-exported here, where this module's
+``ObjectsChanged`` and ``AssetsChanged`` (images, shapes, charts) are the same events in all
+three apps and live in :mod:`claudia_core` (E10.16, D1431); they are re-exported here, where this module's
 users have always imported them from. What is only a workbook's own is below — including ``ChartsChanged``,
 since a chart *tab* is computes' own concept even though the diagram it shows is shared (E6.6).
 """
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from claudia_core import DiagramsChanged, ImagesChanged, ObjectsChanged, ShapesChanged  # noqa: F401  (re-exported)
+from claudia_core import AssetsChanged, ObjectsChanged  # noqa: F401  (re-exported)
 
 from .refs import Position, SheetId, StructuralEdit
 

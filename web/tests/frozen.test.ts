@@ -7,7 +7,7 @@ function fake() {
     revision: 'main:7',
     slides: [{ id: 's1', objects: 1 }, { id: 's2', objects: 0 }],
     order: { s1: ['a'], s2: [] },
-    objects: { a: { id: 'a', kind: 'text', anchor: { kind: 'slide', container: 's1', x: 1, y: 2 } } },
+    objects: { a: { id: 'a', kind: 'text', anchor: { kind: 'slide', holder: 's1', x: 1, y: 2 } } },
     styles: { 'body-text': { id: 'body-text' } },
     shapes: {},
     images: {},

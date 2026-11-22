@@ -15,8 +15,8 @@ def paper():
     return Document(TextModel(), store=MemoryStore())
 
 
-def write(doc, text, block="b1", at=0):
-    doc.execute(InsertText(block, at, text), author="ann")
+def write(doc, text, paragraph="b1", at=0):
+    doc.execute(InsertText(paragraph, at, text), author="ann")
 
 
 def plan(doc, text="review this", sender="ann", mode=None):
@@ -41,7 +41,7 @@ def test_in_act_mode_it_writes_its_replacements_from_the_end_of_a_paragraph(pape
         ("replace_text", 11, 14, "the"),
         ("replace_text", 3, 10, "receive"),
     ], "the later place first, so the earlier offsets still hold"
-    assert all(c.params["block"] == c.params["end_block"] == "b1" for c in calls)
+    assert all(c.params["paragraph"] == c.params["end_paragraph"] == "b1" for c in calls)
 
 
 def test_in_act_mode_a_remark_without_a_replacement_stays_a_remark(paper):
@@ -85,24 +85,26 @@ def test_every_suggestion_says_where_it_is_working(paper):
 def test_it_looks_at_all_paragraphs_with_the_right_offsets(paper):
     write(paper, "fine")
     paper.execute(SetStyle("b1", "body"), author="ann")
-    from claudia_composes import SplitBlock
+    from claudia_composes import SplitParagraph
 
-    paper.execute(SplitBlock("b1", 4, "b2", "body"), author="ann")
-    write(paper, "so teh end", block="b2")
+    paper.execute(SplitParagraph("b1", 4, "b2", "body"), author="ann")
+    write(paper, "so teh end", paragraph="b2")
     (call,) = suggestions(plan(paper))
-    assert (call.params["block"], call.params["start"], call.params["end"]) == ("b2", 3, 6)
+    assert (call.params["paragraph"], call.params["start"], call.params["end"]) == ("b2", 3, 6)
 
 
 def test_this_paragraph_means_the_one_the_asker_is_in(paper):
-    from claudia_composes import SplitBlock
+    from claudia_composes import SplitParagraph
 
     write(paper, "teh first")
-    paper.execute(SplitBlock("b1", 9, "b2", "body"), author="ann")
-    write(paper, "teh second", block="b2")
+    paper.execute(SplitParagraph("b1", 9, "b2", "body"), author="ann")
+    write(paper, "teh second", paragraph="b2")
     paper.show_presence("ann", [TextRange("b2", 0, 0)])
-    assert {c.params["block"] for c in suggestions(plan(paper, "check this paragraph"))} == {"b2"}
-    assert {c.params["block"] for c in suggestions(plan(paper, "check everything"))} == {"b1", "b2"}
-    assert {c.params["block"] for c in suggestions(plan(paper, "review this text"))} == {"b1", "b2"}, "this text: all"
+    assert {c.params["paragraph"] for c in suggestions(plan(paper, "check this paragraph"))} == {"b2"}
+    assert {c.params["paragraph"] for c in suggestions(plan(paper, "check everything"))} == {"b1", "b2"}
+    assert {c.params["paragraph"] for c in suggestions(plan(paper, "review this text"))} == {"b1", "b2"}, (
+        "this text: all"
+    )
 
 
 def test_it_does_not_suggest_again_what_is_already_open(paper):
@@ -162,14 +164,16 @@ def test_a_review_in_the_chat_ends_in_suggestions_people_can_accept():
             ann.handle(json.dumps({"id": len(frames) + 1000, "method": method, "params": params}))
             return frames[-1]
 
-        request("replace_text", {"block": "b1", "start": 0, "end_block": "b1", "end": 0, "text": "We recieve mail."})
+        request(
+            "replace_text", {"paragraph": "b1", "start": 0, "end_paragraph": "b1", "end": 0, "text": "We recieve mail."}
+        )
         request("chat", {"text": "@ai please proofread", "ai_mode": "suggest"})
         await assistant.idle()
         (item,) = request("suggestions")["result"]
         assert (item["author"], item["original"], item["replacement"]) == ("ai", "recieve", "receive")
-        assert request("blocks")["result"]["blocks"][0]["text"] == "We recieve mail.", "nothing written yet"
+        assert request("paragraphs")["result"]["paragraphs"][0]["text"] == "We recieve mail.", "nothing written yet"
         request("accept_suggestion", {"id": item["id"]})
-        block = request("blocks")["result"]["blocks"][0]
-        assert block["text"] == "We receive mail." and [7, "ann", "ai"] in block["runs"]
+        paragraph = request("paragraphs")["result"]["paragraphs"][0]
+        assert paragraph["text"] == "We receive mail." and [7, "ann", "ai"] in paragraph["runs"]
 
     asyncio.run(run())

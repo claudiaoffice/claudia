@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   WheelStepper,
-  containerOf,
+  holderOf,
   firstFocus,
   groupStart,
   keyStep,
@@ -11,9 +11,9 @@ import {
   timeline,
   type Item,
 } from '~/lib/replay'
-import type { ChatMessage, Entry } from '~/lib/base-session'
+import type { ChatMessage, Step } from '~/lib/base-session'
 
-const entry = (n: number, author = 'ann', extra: Partial<Entry> = {}): Entry => ({
+const entry = (n: number, author = 'ann', extra: Partial<Step> = {}): Step => ({
   revision: `main:${n}`,
   author,
   origin: 'do',
@@ -134,9 +134,9 @@ describe('the keys', () => {
 })
 
 describe('where to look', () => {
-  const objects = { kind: 'objects', container: 's2', ids: ['o1'] } as const
+  const objects = { kind: 'objects', holder: 's2', ids: ['o1'] } as const
   const cells = { kind: 'cells', range: { first: { row: 3, col: 1, sheet: 'sales' }, last: { row: 4, col: 1, sheet: 'sales' } } } as const
-  const text = { kind: 'text', block: 'b4', start: 0, end: 3 } as const
+  const text = { kind: 'text', paragraph: 'b4', start: 0, end: 3 } as const
 
   it('takes the first place a step touched', () => {
     expect(firstFocus([cells, objects])).toBe(cells)
@@ -144,10 +144,10 @@ describe('where to look', () => {
   })
 
   it('says which slide, sheet or paragraph a place lies in', () => {
-    expect(containerOf(objects)).toBe('s2')
-    expect(containerOf(cells)).toBe('sales')
-    expect(containerOf(text)).toBe('b4')
-    expect(containerOf(null)).toBeNull()
+    expect(holderOf(objects)).toBe('s2')
+    expect(holderOf(cells)).toBe('sales')
+    expect(holderOf(text)).toBe('b4')
+    expect(holderOf(null)).toBeNull()
   })
 })
 

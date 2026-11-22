@@ -18,7 +18,7 @@ const image = (id: string, extra: object = {}) => ({
   imported: IMPORT,
   rotation: 0,
   snap: true,
-  anchor: { kind: 'cell', container: 's1', row: 0, col: 0 },
+  anchor: { kind: 'cell', holder: 's1', row: 0, col: 0 },
   ...extra,
 })
 
@@ -27,7 +27,7 @@ const WELCOME: Welcome = {
   role: 'owner',
   doc: 'plan',
   app: 'computes',
-  line: 'main',
+  branch: 'main',
   revision: 'main:3',
   id: 1,
   color: '#e6194b',
@@ -35,7 +35,7 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
-  lines: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
+  branches: [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
   proposal: null,
   returned: null,
 }
@@ -108,7 +108,7 @@ function server(link: FakeLink) {
     chat_log: () => [{ number: 1, author: 'ben', to: '', text: 'hi', time: 't', at: null }],
     checkpoints: () => [],
     history: () => ({ can_undo: true, can_redo: false, undo_label: 'Edit cell', redo_label: '' }),
-    lines: () => [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
+    branches: () => [{ name: 'main', head: 'main:3', active: true, forked_from: null }],
     restore_policy: () => ({ policy: 'consensus' }),
     cells: (p: any) => ({
       revision: 'main:3',
@@ -122,14 +122,14 @@ function server(link: FakeLink) {
     lock: () => ({}),
     unlock: () => ({}),
     chat: () => ({}),
-    peek_line: ({ line }: any) => ({ line, revision: 'main:3', app: 'computes', state_schema: 1, state: {} }),
+    peek_branch: ({ branch }: any) => ({ branch, revision: 'main:3', app: 'computes', state_schema: 1, state: {} }),
     propose_restore: () => ({ applied: true, proposal: null }),
     propose_switch: () => ({ applied: true, proposal: null }),
     answer_restore: () => ({ resolved: 'agreed' }),
     withdraw_restore: () => ({}),
     discard_side_history: () => ({ discarded: [] }),
     set_restore_policy: ({ policy }: any) => ({ policy }),
-    ping: () => ({ revision: 'main:3', line: 'main' }),
+    ping: () => ({ revision: 'main:3', branch: 'main' }),
     sizes: () => ({ revision: 'main:3', rows: [[3, 52]], cols: [] }),
     resize_lines: () => ({ revision: 'main:4' }),
     diagrams: () => [],
@@ -175,7 +175,7 @@ describe('opening', () => {
     const link = new FakeLink()
     server(link)
     link.welcome = { ...WELCOME, user: 'vera', role: 'viewer' }
-    for (const refused of ['log', 'chat_log', 'checkpoints', 'history', 'lines', 'restore_policy']) {
+    for (const refused of ['log', 'chat_log', 'checkpoints', 'history', 'branches', 'restore_policy']) {
       link.handlers[refused] = () => {
         throw new ProtocolError('forbidden', `${refused} is for editors`)
       }
@@ -185,9 +185,9 @@ describe('opening', () => {
     const s = session.state
     expect(s.status).toBe('open')
     expect(s.sheets.map((x) => x.name)).toEqual(['Budget'])
-    expect([s.entries, s.chat, s.checkpoints, s.lines]).toEqual([[], [], [], []])
+    expect([s.entries, s.chat, s.checkpoints, s.branches]).toEqual([[], [], [], []])
     expect([s.canUndo, s.canRedo]).toEqual([false, false])
-    for (const method of ['log', 'chat_log', 'checkpoints', 'history', 'lines', 'restore_policy']) expect(link.count(method)).toBe(0)
+    for (const method of ['log', 'chat_log', 'checkpoints', 'history', 'branches', 'restore_policy']) expect(link.count(method)).toBe(0)
   })
 
   it('follows the revision of a viewer\'s document from the commands it is told of, which carry the revision alone', async () => {
@@ -332,7 +332,7 @@ describe('cell styles (E6.13, D307, D317)', () => {
     await session.refreshUses()
     expect(session.state.styleUses).toEqual({ input: 2 })
     const before = link.count('style_uses')
-    for (const event of ['cell_styles', 'objects', 'styles']) link.push(event, event === 'objects' ? { changed: [], removed: [], order: [], container: 's1' } : { sheet: 's1', area: [0, 0, 0, 0], styles: [] })
+    for (const event of ['cell_styles', 'objects', 'styles']) link.push(event, event === 'objects' ? { changed: [], removed: [], order: [], holder: 's1' } : { sheet: 's1', area: [0, 0, 0, 0], styles: [] })
     await session.settled()
     expect(link.count('style_uses')).toBe(before + 3)
   })
@@ -367,11 +367,11 @@ describe('floating objects (images, E6.17)', () => {
 
   it('follows the stacking order the server sends, and takes objects away', async () => {
     const { link, session } = await opened()
-    link.push('objects', { type: 'objects', container: 's1', changed: [image('a'), image('b')], removed: [], order: ['a', 'b'] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [image('a'), image('b')], removed: [], order: ['a', 'b'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b'])
-    link.push('objects', { type: 'objects', container: 's1', changed: [image('a', { anchor: { kind: 'cell', container: 's1', row: 3, col: 2 } })], removed: [], order: ['a', 'b'] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [image('a', { anchor: { kind: 'cell', holder: 's1', row: 3, col: 2 } })], removed: [], order: ['a', 'b'] })
     expect(session.objectsOn('s1')[0]?.anchor).toMatchObject({ row: 3, col: 2 })
-    link.push('objects', { type: 'objects', container: 's1', changed: [], removed: ['a'], order: ['b'] })
+    link.push('objects', { type: 'objects', holder: 's1', changed: [], removed: ['a'], order: ['b'] })
     expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
     expect(session.state.objects.a).toBeUndefined()
   })
@@ -553,7 +553,7 @@ describe('events', () => {
     expect(session.state.presence.ben).toBeUndefined()
   })
 
-  it('reloads everything when the document changed line or was rebuilt', async () => {
+  it('reloads everything when the document changed branch or was rebuilt', async () => {
     for (const name of ['branch', 'rebuilt', 'redacted']) {
       const { session, link } = await opened()
       await session.ensure('s1', 0, 10, 0, 5)
@@ -1050,7 +1050,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     viewer.handlers.audit_log = () => {
       throw new Error('a viewer must not ask')
     }
-    viewer.handlers.ping = () => ({ revision: 'main:3', line: 'main' })
+    viewer.handlers.ping = () => ({ revision: 'main:3', branch: 'main' })
     const seen = new Session(() => viewer)
     await seen.open()
     expect(viewer.count('audit_log')).toBe(0)
@@ -1189,7 +1189,7 @@ const PROPOSAL = {
   kind: 'restore' as const,
   by: 'ben',
   checkpoint: 1,
-  line: null,
+  branch: null,
   label: 'checkpoint “good”',
   opened_at: 0,
   expires_at: 900,
@@ -1198,13 +1198,13 @@ const PROPOSAL = {
   agreed: ['ben'],
 }
 
-describe('lines, and restoring with consent', () => {
-  it('loads the lines and the restore policy, and lets you peek at one', async () => {
+describe('branches, and restoring with consent', () => {
+  it('loads the branches and the restore policy, and lets you peek at one', async () => {
     const { session, link } = await opened()
-    expect(session.state.lines).toEqual([{ name: 'main', head: 'main:3', active: true, forked_from: null }])
+    expect(session.state.branches).toEqual([{ name: 'main', head: 'main:3', active: true, forked_from: null }])
     expect(session.state.restorePolicy).toBe('consensus')
-    expect(await session.peekLine('main')).toMatchObject({ line: 'main', revision: 'main:3' })
-    expect(link.calls.find((c) => c.method === 'peek_line')!.params).toEqual({ line: 'main' })
+    expect(await session.peekBranch('main')).toMatchObject({ branch: 'main', revision: 'main:3' })
+    expect(link.calls.find((c) => c.method === 'peek_branch')!.params).toEqual({ branch: 'main' })
   })
 
   it('suggests a restore; the server may carry it out at once', async () => {
@@ -1214,10 +1214,10 @@ describe('lines, and restoring with consent', () => {
     expect(session.state.proposal).toBeNull()
   })
 
-  it('suggests switching to another line', async () => {
+  it('suggests switching to another branch', async () => {
     const { session, link } = await opened()
     expect(await session.proposeSwitch('restore-1')).toBe(true)
-    expect(link.calls.find((c) => c.method === 'propose_switch')!.params).toEqual({ line: 'restore-1' })
+    expect(link.calls.find((c) => c.method === 'propose_switch')!.params).toEqual({ branch: 'restore-1' })
   })
 
   it('tracks an open suggestion from the restore_proposed event', async () => {
@@ -1277,7 +1277,7 @@ describe('lines, and restoring with consent', () => {
     expect(link.calls.find((c) => c.method === 'set_restore_policy')!.params).toEqual({ policy: 'veto' })
   })
 
-  it('tells a returning person what happened to the line they were on', async () => {
+  it('tells a returning person what happened to the branch they were on', async () => {
     const link = new FakeLink()
     server(link)
     link.welcome = { ...link.welcome, returned: { by: 'ben', kind: 'restore', label: 'checkpoint “good”', agreed: ['ann', 'ben'] } }
@@ -1754,7 +1754,7 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
       revision: 'main:3',
       sheet: p.sheet,
       objects: [
-        { id: `${p.sheet}-pic`, name: `Logo ${p.sheet}`, kind: 'image', anchor: { kind: 'cell', container: p.sheet, row: 0, col: 0, dx: 0, dy: 0 }, w: 10, h: 10 },
+        { id: `${p.sheet}-pic`, name: `Logo ${p.sheet}`, kind: 'image', anchor: { kind: 'cell', holder: p.sheet, row: 0, col: 0, dx: 0, dy: 0 }, w: 10, h: 10 },
       ],
     })
     const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
@@ -1762,8 +1762,8 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
     expect((await session.taggableThings()).map((t) => t.name).sort()).toEqual(['Budget', 'Logo s1', 'Revenue'])
     await session.goToThing('s2-pic')
     expect(session.state.activeSheet).toBe('s2')
-    expect(session.state.pointed).toMatchObject({ id: 's2-pic', container: 's2' })
-    expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
+    expect(session.state.pointed).toMatchObject({ id: 's2-pic', holder: 's2' })
+    expect(session.state.wayBack).toEqual({ holder: 's1', anchor: null })
   })
 
   it('offers the named ranges on the sheet in sight, and goes to one on another sheet (D552)', async () => {
@@ -1797,8 +1797,8 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
     expect(offered.filter((t) => t.kind === 'range')).toEqual([{ id: 'r1', name: 'Revenue', kind: 'range' }])
     await session.goToThing('r2')
     expect(session.state.activeSheet).toBe('s2')
-    expect(session.state.pointed).toMatchObject({ id: 'r2', container: 's2' })
-    expect(session.state.wayBack).toEqual({ container: 's1', anchor: null })
+    expect(session.state.pointed).toMatchObject({ id: 'r2', holder: 's2' })
+    expect(session.state.wayBack).toEqual({ holder: 's1', anchor: null })
   })
 
   it('knows a range is gone once its name is, and keeps the name a tag was written with current', async () => {

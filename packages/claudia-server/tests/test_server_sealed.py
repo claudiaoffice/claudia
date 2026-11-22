@@ -1,14 +1,14 @@
-"""The sealed store (E2.1 to E2.3, E2.7): documents and their people in the encrypted container, behind the server's two
-interfaces (``DocumentProvider`` and ``UserDirectory``)."""
+"""The sealed store (E2.1 to E2.3, E2.7): documents and their people in their sealed document files, behind the server's
+two interfaces (``DocumentProvider`` and ``UserDirectory``)."""
 
 import sys
 import time
 
 import pytest
 
-from claudia_container import JournalWriter, KdfParams, journal_path
 from claudia_core import Document
 from claudia_core.testing import Insert, ListModel
+from claudia_document_file import JournalWriter, KdfParams, journal_path
 from claudia_server.auth import AuthRefused, Credentials
 from claudia_server.sealed import SealedDocuments
 
@@ -363,10 +363,10 @@ def test_creating_needs_the_owner_first(tmp_path):
 
 
 def test_a_writer_for_the_wrong_keys_cannot_continue_somebody_elses_journal(tmp_path):
-    from claudia_container import Domain, random_key
+    from claudia_document_file import Domain, random_key
 
     start(store_in(tmp_path))
-    from claudia_container import read_manifest
+    from claudia_document_file import read_manifest
 
     path = journal_path(tmp_path / "docs" / "plan.claudia")
     keys = {d: random_key() for d in Domain}

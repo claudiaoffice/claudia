@@ -1,10 +1,10 @@
 """Replaying the history (D551): the read requests of a view, answered for the document as it was after one step.
 
 The three apps already show a document from the answers to a handful of read requests (`slides`, `slide`, `cells`,
-`blocks`, `objects`, `styles`, ...). To show the past, a client asks the very same requests through ``as_of``, and the
-view it already has draws the answers. Nothing of the live document is touched: the request runs against a scratch model
-rebuilt at that step (:meth:`claudia_core.Document.materialize`), kept for a short while because a view asks a dozen
-things at once and a person who turns the wheel asks for the next step a moment later.
+`paragraphs`, `objects`, `styles`, ...). To show the past, a client asks the very same requests through ``as_of``, and
+the view it already has draws the answers. Nothing of the live document is touched: the request runs against a scratch
+model rebuilt at that step (:meth:`claudia_core.Document.materialize`), kept for a short while because a view asks a
+dozen things at once and a person who turns the wheel asks for the next step a moment later.
 
 Only what a view reads with can be asked, named in :data:`VIEW_READS`: a method not marked as writing is still not for a
 look (`delete_document`, `change_password`, `leave` and `new_recovery_key` are not marked, and must stay out of reach).
@@ -37,8 +37,8 @@ VIEW_READS = frozenset(
         "style_model",
         "style_uses",
         "images",
-        "renderings",
-        "rendering_types",
+        "containers",
+        "container_types",
         "shapes",
         "print_setup",
         # creates
@@ -59,7 +59,7 @@ VIEW_READS = frozenset(
         "random_state",
         "objects",
         # composes
-        "blocks",
+        "paragraphs",
         "page",
         "look",
         "suggestions",
@@ -113,9 +113,9 @@ def add_replay_methods(table: MethodTable) -> None:
     def as_of(ctx: Context, *, revision: Revision, method: str, params: dict) -> Any:
         """Answer one read request for the document as it was after the step `revision` (D551), so that the view an app
         already has can show the past: `method` is one of the requests a view reads with (`slides`, `slide`, `cells`,
-        `blocks`, `objects`, `styles`, `snapshot`, `log` ...) and `params` its own, exactly as without `as_of`. `log`
-        ends at that step. Nothing else can be asked this way (`forbidden`), and nothing changes. `command_error` for
-        a revision the document does not have."""
+        `paragraphs`, `objects`, `styles`, `snapshot`, `log` ...) and `params` its own, exactly as without `as_of`.
+        `log` ends at that step. Nothing else can be asked this way (`forbidden`), and nothing changes. `command_error`
+        for a revision the document does not have."""
         if method not in VIEW_READS:
             raise RequestError("forbidden", msg("{method} cannot be asked for an earlier step", method=method))
         try:

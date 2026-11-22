@@ -1,18 +1,17 @@
 // One person's view of one presentation (creates): the slides, their objects and the shapes, kept up to date from the
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
 import type { LinkLike, Region, WireData } from './protocol'
-import { parseFence } from './rendering'
-import { containerOf, firstFocus, lookOnly } from './replay'
+import { parseFence } from './containers'
+import { holderOf, firstFocus, lookOnly } from './replay'
 import type { Thing } from './tags'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
-import { describeParams } from './descriptions'
 import { translate as t } from './i18n'
 import type { Frame } from './geometry'
 import type { ImageAsset } from './images'
-import type { ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
-import type { CssCheck, CssEdit } from './style-css'
+import type { ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import type { CssEdit } from './style-css'
 import type { PrintSetupData } from '@claudia/layout'
-import { pointOf, type Label } from './blocks'
+import { pointOf, type Label } from './paragraphs'
 import type { ListInfo, SchemeInfo } from './numbering'
 import type { ContentsEntry } from './contents'
 import type { ReferenceTarget, RefField, Show, Shown } from './references'
@@ -45,25 +44,18 @@ export interface SlideState extends BaseState {
   slides: SlideInfo[]
   activeSlide: string
   objects: Record<string, SlideObject>
-  order: Record<string, string[]> // slide -> object ids, the one in front last
   library: ShapeDef[] // what the server offers for insertion
   shapes: Record<string, ShapeDef> // what this document has taken in, by id
-  images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id (E10.8)
   styles: Record<string, StyleDef>
   /** The speaker notes of the slides, Markdown, by slide; a slide without any is not here (D342). */
   notes: Record<string, string>
   /** The planned time of the slides in whole seconds, by slide; a slide without one is not here (D343). */
   times: Record<string, number>
-  /** The document's colour roles and how they read against each other (D200); the styles are what is drawn from. */
-  palette: PaletteEvent | null
   /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
   styleModel: StyleModel | null
   selected: string | null
   /** How the presentation is printed (D917): layout and page; `null` for a server that does not know printing. */
   printSetup: PrintSetupData | null
-  /** The language of the presentation (D915, D917), a BCP 47 tag; `null` when not set, `undefined` for a server
-   *  that does not know languages. */
-  language: string | null | undefined
   /** The lists the words of text boxes may be items of, and how they are drawn (E9.21, E9.22). */
   lists: ListInfo[]
   schemes: SchemeInfo[]
@@ -84,19 +76,12 @@ export class SlideSession extends BaseSession<SlideState> {
     super(makeLink, options, {
       slides: [],
       activeSlide: '',
-      objects: {},
-      order: {},
       library: [],
-      shapes: {},
-      images: {},
-      styles: {},
       notes: {},
       times: {},
-      palette: null,
       styleModel: null,
       selected: null,
       printSetup: null,
-      language: undefined,
       lists: [],
       schemes: [],
       labels: {},
@@ -170,7 +155,7 @@ export class SlideSession extends BaseSession<SlideState> {
   }
   protected override async inView(): Promise<Thing[]> {
     const here = this.state.activeSlide
-    return this.things().filter((t) => this.containerOf(t.id) === here)
+    return this.things().filter((t) => this.holderOf(t.id) === here)
   }
   override async unnamedInView(): Promise<number> {
     const s = this.state
@@ -180,21 +165,21 @@ export class SlideSession extends BaseSession<SlideState> {
   protected override tracksThings(): boolean {
     return true
   }
-  protected override containerOf(id: string): string | null {
+  protected override holderOf(id: string): string | null {
     const s = this.state
     if (s.slides.some((x) => x.id === id)) return id
-    return s.objects[id]?.anchor.container ?? null
+    return s.objects[id]?.anchor.holder ?? null
   }
-  protected override currentContainer(): string | null {
+  protected override currentHolder(): string | null {
     return this.state.activeSlide || null
   }
-  protected override showContainer(id: string): void {
+  protected override showHolder(id: string): void {
     if (this.state.slides.some((x) => x.id === id)) this.state.activeSlide = id
   }
 
   /** A step of the replay is shown on the slide it touched (D551). */
   protected override followReplay(focus: Region[]): void {
-    const slide = containerOf(firstFocus(focus))
+    const slide = holderOf(firstFocus(focus))
     if (slide && this.state.slides.some((x) => x.id === slide)) this.state.activeSlide = slide
   }
 
@@ -209,48 +194,27 @@ export class SlideSession extends BaseSession<SlideState> {
     for (const [user, here] of Object.entries(this.state.presence)) {
       if (user === this.state.me.user) continue
       for (const region of here.regions) {
-        if (region.kind === 'objects' && region.container === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
+        if (region.kind === 'objects' && region.holder === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
       }
     }
     return found
   }
 
   // ------------------------------------------------------------------------------ events
+  /** A slide's tab shows how many objects it has; a selected object that went is let go of. */
+  protected override objectsChanged(e: ObjectsEvent): void {
+    const s = this.state
+    const info = s.slides.find((x) => x.id === e.holder)
+    if (info) info.objects = e.order.length
+    if (e.removed.includes(s.selected ?? '')) {
+      s.selected = null
+      this.track(this.letGo())
+    }
+  }
+
   protected onAppEvent(name: string, data: WireData): boolean {
     const s = this.state
     switch (name) {
-      case 'objects': {
-        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
-        for (const o of e.changed as SlideObject[]) s.objects[o.id] = o
-        for (const id of e.removed) delete s.objects[id]
-        s.order[e.container] = e.order
-        const info = s.slides.find((x) => x.id === e.container)
-        if (info) info.objects = e.order.length
-        if (e.removed.includes(s.selected ?? '')) {
-          s.selected = null
-          this.track(this.letGo())
-        }
-        return true
-      }
-      case 'styles':
-        // Found by driving a real browser: the styles were requested once at open and never again, so a style a
-        // colleague changed — or a palette role anybody changed (D200) — did not reach this slide until the
-        // document was reopened. The whole book travels, as it does in composes.
-        s.styles = Object.fromEntries((data.styles as StyleDef[]).map((x) => [x.id, x]))
-        return true
-      case 'palette':
-        // Only the styles are drawn from, and they arrive with the event above. Kept so that a palette change is
-        // not reported as an unknown event, and so the roles are here for the menu that will offer them.
-        s.palette = data as PaletteEvent
-        return true
-      case 'shape':
-        if (data.definition) s.shapes[data.id] = data.definition
-        else delete s.shapes[data.id]
-        return true
-      case 'image':
-        if (data.asset) s.images[data.id] = data.asset
-        else delete s.images[data.id]
-        return true
       case 'slides':
         this.track(this.reload())
         return true
@@ -278,9 +242,6 @@ export class SlideSession extends BaseSession<SlideState> {
       case 'schemes':
         s.schemes = data.schemes as SchemeInfo[]
         return true
-      case 'language':
-        s.language = (data.language as string | null) ?? null
-        return true
       case 'slide_notes':
         if (data.notes) s.notes[data.slide as string] = data.notes as string
         else delete s.notes[data.slide as string]
@@ -295,15 +256,15 @@ export class SlideSession extends BaseSession<SlideState> {
 
   // ------------------------------------------------------------------------------ doing things
   private async insert(params: Record<string, unknown>, frame: Frame): Promise<string | null> {
-    const done = await this.attempt('add_object', { slide: this.state.activeSlide, ...params, ...frame, base: this.state.revision })
+    const done = await this.write('add_object', { slide: this.state.activeSlide, ...params, ...frame })
     if (done === false) return null
     await this.select(done.object)
     return done.object
   }
 
-  /** Put a rendered container of `type` on the slide that is shown, in `frame`; its id, or null after telling why not. */
+  /** Put a container of `type` on the slide that is shown, in `frame`; its id, or null after telling why not. */
   async addContainer(type: string, frame: Frame): Promise<string | null> {
-    const id = await this.addRendering(type, { slide: this.state.activeSlide, x: frame.x, y: frame.y }, { w: frame.w, h: frame.h }, undefined, true)
+    const id = await this.addContainerAt(type, { slide: this.state.activeSlide, x: frame.x, y: frame.y }, { w: frame.w, h: frame.h }, undefined, true)
     if (id) await this.select(id)
     return id
   }
@@ -313,16 +274,16 @@ export class SlideSession extends BaseSession<SlideState> {
    * are not such a block (nothing is changed then) or the container could not be made (the box stays). */
   async fenceToContainer(id: string, words: string): Promise<string | null> {
     const box = this.state.objects[id]
-    const fenced = parseFence(words, this.state.renderTypes.map((k) => k.type))
+    const fenced = parseFence(words, this.state.containerTypes.map((k) => k.type))
     if (!box || !fenced) return null
-    const made = await this.addRendering(
+    const made = await this.addContainerAt(
       fenced.type,
-      { slide: box.anchor.container, x: box.anchor.x, y: box.anchor.y },
+      { slide: box.anchor.holder, x: box.anchor.x, y: box.anchor.y },
       { w: box.w, h: box.h },
       fenced.source,
     )
     if (!made) return null
-    await this.remove(id)
+    await this.removeObject(id)
     await this.select(made)
     return made
   }
@@ -347,32 +308,14 @@ export class SlideSession extends BaseSession<SlideState> {
     picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
     frame: Frame,
   ): Promise<string | null> {
-    const done = await this.attempt('add_image', {
-      slide: this.state.activeSlide,
-      data: picture.data,
-      alt: picture.alt,
-      source_name: picture.sourceName,
-      source_path: picture.sourcePath,
-      ...(picture.decorative ? { decorative: true } : {}),
-      ...(picture.fit ? { fit: true } : {}), // from a file: the server sizes it (D1332)
-      ...frame,
-      base: this.state.revision,
-    })
-    if (done === false) return null
-    await this.select(done.object)
-    return done.object
+    const id = await this.putPicture(picture, { slide: this.state.activeSlide, ...frame })
+    if (id) await this.select(id)
+    return id
   }
 
   /** Print the presentation another way (D917): layout and page, one step for everybody. */
   async setPrintSetup(setup: PrintSetupData): Promise<boolean> {
-    if (this.readOnly) return false
-    return (await this.attempt('set_print_setup', { setup, base: this.state.revision })) !== false
-  }
-
-  /** Say which language the presentation is written in (D917), or `null` for not known: one step, for everybody. */
-  async setLanguage(language: string | null): Promise<boolean> {
-    if (this.readOnly) return false
-    return (await this.attempt('set_language', { language, base: this.state.revision })) !== false
+    return (await this.write('set_print_setup', { setup })) !== false
   }
 
   // -- what a talk is prepared with: speaker notes and planned times (D342, D343)
@@ -436,26 +379,25 @@ export class SlideSession extends BaseSession<SlideState> {
   }
 
   private async listRequest(method: string, params: Record<string, unknown>): Promise<boolean> {
-    if (this.readOnly) return false
-    return (await this.attempt(method, { ...params, base: this.state.revision })) !== false
+    return (await this.write(method, { ...params })) !== false
   }
 
   /** Bullets or numbers for the selected box, or (`null`) none; asking for what it is takes it out of its list. */
   makeList(scheme: string | null): Promise<boolean> {
     const id = this.state.selected
-    return id && this.canList() ? this.listRequest('make_list', { blocks: [id], scheme }) : Promise.resolve(false)
+    return id && this.canList() ? this.listRequest('make_list', { paragraphs: [id], scheme }) : Promise.resolve(false)
   }
 
   /** Move the selected box's item one level in (`1`) or out (`-1`). */
   indent(by: 1 | -1): Promise<boolean> {
     const id = this.state.selected
-    return id && this.selectedItem() ? this.listRequest('indent_item', { blocks: [id], by }) : Promise.resolve(false)
+    return id && this.selectedItem() ? this.listRequest('indent_item', { paragraphs: [id], by }) : Promise.resolve(false)
   }
 
   /** Let the list of the selected box go on where the nearest earlier list of its kind ends. */
   continueList(): Promise<boolean> {
     const id = this.state.selected
-    return id && this.selectedItem() ? this.listRequest('continue_list', { block: id }) : Promise.resolve(false)
+    return id && this.selectedItem() ? this.listRequest('continue_list', { paragraph: id }) : Promise.resolve(false)
   }
 
   /** Number the first level of the selected box's list from `start` on. */
@@ -483,8 +425,8 @@ export class SlideSession extends BaseSession<SlideState> {
 
   /** Put an agenda on a slide (the one shown, by default) and select it. */
   async insertAgenda(slide: string = this.state.activeSlide): Promise<string | null> {
-    if (this.readOnly || !slide) return null
-    const done = await this.attempt('insert_agenda', { slide, base: this.state.revision })
+    if (!slide) return null
+    const done = await this.write('insert_agenda', { slide })
     if (done === false) return null
     const id = done.object as string
     await this.select(id)
@@ -504,9 +446,8 @@ export class SlideSession extends BaseSession<SlideState> {
   /** Put a reference to `target` into the words of an object at `offset` (a UTF-16 offset of its words). */
   async insertReference(id: string, offset: number, target: string, show: Show): Promise<boolean> {
     const words = this.state.objects[id]?.paragraph?.text ?? ''
-    if (this.readOnly) return false
-    const params = { paragraph: id, offset: pointOf(words, Math.min(offset, words.length)), target, show, base: this.state.revision }
-    return (await this.attempt('insert_reference', params)) !== false
+    const params = { paragraph: id, offset: pointOf(words, Math.min(offset, words.length)), target, show }
+    return (await this.write('insert_reference', params)) !== false
   }
 
   /** The first reference in the words of an object, as `{field, shown}`, or `null`. */
@@ -517,14 +458,12 @@ export class SlideSession extends BaseSession<SlideState> {
 
   /** Write the notes of a slide (D342): one step in the history, for everybody. `""` clears them. */
   async setNotes(slide: string, notes: string): Promise<boolean> {
-    if (this.readOnly) return false
-    return (await this.attempt('set_slide_notes', { slide, notes, base: this.state.revision })) !== false
+    return (await this.write('set_slide_notes', { slide, notes })) !== false
   }
 
   /** Plan a time for a slide (D343), whole seconds; `null` takes the plan away. */
   async setTime(slide: string, seconds: number | null): Promise<boolean> {
-    if (this.readOnly) return false
-    return (await this.attempt('set_slide_time', { slide, seconds, base: this.state.revision })) !== false
+    return (await this.write('set_slide_time', { slide, seconds })) !== false
   }
 
   /** What the tab of slide `id` (the `index`th, from 0) says: its name, or its place while it has none. */
@@ -533,98 +472,35 @@ export class SlideSession extends BaseSession<SlideState> {
   }
 
   async addSlide(): Promise<string | null> {
-    const done = await this.attempt('add_slide', { base: this.state.revision })
+    const done = await this.write('add_slide')
     if (done === false) return null
     await this.showSlide(done.slide)
     return done.slide
   }
 
   async move(id: string, x: number, y: number): Promise<boolean> {
-    return (await this.attempt('move_object', { id, x, y, base: this.state.revision })) !== false
+    return (await this.write('move_object', { id, x, y })) !== false
   }
 
   async resize(id: string, frame: Frame): Promise<boolean> {
-    return (await this.attempt('resize_object', { id, ...frame, base: this.state.revision })) !== false
-  }
-
-  /** Turn an object to `rotation` whole degrees clockwise about its centre (0–359): one step in the history (D1021).
-   * The server moves the object back onto the slide when the turn would take its outline off (D1022), so what the
-   * object ends up as is what the next `objects` event says, not what was asked; a turn that cannot fit is refused. */
-  async rotate(id: string, rotation: number): Promise<boolean> {
-    return (await this.attempt('rotate_object', { id, rotation, base: this.state.revision })) !== false
+    return (await this.write('resize_object', { id, ...frame })) !== false
   }
 
   /** Hold an object to the grid (`snap` true) or release it (false); its own step in the history (E10.15). */
   async setSnap(id: string, snap: boolean): Promise<boolean> {
-    return (await this.attempt('set_snap', { id, snap, base: this.state.revision })) !== false
-  }
-
-  /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the
-   * history. A picture needs one or the other, which the server insists on. */
-  async describe(id: string, description: string, decorative: boolean): Promise<boolean> {
-    return (await this.attempt('describe_object', { id, ...describeParams(description, decorative), base: this.state.revision })) !== false
-  }
-
-  async remove(id: string): Promise<boolean> {
-    return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
+    return (await this.write('set_snap', { id, snap })) !== false
   }
 
   // -- styles and the palette (E9.7, D200, D203). The same eight methods computes' session has, because the style
   // menu is one component talking to one `StyleHost` and neither knows which app it is in.
-  get readOnly(): boolean {
-    return lookOnly(this.state)
-  }
-
-  /** The styles as the menu wants them, in the order the server lists them. */
-  styleViews(): StyleDef[] {
-    return Object.values(this.state.styles)
-  }
-
-  /** Every object of the document, for the use counts beside the style names. */
-  bodies(): ObjectBody[] {
-    // The client's `VisualObject` is flat — `ObjectBody & { anchor }` — so an object is already a body.
-    return Object.values(this.state.objects)
-  }
-
-
   /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). */
   async applyStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
-    return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
+    return (await this.write('apply_style', { targets, style, slot })) !== false
   }
 
   /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
   async deviateStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
-    const params = { parent, targets, slot, ...edit, base: this.state.revision }
-    return (await this.attempt('deviate', params)) !== false
-  }
-
-  /** Change a style for everything that has it — and for the styles based on it, where they say nothing (D73). */
-  async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
-    return (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false
-  }
-
-
-  async renameStyle(style: string, name: string): Promise<boolean> {
-    return (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false
-  }
-
-  /** Give a colour role another colour: every style that meant it follows, and so does every object (D200). */
-  async setRole(role: string, colour: string): Promise<boolean> {
-    return (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false
-  }
-
-  /** Put a whole palette in place of this document's — what "the colours it started with" does (D200). */
-  async replacePalette(roles: ColourRole[]): Promise<boolean> {
-    return (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false
-  }
-
-  /** What the server makes of this CSS text, line by line. A read: viewers may ask it too. */
-  async checkCss(text: string): Promise<CssCheck | null> {
-    try {
-      return await this.need().request<CssCheck>('check_css', { text })
-    } catch {
-      return null
-    }
+    return (await this.write('deviate', { parent, targets, slot, ...edit })) !== false
   }
 
   async showSlide(slide: string): Promise<void> {
@@ -635,7 +511,7 @@ export class SlideSession extends BaseSession<SlideState> {
 
   // -- the selection: shown to the others, and held so that nobody changes the object under my hands
   private regionOf(id: string): Region[] {
-    return [{ kind: 'objects', container: this.state.objects[id]?.anchor.container ?? this.state.activeSlide, ids: [id] }]
+    return [{ kind: 'objects', holder: this.state.objects[id]?.anchor.holder ?? this.state.activeSlide, ids: [id] }]
   }
 
   /** Select an object (null: nothing). Selecting holds it; a colleague who holds it first keeps it. */

@@ -62,4 +62,4 @@ people who are not there, and it would be a reason never to remove anybody.
 **Notes.** Also what a role change needs: the owner puts the keys the person gains into her inbox. A role change that
 takes keys away is the same as a renewal for those domains.
 
-**Built in slice C** (container 0.12.0): `inbox.py`, login resolver in `container.py`; format in `docs/container-format.md`.
+**Built in slice C** (container 0.12.0): `inbox.py`, login resolver in `container.py` (now `file.py`); format in `docs/document-file-format.md` (`container-format.md` until E1.18 renamed the package and its files).

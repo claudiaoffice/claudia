@@ -39,7 +39,7 @@ def facets(model: WorkbookModel) -> dict[str, object]:
     """A workbook as the facets a converter writes or leaves out, in the order losses are reported. The sheets count
     by their name, cells and looks; the widths and heights of rows and columns are a facet of their own (only a sheet
     that has any), the charts shown (a tab, or a diagram floating on a sheet, each with its definition) are one facet
-    and the pictures (an image or a rendered container, with the assets they show) another, and the other floating
+    and the pictures (an image or a container, with the assets they show) another, and the other floating
     objects (computes has no text boxes and shapes, D1232, but a model may hold them), with what they use, a last."""
     data = model.serialize()
     sheets = data["sheets"]
@@ -55,7 +55,7 @@ def facets(model: WorkbookModel) -> dict[str, object]:
         "pictures": [
             *(each for each in data["objects"] if each["kind"] in PICTURE_KINDS),
             *(("image", each) for each in data["images"]),
-            *(("rendering", each) for each in data["renderings"]),
+            *(("container", each) for each in data["containers"]),
         ],
         "objects": [
             *(each for each in data["objects"] if each["kind"] != "diagram" and each["kind"] not in PICTURE_KINDS),

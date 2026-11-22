@@ -33,7 +33,7 @@ ROW = (
 def a_model(*, widths: dict[int, float] | None = None, heights: dict[int, float] | None = None) -> WorkbookModel:
     model = WorkbookModel()
     model.sheets[DATA] = Sheet(DATA, "Data")
-    model.open_container(str(DATA))
+    model.open_holder(str(DATA))
     sheet = model.sheets[DATA]
     sheet.cells[(0, 0)] = {"t": "text", "v": "Item"}
     sheet.cells[(1, 1)] = {"t": "int", "v": 4}

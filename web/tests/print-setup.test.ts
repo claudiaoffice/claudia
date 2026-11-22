@@ -31,7 +31,7 @@ describe('from a session to the layout library', () => {
       { objects: [], shapes: [], images: [{ id: 'i1', format: 'png', data: 'AA==' }] },
       'de',
     )
-    expect(doc).toMatchObject({ blocks: [{ id: 'b1', style: 'body', text: 'Hallo' }], styles: [{ id: 'body', resolved: { 'font-size': '12pt' } }], images: [{ id: 'i1', format: 'png' }], language: 'de' })
+    expect(doc).toMatchObject({ paragraphs: [{ id: 'b1', style: 'body', text: 'Hallo' }], styles: [{ id: 'body', resolved: { 'font-size': '12pt' } }], images: [{ id: 'i1', format: 'png' }], language: 'de' })
     expect([...fromBase64('aGk=')]).toEqual([104, 105])
   })
   it('passes the tables the text shows with their totals, for the layout to set in the flow (E9.32)', () => {
@@ -40,7 +40,7 @@ describe('from a session to the layout library', () => {
       entries: [['r1', 'c1', { style: '', text: 'kg' }], ['r2', 'c1', { style: '', text: '4' }]] as [string, string, { style: string; text: string }][],
       merges: [], header_rows: 1, banded: false, look: 'rules', placement: 'flow' as const, width: null, next_row: 2, next_col: 1, used_by: ['o1'], totals: { c1: '4' },
     }
-    const object = { id: 'o1', kind: 'table' as const, w: 480, h: 48, style: 'plain-box', paragraph: null, shape: null, image: null, rotation: 0, ref: 't1', anchor: { kind: 'block' as const, container: 'b1', offset: 0 } }
+    const object = { id: 'o1', kind: 'table' as const, w: 480, h: 48, style: 'plain-box', paragraph: null, shape: null, image: null, rotation: 0, ref: 't1', anchor: { kind: 'paragraph' as const, holder: 'b1', offset: 0 } }
     const doc = textDocument([{ id: 'b1', style: 'body', text: 'Hallo', runs: [] }], [], DEFAULT_PAGE, { objects: [object], shapes: [], images: [], tables: [table] }, 'de')
     expect(doc.tables).toEqual([{ ...table, total_label: 'Total' }]) // the word the view shows in the total row
     expect(doc.objects).toEqual([object])
@@ -58,7 +58,7 @@ describe('from a session to the layout library', () => {
       'de',
       { lists: [{ id: 'l1', scheme: 'numbers', start: 1, name: null }], schemes: [{ id: 'numbers', name: 'Numbers', kind: 'number', indent: 2, gap: 0.5 }] },
     )
-    expect(doc.blocks).toEqual([
+    expect(doc.paragraphs).toEqual([
       { id: 'b1', style: 'body', text: 'eins', item: { list: 'l1', level: 0 }, label: { marker: '1.' } },
       { id: 'b2', style: 'body', text: 'kein Punkt', item: null, label: null },
     ])
@@ -77,7 +77,7 @@ describe('from a session to the layout library', () => {
       DEFAULT_PAGE,
       null,
     )
-    expect(doc.blocks).toEqual([
+    expect(doc.paragraphs).toEqual([
       { id: 'toc', style: 'body', text: '', contents: { entries: [{ target: 'h1', words: '1 Why', style: 'contents-1' }, { target: 'h2', words: '1.1 Schools', style: 'contents-2' }], places: true, leader: 'dots' } },
       { id: 'empty', style: 'body', text: '', contents: { entries: [], places: false, leader: 'none' } },
     ])
@@ -99,7 +99,7 @@ describe('from a session to the layout library', () => {
       DEFAULT_PAGE,
       null,
     )
-    expect(doc.blocks[0]).toMatchObject({ text: 'see 2.1 on page .', pageRefs: [{ at: 16, target: 'h' }] })
+    expect(doc.paragraphs[0]).toMatchObject({ text: 'see 2.1 on page .', pageRefs: [{ at: 16, target: 'h' }] })
   })
   it('passes the heading level the server gave each style, so the layout keeps headings with their text (E9.22)', () => {
     const style = (id: string, heading?: number | null) => ({ id, name: id, purpose: '', based_on: null, css: {}, computed: {}, resolved: {}, to_name: false, kind: 'paragraph', heading })

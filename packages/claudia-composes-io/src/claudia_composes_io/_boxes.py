@@ -25,9 +25,9 @@ def is_written(obj: VisualObject) -> bool:
     return body.kind == "text" or (body.kind == "shape" and body.shape in PRIMITIVES)
 
 
-def boxes_of(model: TextModel, block_id: str) -> list[VisualObject]:
-    """The boxes hanging from the paragraph ``block_id`` a converter writes, the one in front last."""
-    found = (model.get_object(object_id) for object_id in model.stack_of(block_id))
+def boxes_of(model: TextModel, paragraph_id: str) -> list[VisualObject]:
+    """The boxes hanging from the paragraph ``paragraph_id`` a converter writes, the one in front last."""
+    found = (model.get_object(object_id) for object_id in model.stack_of(paragraph_id))
     return [obj for obj in found if is_written(obj)]
 
 

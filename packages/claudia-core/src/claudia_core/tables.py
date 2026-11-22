@@ -1,6 +1,6 @@
 """A table: columns and rows with ids, the words of each of its boxes, the merges, and how it looks (D1201–D1207).
 
-A table in a text is an object (``kind == "table"``) whose body names a :class:`TableDef` by id, as a rendered container
+A table in a text is an object (``kind == "table"``) whose body names a :class:`TableDef` by id, as a container
 names its definition (D390). The definition is plain data and is the same wherever it is read. This module is all the
 kernel knows about tables; it knows no text, no page and no sheet, and it never reads a number out of a sheet: what
 computes and composes share is :class:`TableSource`, the small protocol a linked table, a chart and the AI read, and

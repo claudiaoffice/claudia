@@ -1,7 +1,7 @@
 """The kinds of floating object have one list, ``claudia_core.OBJECT_KINDS`` (CODE-60).
 
 The layout library names them in a type (``ObjectKind``) and the web imports that type instead of writing the list
-again; a client that spells the whole list out is how the layout once came to lack ``rendered``. This test refuses a
+again; a client that spells the whole list out is how the layout once came to lack ``container``. This test refuses a
 second spelling and checks that the one there is the same as the server's.
 """
 

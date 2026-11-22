@@ -42,7 +42,7 @@ const WELCOME: Welcome = {
   role: 'owner',
   doc: 'talk',
   app: 'creates',
-  line: 'main',
+  branch: 'main',
   revision: 'main:0',
   id: 1,
   color: '#e6194b',
@@ -50,7 +50,7 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
-  lines: [{ name: 'main', head: 'main:0', active: true, forked_from: null }],
+  branches: [{ name: 'main', head: 'main:0', active: true, forked_from: null }],
   proposal: null,
   returned: null,
 }
@@ -87,7 +87,7 @@ class FakeLink implements LinkLike {
 const STYLE = { id: 'body-text', name: 'Body text', purpose: '', based_on: null, to_name: false, kind: 'paragraph', css: {}, computed: {}, resolved: { color: '#1f1a33' } }
 const SVG = { id: 'v'.repeat(64), format: 'svg', width: 10, height: 10, animated: false, data: btoa('<svg/>'), first_frame: null }
 const PNG = { id: 'p'.repeat(64), format: 'png', width: 10, height: 10, animated: false, data: 'iVBO', first_frame: null }
-const box = (id: string, slide: string) => ({ id, kind: 'text', w: 400, h: 100, style: 'plain-box', paragraph: { style: 'body-text', text: id, runs: [] }, ref: null, imported: null, rotation: 0, snap: true, anchor: { kind: 'slide', container: slide, x: 0, y: 0 } })
+const box = (id: string, slide: string) => ({ id, kind: 'text', w: 400, h: 100, style: 'plain-box', paragraph: { style: 'body-text', text: id, runs: [] }, ref: null, imported: null, rotation: 0, snap: true, anchor: { kind: 'slide', holder: slide, x: 0, y: 0 } })
 const HANDOUTS: PrintSetupData = { layout: 'handouts-6', page: { ...DEFAULT_PAGE, margins: [36000, 36000, 36000, 36000] } }
 
 function server(link: FakeLink, extra: Record<string, (params: any) => any> = {}) {
@@ -106,7 +106,7 @@ function server(link: FakeLink, extra: Record<string, (params: any) => any> = {}
     chat_log: () => [],
     checkpoints: () => [],
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
-    lines: () => [{ name: 'main', head: 'main:0', active: true, forked_from: null }],
+    branches: () => [{ name: 'main', head: 'main:0', active: true, forked_from: null }],
     restore_policy: () => ({ policy: 'consensus' }),
     presence: () => ({}),
     ...extra,
@@ -218,18 +218,18 @@ describe('printing a presentation: its print source', () => {
     expect(doc).toMatchObject({ print: DEFAULT_PRINT, language: 'de' })
     session.close()
   })
-  it('hands a rendered text container to the layout as it is: the layout prints it as the picture it shows (D390)', async () => {
-    const rendered = (id: string, definition: string) => ({ ...box(id, 's1'), kind: 'rendered', paragraph: null, ref: definition })
+  it('hands a container to the layout as it is: the layout prints it as the picture it shows (D390)', async () => {
+    const container = (id: string, definition: string) => ({ ...box(id, 's1'), kind: 'container', paragraph: null, ref: definition })
     const { session, state } = await opened({
       ...PRINTING,
-      slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? [rendered('drawn', 'r1'), rendered('pending', 'r2')] : [] }),
+      slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? [container('drawn', 'r1'), container('pending', 'r2')] : [] }),
     })
     const definition = (id: string, image: string | null) => ({ format: 1, id, type: 'latex', source: 'x', params: {}, image, renderer: '' })
-    state.renderings = { r1: definition('r1', PNG.id), r2: definition('r2', null) } // the picture is the definition's: the object only points at it
+    state.containers = { r1: definition('r1', PNG.id), r2: definition('r2', null) } // the picture is the definition's: the object only points at it
     const [first] = slideDocument(session).slides
     expect(first!.objects.map((o) => [o.id, o.kind, o.image])).toEqual([
-      ['drawn', 'rendered', PNG.id],
-      ['pending', 'rendered', null],
+      ['drawn', 'container', PNG.id],
+      ['pending', 'container', null],
     ])
     session.close()
   })
@@ -312,7 +312,7 @@ describe('printing a presentation: its print source', () => {
 
 describe('printing a text: its print source', () => {
   function textSession(over: Partial<Record<string, unknown>> = {}) {
-    const state = reactive({ doc: 'essay', blocks: [{ id: 'b1', style: 'body', text: 'Hi', runs: [] }], styles: [], lists: [], schemes: [], page: DEFAULT_PAGE, language: null as string | null | undefined, ...over })
+    const state = reactive({ doc: 'essay', paragraphs: [{ id: 'b1', style: 'body', text: 'Hi', runs: [] }], styles: [], lists: [], schemes: [], page: DEFAULT_PAGE, language: null as string | null | undefined, ...over })
     const session = {
       state,
       readOnly: false,

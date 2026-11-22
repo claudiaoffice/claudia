@@ -74,20 +74,20 @@ const APPS = {
     // the active cell: a press on an object must not move it
     below: (page) => page.$eval('.viewport .active', (e) => e.getAttribute('style')).catch(() => ''),
     // Edit text: only a container is written in (a picture and a chart have no words)
-    editable: (kind) => kind === 'rendered',
+    editable: (kind) => kind === 'container',
     wrap: false,
     grid: false,
   },
   composes: {
     url: process.env.URL_COMPOSES ?? 'http://127.0.0.1:8766/',
     ready: '[data-testid=text]',
-    objects: '[data-testid=containers] .object[data-object]',
+    objects: '[data-testid=object-layer] .object[data-object]',
     // the caret: a press on an object must not move it
     below: (page) =>
       page.evaluate(() => {
         const s = getSelection()
-        const block = s?.anchorNode && (s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement)?.closest('[data-block]')
-        return JSON.stringify([block ? [...document.querySelectorAll('[data-block]')].indexOf(block) : -1, s?.anchorOffset ?? -1])
+        const paragraph = s?.anchorNode && (s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentElement)?.closest('[data-paragraph]')
+        return JSON.stringify([paragraph ? [...document.querySelectorAll('[data-paragraph]')].indexOf(paragraph) : -1, s?.anchorOffset ?? -1])
       }),
     // D1232: the words of a box or a shape are written as typed (`write_words`), as in creates
     editable: (kind) => kind !== 'image' && kind !== 'diagram',
@@ -116,7 +116,7 @@ const KINDS = {
   },
   image: { computes: (p) => insertPicture(p), composes: (p) => insertPicture(p), creates: (p) => insertPicture(p) },
   diagram: { computes: (p) => insertChart(p), composes: 'a text has no charts', creates: 'a slide has no charts' },
-  rendered: { computes: (p) => insertContainer(p), composes: (p) => insertContainer(p), creates: (p) => insertContainer(p) },
+  container: { computes: (p) => insertContainer(p), composes: (p) => insertContainer(p), creates: (p) => insertContainer(p) },
   table: { computes: 'a sheet is the table', composes: 'its own battery, below (tables are in the flow)', creates: 'a slide has no tables' },
 }
 // end of KINDS
@@ -365,10 +365,10 @@ async function battery(app, kind, ann, ben) {
 // -- Edit text: one editor, whatever the app (creates' paragraph editor, composes' box, a container's source)
 async function editText(app, kind, ann, ben, obj) {
   const where = `${app} ${kind}`
-  const rendered = kind === 'rendered'
-  const editor = obj.locator(rendered ? '[data-testid=rendered-editor] textarea' : '[role=textbox]')
-  const accept = rendered ? 'Control+Enter' : 'Enter'
-  const words = rendered ? 'x^2 + y^2' : 'words by ann'
+  const isContainer = kind === 'container'
+  const editor = obj.locator(isContainer ? '[data-testid=container-editor] textarea' : '[role=textbox]')
+  const accept = isContainer ? 'Control+Enter' : 'Enter'
+  const words = isContainer ? 'x^2 + y^2' : 'words by ann'
   const h = await entries(ann)
   // from the object's menu
   await obj.click({ button: 'right' })
@@ -379,7 +379,7 @@ async function editText(app, kind, ann, ben, obj) {
   await ann.keyboard.press(accept)
   await editor.waitFor({ state: 'detached' })
   await waitEntries(ann, h + 1, `${where}: one entry for the words`)
-  if (!rendered) {
+  if (!isContainer) {
     assert.ok((await obj.innerText()).includes(words), `${where}: the words are on the object`)
     if (ben) await ben.waitForFunction(([sel, text]) => document.querySelector(sel)?.textContent.includes(text), [APPS[app].objects, words])
   }
@@ -392,7 +392,7 @@ async function editText(app, kind, ann, ben, obj) {
   await editor.waitFor({ state: 'detached' })
   await ann.waitForTimeout(300)
   assert.equal(await entries(ann), h + 1, `${where}: Esc leaves nothing in the history`)
-  if (!rendered) assert.ok(!(await obj.innerText()).includes('not kept'), `${where}: and the words as they were`)
+  if (!isContainer) assert.ok(!(await obj.innerText()).includes('not kept'), `${where}: and the words as they were`)
   // a double press opens it, too
   await obj.dblclick()
   await editor.waitFor()
@@ -456,8 +456,8 @@ async function tables(ann, ben) {
     await ann.keyboard.type(words)
     await ann.keyboard.press('Enter')
   }
-  await ann.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-block]').length >= 3)
-  await ann.locator('[data-testid=text] [data-block]').nth(0).click()
+  await ann.waitForFunction(() => document.querySelectorAll('[data-testid=text] [data-paragraph]').length >= 3)
+  await ann.locator('[data-testid=text] [data-paragraph]').nth(0).click()
   await menu(ann, 'Insert', 'Table…')
   await ann.fill('[data-testid=table-cols]', '3')
   await ann.fill('[data-testid=table-rows]', '2')
@@ -465,7 +465,7 @@ async function tables(ann, ben) {
   await table.waitFor()
   if (ben) await ben.locator('[data-testid=table]').waitFor()
   assert.equal(await table.count(), 1, `${where}: a table was made`)
-  assert.equal(await ann.locator('[data-testid=containers] [data-object][data-testid=table]').count(), 0, `${where}: the layer of objects does not draw it a second time`)
+  assert.equal(await ann.locator('[data-testid=object-layer] [data-object][data-testid=table]').count(), 0, `${where}: the layer of objects does not draw it a second time`)
 
   // select with a press on the tab; Options... is its chip; no other kind of frame is drawn around it
   const tab = ann.locator('[data-testid=table-tab]')
@@ -490,7 +490,7 @@ async function tables(ann, ben) {
   // drag the tab below the last paragraph: a drop line while held, one entry on release, Esc leaves the table
   const first = await box(table)
   const h1 = await entries(ann)
-  const last = await box(ann.locator('[data-testid=text] [data-block]').last())
+  const last = await box(ann.locator('[data-testid=text] [data-paragraph]').last())
   await drag(ann, centre(await box(tab)), { x: last.x + 40, y: last.y + last.height - 2 }, { release: false })
   await ann.waitForSelector('[data-testid=table-drop-line]')
   await ann.mouse.up()

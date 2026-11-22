@@ -90,8 +90,8 @@ def test_a_damaged_admins_file_leaves_the_directory_empty_rather_than_stopping_t
     assert len(directory) == 0
 
 
-# -- the tools behind rendered containers (D392) -------------------------------------------------------------------
-def test_the_tools_of_rendered_containers_are_empty_until_an_administrator_sets_them(tmp_path):
+# -- the tools behind containers (D392) -------------------------------------------------------------------
+def test_the_tools_of_containers_are_empty_until_an_administrator_sets_them(tmp_path):
     from claudia_server.server_settings import RenderSettings
 
     assert load_settings(tmp_path, default_max_documents=1).render == RenderSettings()

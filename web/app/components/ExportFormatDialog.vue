@@ -13,7 +13,7 @@ import { useI18n } from '~/lib/i18n'
 const { t } = useI18n()
 
 /** One target format this app offers. `local`, when given, builds the file here, with no server round trip (the
- * only case today is composes' Markdown, which is already in the browser as `state.blocks`); its absence means
+ * only case today is composes' Markdown, which is already in the browser as `state.paragraphs`); its absence means
  * the dialog asks the server instead, via `exportOffice`. `value` doubles as the file's extension. */
 export interface ExportFormatOption {
   value: string

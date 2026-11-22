@@ -18,20 +18,20 @@ class TextRange:
     An empty range is a caret. It overlaps nothing, but it moves with the text and is drawn."""
 
     kind: ClassVar[str] = "text"
-    block: str
+    paragraph: str
     start: int
     end: int
 
     @property
     def span(self) -> Span:
-        """The range as a ``(block, start, end)`` triple."""
-        return (self.block, self.start, self.end)
+        """The range as a ``(paragraph, start, end)`` triple."""
+        return (self.paragraph, self.start, self.end)
 
     def overlaps(self, other: Region) -> bool:
         """Do the two ranges share a character?"""
         return (
             isinstance(other, TextRange)
-            and self.block == other.block
+            and self.paragraph == other.paragraph
             and self.start < self.end
             and other.start < other.end
             and self.start < other.end
@@ -48,13 +48,13 @@ class TextRange:
 
     def to_data(self) -> dict:
         """The plain-data form for the wire."""
-        return {"kind": self.kind, "block": self.block, "start": self.start, "end": self.end}
+        return {"kind": self.kind, "paragraph": self.paragraph, "start": self.start, "end": self.end}
 
 
 _WORD = re.compile(r"\w+", re.UNICODE)
 
 
-def word_window(text: str, cursor: int, n: int, block: str = "b1") -> TextRange:
+def word_window(text: str, cursor: int, n: int, paragraph: str = "b1") -> TextRange:
     """The zone of D11: from ``n`` words before the cursor to ``n`` words after it.
 
     A word is a run of letters or digits. A cursor inside a word protects that word whole."""
@@ -68,4 +68,4 @@ def word_window(text: str, cursor: int, n: int, block: str = "b1") -> TextRange:
     end = (after[n - 1][1] if len(after) >= n else len(text)) if n else cursor
     if inside:
         end = max(end, inside[0][1])
-    return TextRange(block, start, end)
+    return TextRange(paragraph, start, end)

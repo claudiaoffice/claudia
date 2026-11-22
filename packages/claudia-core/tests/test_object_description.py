@@ -94,6 +94,6 @@ def test_a_body_with_a_field_nobody_knows_is_refused():
 def test_adding_an_object_is_schema_5_and_schema_1_data_is_brought_up_to_date():
     assert AddObject.schema == 6
     old_body = body_before_ref(picture().to_data(), "description", "decorative", "rendered", "name", "table")
-    envelope = {"k": "core.AddObject", "s": 1, "d": {"body": old_body, "anchor": {"container": "s1"}, "at": None}}
+    envelope = {"k": "core.AddObject", "s": 1, "d": {"body": old_body, "anchor": {"holder": "s1"}, "at": None}}
     command = core_commands.decode(envelope)
     assert command.body.description == "a red bicycle" and command.body.decorative is False

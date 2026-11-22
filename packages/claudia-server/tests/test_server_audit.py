@@ -9,8 +9,8 @@ import pytest
 from starlette.testclient import TestClient
 from test_server_app import Peer
 
-from claudia_container import KdfParams, read_audit, read_export, unlock
 from claudia_core.testing import ListModel
+from claudia_document_file import KdfParams, read_audit, read_export, unlock
 from claudia_server.app import create_app
 from claudia_server.hub import Hub
 from claudia_server.sealed import SealedDocuments

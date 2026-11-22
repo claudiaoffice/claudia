@@ -46,9 +46,13 @@ nitpick_ignore_regex = [
     (r"py:class", r"claudia_shell_gtk\.connector\.T"),
     # WorkerPool.submit's own TypeVar/ParamSpec (P, R): not a class to link to
     (r"py:class", r"claudia_server\.workers\.[PR]"),
-    # `type` aliases (PEP 695) for the per-app object types and a rendering's setting values: an alias is not a class
+    # AssetStore's type parameter T and its bound, the module-private protocol every asset meets (D1431). Sphinx names
+    # the parameter as a bare `T`, so this also passes any other bare `T`; it goes once Sphinx resolves PEP 695 type
+    # parameters, or once Asset is public and documented (then only the `T` stays).
+    (r"py:class", r"T|claudia_core\.asset_store\.Asset"),
+    # `type` aliases (PEP 695) for the per-app object types and a container's setting values: an alias is not a class
     (r"py:class", r"claudia_(creates|computes|composes)\.model\.(Slide|Sheet|Text)Object"),
-    (r"py:class", r"claudia_core\.renderings\.Scalar"),
+    (r"py:class", r"claudia_core\.containers\.Scalar"),
     (r"py:(class|data)", r"(claudia_core\.styles\.)?HeadingLevel"),
     (r"py:(class|data)", r"(claudia_core\.generated\.)?Generated"),
     (r"py:(class|data)", r"(claudia_core\.fields\.)?(Field|Show)"),

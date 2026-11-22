@@ -4,7 +4,7 @@
 // Typing is the one thing that is not shown only after the answer: the characters of the word being typed wait in
 // `pending` (drawn at the caret, marked as not yet written) and go out as one request when the word ends, after a pause,
 // or before anything else the person does. So a word is one step in the history, and typing does not wait for the network.
-import { parseFence } from './rendering'
+import { parseFence } from './containers'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import {
   applyEvent,
@@ -19,14 +19,13 @@ import {
   wordEnd,
   wordStart,
   textBetween,
-  type Block,
+  type Paragraph,
   type ListItem,
   type Pos,
   type TextEvent,
-} from './blocks'
+} from './paragraphs'
 import { NEW_OBJECT_CAP, type ImageAsset } from './images'
-import type { BlockAnchor, ObjectBody, ObjectsEvent, PaletteEvent, StyleModel, StyleTarget, VisualObject } from './objects'
-import { describeParams } from './descriptions'
+import type { ParagraphAnchor, PaletteEvent, StyleModel, StyleTarget, VisualObject } from './objects'
 import { NEW_OBJECT_WRAP, nextWrap, wrapOf, wrapParams, type Wrap } from './wrap'
 import { DEFAULT_STYLE, type PageSetupData, type ShapeOutline, type TextObject } from '@claudia/layout'
 import type { LinkLike, Region, WireData } from './protocol'
@@ -34,16 +33,15 @@ import type { ListInfo, SchemeInfo } from './numbering'
 import { FIELD_CHAR, fieldIndex, plain, type ReferenceTarget, type RefField, type Show, type Shown } from './references'
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
 import type { Deleted, DeleteHow } from './style-deletion'
-import { headingLevel, styleUses, type CssCheck, type CssEdit, type StyleView } from './style-css'
+import { headingLevel, styleUses, type CssEdit, type StyleView } from './style-css'
 import { isBoxId, oneLine, type TableEntry, type TableEvent, type TableInfo, withEvent } from './tables'
-
 import { translate as t } from './i18n'
-import { lookOnly } from './replay'
+
 
 export interface SuggestionInfo {
   id: string
   author: string | null
-  block: string
+  paragraph: string
   start: number
   end: number
   original: string
@@ -64,13 +62,11 @@ export interface Unwritten {
   text: string
 }
 export interface TextState extends BaseState {
-  styles: StyleView[]
-  /** The document's colour roles and how they read against each other (D200); a paragraph style names them, and
-   * the resolved colours arrive with the styles themselves. */
-  palette: PaletteEvent | null
+  /** The document's styles, by id, in the order the server lists them (D1432). */
+  styles: Record<string, StyleView>
   /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
   styleModel: StyleModel | null
-  blocks: Block[]
+  paragraphs: Paragraph[]
   lists: ListInfo[]
   schemes: SchemeInfo[]
   suggestions: SuggestionInfo[]
@@ -81,21 +77,16 @@ export interface TextState extends BaseState {
   sending: Unwritten | null
   /** The page the text is printed on (D904); `null` until loaded or for a server that does not know pages. */
   page: PageSetupData | null
-  /** The language the text is written in (D915), a BCP 47 tag; `null` when it is not set. `undefined` for a server
-   *  that does not know languages. */
-  language: string | null | undefined
-  /** The floating objects, by id (a rendered container is one): each hangs from a character of a paragraph (D179). */
-  objects: Record<string, VisualObject<BlockAnchor>>
-  /** The decoded pictures the document holds, by id: what its containers are drawn with. */
-  images: Record<string, ImageAsset>
+  /** The floating objects, by id (a container is one): each hangs from a character of a paragraph (D179). */
+  objects: Record<string, VisualObject<ParagraphAnchor>>
   /** The outlines the shapes among the objects are drawn with, by id (the server's `shapes`). */
   shapes: Record<string, TextShape>
   /** The outlines the server offers for insertion (Edit ▸ the shapes), as creates has them. */
   library: TextShape[]
   /** The object a person has selected here; this is not shared with colleagues. */
   selectedObject: string | null
-  /** The rendered container whose text is being written in its own editor, or `null`; not shared. The object menu's
-   * Edit text and Enter set it, and `TextContainers.vue` shows the editor. */
+  /** The container whose text is being written in its own editor, or `null`; not shared. The object menu's
+   * Edit text and Enter set it, and `TextObjectLayer.vue` shows the editor. */
   editingObject: string | null
   /** The tables of the text by id (E9.32): what the objects of kind `table` point at with `ref`. */
   tables: Record<string, TableInfo>
@@ -146,7 +137,7 @@ export const PLACE_MS = 150
 export const ZONE_WORDS = 3
 const WORD_END = /[\s.,;:!?)\]}"”»]$/u
 
-const same = (a: Pos, b: Pos) => a.block === b.block && a.offset === b.offset
+const same = (a: Pos, b: Pos) => a.paragraph === b.paragraph && a.offset === b.offset
 const collapsed = (pos: Pos): Selection => ({ anchor: { ...pos }, focus: { ...pos } })
 
 export class TextSession extends BaseSession<TextState> {
@@ -164,30 +155,26 @@ export class TextSession extends BaseSession<TextState> {
   private flushQueued = false
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
-    super(makeLink, options, { styles: [], palette: null, styleModel: null, blocks: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, language: undefined, objects: {}, shapes: {}, library: [], images: {}, selectedObject: null, editingObject: null, tables: {}, box: null })
-  }
-
-  get readOnly(): boolean {
-    return lookOnly(this.state)
+    super(makeLink, options, { styleModel: null, paragraphs: [], lists: [], schemes: [], suggestions: [], selection: null, pending: null, sending: null, page: null, library: [], selectedObject: null, editingObject: null, tables: {}, box: null })
   }
 
   // ------------------------------------------------------------------------------ floating objects (D560)
-  /** The objects that hang from the paragraph `block`, in the order the server sent them. */
-  objectsIn(block: string): VisualObject<BlockAnchor>[] {
-    return Object.values(this.state.objects).filter((o) => o.anchor.container === block)
+  /** The objects that hang from the paragraph `paragraph`, in the order the server sent them. */
+  objectsIn(paragraph: string): VisualObject<ParagraphAnchor>[] {
+    return Object.values(this.state.objects).filter((o) => o.anchor.holder === paragraph)
   }
 
   /** The server counts a place in a paragraph in characters, the screen in UTF-16 units. */
-  private placeOnWire(place: { block: string; offset: number }): { block: string; offset: number } {
-    const block = this.state.blocks.find((b) => b.id === place.block)
-    return { block: place.block, offset: block ? pointOf(block.text, place.offset) : place.offset }
+  private placeOnWire(place: { paragraph: string; offset: number }): { paragraph: string; offset: number } {
+    const paragraph = this.state.paragraphs.find((b) => b.id === place.paragraph)
+    return { paragraph: place.paragraph, offset: paragraph ? pointOf(paragraph.text, place.offset) : place.offset }
   }
 
   /** Where an object hangs, in the units of the screen (the server counts characters, the page UTF-16 units), or `null`
    * while its paragraph is not known here. */
-  placeOf(o: VisualObject<BlockAnchor>): { block: string; offset: number } | null {
-    const block = this.state.blocks.find((b) => b.id === o.anchor.container)
-    return block ? { block: block.id, offset: Math.min(unitOf(block.text, o.anchor.offset), block.text.length) } : null
+  placeOf(o: VisualObject<ParagraphAnchor>): { paragraph: string; offset: number } | null {
+    const paragraph = this.state.paragraphs.find((b) => b.id === o.anchor.holder)
+    return paragraph ? { paragraph: paragraph.id, offset: Math.min(unitOf(paragraph.text, o.anchor.offset), paragraph.text.length) } : null
   }
 
   selectObject(id: string | null): void {
@@ -197,25 +184,25 @@ export class TextSession extends BaseSession<TextState> {
   /** Hang a container of `type` from `place` (a paragraph and a place in it, in screen units); its id, or `null` after
    * telling the person why not. It is selected, ready to be written in. The words go above and below it, as they do
    * for a new picture (D1334). */
-  async addContainer(type: string, place: { block: string; offset: number }, size: { w: number; h: number }): Promise<string | null> {
+  async addContainer(type: string, place: { paragraph: string; offset: number }, size: { w: number; h: number }): Promise<string | null> {
     await this.flush()
-    const id = await this.addRendering(type, this.newObjectAt(place), size, undefined, true)
+    const id = await this.addContainerAt(type, this.newObjectAt(place), size, undefined, true)
     if (id) this.state.selectedObject = id
     return id
   }
 
   /** Where a new container goes on the wire: the place, and the wrap every new object gets (D1061, D1334). */
-  private newObjectAt(place: { block: string; offset: number }): Record<string, unknown> {
+  private newObjectAt(place: { paragraph: string; offset: number }): Record<string, unknown> {
     return { ...this.placeOnWire(place), ...wrapParams(NEW_OBJECT_WRAP) }
   }
 
   /** Pasted text that is one fenced block (```latex … ```) of a type the server makes becomes a container at `place`
    * (D560); its id, or `null` if it is not such a block (the caller pastes it as text then). */
-  async pasteFence(text: string, place: { block: string; offset: number }): Promise<string | null> {
-    const fenced = parseFence(text.trim(), this.state.renderTypes.map((k) => k.type))
+  async pasteFence(text: string, place: { paragraph: string; offset: number }): Promise<string | null> {
+    const fenced = parseFence(text.trim(), this.state.containerTypes.map((k) => k.type))
     if (!fenced) return null
     await this.flush()
-    const id = await this.addRendering(fenced.type, this.newObjectAt(place), NEW_OBJECT_CAP, fenced.source, true)
+    const id = await this.addContainerAt(fenced.type, this.newObjectAt(place), NEW_OBJECT_CAP, fenced.source, true)
     if (id) this.state.selectedObject = id
     return id
   }
@@ -228,62 +215,42 @@ export class TextSession extends BaseSession<TextState> {
    */
   async addImage(
     picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
-    place: { block: string; offset: number },
+    place: { paragraph: string; offset: number },
     size: { w: number; h: number },
     wrap?: Wrap,
   ): Promise<string | null> {
-    await this.flush()
-    const done = await this.attempt('add_image', {
-      ...this.placeOnWire(place),
-      ...(wrap ? wrapParams(wrap) : {}),
-      ...size,
-      data: picture.data,
-      alt: picture.alt,
-      source_name: picture.sourceName,
-      source_path: picture.sourcePath,
-      ...(picture.decorative ? { decorative: true } : {}),
-      ...(picture.fit ? { fit: true } : {}), // from a file: the server sizes it (D1332)
-      base: this.state.revision,
-    })
-    if (done === false) return null
-    this.state.selectedObject = done.object as string
-    return done.object as string
+    const id = await this.putPicture(picture, { ...this.placeOnWire(place), ...(wrap ? wrapParams(wrap) : {}), ...size })
+    if (id) this.state.selectedObject = id
+    return id
   }
 
   /** Hang a text box (`kind` `text`) or a shape (with the id of its outline, from the library or the document) from
    * `place`; its id, or `null` after telling the person why not. It is selected. `wrap` says how the text flows round it. */
   private async addBox(
     kind: { kind: 'text' } | { kind: 'shape'; shape: string },
-    place: { block: string; offset: number },
+    place: { paragraph: string; offset: number },
     size: { w: number; h: number },
     wrap?: Wrap,
   ): Promise<string | null> {
-    await this.flush()
-    const done = await this.attempt('add_object', {
-      ...this.placeOnWire(place),
-      ...(wrap ? wrapParams(wrap) : {}),
-      ...kind,
-      ...size,
-      base: this.state.revision,
-    })
+    const done = await this.write('add_object', { ...this.placeOnWire(place), ...(wrap ? wrapParams(wrap) : {}), ...kind, ...size })
     if (done === false) return null
     this.state.selectedObject = done.object as string
     return done.object as string
   }
 
-  /** Edit ▸ Text Box: an empty text box, written in as a rendered container is not (its words are a paragraph). */
-  addTextBox(place: { block: string; offset: number }, size: { w: number; h: number }, wrap?: Wrap): Promise<string | null> {
+  /** Edit ▸ Text Box: an empty text box, written in as a container is not (its words are a paragraph). */
+  addTextBox(place: { paragraph: string; offset: number }, size: { w: number; h: number }, wrap?: Wrap): Promise<string | null> {
     return this.addBox({ kind: 'text' }, place, size, wrap)
   }
 
   /** Edit ▸ a shape of the library. */
-  addShape(shape: string, place: { block: string; offset: number }, size: { w: number; h: number }, wrap?: Wrap): Promise<string | null> {
+  addShape(shape: string, place: { paragraph: string; offset: number }, size: { w: number; h: number }, wrap?: Wrap): Promise<string | null> {
     return this.addBox({ kind: 'shape', shape }, place, size, wrap)
   }
 
   /** How the text flows round an object (D1061); `gap` is how far it keeps from it (left out: the object's own). */
   async setWrap(id: string, wrap: Wrap, gap?: number): Promise<boolean> {
-    return (await this.attempt('set_wrap', { id, ...wrapParams(wrap, gap), base: this.state.revision })) !== false
+    return (await this.write('set_wrap', { id, ...wrapParams(wrap, gap) })) !== false
   }
 
   /** What the key of Format ▸ Wrap Text does (D1064): the object `id` goes on to the next mode; the mode it has now, or
@@ -297,49 +264,25 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Hang an object from another place of the text. `away` is how far it floats from that character (D1023): left out,
    * the object keeps the offset it has. */
-  async moveObject(id: string, place: { block: string; offset: number }, away?: { dx: number; dy: number }): Promise<boolean> {
-    return (await this.attempt('move_object', { id, ...this.placeOnWire(place), ...(away ?? {}), base: this.state.revision })) !== false
+  async moveObject(id: string, place: { paragraph: string; offset: number }, away?: { dx: number; dy: number }): Promise<boolean> {
+    return (await this.write('move_object', { id, ...this.placeOnWire(place), ...(away ?? {}) })) !== false
   }
 
   async resizeObject(id: string, w: number, h: number): Promise<boolean> {
-    return (await this.attempt('resize_object', { id, w, h, base: this.state.revision })) !== false
-  }
-
-  /** Turn an object to `rotation` whole degrees clockwise (D1021); a chart does not turn, and the server says so. */
-  async rotateObject(id: string, rotation: number): Promise<boolean> {
-    return (await this.attempt('rotate_object', { id, rotation, base: this.state.revision })) !== false
-  }
-
-  /** What an object shows to someone who cannot see it, or that it is decoration (BITV 1.1.1). */
-  async describeObject(id: string, description: string, decorative: boolean): Promise<boolean> {
-    return (await this.attempt('describe_object', { id, ...describeParams(description, decorative), base: this.state.revision })) !== false
+    return (await this.write('resize_object', { id, w, h })) !== false
   }
 
   // -- the style of an object: the one style API every app has (`apply_style`, `deviate`, D304); a paragraph's own
   // styling is above. These two are what `object-style-host.ts` needs besides `changeStyle`, `renameStyle`, `setRole`
   // and `checkCss`.
-  /** The styles as the object style menu wants them. */
-  styleViews(): StyleView[] {
-    return this.state.styles
-  }
-
-  /** Every object of the document, for the use counts beside the style names. */
-  bodies(): ObjectBody[] {
-    return Object.values(this.state.objects)
-  }
-
   /** Put a style into one slot of these targets (`apply_style`). */
   async applyObjectStyle(targets: StyleTarget[], style: string, slot: string): Promise<boolean> {
-    return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
+    return (await this.write('apply_style', { targets, style, slot })) !== false
   }
 
   /** Change these targets only, in one slot: a new style from `parent`, named later (`deviate`, D75, D309). */
   async deviateObjectStyle(parent: string, targets: StyleTarget[], slot: string, edit: CssEdit): Promise<boolean> {
-    return (await this.attempt('deviate', { parent, targets, slot, ...edit, base: this.state.revision })) !== false
-  }
-
-  async removeObject(id: string): Promise<boolean> {
-    return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
+    return (await this.write('deviate', { parent, targets, slot, ...edit })) !== false
   }
 
   // ------------------------------------------------------------------------------ tables (E9.32)
@@ -366,36 +309,34 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Put a table after the paragraph `place` is in: `rows` by `cols` boxes, the first `headerRows` the header. Its
    *  object's and its own id, or `null` when the server refused (the person is told why). */
-  async addTable(place: { block: string; offset: number }, size: { rows: number; cols: number; headerRows: number }): Promise<{ object: string; table: string } | null> {
-    if (this.denied()) return null
-    const done = await this.act(() => this.attempt('add_table', { ...this.placeOnWire(place), rows: size.rows, cols: size.cols, header_rows: size.headerRows, base: this.state.revision }))
+  async addTable(place: { paragraph: string; offset: number }, size: { rows: number; cols: number; headerRows: number }): Promise<{ object: string; table: string } | null> {
+    const done = await this.write('add_table', { ...this.placeOnWire(place), rows: size.rows, cols: size.cols, header_rows: size.headerRows })
     if (done === false) return null
     return { object: done.object as string, table: done.table as string }
   }
 
-  /** An empty paragraph after `block` and after what hangs from its end, such as a table at the end of the text
+  /** An empty paragraph after `paragraph` and after what hangs from its end, such as a table at the end of the text
    *  (D1331); the caret goes to it. Its id, or `null` when the server refused (the person is told why). */
-  async addParagraphAfter(block: string): Promise<string | null> {
-    if (this.denied()) return null
-    const done = await this.act(() => this.attempt('add_paragraph_after', { block, base: this.state.revision }))
+  async addParagraphAfter(paragraph: string): Promise<string | null> {
+    const done = await this.write('add_paragraph_after', { paragraph })
     if (done === false) return null
-    const made = done.block as string
-    if (!this.state.blocks.some((b) => b.id === made)) await this.reload() // the event did not come before the answer
-    this.setSelection({ block: made, offset: 0 })
+    const made = done.paragraph as string
+    if (!this.state.paragraphs.some((b) => b.id === made)) await this.reload() // the event did not come before the answer
+    this.setSelection({ paragraph: made, offset: 0 })
     return made
   }
 
   /** Type `text` into a box, in place of the words it has. One line: a line break becomes a space (D1212). */
   async setBox(table: string, row: string, col: string, text: string): Promise<boolean> {
-    if (this.denied()) return false
+    if (this.refused()) return false
     const words = oneLine(text)
     // What the box has is looked at when this job runs, after the ones before it: a commit by Enter and the one by
     // leaving the box come close together, and the second must see what the first did (B1: the words were doubled).
-    return this.act(async () => {
+    return this.run(async () => {
       const old = this.boxText(table, row, col)
       if (words === old) return true
-      const block = `${table}/${row}/${col}`
-      const params = { block, start: 0, end_block: block, end: [...old].length, text: words, base: this.state.revision }
+      const paragraph = `${table}/${row}/${col}`
+      const params = { paragraph, start: 0, end_paragraph: paragraph, end: [...old].length, text: words, base: this.state.revision }
       if ((await this.attempt('replace_text', params)) === false) return false
       this.rememberBox(table, row, col, words) // the server's events bring the box's words only after a round trip
       return true
@@ -417,8 +358,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** One of the server's table methods for table `table`: false when it was refused or the person may not. */
   private async changeTable(method: string, table: string, params: Record<string, unknown> = {}): Promise<boolean> {
-    if (this.denied()) return false
-    return this.act(async () => (await this.attempt(method, { table, ...params, base: this.state.revision })) !== false)
+    return this.write(method, { table, ...params }).then((done) => done !== false)
   }
   /** `place` is `{ after: id }` or `{ before: id }`. */
   insertRows(table: string, place: { after: string } | { before: string }, count = 1): Promise<boolean> {
@@ -452,22 +392,21 @@ export class TextSession extends BaseSession<TextState> {
   }
   /** Take a table away with the object that shows it; undo brings it back. */
   async removeTable(table: string): Promise<boolean> {
-    if (this.denied()) return false
-    return this.act(async () => (await this.attempt('remove_table', { id: table, base: this.state.revision })) !== false)
+    return this.write('remove_table', { id: table }).then((done) => done !== false)
   }
 
   // ------------------------------------------------------------------------------ loading
   protected async loadApp() {
     const link = this.need()
     const [answer, suggestions, palette, styleModel, page, objects, images, shapes, tables] = await Promise.all([
-      link.request<{ styles: StyleView[]; blocks: Block[]; lists: ListInfo[]; schemes: SchemeInfo[] }>('blocks'),
+      link.request<{ styles: StyleView[]; paragraphs: Paragraph[]; lists: ListInfo[]; schemes: SchemeInfo[] }>('paragraphs'),
       link.request<SuggestionInfo[]>('suggestions'),
       link.request<PaletteEvent>('palette'),
       link.request<StyleModel>('style_model'),
       // an older server has no pages: the preview then starts from A4 and cannot store a change
       link.request<PageSetupData>('page').catch(() => null),
       // an older server shows no floating objects
-      link.request<{ objects: VisualObject<BlockAnchor>[] }>('objects').then((a) => a.objects).catch(() => []),
+      link.request<{ objects: VisualObject<ParagraphAnchor>[] }>('objects').then((a) => a.objects).catch(() => []),
       link.request<ImageAsset[]>('images').catch(() => []),
       link.request<ShapeAnswer | TextShape[]>('shapes').then(shapesOf).catch(() => shapesOf([])),
       // an older server has no tables
@@ -488,12 +427,12 @@ export class TextSession extends BaseSession<TextState> {
     s.tables = Object.fromEntries(tables.map((x) => [x.id, x]))
     if (s.box && !s.tables[s.box.table]) s.box = null
     if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
-    s.styles = answer.styles
+    s.styles = Object.fromEntries(answer.styles.map((x) => [x.id, x]))
     s.lists = answer.lists
     s.schemes = answer.schemes
     s.palette = palette
     s.styleModel = styleModel
-    s.blocks = answer.blocks.map((b) => ({ ...b, runs: runsToUnits(b.text, b.runs) }))
+    s.paragraphs = answer.paragraphs.map((b) => ({ ...b, runs: runsToUnits(b.text, b.runs) }))
     s.suggestions = suggestions.map((x) => this.suggestionInUnits(x))
     s.pending = null
     s.sending = null
@@ -510,28 +449,28 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   private clamped(selection: Selection | null): Selection | null {
-    const first = this.state.blocks[0]
+    const first = this.state.paragraphs[0]
     if (!first) return null
     const fit = (pos: Pos): Pos => {
-      const block = this.state.blocks.find((b) => b.id === pos.block)
-      return block ? { block: block.id, offset: Math.min(pos.offset, block.text.length) } : { block: first.id, offset: 0 }
+      const paragraph = this.state.paragraphs.find((b) => b.id === pos.paragraph)
+      return paragraph ? { paragraph: paragraph.id, offset: Math.min(pos.offset, paragraph.text.length) } : { paragraph: first.id, offset: 0 }
     }
-    return selection ? { anchor: fit(selection.anchor), focus: fit(selection.focus) } : collapsed({ block: first.id, offset: 0 })
+    return selection ? { anchor: fit(selection.anchor), focus: fit(selection.focus) } : collapsed({ paragraph: first.id, offset: 0 })
   }
 
   // ------------------------------------------------------------------------------ positions on the wire
-  private textOf(block: string): string {
-    return this.state.blocks.find((b) => b.id === block)?.text ?? ''
+  private textOf(paragraph: string): string {
+    return this.state.paragraphs.find((b) => b.id === paragraph)?.text ?? ''
   }
 
   private suggestionInUnits(item: SuggestionInfo): SuggestionInfo {
-    const text = this.textOf(item.block)
+    const text = this.textOf(item.paragraph)
     return { ...item, start: unitOf(text, item.start), end: unitOf(text, item.end) }
   }
 
   private regionInUnits(region: Region): Region {
     if (region.kind !== 'text') return region
-    const text = this.textOf(region.block)
+    const text = this.textOf(region.paragraph)
     return { ...region, start: unitOf(text, region.start), end: unitOf(text, region.end) }
   }
 
@@ -540,6 +479,12 @@ export class TextSession extends BaseSession<TextState> {
   }
 
   // ------------------------------------------------------------------------------ events
+  /** A selected object that went is no longer selected. */
+  protected override objectsChanged(): void {
+    const s = this.state
+    if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
+  }
+
   protected onAppEvent(name: string, data: WireData): boolean {
     const s = this.state
     switch (name) {
@@ -549,37 +494,24 @@ export class TextSession extends BaseSession<TextState> {
       case 'style':
       case 'item':
       case 'labels':
-      case 'block_generated':
+      case 'paragraph_generated':
       case 'generated':
-      case 'block_fields':
+      case 'paragraph_fields':
       case 'fields': {
         // the words of a box of a table: not a paragraph of the text, so the tables are asked for again (E9.32)
-        const at = (data.block ?? data.paragraph) as string | undefined
+        const at = (data.paragraph ?? data.paragraph) as string | undefined
         if (at && isBoxId(at)) {
           this.track(this.reloadTables())
           return true
         }
-        const event = eventInUnits(s.blocks, data as TextEvent)
-        if (!applyEvent(s.blocks, event)) this.track(this.reload())
+        const event = eventInUnits(s.paragraphs, data as TextEvent)
+        if (!applyEvent(s.paragraphs, event)) this.track(this.reload())
         else this.follow(event)
         return true
       }
-      case 'styles':
-        s.styles = data.styles as StyleView[]
-        return true
       case 'page':
         s.page = data.setup as PageSetupData
         return true
-      case 'language':
-        s.language = (data.language as string | null) ?? null
-        return true
-      case 'objects': {
-        const e = data as unknown as ObjectsEvent
-        for (const o of e.changed as VisualObject<BlockAnchor>[]) s.objects[o.id] = o
-        for (const id of e.removed) delete s.objects[id]
-        if (s.selectedObject && !s.objects[s.selectedObject]) s.selectedObject = null
-        return true
-      }
       case 'table': {
         withEvent(s.tables, data as unknown as TableEvent)
         const table = s.tables[data.id as string]
@@ -587,24 +519,11 @@ export class TextSession extends BaseSession<TextState> {
         else if (table?.columns.some((c) => c.total !== null)) this.track(this.reloadTables()) // the totals are derived
         return true
       }
-      case 'image':
-        if (data.asset) s.images[data.id] = data.asset as ImageAsset
-        else delete s.images[data.id]
-        return true
-      case 'shape':
-        if (data.definition) s.shapes[data.id] = data.definition as TextShape
-        else delete s.shapes[data.id]
-        return true
       case 'lists':
         s.lists = data.lists as ListInfo[]
         return true
       case 'schemes':
         s.schemes = data.schemes as SchemeInfo[]
-        return true
-      case 'palette':
-        // Only the styles are drawn from, and they travel with this event; the roles are kept for the controls
-        // that offer them by name (D200).
-        s.palette = data as PaletteEvent
         return true
       case 'suggestions': {
         for (const item of data.items as SuggestionInfo[]) {
@@ -625,7 +544,7 @@ export class TextSession extends BaseSession<TextState> {
   private follow(event: TextEvent) {
     const s = this.state
     const sending = s.sending
-    if (sending && event.type === 'text' && !event.removed && event.inserted === sending.text && event.block === sending.at.block && event.offset === sending.at.offset) {
+    if (sending && event.type === 'text' && !event.removed && event.inserted === sending.text && event.paragraph === sending.at.paragraph && event.offset === sending.at.offset) {
       s.sending = null // our own words arrived: the document shows them now
     }
     if (s.selection) {
@@ -636,8 +555,8 @@ export class TextSession extends BaseSession<TextState> {
     for (const hold of Object.values(s.presence)) {
       hold.regions = hold.regions.map((r): Region => {
         if (r.kind !== 'text') return r
-        const moved = followSpan({ block: r.block, start: r.start, end: r.end }, event)
-        return { kind: 'text', block: moved.block, start: moved.start, end: moved.end }
+        const moved = followSpan({ paragraph: r.paragraph, start: r.start, end: r.end }, event)
+        return { kind: 'text', paragraph: moved.paragraph, start: moved.start, end: moved.end }
       })
     }
   }
@@ -658,7 +577,7 @@ export class TextSession extends BaseSession<TextState> {
   /** The selection, first position first; `null` if there is no text yet. */
   range(): [Pos, Pos] | null {
     const sel = this.state.selection
-    return sel ? ordered(this.state.blocks, sel.anchor, sel.focus) : null
+    return sel ? ordered(this.state.paragraphs, sel.anchor, sel.focus) : null
   }
 
   isCollapsed(): boolean {
@@ -668,7 +587,7 @@ export class TextSession extends BaseSession<TextState> {
 
   selectedText(): string {
     const r = this.range()
-    return r ? textBetween(this.state.blocks, r[0], r[1]) : ''
+    return r ? textBetween(this.state.paragraphs, r[0], r[1]) : ''
   }
 
   /** Show the others where my caret is, and keep the ± n words around it to myself while I write. */
@@ -681,8 +600,8 @@ export class TextSession extends BaseSession<TextState> {
     this.placing = null
     const sel = this.state.selection
     if (!sel || this.state.status !== 'open') return
-    const text = this.textOf(sel.focus.block)
-    const params = { block: sel.focus.block, offset: pointOf(text, sel.focus.offset), words: ZONE_WORDS }
+    const text = this.textOf(sel.focus.paragraph)
+    const params = { paragraph: sel.focus.paragraph, offset: pointOf(text, sel.focus.offset), words: ZONE_WORDS }
     const where = JSON.stringify(params)
     if (where === this.placed) return
     this.placed = where
@@ -724,11 +643,11 @@ export class TextSession extends BaseSession<TextState> {
     s.sending = unwritten
     // The caret goes behind the words only if it has not been moved since they were typed: a click that came before
     // the words went out (they wait for the word end, or for an earlier request) is where the person wants to be.
-    await this.write(unwritten.at, unwritten.at, unwritten.text, this.typedAt)
+    await this.replaceText(unwritten.at, unwritten.at, unwritten.text, this.typedAt)
     s.sending = null
     const put = this.unsentCaret
     this.unsentCaret = null
-    if (put && same(put.at, unwritten.at)) s.selection = collapsed({ block: put.at.block, offset: put.at.offset + put.index })
+    if (put && same(put.at, unwritten.at)) s.selection = collapsed({ paragraph: put.at.paragraph, offset: put.at.offset + put.index })
   }
 
   /** The caret was put `index` (UTF-16 units, as the page counts) into the words typed but not sent yet (Home right after typing):
@@ -762,37 +681,31 @@ export class TextSession extends BaseSession<TextState> {
     } while (this.state.pending || this.jobs > 0) // characters typed while a job ran are appended when it is done
   }
 
-  /** Run a change after whatever was typed before it has been sent. */
-  private act<T>(job: () => Promise<T>): Promise<T> {
+  /** A change waits for the words typed before it, and for every change queued before it (D1432). */
+  protected override run<T>(job: () => Promise<T>): Promise<T> {
     return this.enqueue(async () => {
       await this.sendPending()
       return job()
     })
   }
 
-  private denied(): boolean {
-    if (!this.readOnly) return false
-    this.notice(t('You can only look at this document.'), 'warning')
-    return true
-  }
-
   // ------------------------------------------------------------------------------ writing
-  /** Replace the text between two positions; the caret ends up behind what was put in. */
-  private async write(from: Pos, to: Pos, text: string, version = this.moved): Promise<boolean> {
+  /** Replace the text between two positions; the caret ends up behind what was put in. Runs as a job (`run`). */
+  private async replaceText(from: Pos, to: Pos, text: string, version = this.moved): Promise<boolean> {
     const s = this.state
-    const [a, b] = ordered(s.blocks, from, to)
-    if (indexOf(s.blocks, a.block) < 0 || indexOf(s.blocks, b.block) < 0) return false
+    const [a, b] = ordered(s.paragraphs, from, to)
+    if (indexOf(s.paragraphs, a.paragraph) < 0 || indexOf(s.paragraphs, b.paragraph) < 0) return false
     const params = {
-      block: a.block,
-      start: pointOf(this.textOf(a.block), a.offset),
-      end_block: b.block,
-      end: pointOf(this.textOf(b.block), b.offset),
+      paragraph: a.paragraph,
+      start: pointOf(this.textOf(a.paragraph), a.offset),
+      end_paragraph: b.paragraph,
+      end: pointOf(this.textOf(b.paragraph), b.offset),
       text,
       base: s.revision,
     }
     const done = await this.attempt('replace_text', params)
     if (done === false) return false
-    if (version === this.moved) s.selection = collapsed({ block: done.block, offset: unitOf(this.textOf(done.block), done.offset) })
+    if (version === this.moved) s.selection = collapsed({ paragraph: done.paragraph, offset: unitOf(this.textOf(done.paragraph), done.offset) })
     return true
   }
 
@@ -800,15 +713,15 @@ export class TextSession extends BaseSession<TextState> {
    * from the headings (E9.31). */
   private onContents(): boolean {
     const at = this.range()?.[0]
-    const block = at && this.state.blocks.find((b) => b.id === at.block)
-    if (!block?.generated) return false
+    const paragraph = at && this.state.paragraphs.find((b) => b.id === at.paragraph)
+    if (!paragraph?.generated) return false
     this.notice(t('A table of contents takes no typing: its entries come from the headings.'), 'warning')
     return true
   }
 
   /** Type: the characters appear at once, and are sent when the word ends. */
   type(text: string) {
-    if (!text || this.denied() || this.onContents()) return
+    if (!text || this.refused() || this.onContents()) return
     const caret = this.state.selection?.focus
     const pending = this.state.pending
     if (this.jobs > 0 || !this.isCollapsed() || (pending && caret && !same(pending.at, caret))) {
@@ -825,7 +738,7 @@ export class TextSession extends BaseSession<TextState> {
     if (!this.isCollapsed()) {
       const [a, b] = this.range()!
       const [first = ''] = text
-      await this.write(a, b, first)
+      await this.replaceText(a, b, first)
       text = text.slice(first.length)
     }
     if (text) this.append(text)
@@ -853,22 +766,22 @@ export class TextSession extends BaseSession<TextState> {
    * same item; an *empty* item is the way out instead: one level out, and at the first level out of the list (E9.21).
    */
   newline(): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => {
+    if (this.refused()) return undefined
+    return this.run(async () => {
       const r = this.range()
       if (!r) return false
-      const block = this.state.blocks.find((b) => b.id === r[0].block)
-      if (block?.item && !block.text && same(r[0], r[1])) return this.leaveList(block)
-      return this.write(r[0], r[1], '\n')
+      const paragraph = this.state.paragraphs.find((b) => b.id === r[0].paragraph)
+      if (paragraph?.item && !paragraph.text && same(r[0], r[1])) return this.leaveList(paragraph)
+      return this.replaceText(r[0], r[1], '\n')
     })
   }
 
   /** Put text in place of the selection (paste; Enter). */
   replaceSelection(text: string): Promise<boolean> | undefined {
-    if (this.denied() || (text && this.onContents())) return undefined
-    return this.act(async () => {
+    if (this.refused() || (text && this.onContents())) return undefined
+    return this.run(async () => {
       const r = this.range()
-      return r ? this.write(r[0], r[1], text) : false
+      return r ? this.replaceText(r[0], r[1], text) : false
     })
   }
 
@@ -879,75 +792,75 @@ export class TextSession extends BaseSession<TextState> {
   /** The selected text, which is then taken out. */
   cut(): string {
     const text = this.selectedText()
-    if (text && !this.denied()) void this.replaceSelection('')
+    if (text && !this.refused()) void this.replaceSelection('')
     return text
   }
 
   /** Backspace (`word`: Ctrl+Backspace). Before the first character it joins the paragraph to the one before. */
   deleteBackward(word = false) {
-    if (this.denied()) return
+    if (this.refused()) return
     const s = this.state
     if (this.jobs === 0 && s.pending && this.isCollapsed()) {
       const text = word ? s.pending.text.slice(0, wordStart(s.pending.text, s.pending.text.length)) : [...s.pending.text].slice(0, -1).join('')
       s.pending = text ? { at: s.pending.at, text } : null
       return
     }
-    void this.act(async () => this.deleteAround(word, -1))
+    void this.run(async () => this.deleteAround(word, -1))
   }
 
   /** Delete (`word`: Ctrl+Delete). At the end of a paragraph it joins the next one to it. */
   deleteForward(word = false) {
-    if (this.denied()) return
-    void this.act(async () => this.deleteAround(word, 1))
+    if (this.refused()) return
+    void this.run(async () => this.deleteAround(word, 1))
   }
 
   private async deleteAround(word: boolean, direction: -1 | 1): Promise<boolean> {
     const r = this.range()
     if (!r) return false
-    if (!same(r[0], r[1])) return this.write(r[0], r[1], '')
-    const { blocks } = this.state
-    const i = indexOf(blocks, r[0].block)
-    if (blocks[i]!.generated) return this.removeContentsNow(r[0].block) // the second key on a table takes it away
-    const text = blocks[i]!.text
-    const neighbour = direction < 0 ? (r[0].offset === 0 ? blocks[i - 1] : undefined) : r[0].offset === text.length ? blocks[i + 1] : undefined
+    if (!same(r[0], r[1])) return this.replaceText(r[0], r[1], '')
+    const { paragraphs } = this.state
+    const i = indexOf(paragraphs, r[0].paragraph)
+    if (paragraphs[i]!.generated) return this.removeContentsNow(r[0].paragraph) // the second key on a table takes it away
+    const text = paragraphs[i]!.text
+    const neighbour = direction < 0 ? (r[0].offset === 0 ? paragraphs[i - 1] : undefined) : r[0].offset === text.length ? paragraphs[i + 1] : undefined
     if (neighbour?.generated) {
       // the first key next to a table selects it, as the mock-up has it (E9.31): a table is never half deleted
-      this.state.selection = collapsed({ block: neighbour.id, offset: 0 })
+      this.state.selection = collapsed({ paragraph: neighbour.id, offset: 0 })
       return true
     }
     const atom = direction < 0 ? r[0].offset - 1 : r[0].offset
     if (!word && text[atom] === FIELD_CHAR) {
       // the first key next to a reference selects it, the second takes it away (mock-up D): never lost by a slip
-      this.state.selection = { anchor: { block: r[0].block, offset: atom }, focus: { block: r[0].block, offset: atom + 1 } }
+      this.state.selection = { anchor: { paragraph: r[0].paragraph, offset: atom }, focus: { paragraph: r[0].paragraph, offset: atom + 1 } }
       return true
     }
     if (direction < 0) {
       if (r[0].offset > 0) {
         const start = word ? wordStart(text, r[0].offset) : r[0].offset - (text.codePointAt(r[0].offset - 2)! > 0xffff ? 2 : 1)
-        return this.write({ block: r[0].block, offset: Math.max(0, start) }, r[0], '')
+        return this.replaceText({ paragraph: r[0].paragraph, offset: Math.max(0, start) }, r[0], '')
       }
-      if (blocks[i]!.item) return this.leaveList(blocks[i]!) // out of the list first, as every editor does
-      const before = blocks[i - 1]
-      return before ? this.write({ block: before.id, offset: before.text.length }, r[0], '') : false
+      if (paragraphs[i]!.item) return this.leaveList(paragraphs[i]!) // out of the list first, as every editor does
+      const before = paragraphs[i - 1]
+      return before ? this.replaceText({ paragraph: before.id, offset: before.text.length }, r[0], '') : false
     }
     if (r[0].offset < text.length) {
       const end = word ? wordEnd(text, r[0].offset) : r[0].offset + (text.codePointAt(r[0].offset)! > 0xffff ? 2 : 1)
-      return this.write(r[0], { block: r[0].block, offset: end }, '')
+      return this.replaceText(r[0], { paragraph: r[0].paragraph, offset: end }, '')
     }
-    const after = blocks[i + 1]
-    return after ? this.write(r[0], { block: after.id, offset: 0 }, '') : false
+    const after = paragraphs[i + 1]
+    return after ? this.replaceText(r[0], { paragraph: after.id, offset: 0 }, '') : false
   }
 
   /** Give the paragraphs of the selection this style. */
   setStyle(style: string): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => {
+    if (this.refused()) return undefined
+    return this.run(async () => {
       const r = this.range()
       if (!r) return false
-      const { blocks } = this.state
-      const [i, j] = [indexOf(blocks, r[0].block), indexOf(blocks, r[1].block)]
-      for (const block of blocks.slice(i, j + 1).filter((b) => b.style !== style)) {
-        if ((await this.attempt('set_style', { block: block.id, style, base: this.state.revision })) === false) return false
+      const { paragraphs } = this.state
+      const [i, j] = [indexOf(paragraphs, r[0].paragraph), indexOf(paragraphs, r[1].paragraph)]
+      for (const paragraph of paragraphs.slice(i, j + 1).filter((b) => b.style !== style)) {
+        if ((await this.attempt('set_style', { paragraph: paragraph.id, style, base: this.state.revision })) === false) return false
       }
       return true
     })
@@ -955,14 +868,7 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Lay the text out on another page (D904): one step in the history, for everybody. */
   setPage(setup: PageSetupData): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => (await this.attempt('set_page', { setup, base: this.state.revision })) !== false)
-  }
-
-  /** Say which language the text is written in (D915), or `null` for not known: one step, for everybody. */
-  setLanguage(language: string | null): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => (await this.attempt('set_language', { language, base: this.state.revision })) !== false)
+    return this.write('set_page', { setup }).then((done) => done !== false)
   }
 
   // -- tags (E5.20, D551). This replica keeps no objects: they are asked for when a tag needs them, and the names they
@@ -978,20 +884,20 @@ export class TextSession extends BaseSession<TextState> {
     return found
   }
   override nameOf(id: string): string | undefined {
-    return this.state.renamed[id] ?? this.state.blocks.find((b) => b.id === id)?.name ?? this.objectNames.get(id)
+    return this.state.renamed[id] ?? this.state.paragraphs.find((b) => b.id === id)?.name ?? this.objectNames.get(id)
   }
   /** What a paragraph is, as a thing (D554): a heading (its style gives a heading level, E9.22), an item of a list, or
    * a paragraph. The level comes worked out from the server with the styles, so this is no second rule. */
-  blockKind(block: Block): ThingKind {
-    if (headingLevel(this.state.styles, block.style) !== null) return 'heading'
-    return block.item ? 'item' : 'paragraph'
+  paragraphKind(paragraph: Paragraph): ThingKind {
+    if (headingLevel(this.styleViews(), paragraph.style) !== null) return 'heading'
+    return paragraph.item ? 'item' : 'paragraph'
   }
-  /** The named paragraphs: from the replica, which `blocks` and `thing_renamed` keep current. */
+  /** The named paragraphs: from the replica, which `paragraphs` and `thing_renamed` keep current. */
   protected override things(): Thing[] {
     const s = this.state
-    return s.blocks.flatMap((b) => {
+    return s.paragraphs.flatMap((b) => {
       const name = s.renamed[b.id] ?? b.name
-      return name ? [{ id: b.id, name, kind: this.blockKind(b) }] : []
+      return name ? [{ id: b.id, name, kind: this.paragraphKind(b) }] : []
     })
   }
   /** What `#` offers in a text: the named objects, every named paragraph, and, still to be named when picked, the
@@ -1001,10 +907,10 @@ export class TextSession extends BaseSession<TextState> {
     const objects = (await this.floating()).filter((o) => o.name).map((o) => ({ id: o.id, name: s.renamed[o.id] ?? o.name!, kind: o.kind }))
     const named = this.things()
     const known = new Set(named.map((t) => t.id))
-    const caret = s.selection?.focus.block
-    const offered = s.blocks.flatMap((b): Thing[] => {
+    const caret = s.selection?.focus.paragraph
+    const offered = s.paragraphs.flatMap((b): Thing[] => {
       if (known.has(b.id)) return []
-      const kind = this.blockKind(b)
+      const kind = this.paragraphKind(b)
       if (kind !== 'heading' && b.id !== caret) return []
       const words = b.text.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME)
       return [{ id: b.id, name: words || t('This paragraph'), kind, unnamed: true }]
@@ -1014,22 +920,22 @@ export class TextSession extends BaseSession<TextState> {
   /** A paragraph without a name is named when it is first pointed at (D554): a heading by its words, any other by what
    * it is. Objects as before. */
   override async thingToReference(id: string): Promise<Thing | null> {
-    const block = this.state.blocks.find((b) => b.id === id)
-    if (!block) return super.thingToReference(id)
+    const paragraph = this.state.paragraphs.find((b) => b.id === id)
+    if (!paragraph) return super.thingToReference(id)
     const named = this.things().find((thing) => thing.id === id)
     if (named) return named
     const done = await this.attempt('name_thing', { id, base: this.state.revision })
     if (done === false) return null
     this.state.renamed[id] = done.name
-    return { id, name: done.name, kind: this.blockKind(block) }
+    return { id, name: done.name, kind: this.paragraphKind(paragraph) }
   }
   override async unnamedInView(): Promise<number> {
     return (await this.floating()).filter((o) => !o.name).length
   }
-  protected override async locate(id: string): Promise<{ container: string | null } | null> {
-    if (this.state.blocks.some((b) => b.id === id)) return { container: id }
+  protected override async locate(id: string): Promise<{ holder: string | null } | null> {
+    if (this.state.paragraphs.some((b) => b.id === id)) return { holder: id }
     const found = (await this.floating()).find((o) => o.id === id)
-    return found ? { container: found.anchor.container } : null
+    return found ? { holder: found.anchor.holder } : null
   }
 
   /** The floating objects, their outlines and their images, for printing (D907). Read when the preview opens. */
@@ -1048,7 +954,7 @@ export class TextSession extends BaseSession<TextState> {
   /** The list item the caret is in, or `null`. */
   currentItem(): ListItem | null {
     const focus = this.state.selection?.focus
-    return this.state.blocks.find((b) => b.id === focus?.block)?.item ?? null
+    return this.state.paragraphs.find((b) => b.id === focus?.paragraph)?.item ?? null
   }
 
   // ------------------------------------------------------------------------------ references (step H)
@@ -1063,63 +969,62 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Put a reference to `target` at the caret (in place of the selection), showing `show`; the caret goes after it. */
   insertReference(target: string, show: Show): Promise<boolean> {
-    if (this.denied() || this.onContents()) return Promise.resolve(false)
-    return this.act(async () => {
+    if (this.refused() || this.onContents()) return Promise.resolve(false)
+    return this.run(async () => {
       const r = this.range()
       if (!r) return false
-      if (!same(r[0], r[1]) && !(await this.write(r[0], r[1], ''))) return false
+      if (!same(r[0], r[1]) && !(await this.replaceText(r[0], r[1], ''))) return false
       const at = this.state.selection?.focus ?? r[0]
-      const params = { paragraph: at.block, offset: pointOf(this.textOf(at.block), at.offset), target, show, base: this.state.revision }
+      const params = { paragraph: at.paragraph, offset: pointOf(this.textOf(at.paragraph), at.offset), target, show, base: this.state.revision }
       if ((await this.attempt('insert_reference', params)) === false) return false
-      this.state.selection = collapsed({ block: at.block, offset: at.offset + 1 })
+      this.state.selection = collapsed({ paragraph: at.paragraph, offset: at.offset + 1 })
       return true
     })
   }
 
   /** Make the `index`-th reference of a paragraph show `show` (Show As). */
-  setFieldShow(block: string, index: number, show: Show): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('set_field', { paragraph: block, index, show, base: this.state.revision })) !== false)
+  setFieldShow(paragraph: string, index: number, show: Show): Promise<boolean> {
+    return this.write('set_field', { paragraph: paragraph, index, show }).then((done) => done !== false)
   }
 
-  /** The reference at a place of the text (the character after `at`), as `{block, index, field, shown}`, or `null`. */
-  referenceAt(at: Pos): { block: string; index: number; field: RefField; shown: Shown | undefined } | null {
-    const block = this.state.blocks.find((b) => b.id === at.block)
-    if (!block || block.text[at.offset] !== FIELD_CHAR) return null
-    const index = fieldIndex(block.text, at.offset)
-    const field = block.fields?.[index]
-    return field ? { block: block.id, index, field, shown: block.shown?.[index] } : null
+  /** The reference at a place of the text (the character after `at`), as `{paragraph, index, field, shown}`, or `null`. */
+  referenceAt(at: Pos): { paragraph: string; index: number; field: RefField; shown: Shown | undefined } | null {
+    const paragraph = this.state.paragraphs.find((b) => b.id === at.paragraph)
+    if (!paragraph || paragraph.text[at.offset] !== FIELD_CHAR) return null
+    const index = fieldIndex(paragraph.text, at.offset)
+    const field = paragraph.fields?.[index]
+    return field ? { paragraph: paragraph.id, index, field, shown: paragraph.shown?.[index] } : null
   }
 
   // ------------------------------------------------------------------------------ tables of contents (E9.31)
   /** The table of contents the caret is on, or `null`. */
-  currentContents(): Block | null {
+  currentContents(): Paragraph | null {
     const at = this.state.selection?.focus
-    const block = at && this.state.blocks.find((b) => b.id === at.block)
-    return block?.generated ? block : null
+    const paragraph = at && this.state.paragraphs.find((b) => b.id === at.paragraph)
+    return paragraph?.generated ? paragraph : null
   }
 
   /** Put a "Contents" paragraph and a table of contents at the caret, as one step; the caret goes onto the table. */
   insertContents(): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => {
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => {
       const at = this.state.selection?.focus
       if (!at) return false
-      const done = await this.attempt('insert_contents', { block: at.block, base: this.state.revision })
+      const done = await this.attempt('insert_contents', { paragraph: at.paragraph, base: this.state.revision })
       if (done === false) return false
-      if (typeof done.block === 'string') this.state.selection = collapsed({ block: done.block, offset: 0 })
+      if (typeof done.paragraph === 'string') this.state.selection = collapsed({ paragraph: done.paragraph, offset: 0 })
       return true
     })
   }
 
   /** Take a table of contents away (its "Contents" paragraph stays, as the author's words). */
-  removeContents(block: string): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => this.removeContentsNow(block))
+  removeContents(paragraph: string): Promise<boolean> {
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => this.removeContentsNow(paragraph))
   }
 
-  private async removeContentsNow(block: string): Promise<boolean> {
-    return (await this.attempt('remove_contents', { block, base: this.state.revision })) !== false
+  private async removeContentsNow(paragraph: string): Promise<boolean> {
+    return (await this.attempt('remove_contents', { paragraph, base: this.state.revision })) !== false
   }
 
   /** The scheme (`bullets`, `numbers`) of the list the caret's item belongs to, or `null`. */
@@ -1134,38 +1039,38 @@ export class TextSession extends BaseSession<TextState> {
     const item = this.currentItem()
     const scheme = this.currentScheme()
     if (!item || !scheme) return false
-    const { blocks, lists } = this.state
-    const first = blocks.findIndex((b) => b.item?.list === item.list)
-    if (blocks[first]?.id !== this.state.selection?.focus.block) return false
-    return blocks.slice(0, first).some((b) => b.item && b.item.list !== item.list && lists.find((l) => l.id === b.item!.list)?.scheme === scheme)
+    const { paragraphs, lists } = this.state
+    const first = paragraphs.findIndex((b) => b.item?.list === item.list)
+    if (paragraphs[first]?.id !== this.state.selection?.focus.paragraph) return false
+    return paragraphs.slice(0, first).some((b) => b.item && b.item.list !== item.list && lists.find((l) => l.id === b.item!.list)?.scheme === scheme)
   }
 
   /** The paragraphs of the selection. */
-  private selectedBlocks(): Block[] {
+  private selectedParagraphs(): Paragraph[] {
     const r = this.range()
     if (!r) return []
-    const { blocks } = this.state
-    return blocks.slice(indexOf(blocks, r[0].block), indexOf(blocks, r[1].block) + 1)
+    const { paragraphs } = this.state
+    return paragraphs.slice(indexOf(paragraphs, r[0].paragraph), indexOf(paragraphs, r[1].paragraph) + 1)
   }
 
   /** Bullets or numbers for the selected paragraphs, or (`null`) plain paragraphs. Asking for what they are takes them
    * out of their list; the server decides (`make_list`). */
   makeList(scheme: string | null): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => {
-      const blocks = this.selectedBlocks().map((b) => b.id)
-      if (!blocks.length) return false
-      return (await this.attempt('make_list', { blocks, scheme, base: this.state.revision })) !== false
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => {
+      const paragraphs = this.selectedParagraphs().map((b) => b.id)
+      if (!paragraphs.length) return false
+      return (await this.attempt('make_list', { paragraphs, scheme, base: this.state.revision })) !== false
     })
   }
 
   /** Move the selected items one level in (`1`) or out (`-1`). */
   indent(by: 1 | -1): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => {
-      const blocks = this.selectedBlocks().filter((b) => b.item).map((b) => b.id)
-      if (!blocks.length) return false
-      return (await this.attempt('indent_item', { blocks, by, base: this.state.revision })) !== false
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => {
+      const paragraphs = this.selectedParagraphs().filter((b) => b.item).map((b) => b.id)
+      if (!paragraphs.length) return false
+      return (await this.attempt('indent_item', { paragraphs, by, base: this.state.revision })) !== false
     })
   }
 
@@ -1178,22 +1083,22 @@ export class TextSession extends BaseSession<TextState> {
 
   /** Let the list of the caret's item go on where the nearest earlier list of its kind ends. */
   continueList(): Promise<boolean> {
-    const block = this.state.selection?.focus.block
-    if (this.denied() || !block || !this.currentItem()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('continue_list', { block, base: this.state.revision })) !== false)
+    const paragraph = this.state.selection?.focus.paragraph
+    if (!paragraph || !this.currentItem()) return Promise.resolve(false)
+    return this.write('continue_list', { paragraph }).then((done) => done !== false)
   }
 
   /** Number the first level of the caret's list from `start` on. */
   startAt(start: number): Promise<boolean> {
     const item = this.currentItem()
-    if (this.denied() || !item) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('list_start', { list: item.list, start, base: this.state.revision })) !== false)
+    if (!item) return Promise.resolve(false)
+    return this.write('list_start', { list: item.list, start }).then((done) => done !== false)
   }
 
   /** The way out of a list from an item with nothing in it: one level out, at the first level out of the list. */
-  private leaveList(block: Block): Promise<boolean> {
-    const item = block.item!
-    return item.level > 0 ? this.attemptOk('indent_item', { blocks: [block.id], by: -1 }) : this.attemptOk('make_list', { blocks: [block.id], scheme: null })
+  private leaveList(paragraph: Paragraph): Promise<boolean> {
+    const item = paragraph.item!
+    return item.level > 0 ? this.attemptOk('indent_item', { paragraphs: [paragraph.id], by: -1 }) : this.attemptOk('make_list', { paragraphs: [paragraph.id], scheme: null })
   }
 
   private async attemptOk(method: string, params: Record<string, unknown>): Promise<boolean> {
@@ -1203,23 +1108,17 @@ export class TextSession extends BaseSession<TextState> {
   /** The style of the paragraph the caret is in. */
   currentStyle(): string {
     const focus = this.state.selection?.focus
-    return this.state.blocks.find((b) => b.id === focus?.block)?.style ?? DEFAULT_STYLE.composes
+    return this.state.paragraphs.find((b) => b.id === focus?.paragraph)?.style ?? DEFAULT_STYLE.composes
   }
 
   // -- styles (CSS, E9.7)
   styleView(id: string): StyleView | undefined {
-    return this.state.styles.find((s) => s.id === id)
+    return this.state.styles[id]
   }
 
   /** How many paragraphs have each style. */
   uses(): Record<string, number> {
-    return styleUses(this.state.blocks)
-  }
-
-  /** Change a style for everything that has it: properties to set and remove, or the complete text of its CSS. */
-  changeStyle(style: string, edit: CssEdit): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false)
+    return styleUses(this.state.paragraphs)
   }
 
   /**
@@ -1227,74 +1126,40 @@ export class TextSession extends BaseSession<TextState> {
    * later (D75). Paragraphs that had the same style get the same new style.
    */
   deviateStyle(edit: CssEdit): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => {
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(async () => {
       const r = this.range()
       if (!r) return false
-      const { blocks } = this.state
-      const [i, j] = [indexOf(blocks, r[0].block), indexOf(blocks, r[1].block)]
+      const { paragraphs } = this.state
+      const [i, j] = [indexOf(paragraphs, r[0].paragraph), indexOf(paragraphs, r[1].paragraph)]
       const parents = new Map<string, string[]>()
-      for (const block of blocks.slice(i, j + 1)) parents.set(block.style, [...(parents.get(block.style) ?? []), block.id])
+      for (const paragraph of paragraphs.slice(i, j + 1)) parents.set(paragraph.style, [...(parents.get(paragraph.style) ?? []), paragraph.id])
       for (const [parent, ids] of parents) {
-        const params = { parent, blocks: ids, ...edit, base: this.state.revision }
+        const params = { parent, paragraphs: ids, ...edit, base: this.state.revision }
         if ((await this.attempt('deviate_style', params)) === false) return false
       }
       return true
     })
   }
 
-  /** Give a colour role another colour: every paragraph style that meant it follows (D200). */
-  setRole(role: string, colour: string): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false)
-  }
-
-  /** Put a whole palette in place of this document's — what "the colours it started with" does. */
-  replacePalette(roles: unknown[]): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false)
-  }
-
   /** A deletion or a hiding goes after whatever was typed before it, like every change that is not typing. */
   override deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(() => super.deleteStyle(style, how, target))
-  }
-
-  override hideStyle(style: string, hidden: boolean): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(() => super.hideStyle(style, hidden))
-  }
-
-  renameStyle(style: string, name: string): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false)
+    if (this.refused()) return Promise.resolve(false)
+    return this.run(() => super.deleteStyle(style, how, target))
   }
 
   /** Make a style give its paragraphs a heading level (E9.22): a level, `'body'` for none, `null` as its parent. */
   setHeadingLevel(style: string, level: number | 'body' | null): Promise<boolean> {
-    if (this.denied()) return Promise.resolve(false)
-    return this.act(async () => (await this.attempt('set_heading_level', { style, level, base: this.state.revision })) !== false)
-  }
-
-  /** What the server makes of this CSS text, line by line. A read: it does not wait for typing or other changes. */
-  async checkCss(text: string): Promise<CssCheck | null> {
-    try {
-      return await this.need().request<CssCheck>('check_css', { text })
-    } catch {
-      return null
-    }
+    return this.write('set_heading_level', { style, level }).then((done) => done !== false)
   }
 
   // -- suggestions
   accept(id: string): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => (await this.attempt('accept_suggestion', { id, base: this.state.revision })) !== false)
+    return this.write('accept_suggestion', { id }).then((done) => done !== false)
   }
 
   reject(id: string): Promise<boolean> | undefined {
-    if (this.denied()) return undefined
-    return this.act(async () => (await this.attempt('reject_suggestion', { id, base: this.state.revision })) !== false)
+    return this.write('reject_suggestion', { id }).then((done) => done !== false)
   }
 
   // -- undo and redo wait for what was typed

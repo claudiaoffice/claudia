@@ -19,18 +19,18 @@ def export_annotations(model: TextModel, author: str, *, comments: bool, now: da
     """The names and, when ``comments``, the descriptions of the paragraphs of ``model`` as an export writes them,
     the comments by ``author`` at ``now`` (the current time when ``None``)."""
     names = {
-        block.id: name
-        for block in model.blocks
-        if block.generated is None
-        and not model.name_is_fixed(block.id)
-        and (name := model.block_names.get(block.id))
+        paragraph.id: name
+        for paragraph in model.paragraphs
+        if paragraph.generated is None
+        and not model.name_is_fixed(paragraph.id)
+        and (name := model.paragraph_names.get(paragraph.id))
         and not is_generic_name(name)
     }
     notes = (
         {
-            block.id: text
-            for block in model.blocks
-            if block.generated is None and (text := model.block_descriptions.get(block.id))
+            paragraph.id: text
+            for paragraph in model.paragraphs
+            if paragraph.generated is None and (text := model.paragraph_descriptions.get(paragraph.id))
         }
         if comments
         else {}

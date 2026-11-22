@@ -50,7 +50,7 @@ def _host(ctx: Context) -> ObjectModel:
 
 def _change(ctx: Context, table_id: str, new: TableDef) -> TableDef:
     """Put ``new`` in place of the table ``table_id``; returns the one it replaces and tells the clients."""
-    old = _host(ctx).replace_table(new)
+    old = _host(ctx).tables.replace(new)
     ctx.emit(TablesChanged(table_id, new))
     return old
 
@@ -128,7 +128,7 @@ class DefineTable(Command):
 
     def apply(self, ctx: Context) -> Command:
         definition = TableDef.from_data(self.definition)
-        _host(ctx).define_table(definition)
+        _host(ctx).tables.define(definition)
         ctx.emit(TablesChanged(definition.id, definition))
         return ForgetTable(definition.id)
 
@@ -165,7 +165,7 @@ class ForgetTable(TableCommand):
         return f"The document lets go of the table {self.table}"
 
     def apply(self, ctx: Context) -> Command:
-        definition = _host(ctx).forget_table(self.table)
+        definition = _host(ctx).tables.forget(self.table)
         ctx.emit(TablesChanged(self.table, None))
         return DefineTable(definition.to_data())
 
@@ -199,7 +199,7 @@ class SetEntries(TableCommand):
         return f"Changed {_plural(len(self.changes), 'box', 'boxes')} of a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         changes = [(r, c, None if p is None else Paragraph.from_data(p)) for r, c, p in self.changes]
         new = old.with_entries(changes)
         before = tuple((r, c, None if (e := old.entry(r, c)) is None else e.to_data()) for r, c, _ in self.changes)
@@ -250,7 +250,7 @@ class InsertRows(TableCommand):
         return f"Inserted {_plural(len(self.rows), 'row', 'rows')} in a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         _change(ctx, self.table, old.insert_rows(self.rows, self.merges))
         return DeleteRows(self.table, tuple(r.id for r in self.rows), old.merges)
 
@@ -301,7 +301,7 @@ class DeleteRows(TableCommand):
         return f"Deleted {_plural(len(self.ids), 'row', 'rows')} of a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         new = old.delete_rows(self.ids)
         if self.merges is not None:
             new = replace(new, merges=self.merges)
@@ -363,7 +363,7 @@ class SetRowOrder(TableCommand):
         return "Sorted the rows of a table" if self.sorted_by else "Moved rows of a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         _change(ctx, self.table, old.row_order(self.order))
         return SetRowOrder(self.table, old.rows, self.sorted_by)
 
@@ -415,7 +415,7 @@ class InsertColumns(TableCommand):
         return f"Inserted {_plural(len(self.columns), 'column', 'columns')} in a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         _change(ctx, self.table, old.insert_columns(self.columns, self.merges))
         return DeleteColumns(self.table, tuple(c.column.id for c in self.columns), old.merges)
 
@@ -465,7 +465,7 @@ class DeleteColumns(TableCommand):
         return f"Deleted {_plural(len(self.ids), 'column', 'columns')} of a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         new = old.delete_columns(self.ids)
         if self.merges is not None:
             new = replace(new, merges=self.merges)
@@ -524,7 +524,7 @@ class SetColumnOrder(TableCommand):
         return "Moved columns of a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         _change(ctx, self.table, old.column_order(self.order))
         return SetColumnOrder(self.table, old.column_ids())
 
@@ -570,7 +570,7 @@ class SetColumn(TableCommand):
         return "Changed the settings of a column of a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         before = old.column(self.column.id)
         _change(ctx, self.table, old.with_column(self.column))
         return SetColumn(self.table, before)
@@ -611,7 +611,7 @@ class SetTableOptions(TableCommand):
         return "Changed the options of a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         changes = dict(self.options)
         new = old.with_options(**changes)
         _change(ctx, self.table, new)
@@ -649,7 +649,7 @@ class SetMerge(TableCommand):
         return "Split a merged box of a table" if (self.rows, self.cols) == (1, 1) else "Merged boxes of a table"
 
     def apply(self, ctx: Context) -> Command:
-        old = _host(ctx).get_table(self.table)
+        old = _host(ctx).tables.known(self.table)
         before = next((m for m in old.merges if (m.row, m.col) == (self.row, self.col)), None)
         _change(ctx, self.table, old.with_merge(self.row, self.col, self.rows, self.cols))
         return SetMerge(self.table, self.row, self.col, *((before.rows, before.cols) if before else (1, 1)))

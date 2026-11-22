@@ -3,15 +3,14 @@
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
-import { containerOf, firstFocus, lookOnly } from './replay'
+import { holderOf, firstFocus } from './replay'
 import type { Thing } from './tags'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
 import type { NumberFormatDef } from './number-format'
-import { describeParams } from './descriptions'
 import type { ImageAsset } from './images'
-import type { CellAnchor, ColourRole, ObjectBody, ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
-import type { CssCheck, CssEdit } from './style-css'
+import type { CellAnchor, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import type { CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
 import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
 import { rangeTouchedBy } from './charts'
@@ -28,7 +27,7 @@ export type {
   BaseState,
   ChatMessage,
   CheckpointInfo,
-  Entry,
+  Step,
   Notice,
   Person,
   SessionOptions,
@@ -79,8 +78,6 @@ export interface State extends BaseState {
   colWidths: Record<string, Map<number, number>>
   generation: number
   objects: Record<string, SheetObject>
-  order: Record<string, string[]> // sheet -> object ids, the one in front last
-  images: Record<string, ImageAsset> // the decoded pictures this document has taken in, by id
   diagrams: Record<string, ChartSpec> // chart definitions this document knows, by id (E6.6)
   charts: Chart[] // chart tabs, in tab order
   /** The workbook's names: named ranges, tables and the results of `SQL()` cells (E6.5), as `names` sends them. */
@@ -92,10 +89,8 @@ export interface State extends BaseState {
    * change it happens — its own definition changing, or a `cells` event touching its range (`ensureFigure`,
    * `onAppEvent`'s `'cells'`/`'diagram'` cases). Never persisted across a reload: `loadApp` starts it empty. */
   figures: Record<string, ChartFigure>
-  /** The document's styles: what a floating object looks like. Cell styling is a separate story (E6.13). */
+  /** The document's styles: what a floating object and a cell look like (E6.13). */
   styles: Record<string, StyleDef>
-  /** The document's colour roles and how they read against each other (D200); the styles are drawn from. */
-  palette: PaletteEvent | null
   /** What a style property means and where a style can go: the server's `style_model` (D303, D304). */
   styleModel: StyleModel | null
   /** The style ranges of each sheet that has been looked at (E6.13, D307), least specific layer first, as the
@@ -116,9 +111,6 @@ export interface State extends BaseState {
   printPage: PageSetupData | null
   /** How each sheet and chart tab prints, by id, with the defaults filled in; empty for an old server. */
   sheetPrint: Record<string, SheetPrintData>
-  /** The language the workbook is written in (D915), a BCP 47 tag; `null` when it is not set, `undefined` for a server
-   * that does not know languages. */
-  language: string | null | undefined
 }
 
 /** What `random_preview` answers: what to type, what an Excel file would hold, and the distribution's own values. */
@@ -182,16 +174,11 @@ export class Session extends BaseSession<State> {
       rowHeights: {},
       colWidths: {},
       generation: 0,
-      objects: {},
-      order: {},
-      images: {},
       diagrams: {},
       charts: [],
       names: [],
       pivots: [],
       figures: {},
-      styles: {},
-      palette: null,
       styleModel: null,
       cellStyles: {},
       styleUses: {},
@@ -200,7 +187,6 @@ export class Session extends BaseSession<State> {
       trace: null,
       printPage: null,
       sheetPrint: {},
-      language: undefined,
     })
   }
 
@@ -259,36 +245,21 @@ export class Session extends BaseSession<State> {
 
   // -- styles and the palette (E9.7, D200, D203): the same methods creates' session has, so that one style menu
   // can talk to either app through a `StyleHost`.
-  get readOnly(): boolean {
-    return lookOnly(this.state)
-  }
-
-  styleViews(): StyleDef[] {
-    return Object.values(this.state.styles)
-  }
-
-  /** Every object of the document, for the use counts beside the style names. */
-  bodies(): ObjectBody[] {
-    return Object.values(this.state.objects)
-  }
-
-
   /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). Without a
    * slot, into every slot of them the style fits: both slots of a cell (D311). */
   async applyStyle(targets: StyleTarget[], style: string, slot?: string): Promise<boolean> {
-    return (await this.attempt('apply_style', { targets, style, slot, base: this.state.revision })) !== false
+    return (await this.write('apply_style', { targets, style, slot })) !== false
   }
 
   /** Change these targets only, in one slot or (without) in every slot that held `parent`: a new style from
    * `parent`, named later (`deviate`, D75, D309). */
   async deviateStyle(parent: string, targets: StyleTarget[], slot: string | undefined, edit: CssEdit): Promise<boolean> {
-    const params = { parent, targets, slot, ...edit, base: this.state.revision }
-    return (await this.attempt('deviate', params)) !== false
+    return (await this.write('deviate', { parent, targets, slot, ...edit })) !== false
   }
 
   /** "Clear cell style" (D317): take the cells' own style away, in one slot or both, so what lies beneath shows. */
   async clearCellStyle(sheet: string, range: [number, number, number, number], slot?: string): Promise<boolean> {
-    return (await this.attempt('clear_cell_style', { sheet, range, slot, base: this.state.revision })) !== false
+    return (await this.write('clear_cell_style', { sheet, range, slot })) !== false
   }
 
   /** The style ranges of a sheet that are loaded; none until `ensureCellStyles` has run for it. */
@@ -322,31 +293,6 @@ export class Session extends BaseSession<State> {
       this.state.styleUses = (await this.need().request<{ uses: Record<string, number> }>('style_uses')).uses
     } catch {
       /* a server without the counts: the gallery shows none */
-    }
-  }
-
-  async changeStyle(style: string, edit: CssEdit): Promise<boolean> {
-    return (await this.attempt('change_style', { style, ...edit, base: this.state.revision })) !== false
-  }
-
-
-  async renameStyle(style: string, name: string): Promise<boolean> {
-    return (await this.attempt('rename_style', { style, name, base: this.state.revision })) !== false
-  }
-
-  async setRole(role: string, colour: string): Promise<boolean> {
-    return (await this.attempt('set_role', { role, colour, base: this.state.revision })) !== false
-  }
-
-  async replacePalette(roles: ColourRole[]): Promise<boolean> {
-    return (await this.attempt('replace_palette', { roles, base: this.state.revision })) !== false
-  }
-
-  async checkCss(text: string): Promise<CssCheck | null> {
-    try {
-      return await this.need().request<CssCheck>('check_css', { text })
-    } catch {
-      return null
     }
   }
 
@@ -563,18 +509,6 @@ export class Session extends BaseSession<State> {
         this.track(this.reload())
         this.refollow()
         return true
-      case 'objects': {
-        const e = data as ObjectsEvent // typed, so a renamed field is a compile error and not a silent undefined
-        for (const o of e.changed as SheetObject[]) s.objects[o.id] = o
-        for (const id of e.removed) delete s.objects[id]
-        s.order[e.container] = e.order
-        this.track(this.refreshUses())
-        return true
-      }
-      case 'image':
-        if (data.asset) s.images[data.id] = data.asset
-        else delete s.images[data.id]
-        return true
       case 'diagram':
         if (data.definition) s.diagrams[data.id] = data.definition as ChartSpec
         else delete s.diagrams[data.id]
@@ -589,19 +523,10 @@ export class Session extends BaseSession<State> {
       case 'pivots':
         this.track(this.reloadPivots())
         return true
-      case 'styles':
-        // A style a colleague changed, and a palette role anybody changed, both arrive here: the styles carry the
-        // resolved colours a sheet is drawn with, and a client cannot work them out for itself (D200).
-        s.styles = Object.fromEntries((data.styles as StyleDef[]).map((x) => [x.id, x]))
-        this.track(this.refreshUses())
-        return true
       case 'cell_styles':
         // Only a sheet somebody looks at is loaded again; another is loaded when it comes into view.
         if (data.sheet in s.cellStyles) this.track(this.loadCellStyles(data.sheet).catch(() => undefined))
         this.track(this.refreshUses())
-        return true
-      case 'palette':
-        s.palette = data as PaletteEvent
         return true
       case 'random':
         s.random = { seed: data.seed, draw: data.draw }
@@ -610,38 +535,39 @@ export class Session extends BaseSession<State> {
         if (data.sheet === undefined) s.printPage = data.page as PageSetupData
         else s.sheetPrint[data.sheet as string] = data.setup as SheetPrintData
         return true
-      case 'language':
-        s.language = (data.language as string | null) ?? null
-        return true
     }
     return false
+  }
+
+  /** An object came, went or changed its style: the use counts beside the style names follow. */
+  protected override objectsChanged(): void {
+    this.track(this.refreshUses())
+  }
+
+  protected override stylesChanged(): void {
+    this.track(this.refreshUses())
   }
 
   // ------------------------------------------------------------------------------ random numbers, alternatives, following
   /** Draw fresh random numbers for everybody (Tools ▸ Resample, F9, E6.22): one undoable step in the history. */
   async resample(steps = 1): Promise<boolean> {
-    return (await this.attempt('resample', { steps, base: this.state.revision })) !== false
+    return (await this.write('resample', { steps })) !== false
   }
 
   // ------------------------------------------------------------------------------ printing (E6.19)
   /** Print the workbook on another page (D1004): one step in the history, for everybody. */
   async setPrintPage(page: PageSetupData): Promise<boolean> {
-    return (await this.attempt('set_print_page', { page, base: this.state.revision })) !== false
+    return (await this.write('set_print_page', { page })) !== false
   }
 
   /** Print a sheet or chart tab another way (D1004): one step in the history, for everybody. */
   async setSheetPrint(sheet: string, setup: SheetPrintData): Promise<boolean> {
-    return (await this.attempt('set_sheet_print', { sheet, setup, base: this.state.revision })) !== false
-  }
-
-  /** Say which language the workbook is written in (D915), or `null` for not known: one step, for everybody. */
-  async setLanguage(language: string | null): Promise<boolean> {
-    return (await this.attempt('set_language', { language, base: this.state.revision })) !== false
+    return (await this.write('set_sheet_print', { sheet, setup })) !== false
   }
 
   /** Give the workbook's random numbers a seed: the same seed and draw give the same numbers on every computer. */
   async setRandomSeed(seed: number): Promise<boolean> {
-    return (await this.attempt('set_random_seed', { seed, base: this.state.revision })) !== false
+    return (await this.write('set_random_seed', { seed })) !== false
   }
 
   /** What a distribution would give, for the Random generator. A problem with the numbers is the answer
@@ -674,7 +600,7 @@ export class Session extends BaseSession<State> {
   /** The sheet being looked at, the chart tabs beside it, the named ranges on it and what floats on it. */
   protected override async inView(): Promise<Thing[]> {
     const here = this.state.activeSheet
-    return this.things().filter((t) => t.kind === 'chart' || this.containerOf(t.id) === here)
+    return this.things().filter((t) => t.kind === 'chart' || this.holderOf(t.id) === here)
   }
   override async unnamedInView(): Promise<number> {
     return this.objectsOn(this.state.activeSheet).filter((o) => !o.name).length
@@ -682,23 +608,23 @@ export class Session extends BaseSession<State> {
   protected override tracksThings(): boolean {
     return true
   }
-  protected override containerOf(id: string): string | null {
+  protected override holderOf(id: string): string | null {
     const s = this.state
     if (s.sheets.some((x) => x.id === id)) return id
     const named = s.names.find((n) => n.id === id)
     if (named) return named.sheet
-    return s.objects[id]?.anchor.container ?? null
+    return s.objects[id]?.anchor.holder ?? null
   }
-  protected override currentContainer(): string | null {
+  protected override currentHolder(): string | null {
     return this.state.activeSheet || null
   }
-  protected override showContainer(id: string): void {
+  protected override showHolder(id: string): void {
     if (this.state.sheets.some((x) => x.id === id)) this.state.activeSheet = id
   }
 
   /** A step of the replay is shown on the sheet it touched (D551); the grid scrolls to it from `state.replay.focus`. */
   protected override followReplay(focus: Region[]): void {
-    const sheet = containerOf(firstFocus(focus))
+    const sheet = holderOf(firstFocus(focus))
     if (sheet && this.state.sheets.some((x) => x.id === sheet)) this.state.activeSheet = sheet
   }
 
@@ -738,19 +664,19 @@ export class Session extends BaseSession<State> {
 
   // ------------------------------------------------------------------------------ doing things
   async setCells(sheet: string, cells: { row: number; col: number; input: string }[]): Promise<boolean> {
-    const done = await this.attempt('set_cells', { sheet, cells, base: this.state.revision })
+    const done = await this.write('set_cells', { sheet, cells })
     return done !== false
   }
 
   async addSheet(name: string): Promise<boolean> {
-    const done = await this.attempt('add_sheet', { name, base: this.state.revision })
+    const done = await this.write('add_sheet', { name })
     if (done === false) return false
     this.state.activeSheet = done.sheet
     return true
   }
 
   async structure(sheet: string, axis: 'row' | 'col', insert: boolean, at: number, count = 1): Promise<boolean> {
-    return (await this.attempt('structure', { sheet, axis, insert, at, count, base: this.state.revision })) !== false
+    return (await this.write('structure', { sheet, axis, insert, at, count })) !== false
   }
 
   // -- floating objects (images, today): anchored to a cell, a fixed pixel size, never touched by `structure`
@@ -764,83 +690,72 @@ export class Session extends BaseSession<State> {
     picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
     anchor: { row: number; col: number; w: number; h: number },
   ): Promise<string | null> {
-    const done = await this.attempt('add_image', {
-      sheet: this.state.activeSheet,
-      data: picture.data,
-      alt: picture.alt,
-      source_name: picture.sourceName,
-      source_path: picture.sourcePath,
-      ...(picture.decorative ? { decorative: true } : {}),
-      ...(picture.fit ? { fit: true } : {}), // from a file: the server sizes it (D1332)
-      ...anchor,
-      base: this.state.revision,
-    })
-    return done === false ? null : done.object
+    return this.putPicture(picture, { sheet: this.state.activeSheet, ...anchor })
   }
 
-  /** Put a rendered container of `type` on the sheet that is shown, anchored to a cell (D560); its id, or `null` after
+  /** Put a container of `type` on the sheet that is shown, anchored to a cell (D560); its id, or `null` after
    * telling the person why not. */
   addContainer(type: string, anchor: { row: number; col: number; w: number; h: number }): Promise<string | null> {
-    return this.addRendering(type, { sheet: this.state.activeSheet, row: anchor.row, col: anchor.col }, { w: anchor.w, h: anchor.h }, undefined, true)
+    return this.addContainerAt(type, { sheet: this.state.activeSheet, row: anchor.row, col: anchor.col }, { w: anchor.w, h: anchor.h }, undefined, true)
   }
 
   /** Take a new chart definition into the document (E6.6); its id, or `null` after telling the person why not.
    * Show it with `addDiagramObject`, `addChart`, or both — neither is bundled into this call, since (unlike
    * `addImage`) a definition may be placed more than once from the very start. */
   async defineDiagram(draft: ChartDraft): Promise<string | null> {
-    const done = await this.attempt('define_diagram', { definition: { kind: 'bar', ...draft }, base: this.state.revision })
+    const done = await this.write('define_diagram', { definition: { kind: 'bar', ...draft } })
     return done === false ? null : done.diagram
   }
 
   /** Redefine a chart in place: what a tab or floating object already showing `id` updates to. */
   async updateDiagram(id: string, draft: ChartDraft): Promise<boolean> {
-    return (await this.attempt('update_diagram', { id, definition: { kind: 'bar', ...draft }, base: this.state.revision })) !== false
+    return (await this.write('update_diagram', { id, definition: { kind: 'bar', ...draft } })) !== false
   }
 
   /** Let a chart definition go. Refused (returns `false`) while a tab or a floating object still shows it. */
   async forgetDiagram(id: string): Promise<boolean> {
-    return (await this.attempt('forget_diagram', { id, base: this.state.revision })) !== false
+    return (await this.write('forget_diagram', { id })) !== false
   }
 
   /** Put a chart on the sheet that is shown, as a floating object showing `diagramId`; its id, or `null` after
    * telling the person why not. `moveObject`/`resizeObject`/`removeObject` then work on it like any object. */
   async addDiagramObject(diagramId: string, anchor: { row: number; col: number; w: number; h: number }): Promise<string | null> {
-    const done = await this.attempt('add_diagram_object', { sheet: this.state.activeSheet, diagram: diagramId, ...anchor, base: this.state.revision })
+    const done = await this.write('add_diagram_object', { sheet: this.state.activeSheet, diagram: diagramId, ...anchor })
     return done === false ? null : done.object
   }
 
   /** Add a chart tab showing `specId`; its id, or `null` after telling the person why not. */
   async addChart(name: string, specId: string, index: number | null = null): Promise<string | null> {
-    const done = await this.attempt('add_chart', { name, spec_id: specId, index, base: this.state.revision })
+    const done = await this.write('add_chart', { name, spec_id: specId, index })
     return done === false ? null : done.chart
   }
 
   /** Remove a chart tab. The definition it showed is untouched (`forgetDiagram` is the separate step). */
   async removeChart(id: string): Promise<boolean> {
-    return (await this.attempt('remove_chart', { id, base: this.state.revision })) !== false
+    return (await this.write('remove_chart', { id })) !== false
   }
 
   // -- names, tables and queries (E6.5)
   /** Give cells a name (or point an existing one, same scope, somewhere else); `false` after telling the person why not. */
   async defineName(draft: NameDraft): Promise<boolean> {
-    return (await this.attempt('define_name', { definition: draft, base: this.state.revision })) !== false
+    return (await this.write('define_name', { definition: draft })) !== false
   }
 
   /** Name cells that have no name and describe them, one step in the history (D1317): the id they have from then on, or
    * `false` after telling the person why not. */
   async nameAndDescribeRange(range: NameRegion, name: string, description: string): Promise<string | false> {
-    const done = await this.attempt('name_and_describe_range', { range, name, description, base: this.state.revision })
+    const done = await this.write('name_and_describe_range', { range, name, description })
     return done === false ? false : (done.id as string)
   }
 
   /** Call a name something else; the formulas that use it are rewritten. */
   async renameName(old: string, next: string, scope: string | null): Promise<boolean> {
-    return (await this.attempt('rename_name', { old, new: next, scope, base: this.state.revision })) !== false
+    return (await this.write('rename_name', { old, new: next, scope })) !== false
   }
 
   /** Take a name away; the cells stay. */
   async removeName(name: string, scope: string | null): Promise<boolean> {
-    return (await this.attempt('remove_name', { name, scope, base: this.state.revision })) !== false
+    return (await this.write('remove_name', { name, scope })) !== false
   }
 
   /** Run a query as a `SQL()` cell on `sheet` would, without changing the document (what the SQL editor previews). */
@@ -850,7 +765,7 @@ export class Session extends BaseSession<State> {
 
   /** Put a query into a cell as `=SQL("…")`, and with `name` make its result a table of that name. */
   async defineSql(sheet: string, row: number, col: number, query: string, name: string | null): Promise<boolean> {
-    return (await this.attempt('define_sql', { sheet, row, col, query, name, base: this.state.revision })) !== false
+    return (await this.write('define_sql', { sheet, row, col, query, name })) !== false
   }
 
   // -- pivot tables (E6.30)
@@ -863,18 +778,18 @@ export class Session extends BaseSession<State> {
     place: { sheet: string; row: number; col: number } | { newSheet: string },
   ): Promise<string | null> {
     const where = 'newSheet' in place ? { new_sheet: place.newSheet } : { sheet: place.sheet, row: place.row, col: place.col }
-    const done = await this.attempt('define_pivot', { name, definition, labels, ...where, base: this.state.revision })
+    const done = await this.write('define_pivot', { name, definition, labels, ...where })
     return done === false ? null : done.sheet
   }
 
   /** Change what a pivot table is made from; its cells follow. The words it already writes stay unless `labels` is given. */
   async updatePivot(name: string, definition: PivotDefinition, labels?: PivotLabels): Promise<boolean> {
-    return (await this.attempt('update_pivot', { name, definition, ...(labels ? { labels } : {}), base: this.state.revision })) !== false
+    return (await this.write('update_pivot', { name, definition, ...(labels ? { labels } : {}) })) !== false
   }
 
   /** Take a pivot table away: its cells are empty, the source is untouched. */
   async deletePivot(name: string): Promise<boolean> {
-    return (await this.attempt('delete_pivot', { name, base: this.state.revision })) !== false
+    return (await this.write('delete_pivot', { name })) !== false
   }
 
   /** The SQL query a pivot table is, or `null` after telling the person why not. */
@@ -885,7 +800,7 @@ export class Session extends BaseSession<State> {
 
   /** Turn a pivot table into a `SQL()` query of the same name; one step in the history. */
   async pivotToSql(name: string): Promise<boolean> {
-    return (await this.attempt('pivot_to_sql', { name, base: this.state.revision })) !== false
+    return (await this.write('pivot_to_sql', { name })) !== false
   }
 
   /** The members a field of `source` has, for a filter's list: at most `limit` (the preview shows 50 rows at most), in order; `null` is "nothing". */
@@ -900,34 +815,19 @@ export class Session extends BaseSession<State> {
 
   /** Drag an object to a new anchor cell; its size never changes. */
   async moveObject(id: string, row: number, col: number): Promise<boolean> {
-    return (await this.attempt('move_object', { id, row, col, base: this.state.revision })) !== false
+    return (await this.write('move_object', { id, row, col })) !== false
   }
 
   /** Give an object a new frame: its anchor cell and pixel size together, since dragging a corner moves the
    * corner too. An image must keep its own proportions (the server refuses otherwise); a diagram keeps none. */
   async resizeObject(id: string, frame: { row: number; col: number; w: number; h: number }): Promise<boolean> {
-    return (await this.attempt('resize_object', { id, ...frame, base: this.state.revision })) !== false
-  }
-
-  /** Turn an object to `rotation` whole degrees clockwise about its centre (D1021); its anchor cell stays. */
-  async rotateObject(id: string, rotation: number): Promise<boolean> {
-    return (await this.attempt('rotate_object', { id, rotation, base: this.state.revision })) !== false
-  }
-
-  /** Say what an object is to someone who cannot see it, or that it is only decoration (BITV 1.1.1); its own step in the
-   * history. A picture needs one or the other, which the server insists on. */
-  async describeObject(id: string, description: string, decorative: boolean): Promise<boolean> {
-    return (await this.attempt('describe_object', { id, ...describeParams(description, decorative), base: this.state.revision })) !== false
-  }
-
-  async removeObject(id: string): Promise<boolean> {
-    return (await this.attempt('remove_object', { id, base: this.state.revision })) !== false
+    return (await this.write('resize_object', { id, ...frame })) !== false
   }
 
   /** Set (or, with `null`, clear back to the default) the size of one or more rows or columns in one change.
    * `sizes` is `[index, size | null]` pairs. */
   async resizeLines(sheet: string, axis: Axis, sizes: [number, number | null][]): Promise<boolean> {
-    return (await this.attempt('resize_lines', { sheet, axis, sizes, base: this.state.revision })) !== false
+    return (await this.write('resize_lines', { sheet, axis, sizes })) !== false
   }
 
   // -- the function catalog (E13.5, E13.6: computes' "Documentation", and the formula bar's in-context help)

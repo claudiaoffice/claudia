@@ -8,8 +8,6 @@ from claudia_computes import (
     CellAnchor,
     CellRef,
     ChartSpec,
-    DefineDiagram,
-    DefineImage,
     MoveObject,
     ObjectBody,
     RangeRef,
@@ -19,7 +17,16 @@ from claudia_computes import (
     VisualObject,
     WorkbookModel,
 )
-from claudia_core import Batch, CommandLog, Document, ImageAsset, ImageImport, MemoryStore, decode_image
+from claudia_core import (
+    Batch,
+    CommandLog,
+    DefineAsset,
+    Document,
+    ImageAsset,
+    ImageImport,
+    MemoryStore,
+    decode_image,
+)
 from claudia_core.testing import FakeClock, pointing_as_ref
 
 S1 = "s1"
@@ -118,7 +125,7 @@ def put_image(doc, object_id: str = "i1", author: str = "ana", asset: ImageAsset
     Returns what ``doc.execute`` returns — read the object back with ``doc.model.get_object(object_id)``."""
     asset = asset or image_asset()
     obj = image_object(object_id, asset=asset, **changes)
-    steps = [add(obj)] if asset.id in doc.model.images else [DefineImage(asset), add(obj)]
+    steps = [add(obj)] if asset.id in doc.model.images else [DefineAsset("image", asset.to_data()), add(obj)]
     return doc.execute(steps[0] if len(steps) == 1 else Batch(tuple(steps)), author=author)
 
 
@@ -147,10 +154,10 @@ def diagram_object(object_id: str = "d1", sheet: str = S1, spec_id: str = "c1", 
 
 
 def put_chart_spec(doc, spec_id: str = "c1", author: str = "ana", **changes) -> ChartSpec:
-    """Register a chart definition (``DefineDiagram``), defining it first if the document does not have it.
+    """Register a chart definition (``DefineAsset``), defining it first if the document does not have it.
 
     Returns the spec — read it back with ``doc.model.diagrams[spec_id]``."""
     spec = chart_spec(spec_id, **changes)
     if spec_id not in doc.model.diagrams:
-        doc.execute(DefineDiagram(spec.to_data()), author=author)
+        doc.execute(DefineAsset("diagram", spec.to_data()), author=author)
     return spec

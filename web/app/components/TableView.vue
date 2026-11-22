@@ -16,12 +16,12 @@ import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { paragraphCss } from '~/lib/style-css'
 import { columnName, gridOf, leaveSide, stepBox, type Box, type Step, type TableInfo } from '~/lib/tables'
 import { nearestGap } from '~/lib/text-object-host'
-import type { BlockAnchor, VisualObject } from '~/lib/objects'
+import type { ParagraphAnchor, VisualObject } from '~/lib/objects'
 import type { TextSession } from '~/lib/text-session'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
-const props = defineProps<{ session: TextSession; object: VisualObject<BlockAnchor>; table: TableInfo }>()
+const props = defineProps<{ session: TextSession; object: VisualObject<ParagraphAnchor>; table: TableInfo }>()
 const emit = defineEmits<{ options: [table: string]; menu: [at: { id: string; x: number; y: number }]; leave: []; exit: [side: 'before' | 'after'] }>()
 const state = props.session.state
 
@@ -31,7 +31,7 @@ const title = computed(() => props.object.name || t('Table'))
 const description = computed(() => (props.object.decorative ? '' : props.object.description))
 
 // ------------------------------------------------------------------------------ how a box looks
-const styleCss = (id: string) => paragraphCss(state.styles.find((s) => s.id === id)?.resolved ?? {})
+const styleCss = (id: string) => paragraphCss(state.styles[id]?.resolved ?? {})
 /** The style of a box: the person's own choice, or the look's for the row's role (D1206). */
 const boxCss = (box: Box, role: 'header' | 'body' | 'band' | 'total'): Record<string, string> => ({
   ...styleCss(box.style || `table-${props.table.look}-${role}`),
@@ -195,9 +195,9 @@ function onIslandDown(event: PointerEvent) {
 
 function paragraphs(): { id: string; bottom: number; left: number; width: number }[] {
   const doc = root.value?.closest('.doc')
-  return [...(doc?.querySelectorAll<HTMLElement>('[data-block]') ?? [])].map((el) => {
+  return [...(doc?.querySelectorAll<HTMLElement>('[data-paragraph]') ?? [])].map((el) => {
     const r = el.getBoundingClientRect()
-    return { id: el.dataset.block!, bottom: r.bottom, left: r.left, width: r.width }
+    return { id: el.dataset.paragraph!, bottom: r.bottom, left: r.left, width: r.width }
   })
 }
 
@@ -222,7 +222,7 @@ function onTabMove(event: PointerEvent) {
 async function onTabUp() {
   const d = dragging.value
   dragging.value = null
-  if (d?.moved && d.after && d.after !== props.object.anchor.container && !readonly.value) await props.session.moveObject(props.object.id, { block: d.after, offset: 0 })
+  if (d?.moved && d.after && d.after !== props.object.anchor.holder && !readonly.value) await props.session.moveObject(props.object.id, { paragraph: d.after, offset: 0 })
 }
 function onTabKey(event: KeyboardEvent) {
   if (event.key === 'Escape') {

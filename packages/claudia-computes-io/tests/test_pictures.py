@@ -1,4 +1,4 @@
-"""Pictures floating on a sheet, written to xlsx and ods (D1233): a picture, and a rendered container's picture, pinned
+"""Pictures floating on a sheet, written to xlsx and ods (D1233): a picture, and a container's picture, pinned
 to its cell, with its size, turn, name and what it says to someone who cannot see it. Computes has no text boxes and
 shapes (D1232), so these two kinds stay unwritten and are reported."""
 
@@ -21,7 +21,7 @@ from lxml import etree
 from test_ods_charts import S1, a_workbook, put_chart
 
 from claudia_computes import CellAnchor, ObjectBody, VisualObject, WorkbookModel
-from claudia_core import ImageAsset, ImageImport, Paragraph, RenderedDefinition, blank_png, decode_image
+from claudia_core import ContainerDefinition, ImageAsset, ImageImport, Paragraph, blank_png, decode_image
 from claudia_odf_io import NS as ODF
 from claudia_odf_io import Loss, problems, read_manifest
 from claudia_opc_io import read_parts
@@ -64,7 +64,7 @@ def put_picture(
 ) -> ImageAsset:
     asset = asset or a_png()
     if asset.id not in model.images:
-        model.define_image(asset)
+        model.images.define(asset)
     fields = {"style": "plain-image", "ref": asset.id, "imported": an_import(asset.id), **body}
     model.insert_object(VisualObject(ObjectBody(object_id, "image", *size, **fields), CellAnchor(S1, *at)))
     return asset
@@ -169,15 +169,15 @@ def test_xlsx_an_svg_picture_is_a_png_where_a_rasteriser_is_given_and_a_blank_on
     assert kinds(xlsx_export_losses(model, rasterised=True)) == {}
 
 
-def test_xlsx_a_rendered_container_is_the_picture_last_made_of_it_and_one_never_drawn_is_left_out():
+def test_xlsx_a_container_is_the_picture_last_made_of_it_and_one_never_drawn_is_left_out():
     model = a_workbook()
     asset = a_png()
-    model.define_image(asset)
-    model.define_rendering(RenderedDefinition("r1", "latex", "x", image=asset.id, renderer="latex 1"))
-    model.define_rendering(RenderedDefinition("r2", "latex", "y"))
+    model.images.define(asset)
+    model.containers.define(ContainerDefinition("r1", "latex", "x", image=asset.id, renderer="latex 1"))
+    model.containers.define(ContainerDefinition("r2", "latex", "y"))
     for object_id, ref, at in (("c1", "r1", (2, 1)), ("c2", "r2", (9, 1))):
         model.insert_object(
-            VisualObject(ObjectBody(object_id, "rendered", 200, 100, "plain-image", ref=ref), CellAnchor(S1, *at))
+            VisualObject(ObjectBody(object_id, "container", 200, 100, "plain-image", ref=ref), CellAnchor(S1, *at))
         )
     data = workbook_to_xlsx(model)
     assert len(pictures_of(data)) == 1

@@ -2,7 +2,7 @@
 
 Found by accident: ``packages/claudia-server/CHANGELOG.md`` had two ``## [0.9.0]`` headers from two branches merged
 in parallel (worker-pool and ai-sec-patch), with a third branch's ``## [0.10.0]`` sandwiched between them — and the
-second ``## [0.9.0]`` block itself ran two unrelated releases together under one header, the second with no header
+second ``## [0.9.0]`` paragraph itself ran two unrelated releases together under one header, the second with no header
 of its own. The same class of bug ``test_decision_log.py`` already catches for ``D<number>``, just one directory
 over: concurrent branches each picking "the next number" without seeing each other's pick.
 

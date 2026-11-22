@@ -6,11 +6,11 @@ a composes text and the words of the objects floating over it, or the words of t
 slide by slide. So a list runs on from one text box to the next as it does from one paragraph to the next.
 
 * ``lists``: the lists, the schemes and every label, for a client that does not load them with the document;
-* ``make_list(blocks, scheme)``: bullets or numbers for paragraphs, or (``scheme`` null) none. Asking for what the
+* ``make_list(paragraphs, scheme)``: bullets or numbers for paragraphs, or (``scheme`` null) none. Asking for what the
   paragraphs already are takes them out of their list, asking for the other kind of a whole list changes its scheme,
   anything else starts a new list at the levels the paragraphs have;
-* ``indent_item(blocks, by)``: move items one level in (``1``) or out (``-1``);
-* ``continue_list(block)``: let the list of ``block`` go on where the nearest earlier list of its kind ends;
+* ``indent_item(paragraphs, by)``: move items one level in (``1``) or out (``-1``);
+* ``continue_list(paragraph)``: let the list of ``paragraph`` go on where the nearest earlier list of its kind ends;
 * ``list_start(list, start)``: the number a list's first level starts at;
 * ``number_headings(on)``: number every heading style in the list ``outline`` (scheme ``chapters``), or no longer;
   creates offers it as Number All Slide Titles, since a slide title is a heading;
@@ -96,7 +96,9 @@ def _items(model: _Host) -> dict[str, ListItem]:
 def _paragraphs(model: _Host, ids: list) -> list[str]:
     """The paragraphs these ids name, in reading order and each once."""
     if not ids or len(ids) > MAX_LISTED or not all(isinstance(i, str) for i in ids):
-        raise RequestError("bad_request", msg("blocks must be a list of 1 to {limit} paragraph ids", limit=MAX_LISTED))
+        raise RequestError(
+            "bad_request", msg("paragraphs must be a list of 1 to {limit} paragraph ids", limit=MAX_LISTED)
+        )
     wanted = set(ids)
     order = _order(model)
     missing = wanted.difference(order)
@@ -389,39 +391,40 @@ def _add_list_methods(table: MethodTable) -> None:
             "labels": {paragraph: label.to_data() for paragraph, label in model.structure.labels().items()},
         }
 
-    @table.method("make_list", "blocks:list scheme:str? base:revision?", write=True)
-    def _make_list(ctx, *, blocks, scheme, base):
-        """Make the paragraphs `blocks` (paragraph ids: paragraphs of a text, or the objects whose words they are)
+    @table.method("make_list", "paragraphs:list scheme:str? base:revision?", write=True)
+    def _make_list(ctx, *, paragraphs, scheme, base):
+        """Make the paragraphs `paragraphs` (paragraph ids: paragraphs of a text, or the objects whose words they are)
         bullets (`scheme` `"bullets"`), numbers (`"numbers"`, or any scheme of the document), or plain again (`scheme`
         null). Paragraphs that already are that kind leave their list; a whole list asked for in another scheme
         changes its scheme; otherwise the paragraphs become a new list, at the levels they had. One step. Returns
         `{revision}`."""
         model = _host(ctx)
-        commands, name = _plan_make_list(model, _paragraphs(model, blocks), scheme)
+        commands, name = _plan_make_list(model, _paragraphs(model, paragraphs), scheme)
         if not commands:
             return _revision(ctx)
         return _run(ctx, commands, name, base)
 
-    @table.method("indent_item", "blocks:list by:int base:revision?", write=True)
-    def _indent_item(ctx, *, blocks, by, base):
-        """Move the list items among `blocks` one level in (`by` 1) or out (`by` -1). An item goes no deeper than
+    @table.method("indent_item", "paragraphs:list by:int base:revision?", write=True)
+    def _indent_item(ctx, *, paragraphs, by, base):
+        """Move the list items among `paragraphs` one level in (`by` 1) or out (`by` -1). An item goes no deeper than
         one below the paragraph read before it, and a list's first item cannot go in. Paragraphs that are no items,
         and items that cannot move, stay. Returns `{revision, changed}`: how many items moved (none: no step)."""
         if by not in (1, -1):
             raise RequestError("bad_request", msg("by is 1 (in) or -1 (out)"))
         model = _host(ctx)
-        commands = _plan_indent(model, _paragraphs(model, blocks), by)
+        commands = _plan_indent(model, _paragraphs(model, paragraphs), by)
         if not commands:
             return {**_revision(ctx), "changed": 0}
         return {**_run(ctx, commands, "Indent list" if by > 0 else "Outdent list", base), "changed": len(commands)}
 
-    @table.method("continue_list", "block:str base:revision?", write=True)
-    def _continue_list(ctx, *, block, base):
-        """Let the list that `block` is an item of go on where the nearest earlier list of the same scheme ends: its
-        items join that list and keep their levels. `command_error` if `block` is no item or there is no such list."""
+    @table.method("continue_list", "paragraph:str base:revision?", write=True)
+    def _continue_list(ctx, *, paragraph, base):
+        """Let the list that `paragraph` is an item of go on where the nearest earlier list of the same scheme ends: its
+        items join that list and keep their levels. `command_error` if `paragraph` is no item or there is no such
+        list."""
         model = _host(ctx)
-        (paragraph,) = _paragraphs(model, [block])
-        return _run(ctx, _plan_continue(model, paragraph), "Continue list", base)
+        (target,) = _paragraphs(model, [paragraph])
+        return _run(ctx, _plan_continue(model, target), "Continue list", base)
 
     @table.method("list_start", "list:str start:int base:revision?", write=True)
     def _list_start(ctx, *, list, start, base):  # noqa: A002  (the parameter is named as it is on the wire)

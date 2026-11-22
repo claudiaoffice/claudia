@@ -34,7 +34,7 @@ _KIND_LABELS = {
     "shape": msg("Shape"),
     "image": msg("Picture"),
     "diagram": msg("Chart"),
-    "rendered": msg("Diagram"),
+    "container": msg("Container"),
     "table": msg("Table"),
     "slide": msg("Slide"),
     # a paragraph of a text (D554, D1310): every one that is not a heading, a list item too; a heading is called by its
@@ -165,9 +165,9 @@ def _kind_of(model: ObjectModel, thing_id: str) -> str:
     for kind, thing in model.unnamed_things():
         if thing == thing_id:
             return kind
-    block_kind = getattr(model, "block_kind", None)  # a paragraph without a name is in neither list (D554)
-    if block_kind is not None:
-        return block_kind(model.block(thing_id))  # type: ignore[attr-defined]
+    paragraph_kind = getattr(model, "paragraph_kind", None)  # a paragraph without a name is in neither list (D554)
+    if paragraph_kind is not None:
+        return paragraph_kind(model.paragraph(thing_id))  # type: ignore[attr-defined]
     raise KeyError(thing_id)
 
 
@@ -194,7 +194,7 @@ def _name_thing(ctx: Context, *, id: str, base) -> dict:  # noqa: A002 - the wir
 
 
 def _is_drawn(model: ObjectModel, thing_id: str) -> bool:
-    """Is it something drawn (a picture, a chart, a shape, rendered words, a text box), which can be mere decoration?
+    """Is it something drawn (a picture, a chart, a shape, a container, a text box), which can be mere decoration?
     A table is an object, but a table is read, not looked at."""
     return thing_id in model.objects and model.objects[thing_id].body.kind != "table"
 
@@ -202,8 +202,8 @@ def _is_drawn(model: ObjectModel, thing_id: str) -> bool:
 def _thing_details(ctx: Context, *, id: str) -> dict:  # noqa: A002 - the wire name
     """What the Name & describe… dialog shows about the thing `id`: `{id, kind, name, name_fixed, description, drawn,
     decorative}`. `name_fixed` is true where the name is worked out and the dialog shows it locked (a heading is
-    called by its words); `drawn` is true for what can be marked `decorative` (a picture, a chart, a shape, rendered
-    words, a text box). `command_error` for an id that is not in the document."""
+    called by its words); `drawn` is true for what can be marked `decorative` (a picture, a chart, a shape, a
+    container, a text box). `command_error` for an id that is not in the document."""
     model = _model(ctx)
     if not model.has_thing(id):
         raise RequestError("command_error", msg("there is nothing called {id!r} in this document", id=id))

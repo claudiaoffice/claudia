@@ -59,12 +59,12 @@ columns that differs from creates is a bug or a stated adaptation.
 
 **composes**
 
-- `TextContainers.vue` draws **every** object in `state.objects`, including those of kind `table`. A table (D1201) is an
+- `TextObjectLayer.vue` draws **every** object in `state.objects`, including those of kind `table`. A table (D1201) is an
   object whose definition the kernel holds, and `TableView.vue` already draws it in the flow. So a table has *two*
   bodies on screen: the real one in the flow and an empty box of the object's stored `w × h` hung at its anchor. That
   box is the dark-violet frame in the bug report. It has `pointer-events: auto` and `z-index: 2`, so it lies **over**
   the table's caption: the click on "Options…" lands on the phantom object (which selects it and does nothing), not
-  on the button (`web/app/components/TextContainers.vue:79-89`, `TableView.vue:146`). This is one cause of three
+  on the button (`web/app/components/TextObjectLayer.vue:79-89`, `TableView.vue:146`). This is one cause of three
   symptoms: the two frames, the dead button, and "I cannot drag the table" (the phantom has no drag either).
 - The layer has no move at all: `select` on press, one `.grip` at the bottom right that calls `resizedBy` with no
   aspect. Images keep an aspect (`_check_image_visual`), so the server refuses a free resize and the size snaps back.
@@ -223,13 +223,13 @@ Each patch assumes the earlier ones are applied; the last step of each is a merg
    that Esc now drops a drag in progress (D1227). `ObjectFrame.vue` (outline and handles drawn once) is **not** in this
    patch: it moves out of creates when composes is its second user (patch 3 below), where its markup can be checked
    against two apps at once.
-3. **composes — built (D1228):** the layer no longer draws tables (`web/app/components/TextContainers.vue`), the table has its
+3. **composes — built (D1228):** the layer no longer draws tables (`web/app/components/TextObjectLayer.vue`), the table has its
    faint frame, name tab, drag with a drop line and menu (`web/app/components/TableView.vue`), objects are dragged, sized
    with the aspect kept, turned and menued through the shared module (`web/app/lib/text-object-host.ts` turns a drop into the
    paragraph and offset), the right button never reaches the words (`web/app/components/TextEditor.vue`), the object menu and
    its dialogs are in `web/app/components/TextObjectMenu.vue`, and `web/app/components/ObjectFrame.vue` is the handles for
    creates and composes. **Not built:** the table's width handle (a table's width is set in its options); the
-   bounding-box wrap of a turned object (D1226); (Edit text for a text box or shape in a text is built, D1232: `set_text`/`write_words` live in `shape_methods`, the editor is `ParagraphEditor.vue` in `TextContainers.vue`.)
+   bounding-box wrap of a turned object (D1226); (Edit text for a text box or shape in a text is built, D1232: `set_text`/`write_words` live in `shape_methods`, the editor is `ParagraphEditor.vue` in `TextObjectLayer.vue`.)
    Follow-up of 2026-11-19 (D1229): the size cap, the table commands in Tools (`clients/linux/src/claudia_shell_gtk/manifest.py`),
    the workbook's wording, Delete on a selected table, and the object clipboard for pictures in all three apps
    (`web/app/lib/object-clipboard.ts`).

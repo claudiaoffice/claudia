@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from claudia_composes import TextModel, TextRange
 
 from .ai_mode import ACT
-from .assistant import Call, Say, Step, Task
+from .assistant import AiTurn, Call, Say, Task
 
 LONG_SENTENCE_WORDS = 35  # more words than this in one sentence earns a remark
 MAX_SUGGESTIONS = 20  # one instruction makes at most this many
@@ -137,7 +137,7 @@ def findings(text: str) -> list[Finding]:
 class TextEngine:
     """Reads one instruction about a text and turns it into suggestions, or in act mode into edits."""
 
-    def plan(self, task: Task) -> list[Step]:
+    def plan(self, task: Task) -> list[AiTurn]:
         """The steps for what the asker wrote."""
         text = task.text.strip()
         if _HELP.match(text):
@@ -150,22 +150,22 @@ class TextEngine:
         acting = task.mode == ACT
         steps: list[Call] = []
         more = 0
-        for block in model.blocks:
-            if only is not None and block.id != only:
+        for paragraph in model.paragraphs:
+            if only is not None and paragraph.id != only:
                 continue
-            for item in self._findings_in(model, block.id, block.text, acting=acting):
+            for item in self._findings_in(model, paragraph.id, paragraph.text, acting=acting):
                 if len(steps) >= MAX_SUGGESTIONS:
                     more += 1
                 elif acting and item.replacement is not None:
-                    steps.append(_written(block.id, item))
+                    steps.append(_written(paragraph.id, item))
                 else:
-                    steps.append(_suggested(block.id, item))
+                    steps.append(_suggested(paragraph.id, item))
         if not steps:
             return [Say(NOTHING)]
         return [*steps, Say(_report(steps, more))]
 
     @staticmethod
-    def _findings_in(model: TextModel, block: str, text: str, *, acting: bool) -> list[Finding]:
+    def _findings_in(model: TextModel, paragraph: str, text: str, *, acting: bool) -> list[Finding]:
         """What the rules find in one paragraph. Suggesting, what is suggested already is left out; acting, every
         place counts (an open suggestion for it simply goes out of date) and the list runs from the paragraph's end,
         so that an edit never moves a place that is still to come."""
@@ -174,7 +174,7 @@ class TextEngine:
         open_now = {
             (s.anchor.start, s.anchor.end, s.replacement)
             for s in model.suggestions.values()
-            if s.state == "open" and s.anchor.block == block
+            if s.state == "open" and s.anchor.paragraph == paragraph
         }
         return [item for item in findings(text) if (item.start, item.end, item.replacement) not in open_now]
 
@@ -182,25 +182,31 @@ class TextEngine:
     def _paragraph_of(task: Task, model: TextModel) -> str | None:
         hold = task.document.presence.of(task.sender)
         for region in hold.regions if hold else ():
-            if isinstance(region, TextRange) and any(b.id == region.block for b in model.blocks):
-                return region.block
+            if isinstance(region, TextRange) and any(b.id == region.paragraph for b in model.paragraphs):
+                return region.paragraph
         return None
 
 
-def _focus(block: str, item: Finding) -> tuple[dict, ...]:
-    return (TextRange(block, item.start, item.end).to_data(),)
+def _focus(paragraph: str, item: Finding) -> tuple[dict, ...]:
+    return (TextRange(paragraph, item.start, item.end).to_data(),)
 
 
-def _suggested(block: str, item: Finding) -> Call:
-    params: dict = {"block": block, "start": item.start, "end": item.end, "reason": item.reason}
+def _suggested(paragraph: str, item: Finding) -> Call:
+    params: dict = {"paragraph": paragraph, "start": item.start, "end": item.end, "reason": item.reason}
     if item.replacement is not None:
         params["replacement"] = item.replacement
-    return Call("suggest", params, _focus(block, item))
+    return Call("suggest", params, _focus(paragraph, item))
 
 
-def _written(block: str, item: Finding) -> Call:
-    params = {"block": block, "start": item.start, "end_block": block, "end": item.end, "text": item.replacement}
-    return Call("replace_text", params, _focus(block, item))
+def _written(paragraph: str, item: Finding) -> Call:
+    params = {
+        "paragraph": paragraph,
+        "start": item.start,
+        "end_paragraph": paragraph,
+        "end": item.end,
+        "text": item.replacement,
+    }
+    return Call("replace_text", params, _focus(paragraph, item))
 
 
 def _report(steps: list[Call], more: int) -> str:

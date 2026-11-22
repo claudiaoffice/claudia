@@ -14,7 +14,7 @@ from claudia_composes_io import (
 from claudia_composes_io._tables import put_tables
 from lxml import etree
 
-from claudia_composes import Block, TextModel
+from claudia_composes import TextModel
 from claudia_core import Column, Merge, Paragraph, TableDef, entry_id
 from claudia_odf_io import NS, problems
 from claudia_opc_io import read_parts
@@ -41,7 +41,7 @@ def table(table_id: str = "t1", **options) -> TableDef:
 
 
 def text_with(*definitions: TableDef) -> TextModel:
-    model = TextModel([Block("b1", "body", "Before"), Block("b2", "body", "After")])
+    model = TextModel([Paragraph("b1", "body", "Before"), Paragraph("b2", "body", "After")])
     put_tables(model, [("b1", len("Before"), definition) for definition in definitions])
     return model
 
@@ -152,7 +152,7 @@ class TestReading:
         assert [column.kind for column in found.columns] == ["text", "number", "number"]
         assert found.width == 6000
         (obj,) = [o for o in back.objects.values() if o.body.kind == "table"]
-        assert (obj.anchor.block, obj.body.ref) == ("b1", found.id)
+        assert (obj.anchor.paragraph, obj.body.ref) == ("b1", found.id)
 
     def test_the_merges_of_a_written_file_come_back(self) -> None:
         merged = TableDef.blank("t1", 3, 3, header_rows=0, merges=(Merge("r1", "c1", 2, 2), Merge("r3", "c1", 1, 3)))
@@ -258,8 +258,8 @@ class TestEditsToAKeptFile:
         data = self.original()
         baseline = odt_to_text(data)
         current = odt_to_text(data)
-        first = current.blocks[0]
-        current.blocks[0] = Block(first.id, first.style, "Edited")
+        first = current.paragraphs[0]
+        current.paragraphs[0] = Paragraph(first.id, first.style, "Edited")
         patched = apply_edits_to_odt(data, baseline, current)
         text = content(patched).find("office:body/office:text", NS)
         assert [etree.QName(child).localname for child in text] == ["p", "table", "p"]
@@ -269,8 +269,10 @@ class TestEditsToAKeptFile:
         data = self.original()
         baseline, current = odt_to_text(data), odt_to_text(data)
         (definition,) = current.tables.values()
-        current.tables[definition.id] = definition.with_entries(
-            [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+        current.tables.put(
+            definition.with_entries(
+                [("r2", "c1", Paragraph(entry_id(definition.id, "r2", "c1"), "", "Cold frame").written_by(None))]
+            )
         )
         with pytest.raises(UnsupportedEdit):
             apply_edits_to_odt(data, baseline, current)

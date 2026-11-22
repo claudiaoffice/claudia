@@ -4,8 +4,8 @@ import pytest
 from starlette.testclient import TestClient
 from test_server_app import Peer
 
-from claudia_container import KdfParams
 from claudia_core.testing import ListModel
+from claudia_document_file import KdfParams
 from claudia_server.app import create_app
 from claudia_server.auth import Credentials, ScryptDirectory
 from claudia_server.hub import Hub, MemoryProvider

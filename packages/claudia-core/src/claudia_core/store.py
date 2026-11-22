@@ -1,4 +1,4 @@
-"""What the kernel needs from storage. The kernel never opens a file: E2 (container, encryption) implements this.
+"""What the kernel needs from storage. The kernel never opens a file: E2 (document file, encryption) implements this.
 
 Only three kinds of thing ever reach a store, matching the message classes of E1.6: log entries, chat records
 and snapshots. There is deliberately no method for ephemeral messages.
@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
-from .log import CommandLog, Entry
+from .log import CommandLog, Step
 from .messages import ChatRecord
 from .model import Snapshot
 from .revision import Branch, Revision
@@ -18,7 +18,7 @@ from .revision import Branch, Revision
 class DocumentStore(Protocol):
     """What the kernel needs from storage: log entries, lines, chat records and snapshot caches. E2 implements it."""
 
-    def append_entry(self, entry: Entry) -> None:
+    def append_entry(self, entry: Step) -> None:
         """Persist one log entry. Raise if it cannot be made durable: the change then did not happen."""
 
     def rewrite(self, log: CommandLog, chat: Sequence[ChatRecord]) -> None:
@@ -51,7 +51,7 @@ class MemoryStore:
         self.branches: dict[str, Branch] = {}
         self.discarded: list[Revision] = []
 
-    def append_entry(self, entry: Entry) -> None:
+    def append_entry(self, entry: Step) -> None:
         """As ``DocumentStore.append_entry``, in memory."""
         self.calls.append("append_entry")
         self.entries[entry.rev] = entry
@@ -59,7 +59,7 @@ class MemoryStore:
     def rewrite(self, log: CommandLog, chat: Sequence[ChatRecord]) -> None:
         """As ``DocumentStore.rewrite``, in memory: every entry of every line, the chat, no snapshot."""
         self.calls.append("rewrite")
-        self.entries = {entry.rev: entry for name in log.branches for entry in log.line(name)}
+        self.entries = {entry.rev: entry for name in log.branches for entry in log.steps_of(name)}
         self.chat = list(chat)
         self.snapshots.clear()
 

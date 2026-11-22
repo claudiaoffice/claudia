@@ -8,7 +8,7 @@ const WELCOME: Welcome = {
   role: 'owner',
   doc: 'essay',
   app: 'composes',
-  line: 'main',
+  branch: 'main',
   revision: 'main:2',
   id: 1,
   color: '#e6194b',
@@ -16,7 +16,7 @@ const WELCOME: Welcome = {
   presence: [],
   checkpoints: [],
   limits: { max_text: 32767 },
-  lines: [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
+  branches: [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
   proposal: null,
   returned: null,
 }
@@ -50,14 +50,14 @@ class FakeLink implements LinkLike {
 const BODY = { id: 'body', name: 'Body text', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }
 const object = (id: string, kind = 'image') => ({
   id, kind, w: 400, h: 200, style: 'plain-image', paragraph: null, ref: null, imported: null,
-  rotation: 0, snap: false, anchor: { kind: 'block', container: 'b1', offset: 0 },
+  rotation: 0, snap: false, anchor: { kind: 'paragraph', holder: 'b1', offset: 0 },
 })
 
 async function opened() {
   const link = new FakeLink()
   const done = () => ({ revision: 'main:3' })
   link.handlers = {
-    blocks: () => ({ revision: 'main:2', styles: [BODY], blocks: [{ id: 'b1', style: 'body', text: 'a😀b', runs: [] }, { id: 'b2', style: 'body', text: 'two', runs: [] }], lists: [], schemes: [] }),
+    paragraphs: () => ({ revision: 'main:2', styles: [BODY], paragraphs: [{ id: 'b1', style: 'body', text: 'a😀b', runs: [] }, { id: 'b2', style: 'body', text: 'two', runs: [] }], lists: [], schemes: [] }),
     suggestions: () => [],
     style_model: () => STYLE_MODEL,
     palette: () => ({ type: 'palette', roles: [], readings: [] }),
@@ -65,7 +65,7 @@ async function opened() {
     chat_log: () => [],
     checkpoints: () => [],
     history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
-    lines: () => [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
+    branches: () => [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
     restore_policy: () => ({ policy: 'consensus' }),
     objects: () => ({ revision: 'main:2', objects: [object('o1'), object('t1', 'table')] }),
     move_object: done,
@@ -83,14 +83,14 @@ async function opened() {
 describe('the floating objects of a text, as the object interaction asks for them (D1221)', () => {
   it('hangs an object from another character and floats it at an offset, in the units the server counts', async () => {
     const { link, session } = await opened()
-    expect(await session.moveObject('o1', { block: 'b1', offset: 3 }, { dx: 40, dy: -12 })).toBe(true)
+    expect(await session.moveObject('o1', { paragraph: 'b1', offset: 3 }, { dx: 40, dy: -12 })).toBe(true)
     // the page counts UTF-16 units, the server characters: the emoji is one character there
-    expect(link.last('move_object')).toEqual({ id: 'o1', block: 'b1', offset: 2, dx: 40, dy: -12, base: 'main:2' })
+    expect(link.last('move_object')).toEqual({ id: 'o1', paragraph: 'b1', offset: 2, dx: 40, dy: -12, base: 'main:2' })
   })
   it('leaves the offset out when it is not given, so the server keeps what the object has', async () => {
     const { link, session } = await opened()
-    await session.moveObject('o1', { block: 'b2', offset: 0 })
-    expect(link.last('move_object')).toEqual({ id: 'o1', block: 'b2', offset: 0, base: 'main:2' })
+    await session.moveObject('o1', { paragraph: 'b2', offset: 0 })
+    expect(link.last('move_object')).toEqual({ id: 'o1', paragraph: 'b2', offset: 0, base: 'main:2' })
   })
   it('turns an object to a whole number of degrees', async () => {
     const { link, session } = await opened()

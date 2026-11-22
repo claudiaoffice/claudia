@@ -624,7 +624,7 @@ def define_diagram(doc, **changes):
 
 
 def fill_table(doc, sheet="s1"):
-    """A header row (East, West) and a header column (Jan, Feb) around a 2x2 block of numbers."""
+    """A header row (East, West) and a header column (Jan, Feb) around a 2x2 paragraph of numbers."""
     typed(
         doc,
         sheet,

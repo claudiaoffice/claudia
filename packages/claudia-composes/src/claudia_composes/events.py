@@ -17,7 +17,7 @@ from .runs import Run, runs_to_data
 class TextChanged:
     """``removed`` characters at ``offset`` of a paragraph were replaced by ``inserted``, written as ``runs``."""
 
-    block: str
+    paragraph: str
     offset: int
     removed: int
     inserted: str
@@ -27,7 +27,7 @@ class TextChanged:
         """The plain-data form of the event, as sent to clients."""
         return {
             "type": "text",
-            "block": self.block,
+            "paragraph": self.paragraph,
             "offset": self.offset,
             "removed": self.removed,
             "inserted": self.inserted,
@@ -36,81 +36,87 @@ class TextChanged:
 
 
 @dataclass(frozen=True)
-class BlockSplit:
-    """The paragraph ``block`` was cut at ``offset``; the rest is the new paragraph ``new_id``, right after it."""
+class ParagraphSplit:
+    """The paragraph ``paragraph`` was cut at ``offset``; the rest is the new paragraph ``new_id``, right after it."""
 
-    block: str
+    paragraph: str
     offset: int
     new_id: str
     style: str
 
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
-        return {"type": "split", "block": self.block, "offset": self.offset, "new_id": self.new_id, "style": self.style}
+        return {
+            "type": "split",
+            "paragraph": self.paragraph,
+            "offset": self.offset,
+            "new_id": self.new_id,
+            "style": self.style,
+        }
 
 
 @dataclass(frozen=True)
-class BlocksJoined:
-    """The paragraph ``block`` was put at the end of ``into``, whose text was ``at`` characters long."""
+class ParagraphsJoined:
+    """The paragraph ``paragraph`` was put at the end of ``into``, whose text was ``at`` characters long."""
 
-    block: str
+    paragraph: str
     into: str
     at: int
 
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
-        return {"type": "join", "block": self.block, "into": self.into, "at": self.at}
+        return {"type": "join", "paragraph": self.paragraph, "into": self.into, "at": self.at}
 
 
 @dataclass(frozen=True)
 class StyleChanged:
-    """The paragraph ``block`` has another style."""
+    """The paragraph ``paragraph`` has another style."""
 
-    block: str
+    paragraph: str
     style: str
 
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
-        return {"type": "style", "block": self.block, "style": self.style}
+        return {"type": "style", "paragraph": self.paragraph, "style": self.style}
 
 
 @dataclass(frozen=True)
 class ItemChanged:
-    """The paragraph ``block`` is now this list item, or (``None``) no list item."""
+    """The paragraph ``paragraph`` is now this list item, or (``None``) no list item."""
 
-    block: str
+    paragraph: str
     item: ListItem | None
 
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
-        return {"type": "item", "block": self.block, "item": None if self.item is None else self.item.to_data()}
+        return {"type": "item", "paragraph": self.paragraph, "item": None if self.item is None else self.item.to_data()}
 
 
 @dataclass(frozen=True)
 class FieldsPut:
-    """The paragraph ``block`` has these fields at its U+FFFC now (a reference put in, taken out or shown otherwise).
-    What they read as comes as a ``fields`` event."""
+    """The paragraph ``paragraph`` has these fields at its U+FFFC now (a reference put in, taken out or shown
+    otherwise). What they read as comes as a ``fields`` event."""
 
-    block: str
+    paragraph: str
     fields: tuple[Field, ...]
 
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
-        return {"type": "block_fields", "block": self.block, "fields": [f.to_data() for f in self.fields]}
+        return {"type": "paragraph_fields", "paragraph": self.paragraph, "fields": [f.to_data() for f in self.fields]}
 
 
 @dataclass(frozen=True)
-class BlockGenerated:
-    """The paragraph ``block`` is now a table of contents with these options, or (``None``) a plain paragraph again.
+class ParagraphGenerated:
+    """The paragraph ``paragraph`` is now a table of contents with these options, or (``None``) a plain paragraph again.
     Its entries come as a ``generated`` event."""
 
-    block: str
+    paragraph: str
     generated: Generated | None
 
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
         options = None if self.generated is None else self.generated.to_data()
-        return {"type": "block_generated", "block": self.block, "generated": options}
+        return {"type": "paragraph_generated", "paragraph": self.paragraph, "generated": options}
 
 
 @dataclass(frozen=True)

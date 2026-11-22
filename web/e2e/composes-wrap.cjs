@@ -33,7 +33,7 @@ async function open(browser, [user, password], create) {
 
 // The text of the paragraphs: what the model holds, without what only the screen shows (carets, previews of suggestions)
 const textOf = () =>
-  [...document.querySelectorAll('[data-testid=text] [data-block]')].map((e) => {
+  [...document.querySelectorAll('[data-testid=text] [data-paragraph]')].map((e) => {
     const copy = e.cloneNode(true)
     copy.querySelectorAll('[data-skip]').forEach((x) => x.remove())
     return copy.textContent
@@ -94,7 +94,7 @@ const objectIds = (page) => page.$$eval('[data-object]', (els) => els.map((e) =>
 
     // ---- a text box goes into the text above and below the words, as D1061 has it
     await menu(ann, 'Edit', 'Text Box')
-    await ann.waitForSelector('[data-testid=containers] [data-object]')
+    await ann.waitForSelector('[data-testid=object-layer] [data-object]')
     const [box] = await objectIds(ann)
     assert.ok(box, 'a text box was made')
     await ann.waitForSelector('[data-testid=text] .wrap-float')
@@ -107,12 +107,12 @@ const objectIds = (page) => page.$$eval('[data-object]', (els) => els.map((e) =>
     // ---- Format ▸ Wrap Text: the one key goes round the modes (over, around, above and below, behind, over)
     await ann.locator(`[data-object="${box}"]`).focus()
     await ann.keyboard.press('Control+Alt+r') // above and below -> behind
-    await ann.waitForSelector('[data-testid=containers-behind] [data-object]')
+    await ann.waitForSelector('[data-testid=object-layer-behind] [data-object]')
     assert.equal(await ann.locator('[data-testid=text] .wrap-float').count(), 0, 'behind: nothing takes room')
     await ann.waitForFunction(
       (id) => {
         const o = document.querySelector(`[data-object="${id}"]`).getBoundingClientRect()
-        const first = document.querySelector('[data-testid=text] [data-block]').getBoundingClientRect()
+        const first = document.querySelector('[data-testid=text] [data-paragraph]').getBoundingClientRect()
         return o.top < first.top + 40 // the words are back under it, where the room was
       },
       box,
@@ -120,16 +120,16 @@ const objectIds = (page) => page.$$eval('[data-object]', (els) => els.map((e) =>
     assert.ok((await overlapping(ann, box, 0)) > 0, 'behind: the words run over it')
     // Ctrl held: the object behind the words can be taken hold of, and the pointer says so
     await ann.keyboard.down('Control')
-    await ann.waitForSelector('[data-testid=containers-behind].grab')
+    await ann.waitForSelector('[data-testid=object-layer-behind].grab')
     const cursor = await ann.locator(`[data-object="${box}"]`).evaluate((e) => getComputedStyle(e).cursor)
     assert.equal(cursor, 'grab')
     await ann.keyboard.up('Control')
-    assert.equal(await ann.locator('[data-testid=containers-behind].grab').count(), 0, 'without Ctrl the words have the press')
+    assert.equal(await ann.locator('[data-testid=object-layer-behind].grab').count(), 0, 'without Ctrl the words have the press')
     log2('behind and Ctrl: ok')
 
     await ann.locator(`[data-object="${box}"]`).focus()
     await ann.keyboard.press('Control+Alt+r') // behind -> over
-    await ann.waitForSelector('[data-testid=containers] [data-object]')
+    await ann.waitForSelector('[data-testid=object-layer] [data-object]')
     assert.equal(await ann.locator('[data-testid=text] .wrap-float').count(), 0)
     await ann.locator(`[data-object="${box}"]`).focus()
     await ann.keyboard.press('Control+Alt+r') // over -> around
@@ -145,17 +145,17 @@ const objectIds = (page) => page.$$eval('[data-object]', (els) => els.map((e) =>
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
       'base64',
     )
-    await ann.locator('[data-testid=text] [data-block]').nth(1).click()
+    await ann.locator('[data-testid=text] [data-paragraph]').nth(1).click()
     await ann.keyboard.press('Home')
     await menu(ann, 'Edit', 'Image')
     await ann.setInputFiles('.modal input[type=file]', { name: 'dot.png', mimeType: 'image/png', buffer: png })
     await ann.fill('.modal .field input', 'A small picture')
     await ann.click('.modal button[type=submit]')
-    await ann.waitForFunction(() => document.querySelectorAll('[data-testid=containers] [data-object]').length === 2)
-    await ann.locator('[data-testid=text] [data-block]').nth(2).click()
+    await ann.waitForFunction(() => document.querySelectorAll('[data-testid=object-layer] [data-object]').length === 2)
+    await ann.locator('[data-testid=text] [data-paragraph]').nth(2).click()
     await ann.keyboard.press('Home')
     await menu(ann, 'Edit', 'Rectangle')
-    await ann.waitForFunction(() => document.querySelectorAll('[data-testid=containers] [data-object]').length === 3)
+    await ann.waitForFunction(() => document.querySelectorAll('[data-testid=object-layer] [data-object]').length === 3)
     await ann.waitForTimeout(800)
     const all = await objectIds(ann)
     assert.equal(all.length, 3)
@@ -176,7 +176,7 @@ const objectIds = (page) => page.$$eval('[data-object]', (els) => els.map((e) =>
     log2('scrolling: ok')
 
     // ---- and typing goes on: the words stay where they are, nothing of the boxes gets into the text
-    await ann.locator('[data-testid=text] [data-block]').nth(0).click()
+    await ann.locator('[data-testid=text] [data-paragraph]').nth(0).click()
     await ann.keyboard.press('Control+Home')
     await ann.keyboard.type('typed on ')
     for (let tries = 0; tries < 50 && !(await paragraphs(ann))[0].startsWith('typed on '); tries++) await ann.waitForTimeout(100)

@@ -1,4 +1,4 @@
-"""claudia-render: rendered text containers of a Claudia server (D390-D396)."""
+"""claudia-render: the containers of a Claudia server (D390-D396)."""
 
 from ._version import __version__
 from .builtin import builtin_registry

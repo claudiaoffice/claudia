@@ -23,6 +23,7 @@ from typing import ClassVar, Self, TypeIs, cast
 
 from claudia_core import (
     OBJECT_KINDS,
+    AssetKind,
     Command,
     CommandRegistry,
     DocumentModel,
@@ -38,6 +39,7 @@ from claudia_core import (
     builtin_palette,
     new_registry,
 )
+from claudia_core.asset_store import DIAGRAM
 
 from .calc import Calculator
 from .cellstyles import CellStyles, Piece
@@ -103,20 +105,20 @@ class CellAnchor:
     col: int
 
     @property
-    def container(self) -> str:
+    def holder(self) -> str:
         """The sheet this object belongs to."""
         return str(self.sheet)
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores and clients are sent."""
-        return {"kind": self.kind, "container": str(self.sheet), "row": self.row, "col": self.col}
+        return {"kind": self.kind, "holder": str(self.sheet), "row": self.row, "col": self.col}
 
     @classmethod
     def from_data(cls, data: dict) -> CellAnchor:
         """Read an anchor sent by a client or stored in the log; ``ValueError`` if it is not one."""
         if data.get("kind") != cls.kind:
             raise ValueError(f"computes knows only cell anchors, not {data.get('kind')!r}")
-        sheet, row, col = data.get("container"), data.get("row"), data.get("col")
+        sheet, row, col = data.get("holder"), data.get("row"), data.get("col")
         if not isinstance(sheet, str) or not _is_whole(row) or not _is_whole(col):
             raise ValueError("a cell anchor names a sheet and whole row and col")
         return cls(SheetId(sheet), row, col)
@@ -432,7 +434,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 8: the workbook carries the seed and draw number of its random numbers (E6.22, D291)
     # 9: object bodies carry a description
     # 10: the workbook carries its named number formats (D378)
-    # 11: rendered text containers (D390)
+    # 11: containers (D390)
     # 12: how it is printed, and its language (E6.19, D1001)
     # 13: names have ids (D552)
     state_schema: ClassVar[int] = (
@@ -443,7 +445,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
-    max_objects_per_container: ClassVar[int] = MAX_OBJECTS_PER_SHEET
+    max_objects_per_holder: ClassVar[int] = MAX_OBJECTS_PER_SHEET
 
     def __init__(
         self,
@@ -509,10 +511,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             "sheets": [sheet.to_data() for sheet in self.sheets.values()],
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
-            "shapes": self.shapes_to_data(),
-            "images": self.images_to_data(),
-            "diagrams": self.diagrams_to_data(),
-            "renderings": self.renderings_to_data(),
+            **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
             "objects": self.objects_to_data(),
             "charts": [chart.to_data() for chart in self.charts.values()],
             "names": self.names.to_data(),
@@ -535,10 +534,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             sheet.col_widths = dict(item["col_widths"])
             sheet.cell_styles = CellStyles.from_data(item["cell_styles"])  # no upcast before the first release (D308)
             model.sheets[sheet.id] = sheet
-            model.open_container(str(sheet.id))
-        model.restore_objects(
-            state["objects"], state["images"], state["shapes"], state["diagrams"], state.get("renderings", ())
-        )
+            model.open_holder(str(sheet.id))
+        model.restore_objects(state["objects"], state)
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
         model.thing_descriptions = dict(state.get("descriptions", {}))  # (schema 15 and earlier: nothing written)
@@ -595,9 +592,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
 
     def _blank_chart(self, chart: Chart) -> None:
         if chart.spec_id in self.diagrams:
-            self.diagrams[chart.spec_id] = ChartSpec.from_data(
-                self.blank_diagram(self.diagrams[chart.spec_id].to_data())
-            )
+            self.diagrams.put(ChartSpec.from_data(self.blank_diagram(self.diagrams[chart.spec_id].to_data())))
 
     def load_state(self, state: dict) -> None:
         """As :meth:`~claudia_core.DocumentModel.load_state`, and the calculator then works for this workbook."""
@@ -623,7 +618,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         ]
         return [*ranges, *ObjectModel.restyle_users(self, old, new)]
 
-    def containers(self) -> list[str]:
+    def holders(self) -> list[str]:
         """The sheets objects may sit on, in order."""
         return [str(sheet) for sheet in self.sheets]
 
@@ -659,11 +654,13 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             raise ValueError("a chart's range must be inside the sheet")
         return spec
 
-    def users_of_diagram(self, diagram_id: str) -> list[str]:
-        """As the shared check (floating objects), plus any chart tab showing this diagram (E6.6): a tab is a
-        user of a diagram definition exactly as an object anchored to one is, so ``forget_diagram`` refuses
-        while either kind of user remains."""
-        return [*super().users_of_diagram(diagram_id), *(c.id for c in self.charts.values() if c.spec_id == diagram_id)]
+    def users_of(self, kind: AssetKind, asset_id: str) -> list[str]:
+        """As the shared answer (floating objects), plus any chart tab showing a diagram (E6.6): a tab is a user of a
+        diagram definition exactly as an object anchored to one is, so forgetting it is refused while either remains."""
+        users = super().users_of(kind, asset_id)
+        if kind is DIAGRAM:
+            users += [chart.id for chart in self.charts.values() if chart.spec_id == asset_id]
+        return users
 
     def charts_reading(self, sheet_id: SheetId) -> list[str]:
         """Ids of the diagram definitions whose range names ``sheet_id`` (E6.6): what ``RemoveSheet`` refuses
@@ -1232,7 +1229,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         ordered.insert(len(ordered) if index is None else index, sheet)
         self.sheets = {s.id: s for s in ordered}
         self._ids = None
-        self.open_container(str(sheet.id))
+        self.open_holder(str(sheet.id))
 
     def restructure(
         self, edit: StructuralEdit

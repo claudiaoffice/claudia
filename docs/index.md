@@ -13,12 +13,12 @@ server
 web
 linux-client
 shell-contract
-container-format
+document-file-format
 versioning
 api/claudia_core
 api/claudia_server
 api/claudia_ai
-api/claudia_container
+api/claudia_document_file
 api/claudia_creates
 api/claudia_file_writer
 api/claudia_fonts
@@ -30,7 +30,7 @@ api/apps
 contributing
 changelog
 changelog-server
-changelog-container
+changelog-document-file
 changelog-computes
 changelog-composes
 changelog-creates

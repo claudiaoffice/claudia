@@ -49,7 +49,7 @@ def insert_container(page, kind: str = "LaTeX") -> None:
 
 
 def body_font_px(page) -> float:
-    return page.eval_on_selector("[data-testid=text] [data-block]", "e => parseFloat(getComputedStyle(e).fontSize)")
+    return page.eval_on_selector("[data-testid=text] [data-paragraph]", "e => parseFloat(getComputedStyle(e).fontSize)")
 
 
 # ------------------------------------------------------------------------------------------------ making things
@@ -73,10 +73,10 @@ def _write_formula(world, source):
     page.keyboard.type("Some words in the body text, then a formula.")
     insert_container(page)
     page.dblclick(OBJECT)
-    page.wait_for_selector("[data-testid=rendered-editor] textarea")
+    page.wait_for_selector("[data-testid=container-editor] textarea")
     page.keyboard.type(source)
     page.keyboard.press("Control+Enter")
-    face = page.locator(f"{OBJECT} [data-testid=rendered-face]").first
+    face = page.locator(f"{OBJECT} [data-testid=container-face]").first
     end = time.monotonic() + DRAWN_WITHIN_S
     while time.monotonic() < end:
         if face.locator("img").count():
@@ -93,7 +93,7 @@ def _write_formula(world, source):
 @when("I insert a LaTeX container in the middle of the first line")
 def _container_in_line(world):
     page = world.ann.page
-    first = page.locator("[data-testid=text] [data-block]").first.bounding_box()
+    first = page.locator("[data-testid=text] [data-paragraph]").first.bounding_box()
     page.mouse.click(first["x"] + first["width"] / 2, first["y"] + 8)
     insert_container(page)
     page.keyboard.press("Escape")
@@ -113,7 +113,7 @@ def _inserted(world, kind):
     page.keyboard.type("Some words so that there is something below an object. " * 3)
     page.wait_for_timeout(400)
     # the middle of the first line: the object has room on both sides to grow into
-    first = page.locator("[data-testid=text] [data-block]").first.bounding_box()
+    first = page.locator("[data-testid=text] [data-paragraph]").first.bounding_box()
     page.mouse.click(first["x"] + first["width"] * 0.4, first["y"] + 8)
     if kind == "LaTeX container":
         insert_container(page)
@@ -209,7 +209,7 @@ def _proportions(world):
 def _no_label(world, label):
     page = world.ann.page
     shown = page.eval_on_selector(
-        f"{OBJECT} [data-testid=rendered-face] .type",
+        f"{OBJECT} [data-testid=container-face] .type",
         """e => { const s = getComputedStyle(e)
                   return s.display !== 'none' && s.visibility !== 'hidden' && s.opacity !== '0' }""",
     )
@@ -222,8 +222,8 @@ def _no_word_under(world):
     under = page.evaluate(
         """() => {
           const o = document.querySelector('[data-object]').getBoundingClientRect()
-          const block = document.querySelector('[data-testid=text] [data-block]')
-          const walk = document.createTreeWalker(block, NodeFilter.SHOW_TEXT)
+          const paragraph = document.querySelector('[data-testid=text] [data-paragraph]')
+          const walk = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT)
           const hit = []
           for (let n = walk.nextNode(); n; n = walk.nextNode()) {
             if (n.parentElement.closest('[data-skip]')) continue

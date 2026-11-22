@@ -36,8 +36,8 @@ export function isDescribed(o: Describable): boolean {
 /** What a screen reader says for an object: its kind, then its description, or its words if it has no description;
  * a decoration says so, and a picture or a chart that is not described says that, instead of an empty name. */
 export function objectName(o: Describable, parts: { shape?: string; words?: string } = {}): string {
-  // A rendered text container (D390) is shown as the picture its renderer drew: its source text is no name for it.
-  const picture = o.kind === 'image' || o.kind === 'rendered'
+  // A container (D390) is shown as the picture its renderer drew: its source text is no name for it.
+  const picture = o.kind === 'image' || o.kind === 'container'
   const kind = picture ? t('Picture') : o.kind === 'diagram' ? t('Chart') : o.kind === 'text' ? t('Text box') : (parts.shape ?? t('Shape'))
   if (o.decorative) return t('{kind} (decorative)', { kind })
   const said = pictureAlt(o).trim() || (picture || o.kind === 'diagram' ? '' : (parts.words ?? '').trim())

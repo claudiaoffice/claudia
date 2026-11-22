@@ -66,7 +66,7 @@ def _two(world, first, second):
 
 def put_caret(world, text: str, key: str, offset: int) -> None:
     page = world.ann.page
-    page.click(f'[data-testid=text] [data-block]:has-text("{text}")')
+    page.click(f'[data-testid=text] [data-paragraph]:has-text("{text}")')
     page.keyboard.press(key)
     # the page has taken the caret where it was put before the next key (a person is not faster than that)
     eventually(lambda: _equal(world.ann.caret(), (text, offset)))

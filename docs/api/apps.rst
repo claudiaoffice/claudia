@@ -159,7 +159,7 @@ composes
 
 .. automodule:: claudia_composes
    :members:
-   :exclude-members: AddObject, DefineImage, DefineShape, DeleteText, Field, DescribeObject, ForgetImage, ForgetShape, InsertText, LabelsChanged, LanguageChanged, LanguageError, MoveObject, ObjectBody, ObjectSet, PAPERS, PageSetup, PageSetupError, Paragraph, RemoveObject, ResizeObject, RotateObject, Run, SetLanguage, SetParagraph, SetParagraphStyle, SetSnap, SetText, TextCommand, VisualObject, normalize_language, paragraph_for
+   :exclude-members: AddObject, DeleteText, Field, DescribeObject, InsertText, LabelsChanged, LanguageChanged, LanguageError, MoveObject, ObjectBody, ObjectSet, PAPERS, PageSetup, PageSetupError, Paragraph, RemoveObject, ResizeObject, RotateObject, Run, SetLanguage, SetParagraph, SetParagraphStyle, SetSnap, SetText, TextCommand, VisualObject, normalize_language, paragraph_for
 
 .. automodule:: claudia_composes.anchors
    :no-members:
@@ -171,8 +171,8 @@ composes
 .. currentmodule:: claudia_composes
 
 The page setup and the language (``PageSetup``, ``SetLanguage`` and the rest) are :doc:`claudia_core`'s and
-re-exported here (D917). ``BlockAnchor`` is documented with the rest of the package above. ``TextObject`` is ``VisualObject[BlockAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor
-(E10.16, D179). Unlike a sheet anchor, a block anchor follows the text.
+re-exported here (D917). ``ParagraphAnchor`` is documented with the rest of the package above. ``TextObject`` is ``VisualObject[ParagraphAnchor]``: a shared :class:`~claudia_core.ObjectBody` and that anchor
+(E10.16, D179). Unlike a sheet anchor, a paragraph anchor follows the text.
 
 Import/export
 ~~~~~~~~~~~~~~
