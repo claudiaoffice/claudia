@@ -21,7 +21,7 @@ Agreed with the owner on 2026-11-22 (see "Agreed").
   app allows it (`objects_change_holder`, composes only). `Batch` makes several commands one undo step.
 - `SlideCanvas.vue` takes creates' `SlideSession`; besides the shared `BaseSession` it uses `select`, `move`, `resize`,
   `objectsOn`, `addImage`, `selectedByOthers`, and the creates-only `markOf`, `agendaOf`, `setSnap`, `fenceToContainer`.
-- Copy and paste is for pictures only, so no chart is ever copied. Nothing in the UI reorders or deletes a tab (UX-64).
+- Copy and paste is for pictures only, so no chart is ever copied. Nothing in the UI reorders or deletes a tab (UX-68).
 
 ## The model
 
@@ -202,7 +202,7 @@ objects on it, scaled from 1600 × 900 to today's `TAB_SIZE`; the charts are wri
 loss `slide` replaces `tab`. Import is unchanged: what was a slide comes back as a sheet (Q15).
 
 **A10 · No reordering of tabs.** Nothing in the UI reorders a sheet today; the one tab order comes without a way to move
-a tab, and a new slide goes after the current tab. Reordering waits, as deleting a tab does (UX-64).
+a tab, and a new slide goes after the current tab. Reordering waits, as deleting a tab does (UX-68).
 
 Untouched: the GTK and Neutralino clients (they show the web page; no new menu entry), the ai (no chart tools), the help
 (no chart topic; one would be a story of its own).
