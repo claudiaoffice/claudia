@@ -2576,3 +2576,13 @@ playwright install chromium`, or set $CLAUDIA_CHROMIUM)", or the same for Firefo
 (5 failed → 5 skipped); a fixture's reaction to a missing browser is not worth a test of its own. Escaped because: the
 fixture launched the browser itself and did not share `test_greeting.py`'s check.
 
+### PROC-49 · `./run-e2e.sh regression` stopped after the shared servers with "port 8766 is in use" · P2 · size 2 · fixed 2026-11-22
+**Measured** (2026-11-22, `main` at `f216c15` and the branch): every full local run ended with exit 2 after the scripts
+against the three shared servers, before the scripts with servers of their own, the fonts server and the client
+windows. Nothing listened on 8766: the runner's port check bound a socket without `SO_REUSEADDR`, which Linux refuses
+while the stopped server's connections wait in TIME_WAIT; the server itself (uvicorn) binds with it and would have
+started. CI never noticed because it started its servers by hand; with D1452 CI runs the runner, so this had to be fixed
+here. **Fixed:** `_free` sets `SO_REUSEADDR` (not on Windows, where it would let the probe share a listening port).
+**Test:** `tests/test_run_e2e.py`, red before, green after. Escaped because: test not run (nobody ran the whole local
+regression to its end; the summary was never printed).
+

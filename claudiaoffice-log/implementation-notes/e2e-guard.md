@@ -31,6 +31,10 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
   hand-written server start and the 30 `npm run e2e…` lines are gone.
 * `tests/test_ci_workflow.py`: `test_every_browser_script_of_the_web_app_is_in_the_one_list` and
   `test_ci_runs_the_browser_scripts_through_the_one_list` replace the old grep of `ci.yml` (PROC-19's test).
+* `scripts/run_e2e.py`, after the code review: `_record` says whether its command passed (the window scripts run only
+  when their build did); `_stop_on_ci` makes a missing browser or font a stop on CI; `_free` probes a port with
+  `SO_REUSEADDR` except on Windows (PROC-49, `tests/test_run_e2e.py`). `tests/conftest.py` (new) loads the runner once
+  for the three tests that read it.
 * `tests/e2e/specs/conftest.py` (PROC-48): `_launch(play)` picks the browser; the `browser` fixture skips with a reason
   when Playwright cannot start it.
 * Docs: `specs/README.md` (the `@draft` tag; "every file is run, or says why not"), `specs/running.md` (one list, what
@@ -40,8 +44,15 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
 
 * A tag on the `Feature:` line counts for all scenarios (pytest-bdd and the README already read it that way).
 * The `@pending:<id>` check only looks at ids that name a story file; ids like `N2` (an owner's answer) are left alone.
-* CI's job time: the job did the same work before (it already ran `objects.cjs` and both windows); the runner adds the
-  `npm ci` of `clients/neutralino` in setup, which the windows steps did before too. The limit stays 30 minutes.
+* `scenario(file, name)` binds one scenario, so it does not count as binding a file; only `scenarios(...)` does.
+* CI's job time: the job did the same work before (it already ran `objects.cjs` and both windows, 14 minutes on
+  2026-11-22); the runner adds nothing the old steps did not do. The limit stays 30 minutes.
+
+## Not done, from the code review
+
+* The specs did not get a CI job of their own (WP2.4 of the plan): not needed at today's 14 minutes.
+* `Script.runs` stays a string with four named groups rather than a type of its own: one module uses it.
+* `_admin_fonts` still waits 10 s for its server to stop without killing it (as before).
 
 ## What could not be run here
 

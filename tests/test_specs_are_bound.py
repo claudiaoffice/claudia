@@ -11,9 +11,7 @@ nothing checks, and nobody notices. On 2026-11-21 four files ran nowhere. A file
 
 from __future__ import annotations
 
-import importlib.util
 import re
-import sys
 from pathlib import Path
 
 from gherkin.parser import Parser
@@ -36,7 +34,8 @@ HOW_TO_FIX = (
     " checks it (@unit:<path>, @io:<path>, @e2e:<script>); or, while the owner has not approved it yet, put @draft on"
     " its Feature: line (claudiaoffice-log/specs/README.md, Tags)."
 )
-_BINDING = re.compile(r"""\bscenarios?\(\s*["']([^"']+\.feature)["']""")
+# scenarios(...) binds a whole file; scenario(file, name) binds one scenario and does not count
+_BINDING = re.compile(r"""\bscenarios\(\s*["']([^"']+\.feature)["']""")
 
 
 def _feature(path: Path) -> dict:
@@ -139,24 +138,14 @@ def _all_tags() -> set[str]:
     return found
 
 
-def _regression_scripts() -> set[str]:
-    """The web/e2e scripts ``./run-e2e.sh regression`` runs, which CI runs too (D1452)."""
-    spec = importlib.util.spec_from_file_location("run_e2e", ROOT / "scripts" / "run_e2e.py")
-    assert spec and spec.loader
-    run_e2e = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = run_e2e  # its dataclasses look themselves up there
-    spec.loader.exec_module(run_e2e)
-    return {script.name for script in run_e2e.SCRIPTS}
-
-
-def test_a_test_tag_names_a_test_that_exists_and_is_run():
-    scripts = _regression_scripts()
+def test_a_test_tag_names_a_test_that_exists_and_is_run(run_e2e):
+    """``@e2e:<script>`` must name a script of ``SCRIPTS``, which ``./run-e2e.sh regression`` and CI run (D1452)."""
+    scripts = {script.name for script in run_e2e.SCRIPTS}
     wrong = []
     for tag in sorted(t for t in _all_tags() if t.startswith(TEST_TAGS)):
         kind, target = tag[1:].split(":", 1)
         if kind == "e2e":
-            stem = target.removesuffix(".cjs")
-            name = "demo" if stem == "demo" else stem
+            name = target.removesuffix(".cjs")
             if not (ROOT / "web" / "e2e" / target).is_file():
                 wrong.append(f"{tag}: there is no web/e2e/{target}")
             elif name not in scripts:

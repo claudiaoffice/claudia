@@ -19,7 +19,7 @@ You need `uv` and Node 22 (or newer) with `npm`; the script says what to install
 |---|---|---|
 | `./run-e2e.sh core` | the specs tagged `@core` (the journeys that must always work) | a few minutes once built |
 | `./run-e2e.sh extended` | `@core` and `@extended`: everything in `specs/` that is not waiting for a decision | longer |
-| `./run-e2e.sh regression` | exactly what CI's end-to-end job runs: `tests/e2e` (with the specs), every Node script of `web/e2e`, the Windows and macOS client's window | about 40 minutes |
+| `./run-e2e.sh regression` | exactly what CI's end-to-end job runs: `tests/e2e` (with the specs), every Node script of `web/e2e`, the Windows and macOS client's window | about 15 minutes in CI; `--list` gives rough minutes per script |
 | `./run-e2e.sh all` | regression, then every spec | the sum |
 | `./run-e2e.sh --list` | what there is, with the number of scenarios counted from the files | a few seconds |
 

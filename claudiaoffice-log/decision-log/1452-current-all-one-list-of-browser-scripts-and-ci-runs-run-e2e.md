@@ -27,6 +27,9 @@ the two client-window scripts ran only in CI, so "use it before delivery" on a c
   browser script outside `./run-e2e.sh`.
 - `./run-e2e.sh --list` counts the spec scenarios by collecting them, so its numbers cannot go stale (PROC-46).
 
-**Consequences.** CI now also tests the runner's setup. Its screenshots and the logs of every script are kept when the
-job fails. A failing script no longer stops the ones after it: the runner runs all and fails at the end, so one red
-script does not hide the next (the lesson of 2026-11-21).
+**Consequences.** CI now also tests the runner's setup. On CI (`$CI` set) a browser that cannot be installed or fonts
+that cannot be fetched stop the run, because on a computer they only cost some tests (which then skip, PROC-48) and a
+green CI job must not rest on skips. Screenshots and the logs of every script are kept when the job fails. A failing
+script no longer stops the ones after it: the runner runs all and fails at the end, so one red script does not hide the
+next (the lesson of 2026-11-21); a server that does not start still stops the run. The runner's port check had kept
+every full run from getting past the shared servers (PROC-49); fixed here, since CI depends on it now.

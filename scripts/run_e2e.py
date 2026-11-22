@@ -83,7 +83,7 @@ START_SECONDS = 90
 SHARED = ("computes", "composes", "creates", "all")
 OWN = "own"
 FONTS = "fonts"
-WINDOWS = ("windows", "macos")
+CLIENT_WINDOWS = ("windows", "macos")
 
 
 @dataclass(frozen=True)
@@ -96,6 +96,7 @@ class Script:
 
     @property
     def npm(self) -> str:
+        """The name of its npm script in web/package.json."""
         return "e2e" if self.name == "demo" else f"e2e:{self.name}"
 
 
@@ -250,11 +251,18 @@ class Runner:
                 )
                 for line in log.read_text(errors="replace").splitlines()[-4:]:
                     self.say("   | " + line)
+                self._stop_on_ci(f"the browsers for {label} Playwright are not installed")
         if sys.platform.startswith("linux"):
             self.say(
                 "   On Linux a browser may still fail to start for want of system libraries. If it does, run once:"
             )
             self.say(f"   sudo {sys.executable} -m playwright install-deps {' '.join(names)}")
+
+    def _stop_on_ci(self, what: str) -> None:
+        """On a computer a missing browser or font costs only some tests, and the run says which. On CI (``$CI`` is set)
+        it is a broken setup: skipped tests must not make a green job, so the run stops (D1452)."""
+        if os.environ.get("CI") and not self.args.dry_run:
+            raise Failure(f"{what}; on CI that stops the run.")
 
     def _assets(self) -> None:
         for name, module in (
@@ -268,11 +276,17 @@ class Runner:
             self.say(f"{name}: fetching (the print tests need them)")
             if self.do([sys.executable, *module, str(target)]):
                 self.say(f"   could not fetch {name} (offline?). Everything but the print tests will still run.")
+                self._stop_on_ci(f"the {name} could not be fetched")
 
     # ------------------------------------------------------------------ servers
 
     def _free(self, port: int) -> bool:
+        """Free if a server could listen on it now. Like the server, the probe may reuse a port whose old connections
+        still wait in TIME_WAIT (PROC-49); Windows allows that without being asked, and there the option would let
+        the probe share a port someone listens on."""
         with closing(socket.socket()) as probe:
+            if os.name != "nt":
+                probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
                 probe.bind(("127.0.0.1", port))
             except OSError:
@@ -361,13 +375,14 @@ class Runner:
 
     # ------------------------------------------------------------------ what to run
 
-    def _record(self, name: str, command: list[str], *, cwd: Path = ROOT, env: dict[str, str] | None = None) -> None:
+    def _record(self, name: str, command: list[str], *, cwd: Path = ROOT, env: dict[str, str] | None = None) -> bool:
+        """Run one command as one result of the summary; whether it passed (a dry run passes)."""
         log = self.logs / f"{name}.log"
         started = time.monotonic()
         code = self.do(command, cwd=cwd, env={"SHOTS": str(self.shots), **(env or {})}, log=log)
         seconds = time.monotonic() - started
         if self.args.dry_run:
-            return
+            return True
         self.results.append(Result(name, code == 0, seconds))
         if code:
             self.say(f"   FAILED ({seconds:.0f} s). Last lines of {log.relative_to(ROOT)}:")
@@ -379,6 +394,7 @@ class Runner:
             note = f": {summary}" if summary else ""
             self.results[-1].note = "skipped some" if "skipped" in summary else ""
             self.say(f"   ok ({seconds:.0f} s){note}")
+        return code == 0
 
     def regression(self) -> None:
         only = set(self.args.only or [])
@@ -413,7 +429,7 @@ class Runner:
             if script.runs == FONTS:
                 self.head("Server settings > Fonts (a server of its own on port 8768)")
                 self._admin_fonts(script)
-            elif script.runs in WINDOWS:
+            elif script.runs in CLIENT_WINDOWS:
                 self.head(f"{WHERE[script.runs]} (shell page, core, server and web app; Neutralino faked)")
                 self._client_window(script)
 
@@ -422,10 +438,8 @@ class Runner:
 
     def _client_window(self, script: Script) -> None:
         """A build behaves like its platform wherever it runs (D660), so both windows are tested on any computer."""
-        self._record(f"build-{script.runs}", ["npm", "run", "--silent", f"build:{script.runs}"], cwd=CLIENT)
-        if self.results and not self.results[-1].ok:
-            return
-        self._npm(script)
+        if self._record(f"build-{script.runs}", ["npm", "run", "--silent", f"build:{script.runs}"], cwd=CLIENT):
+            self._npm(script)
 
     def _admin_fonts(self, script: Script) -> None:
         self._need_ports([8768])
@@ -517,9 +531,9 @@ WHERE = {
 
 
 def listing() -> None:
-    minutes = sum(script.minutes for script in SCRIPTS)
-    print(f"regression (what CI runs; needs the web app built; about {minutes + 6} minutes in all)")
-    print("  pytest tests/e2e   three servers greeting, the grid, documents between servers, names; and the specs")
+    print("regression (what CI runs; needs the web app built; minutes are rough, CI takes about 15 in all)")
+    pytest_runs = "the three servers, the grid, documents between servers, names; the specs"
+    print(f"  {'pytest tests/e2e':<18} {pytest_runs:<52} ~8 min")
     for script in SCRIPTS:
         print(f"  {script.name:<18} {WHERE[script.runs]:<52} ~{script.minutes} min")
     print("\nspecs (claudiaoffice-log/specs, step code in tests/e2e/specs), counted from the files just now:")
