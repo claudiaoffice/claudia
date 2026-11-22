@@ -2432,7 +2432,7 @@ CODE-31 (how the history speaks). Related assumption of the same branch: a selec
 names the paragraph the object was in before the move. **Acceptance.** The entry names the object and, when it changes,
 the paragraph, in the user's language.
 
-### PROC-40 · Four spec files run nowhere · P2 · new, open
+### PROC-40 · Four spec files run nowhere · P2 · guarded 2026-11-22, three files still wait (see the round of 2026-11-22, E2E guard)
 **Measured** (2026-11-20): of the `.feature` files in `claudiaoffice-log/specs`, four are bound by no `scenarios(...)` in
 `tests/e2e/specs/` and none of their scenarios has `@unit:`, `@io:` or `@e2e:`: `objects/names.feature` (28 scenarios,
 `@pending:e1.13`), `container/requirements.feature` (6, `@pending:e1.9`), `invariants/objects-in-composes.feature` (12),
@@ -2533,3 +2533,46 @@ BITV divergence (visible focus, contrast and target size of the native control w
 the control is drawn as the "Select / native" variant to show it. **Acceptance.** Either a decision that native
 selects are the standard (and the other selects follow), or a styled select with the same keyboard behaviour; BITV
 check of the result.
+
+## Round of 2026-11-22 (E2E guard, branch `e2e-guard`, E11.8)
+
+From the tester review of 2026-11-21 (recommendations 1 and 2; the plan is `notes/e2e-rework-plan.md`). Measured on
+`main` at `f216c15` and on the branch.
+
+**PROC-40, re-measured.** `computes/pictures-in-files.feature` is not lost: its `Feature:` line carries
+`@io:packages/claudia-computes-io/tests/test_pictures.py`, which covers all five scenarios. Three approved files run
+nowhere: `objects/names.feature` (28), `document-file/requirements.feature` (6), `invariants/objects-in-composes.feature`
+(12); a fourth, `objects/the-same-in-all-three-apps.feature` (4), is a draft for the owner's review and now says so
+(`@draft`, D1451). `tests/test_specs_are_bound.py` (D1450) fails for any new file in that state; the three stand in its
+`NOT_BOUND_YET` with the story that binds each, and the entry has to go when that happens. PROC-40 is closed when the
+list is empty.
+
+### PROC-44 · `./run-e2e.sh regression` ran fewer browser scripts than CI · P2 · size 2 · fixed 2026-11-22
+**Measured** (2026-11-21, `d18c4e4`): the runner's lists named 27 scripts, CI's job 30; `objects.cjs` (the object
+contract of all three apps, D1221–D1230) and `windows-shell.cjs`, `macos-shell.cjs` ran only in CI. The `@e2e:objects.cjs`
+scenarios of `specs/objects/` were therefore "checked by" a script that "use it before delivery" never ran.
+**Fixed** (D1452): one list, `SCRIPTS` in `scripts/run_e2e.py`; CI runs `./run-e2e.sh setup` and `./run-e2e.sh
+regression`. **Test:** `tests/test_ci_workflow.py` (`web/package.json` and `SCRIPTS` agree; CI calls no script by
+itself) and `tests/test_specs_are_bound.py` (an `@e2e:` tag names a script the runner runs). Escaped because: two lists,
+and no test compared them.
+
+### PROC-46 · `./run-e2e.sh --list`, its help and `running.md` said the step code was not built · P3 · size 3 · fixed 2026-11-22
+**Measured** (2026-11-21): `--list` printed "specs (written, under review; step code not built yet)", the help said
+"core" and "extended" would stop, and `running.md` said "11 of 97" while 76 scenarios passed. **Fixed:** `--list`
+counts the scenarios by collecting them with pytest each time; the stale sentences are gone, and the dead branch of
+`specs()` for a missing `tests/e2e/specs` with them. Escaped because: hand-written counts.
+
+### PROC-47 · Firefox never runs in CI · P2 · size 2 · open
+**Measured** (2026-11-21): 20 scenarios are tagged `@firefox` and every `@core` scenario should be (specs/README.md),
+but CI installs and runs only Chromium; Firefox is the owner's main browser. Left for later on purpose (recommendation 3
+of the review, held back because of parallel work). **Fix.** A job that runs the `@firefox` scenarios on every push and
+every `@core` one nightly (proposal in `notes/e2e-rework-plan.md`, WP3).
+
+### PROC-48 · Without the browser, the spec scenarios failed instead of skipping · P3 · size 3 · fixed 2026-11-22
+**Measured:** with `$CLAUDIA_CHROMIUM` pointing at nothing, `tests/e2e/specs/test_caret.py` gave "5 failed" (Playwright's
+launch error), while `test_greeting.py` skips with a reason in the same situation, as `specs/README.md` promises.
+**Fixed:** the `browser` fixture of `tests/e2e/specs/conftest.py` skips with "no chromium for playwright (`uv run
+playwright install chromium`, or set $CLAUDIA_CHROMIUM)", or the same for Firefox. Evidence: red then green by hand
+(5 failed → 5 skipped); a fixture's reaction to a missing browser is not worth a test of its own. Escaped because: the
+fixture launched the browser itself and did not share `test_greeting.py`'s check.
+
