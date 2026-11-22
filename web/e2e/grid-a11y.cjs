@@ -1,8 +1,8 @@
 // The computes grid, as a screen reader meets it (UX-02, BITV 4.1.2): its structure in ARIA, the name of the cell the
 // focus is on, what is said of a range, and axe-core's verdict on the whole workspace page.
 //   uv run python scripts/start.py --app computes --port 8765 --no-browser --rebuild --dir /tmp/claudia-axe
-//   node e2e/grid-a11y.cjs        (CHROME=/path/to/chrome when playwright's own chromium is not installed)
-const { chromium } = require('playwright')
+//   node e2e/grid-a11y.cjs        (CLAUDIA_CHROMIUM=/path/to/chrome when playwright's own chromium is not installed)
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -31,7 +31,7 @@ async function typeInto(page, text) {
 }
 
 ;(async () => {
-  const browser = await chromium.launch({ executablePath: process.env.CHROME, args: ['--no-sandbox'] })
+  const browser = await launch()
   const context = await browser.newContext({ viewport: { width: 1360, height: 800 }, bypassCSP: true }) // only so that axe can be injected
   const page = await context.newPage()
   const errors = []

@@ -1,8 +1,8 @@
 // Alt text and the decorative mark on a slide's picture (BITV 1.1.1): inserted decorative, then described from the
 // object's context menu, then back to decorative with Ctrl+Alt+D.
 //   uv run python -m claudia_server --no-tls --model claudia_creates:SlideModel --port 8767 --web web/.output/public --dir /tmp/claudia-axe2
-//   node e2e/describe-creates.cjs        (CHROME=/path/to/chrome when playwright's own chromium is not installed)
-const { chromium } = require('playwright')
+//   node e2e/describe-creates.cjs        (CLAUDIA_CHROMIUM=/path/to/chrome when playwright's own chromium is not installed)
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8767/'
@@ -10,7 +10,7 @@ const DOC = `alt-slides-${Date.now() % 100000}`
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
 
 ;(async () => {
-  const browser = await chromium.launch({ executablePath: process.env.CHROME, args: ['--no-sandbox'] })
+  const browser = await launch()
   const page = await (await browser.newContext({ viewport: { width: 1360, height: 800 } })).newPage()
   const errors = []
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message))

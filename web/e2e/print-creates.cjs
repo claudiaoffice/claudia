@@ -2,7 +2,7 @@
 // slide-sized page edge to edge, or as handouts of 2, 3 (with lines), 4, 6 or 9 to a page; how the presentation prints
 // is the document's, a step in its history; the PDF printed is the one downloaded. Start a creates server with fonts
 // and hyphenation first (scripts/start.py does). Run: URL=http://127.0.0.1:8767/ npm run e2e:print-creates
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 const crypto = require('node:crypto')
 const fs = require('node:fs')
@@ -61,7 +61,7 @@ async function write(page, words) {
 
 ;(async () => {
   fs.mkdirSync(SHOTS, { recursive: true })
-  const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {})
+  const browser = await launch()
   try {
     // ---- ann makes three slides: words and a shape on the first, words on the others
     const ann = await open(browser, ANN, true)

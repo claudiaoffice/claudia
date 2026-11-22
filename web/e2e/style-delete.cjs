@@ -1,7 +1,7 @@
 // Deleting and hiding a style from All styles…, in a real browser (E1.10, D226, D780, D785; server:
 // --model claudia_composes:TextModel). Assign another style (the way that changes a look, said first), re-base (keeps
 // every look, and the new style waits for its name), Undo, Hide and Show of a built-in style and the Alt access keys.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8766/'
@@ -22,7 +22,7 @@ async function allStyles(page) {
 }
 
 async function main() {
-  const browser = await chromium.launch(process.env.CLAUDIA_CHROMIUM ? { executablePath: process.env.CLAUDIA_CHROMIUM } : {})
+  const browser = await launch()
   const context = await browser.newContext({ viewport: { width: 1360, height: 860 } })
   const page = await context.newPage()
   const errors = []

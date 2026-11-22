@@ -2,8 +2,8 @@
 // presenter view, overview and blank screen, and the keys that start it (F5 and the Mac-safe chord). Start a
 // presentation server first:
 //   uv run python scripts/start.py creates --no-browser      (URL defaults to http://127.0.0.1:8765/; CI passes URL=)
-// BROWSER=firefox runs it in Firefox (the owner's main browser); CHROME=/path/to/chrome uses a browser that is installed.
-const { chromium, firefox } = require('playwright')
+// BROWSER=firefox runs it in Firefox (the owner's main browser); CLAUDIA_CHROMIUM=/path/to/chrome uses a browser that is installed.
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8765/'
@@ -46,8 +46,7 @@ async function planTime(page, typed) {
 }
 
 ;(async () => {
-  const type = process.env.BROWSER === 'firefox' ? firefox : chromium
-  const browser = await type.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {})
+  const browser = await launch()
   const page = await browser.newPage({ viewport: { width: 1360, height: 860 } })
   const errors = []
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message))

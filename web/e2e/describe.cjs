@@ -1,8 +1,8 @@
 // Alt text and the decorative mark on a picture in computes, from the keyboard (BITV 1.1.1):
 // insert it described, step to it with Ctrl+Alt+PageDown, change the words with Ctrl+Alt+D, mark it decorative.
 //   uv run python scripts/start.py --app computes --port 8765 --no-browser --rebuild --dir /tmp/claudia-axe
-//   node e2e/describe.cjs        (CHROME=/path/to/chrome when playwright's own chromium is not installed)
-const { chromium } = require('playwright')
+//   node e2e/describe.cjs        (CLAUDIA_CHROMIUM=/path/to/chrome when playwright's own chromium is not installed)
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8765/'
@@ -12,7 +12,7 @@ const log = (...a) => console.log(...a)
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
 
 ;(async () => {
-  const browser = await chromium.launch({ executablePath: process.env.CHROME, args: ['--no-sandbox'] })
+  const browser = await launch()
   const page = await (await browser.newContext({ viewport: { width: 1360, height: 800 } })).newPage()
   const errors = []
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message))

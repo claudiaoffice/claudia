@@ -1,6 +1,6 @@
 // Edit ▸ Search & Replace… in a real browser (E5.15): the quick field, the marks in the grid, the builder with its
 // sentence, replacing in one undoable step, and the person's own pattern with its error in words.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const { spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -79,7 +79,7 @@ async function waitSummary(page, expected) {
 ;(async () => {
   fs.mkdirSync(SHOTS, { recursive: true })
   const server = startServer()
-  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM })
+  const browser = await launch()
   const errors = []
   try {
     await ready()

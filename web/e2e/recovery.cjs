@@ -1,7 +1,7 @@
 // The recovery key in a real browser against a real sealed server: shown once when a document is made, replaced by the
 // owner, and the way back in for somebody who forgot their password. Then the server restarts, and the folder is read
 // for anything it should not hold.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const { spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -61,7 +61,7 @@ const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 1
 
 ;(async () => {
   let server = startServer()
-  const browser = await chromium.launch()
+  const browser = await launch()
   try {
     await ready()
 

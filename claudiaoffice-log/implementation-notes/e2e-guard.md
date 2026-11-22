@@ -11,9 +11,9 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
     failure says the three ways out.
   * `NOT_BOUND_YET`: approved files that wait, each with its story. `test_the_list_of_files_not_bound_yet_only_shrinks`
     fails when an entry is run (or gone). Today: `objects/names.feature` (E1.13), `document-file/requirements.feature`
-    (E1.9), `invariants/objects-in-composes.feature` (PROC-40), `objects/the-same-in-all-three-apps.feature` (PROC-40,
-    approved by the owner during the review of this branch), `computes/slides.feature` (E6.31, merged from `main` while
-    this branch was open: the guard caught it).
+    (E1.9), `invariants/objects-in-composes.feature` (PROC-40), `computes/slides.feature` (E6.31, merged from `main`
+    while this branch was open: the guard caught it). `objects/the-same-in-all-three-apps.feature` was in it too until
+    its step code came (follow-up below).
   * `test_a_draft_is_not_run_before_the_owner_has_approved_it`: bound and `@draft` at once fails.
   * `test_a_test_tag_names_a_test_that_exists_and_is_run`: `@unit:`/`@io:` paths exist; `@e2e:<script>` exists in
     `web/e2e/` and is in `SCRIPTS`. Only for files that run: a draft's or a waiting file's tags are promises.
@@ -61,3 +61,25 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
 * Firefox: not installed in this environment and not downloadable through its proxy; nothing in this change is
   Firefox-specific.
 * The GTK client and the real Neutralino windows: unchanged by this work.
+
+## Follow-up, 2026-11-22: step code for the cross-app spec, and one way to start a browser
+
+* `tests/e2e/specs/test_the_same_in_all_three_apps.py` (new): the steps of
+  `specs/objects/the-same-in-all-three-apps.feature` in all three apps, on one server of all apps.
+  * Two people (14 rows): Ann inserts a picture or a shape, moves a container, renames a style (Format ▸ All Styles…)
+    or changes the accent (Format ▸ Colours…); Ben sees it without reloading, and both after a reload.
+  * Undo and redo of inserting (8 rows): the object goes and comes back, and the server forgets and brings back what it
+    showed (D1454). `workbook | a chart` waits for CODE-77 in its own `Examples` block.
+  * A viewer (15 rows), waiting for UX-69: Vera clicks the entries even when they are greyed, tries the rename and the
+    colour controls if there are any, drags the object and a handle, Format ▸ Rotate, Delete. Nothing is sent, the
+    document and the colleague's page stay as they were (all of that passes today); she is not told (UX-69).
+  * A container needs LaTeX on the server: where the entry is off the scenario is skipped with that reason (CI's
+    end-to-end job installs no LaTeX, so the six container rows of the two-people and undo scenarios skip there).
+* `tests/e2e/specs/conftest.py`: `suite` (a server of all three apps, D430) and `suite_world`; `Person` takes an app,
+  picks the kind of a new document on a server of several apps, waits for that app's page, keeps `sent` and `events`,
+  and has `reopen()`; `menu(title, *path)` opens submenus; `world` and `suite_world` share `looked_after`.
+* `web/e2e/browser.cjs` (new, D1453): `launch()`; all 30 scripts use it. `tests/test_run_e2e.py` checks that none starts
+  a browser another way.
+
+Assumptions: "I try to <change>" means clicking the entry even when it is greyed and using a control only where the
+dialog shows one; "rename a style" renames the first style of the list; the palette change is the accent role.
