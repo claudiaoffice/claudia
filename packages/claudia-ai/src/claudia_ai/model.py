@@ -21,6 +21,9 @@ class LanguageModel(Protocol):
     """A chat model."""
 
     name: str
+    remote: (
+        bool  # ``True`` when what it is asked leaves this computer (Claude): the server asks the owners first (D264)
+    )
 
     def generate(self, messages: list[Message], *, max_new_tokens: int, stop: Callable[[], bool]) -> str:
         """The assistant's next message. May take a long time, so it runs on a worker thread (``ModelRunner``).
