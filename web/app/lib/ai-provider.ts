@@ -1,6 +1,8 @@
 // Who answers @ai, in words (E7.11, D264): the badge of the panel and of the dialog, the line under an answer of the ai,
 // and the muted line when the owners switch Claude on or off. Never by colour alone: a screen reader reads the same words.
 import { translate as t } from './i18n'
+import { currentLocale } from './locale'
+import { clock } from './people'
 
 /** Who answered, as the server puts it on a message of the ai and in `ai_consent` (`Via` of claudia_core). */
 export interface Via {
@@ -27,6 +29,8 @@ export interface ConsentView {
   owners: string[]
   history: ConsentDecision[]
   answering: Via | null
+  /** Does this server have Claude set up, so that there is something to allow? */
+  offered: boolean
 }
 
 /** What the server says when it did not answer at all, or was stopped: they follow the badge in the same line. */
@@ -53,4 +57,25 @@ export function consentLine(decision: ConsentDecision): string {
   return decision.allowed
     ? t('{who} allowed Claude for this document.', { who: decision.who })
     : t('{who} switched Claude off for this document.', { who: decision.who })
+}
+
+/** What the dialog shows: the owners' checkbox, the state for everybody else, or that this server has no remote AI. */
+export interface DialogModel {
+  mode: 'owner' | 'read-only' | 'no-remote'
+  /** For `read-only`: who can change it. */
+  ownersLine: string
+  /** Who decided last and when, for whom; empty while nobody has decided. */
+  allowedLine: string
+}
+
+export function consentDialog(view: ConsentView, role: string): DialogModel {
+  const mode = !view.offered ? 'no-remote' : role === 'owner' ? 'owner' : 'read-only'
+  const owners = new Intl.ListFormat(currentLocale(), { style: 'long', type: 'conjunction' }).format(view.owners)
+  const decided = view.by && view.at ? { who: view.by, time: clock(view.at) } : null
+  const allowedLine = !decided
+    ? ''
+    : view.allowed
+      ? t('Allowed by {who}, {time} · for Claude (Anthropic)', decided)
+      : t('Switched off by {who}, {time} · for Claude (Anthropic)', decided)
+  return { mode, ownersLine: t('Only the owners can change this: {owners}.', { owners }), allowedLine }
 }

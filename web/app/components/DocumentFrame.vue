@@ -225,6 +225,7 @@ onBeforeUnmount(() => clearTimeout(timer))
       @close="dialog = null"
     />
     <AboutDialog v-if="dialog === 'about'" :app="app" @close="dialog = null" />
+    <AiConsentDialog v-if="dialog === 'ai'" :session="session" @close="dialog = null" />
     <OpenDialog
       v-if="dialog === 'open' || dialog === 'open-file'"
       modal
