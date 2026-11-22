@@ -165,6 +165,22 @@ def test_big_histories_are_cut_into_blocks_that_stay_chained(path, owner, writer
     assert read_state(path, owner.keys).history == payloads
 
 
+def test_a_closed_block_keeps_its_bytes_when_later_changes_are_packed(path, owner, writer, monkeypatch):
+    # D1269: once a block is full it is not sealed again by packing; only the last, still small block is replaced.
+    monkeypatch.setattr(blocks, "BLOCK_TARGET_BYTES", 100)
+    put(writer, [b"x" * 60, b"y" * 60, b"z" * 10])
+    writer = pack_journal(path, owner.keys, writer)
+    first = entries(path)
+    assert sorted(n for n in first if n.startswith("history/")) == ["history/000001.blk", "history/000002.blk"]
+
+    put(writer, [b"more"])
+    pack_journal(path, owner.keys, writer).close()
+    second = entries(path)
+    assert second["history/000001.blk"] == first["history/000001.blk"]
+    assert second["history/000002.blk"] != first["history/000002.blk"]
+    assert read_state(path, owner.keys).history == [b"x" * 60, b"y" * 60, b"z" * 10, b"more"]
+
+
 def test_the_manifest_notes_the_change(path, owner, writer):
     before = document_file.read_manifest(path).last_change
     put(writer, H)
