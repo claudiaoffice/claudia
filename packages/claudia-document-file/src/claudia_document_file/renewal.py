@@ -20,7 +20,7 @@ still open (D20). The new keys protect what is written from now on from anyone w
 """
 
 from collections.abc import Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from . import blocks
@@ -75,7 +75,7 @@ class Renewed:
     so all three), the writer of the journal (a new one if keys were renewed; the old one is closed then) and which
     part keys are new."""
 
-    keys: dict[Part, bytes]
+    keys: dict[Part, bytes] = field(repr=False)  # secrets: never in a log line or a traceback (SEC-23)
     writer: JournalWriter
     renewed: frozenset[Part]
 
