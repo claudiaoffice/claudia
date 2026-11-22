@@ -1,4 +1,4 @@
-"""Commands of the computes model: sheets, cell contents, structural edits, row and column sizes, chart tabs.
+"""Commands of the computes model: sheets, slides, cell contents, structural edits, row and column sizes, chart tabs.
 
 Everything about floating objects — images, shapes, text boxes, diagrams: define, forget, add, remove, move,
 resize, rotate, retext, snap — is shared with composes and creates and lives in :mod:`claudia_core.objects`
@@ -20,6 +20,7 @@ from typing import ClassVar
 
 from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetAsset, PageSetup, fits
 from claudia_core.asset_store import DIAGRAM
+from claudia_core.slides import Slide
 
 from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
 from .events import (
@@ -30,8 +31,8 @@ from .events import (
     NamesChanged,
     PrintSetupChanged,
     RandomChanged,
-    SheetsChanged,
     StructureChanged,
+    TabsChanged,
 )
 from .formula import parse_formula
 from .formula.rewrite import adjusted
@@ -147,14 +148,14 @@ class AddSheet(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         model = ctx.model
-        if self.id in model.sheets:
-            raise ValueError(f"sheet id {self.id!r} exists")
+        if self.id in model.sheets or self.id in model.slides:
+            raise ValueError(f"a tab with the id {self.id!r} exists already")
         if any(s.name.casefold() == self.name.casefold() for s in model.sheets.values()):
             raise ValueError(f"a sheet called {self.name!r} exists")
         if not self.legacy_names:
             model.check_name_free(self.id, self.name)
         model.add_sheet(Sheet(self.id, self.name), self.index)
-        ctx.emit(SheetsChanged())
+        ctx.emit(TabsChanged())
         return RemoveSheet(self.id)
 
     def to_data(self) -> dict:
@@ -199,7 +200,7 @@ class RemoveSheet(Command):
             # would leave it pointing nowhere. Refusing is the same answer ``forget_shape``/``forget_image``
             # give while something still uses them.
             raise ValueError(f"sheet {sheet.name!r} still has chart {blocking[0]!r}'s data on it")
-        index = list(model.sheets).index(self.id)
+        index = model.tab_index(self.id)
         cells = tuple((r, c, content) for (r, c), content in sorted(sheet.cells.items()))
         row_heights = tuple(sorted(sheet.row_heights.items()))
         col_widths = tuple(sorted(sheet.col_widths.items()))
@@ -210,7 +211,7 @@ class RemoveSheet(Command):
         restores, name_restores = model.drop_sheet(
             self.id
         )  # formulas elsewhere that pointed here, and names, as they were
-        ctx.emit(SheetsChanged())
+        ctx.emit(TabsChanged())
         if name_restores:
             ctx.emit(NamesChanged())
         # a name that clashed even then (an old document) is put back as it was; any other is checked again
@@ -247,6 +248,91 @@ class RemoveSheet(Command):
 
 
 # ------------------------------------------------------------------------------ cells
+
+
+@register
+@dataclass(frozen=True)
+class AddSlide(Command):
+    """Add a slide to the tabs (E6.31, D1471): a page of objects in the core's 16:9 frame, at ``index`` in the tab
+    order (``None``: at the end). Its name must be free in the whole document, as a sheet's is (D550); what is written
+    about it comes back with it when the removal of a slide is undone. Creates' slides are its own command: they carry
+    speaker notes and planned times, a workbook's carry their place among the sheets (D1470)."""
+
+    kind: ClassVar[str] = "computes.AddSlide"
+    id: str
+    name: str
+    index: int | None = None
+    description: str = ""
+
+    @property
+    def label(self) -> str:
+        return "Add slide"
+
+    @property
+    def summary(self) -> str:
+        return f"add slide {self.name}"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        model = ctx.model
+        model.slides.check_new(self.id)
+        if not self.name:
+            raise ValueError("a slide needs a name")
+        model.check_thing_name(self.id, self.name)
+        model.add_slide(Slide(self.id, self.name, self.description), self.index)
+        ctx.emit(TabsChanged())
+        return RemoveSlide(self.id)
+
+    def to_data(self) -> dict:
+        data: dict = {"id": self.id, "name": self.name, "index": self.index}
+        if self.description:
+            data["description"] = self.description
+        return data
+
+    @classmethod
+    def from_data(cls, data, registry) -> AddSlide:
+        return cls(data["id"], data["name"], data.get("index"), data.get("description", ""))
+
+    def stub(self) -> dict:
+        return {"slide": self.id}
+
+    def redacted(self) -> Command:
+        # still there for the objects on it, with a neutral name and nothing written about it
+        return AddSlide(self.id, self.id, self.index)
+
+
+@register
+@dataclass(frozen=True)
+class RemoveSlide(Command):
+    """Remove a slide that has no objects (the core's rule for every holder); undo puts it back in its place, with
+    its name and what was written about it."""
+
+    kind: ClassVar[str] = "computes.RemoveSlide"
+    id: str
+
+    @property
+    def label(self) -> str:
+        return "Remove slide"
+
+    @property
+    def summary(self) -> str:
+        return "remove a slide"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        slide, index = ctx.model.remove_slide(self.id)
+        ctx.emit(TabsChanged())
+        return AddSlide(slide.id, slide.name, index, slide.description)
+
+    def to_data(self) -> dict:
+        return {"id": self.id}
+
+    @classmethod
+    def from_data(cls, data, registry) -> RemoveSlide:
+        return cls(data["id"])
+
+    def redacted(self) -> Command:
+        return self
+
+
 @register
 @dataclass(frozen=True)
 class SetCells(Command):

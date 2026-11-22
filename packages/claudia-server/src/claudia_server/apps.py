@@ -10,7 +10,7 @@ from claudia_creates import ShapeLibrary
 
 from .assistant import AiTurn, Assistant, Engine, Say, Task
 from .composes import composes_methods, composes_methods_with
-from .computes import computes_methods
+from .computes import computes_methods, computes_methods_with
 from .creates import creates_methods, creates_methods_with
 from .document_lens import DocumentLens
 from .lens import Lens
@@ -95,12 +95,14 @@ _LENSES: dict[str, Lens] = {"computes": WorkbookLens(), "composes": DocumentLens
 def methods_for(model_cls: type[DocumentModel], *, shapes: ShapeLibrary | None = None) -> MethodTable:
     """The method table for documents of this model: the app's own when there is one, else the core's.
 
-    ``shapes`` is the library of outlines a server offers for slides and texts; it matters to those two only, and by
-    default they get the built-in shapes."""
+    ``shapes`` is the library of outlines a server offers for slides and texts (a workbook's slides too); by default
+    they get the built-in shapes."""
     if shapes is not None and model_cls.app == "creates":
         return creates_methods_with(shapes)
     if shapes is not None and model_cls.app == "composes":
         return composes_methods_with(shapes)
+    if shapes is not None and model_cls.app == "computes":
+        return computes_methods_with(shapes)
     return _METHODS.get(model_cls.app, core_methods)
 
 

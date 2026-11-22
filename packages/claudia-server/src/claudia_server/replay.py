@@ -46,6 +46,7 @@ VIEW_READS = frozenset(
         "slide",
         # computes
         "sheets",
+        "tabs",
         "cells",
         "sizes",
         "charts",

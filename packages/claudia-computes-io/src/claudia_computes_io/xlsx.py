@@ -265,8 +265,7 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
         read = read_sheet(package, part, known)
         sheet.cells.update(read.cells)
         _dress(dressing, sheet, read)
-        model.sheets[sheet.id] = sheet
-        model.open_holder(str(sheet.id))
+        model.add_sheet(sheet, None)
     for named in names:
         model.names.put(named)
     for chart in file_charts(package)[0]:

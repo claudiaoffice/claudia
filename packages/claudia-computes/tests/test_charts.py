@@ -332,7 +332,7 @@ def test_a_charts_range_may_end_up_pointing_at_rows_that_no_longer_exist():
 # -- the cells a chart reads, for the writers of files (D462) --------------------------------------------------
 def test_a_chart_says_which_cells_it_reads_now():
     model = WorkbookModel()
-    model.sheets[SheetId(S1)] = Sheet(SheetId(S1), "Data")
+    model.add_sheet(Sheet(SheetId(S1), "Data"), None)
     model.diagrams.define(chart_spec("c1", first=(0, 0), last=(3, 2), header_row=False))
     cells = model.chart_cells("c1")
     assert cells is not None
@@ -346,7 +346,7 @@ def test_a_chart_says_which_cells_it_reads_now():
 
 def test_a_chart_that_follows_a_name_says_the_cells_the_name_is_today_and_none_when_it_is_gone():
     model = WorkbookModel()
-    model.sheets[SheetId(S1)] = Sheet(SheetId(S1), "Data")
+    model.add_sheet(Sheet(SheetId(S1), "Data"), None)
     model.names.put(
         NamedRange("Sales", None, RangeRef(CellRef(1, 1, SheetId(S1)), CellRef(4, 2, SheetId(S1))), header=True)
     )

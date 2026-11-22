@@ -30,7 +30,7 @@ from dataclasses import dataclass
 
 from lxml import etree
 
-from claudia_computes import ChartSpec, SheetId, WorkbookModel
+from claudia_computes import CellAnchor, ChartSpec, SheetId, WorkbookModel
 from claudia_computes.charts import BAR_COLORS
 from claudia_computes.model import MIN_OBJECT_SIZE
 from claudia_computes.refs import column_name
@@ -448,6 +448,7 @@ def written_charts(model: WorkbookModel, *, first: int = 1) -> WrittenCharts:
                 continue
             spec = model.diagrams[obj.body.diagram]
             assert isinstance(spec, ChartSpec)
+            assert isinstance(obj.anchor, CellAnchor)  # (an object on a sheet hangs at a cell)
             corner = offset_of(sheet.col_widths, sheet.row_heights, obj.anchor.row, obj.anchor.col)
             made = a_chart(model, spec, number, (obj.body.w, obj.body.h), corner, obj.body.description, layer)
             if made is not None:

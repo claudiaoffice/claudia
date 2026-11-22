@@ -1,8 +1,10 @@
 """claudia-computes: the spreadsheet app, here only the mini-port that proves claudia-core.
 
 refs      CellRef / RangeRef / structural edits (from the demo)
-model     WorkbookModel, CellAnchor, SheetObject, Chart: sheets, typed cells, and this app's own part of an object
-commands  AddSheet, RemoveSheet, SetCells, Structure, ResizeLines, SetCellStyle, AddChart, RemoveChart (rest: core)
+model     WorkbookModel, CellAnchor, SheetObject, Tab, Chart: sheets and slides in one tab order, typed cells, and
+          this app's own part of an object
+commands  AddSheet, RemoveSheet, AddSlide, RemoveSlide, SetCells, Structure, ResizeLines, SetCellStyle, AddChart,
+          RemoveChart (rest: core)
 heavy     ApplyCalculated, in commands: a worker's result for a deferred heavy call (E4.4, D37, D1314)
 cellstyles CellStyles: a sheet's style ranges, in layers, for the box and the words of its cells (E6.13, D307)
 name_commands  DefineName, RemoveName, RenameName, RestoreNames: named ranges and tables (E6.5)
@@ -59,9 +61,11 @@ from .charts import CHART_KINDS, ChartError, ChartSpec
 from .commands import (
     AddChart,
     AddSheet,
+    AddSlide,
     ApplyCalculated,
     RemoveChart,
     RemoveSheet,
+    RemoveSlide,
     Resample,
     ResizeLines,
     SetCells,
@@ -80,6 +84,7 @@ from .events import (
     PivotsChanged,
     PrintSetupChanged,
     RandomChanged,
+    TabsChanged,
 )
 from .functions.help import FunctionHelp, function_catalog, get_function, search_functions, translatable_texts
 from .model import (
@@ -91,6 +96,7 @@ from .model import (
     Content,
     Sheet,
     SheetObject,
+    Tab,
     WorkbookModel,
     content_of,
 )
@@ -155,6 +161,7 @@ __all__ = [
     "AddChart",
     "AddObject",
     "AddSheet",
+    "AddSlide",
     "ApplyCalculated",
     "builtin_styles",
     "BUILTIN_STYLES",
@@ -209,6 +216,7 @@ __all__ = [
     "RestoreNames",
     "RemoveObject",
     "RemoveSheet",
+    "RemoveSlide",
     "Resample",
     "ResizeLines",
     "ResizeObject",
@@ -225,6 +233,8 @@ __all__ = [
     "SheetId",
     "SheetObject",
     "Structure",
+    "Tab",
+    "TabsChanged",
     "VisualObject",
     "WorkbookModel",
     "function_catalog",

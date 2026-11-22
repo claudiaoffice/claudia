@@ -25,8 +25,7 @@ def model_of(cells: dict[tuple[int, int], dict]) -> WorkbookModel:
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "Pricing")
     sheet.cells.update(cells)
-    model.sheets[sheet.id] = sheet
-    model.open_holder("s1")
+    model.add_sheet(sheet, None)
     model._calculate_loaded()  # noqa: SLF001
     return model
 

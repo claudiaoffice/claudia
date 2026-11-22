@@ -136,6 +136,8 @@ from claudia_core import (
     name_problem,
 )
 from claudia_core.asset_store import DIAGRAM
+from claudia_core.slides import SlideAnchor
+from claudia_creates import ShapeLibrary
 
 from .computes_search import add_search_methods
 from .containers import add_container_methods
@@ -144,8 +146,9 @@ from .i18n import msg, translate
 from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
-from .protocol import Context, RequestError, core_methods
+from .protocol import Context, MethodTable, RequestError, core_methods
 from .replay import add_replay_methods
+from .shape_methods import add_shape_methods
 from .style_targets import OBJECTS
 from .styles import add_style_methods
 from .thing_names import add_name_methods, default_name
@@ -247,6 +250,27 @@ def _sheets(ctx):
         {"id": sheet.id, "name": sheet.name, **dict(zip(("rows", "cols"), sheet.extent(), strict=True))}
         for sheet in _workbook(ctx).sheets.values()
     ]
+
+
+@computes_methods.method("tabs")
+def _tabs(ctx):
+    """The tabs below the workbook in their one order (E6.31, D1471), each as `{kind, id, name}`: `kind` is `"sheet"`
+    or `"slide"`. The event `tabs` says they changed (one came, went, or has another name). The chart tabs are still
+    apart (`charts`) until a chart is shown on a slide."""
+    workbook = _workbook(ctx)
+    return [{**tab.to_data(), "name": workbook.thing_name(tab.id)} for tab in workbook.tabs]
+
+
+@computes_methods.method("slide", "slide:str")
+def _slide(ctx, *, slide):
+    """The objects of a slide, the one in front last, as `{revision, slide, objects}`: the same answer as creates'
+    `slide` without speaker notes and planned time, which a workbook's slides do not have. An object is placed on a
+    slide with `x` and `y`, its top left corner in the slide's 1600 × 900 units."""
+    workbook = _workbook(ctx)
+    if slide not in workbook.slides:
+        raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
+    objects = [obj.to_data_for(ctx.user) for obj in workbook.objects_on(slide)]
+    return {"revision": current_revision(ctx), "slide": slide, "objects": objects}
 
 
 @computes_methods.method("export_office", "format:str", leaves="export")
@@ -1162,28 +1186,76 @@ def _pivot_to_sql(ctx, *, name, base):
     return done(ctx, command, base)
 
 
-def _at_cell(workbook: WorkbookModel, held, *, row: int, col: int, sheet: str | None = None) -> dict:
-    """Where an object of a workbook is: a cell of a sheet. A new one names its sheet; a moved one stays on its own."""
-    if held is not None:
-        sheet = held.sheet
-    elif sheet not in workbook.sheets:
+def _placed(
+    workbook: WorkbookModel,
+    held: CellAnchor | SlideAnchor | None,
+    *,
+    sheet: str | None = None,
+    row: int | None = None,
+    col: int | None = None,
+    slide: str | None = None,
+    x: int | None = None,
+    y: int | None = None,
+) -> dict:
+    """Where an object of a workbook is: a cell of a sheet (`row`, `col`), or a point of a slide (`x`, `y`, the words
+    creates uses, D1473). A new one names its sheet or its slide; a moved one stays on its own tab."""
+    on_slide = isinstance(held, SlideAnchor) if held is not None else slide is not None
+    if held is None and (sheet is None) == (slide is None):
+        raise RequestError("bad_request", msg("name the sheet or the slide the object goes on"))
+    if on_slide:
+        if x is None or y is None or row is not None or col is not None:
+            raise RequestError("bad_request", msg("an object on a slide is placed with x and y"))
+        if held is None and slide not in workbook.slides:
+            raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
+        return SlideAnchor(held.holder if held is not None else str(slide), x, y).to_data()
+    if row is None or col is None or x is not None or y is not None:
+        raise RequestError("bad_request", msg("an object on a sheet is placed with row and col"))
+    if held is None and sheet not in workbook.sheets:
         raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
-    return CellAnchor(SheetId(sheet), row, col).to_data()
+    return CellAnchor(SheetId(held.holder if held is not None else str(sheet)), row, col).to_data()
 
 
-CELLS = Placement(
-    new="sheet:str row:int col:int",
-    move="row:int col:int",
-    frame="row:int col:int",
-    anchor=_at_cell,
+CELLS_AND_SLIDES = Placement(
+    new="sheet:str? row:int? col:int? slide:str? x:int? y:int?",
+    move="row:int? col:int? x:int? y:int?",
+    frame="row:int? col:int? x:int? y:int?",
+    anchor=_placed,
     says={
-        "add_image": "`row` and `col` name the cell it hangs from; its pixel size (and anchor) never change on their "
-        "own afterwards.",
-        "move_object": "`row` and `col` name the cell it hangs from now.",
-        "resize_object": "The cell it hangs from (`row`, `col`) comes with the size, since dragging a corner moves the "
-        "corner.",
-        "rotate_object": "Its anchor cell stays.",
+        "add_image": "On a sheet, `row` and `col` name the cell it hangs from; its pixel size (and anchor) never "
+        "change on their own afterwards. On a slide, `x` and `y` are its top left corner.",
+        "move_object": "On a sheet, `row` and `col` name the cell it hangs from now; on a slide, `x` and `y` are its "
+        "top left corner now. It stays on its own sheet or slide.",
+        "resize_object": "The cell it hangs from (`row`, `col`), or on a slide its top left corner (`x`, `y`), comes "
+        "with the size, since dragging a corner moves the corner.",
+        "rotate_object": "On a sheet its anchor cell stays; a slide keeps the turned outline on the slide, moving the "
+        "object just far enough in, in the same step of the history.",
     },
 )
-add_object_methods(computes_methods, model_of=_workbook, placement=CELLS)
-add_container_methods(computes_methods, model_of=_workbook, placement=CELLS)
+add_object_methods(computes_methods, model_of=_workbook, placement=CELLS_AND_SLIDES)
+add_container_methods(computes_methods, model_of=_workbook, placement=CELLS_AND_SLIDES)
+
+
+def _on_a_slide(workbook: WorkbookModel, held: SlideAnchor | None, *, slide: str, x: int, y: int) -> dict:
+    """Where a new text box or shape of a workbook goes: a point of a slide. A sheet has neither (D1232)."""
+    return _placed(workbook, held, slide=slide, x=x, y=y)
+
+
+ON_A_SLIDE = Placement(
+    new="slide:str x:int y:int",
+    move="x:int y:int",
+    frame="x:int y:int",
+    anchor=_on_a_slide,
+    says={
+        "add_object": "In a workbook a text box or a shape goes on a slide (a sheet has neither, D1232); `x` and `y` "
+        "are its top left corner."
+    },
+)
+add_shape_methods(computes_methods, model_of=_workbook, library=ShapeLibrary.load(), placement=ON_A_SLIDE)
+
+
+def computes_methods_with(library: ShapeLibrary) -> MethodTable:
+    """The method table of workbooks on a server whose shape library is ``library``: the outlines a slide's shapes
+    are drawn from."""
+    table = computes_methods.extended()
+    add_shape_methods(table, model_of=_workbook, library=library, placement=ON_A_SLIDE)
+    return table

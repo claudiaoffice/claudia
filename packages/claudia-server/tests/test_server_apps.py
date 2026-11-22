@@ -32,7 +32,8 @@ def test_presentations_get_their_methods_and_a_server_can_bring_its_own_shapes(t
     )
     custom = methods_for(SlideModel, shapes=ShapeLibrary.load([tmp_path]))
     assert custom is not creates_methods and "add_object" in custom.names()
-    assert methods_for(WorkbookModel, shapes=ShapeLibrary.load()) is computes_methods, "shapes matter to creates only"
+    workbooks = methods_for(WorkbookModel, shapes=ShapeLibrary.load([tmp_path]))
+    assert workbooks is not computes_methods and "add_object" in workbooks.names(), "a workbook's slides have shapes"
 
 
 def test_a_presentation_has_the_model_driven_ai_and_without_a_model_one_that_says_so():

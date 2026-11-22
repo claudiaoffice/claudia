@@ -19,7 +19,7 @@ from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from heapq import heappop, heappush
-from typing import ClassVar, Self, TypeIs, cast
+from typing import ClassVar, Literal, Self, TypeIs, cast
 
 from claudia_core import (
     OBJECT_KINDS,
@@ -40,6 +40,7 @@ from claudia_core import (
     new_registry,
 )
 from claudia_core.asset_store import DIAGRAM
+from claudia_core.slides import Slide, SlideAnchor, Slides, check_on_slide, room_on_slide, turned_on_slide
 
 from .calc import Calculator
 from .cellstyles import CellStyles, Piece
@@ -126,6 +127,27 @@ class CellAnchor:
 
 #: One floating thing on a sheet: an image, and (as the shared layer grows into computes) a shape or text box.
 type SheetObject = VisualObject[CellAnchor]
+
+
+@dataclass(frozen=True)
+class Tab:
+    """What a person selects in the strip below a workbook: a sheet or a slide, by id (glossary: Tab). A workbook's
+    ``tabs`` is the one order of its sheets and slides (D1471)."""
+
+    kind: Literal["sheet", "slide"]
+    id: str
+
+    def to_data(self) -> dict:
+        """The plain-data form: what a snapshot stores and clients are sent."""
+        return {"kind": self.kind, "id": self.id}
+
+    @classmethod
+    def from_data(cls, data: dict) -> Tab:
+        """Inverse of :meth:`to_data`; ``ValueError`` if it is not a tab."""
+        kind, tab_id = data.get("kind"), data.get("id")
+        if kind not in ("sheet", "slide") or not isinstance(tab_id, str):
+            raise ValueError("a tab is a sheet or a slide, by id")
+        return cls(kind, tab_id)
 
 
 @dataclass(frozen=True)
@@ -422,8 +444,9 @@ class Sheet:
         return view
 
 
-class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
-    """The state of a computes document: its sheets, chart tabs, diagrams, objects, style book and palette."""
+class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
+    """The state of a computes document: its sheets and slides in one tab order, chart tabs, diagrams, objects, style
+    book and palette."""
 
     app: ClassVar[str] = "computes"
     # 3: the workbook also carries images and objects anchored to cells (E6.17)
@@ -438,8 +461,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     # 12: how it is printed, and its language (E6.19, D1001)
     # 13: names have ids (D552)
     state_schema: ClassVar[int] = (
-        16  # 16: sheets, chart tabs and named ranges may have descriptions (D1317); 15: an object body has one
-        # ``ref``; 14: the workbook carries its pivot tables (E6.30, D620)
+        17  # 17: tabs, one order of sheets and slides, and the slides as records (E6.31, D1471); 16: sheets, chart tabs
+        # and named ranges may have descriptions (D1317); 15: an object body has one ``ref``; 14: the workbook carries
+        # its pivot tables (E6.30, D620)
     )
     registry: ClassVar[CommandRegistry] = new_registry()
 
@@ -454,7 +478,13 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         palette: Palette | None = None,
     ):
         super().__init__()
+        #: The sheets, in the order the tabs have them (``tabs`` is that order; this is what a sheet is).
         self.sheets: dict[SheetId, Sheet] = {}
+        #: The slides (E6.31, D1470): what a slide is, with its name and description; their order is in ``tabs``.
+        self.slides = Slides()
+        #: The one order of the sheets and slides, every one of them in it exactly once (D1471): kept so by
+        #: :meth:`add_sheet`, :meth:`drop_sheet`, :meth:`add_slide` and :meth:`remove_slide`, and nowhere else.
+        self.tabs: list[Tab] = []
         self.calc = Calculator(self, functions or default_functions())
         self._ids: dict[str, SheetId] | None = None
         self.styles: StyleBook = styles if styles is not None else builtin_styles()
@@ -509,6 +539,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     def serialize(self) -> dict:
         return {
             "sheets": [sheet.to_data() for sheet in self.sheets.values()],
+            "slides": self.slides.to_data(self.slide_ids()),
+            "tabs": [tab.to_data() for tab in self.tabs],
             "styles": self.styles.to_data(),
             "palette": self.palette.to_data(),
             **self.assets_to_data(),  # images, shapes, diagrams, containers, tables (D1431)
@@ -535,6 +567,10 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             sheet.cell_styles = CellStyles.from_data(item["cell_styles"])  # no upcast before the first release (D308)
             model.sheets[sheet.id] = sheet
             model.open_holder(str(sheet.id))
+        model.slides, slide_ids = Slides.from_data(state["slides"])
+        for slide_id in slide_ids:
+            model.open_holder(slide_id)
+        model.tabs = [Tab.from_data(item) for item in state["tabs"]]
         model.restore_objects(state["objects"], state)
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
@@ -564,6 +600,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         still find what they refer to. ``ValueError`` for a part the workbook does not have."""
         if parts is None:
             self.thing_descriptions.clear()
+            for slide_id in self.slide_ids():
+                self.slides.describe(slide_id, "")
             for sheet in self.sheets.values():
                 sheet.cells.clear()
             for chart in self.charts.values():
@@ -580,6 +618,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             self.sheets[SheetId(part)].cells.clear()
         elif part in self.charts:
             self._blank_chart(self.charts[part])
+        elif part in self.slides:
+            self.slides.describe(part, "")
         elif "!" in part:
             sheet_id, text = part.split("!", 1)
             if sheet_id not in self.sheets:
@@ -588,7 +628,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
             for position in parse_range_ref(text).cells():
                 sheet.cells.pop(position, None)
         elif part not in self.objects:
-            raise ValueError(f"the workbook has no sheet, range, chart or object {part!r}")
+            raise ValueError(f"the workbook has no sheet, slide, range, chart or object {part!r}")
 
     def _blank_chart(self, chart: Chart) -> None:
         if chart.spec_id in self.diagrams:
@@ -619,20 +659,39 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         return [*ranges, *ObjectModel.restyle_users(self, old, new)]
 
     def holders(self) -> list[str]:
-        """The sheets objects may sit on, in order."""
-        return [str(sheet) for sheet in self.sheets]
+        """The sheets and slides objects may sit on, in the order of the tabs."""
+        return [tab.id for tab in self.tabs]
 
-    def anchor_from_data(self, data: dict) -> CellAnchor:
-        """Read a cell anchor; ``ValueError`` if the data is not one."""
+    def anchor_from_data(self, data: dict) -> CellAnchor | SlideAnchor:
+        """Read a cell anchor or a slide anchor, by its ``kind``; ``ValueError`` if the data is neither."""
+        if data.get("kind") == SlideAnchor.kind:
+            return SlideAnchor.from_data(data)
         return CellAnchor.from_data(data)
 
-    def check_anchor(self, anchor: CellAnchor, body: ObjectBody) -> None:
-        """An object's anchor must be a cell of the sheet. Its size is not bounded by the sheet: a sheet has no
-        edge to fall off, unlike a slide."""
+    def check_anchor(self, anchor: CellAnchor | SlideAnchor, body: ObjectBody) -> None:
+        """An object on a sheet hangs at a cell of it, and its size is not bounded (a sheet has no edge to fall off);
+        an object on a slide sits at a point of it and stays in its frame, the core's rule for every slide (D1470)."""
+        if isinstance(anchor, SlideAnchor):
+            if anchor.slide in self.sheets:
+                raise ValueError(f"“{self.thing_name(anchor.slide)}” is a sheet: an object on it hangs at a cell")
+            check_on_slide(anchor, body)
+            return
+        if anchor.holder in self.slides:
+            raise ValueError(f"“{self.thing_name(anchor.holder)}” is a slide: an object on it sits at a point")
         if not _is_whole(anchor.row) or not _is_whole(anchor.col):
             raise ValueError("row and col must be whole numbers")
         if anchor.row < 0 or anchor.col < 0 or anchor.row >= MAX_ROWS or anchor.col >= MAX_COLS:
             raise ValueError("the object's anchor must be a cell of the sheet")
+
+    def turned_anchor(self, obj: VisualObject[CellAnchor | SlideAnchor], rotation: int) -> CellAnchor | SlideAnchor:
+        """On a slide, the nearest place at which the turned outline stays in the frame; on a sheet, where it is."""
+        if isinstance(obj.anchor, SlideAnchor):
+            return turned_on_slide(cast(VisualObject[SlideAnchor], obj), rotation)
+        return obj.anchor
+
+    def room_for_new_object(self, anchor: CellAnchor | SlideAnchor | None) -> int | None:
+        """What is left of a slide to the right of a new object (D1332); a sheet sets no limit."""
+        return room_on_slide(anchor) if isinstance(anchor, SlideAnchor) else None
 
     def diagram_from_data(self, data: dict) -> ChartSpec:
         """Read a chart definition; ``ValueError`` if the data is not one, or its range does not fit a sheet
@@ -694,13 +753,52 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         self.chart(chart_id)
         self.charts = {c.id: c for c in self.charts.values() if c.id != chart_id}
 
+    # -- tabs and slides (E6.31, D1471) ---------------------------------------------------------------
+    def slide_ids(self) -> list[str]:
+        """The ids of the slides, in the order of the tabs."""
+        return [tab.id for tab in self.tabs if tab.kind == "slide"]
+
+    def tab_index(self, tab_id: str) -> int:
+        """Where the sheet or slide ``tab_id`` is among the tabs; ``ValueError`` if it is neither."""
+        for index, tab in enumerate(self.tabs):
+            if tab.id == tab_id:
+                return index
+        raise ValueError(f"unknown tab {tab_id!r}")
+
+    def _check_new_tab(self, tab_id: str, index: int | None) -> None:
+        if tab_id in self.sheets or tab_id in self.slides:
+            raise ValueError(f"a tab with the id {tab_id!r} exists already")
+        if index is not None and not 0 <= index <= len(self.tabs):
+            raise ValueError(f"there is no place {index} among {len(self.tabs)} tabs")
+
+    def add_slide(self, slide: Slide, index: int | None) -> None:
+        """Put a slide at ``index`` in the tab order, or last when ``index`` is ``None``; ``ValueError`` (and nothing
+        changed) if its id is taken or not a slide id, or there is no such place. Its name is checked by the
+        command, as a sheet's is."""
+        self.slides.check_new(slide.id)
+        self._check_new_tab(slide.id, index)
+        self.slides.add(slide)
+        self.tabs.insert(len(self.tabs) if index is None else index, Tab("slide", slide.id))
+        self.open_holder(slide.id)
+
+    def remove_slide(self, slide_id: str) -> tuple[Slide, int]:
+        """Take a slide out of the workbook; returns it and the place it had. Refused while it still has objects."""
+        index = self.tab_index(slide_id)
+        if slide_id not in self.slides:
+            raise ValueError(f"{slide_id!r} is not a slide")
+        self.close_holder(slide_id)
+        del self.tabs[index]
+        return self.slides.remove(slide_id), index
+
     # -- names (D550) ------------------------------------------------------------
     def named_things(self):
-        """The objects with names, then the sheets, the chart tabs and the named ranges: one namespace for all of them
-        (D550, D552). A table and the result of a ``SQL()`` cell are named ranges."""
+        """The objects with names, then the sheets, the slides, the chart tabs and the named ranges: one namespace for
+        all of them (D550, D552). A table and the result of a ``SQL()`` cell are named ranges."""
         yield from super().named_things()
         for sheet in self.sheets.values():
             yield "sheet", sheet.id, sheet.name
+        for slide_id in self.slide_ids():
+            yield "slide", slide_id, self.slides[slide_id].name
         for chart in self.charts.values():
             yield "chart", chart.id, chart.name
         for named in self.names.sorted():
@@ -711,12 +809,15 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         return next((named for named in self.names if named.id == thing_id), None)
 
     def thing_name(self, thing_id: str) -> str:
-        """The name of a sheet, a chart tab, a named range or an object; ``ValueError`` if there is none of them."""
+        """The name of a sheet, a slide, a chart tab, a named range or an object; ``ValueError`` if there is none of
+        them."""
         named = self.name_with_id(thing_id)
         if named is not None:
             return named.name
         if thing_id in self.sheets:
             return self.sheets[SheetId(thing_id)].name
+        if thing_id in self.slides:
+            return self.slides[thing_id].name
         if thing_id in self.charts:
             return self.charts[thing_id].name
         return super().thing_name(thing_id)
@@ -726,14 +827,18 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         return thing_id in self.sheets or thing_id in self.charts or self.name_with_id(thing_id) is not None
 
     def thing_description(self, thing_id: str) -> str:
-        """What is written about a sheet, a chart tab, a named range or an object, ``""`` if nothing."""
+        """What is written about a sheet, a slide, a chart tab, a named range or an object, ``""`` if nothing."""
+        if thing_id in self.slides:
+            return self.slides[thing_id].description
         if self._describes(thing_id):
             return self.thing_descriptions.get(thing_id, "")
         return super().thing_description(thing_id)
 
     def set_thing_description(self, thing_id: str, description: str) -> str:
-        """Write something about a sheet, a chart tab or a named range (``""``: nothing); returns what was written.
-        An object is described by :class:`~claudia_core.DescribeObject`."""
+        """Write something about a sheet, a slide, a chart tab or a named range (``""``: nothing); returns what was
+        written before. An object is described by :class:`~claudia_core.DescribeObject`."""
+        if thing_id in self.slides:
+            return self.slides.describe(thing_id, description)
         if not self._describes(thing_id):
             return super().set_thing_description(thing_id, description)
         old = self.thing_descriptions.get(thing_id, "")
@@ -754,15 +859,20 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         return RenameName(named.scope, named.name, name)
 
     def rename_thing(self, ctx, thing_id: str, name: str):
-        """As :meth:`~claudia_core.ObjectModel.rename_thing`. A sheet's name is written in the formulas that read it
-        (``Sheet1!A1``), so they are written again with it, and undo gets them back as they were typed."""
+        """As :meth:`~claudia_core.ObjectModel.rename_thing`, and the clients hear when a tab has another name. A
+        sheet's name is written in the formulas that read it (``Sheet1!A1``), so they are written again with it, and
+        undo gets them back as they were typed."""
+        from .commands import SetCells
+        from .events import TabsChanged
+
+        if thing_id in self.slides:
+            old = self.set_thing_name(thing_id, name)
+            ctx.emit(TabsChanged())
+            return old, ()
         if thing_id not in self.sheets:
             return super().rename_thing(ctx, thing_id, name)
-        from .commands import SetCells
-        from .events import SheetsChanged
-
         old, restores = self.rename_sheet(SheetId(thing_id), name)
-        ctx.emit(SheetsChanged())
+        ctx.emit(TabsChanged())
         return old, tuple(
             SetCells(sheet, tuple(sorted(items, key=lambda t: t[:2]))) for sheet, items in restores.items()
         )
@@ -793,12 +903,16 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         return old, restores
 
     def set_thing_name(self, thing_id: str, name: str) -> str:
-        """Name a chart tab or an object; returns the name it had. (A sheet is renamed by :meth:`rename_thing`, a
-        named range by its own command.)"""
+        """Name a slide, a chart tab or an object; returns the name it had. (A sheet is renamed by
+        :meth:`rename_thing`, a named range by its own command.)"""
         if self.name_with_id(thing_id) is not None:
             raise ValueError(
                 "A named range is renamed in the list of names, which also changes the formulas that use it"
             )
+        if thing_id in self.slides:
+            if not name:
+                raise ValueError("a slide needs a name")
+            return self.slides.rename(thing_id, name)
         if thing_id not in self.charts:
             return super().set_thing_name(thing_id, name)
         if not name:
@@ -1224,10 +1338,12 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
                 )
 
     def add_sheet(self, sheet: Sheet, index: int | None) -> None:
-        """Put a sheet at ``index`` in the tab order, or last when ``index`` is ``None``."""
-        ordered = list(self.sheets.values())
-        ordered.insert(len(ordered) if index is None else index, sheet)
-        self.sheets = {s.id: s for s in ordered}
+        """Put a sheet at ``index`` in the tab order, or last when ``index`` is ``None``; ``ValueError`` (and nothing
+        changed) if its id is taken by another tab or there is no such place."""
+        self._check_new_tab(sheet.id, index)
+        self.tabs.insert(len(self.tabs) if index is None else index, Tab("sheet", sheet.id))
+        self.sheets[sheet.id] = sheet
+        self.sheets = {SheetId(tab.id): self.sheets[SheetId(tab.id)] for tab in self.tabs if tab.kind == "sheet"}
         self._ids = None
         self.open_holder(str(sheet.id))
 
@@ -1343,6 +1459,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         for key in list(calc.by_sheet.get(sheet_id, ())):
             calc.remove(key)
         self.sheets = {s.id: s for s in self.sheets.values() if s.id != sheet_id}
+        del self.tabs[self.tab_index(sheet_id)]
         self._ids = None
         restores: dict[SheetId, Cells] = defaultdict(list)
         for key, formula, old in plan:

@@ -260,8 +260,7 @@ def test_the_import_counts_only_the_charts_the_model_does_not_hold():
 # -- what a file cannot keep ------------------------------------------------------------------------------------------
 def test_a_chart_tab_is_a_sheet_with_the_chart_in_it_and_that_is_said():
     model = WorkbookModel()
-    model.sheets[S1] = Sheet(S1, "Data")
-    model.open_holder("s1")
+    model.add_sheet(Sheet(S1, "Data"), None)
     model.store(model.sheets[S1], 0, 0, {"t": "int", "v": 3})
     model.diagrams.define(ChartSpec(id="c1", kind="bar", range=a_range((0, 0), (0, 0)), title="Sales"))
     model.charts["t1"] = Chart("t1", "Sales chart", "c1")
@@ -295,8 +294,7 @@ def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
 
 def test_a_chart_that_reads_nothing_is_not_written_and_that_is_said():
     model = WorkbookModel()
-    model.sheets[S1] = Sheet(S1, "Data")
-    model.open_holder("s1")
+    model.add_sheet(Sheet(S1, "Data"), None)
     model.diagrams.define(ChartSpec(id="c1", kind="bar", source="Gone"))
     body = ObjectBody("o1", "diagram", 480, 300, "plain-image", ref="c1")
     model.insert_object(VisualObject(body, CellAnchor(S1, 5, 1)))

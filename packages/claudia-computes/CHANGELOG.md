@@ -8,6 +8,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 Heavy functions in worker processes (E4.4, D37, D1314).
 
 ### Added
+- Slides in a workbook (E6.31 step 2, D1470, D1471): `WorkbookModel.slides` (the core's `Slides`) and `tabs`, the one
+  order of the sheets and slides (`Tab(kind, id)`); `AddSlide`/`RemoveSlide`; objects on a slide with the core's
+  `SlideAnchor` (the model is an `ObjectModel[CellAnchor | SlideAnchor]`). A slide is named and described like a
+  sheet. **Breaking:** the event `SheetsChanged` (`sheets`) is `TabsChanged` (`tabs`), sent when a sheet or a slide
+  comes, goes or is renamed; `AddSheet`'s `index` counts the slides too; the state (schema 17) stores `tabs` and
+  `slides`, and an older state is not read.
 - `requirements()` of a workbook: the fonts its styles ask for by name (`Requirements.fonts`), for the font report a
   server makes when it is opened (E1.9, D1306).
 - A sheet, a chart tab and a named range can be described (E1.13, D1317, D1318): `WorkbookModel.thing_descriptions`, `thing_description`, `set_thing_description`, and `rename_command`, which renames a named range with `RenameName`. State schema 16: `descriptions` is new (absent: none).
