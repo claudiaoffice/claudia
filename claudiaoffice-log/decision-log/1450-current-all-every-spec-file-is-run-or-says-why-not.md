@@ -25,7 +25,8 @@ On 2026-11-21 four approved files in `claudiaoffice-log/specs` were read by no t
 An approved file that cannot be bound yet stands in `NOT_BOUND_YET` in that test, with the story or bug that binds it.
 The test fails when an entry is no longer needed, so the list only shrinks; adding to it is the owner's call, not a way
 to get CI green. On 2026-11-22: `objects/names.feature` (E1.13, after the chart renames of E1.18),
-`document-file/requirements.feature` (E1.9), `invariants/objects-in-composes.feature` (PROC-40), and
+`document-file/requirements.feature` (E1.9), `invariants/objects-in-composes.feature` (PROC-40),
+`objects/the-same-in-all-three-apps.feature` (PROC-40: approved 2026-11-22, built by CODE-75, no step code yet), and
 `computes/slides.feature` (E6.31: approved the same day, its step code comes with the feature on its own branch, which
 takes the entry out when it binds the file).
 

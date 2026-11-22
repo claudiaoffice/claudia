@@ -42,8 +42,9 @@ A feature file starts with a `# title` comment line, then `Feature:`. Which test
   - `@app:computes|composes|creates`: the apps a scenario runs in; none means all that the file's folder says.
   - `@e2e:<file>`: the browser test is a script in `web/e2e/`; `@unit:<path>` and `@io:<path>`: the scenario is tested
     by a unit or a file-format test because no browser is needed. These are not run by `tests/e2e/specs`.
-  - `@draft` (on the `Feature:` line only): the file is a draft waiting for the owner's review. Approving it and binding
-    it to step code is one commit, the one that takes `@draft` off.
+  - `@draft` (on the `Feature:` line only): the file is a draft waiting for the owner's review. When the owner approves
+    it, `@draft` comes off: the file is bound to step code in that commit, or waits in `NOT_BOUND_YET` (below) with its
+    story until it is.
 - **Defaults I propose are marked in the review file**, so that a reviewer only has to veto.
 - **Every file is run, or says why not** (D1450). `tests/test_specs_are_bound.py` fails when a `.feature` file is not
   bound by a `test_<feature>.py`, its scenarios do not all carry `@unit:`, `@io:` or `@e2e:`, and it is not a `@draft`.

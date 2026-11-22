@@ -11,15 +11,16 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
     failure says the three ways out.
   * `NOT_BOUND_YET`: approved files that wait, each with its story. `test_the_list_of_files_not_bound_yet_only_shrinks`
     fails when an entry is run (or gone). Today: `objects/names.feature` (E1.13), `document-file/requirements.feature`
-    (E1.9), `invariants/objects-in-composes.feature` (PROC-40), `computes/slides.feature` (E6.31, merged from `main`
-    while this branch was open: the guard caught it).
+    (E1.9), `invariants/objects-in-composes.feature` (PROC-40), `objects/the-same-in-all-three-apps.feature` (PROC-40,
+    approved by the owner during the review of this branch), `computes/slides.feature` (E6.31, merged from `main` while
+    this branch was open: the guard caught it).
   * `test_a_draft_is_not_run_before_the_owner_has_approved_it`: bound and `@draft` at once fails.
   * `test_a_test_tag_names_a_test_that_exists_and_is_run`: `@unit:`/`@io:` paths exist; `@e2e:<script>` exists in
     `web/e2e/` and is in `SCRIPTS`. Only for files that run: a draft's or a waiting file's tags are promises.
   * `test_a_pending_tag_names_a_story_that_is_not_done`: `@pending:<story>` whose `_tasks/<story>-*.md` says
     `status: done` fails.
-* `claudiaoffice-log/specs/objects/the-same-in-all-three-apps.feature`: `@draft` on its `Feature:` line (it says
-  "Draft for the owner's review, 2026-11-21"). Nothing else in it changed.
+* `claudiaoffice-log/specs/objects/the-same-in-all-three-apps.feature`: marked `@draft`, then reviewed by the owner
+  (the chart-tab scenario removed for the chart renames of E1.18) and approved, so `@draft` came off again.
 * `scripts/run_e2e.py` (D1452): the three lists (`WITH_SERVERS`, `OWN_SERVER`, `FONTS_ADMIN`) became one, `SCRIPTS`, a
   list of `Script(name, runs, minutes)`; `runs` is one of the three apps or `all` (the shared servers on 8765–8767),
   `own`, `fonts`, `windows` or `macos`. New in it: `objects`, `windows-shell`, `macos-shell`. The window scripts build

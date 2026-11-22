@@ -2571,9 +2571,9 @@ From the tester review of 2026-11-21 (recommendations 1 and 2; the plan is `note
 `@io:packages/claudia-computes-io/tests/test_pictures.py`, which covers all five scenarios. Three approved files run
 nowhere: `objects/names.feature` (28), `document-file/requirements.feature` (6), `invariants/objects-in-composes.feature`
 (12); a fourth, `objects/the-same-in-all-three-apps.feature` (4), is a draft for the owner's review and now says so
-(`@draft`, D1451). `tests/test_specs_are_bound.py` (D1450) fails for any new file in that state; the three stand in its
-`NOT_BOUND_YET` with the story that binds each, and the entry has to go when that happens. PROC-40 is closed when the
-list is empty.
+(`@draft`, D1451); the owner approved it the same day, and it waits too. `tests/test_specs_are_bound.py` (D1450) fails
+for any new file in that state; the waiting files stand in its `NOT_BOUND_YET` with the story that binds each, and the
+entry has to go when that happens. PROC-40 is closed when its entries are gone.
 
 ### PROC-50 · `./run-e2e.sh regression` ran fewer browser scripts than CI · P2 · size 2 · fixed 2026-11-22
 **Measured** (2026-11-21, `d18c4e4`): the runner's lists named 27 scripts, CI's job 30; `objects.cjs` (the object
