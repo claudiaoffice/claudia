@@ -1830,3 +1830,85 @@ describe('a range to blank in an imported workbook (D723)', () => {
     expect(session.redactionRangePart('A0')).toBeNull()
   })
 })
+
+describe('slides among the sheets (E6.31, D1471, D1473)', () => {
+  const box = (id: string, extra: object = {}) => ({
+    id,
+    kind: 'text',
+    w: 400,
+    h: 120,
+    style: 'plain-box',
+    paragraph: { id, style: 'body-text', text: 'East leads', runs: [] },
+    ref: null,
+    rotation: 0,
+    snap: false,
+    anchor: { kind: 'slide', holder: 'p1', x: 100, y: 80 },
+    ...extra,
+  })
+  async function withASlide() {
+    const opening = await opened()
+    const { link, session } = opening
+    link.handlers.tabs = () => [
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+      { kind: 'slide', id: 'p1', name: 'Sales chart' },
+    ]
+    link.handlers.slide = (p: any) => ({ revision: 'main:3', slide: p.slide, objects: [box('t1')] })
+    link.handlers.shapes = () => ({ library: [{ format: 1, id: 'circle', name: 'Circle', path: 'M0 0', aspect: 1 }], document: [] })
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    return opening
+  }
+
+  it('reads the sheets and slides as one list of tabs, and the objects of each slide', async () => {
+    const { session } = await withASlide()
+    expect(session.state.tabs).toEqual([
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+      { kind: 'slide', id: 'p1', name: 'Sales chart' },
+    ])
+    expect(session.slideObjects('p1').map((o) => o.id)).toEqual(['t1'])
+    expect(session.objectsOn('s1')).toEqual([])
+    expect(session.state.library.map((s) => s.id)).toEqual(['circle'])
+  })
+
+  it('reads the tabs again when the server says they changed', async () => {
+    const { session, link } = await withASlide()
+    link.handlers.tabs = () => [{ kind: 'sheet', id: 's1', name: 'Budget' }]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    expect(session.state.tabs.map((tab) => tab.id)).toEqual(['s1'])
+  })
+
+  it('shows a slide with nothing selected, and a sheet again when the slide is gone', async () => {
+    const { session, link } = await withASlide()
+    await session.showSlide('p1')
+    expect(session.state.activeSlide).toBe('p1')
+    await session.select('t1')
+    expect(link.last('lock')).toEqual({ regions: [{ kind: 'objects', holder: 'p1', ids: ['t1'] }] })
+    link.handlers.tabs = () => [{ kind: 'sheet', id: 's1', name: 'Budget' }]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    expect(session.state.activeSlide).toBe('')
+    expect(session.state.selected).toBe(null)
+  })
+
+  it('moves, resizes and adds on a slide with the words creates uses', async () => {
+    const { session, link } = await withASlide()
+    await session.showSlide('p1')
+    for (const method of ['move_object', 'resize_object', 'add_object', 'add_image']) link.handlers[method] = () => ({ revision: 'main:4', object: 'o9' })
+    await session.move('t1', 300, 200)
+    expect(link.last('move_object')).toMatchObject({ id: 't1', x: 300, y: 200 })
+    await session.resize('t1', { x: 280, y: 180, w: 500, h: 160 })
+    expect(link.last('resize_object')).toMatchObject({ id: 't1', x: 280, y: 180, w: 500, h: 160 })
+    await session.addText({ x: 10, y: 20, w: 400, h: 120 })
+    expect(link.last('add_object')).toMatchObject({ slide: 'p1', kind: 'text', x: 10, y: 20, w: 400, h: 120 })
+    await session.addImage({ data: 'AA==', alt: '', sourceName: 'a.gif', sourcePath: null }, { x: 0, y: 0, w: 40, h: 20 })
+    expect(link.last('add_image')).toMatchObject({ slide: 'p1', x: 0, y: 0, w: 40, h: 20 })
+    await session.addImage({ data: 'AA==', alt: '', sourceName: 'a.gif', sourcePath: null }, { row: 1, col: 2, w: 40, h: 20 })
+    expect(link.last('add_image')).toMatchObject({ sheet: 's1', row: 1, col: 2 })
+  })
+
+  it('keeps working with a server from before slides: the tabs are its sheets', async () => {
+    const { session } = await opened()
+    expect(session.state.tabs).toEqual([{ kind: 'sheet', id: 's1', name: 'Budget' }])
+  })
+})

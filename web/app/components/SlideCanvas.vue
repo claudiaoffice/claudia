@@ -22,7 +22,8 @@ import { objectStyleHost } from '~/lib/object-style-host'
 import { colorOf, inkOn } from '~/lib/people'
 import { facetCss, scaleCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
-import type { SlideObject, SlideSession } from '~/lib/slide-session'
+import type { SlideObject } from '~/lib/slide-session'
+import { onSlide, type SlideHost } from '~/lib/slide-host'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
 import type { SlideMark } from '~/lib/slide-search-host'
@@ -33,17 +34,19 @@ const { t } = useI18n()
 // `showGrid` is the View menu's own preference (`lib/grid.ts`'s `useGrid`, held by SlideWorkspace.vue so the
 // menu item and this canvas share the one choice) — whether the lines are drawn. It never gates snapping: an
 // object snaps or not by its own `snap` field, grid lines shown or not (E10.15).
-const props = defineProps<{ session: SlideSession; showGrid: boolean; marks?: SlideMark[] }>()
+const props = defineProps<{ session: SlideHost; showGrid: boolean; marks?: SlideMark[] }>()
 /** `styles` asks the workspace to open the all-styles dialog, which owns the modal layer. */
 const emit = defineEmits<{ styles: []; agenda: [id: string] }>()
 const session = props.session
 const state = session.state
+/** An object of the document as an object on a slide, or `undefined` (a workbook's objects hang at cells too). */
+const slideObject = (id: string | null | undefined): SlideObject | undefined => onSlide(id ? state.objects[id] : undefined)
 
 /** Cut, Copy and Paste of a picture (D1229): one module for the three apps. A paste puts the picture where a new one goes,
  * at the size it had (and no further out than the slide). */
 const clip = useObjectClipboard({
   selected: () => {
-    const o = state.selected ? state.objects[state.selected] : null
+    const o = slideObject(state.selected) ?? null
     return o ? { id: o.id, body: o, asset: o.ref ? state.images[o.ref] : undefined } : null
   },
   readonly: () => session.readOnly,
@@ -51,7 +54,7 @@ const clip = useObjectClipboard({
   add: async (c) => {
     const w = Math.min(c.w, SLIDE_W)
     const h = Math.min(c.h, SLIDE_H)
-    const at = insertFrame('image', c.w / c.h, session.objectsOn(state.activeSlide).length)
+    const at = insertFrame('image', c.w / c.h, session.slideObjects(state.activeSlide).length)
     await session.addImage(clippedImport(c), { x: Math.max(0, Math.min(at.x, SLIDE_W - w)), y: Math.max(0, Math.min(at.y, SLIDE_H - h)), w, h })
   },
 })
@@ -74,7 +77,7 @@ const scale = computed(() => fitScale(size.value, MARGIN))
 const readonly = computed(() => lookOnly(state))
 usePointed(state, area, (id) => `[data-id="${CSS.escape(id)}"]`)
 
-const objects = computed(() => session.objectsOn(state.activeSlide))
+const objects = computed(() => session.slideObjects(state.activeSlide))
 /** What a search found in the words of an object (E10.19), to draw there. */
 const marksOf = (id: string) => (props.marks ?? []).filter((m) => m.object === id)
 const others = computed(() => session.selectedByOthers(state.activeSlide))
@@ -196,7 +199,7 @@ const interaction = useObjectInteraction({
   },
   toUnits: (event) => point(event),
   subject(id) {
-    const o = state.objects[id]
+    const o = slideObject(id)
     return o ? { id, frame: slideFrame(o), rotation: o.rotation, aspect: aspectOf(o), grid: gridOf(o.snap) } : null
   },
   async commit(change) {
@@ -210,7 +213,7 @@ const { rotatePreview } = interaction
 /** What a screen reader is told about a turn: the angle it has now. */
 const turnSaid = ref('')
 
-const selected = computed(() => (state.selected ? (state.objects[state.selected] ?? null) : null))
+const selected = computed(() => (slideObject(state.selected) ?? null))
 const selectedFrame = computed(() => (selected.value ? frameOf(selected.value) : null))
 /** An image always keeps its own proportions, the same way a shape with a fixed `aspect` does (the server
  * refuses a `resize_object` that would not keep it, `claudia_creates._check_visual`). */
@@ -306,21 +309,21 @@ async function onTurnKey(event: KeyboardEvent) {
   if (to === null) return
   event.preventDefault()
   event.stopPropagation()
-  if (to !== o.rotation && (await session.rotateObject(o.id, to))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? to) })
+  if (to !== o.rotation && (await session.rotateObject(o.id, to))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(slideObject(o.id)?.rotation ?? to) })
 }
 
 /** Format ▸ Rotate ▸ Rotate Right 90° / Rotate Left 90°, and the same two in the context menu. */
 async function quarter(direction: 1 | -1, id: string | null = state.selected) {
-  const o = id ? state.objects[id] : null
+  const o = slideObject(id) ?? null
   if (!o || !canTurn(o.kind)) return
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
-  if (await session.rotateObject(o.id, quarterTurn(o.rotation, direction))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(state.objects[o.id]?.rotation ?? 0) })
+  if (await session.rotateObject(o.id, quarterTurn(o.rotation, direction))) turnSaid.value = t('Turned to {degrees}', { degrees: degreesText(slideObject(o.id)?.rotation ?? 0) })
 }
 
 /** Rotate By…: the popover, beside the object. Its angles are previews on the slide until Done. */
 const rotating = ref<{ id: string; x: number; y: number } | null>(null)
 function openRotateBy(id: string | null = state.selected, at?: { x: number; y: number }) {
-  const o = id ? state.objects[id] : null
+  const o = slideObject(id) ?? null
   if (!o || !canTurn(o.kind)) return
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   const el = area.value?.querySelector(`[data-id="${CSS.escape(o.id)}"]`)
@@ -356,7 +359,7 @@ async function onSlideDown(event: PointerEvent) {
  * right click lands on a different one while the first's menu is still fading, so this is tracked on its own. */
 const contextMenu = ref<{ x: number; y: number; id: string } | null>(null)
 const contextItems = computed<MenuItem[]>(() => {
-  const o = contextMenu.value ? state.objects[contextMenu.value.id] : null
+  const o = slideObject(contextMenu.value?.id) ?? null
   if (!o) return []
   // The list is `lib/object-menu.ts`'s, one for all three apps (D1225); creates has the grid and no wrap.
   return contextMenuItems(
@@ -381,9 +384,9 @@ const contextItems = computed<MenuItem[]>(() => {
       remove: () => session.removeObject(o.id),
       cut: () => void clip.cut(),
       copy: () => void clip.copy(),
-      setSnap: (snap) => session.setSnap(o.id, snap),
+      setSnap: (snap) => void session.setSnap?.(o.id, snap),
     },
-    { grid: true },
+    { grid: session.setSnap !== undefined },
   )
 })
 
@@ -405,7 +408,7 @@ const styleHost = objectStyleHost({
     return state.palette?.readings ?? []
   },
   get selected() {
-    return state.selected ? state.objects[state.selected] ?? null : null
+    return slideObject(state.selected) ?? null
   },
   get model() {
     return state.styleModel
@@ -446,13 +449,13 @@ function closeContextMenu() {
 /** The image a right-click's "Properties" opened the dialog for (follow-up, 2026-11-07) — tracked separately from
  * `contextMenu`/`selected` since the menu itself has already closed by the time the dialog is showing. */
 const propertiesFor = ref<string | null>(null)
-const propertiesObject = computed(() => (propertiesFor.value ? state.objects[propertiesFor.value] ?? null : null))
+const propertiesObject = computed(() => (slideObject(propertiesFor.value) ?? null))
 // ------------------------------------------------------------------------------ describing an object (BITV 1.1.1)
 /** Name & describe… (D1317): Format ▸ Name & describe…, Ctrl+Alt+D, or the context menu's "Name & describe…". The state
  * is kept here, since the context menu has closed by the time the dialog shows. */
 const nameDialog = useNameAndDescribe(session, () => area.value?.focus({ preventScroll: true }))
 function openDescribe(id: string | null = state.selected) {
-  if (!id || !state.objects[id]) return
+  if (!id || !slideObject(id)) return
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   void nameDialog.open(id)
 }
@@ -474,7 +477,7 @@ const setEditor = (el: unknown) => {
 }
 
 async function beginEdit(id: string | null = state.selected) {
-  const o = id ? state.objects[id] : null
+  const o = slideObject(id) ?? null
   if (!o || editing.value || containerEditing.value || o.kind === 'image') return // a picture has no text to write
   if (readonly.value) return session.notice(t('You can only look at this document.'), 'warning')
   await session.select(o.id)
@@ -500,9 +503,9 @@ async function commitEdit(text?: string) {
   const words = text ?? editor.value?.take() ?? e.text
   editing.value = null
   area.value?.focus({ preventScroll: true })
-  const current = state.objects[e.id]
+  const current = slideObject(e.id)
   // Words that are one fenced block (```latex … ```) of a type the server makes become a container (D560)
-  if (current && current.kind === 'text' && (await session.fenceToContainer(e.id, words))) return
+  if (current && current.kind === 'text' && (await session.fenceToContainer?.(e.id, words))) return
   if (current && words !== wordsOf(current)) await session.writeWords(e.id, words)
 }
 
@@ -510,7 +513,7 @@ async function commitEdit(text?: string) {
  * of the selected object's words; with the point on the window to open the picker at. `null` for no words. */
 async function referencePlace(): Promise<{ id: string; offset: number; x: number; y: number } | null> {
   const id = editing.value?.id ?? state.selected
-  const o = id ? state.objects[id] : null
+  const o = slideObject(id) ?? null
   if (!id || !o?.paragraph || o.paragraph.generated) return null
   const rect = document.querySelector<HTMLElement>(`.obj[data-id="${CSS.escape(id)}"]`)?.getBoundingClientRect()
   const offset = editing.value ? (editor.value?.caretOffset() ?? 0) : o.paragraph.text.length
@@ -617,7 +620,7 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
           </svg>
           <div class="words" :style="textStyle(o)">
             <span v-if="wordsOf(o) === '' && o.kind === 'text' && !o.paragraph?.generated && editing?.id !== o.id" class="hint">{{ t('Double-click to type') }}</span>
-            <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" :marker="session.markOf(o.id)?.marker" :indent="session.markOf(o.id)?.indent" :entries="session.agendaOf(o.id)" :leader="o.paragraph?.generated?.leader" :shown="state.referenced[o.id] ?? null" />
+            <ParagraphWords v-else-if="editing?.id !== o.id" :text="wordsOf(o)" :marks="marksOf(o.id)" :marker="session.markOf?.(o.id)?.marker" :indent="session.markOf?.(o.id)?.indent" :entries="session.agendaOf?.(o.id)" :leader="o.paragraph?.generated?.leader" :shown="state.referenced[o.id] ?? null" />
           </div>
           <ParagraphEditor
             v-if="editing?.id === o.id"
@@ -625,8 +628,8 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
             class="editor"
             :text="editing.text"
             :label="t('text of the object')"
-            :marker="session.markOf(o.id)?.marker"
-            :indent="session.markOf(o.id)?.indent"
+            :marker="session.markOf?.(o.id)?.marker"
+            :indent="session.markOf?.(o.id)?.indent"
             :shown="state.referenced[o.id] ?? null"
             :style="editorStyle(o)"
             @commit="commitEdit"
@@ -638,9 +641,9 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
       <!-- what colleagues have selected: their colour and name -->
       <template v-for="other in others" :key="`${other.user}:${other.id}`">
         <div
-          v-if="state.objects[other.id]"
+          v-if="slideObject(other.id)"
           class="other"
-          :style="{ ...boxStyle(state.objects[other.id]!), borderColor: colorOf(state, other.user) }"
+          :style="{ ...boxStyle(slideObject(other.id)!), borderColor: colorOf(state, other.user) }"
           :title="other.locked ? t('{user} is working on this', { user: other.user }) : t('{user} selected this', { user: other.user })"
         >
           <span class="tag" :style="{ background: colorOf(state, other.user), color: inkOn(colorOf(state, other.user)) }">{{ other.user }}</span>

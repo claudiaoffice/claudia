@@ -140,7 +140,7 @@ async function opened(extra: Record<string, (p: any) => any> = {}) {
   return { link, session }
 }
 
-const shown = (id = 's1', kind: 'sheet' | 'chart' = 'sheet') => ({ kind, id })
+const shown = (id = 's1', kind: 'sheet' | 'slide' | 'chart' = 'sheet') => ({ kind, id })
 const ask = (contents: SheetRequest['contents'], at = shown(), selection: SheetRequest['selection'] = null): SheetRequest => ({ contents, shown: at, selection })
 
 // ------------------------------------------------------------------------------ the session
@@ -448,5 +448,44 @@ describe('the print source of a workbook', () => {
     expect(JSON.stringify(source.watched())).not.toBe(before)
     session.state.revision = 'main:12'
     expect(JSON.stringify(source.watched())).not.toBe(before)
+  })
+})
+
+// ------------------------------------------------------------------------------ a slide among the sheets (E6.31, D1473)
+describe('a slide among the sheets', () => {
+  const ON_SLIDE = (id: string, extra: object = {}) => OBJECT(id, { anchor: { kind: 'slide', holder: 'p1', x: 100, y: 80 }, ...extra })
+  const withSlide = {
+    tabs: () => [
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+      { kind: 'slide', id: 'p1', name: 'Sales chart' },
+      { kind: 'sheet', id: 's2', name: 'Plan' },
+    ],
+    slide: () => ({ revision: 'main:3', slide: 'p1', objects: [ON_SLIDE('o9'), ON_SLIDE('o8', { kind: 'diagram', ref: 'd1', w: 800, h: 450 })] }),
+  }
+
+  it('prints the slide that is shown, and in the whole workbook between the sheets as the tabs have it', async () => {
+    const { session } = await opened(withSlide)
+    expect(printedIds(session, ask('sheet', shown('p1', 'slide')))).toEqual([shown('p1', 'slide')])
+    expect(printedIds(session, ask('workbook'))).toEqual([shown('s1'), shown('p1', 'slide'), shown('s2'), shown('c1', 'chart')])
+  })
+
+  it('gives the layout library the slide with its objects, its chart as the picture made of it', async () => {
+    const { session } = await opened(withSlide)
+    const asked = ask('sheet', shown('p1', 'slide'))
+    expect(chartSizes(session, asked)).toEqual(new Map([['d1', [800, 450]]]))
+    const doc = sheetDocument(session, asked, new Map([['d1', '<svg/>']]))
+    expect(doc.sheets).toHaveLength(1)
+    const slide = doc.sheets[0]!
+    expect(slide).toMatchObject({ kind: 'slide', id: 'p1', name: 'Sales chart' })
+    if (slide.kind !== 'slide') return
+    expect(slide.objects.map((o) => [o.id, o.image])).toEqual([['o9', 'pic'], ['o8', 'chart:d1']])
+  })
+
+  it('lies the way a slide does: the bar cannot turn it', async () => {
+    const { session, link } = await opened(withSlide)
+    const source = sheetSource(session, { shown: () => shown('p1', 'slide'), selection: () => null, charts: async () => null })
+    expect(source.orientation!.value()).toBe('landscape')
+    source.orientation!.set('portrait')
+    expect(link.last('set_sheet_print')).toBeUndefined()
   })
 })

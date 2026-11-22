@@ -656,6 +656,59 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     this.state.notice = { id: ++this.noticeCount, kind, text }
   }
 
+  // ------------------------------------------------------------------------------ where I am, and holding what I work on
+  /** The place last shown to the others, in few characters, so that the same place is not sent twice. */
+  private shownWhere = ''
+  private holdingRegions = false
+
+  /** Show the others where I am; `where` says it in few characters so that the same place is not sent twice. */
+  protected async showRegions(where: string, regions: Region[]): Promise<void> {
+    if (where === this.shownWhere || this.state.status !== 'open') return
+    this.shownWhere = where
+    try {
+      await this.need().request('presence', { regions })
+    } catch {
+      this.shownWhere = '' // not important enough to bother the person; the next move tries again
+    }
+  }
+
+  /** Hold these regions so that nobody else changes them; false after telling the person why not. */
+  protected async holdRegions(regions: Region[]): Promise<boolean> {
+    if ((await this.attempt('lock', { regions })) === false) return false
+    this.holdingRegions = true
+    this.shownWhere = ''
+    return true
+  }
+
+  /** Let go of what I hold, if anything. */
+  protected async releaseRegions(): Promise<void> {
+    if (!this.holdingRegions) return
+    this.holdingRegions = false
+    this.shownWhere = ''
+    try {
+      await this.need().request('unlock')
+    } catch {
+      /* the lock runs out by itself */
+    }
+  }
+
+  /** Hold an object a person selected on a slide (shown only, for somebody who just looks); false when a colleague
+   * holds it first. Creates and computes select a slide's objects the same way (D1473). */
+  protected async holdObject(id: string, holder: string): Promise<boolean> {
+    const regions: Region[] = [{ kind: 'objects', holder, ids: [id] }]
+    if (lookOnly(this.state)) {
+      await this.showRegions(`select ${id}`, regions)
+      return true
+    }
+    return this.holdRegions(regions)
+  }
+
+  /** Let go of the selected object, and show the others that nothing is. */
+  protected async letGoOfObject(): Promise<void> {
+    await this.releaseRegions()
+    await this.showRegions('nothing', [])
+  }
+
   protected need(): LinkLike {
     if (!this.link) throw new ProtocolError('closed', 'not connected')
     if (this.state.replay) return (this.replayLink ??= new PastLink(this.link, () => this.replayShown))

@@ -28,6 +28,7 @@ import { pointTo, refOf, sheetPrefix, slotAt } from '~/lib/pointing'
 import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection'
 import type { Session } from '~/lib/session'
 import { NEW_OBJECT_CAP, pictureSize, type PictureImport } from '~/lib/images'
+import { insertFrame } from '~/lib/geometry'
 import {
   askItem,
   authorsItemUnavailable,
@@ -103,6 +104,10 @@ watch(
     if (activeChart.value !== null && !charts.some((c) => c.id === activeChart.value)) activeChart.value = null
   },
 )
+/** A chart tab or a slide is shown instead of a sheet (E6.31): the grid, the formula bar and what acts on cells rest. */
+const offSheet = computed(() => activeChart.value !== null || state.activeSlide !== '')
+/** The slide view, while a slide is shown (D1473): creates' canvas. */
+const canvas = ref<{ focus: () => void } | null>(null)
 const grid = ref<{
   focus: () => void
   selectObject: (id: string) => void
@@ -220,6 +225,7 @@ async function goto(text: string) {
 /** What Edit ▸ Reference in Chat points at: the object selected, else the chart tab, else the named range the selection is exactly,
  * else the sheet. */
 function thingInFocus(): string | undefined {
+  if (state.activeSlide) return state.selected ?? state.activeSlide
   const selected = grid.value?.selectedObject() ?? activeChart.value
   if (selected) return selected
   const named = nameAt(state.names, state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
@@ -230,7 +236,7 @@ function thingInFocus(): string | undefined {
 async function selectName(name: NameInfo) {
   const g = name.region
   if (!g) return
-  if (g.sheet !== state.activeSheet || activeChart.value) await pickTab(g.sheet, 'sheet')
+  if (g.sheet !== state.activeSheet || offSheet.value) await pickTab(g.sheet, 'sheet')
   sel.value = { row: g.row0, col: g.col0, row2: g.row1, col2: g.col1 }
 }
 
@@ -334,7 +340,7 @@ async function pickPurpose(offset: number | null, purpose: Purpose) {
 // ------------------------------------------------------------------------------ pivot tables (E6.30, D624)
 // A pivot table is a name with a place (`state.pivots`); the entries of Tools that work on one are off while the cursor
 // is not in one. The field panel floats like Search & replace; the dialogs are made on demand.
-const pivotHere = computed(() => (activeChart.value ? null : pivotAt(state.pivots, state.activeSheet, sel.value.row, sel.value.col)))
+const pivotHere = computed(() => (offSheet.value ? null : pivotAt(state.pivots, state.activeSheet, sel.value.row, sel.value.col)))
 const pivotPanelName = ref<string | null>(null)
 const panelPivot = computed(() => state.pivots.find((p) => p.name === pivotPanelName.value) ?? null)
 const pivotValue = ref<{ name: string; index: number } | null>(null)
@@ -350,7 +356,7 @@ function openPivotNew() {
   dialog.value = 'pivot-new'
 }
 async function pivotCreated(name: string, sheet: string) {
-  if (sheet !== state.activeSheet || activeChart.value) await pickTab(sheet, 'sheet')
+  if (sheet !== state.activeSheet || offSheet.value) await pickTab(sheet, 'sheet')
   pivotPanelName.value = name
 }
 /** Pivot Fields: shows the panel for the pivot the cursor is in, or hides it. */
@@ -579,14 +585,13 @@ async function pickSheet(id: string) {
 }
 
 /** `FooterBar`'s `pick`: a sheet tab behaves exactly as before; a chart tab just swaps what the main pane
- * shows, with no selection, formula bar or editing of its own to settle first. */
-async function pickTab(id: string, kind: 'sheet' | 'chart') {
-  if (kind === 'chart') {
-    activeChart.value = id
-    return
-  }
-  activeChart.value = null
-  await pickSheet(id)
+ * shows, with no selection, formula bar or editing of its own to settle first; a slide is shown with nothing selected
+ * on it (D1473). */
+async function pickTab(id: string, kind: 'sheet' | 'slide' | 'chart') {
+  if (edit.value && !pointing.value) await commit('none')
+  activeChart.value = kind === 'chart' ? id : null
+  await session.showSlide(kind === 'slide' ? id : '')
+  if (kind === 'sheet') await pickSheet(id)
 }
 
 /** A tag in the chat took the view to a thing (E5.20): to a chart's tab, or from a chart's tab to the sheet it is on. */
@@ -595,20 +600,21 @@ watch(
   (pointed) => {
     if (!pointed) return
     activeChart.value = state.charts.some((c) => c.id === pointed.id) ? pointed.id : null
+    if (activeChart.value) void session.showSlide('')
     const named = state.names.find((n) => n.id === pointed.id)
     if (named) void selectName(named) // a named range: its cells are selected, on the sheet they are on (D552)
   },
 )
 
-/** The tab shown (a sheet, or a chart's) and the name it has, for the rename dialog (E6.24, D550). */
+/** The tab shown (a sheet, a slide or a chart's) and the name it has, for the rename dialog (E6.24, D550). */
 const shownTab = computed(() => {
-  const id = activeChart.value ?? state.activeSheet
-  const found = activeChart.value ? state.charts.find((c) => c.id === id) : state.sheets.find((x) => x.id === id)
+  const id = activeChart.value ?? (state.activeSlide || state.activeSheet)
+  const found = [...state.tabs, ...state.charts].find((x) => x.id === id)
   return found ? { id, name: found.name } : null
 })
 const renaming = ref<{ id: string; name: string } | null>(null)
 function askRename(id?: string) {
-  const tab = id ? ([...state.sheets, ...state.charts].find((x) => x.id === id) ?? null) : shownTab.value
+  const tab = id ? ([...state.tabs, ...state.charts].find((x) => x.id === id) ?? null) : shownTab.value
   if (!tab || readonly.value) return
   renaming.value = { id: tab.id, name: tab.name }
   dialog.value = 'rename'
@@ -687,7 +693,7 @@ const cellHost = cellStyleHost({
     return state.activeSheet
   },
   get area(): [number, number, number, number] | null {
-    if (!state.activeSheet || activeChart.value || objectSelected.value) return null
+    if (!state.activeSheet || offSheet.value || objectSelected.value) return null
     return sheetArea([b.value.r0, b.value.c0, b.value.r1, b.value.c1], SIZE)
   },
   get anchor() {
@@ -740,7 +746,7 @@ watch(
   },
 )
 async function goToCell(sheet: string, row: number, col: number) {
-  if (sheet !== state.activeSheet || activeChart.value) await pickTab(sheet, 'sheet')
+  if (sheet !== state.activeSheet || offSheet.value) await pickTab(sheet, 'sheet')
   sel.value = single(row, col)
 }
 function openSearch(replace = false) {
@@ -810,7 +816,7 @@ const PREVIOUS_OBJECT: ShortcutDef = { id: 'view.previousObject', get label() { 
 // selection of it, or the whole workbook (D1001–D1004); the bar's choices live in `lib/print/source.ts`.
 const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => grid.value?.focus())
 const printSource = sheetSource(session, {
-  shown: () => (activeChart.value ? { kind: 'chart', id: activeChart.value } : { kind: 'sheet', id: state.activeSheet }),
+  shown: () => (activeChart.value ? { kind: 'chart', id: activeChart.value } : state.activeSlide ? { kind: 'slide', id: state.activeSlide } : { kind: 'sheet', id: state.activeSheet }),
   selection: () => {
     const b = bounds(sel.value)
     return [b.r0, b.c0, b.r1, b.c1]
@@ -851,7 +857,7 @@ async function resample() {
   await session.resample()
 }
 function openRandom() {
-  if (state.activeSheet && !activeChart.value) dialog.value = 'random'
+  if (state.activeSheet && !offSheet.value) dialog.value = 'random'
 }
 function openOutcomes(at?: { x: number; y: number }) {
   if (!hasOutcomes.value) return session.notice(t('This cell has no alternatives and does not depend on any.'), 'info')
@@ -864,14 +870,14 @@ function insertRandom(formula: string) {
 }
 
 function followNow(force = false) {
-  if (!following.value || !state.activeSheet || activeChart.value) return
+  if (!following.value || !state.activeSheet || offSheet.value) return
   if (!force && asked && coversWindow(asked, view) && state.trace?.row === sel.value.row && state.trace?.col === sel.value.col && state.trace?.reach === reach.value) return
   asked = windowAround(view, VIEW_ROWS, VIEW_COLS)
   void session.follow(state.activeSheet, sel.value.row, sel.value.col, reach.value, asked)
 }
 function toggleFollow() {
   if (following.value) return stopFollowing()
-  if (!state.activeSheet || activeChart.value) return
+  if (!state.activeSheet || offSheet.value) return
   following.value = true
   followNow(true)
 }
@@ -930,7 +936,7 @@ function styleItems() {
   const offered = galleryFor(cellHost.styles, cellHost.slot, state.styleModel, cellHost.current?.id)
   const [r0, c0, r1, c1] = sheetArea([b.value.r0, b.value.c0, b.value.r1, b.value.c1], SIZE)
   const cells = (r1 - r0 + 1) * (c1 - c0 + 1)
-  const some = !!state.activeSheet && !activeChart.value
+  const some = !!state.activeSheet && !offSheet.value
   return formatItems(t, {
     ...common,
     groups: some ? [offered.own] : [],
@@ -981,7 +987,21 @@ function anchorForImage(aspect: number, natural?: PictureImport['natural']) {
   return { row: b.value.r0, col: b.value.c0, ...pictureSize(aspect, NEW_OBJECT_CAP.h, NEW_OBJECT_CAP.w, natural) }
 }
 function addPicture(picture: PictureImport, aspect: number): Promise<string | null> {
+  if (state.activeSlide) return session.addImage({ ...picture, fit: true }, insertFrame('image', aspect, slideCount.value, picture.natural))
   return session.addImage({ ...picture, fit: true }, anchorForImage(aspect, picture.natural))
+}
+
+// ------------------------------------------------------------------------------ a slide's tools (E6.31): creates' bar, without Present
+const slideCount = computed(() => session.slideObjects(state.activeSlide).length)
+async function addSlideText() {
+  if (await session.addText(insertFrame('text', null, slideCount.value))) canvas.value?.focus()
+}
+async function addSlideShape(id: string) {
+  const outline = state.library.find((x) => x.id === id) ?? state.shapes[id]
+  if (await session.addShape(id, insertFrame('shape', outline?.aspect ?? null, slideCount.value))) canvas.value?.focus()
+}
+async function removeFromSlide() {
+  if (state.selected && (await session.removeObject(state.selected))) canvas.value?.focus()
 }
 
 /** Insert ▸ Container ▸ …: a container of the chosen type where the selection starts (D560), ready to be written in. */
@@ -994,6 +1014,7 @@ async function addContainer(type: string) {
 
 function imageInserted(id: string) {
   dialog.value = null
+  if (state.activeSlide) return canvas.value?.focus()
   grid.value?.selectObject(id)
   grid.value?.focus()
 }
@@ -1177,7 +1198,24 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     @saved="grid?.focus()"
   >
     <template #toolbar>
-      <div v-if="!printing" class="formulaRow" data-region="toolbar">
+      <InsertBar
+        v-if="!printing && state.activeSlide"
+        data-region="toolbar"
+        :shapes="state.library"
+        :can-delete="state.selected !== null"
+        :can-undo="state.canUndo"
+        :can-redo="state.canRedo"
+        :undo-label="state.undoLabel"
+        :redo-label="state.redoLabel"
+        :readonly="readonly"
+        @text="addSlideText"
+        @shape="addSlideShape"
+        @image="dialog = 'image'"
+        @remove="removeFromSlide"
+        @undo="session.undo()"
+        @redo="session.redo()"
+      />
+      <div v-else-if="!printing" class="formulaRow" data-region="toolbar">
         <FormulaBar
           :label="label"
           :text="formulaText"
@@ -1199,9 +1237,9 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
           @undo="session.undo()"
           @redo="session.redo()"
         >
-          <StylePicker v-if="state.activeSheet && !activeChart" :host="activeHost" :hint="chordLabel(LOOK.chord)" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
+          <StylePicker v-if="state.activeSheet && !offSheet" :host="activeHost" :hint="chordLabel(LOOK.chord)" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
           <button
-            v-if="state.activeSheet && !activeChart"
+            v-if="state.activeSheet && !offSheet"
             type="button"
             class="draw"
             :disabled="readonly"
@@ -1235,6 +1273,9 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     <div v-else-if="activeChart" class="chart-tab">
       <ChartView v-if="activeChartSpec" :session="session" :diagram-id="activeChartSpec" :label="t('Chart: {name}', { name: activeChartName })" />
       <div v-else class="nosheet">{{ t('This chart\'s definition is gone.') }}</div>
+    </div>
+    <div v-else-if="state.activeSlide" class="stage">
+      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="false" @styles="dialog = 'styles'" />
     </div>
     <SheetGrid
       v-else-if="state.activeSheet"
@@ -1515,5 +1556,14 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
   min-height: 0;
   padding: 16px;
   background: var(--paper);
+}
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.canvas {
+  flex: 1;
 }
 </style>

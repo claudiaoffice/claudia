@@ -13,7 +13,8 @@ defineProps<{
   undoLabel: string
   redoLabel: string
   readonly: boolean
-  /** The shortcut the Present button names in its tool tip (`lib/present-keys.ts`), and its words. */
+  /** The shortcut the Present button names in its tool tip (`lib/present-keys.ts`), and its words. Without its words
+   * there is no Present button: a workbook's slides are not presented (D1473). */
   presentHint?: string
   presentLabel?: string
 }>()
@@ -52,9 +53,9 @@ defineEmits<{ text: []; shape: [id: string]; image: []; remove: []; undo: []; re
       </button>
     </div>
     <!-- Starting the show is not an edit, so it stays open to a viewer too. -->
-    <button type="button" class="present" :title="`${presentLabel ?? 'Present'} (${presentHint ?? 'F5'})`" :aria-label="presentLabel ?? 'Present'" data-tool="present" @click="$emit('present')">
+    <button v-if="presentLabel" type="button" class="present" :title="`${presentLabel} (${presentHint ?? 'F5'})`" :aria-label="presentLabel" data-tool="present" @click="$emit('present')">
       <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M6 4.5v11l9-5.5z" fill="currentColor" /></svg>
-      <span>{{ presentLabel ?? 'Present' }}</span>
+      <span>{{ presentLabel }}</span>
     </button>
   </div>
 </template>

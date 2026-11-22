@@ -1,8 +1,9 @@
 // A workbook as the layout library's `layoutSheet` reads it (E6.19, D1001–D1009): the cells as they are shown (through
 // their number formats and styles), the sizes of rows and columns, the floating pictures and charts, and how each
 // sheet prints. Everything comes from the session; what is not loaded yet is loaded first (`loadForPrint`).
-import { utf8Decode, type CellArea, type CellPurpose, type ImageInfo, type PrintedChart, type PrintedSheet, type SheetCell, type SheetDocument, type SheetPicture, type TextStyle } from '@claudia/layout'
+import { utf8Decode, type CellArea, type CellPurpose, type ImageInfo, type PrintedChart, type PrintedSheet, type PrintedSlide, type SheetCell, type SheetDocument, type SheetPicture, type SlideObject as LayoutSlideObject, type TextStyle } from '@claudia/layout'
 import { pointer } from '../objects'
+import { pictureOf } from '../containers'
 import { showFormatted } from '../cells'
 import { cellLook, DEFAULT_CELL_STYLE, styleAt, within, type CellLook, type CellRange } from '../cell-styles'
 import { formatCodeOf, inkOf, symbolsFor } from '../number-format'
@@ -22,8 +23,8 @@ const CHART_H = 400
 /** What the person asked the preview to print. */
 export interface SheetRequest {
   contents: Contents
-  /** the sheet or chart tab that is shown in the window */
-  shown: { kind: 'sheet' | 'chart'; id: string }
+  /** the sheet, slide or chart tab that is shown in the window */
+  shown: { kind: 'sheet' | 'slide' | 'chart'; id: string }
   /** the selected cells of the shown sheet: first row, first column, last row, last column */
   selection: [number, number, number, number] | null
 }
@@ -35,11 +36,12 @@ export type ChartPictures = (spec: string, w: number, h: number) => Promise<stri
 /** The id a chart's picture has among the document's images. */
 export const chartImage = (spec: string): string => `chart:${spec}`
 
-/** The sheets and chart tabs the request prints, in tab order: sheets first, then charts. */
-export function printedIds(session: Session, request: SheetRequest): { kind: 'sheet' | 'chart'; id: string }[] {
-  const { sheets, charts } = session.state
-  if (request.contents === 'workbook') return [...sheets.map((s) => ({ kind: 'sheet' as const, id: s.id })), ...charts.map((c) => ({ kind: 'chart' as const, id: c.id }))]
-  const known = request.shown.kind === 'sheet' ? sheets.some((s) => s.id === request.shown.id) : charts.some((c) => c.id === request.shown.id)
+/** The sheets, slides and chart tabs the request prints, in tab order: the sheets and slides as the tabs have them
+ * (E6.31, D1473), then the charts. */
+export function printedIds(session: Session, request: SheetRequest): { kind: 'sheet' | 'slide' | 'chart'; id: string }[] {
+  const { tabs, charts } = session.state
+  if (request.contents === 'workbook') return [...tabs.map(({ kind, id }) => ({ kind, id })), ...charts.map((c) => ({ kind: 'chart' as const, id: c.id }))]
+  const known = request.shown.kind === 'chart' ? charts.some((c) => c.id === request.shown.id) : tabs.some((x) => x.kind === request.shown.kind && x.id === request.shown.id)
   return known ? [request.shown] : []
 }
 
@@ -52,7 +54,8 @@ export function chartSizes(session: Session, request: SheetRequest): Map<string,
       const spec = session.state.charts.find((c) => c.id === id)?.spec_id
       if (spec && !sizes.has(spec)) sizes.set(spec, [CHART_W, CHART_H])
     } else {
-      for (const o of session.objectsOn(id)) if (o.kind === 'diagram' && o.ref && !sizes.has(o.ref)) sizes.set(o.ref, [o.w, o.h])
+      const objects = kind === 'slide' ? session.slideObjects(id) : session.objectsOn(id)
+      for (const o of objects) if (o.kind === 'diagram' && o.ref && !sizes.has(o.ref)) sizes.set(o.ref, [o.w, o.h])
     }
   }
   return sizes
@@ -149,13 +152,27 @@ function picturesOf(session: Session, sheet: string, pictures: ReadonlyMap<strin
   })
 }
 
+/** The objects of a slide as the layout library draws them (as creates' are): a chart as the picture made of it, a
+ * container as the picture it shows. */
+function slideObjectsOf(session: Session, slide: string, pictures: ReadonlyMap<string, string>): LayoutSlideObject[] {
+  const containers = session.state.containers
+  return session.slideObjects(slide).map((o) => {
+    const image = o.kind === 'diagram' ? (o.ref && pictures.has(o.ref) ? chartImage(o.ref) : null) : (pointer(o, 'image') ?? pictureOf(containers[pointer(o, 'container') ?? '']))
+    return { ...o, shape: pointer(o, 'shape'), image } as LayoutSlideObject
+  })
+}
+
 /** The workbook as the layout library reads it. `charts` holds the SVG pictures made of the charts that are printed,
  * by the id of their definition (`chartsPrinted`). */
 export function sheetDocument(session: Session, request: SheetRequest, charts: ReadonlyMap<string, string> = new Map()): SheetDocument {
   const state = session.state
   const styles = new CellStyles(session)
-  const printed: (PrintedSheet | PrintedChart)[] = []
+  const printed: (PrintedSheet | PrintedChart | PrintedSlide)[] = []
   for (const { kind, id } of printedIds(session, request)) {
+    if (kind === 'slide') {
+      printed.push({ kind: 'slide', id, name: state.tabs.find((x) => x.id === id)?.name ?? '', objects: slideObjectsOf(session, id, charts) })
+      continue
+    }
     const setup = setupOf(session, id)
     if (kind === 'chart') {
       const chart = state.charts.find((c) => c.id === id)!
@@ -183,6 +200,7 @@ export function sheetDocument(session: Session, request: SheetRequest, charts: R
   ]
   return {
     sheets: printed,
+    shapes: Object.values(state.shapes),
     styles: [...Object.values(state.styles).map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved })), ...styles.merged.values()],
     images,
     page: state.printPage ?? DEFAULT_PAGE,

@@ -188,7 +188,7 @@ function printable(
 export function slideDocument(session: SlideSession): SlideDocument {
   const state = session.state
   return {
-    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.objectsOn(s.id), (id) => session.markOf(id), (id) => session.agendaOf(id), (id) => state.referenced[id], (o) => pointer(o, 'image') ?? pictureOf(state.containers[pointer(o, 'container') ?? '']) ) })),
+    slides: state.slides.map((s) => ({ id: s.id, objects: printable(session.slideObjects(s.id), (id) => session.markOf(id), (id) => session.agendaOf(id), (id) => state.referenced[id], (o) => pointer(o, 'image') ?? pictureOf(state.containers[pointer(o, 'container') ?? '']) ) })),
     styles: Object.values(state.styles).map((s) => ({ id: s.id, based_on: s.based_on, resolved: s.resolved })),
     shapes: Object.values(state.shapes),
     // an SVG picture is drawn from its text (D914); the others from their bytes
@@ -233,9 +233,10 @@ export function slideSource(session: SlideSession): PrintSource {
 }
 
 // ------------------------------------------------------------------------------ computes
-/** What a workbook's print needs of its window: which sheet or chart tab is shown and which cells are selected. */
+/** What a workbook's print needs of its window: which sheet, slide or chart tab is shown and which cells are
+ * selected. */
 export interface SheetWindow {
-  shown(): { kind: 'sheet' | 'chart'; id: string }
+  shown(): { kind: 'sheet' | 'slide' | 'chart'; id: string }
   /** first row, first column, last row, last column of the selection on the shown sheet, or `null` */
   selection(): [number, number, number, number] | null
   /** the SVG pictures of charts; Plotly's unless a test gives its own */
@@ -278,15 +279,16 @@ export function sheetSource(session: Session, window: SheetWindow): PrintSource 
       enabled: () => window.shown().kind === 'sheet' || contents.value === 'workbook',
     },
     orientation: {
-      value: () => setup().orientation,
-      set: (orientation) => void session.setSheetPrint(window.shown().id, { ...setup(), orientation }),
+      // a slide lies the way its 16:9 frame does (D1473): it has no setup of its own to change
+      value: () => (window.shown().kind === 'slide' ? 'landscape' : setup().orientation),
+      set: (orientation) => void (window.shown().kind !== 'slide' && session.setSheetPrint(window.shown().id, { ...setup(), orientation })),
     },
     language: () => state.language,
     canSetLanguage: () => !session.readOnly && state.language !== undefined,
     setLanguage: (tag) => void session.setLanguage(tag),
     // The cells themselves are not watched (a map of every cell would be walked on every look): any step of the history
     // moves the revision, and a preview that is open lays out again.
-    watched: () => [contents.value, window.shown(), window.selection(), state.revision, state.generation, state.sheets, state.charts, state.sheetPrint, state.printPage, state.language, state.styles, state.cellStyles, state.numberFormats, state.names, state.order, state.objects, state.images, state.rowHeights, state.colWidths],
+    watched: () => [contents.value, window.shown(), window.selection(), state.revision, state.generation, state.sheets, state.tabs, state.charts, state.sheetPrint, state.printPage, state.language, state.styles, state.cellStyles, state.numberFormats, state.names, state.order, state.objects, state.images, state.rowHeights, state.colWidths],
     prepare: async () => {},
     images: () => Object.values(state.images),
     async layOut(assets) {
@@ -312,7 +314,7 @@ export function sheetSource(session: Session, window: SheetWindow): PrintSource 
         geometry: out.geometry,
         notes: out.notes,
         embedded: out.embedded,
-        printed: { sheets: doc.sheets.length, name: first?.name ?? '', orientation: doc.sheets.length === 1 && first ? (first.kind === 'sheet' ? first.print.orientation : first.orientation) : null },
+        printed: { sheets: doc.sheets.length, name: first?.name ?? '', orientation: doc.sheets.length === 1 && first ? (first.kind === 'sheet' ? first.print.orientation : first.kind === 'chart' ? first.orientation : 'landscape') : null },
       }
     },
     status: (pages, page) => (pages.printed ? describeSheets(pages.list.pages.length, pages.printed.sheets, pages.printed.name, PAPER_SIZES.find((p) => p.id === page.paper)?.name ?? `${mm(page.width)} × ${mm(page.height)} mm`, pages.printed.orientation) : describe(page, pages.list.pages.length)),

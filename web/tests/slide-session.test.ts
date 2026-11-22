@@ -156,7 +156,7 @@ describe('opening a presentation', () => {
     expect(state.status).toBe('open')
     expect(state.slides).toEqual([{ id: 's1', objects: 1 }])
     expect(state.activeSlide).toBe('s1')
-    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['t1'])
+    expect(session.slideObjects('s1').map((o) => o.id)).toEqual(['t1'])
     expect(state.library.map((s) => s.id)).toEqual(['circle', 'rectangle'])
     expect(state.styles['body-text']!.css.color).toBe('@text')
     expect(state.styles['body-text']!.resolved.color).toBe('#1f1a33')
@@ -179,7 +179,7 @@ describe('opening a presentation', () => {
     const session = new SlideSession(() => link)
     await session.open()
     expect(session.state.images[ASSET.id]).toEqual(ASSET)
-    const o = session.objectsOn('s1')[0]!
+    const o = session.slideObjects('s1')[0]!
     expect(o.ref).toBe(ASSET.id)
     expect(o.imported).toEqual(IMPORT)
   })
@@ -189,15 +189,15 @@ describe('what the server tells', () => {
   it('adds and changes objects, in the stacking order it sends', async () => {
     const { link, session, state } = await opened([text('a'), text('b')])
     link.push('objects', { type: 'objects', holder: 's1', changed: [text('c')], removed: [], order: ['a', 'b', 'c'] })
-    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b', 'c'])
+    expect(session.slideObjects('s1').map((o) => o.id)).toEqual(['a', 'b', 'c'])
     link.push('objects', { type: 'objects', holder: 's1', changed: [text('a', { anchor: { kind: 'slide', holder: 's1', x: 7, y: 100 } })], removed: [], order: ['a', 'b', 'c'] })
-    expect(session.objectsOn('s1')[0]!.anchor.x).toBe(7)
+    expect(session.slideObjects('s1')[0]!.anchor.x).toBe(7)
     expect(state.slides[0]!.objects).toBe(3)
   })
   it('takes objects away', async () => {
     const { link, session, state } = await opened([text('a'), text('b')])
     link.push('objects', { type: 'objects', holder: 's1', changed: [], removed: ['a'], order: ['b'] })
-    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
+    expect(session.slideObjects('s1').map((o) => o.id)).toEqual(['b'])
     expect(state.objects.a).toBeUndefined()
     expect(state.slides[0]!.objects).toBe(1)
   })

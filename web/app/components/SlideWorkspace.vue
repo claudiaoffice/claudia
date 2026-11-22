@@ -309,7 +309,7 @@ async function resetPalette() {
   if (started.length && (await session.replacePalette(started))) dialog.value = null
 }
 const here = computed(() => state.slides.findIndex((s) => s.id === state.activeSlide))
-const count = computed(() => session.objectsOn(state.activeSlide).length)
+const count = computed(() => session.slideObjects(state.activeSlide).length)
 
 async function addText() {
   if (await session.addText(insertFrame('text', null, count.value))) canvas.value?.focus()

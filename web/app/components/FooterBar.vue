@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { show } from '~/lib/cells'
 import type { Summary } from '~/lib/selection'
-import type { State } from '~/lib/session'
+import type { State, TabInfo } from '~/lib/session'
 import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
@@ -18,7 +18,11 @@ const props = defineProps<{
   /** How many cells of the computation being followed each sheet has (E6.23): a marker on the tab of the others. */
   marks?: Record<string, number>
 }>()
-defineEmits<{ pick: [id: string, kind: 'sheet' | 'chart']; add: []; rename: [id: string] }>()
+defineEmits<{ pick: [id: string, kind: 'sheet' | 'slide' | 'chart']; add: []; rename: [id: string] }>()
+
+/** Is this sheet or slide the tab on show? A slide is shown in place of the sheet (`state.activeSlide`, E6.31). */
+const isShown = (tab: TabInfo) =>
+  props.activeChart === null && (tab.kind === 'slide' ? tab.id === props.state.activeSlide : !props.state.activeSlide && tab.id === props.state.activeSheet)
 
 const shownSum = computed(() => show({ t: 'float', v: props.summary.sum }))
 const shownAverage = computed(() => (props.summary.average === null ? '' : show({ t: 'float', v: props.summary.average })))
@@ -27,17 +31,19 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
 <template>
   <footer class="foot">
     <div class="tabs">
-      <div class="tablist" role="tablist" :aria-label="t('sheets')">
+      <div class="tablist" role="tablist" :aria-label="t('sheets and slides')">
         <button
-          v-for="s in state.sheets"
+          v-for="s in state.tabs"
           :key="s.id"
           type="button"
           role="tab"
           :data-thing="s.id"
-          :aria-selected="activeChart === null && s.id === state.activeSheet"
-          :class="{ on: activeChart === null && s.id === state.activeSheet }"
+          :data-kind="s.kind"
+          :aria-selected="isShown(s)"
+          :class="{ on: isShown(s), slide: s.kind === 'slide' }"
+          :aria-label="s.kind === 'slide' ? t('Slide: {name}', { name: s.name }) : undefined"
           :title="canAdd ? t('Double-click to rename') : undefined"
-          @click="$emit('pick', s.id, 'sheet')"
+          @click="$emit('pick', s.id, s.kind)"
           @dblclick="canAdd && $emit('rename', s.id)"
         >
           {{ s.name }}
@@ -129,6 +135,18 @@ const shownAverage = computed(() => (props.summary.average === null ? '' : show(
   width: 1px;
   margin: 6px 2px;
   background: var(--line);
+}
+/* a slide's tab: a small 16:9 frame before its name, so it is told apart from a sheet's (mock 1 of E6.31) */
+.tabs button.slide::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 7px;
+  margin-right: 6px;
+  border: 1.5px solid currentColor;
+  border-radius: 1px;
+  opacity: 0.7;
+  vertical-align: middle;
 }
 .tabs button.chart::before {
   content: '';

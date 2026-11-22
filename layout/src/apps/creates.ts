@@ -22,6 +22,7 @@ import {
   drawObject,
   type ImageInfo,
   type Note,
+  type ObjectContext,
   objectFonts,
   PAGE_NUMBER_BAND,
   type PageSetupData,
@@ -135,16 +136,8 @@ export function layoutSlides(doc: SlideDocument, fonts: FontSet, resolver: FontR
   if (numbers) area.h -= numbers.margin.bottom - geometry.margin.bottom
 
   // every slide drawn once, in its own coordinates (0, 0 to 1200 × 675 pt), cut at its edge
-  let wantsHyphens = false
-  const drawn = doc.slides.map((slide) => {
-    const items: DisplayItem[] = []
-    for (const o of slide.objects) {
-      if (o.paragraph?.text && sheet.paragraph(o.paragraph.style).style.hyphens === 'auto') wantsHyphens = true
-      const g = drawObject(o, { x: px(o.anchor.x), y: px(o.anchor.y), w: px(o.w), h: px(o.h) }, context)
-      if (g) items.push(g)
-    }
-    return items
-  })
+  const wantsHyphens = doc.slides.some((slide) => slide.objects.some((o) => o.paragraph?.text && sheet.paragraph(o.paragraph.style).style.hyphens === 'auto'))
+  const drawn = doc.slides.map((slide) => drawSlide(slide.objects, context))
   if (wantsHyphens && !hyphenator) {
     notes.push({
       kind: 'hyphenation',
@@ -171,16 +164,8 @@ export function layoutSlides(doc: SlideDocument, fonts: FontSet, resolver: FontR
     const h = Math.floor((cell.h - gap) * 0.5)
     return { slide: { ...cell, h }, lines: { x: cell.x, y: cell.y + h + gap, w: cell.w, h: cell.h - h - gap } }
   }
-  /** a slide fitted into `r`, centred, keeping its 16:9 */
-  const fitted = (r: Rect): { scale: number; rect: Rect } => {
-    // scale in millionths, so the transform is exact; the slide's size on the page follows from it
-    const scale = Math.max(1, Math.min(Math.floor((r.w * 1_000_000) / SLIDE_W), Math.floor((r.h * 1_000_000) / SLIDE_H)))
-    const w = Math.round((SLIDE_W * scale) / 1_000_000)
-    const h = Math.round((SLIDE_H * scale) / 1_000_000)
-    return { scale, rect: { x: r.x + Math.floor((r.w - w) / 2), y: r.y + Math.floor((r.h - h) / 2), w, h } }
-  }
   // the page is the slide itself when it is slide-sized with no margins: no frame then
-  const whole = fitted(area).rect
+  const whole = fittedSlide(area).rect
   const edgeToEdge = perPage === 1 && area.x === 0 && area.y === 0 && whole.w >= geometry.width - 1 && whole.h >= geometry.height - 1
 
   const pages: DisplayPage[] = []
@@ -191,18 +176,7 @@ export function layoutSlides(doc: SlideDocument, fonts: FontSet, resolver: FontR
       const index = n * perPage + k
       if (index >= drawn.length) break
       const { slide, lines } = place(k)
-      const { scale, rect } = fitted(slide)
-      const group: GroupItem = {
-        kind: 'group',
-        clip: null,
-        rotation: 0,
-        origin: { x: 0, y: 0 },
-        matrix: [scale, 0, 0, scale, rect.x, rect.y],
-        clipPath: { ops: rectPath({ x: 0, y: 0, w: SLIDE_W, h: SLIDE_H }) },
-        items: drawn[index]!,
-      }
-      items.push(group)
-      if (!edgeToEdge) items.push({ kind: 'path', ops: rectPath(rect), fill: null, stroke: FRAME, lineWidth: 500 })
+      items.push(...placedSlide(drawn[index]!, slide, !edgeToEdge))
       if (lines) {
         for (let y = lines.y + LINE_GAP; y <= lines.y + lines.h; y += LINE_GAP) {
           items.push({ kind: 'path', ops: [['M', lines.x, y], ['L', lines.x + lines.w, y]], fill: null, stroke: RULE, lineWidth: 400 })
@@ -224,4 +198,34 @@ export function layoutSlides(doc: SlideDocument, fonts: FontSet, resolver: FontR
     slides: doc.slides.length,
     perPage,
   }
+}
+
+/** The objects of a slide drawn in the slide's own coordinates (0, 0 to 1200 × 675 pt), the one in front last: drawn once,
+ * and placed on a page by {@link placedSlide}. A workbook's slides are drawn so too (E6.31, D1473). */
+export function drawSlide(objects: readonly SlideObject[], context: ObjectContext): DisplayItem[] {
+  return objects.flatMap((o) => drawObject(o, { x: px(o.anchor.x), y: px(o.anchor.y), w: px(o.w), h: px(o.h) }, context) ?? [])
+}
+
+/** A slide fitted into `r`, centred, keeping its 16:9: the scale in millionths (so the transform is exact) and where it
+ * lies. */
+function fittedSlide(r: Rect): { scale: number; rect: Rect } {
+  const scale = Math.max(1, Math.min(Math.floor((r.w * 1_000_000) / SLIDE_W), Math.floor((r.h * 1_000_000) / SLIDE_H)))
+  const w = Math.round((SLIDE_W * scale) / 1_000_000)
+  const h = Math.round((SLIDE_H * scale) / 1_000_000)
+  return { scale, rect: { x: r.x + Math.floor((r.w - w) / 2), y: r.y + Math.floor((r.h - h) / 2), w, h } }
+}
+
+/** A drawn slide as large as `place` takes it, centred, cut at its edge, with a thin frame where it ends when `framed`. */
+export function placedSlide(drawn: DisplayItem[], place: Rect, framed: boolean): DisplayItem[] {
+  const { scale, rect } = fittedSlide(place)
+  const group: GroupItem = {
+    kind: 'group',
+    clip: null,
+    rotation: 0,
+    origin: { x: 0, y: 0 },
+    matrix: [scale, 0, 0, scale, rect.x, rect.y],
+    clipPath: { ops: rectPath({ x: 0, y: 0, w: SLIDE_W, h: SLIDE_H }) },
+    items: drawn,
+  }
+  return framed ? [group, { kind: 'path', ops: rectPath(rect), fill: null, stroke: FRAME, lineWidth: 500 }] : [group]
 }

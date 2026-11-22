@@ -9,7 +9,11 @@ import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
 import type { NumberFormatDef } from './number-format'
 import type { ImageAsset } from './images'
-import type { CellAnchor, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import type { CellAnchor, ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import type { Frame } from './geometry'
+import type { Shown } from './references'
+import type { ShapeDef, SlideObject } from './slide-session'
+import { onSlide, othersOn, type Other, type PictureImport, type SlideHost } from './slide-host'
 import type { CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
 import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
@@ -47,6 +51,12 @@ export interface SheetInfo {
   rows: number
   cols: number
 }
+/** One tab below the workbook (E6.31, D1471): a sheet or a slide, in their one order, as `tabs` sends them. */
+export interface TabInfo {
+  kind: 'sheet' | 'slide'
+  id: string
+  name: string
+}
 /** A `functions` search result: name, signature and a one-line tooltip (E13.5/E13.6). Fetch the full help text,
  * with its worked example, through `functionHelp`. */
 export interface FunctionSummary {
@@ -63,6 +73,8 @@ export interface FunctionHelp extends FunctionSummary {
  * (a row/column insert, delete or resize) elsewhere on the sheet; only `moveObject` (dragging it) moves it and
  * `resizeObject` resizes it. Mirrors `claudia_computes.SheetObject`. */
 export type SheetObject = VisualObject<CellAnchor>
+/** An object of a workbook: on a sheet, hanging at a cell, or on a slide, at a point of it (E6.31). */
+export type WorkbookObject = SheetObject | SlideObject
 /** What `sql_preview` answers: the table a query gives (at most the asked rows of it), or the `#SQL!` it would show. */
 export type SqlPreview =
   | { ok: true; columns: string[]; rows: (string | number | boolean | null)[][]; row_count: number; ms: number }
@@ -70,6 +82,17 @@ export type SqlPreview =
 export interface State extends BaseState {
   sheets: SheetInfo[]
   activeSheet: string
+  /** The sheets and slides in their one order (E6.31, D1471); the chart tabs are apart (`charts`). */
+  tabs: TabInfo[]
+  /** The slide on show, or `''` while a sheet or a chart tab is. */
+  activeSlide: string
+  /** The object selected on the slide on show (an object on a sheet is selected in the grid). */
+  selected: string | null
+  /** The outlines the server offers for a slide's shapes, and the ones the document has taken in. */
+  library: ShapeDef[]
+  shapes: Record<string, ShapeDef>
+  /** What references read as, by object: a workbook's words have none (the slide view asks). */
+  referenced: Record<string, Shown[]>
   cells: Record<string, Map<number, Content>>
   /** Rows (by `sheets[].id`) that were given a height away from `DEFAULT_ROW_HEIGHT` (D135). Sparse: a row not in
    * here shows at the default. */
@@ -77,7 +100,7 @@ export interface State extends BaseState {
   /** Same as `rowHeights`, for column widths away from `DEFAULT_COL_WIDTH`. */
   colWidths: Record<string, Map<number, number>>
   generation: number
-  objects: Record<string, SheetObject>
+  objects: Record<string, WorkbookObject>
   diagrams: Record<string, ChartSpec> // chart definitions this document knows, by id (E6.6)
   charts: Chart[] // chart tabs, in tab order
   /** The workbook's names: named ranges, tables and the results of `SQL()` cells (E6.5), as `names` sends them. */
@@ -147,7 +170,7 @@ export interface SearchScope {
 /** A match, or with `match: null` everything at a place, that a replacement leaves alone (`lib/search.ts`). */
 export type { SearchLeave } from './search'
 
-export class Session extends BaseSession<State> {
+export class Session extends BaseSession<State> implements SlideHost {
   /** A range like `A1:B5` (or one cell) on the sheet on show, as the part of an imported workbook to blank (D723). */
   override redactionRangePart(range: string): string | null {
     const text = range.trim().toUpperCase().replace(/\$/g, '')
@@ -161,8 +184,6 @@ export class Session extends BaseSession<State> {
   private sizesInflight = new Map<string, Promise<void>>()
   private figuresInflight = new Map<string, Promise<void>>()
   private stylesInflight = new Map<string, Promise<void>>()
-  private editing = false
-  private shown = ''
   private followed: Followed | null = null
   private refollowing = false
 
@@ -170,6 +191,11 @@ export class Session extends BaseSession<State> {
     super(makeLink, options, {
       sheets: [],
       activeSheet: '',
+      tabs: [],
+      activeSlide: '',
+      selected: null,
+      library: [],
+      referenced: {},
       cells: {},
       rowHeights: {},
       colWidths: {},
@@ -215,15 +241,29 @@ export class Session extends BaseSession<State> {
       // a server from before pivot tables has none: there are no pivots to draw
       link.request<{ pivots: PivotInfo[] }>('pivots').then((a) => a.pivots, () => [] as PivotInfo[]),
     ])
+    // a server from before slides (E6.31) has neither: its tabs are its sheets, and there is nothing to draw on a slide
+    const [tabs, shapes] = await Promise.all([
+      link.request<TabInfo[]>('tabs').catch(() => sheets.map((x): TabInfo => ({ kind: 'sheet', id: x.id, name: x.name }))),
+      link.request<{ library: ShapeDef[]; document: ShapeDef[] }>('shapes').catch(() => ({ library: [], document: [] })),
+    ])
     this.forgetCells()
-    const loaded = await Promise.all(sheets.map((sheet) => link.request<{ objects: SheetObject[] }>('objects', { sheet: sheet.id })))
+    const loaded = await Promise.all(
+      tabs.map((tab) =>
+        tab.kind === 'slide'
+          ? link.request<{ objects: WorkbookObject[] }>('slide', { slide: tab.id })
+          : link.request<{ objects: WorkbookObject[] }>('objects', { sheet: tab.id }),
+      ),
+    )
     s.objects = {}
     s.order = {}
-    sheets.forEach((sheet, i) => {
-      s.order[sheet.id] = loaded[i]!.objects.map((o) => o.id)
+    tabs.forEach((tab, i) => {
+      s.order[tab.id] = loaded[i]!.objects.map((o) => o.id)
       for (const o of loaded[i]!.objects) s.objects[o.id] = o
     })
     s.sheets = sheets
+    s.tabs = tabs
+    s.library = shapes.library
+    s.shapes = Object.fromEntries(shapes.document.map((d) => [d.id, d]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
     s.diagrams = Object.fromEntries(diagrams.map((x) => [x.id, x]))
     s.charts = charts
@@ -241,6 +281,8 @@ export class Session extends BaseSession<State> {
     s.language = language
     this.track(this.refreshUses())
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
+    if (!tabs.some((tab) => tab.kind === 'slide' && tab.id === s.activeSlide)) s.activeSlide = ''
+    if (s.selected && !s.objects[s.selected]) s.selected = null
   }
 
   // -- styles and the palette (E9.7, D200, D203): the same methods creates' session has, so that one style menu
@@ -298,7 +340,70 @@ export class Session extends BaseSession<State> {
 
   /** The objects of a sheet, the one in front last. */
   objectsOn(sheet: string): SheetObject[] {
-    return (this.state.order[sheet] ?? []).map((id) => this.state.objects[id]).filter((o): o is SheetObject => o !== undefined)
+    return this.onHolder(sheet).filter((o): o is SheetObject => o.anchor.kind === 'cell')
+  }
+
+  /** The object `id` if it hangs on a sheet; `undefined` else (an object on a slide is the slide view's). */
+  sheetObject(id: string | null | undefined): SheetObject | undefined {
+    const o = id ? this.state.objects[id] : undefined
+    return o?.anchor.kind === 'cell' ? (o as SheetObject) : undefined
+  }
+
+  /** The objects of a slide, the one in front last (E6.31): what the slide view draws, as creates' does. */
+  slideObjects(slide: string): SlideObject[] {
+    return this.onHolder(slide).flatMap((o) => onSlide(o) ?? [])
+  }
+
+  private onHolder(holder: string): WorkbookObject[] {
+    return (this.state.order[holder] ?? []).map((id) => this.state.objects[id]).filter((o): o is WorkbookObject => o !== undefined)
+  }
+
+  // -- a slide among the sheets (E6.31, D1473): shown with the slide view of creates, its objects placed the same way
+  /** Show a slide (`''`: none, a sheet or a chart tab is shown), with nothing selected on it. */
+  async showSlide(slide: string): Promise<void> {
+    if (slide === this.state.activeSlide) return
+    await this.select(null)
+    this.state.activeSlide = slide
+  }
+
+  /** The objects of a slide that colleagues have selected, and whether they hold them. */
+  selectedByOthers(slide: string): Other[] {
+    return othersOn(this.state, slide)
+  }
+
+  /** Select an object on the slide on show (`null`: nothing). Selecting holds it; a colleague who holds it first keeps
+   * it. */
+  async select(id: string | null): Promise<void> {
+    const s = this.state
+    if (id === s.selected) return
+    s.selected = id
+    if (id === null) return this.letGoOfObject()
+    if (!(await this.holdObject(id, s.objects[id]?.anchor.holder ?? s.activeSlide)) && s.selected === id) s.selected = null
+  }
+
+  async move(id: string, x: number, y: number): Promise<boolean> {
+    return (await this.write('move_object', { id, x, y })) !== false
+  }
+
+  async resize(id: string, frame: Frame): Promise<boolean> {
+    return (await this.write('resize_object', { id, ...frame })) !== false
+  }
+
+  /** Put a text box on the slide on show; its id, or `null` after telling the person why not. */
+  addText(frame: Frame): Promise<string | null> {
+    return this.insertOnSlide({ kind: 'text' }, frame)
+  }
+
+  /** Put a shape from the library (or the document) on the slide on show. */
+  addShape(shape: string, frame: Frame): Promise<string | null> {
+    return this.insertOnSlide({ kind: 'shape', shape }, frame)
+  }
+
+  private async insertOnSlide(params: Record<string, unknown>, frame: Frame): Promise<string | null> {
+    const done = await this.write('add_object', { slide: this.state.activeSlide, ...params, ...frame })
+    if (done === false) return null
+    await this.select(done.object)
+    return done.object
   }
 
   // -- charts (E6.6): a diagram definition, shown as a floating object, a tab, or both at once
@@ -505,7 +610,8 @@ export class Session extends BaseSession<State> {
         }
         return true
       }
-      case 'sheets':
+      case 'tabs':
+      case 'sheets': // (a server from before slides)
         this.track(this.reload())
         this.refollow()
         return true
@@ -539,9 +645,14 @@ export class Session extends BaseSession<State> {
     return false
   }
 
-  /** An object came, went or changed its style: the use counts beside the style names follow. */
-  protected override objectsChanged(): void {
+  /** An object came, went or changed its style: the use counts beside the style names follow; a selected object on a
+   * slide that went is let go of. */
+  protected override objectsChanged(e: ObjectsEvent): void {
     this.track(this.refreshUses())
+    if (e.removed.includes(this.state.selected ?? '')) {
+      this.state.selected = null
+      this.track(this.letGoOfObject())
+    }
   }
 
   protected override stylesChanged(): void {
@@ -591,41 +702,46 @@ export class Session extends BaseSession<State> {
   protected override things(): Thing[] {
     const s = this.state
     const out: Thing[] = []
-    for (const sheet of s.sheets) out.push({ id: sheet.id, name: s.renamed[sheet.id] ?? sheet.name, kind: 'sheet' })
+    for (const tab of s.tabs) out.push({ id: tab.id, name: s.renamed[tab.id] ?? tab.name, kind: tab.kind })
     for (const chart of s.charts) out.push({ id: chart.id, name: s.renamed[chart.id] ?? chart.name, kind: 'chart' })
     for (const o of Object.values(s.objects)) if (o.name) out.push({ id: o.id, name: s.renamed[o.id] ?? o.name, kind: o.kind })
     for (const n of s.names) out.push({ id: n.id, name: n.name, kind: 'range' }) // (a name is renamed with its own command, not as a thing)
     return out
   }
-  /** The sheet being looked at, the chart tabs beside it, the named ranges on it and what floats on it. */
+  /** The sheet or slide being looked at, the chart tabs beside it, the named ranges on it and what floats on it. */
   protected override async inView(): Promise<Thing[]> {
-    const here = this.state.activeSheet
+    const here = this.currentHolder()
     return this.things().filter((t) => t.kind === 'chart' || this.holderOf(t.id) === here)
   }
   override async unnamedInView(): Promise<number> {
-    return this.objectsOn(this.state.activeSheet).filter((o) => !o.name).length
+    return this.onHolder(this.currentHolder() ?? '').filter((o) => !o.name).length
   }
   protected override tracksThings(): boolean {
     return true
   }
   protected override holderOf(id: string): string | null {
     const s = this.state
-    if (s.sheets.some((x) => x.id === id)) return id
+    if (s.tabs.some((x) => x.id === id)) return id
     const named = s.names.find((n) => n.id === id)
     if (named) return named.sheet
     return s.objects[id]?.anchor.holder ?? null
   }
   protected override currentHolder(): string | null {
-    return this.state.activeSheet || null
+    return this.state.activeSlide || this.state.activeSheet || null
   }
   protected override showHolder(id: string): void {
-    if (this.state.sheets.some((x) => x.id === id)) this.state.activeSheet = id
+    const tab = this.state.tabs.find((x) => x.id === id)
+    if (tab?.kind === 'slide') this.state.activeSlide = id
+    else if (tab) {
+      this.state.activeSlide = ''
+      this.state.activeSheet = id
+    }
   }
 
   /** A step of the replay is shown on the sheet it touched (D551); the grid scrolls to it from `state.replay.focus`. */
   protected override followReplay(focus: Region[]): void {
-    const sheet = holderOf(firstFocus(focus))
-    if (sheet && this.state.sheets.some((x) => x.id === sheet)) this.state.activeSheet = sheet
+    const holder = holderOf(firstFocus(focus))
+    if (holder) this.showHolder(holder)
   }
 
   /** Start following the computation the cell at (`row`, `col`) is part of (E6.23): the cells of `window` that are
@@ -686,11 +802,11 @@ export class Session extends BaseSession<State> {
    * `sourcePath` is the file's full path if the caller could get one — a plain web browser cannot, and passes
    * `null`. `anchor` fixes the object's cell and its pixel size for good: there is no resize yet, and no
    * structural edit (row/column insert, delete or resize) ever changes either. */
-  async addImage(
-    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
-    anchor: { row: number; col: number; w: number; h: number },
-  ): Promise<string | null> {
-    return this.putPicture(picture, { sheet: this.state.activeSheet, ...anchor })
+  async addImage(picture: PictureImport, anchor: { row: number; col: number; w: number; h: number } | Frame): Promise<string | null> {
+    if (!('x' in anchor)) return this.putPicture(picture, { sheet: this.state.activeSheet, ...anchor })
+    const id = await this.putPicture(picture, { slide: this.state.activeSlide, ...anchor }) // (a slide's, E6.31)
+    if (id) await this.select(id)
+    return id
   }
 
   /** Put a container of `type` on the sheet that is shown, anchored to a cell (D560); its id, or `null` after
@@ -850,31 +966,14 @@ export class Session extends BaseSession<State> {
   }
 
   async show(sheet: string, r0: number, c0: number, r1 = r0, c1 = c0): Promise<void> {
-    const where = JSON.stringify([sheet, r0, c0, r1, c1])
-    if (where === this.shown || this.state.status !== 'open') return
-    this.shown = where
-    try {
-      await this.need().request('presence', { regions: [this.region(sheet, r0, c0, r1, c1)] })
-    } catch {
-      this.shown = '' // not important enough to bother the person; the next move tries again
-    }
+    await this.showRegions(JSON.stringify([sheet, r0, c0, r1, c1]), [this.region(sheet, r0, c0, r1, c1)])
   }
 
-  async beginEdit(sheet: string, row: number, col: number): Promise<boolean> {
-    if ((await this.attempt('lock', { regions: [this.region(sheet, row, col, row, col)] })) === false) return false
-    this.editing = true
-    this.shown = ''
-    return true
+  beginEdit(sheet: string, row: number, col: number): Promise<boolean> {
+    return this.holdRegions([this.region(sheet, row, col, row, col)])
   }
 
-  async endEdit(): Promise<void> {
-    if (!this.editing) return
-    this.editing = false
-    this.shown = ''
-    try {
-      await this.need().request('unlock')
-    } catch {
-      /* the lock runs out by itself */
-    }
+  endEdit(): Promise<void> {
+    return this.releaseRegions()
   }
 }
