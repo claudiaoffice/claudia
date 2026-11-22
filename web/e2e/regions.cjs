@@ -1,7 +1,7 @@
 // Keyboard access to the parts of a document window, in a real browser (BITV 2.0: 2.1.2 no keyboard trap, 2.4.1 bypass
 // blocks, 2.4.2 page titled, 3.1.1 language of the page). In computes the grid keeps Tab for stepping between cells, so
 // F6 and Shift+F6 are the way out; they must work from the formula bar too, and wrap round at both ends.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8765/'
@@ -26,7 +26,7 @@ async function open(page) {
 }
 
 ;(async () => {
-  const browser = await chromium.launch()
+  const browser = await launch()
   const context = await browser.newContext({ viewport: { width: 1360, height: 800 }, locale: 'en-US' })
   const page = await context.newPage()
   const errors = []

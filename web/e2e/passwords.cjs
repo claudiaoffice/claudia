@@ -2,7 +2,7 @@
 // and starts hidden again in a new dialog; Share's password for a colleague starts hidden; File ▸ Manage ▸ Change
 // Password… with a wrong current password says so in the dialog, with a right one changes it, and only the new one
 // opens the document afterwards.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const { spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -51,7 +51,7 @@ const typeOf = (page, selector) => page.getAttribute(selector, 'type')
 
 ;(async () => {
   const server = startServer()
-  const browser = await chromium.launch()
+  const browser = await launch()
   try {
     await ready()
     const ann = await newPage(browser)

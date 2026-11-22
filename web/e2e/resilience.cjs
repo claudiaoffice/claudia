@@ -1,5 +1,5 @@
 // What happens when things go wrong: a viewer tries to edit, and the server restarts under people's hands.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const { spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -55,7 +55,7 @@ const wait = (page, fn, arg, what) => page.waitForFunction(fn, arg, { timeout: 1
 
 ;(async () => {
   let server = startServer()
-  const browser = await chromium.launch()
+  const browser = await launch()
   try {
     await ready()
     const ann = await login(browser, 'plan', 'ann', 'Ann-has-a-Password-1', true)

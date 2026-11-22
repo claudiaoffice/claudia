@@ -1,7 +1,7 @@
 // Styles on slides, in a real browser (owner's report, 2026-11-12: "I re-styled a text box, named the style, and could
 // not apply it to another one"). Start a presentation server first:
 //   uv run python scripts/start.py creates --no-browser      (URL defaults to http://127.0.0.1:8765/)
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8765/'
@@ -53,7 +53,7 @@ async function write(page, id, words) {
 }
 
 ;(async () => {
-  const browser = await chromium.launch()
+  const browser = await launch()
   const page = await browser.newPage({ viewport: { width: 1360, height: 860 } })
   const errors = []
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message))

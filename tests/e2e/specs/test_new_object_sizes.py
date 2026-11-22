@@ -11,6 +11,7 @@ from __future__ import annotations
 import time
 
 import pytest
+from conftest import eventually
 from pytest_bdd import given, parsers, scenarios, then, when
 
 scenarios("../../../claudiaoffice-log/specs/objects/new-object-sizes.feature")
@@ -18,19 +19,6 @@ scenarios("../../../claudiaoffice-log/specs/objects/new-object-sizes.feature")
 OBJECT = "[data-object]"
 ENTRIES = ".log li.entry"
 DRAWN_WITHIN_S = 40.0  # XeLaTeX on a cold server takes a while for its first formula
-
-
-def eventually(check, seconds: float = 5.0) -> None:
-    """Run ``check`` (it asserts) until it holds, for at most ``seconds``; the last failure is the answer."""
-    end = time.monotonic() + seconds
-    while True:
-        try:
-            check()
-            return
-        except AssertionError:
-            if time.monotonic() > end:
-                raise
-            time.sleep(0.1)
 
 
 def frame_of(page) -> dict:

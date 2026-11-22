@@ -28,7 +28,6 @@ NOT_BOUND_YET = {
     "objects/names.feature": "E1.13 Names of things, after the renames of E1.18 (charts in computes)",
     "document-file/requirements.feature": "E1.9 Document manifest and requirements",
     "invariants/objects-in-composes.feature": "PROC-40, recommendation 4 of notes/e2e-rework-plan.md",
-    "objects/the-same-in-all-three-apps.feature": "PROC-40; approved 2026-11-22, built (CODE-75), no step code yet",
     "computes/slides.feature": "E6.31 Slides in computes, approved 2026-11-22; branch e6-31-slides-in-computes",
 }
 HOW_TO_FIX = (

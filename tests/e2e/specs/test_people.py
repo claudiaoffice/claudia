@@ -31,15 +31,7 @@ def _paragraph(world, words):
 
 @given("Ben is an editor of the document")
 def _ben_is_an_editor(world):
-    ann = world.ann
-    _open_share(ann)
-    dialog = ann.page.locator(DIALOG)
-    dialog.get_by_label("Name", exact=True).fill("ben")
-    dialog.locator("input[name=share-password]").fill(world.join("Ben").password)
-    dialog.locator("select").last.select_option("editor")
-    dialog.get_by_role("button", name="Add person").click()
-    ann.page.wait_for_selector('.added li:has-text("ben (editor)")')
-    dialog.get_by_role("button", name="Done").click()
+    world.ann.share(world.join("Ben"), "editor")
 
 
 @given("Ben has the document open")

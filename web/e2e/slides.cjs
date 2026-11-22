@@ -1,7 +1,7 @@
 // Two people on one slide, in two real browser windows: put a text box and shapes on it, move, resize, edit and delete
 // them, and see what the other holds. Start a presentation server first:
 //   uv run python scripts/start.py --app creates --no-browser   (or: python -m claudia_server --model claudia_creates:SlideModel ...)
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8765/'
@@ -67,7 +67,7 @@ async function drag(page, from, to) {
 const centre = (b) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 })
 
 ;(async () => {
-  const browser = await chromium.launch()
+  const browser = await launch()
   try {
     // ---- ann makes a presentation: one empty slide
     const ann = await open(browser, ANN, true)

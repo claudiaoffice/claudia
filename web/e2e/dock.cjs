@@ -9,7 +9,7 @@
 //     ends it.
 // Start a presentation server first (as CI does): python -m claudia_server --model claudia_creates:SlideModel ...
 // Run: URL=http://127.0.0.1:8767/ npm run e2e:dock
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 
@@ -64,7 +64,7 @@ async function rename(page, slideIndex, name) {
 
 ;(async () => {
   fs.mkdirSync(SHOTS, { recursive: true })
-  const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {})
+  const browser = await launch()
   try {
     const ann = await open(browser, ANN, true)
     await ann.click('[aria-label="new slide"]')

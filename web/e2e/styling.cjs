@@ -1,5 +1,5 @@
 // Styling a text: the style menu, in a real browser (server: --model claudia_composes:TextModel).
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8766/'
@@ -14,7 +14,7 @@ const look = (page, n) =>
   }, n)
 
 async function main() {
-  const browser = await chromium.launch()
+  const browser = await launch()
   const context = await browser.newContext({ viewport: { width: 1360, height: 860 }, deviceScaleFactor: 2 })
   const page = await context.newPage()
   const errors = []

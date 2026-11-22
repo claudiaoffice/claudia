@@ -19,10 +19,12 @@ from __future__ import annotations
 
 import contextlib
 import itertools
+import json
 import os
 import re
 import sys
 import tempfile
+import time
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -40,9 +42,25 @@ HEADED = bool(os.environ.get("CLAUDIA_E2E_HEADED"))
 PASSWORD = "Ann has a password 1"
 PASSWORDS = {"Ann": PASSWORD, "Vera": "Vera has a password 1"}
 TAGS_FOR_MARKERS = ("core", "extended", "firefox", "two-users", "desktop", "needs-decision")
+#: What shows that a document of an app is open, and what a new document of it is called on the front page.
+READY = {"composes": "[data-testid=text]", "computes": "[role=grid]", "creates": "[data-testid=slide]"}
+KIND_WORDS = {"composes": "Text", "computes": "Table", "creates": "Slides"}
 
 
 _config: pytest.Config | None = None
+
+
+def eventually(check, seconds: float = 10.0) -> None:
+    """Run ``check`` (it asserts) until it holds, for at most ``seconds``; the last failure is the answer."""
+    end = time.monotonic() + seconds
+    while True:
+        try:
+            check()
+            return
+        except AssertionError:
+            if time.monotonic() > end:
+                raise
+            time.sleep(0.1)
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -93,16 +111,27 @@ def pytest_bdd_apply_tag(tag: str, function) -> bool | None:
     return None
 
 
-@pytest.fixture(scope="session")
-def stack() -> Iterator[str]:
-    """One server of composes with the built web app, for the whole run; its URL."""
+def _web_server(*options: str) -> Iterator[str]:
+    """A real server with the built web app, for the whole run; its URL."""
     if SKIP:
         pytest.skip(SKIP)
     with (
         tempfile.TemporaryDirectory(prefix="claudia-specs-") as folder,
-        server(Path(folder), "--model", "claudia_composes:TextModel", "--web", str(BUILT)) as running,
+        server(Path(folder), *options, "--web", str(BUILT)) as running,
     ):
         yield running.url
+
+
+@pytest.fixture(scope="session")
+def stack() -> Iterator[str]:
+    """One server of composes."""
+    yield from _web_server("--model", "claudia_composes:TextModel")
+
+
+@pytest.fixture(scope="session")
+def suite() -> Iterator[str]:
+    """One server of all three apps (D430)."""
+    yield from _web_server()
 
 
 def _launch(play):
@@ -139,8 +168,9 @@ _counter = itertools.count(1)
 class Person:
     """One person with one page in one document: what the steps drive."""
 
-    def __init__(self, browser, url: str, document: str, name: str):
+    def __init__(self, browser, url: str, document: str, name: str, app: str = "composes"):
         self.name = name
+        self.app = app
         self.password = PASSWORDS.get(name, PASSWORD)
         self.document = document
         self.context = browser.new_context(viewport={"width": 1360, "height": 900})
@@ -148,7 +178,30 @@ class Person:
         self.errors: list[str] = []
         self.page.on("pageerror", lambda e: self.errors.append(f"pageerror: {e}"))
         self.page.on("console", lambda m: m.type == "error" and self.errors.append(f"console: {m.text}"))
+        self.sent: list[str] = []  # the methods of the requests this page sent, in order
+        self.events: list[dict] = []  # what the server pushed to this page: {"event": ..., "data": ...}
+        self.page.on("websocket", self._listen)
+        # every notice the page shows, kept: a notice goes away by itself after a few seconds
+        self.context.add_init_script(
+            "window.__notices = []; new MutationObserver(() => document.querySelectorAll('.toast').forEach(e => {"
+            " if (!e.dataset.kept) { e.dataset.kept = '1'; window.__notices.push(e.textContent.trim()) } }))"
+            ".observe(document, {childList: true, subtree: true})"
+        )
         self.url = url
+
+    def _listen(self, socket) -> None:
+        def sent(frame: str) -> None:
+            with contextlib.suppress(ValueError, TypeError, AttributeError):
+                self.sent.append(json.loads(frame)["method"])
+
+        def pushed(frame: str) -> None:
+            with contextlib.suppress(ValueError, TypeError):
+                message = json.loads(frame)
+                if isinstance(message, dict) and "event" in message:
+                    self.events.append(message)
+
+        socket.on("framesent", sent)
+        socket.on("framereceived", pushed)
 
     def create(self) -> None:
         page = self.page
@@ -156,12 +209,14 @@ class Person:
         page.fill("input[name=document]", self.document)
         page.fill("input[name=user]", self.name.lower())
         page.fill("input[name=password]", self.password)
+        kinds = page.locator(".kinds")  # a server of several apps asks which kind of document (D430)
+        if kinds.count():
+            kinds.get_by_role("radio", name=KIND_WORDS[self.app]).click()
         page.click("text=Create document")
         page.wait_for_selector("[data-testid=recovery-key]")
         page.check(".modal input[type=checkbox]")
         page.click('.modal button:text-is("Continue")')
-        page.wait_for_selector("[data-testid=text]")
-        page.wait_for_function("document.querySelector('.health.open')")
+        self.wait_until_open()
 
     def type_login(self, password: str | None = None) -> None:
         """The Open dialog of this person's document, filled in and not yet sent."""
@@ -180,16 +235,41 @@ class Person:
         self.press_open()
 
     def wait_until_open(self, timeout: float = 15000) -> None:
-        self.page.wait_for_selector("[data-testid=text]", timeout=timeout)
+        self.page.wait_for_selector(READY[self.app], timeout=timeout)
         self.page.wait_for_function("document.querySelector('.health.open')", timeout=timeout)
+
+    def notices(self) -> list[str]:
+        """Every notice this page has shown since it was loaded, in order."""
+        return self.page.evaluate("window.__notices || []")
+
+    def share(self, person: Person, role: str) -> None:
+        """Add ``person`` with ``role`` (File ▸ Manage ▸ Share…), with the password that person will use."""
+        self.menu("File", "Manage", "Share…")
+        dialog = self.page.locator(".modal")
+        dialog.get_by_label("Name", exact=True).fill(person.name.lower())
+        dialog.locator("input[name=share-password]").fill(person.password)
+        dialog.locator("select").last.select_option(role)  # the last: the role of the person being added
+        dialog.get_by_role("button", name="Add person").click()
+        self.page.wait_for_selector(f'.added li:has-text("{person.name.lower()} ({role})")')
+        dialog.get_by_role("button", name="Done").click()
+
+    def reopen(self) -> None:
+        """Reload the page and open the document again: a reload leaves a person at the front page."""
+        self.page.reload()
+        self.open()
+        self.wait_until_open()
 
     def leave(self) -> None:
         """Close the window of the document, as a person who is done with it."""
         self.page.goto("about:blank")
 
-    def menu(self, title: str, entry: str) -> None:
+    def menu(self, title: str, *path: str) -> None:
+        """Choose ``title`` ▸ ``path``: each entry but the last opens a submenu."""
         self.page.click(f'.menus .title:text-is("{title}")')
-        self.page.click(f'.menus .drop [role=menuitem]:has-text("{entry}")')
+        *submenus, entry = path
+        for submenu in submenus:
+            self.page.locator(f'.menus .drop [role=menuitem]:has-text("{submenu}")').first.hover()
+        self.page.locator(f'.menus .drop [role=menuitem]:has-text("{entry}")').first.click()
 
     def paragraphs(self) -> list[str]:
         return self.page.eval_on_selector_all(
@@ -239,10 +319,13 @@ class World:
         self.me: Person | None = None
         self.last_error: str | None = None
 
-    def join(self, name: str) -> Person:
-        """A person with a page of their own; the second person and later share the first one's document."""
+    def join(self, name: str, app: str | None = None) -> Person:
+        """A person with a page of their own; the second person and later share the first one's document (and app)."""
+        if self.me is not None:
+            assert app in (None, self.me.app), f"{name} joins a {self.me.app} document, not a {app} one"
         document = self.me.document if self.me is not None else f"spec-{next(_counter)}-{os.getpid()}"
-        person = Person(self.browser, self.url, document, name)
+        app = self.me.app if self.me is not None else (app or "composes")
+        person = Person(self.browser, self.url, document, name, app)
         self.people[name] = person
         self.me = self.me or person
         return person
@@ -255,7 +338,18 @@ class World:
 
 @pytest.fixture
 def world(browser, stack, request) -> Iterator[World]:
-    made = World(browser, stack)
+    """The people of a scenario on the composes server."""
+    yield from looked_after(World(browser, stack), request)
+
+
+@pytest.fixture
+def suite_world(browser, suite, request) -> Iterator[World]:
+    """The people of a scenario on the server of all three apps."""
+    yield from looked_after(World(browser, suite), request)
+
+
+def looked_after(made: World, request) -> Iterator[World]:
+    """Hand the world to the scenario; afterwards a screenshot of every page, and no errors in any browser console."""
     yield made
     SHOTS.mkdir(parents=True, exist_ok=True)
     slug = re.sub(r"\W+", "-", request.node.name)[:80]

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import time
 
+from conftest import eventually
 from pytest_bdd import given, parsers, scenarios, then, when
 
 scenarios("../../../claudiaoffice-log/specs/composes/object-anchor.feature")
@@ -18,18 +19,6 @@ PARAGRAPHS = "[data-testid=text] [data-paragraph]"
 MARK = "[data-testid=anchor-mark]"
 LINE = "Paragraph number {n} has enough words in it to fill a line and then go on to a second line, which it does."
 MOVED = "Moved an object"  # how the history speaks of a move
-
-
-def eventually(check, seconds: float = 5.0) -> None:
-    end = time.monotonic() + seconds
-    while True:
-        try:
-            check()
-            return
-        except AssertionError:
-            if time.monotonic() > end:
-                raise
-            time.sleep(0.1)
 
 
 def _equal(got, want) -> None:
