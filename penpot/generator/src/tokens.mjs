@@ -15,12 +15,12 @@ export const FONT_FAMILIES = {
   hand: { family: 'Sacramento', id: 'gfont-sacramento', note: 'the wordmark "claudia" only' },
 }
 
-const WEIGHTS = { regular: 400, medium: 500, semibold: 600 }
+const WEIGHTS = { regular: 400, medium: 500, semibold: 600, bold: 700 }
 
 // Sizes in px; the name is the size, a hyphen stands for the decimal point (token names have no dot but groups).
 const sizeName = (n) => String(n).replace('.', '-')
-const FONT_SIZES = [11, 11.5, 12, 12.5, 13, 13.5, 14, 34, 40]
-const SPACE = [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 24, 28, 32, 36, 40]
+const FONT_SIZES = [11, 11.5, 12, 12.5, 13, 13.5, 14, 34, 40, 10, 10.5, 15, 16, 20, 24]
+const SPACE = [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 24, 28, 32, 36, 40, 5, 26]
 const RADIUS = {
   'input-small': [7, 'inputs in the sidebar, row actions'],
   field: [8, 'a labelled field (.field input)'],
@@ -28,6 +28,12 @@ const RADIUS = {
   row: [10, 'a document row, a menu; --radius in tokens.css'],
   card: [18, 'the front page card'],
   pill: [999, 'buttons (.btn)'],
+  // the dialogs (Modal.vue, SearchPanel.vue, StylesDialog.vue, StyleSpec.vue)
+  dialog: [16, 'a modal dialog (Modal.vue)'],
+  panel: [14, 'the floating search panel (SearchPanel.vue)'],
+  chip: [6, 'an icon button, a segment of a switch, a match row'],
+  swatch: [5, 'the colour swatch of a colour button'],
+  mark: [3, 'the mark on a found text, a check box'],
 }
 const BORDER = { 1: 'every outline', 2: 'the chosen kind of a new document' }
 const SIZING = {
@@ -38,6 +44,11 @@ const SIZING = {
   'app-icon-s': [20, 'an app icon next to a kind (AppIcon :size 20)'],
   'app-icon-m': [22, 'an app icon in a document row (AppIcon :size 22)'],
   'app-icon-l': [64, 'an app icon at its design size'],
+  'icon-button': [26, 'an icon button in a panel header'],
+  'icon-button-s': [19, 'a small icon button (previous, next, remove)'],
+  check: [16, 'a check box or a radio button'],
+  control: [30, 'the height of a control in the style editor (.font-btn, .marks, .stepper)'],
+  segment: [30, 'the width of one button of a group of marks'],
 }
 const OPACITY = { disabled: [0.45, 'a disabled button (.btn:disabled)'], baseline: [0.55, 'the baseline in the composes icon'] }
 
@@ -63,6 +74,34 @@ export const TYPE = {
   kbd: { font: 'mono', size: 11, weight: 'regular', lh: 'normal', note: 'a key name (kbd)' },
   filter: { font: 'ui', size: 12, weight: 'regular', lh: 'normal', note: 'a list filter (.filter)' },
   wordmark: { font: 'hand', size: 34, weight: 'regular', lh: 1, note: 'the wordmark (Wordmark.vue)' },
+  // --- the dialogs ---
+  'dialog-title': { font: 'display', size: 24, weight: 'regular', lh: 1.1, note: 'the title of a modal dialog (Modal.vue h2)' },
+  'panel-title': { font: 'ui', size: 15, weight: 'semibold', lh: 'normal', note: 'the title of the search panel (SearchPanel.vue h2)' },
+  control: { font: 'ui', size: 13, weight: 'regular', lh: 'normal', note: 'text of a control and of a panel (the panel sets 13px)' },
+  'control-strong': { font: 'ui', size: 13, weight: 'bold', lh: 'normal', note: 'the strong part of a control, a count of matches' },
+  'button-panel': { font: 'ui', size: 13, weight: 'medium', lh: 'normal', note: '.btn inside the search panel' },
+  label: { font: 'ui', size: 11, weight: 'medium', lh: 'normal', ls: 0.04, transform: 'uppercase', note: 'a label above a part of the search panel (.label)' },
+  'spec-head': { font: 'ui', size: 11, weight: 'semibold', lh: 1, ls: 0.1, transform: 'uppercase', note: 'the heading of the style editor (StyleSpec h3)' },
+  facet: { font: 'ui', size: 10.5, weight: 'semibold', lh: 1, ls: 0.1, transform: 'uppercase', note: 'the heading of a facet of a style (StyleSpec h4)' },
+  link: { font: 'ui', size: 12, weight: 'regular', lh: 'normal', note: 'a link in a list (.link in StylesDialog)' },
+  'link-strong': { font: 'ui', size: 12, weight: 'semibold', lh: 'normal', note: 'the main link of a row (Edit)' },
+  badge: { font: 'ui', size: 11, weight: 'regular', lh: 'normal', note: 'a small badge (.kind in the matches)' },
+  'mono-small': { font: 'mono', size: 11.5, weight: 'regular', lh: 'normal', note: 'a count or a place (.mono, .count)' },
+  'mono-value': { font: 'mono', size: 12, weight: 'regular', lh: 'normal', note: 'the value of a stepper' },
+  'mark-bold': { font: 'ui', size: 14, weight: 'bold', lh: 'normal', note: 'B in the marks of a style' },
+  'mark-italic': { font: 'display', size: 14, weight: 'regular', lh: 'normal', style: 'italic', note: 'I in the marks of a style' },
+  glyph: { font: 'ui', size: 14, weight: 'regular', lh: 1, note: 'a glyph used as an icon (⋯, ✕)' },
+  'glyph-small': { font: 'ui', size: 11, weight: 'regular', lh: 1, note: 'a small glyph (▲, ▼, ▾)' },
+  sign: { font: 'ui', size: 15, weight: 'regular', lh: 1, note: 'the − and + of a stepper' },
+  switch: { font: 'ui', size: 12, weight: 'medium', lh: 'normal', note: 'a segment of the Controls | CSS switch' },
+  'editor-title': { font: 'ui', size: 20, weight: 'medium', lh: 'normal', note: 'the name of the style being edited' },
+  sentence: { font: 'display', size: 13, weight: 'regular', lh: 'normal', style: 'italic', note: 'the sentence that says what a pattern finds (.sentence)' },
+  'sample-body': { font: 'ui', size: 16, weight: 'regular', lh: 1.3, note: 'a style sample in the list, body look (.sample)' },
+  'sample-display': { font: 'display', size: 16, weight: 'medium', lh: 1.3, ls: -0.01, note: 'a style sample in the list, display look' },
+  'pick-body': { font: 'ui', size: 14, weight: 'regular', lh: 1.3, note: 'a style sample while editing (.pick .sample), body look' },
+  'pick-display': { font: 'display', size: 14, weight: 'medium', lh: 1.3, ls: -0.01, note: 'a style sample while editing, display look' },
+  'pick-bold': { font: 'display', size: 14, weight: 'bold', lh: 1.3, ls: -0.01, note: 'a style sample while editing, bold display look' },
+  'pick-italic': { font: 'display', size: 14, weight: 'medium', lh: 1.3, style: 'italic', note: 'a style sample while editing, italic look' },
 }
 
 // --- the colours -----------------------------------------------------------------------------------------------
@@ -124,7 +163,11 @@ export function buildTokens({ cssFile, lineHeightOf }) {
     if (!m) throw new Error(`tokens.css: cannot read the shadow "${s}"`)
     return { offsetX: m[1], offsetY: m[2], blur: m[3], spread: '0', color: toRgbaText(evalColor(m[4], {}).rgba), inset: false }
   })
-  put(core, 'shadow.card', tok('shadow', shadows, '--shadow: the front page card'))
+  put(core, 'shadow.card', tok('shadow', shadows, '--shadow: the front page card, a modal dialog'))
+  const ink = '#1F1A33'
+  const shadow1 = (y, blur, a) => [{ offsetX: '0', offsetY: String(y), blur: String(blur), spread: '0', color: `${ink}${Math.round(a * 255).toString(16).padStart(2, '0').toUpperCase()}`, inset: false }]
+  put(core, 'shadow.panel', tok('shadow', shadow1(12, 40, 0.22), 'the floating search panel (SearchPanel.vue)'))
+  put(core, 'shadow.raised', tok('shadow', shadow1(1, 2, 0.14), 'the chosen segment of a switch'))
 
   for (const [name, t] of Object.entries(TYPE)) {
     const value = {
@@ -159,6 +202,10 @@ export function buildTokens({ cssFile, lineHeightOf }) {
     const vars = scenario(false, app)
     for (const name of APP_COLORS) put(set, `color.${name}`, tok('color', colorValue(evalColor(vars[name], vars)), `--${name} in tokens.css for ${app}`))
     put(set, 'color.app-light', tok('color', `{color.${APP_LIGHT[app]}}`, `--app-text in the dark scheme for ${app}`))
+    // the app colour as a wash: color-mix(in srgb, var(--app) N%, transparent), written out in StylesDialog and StyleSpec
+    const base = coreColors[{ computes: 'teal', composes: 'rose', creates: 'apricot' }[app]].rgba
+    put(set, 'color.app-selected', tok('color', colorText([base[0], base[1], base[2], 0.14]), `the chosen style in the list of styles: ${app} at 14%`))
+    put(set, 'color.app-wash', tok('color', colorText([base[0], base[1], base[2], 0.09]), `the notice that a change goes to every use: ${app} at 9%`))
     return set
   }
 

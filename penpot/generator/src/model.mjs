@@ -503,7 +503,7 @@ function textParams(n, parent) {
     textAlign: n.align,
     lineHeight: String(lhFactor),
     letterSpacing: String(spec.ls),
-    textDecoration: n.underline ? 'underline' : 'none',
+    textDecoration: n.strike ? 'line-through' : n.underline ? 'underline' : 'none',
     textTransform: spec.transform,
     direction: 'ltr',
     fills: [fill1(c.hex, c.opacity)],
