@@ -93,7 +93,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
-| CODE-17 | P3 | Code / tests | Three names for "use this browser" in the tests (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`) | **new, open** |  |  |
+| CODE-17 | P3 | Code / tests | Three names for "use this browser" in the tests (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`) | **fixed** 2026-11-22 (D1453, `e2e-guard`) |  | 2026-11-22 |
 | CODE-19 | P3 | Code | A debugging scan of the garbage collector and a 10 s sleep loop left in the journal | **new, open** |  |  |
 | CODE-20 | P3 | Code / Supply chain | The Dockerfile copies `uv:latest`: the image's build tool is not pinned | **new, open** |  |  |
 | CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | open; search split out 2026-11-13; 1,121 lines at `7994b00` (see CODE-27, CODE-29) |  |  |
@@ -280,7 +280,6 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-49 | P2 | Process / CI | The Penpot generator on `main` made the Python jobs red: its `package-lock.json` was neither audited nor watched by dependabot, and `tools/transplant.py` failed ruff | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
 | PROC-50 | P2 | Process / E2E | `./run-e2e.sh regression` ran 27 browser scripts, CI 30: `objects.cjs` and the two client windows ran only in CI | **fixed** 2026-11-22 (D1452, `e2e-guard`) | 2026-11-21 | 2026-11-22 |
 | PROC-51 | P2 | Process / E2E | Every full local regression stopped after the shared servers with "port 8766 is in use" (TIME_WAIT, no `SO_REUSEADDR` in the runner's probe) | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-22 | 2026-11-22 |
-| PROC-52 | P3 | Process / E2E | The browser scripts named a browser already there in four ways (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`, none) | **fixed** 2026-11-22 (D1453, `e2e-guard`) | 2026-11-22 | 2026-11-22 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -1521,9 +1520,13 @@ repository variable set, the last step failed after a good deployment (or checke
 `odf-libreoffice` is `continue-on-error` "until it has a track record". It has read 31 of 31 files in every round since
 PROC-11. **Fix:** make it blocking; pin the LibreOffice version in the log line so a distribution update is visible.
 
-### CODE-17 · Three names for "use this browser" · P3 · new, open
+### CODE-17 · Three names for "use this browser" · P3 · fixed 2026-11-22
 `tests/e2e` reads `CLAUDIA_CHROMIUM`, five `web/e2e` scripts `CHROME`, five `CHROMIUM`, the rest nothing. **Fix:** one
 `web/e2e/browser.cjs` (`launch()` reading `CLAUDIA_CHROMIUM`, with `--no-sandbox` where needed) used by every script.
+**Fixed 2026-11-22** (D1453): exactly that; Playwright passes `--no-sandbox` itself. Of the 30 scripts at that point, 8
+read `CHROME`, 9 `CHROMIUM`, 2 `CLAUDIA_CHROMIUM` and 11 nothing; on a computer that cannot download Playwright's
+browser most could not run. **Test:** `tests/test_run_e2e.py::test_every_browser_script_starts_its_browser_one_way`, red
+before, green after; the whole local regression then ran with only `$CLAUDIA_CHROMIUM` set (33 passed).
 
 ### CODE-18 · The search "for all three apps" speaks only in sheets · P2 · fixed 2026-11-13
 `SearchPanel.vue` says it is one panel for all apps (D284), but matches, `leave`, `skipped` and `left_out` are
@@ -2617,7 +2620,7 @@ here. **Fixed:** `_free` sets `SO_REUSEADDR` (not on Windows, where it would let
 **Test:** `tests/test_run_e2e.py`, red before, green after. Escaped because: test not run (nobody ran the whole local
 regression to its end; the summary was never printed).
 
-## Round of 2026-11-22 (step code for the cross-app spec; one way to start a browser; branch `e2e-guard`)
+## Round of 2026-11-22 (step code for the cross-app spec; branch `e2e-guard`; CODE-17 fixed above)
 
 ### UX-69 · A viewer is not told that she can only look · P2 · size 2 · open
 **Measured** with the new step code of `specs/objects/the-same-in-all-three-apps.feature` (all three apps, a server
@@ -2634,11 +2637,3 @@ event that forgets the chart (it does for a picture, a shape and a container, D1
 `Error: DOM element provided is null or undefined` from Plotly's `getGraphDiv`. **Test:** the row `workbook | a chart`
 of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
 E1.18.
-
-### PROC-52 · The browser scripts named a browser already there in four ways · P3 · size 3 · fixed 2026-11-22
-**Measured** (2026-11-21): of the 30 scripts in `web/e2e`, 8 read `CHROME`, 9 `CHROMIUM`, 2 `CLAUDIA_CHROMIUM` and 11
-nothing; on a computer that cannot download Playwright's browser most could not run. **Fixed** (D1453): one launcher,
-`web/e2e/browser.cjs`, and one variable, `$CLAUDIA_CHROMIUM`, as for the Python tests. **Test:**
-`tests/test_run_e2e.py::test_every_browser_script_starts_its_browser_one_way`, red before, green after. Escaped
-because: no rule, and every script was written on its own.
-

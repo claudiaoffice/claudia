@@ -38,13 +38,13 @@ def test_a_port_someone_listens_on_is_busy(run_e2e):
 
 
 def test_every_browser_script_starts_its_browser_one_way():
-    """One variable names a browser already on the computer, ``$CLAUDIA_CHROMIUM``, for the Python tests and the
-    scripts alike. The scripts read ``CHROME``, ``CHROMIUM``, ``CLAUDIA_CHROMIUM`` or nothing (PROC-52): on a computer
-    that cannot download Playwright's browser, most could not run. They start it through ``web/e2e/browser.cjs``."""
+    """Every script starts its browser through ``web/e2e/browser.cjs``, so that one variable, ``$CLAUDIA_CHROMIUM``,
+    names a browser already on the computer for the Python tests and the scripts alike (CODE-17, D1453)."""
     scripts = sorted((Path(__file__).parent.parent / "web" / "e2e").glob("*.cjs"))
     own_way = [
         script.name
         for script in scripts
-        if script.name != "browser.cjs" and re.search(r"\.launch\w*\(|process\.env\.(CHROME|CHROMIUM)\b", script.read_text())
+        if script.name != "browser.cjs"
+        and re.search(r"\.launch\w*\(|process\.env\.(CHROME|CHROMIUM)\b", script.read_text())
     ]
     assert not own_way, f"these start a browser their own way, not through web/e2e/browser.cjs: {own_way}"

@@ -24,6 +24,7 @@ import os
 import re
 import sys
 import tempfile
+import time
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -47,6 +48,19 @@ KIND_WORDS = {"composes": "Text", "computes": "Table", "creates": "Slides"}
 
 
 _config: pytest.Config | None = None
+
+
+def eventually(check, seconds: float = 10.0) -> None:
+    """Run ``check`` (it asserts) until it holds, for at most ``seconds``; the last failure is the answer."""
+    end = time.monotonic() + seconds
+    while True:
+        try:
+            check()
+            return
+        except AssertionError:
+            if time.monotonic() > end:
+                raise
+            time.sleep(0.1)
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -97,16 +111,27 @@ def pytest_bdd_apply_tag(tag: str, function) -> bool | None:
     return None
 
 
-@pytest.fixture(scope="session")
-def stack() -> Iterator[str]:
-    """One server of composes with the built web app, for the whole run; its URL."""
+def _web_server(*options: str) -> Iterator[str]:
+    """A real server with the built web app, for the whole run; its URL."""
     if SKIP:
         pytest.skip(SKIP)
     with (
         tempfile.TemporaryDirectory(prefix="claudia-specs-") as folder,
-        server(Path(folder), "--model", "claudia_composes:TextModel", "--web", str(BUILT)) as running,
+        server(Path(folder), *options, "--web", str(BUILT)) as running,
     ):
         yield running.url
+
+
+@pytest.fixture(scope="session")
+def stack() -> Iterator[str]:
+    """One server of composes."""
+    yield from _web_server("--model", "claudia_composes:TextModel")
+
+
+@pytest.fixture(scope="session")
+def suite() -> Iterator[str]:
+    """One server of all three apps (D430)."""
+    yield from _web_server()
 
 
 def _launch(play):
@@ -114,18 +139,6 @@ def _launch(play):
     if BROWSER == "firefox":
         return play.firefox.launch(headless=not HEADED)
     return play.chromium.launch(executable_path=chromium_at(), headless=not HEADED)
-
-
-@pytest.fixture(scope="session")
-def suite() -> Iterator[str]:
-    """One server of all three apps (D430) with the built web app, for the whole run; its URL."""
-    if SKIP:
-        pytest.skip(SKIP)
-    with (
-        tempfile.TemporaryDirectory(prefix="claudia-specs-suite-") as folder,
-        server(Path(folder), "--web", str(BUILT)) as running,
-    ):
-        yield running.url
 
 
 @pytest.fixture(scope="module")
@@ -168,6 +181,12 @@ class Person:
         self.sent: list[str] = []  # the methods of the requests this page sent, in order
         self.events: list[dict] = []  # what the server pushed to this page: {"event": ..., "data": ...}
         self.page.on("websocket", self._listen)
+        # every notice the page shows, kept: a notice goes away by itself after a few seconds
+        self.context.add_init_script(
+            "window.__notices = []; new MutationObserver(() => document.querySelectorAll('.toast').forEach(e => {"
+            " if (!e.dataset.kept) { e.dataset.kept = '1'; window.__notices.push(e.textContent.trim()) } }))"
+            ".observe(document, {childList: true, subtree: true})"
+        )
         self.url = url
 
     def _listen(self, socket) -> None:
@@ -218,6 +237,21 @@ class Person:
     def wait_until_open(self, timeout: float = 15000) -> None:
         self.page.wait_for_selector(READY[self.app], timeout=timeout)
         self.page.wait_for_function("document.querySelector('.health.open')", timeout=timeout)
+
+    def notices(self) -> list[str]:
+        """Every notice this page has shown since it was loaded, in order."""
+        return self.page.evaluate("window.__notices || []")
+
+    def share(self, person: Person, role: str) -> None:
+        """Add ``person`` with ``role`` (File ▸ Manage ▸ Share…), with the password that person will use."""
+        self.menu("File", "Manage", "Share…")
+        dialog = self.page.locator(".modal")
+        dialog.get_by_label("Name", exact=True).fill(person.name.lower())
+        dialog.locator("input[name=share-password]").fill(person.password)
+        dialog.locator("select").last.select_option(role)  # the last: the role of the person being added
+        dialog.get_by_role("button", name="Add person").click()
+        self.page.wait_for_selector(f'.added li:has-text("{person.name.lower()} ({role})")')
+        dialog.get_by_role("button", name="Done").click()
 
     def reopen(self) -> None:
         """Reload the page and open the document again: a reload leaves a person at the front page."""
@@ -287,6 +321,8 @@ class World:
 
     def join(self, name: str, app: str | None = None) -> Person:
         """A person with a page of their own; the second person and later share the first one's document (and app)."""
+        if self.me is not None:
+            assert app in (None, self.me.app), f"{name} joins a {self.me.app} document, not a {app} one"
         document = self.me.document if self.me is not None else f"spec-{next(_counter)}-{os.getpid()}"
         app = self.me.app if self.me is not None else (app or "composes")
         person = Person(self.browser, self.url, document, name, app)

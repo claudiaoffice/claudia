@@ -78,8 +78,18 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
 * `tests/e2e/specs/conftest.py`: `suite` (a server of all three apps, D430) and `suite_world`; `Person` takes an app,
   picks the kind of a new document on a server of several apps, waits for that app's page, keeps `sent` and `events`,
   and has `reopen()`; `menu(title, *path)` opens submenus; `world` and `suite_world` share `looked_after`.
-* `web/e2e/browser.cjs` (new, D1453): `launch()`; all 30 scripts use it. `tests/test_run_e2e.py` checks that none starts
+* `web/e2e/browser.cjs` (new, CODE-17, D1453): `launch()`; all 30 scripts use it; Firefox with
+  `CLAUDIA_E2E_BROWSER=firefox`, as for the Python specs. `tests/test_run_e2e.py` checks that none starts
   a browser another way.
 
 Assumptions: "I try to <change>" means clicking the entry even when it is greyed and using a control only where the
 dialog shows one; "rename a style" renames the first style of the list; the palette change is the accent role.
+
+After the code review of the follow-up: `eventually`, `Person.share` and `Person.notices` (every notice a page showed,
+kept by an init script, since a notice goes away after 6 s) live in `conftest.py`, and the step files that had their own
+copies use them (`test_administrators`, `test_caret`, `test_new_object_sizes`, `test_object_anchor`, `test_tables`,
+`test_people`, `test_export`, `test_viewer`); `stack` and `suite` share `_web_server`; `World.join` refuses a second
+person in another app. "After a reload we both see the same" compares with the place remembered before the reload, not
+with Ann's page after it. "Shows the same as before" compares what the page shows (size, the picture, the outline).
+While the viewer scenario waits for UX-69, its steps after "I am told" do not run; they passed when that step was
+switched off by hand on 2026-11-22.

@@ -1,5 +1,5 @@
 // Lists in a text (E9.21), in real browser windows with two people (server: --model claudia_composes:TextModel).
-// BROWSER=firefox runs it in Firefox (the owner's main browser); CLAUDIA_CHROMIUM=/path/to/chrome uses a browser that is installed.
+// CLAUDIA_E2E_BROWSER=firefox runs it in Firefox (the owner's main browser); CLAUDIA_CHROMIUM=/path/to/chrome uses a browser that is installed.
 const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 

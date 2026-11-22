@@ -2,7 +2,7 @@
 // presenter view, overview and blank screen, and the keys that start it (F5 and the Mac-safe chord). Start a
 // presentation server first:
 //   uv run python scripts/start.py creates --no-browser      (URL defaults to http://127.0.0.1:8765/; CI passes URL=)
-// BROWSER=firefox runs it in Firefox (the owner's main browser); CLAUDIA_CHROMIUM=/path/to/chrome uses a browser that is installed.
+// CLAUDIA_E2E_BROWSER=firefox runs it in Firefox (the owner's main browser); CLAUDIA_CHROMIUM=/path/to/chrome uses a browser that is installed.
 const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
