@@ -259,3 +259,5 @@ not the provider; the local model answers and the chat says who answered.
 I recommend **(b)**: the consent is a permission, not a request. Making it an obligation would stop `@ai` in every document the
 moment an administrator moves away from Claude, which is the opposite of what the administrator chose. Error lines stay for what
 fails when Claude *is* the chosen provider (the one sentence of your Q11). If you meant (a), I'll write that into the scenarios.
+
+Agreed (b), the owner
