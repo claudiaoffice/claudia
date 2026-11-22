@@ -20,7 +20,7 @@ One zip, written anew for every change and put in place atomically, so a crash l
 | `slots.json` | the key slots: a locator and the sealed part keys, the person's X25519 private key and the key to her private notes, no names | anybody sees the sizes |
 | `people.bin` | names, roles, slot locators, public keys and the ids of everybody's private notes, sealed with the content key | people with the content key |
 | `inbox/<locator>.bin` | a letter to a person who was not there: a sealed box to her public key with her role and the keys she is missing (§1, *Keys and letters*) | the person it is for |
-| `private/<id>/NNNNNN.blk`, `private/<id>/head.bin` | a person's private notes: their own chain and head, sealed with their key only (always one, possibly empty, block) | that person |
+| `private/<id>/NNNNNN.blk`, `private/<id>/head.bin` | a person's private notes: their own chain and head, sealed with her key only (always one, possibly empty, block) | that person |
 | `head.bin` | how many blocks each chain has and the hash of its last block, sealed with the history key | owners and editors |
 | `content/snapshot.bin` | a cache of the current state (optional), sealed with the content key | everybody in the document |
 | `content/original.bin` | the file the document was imported from, if it is kept (optional) | everybody in the document |

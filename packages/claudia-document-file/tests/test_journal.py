@@ -42,7 +42,8 @@ ITEMS = [
 def test_records_come_back_in_order_with_their_part(path, keys):
     written(path, keys, ITEMS)
     records = read_journal(path, DOC, keys)
-    assert [(r.seq, r.part, r.payload) for r in records] == [(i + 1, d, p) for i, (d, p) in enumerate(ITEMS)]
+    expected = [(i + 1, part, payload) for i, (part, payload) in enumerate(ITEMS)]
+    assert [(r.seq, r.part, r.payload) for r in records] == expected
 
 
 def test_an_empty_journal_has_no_records(path, keys):

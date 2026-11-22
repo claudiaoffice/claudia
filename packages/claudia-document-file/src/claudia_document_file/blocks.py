@@ -40,8 +40,8 @@ AUDIT = "audit"
 a part of its own: nobody holds a key for it besides those who hold the history key."""
 
 PRIVATE = "private"
-"""The folder of private notes, ``private/<id>/NNNNNN.blk`` (D1265). Each person's are a chain of their own, sealed
-with their key alone, and have a head of their own."""
+"""The folder of private notes, ``private/<id>/NNNNNN.blk`` (D1265). Each person's notes are a chain of their own,
+sealed with her key alone, with a head of their own."""
 
 _STREAM_BYTE = {"content": 1, "history": 2, "chat": 3, AUDIT: 4, PRIVATE: 5}
 
@@ -69,7 +69,7 @@ class Place:
 def _aad(place: Place) -> bytes:
     name = place.doc_id.encode()
     number = struct.pack(">I", place.number)
-    if place.stream.startswith(f"{PRIVATE}/"):  # the id of the private notes is part of the place
+    if place.stream.startswith(f"{PRIVATE}/"):  # the place names whose private notes these are
         stream = bytes([_STREAM_BYTE[PRIVATE]]) + place.stream.encode()
     else:
         stream = bytes([_STREAM_BYTE[place.stream]])
