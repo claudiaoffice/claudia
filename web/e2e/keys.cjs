@@ -1,7 +1,7 @@
 // One key table for every app and client, and a new document with nothing to undo (UX-33, UX-35, UX-36; D360-D362),
 // in a real browser against a server of one app each on 8765, 8766 and 8767 (`--model`, D433; see docs/web.md, Tests):
 //   node e2e/keys.cjs        (COMPUTES, COMPOSES, CREATES are the three addresses)
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const COMPUTES = process.env.COMPUTES ?? 'http://127.0.0.1:8765/'
@@ -44,7 +44,7 @@ const panelShown = (page) => page.evaluate(() => {
 })
 
 ;(async () => {
-  const browser = await chromium.launch(process.env.CLAUDIA_CHROMIUM ? { executablePath: process.env.CLAUDIA_CHROMIUM } : {})
+  const browser = await launch()
   try {
     // ---- computes: the first sheet is there and stays there; keys from the table
     const sheet = await create(browser, COMPUTES)

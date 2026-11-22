@@ -9,7 +9,7 @@
 //
 //   server 1: uv run python -m claudia_server --no-tls --model claudia_computes.model:WorkbookModel --port 8765 --web web/.output/public --dir /tmp/o1
 //   server 2: ... --model claudia_composes:TextModel --port 8766 ...      server 3: ... --model claudia_creates:SlideModel --port 8767 ...
-//   node e2e/objects.cjs                       (APP=computes|composes|creates for one; CHROME=/path/to/chrome; SHOTS=dir)
+//   node e2e/objects.cjs                       (APP=computes|composes|creates for one; CLAUDIA_CHROMIUM=/path/to/chrome; SHOTS=dir)
 //
 // D1232: Edit text writes the words of a text box and a shape in composes as it does in creates, and Format ▸ Rotate
 // (Rotate Right 90°, Rotate Left 90°, Rotate By…, with their keys) is in composes and computes as in creates; neither a
@@ -17,7 +17,7 @@
 //
 // `tests/test_object_kinds_agree.py` fails when a kind of object (`claudia_core.OBJECT_KINDS`) has no row in KINDS below:
 // a new kind of object comes with its row here, or says in its row why an app cannot have it.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const zlib = require('node:zlib')
@@ -555,7 +555,7 @@ async function run(browser, app) {
 }
 
 ;(async () => {
-  const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME, args: ['--no-sandbox'] } : {})
+  const browser = await launch()
   try {
     for (const app of process.env.APP ? [process.env.APP] : Object.keys(APPS)) await run(browser, app)
     log('objects: ok')

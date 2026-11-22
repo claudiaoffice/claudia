@@ -1,5 +1,5 @@
 // Pointing at cells with the mouse while typing a formula, in a real browser.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8765/'
@@ -49,7 +49,7 @@ async function type(page, row, col, input) {
 }
 
 ;(async () => {
-  const browser = await chromium.launch()
+  const browser = await launch()
   const context = await browser.newContext({ viewport: { width: 1360, height: 800 } })
   const page = await context.newPage()
   const errors = []
