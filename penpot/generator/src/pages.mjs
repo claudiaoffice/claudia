@@ -1,13 +1,22 @@
 // The pages of the file: Foundations (the tokens, shown), Icons and Components (the library), Front page (the
 // design itself, made of instances of the library and of the tokens).
 import { board, circle, instance, measureBox, pick, rect, text } from './model.mjs'
-import { FONT_FAMILIES, TYPE } from './tokens.mjs'
+import { FONT_FAMILIES, LATER, TYPE } from './tokens.mjs'
 
 const section = (title, ...children) => board(title, { w: 1200, h: 'auto', layout: 'column', gap: 'space.16' }, text('title', title, { style: 'h3', color: 'color.text' }), ...children)
 
 // --- Foundations -----------------------------------------------------------------------------------------------
 
 export function foundations(T) {
+  return foundationSections(T, { type: (name) => !LATER.type.has(name), radius: (name) => !LATER.radius.has(name) })
+}
+
+/** The text styles and radii added for the workspace, on a page of their own (see LATER in tokens.mjs). */
+export function laterFoundations(T) {
+  return foundationSections(T, { type: (name) => LATER.type.has(name), radius: (name) => LATER.radius.has(name), only: true })
+}
+
+function foundationSections(T, { type, radius: radiusShown, only = false }) {
   const hex = (name) => {
     const v = T.resolver().value(name)
     return String(v)
@@ -20,7 +29,7 @@ export function foundations(T) {
   const scheme = T.names('scheme/light')
   const app = T.names('app/computes')
 
-  const types = Object.keys(TYPE).map((name) =>
+  const types = Object.keys(TYPE).filter(type).map((name) =>
     board(`type.${name}`, { w: 'fill', h: 'auto', layout: 'row', align: 'center', gap: 'space.24' }, text('token', `type.${name}`, { style: 'server-host', color: 'color.muted', w: 200 }), text('sample', name === 'wordmark' ? 'claudia' : "Tables, texts and slides on this place", { style: name, color: name === 'wordmark' ? 'color.wordmark' : 'color.text' })),
   )
 
@@ -29,12 +38,13 @@ export function foundations(T) {
     const v = parseFloat(T.resolver().value(name))
     return board(name, { w: 'fill', h: 'auto', layout: 'row', align: 'center', gap: 'space.12' }, text('token', name, { style: 'server-host', color: 'color.muted', w: 120 }), rect('bar', { w: name, h: 12, fill: 'color.app' }), text('px', `${v}px`, { style: 'hint', color: 'color.muted' }))
   }
-  const radii = T.names('core').filter((n) => n.startsWith('radius.'))
+  const radii = T.names('core').filter((n) => n.startsWith('radius.') && radiusShown(n))
   const radius = (name) => board(name, { layout: 'column', gap: 'space.6' }, rect('shape', { w: 96, h: 64, radius: name, fill: 'color.surface', stroke: { color: 'color.line-field', width: 'border.1' } }), text('token', name, { style: 'server-host', color: 'color.muted' }))
   const fonts = Object.entries(FONT_FAMILIES).map(([key, f]) =>
     board(`font.${key}`, { w: 280, h: 'auto', layout: 'column', gap: 'space.6' }, text('specimen', 'Aa', { style: key === 'display' ? 'h1' : key === 'hand' ? 'wordmark' : key === 'mono' ? 'kbd' : 'body', color: 'color.text' }), text('family', f.family, { style: 'connect', color: 'color.text' }), text('token', `font.${key}: ${f.note}`, { style: 'hint', color: 'color.muted', w: 260 })),
   )
 
+  if (only) return [section('Type', board('styles', { w: 'fill', h: 'auto', layout: 'column', gap: 'space.12' }, ...types)), section('Radius', row('radii', ...radii.map(radius)))]
   return [
     section('Colour: the palette (set core)', row('palette', ...core.map(swatch))),
     section('Colour: the scheme (set scheme/light or scheme/dark)', row('scheme', ...scheme.map((n) => swatch(n)))),
