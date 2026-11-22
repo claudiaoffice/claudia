@@ -363,17 +363,17 @@ def test_creating_needs_the_owner_first(tmp_path):
 
 
 def test_a_writer_for_the_wrong_keys_cannot_continue_somebody_elses_journal(tmp_path):
-    from claudia_document_file import Domain, random_key
+    from claudia_document_file import Part, random_key
 
     start(store_in(tmp_path))
     from claudia_document_file import read_manifest
 
     path = journal_path(tmp_path / "docs" / "plan.claudia")
-    keys = {d: random_key() for d in Domain}
+    keys = {part: random_key() for part in Part}
     writer = JournalWriter.open(
         path, read_manifest(tmp_path / "docs" / "plan.claudia").binding, keys
     )  # it can append, but nobody with the real keys can read it
-    writer.append(Domain.HISTORY, b"x")
+    writer.append(Part.HISTORY, b"x")
     writer.close()
     store = store_in(tmp_path)
     assert sign_in(store, "Annabelle", ANN_PW) is not None

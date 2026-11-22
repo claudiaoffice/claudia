@@ -173,13 +173,14 @@ def read_allowlist(pyproject: Path) -> list[Allowed]:
 
 
 def lockfiles(root: Path = ROOT) -> list[Path]:
-    """The lockfiles to audit: the web app's, the layout library's and every client's. A test fails if the repository
-    has another."""
+    """The lockfiles to audit: the web app's, the layout library's, every client's and the Penpot generator's. A test
+    fails if the repository has another."""
     return sorted(
         [
             *root.glob("web/package-lock.json"),
             *root.glob("layout/package-lock.json"),
             *root.glob("clients/*/package-lock.json"),
+            *root.glob("penpot/generator/package-lock.json"),
         ]
     )
 

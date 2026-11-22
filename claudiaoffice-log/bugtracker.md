@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (78)
+### Open (85)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -53,6 +53,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
+| UX-68 | P2 | UX / computes | A sheet or a chart tab (after E6.31: a slide) cannot be deleted: nothing in the menus or the tab strip reaches `RemoveSheet` or `remove_chart` | **new, open** (read; size 2) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -84,6 +85,10 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-59 | P3 | UX / composes | Up from the second paragraph to the first failed once in four runs: a re-render of a paragraph just saved may undo a native caret move | **new, open** (measured once, cause a guess; size 3) | 2026-11-20 |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | UX-63 | P3 | UX / all apps | The print preview says printing and saving a PDF are "recorded in the document's history"; they go into the exit record, which is not part of the history (glossary) | **new, open** (`web/app/components/PrintPreview.vue`, string in `po/`; size 3) | 2026-11-21 |  |
+| UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
+| UX-65 | P3 | UX / composes | Search & replace panel, find-only state: the results list overflows its container and the "text" badge of a result is clipped at the panel edge | **new, open** (`web/app/components/SearchPanel.vue`; **measured** in the running app; size 3) | 2026-11-22 |  |
+| UX-66 | P3 | UX / composes | `StylesDialog.vue` hard-codes `#7a4710` for the text of its `.flag` pill instead of a colour token (`--apricot-dark`), so it does not follow the themes | **new, open** (`web/app/components/StylesDialog.vue`; **read**; size 3) | 2026-11-22 |  |
+| UX-67 | P3 | UX / a11y | The Heading and Numbering selects in the Styles dialog are unstyled native `<select>`s: they look unlike every other field and may diverge from BITV (focus, contrast, target size not tested) | **new, open** (`web/app/components/StyleSpec.vue`; **read**; size 3) | 2026-11-22 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
@@ -122,7 +127,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (143)
+### Fixed (145)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -267,6 +272,12 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-43 | P2 | Process / E2E | The job "End to end (Chromium)" was red from 2026-11-17: each first failure hid the next, and four lines of `objects.cjs` were stale (proportions of a free rectangle, the name of a table's menu, "Edit text" for a picture in creates, a race on the history entry of Delete) | **fixed** 2026-11-21 (the script follows the contract; it ran six times in a row; size 2) | 2026-11-21 | 2026-11-21 |
 | PROC-44 | P3 | Process / CI | Two timing flakes on shared runners: `test_the_anchor_is_shown_when_the_object_is_selected` (setup clicked before the layout settled; fixed with `settled_box`) and `test_calculating_a_long_chain_is_linear` (one run 44x instead of ~10x, green on rerun; **open**, the retry in the test is too thin) | anchor spec **fixed** 2026-11-21; perf test **open** (size 3) | 2026-11-21 | |
 | PROC-45 | P2 | Process / CI | The Linux client's end-to-end test still looked for `[data-block]` after the paragraph rename of E1.18 made it `data-paragraph`, so the job "Linux client" was red on `main` | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
+| PROC-46 | P3 | Process / E2E | `./run-e2e.sh --list`, its help and `running.md` said the step code was not built ("11 of 97") | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-21 | 2026-11-22 |
+| PROC-47 | P2 | Process / CI | Firefox never runs in CI, though 20 scenarios are tagged `@firefox` | open (recommendation 3 of the tester review, held back) | 2026-11-21 |  |
+| PROC-48 | P3 | Process / E2E | Without the browser, the spec scenarios failed instead of skipping with a reason | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-21 | 2026-11-22 |
+| PROC-49 | P2 | Process / CI | The Penpot generator on `main` made the Python jobs red: its `package-lock.json` was neither audited nor watched by dependabot, and `tools/transplant.py` failed ruff | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
+| PROC-50 | P2 | Process / E2E | `./run-e2e.sh regression` ran 27 browser scripts, CI 30: `objects.cjs` and the two client windows ran only in CI | **fixed** 2026-11-22 (D1452, `e2e-guard`) | 2026-11-21 | 2026-11-22 |
+| PROC-51 | P2 | Process / E2E | Every full local regression stopped after the shared servers with "port 8766 is in use" (TIME_WAIT, no `SO_REUSEADDR` in the runner's probe) | **fixed** 2026-11-22 (`e2e-guard`) | 2026-11-22 | 2026-11-22 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2428,7 +2439,7 @@ CODE-31 (how the history speaks). Related assumption of the same branch: a selec
 names the paragraph the object was in before the move. **Acceptance.** The entry names the object and, when it changes,
 the paragraph, in the user's language.
 
-### PROC-40 · Four spec files run nowhere · P2 · new, open
+### PROC-40 · Four spec files run nowhere · P2 · guarded 2026-11-22, three files still wait (see the round of 2026-11-22, E2E guard)
 **Measured** (2026-11-20): of the `.feature` files in `claudiaoffice-log/specs`, four are bound by no `scenarios(...)` in
 `tests/e2e/specs/` and none of their scenarios has `@unit:`, `@io:` or `@e2e:`: `objects/names.feature` (28 scenarios,
 `@pending:e1.13`), `container/requirements.feature` (6, `@pending:e1.9`), `invariants/objects-in-composes.feature` (12),
@@ -2485,7 +2496,7 @@ in a signature (`nitpicky`), and `T` and the module's own protocol `Asset` are n
 **measured** on the branch before any change of the slice. **Fixed.** Both are ignored in `docs/conf.py`, as the type
 parameters `M` and `A` already are. Escaped because: test passed but wrong (the gate was run before that last commit).
 
-## Round of 2026-11-22 (CI of `main` after merging `architecture-improvements`)
+## Round of 2026-11-22 (CI of `main` after merging `architecture-improvements`; the E6.31 mockups)
 
 ### PROC-45 · The Linux client's end-to-end test looked for the old paragraph attribute · P2 · size 3 · fixed 2026-11-22
 **Found** in the CI of `main` after `architecture-improvements` was merged (run 45011761530): the job "Linux client
@@ -2495,3 +2506,111 @@ paragraph carries in the page from `data-block` to `data-paragraph`; the test's 
 found nothing and never typed. Evidence: **measured**, red locally on `main` and green after the fix (713 passed, 6
 skipped). **Fixed.** The selector names `[data-paragraph]`. Escaped because: test not run (the slice's gate does not run
 the GTK client's tests, and GTK 4 and WebKitGTK were not installed in the agent's environment; they are now, as in CI).
+
+### PROC-49 · The Penpot generator made the Python jobs red · P2 · size 3 · fixed 2026-11-22
+**Found** in the CI of `main` (runs 45029955355 and 45031675372, the three Python jobs): "Design files, first setup"
+brought `penpot/generator` with an npm lockfile and Python tools. `test_no_package_lock_in_the_repository_escapes_the_audit`
+and `test_every_lockfile_is_watched_by_dependabot` failed (the lockfile was in neither list), and ruff and ruff format
+failed on `tools/transplant.py`, which also ran `zip` through the shell with an unquoted path. Evidence: **measured**
+(the CI logs, then the same failures locally). **Fixed.** `scripts/check_npm_audit.py` audits the generator's lockfile
+(no advisory at moderate or above), `.github/dependabot.yml` watches it, and `transplant.py` is clean and calls `zip`
+without a shell (checked on a real file, an output path with a space). The number skips PROC-46 to PROC-48, which the
+range of `e2e-guard` names. Escaped because: test not run (the gate was not run before the design files were pushed).
+
+### UX-68 · A sheet or a chart tab cannot be deleted in computes · P2 · size 2 · new, open
+**Found** while drawing the mockups of E6.31 (slides in computes): the tab strip (`web/app/components/FooterBar.vue`)
+renames a tab on double-click and does nothing else, and no menu entry deletes a sheet or a chart tab. The model can
+(`RemoveSheet`, which refuses to orphan a chart that reads the sheet) and so can the server (`remove_chart`), but no
+client calls either. A person who added a sheet by mistake keeps it. Evidence: **read** (the web client, the GTK
+manifest and the web menus searched for `removeSheet`, `remove_sheet`, `removeChart`, "Delete"). After E6.31 the same
+holds for a slide, except that a slide goes by itself with its last object (owner, Q20 of the chart session).
+**Acceptance:** a person deletes the sheet she is on (with a question first when it holds cells or objects, and one undo
+step), and is told why when a chart still reads it. The menu entry and its key wait for the menu rework against
+`notes/claudia-menus.xlsx` (owner, 2026-11-22).
+
+## Round of 2026-11-22 (Penpot file of the Styles dialog and the Search & replace dialog, branch `penpot`)
+
+Found while the two dialogs were drawn in `penpot/claudia.penpot` from the running web app (screenshots of the live
+dialogs next to the design). The Penpot file is not part of the bugs: it follows the app.
+
+### UX-64 · Dark mode: the sidebar is not readable enough · P2 · size 2 · needs decision
+Seen on 2026-11-22 when the app was looked at in the dark scheme (composes, `prefers-color-scheme: dark`, History &
+Chat / Help sidebar). The symptom was reported to the owner as "dark-mode sidebar bug, size 2" but not written down;
+the session that saw it was compacted before this entry. A re-check on 2026-11-22 showed the sidebar in dark mode
+without one clear defect (the inactive tab "Help" and the hint texts are the dimmest candidates; not measured).
+**Needs the owner to say which part he saw** (or a contrast measurement of the sidebar in both schemes). Related: the
+contrast report of 2026-11-06 (`--app-dark` as literal text, see `StyleMenu.vue`). **Acceptance.** Every text in the
+sidebar has contrast 4.5:1 in both schemes, measured by a test over the computed colours.
+
+### UX-65 · Search results overflow the panel in the find-only state · P3 · size 3 · new, open
+**Measured** in the running app (composes, Ctrl+H, a word with two matches): in the find-only state (no replacement
+open) the results list is wider than the panel body, so the "text" badge at the end of a result row is cut off at the
+panel's edge. In the replace state the rows fit. **Acceptance.** In every state of the panel the right edge of every
+result row, badge included, lies inside the panel (DOM-geometry test, English and German).
+
+### UX-66 · A hard-coded colour in the Styles dialog · P3 · size 3 · new, open
+**Read:** the `.flag` pill in `StylesDialog.vue` uses `color: #7a4710`, a literal that no token carries. The same
+colour is `color.apricot-dark` in the Penpot design system, where it had to be mapped by hand. It will not follow a
+theme change and is the same kind of fault as the 2026-11-06 contrast report. **Acceptance.** A test over the
+dialogs' styles finds no colour literal outside `tokens.css`.
+
+### UX-67 · Native selects in the Styles dialog · P3 · size 3 · new, open
+**Read:** "Heading" and "Numbering" in the paragraph part of the style editor are native `<select>`s with the
+browser's own look; the other controls (font, size, colour) are the app's own. Consistency fault, and a possible
+BITV divergence (visible focus, contrast and target size of the native control were not tested). In the Penpot file
+the control is drawn as the "Select / native" variant to show it. **Acceptance.** Either a decision that native
+selects are the standard (and the other selects follow), or a styled select with the same keyboard behaviour; BITV
+check of the result.
+
+## Round of 2026-11-22 (E2E guard, branch `e2e-guard`, E11.8)
+
+From the tester review of 2026-11-21 (recommendations 1 and 2; the plan is `notes/e2e-rework-plan.md`). Measured on
+`main` at `f216c15` and on the branch.
+
+**PROC-40, re-measured.** `computes/pictures-in-files.feature` is not lost: its `Feature:` line carries
+`@io:packages/claudia-computes-io/tests/test_pictures.py`, which covers all five scenarios. Three approved files run
+nowhere: `objects/names.feature` (28), `document-file/requirements.feature` (6), `invariants/objects-in-composes.feature`
+(12); a fourth, `objects/the-same-in-all-three-apps.feature` (4), is a draft for the owner's review and now says so
+(`@draft`, D1451). `tests/test_specs_are_bound.py` (D1450) fails for any new file in that state; the three stand in its
+`NOT_BOUND_YET` with the story that binds each, and the entry has to go when that happens. PROC-40 is closed when the
+list is empty.
+
+### PROC-50 · `./run-e2e.sh regression` ran fewer browser scripts than CI · P2 · size 2 · fixed 2026-11-22
+**Measured** (2026-11-21, `d18c4e4`): the runner's lists named 27 scripts, CI's job 30; `objects.cjs` (the object
+contract of all three apps, D1221–D1230) and `windows-shell.cjs`, `macos-shell.cjs` ran only in CI. The `@e2e:objects.cjs`
+scenarios of `specs/objects/` were therefore "checked by" a script that "use it before delivery" never ran.
+**Fixed** (D1452): one list, `SCRIPTS` in `scripts/run_e2e.py`; CI runs `./run-e2e.sh setup` and `./run-e2e.sh
+regression`. **Test:** `tests/test_ci_workflow.py` (`web/package.json` and `SCRIPTS` agree; CI calls no script by
+itself) and `tests/test_specs_are_bound.py` (an `@e2e:` tag names a script the runner runs). Escaped because: two lists,
+and no test compared them.
+
+### PROC-46 · `./run-e2e.sh --list`, its help and `running.md` said the step code was not built · P3 · size 3 · fixed 2026-11-22
+**Measured** (2026-11-21): `--list` printed "specs (written, under review; step code not built yet)", the help said
+"core" and "extended" would stop, and `running.md` said "11 of 97" while 76 scenarios passed. **Fixed:** `--list`
+counts the scenarios by collecting them with pytest each time; the stale sentences are gone, and the dead branch of
+`specs()` for a missing `tests/e2e/specs` with them. Escaped because: hand-written counts.
+
+### PROC-47 · Firefox never runs in CI · P2 · size 2 · open
+**Measured** (2026-11-21): 20 scenarios are tagged `@firefox` and every `@core` scenario should be (specs/README.md),
+but CI installs and runs only Chromium; Firefox is the owner's main browser. Left for later on purpose (recommendation 3
+of the review, held back because of parallel work). **Fix.** A job that runs the `@firefox` scenarios on every push and
+every `@core` one nightly (proposal in `notes/e2e-rework-plan.md`, WP3).
+
+### PROC-48 · Without the browser, the spec scenarios failed instead of skipping · P3 · size 3 · fixed 2026-11-22
+**Measured:** with `$CLAUDIA_CHROMIUM` pointing at nothing, `tests/e2e/specs/test_caret.py` gave "5 failed" (Playwright's
+launch error), while `test_greeting.py` skips with a reason in the same situation, as `specs/README.md` promises.
+**Fixed:** the `browser` fixture of `tests/e2e/specs/conftest.py` skips with "no chromium for playwright (`uv run
+playwright install chromium`, or set $CLAUDIA_CHROMIUM)", or the same for Firefox. Evidence: red then green by hand
+(5 failed → 5 skipped); a fixture's reaction to a missing browser is not worth a test of its own. Escaped because: the
+fixture launched the browser itself and did not share `test_greeting.py`'s check.
+
+### PROC-51 · `./run-e2e.sh regression` stopped after the shared servers with "port 8766 is in use" · P2 · size 2 · fixed 2026-11-22
+**Measured** (2026-11-22, `main` at `f216c15` and the branch): every full local run ended with exit 2 after the scripts
+against the three shared servers, before the scripts with servers of their own, the fonts server and the client
+windows. Nothing listened on 8766: the runner's port check bound a socket without `SO_REUSEADDR`, which Linux refuses
+while the stopped server's connections wait in TIME_WAIT; the server itself (uvicorn) binds with it and would have
+started. CI never noticed because it started its servers by hand; with D1452 CI runs the runner, so this had to be fixed
+here. **Fixed:** `_free` sets `SO_REUSEADDR` (not on Windows, where it would let the probe share a listening port).
+**Test:** `tests/test_run_e2e.py`, red before, green after. Escaped because: test not run (nobody ran the whole local
+regression to its end; the summary was never printed).
+

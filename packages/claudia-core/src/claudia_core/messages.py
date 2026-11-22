@@ -1,7 +1,7 @@
 """The three message classes (E1.6, D32, D34, D37).
 
 ======================  ==========================  ===============================  =====================
-class                   examples                    where it lives                   key domain (D34)
+class                   examples                    where it lives                   part (D34)
 ======================  ==========================  ===============================  =====================
 durable command         SetCells, checkpoint        the command log                  content / history
 chat record             "@ana please check B4"      the chat store, never the log    chat

@@ -64,7 +64,8 @@ cells, the shared block of a menu, CSS (`display: block`, `margin-block`), `scro
 library's flow blocks, the filler character █, and the verb. Where a file's paragraph and the text's paragraph meet in
 the converters, the file's side is `docx_paragraph` / `odt_paragraph` (python-docx's class: `DocxParagraph`).
 
-The GTK client has no paragraph "block": it hosts the web client, so nothing changed there.
+The GTK client has no paragraph "block": it hosts the web client, so nothing changed in its code. Its end-to-end test
+asked the page for `[data-block]` and followed later (PROC-45).
 
 ## The document file (agreed)
 
@@ -78,4 +79,4 @@ The GTK client has no paragraph "block": it hosts the web client, so nothing cha
 | "the container" meaning the document file, in comments and docs | "the document file" |
 
 Kept: "container" for a Docker or OCI container (README, deployment, the state folder), the glossary's Container, and
-the history (changelog entries, decisions, notes). `Domain` (the glossary's Part) is not in D1430 and stays for now.
+the history (changelog entries, decisions, notes). `Domain` (the glossary's Part) is not in D1430; its names are D1434.

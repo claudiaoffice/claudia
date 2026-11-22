@@ -53,8 +53,12 @@ A grid of cells in a computes document.
 _avoid_: worksheet, spreadsheet, tab
 
 **Slide**
-One page of a creates document, shown in turn when presenting.
-_avoid_: page, foil
+A page of objects in a fixed 16:9 frame: in creates one page of the presentation, shown in turn when presenting; in computes a tab beside the sheets.
+_avoid_: page, foil, board, chart sheet, chart tab
+
+**Tab**
+What a person selects in the strip below a computes document; it shows one holder, a sheet or a slide.
+_avoid_: sheet tab, page
 
 **File format**
 The kind of file a document is imported from or downloaded as: claudia's own, OpenDocument or MS Office.
@@ -253,12 +257,8 @@ The invisible layer of a page, a slide or a sheet that floating objects sit on, 
 _avoid_: canvas, overlay, drawing layer
 
 **Chart**
-A picture drawn from a document's data, shown as an object, as a chart tab of its own, or both.
+A picture drawn from a document's data, specified by its data, kind and titles; an object on a sheet or a slide.
 _avoid_: diagram, graph, plot
-
-**Chart tab**
-A tab of a computes document that shows one chart on its own, beside the sheets; a thing, but neither an object nor a sheet.
-_avoid_: chart sheet, diagram tab
 
 **Table**
 A named grid of cells whose first row names its columns: a named range in computes, an object in composes and creates.

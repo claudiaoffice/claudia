@@ -1,5 +1,6 @@
 # Objects, styles and the palette behave alike in all three apps; a viewer is told at once that she can only look
 # (D1431, D1432, CODE-75). Draft for the owner's review, 2026-11-21.
+@draft
 Feature: Objects, styles and the palette work the same in a text, a workbook and a presentation
 
   # -- a viewer --------------------------------------------------------------------------------------------

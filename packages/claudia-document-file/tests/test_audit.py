@@ -24,7 +24,7 @@ from claudia_document_file import (
     sealed_copy,
 )
 from claudia_document_file.crypto import KdfParams
-from claudia_document_file.slots import Domain, Role
+from claudia_document_file.slots import Part, Role
 
 CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 PASSWORD = "Correct-Horse-9"
@@ -83,7 +83,7 @@ def test_a_record_adds_no_revision_and_no_history(path, owner, writer):
 
 
 def test_a_record_leaves_the_journal_in_place(path, owner, writer):
-    writer.append(Domain.HISTORY, b'{"t":"x"}')
+    writer.append(Part.HISTORY, b'{"t":"x"}')
     record_audit(path, owner.keys, export())
     assert read_state(path, owner.keys).history == [b'{"t":"x"}']
     writer = pack_journal(path, owner.keys, writer)
@@ -95,7 +95,7 @@ def test_a_record_leaves_the_journal_in_place(path, owner, writer):
 def test_packing_carries_the_chain_through_byte_for_byte(path, owner, writer):
     record_audit(path, owner.keys, export())
     before = audit_bytes(path)
-    writer.append(Domain.HISTORY, b'{"t":"x"}')
+    writer.append(Part.HISTORY, b'{"t":"x"}')
     pack_journal(path, owner.keys, writer)
     assert audit_bytes(path) == before
 
@@ -104,7 +104,7 @@ def test_a_redaction_does_not_change_one_byte_of_the_chain(path, owner, writer):
     record_audit(path, owner.keys, export())
     record_audit(path, owner.keys, export(fmt="xlsx"))
     before = audit_bytes(path)
-    writer.append(Domain.HISTORY, b'{"secret":"hunter2"}')
+    writer.append(Part.HISTORY, b'{"secret":"hunter2"}')
     rewrite_journal(path, owner.keys, writer, history=[b'{"redacted":true}'], chat=[], snapshot=None)
     assert audit_bytes(path) == before
     assert [r.format for r in read_audit(path, owner.keys)] == ["docx", "xlsx"]
@@ -127,7 +127,7 @@ def test_a_block_that_is_removed_is_noticed(path, owner, monkeypatch):
 
 
 def test_a_viewer_cannot_read_or_write_the_record(path, owner):
-    viewer_keys = {Domain.CONTENT: owner.keys[Domain.CONTENT]}
+    viewer_keys = {Part.CONTENT: owner.keys[Part.CONTENT]}
     with pytest.raises(PermissionError):
         read_audit(path, viewer_keys)
     with pytest.raises(PermissionError):

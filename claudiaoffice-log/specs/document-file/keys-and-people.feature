@@ -63,8 +63,8 @@ Feature: An owner lowers a role or removes a person, and the document's keys are
   @extended @unit:packages/claudia-document-file/tests/test_inbox.py
   Scenario: A person who was away gets the new keys with her next login, and a forged letter is ignored
 
-  @extended @unit:packages/claudia-document-file/tests/test_private_domain.py
-  Scenario: A person's private domain opens with her private key only, and recovery gives her a fresh one
+  @extended @unit:packages/claudia-document-file/tests/test_private_notes.py
+  Scenario: A person's private notes open with her private key only, and recovery gives her fresh ones
 
   @extended @unit:packages/claudia-server/tests/test_server_people_changes.py
   Scenario: Only owners change roles; owners cannot be lowered or removed; a removed person's requests are refused

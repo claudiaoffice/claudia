@@ -263,7 +263,7 @@ def seal(key: bytes, plaintext: bytes, aad: bytes) -> bytes:
     """Encrypt and authenticate ``plaintext``. The result is ``nonce + ciphertext + tag``.
 
     ``aad`` is authenticated but not stored: whoever opens the value must name the same context again (document,
-    domain, position), so a value cannot be moved elsewhere unnoticed. A fresh random 96-bit nonce is used each time.
+    stream, position), so a value cannot be moved elsewhere unnoticed. A fresh random 96-bit nonce is used each time.
     """
     nonce = os.urandom(NONCE_SIZE)
     return nonce + _encrypt(key, nonce, plaintext, aad)

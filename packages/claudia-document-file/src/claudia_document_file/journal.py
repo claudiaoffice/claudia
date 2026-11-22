@@ -1,14 +1,14 @@
 """The encrypted journal of an open document (E2.1, D106).
 
 While somebody has a document open, every change is appended here as one sealed record and is on disk before the
-server answers (``fsync``). Nothing about the content is visible: a record shows only its domain, a sequence number and
+server answers (``fsync``). Nothing about the content is visible: a record shows only its part, a sequence number and
 its size. File layout::
 
     header   b"CLAUDIA-J1\\n", generation (4 bytes), length of the document id (2 bytes), the document id
     record   length of body (4 bytes), body, CRC-32 of body (4 bytes)
-    body     domain (1 byte), sequence number (8 bytes), sealed payload (nonce, ciphertext, tag)
+    body     part (1 byte), sequence number (8 bytes), sealed payload (nonce, ciphertext, tag)
 
-The CRC finds accidents. The encryption (AES-GCM, with the document id, generation, domain and sequence number as
+The CRC finds accidents. The encryption (AES-GCM, with the document id, generation, part and sequence number as
 authenticated data) finds everything else: a record cannot be altered, moved to another place or another document,
 swapped with another, repeated or left out without being noticed.
 
@@ -28,14 +28,14 @@ from typing import BinaryIO, Self
 from claudia_file_writer import fsync_directory, write_atomically
 
 from .crypto import NONCE_SIZE, TAG_SIZE, DecryptionError, open_sealed, seal
-from .slots import Domain
+from .slots import Part
 
 MAGIC = b"CLAUDIA-J1\n"
 MAX_RECORD_BYTES = 16 * 1024 * 1024
 """Largest payload of one record; a file cannot make the reader allocate more than this."""
 
-_DOMAIN_BYTE = {Domain.CONTENT: 1, Domain.HISTORY: 2, Domain.CHAT: 3}
-_BYTE_DOMAIN = {value: domain for domain, value in _DOMAIN_BYTE.items()}
+_PART_BYTE = {Part.CONTENT: 1, Part.HISTORY: 2, Part.CHAT: 3}
+_BYTE_PART = {value: part for part, value in _PART_BYTE.items()}
 _BODY_FIXED = 1 + 8 + NONCE_SIZE + TAG_SIZE
 _MIN_BODY = _BODY_FIXED
 _MAX_BODY = _BODY_FIXED + MAX_RECORD_BYTES
@@ -47,10 +47,10 @@ class JournalError(Exception):
 
 @dataclass(frozen=True)
 class JournalRecord:
-    """One opened record: its number (from 1), its domain and what was written."""
+    """One opened record: its number (from 1), its part and what was written."""
 
     seq: int
-    domain: Domain
+    part: Part
     payload: bytes
 
 
@@ -118,9 +118,9 @@ def _split(data: bytes) -> list[bytes]:
     return frames
 
 
-def _aad(doc_id: str, generation: int, domain_byte: int, seq: int) -> bytes:
+def _aad(doc_id: str, generation: int, part_byte: int, seq: int) -> bytes:
     name = doc_id.encode()
-    fixed = struct.pack(">IBQ", generation, domain_byte, seq)
+    fixed = struct.pack(">IBQ", generation, part_byte, seq)
     return b"claudia/journal/1" + struct.pack(">H", len(name)) + name + fixed
 
 
@@ -128,7 +128,7 @@ class JournalWriter:
     """Appends sealed records to a journal. One writer per open document."""
 
     def __init__(
-        self, handle: BinaryIO, doc_id: str, keys: Mapping[Domain, bytes], generation: int, last_seq: int
+        self, handle: BinaryIO, doc_id: str, keys: Mapping[Part, bytes], generation: int, last_seq: int
     ) -> None:
         self._handle = handle
         self._doc_id = doc_id
@@ -143,7 +143,7 @@ class JournalWriter:
         return self._generation
 
     @classmethod
-    def create(cls, path: Path, doc_id: str, keys: Mapping[Domain, bytes], generation: int = 0) -> Self:
+    def create(cls, path: Path, doc_id: str, keys: Mapping[Part, bytes], generation: int = 0) -> Self:
         """Start a new journal; ``FileExistsError`` if there is one."""
         fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         handle = os.fdopen(fd, "wb")
@@ -154,7 +154,7 @@ class JournalWriter:
         return cls(handle, doc_id, keys, generation, 0)
 
     @classmethod
-    def replace(cls, path: Path, doc_id: str, keys: Mapping[Domain, bytes], generation: int) -> Self:
+    def replace(cls, path: Path, doc_id: str, keys: Mapping[Part, bytes], generation: int) -> Self:
         """Put an empty journal of ``generation`` in place of the one at ``path``, all at once: a crash leaves the old
         journal or the new one, never a mixture. Returns a writer on the new journal."""
         # ``pack_journal`` can land here twice in a row for the same file -- to rotate the journal, and again through
@@ -164,7 +164,7 @@ class JournalWriter:
         return cls(path.open("ab"), doc_id, keys, generation, 0)
 
     @classmethod
-    def open(cls, path: Path, doc_id: str, keys: Mapping[Domain, bytes]) -> Self:
+    def open(cls, path: Path, doc_id: str, keys: Mapping[Part, bytes]) -> Self:
         """Continue an existing journal. A cut-off last record is removed first; its number is used again."""
         data = path.read_bytes()
         parsed = _parse(data)
@@ -178,17 +178,17 @@ class JournalWriter:
         last = struct.unpack(">Q", parsed.bodies[-1][1:9])[0] if parsed.bodies else 0
         return cls(path.open("ab"), doc_id, keys, parsed.generation, last)
 
-    def append(self, domain: Domain, payload: bytes) -> int:
+    def append(self, part: Part, payload: bytes) -> int:
         """Seal and write one record, and return only when it is on disk. Returns its number."""
         if len(payload) > MAX_RECORD_BYTES:
             raise ValueError(f"the record is too large ({len(payload)} bytes, at most {MAX_RECORD_BYTES})")
-        key = self._keys.get(domain)
+        key = self._keys.get(part)
         if key is None:
-            raise ValueError(f"this writer holds no key for the {domain} records")
+            raise ValueError(f"this writer holds no key for the {part} records")
         seq = self.seq + 1
-        domain_byte = _DOMAIN_BYTE[domain]
-        sealed = seal(key, payload, _aad(self._doc_id, self._generation, domain_byte, seq))
-        body = bytes([domain_byte]) + struct.pack(">Q", seq) + sealed
+        part_byte = _PART_BYTE[part]
+        sealed = seal(key, payload, _aad(self._doc_id, self._generation, part_byte, seq))
+        body = bytes([part_byte]) + struct.pack(">Q", seq) + sealed
         self._handle.write(struct.pack(">I", len(body)) + body + struct.pack(">I", zlib.crc32(body)))
         self._handle.flush()
         os.fsync(self._handle.fileno())  # the change did not happen unless it is on disk
@@ -207,7 +207,7 @@ def journal_generation(path: Path) -> int:
     return _header_end(data)[1]
 
 
-def read_journal(path: Path, doc_id: str, keys: Mapping[Domain, bytes]) -> list[JournalRecord]:
+def read_journal(path: Path, doc_id: str, keys: Mapping[Part, bytes]) -> list[JournalRecord]:
     """Open every record of the journal. ``JournalError`` for damage, tampering, a foreign journal or a missing key."""
     parsed = _parse(path.read_bytes())
     if parsed.doc_id != doc_id:
@@ -215,20 +215,20 @@ def read_journal(path: Path, doc_id: str, keys: Mapping[Domain, bytes]) -> list[
     records = []
     expected = 1
     for body in parsed.bodies:
-        domain_byte = body[0]
+        part_byte = body[0]
         (seq,) = struct.unpack(">Q", body[1:9])
         if seq != expected:
             raise JournalError(f"record {expected} is missing, repeated or out of place (found {seq})")
-        domain = _BYTE_DOMAIN.get(domain_byte)
-        if domain is None:
-            raise JournalError(f"record {seq} has an unknown domain")
-        key = keys.get(domain)
+        part = _BYTE_PART.get(part_byte)
+        if part is None:
+            raise JournalError(f"record {seq} has an unknown part")
+        key = keys.get(part)
         if key is None:
-            raise JournalError(f"no key for the {domain} records")
+            raise JournalError(f"no key for the {part} records")
         try:
-            payload = open_sealed(key, body[9:], _aad(doc_id, parsed.generation, domain_byte, seq))
+            payload = open_sealed(key, body[9:], _aad(doc_id, parsed.generation, part_byte, seq))
         except DecryptionError as error:
             raise JournalError(f"record {seq} cannot be opened: wrong key, or it was changed") from error
-        records.append(JournalRecord(seq, domain, payload))
+        records.append(JournalRecord(seq, part, payload))
         expected += 1
     return records

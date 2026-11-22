@@ -28,7 +28,7 @@ from claudia_document_file.crypto import KdfParams
 from claudia_document_file.file import record_audit, write_original
 from claudia_document_file.journal import JournalError, read_journal
 from claudia_document_file.renewal import RenewalInterrupted, change_role, remove_person
-from claudia_document_file.slots import Domain, Role, new_recovery_key
+from claudia_document_file.slots import Part, Role, new_recovery_key
 
 CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 ANNA, BERT, CORA = ("Annabelle", "Correct-Horse-9"), ("Bertram", "Battery-Staple-7"), ("Cornelia", "Purple-Monkey-5")
@@ -61,8 +61,8 @@ def owner(path, recovery):
 def writer(path, owner):
     w = begin(path, owner.keys)
     for payload in HISTORY:
-        w.append(Domain.HISTORY, payload)
-    w.append(Domain.CHAT, CHAT[0])
+        w.append(Part.HISTORY, payload)
+    w.append(Part.CHAT, CHAT[0])
     yield w
     with contextlib.suppress(ValueError):
         w.close()
@@ -86,16 +86,16 @@ def people_of(path, keys) -> dict[str, Role]:
 
 def test_removing_an_editor_renews_all_three_keys(path, owner, writer):
     done = remove_person(path, owner.keys, writer, BERT[0])
-    assert done.renewed == frozenset(Domain)
-    assert all(done.keys[d] != owner.keys[d] for d in Domain)
+    assert done.renewed == frozenset(Part)
+    assert all(done.keys[part] != owner.keys[part] for part in Part)
 
 
 def test_removing_a_viewer_renews_the_content_key_only(path, owner, writer):
     done = remove_person(path, owner.keys, writer, CORA[0])
-    assert done.renewed == frozenset({Domain.CONTENT})
-    assert done.keys[Domain.HISTORY] == owner.keys[Domain.HISTORY]
-    assert done.keys[Domain.CHAT] == owner.keys[Domain.CHAT]
-    assert done.keys[Domain.CONTENT] != owner.keys[Domain.CONTENT]
+    assert done.renewed == frozenset({Part.CONTENT})
+    assert done.keys[Part.HISTORY] == owner.keys[Part.HISTORY]
+    assert done.keys[Part.CHAT] == owner.keys[Part.CHAT]
+    assert done.keys[Part.CONTENT] != owner.keys[Part.CONTENT]
 
 
 def test_the_list_and_the_slot_of_a_removed_person_are_gone(path, owner, writer):
@@ -123,14 +123,14 @@ def test_records_still_in_the_journal_are_folded_in_and_the_journal_starts_again
     done = remove_person(path, owner.keys, writer, BERT[0])
     assert done.writer.generation == before + 1
     assert read_state(path, done.keys).pending == 0
-    done.writer.append(Domain.HISTORY, b'{"t":"entry","n":3}')
+    done.writer.append(Part.HISTORY, b'{"t":"entry","n":3}')
     assert read_state(path, done.keys).history == [*HISTORY, b'{"t":"entry","n":3}']
     done.writer.close()
 
 
 def test_the_journal_is_sealed_under_the_new_keys(path, owner, writer):
     done = remove_person(path, owner.keys, writer, BERT[0])
-    done.writer.append(Domain.HISTORY, b'{"t":"entry","n":3}')
+    done.writer.append(Part.HISTORY, b'{"t":"entry","n":3}')
     manifest_binding = read_manifest(path).binding
     assert [r.payload for r in read_journal(journal_path(path), manifest_binding, done.keys)] == [
         b'{"t":"entry","n":3}'
@@ -194,7 +194,7 @@ def test_everybody_who_stays_and_the_recovery_key_have_a_letter(path, owner, wri
 def test_a_person_who_stays_gets_the_new_keys_at_her_next_login_and_the_letter_goes(path, owner, writer):
     done = remove_person(path, owner.keys, writer, BERT[0])
     cora = unlock(path, *CORA)
-    assert cora.role is Role.VIEWER and cora.keys == {Domain.CONTENT: done.keys[Domain.CONTENT]}
+    assert cora.role is Role.VIEWER and cora.keys == {Part.CONTENT: done.keys[Part.CONTENT]}
     assert len(inbox_of(path)) == 2
     assert unlock(path, *CORA).keys == cora.keys  # and again: the slot itself is up to date now
 
@@ -227,7 +227,7 @@ def test_the_recovery_key_opens_with_the_new_keys(path, owner, writer, recovery)
 def test_a_password_change_takes_in_the_letter_first(path, owner, writer):
     done = remove_person(path, owner.keys, writer, BERT[0])
     assert change_password(path, CORA[0], CORA[1], "Fresh-Walnut-8")
-    assert unlock(path, CORA[0], "Fresh-Walnut-8").keys == {Domain.CONTENT: done.keys[Domain.CONTENT]}
+    assert unlock(path, CORA[0], "Fresh-Walnut-8").keys == {Part.CONTENT: done.keys[Part.CONTENT]}
     assert len(inbox_of(path)) == 2
 
 
@@ -260,7 +260,7 @@ def test_a_letter_of_noise_is_ignored(path, owner, writer):
     name = letter_name_of(path, BERT)
     rewritten(path, lambda e: e.__setitem__(name, b"x" * 200))
     bert = unlock(path, *BERT)
-    assert bert is not None and bert.keys[Domain.HISTORY] == owner.keys[Domain.HISTORY]
+    assert bert is not None and bert.keys[Part.HISTORY] == owner.keys[Part.HISTORY]
     done.writer.close()
 
 
@@ -287,7 +287,7 @@ def test_a_letter_with_keys_that_open_nothing_is_ignored(path, owner, writer):
     manifest = _manifest_of(entries, path)
     people, _ = _open_people_data(entries, manifest, done.keys)
     bert = next(p for p in people if p.name == BERT[0])
-    forged = _letter(manifest, bert.locator, bert.public_key, Role.EDITOR, {d: random_key() for d in Domain})
+    forged = _letter(manifest, bert.locator, bert.public_key, Role.EDITOR, {part: random_key() for part in Part})
     rewritten(path, lambda e: e.__setitem__(_inbox_name(bert.locator), forged))
     assert unlock(path, *BERT).keys == owner.keys  # not locked out: the slot is as it was
     done.writer.close()
@@ -314,10 +314,10 @@ def test_moving_between_editor_and_owner_renews_nothing(path, owner, writer):
 
 def test_lowering_an_editor_renews_the_history_and_the_chat_key_not_the_content_key(path, owner, writer):
     done = change_role(path, owner.keys, writer, BERT[0], Role.VIEWER)
-    assert done.renewed == frozenset({Domain.HISTORY, Domain.CHAT})
-    assert done.keys[Domain.CONTENT] == owner.keys[Domain.CONTENT]
+    assert done.renewed == frozenset({Part.HISTORY, Part.CHAT})
+    assert done.keys[Part.CONTENT] == owner.keys[Part.CONTENT]
     bert = unlock(path, *BERT)
-    assert bert.role is Role.VIEWER and bert.keys == {Domain.CONTENT: owner.keys[Domain.CONTENT]}
+    assert bert.role is Role.VIEWER and bert.keys == {Part.CONTENT: owner.keys[Part.CONTENT]}
     assert people_of(path, bert.keys)[BERT[0]] is Role.VIEWER
     with pytest.raises(TamperedDocument):
         read_state(path, owner.keys)  # what he held opens nothing new
@@ -329,7 +329,7 @@ def test_a_lowered_person_who_was_never_asked_again_still_gets_only_what_a_viewe
     done = change_role(path, owner.keys, writer, BERT[0], Role.VIEWER)
     # his slot still says editor, with keys of before: he logs in and is a viewer, whatever the slot says
     bert = unlock(path, *BERT)
-    assert Domain.HISTORY not in bert.keys and Domain.CHAT not in bert.keys
+    assert Part.HISTORY not in bert.keys and Part.CHAT not in bert.keys
     done.writer.close()
 
 
@@ -347,7 +347,7 @@ def test_the_last_owner_cannot_be_lowered(path, owner, writer):
 def test_an_owner_can_be_lowered_when_there_is_another(path, owner, writer):
     change_role(path, owner.keys, writer, BERT[0], Role.OWNER)
     done = change_role(path, owner.keys, writer, ANNA[0], Role.VIEWER)
-    assert done.renewed == frozenset({Domain.HISTORY, Domain.CHAT})
+    assert done.renewed == frozenset({Part.HISTORY, Part.CHAT})
     done.writer.close()
 
 
@@ -365,7 +365,7 @@ def test_a_crash_while_the_file_is_written_changes_nothing(path, owner, writer, 
         remove_person(path, owner.keys, writer, BERT[0])
     assert path.read_bytes() == before
     assert read_state(path, owner.keys).history == HISTORY
-    writer.append(Domain.HISTORY, b'{"t":"entry","n":3}')  # the journal is still the open one
+    writer.append(Part.HISTORY, b'{"t":"entry","n":3}')  # the journal is still the open one
 
 
 def test_a_crash_between_the_file_and_the_journal_loses_nothing(path, owner, writer, monkeypatch):
@@ -407,7 +407,7 @@ def test_a_removed_person_leaves_nothing_of_her_own_behind(path, owner, writer):
     done.writer.close()
 
 
-def test_the_other_peoples_private_domains_are_not_touched_by_a_renewal(path, owner, writer):
+def test_the_other_peoples_private_notes_are_not_touched_by_a_renewal(path, owner, writer):
     def private_bytes():
         with zipfile.ZipFile(path) as z:
             return {n: z.read(n) for n in z.namelist() if n.startswith(f"private/{owner.private.id}/")}

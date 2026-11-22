@@ -1,6 +1,6 @@
 """Key slots (E2.2, D101, D102, D105): who may open which part of a document.
 
-A document has three **domain keys** (content, history, chat). Every user has one **slot**: the domain keys that the
+A document has three **part keys** (content, history, chat). Every user has one **slot**: the part keys that the
 user's role may hold, encrypted with a key derived from that user's name and password. The slot is found by its
 **locator**, a value derived from the same name and password, so the file shows neither names nor roles.
 
@@ -9,7 +9,7 @@ user's role may hold, encrypted with a key derived from that user's name and pas
   another slot to change somebody's role;
 * a wrong name and a wrong password are the same refusal (``None``), as D50 demands;
 * a slot also holds the **private key** of the person's key pair, with which she opens her inbox (D1274), and the key
-  of her **private domain** (D1265), which no other slot and no role holds.
+  of her **private notes** (D1265), which no other slot and no role holds.
 """
 
 import base64
@@ -37,14 +37,14 @@ from .crypto import (
 
 
 class Role(StrEnum):
-    """What a person may do in a document (D35). The role decides which domain keys the person's slot holds."""
+    """What a person may do in a document (D35). The role decides which part keys the person's slot holds."""
 
     OWNER = "owner"
     EDITOR = "editor"
     VIEWER = "viewer"
 
 
-class Domain(StrEnum):
+class Part(StrEnum):
     """The separately encrypted parts of a document: the current content, the command history and the chat."""
 
     CONTENT = "content"
@@ -52,14 +52,14 @@ class Domain(StrEnum):
     CHAT = "chat"
 
 
-ROLE_DOMAINS: Mapping[Role, frozenset[Domain]] = MappingProxyType(
+ROLE_PARTS: Mapping[Role, frozenset[Part]] = MappingProxyType(
     {
-        Role.OWNER: frozenset(Domain),
-        Role.EDITOR: frozenset(Domain),
-        Role.VIEWER: frozenset({Domain.CONTENT}),
+        Role.OWNER: frozenset(Part),
+        Role.EDITOR: frozenset(Part),
+        Role.VIEWER: frozenset({Part.CONTENT}),
     }
 )
-"""Which domain keys each role holds."""
+"""Which part keys each role holds."""
 
 
 class InvalidRecoveryKey(ValueError):
@@ -91,8 +91,9 @@ class KeySlot:
 
 
 @dataclass(frozen=True)
-class PrivateDomain:
-    """A person's private domain (D1265): a random id that names it in the file and the one key that seals it."""
+class PrivateNotesKey:
+    """The key to a person's private notes (D1265): a random id that names them in the file and the one key that seals
+    them."""
 
     id: str
     key: bytes = field(repr=False)  # a secret: never in a log line or a traceback
@@ -100,19 +101,19 @@ class PrivateDomain:
 
 @dataclass(frozen=True)
 class Unlocked:
-    """What a successful login yields: who it is, the role, and the domain keys that role holds, and (for a slot made
-    since the inbox exists) the private key of the person's key pair and her private domain."""
+    """What a successful login yields: who it is, the role, and the part keys that role holds, and (for a slot made
+    since the inbox exists) the private key of the person's key pair and the key to her private notes."""
 
     name: str
     role: Role
-    keys: dict[Domain, bytes] = field(repr=False)  # secrets: never in a log line or a traceback
+    keys: dict[Part, bytes] = field(repr=False)  # secrets: never in a log line or a traceback
     private_key: bytes | None = field(default=None, repr=False)
-    private: PrivateDomain | None = None
+    private: PrivateNotesKey | None = None
 
 
-def new_domain_keys() -> dict[Domain, bytes]:
-    """Fresh random keys for a new document, one per domain."""
-    return {domain: random_key() for domain in Domain}
+def new_part_keys() -> dict[Part, bytes]:
+    """Fresh random keys for a new document, one per part."""
+    return {part: random_key() for part in Part}
 
 
 def _slot_aad(doc_id: str, locator: bytes) -> bytes:
@@ -125,23 +126,23 @@ def make_slot(
     doc_id: str,
     name: str,
     role: Role,
-    keys: Mapping[Domain, bytes],
+    keys: Mapping[Part, bytes],
     *,
     private_key: bytes | None = None,
-    private: PrivateDomain | None = None,
+    private: PrivateNotesKey | None = None,
 ) -> KeySlot:
-    """Make the slot for ``name`` with ``role``. Only the domain keys of that role are put into it, and the person's
-    own private key and private domain if she has them."""
-    allowed = ROLE_DOMAINS[role]
-    for domain in sorted(allowed):
-        if domain not in keys:
-            raise ValueError(f"the {role} role needs the {domain} key")
-        if len(keys[domain]) != KEY_SIZE:
+    """Make the slot for ``name`` with ``role``. Only the part keys of that role are put into it, and the person's
+    own private key and the key to her private notes if she has them."""
+    allowed = ROLE_PARTS[role]
+    for part in sorted(allowed):
+        if part not in keys:
+            raise ValueError(f"the {role} role needs the {part} key")
+        if len(keys[part]) != KEY_SIZE:
             raise ValueError(f"a key must be {KEY_SIZE} bytes")
     payload = {
         "name": name,
         "role": role.value,
-        "keys": {domain.value: base64.b64encode(keys[domain]).decode() for domain in sorted(allowed)},
+        "keys": {part.value: base64.b64encode(keys[part]).decode() for part in sorted(allowed)},
     }
     if private_key is not None:
         payload["private_key"] = base64.b64encode(private_key).decode()
@@ -173,11 +174,11 @@ def open_slot(slots: Sequence[KeySlot], material: LoginMaterial, doc_id: str) ->
         return Unlocked(
             name=payload["name"],
             role=Role(payload["role"]),
-            keys={Domain(domain): base64.b64decode(key, validate=True) for domain, key in payload["keys"].items()},
+            keys={Part(part): base64.b64decode(key, validate=True) for part, key in payload["keys"].items()},
             private_key=None if private_key is None else base64.b64decode(private_key, validate=True),
             private=None
             if private is None
-            else PrivateDomain(_private_id(private["id"]), base64.b64decode(private["key"], validate=True)),
+            else PrivateNotesKey(_private_id(private["id"]), base64.b64decode(private["key"], validate=True)),
         )
     except (KeyError, TypeError, ValueError, AttributeError) as error:
         # Authentic but malformed: not a wrong password. Whoever wrote it knew the key, so this is a bug, not an attack.
@@ -187,14 +188,14 @@ def open_slot(slots: Sequence[KeySlot], material: LoginMaterial, doc_id: str) ->
 _PRIVATE_ID = re.compile(r"[0-9a-f]{32}")
 
 
-def new_private_domain() -> PrivateDomain:
-    """A private domain with a random id (it is not derived from a name, D102) and a random key."""
-    return PrivateDomain(os.urandom(16).hex(), random_key())
+def new_private_notes_key() -> PrivateNotesKey:
+    """The key to new private notes, with a random id (it is not derived from a name, D102) and a random key."""
+    return PrivateNotesKey(os.urandom(16).hex(), random_key())
 
 
 def _private_id(value: object) -> str:
     if not isinstance(value, str) or not _PRIVATE_ID.fullmatch(value):
-        raise ValueError("a private domain id is 32 lower-case hex digits")
+        raise ValueError("the id of private notes is 32 lower-case hex digits")
     return value
 
 

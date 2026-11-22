@@ -35,14 +35,14 @@ Key slots
 .. autoclass:: claudia_document_file.Role
    :members:
    :undoc-members:
-.. autoclass:: claudia_document_file.Domain
+.. autoclass:: claudia_document_file.Part
    :members:
    :undoc-members:
-.. autodata:: claudia_document_file.ROLE_DOMAINS
+.. autodata:: claudia_document_file.ROLE_PARTS
 .. autoclass:: claudia_document_file.KeySlot
    :members:
 .. autoclass:: claudia_document_file.Unlocked
-.. autofunction:: claudia_document_file.new_domain_keys
+.. autofunction:: claudia_document_file.new_part_keys
 .. autofunction:: claudia_document_file.make_slot
 .. autofunction:: claudia_document_file.open_slot
 
@@ -80,12 +80,12 @@ history and chat as blocks. Every change replaces the file atomically.
 .. autoexception:: claudia_document_file.ReaderLimitExceeded
 .. autoexception:: claudia_document_file.TamperedDocument
 
-Keys of people, renewal and the private domain
-----------------------------------------------
+Keys of people, renewal and private notes
+-----------------------------------------
 
 Every person has a key pair; keys she is not there to receive wait in a sealed inbox until her next login (D1274).
-Removing a person or lowering an editor renews the keys she held (D1263), in one atomic replacement of the file. The private
-domain of a person is a chain only her own key opens (D1265).
+Removing a person or lowering an editor renews the keys she held (D1263), in one atomic replacement of the file. A person's private
+notes are a chain only her own key opens (D1265).
 
 .. autoclass:: claudia_document_file.KeyPair
 .. autofunction:: claudia_document_file.new_key_pair
@@ -95,8 +95,8 @@ domain of a person is a chain only her own key opens (D1265).
 .. autofunction:: claudia_document_file.remove_person
 .. autoclass:: claudia_document_file.Renewed
 .. autoexception:: claudia_document_file.RenewalInterrupted
-.. autoclass:: claudia_document_file.PrivateDomain
-.. autofunction:: claudia_document_file.new_private_domain
+.. autoclass:: claudia_document_file.PrivateNotesKey
+.. autofunction:: claudia_document_file.new_private_notes_key
 .. autofunction:: claudia_document_file.read_private
 .. autofunction:: claudia_document_file.write_private
 
@@ -122,7 +122,7 @@ Every change of an open document is appended to a sealed journal before it is ac
 Blocks, head and snapshot
 -------------------------
 
-Packing folds the journal into blocks (a hash chain per domain), writes the head record and a snapshot, and replaces the
+Packing folds the journal into blocks (a hash chain per stream), writes the head record and a snapshot, and replaces the
 file first and the journal second.
 
 .. autofunction:: claudia_document_file.read_state

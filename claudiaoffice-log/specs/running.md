@@ -19,17 +19,23 @@ You need `uv` and Node 22 (or newer) with `npm`; the script says what to install
 |---|---|---|
 | `./run-e2e.sh core` | the specs tagged `@core` (the journeys that must always work) | a few minutes once built |
 | `./run-e2e.sh extended` | `@core` and `@extended`: everything in `specs/` that is not waiting for a decision | longer |
-| `./run-e2e.sh regression` | what CI runs today: `tests/e2e` and the Node scripts of `web/e2e` | about 25–35 minutes |
+| `./run-e2e.sh regression` | exactly what CI's end-to-end job runs: `tests/e2e` (with the specs), every Node script of `web/e2e`, the Windows and macOS client's window | about 15 minutes in CI; `--list` gives rough minutes per script |
 | `./run-e2e.sh all` | regression, then every spec | the sum |
-| `./run-e2e.sh --list` | what there is | instantly |
+| `./run-e2e.sh --list` | what there is, with the number of scenarios counted from the files | a few seconds |
 
 Options: `--browser chromium|firefox|both` (default chromium; the specs only, the older scripts are Chromium only),
 `--feature tables` (spec files whose name contains it), `--only composes` (older scripts, repeatable), `--headed` (show the
 browser), `--no-setup`, `--rebuild`, `--shots DIR`.
 
-**Today** the `@core` and `@extended` scenarios of `composes/tables.feature` that have step code run (11 of 97: inserting, the
-keyboard, rows and columns by key); the others skip and say which step is missing. Scenarios
-tagged `@pending:<id>` are expected to fail, and are reported as `xfailed`. `./run-e2e.sh --list` shows the counts.
+**What runs.** A scenario whose steps all have code runs; one with a step without code skips and says which step.
+Scenarios tagged `@pending:<id>` are expected to fail, and are reported as `xfailed`. `./run-e2e.sh --list` counts them
+from the files each time. Spec files that no test runs yet are listed, each with the story that will bind it, in
+`tests/test_specs_are_bound.py` (`NOT_BOUND_YET`); that test fails when a new file is neither bound, nor tagged, nor
+marked `@draft`.
+
+**One list (D1452).** The browser scripts are listed once, in `SCRIPTS` in `scripts/run_e2e.py`. CI runs
+`./run-e2e.sh setup` and `./run-e2e.sh regression`, so what passes here and what passes in CI are the same scripts. A new
+script goes into `web/package.json` and into `SCRIPTS`; `tests/test_ci_workflow.py` fails if the two differ.
 `$CLAUDIA_CHROMIUM` points at a Chromium that is already installed (a machine that cannot download Playwright's).
 
 ## Where the results are
@@ -43,6 +49,8 @@ tagged `@pending:<id>` are expected to fail, and are reported as `xfailed`. `./r
 ## When something goes wrong
 
 - *"port 8766 is in use"*: a server is running (`./start.sh`?). Stop it.
+- *Every scenario says "skipped: no chromium for playwright"*: the browser is not installed; run `./run-e2e.sh setup`, or
+  set `$CLAUDIA_CHROMIUM`.
 - *A browser does not start on Linux*: it lacks system libraries. Run once the line the setup printed
   (`sudo … playwright install-deps chromium`).
 - *Firefox does not run*: use `--browser chromium`; tell me what the log says.

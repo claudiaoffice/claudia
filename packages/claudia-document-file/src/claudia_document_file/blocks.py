@@ -1,12 +1,12 @@
 """Blocks and the head record (E2.1, E2.5): how the history and the chat rest in the document file.
 
 A **block** holds a run of journal payloads: they are framed, compressed and sealed (AES-256-GCM) with the key of their
-domain. The authenticated data names the document, the domain, the number of the block and the hash of the block
+stream. The authenticated data names the document, the stream, the number of the block and the hash of the block
 before it, so a block opens in exactly one place: it cannot be changed, moved, swapped with another, taken from another
-document or put after a different predecessor. Blocks of a domain form a chain: the hash of a block is the SHA-256 of
+document or put after a different predecessor. Blocks of a stream form a chain: the hash of a block is the SHA-256 of
 its stored bytes, and the next block was sealed knowing it.
 
-The **head** says how many blocks each domain has, the hash of the last one, and the number of the last journal
+The **head** says how many blocks each stream has, the hash of the last one, and the number of the last journal
 generation that is folded into the blocks. It is sealed with the history key. Somebody who holds the file but no key can
 still remove the newest blocks, but then the head no longer fits and the file is refused. Not covered: putting back an
 older copy of the whole file (the head of an old copy fits its old blocks).
@@ -24,7 +24,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from .crypto import DecryptionError, open_sealed, seal
-from .slots import Domain
+from .slots import Part
 
 BLOCK_TARGET_BYTES = 1024 * 1024
 """A block is closed once its payloads together are this large (before compression); small ones are filled up."""
@@ -37,11 +37,11 @@ GENESIS = bytes(32)
 
 AUDIT = "audit"
 """The name of the chain that records what leaves the document (D1271). It is sealed with the history key, so it is not
-a domain of its own: nobody holds a key for it besides those who hold the history key."""
+a part of its own: nobody holds a key for it besides those who hold the history key."""
 
 PRIVATE = "private"
-"""The folder of private domains, ``private/<id>/NNNNNN.blk`` (D1265). Each one is a chain of its own, sealed with the
-key of that domain alone, and has a head of its own."""
+"""The folder of private notes, ``private/<id>/NNNNNN.blk`` (D1265). Each person's notes are a chain of their own,
+sealed with her key alone, with a head of their own."""
 
 _STREAM_BYTE = {"content": 1, "history": 2, "chat": 3, AUDIT: 4, PRIVATE: 5}
 
@@ -57,11 +57,11 @@ def block_hash(stored: bytes) -> bytes:
 
 @dataclass(frozen=True)
 class Place:
-    """Where a block belongs: its document, its chain (a domain's name or ``"audit"``), its number (from 1) and the hash
-    of the block before it."""
+    """Where a block belongs: its document, its stream (a part's name, ``"audit"`` or ``"private/<id>"``), its number
+    (from 1) and the hash of the block before it."""
 
     doc_id: str
-    domain: str
+    stream: str
     number: int
     previous: bytes
 
@@ -69,11 +69,11 @@ class Place:
 def _aad(place: Place) -> bytes:
     name = place.doc_id.encode()
     number = struct.pack(">I", place.number)
-    if place.domain.startswith(f"{PRIVATE}/"):  # the id of the private domain is part of the place
-        domain = bytes([_STREAM_BYTE[PRIVATE]]) + place.domain.encode()
+    if place.stream.startswith(f"{PRIVATE}/"):  # the place names whose private notes these are
+        stream = bytes([_STREAM_BYTE[PRIVATE]]) + place.stream.encode()
     else:
-        domain = bytes([_STREAM_BYTE[place.domain]])
-    return b"claudia/block/1" + struct.pack(">H", len(name)) + name + domain + number + place.previous
+        stream = bytes([_STREAM_BYTE[place.stream]])
+    return b"claudia/block/1" + struct.pack(">H", len(name)) + name + stream + number + place.previous
 
 
 def seal_block(key: bytes, place: Place, payloads: Sequence[bytes]) -> bytes:
@@ -118,7 +118,7 @@ def _unframe(framed: bytes) -> list[bytes]:
 
 @dataclass(frozen=True)
 class Chain:
-    """How far a domain's chain of blocks goes: the number of blocks and the hash of the last one."""
+    """How far a stream's chain of blocks goes: the number of blocks and the hash of the last one."""
 
     blocks: int
     last: bytes
@@ -144,7 +144,7 @@ class Head:
         """The chain of ``stream``: ``"history"``, ``"chat"`` or ``"audit"``."""
         if stream == AUDIT:
             return self.audit
-        return self.history if stream == Domain.HISTORY else self.chat
+        return self.history if stream == Part.HISTORY else self.chat
 
 
 def _head_aad(doc_id: str) -> bytes:
@@ -187,7 +187,8 @@ def _chain_head_aad(doc_id: str, name: str) -> bytes:
 
 
 def seal_chain_head(key: bytes, doc_id: str, name: str, chain: Chain) -> bytes:
-    """The head of one chain on its own (a private domain, D1265): how many blocks it has and the hash of the last."""
+    """The head of one chain on its own (a person's private notes, D1265): how many blocks it has and the hash of the
+    last."""
     data = {"blocks": chain.blocks, "last": base64.b64encode(chain.last).decode()}
     return seal(key, json.dumps(data).encode(), _chain_head_aad(doc_id, name))
 

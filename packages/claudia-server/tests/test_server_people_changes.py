@@ -8,7 +8,7 @@ from test_server_app import Peer, refused
 
 from claudia_core.testing import ListModel
 from claudia_document_file import KdfParams, read_state, unlock
-from claudia_document_file.slots import Domain
+from claudia_document_file.slots import Part
 from claudia_server.app import create_app
 from claudia_server.hub import Hub
 from claudia_server.sealed import SealedDocuments
@@ -166,7 +166,7 @@ def test_the_removed_persons_old_keys_open_nothing_in_the_file_afterwards(world)
 
     with pytest.raises(TamperedDocument):
         read_state(path, ben_keys)
-    assert set(ben_keys) == set(Domain)
+    assert set(ben_keys) == set(Part)
 
 
 def test_what_the_wire_sends_names_nobody_who_may_not_read_it(world):

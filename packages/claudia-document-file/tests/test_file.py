@@ -36,7 +36,7 @@ from claudia_document_file.file import (
     unlock_with_recovery,
 )
 from claudia_document_file.passwords import WeakPassword
-from claudia_document_file.slots import Domain, Role, new_recovery_key
+from claudia_document_file.slots import Part, Role, new_recovery_key
 
 CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 OWNER_PW, ED_PW, VIEW_PW = "Correct-Horse-9", "Battery-Staple-7", "Purple-Monkey-5"
@@ -118,14 +118,14 @@ def test_the_owner_unlocks_everything(path, owner):
     assert unlocked is not None
     assert (unlocked.name, unlocked.role) == ("Annabelle", Role.OWNER)
     assert unlocked.keys == owner.keys
-    assert set(unlocked.keys) == set(Domain)
+    assert set(unlocked.keys) == set(Part)
 
 
 def test_a_viewer_unlocks_the_content_key_only(path, team):
     viewer = unlock(path, "Cornelia", VIEW_PW)
     assert viewer is not None
     assert viewer.role is Role.VIEWER
-    assert set(viewer.keys) == {Domain.CONTENT}
+    assert set(viewer.keys) == {Part.CONTENT}
 
 
 @pytest.mark.parametrize(
@@ -235,7 +235,7 @@ def test_an_editor_can_leave(path, team):
 
 def test_a_viewer_can_leave_too_though_they_hold_only_the_content_key(path, team):
     viewer = unlock(path, "Cornelia", VIEW_PW)
-    assert set(viewer.keys) == {Domain.CONTENT}
+    assert set(viewer.keys) == {Part.CONTENT}
     assert leave_document(path, "Cornelia", VIEW_PW) is True
     assert unlock(path, "Cornelia", VIEW_PW) is None
 
