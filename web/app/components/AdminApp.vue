@@ -86,7 +86,7 @@ function close() {
       <FirstAdminSetup v-if="screen === 'setup'" :host="host" :exposed="exposed" :setup-code="setupCode" :session="session" @taken="taken" />
       <AdminLogin v-else-if="screen === 'sign-in'" :label="label" :notice="notice" :session="session" @close="close" />
       <AdminShell v-else-if="session.name.value" :label="label" :host="host" :signed-in-as="session.name.value" :active="active" @navigate="active = $event" @sign-out="session.logout()" @close="close">
-        <AdminAiModel v-if="active === 'ai'" :token="session.token.value!" />
+        <AdminAi v-if="active === 'ai'" :token="session.token.value!" />
         <AdminTypesetting v-else-if="active === 'typeset'" :token="session.token.value!" />
         <AdminFonts v-else-if="active === 'fonts'" :token="session.token.value!" :server="label" />
         <AdminSecurity v-else-if="active === 'security'" :token="session.token.value!" />
