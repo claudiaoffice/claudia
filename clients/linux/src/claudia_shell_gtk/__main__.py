@@ -39,8 +39,8 @@ def run(app: str, argv: Sequence[str] | None = None) -> int:
     # The language first, so that `--help` and a bad `--server` already speak it. Resolved and installed *before*
     # `.window` is ever imported (by `.app`, below): the layout of the window is read once, at that import's
     # class-definition time (`window.py`'s `_layout` docstring), so a translation installed any later would be too
-    # late for it -- which is also why a language picked from the Preferences ▸ App Language menu only reaches the native
-    # chrome on the *next* launch, not this one.
+    # late for it -- which is also why a language picked from the Preferences ▸ App Language menu only reaches the
+    # native chrome on the *next* launch, not this one.
     locale = _resolve_locale()
     install_translation(locale)
     options = cli.parse(app, sys.argv[1:] if argv is None else argv)

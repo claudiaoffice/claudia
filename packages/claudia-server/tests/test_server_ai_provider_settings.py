@@ -26,7 +26,6 @@ from claudia_server.setup_code import SetupCode
 
 KEY = "sk-ant-test-a7Q2"
 OTHER_KEY = "sk-ant-test-b4N8"
-SENTENCE_CONFIRMED = {"confirm": True}
 
 
 @pytest.fixture

@@ -15,7 +15,7 @@ One zip, written anew for every change and put in place atomically, so a crash l
 
 | Entry | What it holds | Who can read it |
 |---|---|---|
-| `format` | The text `claudia-document 2`, stored without compression, **first** in the zip | anybody |
+| `format` | The text `claudia-document 3`, stored without compression, **first** in the zip | anybody |
 | `manifest.json` | name, uid, description, tags, app, times, the cost of the password hashing, the salt | anybody |
 | `slots.json` | the key slots: a locator and the sealed part keys, the person's X25519 private key and the key to her private notes, no names | anybody sees the sizes |
 | `people.bin` | names, roles, slot locators, public keys and the ids of everybody's private notes, sealed with the content key | people with the content key |
@@ -27,6 +27,7 @@ One zip, written anew for every change and put in place atomically, so a crash l
 | `history/NNNNNN.blk` | the command history, in blocks | owners and editors |
 | `chat/NNNNNN.blk` | the chat, in blocks | owners and editors |
 | `audit/NNNNNN.blk` | the record of what left the document (§3), in blocks | owners and editors |
+| `consent/NNNNNN.blk` | which remote AI provider the owners allowed, one record per decision (who, when, allowed or withdrawn; D1490), in blocks with a head of its own, sealed with the content key; no record means not allowed | everybody in the document |
 
 Next to the file, while somebody has the document open, there is a **journal** (`<name>.claudia.journal`) that takes each
 change before the server answers; packing folds it into the blocks.
@@ -87,7 +88,7 @@ saved, stay readable: nothing can change that.
 
 ### Versions
 
-The format text is `claudia-document 2`. A file of format 1 is refused with a sentence that says it was written by an
+The format text is `claudia-document 3`. Format 3 added `consent/` (E7.11): a file of format 2 opens as it is and has no consent, which means *off*, and is written as format 3 with its next change; an older program refuses a file of format 3 as newer. A file of format 1 is refused with a sentence that says it was written by an
 older version (slice C added the keys of people and private notes, and there is no upgrade in place). A program that
 does not know the record (`audit/`) refuses a file that has one as damaged, because it does not know the entry; a program
 that knows a higher number of the format refuses the file with a sentence that names the version.

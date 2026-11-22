@@ -6,6 +6,14 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-11-22
+
+### Added
+- Who gave an answer (E7.11, D1493): `Via(provider, label, remote, note="")` with `to_data` and `from_data`, and
+  `ChatRecord.via`, kept in the chat of the document and written only when set. `Document.post_chat(..., via=None)`
+  takes it. An old chat reads back with `via=None`.
+
+
 ### Added
 - Objects that may change holder (D1351): `ObjectModel.objects_change_holder` (false by default),
   `ObjectModel.rehang_object(obj, at=None)` (out of the old stack, into the new one, returns the old place) and

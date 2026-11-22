@@ -1,9 +1,10 @@
 """The menu and action manifest of the Linux client (E5.1 / E5.10): one list from which the native menus are built.
 
-D120 gives every app the same seven header-bar menus — File, Edit, Format, View, Tools, Preferences (called Config until E7.11; its action ids still start with ``config.``), Help — superseding
-D4's four. An action has an id that names *what it does* (``file.save``, ``view.page``) and not where it sits, so a
-menu can be rearranged without touching the shell contract, and so the *same* id means the same thing on the web
-side (``web/app/lib/menu-dispatch.ts``) and here. Each action is carried out by one party (:class:`Kind`).
+D120 gives every app the same seven header-bar menus — File, Edit, Format, View, Tools, Preferences (called Config
+until E7.11; its action ids still start with ``config.``), Help — superseding D4's four. An action has an id that
+names *what it does* (``file.save``, ``view.page``) and not where it sits, so a menu can be rearranged without
+touching the shell contract, and so the *same* id means the same thing on the web side
+(``web/app/lib/menu-dispatch.ts``) and here. Each action is carried out by one party (:class:`Kind`).
 
 Nothing here imports GTK: the menus are described as data and turned into GtkBuilder XML by :func:`menu_xml`, so the
 layout stays in XML (D27) and the manifest can be tested anywhere. :func:`composes` already shipped; :func:`computes`
@@ -824,9 +825,10 @@ def _tools_ask() -> Action:
 
 
 def _preferences_menu() -> Menu:
-    """Shortcuts (D120, D122: an editable remapping UI is deferred; Ctrl+? as in GNOME), AI… (E7.11, the owners' consent for Claude
-    in this document: Ctrl+Shift+Alt+E, provisional, because the wished-for H is Present from This Slide), then App Language (the owner's
-    second i18n round): one checkable ``Kind.PAGE`` action per :data:`LANGUAGES` entry, in its own section/flyout.
+    """Shortcuts (D120, D122: an editable remapping UI is deferred; Ctrl+? as in GNOME), AI… (E7.11, the owners'
+    consent for Claude in this document: Ctrl+Shift+Alt+E, provisional, because the wished-for H is Present from This
+    Slide), then App Language (the owner's second i18n round): one checkable ``Kind.PAGE`` action per
+    :data:`LANGUAGES` entry, in its own section/flyout.
 
     The language entries are the one place without a key: each is a language's own name, and there may be many.
     Mutual exclusion (picking one unchecks the rest) is enforced nowhere in this data — it is just ``LANGUAGES``

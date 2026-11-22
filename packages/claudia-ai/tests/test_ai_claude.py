@@ -134,3 +134,96 @@ def test_stop_ends_a_running_answer_soon_with_what_there_is(anthropic):
 )
 def test_the_administrator_reads_each_reason_in_one_sentence(reason, sentence):
     assert reason.admin_sentence(model="claude-x", seconds=60) == sentence
+
+
+class ScriptedResponse:
+    def __init__(self, status, lines=(), breaks_with=None):
+        self.status, self._lines, self._breaks_with, self.closed = status, list(lines), breaks_with, False
+
+    def lines(self):
+        yield from self._lines
+        if self._breaks_with:
+            raise self._breaks_with
+
+    def close(self):
+        self.closed = True
+
+
+class ScriptedTransport:
+    def __init__(self, response=None, raises=None):
+        self.response, self.raises = response, raises
+
+    def post(self, url, headers, body, *, timeout):
+        if self.raises:
+            raise self.raises
+        return self.response
+
+
+def scripted(response=None, raises=None):
+    return ClaudeModel(KEY, "claude-sonnet-5-5", transport=ScriptedTransport(response, raises))
+
+
+@pytest.mark.parametrize(
+    ("raises", "reason"),
+    [(TimeoutError(), FailureReason.TIMED_OUT), (ConnectionRefusedError(), FailureReason.UNREACHABLE)],
+)
+def test_a_transport_that_fails_before_any_answer_is_told_by_its_cause(raises, reason):
+    with pytest.raises(ProviderError) as caught:
+        ask(scripted(raises=raises))
+    assert caught.value.reason is reason
+
+
+@pytest.mark.parametrize(
+    ("breaks", "reason"),
+    [(TimeoutError(), FailureReason.TIMED_OUT), (ConnectionResetError(), FailureReason.UNREACHABLE)],
+)
+def test_a_connection_that_breaks_while_the_answer_is_read_is_told_by_its_cause(breaks, reason):
+    response = ScriptedResponse(200, [b"event: ping\n"], breaks_with=breaks)
+    with pytest.raises(ProviderError) as caught:
+        ask(scripted(response))
+    assert caught.value.reason is reason
+    assert response.closed
+
+
+@pytest.mark.parametrize(
+    ("status", "body", "reason", "detail"),
+    [
+        (503, b"<html>down</html>", FailureReason.OVERLOADED, "HTTP 503"),
+        (418, b"", FailureReason.OTHER, "HTTP 418"),
+        (
+            404,
+            b'{"error": {"type": "not_found_error", "message": "model: x"}}',
+            FailureReason.UNKNOWN_MODEL,
+            "model: x",
+        ),
+    ],
+)
+def test_a_refusal_without_a_readable_body_still_has_a_reason(status, body, reason, detail):
+    response = ScriptedResponse(status, [body])
+    with pytest.raises(ProviderError) as caught:
+        ask(scripted(response))
+    assert (caught.value.reason, caught.value.detail) == (reason, detail)
+    assert response.closed
+
+
+def test_the_administrator_reads_an_unnamed_failure_with_what_anthropic_said_or_without():
+    assert FailureReason.OTHER.admin_sentence() == "Anthropic answered with an error."
+    assert FailureReason.OTHER.admin_sentence(detail="HTTP 418") == "Anthropic answered with an error: HTTP 418"
+
+
+def test_a_model_prints_without_its_key():
+    assert repr(scripted()) == "ClaudeModel('claude-sonnet-5-5')"
+
+
+def test_the_fake_refuses_a_failure_it_does_not_know_and_answers_again_after_recover(anthropic):
+    with pytest.raises(ValueError, match="unknown failure"):
+        anthropic.fail("no-such-failure")
+    anthropic.fail("overloaded")
+    anthropic.recover()
+    assert ask(claude(anthropic)) == "B7 divides by C7, which is empty."
+
+
+def test_a_key_that_anthropic_does_not_know_is_refused(anthropic):
+    with pytest.raises(ProviderError) as caught:
+        ask(ClaudeModel("sk-ant-test-other", "claude-sonnet-5-5", base_url=anthropic.url))
+    assert caught.value.reason is FailureReason.KEY_REFUSED

@@ -81,7 +81,16 @@ def action_ids(menu: manifest.Menu) -> list[str]:
 
 def test_every_app_has_the_same_eight_menus_in_the_same_order(app: manifest.Manifest) -> None:
     """D120's seven, and Insert between Edit and Format (D560)."""
-    assert [menu.label for menu in app.menus] == ["File", "Edit", "Insert", "Format", "View", "Tools", "Preferences", "Help"]
+    assert [menu.label for menu in app.menus] == [
+        "File",
+        "Edit",
+        "Insert",
+        "Format",
+        "View",
+        "Tools",
+        "Preferences",
+        "Help",
+    ]
 
 
 def test_insert_offers_the_container_types_with_a_key_each(app: manifest.Manifest) -> None:
@@ -274,7 +283,12 @@ def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) ->
 
 def test_preferences_items_are_shortcuts_ai_then_app_language(app: manifest.Manifest) -> None:
     """The owner's second i18n round: Shortcuts, then App Language ▸ one item per ``manifest.LANGUAGES`` entry."""
-    assert action_ids(app.menu("Preferences")) == ["config.shortcuts", "config.ai", "config.language.en", "config.language.de"]
+    assert action_ids(app.menu("Preferences")) == [
+        "config.shortcuts",
+        "config.ai",
+        "config.language.en",
+        "config.language.de",
+    ]
 
 
 def test_app_language_items_are_checkable_page_actions_named_after_their_tag(app: manifest.Manifest) -> None:

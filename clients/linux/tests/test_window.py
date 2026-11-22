@@ -109,7 +109,12 @@ def visible_menus(window) -> list[str]:
 
 def test_the_front_page_gets_the_short_menu_and_a_document_the_whole_one(window) -> None:
     """Sheet 11: on the front page only what works without a document; the whole menu once a document says hello."""
-    assert visible_menus(window) == ["File", "View", "Preferences", "Help"]  # before any page: the front page comes first
+    assert visible_menus(window) == [
+        "File",
+        "View",
+        "Preferences",
+        "Help",
+    ]  # before any page: the front page comes first
     window.show_page("http://127.0.0.1:1")
     page = window.fake_pages[0]
     page.says({**hello(), "view": "start"})

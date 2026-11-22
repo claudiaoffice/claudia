@@ -129,7 +129,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (145)
+### Fixed (146)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -236,6 +236,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |  | 2026-11-18 |
 | CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |  | 2026-11-19 |
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
+| CODE-78 | P2 | Code / AI | The decision which provider answers was made once, when the question was started; a switch of the administrator or of the document's consent while a question ran changed nothing until it ended | **fixed** 2026-11-22 on `e7-11-claude-provider` (D1497) | 2026-11-22 | 2026-11-22 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2641,3 +2642,14 @@ event that forgets the chart (it does for a picture, a shape and a container, D1
 `Error: DOM element provided is null or undefined` from Plotly's `getGraphDiv`. **Test:** the row `workbook | a chart`
 of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
 E1.18.
+
+## Round of 2026-11-22 (Claude as a provider of the `@ai`, branch `e7-11-claude-provider`, E7.11)
+
+### CODE-78 · The provider of an answer was fixed when the question began · P2 · size 2 · fixed 2026-11-22
+**Found** by the owner's review of the architecture note (X1): the router chose the provider once per question, so a
+question that took several rounds went on with Claude after the administrator had switched it off, or after the owner
+had withdrawn the document's consent, and the answer then claimed the wrong source. **Fix.** `AiRouter` asks the
+`ProviderDesk` before every round (D1497); a switch ends the question before its next step with "Stopped: Claude was
+switched off." The first router test was written red. **Test:** `test_server_ai_router.py` and the scenarios
+"The owners switch Claude off while a question is running" and "The administrator switching to another provider
+stops a running question the same way" in `server/claude-answers.feature`.

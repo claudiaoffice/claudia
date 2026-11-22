@@ -1,6 +1,6 @@
 """The steps of ``claudiaoffice-log/specs/document-file/ai-consent.feature`` and ``server/claude-answers.feature``
-(E7.11, D264): a real server that has Claude applied, the fake Anthropic on this computer standing in for Anthropic, and real browsers. No scenario reaches the real
-Anthropic.
+(E7.11, D264): a real server that has Claude applied, the fake Anthropic on this computer standing in for Anthropic,
+and real browsers. No scenario reaches the real Anthropic.
 
 What has no step code yet (a server that is restarted, the server settings pages) skips with its words, as everywhere in
 these specs; ``./run-e2e.sh --list`` shows them.
@@ -16,7 +16,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from claudia_ai.testing import FakeAnthropic
 from conftest import World, eventually, looked_after
 from live import Live, server
 from playwright.sync_api import expect
@@ -24,6 +23,8 @@ from pytest_bdd import given, parsers, scenarios, then, when
 from test_administrators import PASSWORD as ADMIN_PASSWORD
 from test_administrators import put_administrators
 from test_greeting import BUILT, SKIP
+
+from claudia_ai.testing import FakeAnthropic
 
 scenarios("../../../claudiaoffice-log/specs/document-file/ai-consent.feature")
 scenarios("../../../claudiaoffice-log/specs/server/claude-answers.feature")
@@ -293,8 +294,9 @@ def _person(world, name):
     return world.people[name]
 
 
-# "Jonas is an owner" has no step: a document has one owner (add_user refuses the role), so "Anna and Jonas" cannot happen.
-# The scenario "An editor sees what is allowed and cannot change it" waits for the owner's decision on that (see the report).
+# "Jonas is an owner" has no step: a document has one owner (add_user refuses the role), so "Anna and Jonas" cannot
+# happen. The scenario "An editor sees what is allowed and cannot change it" waits for the owner's decision on that
+# (see the report).
 
 
 @given(parsers.parse('Vera is a viewer of "budget"'))
@@ -489,7 +491,9 @@ def _answered_locally(claude_world):
 
 @then('under the answer I read "answered by" and the local provider\'s name')
 def _local_name(claude_world):
-    expect(_the_answer(claude_world).locator("[data-testid=answered-by]")).to_have_text("answered by Scripted stand-in · this server")
+    expect(_the_answer(claude_world).locator("[data-testid=answered-by]")).to_have_text(
+        "answered by Scripted stand-in · this server"
+    )
 
 
 @then("the fake Anthropic was not asked anything")

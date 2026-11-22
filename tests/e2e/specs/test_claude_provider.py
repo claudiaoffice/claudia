@@ -1,6 +1,6 @@
 """The steps of ``claudiaoffice-log/specs/server/claude-as-ai-provider.feature`` (E7.11, D32, D264, D266, D154): the
-administrator's AI page in a real browser, on a real server that is started with the address of the fake Anthropic (never
-settable from the page). Nothing here reaches the real Anthropic.
+administrator's AI page in a real browser, on a real server that is started with the address of the fake Anthropic
+(never settable from the page). Nothing here reaches the real Anthropic.
 
 A scenario that needs a step nobody has written (a saved key, a question asked in a document) skips with its words.
 """
@@ -14,13 +14,14 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from claudia_ai.testing import FakeAnthropic
 from conftest import BROWSER, SHOTS
 from live import server
 from playwright.sync_api import expect
 from pytest_bdd import given, parsers, scenarios, then, when
 from test_administrators import PASSWORD, put_administrators
 from test_greeting import BUILT, SKIP
+
+from claudia_ai.testing import FakeAnthropic
 
 scenarios("../../../claudiaoffice-log/specs/server/claude-as-ai-provider.feature")
 
@@ -41,7 +42,7 @@ class Admin:
         self.page = self.context.new_page()
         self.errors: list[str] = []
         self.page.on("pageerror", lambda e: self.errors.append(f"pageerror: {e}"))
-        # a refused apply is a 400 the page shows in words: the browser logs it as a failed resource, which is not an error
+        # a refused apply is a 400 the page shows in words: the browser logs it as a failed resource, not an error
         self.page.on(
             "console",
             lambda m: m.type == "error" and "status of 400" not in m.text and self.errors.append(m.text),
@@ -85,7 +86,9 @@ def admin(browser, request) -> Iterator[Admin]:
             assert not errors, "the browser reported errors:\n" + "\n".join(errors)
 
 
-@given(parsers.parse('a server with the administrator "anna" and a fake Anthropic that accepts the provider key "{key}"'))
+@given(
+    parsers.parse('a server with the administrator "anna" and a fake Anthropic that accepts the provider key "{key}"')
+)
 def _server(admin, key):
     assert key in admin.fake.keys
 
@@ -129,7 +132,7 @@ def _choices(admin, a, b, c):
         expect(group.get_by_role("button", name=name, exact=True)).to_be_visible()
 
 
-@then("the chosen one is the one named after \"Answering now:\"")
+@then('the chosen one is the one named after "Answering now:"')
 def _chosen_is_named(admin):
     pressed = admin.page.get_by_role("group", name="AI provider").locator("[aria-pressed=true]").inner_text()
     expect(admin.page.locator("[data-testid=ai-now]")).to_contain_text(pressed)
@@ -157,7 +160,9 @@ def _read(admin, words):
 
 @then("I read that the owners of each document must also allow Claude there")
 def _read_owners(admin):
-    expect(admin.page.locator("[data-testid=ai-approval]")).to_contain_text("the owners of each document must also allow Claude")
+    expect(admin.page.locator("[data-testid=ai-approval]")).to_contain_text(
+        "the owners of each document must also allow Claude"
+    )
 
 
 @then('"Apply" is not available')

@@ -2,7 +2,7 @@
 
 ::
 
-    format          "claudia-document 2", stored uncompressed and first, so tools can recognise the file
+    format          "claudia-document 3", stored uncompressed and first, so tools can recognise the file
     manifest.json   readable by anyone: name, uid, description, tags, app, times, unlisted flag, the cost of the
                     password hashing, salt
     slots.json      the key slots (see :mod:`claudia_document_file.slots`): locators and sealed keys, no names

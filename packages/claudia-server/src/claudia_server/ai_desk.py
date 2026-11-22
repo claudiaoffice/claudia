@@ -119,7 +119,7 @@ class ProviderDesk:
     def answering_now(self) -> Via:
         """What the administrator's page says answers ``@ai`` on this server (before the owners of a document have a
         say): the chosen provider, by the name the page shows."""
-        if self.offers_claude:
+        if self.claude is not None and self.offers_claude:
             return Via(CLAUDE, self.claude.name, True)
         return self._own().via
 

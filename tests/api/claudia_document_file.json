@@ -1,5 +1,5 @@
 {
- "version": "0.12.0",
+ "version": "0.13.0",
  "AUDIT_KINDS": {
   "value": "('export', 'print', 'pdf')"
  },
@@ -14,6 +14,18 @@
   "methods": {
    "check": "(self) -> 'None'",
    "from_bytes": "(payload: 'bytes') -> 'AuditRecord'",
+   "to_bytes": "(self) -> 'bytes'"
+  },
+  "properties": []
+ },
+ "ConsentRecord": {
+  "class": [
+   "object"
+  ],
+  "init": "(provider: 'str', allowed: 'bool', who: 'str', when: 'str') -> None",
+  "methods": {
+   "check": "(self) -> 'None'",
+   "from_bytes": "(payload: 'bytes') -> 'ConsentRecord'",
    "to_bytes": "(self) -> 'bytes'"
   },
   "properties": []
@@ -51,7 +63,7 @@
   "properties": []
  },
  "FORMAT_TEXT": {
-  "value": "'claudia-document 2'"
+  "value": "'claudia-document 3'"
  },
  "InvalidRecoveryKey": {
   "class": [
@@ -365,6 +377,9 @@
  "read_audit": {
   "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> list[claudia_document_file.audit.AuditRecord]"
  },
+ "read_consent": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> list[claudia_document_file.consent.ConsentRecord]"
+ },
  "read_export": {
   "function": "(data: 'bytes') -> 'ExportFile'"
  },
@@ -391,6 +406,9 @@
  },
  "record_audit": {
   "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], record: claudia_document_file.audit.AuditRecord) -> None"
+ },
+ "record_consent": {
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], record: claudia_document_file.consent.ConsentRecord) -> None"
  },
  "recover_access": {
   "function": "(path: pathlib.Path, recovery_key: bytes, name: str, new_password: str) -> claudia_document_file.file.Person | None"
