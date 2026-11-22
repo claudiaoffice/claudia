@@ -49,3 +49,35 @@ output, so the cause is not known: likely three servers measuring their password
 load), E2E `@core` (58 passed, 53 skipped, 2 xfailed, as before), creates' browser scripts against three one-app
 servers as CI starts them (`slides`, `creates-styles`, `print-creates`, `describe-creates`, `present`, `dock`, `keys`,
 `objects`: all good).
+
+## Step 2 · Slides in a workbook (D1471, D1473), 2026-11-22
+
+- **Model.** `WorkbookModel.slides` (the core's `Slides`) and `tabs: list[Tab(kind, id)]`, kept by `add_sheet`,
+  `drop_sheet`, `add_slide` and `remove_slide` only; `sheets` stays a dict in the order of the tabs, so everything that
+  walks the sheets in order (files, print, the AI's lens) did not change. `AddSheet.index` counts the slides too; an
+  index of an old log is the same number, since an old workbook has no slides. `AddSheet` refuses an id a slide has.
+  `AddSlide(id, name, index, description)`/`RemoveSlide(id)` are computes' own. A slide must have a name (it is a tab),
+  like a sheet. The event `SheetsChanged` (`sheets`) became `TabsChanged` (`tabs`); the web client still reloads on
+  `sheets` from an older server. State schema 17.
+- **Who builds a workbook by hand** (the xlsx and ods readers, and tests) puts sheets in with `add_sheet` now: a sheet
+  put straight into `sheets` is in no tab and its objects would not be stored.
+- **Wire.** `tabs`, `slide` (creates' answer without notes and time), the event `tabs`. The object methods take
+  `slide`, `x`, `y` beside `sheet`, `row`, `col` (`CELLS_AND_SLIDES`); exactly one of `sheet`/`slide` for a new object,
+  and a moved object stays on its kind of tab. `add_object` and `shapes` came to computes for a slide only (D1232: a
+  sheet still has no text boxes or shapes); `computes_methods_with(library)` as for the two other apps.
+- **Files** (`claudia_computes_io/slide_plan.py`): a copy of the workbook in which each slide is a sheet is what the
+  writers get, so charts and pictures on a slide are written by the code that writes a sheet's. Slide objects are
+  scaled by 0.45 (1600 × 900 into the 720 × 432 of a chart tab) and hung at the nearest cell; one smaller than the
+  smallest object of a sheet (20 px) is written at 20 px. The loss is `slide` with the slide's name; nothing in the web
+  client shows export losses yet (see the report). An edited import with a slide is not patched (`UnsupportedEdit`),
+  so the server writes it afresh.
+- **Web.** `lib/slide-host.ts`: `SlideHost`, what `SlideCanvas.vue` needs; creates' `objectsOn` is `slideObjects` now
+  (computes' `objectsOn` is a sheet's). Showing, holding and letting go of a selection (`showRegions`, `holdRegions`,
+  `releaseRegions`, `holdObject`, `letGoOfObject`) moved into `BaseSession` from both sessions, which had the same
+  code. `InsertBar` shows Present only when it is given its words. A computes slide uses the workbook's own styles: its
+  Body text is 13 px, small on a 1600-unit slide (see the report).
+- **Print.** The layout library's `SheetDocument` takes a `PrintedSlide`: one landscape page with the sheet's footer,
+  the slide drawn by `drawSlide`/`placedSlide`, which `layoutSlides` uses too (no change to its pages). A slide has no
+  print setup: the bar's Portrait does nothing for it.
+- **Browser script** `e2e:computes-slides` (on the computes server): there is no way to make a slide yet, so it
+  imports a Claudia export (D1272) made with one by Python.
