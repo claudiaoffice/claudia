@@ -7,7 +7,8 @@
 # fake Anthropic is mentioned it stands in for Anthropic (see server/claude-as-ai-provider.feature).
 # Decided on 2026-11-22: a copy of a document carries its consent to another server (no record of which server gave it);
 # where that server has no Claude, nothing is an error: the server's own AI provider answers and the chat says who did.
-@draft
+# Provisional chord (2026-11-22): the owner asked for Ctrl+Shift+Alt+H, but that is Present from This Slide; E was free in all
+# three apps. The owner decides; see the decision log of E7.11.
 Feature: Only a document's owners can allow Claude to receive its content, and everybody can see whether they did
 
   As an owner of a document, I want Claude to see my document only if I say so, so that setting up Claude on the server
@@ -24,13 +25,13 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
   Scenario: The menu is called Preferences and has AI… with its key
     When I open the Preferences menu
     Then it has the entries "App language", "Shortcuts" and "AI…"
-    And "AI…" shows the key "Ctrl+Shift+Alt+H"
+    And "AI…" shows the key "Ctrl+Shift+Alt+E"
     And no menu is called "Config"
 
   @core
   Scenario Outline: The same entry and key in all three apps
     Given a new <document> "plan" in which I am Anna, an owner
-    When I press Ctrl+Shift+Alt+H
+    When I press Ctrl+Shift+Alt+E
     Then the dialog "AI in this document" opens
 
     Examples:
@@ -241,7 +242,7 @@ Feature: Only a document's owners can allow Claude to receive its content, and e
 
   @extended
   Scenario: The dialog is usable with the keyboard and says its state in words
-    When I open the dialog "AI in this document" with Ctrl+Shift+Alt+H
+    When I open the dialog "AI in this document" with Ctrl+Shift+Alt+E
     Then the focus is in the dialog and Tab reaches every control in a sensible order
     And whether Claude is allowed is told in words, not by the tick alone
     And a screen reader reads the box with its label and whether it is ticked
