@@ -23,7 +23,7 @@ from claudia_document_file.file import (
     set_recovery_key,
     unlock,
 )
-from claudia_document_file.slots import Domain, Role, new_recovery_key
+from claudia_document_file.slots import Part, Role, new_recovery_key
 
 CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 OWNER, EDITOR, VIEWER = ("Annabelle", "Correct-Horse-9"), ("Bertram", "Battery-Staple-7"), ("Carla", "Purple-Monkey-5")
@@ -43,9 +43,9 @@ def team(path):
     add_user(path, owner.keys, VIEWER[0], VIEWER[1], Role.VIEWER)
     set_recovery_key(path, owner.keys, new_recovery_key())
     writer = begin(path, owner.keys)
-    writer.append(Domain.HISTORY, b"first change")
-    writer.append(Domain.HISTORY, b"second change")
-    writer.append(Domain.CHAT, b"hello")
+    writer.append(Part.HISTORY, b"first change")
+    writer.append(Part.HISTORY, b"second change")
+    writer.append(Part.CHAT, b"hello")
     pack_journal(path, owner.keys, writer, snapshot=b'{"cells": 2}').close()
     return owner
 
@@ -84,7 +84,7 @@ def test_an_editor_gets_the_file_with_only_her_own_slot(path, team, tmp_path):
     }
     assert (
         len({n.split("/")[1] for n in names(data) if n.startswith("private/")}) == 1
-    )  # her own domain, not the others'
+    )  # her own private notes, not the others'
     assert len({n.split("/")[1] for n in whole if n.startswith("private/")}) == 3
     copy = copy_of(path, EDITOR, tmp_path)
     keys = unlock(copy, *EDITOR).keys
@@ -113,7 +113,7 @@ def test_a_viewer_gets_the_parts_the_content_key_opens_and_no_more(path, team, t
     assert {"format", "manifest.json", "slots.json", "people.bin", "content/snapshot.bin"} <= held
     copy = copy_of(path, VIEWER, tmp_path)
     unlocked = unlock(copy, *VIEWER)
-    assert set(unlocked.keys) == {Domain.CONTENT}
+    assert set(unlocked.keys) == {Part.CONTENT}
     assert read_snapshot(copy, unlocked.keys) == b'{"cells": 2}'
 
 

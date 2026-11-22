@@ -50,7 +50,7 @@ from claudia_core import (
     UndoConflict,
     UnknownCommand,
 )
-from claudia_document_file import AuditRecord, Domain, clean_details, write_export
+from claudia_document_file import AuditRecord, Part, clean_details, write_export
 
 from .ai_mode import parse_mode
 from .audience import may_read
@@ -380,8 +380,8 @@ class MethodTable:
         confirms by hashing (``"@user"`` stands for the person asking), so that the server can do that slow work
         outside its event loop first (SEC-21, ``hashes_of``). ``leaves="export"`` marks a method whose answer is the
         document in a readable form: after it succeeds the server records the export (D1271)."""
-        if reads not in tuple(Domain):
-            raise ValueError(f"reads must be one of {', '.join(Domain)}, not {reads!r}")
+        if reads not in tuple(Part):
+            raise ValueError(f"reads must be one of {', '.join(Part)}, not {reads!r}")
 
         def register(fn):
             self._methods[name] = Method(
@@ -473,8 +473,8 @@ class MethodTable:
             raise RequestError("unknown_method", msg("no method {name!r}", name=name))
         if entry.write and not ctx.account.can_write:
             raise RequestError("forbidden", msg("{name} needs the editor role", name=name))
-        if not may_read(ctx.account.role, Domain(entry.reads)):
-            if entry.reads == Domain.CHAT:
+        if not may_read(ctx.account.role, Part(entry.reads)):
+            if entry.reads == Part.CHAT:
                 raise RequestError(
                     "forbidden", msg("{name} reads the chat, which is for the document's owners and editors", name=name)
                 )

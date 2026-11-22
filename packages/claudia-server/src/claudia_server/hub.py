@@ -44,7 +44,7 @@ from claudia_core import (
 )
 from claudia_core.asset_store import CONTAINER
 from claudia_core.clock import utc_now
-from claudia_document_file import Domain
+from claudia_document_file import Part
 from claudia_render import RenderFailed, ToolUnavailable
 
 from .audience import may_read, shape_for
@@ -253,7 +253,7 @@ class Connection:
         """What a client needs to start: who it is, where the document is, who else is here."""
         doc = self.hosted.document
         revision = doc.revision
-        history = may_read(self.account.role, Domain.HISTORY)  # a viewer's welcome carries none of it (D1261)
+        history = may_read(self.account.role, Part.HISTORY)  # a viewer's welcome carries none of it (D1261)
         return {
             "protocol": PROTOCOL_VERSION,
             "user": self.account.user,

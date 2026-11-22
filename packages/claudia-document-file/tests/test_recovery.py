@@ -14,7 +14,7 @@ from claudia_document_file.file import (
     unlock_with_recovery,
 )
 from claudia_document_file.passwords import WeakPassword
-from claudia_document_file.slots import Domain, Role, new_recovery_key
+from claudia_document_file.slots import Part, Role, new_recovery_key
 
 CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 OWNER_PW, ED_PW, VIEW_PW, NEW_PW = "Correct-Horse-9", "Battery-Staple-7", "Purple-Monkey-5", "Fresh-Start-42"
@@ -55,7 +55,7 @@ def test_a_recovery_key_can_be_added_later_and_opens_with_all_keys(path, team):
     set_recovery_key(path, team.keys, key)
     assert has_recovery_key(path, team.keys) is True
     opened = unlock_with_recovery(path, key)
-    assert opened is not None and opened.role is Role.OWNER and set(opened.keys) == set(Domain)
+    assert opened is not None and opened.role is Role.OWNER and set(opened.keys) == set(Part)
 
 
 def test_a_new_recovery_key_makes_the_old_one_useless(path, team):
@@ -93,7 +93,7 @@ def test_the_recovery_key_gives_a_person_a_new_password_and_keeps_their_role(pat
     assert (person.name, person.role) == ("Bertram", Role.EDITOR)
     assert unlock(path, "Bertram", ED_PW) is None
     editor = unlock(path, "Bertram", NEW_PW)
-    assert editor.role is Role.EDITOR and set(editor.keys) == set(Domain)
+    assert editor.role is Role.EDITOR and set(editor.keys) == set(Part)
     assert [p.name for p in read_people(path, team.keys)] == ["Annabelle", "Bertram", "Cornelia"]
 
 
@@ -101,7 +101,7 @@ def test_a_viewer_who_is_recovered_stays_a_viewer(path, team):
     key = new_recovery_key()
     set_recovery_key(path, team.keys, key)
     recover_access(path, key, "Cornelia", NEW_PW)
-    assert set(unlock(path, "Cornelia", NEW_PW).keys) == {Domain.CONTENT}
+    assert set(unlock(path, "Cornelia", NEW_PW).keys) == {Part.CONTENT}
 
 
 def test_somebody_unknown_who_has_the_key_becomes_an_owner(path, team):

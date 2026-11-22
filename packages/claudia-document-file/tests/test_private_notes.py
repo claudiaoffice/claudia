@@ -1,4 +1,4 @@
-"""A person's private domain (D1265): a chain of her own that only her slot's key opens, deleted with her."""
+"""A person's private notes (D1265): a chain of her own that only her slot's key opens, deleted with her."""
 
 import zipfile
 
@@ -19,7 +19,7 @@ from claudia_document_file import (
 )
 from claudia_document_file.crypto import KdfParams
 from claudia_document_file.file import transfer_owner
-from claudia_document_file.slots import Role, new_private_domain, new_recovery_key
+from claudia_document_file.slots import Role, new_private_notes_key, new_recovery_key
 
 CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 ANNA, BERT, CORA = ("Annabelle", "Correct-Horse-9"), ("Bertram", "Battery-Staple-7"), ("Cornelia", "Purple-Monkey-5")
@@ -53,7 +53,7 @@ def folder(private) -> set[str]:
     return {f"private/{private.id}/000001.blk", f"private/{private.id}/head.bin"}
 
 
-def test_everybody_has_a_domain_and_an_empty_one_looks_like_any_other(path, owner):
+def test_everybody_has_private_notes_and_empty_ones_look_like_any_other(path, owner):
     people = read_people(path, owner.keys)
     assert all(p.private_id for p in people) and len({p.private_id for p in people}) == 3
     sizes = {n.split("/")[1]: len(zipfile.ZipFile(path).read(n)) for n in names(path) if n.endswith("000001.blk")}
@@ -67,7 +67,7 @@ def test_what_is_written_is_read_back_in_order(path, owner):
     assert read_private(path, owner.private) == [b"only this"]
 
 
-def test_a_domain_that_holds_nothing_reads_as_nothing(path, owner):
+def test_private_notes_that_hold_nothing_read_as_nothing(path, owner):
     assert read_private(path, owner.private) == []
 
 
@@ -83,19 +83,19 @@ def test_it_survives_a_login_and_a_password_change(path, owner):
 def test_nobody_elses_key_opens_it(path, owner):
     write_private(path, owner.private, [b"secret"])
     bert = unlock(path, *BERT)
-    from claudia_document_file.slots import PrivateDomain
+    from claudia_document_file.slots import PrivateNotesKey
 
     with pytest.raises(TamperedDocument):
-        read_private(path, PrivateDomain(owner.private.id, bert.private.key))
+        read_private(path, PrivateNotesKey(owner.private.id, bert.private.key))
     with pytest.raises(TamperedDocument):
-        read_private(path, PrivateDomain(bert.private.id, owner.private.key))
+        read_private(path, PrivateNotesKey(bert.private.id, owner.private.key))
 
 
-def test_a_domain_the_file_does_not_have_does_not_open(path, owner):
+def test_private_notes_the_file_does_not_have_do_not_open(path, owner):
     with pytest.raises(TamperedDocument, match="not in the file"):
-        read_private(path, new_private_domain())
+        read_private(path, new_private_notes_key())
     with pytest.raises(TamperedDocument):
-        write_private(path, new_private_domain(), [b"x"])
+        write_private(path, new_private_notes_key(), [b"x"])
 
 
 def test_a_block_that_was_removed_or_added_is_noticed(path, owner):
@@ -116,7 +116,7 @@ def test_a_block_that_was_removed_or_added_is_noticed(path, owner):
                 z.writestr(n, d, compress_type=zipfile.ZIP_STORED)
 
 
-def test_the_recovery_key_does_not_open_a_domain_and_gives_a_new_one(path, owner, recovery):
+def test_the_recovery_key_does_not_open_private_notes_and_gives_new_ones(path, owner, recovery):
     write_private(path, owner.private, [b"annas notes"])
     old_files = folder(owner.private)
     assert old_files <= names(path)
@@ -128,21 +128,21 @@ def test_the_recovery_key_does_not_open_a_domain_and_gives_a_new_one(path, owner
     assert renewed.private_key != owner.private_key
 
 
-def test_a_person_who_leaves_takes_her_domain_with_her(path, owner):
+def test_a_person_who_leaves_takes_her_private_notes_with_her(path, owner):
     bert = unlock(path, *BERT)
     write_private(path, bert.private, [b"bert's note"])
     assert leave_document(path, *BERT)
     assert not any(n.startswith(f"private/{bert.private.id}/") for n in names(path))
 
 
-def test_a_plain_removal_deletes_the_domain_too(path, owner):
+def test_a_plain_removal_deletes_the_private_notes_too(path, owner):
     cora = unlock(path, *CORA)
     remove_user(path, owner.keys, CORA[0])
     assert not any(n.startswith(f"private/{cora.private.id}/") for n in names(path))
     assert any(n.startswith(f"private/{owner.private.id}/") for n in names(path))
 
 
-def test_a_handover_of_ownership_keeps_both_domains(path, owner):
+def test_a_handover_of_ownership_keeps_both_peoples_private_notes(path, owner):
     bert = unlock(path, *BERT)
     write_private(path, bert.private, [b"b"])
     write_private(path, owner.private, [b"a"])

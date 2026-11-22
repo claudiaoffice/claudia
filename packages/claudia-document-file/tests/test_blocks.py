@@ -15,18 +15,18 @@ from claudia_document_file.blocks import (
     seal_head,
 )
 from claudia_document_file.crypto import random_key, seal
-from claudia_document_file.slots import Domain
+from claudia_document_file.slots import Part
 
 KEY = random_key()
 PAYLOADS = [b'{"t":"entry","d":{"rev":"main:1"}}', b'{"t":"entry","d":{"rev":"main:2"}}', b""]
 
 
-def sealed(payloads=PAYLOADS, *, doc="plan", domain=Domain.HISTORY, number=1, previous=GENESIS, key=KEY):
-    return seal_block(key, Place(doc, domain, number, previous), payloads)
+def sealed(payloads=PAYLOADS, *, doc="plan", stream=Part.HISTORY, number=1, previous=GENESIS, key=KEY):
+    return seal_block(key, Place(doc, stream, number, previous), payloads)
 
 
-def opened(data, *, doc="plan", domain=Domain.HISTORY, number=1, previous=GENESIS, key=KEY):
-    return open_block(key, Place(doc, domain, number, previous), data)
+def opened(data, *, doc="plan", stream=Part.HISTORY, number=1, previous=GENESIS, key=KEY):
+    return open_block(key, Place(doc, stream, number, previous), data)
 
 
 def test_a_block_gives_back_what_went_in_in_the_same_order():
@@ -56,11 +56,11 @@ def test_the_hash_of_a_block_is_32_bytes_and_depends_on_every_byte():
     [
         {"key": random_key()},
         {"doc": "other"},
-        {"domain": Domain.CHAT},
+        {"stream": Part.CHAT},
         {"number": 2},
         {"previous": bytes([1]) * 32},
     ],
-    ids=["key", "document", "domain", "number", "previous block"],
+    ids=["key", "document", "stream", "number", "previous block"],
 )
 def test_a_block_opens_only_in_its_own_place(wrong):
     with pytest.raises(BlockError):
@@ -87,7 +87,7 @@ def test_a_block_cannot_claim_to_be_enormous():
     from claudia_document_file.blocks import _aad
 
     bomb = zlib.compress(b"\0" * (80 * 1024 * 1024))  # authentic (sealed with the right key and place), but huge
-    data = seal(KEY, bomb, _aad(Place("plan", Domain.HISTORY, 1, GENESIS)))
+    data = seal(KEY, bomb, _aad(Place("plan", Part.HISTORY, 1, GENESIS)))
     with pytest.raises(BlockError, match="large"):
         opened(data)
 

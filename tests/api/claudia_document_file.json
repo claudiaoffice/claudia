@@ -34,14 +34,6 @@
   "methods": {},
   "properties": []
  },
- "Domain": {
-  "class": [
-   "StrEnum"
-  ],
-  "init": "(*values)",
-  "methods": {},
-  "properties": []
- },
  "ExportFile": {
   "class": [
    "object"
@@ -81,7 +73,7 @@
   "class": [
    "object"
   ],
-  "init": "(seq: int, domain: claudia_document_file.slots.Domain, payload: bytes) -> None",
+  "init": "(seq: int, part: claudia_document_file.slots.Part, payload: bytes) -> None",
   "methods": {},
   "properties": []
  },
@@ -89,13 +81,13 @@
   "class": [
    "object"
   ],
-  "init": "(handle: <class 'BinaryIO'>, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], generation: int, last_seq: int) -> None",
+  "init": "(handle: <class 'BinaryIO'>, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], generation: int, last_seq: int) -> None",
   "methods": {
-   "append": "(self, domain: claudia_document_file.slots.Domain, payload: bytes) -> int",
+   "append": "(self, part: claudia_document_file.slots.Part, payload: bytes) -> int",
    "close": "(self) -> None",
-   "create": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], generation: int = 0) -> Self",
-   "open": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> Self",
-   "replace": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], generation: int) -> Self"
+   "create": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], generation: int = 0) -> Self",
+   "open": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> Self",
+   "replace": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], generation: int) -> Self"
   },
   "properties": [
    "generation"
@@ -181,6 +173,14 @@
   "methods": {},
   "properties": []
  },
+ "Part": {
+  "class": [
+   "StrEnum"
+  ],
+  "init": "(*values)",
+  "methods": {},
+  "properties": []
+ },
  "Person": {
   "class": [
    "object"
@@ -189,7 +189,7 @@
   "methods": {},
   "properties": []
  },
- "PrivateDomain": {
+ "PrivateNotesKey": {
   "class": [
    "object"
   ],
@@ -197,7 +197,7 @@
   "methods": {},
   "properties": []
  },
- "ROLE_DOMAINS": {
+ "ROLE_PARTS": {
   "value": "<mappingproxy>"
  },
  "ReaderLimitExceeded": {
@@ -212,7 +212,7 @@
   "class": [
    "DocumentFileError"
   ],
-  "init": "(message: str, keys: dict[claudia_document_file.slots.Domain, bytes]) -> None",
+  "init": "(message: str, keys: dict[claudia_document_file.slots.Part, bytes]) -> None",
   "methods": {},
   "properties": []
  },
@@ -220,7 +220,7 @@
   "class": [
    "object"
   ],
-  "init": "(keys: dict[claudia_document_file.slots.Domain, bytes], writer: claudia_document_file.journal.JournalWriter, renewed: frozenset[claudia_document_file.slots.Domain]) -> None",
+  "init": "(keys: dict[claudia_document_file.slots.Part, bytes], writer: claudia_document_file.journal.JournalWriter, renewed: frozenset[claudia_document_file.slots.Part]) -> None",
   "methods": {},
   "properties": []
  },
@@ -252,7 +252,7 @@
   "class": [
    "object"
   ],
-  "init": "(name: str, role: claudia_document_file.slots.Role, keys: dict[claudia_document_file.slots.Domain, bytes], private_key: bytes | None = None, private: claudia_document_file.slots.PrivateDomain | None = None) -> None",
+  "init": "(name: str, role: claudia_document_file.slots.Role, keys: dict[claudia_document_file.slots.Part, bytes], private_key: bytes | None = None, private: claudia_document_file.slots.PrivateNotesKey | None = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -273,10 +273,10 @@
   "properties": []
  },
  "add_user": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], name: str, password: str, role: claudia_document_file.slots.Role) -> claudia_document_file.file.Person"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], name: str, password: str, role: claudia_document_file.slots.Role) -> claudia_document_file.file.Person"
  },
  "begin": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> claudia_document_file.journal.JournalWriter"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> claudia_document_file.journal.JournalWriter"
  },
  "calibrate": {
   "function": "(target_seconds: float = 0.75, *, max_memory_kib: int = 262144, floor: claudia_document_file.crypto.KdfParams | None = None, measure: collections.abc.Callable[[claudia_document_file.crypto.KdfParams], float] = <function measure_once>) -> claudia_document_file.crypto.KdfParams"
@@ -285,7 +285,7 @@
   "function": "(path: pathlib.Path, name: str, old_password: str, new_password: str) -> bool"
  },
  "change_role": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], writer: claudia_document_file.journal.JournalWriter, name: str, role: claudia_document_file.slots.Role, *, snapshot: bytes | None = None) -> claudia_document_file.renewal.Renewed"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], writer: claudia_document_file.journal.JournalWriter, name: str, role: claudia_document_file.slots.Role, *, snapshot: bytes | None = None) -> claudia_document_file.renewal.Renewed"
  },
  "clean_details": {
   "function": "(description: str, tags: collections.abc.Sequence[str]) -> tuple[str, tuple[str, ...]]"
@@ -300,13 +300,13 @@
   "function": "(recovery_key: bytes) -> claudia_document_file.crypto.LoginMaterial"
  },
  "forget_original": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> None"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> None"
  },
  "format_recovery_key": {
   "function": "(key: bytes) -> str"
  },
  "has_recovery_key": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> bool"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> bool"
  },
  "is_export": {
   "function": "(data: 'bytes') -> 'bool'"
@@ -324,16 +324,16 @@
   "function": "(path: pathlib.Path, name: str, password: str) -> bool"
  },
  "make_slot": {
-  "function": "(material: claudia_document_file.crypto.LoginMaterial, doc_id: str, name: str, role: claudia_document_file.slots.Role, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], *, private_key: bytes | None = None, private: claudia_document_file.slots.PrivateDomain | None = None) -> claudia_document_file.slots.KeySlot"
- },
- "new_domain_keys": {
-  "function": "() -> dict[claudia_document_file.slots.Domain, bytes]"
+  "function": "(material: claudia_document_file.crypto.LoginMaterial, doc_id: str, name: str, role: claudia_document_file.slots.Role, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], *, private_key: bytes | None = None, private: claudia_document_file.slots.PrivateNotesKey | None = None) -> claudia_document_file.slots.KeySlot"
  },
  "new_key_pair": {
   "function": "() -> claudia_document_file.inbox.KeyPair"
  },
- "new_private_domain": {
-  "function": "() -> claudia_document_file.slots.PrivateDomain"
+ "new_part_keys": {
+  "function": "() -> dict[claudia_document_file.slots.Part, bytes]"
+ },
+ "new_private_notes_key": {
+  "function": "() -> claudia_document_file.slots.PrivateNotesKey"
  },
  "new_recovery_key": {
   "function": "() -> bytes"
@@ -351,7 +351,7 @@
   "function": "(slots: collections.abc.Sequence[claudia_document_file.slots.KeySlot], material: claudia_document_file.crypto.LoginMaterial, doc_id: str) -> claudia_document_file.slots.Unlocked | None"
  },
  "pack_journal": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], writer: claudia_document_file.journal.JournalWriter, snapshot: bytes | None = None) -> claudia_document_file.journal.JournalWriter"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], writer: claudia_document_file.journal.JournalWriter, snapshot: bytes | None = None) -> claudia_document_file.journal.JournalWriter"
  },
  "parse_recovery_key": {
   "function": "(text: str) -> bytes"
@@ -363,49 +363,49 @@
   "function": "() -> bytes"
  },
  "read_audit": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> list[claudia_document_file.audit.AuditRecord]"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> list[claudia_document_file.audit.AuditRecord]"
  },
  "read_export": {
   "function": "(data: 'bytes') -> 'ExportFile'"
  },
  "read_journal": {
-  "function": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> list[claudia_document_file.journal.JournalRecord]"
+  "function": "(path: pathlib.Path, doc_id: str, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> list[claudia_document_file.journal.JournalRecord]"
  },
  "read_manifest": {
   "function": "(path: pathlib.Path) -> claudia_document_file.file.Manifest"
  },
  "read_original": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> bytes | None"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> bytes | None"
  },
  "read_people": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> list[claudia_document_file.file.Person]"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> list[claudia_document_file.file.Person]"
  },
  "read_private": {
-  "function": "(path: pathlib.Path, private: claudia_document_file.slots.PrivateDomain) -> list[bytes]"
+  "function": "(path: pathlib.Path, private: claudia_document_file.slots.PrivateNotesKey) -> list[bytes]"
  },
  "read_snapshot": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> bytes | None"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> bytes | None"
  },
  "read_state": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes]) -> claudia_document_file.file.State"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes]) -> claudia_document_file.file.State"
  },
  "record_audit": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], record: claudia_document_file.audit.AuditRecord) -> None"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], record: claudia_document_file.audit.AuditRecord) -> None"
  },
  "recover_access": {
   "function": "(path: pathlib.Path, recovery_key: bytes, name: str, new_password: str) -> claudia_document_file.file.Person | None"
  },
  "remove_person": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], writer: claudia_document_file.journal.JournalWriter, name: str, *, snapshot: bytes | None = None) -> claudia_document_file.renewal.Renewed"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], writer: claudia_document_file.journal.JournalWriter, name: str, *, snapshot: bytes | None = None) -> claudia_document_file.renewal.Renewed"
  },
  "remove_user": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], name: str, *, allow_last: bool = False) -> None"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], name: str, *, allow_last: bool = False) -> None"
  },
  "require_strong_password": {
   "function": "(password: str) -> None"
  },
  "rewrite_journal": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], writer: claudia_document_file.journal.JournalWriter, *, history: collections.abc.Sequence[bytes], chat: collections.abc.Sequence[bytes], snapshot: bytes | None = None) -> claudia_document_file.journal.JournalWriter"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], writer: claudia_document_file.journal.JournalWriter, *, history: collections.abc.Sequence[bytes], chat: collections.abc.Sequence[bytes], snapshot: bytes | None = None) -> claudia_document_file.journal.JournalWriter"
  },
  "seal": {
   "function": "(key: bytes, plaintext: bytes, aad: bytes) -> bytes"
@@ -417,10 +417,10 @@
   "function": "(path: pathlib.Path, name: str, password: str) -> bytes | None"
  },
  "set_details": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], description: str, tags: collections.abc.Sequence[str]) -> None"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], description: str, tags: collections.abc.Sequence[str]) -> None"
  },
  "set_recovery_key": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], recovery_key: bytes) -> None"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], recovery_key: bytes) -> None"
  },
  "transfer_owner": {
   "function": "(path: pathlib.Path, *, old_owner: str, old_owner_password: str, new_owner: str, new_owner_password: str) -> bool"
@@ -441,9 +441,9 @@
   "function": "(app: 'str', state_schema: 'int', state: 'dict', *, exporter: 'str', exported_at: 'str', history: 'list[bytes] | None' = None, chat: 'list[bytes] | None' = None) -> 'bytes'"
  },
  "write_original": {
-  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Domain, bytes], data: bytes) -> None"
+  "function": "(path: pathlib.Path, keys: collections.abc.Mapping[claudia_document_file.slots.Part, bytes], data: bytes) -> None"
  },
  "write_private": {
-  "function": "(path: pathlib.Path, private: claudia_document_file.slots.PrivateDomain, payloads: collections.abc.Sequence[bytes]) -> None"
+  "function": "(path: pathlib.Path, private: claudia_document_file.slots.PrivateNotesKey, payloads: collections.abc.Sequence[bytes]) -> None"
  }
 }

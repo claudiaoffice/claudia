@@ -28,6 +28,11 @@ updates:
     schedule: { interval: weekly, day: monday }
     groups:
       neutralino: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /penpot/generator
+    schedule: { interval: weekly, day: monday }
+    groups:
+      penpot: { patterns: ["*"] }
   - package-ecosystem: docker
     directory: /
     schedule: { interval: weekly, day: monday }

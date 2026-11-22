@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (78)
+### Open (85)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -53,6 +53,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-22 | P2 | UX | The history speaks three dialects: one per app | **new, open** |  |  |
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
+| UX-68 | P2 | UX / computes | A sheet or a chart tab (after E6.31: a slide) cannot be deleted: nothing in the menus or the tab strip reaches `RemoveSheet` or `remove_chart` | **new, open** (read; size 2) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -126,7 +127,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (143)
+### Fixed (145)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -271,6 +272,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-43 | P2 | Process / E2E | The job "End to end (Chromium)" was red from 2026-11-17: each first failure hid the next, and four lines of `objects.cjs` were stale (proportions of a free rectangle, the name of a table's menu, "Edit text" for a picture in creates, a race on the history entry of Delete) | **fixed** 2026-11-21 (the script follows the contract; it ran six times in a row; size 2) | 2026-11-21 | 2026-11-21 |
 | PROC-44 | P3 | Process / CI | Two timing flakes on shared runners: `test_the_anchor_is_shown_when_the_object_is_selected` (setup clicked before the layout settled; fixed with `settled_box`) and `test_calculating_a_long_chain_is_linear` (one run 44x instead of ~10x, green on rerun; **open**, the retry in the test is too thin) | anchor spec **fixed** 2026-11-21; perf test **open** (size 3) | 2026-11-21 | |
 | PROC-45 | P2 | Process / CI | The Linux client's end-to-end test still looked for `[data-block]` after the paragraph rename of E1.18 made it `data-paragraph`, so the job "Linux client" was red on `main` | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
+| PROC-49 | P2 | Process / CI | The Penpot generator on `main` made the Python jobs red: its `package-lock.json` was neither audited nor watched by dependabot, and `tools/transplant.py` failed ruff | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2489,7 +2491,7 @@ in a signature (`nitpicky`), and `T` and the module's own protocol `Asset` are n
 **measured** on the branch before any change of the slice. **Fixed.** Both are ignored in `docs/conf.py`, as the type
 parameters `M` and `A` already are. Escaped because: test passed but wrong (the gate was run before that last commit).
 
-## Round of 2026-11-22 (CI of `main` after merging `architecture-improvements`)
+## Round of 2026-11-22 (CI of `main` after merging `architecture-improvements`; the E6.31 mockups)
 
 ### PROC-45 · The Linux client's end-to-end test looked for the old paragraph attribute · P2 · size 3 · fixed 2026-11-22
 **Found** in the CI of `main` after `architecture-improvements` was merged (run 45011761530): the job "Linux client
@@ -2499,6 +2501,27 @@ paragraph carries in the page from `data-block` to `data-paragraph`; the test's 
 found nothing and never typed. Evidence: **measured**, red locally on `main` and green after the fix (713 passed, 6
 skipped). **Fixed.** The selector names `[data-paragraph]`. Escaped because: test not run (the slice's gate does not run
 the GTK client's tests, and GTK 4 and WebKitGTK were not installed in the agent's environment; they are now, as in CI).
+
+### PROC-49 · The Penpot generator made the Python jobs red · P2 · size 3 · fixed 2026-11-22
+**Found** in the CI of `main` (runs 45029955355 and 45031675372, the three Python jobs): "Design files, first setup"
+brought `penpot/generator` with an npm lockfile and Python tools. `test_no_package_lock_in_the_repository_escapes_the_audit`
+and `test_every_lockfile_is_watched_by_dependabot` failed (the lockfile was in neither list), and ruff and ruff format
+failed on `tools/transplant.py`, which also ran `zip` through the shell with an unquoted path. Evidence: **measured**
+(the CI logs, then the same failures locally). **Fixed.** `scripts/check_npm_audit.py` audits the generator's lockfile
+(no advisory at moderate or above), `.github/dependabot.yml` watches it, and `transplant.py` is clean and calls `zip`
+without a shell (checked on a real file, an output path with a space). The number skips PROC-46 to PROC-48, which the
+range of `e2e-guard` names. Escaped because: test not run (the gate was not run before the design files were pushed).
+
+### UX-68 · A sheet or a chart tab cannot be deleted in computes · P2 · size 2 · new, open
+**Found** while drawing the mockups of E6.31 (slides in computes): the tab strip (`web/app/components/FooterBar.vue`)
+renames a tab on double-click and does nothing else, and no menu entry deletes a sheet or a chart tab. The model can
+(`RemoveSheet`, which refuses to orphan a chart that reads the sheet) and so can the server (`remove_chart`), but no
+client calls either. A person who added a sheet by mistake keeps it. Evidence: **read** (the web client, the GTK
+manifest and the web menus searched for `removeSheet`, `remove_sheet`, `removeChart`, "Delete"). After E6.31 the same
+holds for a slide, except that a slide goes by itself with its last object (owner, Q20 of the chart session).
+**Acceptance:** a person deletes the sheet she is on (with a question first when it holds cells or objects, and one undo
+step), and is told why when a chart still reads it. The menu entry and its key wait for the menu rework against
+`notes/claudia-menus.xlsx` (owner, 2026-11-22).
 
 ## Round of 2026-11-22 (Penpot file of the Styles dialog and the Search & replace dialog, branch `penpot`)
 

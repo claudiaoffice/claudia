@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800"><defs><filter id="sh" x="-20%" y="-20%" width="140%" height="155%"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="7" result="b"/><feComponentTransfer><feFuncA type="linear" slope="0.28"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#F7F3EC"/>
+<rect x="0" y="0" width="1280" height="50" rx="0" fill="#FFFFFF"/>
+<text x="16" y="32" font-family="Georgia, serif" font-size="22" fill="#1F1A33" font-weight="400" text-anchor="start">claudia</text>
+<line x1="100" y1="14" x2="100" y2="38" stroke="#E3DED5" stroke-width="1"/>
+<rect x="116" y="14" width="22" height="22" rx="5" fill="#13917F"/>
+<text x="146" y="30" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="400" text-anchor="start">computes</text>
+<text x="236" y="31" font-family="Georgia, serif" font-size="18" fill="#1F1A33" font-weight="500" text-anchor="start">sales-2027</text>
+<circle cx="1052" cy="25" r="11" fill="#D6477A"/>
+<text x="1052" y="29" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">A</text>
+<circle cx="1074" cy="25" r="11" fill="#5B4BC4"/>
+<text x="1074" y="29" font-family="Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">ai</text>
+<rect x="1124" y="10" width="140" height="30" rx="15" fill="#E9E5F7"/>
+<text x="1194" y="30" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="middle">History &amp; chat</text>
+<line x1="0" y1="50" x2="1280" y2="50" stroke="#E3DED5" stroke-width="1"/>
+<rect x="0" y="51" width="1280" height="32" rx="0" fill="#FFFFFF"/>
+<text x="18" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">File</text>
+<text x="72" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Edit</text>
+<text x="126" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Insert</text>
+<text x="196" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Format</text>
+<text x="266" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">View</text>
+<text x="320" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Tools</text>
+<text x="382" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Config</text>
+<text x="452" y="72" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="start">Help</text>
+<line x1="0" y1="83" x2="1280" y2="83" stroke="#E3DED5" stroke-width="1"/>
+<rect x="0" y="84" width="1280" height="42" rx="0" fill="#FFFFFF"/>
+<rect x="10" y="92" width="96" height="28" rx="6" fill="#FAF8F4" stroke="#E3DED5" stroke-width="1"/>
+<text x="58" y="111" font-family="JetBrains Mono, Menlo, monospace" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="middle">A1:B4</text>
+<text x="212" y="111" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#13917F" font-weight="400" text-anchor="middle">=</text>
+<text x="238" y="111" font-family="JetBrains Mono, Menlo, monospace" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Region</text>
+<line x1="0" y1="126" x2="1280" y2="126" stroke="#E3DED5" stroke-width="1"/>
+<rect x="980" y="127" width="300" height="637" rx="0" fill="#211C38"/>
+<text x="994" y="152" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#B9B3D0" font-weight="400" text-anchor="start">When I ask the AI, in this document:</text>
+<rect x="994" y="162" width="272" height="28" rx="6" fill="none" stroke="#4A4466" stroke-width="1"/>
+<rect x="1130.0" y="162" width="136.0" height="28" rx="6" fill="#5B4BC4"/>
+<text x="1062.0" y="181" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#FFFFFF" font-weight="400" text-anchor="middle">Act at once</text>
+<text x="1198.0" y="181" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">Suggest first</text>
+<text x="994" y="232" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#B9B3D0" font-weight="400" text-anchor="start">HISTORY</text>
+<text x="994" y="540" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#B9B3D0" font-weight="400" text-anchor="start">CHAT</text>
+<rect x="0" y="127" width="980" height="637" rx="0" fill="#FFFFFF"/>
+<rect x="0" y="127" width="1280" height="637" rx="0" fill="#1F1A33" opacity="0.28"/>
+<g filter="url(#sh)">
+<rect x="420" y="140" width="520" height="600" rx="14" fill="#FFFFFF"/>
+</g>
+<text x="446" y="184" font-family="Georgia, serif" font-size="24" fill="#1F1A33" font-weight="500" text-anchor="start">Insert chart</text>
+<text x="446" y="220" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Chart</text>
+<rect x="446" y="230" width="44.5" height="26" rx="13" fill="#FFFFFF" stroke="#13917F" stroke-width="1.6"/>
+<text x="457" y="248" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#1F1A33" font-weight="400" text-anchor="start">Bar</text>
+<rect x="506" y="230" width="104.5" height="26" rx="13" fill="#FFFFFF" stroke="#B9B3A8" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="517" y="248" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start">Line · soon</text>
+<rect x="622" y="230" width="127.0" height="26" rx="13" fill="#FFFFFF" stroke="#B9B3A8" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="633" y="248" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start">Scatter · soon</text>
+<text x="446" y="286" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Data from</text>
+<rect x="446" y="294" width="468" height="28" rx="6" fill="#FFFFFF" stroke="#13917F" stroke-width="1"/>
+<text x="474" y="313" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start">Pick cells instead…  the selection, as it is now</text>
+<text x="446" y="352" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Show as</text>
+<circle cx="456" cy="372" r="6" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.4"/>
+<circle cx="456" cy="372" r="3.2" fill="#5B4BC4"/>
+<text x="472" y="377" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start">A slide</text>
+<circle cx="456" cy="398" r="6" fill="#FFFFFF" stroke="#8E889E" stroke-width="1.4"/>
+<text x="472" y="403" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">A floating object on the sheet</text>
+<text x="446" y="440" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Name (the slide it opens as)</text>
+<rect x="446" y="450" width="468" height="36" rx="7" fill="#FFFFFF" stroke="#CFC9BF" stroke-width="1"/>
+<text x="458" y="473" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="400" text-anchor="start">Sales chart</text>
+<text x="446" y="512" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Series are in: (•) Columns, ( ) Rows</text>
+<text x="710" y="512" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">☑ First row is a header</text>
+<text x="446" y="544" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Title (optional)</text>
+<rect x="446" y="554" width="468" height="36" rx="7" fill="#FFFFFF" stroke="#CFC9BF" stroke-width="1"/>
+<text x="458" y="577" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#1F1A33" font-weight="400" text-anchor="start">Sales by region</text>
+<text x="446" y="620" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start">X axis: Region</text>
+<text x="576" y="620" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start">Y axis: Amount</text>
+<text x="716" y="620" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start">☑ Legend</text>
+<text x="806" y="620" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#6B6580" font-weight="400" text-anchor="start">☑ Gridlines</text>
+<rect x="446" y="680" width="72" height="32" rx="16" fill="#1F1A33"/>
+<text x="482" y="701" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#FFFFFF" font-weight="500" text-anchor="middle">Insert</text>
+<rect x="528" y="680" width="80" height="32" rx="16" fill="#FFFFFF" stroke="#8E889E" stroke-width="1"/>
+<text x="568" y="701" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="400" text-anchor="middle">Cancel</text>
+<rect x="60" y="260" width="320" height="82" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
+<circle cx="60" cy="260" r="10" fill="#E0B84A"/>
+<text x="60" y="264" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">1</text>
+<text x="74" y="282" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">"A tab" becomes "A slide", still the</text>
+<text x="74" y="299" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">default: Insert makes a slide named</text>
+<text x="74" y="316" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">like the field, after the current tab,</text>
+<text x="74" y="333" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">with the chart filling its frame.</text>
+<rect x="60" y="380" width="320" height="48" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
+<circle cx="60" cy="380" r="10" fill="#E0B84A"/>
+<text x="60" y="384" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">2</text>
+<text x="74" y="402" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">The rest of the dialog is as today</text>
+<text x="74" y="419" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">(E6.6): kind, data, series, titles.</text>
+<rect x="60" y="460" width="320" height="82" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
+<circle cx="60" cy="460" r="10" fill="#E0B84A"/>
+<text x="60" y="464" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">3</text>
+<text x="74" y="482" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">Menus and keys stay as they are today</text>
+<text x="74" y="499" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">(Edit ▸ Chart…, Ctrl+Alt+C); the menu</text>
+<text x="74" y="516" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">rework against claudia-menus.xlsx</text>
+<text x="74" y="533" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">comes later (owner, 2026-11-22).</text>
+<rect x="0" y="764" width="1280" height="36" rx="0" fill="#FFFFFF"/>
+<line x1="0" y1="764" x2="1280" y2="764" stroke="#E3DED5" stroke-width="1"/>
+<rect x="14" y="768" width="72" height="28" rx="4" fill="#E3F2EF"/>
+<line x1="14" y1="796" x2="86" y2="796" stroke="#13917F" stroke-width="2"/>
+<text x="26" y="786" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" fill="#1F1A33" font-weight="500" text-anchor="start">Sheet1</text>
+<text x="102" y="787" font-family="Inter, Helvetica, Arial, sans-serif" font-size="16" fill="#6B6580" font-weight="400" text-anchor="start">+</text>
+<text x="1266" y="787" font-family="JetBrains Mono, Menlo, monospace" font-size="12" fill="#6B6580" font-weight="400" text-anchor="end">Sum 490  main:9</text>
+</svg>

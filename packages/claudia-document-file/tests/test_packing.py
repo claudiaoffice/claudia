@@ -29,7 +29,7 @@ from claudia_document_file.file import (
     unlock,
 )
 from claudia_document_file.journal import JournalWriter, read_journal
-from claudia_document_file.slots import Domain, Role
+from claudia_document_file.slots import Part, Role
 
 CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 OWNER_PW, ED_PW, VIEW_PW = "Correct-Horse-9", "Battery-Staple-7", "Purple-Monkey-5"
@@ -59,9 +59,9 @@ def writer(path, owner):
 
 def put(writer, history=(), chat=()):
     for payload in history:
-        writer.append(Domain.HISTORY, payload)
+        writer.append(Part.HISTORY, payload)
     for payload in chat:
-        writer.append(Domain.CHAT, payload)
+        writer.append(Part.CHAT, payload)
 
 
 def entries(path):
@@ -105,7 +105,7 @@ def test_begin_continues_an_existing_journal_and_repairs_a_cut_off_record(path, 
     journal.write_bytes(journal.read_bytes()[:-5])  # the power went out while the last record was written
     again = begin(path, owner.keys)
     assert read_state(path, owner.keys).history == H[:2]
-    again.append(Domain.HISTORY, b"after the crash")
+    again.append(Part.HISTORY, b"after the crash")
     assert read_state(path, owner.keys).history == [*H[:2], b"after the crash"]
     again.close()
 
@@ -316,7 +316,7 @@ def test_a_viewer_holds_no_key_for_history_or_chat(path, owner, writer):
     pack_journal(path, owner.keys, writer, snapshot=b"the state").close()
     viewer = unlock(path, "Cornelia", VIEW_PW)
     editor = unlock(path, "Bertram", ED_PW)
-    assert set(viewer.keys) == {Domain.CONTENT}
+    assert set(viewer.keys) == {Part.CONTENT}
     with pytest.raises(PermissionError):
         read_state(path, viewer.keys)
     assert read_state(path, editor.keys).history == H
@@ -382,7 +382,7 @@ def test_a_journal_can_be_replaced_by_the_next_generation_atomically(tmp_path, o
 
     target = tmp_path / "x.journal"
     first = JournalWriter.create(target, "plan", owner.keys)
-    first.append(Domain.HISTORY, b"old")
+    first.append(Part.HISTORY, b"old")
     first.close()
     assert journal_generation(target) == 0
     second = JournalWriter.replace(target, "plan", owner.keys, generation=1)
@@ -390,7 +390,7 @@ def test_a_journal_can_be_replaced_by_the_next_generation_atomically(tmp_path, o
     assert read_journal(target, "plan", owner.keys) == []
     if sys.platform != "win32":  # Windows has no POSIX permission bits to check
         assert target.stat().st_mode & 0o777 == 0o600
-    second.append(Domain.HISTORY, b"new")
+    second.append(Part.HISTORY, b"new")
     second.close()
     assert [r.payload for r in read_journal(target, "plan", owner.keys)] == [b"new"]
     assert sorted(p.name for p in tmp_path.iterdir() if p.name.startswith(("x", "."))) == ["x.journal"]

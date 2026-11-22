@@ -61,7 +61,7 @@ Done since (2026-11-21, second session; the names around each slice were agreed 
   the module as `document_file` (`test_file.py` has a local `file`).
 
 Waiting: **chart** (the owner wants to think about it more, D1433). Left out by the owner for now: proposal, ai and
-their UI strings. Not in D1430 and not done: `Domain` (the glossary's Part).
+their UI strings. Not in D1430 and not done: `Domain` (the glossary's Part; done later, D1434).
 
 How the slices were done, for the next ones: a script with exact patterns, limited to the packages where the word has the
 meaning, with a guard for lines in another sense; then a check, per function, that no two names became one (Python:
