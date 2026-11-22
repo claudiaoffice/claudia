@@ -24,7 +24,8 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from claudia_ai import ModelError, ModelRunner, OpenVinoModel
+from claudia_ai import ClaudeModel, FailureReason, ModelError, ModelRunner, OpenVinoModel, ProviderError
+from claudia_ai.claude import DEFAULT_BASE_URL
 from claudia_core import DocumentModel
 from claudia_core.clock import utc_now
 from claudia_typeset.programs import EngineUnavailable, resolve_program
@@ -38,7 +39,16 @@ from .assistant import Assistant
 from .fonts import FontService
 from .kdf_policy import KdfPolicy, check_target
 from .login_throttle import LoginThrottle
-from .server_settings import AiSettings, ServerSettings, TypesetSettings, save_admins, save_settings
+from .server_settings import (
+    PROVIDERS,
+    AiSettings,
+    Changed,
+    ClaudeSettings,
+    ServerSettings,
+    TypesetSettings,
+    save_admins,
+    save_settings,
+)
 from .setup_code import SetupCode, remove_code
 from .suite import Suite
 
@@ -63,6 +73,18 @@ def any_lens(models: Iterable[type[DocumentModel]], runner: ModelRunner) -> bool
     return any(model_assistant_for(model, runner) is not None for model in models)
 
 
+class AiRefused(ValueError):
+    """Anthropic did not accept what the administrator applied; ``reason`` says why (it is on the page, E7.11)."""
+
+    def __init__(self, reason: FailureReason, sentence: str):
+        super().__init__(sentence)
+        self.reason = reason
+
+
+APPROVAL_SENTENCE = "Document content is sent to Anthropic when someone asks @ai."
+TEST_QUESTION = [{"role": "user", "content": "Answer with the single word: ok."}]
+
+
 @dataclass
 class AiRuntime:
     """Where the admin API finds, and changes, the AI user's language model while the server runs.
@@ -75,6 +97,31 @@ class AiRuntime:
     models: tuple[type[DocumentModel], ...]
     enabled: bool
     runner: ModelRunner | None = None
+    anthropic_key: str | None = None
+    """A provider key the operator gave (``ANTHROPIC_API_KEY``, ``--anthropic-key-file``): it wins over the saved one
+    (D154), and the settings page cannot change or remove it."""
+    anthropic_url: str | None = None
+    """Where Anthropic is, for tests and a proxy: never a field of a page, which would send the key to any address."""
+
+    def key_in_use(self, settings: AiSettings) -> str | None:
+        """The provider key that is used: the operator's, else the saved one."""
+        return self.anthropic_key or settings.claude.key
+
+    def claude_model(self, settings: AiSettings) -> ClaudeModel:
+        """Claude, as ``settings`` describe it. ``ValueError`` if there is no key."""
+        key = self.key_in_use(settings)
+        if key is None:
+            raise ValueError("Claude needs a provider key.")
+        return ClaudeModel(key, settings.claude.model, base_url=self.anthropic_url or DEFAULT_BASE_URL)
+
+    async def _test_claude(self, settings: AiSettings) -> None:
+        """Ask Claude one question, so that a wrong key or model is found where the administrator is looking."""
+        model = self.claude_model(settings)
+        try:
+            await asyncio.to_thread(model.generate, TEST_QUESTION, max_new_tokens=8, stop=lambda: False)
+        except ProviderError as error:
+            sentence = error.reason.admin_sentence(model=settings.claude.model, seconds=30, detail=error.detail)
+            raise AiRefused(error.reason, sentence) from error
 
     async def apply(self, suite: Suite, settings: AiSettings) -> None:
         """Make ``settings`` the AI user's configuration in every app of ``suite``, from now on: later-opened
@@ -87,7 +134,10 @@ class AiRuntime:
         if not self.enabled:
             raise ValueError("the AI assistant is disabled for this server (it was started with --no-assistant)")
         old_runner = self.runner
-        runner = None if settings.model_dir is None else await self._load(settings.model_dir, settings)
+        if settings.provider == "claude":
+            await self._test_claude(settings)
+        local = settings.model_dir if settings.provider == "local" else None
+        runner = None if local is None else await self._load(local, settings)
         for app, factory in assistants_for(self.models, runner).items():
             module = suite.module(app)
             if module is not None:
@@ -339,7 +389,14 @@ def settings_view(context: AdminContext) -> dict:
     costs for new documents now (``None`` for a server with no sealed documents)."""
     kdf = context.kdf.describe() if context.kdf is not None else None
     diagnosis = _diagnose_typeset(context.settings.typeset)
-    return {**context.settings.to_public_dict(), "typeset_diagnosis": diagnosis, "kdf": kdf}
+    view = context.settings.to_public_dict()
+    key = context.ai.key_in_use(context.settings.ai)
+    view["ai"]["claude"] |= {
+        "key_set": key is not None,
+        "key_tail": key[-4:] if key else None,
+        "key_from_operator": context.ai.anthropic_key is not None,
+    }
+    return {**view, "typeset_diagnosis": diagnosis, "kdf": kdf}
 
 
 def _settings_routes(
@@ -404,14 +461,11 @@ def _settings_routes(
 
     @router.put("/settings/ai")
     async def set_ai(admin: Signedin, body: JsonBody):
-        settings = AiSettings(
-            model_dir=body.get("model_dir"),
-            device=body.get("device", context.settings.ai.device),
-            max_tokens=body.get("max_tokens", context.settings.ai.max_tokens),
-            timeout=body.get("timeout", context.settings.ai.timeout),
-        )
         try:
+            settings = _ai_settings_asked(context, body, admin)
             await context.ai.apply(suite, settings)
+        except AiRefused as exc:
+            return JSONResponse({"detail": str(exc), "reason": exc.reason.value}, status_code=400)
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
         context.settings.ai = settings
@@ -425,6 +479,35 @@ def _settings_routes(
         context.settings.note_changed("typeset", admin)
         _save()
         return _dict()
+
+
+def _ai_settings_asked(context: AdminContext, body: dict, admin: str) -> AiSettings:
+    """The AI settings a ``PUT`` asks for, on top of those there are. ``ValueError`` for what cannot be."""
+    before = context.settings.ai
+    model_dir = body.get("model_dir", before.model_dir) if "provider" in body else body.get("model_dir")
+    provider = body.get("provider") or ("local" if model_dir else "stand-in")
+    if provider not in PROVIDERS:
+        raise ValueError(f"the provider must be one of: {', '.join(PROVIDERS)}")
+    if provider == "local" and not model_dir:
+        raise ValueError("the local model needs a model folder")
+    asked = body.get("claude", {})
+    key = None if asked.get("remove_key") else asked.get("key", before.claude.key)
+    claude = ClaudeSettings(asked.get("model") or before.claude.model, key, before.claude.confirmed)
+    if provider == "claude":
+        if context.ai.key_in_use(AiSettings(claude=claude)) is None:
+            raise ValueError("Claude needs a provider key.")
+        if before.provider != "claude":
+            if not asked.get("confirm"):
+                raise ValueError(f"Confirm first: {APPROVAL_SENTENCE}")
+            claude.confirmed = Changed(admin, utc_now())
+    return AiSettings(
+        provider=provider,
+        model_dir=model_dir,
+        device=body.get("device", before.device),
+        max_tokens=body.get("max_tokens", before.max_tokens),
+        timeout=body.get("timeout", before.timeout),
+        claude=claude,
+    )
 
 
 def _security_routes(router: APIRouter, context: AdminContext, require_admin: Callable) -> None:

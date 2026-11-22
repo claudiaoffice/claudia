@@ -40,16 +40,56 @@ class Changed:
     at: str  # ISO 8601 UTC
 
 
+PROVIDERS = ("stand-in", "local", "claude")
+DEFAULT_CLAUDE_MODEL = "claude-sonnet-5-5"
+
+
+@dataclass
+class ClaudeSettings:
+    """Claude as the AI provider (E7.11, D266): the model id the administrator typed, the provider key, and who
+    confirmed that document content is sent to Anthropic, and when (D264: the administrator's half of the two opt-ins).
+
+    The key is kept here, in the private settings file like the access secret, and is never sent to a page
+    (``AiSettings.public``): a page gets its last four characters."""
+
+    model: str = DEFAULT_CLAUDE_MODEL
+    key: str | None = None
+    confirmed: Changed | None = None
+
+
 @dataclass
 class AiSettings:
-    """The AI model: a folder converted for OpenVINO, the device to run it on, the longest answer it may give and
-    the longest an answer may take. ``model_dir`` of ``None`` means no model is configured (the document gets the
-    scripted stand-in, or no assistant at all with ``--no-assistant``)."""
+    """Who answers ``@ai`` (``provider``: the scripted stand-in, a local model, or Claude), and how.
 
+    ``model_dir`` is a folder converted for OpenVINO and ``device`` where to run it; ``max_tokens`` is the longest
+    answer and ``timeout`` the longest an answer may take, for every provider. The settings of a provider that is not
+    chosen are kept, so choosing it again needs no typing. Settings saved before there were providers (no
+    ``provider``) mean the local model when there is a ``model_dir``, else the stand-in; the document gets no assistant
+    at all only with ``--no-assistant``."""
+
+    provider: str = "stand-in"
     model_dir: str | None = None
     device: str = "GPU"
     max_tokens: int = 512
     timeout: float = 180.0
+    claude: ClaudeSettings = field(default_factory=ClaudeSettings)
+
+    @classmethod
+    def load(cls, data: dict) -> AiSettings:
+        """The settings of :meth:`ServerSettings.dump`, or an older file's."""
+        fields = dict(data)
+        claude = dict(fields.pop("claude", {}))
+        if claude.get("confirmed"):
+            claude["confirmed"] = Changed(**claude["confirmed"])
+        fields.setdefault("provider", "local" if fields.get("model_dir") else "stand-in")
+        return cls(**fields, claude=ClaudeSettings(**claude))
+
+    def public(self) -> dict:
+        """What a page may see: never the key, only whether there is one and its last four characters."""
+        shown = asdict(self)
+        key = shown["claude"].pop("key")
+        shown["claude"] |= {"key_set": key is not None, "key_tail": key[-4:] if key else None}
+        return shown
 
 
 @dataclass
@@ -104,7 +144,7 @@ class ServerSettings:
         return {
             "max_documents": self.max_documents,
             "access_secret_set": self.access_secret is not None,
-            "ai": asdict(self.ai),
+            "ai": self.ai.public(),
             "typeset": asdict(self.typeset),
             "render": asdict(self.render),
             "security": asdict(self.security),
@@ -130,7 +170,7 @@ class ServerSettings:
         settings = cls(
             max_documents=int(data["max_documents"]),
             access_secret=data.get("access_secret"),
-            ai=AiSettings(**data.get("ai", {})),
+            ai=AiSettings.load(data.get("ai", {})),
             typeset=TypesetSettings(**data.get("typeset", {})),
             render=RenderSettings(**data.get("render", {})),
             security=SecuritySettings(**data.get("security", {})),
