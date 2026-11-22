@@ -55,6 +55,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
 | UX-68 | P2 | UX / computes | A sheet or a chart tab (after E6.31: a slide) cannot be deleted: nothing in the menus or the tab strip reaches `RemoveSheet` or `remove_chart` | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
+| UX-70 | P3 | UX / computes | The New sheet dialog proposes no name: the field is empty (placeholder "Forecast") and Add Sheet stays off until one is typed, though a new sheet is to get a name like "Sheet2" (E1.13) | open (scenario `@pending:UX-70`) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -2641,3 +2642,16 @@ event that forgets the chart (it does for a picture, a shape and a container, D1
 `Error: DOM element provided is null or undefined` from Plotly's `getGraphDiv`. **Test:** the row `workbook | a chart`
 of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
 E1.18.
+Measured again with the step code of `specs/objects/names.feature`: insert a chart on Sheet1, add a sheet and go back
+to Sheet1; the same Plotly error is in the console. The scenario "A new object, slide, sheet and chart tab have names"
+carries `@pending:CODE-77` as well as `@pending:UX-70`.
+
+## Round of 2026-11-22, second part (step code for the names spec, E1.13; branch `e2e-guard`)
+
+### UX-70 · The New sheet dialog proposes no name · P3 · size 3 · open
+**Measured** with the new step code of `specs/objects/names.feature` (computes, Chromium): the footer's "+" opens
+*New sheet* with an empty Name field (placeholder "Forecast") and *Add Sheet* is off until a name is typed. The spec
+says a new sheet has a name like "Sheet 2", and the server gives default names to things that have none
+(`thing_names.py`). **Fix.** Fill the field with the next free default name in the maker's language, selected, so
+Enter takes it and typing replaces it. **Test:** "A new object, slide, sheet and chart tab have names",
+`@pending:UX-70` (strict).

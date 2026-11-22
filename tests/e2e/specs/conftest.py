@@ -180,6 +180,7 @@ class Person:
         self.page.on("console", lambda m: m.type == "error" and self.errors.append(f"console: {m.text}"))
         self.sent: list[str] = []  # the methods of the requests this page sent, in order
         self.events: list[dict] = []  # what the server pushed to this page: {"event": ..., "data": ...}
+        self.answers: list[dict] = []  # the results of this page's requests that are objects, in order
         self.page.on("websocket", self._listen)
         # every notice the page shows, kept: a notice goes away by itself after a few seconds
         self.context.add_init_script(
@@ -199,6 +200,8 @@ class Person:
                 message = json.loads(frame)
                 if isinstance(message, dict) and "event" in message:
                     self.events.append(message)
+                elif isinstance(message, dict) and isinstance(message.get("result"), dict):
+                    self.answers.append(message["result"])
 
         socket.on("framesent", sent)
         socket.on("framereceived", pushed)
@@ -234,6 +237,18 @@ class Person:
         self.type_login(password)
         self.press_open()
 
+    def finish_import(self, document: str | None = None) -> None:
+        """The import dialog that a file given to the front page opens: the new document's name (``document``, else
+        this person's), this person's login, Open, and the new document's recovery key put away."""
+        dialog = self.page.locator(".modal")
+        dialog.locator("input[name=import-name]").fill(document or self.document)
+        dialog.locator("input[name=import-user]").fill(self.name.lower())
+        dialog.locator("input[name=import-password]").fill(self.password)
+        dialog.locator("button[type=submit]").click()
+        self.page.wait_for_selector("[data-testid=recovery-key]", timeout=30000)  # a new document: its key first
+        self.page.check(".modal input[type=checkbox]")
+        self.page.click('.modal button:text-is("Continue")')
+
     def wait_until_open(self, timeout: float = 15000) -> None:
         self.page.wait_for_selector(READY[self.app], timeout=timeout)
         self.page.wait_for_function("document.querySelector('.health.open')", timeout=timeout)
@@ -268,8 +283,12 @@ class Person:
         self.page.click(f'.menus .title:text-is("{title}")')
         *submenus, entry = path
         for submenu in submenus:
-            self.page.locator(f'.menus .drop [role=menuitem]:has-text("{submenu}")').first.hover()
-        self.page.locator(f'.menus .drop [role=menuitem]:has-text("{entry}")').first.click()
+            self.menu_item(submenu).hover()
+        self.menu_item(entry).click()
+
+    def menu_item(self, label: str):
+        """The open menu's entry whose label starts with ``label``: "Text Box", not "Undo · Added a text box"."""
+        return self.page.locator(".menus .drop [role=menuitem]", has_text=re.compile("^" + re.escape(label))).first
 
     def paragraphs(self) -> list[str]:
         return self.page.eval_on_selector_all(
