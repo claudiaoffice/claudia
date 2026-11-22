@@ -143,20 +143,18 @@
 <rect x="716" y="326.0" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
 <rect x="716" y="466" width="8" height="8" rx="1.5" fill="#FFFFFF" stroke="#5B4BC4" stroke-width="1.2"/>
 <g filter="url(#sh)">
-<rect x="734" y="200" width="236" height="189" rx="8" fill="#FFFFFF" stroke="#E3DED5" stroke-width="1"/>
+<rect x="734" y="200" width="236" height="150" rx="8" fill="#FFFFFF" stroke="#E3DED5" stroke-width="1"/>
 </g>
 <text x="748" y="226" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Name &amp; describe…</text>
 <text x="956" y="226" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="end">Ctrl+Alt+D</text>
 <text x="748" y="256" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Style…</text>
 <text x="956" y="256" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="end">Ctrl+Alt+A</text>
 <line x1="742" y1="270" x2="962" y2="270" stroke="#E3DED5" stroke-width="1"/>
-<text x="748" y="295" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Snap to grid</text>
+<rect x="738" y="275" width="228" height="30" rx="5" fill="#EAE6FB"/>
+<text x="748" y="295" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start">Move to Slide</text>
 <line x1="742" y1="309" x2="962" y2="309" stroke="#E3DED5" stroke-width="1"/>
-<rect x="738" y="314" width="228" height="30" rx="5" fill="#EAE6FB"/>
-<text x="748" y="334" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="500" text-anchor="start">Move to Slide</text>
-<line x1="742" y1="348" x2="962" y2="348" stroke="#E3DED5" stroke-width="1"/>
-<text x="748" y="373" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Delete</text>
-<text x="956" y="373" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="end">Del</text>
+<text x="748" y="334" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#1F1A33" font-weight="400" text-anchor="start">Delete</text>
+<text x="956" y="334" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#6B6580" font-weight="400" text-anchor="end">Del</text>
 <text x="734" y="192" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#6B6580" font-weight="400" text-anchor="start">Object menu</text>
 <rect x="300" y="520" width="400" height="82" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
 <circle cx="300" cy="520" r="10" fill="#E0B84A"/>
@@ -165,12 +163,13 @@
 <text x="314" y="559" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">It makes a slide named after the chart, right after</text>
 <text x="314" y="576" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">this sheet, and moves the chart object onto it: one</text>
 <text x="314" y="593" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">step, undone as one. The chart fills the frame first.</text>
-<rect x="300" y="640" width="400" height="65" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
+<rect x="300" y="640" width="400" height="82" rx="6" fill="#FFF6D6" stroke="#E0B84A" stroke-width="1"/>
 <circle cx="300" cy="640" r="10" fill="#E0B84A"/>
 <text x="300" y="644" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#FFFFFF" font-weight="500" text-anchor="middle">2</text>
 <text x="314" y="662" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">The chart stays the same chart (its data, kind and</text>
 <text x="314" y="679" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">titles); nothing is left behind on the sheet.</text>
-<text x="314" y="696" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">No key yet: menus are reworked later.</text>
+<text x="314" y="696" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">No key yet: menus are reworked later. The other entries</text>
+<text x="314" y="713" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#1F1A33" font-weight="400" text-anchor="start">are a chart's today (Snap to grid is creates' only).</text>
 <rect x="0" y="764" width="1280" height="36" rx="0" fill="#FFFFFF"/>
 <line x1="0" y1="764" x2="1280" y2="764" stroke="#E3DED5" stroke-width="1"/>
 <rect x="14" y="768" width="72" height="28" rx="4" fill="#E3F2EF"/>
