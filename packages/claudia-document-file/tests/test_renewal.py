@@ -90,6 +90,14 @@ def test_removing_an_editor_renews_all_three_keys(path, owner, writer):
     assert all(done.keys[part] != owner.keys[part] for part in Part)
 
 
+def test_what_a_renewal_returns_does_not_show_its_keys_in_its_text(path, owner, writer):
+    # SEC-23: an object holding keys may end up in a log line or a traceback; its text must not carry them.
+    renewed = remove_person(path, owner.keys, writer, BERT[0])
+    text = repr(renewed)
+    assert not [key for key in renewed.keys.values() if repr(key) in text or key.hex() in text]
+    renewed.writer.close()
+
+
 def test_removing_a_viewer_renews_the_content_key_only(path, owner, writer):
     done = remove_person(path, owner.keys, writer, CORA[0])
     assert done.renewed == frozenset({Part.CONTENT})

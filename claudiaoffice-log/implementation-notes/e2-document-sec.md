@@ -215,3 +215,28 @@ its shortcut in `claudia-menus.xlsx`.
 PROC-39 (fixed: the e2e server's output pipe was never read, so a long enough run froze the server; found because the six new
 scenarios made the run long enough), PROC-38 (a timing test of `test_server_password_methods.py` fails on a fast machine under load: the hashing took 0.1499 s
 against a floor of 0.15 s). The earlier list stands: SEC-22, PROC-37, CODE-74, UX-54.
+
+## E2.5 closed (2026-11-22)
+
+* `test_packing.py::test_a_closed_block_keeps_its_bytes_when_later_changes_are_packed` pins D1269: a pack leaves a full
+  block byte for byte and seals only the last, still small one again. It fails if `_extend` re-seals the whole chain.
+* `scripts/measure_blocks.py` keeps the measurement against sealing every change on its own. `--typing N…` makes a
+  computes typing log in process; `--document FILE --name NAME` reads a document's history (asks for the password,
+  changes nothing). Both pack through `pack_journal` into a throw-away document, so the script follows the block code
+  rather than copying it. Typing logs of 200, 2 000 and 6 000 changes: about 15, 17 and 18 times smaller in blocks (a little different on every run).
+* `claudia_server.sealed._payload` is public now as `record_bytes`, so the script makes the records the server seals
+  without reaching into a private name. No other change.
+* Could not be run: a log from real use (several people, apps, undo, pasting) does not exist yet; that measurement is
+  the follow-up named in the story.
+
+## E2.7 closed (2026-11-22)
+
+* Keys never in logs: `test_server_keys_stay_out_of_logs.py`. One test drives a whole session through the WebSocket door
+  at DEBUG (create, invite, five edits packed every two, chat, a wrong password, `remove_person` which renews the keys,
+  leave, come back) and looks for every key before and after the renewal as bytes, hex and base64 in the captured log.
+  The other checks the text of `_Held`.
+* SEC-23: `_Held.keys` (server) and `Renewed.keys` (document file) are `field(repr=False)`, like the other key-holding
+  dataclasses. No line moved, so the translation catalogues are unchanged.
+* The rest of the acceptance was already built (back-off, idle release, memory only); the story's evidence says where.
+* Not run: a check of the logs of a real server over days (uvicorn's access log, the reverse proxy's); the tests capture
+  Python logging only.
