@@ -6,7 +6,7 @@ replacement is stored.
 
 A search looks in one or more *kinds* of text:
 
-``text``      a cell holding text, as typed
+``text``      a cell holding text, as typed, and the words of a text box or a shape on a slide (UX-72, E6.31)
 ``formulas``  a formula as typed, with its ``=``
 ``values``    what a cell *shows* that is not text typed into it: a number, TRUE or FALSE, and what a formula gives
               (an error shows its code)
@@ -24,7 +24,8 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 
-from claudia_core import Batch, Command
+from claudia_core import Batch, Command, edit_object_text, object_texts
+from claudia_core.object_texts import BOX, LABEL
 from claudia_search import CompiledSearch, Location, Plan, Scan, SearchError, Text, plan, scan
 
 from .commands import SetCells
@@ -45,12 +46,31 @@ _REPLACEABLE_TEXTS = frozenset(_KIND_OF[k] for k in REPLACEABLE)
 _COUNT_OF = {"text": "text", "formula": "formulas", "value": "values"}
 
 Area = tuple[int, int, int, int]  # first row, first column, last row, last column, all 0-based and included
-Held = Callable[[str, int, int], "str | None"]  # who holds this cell, if somebody else does
+Held = Callable[[Location], "str | None"]  # who holds the cell or the object at this place, if somebody else does
+_WORDS = (BOX, LABEL)  # the texts of an object on a slide a search looks at: its words
 
 
 def cell_at(sheet: str, row: int, col: int) -> Location:
     """Where a cell is, as every answer of a search names it: ``{"sheet", "row", "col"}``."""
     return {"sheet": sheet, "row": row, "col": col}
+
+
+def object_at(slide: str, object_id: str, source: str) -> Location:
+    """Where the words of an object on a slide are: ``{"slide", "object", "source"}`` (``box`` or ``label``)."""
+    return {"slide": slide, "object": object_id, "source": source}
+
+
+def place_of(at: Location) -> Location:
+    """A place a client sent back, in its canonical form: a cell, or the words of an object on a slide; ``ValueError``
+    if it is neither."""
+    if isinstance(at, Mapping) and set(at) == {"slide", "object", "source"}:
+        if all(isinstance(v, str) for v in at.values()) and at["source"] in _WORDS:
+            return object_at(at["slide"], at["object"], at["source"])
+        raise ValueError("a place in a workbook is {sheet, row, col} or {slide, object, source}")
+    try:
+        return cell_at(*cell_of(at))
+    except ValueError:
+        raise ValueError("a place in a workbook is {sheet, row, col} or {slide, object, source}") from None
 
 
 def cell_of(at: Location) -> tuple[str, int, int]:
@@ -63,13 +83,14 @@ def cell_of(at: Location) -> tuple[str, int, int]:
 
 
 # --------------------------------------------------------------------------------------------------------- looking
-def _sheets_in(model: WorkbookModel, sheets: Sequence[str] | None) -> list[Sheet]:
-    if sheets is None:
-        return list(model.sheets.values())
-    for sheet_id in sheets:
-        model.sheet(SheetId(sheet_id))  # (ValueError for a sheet this workbook does not have)
-    wanted = set(sheets)
-    return [sheet for sheet in model.sheets.values() if sheet.id in wanted]
+def _tabs_in(model: WorkbookModel, tabs: Sequence[str] | None) -> list[str]:
+    """The sheets and slides to look at, in the order of the tabs; ``ValueError`` for one the workbook does not have."""
+    if tabs is None:
+        return [tab.id for tab in model.tabs]
+    for tab_id in tabs:
+        model.tab_index(tab_id)
+    wanted = set(tabs)
+    return [tab.id for tab in model.tabs if tab.id in wanted]
 
 
 def _cells(sheet: Sheet, kinds: Sequence[str], area: Area | None) -> Iterator[tuple[int, int, str, str]]:
@@ -99,13 +120,20 @@ def _cells(sheet: Sheet, kinds: Sequence[str], area: Area | None) -> Iterator[tu
 def workbook_texts(
     model: WorkbookModel,
     kinds: Sequence[str] = ("text",),
-    sheets: Sequence[str] | None = None,
+    tabs: Sequence[str] | None = None,
     area: Area | None = None,
 ) -> Iterator[Text]:
-    """What a workbook offers a search: the ``kinds`` of text, on ``sheets`` (``None``: all of them) and inside ``area``
-    (on the one sheet), each with its cell as ``at``. ``ValueError`` for a kind or a sheet that does not exist."""
+    """What a workbook offers a search: the ``kinds`` of text, on the sheets and slides ``tabs`` names (``None``: all of
+    them) in tab order, and inside ``area`` (on the one sheet), each with its place as ``at``: a cell, or the words of
+    an object on a slide (kind ``text``). ``ValueError`` for a kind, a sheet or a slide that does not exist."""
     _check_kinds(kinds)
-    for sheet in _sheets_in(model, sheets):
+    for tab_id in _tabs_in(model, tabs):
+        if tab_id in model.slides:
+            if "text" in kinds:
+                for item in object_texts(model, [tab_id], _WORDS):
+                    yield Text(object_at(tab_id, item.object_id, item.source), "text", item.text)
+            continue
+        sheet = model.sheet(SheetId(tab_id))
         for row, col, kind, text in _cells(sheet, kinds, area):
             yield Text(cell_at(sheet.id, row, col), kind, text)
 
@@ -121,14 +149,14 @@ def scan_workbook(
     search: CompiledSearch,
     *,
     kinds: Sequence[str] = ("text",),
-    sheets: Sequence[str] | None = None,
+    tabs: Sequence[str] | None = None,
     area: Area | None = None,
     deadline: float | None = None,
 ) -> Scan:
     """Where ``search`` finds something in the workbook (see :func:`workbook_texts`), until ``deadline`` (a
     :func:`time.monotonic` time; then the answer says ``timed_out``). ``counts`` is by the kinds asked for
-    (``text``, ``formulas``, ``values``), each counting cells."""
-    found = scan(workbook_texts(model, kinds, sheets, area), search, deadline=deadline, replaceable=_REPLACEABLE_TEXTS)
+    (``text``, ``formulas``, ``values``), each counting cells and the words of objects."""
+    found = scan(workbook_texts(model, kinds, tabs, area), search, deadline=deadline, replaceable=_REPLACEABLE_TEXTS)
     counts = dict.fromkeys(KINDS, 0)
     for kind, cells in found.counts.items():
         counts[_COUNT_OF[kind]] = cells
@@ -142,7 +170,7 @@ def plan_replacement(
     search: CompiledSearch,
     *,
     kinds: Sequence[str] = ("text",),
-    sheets: Sequence[str] | None = None,
+    tabs: Sequence[str] | None = None,
     area: Area | None = None,
     leave: Iterable[tuple[Location, int | None]] = (),
     held: Held | None = None,
@@ -150,23 +178,23 @@ def plan_replacement(
     deadline: float | None = None,
 ) -> Plan:
     """What replacing would do, without doing it. Only text and formulas are replaced, whatever ``kinds`` says;
-    ``leave`` names matches as ``(cell, number)`` (``number`` ``None``: the whole cell) a person wants to keep; ``held``
-    says who holds a cell (a cell held by somebody else is skipped, and named); ``max_length`` is the longest text a
-    cell may get. A plan that ran out of time before ``deadline`` says ``timed_out``.
+    ``leave`` names matches as ``(place, number)`` (``number`` ``None``: the whole text) a person wants to keep;
+    ``held`` says who holds a cell or an object (one held by somebody else is skipped, and named); ``max_length`` is
+    the longest text a cell or an object's words may get. A plan that ran out of time before ``deadline`` says
+    ``timed_out``.
 
     ``SearchError`` when the search has no replacement."""
     _check_kinds(kinds)
     wanted = tuple(kind for kind in kinds if kind in REPLACEABLE)
 
     def refuse(item: Text, after: str) -> tuple[str, str | None] | None:
-        sheet, row, col = cell_of(item.at)
-        owner = held(sheet, row, col) if held is not None else None
+        owner = held(item.at) if held is not None else None
         if owner is not None:
             return "locked", owner
         reason = _refusal(model, item.kind, item.text, after, max_length)
         return None if reason is None else (reason, None)
 
-    return plan(workbook_texts(model, wanted, sheets, area), search, leave=leave, refuse=refuse, deadline=deadline)
+    return plan(workbook_texts(model, wanted, tabs, area), search, leave=leave, refuse=refuse, deadline=deadline)
 
 
 def _refusal(model: WorkbookModel, kind: str, before: str, after: str, max_length: int | None) -> str | None:
@@ -187,12 +215,15 @@ def _content(kind: str, text: str) -> Content:
     return content_of(text) if text else None  # (nothing left of a text: the cell is empty)
 
 
-def replace_command(made: Plan) -> Command | None:
+def replace_command(model: WorkbookModel, made: Plan, author: str | None) -> Command | None:
     """The one command that makes the plan: the cells as they will be, stored by row and run of columns so that it
-    holds exactly the cells it changes (and only those can be locked against it). ``None`` when nothing changes."""
+    holds exactly the cells it changes (and only those can be locked against it), and the words of each object on a
+    slide as they will be (who wrote what stays is kept; ``author`` wrote what is put in). ``None`` when nothing
+    changes."""
     if not made.changes:
         return None
-    cells = sorted(((cell_of(c.at), _content(c.kind, c.after)) for c in made.changes), key=lambda cell: cell[0])
+    on_cells = [c for c in made.changes if "sheet" in c.at]
+    cells = sorted(((cell_of(c.at), _content(c.kind, c.after)) for c in on_cells), key=lambda cell: cell[0])
     steps: list[Command] = []
     run: list[tuple[tuple[str, int, int], Content]] = []
     for (sheet, row, col), content in cells:
@@ -200,9 +231,15 @@ def replace_command(made: Plan) -> Command | None:
             steps.append(_set(run))
             run = []
         run.append(((sheet, row, col), content))
-    steps.append(_set(run))
-    count = len(cells)
-    return Batch(tuple(steps), f"Replace in {count} cell{'' if count == 1 else 's'}")
+    if run:
+        steps.append(_set(run))
+    for change in made.changes:
+        if "slide" in change.at:
+            edits = [(e.start, e.end, e.after) for e in change.edits if e.before != e.after]
+            steps.append(edit_object_text(model, change.at["object"], change.at["source"], edits, author))
+    count = len(made.changes)
+    unit = "cell" if len(on_cells) == count else "place"
+    return Batch(tuple(steps), f"Replace in {count} {unit}{'' if count == 1 else 's'}")
 
 
 def _set(run: list[tuple[tuple[str, int, int], Content]]) -> SetCells:
@@ -216,6 +253,8 @@ __all__ = [
     "SearchError",
     "cell_at",
     "cell_of",
+    "object_at",
+    "place_of",
     "plan_replacement",
     "replace_command",
     "scan_workbook",

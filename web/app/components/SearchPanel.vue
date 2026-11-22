@@ -939,7 +939,7 @@ button:focus-visible {
 }
 .selects select.field {
   flex: none;
-  max-width: 45%;
+  max-width: 55%;
 }
 .flags {
   gap: 18px;

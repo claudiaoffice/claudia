@@ -174,6 +174,8 @@ function tabNear(before: readonly TabInfo[], now: readonly TabInfo[], gone: stri
 export interface SearchScope {
   sheet?: string
   range?: [number, number, number, number]
+  /** a slide: the words of its objects (UX-72) */
+  slide?: string
 }
 
 /** A match, or with `match: null` everything at a place, that a replacement leaves alone (`lib/search.ts`). */

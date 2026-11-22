@@ -3,7 +3,7 @@ the words creates uses for them (`slide`, `x`, `y`). Nothing on the wire adds a 
 so these tests put it there through the document."""
 
 import pytest
-from test_server_computes import ANN, VERA, add_image, call, tiny_gif
+from test_server_computes import ANN, VERA, add_image, call, tiny_gif, typed
 
 from claudia_computes import AddSheet, AddSlide, TabsChanged, WorkbookModel
 from claudia_core import Document, MemoryStore
@@ -150,3 +150,37 @@ def test_a_new_sheet_does_not_take_the_id_of_a_slide():
     added = call(doc, "add_sheet", {"name": "Costs"})["sheet"]
     assert added not in ("s1", "s2")
     assert [tab["kind"] for tab in call(doc, "tabs")] == ["sheet", "slide", "sheet"]
+
+
+# -- search (UX-72) -------------------------------------------------------------------------------------------------
+def east(doc):
+    typed(doc, "s1", [(1, 0, "East")])
+    box_on_slide(doc)  # "East leads"
+
+
+def test_a_search_finds_the_words_on_a_slide_after_the_cells_before_it(book):
+    east(book)
+    found = call(book, "search_find", {"query": {"mode": "text", "text": "East"}})
+    assert [m["at"] for m in found["matches"]] == [
+        {"sheet": "s1", "row": 1, "col": 0},
+        {"slide": "p1", "object": found["matches"][1]["at"]["object"], "source": "box"},
+    ]
+    only = call(book, "search_find", {"query": {"mode": "text", "text": "East"}, "scope": {"slide": "p1"}})
+    assert [m["at"]["slide"] for m in only["matches"]] == ["p1"]
+
+
+def test_a_replacement_reaches_the_slide_in_the_same_step_and_one_undo_takes_it_back(book):
+    east(book)
+    query = {"mode": "text", "text": "East", "replace": [{"text": "Ost"}]}
+    assert call(book, "search_replace", {"query": query})["replaced"] == 2
+    (box,) = call(book, "slide", {"slide": "p1"})["objects"]
+    assert box["paragraph"]["text"] == "Ost leads"
+    call(book, "undo")
+    (box,) = call(book, "slide", {"slide": "p1"})["objects"]
+    assert box["paragraph"]["text"] == "East leads"
+
+
+def test_a_scope_of_a_slide_that_is_not_one_is_refused(book):
+    with pytest.raises(RequestError) as refused:
+        call(book, "search_find", {"query": {"mode": "text", "text": "x"}, "scope": {"slide": "s1"}})
+    assert refused.value.code == "command_error"

@@ -765,7 +765,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         for index, tab in enumerate(self.tabs):
             if tab.id == tab_id:
                 return index
-        raise ValueError(f"unknown tab {tab_id!r}")
+        raise ValueError(f"there is no sheet or slide {tab_id!r}")
 
     def check_new_tab(self, tab_id: str, index: int | None) -> None:
         """``ValueError`` unless a new sheet or slide may have this id and stand at ``index`` among the tabs

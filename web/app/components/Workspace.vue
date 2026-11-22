@@ -56,6 +56,7 @@ import { selectionAnnouncement } from '~/lib/grid-a11y'
 import { chordLabel, chordOf, hintOf, searchShortcuts, type ShortcutDef } from '~/lib/shortcuts'
 import type { PreviewAnswer, SearchMatch } from '~/lib/search'
 import { marksFor, NO_MARKS, sheetSearchHost } from '~/lib/sheet-search-host'
+import { marksFor as slideMarksFor } from '~/lib/slide-search-host'
 import { coversWindow, tabMarks, windowAround, type Reach, type Window } from '~/lib/follow'
 import { galleryFor } from '~/lib/style-host'
 import { formatItems, noLists } from '~/lib/format-menu'
@@ -731,6 +732,7 @@ const searchHost = sheetSearchHost({
   session,
   selection: () => sel.value,
   goTo: (sheet, row, col) => void goToCell(sheet, row, col),
+  goToObject: (slide, object) => void pickTab(slide, 'slide').then(() => session.select(object)),
   t,
 })
 /** Show a match: its sheet, and the cell selected so that the grid scrolls to it. The panel keeps the focus. */
@@ -766,6 +768,8 @@ const searchMarks = computed(() =>
     ? marksFor(searchView.value.matches, state.activeSheet, searchView.value.current, searchView.value.preview)
     : NO_MARKS,
 )
+/** What the slide view draws of a search: the matches in the words of its objects (UX-72). */
+const slideMarks = computed(() => (searchOpen.value && state.activeSlide ? slideMarksFor(searchView.value.matches, searchView.value.current, state.activeSlide) : []))
 
 // ------------------------------------------------------------------------------ random numbers, alternatives, following (E6.21–E6.23)
 // Chords are by physical key (`code`): with Alt held, the character a key types differs by layout and platform.
@@ -1276,7 +1280,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       <div v-else class="nosheet">{{ t('This chart\'s definition is gone.') }}</div>
     </div>
     <div v-else-if="state.activeSlide" class="stage">
-      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="false" @styles="dialog = 'styles'" />
+      <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="false" :marks="slideMarks" @styles="dialog = 'styles'" />
     </div>
     <SheetGrid
       v-else-if="state.activeSheet"
