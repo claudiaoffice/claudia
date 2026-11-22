@@ -732,7 +732,7 @@ const searchHost = sheetSearchHost({
   session,
   selection: () => sel.value,
   goTo: (sheet, row, col) => void goToCell(sheet, row, col),
-  goToObject: (slide, object) => void pickTab(slide, 'slide').then(() => session.select(object)),
+  goToSlide: (slide) => void pickTab(slide, 'slide'),
   t,
 })
 /** Show a match: its sheet, and the cell selected so that the grid scrolls to it. The panel keeps the focus. */

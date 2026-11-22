@@ -35,7 +35,7 @@ import { entryWords, type ContentsEntry } from '../contents'
 import { pointer } from '../objects'
 import { pictureOf } from '../containers'
 import { readAs, type Shown } from '../references'
-import { CONTENTS, describeSheets, SCALES, scaleId, withScale, type Contents } from './sheet'
+import { CONTENTS, describeSheets, SCALES, scaleId, withScale, type Contents, type PrintedTabs } from './sheet'
 
 import { translate as t } from '../i18n'
 /** A picture the document holds, as the server sends it: `data` is base64. */
@@ -55,7 +55,7 @@ export interface PrintPages {
   /** a presentation's slide count, for the status line */
   slides?: number
   /** a workbook's sheets and chart tabs, and its slides, that were printed, for the status line */
-  printed?: { sheets: number; slides: number; name: string; orientation: 'portrait' | 'landscape' | null }
+  printed?: PrintedTabs
   /** a text's headings, the PDF's bookmarks, and the page each of its paragraphs starts on (E9.31) */
   outline?: OutlineEntry[]
   pageOf?: ReadonlyMap<string, number>
@@ -325,7 +325,7 @@ export function sheetSource(session: Session, window: SheetWindow): PrintSource 
         },
       }
     },
-    status: (pages, page) => (pages.printed ? describeSheets(pages.list.pages.length, pages.printed.sheets, pages.printed.name, PAPER_SIZES.find((p) => p.id === page.paper)?.name ?? `${mm(page.width)} × ${mm(page.height)} mm`, pages.printed.orientation, pages.printed.slides) : describe(page, pages.list.pages.length)),
+    status: (pages, page) => (pages.printed ? describeSheets(pages.list.pages.length, pages.printed, PAPER_SIZES.find((p) => p.id === page.paper)?.name ?? `${mm(page.width)} × ${mm(page.height)} mm`) : describe(page, pages.list.pages.length)),
     producer: 'claudia computes',
     report: (kind, pages) => void session.reportOutput(kind, pages),
   }

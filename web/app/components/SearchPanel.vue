@@ -146,6 +146,13 @@ watch(
   [() => JSON.stringify(model), scope, () => props.host.revision(), replacing, () => JSON.stringify(kinds), () => leave.value.length],
   () => schedule(),
 )
+// The scopes an app offers can change with what it shows (a workbook's slide has no Selection): one that went is left.
+watch(
+  () => props.host.scopes.join(),
+  () => {
+    if (!props.host.scopes.includes(scope.value)) scope.value = props.host.scopes[0] ?? ''
+  },
+)
 // What the document shows follows what was found and where she is in it.
 watch(
   [shown, current, preview],

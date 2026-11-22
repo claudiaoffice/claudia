@@ -204,8 +204,8 @@ describe('the choices of the bar', () => {
   })
 
   it('says what the pages are in a line', () => {
-    expect(describeSheets(3, 1, 'Budget', 'A4', 'portrait')).toBe('3 pages · Budget · A4 portrait')
-    expect(describeSheets(1, 2, 'Budget', 'A4', null)).toBe('1 page · 2 sheets · A4')
+    expect(describeSheets(3, { sheets: 1, slides: 0, name: 'Budget', orientation: 'portrait' }, 'A4')).toBe('3 pages · Budget · A4 portrait')
+    expect(describeSheets(1, { sheets: 2, slides: 0, name: 'Budget', orientation: null }, 'A4')).toBe('1 page · 2 sheets · A4')
   })
 
   it('reads a chart\'s SVG out of the data URL Plotly makes', () => {
@@ -490,9 +490,9 @@ describe('a slide among the sheets', () => {
   })
 
   it('counts the sheets and the slides apart in the status line (UX-73)', () => {
-    expect(describeSheets(2, 2, 'Budget', 'A4', null, 1)).toBe('2 pages · 2 sheets and 1 slide · A4')
-    expect(describeSheets(2, 1, 'Budget', 'A4', null, 2)).toBe('2 pages · 1 sheet and 2 slides · A4')
-    expect(describeSheets(1, 0, 'Sales chart', 'A4', 'landscape', 1)).toBe('1 page · Sales chart · A4 landscape')
+    expect(describeSheets(2, { sheets: 2, slides: 1, name: 'Budget', orientation: null }, 'A4')).toBe('2 pages · 2 sheets and 1 slide · A4')
+    expect(describeSheets(2, { sheets: 1, slides: 2, name: 'Budget', orientation: null }, 'A4')).toBe('2 pages · 1 sheet and 2 slides · A4')
+    expect(describeSheets(1, { sheets: 0, slides: 1, name: 'Sales chart', orientation: 'landscape' }, 'A4')).toBe('1 page · Sales chart · A4 landscape')
   })
 
   it('lies the way a slide does: the bar cannot turn it', async () => {

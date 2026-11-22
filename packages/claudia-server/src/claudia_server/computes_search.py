@@ -7,7 +7,7 @@ object on a slide, ``{slide, object, source}`` (CODE-18, UX-72) and who holds a 
 
 from __future__ import annotations
 
-from claudia_computes.model import MAX_COLS, MAX_ROWS
+from claudia_computes.model import MAX_COLS, MAX_ROWS, WorkbookModel
 from claudia_computes.refs import SheetId
 from claudia_computes.region import CellRegion
 from claudia_computes.search import (
@@ -131,7 +131,7 @@ def _search_scope(
     """``(tabs, area)``: no scope is every sheet and slide, ``{"sheet": id}`` one sheet, and with ``"range": [r0, c0,
     r1, c1]`` a selection on it; ``{"slide": id}`` one slide (UX-72)."""
     scope = scope or {}
-    if set(scope) == {"slide"}:
+    if set(scope) == {"slide"} and isinstance(scope["slide"], str):
         if scope["slide"] not in workbook(ctx).slides:
             raise RequestError("command_error", msg("unknown slide {slide!r}", slide=scope["slide"]))
         return [scope["slide"]], None
@@ -157,15 +157,18 @@ def _search_scope(
     return [sheet], (area[0], area[1], area[2], area[3])
 
 
-def _holder(ctx: Context, model):
-    """Who holds a cell or an object, when it is somebody else: asks the document's locks once per sheet, and per
-    object for the words of one on a slide."""
+def _holder(ctx: Context, model: WorkbookModel):
+    """Who holds a cell or an object, when it is somebody else: asks the document's locks once per sheet, and once per
+    object for the words of one on a slide (its box and its label are asked about together)."""
     locks: dict[str, list] = {}
+    objects: dict[str, str | None] = {}
 
     def held(at: Location) -> str | None:
         if "object" in at:
-            found = ctx.document.presence.conflicts(ctx.user, list(model.selection_of(at["object"])))
-            return found[0][0] if found else None
+            if at["object"] not in objects:
+                found = ctx.document.presence.conflicts(ctx.user, list(model.selection_of(at["object"])))
+                objects[at["object"]] = found[0][0] if found else None
+            return objects[at["object"]]
         sheet, row, col = cell_of(at)
         if sheet not in locks:
             whole = CellRegion.of(SheetId(sheet), 0, 0, MAX_ROWS - 1, MAX_COLS - 1)

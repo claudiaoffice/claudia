@@ -18,6 +18,9 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   `tabs`, which replaces `sheets`; `slide` (the objects of a slide); `add_object` (a text box or a shape, on a slide only)
   and `shapes`; `add_image`, `add_container`, `move_object` and `resize_object` take a slide's `slide`, `x` and `y`
   as creates does, beside a sheet's `sheet`, `row` and `col`. `computes_methods_with(library)` for a server's own shapes.
+- Computes' `search_find`, `search_preview` and `search_replace` look at the words on a workbook's slides too (UX-72):
+  a match there is at `{slide, object, source}`, a scope may be `{slide}`, and `leave` takes those places; a
+  replacement of cells and words is one step in the history.
 - `GET /api/admin/status` says `setup_code` (whether one is asked for); `POST /api/admin/setup-code` checks a code
   without naming anybody; `GET` and `DELETE /api/admin/reset-note` (signed in): the note of the last reset (D1375).
 - Start options `--reset-administrators` (D1375: the administrators only; `admins.json` is kept aside, settings, fonts

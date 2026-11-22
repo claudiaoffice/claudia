@@ -41,8 +41,9 @@ export function sheetSearchHost(from: {
   session: Session
   selection: () => Sel
   goTo: (sheet: string, row: number, col: number) => void
-  /** Show a slide with this object of it selected. */
-  goToObject: (slide: string, object: string) => void
+  /** Show a slide: its match is marked in the words, and nothing is selected (a selected object is held from the
+   *  others, and stepping through the matches must not hold each in turn). */
+  goToSlide: (slide: string) => void
   t: Translate
 }): SearchHost<SearchScope> {
   const { session, t } = from
@@ -54,7 +55,10 @@ export function sheetSearchHost(from: {
     },
     unit: 'cell',
     switches: SWITCHES,
-    scopes: ['sheet', 'all', 'selection'] satisfies ScopeId[],
+    // a slide has no cells to select
+    get scopes() {
+      return (state.activeSlide ? ['sheet', 'all'] : ['sheet', 'all', 'selection']) satisfies ScopeId[]
+    },
     helpTopic: 'computes.searching-and-replacing',
     extraParts: ['cellref'],
     scopeLabel(scope) {
@@ -64,7 +68,7 @@ export function sheetSearchHost(from: {
     },
     scopeOf(scope) {
       if (scope === 'all') return {}
-      if (state.activeSlide) return { slide: state.activeSlide } // (a slide has no cells to select)
+      if (state.activeSlide) return { slide: state.activeSlide }
       if (scope === 'sheet') return { sheet: state.activeSheet }
       const b = bounds(from.selection())
       return { sheet: state.activeSheet, range: [b.r0, b.c0, b.r1, b.c1] }
@@ -84,11 +88,12 @@ export function sheetSearchHost(from: {
       return name ? `${slide}: ${name}` : t('An object on “{slide}”', { slide })
     },
     jump: (at) => {
-      if (onSlide(at)) return from.goToObject(String(at.slide), String(at.object))
+      if (onSlide(at)) return from.goToSlide(String(at.slide))
       const c = cellOf(at)
       from.goTo(c.sheet, c.row, c.col)
     },
-    revision: () => state.revision,
+    // the tab shown too: "This sheet" and "This slide" name another place once another tab is shown (UX-72)
+    revision: () => `${state.revision}@${state.activeSlide || state.activeSheet}`,
   }
 }
 

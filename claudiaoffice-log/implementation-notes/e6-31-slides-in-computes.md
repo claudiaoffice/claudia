@@ -93,16 +93,26 @@ servers as CI starts them (`slides`, `creates-styles`, `print-creates`, `describ
   stored form; `restore` refuses tabs that miss a sheet or a slide; a new sheet's id is free among the slides too, and
   the pivot dialog's sheet name among their names; tests with literal cells instead of the formula.
 
-## Step 2, fixes UX-72 and UX-73, 2026-11-22
+## Step 2, fixes UX-72 and UX-73 (D1474), 2026-11-22
 
 - **Search on the slides (UX-72).** `workbook_texts` (`claudia_computes/search.py`) goes through the tabs in their
   order: a sheet gives its cells, a slide the words of its text boxes and the labels of its shapes, with creates' places
   `{slide, object, source}` (`object_texts` of the core, as creates reads them). `replace_command` makes one step of
   the cells (`SetCells`) and the words (`edit_object_text`), so undo takes both back. The scope `{slide}` searches one
   slide; the server refuses a slide that is not there. On the web, `sheet-search-host.ts` says "All sheets and slides"
-  when there are slides, and "This slide" for the scope `sheet` while a slide is shown; a match on a slide shows the
-  slide and selects the object, and the slide marks the match in its words (`marksFor` of `slide-search-host.ts`).
-  Descriptions and speaker notes are not searched: a workbook's slides have neither in the UI.
+  when there are slides, and "This slide" for the scope `sheet` while a slide is shown, when Selection is not offered
+  (the host's `scopes` follow the tab shown, and the panel falls back to the first scope when its own goes). A match on
+  a slide shows the slide and selects nothing (selecting would hold the object from the others at every step through
+  the matches, as creates does not either); the slide marks the match in its words (`marksFor` of
+  `slide-search-host.ts`). The host's `revision` carries the tab shown, so a listed search runs again when another tab
+  is shown (before, "This sheet" kept the matches of the sheet that was shown when it ran). Descriptions and speaker
+  notes are not searched: a workbook's slides have neither in the UI.
+- **Review (two axes) and what changed after it:** the server refuses a scope whose `slide` is not a string as a bad
+  request; the locks of an object are asked once for its box and its label; `place_of` says its refusal once;
+  `describeSheets` takes the printed tabs as one `PrintedTabs`; the browser script starts its browser through
+  `browser.cjs` (CODE-17); changelogs of computes and the server. Left as they were: the history's label "Replace in N
+  places" is English and its plural made by hand, as every app's history labels are (UX-22); the refusal for too many
+  changes still says "cells".
 - **The print bar (UX-73).** With a slide shown, "Contents" is "This slide" and "Whole workbook" (no Selection: a slide
   has no cells), and the status line counts sheets and slides apart ("2 sheets and 1 slide").
 - The search panel's scope list was cut off at 45 % of the row ("All sheets and slide"); it may now take 55 %.

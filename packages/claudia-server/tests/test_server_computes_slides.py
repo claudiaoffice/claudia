@@ -184,3 +184,9 @@ def test_a_scope_of_a_slide_that_is_not_one_is_refused(book):
     with pytest.raises(RequestError) as refused:
         call(book, "search_find", {"query": {"mode": "text", "text": "x"}, "scope": {"slide": "s1"}})
     assert refused.value.code == "command_error"
+
+
+def test_a_scope_whose_slide_is_not_a_name_is_a_bad_request(book):
+    with pytest.raises(RequestError) as refused:
+        call(book, "search_find", {"query": {"mode": "text", "text": "x"}, "scope": {"slide": ["p1"]}})
+    assert refused.value.code == "bad_request"

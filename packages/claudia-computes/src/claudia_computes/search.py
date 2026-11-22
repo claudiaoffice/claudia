@@ -63,12 +63,11 @@ def object_at(slide: str, object_id: str, source: str) -> Location:
 def place_of(at: Location) -> Location:
     """A place a client sent back, in its canonical form: a cell, or the words of an object on a slide; ``ValueError``
     if it is neither."""
-    if isinstance(at, Mapping) and set(at) == {"slide", "object", "source"}:
-        if all(isinstance(v, str) for v in at.values()) and at["source"] in _WORDS:
-            return object_at(at["slide"], at["object"], at["source"])
-        raise ValueError("a place in a workbook is {sheet, row, col} or {slide, object, source}")
+    words = isinstance(at, Mapping) and set(at) == {"slide", "object", "source"}
+    if words and all(isinstance(v, str) for v in at.values()) and at["source"] in _WORDS:
+        return object_at(at["slide"], at["object"], at["source"])
     try:
-        return cell_at(*cell_of(at))
+        return cell_at(*cell_of(at))  # (words that are not right are not a cell either)
     except ValueError:
         raise ValueError("a place in a workbook is {sheet, row, col} or {slide, object, source}") from None
 

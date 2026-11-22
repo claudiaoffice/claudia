@@ -3,7 +3,7 @@
 // and File ▸ Print… prints the slide shown as one landscape page and the whole workbook with the slide between the sheets.
 // Nothing in the UI makes a slide yet (a chart will, E6.31 step 3), so the workbook comes in as a Claudia export made
 // here with the slide in it (D1272). Run against a computes server: URL=http://127.0.0.1:8765/ npm run e2e:computes-slides
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const { execFileSync } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -76,7 +76,7 @@ async function menu(page, title, ...items) {
 
 ;(async () => {
   fs.mkdirSync(SHOTS, { recursive: true })
-  const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {})
+  const browser = await launch()
   try {
     const page = await open(browser, seed())
 
