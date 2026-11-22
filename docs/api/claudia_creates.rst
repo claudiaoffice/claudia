@@ -54,12 +54,6 @@ its proportions, exactly as it does for a shape with an ``aspect``.
 :data:`~claudia_core.SLIDE_HEIGHT`) and the slide records are claudia-core's, shared with computes (D1470); they are
 re-exported here.
 
-.. autodata:: claudia_creates.MIN_OBJECT_SIZE
-.. autodata:: claudia_creates.MAX_OBJECT_TEXT
-.. autodata:: claudia_creates.MAX_OBJECTS_PER_SLIDE
-.. autodata:: claudia_creates.ASPECT_TOLERANCE
-.. autodata:: claudia_creates.OBJECT_KINDS
-
 Commands
 --------
 

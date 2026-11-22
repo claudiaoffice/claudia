@@ -122,7 +122,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         language: str | None = None,
     ) -> None:
         super().__init__()
-        #: The order of the slides, the presentation: their ids (what a slide is, is in ``slide_records``).
+        #: The ids of the slides in the order of the presentation; what each slide is, is in ``slide_records``.
         self.slides: list[str] = []
         #: The slides as records, with their names (one namespace with the objects, D550) and descriptions (D1317).
         self.slide_records: Slides = Slides()
@@ -258,15 +258,13 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     ) -> None:
         """Add a slide at position ``at`` (the end by default), optionally with its notes, planned time, name and
         description (which is how undoing the removal of a slide gives them back)."""
-        if slide in self.slide_records:
-            raise ValueError(f"slide {slide!r} exists already")
         if at is not None and not 0 <= at <= len(self.slides):
             raise ValueError(f"there is no place {at} among {len(self.slides)} slides")
         notes = _checked_notes(notes)
         if seconds is not None:
             _check_seconds(seconds)
         self.check_thing_name(slide, name)
-        self.slide_records.add(Slide(slide, name, description))  # refuses an id that is not a slide id
+        self.slide_records.add(Slide(slide, name, description))  # refuses an id that is taken or not a slide id
         self.slides.insert(len(self.slides) if at is None else at, slide)
         self.open_holder(slide)
         self._slide_order += 1
