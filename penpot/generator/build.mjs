@@ -5,7 +5,10 @@ import { buildTokens, TYPE, fontSpecOf } from './src/tokens.mjs'
 import { createMeasurer } from './src/measure.mjs'
 import { configure, emit, layout, newId, parseColorText } from './src/model.mjs'
 import { buildLibrary } from './src/library.mjs'
-import { foundations, frontPage, librarySheets } from './src/pages.mjs'
+import { foundations, frontPage, laterFoundations, librarySheets } from './src/pages.mjs'
+import { buildDialogLibrary, searchPages, stylesPages } from './src/dialogs.mjs'
+import { buildWorkspaceLibrary, slidesInComputes } from './src/workspace.mjs'
+import { buildWorkflowLibrary, workflowPages } from './src/workflow.mjs'
 
 const REPO = process.env.CLAUDIA_REPO ?? '/home/claude/claudia'
 const OUT = process.argv[2] ?? 'out/claudia-front-page.penpot'
@@ -29,6 +32,8 @@ for (const [k, n] of [['filter', 'Atoms / Filter'], ['search', 'Atoms / Search f
 const ch52 = (await measurer.text({ ...fontSpecOf('body') }, '0'.repeat(52))).width
 const found = foundations(T)
 const front = await frontPage(lib, { tokens, ch52 })
+// the dialogs come last: the ids of the shapes above come from the order they were made in, and must not move
+const dialogs = buildDialogLibrary(lib)
 
 const stack = async (nodes, gap = 48, x = 0) => {
   let y = 0
@@ -43,7 +48,22 @@ const pages = {
   Icons: await stack([lib.appIcon, lib.glyph]),
   Components: await stack([lib.button, lib.rowAction, lib.field, lib.search, lib.dashed, lib.filter, lib.wordmark, lib.place, lib.docRow, lib.summary, lib.kind]),
   'Front page': await stack([front]),
+  'Dialog components': await stack(Object.values(dialogs)),
+  'Styles dialog': await stack(stylesPages(dialogs, lib)),
+  'Search & replace': await stack(searchPages(dialogs)),
 }
+// the workspace after everything above, pages included (they make shapes too), for the same reason
+pages['Workspace foundations'] = await stack(laterFoundations(T))
+const workspace = buildWorkspaceLibrary()
+pages['Workspace components'] = await stack(Object.values(workspace))
+pages['E6.31 Slides in computes'] = await stack(slidesInComputes(workspace, dialogs, lib), 120)
+// the workflow (E16) comes after the workspace, for the same reason
+const wf = buildWorkflowLibrary()
+const wfPages = workflowPages(lib, wf, workspace)
+pages['Workflow components'] = await stack(Object.values(wf))
+pages['E16 Corkboard'] = await stack(wfPages.cork, 120)
+pages['E16 Quiet mode'] = await stack(wfPages.quiet, 120)
+pages['E16 Binder'] = await stack(wfPages.binder, 120)
 void librarySheets
 
 // 3. the file

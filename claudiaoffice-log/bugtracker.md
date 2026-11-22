@@ -65,7 +65,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | SEC-09 | P3 | Security | User names can be confusable (homoglyphs) | open (unverified) |  |  |
 | SEC-14 | P3 | Security / Privacy | `/api/swagger` loads its script from a CDN; the API description is public | **new, open** |  |  |
 | SEC-16 | P3 | Security | The LaTeX program setting accepts any executable on the server | **new, open** |  |  |
-| PERF-06 | P3 | Performance | Packing rewrites the whole zip; threshold packing on the event loop | verified open |  |  |
+| PERF-06 | P3 | Performance | Threshold packing blocks the event loop (rewriting the whole zip is accepted up to ~50 MB, D1269) | verified open; narrowed 2026-11-22: the rewrite itself is accepted (D1269) |  |  |
 | PERF-07 | P3 | Performance | Structure edits recalculate the whole workbook (~12 s at 100k formulas) | verified open |  |  |
 | PERF-08 | P3 | Performance | The first chart downloads all of Plotly (4.6 MB) for a bar chart | **new, open** |  |  |
 | UX-08 | P3 | UX | Open and Create sit side by side; a typo cannot be told from a wrong password | open |  |  |
@@ -558,7 +558,11 @@ column), or cache it per revision.
 **Re-checked 2026-11-12: fixed.** `Sheet.extent()` is amortized O(1) (`_rows_live`/`_cols_live`); 0.001 ms at 500k
 cells.
 
-### PERF-06 · Packing rewrites the whole zip; threshold packing on the event loop · P3 · verified open
+### PERF-06 · Threshold packing blocks the event loop · P3 · verified open (narrowed 2026-11-22)
+**Narrowed 2026-11-22 (E2.1 closed).** Rewriting the whole zip is accepted up to about 50 MB (D1269); above that,
+appending is the trigger for a story. **What stays open:** `_after_change` → `_pack` in `claudia_server/sealed.py` packs
+on the event loop every 500 changes, so every other document on the server waits while a large file is rewritten. The
+way out is a worker thread behind the document's lock, as D1282 describes for renewal.
 **Evidence (documented, E2 slice 3 notes).** Packing writes the whole zip again every 500 changes and at release.
 Release runs in a thread; threshold packing does not. Fine up to some tens of megabytes; larger documents need
 appending or a split.
