@@ -143,8 +143,10 @@ jobs:
       - run: npm test
       - run: npm run docs # TypeDoc: the API documentation is generated from the source
 
-  # Real browsers against real servers: the one Python test that starts all three apps (tests/e2e), and the scripts
-  # in web/e2e that walk two people through each app. They are the only tests that see the rendered page.
+  # Real browsers against real servers: tests/e2e (with the specs), the scripts in web/e2e that walk two people through
+  # each app, and the Windows and macOS client's window. They are the only tests that see the rendered page. CI runs
+  # them as a computer does, through ./run-e2e.sh and its one list of scripts (D1452), so a script cannot run in one
+  # place and not in the other (PROC-44).
   e2e:
     name: End to end (Chromium)
     runs-on: ubuntu-24.04
@@ -162,91 +164,25 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci && npm run build
-        working-directory: web
-      - name: Chromium for Python's and Node's Playwright
-        run: |
-          uv run playwright install --with-deps chromium
-          (cd web && npx playwright install chromium)
-      - name: Three one-app servers, each greeting with its own app
-        run: uv run pytest tests/e2e
-      # Until the web client asks for an app by address (its own patch after D431), each script talks to a server of
-      # one app, started the old way (--model, D433) on the ports it expects.
-      - name: Two people in each app, against running servers
-        run: |
-          mkdir -p "$SHOTS"
-          uv run python -m claudia_fonts fetch "$RUNNER_TEMP/fonts"
-          uv run python -m claudia_server.hyphenation fetch "$RUNNER_TEMP/hyphenation"
-          port=8765
-          for model in claudia_computes.model:WorkbookModel claudia_composes:TextModel claudia_creates:SlideModel; do
-            uv run python -m claudia_server --no-tls --port "$port" --model "$model" --web web/.output/public \
-              --dir "$RUNNER_TEMP/documents-$port" --state-dir "$RUNNER_TEMP/state-$port" \
-              --fonts "$RUNNER_TEMP/fonts" --hyphenation "$RUNNER_TEMP/hyphenation" \
-              >> "$RUNNER_TEMP/servers.log" 2>&1 &
-            port=$((port + 1))
-          done
-          for _ in $(seq 1 60); do curl -fsS http://127.0.0.1:8767/api/health > /dev/null && break; sleep 1; done
-          cd web
-          URL=http://127.0.0.1:8765/ npm run e2e
-          URL=http://127.0.0.1:8765/ npm run e2e:pointing
-          URL=http://127.0.0.1:8765/ npm run e2e:regions
-          URL=http://127.0.0.1:8765/ npm run e2e:grid-a11y
-          URL=http://127.0.0.1:8765/ npm run e2e:describe
-          URL=http://127.0.0.1:8765/ TEXT_URL=http://127.0.0.1:8766/ npm run e2e:redaction # pick, plan, preview, redact (E3.14)
-          URL=http://127.0.0.1:8766/ npm run e2e:composes
-          URL=http://127.0.0.1:8766/ npm run e2e:composes-wrap # the lines go round a text box, a picture, a shape (CODE-64, D1068)
-          URL=http://127.0.0.1:8766/ npm run e2e:styling
-          URL=http://127.0.0.1:8766/ npm run e2e:style-delete
-          URL=http://127.0.0.1:8766/ npm run e2e:print
-          URL=http://127.0.0.1:8766/ npm run e2e:lists
-          URL=http://127.0.0.1:8766/ npm run e2e:dock-text # paragraphs as things: a tag to a heading (D554)
-          URL=http://127.0.0.1:8767/ npm run e2e:slides
-          URL=http://127.0.0.1:8767/ npm run e2e:creates-styles
-          URL=http://127.0.0.1:8767/ npm run e2e:print-creates
-          URL=http://127.0.0.1:8767/ npm run e2e:describe-creates
-          URL=http://127.0.0.1:8767/ npm run e2e:present
-          URL=http://127.0.0.1:8767/ npm run e2e:dock # names, a tag in the chat, replay (D550, D551)
-          npm run e2e:keys # all three servers: one key table, every menu entry, nothing to undo in a new document
-          npm run e2e:objects # all three servers: press, drag, scale, turn, menu, keys for every kind of object, and composes' tables (D1221-D1230)
-          pkill -f claudia_server || true
-      # These two start (and restart) a server of their own, on ports the step above has freed.
-      - name: Losing the server, and the recovery key
-        working-directory: web
-        run: |
-          npm run e2e:resilience
-          npm run e2e:recovery
-          npm run e2e:search
-          npm run e2e:pivots
-          npm run e2e:passwords
-          npm run e2e:details # description and tags on the front page (D530-D532), against a sealed server of its own
-      # Server settings ▸ Fonts (E3.13 f, D1041): a new administrator adds a house font (one style forbids embedding and is
-      # left out), renames the collection and removes it, against a server of its own on a free port.
-      - name: Server settings ▸ Fonts
-        run: |
-          uv run python scripts/make_admin_fonts_sample.py "$RUNNER_TEMP/house-fonts"
-          uv run python -m claudia_server --no-tls --port 8768 --web web/.output/public \
-            --dir "$RUNNER_TEMP/documents-8768" --state-dir "$RUNNER_TEMP/state-8768" >> "$RUNNER_TEMP/servers.log" 2>&1 &
-          for _ in $(seq 1 60); do curl -fsS http://127.0.0.1:8768/api/health > /dev/null && break; sleep 1; done
-          # The first administrator needs the setup code the server made at its start (SEC-12, D1371): it is in the state folder.
-          cd web && URL=http://127.0.0.1:8768/ FONTS="$RUNNER_TEMP/house-fonts" SETUP_CODE="$(cat "$RUNNER_TEMP/state-8768/admin/setup-code")" npm run e2e:admin-fonts
-          pkill -f "port 8768" || true
-      # The Neutralino client's window (D660), minus Neutralino itself: its built shell page and core, the real web app
-      # in the frame, once built for Windows and once for macOS (a build behaves like its platform wherever it runs).
-      # Starts servers of its own (8791 for --server), on ports the steps above have freed.
-      - name: The Windows client's window (shell page, core, server and web app, Neutralino faked)
-        run: |
-          (cd clients/neutralino && npm ci && npm run build:windows)
-          cd web && npm run e2e:windows-shell
-      - name: The macOS client's window (the same, built for macOS)
-        run: |
-          (cd clients/neutralino && npm run build:macos)
-          cd web && npm run e2e:macos-shell
+          cache-dependency-path: |
+            web/package-lock.json
+            clients/neutralino/package-lock.json
+      # The one step a computer does by hand (./run-e2e.sh prints it): the system libraries the browser needs.
+      - name: The system libraries Chromium needs
+        run: uv run playwright install-deps chromium
+      # Packages of web/ and clients/neutralino/, the web build, Chromium for Python's and Node's Playwright, the fonts
+      # and hyphenation patterns, into .claudia/e2e/ as on a computer.
+      - name: Get ready as on a computer
+        run: ./run-e2e.sh setup
+      - name: Everything ./run-e2e.sh regression runs
+        run: ./run-e2e.sh regression --no-setup --shots "$SHOTS"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
-          name: e2e-screenshots
-          path: shots/
+          name: e2e-screenshots-and-logs
+          path: |
+            shots/
+            .claudia/e2e/logs/
           if-no-files-found: ignore
 
   # What the OpenDocument code writes is also opened in LibreOffice, the reference implementation (D409): the library's

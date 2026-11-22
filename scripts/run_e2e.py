@@ -15,18 +15,19 @@ What the words mean
     core        specs/ scenarios tagged @core, in the browsers chosen with --browser (default: chromium).
     extended    the same plus those tagged @extended, i.e. every scenario that is not waiting for a decision.
     specs       an alias of "extended".
-    regression  what CI runs today: pytest tests/e2e, and the Node scripts in web/e2e against real servers.
-                These scripts only drive Chromium; --browser does not change that.
+    regression  exactly what CI runs in its end-to-end job, from one list (SCRIPTS below, D1452): pytest tests/e2e
+                (with the specs), every Node script in web/e2e against real servers, and the Windows and macOS
+                client's window. These only drive Chromium; --browser does not change that.
     all         regression, then specs.
     setup       only the setup below.
 
-The specs (claudiaoffice-log/specs/*.feature) are written and under review; their step code is not built yet, so
-"core" and "extended" say so and stop until tests/e2e/specs exists. "regression" works today.
+A spec scenario whose step has no code yet is skipped with its words; the list of skips is shown at the end of
+every run. `--list` counts the scenarios from the files each time, so it cannot go out of date.
 
 What setup does (every run does it first, and skips what is already done; --no-setup skips all of it)
     1. checks that uv, node (22 or newer) and npm are installed, and says how to get them if not;
     2. python packages: `uv run` already installed them from uv.lock before this script started;
-    3. web packages: `npm ci` in web/ when node_modules is missing or package-lock.json changed;
+    3. packages: `npm ci` in web/ and in clients/neutralino/ when node_modules is missing or package-lock.json changed;
     4. the web app: `npm run build` when web/.output is missing or older than web/app (or with --rebuild);
     5. browsers for Playwright, for Python and for Node (they keep separate versions): chromium, and firefox when
        --browser asks for it. On Linux a browser may also need system libraries; this script does not use sudo, it
@@ -63,6 +64,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
+CLIENT = ROOT / "clients" / "neutralino"  # the Windows and macOS client, whose windows two scripts test
 STATE = ROOT / ".claudia" / "e2e"
 SPECS_TESTS = ROOT / "tests" / "e2e" / "specs"
 BUILT = WEB / ".output" / "public" / "index.html"
@@ -75,34 +77,63 @@ MODELS = {
 }
 START_SECONDS = 90
 
-# The Node scripts of web/e2e, as CI runs them (.github/workflows/ci.yml, "Two people in each app"): which app's
-# server each talks to. `name` is the npm script e2e:<name>; "e2e" alone is demo.cjs. Minutes are rough.
-WITH_SERVERS: list[tuple[str, str, int]] = [
-    ("demo", "computes", 1),
-    ("pointing", "computes", 1),
-    ("regions", "computes", 1),
-    ("grid-a11y", "computes", 1),
-    ("describe", "computes", 1),
-    ("redaction", "computes", 1),
-    ("composes", "composes", 1),
-    ("composes-wrap", "composes", 1),
-    ("styling", "composes", 1),
-    ("style-delete", "composes", 1),
-    ("print", "composes", 2),
-    ("lists", "composes", 1),
-    ("dock-text", "composes", 1),
-    ("slides", "creates", 1),
-    ("creates-styles", "creates", 1),
-    ("print-creates", "creates", 2),
-    ("describe-creates", "creates", 1),
-    ("present", "creates", 1),
-    ("dock", "creates", 1),
-    ("keys", "all", 1),
+# Where a script of web/e2e runs: against one of the three shared one-app servers on 8765-8767 (or "all" of them),
+# against a server it starts itself ("own"), against a server with house fonts on 8768 ("fonts"), or in the window of
+# the Neutralino client built for Windows or macOS, which starts its own server too ("windows", "macos").
+SHARED = ("computes", "composes", "creates", "all")
+OWN = "own"
+FONTS = "fonts"
+WINDOWS = ("windows", "macos")
+
+
+@dataclass(frozen=True)
+class Script:
+    """A browser script of web/e2e: the npm script ``e2e:<name>`` ("demo" is plain ``e2e``), where it runs, minutes."""
+
+    name: str
+    runs: str
+    minutes: int = 1
+
+    @property
+    def npm(self) -> str:
+        return "e2e" if self.name == "demo" else f"e2e:{self.name}"
+
+
+# The one list of the browser scripts (D1452): `./run-e2e.sh regression` runs them in this order, and CI runs
+# `./run-e2e.sh regression`, so a computer and CI run the same. A script in web/package.json that is missing here fails
+# tests/test_ci_workflow.py.
+SCRIPTS: list[Script] = [
+    Script("demo", "computes"),
+    Script("pointing", "computes"),
+    Script("regions", "computes"),
+    Script("grid-a11y", "computes"),
+    Script("describe", "computes"),
+    Script("redaction", "computes"),
+    Script("composes", "composes"),
+    Script("composes-wrap", "composes"),
+    Script("styling", "composes"),
+    Script("style-delete", "composes"),
+    Script("print", "composes", 2),
+    Script("lists", "composes"),
+    Script("dock-text", "composes"),
+    Script("slides", "creates"),
+    Script("creates-styles", "creates"),
+    Script("print-creates", "creates", 2),
+    Script("describe-creates", "creates"),
+    Script("present", "creates"),
+    Script("dock", "creates"),
+    Script("keys", "all"),
+    Script("objects", "all", 3),
+    Script("resilience", OWN),
+    Script("recovery", OWN),
+    Script("search", OWN),
+    Script("pivots", OWN),
+    Script("passwords", OWN),
+    Script("details", OWN),
+    Script("admin-fonts", FONTS),
+    Script("windows-shell", "windows", 2),
+    Script("macos-shell", "macos", 2),
 ]
-# These start (and restart) a server of their own, so the shared servers must be stopped first.
-OWN_SERVER = ["resilience", "recovery", "search", "pivots", "passwords", "details"]
-# One more with a server of its own and a folder of house fonts (CI step "Server settings > Fonts").
-FONTS_ADMIN = "admin-fonts"
 
 
 class Failure(Exception):
@@ -156,7 +187,8 @@ class Runner:
     def setup(self) -> None:
         self.head("Setup (skips what is already done)")
         self._tools()
-        self._web_packages()
+        self._packages(WEB)
+        self._packages(CLIENT)
         self._web_build()
         self._browsers()
         self._assets()
@@ -176,16 +208,17 @@ class Runner:
             )
         self.say(f"tools: uv, node {major}, npm are there; python packages come from uv.lock (uv run installed them)")
 
-    def _web_packages(self) -> None:
-        lock = WEB / "package-lock.json"
-        stamp = WEB / "node_modules" / ".e2e-lock-hash"
-        digest = hashlib.sha256(lock.read_bytes()).hexdigest()
+    def _packages(self, folder: Path) -> None:
+        """`npm ci` in a folder when its node_modules is missing or its package-lock.json changed."""
+        where = folder.relative_to(ROOT).as_posix()
+        stamp = folder / "node_modules" / ".e2e-lock-hash"
+        digest = hashlib.sha256((folder / "package-lock.json").read_bytes()).hexdigest()
         if stamp.is_file() and stamp.read_text().strip() == digest:
-            self.say("web packages: up to date")
+            self.say(f"{where} packages: up to date")
             return
-        self.say("web packages: installing (npm ci)")
-        if self.do(["npm", "ci"], cwd=WEB):
-            raise Failure("`npm ci` failed in web/.")
+        self.say(f"{where} packages: installing (npm ci)")
+        if self.do(["npm", "ci"], cwd=folder):
+            raise Failure(f"`npm ci` failed in {where}/.")
         if not self.args.dry_run:
             stamp.write_text(digest)
 
@@ -349,43 +382,52 @@ class Runner:
 
     def regression(self) -> None:
         only = set(self.args.only or [])
-        known = {n for n, _, _ in WITH_SERVERS} | set(OWN_SERVER) | {FONTS_ADMIN, "pytest"}
-        unknown = only - known
+        unknown = only - {script.name for script in SCRIPTS} - {"pytest"}
         if unknown:
-            raise Failure(f"no such script: {', '.join(sorted(unknown))}. Known: {', '.join(sorted(known))}")
-        want = lambda name: not only or name in only  # noqa: E731
+            known = sorted(script.name for script in SCRIPTS)
+            raise Failure(f"no such script: {', '.join(sorted(unknown))}. Known: pytest, {', '.join(known)}")
+        chosen = [script for script in SCRIPTS if not only or script.name in only]
 
-        self.head("tests/e2e (real servers, one Chromium)")
-        if want("pytest"):
+        if not only or "pytest" in only:
+            self.head("tests/e2e, with the specs (real servers, one Chromium)")
             self._record("pytest-e2e", [sys.executable, "-m", "pytest", "-rs", "tests/e2e"])
 
-        chosen = [row for row in WITH_SERVERS if want(row[0])]
-        if chosen:
+        shared = [script for script in chosen if script.runs in SHARED]
+        if shared:
             self.head("web/e2e scripts against the three servers (ports 8765-8767)")
             with self.servers():
-                for name, app, _ in chosen:
-                    env = {} if app == "all" else {"URL": f"http://127.0.0.1:{PORTS[app]}/"}
-                    if name == "redaction":
+                for script in shared:
+                    env = {} if script.runs == "all" else {"URL": f"http://127.0.0.1:{PORTS[script.runs]}/"}
+                    if script.name == "redaction":
                         env["TEXT_URL"] = f"http://127.0.0.1:{PORTS['composes']}/"
-                    self._record(
-                        f"e2e-{name}",
-                        ["npm", "run", "--silent", "e2e" if name == "demo" else f"e2e:{name}"],
-                        cwd=WEB,
-                        env=env,
-                    )
+                    self._npm(script, env)
 
-        own = [n for n in OWN_SERVER if want(n)]
+        own = [script for script in chosen if script.runs == OWN]
         if own:
             self.head("web/e2e scripts that start a server of their own")
             self._need_ports([8766])
-            for name in own:
-                self._record(f"e2e-{name}", ["npm", "run", "--silent", f"e2e:{name}"], cwd=WEB)
+            for script in own:
+                self._npm(script)
 
-        if want(FONTS_ADMIN):
-            self.head("Server settings > Fonts (a server of its own on port 8768)")
-            self._admin_fonts()
+        for script in chosen:
+            if script.runs == FONTS:
+                self.head("Server settings > Fonts (a server of its own on port 8768)")
+                self._admin_fonts(script)
+            elif script.runs in WINDOWS:
+                self.head(f"{WHERE[script.runs]} (shell page, core, server and web app; Neutralino faked)")
+                self._client_window(script)
 
-    def _admin_fonts(self) -> None:
+    def _npm(self, script: Script, env: dict[str, str] | None = None) -> None:
+        self._record(f"e2e-{script.name}", ["npm", "run", "--silent", script.npm], cwd=WEB, env=env)
+
+    def _client_window(self, script: Script) -> None:
+        """A build behaves like its platform wherever it runs (D660), so both windows are tested on any computer."""
+        self._record(f"build-{script.runs}", ["npm", "run", "--silent", f"build:{script.runs}"], cwd=CLIENT)
+        if self.results and not self.results[-1].ok:
+            return
+        self._npm(script)
+
+    def _admin_fonts(self, script: Script) -> None:
         self._need_ports([8768])
         work = Path(tempfile.mkdtemp(prefix="claudia-e2e-fonts-", dir=STATE))
         process = None
@@ -415,11 +457,9 @@ class Runner:
             )
             self._wait_for([8768], [process])
             code = work / "state" / "admin" / "setup-code"  # the server's setup code, for naming its administrator
-            self._record(
-                "e2e-admin-fonts",
-                ["npm", "run", "--silent", "e2e:admin-fonts"],
-                cwd=WEB,
-                env={
+            self._npm(
+                script,
+                {
                     "URL": "http://127.0.0.1:8768/",
                     "FONTS": str(work / "house-fonts"),
                     "SETUP_CODE": code.read_text(encoding="utf-8").strip() if code.is_file() else "",
@@ -433,10 +473,6 @@ class Runner:
 
     def specs(self, level: str) -> None:
         self.head(f"specs ({level})")
-        if not SPECS_TESTS.is_dir():
-            self.say("The specs are written (claudiaoffice-log/specs/*.feature) but their step code is not built yet:")
-            self.say("tests/e2e/specs does not exist. Nothing to run here yet.")
-            return
         marker = "core" if level == "core" else "core or extended"
         command = [sys.executable, "-m", "pytest", "tests/e2e/specs", "-m", marker]
         if self.args.feature:
@@ -468,17 +504,56 @@ class Runner:
         return 1 if failed else 0
 
 
+WHERE = {
+    "computes": "against the computes server",
+    "composes": "against the composes server",
+    "creates": "against the creates server",
+    "all": "against all three servers",
+    OWN: "starts a server of its own",
+    FONTS: "starts a server of its own, with sample house fonts",
+    "windows": "The Windows client's window, built first",
+    "macos": "The macOS client's window, built first",
+}
+
+
 def listing() -> None:
-    print("regression (works today; needs the web app built; about 25-35 minutes in all)")
-    print("  pytest tests/e2e (three servers greeting, grid, documents between servers, names)")
-    for name, app, minutes in WITH_SERVERS:
-        print(f"  {name:<18} against the {app} server{'s' if app == 'all' else '':<2}  ~{minutes} min")
-    for name in OWN_SERVER:
-        print(f"  {name:<18} starts a server of its own")
-    print(f"  {FONTS_ADMIN:<18} starts a server of its own, with sample house fonts")
-    print("\nspecs (written, under review; step code not built yet)")
-    for feature in sorted((ROOT / "claudiaoffice-log" / "specs").rglob("*.feature")):
-        print(f"  {feature.relative_to(ROOT / 'claudiaoffice-log' / 'specs')}")
+    minutes = sum(script.minutes for script in SCRIPTS)
+    print(f"regression (what CI runs; needs the web app built; about {minutes + 6} minutes in all)")
+    print("  pytest tests/e2e   three servers greeting, the grid, documents between servers, names; and the specs")
+    for script in SCRIPTS:
+        print(f"  {script.name:<18} {WHERE[script.runs]:<52} ~{script.minutes} min")
+    print("\nspecs (claudiaoffice-log/specs, step code in tests/e2e/specs), counted from the files just now:")
+    collected = subprocess.run(
+        # -qq prints one "file: count" line per test file; addopts is emptied so that a -q there does not change it
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--collect-only",
+            "-qq",
+            "-o",
+            "addopts=",
+            "-p",
+            "no:cacheprovider",
+            str(SPECS_TESTS),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if collected.returncode:
+        print("  could not collect them; run `uv run pytest --collect-only tests/e2e/specs` to see why")
+        return
+    per_file = {
+        path.rsplit("/", 1)[-1]: int(count)
+        for path, _, count in (line.rpartition(": ") for line in collected.stdout.splitlines())
+        if path.endswith(".py") and count.isdigit()
+    }
+    for name, count in sorted(per_file.items()):
+        print(f"  {name:<32} {count:>4} scenarios")
+    print(f"  {sum(per_file.values())} scenarios in all. Which of them skip, and why, every run says at its end.")
+    print("  Spec files no test runs yet are listed in tests/test_specs_are_bound.py (NOT_BOUND_YET).")
 
 
 def main() -> int:

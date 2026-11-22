@@ -1,4 +1,4 @@
-"""CI runs what the repository says it can run (PROC-19).
+"""CI runs what the repository says it can run (PROC-19, PROC-44).
 
 At ``cfa2d91`` six of the eighteen browser scripts in ``web/package.json`` (lists, regions, the grid's accessibility,
 describing objects in computes and creates, the macOS shell window) were never run by CI, and the macOS client's own
@@ -6,8 +6,10 @@ tests, type check and build ran nowhere at all. Two of them rotted the same way 
 checks read the workflow as text: a script or a client that is not mentioned there is not run.
 """
 
+import importlib.util
 import json
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -19,10 +21,30 @@ def _e2e_scripts() -> list[str]:
     return sorted(name for name in scripts if name == "e2e" or name.startswith("e2e:"))
 
 
-def test_every_browser_script_of_the_web_app_is_run_by_ci():
-    run = set(re.findall(r"npm run (e2e(?::[\w-]+)?)\b", CI))
-    missing = [name for name in _e2e_scripts() if name not in run]
-    assert not missing, f"web/package.json has browser scripts CI never runs: {missing}"
+def _run_e2e():
+    spec = importlib.util.spec_from_file_location("run_e2e", ROOT / "scripts" / "run_e2e.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module  # its dataclasses look themselves up there
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_every_browser_script_of_the_web_app_is_in_the_one_list():
+    """``./run-e2e.sh`` and CI run the same scripts from one list (PROC-44, D1452)."""
+    listed = sorted(script.npm for script in _run_e2e().SCRIPTS)
+    assert listed == _e2e_scripts(), (
+        "web/package.json and SCRIPTS in scripts/run_e2e.py name different browser scripts:"
+        f" only in package.json {sorted(set(_e2e_scripts()) - set(listed))},"
+        f" only in SCRIPTS {sorted(set(listed) - set(_e2e_scripts()))}"
+    )
+
+
+def test_ci_runs_the_browser_scripts_through_the_one_list():
+    """A script CI calls by itself would be a second list, and a computer would not run it (objects.cjs, PROC-44)."""
+    assert "./run-e2e.sh regression" in CI, "CI does not run ./run-e2e.sh regression"
+    by_hand = re.findall(r"npm run (e2e(?::[\w-]+)?)\b", CI)
+    assert not by_hand, f"CI runs these browser scripts outside ./run-e2e.sh: {by_hand}"
 
 
 def test_every_native_client_with_its_own_tests_is_tested_by_ci():
