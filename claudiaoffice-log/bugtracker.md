@@ -54,6 +54,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-42 | P2 | UX / all | A document cannot be renamed: its name is sealed into the file, which the uid was meant to avoid | **decided, open** (D536, E5.21) |  |  |
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
 | UX-68 | P2 | UX / computes | A sheet or a chart tab (after E6.31: a slide) cannot be deleted: nothing in the menus or the tab strip reaches `RemoveSheet` or `remove_chart` | **new, open** (read; size 2) | 2026-11-22 |  |
+| UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -92,7 +93,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
-| CODE-17 | P3 | Code / tests | Three names for "use this browser" in the tests (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`) | **new, open** |  |  |
+| CODE-17 | P3 | Code / tests | Three names for "use this browser" in the tests (`CHROME`, `CHROMIUM`, `CLAUDIA_CHROMIUM`) | **fixed** 2026-11-22 (D1453, `e2e-guard`) |  | 2026-11-22 |
 | CODE-19 | P3 | Code | A debugging scan of the garbage collector and a 10 s sleep loop left in the journal | **new, open** |  |  |
 | CODE-20 | P3 | Code / Supply chain | The Dockerfile copies `uv:latest`: the image's build tool is not pinned | **new, open** |  |  |
 | CODE-21 | P3 | Code | `claudia_server/computes.py` holds every computes method (1,228 lines) | open; search split out 2026-11-13; 1,121 lines at `7994b00` (see CODE-27, CODE-29) |  |  |
@@ -121,6 +122,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
 | CODE-75 | P3 | Code / web clients | Only composes refused a change of a viewer before sending it; computes sent it and showed the server's refusal, creates checked in some places only | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-76 | P3 | Code / web clients | The sheet session ignored `shape` events, so an outline a colleague's sheet object needed arrived only with a reload | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
+| CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | open (row `@pending:CODE-77`) | 2026-11-22 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
@@ -1522,9 +1524,13 @@ repository variable set, the last step failed after a good deployment (or checke
 `odf-libreoffice` is `continue-on-error` "until it has a track record". It has read 31 of 31 files in every round since
 PROC-11. **Fix:** make it blocking; pin the LibreOffice version in the log line so a distribution update is visible.
 
-### CODE-17 · Three names for "use this browser" · P3 · new, open
+### CODE-17 · Three names for "use this browser" · P3 · fixed 2026-11-22
 `tests/e2e` reads `CLAUDIA_CHROMIUM`, five `web/e2e` scripts `CHROME`, five `CHROMIUM`, the rest nothing. **Fix:** one
 `web/e2e/browser.cjs` (`launch()` reading `CLAUDIA_CHROMIUM`, with `--no-sandbox` where needed) used by every script.
+**Fixed 2026-11-22** (D1453): exactly that; Playwright passes `--no-sandbox` itself. Of the 30 scripts at that point, 8
+read `CHROME`, 9 `CHROMIUM`, 2 `CLAUDIA_CHROMIUM` and 11 nothing; on a computer that cannot download Playwright's
+browser most could not run. **Test:** `tests/test_run_e2e.py::test_every_browser_script_starts_its_browser_one_way`, red
+before, green after; the whole local regression then ran with only `$CLAUDIA_CHROMIUM` set (33 passed).
 
 ### CODE-18 · The search "for all three apps" speaks only in sheets · P2 · fixed 2026-11-13
 `SearchPanel.vue` says it is one panel for all apps (D284), but matches, `leave`, `skipped` and `left_out` are
@@ -2618,3 +2624,20 @@ here. **Fixed:** `_free` sets `SO_REUSEADDR` (not on Windows, where it would let
 **Test:** `tests/test_run_e2e.py`, red before, green after. Escaped because: test not run (nobody ran the whole local
 regression to its end; the summary was never printed).
 
+## Round of 2026-11-22 (step code for the cross-app spec; branch `e2e-guard`; CODE-17 fixed above)
+
+### UX-69 · A viewer is not told that she can only look · P2 · size 2 · open
+**Measured** with the new step code of `specs/objects/the-same-in-all-three-apps.feature` (all three apps, a server
+of all apps, Chromium): for a viewer, Edit ▸ Image… and Insert ▸ Container ▸ … are greyed, the Rename links of
+Format ▸ All Styles… are not shown, the controls of Format ▸ Colours… are off, and dragging, scaling, turning or deleting
+an object does nothing; in none of these is she told "You can only look at this document." Only Delete on an object
+of a sheet says it. What D1432 promises (nothing is sent, the document and the colleague's page stay as they were)
+holds everywhere. **Fix.** Tell her once when she tries: a greyed entry, a gesture on an object, the dialogs.
+**Test:** the viewer scenario of that file, `@pending:UX-69` (strict: the day it passes, the tag has to go).
+
+### CODE-77 · Undoing a chart leaves it in the workbook, and the page reports an error · P2 · size 2 · open
+**Measured** the same way: after inserting a chart on a sheet and undoing it, the object goes, but the server sends no
+event that forgets the chart (it does for a picture, a shape and a container, D1431), and the browser's console has
+`Error: DOM element provided is null or undefined` from Plotly's `getGraphDiv`. **Test:** the row `workbook | a chart`
+of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
+E1.18.

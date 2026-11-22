@@ -8,8 +8,8 @@ is. Nothing here calls the server or reads the app's state.
 from __future__ import annotations
 
 import re
-import time
 
+from conftest import eventually
 from pytest_bdd import given, parsers, scenarios, then, when
 
 scenarios("../../../claudiaoffice-log/specs/composes/tables.feature")
@@ -39,19 +39,6 @@ def entries_with(person, word: str) -> int:
 
 def settle(person) -> None:
     person.page.wait_for_timeout(SETTLE_MS)
-
-
-def eventually(check, seconds: float = 5.0) -> None:
-    """Run ``check`` (it asserts) until it holds, for at most ``seconds``; the last failure is the answer."""
-    end = time.monotonic() + seconds
-    while True:
-        try:
-            check()
-            return
-        except AssertionError:
-            if time.monotonic() > end:
-                raise
-            time.sleep(0.1)
 
 
 @given('a new composes document "report" in which I am Ann, an owner')

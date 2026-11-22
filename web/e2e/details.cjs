@@ -1,7 +1,7 @@
 // Description and tags on the front page, in a real browser against a real sealed server: a document is made, its owner
 // writes a description and tags with Details…, anybody sees them in the list without a password, a chip narrows the
 // list, and a collection can be left again with "All documents" and with Esc.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const { spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -55,7 +55,7 @@ async function makeDocument(browser, id) {
 
 ;(async () => {
   const server = startServer()
-  const browser = await chromium.launch()
+  const browser = await launch()
   try {
     await ready()
     await makeDocument(browser, 'forecast-q3')

@@ -16,7 +16,7 @@
 // platform wherever it runs).
 // Where the two differ: the folders the core uses (%LOCALAPPDATA%), and the server's interpreter, which the core looks
 // for in .venv\Scripts on Windows and is therefore handed explicitly here, so that the same script runs in Linux CI.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const { createRequire } = require('node:module')
 const { execFileSync, spawn } = require('node:child_process')
 const assert = require('node:assert/strict')
@@ -260,8 +260,8 @@ async function checkWindow(window, app, label) {
 }
 
 ;(async () => {
-  // CHROMIUM: a browser binary to use instead of Playwright's own (for a machine with another Playwright version).
-  const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {})
+  // CLAUDIA_CHROMIUM: a browser binary to use instead of Playwright's own (for a machine with another Playwright version).
+  const browser = await launch()
   let failed = null
   try {
     // ---- each app, with the server the window starts itself

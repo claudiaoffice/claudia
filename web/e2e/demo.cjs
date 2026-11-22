@@ -1,5 +1,5 @@
 // Two people and the assistant in one table, in two real browser windows.
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8765/'
@@ -59,7 +59,7 @@ async function menu(page, title, ...path) {
 }
 
 ;(async () => {
-  const browser = await chromium.launch()
+  const browser = await launch()
   try {
     // ---- ann makes a document and types a small table
     const ann = await open(browser, ANN, true)

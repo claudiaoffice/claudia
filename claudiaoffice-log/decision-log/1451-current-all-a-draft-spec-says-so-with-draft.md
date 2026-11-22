@@ -21,4 +21,4 @@ step code is written yet, puts the file into `NOT_BOUND_YET` with its story (D14
 
 The owner finds what waits for review with `grep -rl "^@draft" claudiaoffice-log/specs`. The first draft marked so was
 `objects/the-same-in-all-three-apps.feature` (2026-11-21, D1431, D1432, CODE-75); the owner approved it on 2026-11-22
-without its chart-tab scenario, and it waits in `NOT_BOUND_YET` for step code.
+without its chart-tab scenario; it waited in `NOT_BOUND_YET` until its step code came the same day.

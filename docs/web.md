@@ -197,7 +197,7 @@ then:
 URL=http://127.0.0.1:8765/ npm run e2e            # two people and the assistant in one table
 URL=http://127.0.0.1:8765/ npm run e2e:pointing   # picking cells with the mouse while typing a formula
 URL=http://127.0.0.1:8766/ npm run e2e:composes   # two people and the assistant in one text
-URL=http://127.0.0.1:8766/ npm run e2e:composes-wrap  # the lines go round a text box, a picture and a shape (set CHROME=/path/to/chrome to use an installed browser)
+URL=http://127.0.0.1:8766/ npm run e2e:composes-wrap  # the lines go round a text box, a picture and a shape (set CLAUDIA_CHROMIUM=/path/to/chrome to use an installed browser)
 URL=http://127.0.0.1:8766/ npm run e2e:styling    # the style menu, the colour roles and the CSS view
 URL=http://127.0.0.1:8766/ npm run e2e:style-delete # deleting and hiding styles: assign, re-base, Undo, Hide/Show
 URL=http://127.0.0.1:8767/ npm run e2e:slides     # two people on one slide
@@ -212,7 +212,7 @@ npm run e2e:windows-shell    # the same, built for Windows
 The scripts that start a server of their own need ports 8766, 8767, 8768 and 8769 free, so stop the three servers first. `e2e:macos-shell` needs the macOS and Windows client built for macOS
 (`cd clients/neutralino && npm ci && npm run build:macos`) as well as the web app (`e2e:windows-shell` the same with `build:windows`; the two write
 the same folders, so build right before each), starts a server of its own for each app and one on 8791
-for `--server`, and fakes only Neutralino's client library; `CHROMIUM=/path/to/chrome` picks a browser binary other than Playwright's. CI runs all of them in its `e2e` job,
+for `--server`, and fakes only Neutralino's client library; `CLAUDIA_CHROMIUM=/path/to/chrome` picks a browser binary other than Playwright's. CI runs all of them in its `e2e` job,
 together with `tests/e2e` (the Python test that checks each server greets with its own app).
 
 `npm run lint` runs ESLint (`eslint.config.mjs`: Nuxt's recommended rules without the stylistic ones; every rule
@@ -306,7 +306,7 @@ between the audience view and the presenter view (current and next slide, the no
 planned total, the pace, this slide against its time, the clock), **F** toggles fullscreen, **Esc** steps back out one
 layer and then ends. The window announces each slide to a screen reader and respects reduced motion. The rules are in
 `lib/show.ts` (tested without a browser); `components/PresentShow.vue` draws them; `e2e/present.cjs`
-(`npm run e2e:present`, `BROWSER=firefox` for Firefox) drives all of it. A second audience window on another screen is
+(`npm run e2e:present`, `CLAUDIA_E2E_BROWSER=firefox` for Firefox) drives all of it. A second audience window on another screen is
 not built yet (D345).
 
 ## Search & replace panel, movable dialogs, help topics

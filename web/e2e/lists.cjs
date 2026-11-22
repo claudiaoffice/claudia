@@ -1,6 +1,6 @@
 // Lists in a text (E9.21), in real browser windows with two people (server: --model claudia_composes:TextModel).
-// BROWSER=firefox runs it in Firefox (the owner's main browser); CHROME=/path/to/chrome uses a browser that is installed.
-const { chromium, firefox } = require('playwright')
+// CLAUDIA_E2E_BROWSER=firefox runs it in Firefox (the owner's main browser); CLAUDIA_CHROMIUM=/path/to/chrome uses a browser that is installed.
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8766/'
@@ -57,8 +57,7 @@ async function menu(page, title, ...path) {
 const paragraph = (page, n) => page.locator('[data-testid=text] [data-paragraph]').nth(n)
 
 ;(async () => {
-  const type = process.env.BROWSER === 'firefox' ? firefox : chromium
-  const browser = await type.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {})
+  const browser = await launch()
   try {
     const ann = await open(browser, ANN, true)
     await ann.click('[data-testid=text]')

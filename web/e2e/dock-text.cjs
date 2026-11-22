@@ -3,7 +3,7 @@
 // puts a tag for the paragraph with the caret in the box. ben clicks the heading's tag and the text outlines it.
 // Start a text server first (as CI does): python -m claudia_server --model claudia_composes:TextModel ...
 // Run: URL=http://127.0.0.1:8766/ npm run e2e:dock-text
-const { chromium } = require('playwright')
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 
@@ -41,7 +41,7 @@ async function menu(page, title, ...path) {
 
 ;(async () => {
   fs.mkdirSync(SHOTS, { recursive: true })
-  const browser = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {})
+  const browser = await launch()
   try {
     const ann = await open(browser, ANN, true)
     await ann.click('[data-testid=text]')

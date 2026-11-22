@@ -28,17 +28,7 @@ def _paragraph(world, words):
 
 @given("Vera is a viewer of the document")
 def _vera_is_a_viewer(world):
-    ann = world.ann
-    ann.page.click('.menus .title:text-is("File")')
-    ann.page.click('.menus .drop [role=menuitem]:has-text("Manage")')
-    ann.page.click('.menus [role=menuitem]:has-text("Share…")')
-    dialog = ann.page.locator(".modal")
-    dialog.get_by_label("Name", exact=True).fill("vera")
-    dialog.locator("input[name=share-password]").fill(world.join("Vera").password)
-    dialog.locator("select").select_option("viewer")
-    dialog.get_by_role("button", name="Add person").click()
-    ann.page.wait_for_selector('.added li:has-text("vera (viewer)")')
-    dialog.get_by_role("button", name="Done").click()
+    world.ann.share(world.join("Vera"), "viewer")
 
 
 @given("Vera has the document open")

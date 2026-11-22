@@ -1,7 +1,7 @@
 // Redacting (E3.14; D720–D728) in two real browser windows: an owner picks a change and a message, sees the plan and
 // the preview, redacts, and the other person sees the blanked history; an editor may pick only her own work.
-// `CHROME=/path/to/chrome` uses that browser instead of Playwright's own.
-const { chromium } = require('playwright')
+// `CLAUDIA_CHROMIUM=/path/to/chrome` uses that browser instead of Playwright's own.
+const { launch } = require('./browser.cjs')
 const assert = require('node:assert/strict')
 
 const URL = process.env.URL ?? 'http://127.0.0.1:8765/'
@@ -155,7 +155,7 @@ async function importInParts(browser) {
 }
 
 ;(async () => {
-  const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {})
+  const browser = await launch()
   try {
     const ann = await open(browser, ANN, true)
     await typeAt(ann, 7, 3, SECRET)
