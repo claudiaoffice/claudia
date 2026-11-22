@@ -105,20 +105,28 @@ def stack() -> Iterator[str]:
         yield running.url
 
 
+def _launch(play):
+    """The browser the run asked for: Firefox, or Chromium from ``$CLAUDIA_CHROMIUM`` or from Playwright's own copy."""
+    if BROWSER == "firefox":
+        return play.firefox.launch(headless=not HEADED)
+    return play.chromium.launch(executable_path=chromium_at(), headless=not HEADED)
+
+
 @pytest.fixture(scope="module")
 def browser() -> Iterator[object]:
     """One browser per file of scenarios, shut down when the last of them is done. Not for the whole run (PROC-35): a
     Playwright that is still open keeps an event loop running in this thread, and the other end-to-end tests start their
     own Playwright, which refuses to start inside it."""
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import Error, sync_playwright
 
     with sync_playwright() as play:
-        if BROWSER == "firefox":
-            opened = play.firefox.launch(headless=not HEADED)
-        elif chromium_at():
-            opened = play.chromium.launch(executable_path=chromium_at(), headless=not HEADED)
-        else:
-            opened = play.chromium.launch(headless=not HEADED)
+        try:
+            opened = _launch(play)
+        except Error:
+            # Skipped with a reason, like test_greeting.py, not failed: a computer without the browser is not a broken
+            # app (PROC-48).
+            hint = ", or set $CLAUDIA_CHROMIUM" if BROWSER == "chromium" else ""
+            pytest.skip(f"no {BROWSER} for playwright (`uv run playwright install {BROWSER}`{hint})")
         try:
             yield opened
         finally:

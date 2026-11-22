@@ -1,5 +1,5 @@
 # Objects, styles and the palette behave alike in all three apps; a viewer is told at once that she can only look
-# (D1431, D1432, CODE-75). Draft for the owner's review, 2026-11-21.
+# (D1431, D1432, CODE-75). Reviewed by the owner 2026-11-22; the chart-tab scenario waits for the chart renames of E1.18.
 Feature: Objects, styles and the palette work the same in a text, a workbook and a presentation
 
   # -- a viewer --------------------------------------------------------------------------------------------
@@ -74,10 +74,3 @@ Feature: Objects, styles and the palette work the same in a text, a workbook and
       | presentation | a container    |
       | workbook     | a chart        |
       | presentation | a shape        |
-
-  @extended @app:computes
-  Scenario: A chart shown on a chart tab and as an object stays when one of them goes
-    Given a workbook with a chart shown on a chart tab and as an object on a sheet
-    When I delete the object
-    Then the chart tab still shows the chart
-    And when I undo, the object shows it again
