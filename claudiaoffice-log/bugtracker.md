@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (79)
+### Open (85)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -85,6 +85,10 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-59 | P3 | UX / composes | Up from the second paragraph to the first failed once in four runs: a re-render of a paragraph just saved may undo a native caret move | **new, open** (measured once, cause a guess; size 3) | 2026-11-20 |  |
 | UX-60 | P3 | UX / composes | Dragging an object to another paragraph is "Moved an object" in the history; the mock names the object and the paragraph | **new, open** (divergence from the mock of D1352; size 3) | 2026-11-20 |  |
 | UX-63 | P3 | UX / all apps | The print preview says printing and saving a PDF are "recorded in the document's history"; they go into the exit record, which is not part of the history (glossary) | **new, open** (`web/app/components/PrintPreview.vue`, string in `po/`; size 3) | 2026-11-21 |  |
+| UX-64 | P2 | UX / all apps | Dark mode: a part of the sidebar (History & Chat / Help) is not readable or has too little contrast; the exact symptom was not written down when it was seen (see entry) | **needs decision** (symptom to be re-stated; size 2) | 2026-11-22 |  |
+| UX-65 | P3 | UX / composes | Search & replace panel, find-only state: the results list overflows its container and the "text" badge of a result is clipped at the panel edge | **new, open** (`web/app/components/SearchPanel.vue`; **measured** in the running app; size 3) | 2026-11-22 |  |
+| UX-66 | P3 | UX / composes | `StylesDialog.vue` hard-codes `#7a4710` for the text of its `.flag` pill instead of a colour token (`--apricot-dark`), so it does not follow the themes | **new, open** (`web/app/components/StylesDialog.vue`; **read**; size 3) | 2026-11-22 |  |
+| UX-67 | P3 | UX / a11y | The Heading and Numbering selects in the Styles dialog are unstyled native `<select>`s: they look unlike every other field and may diverge from BITV (focus, contrast, target size not tested) | **new, open** (`web/app/components/StyleSpec.vue`; **read**; size 3) | 2026-11-22 |  |
 | CODE-03 | P3 | Code | README is out of date | open (not re-checked) |  |  |
 | CODE-04 | P3 | Code | Untyped functions escape the type check | verified open |  |  |
 | CODE-06 | P3 | Code | `--max-connections` is per document, not per server | open |  |  |
@@ -123,7 +127,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (143)
+### Fixed (144)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -2507,3 +2511,37 @@ holds for a slide, except that a slide goes by itself with its last object (owne
 **Acceptance:** a person deletes the sheet she is on (with a question first when it holds cells or objects, and one undo
 step), and is told why when a chart still reads it. The menu entry and its key wait for the menu rework against
 `notes/claudia-menus.xlsx` (owner, 2026-11-22).
+
+## Round of 2026-11-22 (Penpot file of the Styles dialog and the Search & replace dialog, branch `penpot`)
+
+Found while the two dialogs were drawn in `penpot/claudia.penpot` from the running web app (screenshots of the live
+dialogs next to the design). The Penpot file is not part of the bugs: it follows the app.
+
+### UX-64 · Dark mode: the sidebar is not readable enough · P2 · size 2 · needs decision
+Seen on 2026-11-22 when the app was looked at in the dark scheme (composes, `prefers-color-scheme: dark`, History &
+Chat / Help sidebar). The symptom was reported to the owner as "dark-mode sidebar bug, size 2" but not written down;
+the session that saw it was compacted before this entry. A re-check on 2026-11-22 showed the sidebar in dark mode
+without one clear defect (the inactive tab "Help" and the hint texts are the dimmest candidates; not measured).
+**Needs the owner to say which part he saw** (or a contrast measurement of the sidebar in both schemes). Related: the
+contrast report of 2026-11-06 (`--app-dark` as literal text, see `StyleMenu.vue`). **Acceptance.** Every text in the
+sidebar has contrast 4.5:1 in both schemes, measured by a test over the computed colours.
+
+### UX-65 · Search results overflow the panel in the find-only state · P3 · size 3 · new, open
+**Measured** in the running app (composes, Ctrl+H, a word with two matches): in the find-only state (no replacement
+open) the results list is wider than the panel body, so the "text" badge at the end of a result row is cut off at the
+panel's edge. In the replace state the rows fit. **Acceptance.** In every state of the panel the right edge of every
+result row, badge included, lies inside the panel (DOM-geometry test, English and German).
+
+### UX-66 · A hard-coded colour in the Styles dialog · P3 · size 3 · new, open
+**Read:** the `.flag` pill in `StylesDialog.vue` uses `color: #7a4710`, a literal that no token carries. The same
+colour is `color.apricot-dark` in the Penpot design system, where it had to be mapped by hand. It will not follow a
+theme change and is the same kind of fault as the 2026-11-06 contrast report. **Acceptance.** A test over the
+dialogs' styles finds no colour literal outside `tokens.css`.
+
+### UX-67 · Native selects in the Styles dialog · P3 · size 3 · new, open
+**Read:** "Heading" and "Numbering" in the paragraph part of the style editor are native `<select>`s with the
+browser's own look; the other controls (font, size, colour) are the app's own. Consistency fault, and a possible
+BITV divergence (visible focus, contrast and target size of the native control were not tested). In the Penpot file
+the control is drawn as the "Select / native" variant to show it. **Acceptance.** Either a decision that native
+selects are the standard (and the other selects follow), or a styled select with the same keyboard behaviour; BITV
+check of the result.
