@@ -31,5 +31,8 @@ Kept: "part" in its other senses (the files inside an export in `export_file.py`
 an internet domain, and the history: changelog entries, decisions, notes and the backlog's stories (E2.4 "Key domains
 and visibility", E16.8) keep the word they were written with.
 
+`stream` and "part key" are words of the code and stay out of the glossary: the glossary holds only the main concepts
+people meet when they use claudia (the owner, 2026-11-22).
+
 Nothing in the file and nothing on the wire changes: the file names a part by its value (`content`, `history`, `chat`)
 and never wrote the word.
