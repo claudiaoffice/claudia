@@ -36,6 +36,17 @@ export interface ConsentView {
 /** What the server says when it did not answer at all, or was stopped: they follow the badge in the same line. */
 const OF_THE_LINE = ['no answer was made', 'stopped at its next step']
 
+/** The sentences the server puts in `Via.note` (`ai_desk.py`, `ai_router.py`), each as a literal so that the catalogue has
+ * it: the note is English on the wire and is said here in the person's language. */
+const NOTES: Record<string, () => string> = {
+  'no answer was made': () => t('no answer was made'),
+  'stopped at its next step': () => t('stopped at its next step'),
+  'Claude is not allowed in this document. The owners can change that in Preferences ▸ AI…': () =>
+    t('Claude is not allowed in this document. The owners can change that in Preferences ▸ AI…'),
+}
+
+const said = (note: string) => (NOTES[note] ?? (() => note))()
+
 /** The badge: "Claude · remote" or "Qwen2.5-7B · this server". */
 export function badge(via: Via): string {
   return `${via.label} · ${via.remote ? t('remote') : t('this server')}`
@@ -43,13 +54,13 @@ export function badge(via: Via): string {
 
 /** The line under a message of the ai: who gave the answer, or what became of the question. */
 export function answeredBy(via: Via): string {
-  if (OF_THE_LINE.includes(via.note)) return `${badge(via)} · ${t(via.note)}`
+  if (OF_THE_LINE.includes(via.note)) return `${badge(via)} · ${said(via.note)}`
   return via.remote ? t('answered by {name} (remote)', { name: via.label }) : t('answered by {name}', { name: badge(via) })
 }
 
 /** The sentence about why this provider answered (Claude was not allowed here), apart from the line: `''` if none. */
 export function noteOf(via: Via): string {
-  return OF_THE_LINE.includes(via.note) || !via.note ? '' : t(via.note)
+  return OF_THE_LINE.includes(via.note) || !via.note ? '' : said(via.note)
 }
 
 /** The muted line in the history when the owners decide about Claude: "jonas switched Claude off for this document." */
