@@ -367,7 +367,7 @@ function fillsOf(f, rect) {
 
 function strokeOf(s) {
   if (!s) return { strokes: [] }
-  const c = s.raw ? { hex: s.raw, opacity: 1 } : color(s.color)
+  const c = s.raw ? { hex: s.raw, opacity: s.opacity ?? 1 } : color(s.color)
   const width = num(s.width)
   return {
     strokes: [

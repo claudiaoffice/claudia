@@ -8,14 +8,14 @@ import { board, circle, component, instance, pick, rect, text, variantSet } from
 import { vector } from './library.mjs'
 import { dialogShell } from './dialogs.mjs'
 
-const WHITE = { raw: '#FFFFFF' }
-const PANEL_TEXT = (opacity) => ({ raw: '#E6E0F5', opacity }) // SidePanel.vue: color #e6e0f5, rgb(230 224 245 / n%)
+export const WHITE = { raw: '#FFFFFF' }
+export const PANEL_TEXT = (opacity) => ({ raw: '#E6E0F5', opacity }) // SidePanel.vue: color #e6e0f5, rgb(230 224 245 / n%)
 const SCRIM = { raw: '#1F1A33', opacity: 0.38 } // Modal.vue ::backdrop rgb(31 26 51 / 38%)
 const NOTE = { raw: '#FFF6D6' } // a design note: not part of the app
 const NOTE_EDGE = '#E0B84A'
 
-const W = 1360 // the window the browser scripts use (web/e2e/*.cjs)
-const H = 800
+export const W = 1360 // the window the browser scripts use (web/e2e/*.cjs)
+export const H = 800
 
 // --- the library -----------------------------------------------------------------------------------------------
 
@@ -117,30 +117,30 @@ export function buildWorkspaceLibrary() {
 
 // --- pieces of a screen ----------------------------------------------------------------------------------------
 
-const hline = (name, y, w = 'fill', color = 'color.line') => rect(name, { abs: true, x: 0, y, w, h: 'border.1', fill: color })
+export const hline = (name, y, w = 'fill', color = 'color.line') => rect(name, { abs: true, x: 0, y, w, h: 'border.1', fill: color })
 
-function topBar(lib, doc) {
+export function topBar(lib, doc, app = 'computes') {
   const person = (letter, fill) => board('person', { w: 'size.avatar', h: 'size.avatar', layout: 'row', align: 'center', justify: 'center', radius: 'radius.pill', fill, stroke: { color: 'color.surface', width: 'border.2' } }, text('letter', letter, { style: 'hint', color: 'color.paper' }))
   return board(
     'Top bar',
     { w: 'fill', h: 'size.top-bar', layout: 'row', align: 'center', gap: 'space.24', pad: [0, 'space.16'], fill: 'color.surface' },
-    board('brand', { layout: 'row', align: 'center', gap: 'space.14' }, instance(lib.wordmark, {}), board('app', { layout: 'row', align: 'center', gap: 'space.7', pad: [0, 0, 0, 'space.14'] }, rect('divider', { abs: true, x: 0, y: 2, w: 'border.1', h: 24, fill: 'color.line' }), instance(pick(lib.appIcon, { App: 'computes', Size: '22' }), { nested: true }), text('name', 'computes', { style: 'app-name', color: 'color.text' }))),
+    board('brand', { layout: 'row', align: 'center', gap: 'space.14' }, instance(lib.wordmark, {}), board('app', { layout: 'row', align: 'center', gap: 'space.7', pad: [0, 0, 0, 'space.14'] }, rect('divider', { abs: true, x: 0, y: 2, w: 'border.1', h: 24, fill: 'color.line' }), instance(pick(lib.appIcon, { App: app, Size: '22' }), { nested: true }), text('name', app, { style: 'app-name', color: 'color.text' }))),
     text('document', doc, { style: 'doc-title', color: 'color.text', w: 'fill' }),
     board('right', { layout: 'row', align: 'center', gap: 'space.14' }, board('people', { layout: 'row', align: 'center' }, person('A', 'color.rose'), person('ai', 'color.iris')), board('History & chat', { layout: 'row', pad: ['space.7', 'space.17'], radius: 'radius.pill', fill: 'color.mist' }, text('label', 'History & chat', { style: 'body', color: 'color.ink' }))),
     hline('line', 51),
   )
 }
 
-function menuBar(w) {
+export function menuBar(w) {
   const titles = ['File', 'Edit', 'Insert', 'Format', 'View', 'Tools', 'Config', 'Help'] // as the code has them today (owner, 2026-11-22)
   return board('Menu bar', { w: 'fill', h: 'size.menu-bar', layout: 'row', align: 'center', gap: 'space.2', pad: ['space.2', 'space.10'], fill: 'color.surface' }, ...titles.map((t) => instance(w.menuTitle, { edit: { label: { content: t } } })), hline('line', 31))
 }
 
-function insertBar(w) {
+export function insertBar(w) {
   return board('Insert bar', { w: 'fill', h: 'auto', layout: 'row', align: 'center', gap: 'space.2', pad: ['space.6', 'space.10'], fill: 'color.surface' }, ...['text', 'image', 'circle', 'rectangle', 'triangle'].map((Glyph) => instance(pick(w.tool, { Glyph }), {})), hline('line', 41))
 }
 
-function formulaBar(ref, formula) {
+export function formulaBar(ref, formula) {
   return board(
     'Formula bar',
     { w: 'fill', h: 'auto', layout: 'row', align: 'center', gap: 'space.8', pad: ['space.6', 'space.10'], fill: 'color.surface' },
@@ -151,19 +151,19 @@ function formulaBar(ref, formula) {
   )
 }
 
-function sidePanel() {
+export function sidePanel(historyKids = [], chatKids = []) {
   const label = (name, t, o = {}) => text(name, t, { style: 'panel-label', color: PANEL_TEXT(0.62), ...o })
   return board(
     'History & Chat',
     { w: 'size.dock', h: 'fill', layout: 'column', fill: 'color.ink' },
     board('ai mode', { w: 'fill', h: 'auto', layout: 'column', gap: 'space.5', pad: ['space.10', 'space.14', 'space.4', 'space.14'] }, label('label', 'When I ask the AI, in this document:'), board('segmented', { w: 'fill', h: 'auto', layout: 'row', radius: 'radius.control', clip: true, stroke: { raw: '#E7E1F4', width: 'border.1' } }, board('act', { w: 'fill', h: 'auto', layout: 'row', justify: 'center', pad: ['space.6', 'space.4'] }, text('label', 'Act at once', { style: 'body', color: PANEL_TEXT(0.85) })), board('suggest', { w: 'fill', h: 'auto', layout: 'row', justify: 'center', pad: ['space.6', 'space.4'], fill: 'color.iris' }, text('label', 'Suggest first', { style: 'body', color: WHITE })))),
     board('tabs', { w: 'fill', h: 'auto', layout: 'row', gap: 'space.2', pad: ['space.8', 'space.10', 0, 'space.10'] }, board('History & Chat', { w: 'fill', h: 'auto', layout: 'row', justify: 'center', pad: ['space.7', 'space.4'], radius: ['radius.tab', 'radius.tab', 0, 0], fill: { raw: '#FFFFFF', opacity: 0.07 } }, text('label', 'History & Chat', { style: 'panel-tab', color: WHITE })), board('Help', { w: 'fill', h: 'auto', layout: 'row', justify: 'center', pad: ['space.7', 'space.4'] }, text('label', 'Help', { style: 'panel-tab', color: PANEL_TEXT(0.6) }))),
-    board('history', { w: 'fill', h: 'fill', layout: 'column', pad: ['space.12', 'space.14'] }, label('title', 'HISTORY')),
-    board('chat', { w: 'fill', h: 'fill', layout: 'column', pad: ['space.12', 'space.14'] }, label('title', 'CHAT')),
+    board('history', { w: 'fill', h: 'fill', layout: 'column', gap: historyKids.length ? 'space.6' : undefined, pad: ['space.12', 'space.14'] }, label('title', 'HISTORY'), ...historyKids),
+    board('chat', { w: 'fill', h: 'fill', layout: 'column', gap: chatKids.length ? 'space.6' : undefined, pad: ['space.12', 'space.14'] }, label('title', 'CHAT'), ...chatKids),
   )
 }
 
-function footer(w, tabs) {
+export function footer(w, tabs) {
   return board(
     'Tab strip',
     { w: 'fill', h: 'size.foot', layout: 'row', align: 'center', gap: 'space.4', pad: [0, 'space.10'], fill: 'color.surface' },
@@ -174,7 +174,7 @@ function footer(w, tabs) {
 }
 
 /** A selected object's frame: the outline and its eight handles (ObjectFrame.vue), around a w×h box at x, y. */
-function selection(x, y, w, h) {
+export function selection(x, y, w, h) {
   const at = [
     [0, 0], [w / 2, 0], [w, 0], [0, h / 2], [w, h / 2], [0, h], [w / 2, h], [w, h],
   ]
@@ -187,7 +187,7 @@ function selection(x, y, w, h) {
 }
 
 /** A bar chart as Plotly draws it in ChartView.vue: the first of BAR_COLORS (charts.py) is the teal of the palette. */
-function barChart(x, y, w, h, title) {
+export function barChart(x, y, w, h, title) {
   const top = title ? 36 : 14
   const base = h - 30
   const left = 44
@@ -227,7 +227,7 @@ function screen(name, { lib, w, toolbar, content, tabs, over = [] }) {
   )
 }
 
-function sheetGrid(rows) {
+export function sheetGrid(rows) {
   const kids = [rect('cells', { w: 'fill', h: 'fill', fill: 'color.surface' })]
   for (let r = 0; r < 24; r++) kids.push(rect(`row line ${r}`, { x: 0, y: 26 + r * 26, w: 'fill', h: 1, fill: 'color.line' }))
   for (let c = 0; c < 10; c++) kids.push(rect(`column line ${c}`, { x: 52 + c * 96, y: 0, w: 1, h: 'fill', fill: 'color.line' }))
@@ -250,7 +250,7 @@ const DATA = [
 ]
 
 /** A screen and the notes that go with it, side by side on the page. */
-const withNotes = (w, scr, notes) =>
+export const withNotes = (w, scr, notes) =>
   board(`${scr.name} (with notes)`, { layout: 'row', gap: 'space.24' }, scr, board('Notes', { w: 320, h: 'auto', layout: 'column', gap: 'space.12', pad: ['space.24', 0] }, ...notes.map((t, i) => instance(w.note, { w: 'fill', edit: { n: { content: String(i + 1) }, text: { content: t } } }))))
 
 // --- the screens of E6.31 --------------------------------------------------------------------------------------
