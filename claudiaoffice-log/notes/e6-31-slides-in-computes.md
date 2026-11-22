@@ -3,7 +3,7 @@
 Story: `Projects/claudia-office/_tasks/e6.31-slides-in-computes.md`. Glossary: Slide, Tab, Chart, Holder, Object layer.
 Screens: `notes/mockups/computes-slides-1-a-slide-among-the-sheets.svg`, `-2-insert-chart-as-a-slide.svg`,
 `-3-move-a-chart-to-a-slide.svg`, and the page "E6.31 Slides in computes" of `penpot/claudia.penpot` (branch `penpot`).
-Proposed on 2026-11-22; A3′ agreed with the owner the same day, the rest proposed with it (see "Agreed").
+Agreed with the owner on 2026-11-22 (see "Agreed").
 
 ## What the code does today
 
@@ -211,3 +211,4 @@ Untouched: the GTK and Neutralino clients (they show the web page; no new menu e
 
 - 2026-11-22: A3′ (the owner asked why `WorkbookModel` has sheets, slides and tabs; the answer, two collections and one
   order of references into them, was agreed, and with it a `Slides` without an order of its own).
+- 2026-11-22: A1, A2 and A4 to A10, as written here.
