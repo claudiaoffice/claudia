@@ -22,6 +22,8 @@ const loading = ref(true)
 const error = ref('')
 const refusal = ref<{ sentence: string; reason: string } | null>(null)
 const removing = ref(false)
+/** Applying Claude asks it one test question first, so a page that was applied has had it answered. */
+const tested = ref(false)
 
 const ai = computed(() => settings.value?.ai ?? null)
 const apply_ = computed(() => (ai.value ? applyState(form.value, { provider: ai.value.provider, key_set: ai.value.claude.key_set }) : null))
@@ -73,6 +75,7 @@ async function apply() {
   busy.value = true
   error.value = ''
   refusal.value = null
+  tested.value = false
   const f = form.value
   try {
     sync(
@@ -85,6 +88,7 @@ async function apply() {
         claude: claudePayload(f),
       }),
     )
+    tested.value = f.provider === 'claude'
   } catch (e) {
     if (e instanceof AdminApiError && e.reason) refusal.value = { sentence: refused(e), reason: e.reason }
     else error.value = e instanceof AdminApiError ? e.message : t('Could not reach the server.')
@@ -200,6 +204,8 @@ const lastError = computed(() => {
       <p class="lead">{{ t('Apply asks Claude one test question first.') }}</p>
       <p v-if="apply_.needsKey || (apply_.needsConfirm && !form.confirmed)" class="lead">{{ t('Apply needs a key and the confirmed sentence.') }}</p>
     </section>
+
+    <p v-if="tested" class="lead" role="status" data-testid="ai-tested">{{ t('Test answered') }}</p>
 
     <section v-if="refusal" class="refused" role="alert" data-testid="ai-refused">
       <strong>{{ refusal.sentence }}</strong>

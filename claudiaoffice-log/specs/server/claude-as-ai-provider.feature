@@ -7,7 +7,6 @@
 # be out of credit, to be slow and so on; the server under test is started with its address (never settable from the page).
 # One real-key check by the owner is the only run against the real API ("real API not run" is said in every patch).
 # Words in the glossary: AI provider, Remote provider, Provider key, Owners' consent.
-@draft
 Feature: An administrator can make Claude the AI that answers @ai, and the page tells the truth about where content goes
 
   As the administrator of a server, I want to connect Claude in the server settings, so that @ai answers with Claude the

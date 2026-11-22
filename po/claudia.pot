@@ -37,7 +37,7 @@ msgstr ""
 msgid "(delete)"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:145
+#: web/app/components/AdminAi.vue:149
 msgid "(none — @ai gets the scripted stand-in)"
 msgstr ""
 
@@ -309,7 +309,7 @@ msgstr ""
 msgid "A hyphen the line is never broken at"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:170
+#: web/app/components/AdminAi.vue:174
 msgid "A key of your Anthropic account. Anthropic bills its use apart from any Claude subscription."
 msgstr ""
 
@@ -429,7 +429,7 @@ msgstr ""
 msgid "ABCD-EFGH-…"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:120 web/app/components/AdminShell.vue:14
+#: web/app/components/AdminAi.vue:124 web/app/components/AdminShell.vue:14
 msgid "AI"
 msgstr ""
 
@@ -437,7 +437,7 @@ msgstr ""
 msgid "AI in this document"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:136 web/app/components/AdminAi.vue:137
+#: web/app/components/AdminAi.vue:140 web/app/components/AdminAi.vue:141
 msgid "AI provider"
 msgstr ""
 
@@ -733,7 +733,7 @@ msgstr ""
 msgid "Answering @ai in this document now"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:124
+#: web/app/components/AdminAi.vue:128
 msgid "Answering now:"
 msgstr ""
 
@@ -801,11 +801,11 @@ msgstr ""
 msgid "Apply Style…"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:200
+#: web/app/components/AdminAi.vue:204
 msgid "Apply asks Claude one test question first."
 msgstr ""
 
-#: web/app/components/AdminAi.vue:201
+#: web/app/components/AdminAi.vue:205
 msgid "Apply needs a key and the confirmed sentence."
 msgstr ""
 
@@ -901,7 +901,7 @@ msgstr ""
 msgid "Authors"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:151 web/app/components/StyleSpec.vue:197
+#: web/app/components/AdminAi.vue:155 web/app/components/StyleSpec.vue:197
 msgid "Auto"
 msgstr ""
 
@@ -1249,7 +1249,7 @@ msgstr ""
 msgid "Choose somebody…"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:48
+#: web/app/components/AdminAi.vue:50
 msgid "Claude"
 msgstr ""
 
@@ -1425,7 +1425,7 @@ msgstr ""
 msgid "Confirm password"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:198
+#: web/app/components/AdminAi.vue:202
 msgid "Confirmed by {by}, {when}"
 msgstr ""
 
@@ -1533,7 +1533,7 @@ msgstr ""
 msgid "Could not place the chart."
 msgstr ""
 
-#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:116 web/app/components/AdminAccessDocuments.vue:144 web/app/components/AdminAccessDocuments.vue:161 web/app/components/AdminAccessDocuments.vue:177 web/app/components/AdminAccessDocuments.vue:197 web/app/components/AdminAccessDocuments.vue:42 web/app/components/AdminAccessDocuments.vue:54 web/app/components/AdminAccessDocuments.vue:78 web/app/components/AdminAccessDocuments.vue:93 web/app/components/AdminAi.vue:60 web/app/components/AdminAi.vue:90 web/app/components/AdminFonts.vue:78 web/app/components/AdminSecurity.vue:54 web/app/components/AdminSecurity.vue:80 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:119 web/app/lib/admin-session.ts:59
+#: web/app/components/AddFontsDialog.vue:61 web/app/components/AdminAccessDocuments.vue:116 web/app/components/AdminAccessDocuments.vue:144 web/app/components/AdminAccessDocuments.vue:161 web/app/components/AdminAccessDocuments.vue:177 web/app/components/AdminAccessDocuments.vue:197 web/app/components/AdminAccessDocuments.vue:42 web/app/components/AdminAccessDocuments.vue:54 web/app/components/AdminAccessDocuments.vue:78 web/app/components/AdminAccessDocuments.vue:93 web/app/components/AdminAi.vue:62 web/app/components/AdminAi.vue:94 web/app/components/AdminFonts.vue:78 web/app/components/AdminSecurity.vue:54 web/app/components/AdminSecurity.vue:80 web/app/components/AdminTypesetting.vue:32 web/app/components/AdminTypesetting.vue:49 web/app/lib/admin-session.ts:119 web/app/lib/admin-session.ts:59
 msgid "Could not reach the server."
 msgstr ""
 
@@ -1789,7 +1789,7 @@ msgstr ""
 msgid "Detected on this machine"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:149 web/app/components/AdminAi.vue:150
+#: web/app/components/AdminAi.vue:153 web/app/components/AdminAi.vue:154
 msgid "Device"
 msgstr ""
 
@@ -1841,7 +1841,7 @@ msgstr ""
 msgid "Documents are encrypted on this server. Claude reads what it is shown in plain text."
 msgstr ""
 
-#: web/app/components/AdminAi.vue:197
+#: web/app/components/AdminAi.vue:201
 msgid "Documents are encrypted on this server; Claude reads what it is shown in plain text."
 msgstr ""
 
@@ -2941,7 +2941,7 @@ msgstr ""
 msgid "Kept as"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:169
+#: web/app/components/AdminAi.vue:173
 msgid "Kept on this server only. It is never shown again, never sent to a client or into a document."
 msgstr ""
 
@@ -2985,11 +2985,11 @@ msgstr ""
 msgid "Last changed by {by} · {when}"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:129
+#: web/app/components/AdminAi.vue:133
 msgid "Last error"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:134
+#: web/app/components/AdminAi.vue:138
 msgid "Last error: none"
 msgstr ""
 
@@ -3093,7 +3093,7 @@ msgstr ""
 msgid "Loading…"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:47
+#: web/app/components/AdminAi.vue:49
 msgid "Local model"
 msgstr ""
 
@@ -3229,7 +3229,7 @@ msgstr ""
 msgid "Max"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:183
+#: web/app/components/AdminAi.vue:187
 msgid "Max answer length (tokens)"
 msgstr ""
 
@@ -3301,11 +3301,11 @@ msgstr ""
 msgid "Mist"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:174
+#: web/app/components/AdminAi.vue:178
 msgid "Model"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:143
+#: web/app/components/AdminAi.vue:147
 msgid "Model folder"
 msgstr ""
 
@@ -3717,7 +3717,7 @@ msgstr ""
 msgid "Nothing to undo"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:206
+#: web/app/components/AdminAi.vue:212
 msgid "Nothing was changed: @ai still answers with {who}."
 msgstr ""
 
@@ -4137,7 +4137,7 @@ msgstr ""
 msgid "Paste As"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:164
+#: web/app/components/AdminAi.vue:168
 msgid "Paste the key of your Anthropic account"
 msgstr ""
 
@@ -4361,7 +4361,7 @@ msgstr ""
 msgid "Print…"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:157
+#: web/app/components/AdminAi.vue:161
 msgid "Provider key"
 msgstr ""
 
@@ -4573,7 +4573,7 @@ msgstr ""
 msgid "Remarks"
 msgstr ""
 
-#: web/app/components/AdminAccessDocuments.vue:235 web/app/components/AdminAi.vue:162 web/app/components/NumberingDialog.vue:200 web/app/components/PivotPanel.vue:113 web/app/components/SearchPanel.vue:631 web/app/components/ShareDialog.vue:116
+#: web/app/components/AdminAccessDocuments.vue:235 web/app/components/AdminAi.vue:166 web/app/components/NumberingDialog.vue:200 web/app/components/PivotPanel.vue:113 web/app/components/SearchPanel.vue:631 web/app/components/ShareDialog.vue:116
 msgid "Remove"
 msgstr ""
 
@@ -4601,7 +4601,7 @@ msgstr ""
 msgid "Remove tag {tag}"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:167
+#: web/app/components/AdminAi.vue:171
 msgid "Remove the key"
 msgstr ""
 
@@ -4641,7 +4641,7 @@ msgstr ""
 msgid "Removes the characters that cannot be printed (codes 0 to 31) from a text."
 msgstr ""
 
-#: web/app/components/AdminAi.vue:166
+#: web/app/components/AdminAi.vue:170
 msgid "Removing the key switches this server to the local model, because nothing else could answer."
 msgstr ""
 
@@ -4681,7 +4681,7 @@ msgstr ""
 msgid "Renewing the keys…"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:161 web/app/lib/shortcuts.ts:109
+#: web/app/components/AdminAi.vue:165 web/app/lib/shortcuts.ts:109
 msgid "Replace"
 msgstr ""
 
@@ -5001,7 +5001,7 @@ msgstr ""
 msgid "Schemes"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:46
+#: web/app/components/AdminAi.vue:48
 msgid "Scripted stand-in"
 msgstr ""
 
@@ -5697,6 +5697,10 @@ msgstr ""
 msgid "Tell them in the chat:"
 msgstr ""
 
+#: web/app/components/AdminAi.vue:208
+msgid "Test answered"
+msgstr ""
+
 #: web/app/components/InsertBar.vue:28 web/app/components/OpenDialog.vue:103 web/app/components/SearchPanel.vue:334 web/app/components/StyleBar.vue:56 web/app/components/StyleSpec.vue:176 web/app/components/StyleSpec.vue:177 web/app/components/StyleSpec.vue:189 web/app/lib/reference-labels.ts:11
 msgid "Text"
 msgstr ""
@@ -5809,7 +5813,7 @@ msgstr ""
 msgid "The address of a cell as text, from its row and column number. The third argument is 1 (default) for $A$1, 2 for A$1, 3 for $A1, 4 for A1; the fourth FALSE for R1C1 style; the fifth names a sheet."
 msgstr ""
 
-#: web/app/components/AdminAi.vue:132
+#: web/app/components/AdminAi.vue:136
 msgid "The administrator decides: add credit, or choose another provider."
 msgstr ""
 
@@ -6177,7 +6181,7 @@ msgstr ""
 msgid "The kept original file goes either way: it holds the same content."
 msgstr ""
 
-#: web/app/components/AdminAi.vue:158
+#: web/app/components/AdminAi.vue:162
 msgid "The key is given by the server’s operator."
 msgstr ""
 
@@ -7033,7 +7037,7 @@ msgstr ""
 msgid "This is not a file Claudia can open."
 msgstr ""
 
-#: web/app/components/AdminAi.vue:199
+#: web/app/components/AdminAi.vue:203
 msgid "This is not enough on its own: the owners of each document must also allow Claude (Preferences ▸ AI…, off by default). Until they do, @ai in that document uses the local model or the stand-in, and says so."
 msgstr ""
 
@@ -7197,7 +7201,7 @@ msgstr ""
 msgid "Time to check one password, in seconds"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:187
+#: web/app/components/AdminAi.vue:191
 msgid "Timeout (seconds)"
 msgstr ""
 
@@ -7301,7 +7305,7 @@ msgstr ""
 msgid "Type a server address."
 msgstr ""
 
-#: web/app/components/AdminAi.vue:178
+#: web/app/components/AdminAi.vue:182
 msgid "Type any model id: the list of models changes faster than this app does."
 msgstr ""
 
@@ -7461,7 +7465,7 @@ msgstr ""
 msgid "What a sum and regular payments are worth after a number of periods at a fixed rate."
 msgstr ""
 
-#: web/app/components/AdminAi.vue:121
+#: web/app/components/AdminAi.vue:125
 msgid "What answers @ai in every document on this server."
 msgstr ""
 
@@ -9209,7 +9213,7 @@ msgstr ""
 msgid "remark"
 msgstr ""
 
-#: web/app/components/AdminAi.vue:126 web/app/lib/ai-provider.ts:52
+#: web/app/components/AdminAi.vue:130 web/app/lib/ai-provider.ts:52
 msgid "remote"
 msgstr ""
 

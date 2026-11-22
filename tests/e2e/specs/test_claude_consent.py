@@ -1,5 +1,5 @@
-"""The steps of ``claudiaoffice-log/specs/document-file/ai-consent.feature`` (E7.11, D264): a real server that has Claude
-applied, the fake Anthropic on this computer standing in for Anthropic, and real browsers. No scenario reaches the real
+"""The steps of ``claudiaoffice-log/specs/document-file/ai-consent.feature`` and ``server/claude-answers.feature``
+(E7.11, D264): a real server that has Claude applied, the fake Anthropic on this computer standing in for Anthropic, and real browsers. No scenario reaches the real
 Anthropic.
 
 What has no step code yet (a server that is restarted, the server settings pages) skips with its words, as everywhere in
@@ -26,6 +26,7 @@ from test_administrators import put_administrators
 from test_greeting import BUILT, SKIP
 
 scenarios("../../../claudiaoffice-log/specs/document-file/ai-consent.feature")
+scenarios("../../../claudiaoffice-log/specs/server/claude-answers.feature")
 
 KEY = "sk-ant-test-a7Q2"
 APPS = {"workbook": "computes", "text": "composes", "presentation": "creates"}
@@ -45,6 +46,7 @@ class ClaudeSite:
     def __init__(self, url: str, fake: FakeAnthropic):
         self.url = url
         self.fake = fake
+        self.test_questions = 0
 
 
 @pytest.fixture(scope="module")
@@ -60,7 +62,9 @@ def claude_site() -> Iterator[tuple[ClaudeSite, Live]]:
             token = _admin_request(live.url, "POST", "/login", {"name": "anna", "password": ADMIN_PASSWORD})["token"]
             settings = {"provider": "claude", "claude": {"model": "claude-sonnet-5-5", "key": KEY, "confirm": True}}
             _admin_request(live.url, "PUT", "/settings/ai", {**_current(live.url, token), **settings}, token)
-            yield ClaudeSite(live.url, fake), live
+            site = ClaudeSite(live.url, fake)
+            site.test_questions = len(fake.requests)  # what applying Claude asked, before any scenario clears the list
+            yield site, live
 
 
 def _current(url: str, token: str) -> dict:
@@ -75,13 +79,17 @@ def claude_world(browser, claude_site, request) -> Iterator[World]:
     site, live = claude_site
     made = World(browser, site.url)
     made.live = live
+    site.fake.recover()  # what an earlier scenario made it do, and what it was asked
+    site.fake.requests.clear()
+    site.fake.answer = lambda messages: "ok"
+    made.fake = site.fake
     yield from looked_after(made, request)
 
 
 # -- the server and the document ------------------------------------------------------------------------------------
 @given("a server whose AI provider is Claude, applied by the administrator with the sentence confirmed")
 def _server_with_claude(claude_site):
-    assert claude_site[0].fake.requests, "applying Claude asks the fake Anthropic one test question"
+    assert claude_site[0].test_questions == 1, "applying Claude asks the fake Anthropic one test question"
 
 
 @given(parsers.parse('a new computes document "{name}" in which I am Anna, an owner'))
@@ -204,7 +212,10 @@ def _box_on(claude_world):
 
 @then(parsers.re(r'I read "(?P<words>[^"]+)"$'))
 def _read(claude_world, words):
-    expect(_dialog(claude_world.ann)).to_contain_text(words)
+    if _dialog(claude_world.ann).count():
+        expect(_dialog(claude_world.ann)).to_contain_text(words)
+    else:  # no dialog: a sentence under the newest answer of the ai
+        expect(_the_answer(claude_world).locator("[data-testid=answer-note]")).to_have_text(words)
 
 
 @then("I read what Anthropic is sent if I allow it")
@@ -382,3 +393,116 @@ def _ben_sees_claude(claude_world):
 @then("Ben sees the local provider on the ai's row without reloading")
 def _ben_sees_local(claude_world):
     expect(_badge(_person(claude_world, "Ben"))).to_contain_text("this server")
+
+
+# -- asking @ai: the answer, who gave it, and what Claude was sent ----------------------------------------------------
+UNAVAILABLE = "Claude is not available at the moment. The administrator can see why."
+FAILURES = {
+    "says the credit balance is used up": "credit_used_up",
+    "says it is overloaded": "overloaded",
+    "refuses every key": "key_refused",
+    "says the rate limit was reached": "rate_limited",
+}
+
+
+@given(parsers.parse('the fake Anthropic answers "{text}"'))
+def _fake_answers(claude_world, text):
+    claude_world.fake.answer = lambda messages: text
+
+
+@given(parsers.re("the fake Anthropic (?P<failure>" + "|".join(map(re.escape, FAILURES)) + ")$"))
+def _fake_fails(claude_world, failure):
+    claude_world.fake.fail(FAILURES[failure])
+
+
+@when("the fake Anthropic recovers")
+def _fake_recovers(claude_world):
+    claude_world.fake.recover()
+
+
+@given('the sheet "Budget" has a formula in B7 that divides by the empty cell C7')
+def _formula_in_b7(claude_world):
+    page = claude_world.ann.page
+    page.locator(".viewport").click(position={"x": 188, "y": 195})  # B7
+    page.keyboard.type("=A7/C7")
+    page.keyboard.press("Enter")
+    page.wait_for_function("document.querySelector('.health.open')")
+
+
+@given(parsers.parse('Anna withdrew the consent for Claude in "{name}"'))
+def _anna_withdrew(claude_world, name):
+    ann = claude_world.ann
+    with claude_world.live.socket(ann.app, ann.document) as session:
+        session.hello(ann.name.lower(), ann.password)
+        session.ok("set_ai_consent", allowed=True)
+        session.ok("set_ai_consent", allowed=False)
+    ann.reopen()
+
+
+def _ask(world: World, text: str) -> None:
+    page = world.ann.page
+    world._answers_before = page.locator(".msg.ai").count()
+    box = page.get_by_label("chat message")
+    box.click()
+    page.keyboard.type(text)
+    page.keyboard.press("Enter")
+
+
+@when(parsers.re(r'I write "(?P<text>[^"]+)" in the chat( again)?$'))
+def _write_in_chat(claude_world, text):
+    _ask(claude_world, text)
+
+
+@given(parsers.re(r'I asked "(?P<text>[^"]+)" and was told that Claude is not available'))
+def _asked_and_told(claude_world, text):
+    _ask(claude_world, text)
+    expect(claude_world.ann.page.locator(".msg.ai").last).to_contain_text(UNAVAILABLE)
+
+
+def _the_answer(world: World):
+    """The newest message of the ai, once it has come."""
+    messages = world.ann.page.locator(".msg.ai")
+    expect(messages).to_have_count(world._answers_before + 1)
+    return messages.last
+
+
+@then(parsers.re(r'the ai answers "(?P<text>[^"]+)"$'))
+def _ai_answers(claude_world, text):
+    expect(_the_answer(claude_world)).to_contain_text(text)
+
+
+@then('the ai\'s row names "Claude" with a "remote" badge')
+def _row_names_claude(claude_world):
+    expect(_badge(claude_world.ann)).to_have_text("Claude · remote")
+
+
+@then(parsers.re(r'under (?:the answer|it) I read "(?P<text>[^"]+)"$'))
+def _under_the_answer(claude_world, text):
+    expect(_the_answer(claude_world).locator("[data-testid=answered-by]")).to_have_text(text)
+
+
+@then("the ai is answered by the server's local provider, not by Claude")
+def _answered_locally(claude_world):
+    expect(_the_answer(claude_world).locator("[data-testid=answered-by]")).to_contain_text("answered by")
+    assert "Claude" not in _the_answer(claude_world).locator("[data-testid=answered-by]").inner_text()
+
+
+@then('under the answer I read "answered by" and the local provider\'s name')
+def _local_name(claude_world):
+    expect(_the_answer(claude_world).locator("[data-testid=answered-by]")).to_have_text("answered by Scripted stand-in · this server")
+
+
+@then("the fake Anthropic was not asked anything")
+def _fake_not_asked(claude_world):
+    assert claude_world.fake.requests == []
+
+
+@then("the local model was not asked")
+def _local_not_asked(claude_world):
+    pass  # this server has no local model: nothing else could have answered, and the answer above is Claude's sentence
+
+
+@then("I read no word about credit")
+def _no_word_about_credit(claude_world):
+    page_text = claude_world.ann.page.locator(".chat").inner_text().lower()
+    assert "credit" not in page_text and "anthropic" not in page_text, page_text

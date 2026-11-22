@@ -9,7 +9,6 @@
 # administrator can see why.") and the reason is on the AI page; there is no automatic switch to another provider; the stop
 # message is "Stopped: Claude was switched off."; the owners' consent only permits, so where Claude is not the server's
 # provider the provider that is answers, and the chat says so (not an error).
-@draft
 Feature: @ai answers with Claude only where both the administrator and the owners agreed, and always says who answered
 
   Background:
