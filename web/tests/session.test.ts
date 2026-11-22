@@ -359,8 +359,8 @@ describe('floating objects (images, E6.17)', () => {
     const session = new Session(() => link)
     await session.open()
     expect(session.state.images[ASSET.id]).toEqual(ASSET)
-    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['i1'])
-    const o = session.objectsOn('s1')[0]!
+    expect(session.sheetObjects('s1').map((o) => o.id)).toEqual(['i1'])
+    const o = session.sheetObjects('s1')[0]!
     expect(o.ref).toBe(ASSET.id)
     expect(o.imported).toEqual(IMPORT)
   })
@@ -368,11 +368,11 @@ describe('floating objects (images, E6.17)', () => {
   it('follows the stacking order the server sends, and takes objects away', async () => {
     const { link, session } = await opened()
     link.push('objects', { type: 'objects', holder: 's1', changed: [image('a'), image('b')], removed: [], order: ['a', 'b'] })
-    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['a', 'b'])
+    expect(session.sheetObjects('s1').map((o) => o.id)).toEqual(['a', 'b'])
     link.push('objects', { type: 'objects', holder: 's1', changed: [image('a', { anchor: { kind: 'cell', holder: 's1', row: 3, col: 2 } })], removed: [], order: ['a', 'b'] })
-    expect(session.objectsOn('s1')[0]?.anchor).toMatchObject({ row: 3, col: 2 })
+    expect(session.sheetObjects('s1')[0]?.anchor).toMatchObject({ row: 3, col: 2 })
     link.push('objects', { type: 'objects', holder: 's1', changed: [], removed: ['a'], order: ['b'] })
-    expect(session.objectsOn('s1').map((o) => o.id)).toEqual(['b'])
+    expect(session.sheetObjects('s1').map((o) => o.id)).toEqual(['b'])
     expect(session.state.objects.a).toBeUndefined()
   })
 
@@ -1866,7 +1866,7 @@ describe('slides among the sheets (E6.31, D1471, D1473)', () => {
       { kind: 'slide', id: 'p1', name: 'Sales chart' },
     ])
     expect(session.slideObjects('p1').map((o) => o.id)).toEqual(['t1'])
-    expect(session.objectsOn('s1')).toEqual([])
+    expect(session.sheetObjects('s1')).toEqual([])
     expect(session.state.library.map((s) => s.id)).toEqual(['circle'])
   })
 
@@ -1889,6 +1889,39 @@ describe('slides among the sheets (E6.31, D1471, D1473)', () => {
     await session.settled()
     expect(session.state.activeSlide).toBe('')
     expect(session.state.selected).toBe(null)
+  })
+
+  it('shows the tab before a slide that went, or the one after it when it was the first', async () => {
+    const { session, link } = await withASlide()
+    link.handlers.tabs = () => [
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+      { kind: 'slide', id: 'p1', name: 'Sales chart' },
+      { kind: 'sheet', id: 's2', name: 'Costs' },
+    ]
+    link.handlers.sheets = () => [{ id: 's1', name: 'Budget', rows: 2, cols: 2 }, { id: 's2', name: 'Costs', rows: 0, cols: 0 }]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    session.state.activeSheet = 's2' // the person came to the slide from Costs
+    await session.showSlide('p1')
+    link.handlers.tabs = () => [
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+      { kind: 'sheet', id: 's2', name: 'Costs' },
+    ]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    expect([session.state.activeSlide, session.state.activeSheet]).toEqual(['', 's1'])
+
+    link.handlers.tabs = () => [
+      { kind: 'slide', id: 'p2', name: 'First' },
+      { kind: 'sheet', id: 's1', name: 'Budget' },
+    ]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    await session.showSlide('p2')
+    link.handlers.tabs = () => [{ kind: 'sheet', id: 's1', name: 'Budget' }]
+    link.push('tabs', { type: 'tabs' })
+    await session.settled()
+    expect([session.state.activeSlide, session.state.activeSheet]).toEqual(['', 's1'])
   })
 
   it('moves, resizes and adds on a slide with the words creates uses', async () => {

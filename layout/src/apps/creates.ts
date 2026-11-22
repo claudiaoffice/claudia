@@ -6,48 +6,40 @@
  * A slide is 1600 × 900 CSS pixels (its objects and their CSS are measured so), drawn once at 1200 × 675 pt and
  * placed on each page through a group's transform, scaled to fit its place and centred there. On the `slide` paper
  * with no margins the page is the slide itself, edge to edge; anywhere else a thin frame shows where the slide ends.
- * The objects are drawn exactly as composes draws its floating objects ({@link drawObject}).
+ * The objects are drawn exactly as composes draws its floating objects, and a slide as computes prints one among its
+ * sheets (`./slides`).
  *
  * @module
  */
-import { type DisplayItem, type DisplayList, type DisplayPage, type GroupItem, type Rect, rectPath, walk } from '../display/list'
+import { type DisplayItem, type DisplayList, type DisplayPage, type Rect, walk } from '../display/list'
 import { contentBox, type PageGeometry, pageGeometry } from '../flow/paper'
 import type { FontSet } from '../fonts/fontset'
 import type { FontResolver } from '../fonts/resolve'
 import { DEFAULT_STYLE } from '../styles.generated'
 import type { Hyphenator } from '../text/hyphenate'
 import { LAYOUT_VERSION } from '../version'
+import { drawSlide, fittedSlide, placedSlide, slideFrame, type SlideObject } from './slides'
+
+export { SLIDE, type SlideObject } from './slides'
 import {
   cssOf,
-  drawObject,
   type ImageInfo,
   type Note,
-  type ObjectContext,
   objectFonts,
   PAGE_NUMBER_BAND,
   type PageSetupData,
   pageNumberItems,
-  px,
   type ShapeOutline,
   styleFont,
   Styles,
   type TextStyle,
-  type VisualObject,
 } from './objects'
 
-/** A slide's size in CSS pixels, and in mpt. */
-export const SLIDE = { w: 1600, h: 900 } as const
-const SLIDE_W = px(SLIDE.w)
-const SLIDE_H = px(SLIDE.h)
 
 /** The print layouts, in the order a preview offers them. */
 export const SLIDE_LAYOUTS = ['slides', 'handouts-2', 'handouts-3', 'handouts-4', 'handouts-6', 'handouts-9'] as const
 export type SlideLayout = (typeof SLIDE_LAYOUTS)[number]
 
-/** An object on a slide as the server sends it: the shared body and where on its slide it sits (CSS pixels). */
-export interface SlideObject extends VisualObject {
-  anchor: { kind: 'slide'; holder: string; x: number; y: number }
-}
 /** The `print_setup` answer of a creates server (D917). */
 export interface PrintSetupData {
   layout: SlideLayout
@@ -84,7 +76,6 @@ const BODY = DEFAULT_STYLE.creates
 /** The space between the slides of a handout, and between the lines for notes. */
 const GAP = 22677 // 8 mm
 const LINE_GAP = 22677
-const FRAME = { r: 160, g: 160, b: 160, a: 255 }
 const RULE = { r: 190, g: 190, b: 190, a: 255 }
 
 /** The SHA-256 of every font file laying out `doc` needs, as `resolver` picks them. */
@@ -176,7 +167,9 @@ export function layoutSlides(doc: SlideDocument, fonts: FontSet, resolver: FontR
       const index = n * perPage + k
       if (index >= drawn.length) break
       const { slide, lines } = place(k)
-      items.push(...placedSlide(drawn[index]!, slide, !edgeToEdge))
+      const placed = placedSlide(drawn[index]!, slide)
+      items.push(placed.group)
+      if (!edgeToEdge) items.push(slideFrame(placed.rect))
       if (lines) {
         for (let y = lines.y + LINE_GAP; y <= lines.y + lines.h; y += LINE_GAP) {
           items.push({ kind: 'path', ops: [['M', lines.x, y], ['L', lines.x + lines.w, y]], fill: null, stroke: RULE, lineWidth: 400 })
@@ -198,34 +191,4 @@ export function layoutSlides(doc: SlideDocument, fonts: FontSet, resolver: FontR
     slides: doc.slides.length,
     perPage,
   }
-}
-
-/** The objects of a slide drawn in the slide's own coordinates (0, 0 to 1200 × 675 pt), the one in front last: drawn once,
- * and placed on a page by {@link placedSlide}. A workbook's slides are drawn so too (E6.31, D1473). */
-export function drawSlide(objects: readonly SlideObject[], context: ObjectContext): DisplayItem[] {
-  return objects.flatMap((o) => drawObject(o, { x: px(o.anchor.x), y: px(o.anchor.y), w: px(o.w), h: px(o.h) }, context) ?? [])
-}
-
-/** A slide fitted into `r`, centred, keeping its 16:9: the scale in millionths (so the transform is exact) and where it
- * lies. */
-function fittedSlide(r: Rect): { scale: number; rect: Rect } {
-  const scale = Math.max(1, Math.min(Math.floor((r.w * 1_000_000) / SLIDE_W), Math.floor((r.h * 1_000_000) / SLIDE_H)))
-  const w = Math.round((SLIDE_W * scale) / 1_000_000)
-  const h = Math.round((SLIDE_H * scale) / 1_000_000)
-  return { scale, rect: { x: r.x + Math.floor((r.w - w) / 2), y: r.y + Math.floor((r.h - h) / 2), w, h } }
-}
-
-/** A drawn slide as large as `place` takes it, centred, cut at its edge, with a thin frame where it ends when `framed`. */
-export function placedSlide(drawn: DisplayItem[], place: Rect, framed: boolean): DisplayItem[] {
-  const { scale, rect } = fittedSlide(place)
-  const group: GroupItem = {
-    kind: 'group',
-    clip: null,
-    rotation: 0,
-    origin: { x: 0, y: 0 },
-    matrix: [scale, 0, 0, scale, rect.x, rect.y],
-    clipPath: { ops: rectPath({ x: 0, y: 0, w: SLIDE_W, h: SLIDE_H }) },
-    items: drawn,
-  }
-  return framed ? [group, { kind: 'path', ops: rectPath(rect), fill: null, stroke: FRAME, lineWidth: 500 }] : [group]
 }

@@ -428,7 +428,7 @@ const replayClass = (id: string) => {
  * asked that an image never resizes on a structural edit and takes click priority over the cells beneath it. */
 const selectedObject = ref<string | null>(null)
 
-const objects = computed(() => props.session.objectsOn(props.sheet))
+const objects = computed(() => props.session.sheetObjects(props.sheet))
 
 /** The frame an object is drawn in: the preview of the gesture under way, else its own (sheet pixels from the first cell,
  * without the headers or the scroll), and the angle it is drawn at. */

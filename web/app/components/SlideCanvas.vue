@@ -23,7 +23,7 @@ import { colorOf, inkOn } from '~/lib/people'
 import { facetCss, scaleCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject } from '~/lib/slide-session'
-import { onSlide, type SlideHost } from '~/lib/slide-host'
+import { isOnSlide, type SlideHost } from '~/lib/slide-host'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
 import type { SlideMark } from '~/lib/slide-search-host'
@@ -40,7 +40,10 @@ const emit = defineEmits<{ styles: []; agenda: [id: string] }>()
 const session = props.session
 const state = session.state
 /** An object of the document as an object on a slide, or `undefined` (a workbook's objects hang at cells too). */
-const slideObject = (id: string | null | undefined): SlideObject | undefined => onSlide(id ? state.objects[id] : undefined)
+const slideObject = (id: string | null | undefined): SlideObject | undefined => {
+  const o = id ? state.objects[id] : undefined
+  return isOnSlide(o) ? o : undefined
+}
 
 /** Cut, Copy and Paste of a picture (D1229): one module for the three apps. A paste puts the picture where a new one goes,
  * at the size it had (and no further out than the slide). */

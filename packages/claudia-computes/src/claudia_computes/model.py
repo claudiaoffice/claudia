@@ -480,10 +480,10 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         super().__init__()
         #: The sheets, in the order the tabs have them (``tabs`` is that order; this is what a sheet is).
         self.sheets: dict[SheetId, Sheet] = {}
-        #: The slides (E6.31, D1470): what a slide is, with its name and description; their order is in ``tabs``.
+        #: What each slide is, with its name and description (E6.31, D1470); their order is in ``tabs``.
         self.slides = Slides()
-        #: The one order of the sheets and slides, every one of them in it exactly once (D1471): kept so by
-        #: :meth:`add_sheet`, :meth:`drop_sheet`, :meth:`add_slide` and :meth:`remove_slide`, and nowhere else.
+        #: The one order of the sheets and slides, every one of them in it exactly once (D1471), kept so by
+        #: :meth:`add_sheet`, :meth:`drop_sheet`, :meth:`add_slide` and :meth:`remove_slide` and nowhere else.
         self.tabs: list[Tab] = []
         self.calc = Calculator(self, functions or default_functions())
         self._ids: dict[str, SheetId] | None = None
@@ -571,6 +571,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         for slide_id in slide_ids:
             model.open_holder(slide_id)
         model.tabs = [Tab.from_data(item) for item in state["tabs"]]
+        if sorted(tab.id for tab in model.tabs) != sorted([*model.sheets, *slide_ids]):
+            raise ValueError("the tabs must name every sheet and every slide exactly once")
         model.restore_objects(state["objects"], state)
         model.charts = {item["id"]: Chart.from_data(item) for item in state["charts"]}
         model.names = Names.from_data(state["names"])
@@ -672,8 +674,8 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         """An object on a sheet hangs at a cell of it, and its size is not bounded (a sheet has no edge to fall off);
         an object on a slide sits at a point of it and stays in its frame, the core's rule for every slide (D1470)."""
         if isinstance(anchor, SlideAnchor):
-            if anchor.slide in self.sheets:
-                raise ValueError(f"“{self.thing_name(anchor.slide)}” is a sheet: an object on it hangs at a cell")
+            if anchor.holder in self.sheets:
+                raise ValueError(f"“{self.thing_name(anchor.holder)}” is a sheet: an object on it hangs at a cell")
             check_on_slide(anchor, body)
             return
         if anchor.holder in self.slides:
@@ -765,7 +767,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
                 return index
         raise ValueError(f"unknown tab {tab_id!r}")
 
-    def _check_new_tab(self, tab_id: str, index: int | None) -> None:
+    def check_new_tab(self, tab_id: str, index: int | None) -> None:
+        """``ValueError`` unless a new sheet or slide may have this id and stand at ``index`` among the tabs
+        (``None``: last)."""
         if tab_id in self.sheets or tab_id in self.slides:
             raise ValueError(f"a tab with the id {tab_id!r} exists already")
         if index is not None and not 0 <= index <= len(self.tabs):
@@ -776,7 +780,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         changed) if its id is taken or not a slide id, or there is no such place. Its name is checked by the
         command, as a sheet's is."""
         self.slides.check_new(slide.id)
-        self._check_new_tab(slide.id, index)
+        self.check_new_tab(slide.id, index)
         self.slides.add(slide)
         self.tabs.insert(len(self.tabs) if index is None else index, Tab("slide", slide.id))
         self.open_holder(slide.id)
@@ -1340,7 +1344,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
     def add_sheet(self, sheet: Sheet, index: int | None) -> None:
         """Put a sheet at ``index`` in the tab order, or last when ``index`` is ``None``; ``ValueError`` (and nothing
         changed) if its id is taken by another tab or there is no such place."""
-        self._check_new_tab(sheet.id, index)
+        self.check_new_tab(sheet.id, index)
         self.tabs.insert(len(self.tabs) if index is None else index, Tab("sheet", sheet.id))
         self.sheets[sheet.id] = sheet
         self.sheets = {SheetId(tab.id): self.sheets[SheetId(tab.id)] for tab in self.tabs if tab.kind == "sheet"}

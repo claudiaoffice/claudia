@@ -692,23 +692,6 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     }
   }
 
-  /** Hold an object a person selected on a slide (shown only, for somebody who just looks); false when a colleague
-   * holds it first. Creates and computes select a slide's objects the same way (D1473). */
-  protected async holdObject(id: string, holder: string): Promise<boolean> {
-    const regions: Region[] = [{ kind: 'objects', holder, ids: [id] }]
-    if (lookOnly(this.state)) {
-      await this.showRegions(`select ${id}`, regions)
-      return true
-    }
-    return this.holdRegions(regions)
-  }
-
-  /** Let go of the selected object, and show the others that nothing is. */
-  protected async letGoOfObject(): Promise<void> {
-    await this.releaseRegions()
-    await this.showRegions('nothing', [])
-  }
-
   protected need(): LinkLike {
     if (!this.link) throw new ProtocolError('closed', 'not connected')
     if (this.state.replay) return (this.replayLink ??= new PastLink(this.link, () => this.replayShown))

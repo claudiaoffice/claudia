@@ -3,7 +3,7 @@
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { translate as t } from './i18n'
 import { ProtocolError, type LinkLike, type Region, type WireData } from './protocol'
-import { holderOf, firstFocus } from './replay'
+import { holderOf, firstFocus, lookOnly } from './replay'
 import type { Thing } from './tags'
 import { MAX_COLS, MAX_ROWS, type Content } from './cells'
 import type { CellRange } from './cell-styles'
@@ -12,8 +12,7 @@ import type { ImageAsset } from './images'
 import type { CellAnchor, ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
 import type { Frame } from './geometry'
 import type { Shown } from './references'
-import type { ShapeDef, SlideObject } from './slide-session'
-import { onSlide, othersOn, type Other, type PictureImport, type SlideHost } from './slide-host'
+import { isOnSlide, othersOn, SlideActions, type Other, type PictureImport, type ShapeDef, type SlideHost, type SlideObject } from './slide-host'
 import type { CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
 import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
@@ -161,6 +160,16 @@ interface Followed {
 
 const key = (row: number, col: number) => row * COL_STRIDE + col
 
+/** Does `object` hang at a cell of a sheet? */
+const isOnSheet = (object: WorkbookObject | undefined): object is SheetObject => object?.anchor.kind === 'cell'
+
+/** The tab to show when the tab `gone` went (D1473): the one before it that is still there, or the one after it. */
+function tabNear(before: readonly TabInfo[], now: readonly TabInfo[], gone: string): string | undefined {
+  const at = before.findIndex((tab) => tab.id === gone)
+  const kept = (tab: TabInfo) => now.some((x) => x.id === tab.id)
+  return [...before.slice(0, Math.max(at, 0))].reverse().find(kept)?.id ?? before.slice(at + 1).find(kept)?.id ?? now[0]?.id
+}
+
 /** Where a search looks: every sheet, one sheet, or a block of cells on it (first row, first column, last row, last column). */
 export interface SearchScope {
   sheet?: string
@@ -171,6 +180,15 @@ export interface SearchScope {
 export type { SearchLeave } from './search'
 
 export class Session extends BaseSession<State> implements SlideHost {
+  /** Showing a slide, and selecting, moving and putting objects on it, as creates does (E6.31, D1473). */
+  private readonly slide = new SlideActions({
+    state: this.state,
+    write: (method, params) => this.write(method, params),
+    show: (where, regions) => this.showRegions(where, regions),
+    hold: (regions) => this.holdRegions(regions),
+    release: () => this.releaseRegions(),
+    looking: () => lookOnly(this.state),
+  })
   /** A range like `A1:B5` (or one cell) on the sheet on show, as the part of an imported workbook to blank (D723). */
   override redactionRangePart(range: string): string | null {
     const text = range.trim().toUpperCase().replace(/\$/g, '')
@@ -261,7 +279,6 @@ export class Session extends BaseSession<State> implements SlideHost {
       for (const o of loaded[i]!.objects) s.objects[o.id] = o
     })
     s.sheets = sheets
-    s.tabs = tabs
     s.library = shapes.library
     s.shapes = Object.fromEntries(shapes.document.map((d) => [d.id, d]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
@@ -280,8 +297,10 @@ export class Session extends BaseSession<State> implements SlideHost {
     s.sheetPrint = printing?.sheets ?? {}
     s.language = language
     this.track(this.refreshUses())
+    const before = s.tabs
+    s.tabs = tabs
     if (!sheets.some((x) => x.id === s.activeSheet)) s.activeSheet = sheets[0]?.id ?? ''
-    if (!tabs.some((tab) => tab.kind === 'slide' && tab.id === s.activeSlide)) s.activeSlide = ''
+    if (s.activeSlide && !tabs.some((tab) => tab.id === s.activeSlide)) this.showHolder(tabNear(before, tabs, s.activeSlide) ?? '')
     if (s.selected && !s.objects[s.selected]) s.selected = null
   }
 
@@ -339,19 +358,19 @@ export class Session extends BaseSession<State> implements SlideHost {
   }
 
   /** The objects of a sheet, the one in front last. */
-  objectsOn(sheet: string): SheetObject[] {
-    return this.onHolder(sheet).filter((o): o is SheetObject => o.anchor.kind === 'cell')
+  sheetObjects(sheet: string): SheetObject[] {
+    return this.onHolder(sheet).filter(isOnSheet)
   }
 
   /** The object `id` if it hangs on a sheet; `undefined` else (an object on a slide is the slide view's). */
   sheetObject(id: string | null | undefined): SheetObject | undefined {
     const o = id ? this.state.objects[id] : undefined
-    return o?.anchor.kind === 'cell' ? (o as SheetObject) : undefined
+    return isOnSheet(o) ? o : undefined
   }
 
   /** The objects of a slide, the one in front last (E6.31): what the slide view draws, as creates' does. */
   slideObjects(slide: string): SlideObject[] {
-    return this.onHolder(slide).flatMap((o) => onSlide(o) ?? [])
+    return this.onHolder(slide).filter(isOnSlide)
   }
 
   private onHolder(holder: string): WorkbookObject[] {
@@ -360,10 +379,8 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   // -- a slide among the sheets (E6.31, D1473): shown with the slide view of creates, its objects placed the same way
   /** Show a slide (`''`: none, a sheet or a chart tab is shown), with nothing selected on it. */
-  async showSlide(slide: string): Promise<void> {
-    if (slide === this.state.activeSlide) return
-    await this.select(null)
-    this.state.activeSlide = slide
+  showSlide(slide: string): Promise<void> {
+    return this.slide.show(slide)
   }
 
   /** The objects of a slide that colleagues have selected, and whether they hold them. */
@@ -373,37 +390,26 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   /** Select an object on the slide on show (`null`: nothing). Selecting holds it; a colleague who holds it first keeps
    * it. */
-  async select(id: string | null): Promise<void> {
-    const s = this.state
-    if (id === s.selected) return
-    s.selected = id
-    if (id === null) return this.letGoOfObject()
-    if (!(await this.holdObject(id, s.objects[id]?.anchor.holder ?? s.activeSlide)) && s.selected === id) s.selected = null
+  select(id: string | null): Promise<void> {
+    return this.slide.select(id)
   }
 
-  async move(id: string, x: number, y: number): Promise<boolean> {
-    return (await this.write('move_object', { id, x, y })) !== false
+  move(id: string, x: number, y: number): Promise<boolean> {
+    return this.slide.move(id, x, y)
   }
 
-  async resize(id: string, frame: Frame): Promise<boolean> {
-    return (await this.write('resize_object', { id, ...frame })) !== false
+  resize(id: string, frame: Frame): Promise<boolean> {
+    return this.slide.resize(id, frame)
   }
 
   /** Put a text box on the slide on show; its id, or `null` after telling the person why not. */
   addText(frame: Frame): Promise<string | null> {
-    return this.insertOnSlide({ kind: 'text' }, frame)
+    return this.slide.insert({ kind: 'text' }, frame)
   }
 
   /** Put a shape from the library (or the document) on the slide on show. */
   addShape(shape: string, frame: Frame): Promise<string | null> {
-    return this.insertOnSlide({ kind: 'shape', shape }, frame)
-  }
-
-  private async insertOnSlide(params: Record<string, unknown>, frame: Frame): Promise<string | null> {
-    const done = await this.write('add_object', { slide: this.state.activeSlide, ...params, ...frame })
-    if (done === false) return null
-    await this.select(done.object)
-    return done.object
+    return this.slide.insert({ kind: 'shape', shape }, frame)
   }
 
   // -- charts (E6.6): a diagram definition, shown as a floating object, a tab, or both at once
@@ -649,10 +655,7 @@ export class Session extends BaseSession<State> implements SlideHost {
    * slide that went is let go of. */
   protected override objectsChanged(e: ObjectsEvent): void {
     this.track(this.refreshUses())
-    if (e.removed.includes(this.state.selected ?? '')) {
-      this.state.selected = null
-      this.track(this.letGoOfObject())
-    }
+    this.track(this.slide.gone(e.removed))
   }
 
   protected override stylesChanged(): void {
@@ -731,11 +734,9 @@ export class Session extends BaseSession<State> implements SlideHost {
   }
   protected override showHolder(id: string): void {
     const tab = this.state.tabs.find((x) => x.id === id)
-    if (tab?.kind === 'slide') this.state.activeSlide = id
-    else if (tab) {
-      this.state.activeSlide = ''
-      this.state.activeSheet = id
-    }
+    if (!tab) return
+    this.state.activeSlide = tab.kind === 'slide' ? id : ''
+    if (tab.kind === 'sheet') this.state.activeSheet = id
   }
 
   /** A step of the replay is shown on the sheet it touched (D551); the grid scrolls to it from `state.replay.focus`. */

@@ -104,8 +104,9 @@ watch(
     if (activeChart.value !== null && !charts.some((c) => c.id === activeChart.value)) activeChart.value = null
   },
 )
-/** A chart tab or a slide is shown instead of a sheet (E6.31): the grid, the formula bar and what acts on cells rest. */
-const offSheet = computed(() => activeChart.value !== null || state.activeSlide !== '')
+/** A sheet is shown, not a chart tab or a slide (E6.31): only then do the grid, the formula bar and what acts on cells
+ * work. */
+const sheetShown = computed(() => activeChart.value === null && state.activeSlide === '')
 /** The slide view, while a slide is shown (D1473): creates' canvas. */
 const canvas = ref<{ focus: () => void } | null>(null)
 const grid = ref<{
@@ -236,7 +237,7 @@ function thingInFocus(): string | undefined {
 async function selectName(name: NameInfo) {
   const g = name.region
   if (!g) return
-  if (g.sheet !== state.activeSheet || offSheet.value) await pickTab(g.sheet, 'sheet')
+  if (g.sheet !== state.activeSheet || !sheetShown.value) await pickTab(g.sheet, 'sheet')
   sel.value = { row: g.row0, col: g.col0, row2: g.row1, col2: g.col1 }
 }
 
@@ -340,7 +341,7 @@ async function pickPurpose(offset: number | null, purpose: Purpose) {
 // ------------------------------------------------------------------------------ pivot tables (E6.30, D624)
 // A pivot table is a name with a place (`state.pivots`); the entries of Tools that work on one are off while the cursor
 // is not in one. The field panel floats like Search & replace; the dialogs are made on demand.
-const pivotHere = computed(() => (offSheet.value ? null : pivotAt(state.pivots, state.activeSheet, sel.value.row, sel.value.col)))
+const pivotHere = computed(() => (!sheetShown.value ? null : pivotAt(state.pivots, state.activeSheet, sel.value.row, sel.value.col)))
 const pivotPanelName = ref<string | null>(null)
 const panelPivot = computed(() => state.pivots.find((p) => p.name === pivotPanelName.value) ?? null)
 const pivotValue = ref<{ name: string; index: number } | null>(null)
@@ -356,7 +357,7 @@ function openPivotNew() {
   dialog.value = 'pivot-new'
 }
 async function pivotCreated(name: string, sheet: string) {
-  if (sheet !== state.activeSheet || offSheet.value) await pickTab(sheet, 'sheet')
+  if (sheet !== state.activeSheet || !sheetShown.value) await pickTab(sheet, 'sheet')
   pivotPanelName.value = name
 }
 /** Pivot Fields: shows the panel for the pivot the cursor is in, or hides it. */
@@ -693,7 +694,7 @@ const cellHost = cellStyleHost({
     return state.activeSheet
   },
   get area(): [number, number, number, number] | null {
-    if (!state.activeSheet || offSheet.value || objectSelected.value) return null
+    if (!state.activeSheet || !sheetShown.value || objectSelected.value) return null
     return sheetArea([b.value.r0, b.value.c0, b.value.r1, b.value.c1], SIZE)
   },
   get anchor() {
@@ -746,7 +747,7 @@ watch(
   },
 )
 async function goToCell(sheet: string, row: number, col: number) {
-  if (sheet !== state.activeSheet || offSheet.value) await pickTab(sheet, 'sheet')
+  if (sheet !== state.activeSheet || !sheetShown.value) await pickTab(sheet, 'sheet')
   sel.value = single(row, col)
 }
 function openSearch(replace = false) {
@@ -857,7 +858,7 @@ async function resample() {
   await session.resample()
 }
 function openRandom() {
-  if (state.activeSheet && !offSheet.value) dialog.value = 'random'
+  if (state.activeSheet && sheetShown.value) dialog.value = 'random'
 }
 function openOutcomes(at?: { x: number; y: number }) {
   if (!hasOutcomes.value) return session.notice(t('This cell has no alternatives and does not depend on any.'), 'info')
@@ -870,14 +871,14 @@ function insertRandom(formula: string) {
 }
 
 function followNow(force = false) {
-  if (!following.value || !state.activeSheet || offSheet.value) return
+  if (!following.value || !state.activeSheet || !sheetShown.value) return
   if (!force && asked && coversWindow(asked, view) && state.trace?.row === sel.value.row && state.trace?.col === sel.value.col && state.trace?.reach === reach.value) return
   asked = windowAround(view, VIEW_ROWS, VIEW_COLS)
   void session.follow(state.activeSheet, sel.value.row, sel.value.col, reach.value, asked)
 }
 function toggleFollow() {
   if (following.value) return stopFollowing()
-  if (!state.activeSheet || offSheet.value) return
+  if (!state.activeSheet || !sheetShown.value) return
   following.value = true
   followNow(true)
 }
@@ -936,7 +937,7 @@ function styleItems() {
   const offered = galleryFor(cellHost.styles, cellHost.slot, state.styleModel, cellHost.current?.id)
   const [r0, c0, r1, c1] = sheetArea([b.value.r0, b.value.c0, b.value.r1, b.value.c1], SIZE)
   const cells = (r1 - r0 + 1) * (c1 - c0 + 1)
-  const some = !!state.activeSheet && !offSheet.value
+  const some = !!state.activeSheet && sheetShown.value
   return formatItems(t, {
     ...common,
     groups: some ? [offered.own] : [],
@@ -1237,9 +1238,9 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
           @undo="session.undo()"
           @redo="session.redo()"
         >
-          <StylePicker v-if="state.activeSheet && !offSheet" :host="activeHost" :hint="chordLabel(LOOK.chord)" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
+          <StylePicker v-if="state.activeSheet && sheetShown" :host="activeHost" :hint="chordLabel(LOOK.chord)" @look="grid?.openStyleMenu()" @styled="grid?.focus()" />
           <button
-            v-if="state.activeSheet && !offSheet"
+            v-if="state.activeSheet && sheetShown"
             type="button"
             class="draw"
             :disabled="readonly"

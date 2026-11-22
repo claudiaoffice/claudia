@@ -148,8 +148,7 @@ class AddSheet(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         model = ctx.model
-        if self.id in model.sheets or self.id in model.slides:
-            raise ValueError(f"a tab with the id {self.id!r} exists already")
+        model.check_new_tab(self.id, self.index)
         if any(s.name.casefold() == self.name.casefold() for s in model.sheets.values()):
             raise ValueError(f"a sheet called {self.name!r} exists")
         if not self.legacy_names:

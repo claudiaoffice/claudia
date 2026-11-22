@@ -1176,6 +1176,7 @@
    "charts_reading": "(self, sheet_id: 'SheetId') -> 'list[str]'",
    "check_anchor": "(self, anchor: 'CellAnchor | SlideAnchor', body: 'ObjectBody') -> 'None'",
    "check_name": "(self, named: 'NamedRange', *, shared: 'bool' = True) -> 'None'",
+   "check_new_tab": "(self, tab_id: 'str', index: 'int | None') -> 'None'",
    "check_writable": "(self, sheet: 'Sheet', positions) -> 'None'",
    "columns_of": "(self, named: 'NamedRange', sample: 'int' = 2000) -> 'list[tuple[str, str]]'",
    "diagram_from_data": "(self, data: 'dict') -> 'ChartSpec'",

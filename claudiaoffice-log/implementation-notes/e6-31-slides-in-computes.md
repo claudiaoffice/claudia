@@ -65,19 +65,30 @@ servers as CI starts them (`slides`, `creates-styles`, `print-creates`, `describ
   `slide`, `x`, `y` beside `sheet`, `row`, `col` (`CELLS_AND_SLIDES`); exactly one of `sheet`/`slide` for a new object,
   and a moved object stays on its kind of tab. `add_object` and `shapes` came to computes for a slide only (D1232: a
   sheet still has no text boxes or shapes); `computes_methods_with(library)` as for the two other apps.
-- **Files** (`claudia_computes_io/slide_plan.py`): a copy of the workbook in which each slide is a sheet is what the
-  writers get, so charts and pictures on a slide are written by the code that writes a sheet's. Slide objects are
-  scaled by 0.45 (1600 × 900 into the 720 × 432 of a chart tab) and hung at the nearest cell; one smaller than the
-  smallest object of a sheet (20 px) is written at 20 px. The loss is `slide` with the slide's name; nothing in the web
+- **Files** (`claudia_computes_io/slide_plan.py`): a copy of the workbook in which each slide is a sheet (made with the
+  model's own methods, so it is checked like any change) is what the writers get, so charts and pictures on a slide are
+  written by the code that writes a sheet's. Slide objects are scaled by 0.45 (1600 × 900 into the 720 × 432 of a chart
+  tab) and hung at the nearest cell; one that would be smaller than the smallest object of a sheet (20 px) is scaled
+  less, keeping its proportions. The sheet keeps what was written about the slide. Its name is written the way Excel
+  allows a sheet's (the stricter format), for ods too. The loss is `slide` with the slide's name; nothing in the web
   client shows export losses yet (see the report). An edited import with a slide is not patched (`UnsupportedEdit`),
   so the server writes it afresh.
-- **Web.** `lib/slide-host.ts`: `SlideHost`, what `SlideCanvas.vue` needs; creates' `objectsOn` is `slideObjects` now
-  (computes' `objectsOn` is a sheet's). Showing, holding and letting go of a selection (`showRegions`, `holdRegions`,
-  `releaseRegions`, `holdObject`, `letGoOfObject`) moved into `BaseSession` from both sessions, which had the same
-  code. `InsertBar` shows Present only when it is given its words. A computes slide uses the workbook's own styles: its
+- **Web.** `lib/slide-host.ts`: `SlideHost`, what `SlideCanvas.vue` needs, the types of a slide's objects and shapes,
+  and `SlideActions`, what both sessions do the same way on a slide (show one, select, move, resize, put a text box or
+  shape there); each session has one. Creates' `objectsOn` is `slideObjects` now, computes' is `sheetObjects`. Showing
+  the others where I am, holding and letting go (`showRegions`, `holdRegions`, `releaseRegions`) moved into
+  `BaseSession` from both sessions, which had the same code. When a slide goes, the tab before it is shown (the one
+  after it if it was the first, D1473). `InsertBar` shows Present only when it is given its words. A computes slide uses the workbook's own styles: its
   Body text is 13 px, small on a 1600-unit slide (see the report).
 - **Print.** The layout library's `SheetDocument` takes a `PrintedSlide`: one landscape page with the sheet's footer,
-  the slide drawn by `drawSlide`/`placedSlide`, which `layoutSlides` uses too (no change to its pages). A slide has no
+  the slide drawn by `src/apps/slides.ts` (`drawSlide`, `placedSlide`, `slideFrame`), which `layoutSlides` uses too (no
+  change to its pages). A slide printed from a workbook does not say that its words are not hyphenated, as a
+  presentation does (computes' styles do not hyphenate). A slide has no
   print setup: the bar's Portrait does nothing for it.
 - **Browser script** `e2e:computes-slides` (on the computes server): there is no way to make a slide yet, so it
   imports a Claudia export (D1272) made with one by Python.
+- **Review (two axes) and what changed after it:** the shared slide drawing and the slide's types left creates' modules
+  (§3: apps do not import each other); `placedSlide` lost its flag (CONTRIBUTING §2); `SlideActions` instead of the same
+  code in two sessions; `_placed` on the server is two small functions; `slide_plan` uses the model's methods, not the
+  stored form; `restore` refuses tabs that miss a sheet or a slide; a new sheet's id is free among the slides too, and
+  the pivot dialog's sheet name among their names; tests with literal cells instead of the formula.

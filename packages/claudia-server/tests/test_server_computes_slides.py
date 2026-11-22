@@ -141,3 +141,12 @@ def test_asking_for_a_slide_that_is_not_one_is_refused(book):
 def test_an_export_says_that_a_slide_became_a_sheet(book, fmt):
     losses = call(book, "export_office", {"format": fmt})["losses"]
     assert {"kind": "slide", "detail": "Sales chart", "count": 1} in losses
+
+
+def test_a_new_sheet_does_not_take_the_id_of_a_slide():
+    doc = Document(WorkbookModel(), store=MemoryStore())
+    doc.execute(AddSheet("s1", "Sheet1"), author="ann")
+    doc.execute(AddSlide("s2", "Sales chart"), author="ann")
+    added = call(doc, "add_sheet", {"name": "Costs"})["sheet"]
+    assert added not in ("s1", "s2")
+    assert [tab["kind"] for tab in call(doc, "tabs")] == ["sheet", "slide", "sheet"]

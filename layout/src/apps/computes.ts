@@ -34,7 +34,7 @@ import { type BoxLayout, layoutBox } from '../text/box'
 import { layoutParagraph } from '../text/paragraph'
 import { paragraphStyle, type ParagraphStyle, type Rgba } from '../text/style'
 import { LAYOUT_VERSION } from '../version'
-import { drawSlide, placedSlide, type SlideObject } from './creates'
+import { drawSlide, placedSlide, slideFrame, type SlideObject } from './slides'
 import {
   cssOf,
   drawObject,
@@ -467,7 +467,8 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
   const draw = { fonts, styles, context, base: base.style }
   for (const plan of plans) {
     if ('slide' in plan) {
-      const p: DisplayPage = { width: plan.geometry.width, height: plan.geometry.height, items: placedSlide(drawSlide(plan.slide.objects, context), plan.box, true) }
+      const placed = placedSlide(drawSlide(plan.slide.objects, context), plan.box)
+      const p: DisplayPage = { width: plan.geometry.width, height: plan.geometry.height, items: [placed.group, slideFrame(placed.rect)] }
       footerItems(draw, p, plan.geometry, plan.geometry.margin.bottom, plan.slide.name, page.page_numbers, pages.length + 1, total)
       pages.push(p)
       pageMap.push({ sheet: plan.slide.id, kind: 'slide', rows: null, cols: null, scale: ONE })

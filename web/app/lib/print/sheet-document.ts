@@ -54,7 +54,7 @@ export function chartSizes(session: Session, request: SheetRequest): Map<string,
       const spec = session.state.charts.find((c) => c.id === id)?.spec_id
       if (spec && !sizes.has(spec)) sizes.set(spec, [CHART_W, CHART_H])
     } else {
-      const objects = kind === 'slide' ? session.slideObjects(id) : session.objectsOn(id)
+      const objects = kind === 'slide' ? session.slideObjects(id) : session.sheetObjects(id)
       for (const o of objects) if (o.kind === 'diagram' && o.ref && !sizes.has(o.ref)) sizes.set(o.ref, [o.w, o.h])
     }
   }
@@ -143,7 +143,7 @@ function purposeOf(names: Session['state']['names'], sheet: string, row: number,
 }
 
 function picturesOf(session: Session, sheet: string, pictures: ReadonlyMap<string, string>): SheetPicture[] {
-  return session.objectsOn(sheet).flatMap((o): SheetPicture[] => {
+  return session.sheetObjects(sheet).flatMap((o): SheetPicture[] => {
     const anchor = { kind: 'cell' as const, row: o.anchor.row, col: o.anchor.col }
     const base = { id: o.id, kind: o.kind, w: o.w, h: o.h, style: o.style, paragraph: o.paragraph ? { style: o.paragraph.style, text: o.paragraph.text } : null, shape: pointer(o, 'shape'), image: pointer(o, 'image'), rotation: o.rotation, anchor }
     if (o.kind === 'diagram') return [{ ...base, kind: 'diagram', image: o.ref && pictures.has(o.ref) ? chartImage(o.ref) : null }]

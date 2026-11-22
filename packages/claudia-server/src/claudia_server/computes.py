@@ -580,8 +580,9 @@ def _set_cells(ctx, sheet, cells, base):
     return done(ctx, SetCells(sheet, _typed(ctx, cells)), base)
 
 
-def _fresh_sheet_id(taken) -> str:
-    """The next sheet id (``s2``, ``s3`` ...) that no sheet of the workbook has."""
+def _fresh_sheet_id(workbook: WorkbookModel) -> str:
+    """The next sheet id (``s2``, ``s3`` ...) that no sheet or slide of the workbook has (they share the tabs)."""
+    taken = {tab.id for tab in workbook.tabs}
     number = len(taken) + 1
     while f"s{number}" in taken:
         number += 1
@@ -598,7 +599,7 @@ def _add_sheet(ctx, name, base):
             "bad_request",
             msg("add_sheet: the name must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
         )
-    sheet_id = _fresh_sheet_id(_workbook(ctx).sheets)
+    sheet_id = _fresh_sheet_id(_workbook(ctx))
     return done(ctx, AddSheet(SheetId(sheet_id), name), base, sheet=sheet_id)
 
 
@@ -1127,7 +1128,7 @@ def _define_pivot(ctx, *, name, definition, labels, sheet, row, col, new_sheet, 
                 "bad_request",
                 msg("define_pivot: the name of the new sheet must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
             )
-        target = _fresh_sheet_id(workbook.sheets)
+        target = _fresh_sheet_id(workbook)
     try:
         command = create_pivot(workbook, name, (SheetId(target), row, col), parsed, words, new_sheet)
     except ValueError as problem:
@@ -1199,20 +1200,33 @@ def _placed(
 ) -> dict:
     """Where an object of a workbook is: a cell of a sheet (`row`, `col`), or a point of a slide (`x`, `y`, the words
     creates uses, D1473). A new one names its sheet or its slide; a moved one stays on its own tab."""
-    on_slide = isinstance(held, SlideAnchor) if held is not None else slide is not None
-    if held is None and (sheet is None) == (slide is None):
+    if held is not None:
+        return (
+            _at_point(held.holder, x, y, row, col)
+            if isinstance(held, SlideAnchor)
+            else _at_cell(held.holder, row, col, x, y)
+        )
+    if (sheet is None) == (slide is None):
         raise RequestError("bad_request", msg("name the sheet or the slide the object goes on"))
-    if on_slide:
-        if x is None or y is None or row is not None or col is not None:
-            raise RequestError("bad_request", msg("an object on a slide is placed with x and y"))
-        if held is None and slide not in workbook.slides:
+    if slide is not None:
+        if slide not in workbook.slides:
             raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
-        return SlideAnchor(held.holder if held is not None else str(slide), x, y).to_data()
+        return _at_point(slide, x, y, row, col)
+    if sheet not in workbook.sheets:
+        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
+    return _at_cell(str(sheet), row, col, x, y)
+
+
+def _at_point(slide: str, x: int | None, y: int | None, row: int | None, col: int | None) -> dict:
+    if x is None or y is None or row is not None or col is not None:
+        raise RequestError("bad_request", msg("an object on a slide is placed with x and y"))
+    return SlideAnchor(slide, x, y).to_data()
+
+
+def _at_cell(sheet: str, row: int | None, col: int | None, x: int | None, y: int | None) -> dict:
     if row is None or col is None or x is not None or y is not None:
         raise RequestError("bad_request", msg("an object on a sheet is placed with row and col"))
-    if held is None and sheet not in workbook.sheets:
-        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
-    return CellAnchor(SheetId(held.holder if held is not None else str(sheet)), row, col).to_data()
+    return CellAnchor(SheetId(sheet), row, col).to_data()
 
 
 CELLS_AND_SLIDES = Placement(

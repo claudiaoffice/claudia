@@ -176,6 +176,14 @@ def test_slides_and_their_objects_survive_being_stored_loaded_and_replayed(doc):
     assert WorkbookModel.state_schema == 17
 
 
+def test_a_stored_state_whose_tabs_miss_a_sheet_or_a_slide_is_refused(doc):
+    doc.execute(AddSlide("p1", "Slide 1"), author="ana")
+    state = doc.model.serialize()
+    state["tabs"] = [{"kind": "sheet", "id": "s1"}]
+    with pytest.raises(ValueError, match="every sheet and every slide exactly once"):
+        WorkbookModel.restore(state)
+
+
 def test_redacting_takes_what_was_written_about_a_slide_and_keeps_the_slide(doc):
     doc.execute(AddSlide("p1", "Slide 1"), author="ana")
     doc.execute(DescribeThing("p1", "secret"), author="ana")

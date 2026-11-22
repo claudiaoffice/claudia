@@ -2,38 +2,29 @@
 // server's events. What every document has in common (connection, history, chat, people, undo) is in BaseSession.
 import type { LinkLike, Region, WireData } from './protocol'
 import { parseFence } from './containers'
-import { holderOf, firstFocus } from './replay'
+import { holderOf, firstFocus, lookOnly } from './replay'
 import type { Thing } from './tags'
 import { BaseSession, type BaseState, type SessionOptions } from './base-session'
 import { translate as t } from './i18n'
 import type { Frame } from './geometry'
 import type { ImageAsset } from './images'
-import type { ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import type { ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget } from './objects'
 import type { CssEdit } from './style-css'
 import type { PrintSetupData } from '@claudia/layout'
 import { pointOf, type Label } from './paragraphs'
 import type { ListInfo, SchemeInfo } from './numbering'
 import type { ContentsEntry } from './contents'
 import type { ReferenceTarget, RefField, Show, Shown } from './references'
-import { othersOn, type Other, type PictureImport, type SlideHost } from './slide-host'
+import { othersOn, SlideActions, type Other, type PictureImport, type ShapeDef, type SlideHost, type SlideObject } from './slide-host'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
 // so existing imports of them from this module keep working.
 export type { ImageAsset, ImageImport } from './images'
 export type { ColourRole, ObjectBody, PaletteEvent, Reading, SlideAnchor, StyleDef, VisualObject } from './objects'
 
-/** One thing on a slide: the shared `ObjectBody` plus a `SlideAnchor` — the only part of it that is this app's
- * own (E10.16, D177). Read its place with `slideFrame(obj)`, not `obj.x`. */
-export type SlideObject = VisualObject<SlideAnchor>
-/** An outline: `path` is an SVG path in a box of 100 by 100; `aspect` is width / height when it must be kept. */
-export interface ShapeDef {
-  format: number
-  id: string
-  name: string
-  path: string
-  aspect: number | null
-  text_area: { x: number; y: number; w: number; h: number }
-}
+// One thing on a slide is the shared `ObjectBody` plus a `SlideAnchor` (E10.16, D177): read its place with
+// `slideFrame(obj)`, not `obj.x`. Computes' slides have the same objects (`slide-host.ts`, D1473).
+export type { ShapeDef, SlideObject } from './slide-host'
 
 export interface SlideInfo {
   id: string
@@ -70,6 +61,15 @@ export interface SlideState extends BaseState {
 }
 
 export class SlideSession extends BaseSession<SlideState> implements SlideHost {
+  /** Showing a slide, and selecting, moving and putting objects on it, as computes does (D1473). */
+  private readonly slide = new SlideActions({
+    state: this.state,
+    write: (method, params) => this.write(method, params),
+    show: (where, regions) => this.showRegions(where, regions),
+    hold: (regions) => this.holdRegions(regions),
+    release: () => this.releaseRegions(),
+    looking: () => lookOnly(this.state),
+  })
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
     super(makeLink, options, {
@@ -198,10 +198,7 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
     const s = this.state
     const info = s.slides.find((x) => x.id === e.holder)
     if (info) info.objects = e.order.length
-    if (e.removed.includes(s.selected ?? '')) {
-      s.selected = null
-      this.track(this.letGoOfObject())
-    }
+    this.track(this.slide.gone(e.removed))
   }
 
   protected onAppEvent(name: string, data: WireData): boolean {
@@ -247,12 +244,6 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
   }
 
   // ------------------------------------------------------------------------------ doing things
-  private async insert(params: Record<string, unknown>, frame: Frame): Promise<string | null> {
-    const done = await this.write('add_object', { slide: this.state.activeSlide, ...params, ...frame })
-    if (done === false) return null
-    await this.select(done.object)
-    return done.object
-  }
 
   /** Put a container of `type` on the slide that is shown, in `frame`; its id, or null after telling why not. */
   async addContainer(type: string, frame: Frame): Promise<string | null> {
@@ -282,12 +273,12 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
 
   /** Put a text box on the slide that is shown; its id, or null after telling the person why not. */
   addText(frame: Frame): Promise<string | null> {
-    return this.insert({ kind: 'text' }, frame)
+    return this.slide.insert({ kind: 'text' }, frame)
   }
 
   /** Put a shape from the library (or the document) on the slide that is shown. */
   addShape(shape: string, frame: Frame): Promise<string | null> {
-    return this.insert({ kind: 'shape', shape }, frame)
+    return this.slide.insert({ kind: 'shape', shape }, frame)
   }
 
   /**
@@ -467,12 +458,12 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
     return done.slide
   }
 
-  async move(id: string, x: number, y: number): Promise<boolean> {
-    return (await this.write('move_object', { id, x, y })) !== false
+  move(id: string, x: number, y: number): Promise<boolean> {
+    return this.slide.move(id, x, y)
   }
 
-  async resize(id: string, frame: Frame): Promise<boolean> {
-    return (await this.write('resize_object', { id, ...frame })) !== false
+  resize(id: string, frame: Frame): Promise<boolean> {
+    return this.slide.resize(id, frame)
   }
 
   /** Hold an object to the grid (`snap` true) or release it (false); its own step in the history (E10.15). */
@@ -492,19 +483,12 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
     return (await this.write('deviate', { parent, targets, slot, ...edit })) !== false
   }
 
-  async showSlide(slide: string): Promise<void> {
-    if (slide === this.state.activeSlide) return
-    await this.select(null)
-    this.state.activeSlide = slide
+  showSlide(slide: string): Promise<void> {
+    return this.slide.show(slide)
   }
 
-  // -- the selection: shown to the others, and held so that nobody changes the object under my hands
   /** Select an object (null: nothing). Selecting holds it; a colleague who holds it first keeps it. */
-  async select(id: string | null): Promise<void> {
-    const s = this.state
-    if (id === s.selected) return
-    s.selected = id
-    if (id === null) return this.letGoOfObject()
-    if (!(await this.holdObject(id, s.objects[id]?.anchor.holder ?? s.activeSlide)) && s.selected === id) s.selected = null
+  select(id: string | null): Promise<void> {
+    return this.slide.select(id)
   }
 }
