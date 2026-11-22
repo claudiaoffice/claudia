@@ -42,7 +42,10 @@ from .fonts import FontService
 from .kdf_policy import KdfPolicy, check_target
 from .login_throttle import LoginThrottle
 from .server_settings import (
+    CLAUDE,
+    LOCAL,
     PROVIDERS,
+    STAND_IN,
     AiSettings,
     Changed,
     ClaudeSettings,
@@ -111,7 +114,9 @@ class AiRuntime:
         key = self.key_in_use(settings)
         if key is None:
             raise ValueError("Claude needs a provider key.")
-        return ClaudeModel(key, settings.claude.model, base_url=self.anthropic_url or DEFAULT_BASE_URL)
+        return ClaudeModel(
+            key, settings.claude.model, base_url=self.anthropic_url or DEFAULT_BASE_URL, read_timeout=settings.timeout
+        )
 
     async def _test_claude(self, settings: AiSettings) -> None:
         """Ask Claude one question, so that a wrong key or model is found where the administrator is looking."""
@@ -119,7 +124,9 @@ class AiRuntime:
         try:
             await asyncio.to_thread(model.generate, TEST_QUESTION, max_new_tokens=8, stop=lambda: False)
         except ProviderError as error:
-            sentence = error.reason.admin_sentence(model=settings.claude.model, seconds=30, detail=error.detail)
+            sentence = error.reason.admin_sentence(
+                model=settings.claude.model, seconds=settings.timeout, detail=error.detail
+            )
             raise AiRefused(error.reason, sentence) from error
 
     @property
@@ -143,12 +150,12 @@ class AiRuntime:
         key, or none of this server's apps has an assistant for the model."""
         if not self.enabled:
             raise ValueError("the AI assistant is disabled for this server (it was started with --no-assistant)")
-        if settings.provider == "claude":
+        if settings.provider == CLAUDE:
             await self._test_claude(settings)
         local = None
-        if settings.model_dir and settings.provider != "stand-in":
-            local = await self._load(settings.model_dir, settings, required=settings.provider == "local")
-        claude = self.claude_runner(settings) if settings.provider == "claude" else None
+        if settings.model_dir and settings.provider != STAND_IN:
+            local = await self._load(settings.model_dir, settings, required=settings.provider == LOCAL)
+        claude = self.claude_runner(settings) if settings.provider == CLAUDE else None
         replaced = self.desk.install(
             provider=settings.provider, local=local, claude=claude, approved=settings.claude.confirmed is not None
         )
@@ -522,18 +529,18 @@ def _ai_settings_asked(context: AdminContext, body: dict, admin: str) -> AiSetti
     """The AI settings a ``PUT`` asks for, on top of those there are. ``ValueError`` for what cannot be."""
     before = context.settings.ai
     model_dir = body.get("model_dir", before.model_dir) if "provider" in body else body.get("model_dir")
-    provider = body.get("provider") or ("local" if model_dir else "stand-in")
+    provider = body.get("provider") or (LOCAL if model_dir else STAND_IN)
     if provider not in PROVIDERS:
         raise ValueError(f"the provider must be one of: {', '.join(PROVIDERS)}")
-    if provider == "local" and not model_dir:
+    if provider == LOCAL and not model_dir:
         raise ValueError("the local model needs a model folder")
     asked = body.get("claude", {})
     key = None if asked.get("remove_key") else asked.get("key", before.claude.key)
     claude = ClaudeSettings(asked.get("model") or before.claude.model, key, before.claude.confirmed)
-    if provider == "claude":
+    if provider == CLAUDE:
         if context.ai.key_in_use(AiSettings(claude=claude)) is None:
             raise ValueError("Claude needs a provider key.")
-        if before.provider != "claude":
+        if before.provider != CLAUDE:
             if not asked.get("confirm"):
                 raise ValueError(f"Confirm first: {APPROVAL_SENTENCE}")
             claude.confirmed = Changed(admin, utc_now())

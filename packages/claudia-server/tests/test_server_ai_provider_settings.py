@@ -110,6 +110,12 @@ def test_claude_is_applied_with_the_right_key_after_one_test_question(tmp_path, 
     assert admin.settings.ai.provider == "claude"
 
 
+def test_the_key_is_not_in_the_text_a_log_or_a_failing_test_prints_for_the_settings():
+    settings = AiSettings(provider="claude")
+    settings.claude.key = KEY
+    assert KEY not in repr(settings) + str(settings)
+
+
 def test_the_key_is_never_returned_only_its_last_four_characters(tmp_path, anthropic):
     app, _, _ = serve(tmp_path, anthropic)
     with TestClient(app) as client:

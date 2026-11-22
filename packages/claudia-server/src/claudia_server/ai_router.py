@@ -25,11 +25,12 @@ from claudia_ai import (
 )
 from claudia_core import Via
 
-from .ai_consent import CLAUDE, AiConsent
+from .ai_consent import AiConsent
 from .ai_desk import CLAUDE_VIA, Failure, ProviderDesk
 from .assistant import AiTurn, Engine, Say, Task
 from .lens import Lens
 from .model_engine import Budget, ConversationMemory, ModelEngine
+from .server_settings import CLAUDE
 
 log = logging.getLogger("claudia_server")
 

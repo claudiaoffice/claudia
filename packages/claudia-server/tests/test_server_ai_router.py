@@ -13,11 +13,11 @@ from test_server_assistant import ANN, Person
 from claudia_ai import ClaudeModel, ModelRunner
 from claudia_ai.testing import FakeAnthropic, FakeModel
 from claudia_computes import WorkbookModel
-from claudia_server.ai_consent import CLAUDE
 from claudia_server.ai_desk import NOTE_NOT_ALLOWED, ProviderDesk
 from claudia_server.apps import routed_assistant_for
 from claudia_server.computes import computes_methods
 from claudia_server.hub import Hub, MemoryProvider
+from claudia_server.server_settings import CLAUDE
 
 KEY = "sk-ant-test-a7Q2"
 

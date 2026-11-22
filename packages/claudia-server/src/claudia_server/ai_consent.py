@@ -18,9 +18,6 @@ from claudia_document_file import ConsentRecord
 
 from .auth import ConsentDirectory
 
-CLAUDE = "claude"
-"""The provider the owners' consent is for. Written in the file, so it is not a label to translate."""
-
 
 @dataclass(frozen=True)
 class AiConsent:

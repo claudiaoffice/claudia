@@ -52,7 +52,7 @@ from claudia_core import (
 )
 from claudia_document_file import AuditRecord, Part, clean_details, write_export
 
-from .ai_consent import CLAUDE, AiConsent, ConsentBook, ConsentNotKept, consent_view
+from .ai_consent import AiConsent, ConsentBook, ConsentNotKept, consent_view
 from .ai_mode import parse_mode
 from .audience import may_read
 from .auth import (
@@ -74,6 +74,7 @@ from .help import default_library
 from .i18n import localized, msg
 from .planned import keep_plan
 from .restore import POLICIES, RestoreCoordinator, RestoreError
+from .server_settings import CLAUDE
 from .throttle import Throttle
 
 if TYPE_CHECKING:

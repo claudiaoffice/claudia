@@ -90,7 +90,7 @@ from .kdf_policy import KdfPolicy
 from .protocol import Limits
 from .rasterise import svg_rasteriser
 from .sealed import SealedDocuments
-from .server_settings import AiSettings, ServerSettings, load_admins, load_settings
+from .server_settings import CLAUDE, LOCAL, STAND_IN, AiSettings, ServerSettings, load_admins, load_settings
 from .state import default_state_dir
 from .suite import APP_MODELS, Module, Suite
 
@@ -542,7 +542,7 @@ def _build_assistant(
         if not any_lens(models):
             runner.close()
             raise UsageError("--ai: the AI assistant does not know documents of this kind yet")
-        ai.desk.install(provider="local", local=runner)
+        ai.desk.install(provider=LOCAL, local=runner)
     elif enabled:
         _start_saved_provider(ai, settings.ai)
     return assistants_for(models, ai.desk) if enabled else dict.fromkeys((m.app for m in models), None), ai
@@ -551,7 +551,7 @@ def _build_assistant(
 def _start_saved_provider(ai: AiRuntime, saved: AiSettings) -> None:
     """Start with the providers last saved through the settings pages. What cannot be started is said on stderr and
     the stand-in answers until the administrator fixes it; the server itself always starts."""
-    if saved.provider == "stand-in":
+    if saved.provider == STAND_IN:
         return
     local = None
     if saved.model_dir:
@@ -565,7 +565,7 @@ def _start_saved_provider(ai: AiRuntime, saved: AiSettings) -> None:
                 local.close()
                 local = None
     claude = None
-    if saved.provider == "claude":
+    if saved.provider == CLAUDE:
         try:
             claude = ai.claude_runner(saved)
         except ValueError as exc:

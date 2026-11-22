@@ -18,10 +18,9 @@ from datetime import UTC, datetime
 from claudia_ai import FailureReason, ModelRunner
 from claudia_core import Via
 
-from .ai_consent import CLAUDE, AiConsent
+from .ai_consent import AiConsent
+from .server_settings import CLAUDE, LOCAL, STAND_IN
 
-STAND_IN = "stand-in"
-LOCAL = "local"
 SCRIPTED = Via(STAND_IN, "Scripted stand-in", False)
 CLAUDE_VIA = Via(CLAUDE, "Claude", True)
 
@@ -96,7 +95,7 @@ class ProviderDesk:
     def decide(self, consent: AiConsent) -> tuple[Decision, str]:
         """Who answers a question in a document whose owners decided ``consent``, and the sentence for the chat that
         goes with it (``""``: none)."""
-        if self.provider == CLAUDE and self.claude is not None and self.approved:
+        if self.offers_claude:
             if consent.allowed(CLAUDE):
                 return Decision(self.claude, CLAUDE_VIA), ""
             return self._own(), NOTE_NOT_ALLOWED
@@ -126,7 +125,7 @@ class ProviderDesk:
     def may_ask_claude(self, runner: ModelRunner, consent: AiConsent) -> bool:
         """Is ``runner`` still the one Claude is asked through, and do the owners still allow it? A running question
         asks before each of its steps."""
-        return runner is self.claude and self.approved and self.provider == CLAUDE and consent.allowed(CLAUDE)
+        return runner is self.claude and self.offers_claude and consent.allowed(CLAUDE)
 
     def close(self) -> None:
         """Stop both runners (the server is stopping)."""

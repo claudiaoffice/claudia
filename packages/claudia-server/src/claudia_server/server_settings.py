@@ -40,7 +40,11 @@ class Changed:
     at: str  # ISO 8601 UTC
 
 
-PROVIDERS = ("stand-in", "local", "claude")
+STAND_IN = "stand-in"
+LOCAL = "local"
+CLAUDE = "claude"
+PROVIDERS = (STAND_IN, LOCAL, CLAUDE)
+"""The providers of the AI the administrator may choose; the one name of each, used by every module."""
 DEFAULT_CLAUDE_MODEL = "claude-sonnet-5-5"
 
 
@@ -53,7 +57,7 @@ class ClaudeSettings:
     (``AiSettings.public``): a page gets its last four characters."""
 
     model: str = DEFAULT_CLAUDE_MODEL
-    key: str | None = None
+    key: str | None = field(default=None, repr=False)  # a repr is in logs and test output: never the key
     confirmed: Changed | None = None
 
 
@@ -67,7 +71,7 @@ class AiSettings:
     ``provider``) mean the local model when there is a ``model_dir``, else the stand-in; the document gets no assistant
     at all only with ``--no-assistant``."""
 
-    provider: str = "stand-in"
+    provider: str = STAND_IN
     model_dir: str | None = None
     device: str = "GPU"
     max_tokens: int = 512
@@ -81,7 +85,7 @@ class AiSettings:
         claude = dict(fields.pop("claude", {}))
         if claude.get("confirmed"):
             claude["confirmed"] = Changed(**claude["confirmed"])
-        fields.setdefault("provider", "local" if fields.get("model_dir") else "stand-in")
+        fields.setdefault("provider", LOCAL if fields.get("model_dir") else STAND_IN)
         return cls(**fields, claude=ClaudeSettings(**claude))
 
     def public(self) -> dict:
