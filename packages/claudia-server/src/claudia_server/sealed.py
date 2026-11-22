@@ -40,7 +40,7 @@ import threading
 import time
 import unicodedata
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -184,7 +184,7 @@ def record_bytes(kind: str, data) -> bytes:
 class _Held:
     """An open document: its keys, the store that writes its journal, and the document itself (for snapshots)."""
 
-    keys: dict[Part, bytes]
+    keys: dict[Part, bytes] = field(repr=False)  # secrets: never in a log line or a traceback (SEC-23)
     store: SealedStore
     document: Document | None = None
 

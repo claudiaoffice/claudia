@@ -132,7 +132,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (152)
+### Fixed (153)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -154,6 +154,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **fixed** 2026-11-13 (D288) |  | 2026-11-13 |
 | SEC-20 | P2 | Security | Behind `--behind-proxy` every client had the proxy's address, so the per-address caps (waiting sockets, lookups, uploads) were one cap for everybody | **fixed** 2026-11-19 (D1275, branch `e2-document-sec`) |  | 2026-11-19 |
 | SEC-21 | P2 | Security / performance | Methods that confirm a password (`set_details`, `delete_document`, `leave`, `change_password`, `propose_owner`, `download_claudia`) hash on the event loop, in `Connection.handle`, not in a thread: at 0.75 s (D1267) each stops every connection of the server for that long | **fixed** 2026-11-19 on branch `e2-document-sec` (D1277) |  | 2026-11-19 |
+| SEC-23 | P3 | Security | Two objects that hold a document's keys printed them in their text (`repr`): `_Held` in `claudia_server/sealed.py` and `Renewed` in `claudia_document_file/renewal.py`; nothing logged them yet, but one `logger.debug(held)` or a traceback with locals would have | **fixed** 2026-11-22 on branch `e2-7-close` | 2026-11-22 | 2026-11-22 |
 | PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |  |  |
 | PERF-03 | P3 | Performance | `users.json` rewritten and fsynced in full on every user added | superseded by the container |  |  |
 | PERF-04 | P3 | Performance | `GET /api/docs` scans the disk on every request | fixed (listing cache) |  |  |
@@ -2360,6 +2361,16 @@ viewer's "show who wrote what" should have no data behind it. **Options.** (a) M
 file (a viewer's snapshot would be written without them: a second snapshot); (b) accept the authorship as content and say
 so in D1261. **Proposal:** (b) until the owner says otherwise, because masking in the snapshot means the content is stored
 twice. Not built either way.
+
+### SEC-23 · Two objects that hold keys printed them in their text · P3 · fixed 2026-11-22 on branch `e2-7-close`
+**Fixed.** The key fields of `_Held` (`claudia_server/sealed.py`) and `Renewed` (`claudia_document_file/renewal.py`) are
+`field(repr=False)`, as `Unlocked`, `KeyPair` and `PrivateNotesKey` already were. Tests:
+`test_server_keys_stay_out_of_logs.py` (the text of `_Held`, and a whole session through the server's door at DEBUG:
+create, invite, edits packed on the way, a wrong password, a removal that renews the keys, leaving and coming back; no
+key in the log as bytes, hex or base64) and `test_renewal.py::test_what_a_renewal_returns_does_not_show_its_keys_in_its_text`.
+
+**Evidence (read, then measured).** Found while checking E2.7's "keys never appear in logs": no code logs these
+objects, so nothing has leaked; the two dataclasses used the default `repr`, which prints every field.
 
 ### PROC-36 · A global `ruff` is not the project's · P3 · fixed 2026-11-19
 `ruff 0.16.9` outside the project rewrote `except (A, B):` into `except A, B:` in five files and reformatted six others
