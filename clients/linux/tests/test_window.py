@@ -109,26 +109,26 @@ def visible_menus(window) -> list[str]:
 
 def test_the_front_page_gets_the_short_menu_and_a_document_the_whole_one(window) -> None:
     """Sheet 11: on the front page only what works without a document; the whole menu once a document says hello."""
-    assert visible_menus(window) == ["File", "View", "Config", "Help"]  # before any page: the front page comes first
+    assert visible_menus(window) == ["File", "View", "Preferences", "Help"]  # before any page: the front page comes first
     window.show_page("http://127.0.0.1:1")
     page = window.fake_pages[0]
     page.says({**hello(), "view": "start"})
-    assert visible_menus(window) == ["File", "View", "Config", "Help"]
+    assert visible_menus(window) == ["File", "View", "Preferences", "Help"]
     assert window.lookup_action("file.open-file").get_enabled()
     assert not window.lookup_action("file.save").get_enabled()  # nor by its key
     assert window.menu_file.get_menu_model().get_n_items() == 2  # New, Open…, Open a File… · Quit
     page.says({**hello(), "view": "document"})
-    assert visible_menus(window) == ["File", "Edit", "Insert", "Format", "View", "Tools", "Config", "Help"]
+    assert visible_menus(window) == ["File", "Edit", "Insert", "Format", "View", "Tools", "Preferences", "Help"]
     assert window.lookup_action("file.save").get_enabled()
     page.says({**hello(), "view": "start"})  # File ▸ Close Document: the front page again
-    assert visible_menus(window) == ["File", "View", "Config", "Help"]
+    assert visible_menus(window) == ["File", "View", "Preferences", "Help"]
     assert not window.lookup_action("edit.undo").get_enabled()
 
 
 def test_a_page_that_does_not_say_what_it_is_gets_the_whole_menu(window) -> None:
     window.show_page("http://127.0.0.1:1")
     window.fake_pages[0].says(hello())
-    assert visible_menus(window) == ["File", "Edit", "Insert", "Format", "View", "Tools", "Config", "Help"]
+    assert visible_menus(window) == ["File", "Edit", "Insert", "Format", "View", "Tools", "Preferences", "Help"]
 
 
 def test_the_page_of_the_shells_own_server_is_handed_its_setup_code_and_another_servers_page_is_not(window) -> None:

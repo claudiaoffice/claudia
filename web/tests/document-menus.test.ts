@@ -5,7 +5,7 @@ import {
   SHARED_HINTS,
   askItem,
   clipboardItems,
-  configMenu,
+  preferencesMenu,
   darkItem,
   fileMenu,
   helpMenu,
@@ -134,7 +134,7 @@ describe('undoRedoItems and clipboardItems: the shared block at the top of Edit'
   })
 })
 
-describe('View, Tools, Config and Help pieces', () => {
+describe('View, Tools, Preferences and Help pieces', () => {
   it('panel and dark mode follow a shell asking by name, and toggle on a click', () => {
     let open = true
     const panel = panelItem(context().c, { open: () => open, toggle: () => (open = !open) })
@@ -154,11 +154,11 @@ describe('View, Tools, Config and Help pieces', () => {
     expect(dark).toBe(true)
   })
 
-  it('Config ▸ App Language lists LANGUAGES, ticks the current one, and chooses', () => {
+  it('Preferences ▸ App Language lists LANGUAGES, ticks the current one, and chooses', () => {
     const chosen: string[] = []
-    const config = configMenu(context().c, { current: 'de', choose: (tag) => chosen.push(tag) })
-    expect(ids(config.items)).toEqual(['config.shortcuts', 'App Language'])
-    const languages = config.items[1]!.items!
+    const preferences = preferencesMenu(context().c, { current: 'de', choose: (tag) => chosen.push(tag) })
+    expect(ids(preferences.items)).toEqual(['config.shortcuts', 'App Language'])
+    const languages = preferences.items[1]!.items!
     expect(languages.map((l) => [l.id, l.label, l.checked])).toEqual(LANGUAGES.map(([tag, name]) => [`config.language.${tag}`, name, tag === 'de']))
     languages[0]!.action!()
     expect(chosen).toEqual([LANGUAGES[0]![0]])

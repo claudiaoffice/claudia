@@ -29,7 +29,7 @@ WEB_SOURCES = {
     "computes": REPO / "web" / "app" / "components" / "Workspace.vue",
     "creates": REPO / "web" / "app" / "components" / "SlideWorkspace.vue",
 }
-# The items every app's window shares (File, the Edit and View blocks, Config, Help) are built once, here; each
+# The items every app's window shares (File, the Edit and View blocks, Preferences, Help) are built once, here; each
 # workspace above assembles them with its own.
 WEB_SHARED_MENUS = REPO / "web" / "app" / "lib" / "document-menus.ts"
 # The Format menu's four entries are built in one place for all three apps (D300).
@@ -37,7 +37,7 @@ WEB_FORMAT_MENU = REPO / "web" / "app" / "lib" / "format-menu.ts"
 # Composes' table entries (E9.32), Edit ▸ Row ▸ … Table Options… and Insert ▸ Table…, are built in one place.
 WEB_TABLE_MENU = REPO / "web" / "app" / "lib" / "table-menu.ts"
 WEB_ROTATE_MENU = REPO / "web" / "app" / "lib" / "rotate-menu.ts"
-# Config ▸ App Language's ids are built from this list (`config.language.${tag}`), not written out one by one.
+# Preferences ▸ App Language's ids are built from this list (`config.language.${tag}`), not written out one by one.
 WEB_LANGUAGES = REPO / "web" / "app" / "lib" / "i18n.ts"
 BUILDERS = {"composes": manifest.composes, "computes": manifest.computes, "creates": manifest.creates}
 APPS = tuple(BUILDERS)
@@ -81,7 +81,7 @@ def action_ids(menu: manifest.Menu) -> list[str]:
 
 def test_every_app_has_the_same_eight_menus_in_the_same_order(app: manifest.Manifest) -> None:
     """D120's seven, and Insert between Edit and Format (D560)."""
-    assert [menu.label for menu in app.menus] == ["File", "Edit", "Insert", "Format", "View", "Tools", "Config", "Help"]
+    assert [menu.label for menu in app.menus] == ["File", "Edit", "Insert", "Format", "View", "Tools", "Preferences", "Help"]
 
 
 def test_insert_offers_the_container_types_with_a_key_each(app: manifest.Manifest) -> None:
@@ -274,11 +274,11 @@ def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) ->
 
 def test_configs_items_are_shortcuts_then_app_language(app: manifest.Manifest) -> None:
     """The owner's second i18n round: Shortcuts, then App Language ▸ one item per ``manifest.LANGUAGES`` entry."""
-    assert action_ids(app.menu("Config")) == ["config.shortcuts", "config.language.en", "config.language.de"]
+    assert action_ids(app.menu("Preferences")) == ["config.shortcuts", "config.language.en", "config.language.de"]
 
 
 def test_app_language_items_are_checkable_page_actions_named_after_their_tag(app: manifest.Manifest) -> None:
-    config = app.menu("Config")
+    config = app.menu("Preferences")
     app_language = next(
         e for section in config.sections for e in section if getattr(e, "label", None) == "App Language"
     )
@@ -766,11 +766,11 @@ def test_a_translate_function_never_touches_the_language_pickers_own_autonyms() 
     translating them would be exactly the mistake this module's docstring calls out."""
     shout_everything = str.upper
     root = ET.fromstring(manifest.menu_xml(manifest.composes(), translate=shout_everything))
-    config_menu = root.find(".//menu[@id='menu-config']")
-    assert config_menu is not None
+    preferences_menu = root.find(".//menu[@id='menu-preferences']")
+    assert preferences_menu is not None
     language_labels = {
         item.findtext("attribute[@name='label']")
-        for item in config_menu.findall(".//submenu/section/item")
+        for item in preferences_menu.findall(".//submenu/section/item")
         if (item.findtext("attribute[@name='action']") or "").startswith("win.config.language.")
     }
     assert language_labels == {"English", "Deutsch"}
@@ -819,7 +819,7 @@ def _flatten(menu: dict[str, Any]) -> list[dict[str, Any]]:
 @pytest.mark.parametrize("app_name", ["composes", "computes", "creates"])
 def test_the_front_page_menu_has_only_what_works_without_a_document(app_name: str) -> None:
     short = manifest.for_start(manifest.for_app(app_name))
-    assert [menu.label for menu in short.menus] == ["File", "View", "Config", "Help"]
+    assert [menu.label for menu in short.menus] == ["File", "View", "Preferences", "Help"]
     ids = [action.id for action in short.actions]
     assert ids == [
         "file.new",
@@ -834,7 +834,7 @@ def test_the_front_page_menu_has_only_what_works_without_a_document(app_name: st
 
 
 def test_the_front_page_menu_keeps_the_language_flyout_and_drops_empty_sections(composes: manifest.Manifest) -> None:
-    config = manifest.for_start(composes).menu("Config")
+    config = manifest.for_start(composes).menu("Preferences")
     assert len(config.sections) == 1
     (flyout,) = config.sections[0]
     assert isinstance(flyout, manifest.Submenu) and flyout.label == "App Language"

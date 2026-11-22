@@ -1349,10 +1349,6 @@ msgstr "[Cômmôn tîmés~~~~~]"
 msgid "Condition"
 msgstr "[Côndîtîôn~~~~]"
 
-#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:258
-msgid "Config"
-msgstr "[Cônfîg~~]"
-
 #: web/app/components/FirstAdminSetup.vue:156
 msgid "Confirm password"
 msgstr "[Cônfîrm pàsswôrd~~~~~~]"
@@ -4161,6 +4157,10 @@ msgstr "[PôwérPôînt préséntàtîôn (.pptx)~~~~~~~~~~~~]"
 msgid "PowerPoint, OpenDocument or Claudia slides, or drop one anywhere on this page."
 msgstr "[PôwérPôînt, ÔpénDôcûmént ôr Clàûdîà slîdés, ôr drôp ôné ànywhéré ôn thîs pàgé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: clients/linux/src/claudia_shell_gtk/manifest.py web/app/lib/document-menus.ts:258
+msgid "Preferences"
+msgstr "[Préféréncés~~~~]"
+
 #: web/app/components/SlideWorkspace.vue:481
 msgid "Present"
 msgstr "[Présént~~~]"
@@ -6117,7 +6117,7 @@ msgstr "[Thé nàmé ôr pàsswôrd îs nôt rîght (ôr théré îs nô sûch d
 msgid "The name or password is not right."
 msgstr "[Thé nàmé ôr pàsswôrd îs nôt rîght.~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/auth.py:338 packages/claudia-server/src/claudia_server/sealed.py:313
+#: packages/claudia-server/src/claudia_server/auth.py:349 packages/claudia-server/src/claudia_server/sealed.py:316
 msgid "The name “{name}” belongs to the AI assistant. Choose another name."
 msgstr "[Thé nàmé “{name}” bélôngs tô thé ÀÎ àssîstànt. Chôôsé ànôthér nàmé.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6829,7 +6829,7 @@ msgstr "[Thîs dôcûmént cànnôt sày whàt délétîng thé stylé wôûld d
 msgid "This document has no sheet yet."
 msgstr "[Thîs dôcûmént hàs nô shéét yét.~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:114
+#: packages/claudia-server/src/claudia_server/hub.py:115
 msgid "This document is on this server already, as “{id}”. It cannot be added a second time."
 msgstr "[Thîs dôcûmént îs ôn thîs sérvér àlréàdy, às “{id}”. Ît cànnôt bé àddéd à sécônd tîmé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7753,7 +7753,7 @@ msgstr "[à récôvéry kéy, à nàmé ànd à néw pàsswôrd àré néédéd~
 msgid "a remark suggests no change; dismiss it instead"
 msgstr "[à rémàrk sûggésts nô chàngé; dîsmîss ît înstéàd~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:538
+#: packages/claudia-server/src/claudia_server/protocol.py:541
 msgid "a request must be a JSON object"
 msgstr "[à réqûést mûst bé à JSÔN ôbjéct~~~~~~~~~~~~]"
 
@@ -7845,7 +7845,7 @@ msgstr "[àdd_ôbjéct: ûsé àdd_îmàgé tô pût à pîctûré héré~~~~~~~
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr "[àdd_shéét: thé nàmé mûst hàvé 1 tô {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1096
+#: packages/claudia-server/src/claudia_server/protocol.py:1099
 msgid "add_user: role must be editor or viewer"
 msgstr "[àdd_ûsér: rôlé mûst bé édîtôr ôr vîéwér~~~~~~~~~~~~~~~~]"
 
@@ -8033,7 +8033,7 @@ msgstr "[célls: wîndôw tôô làrgé (àt môst {limit} pôsîtîôns)~~~~~~~
 msgid "chance"
 msgstr "[chàncé~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1113
+#: packages/claudia-server/src/claudia_server/protocol.py:1116
 msgid "change_role: role must be editor or viewer"
 msgstr "[chàngé_rôlé: rôlé mûst bé édîtôr ôr vîéwér~~~~~~~~~~~~~~~~~]"
 
@@ -8049,7 +8049,7 @@ msgstr "[chàrt typé~~~~]"
 msgid "chat message"
 msgstr "[chàt méssàgé~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1422
+#: packages/claudia-server/src/claudia_server/protocol.py:1465
 msgid "chat: {reason}"
 msgstr "[chàt: {reason}~~~~~~]"
 
@@ -8057,7 +8057,7 @@ msgstr "[chàt: {reason}~~~~~~]"
 msgid "chat: {text}"
 msgstr "[chàt: {text}~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:985
+#: packages/claudia-server/src/claudia_server/protocol.py:988
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr "[chàt_lôg: lîmît mûst bé frôm 1 tô {limit}~~~~~~~~~~~~~~~~]"
 
@@ -8205,7 +8205,7 @@ msgstr "[dô nôt màtch thé pàttérn fôr téxts~~~~~~~~~~~~~~]"
 msgid "do not start with “{text}”"
 msgstr "[dô nôt stàrt wîth “{text}”~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:762
+#: packages/claudia-server/src/claudia_server/hub.py:765
 msgid "document ids are 1-64 letters, digits, '-' or '_'"
 msgstr "[dôcûmént îds àré 1-64 léttérs, dîgîts, '-' ôr '_'~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8401,7 +8401,7 @@ msgstr "[hôw màny rôws thé ràngé hàs.~~~~~~~~~~~]"
 msgid "how many sheets the workbook has (1 for a reference)."
 msgstr "[hôw màny shééts thé wôrkbôôk hàs (1 fôr à référéncé).~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:541
+#: packages/claudia-server/src/claudia_server/protocol.py:544
 msgid "id must be an integer or a short string"
 msgstr "[îd mûst bé àn întégér ôr à shôrt strîng~~~~~~~~~~~~~~~~]"
 
@@ -8429,11 +8429,11 @@ msgstr "[în {source}~~~~]"
 msgid "insert"
 msgstr "[însért~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:358
+#: packages/claudia-server/src/claudia_server/hub.py:360
 msgid "internal server error"
 msgstr "[întérnàl sérvér érrôr~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1030
+#: packages/claudia-server/src/claudia_server/protocol.py:1033
 msgid "invalid command: {reason!r}"
 msgstr "[învàlîd cômmànd: {réàsôn!r}~~~~~~~~~~~]"
 
@@ -8529,7 +8529,7 @@ msgstr "[lôckéd by {name}~~~~~~]"
 msgid "log more and enable the web inspector"
 msgstr "[lôg môré ànd énàblé thé wéb înspéctôr~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:935
+#: packages/claudia-server/src/claudia_server/protocol.py:938
 msgid "log: limit must be from 1 to {limit}"
 msgstr "[lôg: lîmît mûst bé frôm 1 tô {limit}~~~~~~~~~~~~~~]"
 
@@ -8561,11 +8561,11 @@ msgstr "[médîàn~~]"
 msgid "menu"
 msgstr "[ménû~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:532
+#: packages/claudia-server/src/claudia_server/protocol.py:535
 msgid "message too large"
 msgstr "[méssàgé tôô làrgé~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:470
+#: packages/claudia-server/src/claudia_server/protocol.py:473
 msgid "method must be a string"
 msgstr "[méthôd mûst bé à strîng~~~~~~~~~]"
 
@@ -8641,11 +8641,11 @@ msgstr "[nô àpp~~]"
 msgid "no cells"
 msgstr "[nô célls~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:700
+#: packages/claudia-server/src/claudia_server/protocol.py:703
 msgid "no checkpoint number {checkpoint}"
 msgstr "[nô chéckpôînt nûmbér {checkpoint}~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:915
+#: packages/claudia-server/src/claudia_server/hub.py:918
 msgid "no document {id!r}"
 msgstr "[nô dôcûmént {îd!r}~~~~~~~]"
 
@@ -8653,7 +8653,7 @@ msgstr "[nô dôcûmént {îd!r}~~~~~~~]"
 msgid "no function named {name!r}"
 msgstr "[nô fûnctîôn nàméd {nàmé!r}~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:602
+#: packages/claudia-server/src/claudia_server/protocol.py:605
 msgid "no help topic {id!r}"
 msgstr "[nô hélp tôpîc {îd!r}~~~~~~~~]"
 
@@ -8661,11 +8661,11 @@ msgstr "[nô hélp tôpîc {îd!r}~~~~~~~~]"
 msgid "no merged box starts at row {row!r}, column {col!r}"
 msgstr "[nô mérgéd bôx stàrts àt rôw {rôw!r}, côlûmn {côl!r}~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:473
+#: packages/claudia-server/src/claudia_server/protocol.py:476
 msgid "no method {name!r}"
 msgstr "[nô méthôd {nàmé!r}~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1231
+#: packages/claudia-server/src/claudia_server/protocol.py:1234
 msgid "no ownership transfer is waiting for you with that password"
 msgstr "[nô ôwnérshîp trànsfér îs wàîtîng fôr yôû wîth thàt pàsswôrd~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8685,7 +8685,7 @@ msgstr "[nôné~~]"
 msgid "not a numbering scheme: {reason}"
 msgstr "[nôt à nûmbérîng schémé: {reason}~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:566
+#: packages/claudia-server/src/claudia_server/protocol.py:569
 msgid "not a region this document understands: {reason!r}"
 msgstr "[nôt à régîôn thîs dôcûmént ûndérstànds: {réàsôn!r}~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8701,7 +8701,7 @@ msgstr "[nôt nûmbéréd~~~~~]"
 msgid "not the options of a table of contents: {reason}"
 msgstr "[nôt thé ôptîôns ôf à tàblé ôf cônténts: {reason}~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:536
+#: packages/claudia-server/src/claudia_server/protocol.py:539
 msgid "not valid JSON"
 msgstr "[nôt vàlîd JSÔN~~~~~~]"
 
@@ -8753,15 +8753,15 @@ msgstr "[ônly Sûndày îs ôff: Sàtûrdày îs à wôrkdày~~~~~~~~~~~~~~~~]"
 msgid "only a built-in scheme can be reset"
 msgstr "[ônly à bûîlt-în schémé càn bé rését~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1262
+#: packages/claudia-server/src/claudia_server/protocol.py:1265
 msgid "only an editor or an owner of a document may change its description and tags"
 msgstr "[ônly àn édîtôr ôr àn ôwnér ôf à dôcûmént mày chàngé îts déscrîptîôn ànd tàgs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1320
+#: packages/claudia-server/src/claudia_server/protocol.py:1323
 msgid "only an owner may export the history and the chat"
 msgstr "[ônly àn ôwnér mày éxpôrt thé hîstôry ànd thé chàt~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1243
+#: packages/claudia-server/src/claudia_server/protocol.py:1246
 msgid "only an owner of a document may delete it"
 msgstr "[ônly àn ôwnér ôf à dôcûmént mày délété ît~~~~~~~~~~~~~~~~]"
 
@@ -8773,7 +8773,7 @@ msgstr "[ônly îts bôx~~~~~]"
 msgid "only look"
 msgstr "[ônly lôôk~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:804
+#: packages/claudia-server/src/claudia_server/protocol.py:807
 msgid "only owners, and editors on their own work, redact"
 msgstr "[ônly ôwnérs, ànd édîtôrs ôn théîr ôwn wôrk, rédàct~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8789,33 +8789,37 @@ msgstr "[ônly thé àssîstànt màkés sûggéstîôns~~~~~~~~~~~~~~]"
 msgid "only the branch taken is evaluated, so IF(B1=0, 0, A1/B1) never divides by zero."
 msgstr "[ônly thé brànch tàkén îs évàlûàtéd, sô ÎF(B1=0, 0, À1/B1) névér dîvîdés by zérô.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1092
+#: packages/claudia-server/src/claudia_server/protocol.py:1095
 msgid "only the owner of a document adds people to it"
 msgstr "[ônly thé ôwnér ôf à dôcûmént àdds péôplé tô ît~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1213
+#: packages/claudia-server/src/claudia_server/protocol.py:1216
 msgid "only the owner of a document can hand it over"
 msgstr "[ônly thé ôwnér ôf à dôcûmént càn hànd ît ôvér~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1109
+#: packages/claudia-server/src/claudia_server/protocol.py:1112
 msgid "only the owner of a document changes who may do what"
 msgstr "[ônly thé ôwnér ôf à dôcûmént chàngés whô mày dô whàt~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:788
+#: packages/claudia-server/src/claudia_server/protocol.py:791
 msgid "only the owner of a document discards its hidden lines"
 msgstr "[ônly thé ôwnér ôf à dôcûmént dîscàrds îts hîddén lînés~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1157
+#: packages/claudia-server/src/claudia_server/protocol.py:1160
 msgid "only the owner of a document makes a recovery key"
 msgstr "[ônly thé ôwnér ôf à dôcûmént màkés à récôvéry kéy~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1125
+#: packages/claudia-server/src/claudia_server/protocol.py:1128
 msgid "only the owner of a document removes people from it"
 msgstr "[ônly thé ôwnér ôf à dôcûmént rémôvés péôplé frôm ît~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:681
+#: packages/claudia-server/src/claudia_server/protocol.py:684
 msgid "only the owner of a document sets this"
 msgstr "[ônly thé ôwnér ôf à dôcûmént séts thîs~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:1406
+msgid "only the owners of a document decide whether Claude may be asked here"
+msgstr "[ônly thé ôwnérs ôf à dôcûmént décîdé whéthér Clàûdé mày bé àskéd héré~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/cell-style-host.ts:89
 msgid "only their box"
@@ -8869,7 +8873,7 @@ msgstr "[pàràgràphs mûst bé à lîst ôf àt môst {limit} pàràgràph îd
 msgid "paragraphs, pictures and boxes"
 msgstr "[pàràgràphs, pîctûrés ànd bôxés~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:442
+#: packages/claudia-server/src/claudia_server/protocol.py:445
 msgid "params must be an object"
 msgstr "[pàràms mûst bé àn ôbjéct~~~~~~~~~~]"
 
@@ -8981,7 +8985,7 @@ msgstr "[ràté~~]"
 msgid "recovery key"
 msgstr "[récôvéry kéy~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:811
+#: packages/claudia-server/src/claudia_server/protocol.py:814
 msgid "redaction: revisions like \"main:12\", chat numbers, parts by revision"
 msgstr "[rédàctîôn: révîsîôns lîké \"màîn:12\", chàt nûmbérs, pàrts by révîsîôn~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8993,11 +8997,11 @@ msgstr "[rédô~~]"
 msgid "remark"
 msgstr "[rémàrk~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1365
+#: packages/claudia-server/src/claudia_server/protocol.py:1368
 msgid "report_output: kind must be print or pdf"
 msgstr "[répôrt_ôûtpût: kînd mûst bé prînt ôr pdf~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1367
+#: packages/claudia-server/src/claudia_server/protocol.py:1370
 msgid "report_output: pages and format are not usable"
 msgstr "[répôrt_ôûtpût: pàgés ànd fôrmàt àré nôt ûsàblé~~~~~~~~~~~~~~~~~~]"
 
@@ -9093,7 +9097,7 @@ msgstr "[sét_célls: éàch céll îs àn ôbjéct wîth rôw, côl ànd înpû
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr "[sét_célls: înpût mûst bé téxt ôf àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:684
+#: packages/claudia-server/src/claudia_server/protocol.py:687
 msgid "set_restore_policy: policy must be one of {policies}"
 msgstr "[sét_réstôré_pôlîcy: pôlîcy mûst bé ôné ôf {policies}~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9205,7 +9209,7 @@ msgstr "[tàblé · {rows} rôws~~~~~~~~]"
 msgid "tables"
 msgstr "[tàblés~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1267
+#: packages/claudia-server/src/claudia_server/protocol.py:1270
 msgid "tags are words"
 msgstr "[tàgs àré wôrds~~~~~~]"
 
@@ -9225,11 +9229,11 @@ msgstr "[téxt bôx~~~]"
 msgid "text of the object"
 msgstr "[téxt ôf thé ôbjéct~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1370
+#: packages/claudia-server/src/claudia_server/protocol.py:1373
 msgid "that is more prints and PDFs than the document records in a minute"
 msgstr "[thàt îs môré prînts ànd PDFs thàn thé dôcûmént récôrds în à mînûté~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1181 packages/claudia-server/src/claudia_server/protocol.py:1202 packages/claudia-server/src/claudia_server/protocol.py:1217 packages/claudia-server/src/claudia_server/protocol.py:1247 packages/claudia-server/src/claudia_server/protocol.py:1273 packages/claudia-server/src/claudia_server/protocol.py:1401
+#: packages/claudia-server/src/claudia_server/protocol.py:1184 packages/claudia-server/src/claudia_server/protocol.py:1205 packages/claudia-server/src/claudia_server/protocol.py:1220 packages/claudia-server/src/claudia_server/protocol.py:1250 packages/claudia-server/src/claudia_server/protocol.py:1276 packages/claudia-server/src/claudia_server/protocol.py:1444
 msgid "that is not your current password"
 msgstr "[thàt îs nôt yôûr cûrrént pàsswôrd~~~~~~~~~~~~~]"
 
@@ -9237,35 +9241,35 @@ msgstr "[thàt îs nôt yôûr cûrrént pàsswôrd~~~~~~~~~~~~~]"
 msgid "that would make too many paragraphs"
 msgstr "[thàt wôûld màké tôô màny pàràgràphs~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1024
+#: packages/claudia-server/src/claudia_server/protocol.py:1027
 msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr "[thé àssîstànt cànnôt àpply à ràw cômmànd; ûsé thé àpp's ôwn méthôds~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1318
+#: packages/claudia-server/src/claudia_server/protocol.py:1321
 msgid "the assistant does not export the document"
 msgstr "[thé àssîstànt dôés nôt éxpôrt thé dôcûmént~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1363
+#: packages/claudia-server/src/claudia_server/protocol.py:1366
 msgid "the assistant does not print"
 msgstr "[thé àssîstànt dôés nôt prînt~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:697
+#: packages/claudia-server/src/claudia_server/protocol.py:700
 msgid "the assistant does not suggest restoring a checkpoint"
 msgstr "[thé àssîstànt dôés nôt sûggést réstôrîng à chéckpôînt~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:724
+#: packages/claudia-server/src/claudia_server/protocol.py:727
 msgid "the assistant does not suggest restoring a step"
 msgstr "[thé àssîstànt dôés nôt sûggést réstôrîng à stép~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:751
+#: packages/claudia-server/src/claudia_server/protocol.py:754
 msgid "the assistant does not suggest switching branches"
 msgstr "[thé àssîstànt dôés nôt sûggést swîtchîng brànchés~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:770
+#: packages/claudia-server/src/claudia_server/protocol.py:773
 msgid "the assistant does not vote"
 msgstr "[thé àssîstànt dôés nôt vôté~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:908
+#: packages/claudia-server/src/claudia_server/protocol.py:911
 msgid "the assistant does not withdraw suggestions"
 msgstr "[thé àssîstànt dôés nôt wîthdràw sûggéstîôns~~~~~~~~~~~~~~~~~]"
 
@@ -9393,7 +9397,7 @@ msgstr "[thé pôsîtîôn (frôm 1) ôf thé vàlûé. Màtch môdé 0 îs éx�
 msgid "the range ends before it starts"
 msgstr "[thé ràngé énds béfôré ît stàrts~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:895
+#: packages/claudia-server/src/claudia_server/protocol.py:898
 msgid "the redaction would now blank other steps than you were shown; look at it again"
 msgstr "[thé rédàctîôn wôûld nôw blànk ôthér stéps thàn yôû wéré shôwn; lôôk àt ît àgàîn~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9505,15 +9509,15 @@ msgstr "[thé wôrds {fînd!r} àré nôt în pàràgràph {paragraph}; réàd �
 msgid "there is a table of contents here already"
 msgstr "[théré îs à tàblé ôf cônténts héré àlréàdy~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:790 packages/claudia-server/src/claudia_server/protocol.py:886
+#: packages/claudia-server/src/claudia_server/protocol.py:793 packages/claudia-server/src/claudia_server/protocol.py:889
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr "[théré îs àn ôpén sûggéstîôn; ànswér ôr wîthdràw ît fîrst~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:753
+#: packages/claudia-server/src/claudia_server/protocol.py:756
 msgid "there is no branch called {branch!r}"
 msgstr "[théré îs nô brànch càlléd {brànch!r}~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:816
+#: packages/claudia-server/src/claudia_server/protocol.py:819
 msgid "there is no chat message of that number for you"
 msgstr "[théré îs nô chàt méssàgé ôf thàt nûmbér fôr yôû~~~~~~~~~~~~~~~~~~~]"
 
@@ -9529,7 +9533,7 @@ msgstr "[théré îs nô pàràgràph {pàràgràph!r}~~~~~~~~~~~~~~]"
 msgid "there is no pivot table called {name!r}"
 msgstr "[théré îs nô pîvôt tàblé càlléd {nàmé!r}~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:726
+#: packages/claudia-server/src/claudia_server/protocol.py:729
 msgid "there is no step {revision} on this line"
 msgstr "[théré îs nô stép {revision} ôn thîs lîné~~~~~~~~~~~~~~~~]"
 
@@ -9541,7 +9545,7 @@ msgstr "[théré îs nô sûch référéncé héré~~~~~~~~~~~~]"
 msgid "there is no text to add"
 msgstr "[théré îs nô téxt tô àdd~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1137
+#: packages/claudia-server/src/claudia_server/protocol.py:1140
 msgid "there is nobody called {name} in this document"
 msgstr "[théré îs nôbôdy càlléd {name} în thîs dôcûmént~~~~~~~~~~~~~~~~~~]"
 
@@ -9617,7 +9621,11 @@ msgstr "[thîs prévîéw îs nô lôngér képt; wôrk thé rédàctîôn ôût
 msgid "this row"
 msgstr "[thîs rôw~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1111
+#: packages/claudia-server/src/claudia_server/protocol.py:1408 packages/claudia-server/src/claudia_server/protocol.py:1413
+msgid "this server cannot keep the owners' consent, so Claude is not allowed"
+msgstr "[thîs sérvér cànnôt kéép thé ôwnérs' cônsént, sô Clàûdé îs nôt àllôwéd~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-server/src/claudia_server/protocol.py:1114
 msgid "this server does not change roles"
 msgstr "[thîs sérvér dôés nôt chàngé rôlés~~~~~~~~~~~~~]"
 
@@ -9625,19 +9633,19 @@ msgstr "[thîs sérvér dôés nôt chàngé rôlés~~~~~~~~~~~~~]"
 msgid "this server does not host {app}"
 msgstr "[thîs sérvér dôés nôt hôst {app}~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1265
+#: packages/claudia-server/src/claudia_server/protocol.py:1268
 msgid "this server does not keep a description and tags"
 msgstr "[thîs sérvér dôés nôt kéép à déscrîptîôn ànd tàgs~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1395
+#: packages/claudia-server/src/claudia_server/protocol.py:1438
 msgid "this server does not keep documents as files you can download"
 msgstr "[thîs sérvér dôés nôt kéép dôcûménts às fîlés yôû càn dôwnlôàd~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/app.py:366 packages/claudia-server/src/claudia_server/protocol.py:1159
+#: packages/claudia-server/src/claudia_server/app.py:366 packages/claudia-server/src/claudia_server/protocol.py:1162
 msgid "this server does not keep recovery keys"
 msgstr "[thîs sérvér dôés nôt kéép récôvéry kéys~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1169
+#: packages/claudia-server/src/claudia_server/protocol.py:1172
 msgid "this server does not list a document's people this way"
 msgstr "[thîs sérvér dôés nôt lîst à dôcûmént's péôplé thîs wày~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9645,35 +9653,35 @@ msgstr "[thîs sérvér dôés nôt lîst à dôcûmént's péôplé thîs wày~
 msgid "this server does not make containers"
 msgstr "[thîs sérvér dôés nôt màké côntàînérs~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1094
+#: packages/claudia-server/src/claudia_server/protocol.py:1097
 msgid "this server does not manage people"
 msgstr "[thîs sérvér dôés nôt mànàgé péôplé~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1127
+#: packages/claudia-server/src/claudia_server/protocol.py:1130
 msgid "this server does not remove people"
 msgstr "[thîs sérvér dôés nôt rémôvé péôplé~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1196
+#: packages/claudia-server/src/claudia_server/protocol.py:1199
 msgid "this server does not support changing a password"
 msgstr "[thîs sérvér dôés nôt sûppôrt chàngîng à pàsswôrd~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1245
+#: packages/claudia-server/src/claudia_server/protocol.py:1248
 msgid "this server does not support deleting a document"
 msgstr "[thîs sérvér dôés nôt sûppôrt délétîng à dôcûmént~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1215 packages/claudia-server/src/claudia_server/protocol.py:1228
+#: packages/claudia-server/src/claudia_server/protocol.py:1218 packages/claudia-server/src/claudia_server/protocol.py:1231
 msgid "this server does not support handing over ownership"
 msgstr "[thîs sérvér dôés nôt sûppôrt hàndîng ôvér ôwnérshîp~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1179
+#: packages/claudia-server/src/claudia_server/protocol.py:1182
 msgid "this server does not support leaving a document"
 msgstr "[thîs sérvér dôés nôt sûppôrt léàvîng à dôcûmént~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:698
+#: packages/claudia-server/src/claudia_server/hub.py:701
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "[thîs sérvér hôlds {limit} dôcûménts, thé môst ît mày hôld~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:842
+#: packages/claudia-server/src/claudia_server/hub.py:845
 msgid "this server keeps its documents in memory and cannot take in a file"
 msgstr "[thîs sérvér kééps îts dôcûménts în mémôry ànd cànnôt tàké în à fîlé~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9681,7 +9689,7 @@ msgstr "[thîs sérvér kééps îts dôcûménts în mémôry ànd cànnôt tà
 msgid "this suggestion is not open any more"
 msgstr "[thîs sûggéstîôn îs nôt ôpén àny môré~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:891
+#: packages/claudia-server/src/claudia_server/protocol.py:894
 msgid "this would also blank later changes by {names}; ask an owner"
 msgstr "[thîs wôûld àlsô blànk làtér chàngés by {names}; àsk àn ôwnér~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9737,7 +9745,7 @@ msgstr "[ûndérlîné~~~~]"
 msgid "undo"
 msgstr "[ûndô~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:446
+#: packages/claudia-server/src/claudia_server/protocol.py:449
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr "[ûnknôwn pàràmétér {pàràmétér!r} fôr {name}~~~~~~~~~~~~~~~~~]"
 
@@ -9829,11 +9837,11 @@ msgstr "[xélàtéx~~~]"
 msgid "you"
 msgstr "[yôû~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:330
+#: packages/claudia-server/src/claudia_server/hub.py:331
 msgid "you are no longer a person of this document"
 msgstr "[yôû àré nô lôngér à pérsôn ôf thîs dôcûmént~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:821
+#: packages/claudia-server/src/claudia_server/protocol.py:824
 msgid "you can redact only your own changes and messages; ask an owner"
 msgstr "[yôû càn rédàct ônly yôûr ôwn chàngés ànd méssàgés; àsk àn ôwnér~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -10089,27 +10097,27 @@ msgstr "[{host} càn bé réàchéd frôm ôthér cômpûtérs. Tô shôw thàt 
 msgid "{host} isn't reachable beyond this computer yet, so this isn't required — but set a name and password now if you'd like to manage its settings, or before you open it up to others later."
 msgstr "[{host} îsn't réàchàblé béyônd thîs cômpûtér yét, sô thîs îsn't réqûîréd — bût sét à nàmé ànd pàsswôrd nôw îf yôû'd lîké tô mànàgé îts séttîngs, ôr béfôré yôû ôpén ît ûp tô ôthérs làtér.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:489
+#: packages/claudia-server/src/claudia_server/hub.py:492
 msgid "{id} already has {limit} connections"
 msgstr "[{id} àlréàdy hàs {limit} cônnéctîôns~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:903
+#: packages/claudia-server/src/claudia_server/hub.py:906
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "[{id} cànnôt bé ôpénéd yét: {reason}~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:906
+#: packages/claudia-server/src/claudia_server/hub.py:909
 msgid "{id} cannot be opened: {reason}"
 msgstr "[{id} cànnôt bé ôpénéd: {reason}~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:910
+#: packages/claudia-server/src/claudia_server/hub.py:913
 msgid "{id} cannot be read"
 msgstr "[{id} cànnôt bé réàd~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:854
+#: packages/claudia-server/src/claudia_server/hub.py:857
 msgid "{id} cannot be taken in: {reason}"
 msgstr "[{id} cànnôt bé tàkén în: {reason}~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:845 packages/claudia-server/src/claudia_server/hub.py:850
+#: packages/claudia-server/src/claudia_server/hub.py:848 packages/claudia-server/src/claudia_server/hub.py:853
 msgid "{id} is here already"
 msgstr "[{id} îs héré àlréàdy~~~~~~~~]"
 
@@ -10209,11 +10217,11 @@ msgstr "[{method}: à shéét îs nàméd by îts îd~~~~~~~~~~~~~~]"
 msgid "{method}: kinds is a list of {kinds}"
 msgstr "[{method}: kînds îs à lîst ôf {kinds}~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:454
+#: packages/claudia-server/src/claudia_server/protocol.py:457
 msgid "{method}: missing parameter {parameter!r}"
 msgstr "[{method}: mîssîng pàràmétér {pàràmétér!r}~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:463
+#: packages/claudia-server/src/claudia_server/protocol.py:466
 msgid "{method}: {parameter} {reason}"
 msgstr "[{method}: {parameter} {reason}~~~~~~~~~~~~]"
 
@@ -10269,19 +10277,19 @@ msgstr "[{name} îs héré. {count} thîngs ît hôlds àré nôt shôwn, ànd s
 msgid "{name} is larger than {mb} MB."
 msgstr "[{name} îs làrgér thàn {mb} MB.~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:487
+#: packages/claudia-server/src/claudia_server/protocol.py:490
 msgid "{name} is not one of the methods this account may call"
 msgstr "[{name} îs nôt ôné ôf thé méthôds thîs àccôûnt mày càll~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:475
+#: packages/claudia-server/src/claudia_server/protocol.py:478
 msgid "{name} needs the editor role"
 msgstr "[{name} nééds thé édîtôr rôlé~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:479
+#: packages/claudia-server/src/claudia_server/protocol.py:482
 msgid "{name} reads the chat, which is for the document's owners and editors"
 msgstr "[{name} réàds thé chàt, whîch îs fôr thé dôcûmént's ôwnérs ànd édîtôrs~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:482 packages/claudia-server/src/claudia_server/what_if.py:165
+#: packages/claudia-server/src/claudia_server/protocol.py:485 packages/claudia-server/src/claudia_server/what_if.py:165
 msgid "{name} reads the history, which is for the document's owners and editors"
 msgstr "[{name} réàds thé hîstôry, whîch îs fôr thé dôcûmént's ôwnérs ànd édîtôrs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -10453,7 +10461,7 @@ msgstr "[{range} · {rows} · {fields}~~~~~~~~~~~]"
 msgid "{ref}, empty"
 msgstr "[{ref}, émpty~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/protocol.py:925
+#: packages/claudia-server/src/claudia_server/protocol.py:928
 msgid "{revision} is not part of the document's current line; reload it"
 msgstr "[{revision} îs nôt pàrt ôf thé dôcûmént's cûrrént lîné; rélôàd ît~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 

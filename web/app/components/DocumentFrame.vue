@@ -30,7 +30,7 @@ const props = withDefaults(
     exportFormats: ExportFormatOption[]
     /** This app's own shortcuts, on top of Undo, Redo and Save (D122). */
     extraShortcuts?: ShortcutDef[]
-    /** Config ▸ Shortcuts: what is not a single key chord (the mouse, typing), as [keys, what it does]. */
+    /** Preferences ▸ Shortcuts: what is not a single key chord (the mouse, typing), as [keys, what it does]. */
     shortcutNotes?: [string, string][]
   }>(),
   { extraShortcuts: () => [], shortcutNotes: () => [] },
@@ -123,7 +123,7 @@ function openHelp(mode?: 'how-to' | 'docs', topic?: string) {
 }
 
 // D122: the shared shortcut map and the app's own, in one list that both the window's key handler and
-// Config ▸ Shortcuts read, so the dialog shows exactly what is wired. Then every other menu entry's key from the one
+// Preferences ▸ Shortcuts read, so the dialog shows exactly what is wired. Then every other menu entry's key from the one
 // table of all clients (UX-35): an entry with a key runs as if it were clicked.
 const shortcuts = computed<ShortcutDef[]>(() => {
   const own = [

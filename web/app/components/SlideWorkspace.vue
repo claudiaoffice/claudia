@@ -10,7 +10,7 @@ import {
   askItem,
   authorsItemUnavailable,
   clipboardItems,
-  configMenu,
+  preferencesMenu,
   darkItem,
   fileMenu,
   helpMenu,
@@ -439,12 +439,12 @@ const menus = computed<Menu[]>(() => {
       ],
     },
     { label: t('Tools'), items: [askItem(c, (text) => frame.value?.ask(text))] },
-    configMenu(c, { current: locale.value, choose }),
+    preferencesMenu(c, { current: locale.value, choose }),
     helpMenu(c, { ask: (text) => frame.value?.ask(text), openHelp: (mode) => frame.value?.openHelp(mode) }),
   ]
 })
 
-/** Config ▸ Shortcuts: the slide's own mouse and keyboard conventions, which are not a single key chord. */
+/** Preferences ▸ Shortcuts: the slide's own mouse and keyboard conventions, which are not a single key chord. */
 const SHORTCUT_NOTES = computed<[string, string][]>(() => [
   [t('Click'), t('select an object (colleagues cannot change it while you hold it)')],
   [t('Drag'), t('move it; the handles resize it')],

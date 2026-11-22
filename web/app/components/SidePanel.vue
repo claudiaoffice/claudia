@@ -32,7 +32,7 @@ const emit = defineEmits<{ redact: [picked: Picked] }>()
 const state = props.session.state
 // `t` stays this bare (never `i18n.t`): `scripts/extract_i18n.py`'s own regex only recognises an unqualified
 // `t(...)` call (`obj.t(...)` is deliberately excluded, the same way `format(...)` is) -- see its docstring. Only
-// the two static headers below need it; this panel has no Config ▸ App Language menu of its own.
+// the two static headers below need it; this panel has no Preferences ▸ App Language menu of its own.
 const { t } = useI18n()
 
 const history = ref<HTMLElement | null>(null)

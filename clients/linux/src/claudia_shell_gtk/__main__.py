@@ -27,7 +27,7 @@ def install_hint() -> str:
 
 
 def _resolve_locale() -> str:
-    """The persisted Config ▸ App Language choice (``settings.load_shell_locale``), if there is one yet, else this
+    """The persisted Preferences ▸ App Language choice (``settings.load_shell_locale``), if there is one yet, else this
     computer's own locale (``i18n.detect_system_locale``). The one place this is decided: both the native chrome,
     translated below, and the page (via ``ClaudiaApp``'s ``locale``, forwarded into the ``welcome`` message) are
     handed this same value, so they never disagree with each other."""
@@ -39,7 +39,7 @@ def run(app: str, argv: Sequence[str] | None = None) -> int:
     # The language first, so that `--help` and a bad `--server` already speak it. Resolved and installed *before*
     # `.window` is ever imported (by `.app`, below): the layout of the window is read once, at that import's
     # class-definition time (`window.py`'s `_layout` docstring), so a translation installed any later would be too
-    # late for it -- which is also why a language picked from the Config ▸ App Language menu only reaches the native
+    # late for it -- which is also why a language picked from the Preferences ▸ App Language menu only reaches the native
     # chrome on the *next* launch, not this one.
     locale = _resolve_locale()
     install_translation(locale)

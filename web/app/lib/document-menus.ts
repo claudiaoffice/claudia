@@ -251,11 +251,11 @@ export function askItem(c: DocumentMenuContext, ask: (text: string) => void): Me
   return { id: 'tools.ask', label: t('Ask the Assistant…'), action: () => ask('@ai ') }
 }
 
-/** Config: Shortcuts, and App Language from `LANGUAGES` (each language under its own name, never translated). */
-export function configMenu(c: DocumentMenuContext, language: { current: string; choose: (tag: string) => void }): Menu {
+/** Preferences: Shortcuts, and App Language from `LANGUAGES` (each language under its own name, never translated). */
+export function preferencesMenu(c: DocumentMenuContext, language: { current: string; choose: (tag: string) => void }): Menu {
   const { t } = c
   return {
-    label: t('Config'),
+    label: t('Preferences'),
     items: [
       { id: 'config.shortcuts', label: t('Shortcuts'), action: () => c.open('shortcuts') },
       {

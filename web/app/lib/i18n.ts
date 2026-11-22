@@ -8,7 +8,7 @@ import { currentLocale, setLocale as persistLocale } from './locale'
 
 export type Catalog = Record<string, string>
 
-/** The language picker's own short, explicit list (Config ▸ App Language): the same two entries
+/** The language picker's own short, explicit list (Preferences ▸ App Language): the same two entries
  * `manifest.LANGUAGES` lists for the Linux client (kept in sync by hand — there is no shared manifest between the
  * two shells, the same as `about_links()`'s three links). Each entry's own name is its autonym ("Deutsch", not
  * "German" from an English catalog); `t()` must never be called on one, the same universal convention every OS
@@ -20,7 +20,7 @@ export const LANGUAGES: ReadonlyArray<readonly [tag: string, autonym: string]> =
 
 /** The App Language a locale tag means: the `LANGUAGES` entry with the same tag, else the one with its language
  *  (`de-AT` reads German), else English, the source language. A browser reports a regional tag (`en-US`,
- *  `de-DE`); catalogs and the Config ▸ App Language menu are per language. */
+ *  `de-DE`); catalogs and the Preferences ▸ App Language menu are per language. */
 export function appLanguage(locale: string): string {
   const tags = LANGUAGES.map(([tag]) => tag)
   const lower = locale.toLowerCase()
@@ -128,7 +128,7 @@ export function onLanguageChange(handler: (tag: string) => void): () => void {
 }
 
 /**
- * The App Language (the Config ▸ App Language menu's own state, D160): the shared `locale` ref every workspace's
+ * The App Language (the Preferences ▸ App Language menu's own state, D160): the shared `locale` ref every workspace's
  * `menus` computed reads (so every `config.language.<tag>` item's `checked` recomputes from this one ref —
  * `manifest.py`'s docstring describes the same "one ref, no special-cased mutual exclusion" design for the Linux
  * client's native menu), `t` for the catalog loaded now, and `choose` to switch.

@@ -39,7 +39,7 @@ export function presentHint(action: PresentAction, mac: boolean): string {
   return [...parts.filter(Boolean), chord.key.length === 1 ? chord.key.toUpperCase() : chord.key].join('+')
 }
 
-/** Every chord that does something, for the window's key handler and Config ▸ Shortcuts. Both of an action's chords
+/** Every chord that does something, for the window's key handler and Preferences ▸ Shortcuts. Both of an action's chords
  * work on every system: only the one a menu names differs. */
 export function presentShortcuts(
   t: (msgid: string) => string,
