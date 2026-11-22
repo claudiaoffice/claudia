@@ -82,6 +82,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Tools | Split Cell | Ctrl+Shift+H |  |
 | Tools | Table Options… | Ctrl+Shift+L |  |
 | Preferences | Shortcuts | Ctrl+? |  |
+| Preferences | AI… | Ctrl+Shift+Alt+E |  |
 | Preferences | App Language ▸ English | — |  |
 | Preferences | App Language ▸ Deutsch | — |  |
 | Help | Ask ai | Ctrl+F1 |  |
@@ -170,6 +171,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | Tools | Show Pivot Table as SQL… | Ctrl+Shift+Alt+Q |  |
 | Tools | Delete Pivot Table… | Ctrl+Shift+Alt+V |  |
 | Preferences | Shortcuts | Ctrl+? |  |
+| Preferences | AI… | Ctrl+Shift+Alt+E |  |
 | Preferences | App Language ▸ English | — |  |
 | Preferences | App Language ▸ Deutsch | — |  |
 | Help | Ask ai | Ctrl+F1 |  |
@@ -246,6 +248,7 @@ On a Mac, Ctrl is Cmd and Alt is Option.
 | View | Speaker Notes | Ctrl+Alt+V |  |
 | Tools | Ask the Assistant… | Ctrl+Alt+J |  |
 | Preferences | Shortcuts | Ctrl+? |  |
+| Preferences | AI… | Ctrl+Shift+Alt+E |  |
 | Preferences | App Language ▸ English | — |  |
 | Preferences | App Language ▸ Deutsch | — |  |
 | Help | Ask ai | Ctrl+F1 |  |

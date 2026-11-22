@@ -110,10 +110,16 @@ class ProviderDesk:
             return Decision(None, SCRIPTED)
         return Decision(self.local, Via(LOCAL, self.local.name, False))
 
+    @property
+    def offers_claude(self) -> bool:
+        """Has the administrator set Claude up here, with the sentence confirmed? Then the owners of a document may
+        allow it; otherwise there is nothing for them to decide."""
+        return self.provider == CLAUDE and self.claude is not None and self.approved
+
     def answering_now(self) -> Via:
         """What the administrator's page says answers ``@ai`` on this server (before the owners of a document have a
         say): the chosen provider, by the name the page shows."""
-        if self.provider == CLAUDE and self.claude is not None and self.approved:
+        if self.offers_claude:
             return Via(CLAUDE, self.claude.name, True)
         return self._own().via
 

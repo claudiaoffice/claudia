@@ -157,11 +157,20 @@ describe('View, Tools, Preferences and Help pieces', () => {
   it('Preferences ▸ App Language lists LANGUAGES, ticks the current one, and chooses', () => {
     const chosen: string[] = []
     const preferences = preferencesMenu(context().c, { current: 'de', choose: (tag) => chosen.push(tag) })
-    expect(ids(preferences.items)).toEqual(['config.shortcuts', 'App Language'])
-    const languages = preferences.items[1]!.items!
+    expect(ids(preferences.items)).toEqual(['config.shortcuts', 'config.ai', 'App Language'])
+    const languages = preferences.items[2]!.items!
     expect(languages.map((l) => [l.id, l.label, l.checked])).toEqual(LANGUAGES.map(([tag, name]) => [`config.language.${tag}`, name, tag === 'de']))
     languages[0]!.action!()
     expect(chosen).toEqual([LANGUAGES[0]![0]])
+  })
+
+  it('Preferences ▸ AI… opens the dialog about who answers @ai in this document, with its key shown', () => {
+    const { c, calls } = context()
+    const ai = preferencesMenu(c, { current: 'en', choose: () => {} }).items.find((i) => i.id === 'config.ai')!
+    expect(ai.label).toBe('AI…')
+    expect(ai.hint).toBe('Ctrl+Shift+Alt+E')
+    ai.action!()
+    expect(calls).toEqual(['open:ai'])
   })
 
   it('Help asks the assistant, opens the help tab in its two modes, and shows About', () => {

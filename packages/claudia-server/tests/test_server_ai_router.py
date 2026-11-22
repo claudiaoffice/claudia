@@ -292,3 +292,19 @@ def test_the_consent_says_who_answers_here_now_and_why_it_is_not_claude(anthropi
         assert ann.request("ai_consent")["result"]["answering"] == CLAUDE_VIA
 
     served(test, claude_desk(anthropic, local=runner_of("the local model")))
+
+
+def test_the_consent_says_whether_this_server_offers_claude_at_all(anthropic):
+    async def offered(hosted, ann, desk):
+        assert ann.request("ai_consent")["result"]["offered"] is True
+        desk.install(provider="local", local=runner_of("the local model"))
+        assert ann.request("ai_consent")["result"]["offered"] is False  # the administrator chose the local model
+
+    served(offered, claude_desk(anthropic, local=runner_of("the local model")))
+
+    async def not_offered(hosted, ann, desk):
+        assert ann.request("ai_consent")["result"]["offered"] is False
+
+    own = ProviderDesk()
+    own.install(provider="local", local=runner_of("the local model"))
+    served(not_offered, own)

@@ -170,6 +170,7 @@ describe('one key table for every client (UX-35)', () => {
   it('shows a key the way people read it', () => {
     expect(hintOf('edit.row-insert-above')).toBe('Shift+Alt+↑')
     expect(hintOf('config.shortcuts')).toBe('Ctrl+?') // the symbol, without the Shift that types it
+    expect(hintOf('config.ai')).toBe('Ctrl+Shift+Alt+E')
     expect(hintOf('edit.clear')).toBe('Del')
     expect(hintOf('format.look')).toBe('Shift+F10')
     expect(hintOf(undefined)).toBeUndefined()

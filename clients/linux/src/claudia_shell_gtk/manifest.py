@@ -824,7 +824,8 @@ def _tools_ask() -> Action:
 
 
 def _preferences_menu() -> Menu:
-    """Shortcuts (D120, D122: an editable remapping UI is deferred; Ctrl+? as in GNOME), then App Language (the owner's
+    """Shortcuts (D120, D122: an editable remapping UI is deferred; Ctrl+? as in GNOME), AI… (E7.11, the owners' consent for Claude
+    in this document: Ctrl+Shift+Alt+E, provisional, because the wished-for H is Present from This Slide), then App Language (the owner's
     second i18n round): one checkable ``Kind.PAGE`` action per :data:`LANGUAGES` entry, in its own section/flyout.
 
     The language entries are the one place without a key: each is a language's own name, and there may be many.
@@ -843,6 +844,12 @@ def _preferences_menu() -> Menu:
                     "Shortcuts",
                     "The keyboard shortcuts this app uses",
                     accelerators=("<Primary>question",),
+                ),
+                _page(
+                    "config.ai",
+                    "AI…",
+                    "Who may answer @ai in this document, and what is sent to Anthropic if Claude does (E7.11)",
+                    accelerators=("<Primary><Shift><Alt>e",),
                 ),
             ),
             (

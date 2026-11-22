@@ -322,6 +322,8 @@ class Context:
     consent: ConsentBook | None = None
     # Who answers `@ai` in this document now, as `Via.to_data` says it; ``None`` when nobody does.
     answering: Callable[[], dict | None] = field(default=lambda: None)
+    # Whether this server has a remote AI provider the owners could allow (E7.11).
+    offers_claude: Callable[[], bool] = field(default=lambda: False)
 
     @property
     def user(self) -> str:
@@ -1391,11 +1393,12 @@ def _audit_log(ctx):
 def _ai_consent(ctx):
     """Whether the owners allowed Claude to be sent this document's content when somebody asks `@ai` here (D264): off
     until an owner says so. Any role may read it, a viewer too. Returns `{provider, allowed, by, at, owners,
-    history, answering}`: `by` and `at` are who decided last and when, `owners` the people who can change it,
+    history, answering, offered}`: `by` and `at` are who decided last and when, `owners` the people who can change it,
     `history` every decision (`{allowed, who, when}`) oldest first, `answering` who answers `@ai` here now (`{provider,
-    label, remote, note}`; `note` says why it is not Claude where it is not)."""
+    label, remote, note}`; `note` says why it is not Claude where it is not), `offered` whether this server has
+    Claude set up, so that there is something to allow."""
     state = ctx.consent.state if ctx.consent is not None else AiConsent()
-    return {**consent_view(state, CLAUDE, _owners(ctx)), "answering": ctx.answering()}
+    return _consent_answer(ctx, state)
 
 
 @core_methods.method("set_ai_consent", "allowed:bool", write=True)
@@ -1415,10 +1418,18 @@ def _set_ai_consent(ctx, allowed):
         raise RequestError(
             "unavailable", msg("this server cannot keep the owners' consent, so Claude is not allowed")
         ) from None
-    view = {**consent_view(ctx.consent.state, CLAUDE, _owners(ctx)), "answering": ctx.answering()}
+    view = _consent_answer(ctx, ctx.consent.state)
     if record is not None:
         ctx.document.publish("ai_consent_changed", ctx.user, {"allowed": allowed, "by": ctx.user, "at": record.when})
     return view
+
+
+def _consent_answer(ctx, state: AiConsent) -> dict:
+    return {
+        **consent_view(state, CLAUDE, _owners(ctx)),
+        "answering": ctx.answering(),
+        "offered": ctx.offers_claude(),
+    }
 
 
 def _owners(ctx) -> list[str]:

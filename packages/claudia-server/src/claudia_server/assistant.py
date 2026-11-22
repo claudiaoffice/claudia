@@ -107,6 +107,9 @@ class Answering(Protocol):
     def answering(self, consent: AiConsent) -> Via:
         """Who answers, with the sentence for the chat that goes with it."""
 
+    def offers_claude(self) -> bool:
+        """Is there a remote provider the owners could allow?"""
+
 
 class Assistant:
     """The AI participant of one document.
@@ -141,6 +144,10 @@ class Assistant:
     def answering(self, consent: AiConsent) -> Via | None:
         """Who would answer the next question, if the engine says (the router does); ``None`` otherwise."""
         return self.engine.answering(consent) if isinstance(self.engine, Answering) else None
+
+    def offers_claude(self) -> bool:
+        """Could the owners allow a remote provider here? Only an engine that routes between providers can say."""
+        return isinstance(self.engine, Answering) and self.engine.offers_claude()
 
     # -- joining ---------------------------------------------------------------------------
     def attach(self, hosted: HostedDocument) -> Connection:

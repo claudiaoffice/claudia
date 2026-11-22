@@ -83,6 +83,10 @@ class AiRouter:
         decision, note = self._desk.decide(consent)
         return replace(decision.via, note=note)
 
+    def offers_claude(self) -> bool:
+        """Can the owners of a document allow Claude here at all?"""
+        return self._desk.offers_claude
+
     async def plan_async(self, task: Task) -> list[AiTurn]:
         """The steps that answer ``task``, each ``Say`` marked with who answered."""
         decision, note = self._desk.decide(task.consent() if task.consent else AiConsent())

@@ -31,6 +31,7 @@ export type FrameDialog =
   | 'redact'
   | 'open'
   | 'open-file'
+  | 'ai'
 
 /** What the shared items need from the window they are in. */
 export interface DocumentMenuContext {
@@ -251,13 +252,14 @@ export function askItem(c: DocumentMenuContext, ask: (text: string) => void): Me
   return { id: 'tools.ask', label: t('Ask the Assistant…'), action: () => ask('@ai ') }
 }
 
-/** Preferences: Shortcuts, and App Language from `LANGUAGES` (each language under its own name, never translated). */
+/** Preferences: Shortcuts, AI… (who may answer `@ai` here, E7.11), and App Language from `LANGUAGES` (each language under its own name, never translated). */
 export function preferencesMenu(c: DocumentMenuContext, language: { current: string; choose: (tag: string) => void }): Menu {
   const { t } = c
   return {
     label: t('Preferences'),
     items: [
       { id: 'config.shortcuts', label: t('Shortcuts'), action: () => c.open('shortcuts') },
+      { id: 'config.ai', label: t('AI…'), hint: hintOf('config.ai'), action: () => c.open('ai') },
       {
         label: t('App Language'),
         items: LANGUAGES.map(([tag, autonym]) => ({

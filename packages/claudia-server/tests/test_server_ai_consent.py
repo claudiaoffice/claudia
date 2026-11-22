@@ -62,6 +62,7 @@ def test_nothing_is_allowed_until_an_owner_says_so_and_everybody_can_read_that(w
             "owners": [ANN],
             "history": [],
             "answering": None,  # this server has no assistant
+            "offered": False,
         }
 
 

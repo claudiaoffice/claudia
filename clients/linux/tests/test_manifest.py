@@ -272,9 +272,9 @@ def test_views_shared_block_is_identical_in_every_app(app: manifest.Manifest) ->
     ]
 
 
-def test_configs_items_are_shortcuts_then_app_language(app: manifest.Manifest) -> None:
+def test_preferences_items_are_shortcuts_ai_then_app_language(app: manifest.Manifest) -> None:
     """The owner's second i18n round: Shortcuts, then App Language ▸ one item per ``manifest.LANGUAGES`` entry."""
-    assert action_ids(app.menu("Preferences")) == ["config.shortcuts", "config.language.en", "config.language.de"]
+    assert action_ids(app.menu("Preferences")) == ["config.shortcuts", "config.ai", "config.language.en", "config.language.de"]
 
 
 def test_app_language_items_are_checkable_page_actions_named_after_their_tag(app: manifest.Manifest) -> None:
