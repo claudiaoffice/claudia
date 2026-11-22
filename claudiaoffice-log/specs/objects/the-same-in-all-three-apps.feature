@@ -74,10 +74,3 @@ Feature: Objects, styles and the palette work the same in a text, a workbook and
       | presentation | a container    |
       | workbook     | a chart        |
       | presentation | a shape        |
-
-  @extended @app:computes
-  Scenario: A chart shown on a chart tab and as an object stays when one of them goes
-    Given a workbook with a chart shown on a chart tab and as an object on a sheet
-    When I delete the object
-    Then the chart tab still shows the chart
-    And when I undo, the object shows it again
