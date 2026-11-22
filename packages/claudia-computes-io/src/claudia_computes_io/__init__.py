@@ -12,6 +12,9 @@ only the cells that changed onto the original bytes (``apply_edits_to_ods``), ea
 be kept (``ods_export_losses``, ``ods_import_losses``). Formulas are translated between the model's Excel language
 and OpenFormula by :func:`to_openformula` and :func:`from_openformula`.
 
+Neither format has slides: a workbook's slide is written as a sheet of its own, with its objects on it, and the
+export says so (``slide_plan``, E6.31, D1473).
+
 The names, by kind::
 
    xlsx   workbook_to_xlsx, xlsx_to_workbook, apply_edits_to_xlsx, xlsx_export_losses, xlsx_import_losses,

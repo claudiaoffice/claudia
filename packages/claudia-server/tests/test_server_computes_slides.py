@@ -135,3 +135,9 @@ def test_asking_for_a_slide_that_is_not_one_is_refused(book):
     with pytest.raises(RequestError) as refused:
         call(book, "slide", {"slide": "s1"})
     assert refused.value.code == "command_error"
+
+
+@pytest.mark.parametrize("fmt", ["xlsx", "ods"])
+def test_an_export_says_that_a_slide_became_a_sheet(book, fmt):
+    losses = call(book, "export_office", {"format": fmt})["losses"]
+    assert {"kind": "slide", "detail": "Sales chart", "count": 1} in losses

@@ -93,6 +93,7 @@ from .ods_pivots import data_pilot_tables, read_pivots
 from .ods_write_looks import OdsLookWriter, OdsRestyler
 from .openformula import Untranslatable, from_openformula, to_openformula
 from .pivot_exchange import adopt_pivots, outside_pivots, sheet_cells, written_pivots
+from .slide_plan import slide_losses, with_slides_as_sheets
 from .xlsx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -898,7 +899,8 @@ def workbook_to_ods(
     written once, with a count). A formula is written as OpenFormula with the value it shows, a constant as its value.
     The charts and pictures floating on a sheet are in its ``table:shapes``, stacked as they are (D462, D1233;
     ``rasterise`` draws an SVG as a PNG). ``info`` is the metadata (D411). Anything the file cannot hold is in
-    :func:`ods_export_losses`."""
+    :func:`ods_export_losses`. A slide is a sheet of its own in the file (``slide_plan``, D1473)."""
+    model = with_slides_as_sheets(model)
     root = _el("office", "document-content", {"office:version": "1.3"})
     for name in ("scripts", "font-face-decls", "automatic-styles"):
         etree.SubElement(root, _q("office", name))
@@ -948,8 +950,11 @@ def ods_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tupl
     ``"rendering-pending"`` (a container nothing has been drawn for: left out), ``"decorative"`` (a picture
     marked as having nothing to say: ODF has no way to say so), ``"object"`` (a text box or shape floating on a sheet,
     which computes does not have, is not written) and ``"look"`` (``too-many-cells``: cells of style ranges too large
-    to write one by one)."""
+    to write one by one). A slide is ``"slide"``, with its name: it is written as a sheet (``slide_plan``, D1473)."""
     losses = LossLog()
+    for slide in slide_losses(model):
+        losses.add(slide.kind, slide.detail)
+    model = with_slides_as_sheets(model)
     for detail in chart_losses(model):
         losses.add("chart", detail)
     for loss in picture_losses(model, rasterised=rasterised):
@@ -1568,5 +1573,8 @@ def apply_edits_to_ods(
     was changed (D411).
 
     Raises :class:`~claudia_computes_io.UnsupportedEdit` for what cannot be patched: a baseline that is not the
-    workbook the file holds, sheets moved relative to each other, and a cell of an array formula."""
+    workbook the file holds, sheets moved relative to each other, a slide (written as a sheet of its own, D1473) and a
+    cell of an array formula."""
+    if current.slide_ids():
+        raise UnsupportedEdit("a slide is written as a sheet of its own, which cannot be patched onto the file yet")
     return _Patch(original_bytes, baseline, current, losses=losses, info=info).run()
