@@ -184,9 +184,9 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
                 "objects": len(deck.objects_on(slide)),
                 "seconds": deck.times.get(slide),
                 "has_notes": slide in deck.notes,
-                "name": deck.slide_records[slide].name,
+                "name": deck.slides[slide].name,
             }
-            for slide in deck.slides
+            for slide in deck.order
         ]
 
     @table.method("slide", "slide:str")
@@ -200,7 +200,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
         to show or hide on its own — `snap` is unaffected by that and is the document's own state, set with
         `set_snap`."""
         deck = _deck(ctx)
-        if slide not in deck.slides:
+        if slide not in deck.order:
             raise RequestError("command_error", msg("unknown slide {slide!r}", slide=slide))
         objects = [obj.to_data_for(ctx.user) for obj in deck.objects_on(slide)]
         return {
@@ -254,7 +254,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     @table.method("add_slide", "base:revision?", write=True)
     def _add_slide(ctx, base):
         """Add an empty slide at the end. Returns its id and the revision."""
-        slide = fresh_id("s", _deck(ctx).slides)
+        slide = fresh_id("s", _deck(ctx).order)
         return done(ctx, AddSlide(slide, name=default_name(ctx, "slide")), base, slide=slide)
 
     @table.method("insert_agenda", "slide:str base:revision?", write=True)

@@ -245,14 +245,14 @@ def test_the_same_deck_gives_the_same_bytes():
 def test_an_empty_deck_is_a_valid_presentation():
     data = slides_to_odp(SlideModel.empty())
     assert problems(data) == []
-    assert len(pages_of(data)) == len(SlideModel.empty().slides)
+    assert len(pages_of(data)) == len(SlideModel.empty().order)
 
 
 def test_a_round_trip_keeps_the_deck():
     deck = a_deck()
     again = odp_to_slides(slides_to_odp(deck))
-    assert again.slides == deck.slides
-    for slide in deck.slides:
+    assert again.order == deck.order
+    for slide in deck.order:
         mine = [
             (o.body.kind, o.body.shape, o.body.paragraph.text if o.body.paragraph else "")
             for o in deck.objects_on(slide)
@@ -274,7 +274,7 @@ def test_export_losses_name_what_the_file_cannot_hold():
 # -- import --------------------------------------------------------------------------------------------------------
 def test_a_slide_per_page_and_an_object_per_text_box_or_shape():
     model = odp_to_slides(RICH)
-    assert list(model.slides) == ["s1", "s2"]
+    assert list(model.order) == ["s1", "s2"]
     assert [(o.id, o.body.kind, o.body.shape) for o in model.objects_on("s1")] == [
         ("o1", "text", None),
         ("o2", "shape", "circle"),
@@ -388,7 +388,7 @@ def test_the_scale_comes_from_the_page_not_from_an_assumed_shape():
 
 
 def test_a_deck_without_pages_is_an_empty_deck():
-    assert odp_to_slides(an_odp("")).slides == SlideModel.empty().slides
+    assert odp_to_slides(an_odp("")).order == SlideModel.empty().order
 
 
 @pytest.mark.parametrize(
@@ -661,7 +661,7 @@ def test_slides_and_objects_can_be_added_to_a_deck_with_no_pages_and_to_an_empty
     empty_deck = an_odp("")
     edited, _, current = edit(empty_deck, fill)
     assert [o.body.paragraph.text for o in odp_to_slides(edited).objects.values()] == ["hello"]
-    assert len(pages_of(edited)) == 1 and current.slides == ["s1"]
+    assert len(pages_of(edited)) == 1 and current.order == ["s1"]
 
     empty_page = an_odp(page(""))
     edited, _, _ = edit(empty_page, fill)
@@ -680,7 +680,7 @@ def test_a_second_slide_is_added_after_the_first_of_a_deck_that_has_one_page():
 
 def test_slides_in_another_order_cannot_be_patched():
     baseline, current = odp_to_slides(RICH), odp_to_slides(RICH)
-    current.slides.reverse()
+    current.order.reverse()
     with pytest.raises(UnsupportedEdit):
         apply_edits_to_odp(RICH, baseline, current)
 

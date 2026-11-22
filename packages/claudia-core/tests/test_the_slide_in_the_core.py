@@ -4,7 +4,6 @@ import pytest
 
 from claudia_core import ObjectBody, VisualObject
 from claudia_core.slides import (
-    SLIDE_HEIGHT,
     SLIDE_WIDTH,
     Slide,
     SlideAnchor,
@@ -17,10 +16,6 @@ from claudia_core.slides import (
 
 def box(w: int = 400, h: int = 200, rotation: int = 0) -> ObjectBody:
     return ObjectBody("o1", "text", w, h, "", rotation=rotation)
-
-
-def test_the_frame_is_sixteen_by_nine():
-    assert (SLIDE_WIDTH, SLIDE_HEIGHT) == (1600, 900)
 
 
 def test_a_slide_anchor_survives_the_trip_through_stored_data():
@@ -49,7 +44,7 @@ def test_an_object_must_stay_on_the_slide():
     with pytest.raises(ValueError, match="stay on the slide"):
         check_on_slide(SlideAnchor("s1", 1201, 700), box())
     with pytest.raises(ValueError, match="whole numbers"):
-        check_on_slide(SlideAnchor("s1", 0.5, 0), box())  # type: ignore[arg-type]
+        check_on_slide(SlideAnchor("s1", 0.5, 0), box())  # type: ignore[arg-type]  # a client may send a fraction
 
 
 def test_a_turned_object_is_kept_on_the_slide_by_its_outline():
@@ -95,6 +90,10 @@ def test_a_slide_id_is_given_once_and_must_be_one():
         slides.add(Slide("s1"))
     with pytest.raises(ValueError, match="slide id"):
         slides.add(Slide("Slide 1"))
+    with pytest.raises(ValueError, match="exists already"):
+        slides.check_new("s1")  # what an app asks before it changes anything else
+    slides.check_new("s2")
+    assert "s2" not in slides
 
 
 def test_removing_a_slide_gives_it_back_whole():
@@ -112,5 +111,21 @@ def test_slides_are_written_in_the_order_the_app_gives():
         slides.add(slide)
     data = slides.to_data(["s3", "s1", "s2"])  # the app's order (creates: the presentation; computes: its tabs)
     assert [item["id"] for item in data] == ["s3", "s1", "s2"]
-    back = Slides.from_data(data)
+    back, order = Slides.from_data(data)
+    assert order == ["s3", "s1", "s2"]
     assert [back[i] for i in ("s1", "s2", "s3")] == [slides[i] for i in ("s1", "s2", "s3")]
+
+
+@pytest.mark.parametrize("order", [["s1"], ["s1", "s2", "s2"], ["s1", "s3"]])
+def test_an_order_that_does_not_name_every_slide_once_is_refused(order):
+    slides = Slides()
+    slides.add(Slide("s1"))
+    slides.add(Slide("s2"))
+    with pytest.raises(ValueError, match="exactly once"):
+        slides.to_data(order)
+
+
+@pytest.mark.parametrize("item", ["s1", {"name": "No id"}, {"id": "s1", "name": 3}, {"id": "s1", "description": None}])
+def test_what_is_not_a_stored_slide_is_refused(item):
+    with pytest.raises(ValueError, match="a slide has an id"):
+        Slides.from_data([item])

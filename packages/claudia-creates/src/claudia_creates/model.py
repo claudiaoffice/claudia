@@ -122,10 +122,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         language: str | None = None,
     ) -> None:
         super().__init__()
-        #: The ids of the slides in the order of the presentation; what each slide is, is in ``slide_records``.
-        self.slides: list[str] = []
+        #: The ids of the slides in the order of the presentation; what each slide is, is in ``slides``.
+        self.order: list[str] = []
         #: The slides as records, with their names (one namespace with the objects, D550) and descriptions (D1317).
-        self.slide_records: Slides = Slides()
+        self.slides: Slides = Slides()
         #: The speaker notes of the slides that have any, as written in Markdown (D342).
         self.notes: dict[str, str] = {}
         #: The planned time of the slides that have one, in whole seconds (D343).
@@ -167,7 +167,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
 
     def serialize(self) -> dict:
         return {
-            "slides": self.slide_records.to_data(self.slides),
+            "slides": self.slides.to_data(self.order),
             "notes": dict(self.notes),
             "times": dict(self.times),
             "styles": self.styles.to_data(),
@@ -187,13 +187,12 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model = cls(
             StyleBook.from_data(state["styles"]), Palette.from_data(state["palette"]), setup, state.get("language")
         )
-        model.slide_records = Slides.from_data(state["slides"])
-        model.slides = [item["id"] for item in state["slides"]]
-        for slide in model.slides:
+        model.slides, model.order = Slides.from_data(state["slides"])
+        for slide in model.order:
             model.open_holder(slide)
         # schema 8 and earlier: no notes and no planned times
-        model.notes = {k: v for k, v in state.get("notes", {}).items() if k in model.slides and v}
-        model.times = {k: v for k, v in state.get("times", {}).items() if k in model.slides}
+        model.notes = {k: v for k, v in state.get("notes", {}).items() if k in model.order and v}
+        model.times = {k: v for k, v in state.get("times", {}).items() if k in model.order}
         model.restore_objects(state["objects"], state)
         model.lists = ListBook.from_data(state.get("lists", ()))  # schema 12 and earlier: no lists
         model.schemes = SchemeBook.from_data(state.get("schemes"))  # schema 13 and earlier: the built-in ones
@@ -204,13 +203,13 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """Blank what ``parts`` names, for redacting an import (D723), or everything for ``None``: a slide's id takes
         its speaker notes and blanks every object on it, an object's id blanks that object. Slides, their names,
         planned times and every place and size stay. ``ValueError`` for a part the presentation does not have."""
-        slides = set(self.slides)
+        slides = set(self.order)
         if parts is not None and (unknown := sorted(parts - slides - set(self.objects))):
             raise ValueError(f"the presentation has no slide or object {unknown[0]!r}")
         chosen = slides if parts is None else slides & parts
         self.notes = {slide: text for slide, text in self.notes.items() if slide not in chosen}
         for slide in chosen:
-            self.slide_records.describe(slide, "")
+            self.slides.describe(slide, "")
         if parts is None:
             self.blank_objects(None)
             return
@@ -223,14 +222,14 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # -- the object seam -------------------------------------------------------
     def holders(self) -> list[str]:
         """The slides objects may sit on, in order."""
-        return self.slides
+        return self.order
 
     def anchor_from_data(self, data: dict) -> SlideAnchor:
         """Read a slide anchor; ``ValueError`` if the data is not one."""
         return SlideAnchor.from_data(data)
 
     def room_for_new_object(self, anchor: SlideAnchor | None) -> int | None:
-        """What is left of the slide to the right of where a new object starts (D1332): an object stays on its slide."""
+        """The core's rule for every slide (D1470)."""
         return room_on_slide(anchor)
 
     def check_anchor(self, anchor: SlideAnchor, body: ObjectBody) -> None:
@@ -258,14 +257,15 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     ) -> None:
         """Add a slide at position ``at`` (the end by default), optionally with its notes, planned time, name and
         description (which is how undoing the removal of a slide gives them back)."""
-        if at is not None and not 0 <= at <= len(self.slides):
-            raise ValueError(f"there is no place {at} among {len(self.slides)} slides")
+        self.slides.check_new(slide)
+        if at is not None and not 0 <= at <= len(self.order):
+            raise ValueError(f"there is no place {at} among {len(self.order)} slides")
         notes = _checked_notes(notes)
         if seconds is not None:
             _check_seconds(seconds)
         self.check_thing_name(slide, name)
-        self.slide_records.add(Slide(slide, name, description))  # refuses an id that is taken or not a slide id
-        self.slides.insert(len(self.slides) if at is None else at, slide)
+        self.slides.add(Slide(slide, name, description))
+        self.order.insert(len(self.order) if at is None else at, slide)
         self.open_holder(slide)
         self._slide_order += 1
         if notes:
@@ -275,14 +275,14 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
 
     def delete_slide(self, slide: str) -> int:
         """Remove an empty slide; returns the place it had."""
-        if slide not in self.slides:
+        if slide not in self.order:
             raise ValueError(f"unknown slide {slide!r}")
         if self.stack_of(slide):
             raise ValueError(f"slide {slide!r} still has objects; remove them first")
-        place = self.slides.index(slide)
-        del self.slides[place]
+        place = self.order.index(slide)
+        del self.order[place]
         self.close_holder(slide)
-        self.slide_records.remove(slide)
+        self.slides.remove(slide)
         self._slide_order += 1
         self.notes.pop(slide, None)
         self.times.pop(slide, None)
@@ -293,7 +293,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """The words of the objects in the order they are read: slide by slide, on each slide in stacking order,
         bottom first (as PowerPoint reads a slide to a screen reader; the owner's decision of 2026-11-16). The place a
         reader finds them at is the slide's number."""
-        for number, slide in enumerate(self.slides, start=1):
+        for number, slide in enumerate(self.order, start=1):
             for obj in self.objects_on(slide):
                 if obj.body.paragraph is not None:
                     yield Placed(obj.body.paragraph, slide, True, str(number))
@@ -371,41 +371,41 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     def named_things(self):
         """The objects with names, then the slides with names: one namespace."""
         yield from super().named_things()
-        for slide in self.slides:
-            if name := self.slide_records[slide].name:
+        for slide in self.order:
+            if name := self.slides[slide].name:
                 yield "slide", slide, name
 
     def unnamed_things(self):
         """The slides without a name, then the objects without one."""
-        for slide in self.slides:
-            if not self.slide_records[slide].name:
+        for slide in self.order:
+            if not self.slides[slide].name:
                 yield "slide", slide
         yield from super().unnamed_things()
 
     def thing_name(self, thing_id: str) -> str:
         """The name of an object or a slide, ``""`` if it has none; ``ValueError`` if there is neither."""
-        if thing_id in self.slides:
-            return self.slide_records[thing_id].name
+        if thing_id in self.order:
+            return self.slides[thing_id].name
         return super().thing_name(thing_id)
 
     def set_thing_name(self, thing_id: str, name: str) -> str:
         """Name an object or a slide; returns the name it had."""
-        if thing_id not in self.slides:
+        if thing_id not in self.order:
             return super().set_thing_name(thing_id, name)
-        return self.slide_records.rename(thing_id, name)
+        return self.slides.rename(thing_id, name)
 
     def thing_description(self, thing_id: str) -> str:
         """What is written about an object or a slide, ``""`` if nothing; ``ValueError`` if there is neither."""
-        if thing_id not in self.slides:
+        if thing_id not in self.order:
             return super().thing_description(thing_id)
-        return self.slide_records[thing_id].description
+        return self.slides[thing_id].description
 
     def set_thing_description(self, thing_id: str, description: str) -> str:
         """Write something about a slide (``""``: nothing); returns what was written. An object is described by
         :class:`~claudia_core.DescribeObject`."""
-        if thing_id not in self.slides:
+        if thing_id not in self.order:
             return super().set_thing_description(thing_id, description)
-        return self.slide_records.describe(thing_id, description)
+        return self.slides.describe(thing_id, description)
 
     # -- notes and planned times (E10.2) -----------------------------------------
     def notes_of(self, slide: str) -> str:
@@ -445,5 +445,5 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return sum(self.times.values())
 
     def _require_slide(self, slide: str) -> None:
-        if slide not in self.slides:
+        if slide not in self.order:
             raise ValueError(f"unknown slide {slide!r}")

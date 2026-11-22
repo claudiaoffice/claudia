@@ -102,7 +102,7 @@ class RemoveSlide(Command):
     def apply(self, ctx: Context[SlideModel]) -> Command:
         notes = ctx.model.notes.get(self.id, "")
         seconds = ctx.model.times.get(self.id)
-        record = ctx.model.slide_records[self.id]
+        record = ctx.model.slides[self.id]
         place = ctx.model.delete_slide(self.id)
         ctx.emit(SlidesChanged())
         return AddSlide(self.id, place, notes, seconds, record.name, record.description)

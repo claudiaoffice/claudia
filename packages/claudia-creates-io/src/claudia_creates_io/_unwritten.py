@@ -74,7 +74,7 @@ def notes_losses(model: SlideModel) -> tuple[Loss, ...]:
     the file shows only as plain words (the speaker notes are written as paragraphs with bold and italic runs)."""
     losses = LossLog()
     used: dict[str, int] = {}
-    for slide_id in model.slides:
+    for slide_id in model.order:
         for feature in markdown_to_lines(model.notes_of(slide_id))[1] - {"heading"}:  # a heading is a bold line
             used[feature] = used.get(feature, 0) + 1
     for feature in sorted(used):

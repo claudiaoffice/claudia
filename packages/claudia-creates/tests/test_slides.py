@@ -219,7 +219,7 @@ def test_a_shape_that_is_in_use_cannot_be_forgotten_and_one_that_exists_cannot_b
 
 def test_slides_are_added_and_only_empty_ones_removed(doc):
     doc.execute(AddSlide("s2"), author="ana")
-    assert doc.model.slides == [SLIDE, "s2"]
+    assert doc.model.order == [SLIDE, "s2"]
     with pytest.raises(ValueError, match="exists"):
         doc.execute(AddSlide("s2"), author="ana")
     put(doc, text_box())
@@ -227,15 +227,15 @@ def test_slides_are_added_and_only_empty_ones_removed(doc):
         doc.execute(RemoveSlide(SLIDE), author="ana")
     doc.execute(RemoveSlide("s2"), author="ana")
     doc.undo("ana")
-    assert doc.model.slides == [SLIDE, "s2"]
+    assert doc.model.order == [SLIDE, "s2"]
 
 
 def test_a_new_presentation_starts_with_one_empty_slide():
     model = SlideModel.empty()
-    assert model.slides == [SLIDE] and model.objects_on(SLIDE) == []
-    assert SlideModel.restore(model.serialize()).slides == [SLIDE]
+    assert model.order == [SLIDE] and model.objects_on(SLIDE) == []
+    assert SlideModel.restore(model.serialize()).order == [SLIDE]
     doc = Document(SlideModel.empty(), store=MemoryStore())
-    assert reopen(doc).model.slides == [SLIDE], "a replay starts from the same empty presentation"
+    assert reopen(doc).model.order == [SLIDE], "a replay starts from the same empty presentation"
 
 
 # -- working together (D46, D47) -----------------------------------------------------------------------------
@@ -243,9 +243,9 @@ def test_a_removed_slide_comes_back_where_it_was(doc):
     for name in ("s2", "s3"):
         doc.execute(AddSlide(name), author="ana")
     doc.execute(RemoveSlide("s2"), author="ana")
-    assert doc.model.slides == [SLIDE, "s3"]
+    assert doc.model.order == [SLIDE, "s3"]
     doc.undo("ana")
-    assert doc.model.slides == [SLIDE, "s2", "s3"]
+    assert doc.model.order == [SLIDE, "s2", "s3"]
 
 
 def test_undo_of_a_removal_is_refused_when_a_colleague_took_the_shape_away_meanwhile(doc):

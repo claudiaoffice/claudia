@@ -15,12 +15,11 @@ A slide is a holder in creates and in computes (glossary: Slide, Tab). What both
 `claudia_core/slides.py`: `SLIDE_WIDTH`, `SLIDE_HEIGHT` and `SlideAnchor` (from creates), the rule that keeps an object
 on the slide (creates' `check_anchor`/`turned_anchor`, as functions), `Slide(id, name, description)` and `Slides`, a
 keyed collection **without an order of its own** (that a slide which still has objects cannot be taken away is the
-core's rule for every holder, `close_holder`). Each app keeps
-its own order (creates: the presentation, a list of ids; computes: its tabs, D1471) and its own `AddSlide`/`RemoveSlide`
-(creates' carry the speaker notes and the planned time, computes' the place among the tabs). Creates' stored state
-changes from a list of ids with name and description maps to slide records in the order of the presentation (the
-order itself stays `SlideModel.slides`, the records are `slide_records`): a new state schema, no upgrade (claudia is
-pre-release, D1430).
+core's rule for every holder, `close_holder`). Each app keeps its own order (creates: the presentation, a list of ids;
+computes: its tabs, D1471) and its own `AddSlide`/`RemoveSlide` (creates' carry the speaker notes and the planned time,
+computes' the place among the tabs). Creates' stored state changes from a list of ids with name and description maps to
+slide records in the order of the presentation (the records are `SlideModel.slides`, the order is `SlideModel.order`,
+the same names as in computes): a new state schema, no upgrade (claudia is pre-release, D1430).
 
 **Why.** The owner asked whether the slide of creates could be reused in computes (2026-11-22); it can, because a slide
 is already little more than a holder of the shared object layer. A core command with optional notes would mix the two

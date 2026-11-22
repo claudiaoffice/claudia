@@ -38,6 +38,6 @@ def test_it_survives_a_snapshot_and_a_slide_without_one_is_stored_without_one(de
 def test_it_goes_with_the_slide_and_comes_back_with_an_undo(deck):
     deck.execute(DescribeThing("s2", "gone"), author="ann")
     deck.execute(RemoveSlide("s2"), author="ann")
-    assert "s2" not in deck.model.slide_records
+    assert "s2" not in deck.model.slides
     deck.undo("ann")
     assert deck.model.thing_description("s2") == "gone"

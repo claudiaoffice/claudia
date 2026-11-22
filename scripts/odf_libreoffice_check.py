@@ -137,7 +137,7 @@ def texts_of(fmt: str, model) -> list[str]:
         return [paragraph.text for paragraph in model.paragraphs if paragraph.text.strip()]
     return [
         o.body.paragraph.text
-        for slide in model.slides
+        for slide in model.order
         for o in model.objects_on(slide)
         if o.body.paragraph is not None and o.body.paragraph.text.strip()
     ]

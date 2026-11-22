@@ -2436,8 +2436,9 @@
   "init": "() -> 'None'",
   "methods": {
    "add": "(self, slide: 'Slide') -> 'None'",
+   "check_new": "(self, slide_id: 'str') -> 'None'",
    "describe": "(self, slide_id: 'str', description: 'str') -> 'str'",
-   "from_data": "(data: 'Iterable[dict]') -> 'Slides'",
+   "from_data": "(data: 'Iterable[dict]') -> 'tuple[Slides, list[str]]'",
    "remove": "(self, slide_id: 'str') -> 'Slide'",
    "rename": "(self, slide_id: 'str', name: 'str') -> 'str'",
    "to_data": "(self, order: 'Iterable[str]') -> 'list[dict]'"

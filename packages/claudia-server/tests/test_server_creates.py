@@ -550,7 +550,7 @@ def test_export_office_returns_pptx_bytes_that_round_trip(deck):
     raw = base64.b64decode(answer["data"])
     assert raw[:2] == b"PK"  # a pptx is a zip
     reloaded = pptx_to_slides(raw)
-    assert len(reloaded.slides) == 1
+    assert len(reloaded.order) == 1
 
 
 def test_a_pptx_says_who_made_it_when_and_not_what_wrote_it(deck):

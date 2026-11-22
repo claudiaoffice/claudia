@@ -10,24 +10,17 @@ objects, as it does for every holder.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import ClassVar, TypeIs
+from typing import ClassVar
 
-from .objects import ObjectBody, VisualObject
+from .objects import _ID, ObjectBody, VisualObject, _is_whole
 from .turning import nudge_into, turned_extent
 
 #: The frame of a slide, in whole units: an anchor and an object body are measured in it; a view scales it and a file
 #: maps it to centimetres or EMU.
 SLIDE_WIDTH = 1600
 SLIDE_HEIGHT = 900
-
-_ID = re.compile(r"[a-z][a-z0-9_-]{0,39}")
-
-
-def _is_whole(value: object) -> TypeIs[int]:
-    return isinstance(value, int) and not isinstance(value, bool)
 
 
 @dataclass(frozen=True)
@@ -111,6 +104,8 @@ class Slide:
     @classmethod
     def from_data(cls, data: dict) -> Slide:
         """Inverse of :meth:`to_data`; ``ValueError`` if it is not a slide."""
+        if not isinstance(data, dict):
+            raise ValueError("a slide has an id, and a name and a description that are text")
         slide_id, name, description = data.get("id"), data.get("name", ""), data.get("description", "")
         if not isinstance(slide_id, str) or not isinstance(name, str) or not isinstance(description, str):
             raise ValueError("a slide has an id, and a name and a description that are text")
@@ -132,15 +127,17 @@ class Slides:
         except KeyError:
             raise ValueError(f"unknown slide {slide_id!r}") from None
 
-    def __len__(self) -> int:
-        return len(self._by_id)
+    def check_new(self, slide_id: str) -> None:
+        """``ValueError`` if ``slide_id`` is not a slide id or is taken: what an app checks before it adds a slide,
+        so that nothing of the slide is kept when another of its checks refuses."""
+        if not _ID.fullmatch(slide_id):
+            raise ValueError(f"slide id {slide_id!r}: lower-case letters, digits, '-' and '_', starting with a letter")
+        if slide_id in self._by_id:
+            raise ValueError(f"slide {slide_id!r} exists already")
 
     def add(self, slide: Slide) -> None:
         """Keep a new slide; ``ValueError`` if its id is not a slide id or is taken."""
-        if not _ID.fullmatch(slide.id):
-            raise ValueError(f"slide id {slide.id!r}: lower-case letters, digits, '-' and '_', starting with a letter")
-        if slide.id in self._by_id:
-            raise ValueError(f"slide {slide.id!r} exists already")
+        self.check_new(slide.id)
         self._by_id[slide.id] = slide
 
     def remove(self, slide_id: str) -> Slide:
@@ -157,7 +154,7 @@ class Slides:
         return old.name
 
     def describe(self, slide_id: str, description: str) -> str:
-        """Write something about a slide (``""``: nothing); returns what was written."""
+        """Write something about a slide (``""``: nothing); returns what was written before."""
         old = self[slide_id]
         self._by_id[slide_id] = Slide(slide_id, old.name, description)
         return old.description
@@ -170,9 +167,11 @@ class Slides:
         return [self._by_id[slide_id].to_data() for slide_id in ids]
 
     @classmethod
-    def from_data(cls, data: Iterable[dict]) -> Slides:
-        """Inverse of :meth:`to_data` (the order is the app's to read from the same list)."""
-        slides = cls()
+    def from_data(cls, data: Iterable[dict]) -> tuple[Slides, list[str]]:
+        """Inverse of :meth:`to_data`: the slides, and the order they were written in, which is the app's to keep."""
+        slides, order = cls(), []
         for item in data:
-            slides.add(Slide.from_data(item))
-        return slides
+            slide = Slide.from_data(item)
+            slides.add(slide)
+            order.append(slide.id)
+        return slides, order

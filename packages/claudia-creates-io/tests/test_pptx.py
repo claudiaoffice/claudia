@@ -161,7 +161,7 @@ def test_transition_survives_a_python_pptx_round_trip():
 
 def test_pptx_to_slides_imports_text_and_shape_objects_in_order():
     model = pptx_to_slides(slides_to_pptx(two_slide_deck()))
-    assert model.slides == ["s1", "s2"]
+    assert model.order == ["s1", "s2"]
     assert [(o.body.kind, o.body.paragraph.text) for o in model.objects_on("s1")] == [("text", "Hello")]
     assert [(o.body.kind, o.body.paragraph.text, o.body.shape) for o in model.objects_on("s2")] == [
         ("shape", "Circle", "circle")

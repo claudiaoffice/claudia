@@ -67,7 +67,7 @@ def test_a_new_decks_first_slide_has_a_name_in_its_makers_language(locale, label
     """Every thing has a name (D550). The first slide is part of an empty presentation, not added by anybody, so no
     `add_slide` named it: it stayed nameless, and the next slide took "Slide 1" before it."""
     document = made(SlideModel, locale=locale).open("plan")
-    (first,) = document.model.slides
+    (first,) = document.model.order
     assert document.model.thing_name(first) == label
     assert list(document.model.unnamed_things()) == []
     assert not document.history_for("ann").can_undo, "naming it is part of the setup, nobody's undo step"

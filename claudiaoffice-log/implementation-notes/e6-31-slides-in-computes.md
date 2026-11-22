@@ -10,15 +10,19 @@ not say, step by step.
   `turned_on_slide`, `room_on_slide`) and `Slide`/`Slides`. Creates' `check_anchor`, `turned_anchor` and
   `room_for_new_object` call them; the anchor's refusal of another kind now says "not a slide anchor" instead of
   "creates knows only slide anchors", as two apps read it.
-- **Creates keeps `SlideModel.slides` as the order** (the presentation, as before): about 140 places in creates,
-  creates-io, the server and the tests read it, and in the ODP reader and python-pptx `slides` means something else, so
-  renaming it would have been a risky sweep for nothing. The records are `SlideModel.slide_records` (`Slides`), and
-  they replace `slide_names` and `slide_descriptions`. The architecture note says so.
+- **Creates' names are computes' names** (the owner, after the review): `SlideModel.slides` are the records (`Slides`,
+  replacing `slide_names` and `slide_descriptions`) and `SlideModel.order` is the presentation, which `slides` was. The
+  ODP reader's own `self.slides` (the pages it scanned) and python-pptx's `prs.slides` are other things and kept their
+  names.
+- **A refused slide changes nothing, and refuses as before:** `Slides.check_new(id)` is what creates asks first, so a
+  bad or taken id is still the first thing `AddSlide` refuses; computes' `add_slide` will ask the same before it
+  touches its tabs. `Slides.from_data` gives the order back with the records, so the format is read in one place.
 - **That a slide with objects cannot go is the core's `close_holder`**, as for every holder; `Slides` does not know
   objects. D1470 says so now.
 - **The state** (schema 18) stores the slides as records in the presentation's order (`[{id, name?, description?}]`);
   the keys `names` and `descriptions` are gone. An older state is not read (pre-release, D1430): the test that read a
-  state from before names and part of the test of a state from before notes went with it.
+  state from before names went, and the test of a state from before notes became the test that a presentation
+  (slides in another order, names, descriptions, notes, times) survives being stored and loaded.
 - `claudia_creates` still re-exports `SLIDE_WIDTH`, `SLIDE_HEIGHT` and `SlideAnchor`, as it re-exports `ObjectBody` and
   `VisualObject`: creates-io imports them from there and did not change. The server's `slide_lens.py` imported them
   from `claudia_creates.model` and now from `claudia_core`.
@@ -28,6 +32,15 @@ not say, step by step.
   paragraph above them), and named constants creates does not have (two of them exist nowhere). They are gone. Three
   of them (`MIN_OBJECT_SIZE`, `ASPECT_TOLERANCE`, `OBJECT_KINDS`) are in `claudia_core.__all__` but not on the core's
   API page; that is left as it is (not this story's).
+
+**Review (code-review, two axes) and what changed after it:** the order and the records got the agreed names (above);
+`check_new` restores the order of `AddSlide`'s refusals; `Slides.from_data` returns the order and refuses an item that
+is not a record with `ValueError`; tests for the refusals of `Slides.to_data` and `Slide.from_data`; `_ID` and
+`_is_whole` come from `objects.py` instead of a third copy; `Slides.__len__` (unused) and a test that compared the frame
+with itself are gone. Left as they are: two commit subjects of step 1 (`ac449481`, `e71968c4`) are not in the
+imperative (coding-standards §10) and are pushed; the error for an anchor of another kind now reads "not a slide
+anchor: the kind is …" (a client or the AI sees it; nothing reads its words); a creates snapshot shows `slides` as
+records, which the web client does not read (it asks `slides`).
 
 **Run before delivery:** the gate (`scripts/check_debt.py --ci`; everything clean but six setup errors of
 `clients/linux/tests/test_connect_flow.py`, whose module fixture saw its first server not answer within 40 s; the same
