@@ -122,7 +122,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (142)
+### Fixed (143)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -266,6 +266,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PROC-42 | P2 | Process / CI | The CI step "Server settings ▸ Fonts" did not give `e2e:admin-fonts` the setup code that SEC-12 made necessary: it would have been the next red step | **fixed** 2026-11-21 (the step reads the code from the state folder; size 2) | 2026-11-21 | 2026-11-21 |
 | PROC-43 | P2 | Process / E2E | The job "End to end (Chromium)" was red from 2026-11-17: each first failure hid the next, and four lines of `objects.cjs` were stale (proportions of a free rectangle, the name of a table's menu, "Edit text" for a picture in creates, a race on the history entry of Delete) | **fixed** 2026-11-21 (the script follows the contract; it ran six times in a row; size 2) | 2026-11-21 | 2026-11-21 |
 | PROC-44 | P3 | Process / CI | Two timing flakes on shared runners: `test_the_anchor_is_shown_when_the_object_is_selected` (setup clicked before the layout settled; fixed with `settled_box`) and `test_calculating_a_long_chain_is_linear` (one run 44x instead of ~10x, green on rerun; **open**, the retry in the test is too thin) | anchor spec **fixed** 2026-11-21; perf test **open** (size 3) | 2026-11-21 | |
+| PROC-45 | P2 | Process / CI | The Linux client's end-to-end test still looked for `[data-block]` after the paragraph rename of E1.18 made it `data-paragraph`, so the job "Linux client" was red on `main` | **fixed** 2026-11-22 (size 3) | 2026-11-22 | 2026-11-22 |
 | DOC-01 | P2 | Docs | Decision numbers D70–D82 and D97–D99 are used twice for different decisions | fixed |  |  |
 | DOC-02 | P3 | Docs | `start-client.sh` was renamed; the Linux README and the other launchers still named it | **fixed** 2026-11-13 |  | 2026-11-13 |
 | DOC-03 | P3 | Docs | Current decisions that later ones contradict (D2, D44, D84, D115, D242); a stale row in `ranges.md`; stale lines in two notes | **fixed** 2026-11-17 (log audit: D44, D84, D115 superseded; D2, D242 noted) |  | 2026-11-17 |
@@ -2483,3 +2484,14 @@ typed read-back in the asset store"), which made the store generic (`AssetStore[
 in a signature (`nitpicky`), and `T` and the module's own protocol `Asset` are not documented classes. Evidence:
 **measured** on the branch before any change of the slice. **Fixed.** Both are ignored in `docs/conf.py`, as the type
 parameters `M` and `A` already are. Escaped because: test passed but wrong (the gate was run before that last commit).
+
+## Round of 2026-11-22 (CI of `main` after merging `architecture-improvements`)
+
+### PROC-45 · The Linux client's end-to-end test looked for the old paragraph attribute · P2 · size 3 · fixed 2026-11-22
+**Found** in the CI of `main` after `architecture-improvements` was merged (run 45011761530): the job "Linux client
+(Python 3.12, GTK 4)" failed on `test_composes_starts_its_server_shows_the_page_and_the_native_menu_drives_it` with
+"gave up waiting for the text to take a word". The paragraph slice of E1.18 (D1430) renamed the attribute every
+paragraph carries in the page from `data-block` to `data-paragraph`; the test's script still asked for `[data-block]`,
+found nothing and never typed. Evidence: **measured**, red locally on `main` and green after the fix (713 passed, 6
+skipped). **Fixed.** The selector names `[data-paragraph]`. Escaped because: test not run (the slice's gate does not run
+the GTK client's tests, and GTK 4 and WebKitGTK were not installed in the agent's environment; they are now, as in CI).
