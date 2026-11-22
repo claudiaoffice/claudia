@@ -26,6 +26,28 @@ EVERYBODY = ""  # the recipient of a message that is for everybody
 
 
 @dataclass(frozen=True)
+class Via:
+    """Who answered a message of the AI (E7.11): the provider's name, how the chat shows it (``label``), whether what
+    was asked left this computer (``remote``) and a sentence that goes with it (why a local model answered, say).
+
+    It says who answered, never what was sent, so it can stay with the message for as long as the message does."""
+
+    provider: str
+    label: str
+    remote: bool
+    note: str = ""
+
+    def to_data(self) -> dict:
+        """The plain-data form."""
+        return {"provider": self.provider, "label": self.label, "remote": self.remote, "note": self.note}
+
+    @classmethod
+    def from_data(cls, data: dict) -> Via:
+        """Inverse of ``to_data``."""
+        return cls(data["provider"], data["label"], bool(data["remote"]), data.get("note", ""))
+
+
+@dataclass(frozen=True)
 class ChatRecord:
     number: int  # position in the chat, from 1
     author: str
@@ -34,6 +56,7 @@ class ChatRecord:
     time: str
     at: Revision | None  # the document revision when it was written, to place it in the history
     redacted: bool = False  # its words were taken away (D724); who, to whom, when and where stay
+    via: Via | None = None  # who answered, for a message of the AI (E7.11); absent for everybody else and for old chats
 
     def to_data(self) -> dict:
         """The plain-data form of the record."""
@@ -47,6 +70,8 @@ class ChatRecord:
         }
         if self.redacted:
             data["redacted"] = True
+        if self.via is not None:
+            data["via"] = self.via.to_data()
         return data
 
     @classmethod
@@ -61,6 +86,7 @@ class ChatRecord:
             data["time"],
             Revision.parse(at) if at else None,
             bool(data.get("redacted", False)),
+            Via.from_data(data["via"]) if data.get("via") else None,
         )
 
     def blanked(self) -> ChatRecord:

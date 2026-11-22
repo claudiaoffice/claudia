@@ -101,7 +101,9 @@ def _literals(pattern: str, *roots: Path) -> set[str]:
 
 
 # "bar" is a chart kind that happens to sit under a "type" key; the others under it are all events.
-NOT_AN_EVENT = {"bar"}
+# "bar" is a chart kind; the others are Anthropic's streaming frames, which the fake Anthropic in
+# claudia_ai.testing writes and which never reach a document's audience.
+NOT_AN_EVENT = {"bar", "content_block_delta", "text_delta", "message_stop", "error"}
 
 
 def test_every_kind_of_event_the_packages_can_send_is_classified():

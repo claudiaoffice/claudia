@@ -47,6 +47,7 @@ from pathlib import Path
 from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Import, Snapshot
 from claudia_document_file import (
     AuditRecord,
+    ConsentRecord,
     DocumentFileError,
     JournalError,
     JournalWriter,
@@ -70,11 +71,13 @@ from claudia_document_file import (
     pack_journal,
     parse_recovery_key,
     read_audit,
+    read_consent,
     read_manifest,
     read_original,
     read_people,
     read_state,
     record_audit,
+    record_consent,
     recover_access,
     remove_person,
     remove_user,
@@ -577,6 +580,19 @@ class SealedDocuments:
         keys = self._all_keys(doc_id)
         with self._lock:
             return read_audit(self._file(doc_id), keys)
+
+    # -- the owners' consent to a remote AI provider (E7.11, D264) ------------------------------
+    def consent_rows(self, doc_id: str) -> list[ConsentRecord]:
+        """Every decision of the owners about a remote AI provider, oldest first."""
+        keys = self._all_keys(doc_id)
+        with self._lock:
+            return read_consent(self._file(doc_id), keys)
+
+    def record_consent(self, doc_id: str, record: ConsentRecord) -> None:
+        """Add ``record`` to the document's consent, with the keys the open document holds."""
+        keys = self._all_keys(doc_id)
+        with self._lock:
+            record_consent(self._file(doc_id), keys, record)
 
     def describe(self, doc_id: str, description: str, tags: Sequence[str]) -> None:
         """Give a document its maker has just made (whose keys are still held) a description and tags: the one

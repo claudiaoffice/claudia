@@ -47,6 +47,7 @@ from claudia_core.clock import utc_now
 from claudia_document_file import Part
 from claudia_render import RenderFailed, ToolUnavailable
 
+from .ai_consent import ConsentBook
 from .audience import may_read, shape_for
 from .auth import AI_COLOR, ROLES, Account, UserDirectory
 from .heavy_dispatch import HeavyDispatcher
@@ -346,6 +347,7 @@ class Connection:
                 hosted.original,
                 hosted.render_outcomes,
                 hosted.font_catalogue,
+                hosted.consent,
             )
             hosted.acting_user = self.account.user
             result = hosted.methods.dispatch(context, name, params)
@@ -420,6 +422,7 @@ class HostedDocument:
         self.max_connections = max_connections
         self.edit_timeout = edit_timeout
         self.directory = directory
+        self.consent = ConsentBook(directory, doc_id)  # what the owners allowed a remote AI provider (E7.11)
         self._clock = clock
         self.connections: set[Connection] = set()
         self.assistant: Assistant | None = None  # the AI participant, if the hub gives documents one
