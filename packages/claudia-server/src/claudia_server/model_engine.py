@@ -19,7 +19,7 @@ from collections import Counter, deque
 from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
-from claudia_ai import Message, ModelRunner, Request, ToolCall, ToolSpec, Turn
+from claudia_ai import Answerer, Message, Request, ToolCall, ToolSpec, Turn
 
 from .assistant import AiTurn, Say, Task
 from .lens import Lens, cut
@@ -63,41 +63,57 @@ CARRY_ON = "Carry on with more requests, or give your final answer to the person
 ANSWER_NOW = "You have used all the requests you may make for this question. Give your final answer to the person now."
 
 
+class ConversationMemory:
+    """The last conversation of each person with the AI of one document, for as long as the document stays loaded.
+
+    It belongs to the document, not to a model: whichever model gave the earlier answers, the next one is sent them."""
+
+    def __init__(self, turns: int = MEMORY_TURNS):
+        self._turns = turns
+        self._by_person: dict[str, deque[Message]] = {}
+
+    def recall(self, person: str) -> tuple[Message, ...]:
+        """What was said between ``person`` and the AI, oldest first."""
+        return tuple(self._by_person.get(person.casefold(), ()))
+
+    def remember(self, person: str, question: str, answer: str) -> None:
+        """Add one question and its answer."""
+        memory = self._by_person.setdefault(person.casefold(), deque(maxlen=2 * self._turns))
+        memory.append({"role": "user", "content": question})
+        memory.append({"role": "assistant", "content": answer})
+
+
 class ModelEngine:
     """Plans by asking the language model. One per document: it remembers the last conversation with each person."""
 
     def __init__(
         self,
-        runner: ModelRunner,
+        runner: Answerer,
         tools: tuple[ToolSpec, ...],
         lens: Lens,
         *,
-        memory_turns: int = MEMORY_TURNS,
+        memory: ConversationMemory | None = None,
         budget: Budget = Budget(),  # noqa: B008  (frozen)
     ):
         self._runner = runner
         self._tools = tools
         self._lens = lens
-        self._memory_turns = memory_turns
+        self._memory = memory or ConversationMemory()
         self._budget = budget
-        self._memory: dict[str, deque[Message]] = {}
 
     async def plan_async(self, task: Task) -> list[AiTurn]:
         """The answer to what the asker wrote, after whatever the model looked at and did on the way. Raises
         ``ModelError`` (the assistant tells the asker)."""
         if task.call is None:
             raise ValueError("the model's loop needs a task that can make requests")
-        key = task.sender.casefold()
-        history = tuple(self._memory.get(key, ()))
+        history = self._memory.recall(task.sender)
         tools = tuple(t for t in self._tools if t.kind == "look" or task.writes is None or t.name in task.writes)
         can_write = any(t.kind != "look" for t in tools)
         offered = frozenset(t.name for t in tools if t.kind != "look")
         context = self._lens.orient(task.document, can_write=can_write, asker=task.sender, writes=offered)
         request = Request(task.sender, task.text, context, tools, history)
         say = await self._converse(task, request)
-        memory = self._memory.setdefault(key, deque(maxlen=2 * self._memory_turns))
-        memory.append({"role": "user", "content": task.text})
-        memory.append({"role": "assistant", "content": say})
+        self._memory.remember(task.sender, task.text, say)
         return [Say(say)]
 
     async def _converse(self, task: Task, request: Request) -> str:

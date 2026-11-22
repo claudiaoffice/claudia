@@ -26,8 +26,9 @@ from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from claudia_core import ChatPosted, ChatRecord, Document
+from claudia_core import ChatPosted, ChatRecord, Document, Via
 
+from .ai_consent import AiConsent
 from .ai_mode import ACT, DEFAULT_MODE, SUGGEST, AiMode, parse_mode
 from .auth import AI_USER, Account, is_reserved
 from .hub import HubError
@@ -54,13 +55,17 @@ class Task:
     # its result; ``RequestError`` if it is refused or fails. An engine that acts while it thinks (the model's loop)
     # uses it.
     call: Callable[[str, dict], Any] | None = None
+    # What the document's owners allow a remote provider, as it is *now* (not when the question was asked): whoever
+    # sends the document's content out looks again before every step (E7.11).
+    consent: Callable[[], AiConsent] | None = None
 
 
 @dataclass(frozen=True)
 class Say:
-    """Answer the asker in the chat."""
+    """Answer the asker in the chat. ``via`` says who answered, for the line under the answer (E7.11)."""
 
     text: str
+    via: Via | None = None
 
 
 @dataclass(frozen=True)
@@ -188,7 +193,8 @@ class Assistant:
 
     async def _answer(self, record: ChatRecord, mode: AiMode = DEFAULT_MODE) -> None:
         assert self.hosted is not None
-        document = self.hosted.document
+        hosted = self.hosted
+        document = hosted.document
         account = self.account_for(record.author, mode)
         document.publish("typing", AI_USER, {"on": True})
         try:
@@ -200,6 +206,7 @@ class Assistant:
                     mode,
                     account.allowed_methods,
                     call=lambda method, params: self._call(method, params, account),
+                    consent=lambda: hosted.consent.state,
                 )
                 steps = await self._plan(task)
             except Exception as exc:  # the engine is a plug-in: whatever it does wrong, the asker is told
@@ -221,7 +228,7 @@ class Assistant:
         """Do one step as ``account`` (the AI's own when none is given); ``False`` if the rest of the plan should be
         dropped."""
         if isinstance(step, Say):
-            self._say(asker, step.text)
+            self._say(asker, step.text, step.via)
             return True
         if mode == SUGGEST and step.method in self.allowed_methods - self.suggest_methods:
             # D262: not an error, a choice she made; say so and where to change it, before anything is shown or tried
@@ -249,9 +256,9 @@ class Assistant:
         finally:
             hosted.acting_user = None
 
-    def _say(self, asker: str, text: str) -> None:
+    def _say(self, asker: str, text: str, via: Via | None = None) -> None:
         assert self.hosted is not None
         try:
-            self.hosted.document.post_chat(AI_USER, f"@{asker} {text}", users=self.hosted.users())
+            self.hosted.document.post_chat(AI_USER, f"@{asker} {text}", users=self.hosted.users(), via=via)
         except ValueError:
             log.info("the assistant's answer to %s was not sent: %s", asker, text)  # they left in the meantime

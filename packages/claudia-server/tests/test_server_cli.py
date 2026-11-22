@@ -666,7 +666,8 @@ def test_one_language_model_answers_in_every_app_that_has_a_lens(tmp_path, model
             found[module.app] = type(hosted.assistant.engine).__name__
         return found
 
-    assert asyncio.run(engines()) == {"computes": "ModelEngine", "composes": "ModelEngine", "creates": "ModelEngine"}
+    # every app's assistant asks the one desk who answers (E7.11); the model behind it was loaded once, above
+    assert asyncio.run(engines()) == {"computes": "AiRouter", "composes": "AiRouter", "creates": "AiRouter"}
     result.close()
 
 
@@ -736,3 +737,101 @@ def test_documents_that_are_not_sealed_have_no_hashing_cost_to_measure(tmp_path)
     memory = plan(tmp_path=tmp_path)
     assert memory.kdf is None
     memory.start()  # nothing to start, and no error
+
+
+# ---------------------------------------------------------------- Claude as the AI provider (E7.11)
+KEY = "sk-ant-test-a7Q2"
+
+
+@pytest.fixture
+def anthropic():
+    from claudia_ai.testing import FakeAnthropic
+
+    with FakeAnthropic(key=KEY, answer=lambda messages: "Claude heard: " + messages[-1]["content"]) as fake:
+        yield fake
+
+
+def save_claude(tmp_path, *, key=KEY, confirmed=True):
+    from claudia_server.server_settings import AiSettings, Changed, ClaudeSettings, ServerSettings, save_settings
+
+    claude = ClaudeSettings("claude-sonnet-5-5", key, Changed("anna", "2026-11-22T10:00:00Z") if confirmed else None)
+    save_settings(tmp_path, ServerSettings(max_documents=5, ai=AiSettings(provider="claude", claude=claude)))
+
+
+def test_the_operators_key_comes_from_a_file_or_the_environment_and_the_file_wins(tmp_path, monkeypatch):
+    from claudia_server.cli import _operator_anthropic_key, build_parser
+
+    keyfile = tmp_path / "key"
+    keyfile.write_text(" sk-ant-from-file \n")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-from-env")
+    assert (
+        _operator_anthropic_key(build_parser().parse_args(["--anthropic-key-file", str(keyfile)])) == "sk-ant-from-file"
+    )
+    assert _operator_anthropic_key(build_parser().parse_args([])) == "sk-ant-from-env"
+    monkeypatch.delenv("ANTHROPIC_API_KEY")
+    assert _operator_anthropic_key(build_parser().parse_args([])) is None
+
+
+def test_a_key_that_is_asked_for_but_empty_or_unreadable_stops_the_server(tmp_path, monkeypatch):
+    empty = tmp_path / "empty"
+    empty.write_text("\n")
+    with pytest.raises(UsageError, match="--anthropic-key-file: cannot read"):
+        plan("--no-tls", "--anthropic-key-file", str(tmp_path / "missing"), tmp_path=tmp_path)
+    with pytest.raises(UsageError, match="key is empty"):
+        plan("--no-tls", "--anthropic-key-file", str(empty), tmp_path=tmp_path)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+    with pytest.raises(UsageError, match="key is empty"):
+        plan("--no-tls", tmp_path=tmp_path)
+
+
+def asked_in_a_document_whose_owner_allowed_claude(result):
+    from starlette.testclient import TestClient
+    from test_server_app import Peer
+
+    with TestClient(result.app) as client:
+        peer = Peer(client, user="Annabelle", password="Correct-Horse-9", create=True)
+        try:
+            assert peer.request("set_ai_consent", {"allowed": True})["ok"]
+            assert peer.request("chat", {"text": "@ai hello"})["ok"]
+            while not any(f.get("event") == "chat" and f["data"]["author"] == "ai" for f in peer.pushed):
+                peer.pushed.append(peer.socket.receive_json())
+            reply = next(f["data"] for f in peer.pushed if f.get("event") == "chat" and f["data"]["author"] == "ai")
+        finally:
+            peer.close()
+    return reply
+
+
+def test_claude_chosen_on_the_settings_page_still_answers_after_a_restart(tmp_path, anthropic):
+    save_claude(tmp_path)
+    result = plan("--no-tls", "--dir", str(tmp_path / "docs"), "--anthropic-base-url", anthropic.url, tmp_path=tmp_path)
+    assert any("Claude" in line and "where the document owners allow" in line for line in result.banner)
+    reply = asked_in_a_document_whose_owner_allowed_claude(result)
+    assert reply["text"].endswith("Claude heard: hello") and reply["via"]["provider"] == "claude"
+    result.close()
+
+
+def test_the_operators_key_wins_over_the_saved_one(tmp_path, anthropic):
+    save_claude(tmp_path, key="sk-ant-saved-and-wrong")
+    keyfile = tmp_path / "key"
+    keyfile.write_text(KEY)
+    result = plan(
+        "--no-tls",
+        "--dir",
+        str(tmp_path / "docs"),
+        "--anthropic-base-url",
+        anthropic.url,
+        "--anthropic-key-file",
+        str(keyfile),
+        tmp_path=tmp_path,
+    )
+    reply = asked_in_a_document_whose_owner_allowed_claude(result)
+    assert reply["via"]["provider"] == "claude" and anthropic.requests[-1].key == KEY
+    result.close()
+
+
+def test_claude_without_the_administrators_confirmed_sentence_is_not_asked(tmp_path, anthropic):
+    save_claude(tmp_path, confirmed=False)
+    result = plan("--no-tls", "--dir", str(tmp_path / "docs"), "--anthropic-base-url", anthropic.url, tmp_path=tmp_path)
+    reply = asked_in_a_document_whose_owner_allowed_claude(result)
+    assert reply["via"]["provider"] == "stand-in" and anthropic.requests == []
+    result.close()

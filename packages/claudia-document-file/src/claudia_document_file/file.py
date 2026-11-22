@@ -187,10 +187,8 @@ class Manifest:
     def from_dict(cls, data: object) -> Manifest:
         """Read a manifest; ``ValueError`` if it is not a sound one."""
         try:
-            if data["format"] not in range(OLDEST_FORMAT, FORMAT_VERSION + 1) or data["ciphers"] != {
-                "kdf": "argon2id",
-                "aead": "aes-256-gcm",
-            }:  # type: ignore[index]
+            known_format = data["format"] in range(OLDEST_FORMAT, FORMAT_VERSION + 1)  # type: ignore[index]
+            if not known_format or data["ciphers"] != {"kdf": "argon2id", "aead": "aes-256-gcm"}:  # type: ignore[index]
                 raise ValueError("unknown format or ciphers")
             manifest = cls(
                 name=data["name"],  # type: ignore[index]

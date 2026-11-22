@@ -10,11 +10,13 @@ import pytest
 from starlette.testclient import TestClient
 from test_server_admin_api import CODE, PASSWORD
 
+from claudia_ai import FailureReason
 from claudia_ai.testing import FakeAnthropic
 from claudia_computes import WorkbookModel
 from claudia_server.admin import AdminDirectory
 from claudia_server.admin_api import AdminContext, AiRuntime
 from claudia_server.admin_sessions import AdminSessions
+from claudia_server.ai_desk import Failure
 from claudia_server.app import create_app
 from claudia_server.auth import ScryptDirectory
 from claudia_server.computes import computes_methods
@@ -241,3 +243,38 @@ def test_the_local_model_is_chosen_as_before(tmp_path, anthropic):
         response = client.put("/api/admin/settings/ai", headers=signed_in(client), json={"model_dir": None})
     assert response.status_code == 200
     assert response.json()["ai"]["provider"] == "stand-in" and admin.ai.runner is None
+
+
+# -- what answers now, and what went wrong with it last
+def test_the_page_says_what_answers_now_and_that_nothing_went_wrong(tmp_path, anthropic):
+    app, _, _ = serve(tmp_path, anthropic)
+    with TestClient(app) as client:
+        ai = client.get("/api/admin/settings", headers=signed_in(client)).json()["ai"]
+    assert ai["answering"] == {"provider": "stand-in", "label": "Scripted stand-in", "remote": False, "note": ""}
+    assert ai["last_error"] is None
+
+
+def test_after_applying_claude_the_page_says_claude_answers_now_and_that_it_is_remote(tmp_path, anthropic):
+    app, _, _ = serve(tmp_path, anthropic)
+    with TestClient(app) as client:
+        headers = signed_in(client)
+        assert apply_claude(client, headers).status_code == 200
+        ai = client.get("/api/admin/settings", headers=headers).json()["ai"]
+    assert ai["answering"] == {"provider": "claude", "label": "Claude · claude-sonnet-5-5", "remote": True, "note": ""}
+
+
+def test_the_page_gives_the_reason_of_the_last_failure_in_the_administrators_words(tmp_path, anthropic):
+    app, _, admin = serve(tmp_path, anthropic)
+    with TestClient(app) as client:
+        headers = signed_in(client)
+        apply_claude(client, headers, model="claude-x")
+        admin.ai.desk.health.failed(
+            Failure("claude", FailureReason.UNKNOWN_MODEL, "no such model", "2026-11-22T10:00:00Z")
+        )
+        ai = client.get("/api/admin/settings", headers=headers).json()["ai"]
+    assert ai["last_error"] == {
+        "provider": "claude",
+        "reason": "unknown_model",
+        "sentence": "Anthropic does not know the model “claude-x”.",
+        "when": "2026-11-22T10:00:00Z",
+    }

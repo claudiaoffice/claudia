@@ -17,6 +17,10 @@ class ModelError(Exception):
     """The model cannot be loaded or failed while answering. The message is meant for the person using the assistant."""
 
 
+class ModelTimeout(ModelError):
+    """The model did not finish within the time it was given."""
+
+
 class LanguageModel(Protocol):
     """A chat model."""
 

@@ -12,9 +12,9 @@ The package knows nothing of documents, protocols or servers: ``claudia_server``
 from ._version import __version__
 from .agent import CALL_LIMIT, Agent, Request, ToolCall, ToolSpec, Turn
 from .claude import ClaudeModel, FailureReason, ProviderError
-from .model import LanguageModel, Message, ModelError
+from .model import LanguageModel, Message, ModelError, ModelTimeout
 from .openvino_model import DEFAULT_DEVICE, OpenVinoModel
-from .runner import ModelRunner
+from .runner import Answerer, ModelRunner
 
 __all__ = [
     "__version__",
@@ -23,10 +23,12 @@ __all__ = [
     "DEFAULT_DEVICE",
     "FailureReason",
     "Agent",
+    "Answerer",
     "LanguageModel",
     "Message",
     "ModelError",
     "ModelRunner",
+    "ModelTimeout",
     "OpenVinoModel",
     "ProviderError",
     "Request",
