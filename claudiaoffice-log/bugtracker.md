@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (92)
+### Open (90)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -57,8 +57,6 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
 | UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them (a workbook's slide written as a sheet among them) | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
-| UX-72 | P2 | UX / computes | Search in a workbook does not look at the words on its slides, and "This sheet" searches the sheet behind a slide | **in progress** (read; size 3; `e6-31-slides-in-computes`) | 2026-11-22 |  |
-| UX-73 | P2 | UX / computes | While a slide is shown, the print bar offers "This sheet" and counts the slide as a sheet | **in progress** (measured; size 3; `e6-31-slides-in-computes`) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -134,7 +132,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (145)
+### Fixed (152)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -200,6 +198,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-58 | P3 | UX / composes | A press on a text box also moved the caret in the words below it | **fixed** 2026-11-21 (`objects.cjs` step 1; size 3) | 2026-11-20 | 2026-11-21 |
 | UX-61 | P3 | UX / admin | The first-administrator page and Access & documents called the access secret a recovery key for administrators: there is no such recovery, and nobody signs in with it | **fixed** 2026-11-20 (`web/tests/admin-wording.test.ts`; size 3) | 2026-11-20 | 2026-11-20 |
 | UX-62 | P3 | UX / composes | ← and → did nothing on a selected object, where the contract says the arrow keys nudge it | **fixed** 2026-11-21 (D1390; `objects.cjs` step 6; size 3) | 2026-11-21 | 2026-11-21 |
+| UX-72 | P2 | UX / computes | Search in a workbook does not look at the words on its slides, and "This sheet" searches the sheet behind a slide | **fixed** 2026-11-22 on `e6-31-slides-in-computes` | 2026-11-22 | 2026-11-22 |
+| UX-73 | P2 | UX / computes | While a slide is shown, the print bar offers "This sheet" and counts the slide as a sheet | **fixed** 2026-11-22 on `e6-31-slides-in-computes` | 2026-11-22 | 2026-11-22 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -2667,16 +2667,24 @@ workbook's Body text, 13 px for the cells of a sheet, which on a slide of 1600 �
 needed:** whether a workbook's slides get text styles of their own (as creates has), or the slide is drawn at another
 scale. Until then a person makes the text larger with a style of her own.
 
-### UX-72 · Search in a workbook does not look at its slides · P2 · size 3 · in progress
+### UX-72 · Search in a workbook does not look at its slides · P2 · size 3 · fixed
 **Found** in the review of step 2: computes' search goes through the cells of the sheets; the words of a slide's text
 boxes and shapes are never found, and with a slide shown "This sheet" searches the sheet behind it. Evidence: **read**.
 **Acceptance:** a search finds words on a slide (and shows the slide with the object marked), and with a slide shown the
-scope is that slide.
+scope is that slide. **Fixed** 2026-11-22: `workbook_texts` (`claudia_computes/search.py`) reads
+the words of the boxes and shapes of the slides in tab order with the cells, a replacement changes cells and words in
+one step (`replace_command`), and the scope `{slide}` is "This slide" while a slide is shown; a match is shown on its
+slide, marked in the words. **Tests:** `test_search_on_slides.py`, `test_server_computes_slides.py`,
+`sheet-search-host.test.ts`, the Rule "Search looks at the words on the slides too" of `specs/computes/slides.feature`
+and `web/e2e/computes-slides.cjs`.
 
-### UX-73 · The print bar calls a slide a sheet · P2 · size 3 · in progress
+### UX-73 · The print bar calls a slide a sheet · P2 · size 3 · fixed
 **Found** in the screenshots of `web/e2e/computes-slides.cjs`: with a slide shown, File ▸ Print… offers "This sheet",
 and the status line of the whole workbook says "2 pages · 3 sheets" for two sheets and a slide. Evidence: **measured**.
-**Acceptance:** "This slide" while a slide is shown, and the status line counts sheets and slides apart.
+**Acceptance:** "This slide" while a slide is shown, and the status line counts sheets and slides apart. **Fixed** 2026-11-22: "Contents" offers "This slide" and "Whole
+workbook" while a slide is shown (a slide has no cells to select), and the status line says "2 sheets and 1 slide"
+(`describeSheets` in `web/app/lib/print/sheet.ts`). **Tests:** `print-sheets.test.ts`, the scenario "The print bar
+speaks of the slide shown as a slide" and `web/e2e/computes-slides.cjs`.
 
 ### CODE-78 · Refusals of the models reach a German user in English · P2 · size 2 · in progress
 **Found** in the review of step 2: the core and the apps refuse with a `ValueError` and an English sentence (for

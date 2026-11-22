@@ -58,10 +58,17 @@ async function open(browser, file) {
   await page.waitForSelector('.foot [role=tab]')
   await page.waitForFunction(() => document.querySelector('.health.open'))
   for (let i = 0; i < 3 && (await page.locator('.modal').count()); i++) await page.keyboard.press('Escape')
+  // the notice that the file came in stays until clicked, over the foot of the panels
+  await page.locator('.toast').click({ timeout: 5000 }).catch(() => {})
   return page
 }
 const tabs = (page) => page.$$eval('.foot [role=tablist] [role=tab]', (els) => els.map((e) => [e.dataset.kind, e.getAttribute('aria-label') ?? e.textContent.trim()]))
 const statusIs = (page, re) => page.waitForFunction((src) => new RegExp(src).test(document.querySelector('[data-testid=print-status]')?.textContent ?? ''), re.source)
+async function waitSummary(page, expected) {
+  await page.waitForFunction((want) => document.querySelector('[data-testid=search-summary]')?.textContent.trim() === want, expected, { timeout: 10000 }).catch(async () => {
+    throw new Error(`the summary is ${JSON.stringify(await page.locator('[data-testid=search-summary]').textContent())}, not ${JSON.stringify(expected)}`)
+  })
+}
 async function menu(page, title, ...items) {
   await page.click(`.menus .title:text-is("${title}")`)
   for (const item of items) await page.click(`.menus .drop [role=menuitem]:has-text("${item}")`)
@@ -102,9 +109,13 @@ async function menu(page, title, ...items) {
     await page.waitForSelector('[data-testid=print-pages] .page svg')
     await statusIs(page, /1 page/)
     await statusIs(page, /landscape/)
+    // UX-73: the print bar calls the slide shown a slide, and offers no selection (a slide has no cells)
+    const contents = await page.$$eval('[data-testid=print-contents] option', (els) => els.map((e) => e.textContent.trim()))
+    assert.deepEqual(contents, ['This slide', 'Whole workbook'])
     await page.screenshot({ path: `${SHOTS}/computes-slides-2-print-the-slide.png` })
     await page.selectOption('[data-testid=print-contents]', 'workbook')
     await statusIs(page, /^2 pages/)
+    await statusIs(page, /2 sheets and 1 slide/)
     const sides = await page.$$eval('[data-testid=print-pages] .page svg', (els) => els.map((e) => { const b = e.viewBox.baseVal; return b.width > b.height ? 'landscape' : 'portrait' }))
     // Sheet1, then the slide; Costs has nothing on it, so it prints no page (as any empty sheet)
     assert.deepEqual(sides, ['portrait', 'landscape'], 'the slide is the second page, lying as a slide does')
@@ -116,6 +127,52 @@ async function menu(page, title, ...items) {
     await page.click('.foot [role=tab]:has-text("Sheet1")')
     await page.waitForSelector('.formulaRow')
     assert.equal(await page.locator('[data-testid=slide]').count(), 0)
+
+    // ---- search (UX-72): the words on the slide are found with the cells, the match is shown on the slide, and a
+    // replacement changes both in one step that undo takes back
+    await page.keyboard.press('Control+f')
+    await page.waitForSelector('[data-testid=search-panel]')
+    assert.deepEqual(await page.$$eval('[data-testid=search-panel] select option', (els) => els.map((e) => e.textContent.trim())).then((o) => o.includes('All sheets and slides')), true)
+    await page.selectOption('[data-testid=search-panel] select', 'all')
+    await page.fill('[data-testid=search-quick]', 'East')
+    await waitSummary(page, '2 matches')
+    const wheres = () => page.$$eval('[data-testid=search-panel] .list .where', (els) => els.map((e) => e.textContent.trim()))
+    const found = await wheres()
+    assert.equal(found.length, 2)
+    assert.ok(found.some((w) => /A2/.test(w)) && found.some((w) => /Sales chart/.test(w)), `found in a cell and on the slide: ${found}`)
+    await page.click('[data-testid=search-panel] .list button.row:has-text("Sales chart")')
+    await page.waitForSelector('[data-testid=slide] [data-found=current]')
+    assert.equal(await page.locator('.foot [role=tab][aria-selected=true]').getAttribute('data-kind'), 'slide')
+    await page.screenshot({ path: `${SHOTS}/computes-slides-4-search-on-the-slide.png` })
+    log('search: found in a cell and on the slide, and shown on the slide')
+
+    // with the slide shown, "This slide" looks on that slide only
+    await page.selectOption('[data-testid=search-panel] select', 'sheet')
+    await waitSummary(page, 'One match')
+    assert.match((await wheres())[0], /Sales chart/)
+
+    // a replacement in all sheets and slides, one step
+    await page.selectOption('[data-testid=search-panel] select', 'all')
+    await waitSummary(page, '2 matches')
+    await page.click('text=Replace with…')
+    await page.fill('input[data-replace-first]', 'Ost')
+    await page.waitForSelector('[data-testid=search-replace-all]:not([disabled])')
+    await page.click('[data-testid=search-replace-all]')
+    await waitSummary(page, 'No matches')
+    await page.waitForFunction(() => document.querySelector('[data-testid=slide]')?.textContent.includes('Ost leads'))
+    await page.click('[data-testid=search-panel] [aria-label="Close"], [data-testid=search-panel] button:has-text("✕")').catch(() => page.keyboard.press('Escape'))
+    await page.waitForSelector('[data-testid=search-panel]', { state: 'detached' }).catch(() => page.keyboard.press('Escape'))
+    await page.click('[data-testid=slide]', { position: { x: 5, y: 5 } })
+    await page.keyboard.press('Control+z')
+    await page.waitForFunction(() => document.querySelector('[data-testid=slide]')?.textContent.includes('East leads'))
+    // …and the cell too: "East" is found in both places again
+    await page.keyboard.press('Control+f')
+    await page.waitForSelector('[data-testid=search-panel]')
+    await page.selectOption('[data-testid=search-panel] select', 'all')
+    await page.fill('[data-testid=search-quick]', 'East')
+    await waitSummary(page, '2 matches')
+    await page.keyboard.press('Escape')
+    log('search: replaced on the slide and in the cell in one step, and undo took both back')
 
     assert.deepEqual(page.errors, [], 'no errors in the browser')
     log('ALL GOOD')

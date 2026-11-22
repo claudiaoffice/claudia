@@ -92,3 +92,17 @@ servers as CI starts them (`slides`, `creates-styles`, `print-creates`, `describ
   code in two sessions; `_placed` on the server is two small functions; `slide_plan` uses the model's methods, not the
   stored form; `restore` refuses tabs that miss a sheet or a slide; a new sheet's id is free among the slides too, and
   the pivot dialog's sheet name among their names; tests with literal cells instead of the formula.
+
+## Step 2, fixes UX-72 and UX-73, 2026-11-22
+
+- **Search on the slides (UX-72).** `workbook_texts` (`claudia_computes/search.py`) goes through the tabs in their
+  order: a sheet gives its cells, a slide the words of its text boxes and the labels of its shapes, with creates' places
+  `{slide, object, source}` (`object_texts` of the core, as creates reads them). `replace_command` makes one step of
+  the cells (`SetCells`) and the words (`edit_object_text`), so undo takes both back. The scope `{slide}` searches one
+  slide; the server refuses a slide that is not there. On the web, `sheet-search-host.ts` says "All sheets and slides"
+  when there are slides, and "This slide" for the scope `sheet` while a slide is shown; a match on a slide shows the
+  slide and selects the object, and the slide marks the match in its words (`marksFor` of `slide-search-host.ts`).
+  Descriptions and speaker notes are not searched: a workbook's slides have neither in the UI.
+- **The print bar (UX-73).** With a slide shown, "Contents" is "This slide" and "Whole workbook" (no Selection: a slide
+  has no cells), and the status line counts sheets and slides apart ("2 sheets and 1 slide").
+- The search panel's scope list was cut off at 45 % of the row ("All sheets and slide"); it may now take 55 %.
