@@ -10,7 +10,7 @@ For the owner to read before the scenarios are agreed. Drafted 2026-11-19 with t
 | Ann removes Ben, and Ben is out at once | Chrome, two windows | the question mentions private notes; Ben's window closes with a sentence and his password no longer opens the document |
 | Ann carries on after the renewal | Chrome | the document is still there and writing still works under the new keys (the text she types survives a reopen) |
 | An editor cannot open the Share dialog | Chrome | the entry is disabled for non-owners |
-| The six `@extended` ones | unit tests | which domains a renewal touches; the interrupted renewal; letters and forged letters; the private domain; who may change what on the wire |
+| The six `@extended` ones | unit tests | which parts a renewal touches; the interrupted renewal; letters and forged letters; the private domain; who may change what on the wire |
 
 Not run in a browser: a person who was away during the renewal and logs in later (unit tests of the letter), the recovery
 key as a receiver of letters, a crash in the middle of a renewal, a very large document (the dialog's "about as long as

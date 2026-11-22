@@ -1,9 +1,9 @@
 """Who receives and may ask for what in a live document: the roles of the file, applied to the session (D1261, SEC-17).
 
 A document file has three separately encrypted parts, its **content**, its **history** and its **chat**, and a role
-holds the keys of some of them (D101, ``claudia_document_file.ROLE_DOMAINS``): a viewer holds the content key only. The
+holds the keys of some of them (D101, ``claudia_document_file.ROLE_PARTS``): a viewer holds the content key only. The
 live session must not give a viewer what her key would not open, so every event the server pushes and every method it
-answers belongs to one of those domains, and this module says which.
+answers belongs to one of those parts, and this module says which.
 
 Two tables, one rule:
 
@@ -11,7 +11,7 @@ Two tables, one rule:
   ``ephemeral`` event. ``shape_for`` applies them. What nobody classified goes to owners and editors only, so a new
   event can leak nothing by being forgotten; a test (``test_server_audience.py``) fails until it is listed.
 * A protocol method says what it reads (``reads=`` on ``MethodTable.method``, ``content`` unless stated), and a viewer
-  is refused one that reads a domain her role does not hold (``MethodTable.dispatch``).
+  is refused one that reads a part her role does not hold (``MethodTable.dispatch``).
 
 The apps and the kernel know nothing of this; they raise their events and register their methods as before.
 """
@@ -20,17 +20,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from claudia_document_file import ROLE_DOMAINS, Domain, Role
+from claudia_document_file import ROLE_PARTS, Part, Role
 
-CONTENT, HISTORY, CHAT = Domain.CONTENT, Domain.HISTORY, Domain.CHAT
+CONTENT, HISTORY, CHAT = Part.CONTENT, Part.HISTORY, Part.CHAT
 
 
 @dataclass(frozen=True)
 class Rule:
-    """The domain an event's whole payload belongs to, and the part of it a role that does not hold that domain still
+    """The part an event's whole payload belongs to, and what of it a role that does not hold that part still
     receives (``None``: none of it; the keys that stay otherwise)."""
 
-    domain: Domain
+    part: Part
     viewer_keeps: tuple[str, ...] | None = None
 
 
@@ -102,7 +102,7 @@ EVENT_RULES: dict[str, Rule] = {
 }
 
 # The kinds of the ``ephemeral`` event (what is not stored). Presence and the names are not secrets of the history.
-EPHEMERAL_RULES: dict[str, Domain] = {
+EPHEMERAL_RULES: dict[str, Part] = {
     "presence": CONTENT,
     "person_left": CONTENT,
     "owner_changed": CONTENT,
@@ -115,14 +115,14 @@ EPHEMERAL_RULES: dict[str, Domain] = {
 }
 
 
-def may_read(role: str, domain: Domain) -> bool:
-    """Does a person with this role hold the key of ``domain`` (the file's table, D101)? A role nobody knows holds the
+def may_read(role: str, part: Part) -> bool:
+    """Does a person with this role hold the key of ``part`` (the file's table, D101)? A role nobody knows holds the
     least, a viewer's."""
     try:
-        held = ROLE_DOMAINS[Role(role)]
+        held = ROLE_PARTS[Role(role)]
     except ValueError:
-        held = ROLE_DOMAINS[Role.VIEWER]
-    return domain in held
+        held = ROLE_PARTS[Role.VIEWER]
+    return part in held
 
 
 def shape_for(role: str, event: str, data: dict) -> dict | None:
@@ -137,9 +137,9 @@ def shape_for(role: str, event: str, data: dict) -> dict | None:
     if rule is None:
         return None
     if event == "ephemeral":
-        domain = EPHEMERAL_RULES.get(str(data.get("kind")))
-        return data if domain is not None and may_read(role, domain) else None
-    if may_read(role, rule.domain):
+        part = EPHEMERAL_RULES.get(str(data.get("kind")))
+        return data if part is not None and may_read(role, part) else None
+    if may_read(role, rule.part):
         return data
     if rule.viewer_keeps is None:
         return None

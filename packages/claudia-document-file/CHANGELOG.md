@@ -11,6 +11,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   `claudia_document_file.file` (was `.container`), and `DocumentFileError` (was `ContainerError`) is the base of
   `NotAClaudiaDocument`, `UnsupportedFormat`, `TamperedDocument` and `ReaderLimitExceeded`. Older entries below keep
   the old names.
+- **Breaking** — the glossary's *part* (D1434, E1.18): `Domain` is `Part`, `ROLE_DOMAINS` is `ROLE_PARTS` and
+  `new_domain_keys` is `new_part_keys`; the key to a person's private notes is `PrivateNotesKey`, made by
+  `new_private_notes_key` (was `PrivateDomain`, `new_private_domain`). `JournalRecord.domain` is `JournalRecord.part`,
+  and `blocks.Place.domain`, which names a chain of blocks (a part, `"audit"` or `"private/<id>"`), is
+  `blocks.Place.stream`. `AUDIT_PARTS` is made from `Part`. Nothing in the file changes.
 
 ## [0.12.0] - 2026-11-19
 

@@ -8,13 +8,13 @@ import pytest
 from claudia_document_file import crypto
 from claudia_document_file.crypto import KdfParams
 from claudia_document_file.slots import (
-    Domain,
     InvalidRecoveryKey,
     KeySlot,
+    Part,
     Role,
     format_recovery_key,
     make_slot,
-    new_domain_keys,
+    new_part_keys,
     new_recovery_key,
     open_slot,
     parse_recovery_key,
@@ -23,7 +23,7 @@ from claudia_document_file.slots import (
 CHEAP = KdfParams(iterations=1, memory_kib=64, lanes=1)
 DOC = "doc-0001"
 SALT = bytes(range(16))
-ALL = {Domain.CONTENT, Domain.HISTORY, Domain.CHAT}
+ALL = {Part.CONTENT, Part.HISTORY, Part.CHAT}
 
 
 def login(name, password, salt=SALT, params=CHEAP):
@@ -32,7 +32,7 @@ def login(name, password, salt=SALT, params=CHEAP):
 
 @pytest.fixture
 def keys():
-    return new_domain_keys()
+    return new_part_keys()
 
 
 @pytest.fixture
@@ -44,14 +44,14 @@ def slots(keys):
     ]
 
 
-def test_new_domain_keys_are_three_different_random_keys():
-    keys = new_domain_keys()
+def test_new_part_keys_are_three_different_random_keys():
+    keys = new_part_keys()
     assert set(keys) == ALL
     assert len(set(keys.values())) == 3
     assert all(len(key) == 32 for key in keys.values())
 
 
-def test_the_owner_and_the_editor_open_all_three_domains(slots, keys):
+def test_the_owner_and_the_editor_open_all_three_parts(slots, keys):
     people = [("annabelle", "Correct-Horse-9", Role.OWNER), ("bertram", "Battery-Staple-7", Role.EDITOR)]
     for name, password, role in people:
         unlocked = open_slot(slots, login(name, password), DOC)
@@ -65,7 +65,7 @@ def test_a_viewer_gets_the_content_key_and_nothing_else(slots, keys):
     unlocked = open_slot(slots, login("cornelia", "Purple-Monkey-5"), DOC)
     assert unlocked is not None
     assert unlocked.role is Role.VIEWER
-    assert unlocked.keys == {Domain.CONTENT: keys[Domain.CONTENT]}
+    assert unlocked.keys == {Part.CONTENT: keys[Part.CONTENT]}
 
 
 @pytest.mark.parametrize(
@@ -166,8 +166,8 @@ def test_a_slot_made_from_rubbish_is_refused(bad):
 def test_the_unlocked_keys_are_not_printed_by_accident(slots, keys):
     unlocked = open_slot(slots, login("annabelle", "Correct-Horse-9"), DOC)
     assert unlocked is not None
-    assert keys[Domain.CONTENT].hex() not in repr(unlocked)
-    assert str(keys[Domain.CONTENT]) not in repr(unlocked)
+    assert keys[Part.CONTENT].hex() not in repr(unlocked)
+    assert str(keys[Part.CONTENT]) not in repr(unlocked)
 
 
 # --- the recovery key (D105) -------------------------------------------------------------------------------------
@@ -221,10 +221,20 @@ def test_a_recovery_key_is_not_a_password_for_a_user_slot(slots):
 
 def test_a_role_that_may_not_hold_a_key_cannot_be_given_it(keys):
     with pytest.raises(ValueError, match="key"):
-        only_history = {Domain.HISTORY: keys[Domain.HISTORY]}  # the content key is missing
+        only_history = {Part.HISTORY: keys[Part.HISTORY]}  # the content key is missing
         make_slot(login("c", "Pass-word-1"), DOC, "c", Role.VIEWER, only_history)
 
 
 def test_a_wrong_size_key_is_a_programming_error():
     with pytest.raises(ValueError, match="32"):
-        make_slot(login("c", "Pass-word-1"), DOC, "c", Role.OWNER, dict.fromkeys(Domain, b"short"))
+        make_slot(login("c", "Pass-word-1"), DOC, "c", Role.OWNER, dict.fromkeys(Part, b"short"))
+
+
+def test_a_document_has_the_glossarys_three_parts_and_a_viewer_holds_only_the_content():
+    from claudia_document_file import AUDIT_PARTS, ROLE_PARTS, Part, PrivateNotesKey, Role
+
+    assert [part.value for part in Part] == ["content", "history", "chat"]
+    assert ROLE_PARTS[Role.OWNER] == ROLE_PARTS[Role.EDITOR] == set(Part)
+    assert ROLE_PARTS[Role.VIEWER] == {Part.CONTENT}
+    assert AUDIT_PARTS == ("content", "history", "chat")  # an exit record names the same parts
+    assert PrivateNotesKey.__name__ == "PrivateNotesKey"  # the id and the key of one person's private notes

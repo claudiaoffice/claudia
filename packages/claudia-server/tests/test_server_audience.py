@@ -125,11 +125,11 @@ def test_every_ephemeral_kind_the_server_publishes_is_classified():
     assert kinds - set(EPHEMERAL_RULES) == set(), "classify these in claudia_server/audience.py (EPHEMERAL_RULES)"
 
 
-def test_the_table_only_names_domains_a_document_has():
-    from claudia_document_file import Domain
+def test_the_table_only_names_parts_a_document_has():
+    from claudia_document_file import Part
 
-    domains = {rule.domain for rule in EVENT_RULES.values()} | set(EPHEMERAL_RULES.values())
-    assert domains <= set(Domain)
+    parts = {rule.part for rule in EVENT_RULES.values()} | set(EPHEMERAL_RULES.values())
+    assert parts <= set(Part)
 
 
 # ------------------------------------------------------------------------------------------ the hub
@@ -299,18 +299,18 @@ def _all_methods():
     return seen
 
 
-def test_every_method_is_in_the_reviewed_list_with_the_domain_it_reads():
+def test_every_method_is_in_the_reviewed_list_with_the_part_it_reads():
     reviewed = json.loads(GOLDEN.read_text(encoding="utf-8"))
     actual = _all_methods()
     assert set(actual) - set(reviewed) == set(), (
-        "a new method: decide which domain it reads (content, history or chat), declare it with "
+        "a new method: decide which part it reads (content, history or chat), declare it with "
         "`reads=` and add it to tests/method_reads.json"
     )
     assert set(reviewed) - set(actual) == set(), "a method was removed: remove it from tests/method_reads.json"
-    assert {n: d for n, d in actual.items() if d != reviewed[n]} == {}, "declared and reviewed domains differ"
+    assert {n: d for n, d in actual.items() if d != reviewed[n]} == {}, "declared and reviewed parts differ"
 
 
-def test_a_method_cannot_declare_a_domain_there_is_not():
+def test_a_method_cannot_declare_a_part_there_is_not():
     from claudia_server.protocol import MethodTable
 
     with pytest.raises(ValueError, match="reads"):
@@ -342,9 +342,9 @@ def test_a_viewer_is_refused_before_the_method_runs():
 
 def test_the_role_table_is_the_files(monkeypatch):
     """The live session follows claudia-document-file's table of which role holds which key (one source of truth)."""
-    from claudia_document_file import ROLE_DOMAINS, Domain, Role
+    from claudia_document_file import ROLE_PARTS, Part, Role
 
-    assert audience.may_read("viewer", Domain.CONTENT)
-    assert not audience.may_read("viewer", Domain.HISTORY)
-    assert all(audience.may_read(r, d) for r in ("owner", "editor") for d in Domain)
-    assert ROLE_DOMAINS[Role.VIEWER] == {Domain.CONTENT}
+    assert audience.may_read("viewer", Part.CONTENT)
+    assert not audience.may_read("viewer", Part.HISTORY)
+    assert all(audience.may_read(r, part) for r in ("owner", "editor") for part in Part)
+    assert ROLE_PARTS[Role.VIEWER] == {Part.CONTENT}

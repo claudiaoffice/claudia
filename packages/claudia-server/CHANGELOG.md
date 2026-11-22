@@ -67,6 +67,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ### Changed
 - It depends on `claudia-document-file` (was `claudia-container`, D1430, E1.18): imports and `ContainerError` →
   `DocumentFileError` follow; nothing on the wire changes.
+- `claudia_server.audience` speaks of the glossary's parts (D1434, E1.18): `Rule.part` (was `Rule.domain`) and
+  `may_read(role, part)`; nothing on the wire changes.
 - **Breaking** — a paragraph on the wire (D1430, E1.18): composes' `blocks` is `paragraphs`, and the ai's paged
   reader that was called `paragraphs` is `read_paragraphs`; every parameter and answer that named a paragraph `block`
   says `paragraph` (`add_paragraph_after`, `replace_text`, `set_style`, `move_object`, the object methods' place, the

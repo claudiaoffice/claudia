@@ -48,10 +48,10 @@ from claudia_core import ChatRecord, CommandLog, Document, DocumentModel, Import
 from claudia_document_file import (
     AuditRecord,
     DocumentFileError,
-    Domain,
     JournalError,
     JournalWriter,
     KdfParams,
+    Part,
     RenewalInterrupted,
     Role,
     WeakPassword,
@@ -141,14 +141,14 @@ class SealedStore(JournalStore):
     else under the history key. It counts what the journal holds since the last packing. ``path`` is the document
     file; ``keys`` are the document's keys, which a redaction needs to seal the file anew."""
 
-    def __init__(self, path: Path, writer: JournalWriter, keys: Mapping[Domain, bytes]):
+    def __init__(self, path: Path, writer: JournalWriter, keys: Mapping[Part, bytes]):
         super().__init__(path)
         self.writer = writer
         self.keys = keys
         self.unpacked = 0
 
     def _write(self, kind: str, data) -> None:
-        self.writer.append(Domain.CHAT if kind == "chat" else Domain.HISTORY, _payload(kind, data))
+        self.writer.append(Part.CHAT if kind == "chat" else Part.HISTORY, _payload(kind, data))
         self.unpacked += 1
 
     def rewrite(self, log: CommandLog, chat: Sequence[ChatRecord]) -> None:
@@ -183,7 +183,7 @@ def _payload(kind: str, data) -> bytes:
 class _Held:
     """An open document: its keys, the store that writes its journal, and the document itself (for snapshots)."""
 
-    keys: dict[Domain, bytes]
+    keys: dict[Part, bytes]
     store: SealedStore
     document: Document | None = None
 
@@ -247,7 +247,7 @@ class SealedDocuments:
         self._clock = clock
         self._options = options
         self._lock = threading.RLock()  # logins run in threads
-        self._pending: dict[str, tuple[dict[Domain, bytes], float]] = {}
+        self._pending: dict[str, tuple[dict[Part, bytes], float]] = {}
         self._open: dict[str, _Held] = {}
         self._transfers: dict[str, tuple[str, str, str, float]] = {}  # doc_id -> (old, old_pw, new, expires)
         private_dir(self.root / "docs")
@@ -279,7 +279,7 @@ class SealedDocuments:
             return False
 
     # -- the keys in memory -------------------------------------------------------------------
-    def _take_pending(self, doc_id: str) -> dict[Domain, bytes] | None:
+    def _take_pending(self, doc_id: str) -> dict[Part, bytes] | None:
         with self._lock:
             now = self._clock()
             for stale in [d for d, (_, expires) in self._pending.items() if expires <= now]:
@@ -287,11 +287,11 @@ class SealedDocuments:
             entry = self._pending.pop(doc_id, None)
             return entry[0] if entry else None
 
-    def _keep_pending(self, doc_id: str, keys: dict[Domain, bytes]) -> None:
+    def _keep_pending(self, doc_id: str, keys: dict[Part, bytes]) -> None:
         with self._lock:
             self._pending[doc_id] = (keys, self._clock() + self._key_ttl)
 
-    def _all_keys(self, doc_id: str) -> dict[Domain, bytes]:
+    def _all_keys(self, doc_id: str) -> dict[Part, bytes]:
         """The keys of an open document (or one that was just made), or ``ValueError`` if it is sealed."""
         with self._lock:
             held = self._open.get(doc_id)
@@ -328,7 +328,7 @@ class SealedDocuments:
             return None
         if unlocked is None:
             return None
-        if set(unlocked.keys) == set(Domain):
+        if set(unlocked.keys) == set(Part):
             self._keep_pending(doc_id, unlocked.keys)
         return Account(unlocked.name, unlocked.role.value)
 
@@ -435,7 +435,7 @@ class SealedDocuments:
                 held.store.unpacked = 0
         return Account(target.name, (role or target.role).value)
 
-    def _is_empty(self, doc_id: str, keys: Mapping[Domain, bytes]) -> bool:
+    def _is_empty(self, doc_id: str, keys: Mapping[Part, bytes]) -> bool:
         try:
             state = read_state(self._file(doc_id), keys)
         except (DocumentFileError, JournalError, OSError):
@@ -608,7 +608,7 @@ class SealedDocuments:
             raise DocumentSealed(_SEALED)
         return self._bring_up(doc_id, keys, fresh=False)
 
-    def _bring_up(self, doc_id: str, keys: dict[Domain, bytes], *, fresh: bool) -> Document:
+    def _bring_up(self, doc_id: str, keys: dict[Part, bytes], *, fresh: bool) -> Document:
         path = self._file(doc_id)
         log_: CommandLog = CommandLog()
         chat: list[ChatRecord] = []

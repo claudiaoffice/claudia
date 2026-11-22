@@ -5,8 +5,8 @@ and the **export file** (`.claudia-export.zip`), which is not. It is written for
 Claudia, or write a program that does. The Python package `claudia_document_file` is the reference implementation
 ([API](api/claudia_document_file)); where this page and the code differ, the code is right and this page has a bug.
 
-Decisions behind it: D100–D111 (the document file, slots, domains), D1263 and D1274 (renewal, keys and letters), D1265 (the private
-domain), D1269 (blocks), D1271 (the record of what leaves), D1270
+Decisions behind it: D100–D111 (the document file, slots, parts), D1263 and D1274 (renewal, keys and letters), D1265 (private
+notes), D1269 (blocks), D1271 (the record of what leaves), D1270
 and D1272 (the export and its import), D1268 (what is not detected).
 
 ## 1. The document file
@@ -17,10 +17,10 @@ One zip, written anew for every change and put in place atomically, so a crash l
 |---|---|---|
 | `format` | The text `claudia-document 2`, stored without compression, **first** in the zip | anybody |
 | `manifest.json` | name, uid, description, tags, app, times, the cost of the password hashing, the salt | anybody |
-| `slots.json` | the key slots: a locator and the sealed domain keys, the person's X25519 private key and her private-domain key, no names | anybody sees the sizes |
-| `people.bin` | names, roles, slot locators, public keys and private-domain ids of everybody, sealed with the content key | people with the content key |
+| `slots.json` | the key slots: a locator and the sealed part keys, the person's X25519 private key and the key to her private notes, no names | anybody sees the sizes |
+| `people.bin` | names, roles, slot locators, public keys and the ids of everybody's private notes, sealed with the content key | people with the content key |
 | `inbox/<locator>.bin` | a letter to a person who was not there: a sealed box to her public key with her role and the keys she is missing (§1, *Keys and letters*) | the person it is for |
-| `private/<id>/NNNNNN.blk`, `private/<id>/head.bin` | a person's private domain: its own chain and head, sealed with her private-domain key only (always one, possibly empty, block) | that person |
+| `private/<id>/NNNNNN.blk`, `private/<id>/head.bin` | a person's private notes: their own chain and head, sealed with their key only (always one, possibly empty, block) | that person |
 | `head.bin` | how many blocks each chain has and the hash of its last block, sealed with the history key | owners and editors |
 | `content/snapshot.bin` | a cache of the current state (optional), sealed with the content key | everybody in the document |
 | `content/original.bin` | the file the document was imported from, if it is kept (optional) | everybody in the document |
@@ -36,7 +36,7 @@ change before the server answers; packing folds it into the blocks.
 Passwords become keys with Argon2id (the cost is in the manifest); one secret becomes several keys with HKDF-SHA256; every
 value is sealed with AES-256-GCM, a random 12-byte nonce in front and the 16-byte tag at the end. A person's **login** is
 turned into a **locator** (which slot is theirs) and a **key-encryption key** (which opens it), both from name *and*
-password, so a wrong name and a wrong password are the same refusal. A **role** decides which domain keys a slot holds: an
+password, so a wrong name and a wrong password are the same refusal. A **role** decides which part keys a slot holds: an
 owner and an editor hold the content, history and chat keys, a viewer the content key only.
 
 ### Blocks and the head
@@ -88,7 +88,7 @@ saved, stay readable: nothing can change that.
 ### Versions
 
 The format text is `claudia-document 2`. A file of format 1 is refused with a sentence that says it was written by an
-older version (slice C added the keys of people and the private domain, and there is no upgrade in place). A program that
+older version (slice C added the keys of people and private notes, and there is no upgrade in place). A program that
 does not know the record (`audit/`) refuses a file that has one as damaged, because it does not know the entry; a program
 that knows a higher number of the format refuses the file with a sentence that names the version.
 

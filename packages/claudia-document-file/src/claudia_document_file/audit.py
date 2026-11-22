@@ -12,11 +12,13 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
+from .slots import Part
+
 KINDS = ("export", "print", "pdf")
 """What can leave: an export in any format, a print, a PDF."""
 
-PARTS = ("content", "history", "chat")
-"""Which parts of the document a record can name."""
+PARTS = tuple(part.value for part in Part)
+"""Which parts of the document a record can name: all of them (content, history, chat)."""
 
 MAX_FIELD = 200
 """Longest a name or a format may be: the record must not become a place to store things."""
