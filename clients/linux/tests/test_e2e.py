@@ -55,7 +55,7 @@ FILL_AND_CREATE = """
 # was taken out of the menu, 2026-11-12).
 TYPE_A_WORD = """
 (() => {
-  const text = document.querySelector('[data-testid=text] [data-block]')
+  const text = document.querySelector('[data-testid=text] [data-paragraph]')
   if (!text) return 'waiting'
   text.focus()
   const range = document.createRange()
