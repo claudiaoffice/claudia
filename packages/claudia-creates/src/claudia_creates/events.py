@@ -54,3 +54,24 @@ class SlideTimeChanged:
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
         return {"type": "slide_time", "slide": self.slide, "seconds": self.seconds}
+
+
+@dataclass(frozen=True)
+class LayoutsChanged:
+    """Layouts were defined, removed, renamed, hidden or reordered (E10.4): a view asks for the list again."""
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "layouts"}
+
+
+@dataclass(frozen=True)
+class SlideLayoutChanged:
+    """The layout a slide follows changed (E10.4): the slide and the layout it follows now."""
+
+    slide: str
+    layout: str
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "slide_layout", "slide": self.slide, "layout": self.layout}

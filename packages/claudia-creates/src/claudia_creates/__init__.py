@@ -50,16 +50,19 @@ from claudia_core import (  # noqa: F401
     parse_shape,
 )
 
-from . import commands  # noqa: F401  (registers the commands)
+from . import commands, layout_commands  # noqa: F401  (registers the commands)
 from ._version import __version__
 from .commands import AddSlide, RemoveSlide, SetPrintSetup, SetSlideNotes, SetSlideTime
 from .events import (
+    LayoutsChanged,
     ObjectsChanged,
     PrintSetupChanged,
+    SlideLayoutChanged,
     SlideNotesChanged,
     SlidesChanged,
     SlideTimeChanged,
 )
+from .layout_commands import DefineLayout, RemoveLayout, SetSlideLayout
 from .model import (
     FIRST_SLIDE,
     MAX_NOTES_LENGTH,
@@ -75,6 +78,10 @@ __all__ = [
     "__version__",
     "AddObject",
     "AddSlide",
+    "DefineLayout",
+    "LayoutsChanged",
+    "RemoveLayout",
+    "SlideLayoutChanged",
     "ALLOWED_CSS",
     "BOX",
     "BUILTIN_DIRECTORY",
@@ -105,6 +112,7 @@ __all__ = [
     "Run",
     "SetParagraphStyle",
     "SetPrintSetup",
+    "SetSlideLayout",
     "SetSlideNotes",
     "SetSlideTime",
     "SetSnap",

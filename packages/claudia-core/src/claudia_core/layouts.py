@@ -94,11 +94,19 @@ class Layouts:
     def add(self, layout: Layout, at: int | None = None) -> None:
         """Keep a new layout at place ``at`` (the end by default); ``ValueError`` if its id is not an id or is taken."""
         if not _ID.fullmatch(layout.id):
-            raise ValueError(f"layout id {layout.id!r}: lower-case letters, digits, '-' and '_', starting with a letter")
+            raise ValueError(
+                f"layout id {layout.id!r}: lower-case letters, digits, '-' and '_', starting with a letter"
+            )
         if layout.id in self._by_id:
             raise ValueError(f"layout {layout.id!r} exists already")
         self._by_id[layout.id] = layout
         self._order.insert(len(self._order) if at is None else at, layout.id)
+
+    def remove(self, layout_id: str) -> None:
+        """Forget a layout; ``ValueError`` if there is none."""
+        self[layout_id]  # noqa: B018  (raises for an unknown layout)
+        del self._by_id[layout_id]
+        self._order.remove(layout_id)
 
     def to_data(self) -> list[dict]:
         """The layouts as plain data, in order."""

@@ -19,8 +19,6 @@ from typing import ClassVar, Self, TypeIs
 
 from claudia_core import (
     N_,
-    Layout,
-    Layouts,
     Command,
     CommandRegistry,
     DocumentModel,
@@ -28,6 +26,8 @@ from claudia_core import (
     FontRequirement,
     Generated,
     Label,
+    Layout,
+    Layouts,
     ListBook,
     ListItem,
     ObjectBody,
@@ -275,6 +275,31 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """The id of the layout a slide follows; ``ValueError`` if there is no such slide."""
         self._require_slide(slide)
         return self.slide_layouts[slide]
+
+    def define_layout(self, layout: Layout, at: int | None = None) -> None:
+        """Keep a new layout, at place ``at`` (the end by default); ``ValueError`` if its id is taken."""
+        if layout.id in self.slides:
+            raise ValueError(f"{layout.id!r} is a slide, not a layout")
+        self.layouts.add(layout, at)
+
+    def remove_layout(self, layout: str) -> tuple[Layout, int]:
+        """Take a layout away that no slide follows; returns it and the place it had. The basic layout stays."""
+        if layout == BASIC_LAYOUT:
+            raise Refusal("the basic layout stays")
+        if layout in self.slide_layouts.values():
+            raise Refusal("a slide still follows this layout")
+        removed = self.layouts[layout]
+        place = self.layouts.ids().index(layout)
+        self.layouts.remove(layout)
+        return removed, place
+
+    def put_slide_on_layout(self, slide: str, layout: str) -> str:
+        """Make a slide follow a layout; returns the layout it followed before. ``ValueError`` if there is no such
+        slide or layout."""
+        old = self.layout_of(slide)
+        self.layouts[layout]  # noqa: B018  (raises for an unknown layout)
+        self.slide_layouts[slide] = layout
+        return old
 
     # -- slides ----------------------------------------------------------------
     def insert_slide(

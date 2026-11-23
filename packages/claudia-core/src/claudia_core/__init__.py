@@ -155,6 +155,7 @@ from .generated import (
 )
 from .history import History, UndoUnit
 from .language import LanguageChanged, LanguageError, SetLanguage, normalize_language
+from .layouts import LAYOUT_ORIGINS, Layout, Layouts
 from .lists import (
     ChangeList,
     CreateList,
@@ -265,7 +266,6 @@ from .schemes import (
 )
 from .shapes import BOX, FORMAT, PRIMITIVES, ShapeDefinition, ShapeError, parse_shape, primitive
 from .sizing import BASE_FONT_PX, font_size_px, new_object_size
-from .layouts import LAYOUT_ORIGINS, Layout, Layouts
 from .slides import (
     SLIDE_HEIGHT,
     SLIDE_WIDTH,
