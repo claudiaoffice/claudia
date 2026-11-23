@@ -48,3 +48,20 @@ def test_every_browser_script_starts_its_browser_one_way():
         and re.search(r"\.launch\w*\(|process\.env\.(CHROME|CHROMIUM)\b", script.read_text())
     ]
     assert not own_way, f"these start a browser their own way, not through web/e2e/browser.cjs: {own_way}"
+
+
+def test_a_failed_pytest_run_names_the_tests_that_failed(run_e2e, tmp_path, capsys):
+    """CI shows only what the runner prints. A run of the specs that ended "1 failed, 140 passed" printed its last 20
+    lines, all of them skipped scenarios, and not which test failed (PROC-52)."""
+    specs = tmp_path / "test_some_specs.py"
+    specs.write_text(
+        "import pytest\n\n"
+        "def test_this_one_fails():\n    assert False\n\n"
+        + "".join(f"@pytest.mark.skip(reason='not yet {i}')\ndef test_skipped_{i}():\n    pass\n\n" for i in range(30))
+    )
+    runner = run_e2e.Runner(argparse.Namespace(shots=None, dry_run=False))
+    try:
+        assert not runner._record("proc-52-check", run_e2e.pytest_command(str(specs)))
+    finally:
+        (runner.logs / "proc-52-check.log").unlink(missing_ok=True)  # the runner keeps its logs in the repo's state
+    assert "test_some_specs.py::test_this_one_fails" in capsys.readouterr().out
