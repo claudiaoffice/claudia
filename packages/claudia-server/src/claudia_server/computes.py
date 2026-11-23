@@ -142,7 +142,7 @@ from claudia_creates import ShapeLibrary
 from .computes_search import add_search_methods
 from .containers import add_container_methods
 from .font_report import add_font_report_method
-from .i18n import msg, translate
+from .i18n import message_of, msg, translate
 from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
@@ -379,7 +379,7 @@ def _set_print_page(ctx, *, page, base):
     try:
         command = SetPrintPage(PageSetup.from_data(page))
     except PageSetupError as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return done(ctx, command, base)
 
 
@@ -392,7 +392,7 @@ def _set_sheet_print(ctx, *, sheet, setup, base):
     try:
         command = SetSheetPrint(sheet, SheetPrintSetup.from_data(setup))
     except PrintSetupError as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return done(ctx, command, base)
 
 
@@ -458,7 +458,7 @@ def _outcome_table(ctx, *, sheet, row, col, combine):
     try:
         table = _workbook(ctx).outcome_table(SheetId(sheet), row, col, combine=combine)
     except (KeyError, ValueError) as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return {"revision": current_revision(ctx), "table": None if table is None else table.to_data()}
 
 
@@ -489,7 +489,7 @@ def _trace(ctx, *, sheet, row, col, reach, window):
     try:
         found = _workbook(ctx).trace(SheetId(sheet), row, col, reach=reach, window=area)
     except KeyError as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return {"revision": current_revision(ctx), "trace": found.to_data()}
 
 
@@ -556,11 +556,11 @@ def _clear_cell_style(ctx, *, sheet, range, slot, base):
         model = _workbook(ctx)
         steps = [SetCellStyle.applying(model, SheetId(sheet), one, area, None) for one in slots]
     except (KeyError, ValueError) as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     try:
         applied = ctx.document.execute(Batch(tuple(steps), "Clear cell style"), author=ctx.user, base=base)
     except ValueError as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return {"revision": applied.revision.to_data()}
 
 
@@ -863,7 +863,7 @@ def _name_from(workbook: WorkbookModel, definition: dict, what: str) -> NamedRan
             _fresh_range_id(workbook),
         )
     except (ValueError, TypeError) as problem:
-        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
+        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=message_of(problem))) from None
 
 
 def _name_data(workbook: WorkbookModel, named: NamedRange) -> dict:
@@ -940,7 +940,7 @@ def _name_and_describe_range(ctx, *, range, name, description, base):  # noqa: A
     to give `name_and_describe` from then on."""
     problem = name_problem(name)
     if problem is not None:
-        raise RequestError("bad_request", problem)
+        raise RequestError("bad_request", message_of(problem))
     named = _name_from(_workbook(ctx), {"name": clean_name(name), "range": range}, "name_and_describe_range")
     steps: list[Command] = [DefineName(named)]
     if description:
@@ -1023,7 +1023,7 @@ def _define_sql(ctx, *, sheet, row, col, query, name, base):
                 DefineName(NamedRange(name, None, None, True, False, "result", (), anchor, _fresh_range_id(workbook)))
             )
         except ValueError as problem:
-            raise RequestError("bad_request", msg("define_sql: {problem}", problem=problem)) from None
+            raise RequestError("bad_request", msg("define_sql: {problem}", problem=message_of(problem))) from None
     return done(ctx, steps[0] if len(steps) == 1 else Batch(tuple(steps)), base)
 
 
@@ -1071,7 +1071,7 @@ def _pivot_definition(data, what: str) -> PivotDefinition:
     try:
         return PivotDefinition.from_data(data)
     except PivotError as problem:
-        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
+        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=message_of(problem))) from None
 
 
 def _pivot_labels(data, what: str) -> PivotLabels | None:
@@ -1080,11 +1080,11 @@ def _pivot_labels(data, what: str) -> PivotLabels | None:
     try:
         return PivotLabels.from_data(data)
     except PivotError as problem:
-        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=problem)) from None
+        raise RequestError("bad_request", msg("{what}: {problem}", what=what, problem=message_of(problem))) from None
 
 
 def _refused(problem: ValueError):
-    return RequestError("command_error", msg("{problem}", problem=problem))
+    return RequestError("command_error", msg("{problem}", problem=message_of(problem)))
 
 
 @computes_methods.method("pivots")

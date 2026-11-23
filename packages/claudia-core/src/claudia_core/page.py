@@ -12,6 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import Self
 
+from .errors import N_, Refusal
+
 #: The paper presets in mpt, short side first; ISO sizes from millimetres (rounded half up), US sizes exact.
 PAPERS: dict[str, tuple[int, int]] = {
     "a3": (841890, 1190551),
@@ -35,7 +37,7 @@ MIN_CONTENT = round(10 * MM)  # what the margins must leave for the content
 DEFAULT_MARGIN = 70866  # 2.5 cm
 
 
-class PageSetupError(ValueError):
+class PageSetupError(Refusal):
     """A page setup that cannot be used; the message says which part."""
 
 
@@ -69,13 +71,13 @@ class PageSetup:
         if self.width > self.height:
             raise PageSetupError("width is the short side; landscape is said by orientation")
         if not MIN_SIDE <= self.width <= MAX_SIDE or not MIN_SIDE <= self.height <= MAX_SIDE:
-            raise PageSetupError("a page side must be between 25 mm and 1200 mm")
+            raise PageSetupError(N_("a page side must be between 25 mm and 1200 mm"))
         across, down = (self.height, self.width) if self.orientation == "landscape" else (self.width, self.height)
         if (
             across - self.margin_left - self.margin_right < MIN_CONTENT
             or down - self.margin_top - self.margin_bottom < MIN_CONTENT
         ):
-            raise PageSetupError("the margins leave less than 10 mm for the content")
+            raise PageSetupError(N_("the margins leave less than 10 mm for the content"))
 
     @classmethod
     def preset(cls, paper: str, **changes: object) -> Self:

@@ -16,12 +16,13 @@ from __future__ import annotations
 
 from bisect import bisect_left, bisect_right, insort
 from collections import defaultdict
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from heapq import heappop, heappush
 from typing import ClassVar, Literal, Self, TypeIs, cast
 
 from claudia_core import (
+    N_,
     OBJECT_KINDS,
     AssetKind,
     Command,
@@ -32,6 +33,7 @@ from claudia_core import (
     ObjectModel,
     PageSetup,
     Palette,
+    Refusal,
     Region,
     Requirements,
     StyleBook,
@@ -44,7 +46,7 @@ from claudia_core.slides import Slide, SlideAnchor, Slides, check_on_slide, room
 
 from .calc import Calculator
 from .cellstyles import CellStyles, Piece
-from .charts import ChartError, ChartSeries, ChartSpec, figure_of, in_bounds
+from .charts import ChartSeries, ChartSpec, figure_of, in_bounds
 from .formula.rewrite import adjusted, renamed_name, reprinted, without_sheet
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here: other packages import them from here)
@@ -468,6 +470,13 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
+    name_taken: ClassVar[Mapping[str, str]] = {
+        **ObjectModel.name_taken,
+        "sheet": N_("There is already a sheet called “{name}”"),
+        "slide": N_("There is already a slide called “{name}”"),
+        "chart": N_("There is already a chart called “{name}”"),
+        "range": N_("There is already a named range called “{name}”"),
+    }
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
     max_objects_per_holder: ClassVar[int] = MAX_OBJECTS_PER_SHEET
 
@@ -698,21 +707,18 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
     def diagram_from_data(self, data: dict) -> ChartSpec:
         """Read a chart definition; ``ValueError`` if the data is not one, or its range does not fit a sheet
         this workbook actually has (:class:`~claudia_computes.ChartSpec` alone cannot know that)."""
-        try:
-            spec = ChartSpec.from_data(data)
-        except ChartError as error:
-            raise ValueError(str(error)) from None
+        spec = ChartSpec.from_data(data)
         if spec.source:
             if spec.source_scope is not None and spec.source_scope not in self.sheets:
                 raise ValueError(f"this document does not know the sheet {spec.source_scope!r}")
             if self.names.get(key_of(spec.source_scope, spec.source)) is None:
-                raise ValueError(f"this document has no name {spec.source!r} to draw a chart from")
+                raise Refusal("this document has no name “{source}” to draw a chart from", source=spec.source)
             return spec
         assert spec.range is not None  # (a spec reads a range or a source)
         if spec.range.sheet not in self.sheets:
             raise ValueError(f"this document does not know the sheet {spec.range.sheet!r}")
         if not in_bounds(spec.range):
-            raise ValueError("a chart's range must be inside the sheet")
+            raise Refusal("a chart's range must be inside the sheet")
         return spec
 
     def users_of(self, kind: AssetKind, asset_id: str) -> list[str]:
@@ -887,7 +893,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         typed, so none waits for a sheet of this name.)"""
         sheet = self.sheet(sheet_id)
         if not name:
-            raise ValueError("a sheet needs a name")
+            raise Refusal("a sheet needs a name")
         calc = self.calc
         old = sheet.name
         readers = sorted(calc.referring.get(sheet_id, ()))
@@ -910,17 +916,15 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         """Name a slide, a chart tab or an object; returns the name it had. (A sheet is renamed by
         :meth:`rename_thing`, a named range by its own command.)"""
         if self.name_with_id(thing_id) is not None:
-            raise ValueError(
-                "A named range is renamed in the list of names, which also changes the formulas that use it"
-            )
+            raise Refusal("A named range is renamed in the list of names, which also changes the formulas that use it")
         if thing_id in self.slides:
             if not name:
-                raise ValueError("a slide needs a name")
+                raise Refusal("a slide needs a name")
             return self.slides.rename(thing_id, name)
         if thing_id not in self.charts:
             return super().set_thing_name(thing_id, name)
         if not name:
-            raise ValueError("a chart needs a name")
+            raise Refusal("a chart needs a name")
         chart = self.charts[thing_id]
         self.charts = {c.id: replace(c, name=name) if c.id == thing_id else c for c in self.charts.values()}
         return chart.name
@@ -1088,7 +1092,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         it, that is not looked at). The names of two ranges are told apart by their scope, as ever."""
         problem = name_problem(named.name)
         if problem is not None:
-            raise ValueError(problem)
+            raise problem
         holder = self.name_with_id(named.id)
         if holder is not None and holder.key != named.key:
             raise ValueError(f"the id {named.id!r} is used by another name")
@@ -1106,9 +1110,9 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
             or area.last.row < area.first.row
             or area.last.col < area.first.col
         ):
-            raise ValueError("the cells of a name must be inside the sheet")
+            raise Refusal("the cells of a name must be inside the sheet")
         if area is not None and named.header and area.last.row == area.first.row and area.last.col < area.first.col:
-            raise ValueError("a table needs a header row")
+            raise Refusal("a table needs a header row")
 
     def region_of(self, named: NamedRange) -> Rect | None:
         """The cells a name is on right now (its header row included), or ``None`` for a result that has none: the
@@ -1205,13 +1209,13 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         Returns those formulas as they were typed, by sheet, for an undo."""
         named = self.names.get(key_of(scope, old))
         if named is None:
-            raise ValueError(f"there is no name {old!r}")
+            raise Refusal("there is no name “{old}”", old=old)
         problem = name_problem(new)
         if problem is not None:
-            raise ValueError(problem)
+            raise problem
         target = key_of(scope, new)
         if target != named.key and self.names.get(target) is not None:
-            raise ValueError(f"{new} is already a name")
+            raise Refusal("{name} is already a name", name=new)
         if shared and new.casefold() != old.casefold():
             self.check_name_free(named.id, new, ignoring=("range",))
         calc = self.calc
@@ -1335,10 +1339,11 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         for row, col in positions:
             owner = sheet.spilled.get((row, col))
             if owner is not None:
-                raise ValueError(
-                    f"{column_name(col)}{row + 1} shows the result of the formula in "
-                    f"{column_name(owner[2])}{owner[1] + 1} "
-                    "(SQL(), SORT() ...): change that formula, not its result"
+                raise Refusal(
+                    "{cell} shows the result of the formula in {owner} (SQL(), SORT() ...): change that formula, not "
+                    "its result",
+                    cell=f"{column_name(col)}{row + 1}",
+                    owner=f"{column_name(owner[2])}{owner[1] + 1}",
                 )
 
     def add_sheet(self, sheet: Sheet, index: int | None) -> None:
@@ -1366,7 +1371,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
         sheet = self.sheet(edit.sheet)
         limit = MAX_ROWS if edit.axis == "row" else MAX_COLS
         if edit.at >= limit or (not edit.insert and edit.at + edit.count > limit):
-            raise ValueError("structural edit is outside the sheet")
+            raise Refusal("structural edit is outside the sheet")
         index = 0 if edit.axis == "row" else 1
 
         def remap(position: Position) -> Position | None:
@@ -1384,7 +1389,7 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
             else:
                 moved[target] = content
         if any(r >= MAX_ROWS or c >= MAX_COLS for r, c in moved):
-            raise ValueError("structural edit would push cells off the sheet")
+            raise Refusal("structural edit would push cells off the sheet")
 
         plan = self._plan_restructure(edit, remap)
         # nothing can fail from here on: change the state

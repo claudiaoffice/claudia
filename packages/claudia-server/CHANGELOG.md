@@ -5,6 +5,12 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Fixed
+- A refusal of a model reaches a person in her language (CODE-78, D1510): `i18n.message_of(error)` keeps the
+  template of a `claudia_core.Refusal`, every `command_error` and `bad_request` that passes on a model's refusal uses
+  it, and `localized` says a message that fills another message in the same language. The reasons of the style
+  deletion targets are said in the connection's language.
+
 ### Security (SEC-12)
 - **The first administrator needs the setup code** (D1370, D1371), on every server: `POST /api/admin/setup` takes
   `code` and answers 403 for a wrong one, 429 with `Retry-After` after too many tries (the sign-in's waits) and 409

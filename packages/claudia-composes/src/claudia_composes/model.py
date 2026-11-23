@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, replace
 from typing import ClassVar, Self
 
 from claudia_core import (
     FILLER,
     MAX_THING_NAME,
+    N_,
     SLOTS,
     Command,
     CommandRegistry,
@@ -33,6 +34,7 @@ from claudia_core import (
     Palette,
     Paragraph,
     Placed,
+    Refusal,
     Region,
     Requirements,
     Run,
@@ -418,6 +420,12 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
     app: ClassVar[str] = "composes"
     body_text_style: ClassVar[str] = DEFAULT_STYLE
     objects_change_holder: ClassVar[bool] = True  # an object can be dragged to another paragraph (D1351)
+    name_taken: ClassVar[Mapping[str, str]] = {
+        **ObjectModel.name_taken,
+        "heading": N_("There is already a heading called “{name}”"),
+        "item": N_("There is already a list item called “{name}”"),
+        "paragraph": N_("There is already a paragraph called “{name}”"),
+    }
     # 4: a text also carries objects, images and shapes (E10.16)
     # 5: the text carries its own colour palette (D200)
     # 6: the text says which page it is printed on (D904)
@@ -1054,7 +1062,7 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
         """Put ``text`` into a paragraph at ``offset``; ``runs`` say who wrote it, ``fields`` are its U+FFFC's."""
         paragraph = self.paragraph(paragraph_id)
         if paragraph.generated is not None:
-            raise ValueError("a table of contents takes no typing: its entries come from the headings")
+            raise Refusal("a table of contents takes no typing: its entries come from the headings")
         self._put(paragraph.typed(offset, text, runs, fields))
 
     def remove(self, paragraph_id: str, start: int, end: int) -> tuple[str, list[Run], tuple[Field, ...]]:
@@ -1112,9 +1120,9 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
         if self.index_of(paragraph_id) != self.index_of(into) + 1:
             raise ValueError("a paragraph can only be joined to the one right before it")
         if second.generated is not None:
-            raise ValueError("a table of contents cannot be joined to a paragraph; remove it instead")
+            raise Refusal("a table of contents cannot be joined to a paragraph; remove it instead")
         if first.generated is not None and second.text:
-            raise ValueError("text cannot be joined into a table of contents")
+            raise Refusal("text cannot be joined into a table of contents")
         if len(first.text) != at:
             raise ValueError("the paragraph before it is not as long as the command says")
         joined = first.with_text(first.text + second.text, insert_runs(first.runs, at, second.runs))
@@ -1145,7 +1153,7 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
             raise ValueError(f"no style {style!r}")
         found = self.styles.get(style)
         if not fits(found.kind, SLOTS.slot("paragraph", "paragraph")):
-            raise ValueError(f"“{found.name}” is a {found.kind} style and cannot be put on a paragraph")
+            raise Refusal("“{name}” is a style of another kind and cannot be put on a paragraph", name=found.name)
 
     # -- suggestions (used by the commands) --------------------------------------
     def add_suggestion(self, suggestion: Suggestion) -> None:

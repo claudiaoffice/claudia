@@ -116,3 +116,11 @@ servers as CI starts them (`slides`, `creates-styles`, `print-creates`, `describ
 - **The print bar (UX-73).** With a slide shown, "Contents" is "This slide" and "Whole workbook" (no Selection: a slide
   has no cells), and the status line counts sheets and slides apart ("2 sheets and 1 slide").
 - The search panel's scope list was cut off at 45 % of the row ("All sheets and slide"); it may now take 55 %.
+
+## Main merged in with CODE-78 (typed refusals, D1510), 2026-11-23
+
+The refusals that step 1 and 2 brought and that a person can meet are `Refusal`s now: "a slide needs a name" (computes'
+`AddSlide` and rename), "the object must stay on the slide" and "this object is too large to turn that way" (the core's
+`check_on_slide`, `turned_on_slide`), with German. A workbook's slide has its own sentence for a taken name
+(`WorkbookModel.name_taken["slide"]`). The checks of ids and tabs (`tab_index`, `check_new_tab`, the anchors) stay
+English: only a wrong client fails them.

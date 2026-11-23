@@ -88,7 +88,7 @@ from .formats import CLAUDIA, CLAUDIA_EXPORT, import_state
 from .hosts import AllowedHosts, HostGuard
 from .hub import Hub, HubError, same_document_message
 from .hyphenation import HyphenationService, hyphenation_router
-from .i18n import localized, msg
+from .i18n import localized, message_of, msg
 from .idle import IdleMiddleware, IdleWatch
 from .login_throttle import LoginThrottle
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
@@ -421,7 +421,7 @@ class Gateway:
         try:
             return clean_details(description, tags)
         except ValueError as error:
-            raise HubError("bad_request", str(error)) from error
+            raise HubError("bad_request", message_of(error)) from error
 
     async def _read_upload(
         self, module: Module, doc_id: str, upload: Upload, locale: str
@@ -527,7 +527,7 @@ class Gateway:
             self.login_throttle.failed(address, doc_id, params.get("user"))
             await _refuse(websocket, request_id, "unauthorized", exc.args[0], 4401, locale)
         except ValueError as exc:  # the name or password of a new document is not acceptable
-            await _refuse(websocket, request_id, "bad_request", str(exc), 4400)
+            await _refuse(websocket, request_id, "bad_request", message_of(exc), 4400, locale)
         return None
 
 

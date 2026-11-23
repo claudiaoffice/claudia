@@ -84,10 +84,12 @@ from .css import (
 )
 from .document import Applied, BranchInfo, Changes, CheckpointInfo, Document, Look, RedactionPlan, environment_of
 from .errors import (
+    N_,
     KernelError,
     MissingUpcaster,
     ProposalOutdated,
     RedactionError,
+    Refusal,
     RegionHeld,
     ReplayError,
     RevisionMismatch,
@@ -512,6 +514,7 @@ __all__ = [
     "MIN_OBJECT_SIZE",
     "MissingUpcaster",
     "MoveObject",
+    "N_",
     "new_registry",
     "normalized",
     "assign_changes_look",
@@ -553,6 +556,7 @@ __all__ = [
     "RedactedEvent",
     "Redaction",
     "RedactionError",
+    "Refusal",
     "RedactionPlan",
     "Region",
     "RegionHeld",

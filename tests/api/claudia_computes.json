@@ -207,9 +207,9 @@
  },
  "ChartError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },
@@ -553,9 +553,9 @@
  },
  "PivotError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },
@@ -642,9 +642,9 @@
  },
  "PrintSetupError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },

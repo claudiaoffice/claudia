@@ -18,6 +18,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 16.
 
 ### Added
+- The refusals a person can meet are `Refusal`s (CODE-78, D1510); `SlideModel.name_taken` adds slides.
+  `PrintSetupError` is a refusal.
 - `SlideModel.room_for_new_object`: what is left of the slide to the right of a new object's anchor (D1332).
 - `requirements()` of a presentation: the fonts its styles ask for by name (`Requirements.fonts`), for the font report a
   server makes when it is opened (E1.9, D1306).

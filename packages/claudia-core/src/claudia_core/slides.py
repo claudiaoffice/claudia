@@ -14,6 +14,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import ClassVar
 
+from .errors import Refusal
 from .objects import _ID, ObjectBody, VisualObject, _is_whole
 from .turning import nudge_into, turned_extent
 
@@ -61,7 +62,11 @@ def check_on_slide(anchor: SlideAnchor, body: ObjectBody) -> None:
     if not _is_whole(anchor.x) or not _is_whole(anchor.y):
         raise ValueError("x and y must be whole numbers")
     if (anchor.x, anchor.y) != nudge_into(anchor.x, anchor.y, body.w, body.h, body.rotation, SLIDE_WIDTH, SLIDE_HEIGHT):
-        raise ValueError(f"the object must stay on the slide ({SLIDE_WIDTH} by {SLIDE_HEIGHT} units)")
+        raise Refusal(
+            "the object must stay on the slide ({slide_width} by {slide_height} units)",
+            slide_width=SLIDE_WIDTH,
+            slide_height=SLIDE_HEIGHT,
+        )
 
 
 def turned_on_slide(obj: VisualObject[SlideAnchor], rotation: int) -> SlideAnchor:
@@ -71,9 +76,13 @@ def turned_on_slide(obj: VisualObject[SlideAnchor], rotation: int) -> SlideAncho
     place = nudge_into(obj.anchor.x, obj.anchor.y, body.w, body.h, rotation, SLIDE_WIDTH, SLIDE_HEIGHT)
     if place is None:
         out_w, out_h = turned_extent(body.w, body.h, rotation)
-        raise ValueError(
-            f"this object is too large to turn that way: it would be {out_w} by {out_h} units on a slide of "
-            f"{SLIDE_WIDTH} by {SLIDE_HEIGHT}"
+        raise Refusal(
+            "this object is too large to turn that way: it would be {width} by {height} units on a slide of "
+            "{slide_width} by {slide_height}",
+            width=out_w,
+            height=out_h,
+            slide_width=SLIDE_WIDTH,
+            slide_height=SLIDE_HEIGHT,
         )
     return SlideAnchor(obj.anchor.slide, *place)
 

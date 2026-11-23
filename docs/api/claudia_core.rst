@@ -540,3 +540,8 @@ Errors
 .. autoexception:: claudia_core.StaleEdit
 .. autoexception:: claudia_core.RedactionError
 .. autoexception:: claudia_core.ReplayError
+
+A document's refusal of what a person asked, said in her language by whoever tells her (CODE-78, D1510):
+
+.. autoexception:: claudia_core.Refusal
+.. autofunction:: claudia_core.N_

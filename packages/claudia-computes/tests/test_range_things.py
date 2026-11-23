@@ -94,7 +94,7 @@ def test_a_name_cannot_be_called_like_a_sheet(doc):
 
 def test_a_name_cannot_be_called_like_an_object(doc):
     put_image(doc, "i1", name="Logo")
-    with pytest.raises(ValueError, match="There is already an image called “Logo”"):
+    with pytest.raises(ValueError, match="There is already a picture called “Logo”"):
         define(doc, "LOGO", "A1:B2")
 
 
@@ -119,23 +119,23 @@ def test_a_sheet_scoped_name_is_checked_the_same(doc):
 
 def test_a_sheet_cannot_be_called_like_a_name(doc):
     define(doc, "Revenue", "A1:B2")
-    with pytest.raises(ValueError, match="There is already a range called “Revenue”"):
+    with pytest.raises(ValueError, match="There is already a named range called “Revenue”"):
         doc.execute(AddSheet("s2", "revenue"), author="ana")
 
 
 def test_a_chart_tab_cannot_be_called_like_a_name(doc):
     define(doc, "Revenue", "A1:B2")
     put_chart_spec(doc)
-    with pytest.raises(ValueError, match="There is already a range called “Revenue”"):
+    with pytest.raises(ValueError, match="There is already a named range called “Revenue”"):
         doc.execute(AddChart("t1", "REVENUE", "c1"), author="ana")
 
 
 def test_an_object_cannot_be_called_like_a_name_when_added_or_renamed(doc):
     define(doc, "Revenue", "A1:B2")
-    with pytest.raises(ValueError, match="There is already a range called “Revenue”"):
+    with pytest.raises(ValueError, match="There is already a named range called “Revenue”"):
         put_image(doc, "i1", name="revenue")
     put_image(doc, "i2")
-    with pytest.raises(ValueError, match="There is already a range called “Revenue”"):
+    with pytest.raises(ValueError, match="There is already a named range called “Revenue”"):
         doc.execute(RenameThing("i2", "Revenue"), author="ana")
 
 
@@ -149,7 +149,7 @@ def test_names_of_one_text_on_different_sheets_are_still_allowed(doc):
 def test_the_namespace_survives_reopening(doc):
     define(doc, "Revenue", "A1:B2")
     again = reopen(doc)
-    with pytest.raises(ValueError, match="There is already a range called “Revenue”"):
+    with pytest.raises(ValueError, match="There is already a named range called “Revenue”"):
         again.execute(AddSheet("s2", "Revenue"), author="ana")
 
 

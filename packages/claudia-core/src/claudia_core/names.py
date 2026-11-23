@@ -10,6 +10,8 @@ from __future__ import annotations
 import unicodedata
 from collections.abc import Iterable
 
+from .errors import Refusal
+
 #: The longest name a thing may have, in characters.
 MAX_THING_NAME = 60
 
@@ -26,16 +28,17 @@ def name_key(text: str) -> str:
     return clean_name(text).casefold()
 
 
-def name_problem(text: str) -> str | None:
-    """Why ``text`` cannot be a name (a sentence for a dialog), or ``None`` when it can. Spaces, umlauts and ``#`` are
-    all fine: a tag in the chat is made by picking a thing, not by parsing text, so a name needs no special syntax."""
+def name_problem(text: str) -> Refusal | None:
+    """Why ``text`` cannot be a name (the refusal to raise or to say in a dialog), or ``None`` when it can. Spaces,
+    umlauts and ``#`` are all fine: a tag in the chat is made by picking a thing, not by parsing text, so a name needs
+    no special syntax."""
     if any(unicodedata.category(c) == "Cc" for c in text):
-        return "a name has no control characters"
+        return Refusal("a name has no control characters")
     cleaned = clean_name(text)
     if not cleaned:
-        return "a name needs some text"
+        return Refusal("a name needs some text")
     if len(cleaned) > MAX_THING_NAME:
-        return f"a name has at most {MAX_THING_NAME} characters"
+        return Refusal("a name has at most {limit} characters", limit=MAX_THING_NAME)
     return None
 
 

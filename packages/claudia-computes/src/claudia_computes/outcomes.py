@@ -33,6 +33,8 @@ from dataclasses import dataclass, field
 from itertools import product
 from typing import TYPE_CHECKING
 
+from claudia_core import Refusal
+
 from .draws import uniform
 from .formula.forms.alternatives import brace_text, items_of
 from .refs import Position, SheetId
@@ -450,7 +452,9 @@ class Outcomes:
         sampled = False
         if combine == "pair":
             if len(set(counts)) > 1:
-                raise ValueError(f"to pair them the inputs must have the same number of alternatives, not {counts}")
+                raise Refusal(
+                    "to pair them the inputs must have the same number of alternatives, not {counts}", counts=counts
+                )
             projected = [tuple([a] * len(needs)) for a in range(counts[0])]
             full = [self._widen(component, needs, choice) for choice in projected]
         else:

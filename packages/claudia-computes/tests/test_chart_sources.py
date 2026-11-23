@@ -73,7 +73,7 @@ def test_a_name_without_cells_draws_an_empty_chart_instead_of_failing(sales):
 
 
 def test_a_source_must_name_something_this_document_has(sales):
-    with pytest.raises(ValueError, match="no name 'Nope'"):
+    with pytest.raises(ValueError, match="no name “Nope”"):
         sales.model.diagram_from_data(sourced(source="Nope").to_data())
     with pytest.raises(ValueError, match="does not know the sheet"):
         sales.model.diagram_from_data(sourced(scope=SheetId("zz")).to_data())
@@ -83,7 +83,7 @@ def test_a_sheet_scoped_source_is_found_by_its_scope(sales):
     define(sales, "Local", "A1:B4", header=True, scope=SheetId(S1))
     figure = draw(sales, sourced(source="Local", scope=SheetId(S1)))
     assert [trace["name"] for trace in figure["data"]] == ["Units"]
-    with pytest.raises(ValueError, match="no name 'Local'"):
+    with pytest.raises(ValueError, match="no name “Local”"):
         sales.model.diagram_from_data(sourced(source="Local").to_data())  # not a workbook-wide name
 
 

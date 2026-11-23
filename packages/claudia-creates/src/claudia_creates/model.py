@@ -14,10 +14,11 @@ What is not here yet: templates and layouts (E10.4), groups, free colours.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from typing import ClassVar, Self, TypeIs
 
 from claudia_core import (
+    N_,
     Command,
     CommandRegistry,
     DocumentModel,
@@ -32,6 +33,7 @@ from claudia_core import (
     ObjectSet,
     Palette,
     Placed,
+    Refusal,
     Region,
     Requirements,
     Run,
@@ -76,14 +78,17 @@ def _checked_notes(text: object) -> str:
         raise ValueError("notes must not contain a null character")
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     if len(text) > MAX_NOTES_LENGTH:
-        raise ValueError(f"notes are at most {MAX_NOTES_LENGTH} characters")
+        raise Refusal("notes are at most {limit} characters", limit=MAX_NOTES_LENGTH)
     return text
 
 
 def _check_seconds(seconds: object) -> None:
     """``ValueError`` unless ``seconds`` is a whole number from 1 to a day."""
     if not _is_whole(seconds) or not 1 <= seconds <= MAX_SLIDE_SECONDS:
-        raise ValueError(f"a planned time is a whole number of seconds from 1 to {MAX_SLIDE_SECONDS}")
+        raise Refusal(
+            "a planned time is a whole number of seconds from 1 to {limit}",
+            limit=MAX_SLIDE_SECONDS,
+        )
 
 
 #: One thing on a slide: a text box, a shape or an image. The body is shared with the other two apps; only the
@@ -98,6 +103,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     :class:`~claudia_core.ObjectModel`."""
 
     app: ClassVar[str] = "creates"
+    name_taken: ClassVar[Mapping[str, str]] = {
+        **ObjectModel.name_taken,
+        "slide": N_("There is already a slide called “{name}”"),
+    }
     # 6: the presentation carries its own colour palette (D200)
     # 7: how it is printed, and its language (D917)
     # 8: object bodies carry a description (alternative text)

@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import Batch, Command, Context
+from claudia_core import Batch, Command, Context, Refusal
 
 from .commands import SetCells, register
 from .events import NamesChanged
@@ -58,7 +58,7 @@ class DefineName(Command):
             named = replace(named, id=existing.id)  # (the same name pointed somewhere else is still the same thing)
         model.check_name(named, shared=not self.legacy_names)
         if named.anchor is None and named.scope is None and model.pivots.get(named.name) is not None:
-            raise ValueError(f"{named.name} is a pivot table: change the pivot, not its name")
+            raise Refusal("{name} is a pivot table: change the pivot, not its name", name=named.name)
         before = model.put_names([(named.key, named)])
         ctx.emit(NamesChanged())
         return RestoreNames(tuple(before))
@@ -104,7 +104,7 @@ class RemoveName(Command):
         if model.names.get(key) is None:
             raise ValueError(f"there is no name {self.name!r}")
         if self.scope is None and model.pivots.get(self.name) is not None:
-            raise ValueError(f"{self.name} is a pivot table: delete the pivot, not its name")
+            raise Refusal("{name} is a pivot table: delete the pivot, not its name", name=self.name)
         before = model.put_names([(key, None)])
         ctx.emit(NamesChanged())
         return RestoreNames(tuple(before))
@@ -142,7 +142,7 @@ class RenameName(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         if self.scope is None and ctx.model.pivots.get(self.old) is not None:
-            raise ValueError(f"{self.old} is a pivot table: a pivot keeps its name")
+            raise Refusal("{old} is a pivot table: a pivot keeps its name", old=self.old)
         restores = ctx.model.rename_name(self.scope, self.old, self.new, shared=not self.legacy_names)
         ctx.emit(NamesChanged())
         undo: list[Command] = [RenameName(self.scope, self.new, self.old)]

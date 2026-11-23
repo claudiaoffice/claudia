@@ -38,7 +38,7 @@ from claudia_core import (
     validate_css,
 )
 
-from .i18n import msg
+from .i18n import localized, message_of, msg
 from .protocol import Context, MethodTable, RequestError
 from .style_targets import OBJECTS, StyleTarget, add_target_methods
 
@@ -148,7 +148,7 @@ def _add_palette_methods(table: MethodTable) -> None:
         try:
             return _changed(ctx, SetRole(role, colour), base)
         except ValueError as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
 
     @table.method("replace_palette", "roles:list base:revision?", write=True)
     def _replace_palette(ctx, *, roles, base):
@@ -159,7 +159,7 @@ def _add_palette_methods(table: MethodTable) -> None:
         try:
             return _changed(ctx, ReplacePalette(_roles_from(roles)), base)
         except ValueError as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
 
 
 def _add_object_style_methods(table: MethodTable) -> None:
@@ -178,7 +178,7 @@ def _add_object_style_methods(table: MethodTable) -> None:
         try:
             return _changed(ctx, SetObjectStyle(id, style), base)
         except (KeyError, ValueError) as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
 
     @table.method("set_paragraph_style", "id:str style:str base:revision?", write=True)
     def _set_paragraph_style(ctx, *, id, style, base):
@@ -190,7 +190,7 @@ def _add_object_style_methods(table: MethodTable) -> None:
         try:
             return _changed(ctx, SetParagraphStyle(id, style), base)
         except (KeyError, ValueError) as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
 
     @table.method("deviate_object_style", "parent:str objects:list set:dict? text:text? base:revision?", write=True)
     def _deviate_object_style(ctx, *, parent, objects, set, text, base):
@@ -337,7 +337,7 @@ def add_style_methods(
         return {"css": css, "text": format_css(css), "problems": [p.to_data() for p in problems]}
 
 
-def _deletion_targets(book: StyleBook, style_id: str, model: object) -> list[dict]:
+def _deletion_targets(book: StyleBook, style_id: str, model: object, locale: str) -> list[dict]:
     """The styles that could take the place of ``style_id`` when it goes, each as
     ``{id, name, changes_look, holds, reason}``: ``changes_look`` is whether *assigning* it would change how something
     looks, ``holds`` is false, and ``reason`` says why in a sentence, when the look could not be kept by *re-basing* on
@@ -361,7 +361,7 @@ def _deletion_targets(book: StyleBook, style_id: str, model: object) -> list[dic
         try:
             plan_delete_style(model, style_id, how="rebase", target=other.id)
         except ValueError as exc:
-            entry.update(holds=False, reason=str(exc))
+            entry.update(holds=False, reason=localized(message_of(exc), locale))
         targets.append(entry)
     return targets
 
@@ -403,7 +403,7 @@ def _add_deletion_methods(table: MethodTable) -> None:
             "uses": uses,
             "children": [{"id": child, "name": book.get(child).name} for child in book.children(style)],
             "suggested": None if suggested is None else {"id": suggested.id, "name": suggested.name},
-            "targets": [] if protected else _deletion_targets(book, style, model),
+            "targets": [] if protected else _deletion_targets(book, style, model, ctx.locale),
         }
 
     @table.method("delete_style", "style:str how:str? target:str? base:revision?", write=True)
@@ -428,12 +428,12 @@ def _add_deletion_methods(table: MethodTable) -> None:
         try:
             plan = plan_delete_style(model, style, how=how or "assign", target=target)
         except ValueError as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
         made = next((step.style.id for step in plan.commands if isinstance(step, CreateStyle)), None)
         try:
             applied = ctx.document.execute(plan, author=ctx.user, base=base)
         except ValueError as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
         return {"stand_in": made, "revision": applied.revision.to_data()}
 
     @table.method("hide_style", "style:str hidden:bool base:revision?", write=True)

@@ -24,7 +24,7 @@ from claudia_core import (
     name_problem,
 )
 
-from .i18n import available_locales, localized, msg, translate
+from .i18n import available_locales, localized, message_of, msg, translate
 from .images import picture_words
 from .protocol import Context, MethodTable, RequestError
 
@@ -106,7 +106,7 @@ def _rename_thing(ctx: Context, *, id: str, name: str, base) -> dict:  # noqa: A
         raise RequestError("bad_request", msg("a name has at most {limit} characters", limit=MAX_THING_NAME))
     problem = name_problem(name)
     if problem is not None:
-        raise RequestError("bad_request", problem)
+        raise RequestError("bad_request", message_of(problem))
     applied = ctx.document.execute(RenameThing(id, cleaned), author=ctx.user, base=base)
     return {"revision": applied.revision.to_data()}
 
@@ -245,7 +245,7 @@ def _name_and_describe(
         _refuse_fixed_name(model, id)
         problem = name_problem(name)
         if problem is not None:
-            raise RequestError("bad_request", problem)
+            raise RequestError("bad_request", message_of(problem))
         steps.append(model.rename_command(id, cleaned))
     drawn = _is_drawn(model, id)
     if decorative and not drawn:

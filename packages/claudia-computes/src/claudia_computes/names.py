@@ -21,6 +21,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
+from claudia_core import Refusal
+
 from .limits import MAX_COLS, MAX_ROWS
 from .refs import RangeRef, SheetId, column_index
 from .values import REF, VALUE, FormulaError
@@ -38,20 +40,20 @@ _CELL_LIKE = re.compile(r"([A-Za-z]{1,3})([0-9]+)")
 _RESERVED = frozenset({"TRUE", "FALSE"})
 
 
-def name_problem(text: str) -> str | None:
-    """Why ``text`` cannot be a name (or ``None`` when it can): a name is a word, and not a cell, since a formula
-    could not tell the two apart."""
+def name_problem(text: str) -> Refusal | None:
+    """Why ``text`` cannot be a name (the refusal, or ``None`` when it can): a name is a word, and not a cell, since a
+    formula could not tell the two apart."""
     if not text:
-        return "a name needs some text"
+        return Refusal("a name needs some text")
     if len(text) > MAX_NAME_LENGTH:
-        return f"a name has at most {MAX_NAME_LENGTH} characters"
+        return Refusal("a name has at most {limit} characters", limit=MAX_NAME_LENGTH)
     if _NAME.fullmatch(text) is None:
-        return "a name starts with a letter and has only letters, digits, _ and ."
+        return Refusal("a name starts with a letter and has only letters, digits, _ and .")
     if text.upper() in _RESERVED:
-        return f"{text} is a value, not a name"
+        return Refusal("{name} is a value, not a name", name=text)
     cell = _CELL_LIKE.fullmatch(text)
     if cell is not None and column_index(cell[1]) < MAX_COLS and 0 < int(cell[2]) <= MAX_ROWS:
-        return f"{text} is a cell, not a name"
+        return Refusal("{name} is a cell, not a name", name=text)
     return None
 
 

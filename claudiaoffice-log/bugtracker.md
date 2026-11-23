@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (90)
+### Open (89)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -125,14 +125,13 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-75 | P3 | Code / web clients | Only composes refused a change of a viewer before sending it; computes sent it and showed the server's refusal, creates checked in some places only | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-76 | P3 | Code / web clients | The sheet session ignored `shape` events, so an outline a colleague's sheet object needed arrived only with a reload | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | open (row `@pending:CODE-77`) | 2026-11-22 |  |
-| CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **in progress** (read; size 2; approach being decided) | 2026-11-22 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (153)
+### Fixed (154)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -242,6 +241,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |  | 2026-11-18 |
 | CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |  | 2026-11-19 |
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
+| CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **fixed** 2026-11-23 on `code-78-translated-refusals` (D1510) | 2026-11-22 | 2026-11-23 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2697,9 +2697,15 @@ workbook" while a slide is shown (a slide has no cells to select), and the statu
 (`describeSheets` in `web/app/lib/print/sheet.ts`). **Tests:** `print-sheets.test.ts`, the scenario "The print bar
 speaks of the slide shown as a slide" and `web/e2e/computes-slides.cjs`.
 
-### CODE-78 · Refusals of the models reach a German user in English · P2 · size 2 · in progress
-**Found** in the review of step 2: the core and the apps refuse with a `ValueError` and an English sentence (for
+### CODE-78 · Refusals of the models reach a German user in English · P2 · size 2 · fixed
+**Found** in the review of E6.31 step 2: the core and the apps refuse with a `ValueError` and an English sentence (for
 example "a slide needs a name", "There is already a sheet called “…”"); the server sends it on as it is
 (`claudia_server.i18n.localized` translates only its own `msg(...)`), so a person who works in German reads English.
 About 365 refusals in core, computes, composes and creates. Evidence: **read**. **Acceptance:** a refusal the person
-meets is in her language (a scenario with the language German and a name that is taken).
+meets is in her language (a scenario with the language German and a name that is taken). **Fixed** 2026-11-23 (D1510):
+typed refusals (`claudia_core.Refusal`, `N_`), said by the server in the connection's language (`message_of`), for the
+refusals a person can meet (about 140 sites); checks that only a wrong client can fail stay English, as agreed.
+**Escaped** because the server's i18n (D322) covered its own messages only, and no test spoke German to a model.
+**Tests:** `specs/server/refusals.feature` (`tests/e2e/specs/test_refusals.py`), `test_refusal.py`,
+`test_server_i18n.py`, `test_server_thing_names.py`, `test_extract_i18n.py`, `test_catalogs.py`.
+
