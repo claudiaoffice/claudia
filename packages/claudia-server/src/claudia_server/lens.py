@@ -17,6 +17,10 @@ from typing import Any, Protocol
 from claudia_core import Document
 
 FENCE = "```"
+
+#: Said to a remote provider in place of the start of the document (CODE-80): it is shown how much there is, and has to
+#: look for what it needs, so that what leaves the server is what it asked to see.
+REMOTE_FIRST = "Nothing a person wrote is shown here: look at what the question is about, with the requests below."
 _FENCES = re.compile(r"`{3,}")
 
 
@@ -71,11 +75,13 @@ class Lens(Protocol):
         can_write: bool,
         asker: str | None = None,
         writes: frozenset[str] | None = None,
+        remote: bool = False,
     ) -> str:
         """Where the model starts: how things are counted and named, and what is in the document, briefly.
 
         ``asker`` is who asked (a lens may say where she is working); ``writes`` the write methods the model is
-        offered for her (``None``: no limit), so an example names one it may use."""
+        offered for her (``None``: no limit), so an example names one it may use. ``remote``: the answer leaves the
+        server (D1568), so it holds counts and ids and nothing a person wrote."""
         ...
 
     def show(self, method: str, params: dict, result: Any) -> str:

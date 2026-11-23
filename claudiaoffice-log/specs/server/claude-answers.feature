@@ -36,6 +36,21 @@ Feature: @ai answers with Claude only where both the administrator and the owner
     And it received nothing of the sheet "Salaries"
     And it received no password, no key and no list of the document's people
 
+  # CODE-80, D1568: the first message holds counts and ids; what Claude looks at is what goes out.
+  @core @unit:packages/claudia-server/tests/test_server_remote_orientation.py
+  Scenario: Claude is first told how much there is, and nothing a person wrote
+    Given the sheet "Salaries" has names and numbers that the question has nothing to do with
+    When I write "@ai why is B7 an error?" in the chat
+    Then the first thing the fake Anthropic received says that the document has 2 sheets
+    And it names none of the sheets and shows no cell
+
+  @extended @unit:packages/claudia-server/tests/test_server_remote_orientation.py
+  Scenario: The local model is still shown the start of the document
+    Given Anna did not allow Claude in "budget" yet
+    And the server's own provider is the local model
+    When I write "@ai why is B7 an error?" in the chat
+    Then the local model was shown the sheet names and the top left of the sheets
+
   @core
   Scenario: Claude looks and changes the document the way the local model does
     Given the fake Anthropic asks to look at "Budget!A1:F8" and then to put "52" in C7, and then answers "Done."

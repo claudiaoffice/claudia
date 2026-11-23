@@ -94,8 +94,10 @@ class ModelEngine:
         *,
         memory: ConversationMemory | None = None,
         budget: Budget = Budget(),  # noqa: B008  (frozen)
+        remote: bool = False,
     ):
         self._runner = runner
+        self._remote = remote
         self._tools = tools
         self._lens = lens
         self._memory = memory or ConversationMemory()
@@ -110,7 +112,9 @@ class ModelEngine:
         tools = tuple(t for t in self._tools if t.kind == "look" or task.writes is None or t.name in task.writes)
         can_write = any(t.kind != "look" for t in tools)
         offered = frozenset(t.name for t in tools if t.kind != "look")
-        context = self._lens.orient(task.document, can_write=can_write, asker=task.sender, writes=offered)
+        context = self._lens.orient(
+            task.document, can_write=can_write, asker=task.sender, writes=offered, remote=self._remote
+        )
         request = Request(task.sender, task.text, context, tools, history)
         say = await self._converse(task, request)
         self._memory.remember(task.sender, task.text, say)

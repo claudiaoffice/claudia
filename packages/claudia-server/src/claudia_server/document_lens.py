@@ -29,7 +29,7 @@ from claudia_composes.events import (
 from claudia_core import Document, TableDef, TablesChanged, parse_entry_id
 
 from .composes_words import paragraph_view
-from .lens import fence, shorten
+from .lens import REMOTE_FIRST, fence, shorten
 from .tables import table_view
 
 PREVIEW_PARAGRAPHS = 12  # paragraphs from the start shown at the beginning
@@ -146,12 +146,16 @@ class DocumentLens:
         can_write: bool,
         asker: str | None = None,
         writes: frozenset[str] | None = None,
+        remote: bool = False,
     ) -> str:
         """How paragraphs and words are named, the paragraph styles, the headings, the first paragraphs and the
-        asker's own, and how many suggestions are open."""
+        asker's own, and how many suggestions are open; for a remote provider only how much there is, and where the
+        asker's cursor is by the paragraph's id."""
         model = document.model
         assert isinstance(model, TextModel)
         text = ORIENTATION.format(example=self._example(can_write, writes))
+        if remote:
+            return text + self._counts(document, model, asker)
         labels = model.labels()
         paragraphs = model.paragraphs
         text += f"\nThe text has {len(paragraphs)} paragraph{'s' if len(paragraphs) != 1 else ''}."
@@ -184,6 +188,21 @@ class DocumentLens:
         if open_now:
             text += f"\n{open_now} suggestion{'s are' if open_now != 1 else ' is'} open (ask for the suggestions)."
         return text
+
+    def _counts(self, document: Document, model: TextModel, asker: str | None) -> str:
+        """What a remote provider is first told: how many paragraphs, headings, tables and open suggestions there are,
+        and the id (not the words) of the paragraph the asker is in; nothing a person wrote."""
+        paragraphs = model.paragraphs
+        headings = sum(1 for p in paragraphs if model.paragraph_kind(p) == "heading")
+        text = f"\nThe text has {_count(len(paragraphs), 'paragraph', 'paragraphs')}"
+        text += f", {_count(headings, 'heading', 'headings')}, {_count(len(model.tables), 'table', 'tables')}."
+        here = self._asker_at(document, model, asker)
+        if here is not None:
+            text += f"\n{asker}'s cursor is in paragraph {paragraphs[here].id}."
+        open_now = len(model.visible_suggestions())
+        if open_now:
+            text += f"\n{open_now} suggestion{'s are' if open_now != 1 else ' is'} open (ask for the suggestions)."
+        return f"{text}\n{REMOTE_FIRST} Start with outline, styles, tables or read_paragraphs."
 
     @staticmethod
     def _tables(model: TextModel) -> str:

@@ -5,6 +5,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-11-23
+
+### Changed
+- **A remote provider is first sent counts and ids, and nothing a person wrote** (CODE-80, D1568). `Lens.orient` takes
+  `remote` (default `False`) and `ModelEngine` takes `remote`; `AiRouter` passes `Via.remote`. A lens written outside this
+  package must accept the new keyword. The local model's first message is unchanged.
+
 ## [0.42.0] - 2026-11-22
 
 ### Added

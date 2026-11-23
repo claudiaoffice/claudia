@@ -20,7 +20,7 @@ from claudia_core import SLIDE_HEIGHT, SLIDE_WIDTH, Document, ObjectsChanged
 from claudia_creates import SlideModel
 from claudia_creates.events import SlidesChanged
 
-from .lens import fence, shorten
+from .lens import REMOTE_FIRST, fence, shorten
 
 MAX_LISTED_SLIDES = 40  # slides named to the model; a small model has little room
 PREVIEW_SLIDES = 3  # slides whose objects are shown at the start
@@ -86,8 +86,10 @@ class SlideLens:
         can_write: bool,
         asker: str | None = None,
         writes: frozenset[str] | None = None,
+        remote: bool = False,
     ) -> str:
-        """How a slide is measured, the slides with how many objects, and what is on the first few."""
+        """How a slide is measured, the slides with how many objects, and what is on the first few; for a remote
+        provider not what is on them."""
         model = document.model
         assert isinstance(model, SlideModel)
         text = ORIENTATION.format(w=SLIDE_WIDTH, h=SLIDE_HEIGHT, example=EXAMPLE if can_write else "")
@@ -98,6 +100,8 @@ class SlideLens:
         if len(slides) > MAX_LISTED_SLIDES:
             names.append(f"... and {len(slides) - MAX_LISTED_SLIDES} more")
         text += "\nSlides in order (id (objects)): " + ", ".join(names)
+        if remote:
+            return f"{text}\n{REMOTE_FIRST} Start with slide."
         shown = [describe_slide(model, s) for s in slides[:PREVIEW_SLIDES]]
         return text + "\nThe first slides:\n" + fence("\n".join(shown))
 

@@ -12,7 +12,7 @@ from claudia_computes.events import CellsChanged, StructureChanged, TabsChanged
 from claudia_computes.refs import StructuralEdit
 from claudia_core import Document
 
-from .lens import fence, shorten
+from .lens import REMOTE_FIRST, fence, shorten
 
 MAX_LISTED_SHEETS = 50  # sheets named to the model; a small model has little room
 MAX_SHEET_NAME = 30
@@ -76,14 +76,19 @@ class WorkbookLens:
         can_write: bool,
         asker: str | None = None,
         writes: frozenset[str] | None = None,
+        remote: bool = False,
     ) -> str:
-        """How cells are counted, the sheets with what they hold, and the top left corner of the first few."""
+        """How cells are counted, the sheets with what they hold, and the top left corner of the first few; for a
+        remote provider only how many sheets there are and their ids."""
         model = document.model
         assert isinstance(model, WorkbookModel)
         sheets = list(model.sheets.values())
         text = ORIENTATION.format(example=EXAMPLE if can_write else "")
         if not sheets:
             return text + "\nThere are no sheets yet: add one with add_sheet."
+        if remote:
+            ids = ", ".join(sheet.id for sheet in sheets[:MAX_LISTED_SHEETS])
+            return f"{text}\nThe document has {len(sheets)} sheets ({ids}). {REMOTE_FIRST} Start with sheets."
         lines = []
         for sheet in sheets[:MAX_LISTED_SHEETS]:
             rows, cols = sheet.extent()
