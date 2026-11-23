@@ -26,9 +26,8 @@ Written 2026-11-23, branch `d1499-one-owner` (from `main`). No new decision: D14
 ## Assumptions
 
 1. "The owner" in the dialog line is followed by the name from the list the server sends; with one owner that is one name.
-2. The glossary term **Owners' consent** and its text ("until the owners turn it on") still say the plural. Renaming it
-   is a glossary change and waits for the owner.
-3. `penpot/generator/src/aiprovider.mjs` and `penpot/claudia.penpot` still show the old plural; the generator was not
+2. The glossary term is **Owner's consent** now ("until the owner turns it on"), approved by the owner 2026-11-23.
+3. The penpot page is still called "E7.11 Owners' consent"; `penpot/generator/src/aiprovider.mjs` and `penpot/claudia.penpot` still show the old plural; the generator was not
    run here.
 
 ## What could not be run
