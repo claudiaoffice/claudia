@@ -1,0 +1,440 @@
+<svg viewBox="0 0 1700 1060" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif"><rect width="1700" height="1060" fill="#f3f1ea"/><text x="40.0" y="44.0" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia creates — layouts and templates: the preview and the new layout (E10.5, reworked)</text>
+<text x="40.0" y="66.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Mock round of 22 Nov 2026, for review. Content is invented. “Update layout” is never silent when more than one slide follows the layout:</text>
+<text x="40.0" y="83.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">the preview shows every slide as it will look. Undo is one step, as for every command.</text>
+<rect x="40.0" y="96.0" width="840.0" height="640.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62.0" y="126.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">E · Update the layout: every slide it changes, before it changes</text>
+<text x="62.0" y="144.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Opens from “Update layout · 12 slides”. After shows the result, Before the present state; the changed frame is outlined.</text>
+<rect x="65.0" y="165.0" width="796.0" height="548.0" rx="12" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="62.0" y="160.0" width="796.0" height="548.0" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="84.0" y="192.0" font-family="Fraunces, Georgia, serif" font-size="15.5" font-weight="600" fill="#1f1a33" text-anchor="start">Update layout “Two lists” for 12 slides</text>
+<path d="M832 178 l10 10 M842 178 l-10 10" fill="none" stroke="#6e6880" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="62.0" y1="206.0" x2="858.0" y2="206.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="84.0" y="214.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">“Right list” becomes taller and wider. Undo brings everything back in one step.</text>
+<rect x="84.0" y="232.0" width="78.0" height="26.0" rx="0" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="123.0" y="249.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="middle">Before</text>
+<rect x="162.0" y="232.0" width="78.0" height="26.0" rx="0" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1"/>
+<text x="201.0" y="249.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#ffffff" text-anchor="middle">After</text>
+<text x="838.0" y="250.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="end">12 of 12 slides</text>
+<rect x="84.0" y="276.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="242.1" cy="285.6" r="4.42" fill="#5b4bc4"/>
+<line x1="94.2" y1="364.9" x2="243.8" y2="364.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="243.8" y="370.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">3</text>
+<rect x="94.2" y="286.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="96.0" cy="311.5" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="310.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="96.0" cy="320.4" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="319.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="96.0" cy="329.2" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="328.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="96.0" cy="338.0" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="337.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="311.5" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="310.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="320.4" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="319.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="329.2" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="328.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="338.0" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="337.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="346.9" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="346.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="170.9" y="307.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="84.0" y="384.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">3 · Quarterly results</text>
+<rect x="268.0" y="276.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="426.1" cy="285.6" r="4.42" fill="#5b4bc4"/>
+<line x1="278.2" y1="364.9" x2="427.8" y2="364.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="427.8" y="370.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">4</text>
+<rect x="278.2" y="286.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="280.0" cy="311.5" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="310.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="280.0" cy="320.4" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="319.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="280.0" cy="329.2" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="328.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="280.0" cy="338.0" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="337.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="311.5" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="310.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="320.4" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="319.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="329.2" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="328.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="338.0" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="337.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="346.9" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="346.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="354.9" y="307.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="268.0" y="384.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">4 · Regions</text>
+<rect x="452.0" y="276.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="610.1" cy="285.6" r="4.42" fill="#5b4bc4"/>
+<line x1="462.2" y1="364.9" x2="611.8" y2="364.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="611.8" y="370.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">6</text>
+<rect x="462.2" y="286.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="464.0" cy="311.5" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="310.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="464.0" cy="320.4" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="319.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="464.0" cy="329.2" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="328.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="464.0" cy="338.0" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="337.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="311.5" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="310.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="320.4" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="319.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="329.2" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="328.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="338.0" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="337.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="346.9" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="346.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="538.9" y="307.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="452.0" y="384.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">6 · Costs</text>
+<rect x="636.0" y="276.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="794.1" cy="285.6" r="4.42" fill="#5b4bc4"/>
+<line x1="646.2" y1="364.9" x2="795.8" y2="364.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="795.8" y="370.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">7</text>
+<rect x="646.2" y="286.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="648.0" cy="311.5" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="310.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="648.0" cy="320.4" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="319.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="648.0" cy="329.2" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="328.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="648.0" cy="338.0" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="337.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="311.5" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="310.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="320.4" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="319.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="329.2" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="328.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="338.0" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="337.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="346.9" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="346.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="722.9" y="307.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="636.0" y="384.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">7 · Hiring</text>
+<rect x="84.0" y="400.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="242.1" cy="409.6" r="4.42" fill="#5b4bc4"/>
+<line x1="94.2" y1="488.9" x2="243.8" y2="488.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="243.8" y="494.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">9</text>
+<rect x="94.2" y="410.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="96.0" cy="435.5" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="434.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="96.0" cy="444.4" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="443.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="96.0" cy="453.2" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="452.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="96.0" cy="462.0" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="461.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="435.5" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="434.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="444.4" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="443.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="453.2" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="452.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="462.0" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="461.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="470.9" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="470.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="170.9" y="431.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="84.0" y="508.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">9 · Risks</text>
+<rect x="268.0" y="400.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="426.1" cy="409.6" r="4.42" fill="#5b4bc4"/>
+<line x1="278.2" y1="488.9" x2="427.8" y2="488.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="427.8" y="494.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">10</text>
+<rect x="278.2" y="410.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="280.0" cy="435.5" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="434.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="280.0" cy="444.4" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="443.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="280.0" cy="453.2" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="452.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="280.0" cy="462.0" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="461.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="435.5" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="434.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="444.4" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="443.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="453.2" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="452.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="462.0" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="461.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="470.9" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="470.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="354.9" y="431.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="268.0" y="508.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">10 · Customers</text>
+<rect x="452.0" y="400.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="610.1" cy="409.6" r="4.42" fill="#5b4bc4"/>
+<line x1="462.2" y1="488.9" x2="611.8" y2="488.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="611.8" y="494.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">12</text>
+<rect x="462.2" y="410.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="464.0" cy="435.5" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="434.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="464.0" cy="444.4" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="443.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="464.0" cy="453.2" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="452.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="464.0" cy="462.0" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="461.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="435.5" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="434.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="444.4" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="443.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="453.2" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="452.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="462.0" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="461.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="470.9" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="470.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="538.9" y="431.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="452.0" y="508.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">12 · Pricing</text>
+<rect x="636.0" y="400.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="794.1" cy="409.6" r="4.42" fill="#5b4bc4"/>
+<line x1="646.2" y1="488.9" x2="795.8" y2="488.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="795.8" y="494.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">13</text>
+<rect x="646.2" y="410.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="648.0" cy="435.5" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="434.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="648.0" cy="444.4" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="443.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="648.0" cy="453.2" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="452.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="648.0" cy="462.0" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="461.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="435.5" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="434.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="444.4" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="443.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="453.2" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="452.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="462.0" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="461.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="470.9" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="470.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="722.9" y="431.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="636.0" y="508.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">13 · Support</text>
+<rect x="84.0" y="524.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="242.1" cy="533.6" r="4.42" fill="#5b4bc4"/>
+<line x1="94.2" y1="612.9" x2="243.8" y2="612.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="243.8" y="618.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">15</text>
+<rect x="94.2" y="534.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="96.0" cy="559.5" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="558.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="96.0" cy="568.4" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="567.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="96.0" cy="577.2" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="576.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="96.0" cy="586.0" r="1.2" fill="#c9c4d6"/>
+<rect x="100.2" y="585.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="559.5" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="558.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="568.4" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="567.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="577.2" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="576.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="586.0" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="585.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="174.2" cy="594.9" r="1.2" fill="#c9c4d6"/>
+<rect x="178.4" y="594.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="170.9" y="555.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="84.0" y="632.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">15 · Roadmap</text>
+<rect x="268.0" y="524.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="426.1" cy="533.6" r="4.42" fill="#5b4bc4"/>
+<line x1="278.2" y1="612.9" x2="427.8" y2="612.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="427.8" y="618.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">16</text>
+<rect x="278.2" y="534.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="280.0" cy="559.5" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="558.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="280.0" cy="568.4" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="567.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="280.0" cy="577.2" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="576.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="280.0" cy="586.0" r="1.2" fill="#c9c4d6"/>
+<rect x="284.2" y="585.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="559.5" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="558.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="568.4" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="567.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="577.2" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="576.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="586.0" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="585.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="358.2" cy="594.9" r="1.2" fill="#c9c4d6"/>
+<rect x="362.4" y="594.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="354.9" y="555.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="268.0" y="632.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">16 · Partners</text>
+<rect x="452.0" y="524.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="610.1" cy="533.6" r="4.42" fill="#5b4bc4"/>
+<line x1="462.2" y1="612.9" x2="611.8" y2="612.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="611.8" y="618.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">18</text>
+<rect x="462.2" y="534.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="464.0" cy="559.5" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="558.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="464.0" cy="568.4" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="567.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="464.0" cy="577.2" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="576.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="464.0" cy="586.0" r="1.2" fill="#c9c4d6"/>
+<rect x="468.2" y="585.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="559.5" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="558.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="568.4" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="567.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="577.2" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="576.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="586.0" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="585.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="542.2" cy="594.9" r="1.2" fill="#c9c4d6"/>
+<rect x="546.4" y="594.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="538.9" y="555.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="452.0" y="632.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">18 · Timeline</text>
+<rect x="636.0" y="524.0" width="170.0" height="95.6" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="794.1" cy="533.6" r="4.42" fill="#5b4bc4"/>
+<line x1="646.2" y1="612.9" x2="795.8" y2="612.9" stroke="#e3dfee" stroke-width="1"/>
+<text x="795.8" y="618.2" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.6499999999999995" font-weight="400" fill="#6e6880" text-anchor="end">20</text>
+<rect x="646.2" y="534.3" width="78.0" height="4.8" rx="1" fill="#1f1a33"/>
+<circle cx="648.0" cy="559.5" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="558.6" width="57.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="648.0" cy="568.4" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="567.5" width="48.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="648.0" cy="577.2" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="576.3" width="53.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="648.0" cy="586.0" r="1.2" fill="#c9c4d6"/>
+<rect x="652.2" y="585.1" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="559.5" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="558.6" width="41.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="568.4" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="567.5" width="60.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="577.2" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="576.3" width="49.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="586.0" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="585.1" width="55.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="726.2" cy="594.9" r="1.2" fill="#c9c4d6"/>
+<rect x="730.4" y="594.0" width="37.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="722.9" y="555.0" width="77.8" height="55.6" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="636.0" y="632.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">20 · Next steps</text>
+<text x="84.0" y="678.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#5b4bc4" text-anchor="start">Show as list</text>
+<path d="M164 673 l4 4 l-4 4" fill="none" stroke="#5b4bc4" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="740.0" y="658.0" width="66.5" height="30.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="773.2" y="677.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="594.0" y="658.0" width="138.0" height="30.0" rx="7" fill="#5b4bc4"/>
+<text x="663.0" y="677.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Update 12 slides</text>
+<rect x="900.0" y="96.0" width="760.0" height="640.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="922.0" y="126.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">F · Deleting a placeholder: the text on other slides is kept</text>
+<text x="922.0" y="144.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Deleting the object that took “Subtitle” offers the same two choices. Updating the layout never throws text away.</text>
+<rect x="925.0" y="165.0" width="716.0" height="548.0" rx="12" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="922.0" y="160.0" width="716.0" height="548.0" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="944.0" y="192.0" font-family="Fraunces, Georgia, serif" font-size="15.5" font-weight="600" fill="#1f1a33" text-anchor="start">Remove “Subtitle” from layout “Title slide” for 6 slides</text>
+<path d="M1612 178 l10 10 M1622 178 l-10 10" fill="none" stroke="#6e6880" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="922.0" y1="206.0" x2="1638.0" y2="206.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="944.0" y="214.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Where it holds text, the text stays on the slide as a free box. Empty ones are removed.</text>
+<text x="944.0" y="232.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">On slide 5, where you deleted it, the object is gone, as you asked.</text>
+<rect x="944.0" y="256.0" width="204.0" height="114.8" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1133.7" cy="267.5" r="5.303999999999999" fill="#5b4bc4"/>
+<line x1="956.2" y1="362.7" x2="1135.8" y2="362.7" stroke="#e3dfee" stroke-width="1"/>
+<text x="1135.8" y="369.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.18" font-weight="400" fill="#6e6880" text-anchor="end">1</text>
+<rect x="956.2" y="268.4" width="93.6" height="5.7" rx="1" fill="#1f1a33"/>
+<rect x="956.2" y="295.0" width="122.4" height="13.8" rx="1" fill="none" stroke="#13917f" stroke-width="1" stroke-dasharray="2 1.5"/>
+<rect x="958.2" y="298.1" width="85.2" height="1.8" rx="1" fill="#13917f"/>
+<rect x="947.0" y="356.8" width="107.2" height="11.0" rx="5.5" fill="#13917f"/>
+<text x="1000.6" y="364.9" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.5" font-weight="500" fill="#ffffff" text-anchor="middle">text stays as a free box</text>
+<text x="944.0" y="386.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">1 · Opening</text>
+<rect x="1170.0" y="256.0" width="204.0" height="114.8" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1359.7" cy="267.5" r="5.303999999999999" fill="#5b4bc4"/>
+<line x1="1182.2" y1="362.7" x2="1361.8" y2="362.7" stroke="#e3dfee" stroke-width="1"/>
+<text x="1361.8" y="369.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.18" font-weight="400" fill="#6e6880" text-anchor="end">5</text>
+<rect x="1182.2" y="268.4" width="93.6" height="5.7" rx="1" fill="#1f1a33"/>
+<rect x="1173.0" y="356.8" width="82.0" height="11.0" rx="5.5" fill="#5b4bc4"/>
+<text x="1214.0" y="364.9" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.5" font-weight="500" fill="#ffffff" text-anchor="middle">you deleted it here</text>
+<text x="1170.0" y="386.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">5 · Pricing</text>
+<rect x="1396.0" y="256.0" width="204.0" height="114.8" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1585.7" cy="267.5" r="5.303999999999999" fill="#5b4bc4"/>
+<line x1="1408.2" y1="362.7" x2="1587.8" y2="362.7" stroke="#e3dfee" stroke-width="1"/>
+<text x="1587.8" y="369.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.18" font-weight="400" fill="#6e6880" text-anchor="end">8</text>
+<rect x="1408.2" y="268.4" width="93.6" height="5.7" rx="1" fill="#1f1a33"/>
+<rect x="1406.7" y="293.5" width="125.4" height="16.8" rx="2" fill="none" stroke="#c9c4d6" stroke-width="1.6" stroke-dasharray="3 2"/>
+<rect x="1399.0" y="356.8" width="82.0" height="11.0" rx="5.5" fill="#8d87a0"/>
+<text x="1440.0" y="364.9" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.5" font-weight="500" fill="#ffffff" text-anchor="middle">empty box removed</text>
+<text x="1396.0" y="386.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">8 · Part two</text>
+<rect x="944.0" y="406.0" width="204.0" height="114.8" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1133.7" cy="417.5" r="5.303999999999999" fill="#5b4bc4"/>
+<line x1="956.2" y1="512.7" x2="1135.8" y2="512.7" stroke="#e3dfee" stroke-width="1"/>
+<text x="1135.8" y="519.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.18" font-weight="400" fill="#6e6880" text-anchor="end">11</text>
+<rect x="956.2" y="418.4" width="93.6" height="5.7" rx="1" fill="#1f1a33"/>
+<rect x="954.7" y="443.5" width="125.4" height="16.8" rx="2" fill="none" stroke="#c9c4d6" stroke-width="1.6" stroke-dasharray="3 2"/>
+<rect x="947.0" y="506.8" width="82.0" height="11.0" rx="5.5" fill="#8d87a0"/>
+<text x="988.0" y="515.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.5" font-weight="500" fill="#ffffff" text-anchor="middle">empty box removed</text>
+<text x="944.0" y="536.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">11 · Part three</text>
+<rect x="1170.0" y="406.0" width="204.0" height="114.8" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1359.7" cy="417.5" r="5.303999999999999" fill="#5b4bc4"/>
+<line x1="1182.2" y1="512.7" x2="1361.8" y2="512.7" stroke="#e3dfee" stroke-width="1"/>
+<text x="1361.8" y="519.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.18" font-weight="400" fill="#6e6880" text-anchor="end">14</text>
+<rect x="1182.2" y="418.4" width="93.6" height="5.7" rx="1" fill="#1f1a33"/>
+<rect x="1182.2" y="445.0" width="122.4" height="13.8" rx="1" fill="none" stroke="#13917f" stroke-width="1" stroke-dasharray="2 1.5"/>
+<rect x="1184.2" y="448.1" width="85.2" height="1.8" rx="1" fill="#13917f"/>
+<rect x="1173.0" y="506.8" width="107.2" height="11.0" rx="5.5" fill="#13917f"/>
+<text x="1226.6" y="515.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.5" font-weight="500" fill="#ffffff" text-anchor="middle">text stays as a free box</text>
+<text x="1170.0" y="536.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">14 · Part four</text>
+<rect x="1396.0" y="406.0" width="204.0" height="114.8" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1585.7" cy="417.5" r="5.303999999999999" fill="#5b4bc4"/>
+<line x1="1408.2" y1="512.7" x2="1587.8" y2="512.7" stroke="#e3dfee" stroke-width="1"/>
+<text x="1587.8" y="519.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="9.18" font-weight="400" fill="#6e6880" text-anchor="end">19</text>
+<rect x="1408.2" y="418.4" width="93.6" height="5.7" rx="1" fill="#1f1a33"/>
+<rect x="1408.2" y="445.0" width="122.4" height="13.8" rx="1" fill="none" stroke="#13917f" stroke-width="1" stroke-dasharray="2 1.5"/>
+<rect x="1410.2" y="448.1" width="85.2" height="1.8" rx="1" fill="#13917f"/>
+<rect x="1399.0" y="506.8" width="107.2" height="11.0" rx="5.5" fill="#13917f"/>
+<text x="1452.6" y="515.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="7.5" font-weight="500" fill="#ffffff" text-anchor="middle">text stays as a free box</text>
+<text x="1396.0" y="536.8" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">19 · Thank you</text>
+<text x="944.0" y="596.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">3 slides keep their text as free boxes · 2 empty boxes are removed · 1 slide is the one you edited</text>
+<text x="944.0" y="616.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">A free box keeps its frame at the moment of the change.</text>
+<rect x="1510.0" y="658.0" width="100.0" height="30.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1560.0" y="677.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="1332.0" y="658.0" width="170.0" height="30.0" rx="7" fill="#5b4bc4"/>
+<text x="1417.0" y="677.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Remove from layout</text>
+<rect x="40.0" y="756.0" width="1620.0" height="270.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62.0" y="786.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">G · New layout from this slide: it exists at once and waits for its name</text>
+<text x="62.0" y="804.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">The same pattern as a deviating style (D75, D309): the layout is made under a provisional name and the person names it when she wants to.</text>
+<rect x="62.0" y="830.0" width="720.0" height="130.0" rx="10" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1"/>
+<rect x="78.0" y="846.0" width="96.0" height="54.0" rx="3" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<circle cx="167.3" cy="851.4" r="2.496" fill="#5b4bc4"/>
+<line x1="83.8" y1="896.2" x2="168.2" y2="896.2" stroke="#e3dfee" stroke-width="1"/>
+<rect x="83.8" y="851.8" width="44.0" height="2.7" rx="1" fill="#1f1a33"/>
+<circle cx="85.6" cy="867.4" r="1.2" fill="#c9c4d6"/>
+<rect x="89.8" y="866.5" width="29.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="85.6" cy="872.4" r="1.2" fill="#c9c4d6"/>
+<rect x="89.8" y="871.5" width="25.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="85.6" cy="877.3" r="1.2" fill="#c9c4d6"/>
+<rect x="89.8" y="876.4" width="27.9" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="85.6" cy="882.3" r="1.2" fill="#c9c4d6"/>
+<rect x="89.8" y="881.4" width="19.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="129.7" cy="867.4" r="1.2" fill="#c9c4d6"/>
+<rect x="133.9" y="866.5" width="21.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="129.7" cy="872.4" r="1.2" fill="#c9c4d6"/>
+<rect x="133.9" y="871.5" width="31.9" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="129.7" cy="877.3" r="1.2" fill="#c9c4d6"/>
+<rect x="133.9" y="876.4" width="26.1" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="129.7" cy="882.3" r="1.2" fill="#c9c4d6"/>
+<rect x="133.9" y="881.4" width="29.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="129.7" cy="887.3" r="1.2" fill="#c9c4d6"/>
+<rect x="133.9" y="886.4" width="19.9" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="126.4" y="862.9" width="45.2" height="32.7" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="192.0" y="864.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#1f1a33" text-anchor="start">This slide now follows “Two lists 2”.</text>
+<text x="192.0" y="882.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The other 11 still follow “Two lists”. Free objects on this slide stay free.</text>
+<text x="192.0" y="908.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#6e6880" text-anchor="start">What is this layout for?</text>
+<rect x="192.0" y="916.0" width="330.0" height="30.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="204.0" y="936.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start" font-style="italic">Compare, with room for the longer side</text>
+<rect x="532.0" y="917.0" width="73.2" height="28.0" rx="7" fill="#5b4bc4"/>
+<text x="568.6" y="935.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Name it</text>
+<rect x="613.2" y="917.0" width="59.8" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="643.1" y="935.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Later</text>
+<rect x="684.0" y="844.0" width="59.6" height="20.0" rx="10" fill="#fdebd9" stroke="#f2a057" stroke-width="1"/>
+<text x="713.8" y="858.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#1f1a33" text-anchor="middle">to name</text>
+<text x="840.0" y="856.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">New layout from this slide</text>
+<text x="840.0" y="884.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">• is made at once, named after its parent (“Two lists 2”), and the slide follows it.</text>
+<text x="840.0" y="906.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">• takes the slide’s placeholders at their present frames. Free objects stay on the slide.</text>
+<text x="840.0" y="928.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">• that is still unnamed and followed by no slide is removed automatically.</text>
+<text x="840.0" y="950.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">• once named, stays; it can be hidden in All layouts…, like a built-in style (D780).</text>
+<text x="840.0" y="972.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">• is listed in All layouts… with “to name”, as styles are.</text>
+<text x="62.0" y="996.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Why a purpose question and not just a name: a layout’s name states what it is for, like a style’s, so “Two lists 2” is only a placeholder for an answer.</text></svg>
