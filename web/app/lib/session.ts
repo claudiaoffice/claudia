@@ -15,7 +15,7 @@ import type { Shown } from './references'
 import { isOnSlide, othersOn, SlideActions, type Other, type PictureImport, type ShapeDef, type SlideHost, type SlideObject } from './slide-host'
 import type { CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
-import type { ChartDraft, ChartFigure, ChartSpec } from './charts'
+import type { ChartDraft, ChartFigure, ChartFigures, ChartSpec } from './charts'
 import { rangeTouchedBy } from './charts'
 import type { NameDraft, NameInfo, NameRegion } from './names'
 import type { PivotDefinition, PivotInfo, PivotLabels } from './pivots'
@@ -413,6 +413,11 @@ export class Session extends BaseSession<State> implements SlideHost {
   }
 
   // -- charts (E6.6, E6.31): a chart is an object on a sheet or a slide, with a definition of its own
+  /** What draws a chart, on a sheet or a slide (`ChartFigures`): this session's figures. */
+  get figures(): ChartFigures {
+    return this
+  }
+
   /** The already-cached figure for a diagram, or `null` while it has not been asked for yet (call
    * `ensureFigure` to start that, typically from the component that is about to draw it). */
   figureOf(diagramId: string): ChartFigure | null {

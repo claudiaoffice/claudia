@@ -914,13 +914,15 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return (await this.write('rename_thing', { id, name })) !== false
   }
 
-  /** The next free generic name for a thing of `kind` (an object kind, `sheet`, `slide`), in the language of this
-   * window: "Chart 2" when "Chart 1" is taken (D1475). `null` when the server cannot say (an older one, no link). */
+  /** The next free generic name for a thing of `kind` (an object kind or `slide`), in the language of this window:
+   * "Chart 2" when "Chart 1" is taken (D1475). `null` when the server says no (an older one does not know the request);
+   * a lost connection is not caught here. */
   async freeName(kind: string): Promise<string | null> {
     try {
       return (await this.need().request<{ name: string }>('free_name', { kind })).name
-    } catch {
-      return null
+    } catch (error) {
+      if (error instanceof ProtocolError) return null
+      throw error
     }
   }
 

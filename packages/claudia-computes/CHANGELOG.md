@@ -12,8 +12,8 @@ Heavy functions in worker processes (E4.4, D37, D1314).
   of the history, as a slide of its own right after a tab (`as_new_slide`), on a slide (`on_slide`, half the frame in
   its middle) or floating on a sheet (`on_sheet`), from a `NewChart`; `to_new_slide` is "Move to Slide" (a new slide
   after the chart's sheet, the chart filling it); `removal` takes objects away with every definition nothing else shows
-  and every slide left empty. `RemoveSlide(id, if_empty=True)` does nothing while the slide holds an object (the undo
-  of `AddSlide`). A workbook's objects may change holder between a sheet and a slide
+  and every slide left empty. The undo of `AddSlide` is `TakeBackSlide`, which does nothing while the slide holds an
+  object. A workbook's objects may change holder between a sheet and a slide
   (`WorkbookModel.may_change_holder`).
 - Slides in a workbook (E6.31 step 2, D1470, D1471): `WorkbookModel.slides` (the core's `Slides`) and `tabs`, the one
   order of the sheets and slides (`Tab(kind, id)`); `AddSlide`/`RemoveSlide`; objects on a slide with the core's

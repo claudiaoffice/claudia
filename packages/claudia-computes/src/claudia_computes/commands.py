@@ -275,7 +275,7 @@ class AddSlide(Command):
         model.check_thing_name(self.id, self.name)
         model.add_slide(Slide(self.id, self.name, self.description), self.index)
         ctx.emit(TabsChanged())
-        return RemoveSlide(self.id, if_empty=True)
+        return TakeBackSlide(self.id)
 
     def to_data(self) -> dict:
         data: dict = {"id": self.id, "name": self.name, "index": self.index}
@@ -299,13 +299,10 @@ class AddSlide(Command):
 @dataclass(frozen=True)
 class RemoveSlide(Command):
     """Remove a slide that has no objects (the core's rule for every holder); undo puts it back in its place, with
-    its name and what was written about it. With ``if_empty`` a slide that has objects stays and nothing happens: the
-    undo of a slide made for a chart takes the slide away only while it is empty, since a slide goes with its last
-    object (E6.31, Q4 and Q20 of the review of 2026-11-22)."""
+    its name and what was written about it."""
 
     kind: ClassVar[str] = "computes.RemoveSlide"
     id: str
-    if_empty: bool = False
 
     @property
     def label(self) -> str:
@@ -316,21 +313,34 @@ class RemoveSlide(Command):
         return "remove a slide"
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
-        if self.if_empty and ctx.model.stack_of(self.id):
-            return Batch(())  # it stays, and so there is nothing to put back
         slide, index = ctx.model.remove_slide(self.id)
         ctx.emit(TabsChanged())
         return AddSlide(slide.id, slide.name, index, slide.description)
 
     def to_data(self) -> dict:
-        return {"id": self.id, "if_empty": True} if self.if_empty else {"id": self.id}
+        return {"id": self.id}
 
     @classmethod
     def from_data(cls, data, registry) -> RemoveSlide:
-        return cls(data["id"], bool(data.get("if_empty", False)))
+        return cls(data["id"])
 
     def redacted(self) -> Command:
         return self
+
+
+@register
+@dataclass(frozen=True)
+class TakeBackSlide(RemoveSlide):
+    """The undo of :class:`AddSlide`: the slide goes while it is empty; one that holds an object stays and nothing
+    happens, since a slide goes with its last object (E6.31, Q4 and Q20 of the review of 2026-11-22). So undoing
+    "Move to Slide" keeps a slide a colleague has put something on."""
+
+    kind: ClassVar[str] = "computes.TakeBackSlide"
+
+    def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        if ctx.model.stack_of(self.id):
+            return Batch(())  # it stays, and so there is nothing to put back
+        return super().apply(ctx)
 
 
 @register

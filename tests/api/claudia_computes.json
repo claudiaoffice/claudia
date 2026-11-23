@@ -702,7 +702,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', if_empty: 'bool' = False) -> None",
+  "init": "(id: 'str') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'RemoveSlide'",
@@ -1131,7 +1131,7 @@
    "header_texts": "(self, region: 'Rect') -> 'list[str]'",
    "holders": "(self) -> 'list[str]'",
    "load_state": "(self, state: 'dict') -> 'None'",
-   "may_change_holder": "(self, old: 'CellAnchor | SlideAnchor', new: 'CellAnchor | SlideAnchor') -> 'bool'",
+   "may_change_holder": "(self, obj: 'VisualObject[CellAnchor | SlideAnchor]', new: 'CellAnchor | SlideAnchor') -> 'bool'",
    "name_with_id": "(self, thing_id: 'str') -> 'NamedRange | None'",
    "named_things": "(self)",
    "outcome_table": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, combine: 'str' = 'all') -> 'OutcomeTable | None'",

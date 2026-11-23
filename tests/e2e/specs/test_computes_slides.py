@@ -134,9 +134,8 @@ def _second_sheet(world: World, name: str) -> None:
 
 
 # ------------------------------------------------------------------------------------------------ Edit ▸ Chart…
-def open_chart_dialog(person: Person, cells: str | None) -> None:
-    if cells is not None:
-        go_to(person, cells)
+def open_chart_dialog(person: Person, cells: str) -> None:
+    go_to(person, cells)
     person.menu("Edit", "Chart…")
     person.page.wait_for_selector(".modal >> text=Show as")
 
@@ -165,17 +164,19 @@ def _name_field(world: World) -> None:
 
 
 def insert_chart(person: Person, name: str, how: str) -> None:
-    on_slide = how == "on this slide"
-    open_chart_dialog(person, None if on_slide else "A1:B4")
+    open_chart_dialog(person, "A1:B4")
     dialog = person.page.locator(".modal")
     choice = {"as a slide": "A slide", "as a floating object on the sheet": "A floating object on the sheet"}
-    dialog.get_by_role("radio", name=choice.get(how, "On this slide")).check()
+    dialog.get_by_role("radio", name=choice[how]).check()
     dialog.get_by_label("Name of the chart").fill(name)
     dialog.locator("button[type=submit]").click()
     person.page.wait_for_selector(".modal >> text=Show as", state="detached")
 
 
-@when(parsers.re(r'I insert a bar chart "(?P<name>[^"]+)" of A1:B4 (?P<how>as a slide|as a floating object on the sheet)'))
+INSERTED_AS = r'"(?P<name>[^"]+)" of A1:B4 (?P<how>as a slide|as a floating object on the sheet)'
+
+
+@when(parsers.re(f"I insert a bar chart {INSERTED_AS}"))
 @given(parsers.re(r'I inserted a bar chart "(?P<name>[^"]+)" of A1:B4 (?P<how>as a slide)'))
 def _insert_chart(world: World, scene: Scene, name: str, how: str) -> None:
     insert_chart(world.ann, name, how)
@@ -331,7 +332,8 @@ def _text_beside(world: World, words: str) -> None:
     # the tool puts it near the top left corner, over the chart: it is dragged into the half the chart left free
     chart = page.locator(CHART_ON_SLIDE).bounding_box()
     drag(world.ann, f"{SLIDE} .obj.text", chart["width"], 0)
-    eventually(lambda: _assert(box.bounding_box()["x"] >= chart["x"] + chart["width"], "the text box is beside the chart"))
+    beside = chart["x"] + chart["width"]
+    eventually(lambda: _assert(box.bounding_box()["x"] >= beside, "the text box is beside the chart"))
 
 
 @when("I load the page again")

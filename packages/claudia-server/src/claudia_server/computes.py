@@ -708,8 +708,8 @@ def _define_diagram(ctx, *, definition, base):
 
 @computes_methods.method("update_diagram", "id:str definition:dict base:revision?", write=True)
 def _update_diagram(ctx, *, id, definition, base):
-    """Redefine a chart in place (E6.6): what a tab or floating object already showing `id` updates to, with
-    nothing to re-place. Same shape as `define_diagram`'s `definition`; the id and format are unchanged."""
+    """Redefine a chart in place (E6.6): what a chart already showing `id` updates to, with nothing to re-place. Same
+    shape as `define_diagram`'s `definition`; the id and format are unchanged."""
     _diagram_definition(_workbook(ctx), id, "update_diagram")
     command = UpdateAsset(DIAGRAM.name, id, {**definition, "id": id, "format": 1})
     return done(ctx, command, base)
@@ -722,15 +722,17 @@ def _forget_diagram(ctx, *, id, base):
     return done(ctx, ForgetAsset(DIAGRAM.name, id), base)
 
 
-_SHOWN_AS = ("slide", "on_slide", "sheet")
+#: What a chart may be shown as, and the keys of its place: a tab to put a new slide after, the slide shown, or a cell
+#: of a sheet and the size.
+_PLACE_KEYS = {"slide": {"after"}, "on_slide": {"slide"}, "sheet": {"sheet", "row", "col", "w", "h"}}
 
 
-def _place_of(workbook: WorkbookModel, show_as: str, place: dict) -> dict:
-    """``place`` checked for ``show_as``: ``{after}`` (a tab) for a new slide, ``{slide}`` for the slide shown,
-    ``{sheet, row, col, w, h}`` on a sheet; ``bad_request`` for anything else."""
-    wanted = {"slide": {"after"}, "on_slide": {"slide"}, "sheet": {"sheet", "row", "col", "w", "h"}}.get(show_as)
+def _check_place(workbook: WorkbookModel, show_as: str, place: dict) -> None:
+    """``bad_request`` for a ``place`` that does not fit ``show_as``, ``command_error`` for a tab, slide or sheet the
+    workbook does not have."""
+    wanted = _PLACE_KEYS.get(show_as)
     if wanted is None:
-        raise RequestError("bad_request", msg("insert_chart: show_as is one of {kinds}", kinds=", ".join(_SHOWN_AS)))
+        raise RequestError("bad_request", msg("insert_chart: show_as is one of {kinds}", kinds=", ".join(_PLACE_KEYS)))
     if not isinstance(place, dict) or set(place) != wanted:
         raise RequestError(
             "bad_request",
@@ -749,7 +751,6 @@ def _place_of(workbook: WorkbookModel, show_as: str, place: dict) -> dict:
             raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=place["sheet"]))
         if not all(isinstance(place[key], int) and place[key] >= 0 for key in ("row", "col", "w", "h")):
             raise RequestError("bad_request", msg("insert_chart: row, col, w and h are whole numbers from 0"))
-    return place
 
 
 def _new_slide(ctx: Context, workbook: WorkbookModel) -> tuple[str, str]:
@@ -769,19 +770,19 @@ def _insert_chart(ctx, *, definition, show_as, place, name, base):
     if "id" in definition or "format" in definition:
         raise RequestError("bad_request", msg("insert_chart: id and format are assigned by the server"))
     workbook = _workbook(ctx)
-    where = _place_of(workbook, show_as, place)
+    _check_place(workbook, show_as, place)
     chosen = clean_name(name or "") or default_name(ctx, "diagram")
     chart = NewChart(fresh_id("g", workbook.diagrams), fresh_id("o", workbook.objects), chosen, definition)
     slide: str | None = None
     if show_as == "slide":
         slide, slide_name = _new_slide(ctx, workbook)
-        step = chart_steps.as_new_slide(workbook, chart, slide_id=slide, slide_name=slide_name, after=where["after"])
+        step = chart_steps.as_new_slide(workbook, chart, slide_id=slide, slide_name=slide_name, after=place["after"])
     elif show_as == "on_slide":
-        slide = where["slide"]
+        slide = place["slide"]
         step = chart_steps.on_slide(workbook, chart, slide)
     else:
-        anchor = CellAnchor(SheetId(where["sheet"]), where["row"], where["col"])
-        step = chart_steps.on_sheet(workbook, chart, anchor, where["w"], where["h"])
+        anchor = CellAnchor(SheetId(place["sheet"]), place["row"], place["col"])
+        step = chart_steps.on_sheet(workbook, chart, anchor, place["w"], place["h"])
     return done(ctx, step, base, object=chart.object_id, slide=slide, diagram=chart.spec_id)
 
 
@@ -1278,6 +1279,7 @@ CELLS_AND_SLIDES = Placement(
 add_object_methods(computes_methods, model_of=_workbook, placement=CELLS_AND_SLIDES)
 
 
+# in place of the shared `remove_object` that add_object_methods registered: in a workbook more goes with an object
 @computes_methods.method("remove_object", "id:str base:revision?", write=True)
 def _remove_object(ctx, *, id, base):  # noqa: A002 - the wire name
     """Take an object away, in one step with what goes with it (E6.31, D1475): a chart's definition, and the slide it

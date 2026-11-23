@@ -136,7 +136,7 @@ English: only a wrong client fails them.
   `charts`. State schema 18; a stored workbook with chart tabs is not read (no upgrade, D1475).
 - **The core.** `ObjectModel.may_change_holder(old, new)` replaces the flag `objects_change_holder`: composes moves an
   object to any paragraph; computes from a sheet to a slide and back (the undo of "Move to Slide"), never between two
-  sheets or two slides. `RemoveSlide(if_empty=True)` is the undo of `AddSlide`: it does nothing while the slide holds an
+  sheets or two slides. `TakeBackSlide` (a `RemoveSlide` of its own, not a flag: CONTRIBUTING §2) is the undo of `AddSlide`: it does nothing while the slide holds an
   object, so undoing "Move to Slide" keeps a slide a colleague has put something on.
 - **Wire.** `insert_chart(definition, show_as, place, name?)` with `show_as` `slide` (`{after}`), `on_slide`
   (`{slide}`) or `sheet` (`{sheet, row, col, w, h}`); `move_to_slide(object)`; computes' `remove_object` goes through
@@ -165,4 +165,16 @@ English: only a wrong client fails them.
   chosen; the dialog's own error line is gone, a refusal is said by the notice every write gives.
 - **E2E.** `tests/e2e/specs/test_computes_slides.py` binds the @core rules of `slides.feature`; the name of a chart is
   read in Name & describe…, and whether something was selected is noted when the slide is shown. The browser script
-  `e2e:computes-slides` keeps the rules of search and print.
+  `e2e:computes-slides` keeps the rules of search and print. Not bound yet (they skip, saying the step): the @extended
+  scenarios of a chart on a sheet "at the selected cells", the dialog and a second chart while a slide is shown, two
+  people (Ben, Vera), a slide with a text box left, renaming a slide, "+" and printing. "A second chart on the slide"
+  cannot pass as written: its Background has no table or query result, and on a slide the dialog offers only those
+  (D1475); the owner is asked.
+- **Review (two axes) and what changed after it:** the undo of `AddSlide` is a command of its own, `TakeBackSlide`,
+  not a flag on `RemoveSlide` (CONTRIBUTING §2); `may_change_holder` takes the object, so in a workbook only a chart
+  changes holder (a text box cannot leave a slide and leave it empty); `_check_place` and one table of the places
+  `show_as` takes; `SlideHost.figures` instead of two optional methods; `freeName` catches only a refusal of the
+  server; the vulture whitelist follows the methods; a reasoned `noqa` in composes. Left as they were: the server
+  checks the tab, slide and sheet of a place before `chart_steps` does (its refusals are said to the person, the model's
+  are for a wrong client); the history's label "Move to slide" is English, as all history labels are (UX-22); "Move to
+  Slide" has no key (owner, D1475).

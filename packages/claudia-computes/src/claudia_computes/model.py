@@ -639,10 +639,11 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor | SlideAnchor]):
             return SlideAnchor.from_data(data)
         return CellAnchor.from_data(data)
 
-    def may_change_holder(self, old: CellAnchor | SlideAnchor, new: CellAnchor | SlideAnchor) -> bool:
-        """A chart moves from a sheet to a slide ("Move to Slide", E6.31 A4), and back when that is undone; an
-        object does not move from one sheet to another, or from one slide to another."""
-        return type(old) is not type(new)
+    def may_change_holder(self, obj: VisualObject[CellAnchor | SlideAnchor], new: CellAnchor | SlideAnchor) -> bool:
+        """A chart moves from a sheet to a slide ("Move to Slide", E6.31 A4), and back when that is undone; nothing
+        else changes its holder, and nothing moves from one sheet to another or from one slide to another, so a slide
+        loses an object only when it is taken away (and goes with its last one)."""
+        return obj.body.diagram is not None and type(obj.anchor) is not type(new)
 
     def check_anchor(self, anchor: CellAnchor | SlideAnchor, body: ObjectBody) -> None:
         """An object on a sheet hangs at a cell of it, and its size is not bounded (a sheet has no edge to fall off);

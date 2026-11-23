@@ -5,7 +5,7 @@ Feature: Slides in computes (E6.31)
   A slide comes into existence only for a chart, and goes with its last object. The screens are
   `notes/mockups/computes-slides-*.svg`, the architecture `notes/e6-31-slides-in-computes.md`. The owner's answers
   to the review of 2026-11-22 are written into the scenarios (`Q<n>` names the question they answer); the decisions
-  are D1470 to D1473.
+  are D1470 to D1475.
   What every object does (selecting, moving, scaling, naming, the object menu as such) is in `specs/objects/` and is
   not repeated here.
 

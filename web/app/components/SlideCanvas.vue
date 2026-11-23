@@ -24,7 +24,6 @@ import { facetCss, scaleCss } from '~/lib/slide-style'
 import { withDisplayInk } from '~/lib/style-css'
 import type { SlideObject } from '~/lib/slide-session'
 import { isOnSlide, type SlideHost } from '~/lib/slide-host'
-import type { ChartFigures } from '~/lib/charts'
 import type { MenuItem } from './MenuBar.vue'
 import { useI18n } from '~/lib/i18n'
 import type { SlideMark } from '~/lib/slide-search-host'
@@ -185,9 +184,6 @@ function cancelContainer() {
   containerEditing.value = null
   area.value?.focus({ preventScroll: true })
 }
-/** What draws a chart on a slide: computes' session (creates has no charts). */
-const figures: ChartFigures | null =
-  session.figureOf && session.ensureFigure ? { figureOf: (id) => session.figureOf!(id), ensureFigure: (id, force) => session.ensureFigure!(id, force) } : null
 /** What a screen reader says for an object: its kind and its description (or its words), or that it is decoration. */
 const label = (o: SlideObject) => objectName(o, { shape: outline(o)?.name, words: wordsOf(o) })
 
@@ -613,8 +609,8 @@ defineExpose({ paste: () => clip.paste(), focus: () => area.value?.focus(), begi
         <img v-if="o.kind === 'image'" class="picture" :src="pictureSrc(o)" alt="" draggable="false" >
         <template v-else-if="o.kind === 'diagram'">
           <!-- drawn in slide units and scaled with the slide, so that it looks the same at every size of the window -->
-          <div v-if="figures && o.ref" class="chart" :style="{ transform: `scale(${scale})` }">
-            <ChartView :session="figures" :diagram-id="o.ref" :width="frameOf(o).w" :height="frameOf(o).h" />
+          <div v-if="session.figures && o.ref" class="chart" :style="{ transform: `scale(${scale})` }">
+            <ChartView :session="session.figures" :diagram-id="o.ref" :width="frameOf(o).w" :height="frameOf(o).h" />
           </div>
         </template>
         <template v-else-if="o.kind === 'container'">

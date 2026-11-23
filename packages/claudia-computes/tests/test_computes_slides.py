@@ -105,6 +105,14 @@ def test_a_text_box_sits_on_a_slide_and_must_stay_in_its_frame(doc):
         doc.execute(MoveObject("t1", SlideAnchor("p1", 1300, 700).to_data()), author="ana")
 
 
+def test_only_a_chart_leaves_its_slide_for_a_sheet_so_a_slide_loses_an_object_only_when_it_is_taken_away(doc):
+    doc.execute(AddSlide("p1", "Slide 1"), author="ana")
+    doc.execute(text_box(), author="ana")
+    with pytest.raises(ValueError, match="cannot change its holder"):
+        doc.execute(MoveObject("t1", {"kind": "cell", "holder": S1, "row": 0, "col": 0}), author="ana")
+    assert doc.model.get_object("t1").anchor == SlideAnchor("p1", 100, 100)
+
+
 def test_the_words_of_a_text_box_on_a_slide_are_written_as_in_creates_and_undone(doc):
     # CODE-79: writing in a text box on a workbook's slide was an internal error
     doc.execute(AddSlide("p1", "Slide 1"), author="ana")

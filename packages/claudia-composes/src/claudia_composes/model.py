@@ -609,7 +609,7 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
         across = page.height if page.orientation == "landscape" else page.width
         return int((across - page.margin_left - page.margin_right) / 1000 * 4 / 3)
 
-    def may_change_holder(self, old: ParagraphAnchor, new: ParagraphAnchor) -> bool:  # noqa: ARG002
+    def may_change_holder(self, obj: TextObject, new: ParagraphAnchor) -> bool:  # noqa: ARG002 - any object, anywhere
         """An object can be dragged to another paragraph (D1351)."""
         return True
 

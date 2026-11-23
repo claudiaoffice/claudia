@@ -1072,10 +1072,11 @@ class ObjectModel[A: Anchor]:
             self.paragraph_order += 1
         return old
 
-    def may_change_holder(self, old: A, new: A) -> bool:  # noqa: ARG002 - an app that allows a move looks at both
-        """May a move take an object from where ``old`` puts it to the other holder ``new`` puts it on (D1351, A4 of
+    def may_change_holder(self, obj: VisualObject[A], new: A) -> bool:  # noqa: ARG002 - an app that allows it looks
+        """May a move take the object ``obj``, where it is now, to the other holder ``new`` puts it on (D1351, A4 of
         E6.31)? Not by default: on a slide or a sheet a move to another holder would make it another object for
-        locks and the stacking order. A text lets it go to another paragraph; a workbook from a sheet to a slide."""
+        locks and the stacking order. A text lets any object go to another paragraph; a workbook a chart from a sheet
+        to a slide."""
         return False
 
     def rehang_object(self, obj: VisualObject[A], at: int | None = None) -> int:
@@ -1086,7 +1087,7 @@ class ObjectModel[A: Anchor]:
         if obj.holder == old.holder:
             self.replace_object(obj)
             return self._stack[old.holder].index(obj.id)
-        if not self.may_change_holder(old.anchor, obj.anchor):
+        if not self.may_change_holder(old, obj.anchor):
             raise ValueError("an object cannot change its holder")
         self.check_object(obj)
         stack = self._stack.setdefault(obj.holder, [])

@@ -265,7 +265,7 @@ msgstr "Ein Aufzählungszeichen ist ein einzelnes Symbol (bis zu 4 Zeichen), nic
 msgid "A change here changes every use of “{name}”"
 msgstr "Eine Änderung hier ändert jede Verwendung von „{name}“"
 
-#: packages/claudia-core/src/claudia_core/objects.py:86
+#: packages/claudia-core/src/claudia_core/objects.py:87
 msgid "A chart does not turn"
 msgstr "Ein Diagramm lässt sich nicht drehen"
 
@@ -353,7 +353,7 @@ msgstr "Eine Liste verwendet dieses Schema"
 msgid "A name like this exists already and will point here."
 msgstr "Ein Name wie dieser existiert bereits und verweist künftig hierher."
 
-#: packages/claudia-computes/src/claudia_computes/model.py:852
+#: packages/claudia-computes/src/claudia_computes/model.py:853
 msgid "A named range is renamed in the list of names, which also changes the formulas that use it"
 msgstr "Ein benannter Bereich wird in der Liste der Namen umbenannt; dort ändern sich auch die Formeln, die ihn verwenden"
 
@@ -441,7 +441,7 @@ msgstr "Der Name eines Formats ist eine Zeile mit 1 bis {limit} Zeichen, nicht {
 msgid "A table always has its header row."
 msgstr "Eine Tabelle hat immer ihre Kopfzeile."
 
-#: packages/claudia-core/src/claudia_core/objects.py:86
+#: packages/claudia-core/src/claudia_core/objects.py:87
 msgid "A table does not turn"
 msgstr "Eine Tabelle lässt sich nicht drehen"
 
@@ -1833,7 +1833,7 @@ msgstr "Punktdiagramm von {n} Ergebnissen, von {low} bis {high}, Median {median}
 msgid "Double-click to rename"
 msgstr "Doppelklick zum Umbenennen"
 
-#: web/app/components/SlideCanvas.vue:635
+#: web/app/components/SlideCanvas.vue:631
 msgid "Double-click to type"
 msgstr "Doppelklick zum Schreiben"
 
@@ -3561,7 +3561,7 @@ msgstr "Keine Schrift, die sich lesen lässt."
 msgid "Not available yet"
 msgstr "Noch nicht verfügbar"
 
-#: web/app/lib/base-session.ts:1246 web/app/lib/base-session.ts:804
+#: web/app/lib/base-session.ts:1248 web/app/lib/base-session.ts:804
 msgid "Not connected to the server."
 msgstr "Nicht mit dem Server verbunden."
 
@@ -3617,7 +3617,7 @@ msgstr "Was im Dokument zu sehen ist, ändert sich nicht: es steht nur im Verlau
 msgid "Nothing differs from now"
 msgstr "Nichts weicht von jetzt ab"
 
-#: web/app/lib/base-session.ts:1386
+#: web/app/lib/base-session.ts:1388
 msgid "Nothing has changed since the last checkpoint."
 msgstr "Seit dem letzten Prüfpunkt hat sich nichts geändert."
 
@@ -3745,7 +3745,7 @@ msgstr "Nummern"
 msgid "Object in paragraph {n}"
 msgstr "Objekt in Absatz {n}"
 
-#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1393 web/app/components/SlideCanvas.vue:674 web/app/components/TextObjectMenu.vue:173
+#: web/app/components/ContextMenu.vue:31 web/app/components/ContextMenu.vue:32 web/app/components/SheetGrid.vue:1393 web/app/components/SlideCanvas.vue:670 web/app/components/TextObjectMenu.vue:173
 msgid "Object menu"
 msgstr "Objektmenü"
 
@@ -5277,7 +5277,7 @@ msgstr "Bedingter Trennstrich"
 msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr "Inzwischen hat jemand den ersten Administrator dieses Servers benannt. Melden Sie sich an, oder bitten Sie darum, hinzugefügt zu werden."
 
-#: packages/claudia-core/src/claudia_core/objects.py:709
+#: packages/claudia-core/src/claudia_core/objects.py:710
 msgid "Something else is already called “{name}”"
 msgstr "Etwas anderes heißt schon „{name}“"
 
@@ -5285,7 +5285,7 @@ msgstr "Etwas anderes heißt schon „{name}“"
 msgid "Something is repeated that is not there."
 msgstr "Es wird etwas wiederholt, das nicht da ist."
 
-#: web/app/lib/base-session.ts:1235 web/app/lib/base-session.ts:1439 web/app/lib/session.ts:684
+#: web/app/lib/base-session.ts:1237 web/app/lib/base-session.ts:1441 web/app/lib/session.ts:689
 msgid "Something went wrong."
 msgstr "Etwas ist schiefgegangen."
 
@@ -5685,7 +5685,7 @@ msgstr "Dieser Wiederherstellungsschlüssel passt nicht zu diesem Dokument."
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr "Dieser Server betreibt {other}. Dieses Fenster ist {this} – öffnen Sie ihn dort."
 
-#: web/app/lib/base-session.ts:1016
+#: web/app/lib/base-session.ts:1018
 msgid "That was deleted. This is the last moment it was there."
 msgstr "Das wurde gelöscht. Dies ist der letzte Moment, in dem es da war."
 
@@ -6821,7 +6821,7 @@ msgstr "Zur „)“ bei Zeichen {position} fehlt die „(“. Es wird nichts ers
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr "Zur „[“ bei Zeichen {position} fehlt die „]“. Es wird nichts ersetzt."
 
-#: packages/claudia-core/src/claudia_core/objects.py:466
+#: packages/claudia-core/src/claudia_core/objects.py:467
 msgid "There is already a chart called “{name}”"
 msgstr "Es gibt schon ein Diagramm namens „{name}“"
 
@@ -6829,7 +6829,7 @@ msgstr "Es gibt schon ein Diagramm namens „{name}“"
 msgid "There is already a colour role named “{name}”"
 msgstr "Es gibt schon eine Farbrolle namens „{name}“"
 
-#: packages/claudia-core/src/claudia_core/objects.py:467
+#: packages/claudia-core/src/claudia_core/objects.py:468
 msgid "There is already a container called “{name}”"
 msgstr "Es gibt schon einen Container namens „{name}“"
 
@@ -6849,11 +6849,11 @@ msgstr "Es gibt schon einen benannten Bereich namens „{name}“"
 msgid "There is already a paragraph called “{name}”"
 msgstr "Es gibt schon einen Absatz namens „{name}“"
 
-#: packages/claudia-core/src/claudia_core/objects.py:465
+#: packages/claudia-core/src/claudia_core/objects.py:466
 msgid "There is already a picture called “{name}”"
 msgstr "Es gibt schon ein Bild namens „{name}“"
 
-#: packages/claudia-core/src/claudia_core/objects.py:464
+#: packages/claudia-core/src/claudia_core/objects.py:465
 msgid "There is already a shape called “{name}”"
 msgstr "Es gibt schon eine Form namens „{name}“"
 
@@ -6861,7 +6861,7 @@ msgstr "Es gibt schon eine Form namens „{name}“"
 msgid "There is already a sheet called “{name}”"
 msgstr "Es gibt schon ein Tabellenblatt namens „{name}“"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:451 packages/claudia-creates/src/claudia_creates/model.py:108
+#: packages/claudia-computes/src/claudia_computes/model.py:451 packages/claudia-creates/src/claudia_creates/model.py:106
 msgid "There is already a slide called “{name}”"
 msgstr "Es gibt schon eine Folie namens „{name}“"
 
@@ -6869,11 +6869,11 @@ msgstr "Es gibt schon eine Folie namens „{name}“"
 msgid "There is already a style named “{name}”"
 msgstr "Es gibt schon ein Format namens „{name}“"
 
-#: packages/claudia-core/src/claudia_core/objects.py:468
+#: packages/claudia-core/src/claudia_core/objects.py:469
 msgid "There is already a table called “{name}”"
 msgstr "Es gibt schon eine Tabelle namens „{name}“"
 
-#: packages/claudia-core/src/claudia_core/objects.py:463
+#: packages/claudia-core/src/claudia_core/objects.py:464
 msgid "There is already a text box called “{name}”"
 msgstr "Es gibt schon ein Textfeld namens „{name}“"
 
@@ -6897,7 +6897,7 @@ msgstr "Es gibt noch keine Tabelle zum Auswerten. Wählen Sie Zellen mit einer K
 msgid "There is nothing in this to redact."
 msgstr "Hier gibt es nichts zu schwärzen."
 
-#: web/app/lib/base-session.ts:1013
+#: web/app/lib/base-session.ts:1015
 msgid "There is nothing like that in this document."
 msgstr "So etwas gibt es in diesem Dokument nicht."
 
@@ -7277,7 +7277,7 @@ msgstr "Das ausgewählte Objekt auf einen Winkel in ganzen Grad drehen"
 msgid "Turn: drag, or arrow keys (Shift for 15°)"
 msgstr "Drehen: ziehen oder Pfeiltasten (mit Umschalt in 15°-Schritten)"
 
-#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:572 web/app/components/SheetGrid.vue:580 web/app/components/SheetGrid.vue:589 web/app/components/SheetGrid.vue:607 web/app/components/SlideCanvas.vue:290 web/app/components/SlideCanvas.vue:319 web/app/components/SlideCanvas.vue:327 web/app/components/SlideCanvas.vue:348 web/app/components/TextObjectLayer.vue:350 web/app/components/TextObjectLayer.vue:354 web/app/components/TextObjectMenu.vue:112
+#: web/app/components/RotatePopover.vue:102 web/app/components/SheetGrid.vue:572 web/app/components/SheetGrid.vue:580 web/app/components/SheetGrid.vue:589 web/app/components/SheetGrid.vue:607 web/app/components/SlideCanvas.vue:286 web/app/components/SlideCanvas.vue:315 web/app/components/SlideCanvas.vue:323 web/app/components/SlideCanvas.vue:344 web/app/components/TextObjectLayer.vue:350 web/app/components/TextObjectLayer.vue:354 web/app/components/TextObjectMenu.vue:112
 msgid "Turned to {degrees}"
 msgstr "Gedreht auf {degrees}"
 
@@ -7769,7 +7769,7 @@ msgstr "Sie werden Eigentümer des neuen Dokuments. Niemand sonst erhält Zugrif
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr "Sie können es trotzdem ändern – das ist eine Warnung, keine Ablehnung."
 
-#: web/app/components/SheetGrid.vue:458 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:597 web/app/components/SlideCanvas.vue:326 web/app/components/SlideCanvas.vue:335 web/app/components/SlideCanvas.vue:466 web/app/components/SlideCanvas.vue:489 web/app/components/TextObjectLayer.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:288 web/app/components/Workspace.vue:345 web/app/components/Workspace.vue:396 web/app/components/Workspace.vue:478 web/app/components/Workspace.vue:538 web/app/components/Workspace.vue:544 web/app/components/Workspace.vue:621 web/app/components/Workspace.vue:790 web/app/components/Workspace.vue:844 web/app/components/Workspace.vue:964 web/app/lib/base-session.ts:1208 web/app/lib/base-session.ts:1244
+#: web/app/components/SheetGrid.vue:458 web/app/components/SheetGrid.vue:587 web/app/components/SheetGrid.vue:597 web/app/components/SlideCanvas.vue:322 web/app/components/SlideCanvas.vue:331 web/app/components/SlideCanvas.vue:462 web/app/components/SlideCanvas.vue:485 web/app/components/TextObjectLayer.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:288 web/app/components/Workspace.vue:345 web/app/components/Workspace.vue:396 web/app/components/Workspace.vue:478 web/app/components/Workspace.vue:538 web/app/components/Workspace.vue:544 web/app/components/Workspace.vue:621 web/app/components/Workspace.vue:790 web/app/components/Workspace.vue:844 web/app/components/Workspace.vue:964 web/app/lib/base-session.ts:1210 web/app/lib/base-session.ts:1246
 msgid "You can only look at this document."
 msgstr "Sie können dieses Dokument nur ansehen."
 
@@ -7793,7 +7793,7 @@ msgstr "Sie können {doc} nicht mehr öffnen, es sei denn, jemand fügt Sie wied
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr "Ihr Browser wollte ihn nicht kopieren: Markieren Sie den Schlüssel und kopieren Sie ihn selbst."
 
-#: web/app/lib/base-session.ts:1241
+#: web/app/lib/base-session.ts:1243
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr "Ihre Änderung wurde nicht übernommen: Das Dokument hat sich unter Ihnen geändert. Es wurde neu geladen."
 
@@ -7845,7 +7845,7 @@ msgstr "eine Claudia-Datei kommt so hinein, wie sie ist, nicht als neues Dokumen
 msgid "a cell reference"
 msgstr "ein Zellbezug"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:686
+#: packages/claudia-computes/src/claudia_computes/model.py:687
 msgid "a chart's range must be inside the sheet"
 msgstr "Der Bereich eines Diagramms muss im Tabellenblatt liegen"
 
@@ -7857,7 +7857,7 @@ msgstr "Eine Spalte kann nicht vor sich selbst verschoben werden"
 msgid "a column has no setting {name!r}"
 msgstr "Eine Spalte hat keine Einstellung {name!r}"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:742
+#: packages/claudia-computes/src/claudia_computes/commands.py:752
 msgid "a column is {lo} to {hi} wide, not {size}"
 msgstr "Eine Spalte ist {lo} bis {hi} breit, nicht {size}"
 
@@ -7877,7 +7877,7 @@ msgstr "ein Raster aus Zufallszahlen (1 Zeile, 1 Spalte, von 0 bis 1 und keine g
 msgid "a heading is called by its words: change the words to change the name"
 msgstr "Eine Überschrift heißt wie ihr Text: Ändern Sie den Text, um den Namen zu ändern"
 
-#: packages/claudia-core/src/claudia_core/objects.py:1011 packages/claudia-core/src/claudia_core/objects.py:1069
+#: packages/claudia-core/src/claudia_core/objects.py:1036 packages/claudia-core/src/claudia_core/objects.py:1095
 msgid "a holder has at most {limit} objects"
 msgstr "Hier haben höchstens {limit} Objekte Platz"
 
@@ -7913,7 +7913,7 @@ msgstr "Ein Name hat höchstens {max} Zeichen"
 msgid "a name has no control characters"
 msgstr "Ein Name enthält keine Steuerzeichen"
 
-#: packages/claudia-core/src/claudia_core/objects.py:682
+#: packages/claudia-core/src/claudia_core/objects.py:683
 msgid "a name is written without spaces around it or twice in a row"
 msgstr "Ein Name hat keine Leerzeichen am Anfang oder Ende und keine zwei hintereinander"
 
@@ -7961,7 +7961,7 @@ msgstr "Eine Palette enthält höchstens {limit} Farbrollen"
 msgid "a paragraph holds text of at most {limit} characters"
 msgstr "Ein Absatz hat höchstens {limit} Zeichen"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:88
+#: packages/claudia-creates/src/claudia_creates/model.py:86
 msgid "a planned time is a whole number of seconds from 1 to {limit}"
 msgstr "Eine geplante Zeit ist eine ganze Zahl von Sekunden von 1 bis {limit}"
 
@@ -7997,11 +7997,11 @@ msgstr "ID, Name und Farbe einer Rolle sind Text"
 msgid "a row cannot be moved in front of itself"
 msgstr "Eine Zeile kann nicht vor sich selbst verschoben werden"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:740
+#: packages/claudia-computes/src/claudia_computes/commands.py:750
 msgid "a row is {lo} to {hi} high, not {size}"
 msgstr "Eine Zeile ist {lo} bis {hi} hoch, nicht {size}"
 
-#: packages/claudia-core/src/claudia_core/objects.py:376
+#: packages/claudia-core/src/claudia_core/objects.py:377
 msgid "a selection holds at most {limit} objects"
 msgstr "Eine Auswahl umfasst höchstens {limit} Objekte"
 
@@ -8009,11 +8009,11 @@ msgstr "Eine Auswahl umfasst höchstens {limit} Objekte"
 msgid "a sheet holds at most {limit} style ranges"
 msgstr "Ein Tabellenblatt hat höchstens {limit} formatierte Bereiche"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:829
+#: packages/claudia-computes/src/claudia_computes/model.py:830
 msgid "a sheet needs a name"
 msgstr "Ein Tabellenblatt braucht einen Namen"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:274 packages/claudia-computes/src/claudia_computes/model.py:855
+#: packages/claudia-computes/src/claudia_computes/commands.py:274 packages/claudia-computes/src/claudia_computes/model.py:856
 msgid "a slide needs a name"
 msgstr "Eine Folie braucht einen Namen"
 
@@ -8065,7 +8065,7 @@ msgstr "Eine Tabelle behält mindestens eine Spalte"
 msgid "a table keeps at least one row"
 msgstr "Eine Tabelle behält mindestens eine Zeile"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1042
+#: packages/claudia-computes/src/claudia_computes/model.py:1043
 msgid "a table needs a header row"
 msgstr "Eine Tabelle braucht eine Kopfzeile"
 
@@ -8193,11 +8193,11 @@ msgstr "ein Bild hat keine Wörter"
 msgid "an image is at most {megabytes} MB"
 msgstr "Ein Bild ist höchstens {megabytes} MB groß"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1258
+#: packages/claudia-server/src/claudia_server/computes.py:1259
 msgid "an object on a sheet is placed with row and col"
 msgstr "Ein Objekt auf einem Blatt wird mit row und col platziert"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1252
+#: packages/claudia-server/src/claudia_server/computes.py:1253
 msgid "an object on a slide is placed with x and y"
 msgstr "Ein Objekt auf einer Folie wird mit x und y platziert"
 
@@ -8453,19 +8453,19 @@ msgstr "count muss zwischen 1 und {limit} liegen"
 msgid "define_diagram: id and format are assigned by the server"
 msgstr "define_diagram: id und format vergibt der Server"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1149
+#: packages/claudia-server/src/claudia_server/computes.py:1150
 msgid "define_pivot: give the sheet it starts on or new_sheet, not both"
 msgstr "define_pivot: geben Sie das Blatt an, auf dem sie beginnt, oder new_sheet, nicht beides"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1159
+#: packages/claudia-server/src/claudia_server/computes.py:1160
 msgid "define_pivot: the name of the new sheet must have 1 to {limit} characters"
 msgstr "define_pivot: der Name des neuen Blatts muss 1 bis {limit} Zeichen haben"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1040
+#: packages/claudia-server/src/claudia_server/computes.py:1041
 msgid "define_sql: query must be text of at most {limit} characters"
 msgstr "define_sql: query muss Text mit höchstens {limit} Zeichen sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1056
+#: packages/claudia-server/src/claudia_server/computes.py:1057
 msgid "define_sql: {problem}"
 msgstr "define_sql: {problem}"
 
@@ -8745,19 +8745,19 @@ msgstr "in {source}"
 msgid "insert"
 msgstr "einfügen"
 
-#: packages/claudia-server/src/claudia_server/computes.py:770
+#: packages/claudia-server/src/claudia_server/computes.py:771
 msgid "insert_chart: id and format are assigned by the server"
 msgstr "insert_chart: id und format vergibt der Server"
 
-#: packages/claudia-server/src/claudia_server/computes.py:751
+#: packages/claudia-server/src/claudia_server/computes.py:753
 msgid "insert_chart: row, col, w and h are whole numbers from 0"
 msgstr "insert_chart: row, col, w und h sind ganze Zahlen ab 0"
 
-#: packages/claudia-server/src/claudia_server/computes.py:733
+#: packages/claudia-server/src/claudia_server/computes.py:735
 msgid "insert_chart: show_as is one of {kinds}"
 msgstr "insert_chart: show_as ist eines von {kinds}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:737
+#: packages/claudia-server/src/claudia_server/computes.py:739
 msgid "insert_chart: the place of a chart shown as {how} is {keys}"
 msgstr "insert_chart: Der Ort eines Diagramms, das als {how} gezeigt wird, ist {keys}"
 
@@ -8941,7 +8941,7 @@ msgstr "{name} verschieben"
 msgid "name"
 msgstr "Name"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1240
+#: packages/claudia-server/src/claudia_server/computes.py:1241
 msgid "name the sheet or the slide the object goes on"
 msgstr "Nenne das Blatt oder die Folie, auf die das Objekt kommt"
 
@@ -8989,7 +8989,7 @@ msgstr "Kein Dokument {id!r}"
 msgid "no field “{field}” in “{source}”: {names}"
 msgstr "Kein Feld „{field}“ in „{source}“: {names}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:832
+#: packages/claudia-server/src/claudia_server/computes.py:833
 msgid "no function named {name!r}"
 msgstr "Keine Funktion namens {name!r}"
 
@@ -9133,7 +9133,7 @@ msgstr "Kein gültiges JSON"
 msgid "notes"
 msgstr "Notizen"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:81
+#: packages/claudia-creates/src/claudia_creates/model.py:79
 msgid "notes are at most {limit} characters"
 msgstr "Notizen haben höchstens {limit} Zeichen"
 
@@ -9573,7 +9573,7 @@ msgstr "Größe"
 msgid "skipped"
 msgstr "übersprungen"
 
-#: web/app/components/SlideCanvas.vue:583
+#: web/app/components/SlideCanvas.vue:579
 msgid "slide"
 msgstr "Folie"
 
@@ -9605,7 +9605,7 @@ msgstr "Streuung (Standardabweichung)"
 msgid "spread of the logarithm"
 msgstr "Streuung des Logarithmus"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1009
+#: packages/claudia-server/src/claudia_server/computes.py:1010
 msgid "sql_preview: limit must be a whole number from 0 to {limit}"
 msgstr "sql_preview: limit muss eine ganze Zahl von 0 bis {limit} sein"
 
@@ -9621,11 +9621,11 @@ msgstr "beginnen mit"
 msgid "start with “{text}”"
 msgstr "mit „{text}“ beginnen"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1301
+#: packages/claudia-computes/src/claudia_computes/model.py:1302
 msgid "structural edit is outside the sheet"
 msgstr "Diese Änderung liegt außerhalb des Tabellenblatts"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1319
+#: packages/claudia-computes/src/claudia_computes/model.py:1320
 msgid "structural edit would push cells off the sheet"
 msgstr "Diese Änderung würde Zellen über den Rand des Tabellenblatts hinausschieben"
 
@@ -9673,7 +9673,7 @@ msgstr "Textfeld"
 msgid "text cannot be joined into a table of contents"
 msgstr "Text kann nicht mit einem Inhaltsverzeichnis verbunden werden"
 
-#: web/app/components/SlideCanvas.vue:643 web/app/components/TextObjectLayer.vue:425
+#: web/app/components/SlideCanvas.vue:639 web/app/components/TextObjectLayer.vue:425
 msgid "text of the object"
 msgstr "Text des Objekts"
 
@@ -9745,7 +9745,7 @@ msgstr "die Zellen ``rows`` weiter unten und ``columns`` weiter rechts vom Bezug
 msgid "the cells are more than the table's rows and cols"
 msgstr "Die Texte (cells) sind mehr, als die Tabelle Zeilen und Spalten hat"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1040
+#: packages/claudia-computes/src/claudia_computes/model.py:1041
 msgid "the cells of a name must be inside the sheet"
 msgstr "Die Zellen eines Namens müssen im Tabellenblatt liegen"
 
@@ -9765,7 +9765,7 @@ msgstr "die Verbindung wurde geschlossen ({code})"
 msgid "the date and time as a day number with the time of day as its fraction."
 msgstr "das Datum und die Uhrzeit als Tageszahl, mit der Uhrzeit als Bruchteil."
 
-#: packages/claudia-core/src/claudia_core/objects.py:1909 packages/claudia-core/src/claudia_core/objects.py:918
+#: packages/claudia-core/src/claudia_core/objects.py:1935 packages/claudia-core/src/claudia_core/objects.py:943
 msgid "the description is text of at most {limit} characters"
 msgstr "Die Beschreibung ist ein Text mit höchstens {limit} Zeichen"
 
@@ -9781,7 +9781,7 @@ msgstr "Das Dokument hat sich dort, wo diese Vorschau wirkt, seit ihrer Erstellu
 msgid "the document's own"
 msgstr "das eigene des Dokuments"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:807
+#: packages/claudia-computes/src/claudia_computes/commands.py:817
 msgid "the draw number cannot go below 0"
 msgstr "Die Ziehung kann nicht unter 0 sinken"
 
@@ -9861,7 +9861,7 @@ msgstr "Das Objekt muss auf der Folie bleiben ({slide_width} mal {slide_height} 
 msgid "the pivot table called ``name`` — the summary of a table the field panel of Tools ▸ Pivot Table describes. Written by the pivot's own commands, not by hand: change the pivot in its panel, not this formula. As the whole formula it fills the cells below and beside it; inside another formula it gives the first cell."
 msgstr "die Pivot-Tabelle namens ``name`` — die Zusammenfassung einer Tabelle, die das Feldfenster unter Werkzeuge ▸ Pivot-Tabelle beschreibt. Wird von den Befehlen der Pivot-Tabelle geschrieben, nicht von Hand: ändern Sie die Pivot-Tabelle in ihrem Feldfenster, nicht diese Formel. Als ganze Formel füllt sie die Zellen darunter und daneben; innerhalb einer anderen Formel gibt sie die erste Zelle zurück."
 
-#: packages/claudia-server/src/claudia_server/computes.py:1203
+#: packages/claudia-server/src/claudia_server/computes.py:1204
 msgid "the pivot table {name} gave nothing: there is no SQL to show"
 msgstr "Die Pivot-Tabelle {name} hat nichts ergeben: Es gibt kein SQL zum Anzeigen"
 
@@ -9941,7 +9941,7 @@ msgstr "die Tabellen"
 msgid "the sheet’s style"
 msgstr "das Format des Blatts"
 
-#: packages/claudia-core/src/claudia_core/objects.py:996
+#: packages/claudia-core/src/claudia_core/objects.py:1021
 msgid "the size must be at least {least} by {least} units"
 msgstr "Die Größe muss mindestens {least} mal {least} Einheiten betragen"
 
@@ -10037,11 +10037,11 @@ msgstr "Für Sie gibt es keine Chat-Nachricht mit dieser Nummer"
 msgid "there is no earlier list of this kind to continue"
 msgstr "Es gibt keine frühere Liste dieser Art, die sich fortsetzen ließe"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1139
+#: packages/claudia-computes/src/claudia_computes/model.py:1140
 msgid "there is no name “{old}”"
 msgstr "Es gibt keinen Namen „{old}“"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1287 packages/claudia-server/src/claudia_server/computes.py:796
+#: packages/claudia-server/src/claudia_server/computes.py:1289 packages/claudia-server/src/claudia_server/computes.py:797
 msgid "there is no object {id!r}"
 msgstr "Es gibt kein Objekt {id!r}"
 
@@ -10049,7 +10049,7 @@ msgstr "Es gibt kein Objekt {id!r}"
 msgid "there is no paragraph {paragraph!r}"
 msgstr "Es gibt keinen Absatz {paragraph!r}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1199
+#: packages/claudia-server/src/claudia_server/computes.py:1200
 msgid "there is no pivot table called {name!r}"
 msgstr "Es gibt keine Pivot-Tabelle namens {name!r}"
 
@@ -10057,11 +10057,11 @@ msgstr "Es gibt keine Pivot-Tabelle namens {name!r}"
 msgid "there is no pivot table called “{name}”"
 msgstr "Es gibt keine PivotTable namens „{name}“"
 
-#: packages/claudia-server/src/claudia_server/computes.py:744
+#: packages/claudia-server/src/claudia_server/computes.py:746
 msgid "there is no sheet or slide {id!r}"
 msgstr "Es gibt kein Blatt und keine Folie {id!r}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:746
+#: packages/claudia-server/src/claudia_server/computes.py:748
 msgid "there is no slide {id!r}"
 msgstr "Es gibt keine Folie {id!r}"
 
@@ -10101,7 +10101,7 @@ msgstr "Dieses Dokument hat keinen Container mit der ID {id!r}"
 msgid "this document has no lists"
 msgstr "dieses Dokument hat keine Listen"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:680
+#: packages/claudia-computes/src/claudia_computes/model.py:681
 msgid "this document has no name “{source}” to draw a chart from"
 msgstr "Dieses Dokument hat keinen Namen „{source}“, aus dem ein Diagramm entstehen könnte"
 
@@ -10145,7 +10145,7 @@ msgstr "diese Ebene"
 msgid "this object is too large to turn that way: it would be {width} by {height} units on a slide of {slide_width} by {slide_height}"
 msgstr "Dieses Objekt ist zu groß, um so gedreht zu werden: Es wäre {width} mal {height} Einheiten groß auf einer Folie von {slide_width} mal {slide_height}"
 
-#: packages/claudia-core/src/claudia_core/objects.py:1001
+#: packages/claudia-core/src/claudia_core/objects.py:1026
 msgid "this object keeps its proportions (width divided by height is {aspect:g})"
 msgstr "Dieses Objekt behält seine Proportionen (Breite geteilt durch Höhe ist {aspect:g})"
 
@@ -10301,11 +10301,11 @@ msgstr "rückgängig"
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr "Unbekannter Parameter {parameter!r} für {name}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1005 packages/claudia-server/src/claudia_server/computes.py:1035 packages/claudia-server/src/claudia_server/computes.py:1246 packages/claudia-server/src/claudia_server/computes.py:667 packages/claudia-server/src/claudia_server/computes.py:749
+#: packages/claudia-server/src/claudia_server/computes.py:1006 packages/claudia-server/src/claudia_server/computes.py:1036 packages/claudia-server/src/claudia_server/computes.py:1247 packages/claudia-server/src/claudia_server/computes.py:667 packages/claudia-server/src/claudia_server/computes.py:751
 msgid "unknown sheet {sheet!r}"
 msgstr "Unbekanntes Blatt {sheet!r}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1243 packages/claudia-server/src/claudia_server/computes.py:268 packages/claudia-server/src/claudia_server/computes_search.py:136 packages/claudia-server/src/claudia_server/creates.py:204
+#: packages/claudia-server/src/claudia_server/computes.py:1244 packages/claudia-server/src/claudia_server/computes.py:268 packages/claudia-server/src/claudia_server/computes_search.py:136 packages/claudia-server/src/claudia_server/creates.py:204
 msgid "unknown slide {slide!r}"
 msgstr "Unbekannte Folie {slide!r}"
 
@@ -10473,7 +10473,7 @@ msgstr "{caption}: das Textfeld nach seinem Zweck auszeichnen"
 msgid "{cell} (no table right now)"
 msgstr "{cell} (gerade keine Tabelle)"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1269
+#: packages/claudia-computes/src/claudia_computes/model.py:1270
 msgid "{cell} shows the result of the formula in {owner} (SQL(), SORT() ...): change that formula, not its result"
 msgstr "{cell} zeigt das Ergebnis der Formel in {owner} (SQL(), SORT() …): Ändern Sie diese Formel, nicht ihr Ergebnis"
 
@@ -10849,7 +10849,7 @@ msgstr "{name} ist eine PivotTable: Löschen Sie die PivotTable, nicht ihren Nam
 msgid "{name} is a value, not a name"
 msgstr "{name} ist ein Wert, kein Name"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1145 packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
+#: packages/claudia-computes/src/claudia_computes/model.py:1146 packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
 msgid "{name} is already a name"
 msgstr "{name} ist schon ein Name"
 
@@ -11037,7 +11037,7 @@ msgstr "{place} hat schon ein Dokument namens {id}. Ein Name kann sich nicht än
 msgid "{place} already holds this document, as {id}. It cannot be added a second time: open the one that is here."
 msgstr "{place} enthält dieses Dokument bereits, als {id}. Es kann nicht ein zweites Mal hinzugefügt werden: Öffnen Sie das vorhandene."
 
-#: packages/claudia-server/src/claudia_server/computes.py:1117
+#: packages/claudia-server/src/claudia_server/computes.py:1118
 msgid "{problem}"
 msgstr "{problem}"
 
@@ -11109,7 +11109,7 @@ msgstr "{type}-Container: {words}"
 msgid "{user} (you)"
 msgstr "{user} (Sie)"
 
-#: web/app/components/SlideCanvas.vue:660
+#: web/app/components/SlideCanvas.vue:656
 msgid "{user} is working on this"
 msgstr "{user} arbeitet daran"
 
@@ -11125,7 +11125,7 @@ msgstr "{user} hat dieses Dokument verlassen."
 msgid "{user} may now “{role}”."
 msgstr "{user} darf jetzt „{role}“."
 
-#: web/app/components/SlideCanvas.vue:660
+#: web/app/components/SlideCanvas.vue:656
 msgid "{user} selected this"
 msgstr "{user} hat dies ausgewählt"
 
@@ -11181,27 +11181,27 @@ msgstr "{what}, {n} Fehler"
 msgid "{what}, {n} to {m} times"
 msgstr "{what}, {n}- bis {m}-mal"
 
-#: packages/claudia-server/src/claudia_server/computes.py:866
+#: packages/claudia-server/src/claudia_server/computes.py:867
 msgid "{what}: anchor is {{sheet, row, col}} on a sheet of this document"
 msgstr "{what}: anchor ist {{sheet, row, col}} auf einem Blatt dieses Dokuments"
 
-#: packages/claudia-server/src/claudia_server/computes.py:881
+#: packages/claudia-server/src/claudia_server/computes.py:882
 msgid "{what}: give a range or an anchor (the cell of a SQL() formula), not both"
 msgstr "{what}: Geben Sie einen Bereich oder einen Anker an (die Zelle einer SQL()-Formel), nicht beides"
 
-#: packages/claudia-server/src/claudia_server/computes.py:850
+#: packages/claudia-server/src/claudia_server/computes.py:851
 msgid "{what}: range is {{sheet, row0, col0, row1, col1}}"
 msgstr "{what}: Der Bereich ist {{sheet, row0, col0, row1, col1}}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:844
+#: packages/claudia-server/src/claudia_server/computes.py:845
 msgid "{what}: scope must be a sheet id or null"
 msgstr "{what}: scope muss eine Blatt-ID oder null sein"
 
-#: packages/claudia-server/src/claudia_server/computes.py:876
+#: packages/claudia-server/src/claudia_server/computes.py:877
 msgid "{what}: the definition is an object with {allowed}"
 msgstr "{what}: Die Definition ist ein Objekt mit {allowed}"
 
-#: packages/claudia-server/src/claudia_server/computes.py:859
+#: packages/claudia-server/src/claudia_server/computes.py:860
 msgid "{what}: the range must not end before it starts"
 msgstr "{what}: Der Bereich darf nicht vor seinem Anfang enden"
 
@@ -11209,11 +11209,11 @@ msgstr "{what}: Der Bereich darf nicht vor seinem Anfang enden"
 msgid "{what}: this document does not know the diagram {diagram_id!r}"
 msgstr "{what}: Dieses Dokument kennt das Diagramm {diagram_id!r} nicht"
 
-#: packages/claudia-server/src/claudia_server/computes.py:854
+#: packages/claudia-server/src/claudia_server/computes.py:855
 msgid "{what}: this document does not know the sheet {sheet!r}"
 msgstr "{what}: Dieses Dokument kennt das Blatt {sheet!r} nicht"
 
-#: packages/claudia-server/src/claudia_server/computes.py:1104 packages/claudia-server/src/claudia_server/computes.py:1113 packages/claudia-server/src/claudia_server/computes.py:896
+#: packages/claudia-server/src/claudia_server/computes.py:1105 packages/claudia-server/src/claudia_server/computes.py:1114 packages/claudia-server/src/claudia_server/computes.py:897
 msgid "{what}: {problem}"
 msgstr "{what}: {problem}"
 
@@ -11305,11 +11305,11 @@ msgstr "„{name}“ gelöscht. Was es hatte, hat jetzt „{target}“."
 msgid "“{name}” is a built-in style and can only be hidden, not deleted"
 msgstr "„{name}“ ist ein eingebautes Format und kann nur ausgeblendet, nicht gelöscht werden"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:647
+#: packages/claudia-computes/src/claudia_computes/commands.py:657
 msgid "“{name}” is a style of another kind and cannot be put into the box of a cell"
 msgstr "„{name}“ ist ein Format anderer Art und kann nicht auf den Kasten einer Zelle gelegt werden"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:649
+#: packages/claudia-computes/src/claudia_computes/commands.py:659
 msgid "“{name}” is a style of another kind and cannot be put into the words of a cell"
 msgstr "„{name}“ ist ein Format anderer Art und kann nicht auf den Text einer Zelle gelegt werden"
 
