@@ -247,14 +247,11 @@ def test_a_purpose_is_on_a_layout_only_and_a_layout_has_each_purpose_once(doc):
     doc.execute(add(text_box("body", slide="two-lists", purpose="Body", x=100, y=200)), author="ana")
 
 
-def test_the_layouts_to_choose_from_leave_out_hidden_ones_and_provisional_ones_nobody_follows(doc):
+def test_the_layouts_to_choose_from_leave_out_hidden_ones(doc):
     doc.execute(DefineLayout("agenda", "Agenda"), author="ana")
-    doc.execute(DefineLayout("l1", "Agenda 2", to_name=True), author="ana")
-    doc.execute(DefineLayout("l2", "Quiet"), author="ana")
-    doc.execute(HideLayout("l2", True), author="ana")
+    doc.execute(DefineLayout("quiet", "Quiet"), author="ana")
+    doc.execute(HideLayout("quiet", True), author="ana")
     assert [layout.id for layout in doc.model.layouts_to_choose()] == ["basic", "agenda"]
-    doc.execute(SetSlideLayout("s1", "l1"), author="ana")
-    assert [layout.id for layout in doc.model.layouts_to_choose()] == ["basic", "agenda", "l1"]
 
 
 def test_an_empty_box_in_a_placeholder_is_not_drawn_but_a_filled_one_is(doc):

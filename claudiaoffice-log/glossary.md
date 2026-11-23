@@ -305,7 +305,7 @@ An object on a layout, labelled by its purpose, that an object on a slide can ta
 _avoid_: slot, frame
 
 **Provisional layout**
-A layout that a slide follows at once when a change to what the slide takes from its layout is made on that slide; it is named after the layout it came from, with a number, until a person names it.
+A layout that a slide follows at once when a change to what the slide takes from its layout is made on that slide; it is named after the layout it came from, with a number, until a person names it. When no slide follows it any more and nobody named it, it goes away.
 _avoid_: temporary layout, draft layout, copy of a layout
 
 **Number format**

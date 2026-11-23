@@ -128,6 +128,13 @@ Feature: A slide follows a layout, and changing what belongs to the layout is of
     Given a slide on the provisional layout "Two lists 2" that I never named
     When I choose another layout for the slide
     Then "Two lists 2" is no longer in the list of layouts
+    And when I undo, the slide is on "Two lists 2" again, with everything on it
+
+  @extended @app:creates
+  Scenario: Deleting the last slide on a layout nobody named takes the layout away
+    Given a slide on the provisional layout "Two lists 2" that I never named, and no other slide follows it
+    When I delete the slide
+    Then "Two lists 2" is no longer in the list of layouts
 
   @extended @app:creates
   Scenario: A layout I named stays when no slide follows it

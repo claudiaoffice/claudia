@@ -11,6 +11,7 @@ from typing import NamedTuple
 
 from claudia_core import AddObject, Batch, Command, MoveObject, RemoveObject, ResizeObject, RotateObject, SetObjectStyle
 
+from .commands import RemoveSlide
 from .layout_commands import DefineLayout, RemoveLayout, SetSlideLayout
 from .model import SlideModel, is_empty
 
@@ -19,10 +20,23 @@ from .model import SlideModel, is_empty
 _DEVIATIONS = (MoveObject, ResizeObject, RotateObject, SetObjectStyle, RemoveObject)
 
 
-def set_layout_command(model: SlideModel, slide: str, layout: str) -> SetSlideLayout:
+def set_layout_command(model: SlideModel, slide: str, layout: str) -> Command:
     """The command that lets a slide follow ``layout``: what is bound to a placeholder follows the placeholder with
-    the same purpose on the new layout, and where there is none it becomes a free box where it stands (E10.4)."""
-    model.layout_of(slide)  # raises for an unknown slide
+    the same purpose on the new layout, and where there is none it becomes a free box where it stands (E10.4). A
+    provisional layout that nobody follows then and nobody named goes with the step (D1536)."""
+    left = model.layout_of(slide)
+    return _one((_follow(model, slide, layout), *_forgotten(model, left, {slide})))
+
+
+def remove_slide_command(model: SlideModel, slide: str) -> Command:
+    """The command that takes a slide away with its objects, and the provisional layout it was the last to follow if
+    nobody named that (D1536)."""
+    objects = tuple(RemoveObject(obj.id) for obj in model.objects_on(slide))
+    return _one((*objects, RemoveSlide(slide), *_forgotten(model, model.layout_of(slide), {slide})))
+
+
+def _follow(model: SlideModel, slide: str, layout: str) -> SetSlideLayout:
+    """The step that lets ``slide`` follow ``layout``, with every bound object rebound by purpose."""
     by_purpose = {obj.anchor.purpose: obj.id for obj in model.objects_on(layout) if obj.anchor.purpose}
     rebind = tuple(
         (obj.id, by_purpose.get(model.objects[obj.anchor.bound_to_placeholder].anchor.purpose, ""))
@@ -65,6 +79,7 @@ def deviate_layout(model: SlideModel, slide: str, change: Command) -> Command:
             steps.append(change)
     else:
         steps.append(_retargeted(change, copies[layout_object], layout_id))
+    steps += _forgotten(model, parent, {slide})
     return Batch(tuple(steps))
 
 
@@ -91,10 +106,23 @@ def delete_layout(model: SlideModel, layout: str, move_to: str) -> Command:
     if move_to == layout:
         raise ValueError("the slides cannot move to the layout that is taken away")
     model.layouts.require(move_to)
-    steps: list[Command] = [set_layout_command(model, slide, move_to) for slide in model.slides_following(layout)]
+    steps: list[Command] = [_follow(model, slide, move_to) for slide in model.slides_following(layout)]
     steps += [RemoveObject(obj.id) for obj in model.objects_on(layout)]
     steps.append(RemoveLayout(layout))
     return Batch(tuple(steps))
+
+
+def _one(steps: tuple[Command, ...]) -> Command:
+    """The one step, or the steps as a batch."""
+    return steps[0] if len(steps) == 1 else Batch(steps)
+
+
+def _forgotten(model: SlideModel, layout: str, leaving: set[str]) -> list[Command]:
+    """The steps that take ``layout`` away once the slides in ``leaving`` no longer follow it: if it is provisional and
+    nobody named it, and no other slide follows it (D1536)."""
+    if not model.layouts[layout].to_name or set(model.slides_following(layout)) - leaving:
+        return []
+    return [*(RemoveObject(obj.id) for obj in model.objects_on(layout)), RemoveLayout(layout)]
 
 
 class _Belonging(NamedTuple):

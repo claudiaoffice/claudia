@@ -349,12 +349,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return [*self.layout_objects_of(slide), *own]
 
     def layouts_to_choose(self) -> list[Layout]:
-        """The layouts a person chooses a slide's layout from, in order: not the hidden ones, and not a provisional one
-        that nobody follows and nobody named (D1536)."""
-        following = set(self.slide_layouts.values())
-        return [
-            layout for layout in self.layouts if not layout.hidden and (layout.id in following or not layout.to_name)
-        ]
+        """The layouts a person chooses a slide's layout from, in order: all but the hidden ones."""
+        return [layout for layout in self.layouts if not layout.hidden]
 
     def layout_objects_of(self, slide: str) -> list[SlideObject]:
         """What the layout of a slide shows beneath the slide's own objects, bottom first: everything on the layout but

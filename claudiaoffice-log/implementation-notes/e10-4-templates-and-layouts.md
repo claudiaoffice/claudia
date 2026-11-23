@@ -25,7 +25,8 @@ decisions D1530–D1536; words: glossary (Layout, Placeholder, Provisional layou
   `SetSlideLayout`; all with exact inverses. `AddSlide.layout` lets undoing `RemoveSlide` restore the layout.
 * `layout_plans.py` — plans that return commands with final values: `set_layout_command`, `deviate_layout` (D1533: a
   provisional layout "Parent 2" holding copies of the parent's objects, the slide moved onto it, the change retargeted),
-  `update_layout`, `delete_layout`.
+  `update_layout`, `delete_layout`, `remove_slide_command`. D1536: the plans that leave a provisional, unnamed layout
+  without a follower end with its removal, in the same batch (undo brings it back).
 * Bound copy (D1531): `SlideModel.settle` repairs bound objects from their placeholder and emits `ObjectsChanged`; it
   never refuses and never clears a binding, so undo restores it. A binding to a placeholder of a layout the slide does
   not follow is inert. `replace_object` refuses to move, resize, rotate or restyle a bound object ("change the layout
@@ -44,8 +45,8 @@ decisions D1530–D1536; words: glossary (Layout, Placeholder, Provisional layou
 3. A provisional layout's number is the first free one starting at 2.
 4. `purpose` is unique per layout and only allowed on a layout's object.
 5. Layout object text is not covered by redaction (layouts hold no user content until E10.24 imports some).
-6. D1536 is **undecided**: unnamed layouts nobody follows are hidden from `layouts_to_choose`, not deleted. Owner to
-   decide whether they should be removed automatically.
+6. D1536 (decided by the owner): an unnamed provisional layout nobody follows is removed by the step that made it
+   unused. A client that sends the plain `SetSlideLayout` or `RemoveSlide` can still leave one behind.
 
 ## Measured
 

@@ -22,7 +22,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   `slides_following`, `layout_objects_of`; commands `DefineLayout`, `RemoveLayout`, `RenameLayout`, `HideLayout`,
   `MoveLayout`, `SetSlideLayout`, and `AddSlide.layout` (undoing the removal of a slide gives its layout back); events
   `LayoutsChanged` and `SlideLayoutChanged`; the plans `claudia_creates.layout_plans` (`set_layout_command`,
-  `deviate_layout`, `update_layout`, `delete_layout`). A bound object keeps the place, size, turn and look of its
+  `deviate_layout`, `update_layout`, `delete_layout`, `remove_slide_command`; D1536: they take an unnamed provisional
+  layout that nobody follows any more away in the same step). A bound object keeps the place, size, turn and look of its
   placeholder; `settle` repairs it. State schema 19: `layouts` and `slide_layouts` are new (absent: every slide on the
   basic layout).
 - The refusals a person can meet are `Refusal`s (CODE-78, D1510); `SlideModel.name_taken` adds slides.
