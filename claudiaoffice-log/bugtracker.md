@@ -134,7 +134,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (155)
+### Fixed (158)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -163,6 +163,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | PERF-05 | P2 | Performance | `sheets` recomputes the extent by scanning every cell | **fixed** (re-measured 2026-11-12) |  |  |
 | PERF-09 | P2 | Performance | Making a webfont (WOFF2) blocked every request of every document for seconds | **fixed** 2026-11-13 |  | 2026-11-13 |
 | PERF-11 | P3 | Performance | Search preview and replace have no time budget at all | **fixed** 2026-11-13 |  | 2026-11-13 |
+| PERF-12 | P3 | Performance / creates | Every command in a presentation looked at every object bound to a placeholder: 62.7 ms a command with 6,000 bound objects | **fixed** 2026-11-23 on `e10-4-templates-and-layouts` (4.3 ms) | 2026-11-23 | 2026-11-23 |
 | UX-01 | P2 | UX | Menus cannot be operated with the keyboard | fixed (read 2026-11-12, not screen-reader tested) |  |  |
 | UX-02 | P2 | UX | The grid has no accessible structure | fixed, merged at `cfa2d91` (`grid-a11y.cjs` passes; no screen reader run yet) |  |  |
 | UX-03 | P2 | UX | Dialogs do not manage focus | fixed (native `<dialog>`, read 2026-11-12) |  |  |
@@ -246,6 +247,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
 | CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **fixed** 2026-11-23 on `code-78-translated-refusals` (D1510) | 2026-11-22 | 2026-11-23 |
 | CODE-79 | P2 | Code / AI | The decision which provider answers was made once, when the question was started; a switch of the administrator or of the document's consent while a question ran changed nothing until it ended | **fixed** 2026-11-22 on `e7-11-claude-provider` (D1497) | 2026-11-22 | 2026-11-22 |
+| CODE-83 | P3 | Code / creates | Undoing a slide's layout change did not give an object that had taken a placeholder's place its own place back | **fixed** 2026-11-23 on `e10-4-templates-and-layouts` | 2026-11-23 | 2026-11-23 |
+| CODE-84 | P3 | Code / creates | A layout's id could not be named as a part to redact; only the whole document redacted the words on layouts | **fixed** 2026-11-23 on `e10-4-templates-and-layouts` | 2026-11-23 | 2026-11-23 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2740,3 +2743,26 @@ so nothing leaves; but it stays on and comes back with the administrator's next 
 ### UX-75 · The badge of an open window does not follow the administrator's change · P3 · size 3 · new, open
 The badge and the dialog read `ai_consent` at join and on `ai_consent_changed` only. **Fix.** Publish the same event to
 the open documents when the provider changes (`AiRuntime.apply`).
+
+## Round of 2026-11-23 (E10.4 patch 1: layouts in the creates model, branch `e10-4-templates-and-layouts`)
+
+Found while building and reviewing patch 1; the owner asked for all three to be fixed with patch 2 (the first two were
+first filed as CODE-79 and CODE-80 in the report, whose numbers `main` had taken by then).
+
+### PERF-12 · Settling the bound copies looked at every bound object after every command · P3 · size 3 · fixed 2026-11-23
+**Measured.** 6,000 objects bound to a placeholder: 62.7 ms a command (1.7 ms of 4.7 ms with fewer bound ones, D1531).
+**Fix.** The objects of a presentation are an `_ObjectTable` that records what was written and what follows which
+placeholder; `settle` looks at the objects that were written, the followers of a placeholder that was written and the
+objects of a slide whose layout changed: 4.3 ms. **Test:** `test_bound_copy_work.py` (what was looked at, and that every
+slide that follows a changed placeholder is still repaired, also after undo).
+
+### CODE-83 · Undoing a layout change left a bound object where the placeholder had put it · P3 · size 3 · fixed 2026-11-23
+**Found** in the review of patch 1: `SetSlideLayout` with a `rebind` that binds an object that was free (or bound to an
+inert placeholder) moves it to the placeholder's place; the inverse unbound it but left it there. **Fix.** The inverse
+carries `frames`: the place, size, turn and look the objects had; undoing a change from an inert binding is no longer
+refused. **Test:** `test_layouts.py`, "undoing the binding of a free object…".
+
+### CODE-84 · The words on a layout could not be redacted by naming the layout · P3 · size 3 · fixed 2026-11-23
+**Found** in the review of patch 1: `SlideModel.blank` took slide and object ids only; the full redaction (`parts` none)
+did cover the words on layouts. **Fix.** A layout's id is a part that blanks the objects on the layout. **Test:**
+`test_creates_redacting_an_import.py`.

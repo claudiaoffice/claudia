@@ -423,7 +423,7 @@
   "class": [
    "Command"
   ],
-  "init": "(slide: 'str', layout: 'str', rebind: 'tuple[tuple[str, str], ...]' = ()) -> None",
+  "init": "(slide: 'str', layout: 'str', rebind: 'tuple[tuple[str, str], ...]' = (), frames: 'tuple[tuple[str, tuple], ...]' = ()) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'SetSlideLayout'",
@@ -596,7 +596,7 @@
    "put_fields": "(self, paragraph_id: 'str', fields: 'tuple[Field, ...]') -> 'tuple[object, ...]'",
    "put_generated": "(self, paragraph_id: 'str', generated: 'Generated | None') -> 'object'",
    "put_item": "(self, paragraph_id: 'str', item: 'ListItem | None') -> 'object'",
-   "put_slide_on_layout": "(self, slide: 'str', layout: 'str', rebind: 'Mapping[str, str] | None' = None) -> 'tuple[str, dict[str, str]]'",
+   "put_slide_on_layout": "(self, slide: 'str', layout: 'str', rebind: 'Mapping[str, str] | None' = None, frames: 'Mapping[str, tuple] | None' = None) -> 'SlideLayoutWas'",
    "reading_order": "(self) -> 'Iterator[Placed]'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "remove_layout": "(self, layout: 'str') -> 'tuple[Layout, int]'",

@@ -7037,7 +7037,7 @@ msgstr "Es gibt schon eine Form namens „{name}“"
 msgid "There is already a sheet called “{name}”"
 msgstr "Es gibt schon ein Tabellenblatt namens „{name}“"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:133
+#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:178
 msgid "There is already a slide called “{name}”"
 msgstr "Es gibt schon eine Folie namens „{name}“"
 
@@ -8089,7 +8089,7 @@ msgstr "Eine Überschrift heißt wie ihr Text: Ändern Sie den Text, um den Name
 msgid "a holder has at most {limit} objects"
 msgstr "Hier haben höchstens {limit} Objekte Platz"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:303
+#: packages/claudia-creates/src/claudia_creates/model.py:353
 msgid "a layout has one placeholder for each purpose: {purpose}"
 msgstr "Ein Layout hat für jeden Zweck einen Platzhalter: {purpose}"
 
@@ -8233,7 +8233,7 @@ msgstr "Ein Tabellenblatt braucht einen Namen"
 msgid "a slide needs a name"
 msgstr "Eine Folie braucht einen Namen"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:369
+#: packages/claudia-creates/src/claudia_creates/model.py:419
 msgid "a slide still follows this layout"
 msgstr "Eine Folie verwendet dieses Layout noch"
 
@@ -9401,7 +9401,7 @@ msgstr "nur der Sonntag ist frei: der Samstag ist ein Arbeitstag"
 msgid "only a built-in scheme can be reset"
 msgstr "nur ein vorgegebenes Schema kann zurückgesetzt werden"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:301
+#: packages/claudia-creates/src/claudia_creates/model.py:351
 msgid "only a placeholder on a layout has a purpose"
 msgstr "Nur ein Platzhalter auf einem Layout hat einen Zweck"
 
@@ -9961,7 +9961,7 @@ msgstr "Der Assistent zieht keine Vorschläge zurück"
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr "der Assistent schlägt Änderungen vor; Sie nehmen jede an oder lehnen sie ab"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:367
+#: packages/claudia-creates/src/claudia_creates/model.py:417
 msgid "the basic layout stays"
 msgstr "Das Basislayout bleibt erhalten"
 
@@ -10377,7 +10377,7 @@ msgstr "Das ist nicht der Vorschlag, der im Dokument steht"
 msgid "this level"
 msgstr "diese Ebene"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:311
+#: packages/claudia-creates/src/claudia_creates/model.py:361
 msgid "this object has the place, size and look of its placeholder: change the layout instead"
 msgstr "Dieses Objekt hat Platz, Größe und Aussehen seines Platzhalters: Ändern Sie stattdessen das Layout"
 

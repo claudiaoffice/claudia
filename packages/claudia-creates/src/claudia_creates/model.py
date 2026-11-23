@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import replace
-from typing import ClassVar, Self, TypeIs
+from typing import ClassVar, NamedTuple, Self, TypeIs
 
 from claudia_core import (
     N_,
@@ -101,6 +101,35 @@ def _check_seconds(seconds: object) -> None:
 type SlideObject = VisualObject[SlideAnchor]
 
 
+class _ObjectTable(dict[str, SlideObject]):
+    """The objects by id, which also knows what is bound to which placeholder and what was written since the bound
+    copies were last settled, so that settling looks only at what a command touched (PERF-12). Only item assignment
+    and ``del`` are used on it, and only those keep the two records."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        #: The ids that were written or removed since the last settling.
+        self.touched: set[str] = set()
+        #: The ids of the objects bound to a placeholder, by the id of the placeholder.
+        self.followers: dict[str, set[str]] = {}
+
+    def __setitem__(self, key: str, obj: SlideObject) -> None:
+        self._unbind(key)
+        super().__setitem__(key, obj)
+        self.touched.add(key)
+        if placeholder := obj.anchor.bound_to_placeholder:
+            self.followers.setdefault(placeholder, set()).add(key)
+
+    def __delitem__(self, key: str) -> None:
+        self._unbind(key)
+        super().__delitem__(key)
+        self.touched.add(key)
+
+    def _unbind(self, key: str) -> None:
+        if (old := self.get(key)) is not None and (placeholder := old.anchor.bound_to_placeholder):
+            self.followers[placeholder].discard(key)
+
+
 def is_empty(obj: SlideObject) -> bool:
     """Is there nothing in this object that a person put there? A box with no words."""
     return obj.body.paragraph is not None and not obj.body.paragraph.text
@@ -109,6 +138,22 @@ def is_empty(obj: SlideObject) -> bool:
 def _own_place(obj: SlideObject) -> tuple:
     """What a placeholder gives the objects bound to it: place, size, turn and look."""
     return (obj.anchor.x, obj.anchor.y, obj.body.w, obj.body.h, obj.body.rotation, obj.body.style)
+
+
+def _placed(obj: SlideObject, place: tuple) -> SlideObject:
+    """``obj`` at a place, size, turn and look that :func:`_own_place` gave."""
+    x, y, w, h, rotation, style = place
+    return replace(
+        obj, anchor=replace(obj.anchor, x=x, y=y), body=replace(obj.body, w=w, h=h, rotation=rotation, style=style)
+    )
+
+
+class SlideLayoutWas(NamedTuple):
+    """What undoing :meth:`SlideModel.put_slide_on_layout` needs (see there)."""
+
+    layout: str
+    bindings: dict[str, str]
+    frames: dict[str, tuple]
 
 
 def _bound_to(obj: SlideObject, placeholder: SlideObject) -> SlideObject:
@@ -163,6 +208,9 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.layouts: Layouts = Layouts()
         self.layouts.add(Layout(BASIC_LAYOUT, "Basic", "builtin"))
         self.open_holder(BASIC_LAYOUT)
+        self.objects: _ObjectTable = _ObjectTable()
+        #: The slides whose layout was changed since the bound copies were last settled (PERF-12).
+        self._slides_on_new_layouts: set[str] = set()
         #: The layout every slide follows, by slide id.
         self.slide_layouts: dict[str, str] = {}
         #: The slides as records, with their names (one namespace with the objects, D550) and descriptions (D1317).
@@ -250,11 +298,13 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
 
     def blank(self, parts: frozenset[str] | None) -> None:
         """Blank what ``parts`` names, for redacting an import (D723), or everything for ``None``: a slide's id takes
-        its speaker notes and blanks every object on it, an object's id blanks that object. Slides, their names,
-        planned times and every place and size stay. ``ValueError`` for a part the presentation does not have."""
+        its speaker notes and blanks every object on it, a layout's id blanks every object on the layout, an object's id
+        blanks that object. Slides, their names, planned times and every place and size stay. ``ValueError`` for a
+        part the presentation does not have."""
         slides = set(self.order)
-        if parts is not None and (unknown := sorted(parts - slides - set(self.objects))):
-            raise ValueError(f"the presentation has no slide or object {unknown[0]!r}")
+        layouts = set(self.layouts.ids())
+        if parts is not None and (unknown := sorted(parts - slides - layouts - set(self.objects))):
+            raise ValueError(f"the presentation has no slide, layout or object {unknown[0]!r}")
         chosen = slides if parts is None else slides & parts
         self.notes = {slide: text for slide, text in self.notes.items() if slide not in chosen}
         for slide in chosen:
@@ -262,8 +312,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         if parts is None:
             self.blank_objects(None)
             return
-        on_slides = {obj.id for slide in chosen for obj in self.objects_on(slide)}
-        self.blank_objects(frozenset(on_slides | (parts & set(self.objects))))
+        on_holders = {obj.id for holder in chosen | layouts & parts for obj in self.objects_on(holder)}
+        self.blank_objects(frozenset(on_holders | (parts & set(self.objects))))
 
     def region_from_data(self, data: dict) -> Region:
         return ObjectSet.from_data(data)
@@ -374,12 +424,18 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return removed, place
 
     def put_slide_on_layout(
-        self, slide: str, layout: str, rebind: Mapping[str, str] | None = None
-    ) -> tuple[str, dict[str, str]]:
-        """Make a slide follow a layout, and bind the objects named in ``rebind`` to the placeholders it names (``""``:
-        to none). Returns the layout it followed before and what binds the objects that were bound or are named, which
-        is what undoing it needs. ``ValueError`` if there is no such slide or layout, an object is not on the slide,
-        or a placeholder is not on the layout."""
+        self,
+        slide: str,
+        layout: str,
+        rebind: Mapping[str, str] | None = None,
+        frames: Mapping[str, tuple] | None = None,
+    ) -> SlideLayoutWas:
+        """Make a slide follow a layout, bind the objects named in ``rebind`` to the placeholders it names (``""``:
+        to none), and put the objects named in ``frames`` back to the place, size, turn and look they are given there.
+        Returns what undoing it needs: the layout the slide followed, what bound the objects that were bound or are
+        named, and the frames of the objects that now take a placeholder's. A placeholder of another layout is allowed:
+        the binding is then inert (D1531), and it is what undoing a change from such a binding gives back.
+        ``ValueError`` if there is no such slide or layout, an object is not on the slide, or a placeholder is none."""
         old = self.layout_of(slide)
         self.layouts.require(layout)
         rebind = rebind or {}
@@ -387,18 +443,27 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         for object_id, placeholder in rebind.items():
             if object_id not in on_slide:
                 raise ValueError(f"{object_id!r} is not on slide {slide!r}")
-            if placeholder and (placeholder not in self.objects or self.objects[placeholder].holder != layout):
-                raise ValueError(f"{placeholder!r} is not on layout {layout!r}")
+            if placeholder and (
+                placeholder not in self.objects or self.objects[placeholder].holder not in self.layouts
+            ):
+                raise ValueError(f"{placeholder!r} is not a placeholder of a layout")
+        for object_id in frames or {}:
+            if object_id not in on_slide:
+                raise ValueError(f"{object_id!r} is not on slide {slide!r}")
         before = {
             object_id: obj.anchor.bound_to_placeholder
             for object_id, obj in on_slide.items()
             if obj.anchor.bound_to_placeholder or object_id in rebind
         }
+        taken = {object_id: _own_place(on_slide[object_id]) for object_id, placeholder in rebind.items() if placeholder}
         self.slide_layouts[slide] = layout
+        self._slides_on_new_layouts.add(slide)
         for object_id, placeholder in rebind.items():
             obj = on_slide[object_id]
             self.objects[object_id] = replace(obj, anchor=replace(obj.anchor, bound_to_placeholder=placeholder))
-        return old, before
+        for object_id, place in (frames or {}).items():
+            self.objects[object_id] = _placed(self.objects[object_id], place)
+        return SlideLayoutWas(old, before, taken)
 
     # -- slides ----------------------------------------------------------------
     def insert_slide(
@@ -544,11 +609,20 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         that is not on the layout of the slide (gone, or of another layout) does nothing and is not touched, so that
         undoing what removed the placeholder binds the object again. It never refuses, and it is derived from the state
         alone, so undo and replay come to the same result."""
+        table = self.objects
+        to_look_at = {key for key in table.touched if key in table and table[key].anchor.bound_to_placeholder}
+        for key in table.touched:  # a placeholder that was written: whatever follows it
+            to_look_at |= table.followers.get(key, set())
+        for slide in self._slides_on_new_layouts & set(self.order):
+            to_look_at |= {obj.id for obj in self.objects_on(slide) if obj.anchor.bound_to_placeholder}
         repaired: dict[str, list[SlideObject]] = {}
-        for obj in [obj for obj in self.objects.values() if obj.anchor.bound_to_placeholder]:
+        for key in sorted(to_look_at):
+            obj = table[key]
             if (placeholder := self.placeholder_of(obj)) is not None and (now := _bound_to(obj, placeholder)) != obj:
-                self.objects[obj.id] = now
+                table[key] = now
                 repaired.setdefault(obj.holder, []).append(now)
+        table.touched.clear()
+        self._slides_on_new_layouts.clear()
         for slide, objects in repaired.items():
             ctx.emit(self.objects_changed(slide, changed=tuple(objects)))
 

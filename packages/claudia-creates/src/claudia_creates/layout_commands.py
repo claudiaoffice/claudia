@@ -196,12 +196,15 @@ class MoveLayout(Command):
 class SetSlideLayout(Command):
     """Let a slide follow another layout. ``rebind`` says, by final values, which placeholder each object of the slide
     is bound to afterwards (``""``: none): the command does not look for matches, so that undo, replay and a colleague's
-    view all end the same way (see :meth:`SlideModel.set_layout_command`, which finds them by purpose)."""
+    view all end the same way (see :func:`~claudia_creates.layout_plans.set_layout_command`, which finds them by
+    purpose). ``frames`` is what undoing it adds: the place, size, turn and look (x, y, w, h, rotation, style) that
+    objects get back, because an object that takes a placeholder's place has lost its own."""
 
     kind: ClassVar[str] = "creates.SetSlideLayout"
     slide: str
     layout: str
     rebind: tuple[tuple[str, str], ...] = ()
+    frames: tuple[tuple[str, tuple], ...] = ()
 
     @property
     def label(self) -> str:
@@ -212,19 +215,22 @@ class SetSlideLayout(Command):
         return "changed the layout of a slide"
 
     def apply(self, ctx: Context[SlideModel]) -> Command:
-        old, before = ctx.model.put_slide_on_layout(self.slide, self.layout, dict(self.rebind))
+        was = ctx.model.put_slide_on_layout(self.slide, self.layout, dict(self.rebind), dict(self.frames))
         ctx.emit(SlideLayoutChanged(self.slide, self.layout))
-        if before:
-            changed = tuple(ctx.model.objects[object_id] for object_id in before)
+        if was.bindings:
+            changed = tuple(ctx.model.objects[object_id] for object_id in was.bindings)
             ctx.emit(ctx.model.objects_changed(self.slide, changed=changed))
-        return SetSlideLayout(self.slide, old, tuple(before.items()))
+        return SetSlideLayout(self.slide, was.layout, tuple(was.bindings.items()), tuple(was.frames.items()))
 
     def to_data(self) -> dict:
         data: dict = {"slide": self.slide, "layout": self.layout}
         if self.rebind:
             data["rebind"] = dict(self.rebind)
+        if self.frames:
+            data["frames"] = {object_id: list(place) for object_id, place in self.frames}
         return data
 
     @classmethod
     def from_data(cls, data, registry) -> SetSlideLayout:
-        return cls(data["slide"], data["layout"], tuple(data.get("rebind", {}).items()))
+        frames = tuple((object_id, tuple(place)) for object_id, place in data.get("frames", {}).items())
+        return cls(data["slide"], data["layout"], tuple(data.get("rebind", {}).items()), frames)

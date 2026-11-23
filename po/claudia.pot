@@ -7037,7 +7037,7 @@ msgstr ""
 msgid "There is already a sheet called “{name}”"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:133
+#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:178
 msgid "There is already a slide called “{name}”"
 msgstr ""
 
@@ -8089,7 +8089,7 @@ msgstr ""
 msgid "a holder has at most {limit} objects"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:303
+#: packages/claudia-creates/src/claudia_creates/model.py:353
 msgid "a layout has one placeholder for each purpose: {purpose}"
 msgstr ""
 
@@ -8233,7 +8233,7 @@ msgstr ""
 msgid "a slide needs a name"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:369
+#: packages/claudia-creates/src/claudia_creates/model.py:419
 msgid "a slide still follows this layout"
 msgstr ""
 
@@ -9401,7 +9401,7 @@ msgstr ""
 msgid "only a built-in scheme can be reset"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:301
+#: packages/claudia-creates/src/claudia_creates/model.py:351
 msgid "only a placeholder on a layout has a purpose"
 msgstr ""
 
@@ -9961,7 +9961,7 @@ msgstr ""
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:367
+#: packages/claudia-creates/src/claudia_creates/model.py:417
 msgid "the basic layout stays"
 msgstr ""
 
@@ -10377,7 +10377,7 @@ msgstr ""
 msgid "this level"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:311
+#: packages/claudia-creates/src/claudia_creates/model.py:361
 msgid "this object has the place, size and look of its placeholder: change the layout instead"
 msgstr ""
 

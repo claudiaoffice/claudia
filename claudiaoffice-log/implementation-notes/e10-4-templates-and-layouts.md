@@ -50,13 +50,20 @@ decisions D1530–D1536; words: glossary (Layout, Placeholder, Provisional layou
 
 ## Measured
 
-`settle` scans all objects after every command: 1.7 ms of 4.7 ms per command on a deck of 6,000 objects (D1531). Fine
-for decks of normal size; an index of bound objects per placeholder would remove it (tech debt, PERF below).
+`settle` scanned all bound objects after every command: 1.7 ms of 4.7 ms per command on 6,000 objects (D1531), and
+62.7 ms when all 6,000 are bound (PERF-12). It now looks at what the command touched (an `_ObjectTable` that records
+writes and followers): 4.3 ms in the second case.
+
+## Fixed after the review (owner's wish, 2026-11-23)
+
+* PERF-12 as above.
+* CODE-83: `SetSlideLayout` carries `frames` in its inverse, so that undoing the binding of a free object gives its
+  place back; undoing a change from an inert binding is no longer refused.
+* CODE-84: a layout's id is a part for redaction.
 
 ## Known gaps
 
-* `SetSlideLayout.rebind` that binds a previously free object cannot restore its frame on undo. No plan does this yet.
-* Layout `purpose` and layout origin `"template"` are unused until patch 2 and E10.24.
+* Layout `purpose` and the origin `"template"` are unused until patch 2 and E10.24.
 * The web does not draw layout objects yet; no menus (Format ▸ Layout / Template with keys in `claudia-menus.xlsx`) —
   patch 3.
 

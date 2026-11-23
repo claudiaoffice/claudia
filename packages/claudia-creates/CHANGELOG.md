@@ -26,6 +26,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
   layout that nobody follows any more away in the same step). A bound object keeps the place, size, turn and look of its
   placeholder; `settle` repairs it. State schema 19: `layouts` and `slide_layouts` are new (absent: every slide on the
   basic layout).
+- `SetSlideLayout` carries `frames` (what undoing it gives back, CODE-83); settling the bound copies looks only at what a
+  command touched (PERF-12); a layout's id is a part for redacting an import (CODE-84).
 - The refusals a person can meet are `Refusal`s (CODE-78, D1510); `SlideModel.name_taken` adds slides.
   `PrintSetupError` is a refusal.
 - `SlideModel.room_for_new_object`: what is left of the slide to the right of a new object's anchor (D1332).

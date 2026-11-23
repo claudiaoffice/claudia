@@ -268,3 +268,32 @@ def test_what_a_layout_shows_beneath_its_slides_is_what_is_on_it_that_is_not_a_p
     doc.execute(SetSlideLayout("s1", "two-lists"), author="ana")
     assert [obj.id for obj in doc.model.layout_objects_of("s1")] == ["logo"]
     assert doc.model.layout_objects_of("s1") != doc.model.objects_on("s1"), "they are not the slide's own"
+
+
+# -- binding a free object is undone exactly (CODE-83) -----------------------------------------------------
+def test_undoing_the_binding_of_a_free_object_gives_its_place_back(doc):
+    two_lists_with_a_heading(doc)  # slide s1 on "two-lists", heading h1 bound to "title"
+    doc.execute(add(text_box("mine", slide="s1", x=10, y=20, w=300, h=40)), author="ana")
+    doc.execute(SetSlideLayout("s1", "two-lists", (("mine", "title"),)), author="ana")
+    assert frame(doc, "mine") == (100, 50, 800, 100), "bound: it takes the place of the placeholder"
+    doc.undo("ana")
+    assert doc.model.get("mine").anchor.bound_to_placeholder == ""
+    assert frame(doc, "mine") == (10, 20, 300, 40)
+    doc.redo("ana")
+    assert frame(doc, "mine") == (100, 50, 800, 100)
+    assert reopen(doc).model.serialize() == doc.model.serialize()
+    doc.undo("ana")
+    assert reopen(doc).model.serialize() == doc.model.serialize()
+
+
+def test_undoing_a_move_to_another_placeholder_gives_the_old_place_back_to_an_object_that_was_not_following(doc):
+    two_lists_with_a_heading(doc)
+    doc.execute(DefineLayout("other", "Other"), author="ana")
+    doc.execute(add(text_box("o", slide="other", purpose="Title", x=5, y=6, w=70, h=80)), author="ana")
+    doc.execute(SetSlideLayout("s1", "other"), author="ana")  # h1 keeps its place: its binding is of another layout
+    assert frame(doc, "h1") == (100, 50, 800, 100)
+    doc.execute(SetSlideLayout("s1", "other", (("h1", "o"),)), author="ana")
+    assert frame(doc, "h1") == (5, 6, 70, 80)
+    doc.undo("ana")
+    assert doc.model.get("h1").anchor.bound_to_placeholder == "title"
+    assert frame(doc, "h1") == (100, 50, 800, 100)
