@@ -18,15 +18,15 @@
   },
   "dependencies": {
     "fflate": "0.8.3",
-    "linebreak": "1.1.0",
+    "linebreak": "2.0.0",
     "harfbuzzjs": "1.6.4"
   },
   "devDependencies": {
-    "@types/node": "22.19.1",
-    "@vitest/coverage-v8": "5.1.0",
-    "pdfjs-dist": "4.10.38",
+    "@types/node": "26.6.6",
+    "@vitest/coverage-v8": "5.1.1",
+    "pdfjs-dist": "6.5.438",
     "typedoc": "0.28.20",
-    "typescript": "5.9.3",
-    "vitest": "5.1.0"
+    "typescript": "7.0.2",
+    "vitest": "5.1.1"
   }
 }
