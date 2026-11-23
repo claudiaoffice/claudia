@@ -51,7 +51,7 @@ from .ai_consent import ConsentBook
 from .audience import may_read, shape_for
 from .auth import AI_COLOR, ROLES, Account, UserDirectory
 from .heavy_dispatch import HeavyDispatcher
-from .i18n import localized, msg
+from .i18n import localized, message_of, msg
 from .protocol import (
     DEFAULT_LOCALE,
     PROTOCOL_VERSION,
@@ -867,7 +867,9 @@ class Hub:
             except DuplicateDocument as exc:
                 raise HubError("bad_request", same_document_message(exc.existing)) from exc
             except ValueError as exc:
-                raise HubError("bad_request", msg("{id} cannot be taken in: {reason}", id=doc_id, reason=exc)) from exc
+                raise HubError(
+                    "bad_request", msg("{id} cannot be taken in: {reason}", id=doc_id, reason=message_of(exc))
+                ) from exc
             self._known.add(doc_id)
 
     def is_loaded(self, doc_id: str) -> bool:
@@ -916,10 +918,12 @@ class Hub:
                 try:
                     document = await asyncio.to_thread(self.provider.open, doc_id)
                 except DocumentSealed as exc:
-                    raise HubError("sealed", msg("{id} cannot be opened yet: {reason}", id=doc_id, reason=exc)) from exc
+                    raise HubError(
+                        "sealed", msg("{id} cannot be opened yet: {reason}", id=doc_id, reason=message_of(exc))
+                    ) from exc
                 except ValueError as exc:
                     raise HubError(
-                        "bad_request", msg("{id} cannot be opened: {reason}", id=doc_id, reason=exc)
+                        "bad_request", msg("{id} cannot be opened: {reason}", id=doc_id, reason=message_of(exc))
                     ) from exc
                 except OSError as exc:
                     log.exception("cannot read %s", doc_id)

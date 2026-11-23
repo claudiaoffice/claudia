@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (88)
+### Open (92)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -55,6 +55,8 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | UX-51 | P2 | UX / composes | The words go round the unturned frame of a turned object, not its bounding box (D1226 decides the box); turning is on screen in composes since D1232 | **new, open** (read) |  |  |
 | UX-68 | P2 | UX / computes | A sheet or a chart tab (after E6.31: a slide) cannot be deleted: nothing in the menus or the tab strip reaches `RemoveSheet` or `remove_chart` | **new, open** (read; size 2) | 2026-11-22 |  |
 | UX-69 | P2 | UX / all apps | A viewer is not told she can only look: greyed entries, hidden controls and object gestures are silent (only Delete on a sheet's object says so) | open (scenario `@pending:UX-69`) | 2026-11-22 |  |
+| UX-70 | P2 | UX / all apps | What an export could not keep is never shown: the losses come back with the file and no client says them (a workbook's slide written as a sheet among them) | **new, open** (read; size 2) | 2026-11-22 |  |
+| UX-71 | P2 | UX / computes | Text on a workbook's slide is drawn in the workbook's Body text (13 px), tiny on a 1600-unit slide | **needs decision** (measured; size 2) | 2026-11-22 |  |
 | CODE-25 | P2 | Code / Export | A renamed object loses its name in pptx and odp without the export saying so (D450) | **new, open** |  |  |
 | CODE-31 | P2 | Code / i18n | The history speaks English to everybody: command labels and summaries are not translated | **new, open** |  |  |
 | CODE-45 | P2 | Code / Import | pptx placeholders (titles, body text) are not imported at all | **new, open** |  |  |
@@ -123,16 +125,16 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-75 | P3 | Code / web clients | Only composes refused a change of a viewer before sending it; computes sent it and showed the server's refusal, creates checked in some places only | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-76 | P3 | Code / web clients | The sheet session ignored `shape` events, so an outline a colleague's sheet object needed arrived only with a reload | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | open (row `@pending:CODE-77`) | 2026-11-22 |  |
-| CODE-79 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **new, open** (size 2; owner to decide: fix now or log) | 2026-11-22 |  |
-| UX-70 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **new, open** (size 3) | 2026-11-22 |  |
-| UX-71 | P3 | UX / AI | A window that is open when the administrator changes the provider keeps its old badge until the next consent change or reload | **new, open** (size 3) | 2026-11-22 |  |
+| CODE-80 | P2 | Code / AI / privacy | A question to Claude sends, before Claude asks for anything, the sheet list and the top left of the first three sheets (`workbook_lens.orient`; likewise the other two lenses' first look), so a sheet the question has nothing to do with can leave the server; the @core scenario "Claude is sent what the dialog says and nothing else" says it must not | **new, open** (size 2; owner to decide: fix now or log) | 2026-11-22 |  |
+| UX-74 | P3 | UX / AI | While the administrator has Claude off, the owners' dialog shows no check box, so an owner cannot withdraw a consent given earlier; it resumes when Claude is switched on again | **new, open** (size 3) | 2026-11-22 |  |
+| UX-75 | P3 | UX / AI | A window that is open when the administrator changes the provider keeps its old badge until the next consent change or reload | **new, open** (size 3) | 2026-11-22 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (146)
+### Fixed (155)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -154,6 +156,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | SEC-18 | **P1** | Security / Perf | A search pattern the static guard lets through freezes the whole server | **fixed** 2026-11-13 (D288) |  | 2026-11-13 |
 | SEC-20 | P2 | Security | Behind `--behind-proxy` every client had the proxy's address, so the per-address caps (waiting sockets, lookups, uploads) were one cap for everybody | **fixed** 2026-11-19 (D1275, branch `e2-document-sec`) |  | 2026-11-19 |
 | SEC-21 | P2 | Security / performance | Methods that confirm a password (`set_details`, `delete_document`, `leave`, `change_password`, `propose_owner`, `download_claudia`) hash on the event loop, in `Connection.handle`, not in a thread: at 0.75 s (D1267) each stops every connection of the server for that long | **fixed** 2026-11-19 on branch `e2-document-sec` (D1277) |  | 2026-11-19 |
+| SEC-23 | P3 | Security | Two objects that hold a document's keys printed them in their text (`repr`): `_Held` in `claudia_server/sealed.py` and `Renewed` in `claudia_document_file/renewal.py`; nothing logged them yet, but one `logger.debug(held)` or a traceback with locals would have | **fixed** 2026-11-22 on branch `e2-7-close` | 2026-11-22 | 2026-11-22 |
 | PERF-01 | P2 | Performance | `cells` window cost grows with the whole sheet | **fixed** (re-measured 2026-11-12) |  |  |
 | PERF-03 | P3 | Performance | `users.json` rewritten and fsynced in full on every user added | superseded by the container |  |  |
 | PERF-04 | P3 | Performance | `GET /api/docs` scans the disk on every request | fixed (listing cache) |  |  |
@@ -198,6 +201,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | UX-58 | P3 | UX / composes | A press on a text box also moved the caret in the words below it | **fixed** 2026-11-21 (`objects.cjs` step 1; size 3) | 2026-11-20 | 2026-11-21 |
 | UX-61 | P3 | UX / admin | The first-administrator page and Access & documents called the access secret a recovery key for administrators: there is no such recovery, and nobody signs in with it | **fixed** 2026-11-20 (`web/tests/admin-wording.test.ts`; size 3) | 2026-11-20 | 2026-11-20 |
 | UX-62 | P3 | UX / composes | ← and → did nothing on a selected object, where the contract says the arrow keys nudge it | **fixed** 2026-11-21 (D1390; `objects.cjs` step 6; size 3) | 2026-11-21 | 2026-11-21 |
+| UX-72 | P2 | UX / computes | Search in a workbook does not look at the words on its slides, and "This sheet" searches the sheet behind a slide | **fixed** 2026-11-22 on `e6-31-slides-in-computes` | 2026-11-22 | 2026-11-22 |
+| UX-73 | P2 | UX / computes | While a slide is shown, the print bar offers "This sheet" and counts the slide as a sheet | **fixed** 2026-11-22 on `e6-31-slides-in-computes` | 2026-11-22 | 2026-11-22 |
 | CODE-01 | P2 | Code | No coverage, no web lint; Playwright not declared | **fixed** |  |  |
 | CODE-02 | P3 | Code | 26 build files tracked in `web/dist` | fixed |  |  |
 | CODE-05 | P3 | Code | Dead branch in `Gateway.admit`; stale docstring in `state.py` | **fixed** (the branch was not dead: comment corrected) |  |  |
@@ -239,7 +244,8 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |  | 2026-11-18 |
 | CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |  | 2026-11-19 |
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
-| CODE-78 | P2 | Code / AI | The decision which provider answers was made once, when the question was started; a switch of the administrator or of the document's consent while a question ran changed nothing until it ended | **fixed** 2026-11-22 on `e7-11-claude-provider` (D1497) | 2026-11-22 | 2026-11-22 |
+| CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **fixed** 2026-11-23 on `code-78-translated-refusals` (D1510) | 2026-11-22 | 2026-11-23 |
+| CODE-79 | P2 | Code / AI | The decision which provider answers was made once, when the question was started; a switch of the administrator or of the document's consent while a question ran changed nothing until it ended | **fixed** 2026-11-22 on `e7-11-claude-provider` (D1497) | 2026-11-22 | 2026-11-22 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2360,6 +2366,16 @@ file (a viewer's snapshot would be written without them: a second snapshot); (b)
 so in D1261. **Proposal:** (b) until the owner says otherwise, because masking in the snapshot means the content is stored
 twice. Not built either way.
 
+### SEC-23 · Two objects that hold keys printed them in their text · P3 · fixed 2026-11-22 on branch `e2-7-close`
+**Fixed.** The key fields of `_Held` (`claudia_server/sealed.py`) and `Renewed` (`claudia_document_file/renewal.py`) are
+`field(repr=False)`, as `Unlocked`, `KeyPair` and `PrivateNotesKey` already were. Tests:
+`test_server_keys_stay_out_of_logs.py` (the text of `_Held`, and a whole session through the server's door at DEBUG:
+create, invite, edits packed on the way, a wrong password, a removal that renews the keys, leaving and coming back; no
+key in the log as bytes, hex or base64) and `test_renewal.py::test_what_a_renewal_returns_does_not_show_its_keys_in_its_text`.
+
+**Evidence (read, then measured).** Found while checking E2.7's "keys never appear in logs": no code logs these
+objects, so nothing has leaked; the two dataclasses used the default `repr`, which prints every field.
+
 ### PROC-36 · A global `ruff` is not the project's · P3 · fixed 2026-11-19
 `ruff 0.16.9` outside the project rewrote `except (A, B):` into `except A, B:` in five files and reformatted six others
 that were not touched. `pyproject.toml` pins `ruff>=0.6,<0.15` for this reason. Use `uv run ruff`. **Fixed:** rule 5 of
@@ -2646,9 +2662,60 @@ event that forgets the chart (it does for a picture, a shape and a container, D1
 of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
 E1.18.
 
+## Round of 2026-11-22 (E6.31 step 2: slides in computes, branch `e6-31-slides-in-computes`)
+
+Found while building and reviewing step 2 (a workbook's slides: tabs, the slide view, print, files). The owner chose on
+2026-11-22: UX-70 and UX-71 are filed; CODE-78, UX-72 and UX-73 are fixed.
+
+### UX-70 · What an export could not keep is never shown · P2 · size 2 · new, open
+**Found** while writing the slide's loss (`slide_plan.py`): `export_office` answers with `losses` (`{kind, detail,
+count}`) for xlsx and ods, and composes and creates have their own, but no client reads them (`ExportedFile.losses` in
+`web/app/lib/base-session.ts` is never shown). The person is not told that a chart tab became a sheet, that a formula
+was written as its value, or (since E6.31) that a slide was written as a sheet. Evidence: **read**. **Acceptance:** after
+an export that lost something, the person is told what, in words, once per kind (the scenario "Downloading as xlsx or
+ods says that a slide became a sheet" of `specs/computes/slides.feature` is one of them).
+
+### UX-71 · Text on a workbook's slide is tiny · P2 · size 2 · needs decision
+**Found** in the screenshots of `web/e2e/computes-slides.cjs`: a text box on a slide in computes is drawn in the
+workbook's Body text, 13 px for the cells of a sheet, which on a slide of 1600 × 900 units is a fortieth of its height
+(creates' Body text is made for a slide). Evidence: **measured** (`computes-slides-1-the-slide.png`). **Decision
+needed:** whether a workbook's slides get text styles of their own (as creates has), or the slide is drawn at another
+scale. Until then a person makes the text larger with a style of her own.
+
+### UX-72 · Search in a workbook does not look at its slides · P2 · size 3 · fixed
+**Found** in the review of step 2: computes' search goes through the cells of the sheets; the words of a slide's text
+boxes and shapes are never found, and with a slide shown "This sheet" searches the sheet behind it. Evidence: **read**.
+**Acceptance:** a search finds words on a slide (and shows the slide with the object marked), and with a slide shown the
+scope is that slide. **Fixed** 2026-11-22: `workbook_texts` (`claudia_computes/search.py`) reads
+the words of the boxes and shapes of the slides in tab order with the cells, a replacement changes cells and words in
+one step (`replace_command`), and the scope `{slide}` is "This slide" while a slide is shown; a match is shown on its
+slide, marked in the words. **Tests:** `test_search_on_slides.py`, `test_server_computes_slides.py`,
+`sheet-search-host.test.ts`, the Rule "Search looks at the words on the slides too" of `specs/computes/slides.feature`
+and `web/e2e/computes-slides.cjs`.
+
+### UX-73 · The print bar calls a slide a sheet · P2 · size 3 · fixed
+**Found** in the screenshots of `web/e2e/computes-slides.cjs`: with a slide shown, File ▸ Print… offers "This sheet",
+and the status line of the whole workbook says "2 pages · 3 sheets" for two sheets and a slide. Evidence: **measured**.
+**Acceptance:** "This slide" while a slide is shown, and the status line counts sheets and slides apart. **Fixed** 2026-11-22: "Contents" offers "This slide" and "Whole
+workbook" while a slide is shown (a slide has no cells to select), and the status line says "2 sheets and 1 slide"
+(`describeSheets` in `web/app/lib/print/sheet.ts`). **Tests:** `print-sheets.test.ts`, the scenario "The print bar
+speaks of the slide shown as a slide" and `web/e2e/computes-slides.cjs`.
+
+### CODE-78 · Refusals of the models reach a German user in English · P2 · size 2 · fixed
+**Found** in the review of E6.31 step 2: the core and the apps refuse with a `ValueError` and an English sentence (for
+example "a slide needs a name", "There is already a sheet called “…”"); the server sends it on as it is
+(`claudia_server.i18n.localized` translates only its own `msg(...)`), so a person who works in German reads English.
+About 365 refusals in core, computes, composes and creates. Evidence: **read**. **Acceptance:** a refusal the person
+meets is in her language (a scenario with the language German and a name that is taken). **Fixed** 2026-11-23 (D1510):
+typed refusals (`claudia_core.Refusal`, `N_`), said by the server in the connection's language (`message_of`), for the
+refusals a person can meet (about 140 sites); checks that only a wrong client can fail stay English, as agreed.
+**Escaped** because the server's i18n (D322) covered its own messages only, and no test spoke German to a model.
+**Tests:** `specs/server/refusals.feature` (`tests/e2e/specs/test_refusals.py`), `test_refusal.py`,
+`test_server_i18n.py`, `test_server_thing_names.py`, `test_extract_i18n.py`, `test_catalogs.py`.
+
 ## Round of 2026-11-22 (Claude as a provider of the `@ai`, branch `e7-11-claude-provider`, E7.11)
 
-### CODE-78 · The provider of an answer was fixed when the question began · P2 · size 2 · fixed 2026-11-22
+### CODE-79 · The provider of an answer was fixed when the question began · P2 · size 2 · fixed 2026-11-22
 **Found** by the owner's review of the architecture note (X1): the router chose the provider once per question, so a
 question that took several rounds went on with Claude after the administrator had switched it off, or after the owner
 had withdrawn the document's consent, and the answer then claimed the wrong source. **Fix.** `AiRouter` asks the
@@ -2657,7 +2724,7 @@ switched off." The first router test was written red. **Test:** `test_server_ai_
 "The owners switch Claude off while a question is running" and "The administrator switching to another provider
 stops a running question the same way" in `server/claude-answers.feature`.
 
-### CODE-79 · What Claude is sent before it asks for anything · P2 · size 2 · new, open
+### CODE-80 · What Claude is sent before it asks for anything · P2 · size 2 · new, open
 **Read** in code review of the branch (not measured with a real sheet): `WorkbookLens.orient` puts the sheet list and
 a preview of the first `PREVIEW_SHEETS` sheets into the first message for every provider. For the local model that stays
 on the machine; for Claude it is content of sheets the question does not name. **Fix, if the owner wants it now.** For a
@@ -2665,11 +2732,11 @@ remote provider send names and sizes only and let Claude `look` for cells (the s
 at"); the lens needs to know the answer goes out (`Via.remote`). **Test:** the @core scenario above, with a "Salaries"
 sheet and the fake Anthropic's recorded requests.
 
-### UX-70 · An owner cannot withdraw consent while Claude is off · P3 · size 3 · new, open
+### UX-74 · An owner cannot withdraw consent while Claude is off · P3 · size 3 · new, open
 `consentDialog` answers `no-remote` when `offered` is false and shows no choice. The consent is only a permission (D1491),
 so nothing leaves; but it stays on and comes back with the administrator's next switch. **Fix.** Show the check box
 (checked, can be cleared) when a consent exists.
 
-### UX-71 · The badge of an open window does not follow the administrator's change · P3 · size 3 · new, open
+### UX-75 · The badge of an open window does not follow the administrator's change · P3 · size 3 · new, open
 The badge and the dialog read `ai_consent` at join and on `ai_consent_changed` only. **Fix.** Publish the same event to
 the open documents when the provider changes (`AiRuntime.apply`).

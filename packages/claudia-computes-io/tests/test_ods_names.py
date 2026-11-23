@@ -27,7 +27,7 @@ def a_model(*names: NamedRange, sheet_name: str = "Data") -> WorkbookModel:
     model = WorkbookModel()
     for sheet_id, name in ((DATA, sheet_name), (OTHER, "Other")):
         sheet = Sheet(sheet_id, name)
-        model.sheets[sheet_id] = sheet
+        model.add_sheet(sheet, None)
         model.open_holder(str(sheet_id))
     data = model.sheets[DATA]
     for position, content in {
@@ -297,8 +297,7 @@ def test_a_name_of_a_name_the_file_has_twice_is_the_first_and_the_second_is_coun
 def test_a_name_of_a_sheet_that_is_added_comes_with_the_sheet():
     original = an_ods(table("Data", row(num("1"))))
     baseline, current = ods_to_workbook(original), ods_to_workbook(original)
-    current.sheets[OTHER] = Sheet(OTHER, "Extra")
-    current.open_holder("s2")
+    current.add_sheet(Sheet(OTHER, "Extra"), None)
     current.names.put(NamedRange("Fresh", OTHER, box(OTHER, (0, 0))))
     out = apply_edits_to_ods(original, baseline, current)
     assert names_of(ods_to_workbook(out)) == [NamedRange("Fresh", OTHER, box(OTHER, (0, 0)))]

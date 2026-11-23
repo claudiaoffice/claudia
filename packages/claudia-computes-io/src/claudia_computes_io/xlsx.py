@@ -59,6 +59,7 @@ from .extensions import to_excel, with_note
 from .layout_sizes import changed_sizes
 from .openformula import Untranslatable
 from .pivot_exchange import adopt_pivots, pivot_positions, sheet_cells
+from .slide_plan import slide_losses, with_slides_as_sheets
 from .xlsx_chart_patch import Drawings, patch_charts
 from .xlsx_charts import WrittenChart, file_charts, written_charts
 from .xlsx_layout import layout_losses
@@ -147,8 +148,12 @@ def xlsx_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tup
     ``empty``: a chart that reads nothing is not written), ``"svg-fallback"`` (a picture drawn as SVG, which only
     Excel 2016 and later show; other programs show it empty unless there was something to draw it with,
     ``rasterised``), ``"rendering-pending"`` (a container nothing has been drawn for: left out) and what
-    :func:`xlsx_unwritten_changes` says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"``."""
+    :func:`xlsx_unwritten_changes` says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"``. A
+    slide is ``"slide"``, with its name: it is written as a sheet (``slide_plan``, D1473)."""
     losses = LossLog()
+    for slide in slide_losses(model):
+        losses.add(slide.kind, slide.detail)
+    model = with_slides_as_sheets(model)
     dropped = sum(sheet_styling(sheet).dropped for sheet in model.sheets.values())
     if dropped:
         losses.add("look", "too-many-cells", dropped)
@@ -191,7 +196,8 @@ def workbook_to_xlsx(
     sheet of its own with the chart in it; ``xlsx_charts``, D463) and its pictures, in the same drawing in the order
     they are stacked (``xlsx_pictures``, D1233; ``rasterise`` draws an SVG as a PNG). The file says in its properties
     who made the workbook and when and who changed it last, from ``info``; what ``info`` does not know it leaves out
-    (D466)."""
+    (D466). A slide is a sheet of its own in the file (``slide_plan``, D1473)."""
+    model = with_slides_as_sheets(model)
     wb = openpyxl.Workbook()
     assert wb.active is not None  # a freshly constructed Workbook always starts with one
     wb.remove(wb.active)
@@ -265,8 +271,7 @@ def _model_of(package: Package) -> tuple[WorkbookModel, tuple[Loss, ...]]:
         read = read_sheet(package, part, known)
         sheet.cells.update(read.cells)
         _dress(dressing, sheet, read)
-        model.sheets[sheet.id] = sheet
-        model.open_holder(str(sheet.id))
+        model.add_sheet(sheet, None)
     for named in names:
         model.names.put(named)
     for chart in file_charts(package)[0]:
@@ -381,8 +386,10 @@ def apply_edits_to_xlsx(
     :func:`xlsx_export_losses`; D463).
 
     Raises :class:`UnsupportedEdit` if a sheet or a chart tab was added, removed, renamed or reordered since
-    ``baseline``, or a cell inside an array formula or a spilled range was changed. An unchanged model gives back
-    ``original_bytes``."""
+    ``baseline``, the workbook has a slide (a file has none, it would be a sheet more), or a cell inside an array
+    formula or a spilled range was changed. An unchanged model gives back ``original_bytes``."""
+    if current.slide_ids():
+        raise UnsupportedEdit("a slide is written as a sheet of its own, which cannot be patched onto the file yet")
     baseline_sheets = [(sheet.id, sheet.name) for sheet in baseline.sheets.values()]
     current_sheets = [(sheet.id, sheet.name) for sheet in current.sheets.values()]
     if baseline_sheets != current_sheets:

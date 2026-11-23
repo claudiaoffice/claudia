@@ -806,6 +806,9 @@
  "computes_methods": {
   "value": "<MethodTable>"
  },
+ "computes_methods_with": {
+  "function": "(library: 'ShapeLibrary') -> 'MethodTable'"
+ },
  "core_methods": {
   "value": "<MethodTable>"
  },

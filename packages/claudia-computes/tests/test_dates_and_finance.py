@@ -11,7 +11,7 @@ from claudia_computes import Sheet, SheetId, WorkbookModel
 def evaluate(formula: str, cells: dict[tuple[int, int], object] | None = None):
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "S")
-    model.sheets[sheet.id] = sheet
+    model.add_sheet(sheet, None)
     for position, value in (cells or {}).items():
         kind = "int" if isinstance(value, int) else "float" if isinstance(value, float) else "text"
         sheet.cells[position] = {"t": kind, "v": value}
@@ -126,7 +126,7 @@ def test_a_reference_only_asked_where_it_is_is_no_circle():
     # The pattern of the real planning workbook: a running column count that includes the formula's own cell.
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "S")
-    model.sheets[sheet.id] = sheet
+    model.add_sheet(sheet, None)
     sheet.cells[(2, 1)] = {"t": "formula", "v": "=COLUMNS($B$3:B3)+2025"}
     sheet.cells[(2, 2)] = {"t": "formula", "v": "=COLUMNS($B$3:C3)+2025"}
     sheet.cells[(3, 1)] = {"t": "formula", "v": "=ROW(B4)+ROWS((B1:B4))"}

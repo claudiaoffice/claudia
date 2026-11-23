@@ -3,6 +3,14 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [Unreleased]
+
+### Added
+- A workbook's slides in xlsx and ods (E6.31 step 2, D1473, `slide_plan`): each is written as a sheet without cells in
+  its place among the sheets, its objects scaled from 1600 × 900 to the size a chart tab is written at and hung at the
+  nearest cell; the export losses say `slide` with its name. An edited import with a slide is not patched
+  (`UnsupportedEdit`): it is written afresh.
+
 ## [0.12.0] - 2026-11-19
 
 Pivot tables go to and from ods and xlsx (D625, D628).

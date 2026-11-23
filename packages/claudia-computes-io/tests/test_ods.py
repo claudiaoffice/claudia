@@ -370,7 +370,7 @@ def a_workbook() -> WorkbookModel:
     model = WorkbookModel()
     first, second = Sheet(SheetId("s1"), "Data & more"), Sheet(SheetId("s2"), "Other")
     for sheet in (first, second):
-        model.sheets[sheet.id] = sheet
+        model.add_sheet(sheet, None)
         model.open_holder(str(sheet.id))
     first.cells.update(
         {
@@ -424,7 +424,7 @@ def test_a_workbook_with_nothing_in_it_is_still_a_file_with_a_sheet():
     assert problems(data) == []
     assert [sheet.name for sheet in ods_to_workbook(data).sheets.values()] == ["Sheet1"]
     empty = WorkbookModel()
-    empty.sheets[SheetId("s1")] = Sheet(SheetId("s1"), "Nothing")
+    empty.add_sheet(Sheet(SheetId("s1"), "Nothing"), None)
     assert problems(workbook_to_ods(empty)) == []
 
 

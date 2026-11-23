@@ -85,7 +85,7 @@ def test_text_shows_a_number_through_a_code_the_english_way():
 
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "S")
-    model.sheets[sheet.id] = sheet
+    model.add_sheet(sheet, None)
     sheet.cells[(0, 0)] = {"t": "formula", "v": '=TEXT(1234.5,"#,##0.00 ""MWh""")'}
     sheet.cells[(0, 1)] = {"t": "formula", "v": '=TEXT(46339,"mmmm yyyy")'}
     sheet.cells[(0, 2)] = {"t": "formula", "v": '=TEXT("abc","0;0;0;""<""@"">""")'}

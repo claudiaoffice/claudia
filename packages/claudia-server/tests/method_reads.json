@@ -193,6 +193,7 @@
  "suggest_words": "content",
  "suggestions": "content",
  "tables": "content",
+ "tabs": "content",
  "thing_details": "content",
  "thing_last_seen": "history",
  "trace": "content",

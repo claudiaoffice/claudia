@@ -14,13 +14,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Self
 
-from claudia_core import PageSetup
+from claudia_core import PageSetup, Refusal
 
 #: The layouts, in the order the print preview offers them.
 LAYOUTS: tuple[str, ...] = ("slides", "handouts-2", "handouts-3", "handouts-4", "handouts-6", "handouts-9")
 
 
-class PrintSetupError(ValueError):
+class PrintSetupError(Refusal):
     """A print setup that cannot be used; the message says which part."""
 
 

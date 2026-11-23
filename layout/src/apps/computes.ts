@@ -34,6 +34,7 @@ import { type BoxLayout, layoutBox } from '../text/box'
 import { layoutParagraph } from '../text/paragraph'
 import { paragraphStyle, type ParagraphStyle, type Rgba } from '../text/style'
 import { LAYOUT_VERSION } from '../version'
+import { drawSlide, placedSlide, slideFrame, type SlideObject } from './slides'
 import {
   cssOf,
   drawObject,
@@ -152,9 +153,18 @@ export interface PrintedChart {
   orientation: Orientation
 }
 
+/** A slide among the sheets (E6.31, D1473): one landscape page, the slide as large as the page takes it, drawn as
+ * creates draws its slides. */
+export interface PrintedSlide {
+  kind: 'slide'
+  id: string
+  name: string
+  objects: readonly SlideObject[]
+}
+
 export interface SheetDocument {
   /** what is printed, in order */
-  sheets: readonly (PrintedSheet | PrintedChart)[]
+  sheets: readonly (PrintedSheet | PrintedChart | PrintedSlide)[]
   styles: readonly TextStyle[]
   shapes?: readonly ShapeOutline[]
   images?: readonly ImageInfo[]
@@ -167,7 +177,7 @@ export interface SheetDocument {
 /** Where on the sheet a page's cells come from: for the preview's page map. `rows` and `cols` are `null` for a chart tab. */
 export interface SheetPageInfo {
   sheet: string
-  kind: 'sheet' | 'chart'
+  kind: 'sheet' | 'chart' | 'slide'
   rows: [number, number] | null
   cols: [number, number] | null
   /** the scale in millionths */
@@ -383,6 +393,7 @@ export function sheetFontsNeeded(doc: SheetDocument, resolver: FontResolver): st
     if (s.print.objects) for (const h of objectFonts(s.objects.map(asDrawn), styles, doc.images ?? [], resolver, DEFAULT_STYLE)) out.add(h)
   }
   for (const s of doc.sheets) if (s.kind === 'chart') for (const h of objectFonts([chartObject(s)], styles, doc.images ?? [], resolver, DEFAULT_STYLE)) out.add(h)
+  for (const s of doc.sheets) if (s.kind === 'slide') for (const h of objectFonts(s.objects, styles, doc.images ?? [], resolver, DEFAULT_STYLE)) out.add(h)
   return [...out].sort()
 }
 
@@ -411,7 +422,7 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
   const margins = { top: page.margins[0], right: page.margins[1], bottom: page.margins[2], left: page.margins[3] }
 
   // ---- plan every sheet first: the footer's "n / N" needs the count
-  const plans: (SheetPlan | { chart: PrintedChart; geometry: PageGeometry; box: Rect; footer: boolean })[] = []
+  const plans: (SheetPlan | { chart: PrintedChart; geometry: PageGeometry; box: Rect; footer: boolean } | { slide: PrintedSlide; geometry: PageGeometry; box: Rect })[] = []
   const geometries = new Map<Orientation, PageGeometry>()
   const geometryFor = (o: Orientation): PageGeometry => {
     let g = geometries.get(o)
@@ -435,6 +446,12 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
       total++
       continue
     }
+    if (s.kind === 'slide') {
+      const geometry = geometryFor('landscape')
+      plans.push({ slide: s, geometry, box: boxOf(geometry, true) })
+      total++
+      continue
+    }
     const geometry = geometryFor(s.print.orientation)
     const footer = page.page_numbers || s.print.footerName
     const prepared = prepare(s, fonts, styles, context)
@@ -449,6 +466,14 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
   const pageMap: SheetPageInfo[] = []
   const draw = { fonts, styles, context, base: base.style }
   for (const plan of plans) {
+    if ('slide' in plan) {
+      const placed = placedSlide(drawSlide(plan.slide.objects, context), plan.box)
+      const p: DisplayPage = { width: plan.geometry.width, height: plan.geometry.height, items: [placed.group, slideFrame(placed.rect)] }
+      footerItems(draw, p, plan.geometry, plan.geometry.margin.bottom, plan.slide.name, page.page_numbers, pages.length + 1, total)
+      pages.push(p)
+      pageMap.push({ sheet: plan.slide.id, kind: 'slide', rows: null, cols: null, scale: ONE })
+      continue
+    }
     if ('chart' in plan) {
       const t = plan.chart
       const items: DisplayItem[] = []
@@ -475,7 +500,8 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
 
   // nothing to print at all: one blank page, and a note, so there is something to show and to write
   if (pages.length === 0) {
-    const g = geometryFor(doc.sheets[0] ? (doc.sheets[0].kind === 'sheet' ? doc.sheets[0].print.orientation : doc.sheets[0].orientation) : page.orientation)
+    const first = doc.sheets[0]
+    const g = geometryFor(!first ? page.orientation : first.kind === 'sheet' ? first.print.orientation : first.kind === 'chart' ? first.orientation : 'landscape')
     pages.push({ width: g.width, height: g.height, items: [] })
     pageMap.push({ sheet: doc.sheets[0]?.id ?? '', kind: 'sheet', rows: [0, 0], cols: [0, 0], scale: ONE })
     if (!notes.some((n) => n.kind === 'sheet')) notes.push({ kind: 'sheet', reason: 'there is nothing to print' })

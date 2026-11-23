@@ -74,10 +74,10 @@ def _check_kinds(kinds: Sequence[str]) -> None:
 
 def _slides(model: SlideModel, scope: Mapping | None) -> list[str]:
     if not scope:
-        return list(model.slides)
+        return list(model.order)
     if set(scope) != {"slide"}:
         raise ValueError("a scope is {slide: id}, or nothing for every slide")
-    if scope["slide"] not in model.slides:
+    if scope["slide"] not in model.order:
         raise ValueError(f"no such slide: {scope['slide']!r}")
     return [scope["slide"]]
 

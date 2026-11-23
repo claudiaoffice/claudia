@@ -17,6 +17,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Self
 
+from claudia_core import N_, Refusal
+
 ORIENTATIONS: tuple[str, ...] = ("portrait", "landscape")
 SCALE_KINDS: tuple[str, ...] = ("fit-width", "fit-page", "percent")
 ORDERS: tuple[str, ...] = ("down-then-across", "across-then-down")
@@ -26,7 +28,7 @@ _FLAGS: tuple[str, ...] = ("gridlines", "headings", "purposes", "footer_name", "
 _LINES = 16384 * 64  # more than any sheet has rows or columns: a limit against absurd numbers only
 
 
-class PrintSetupError(ValueError):
+class PrintSetupError(Refusal):
     """A print setup that cannot be used; the message says which part."""
 
 
@@ -67,7 +69,11 @@ class SheetPrintSetup:
         if self.scale not in SCALE_KINDS:
             raise PrintSetupError(f"unknown scale {self.scale!r}: one of {', '.join(SCALE_KINDS)}")
         if type(self.percent) is not int or not MIN_PERCENT <= self.percent <= MAX_PERCENT:
-            raise PrintSetupError(f"the scale is between {MIN_PERCENT} % and {MAX_PERCENT} %")
+            raise PrintSetupError(
+                N_("the scale is between {min_percent} % and {max_percent} %"),
+                min_percent=MIN_PERCENT,
+                max_percent=MAX_PERCENT,
+            )
         if self.order not in ORDERS:
             raise PrintSetupError(f"unknown page order {self.order!r}: one of {', '.join(ORDERS)}")
         _lines(self.repeat_rows, "repeat_rows")

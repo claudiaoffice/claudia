@@ -235,8 +235,7 @@ def styled_workbook():
 
     model = WorkbookModel()
     sheet = Sheet(SheetId("s1"), "Plan")
-    model.sheets[sheet.id] = sheet
-    model.open_holder("s1")
+    model.add_sheet(sheet, None)
     for (row, col), value in {(0, 0): "Year", (0, 1): "Heat", (1, 0): 2026, (1, 1): 1200.5}.items():
         sheet.cells[(row, col)] = {"t": "text" if isinstance(value, str) else type(value).__name__, "v": value}
     model.number_formats.add(NumberFormat("mwh", "MWh", '#,##0.0 "MWh"'))

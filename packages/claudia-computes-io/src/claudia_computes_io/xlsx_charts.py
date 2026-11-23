@@ -24,7 +24,7 @@ from xml.sax.saxutils import escape
 
 from lxml import etree
 
-from claudia_computes import MAX_OBJECTS_PER_SHEET, ChartSpec, SheetId, WorkbookModel
+from claudia_computes import MAX_OBJECTS_PER_SHEET, CellAnchor, ChartSpec, SheetId, WorkbookModel
 from claudia_computes.charts import BAR_COLORS
 from claudia_computes.limits import MAX_COLS, MAX_ROWS
 from claudia_computes.model import MIN_OBJECT_SIZE
@@ -540,6 +540,7 @@ def written_charts(model: WorkbookModel, taken: set[str] | None = None) -> tuple
                 continue
             spec = model.diagrams[obj.body.diagram]
             assert isinstance(spec, ChartSpec)
+            assert isinstance(obj.anchor, CellAnchor)  # (an object on a sheet hangs at a cell)
             xml = chart_xml(model, spec)
             if xml is not None:
                 body = obj.body

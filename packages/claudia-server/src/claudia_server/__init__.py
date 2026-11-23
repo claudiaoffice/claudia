@@ -15,7 +15,7 @@ from .assistant import AiTurn, Assistant, AsyncEngine, Call, Engine, Say, Task
 from .auth import AI_USER, Account, AuthRefused, Credentials, ScryptDirectory, UserDirectory, WarmableDirectory
 from .certs import Certificate, CertificateError, ensure_certificate
 from .composes import composes_methods
-from .computes import computes_methods
+from .computes import computes_methods, computes_methods_with
 from .creates import creates_methods, creates_methods_with
 from .filestore import FileDirectory, FileProvider
 from .folder_lock import FolderLock, FolderLocked
@@ -131,6 +131,7 @@ __all__ = [
     "admin_router",
     "composes_methods",
     "computes_methods",
+    "computes_methods_with",
     "core_methods",
     "create_app",
     "creates_methods",

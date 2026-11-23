@@ -381,7 +381,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None, inf
     page = page_colour(model)
     marks = marks_of(model)
     background = colour_of({"fill": page or ""}, "fill")
-    for slide_id in model.slides:
+    for slide_id in model.order:
         slide = prs.slides.add_slide(layout)
         if background is not None:
             slide.background.fill.solid()
@@ -769,13 +769,13 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
     existing object is supported, and so are the notes of a slide: they are written to its notes page (a slide's first
     notes make one), and the notes page is the only part that changes -- unless the file's notes were too long for
     the model to read, which are not replaced (:class:`UnsupportedEdit`)."""
-    if baseline.slides != current.slides:
+    if baseline.order != current.order:
         raise UnsupportedEdit("adding, removing or reordering a slide cannot be patched onto the original file yet")
     baseline_by_id, current_by_id = dict(baseline.objects), dict(current.objects)
     added, removed = current_by_id.keys() - baseline_by_id.keys(), baseline_by_id.keys() - current_by_id.keys()
     if added or removed:
         raise UnsupportedEdit("adding or removing an object cannot be patched onto the original file yet")
-    for slide_id in baseline.slides:
+    for slide_id in baseline.order:
         before_order = [obj.id for obj in baseline.objects_on(slide_id)]
         after_order = [obj.id for obj in current.objects_on(slide_id)]
         if before_order != after_order:
@@ -790,7 +790,7 @@ def apply_edits_to_pptx(original_bytes: bytes, baseline: SlideModel, current: Sl
 
     touched_parts: set[str] = set()
     marks_before, marks_after = marks_of(baseline), marks_of(current)
-    for slide_number, slide_id in enumerate(baseline.slides):
+    for slide_number, slide_id in enumerate(baseline.order):
         touched_parts |= _patch_notes(prs, members, slide_number, baseline, current, slide_id)
         shape_indices = _modeled_shape_indices(prs.slides[slide_number])
         for position, object_id in enumerate(obj.id for obj in baseline.objects_on(slide_id)):

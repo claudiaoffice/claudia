@@ -188,7 +188,7 @@ def test_chart_tab_ids_and_names_must_be_unique(doc):
     doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
     with pytest.raises(ValueError, match="exists"):
         doc.execute(AddChart("t1", "Another", spec.id), author="ana")
-    with pytest.raises(ValueError, match="exists"):
+    with pytest.raises(ValueError, match="There is already a chart called “Revenue”"):
         doc.execute(AddChart("t2", "Revenue", spec.id), author="ana")
 
 
@@ -212,7 +212,7 @@ def test_chart_tabs_keep_their_order(doc):
 def test_a_sheet_a_charts_range_still_reads_from_cannot_be_removed(doc):
     doc.execute(AddSheet("s2", "Sheet2"), author="ana")
     put_chart_spec(doc, sheet="s2")
-    with pytest.raises(ValueError, match="still has chart"):
+    with pytest.raises(ValueError, match="still has the data of the chart"):
         doc.execute(RemoveSheet("s2"), author="ana")
     doc.execute(RemoveSheet(S1), author="ana")  # a different sheet: nothing stops this
 
@@ -221,7 +221,7 @@ def test_removing_a_sheet_removes_its_diagram_objects_but_not_their_definitions(
     spec = put_chart_spec(doc)  # the definition's range is on S1, same as the object
     doc.execute(AddSheet("s2", "Sheet2"), author="ana")
     doc.execute(add(diagram_object(sheet="s2", spec_id=spec.id)), author="ana")
-    with pytest.raises(ValueError, match="still has chart"):
+    with pytest.raises(ValueError, match="still has the data of the chart"):
         doc.execute(RemoveSheet(S1), author="ana")  # the definition's own range is still here
     doc.execute(RemoveSheet("s2"), author="ana")  # only the floating object sat here
     assert doc.model.objects == {}
@@ -332,7 +332,7 @@ def test_a_charts_range_may_end_up_pointing_at_rows_that_no_longer_exist():
 # -- the cells a chart reads, for the writers of files (D462) --------------------------------------------------
 def test_a_chart_says_which_cells_it_reads_now():
     model = WorkbookModel()
-    model.sheets[SheetId(S1)] = Sheet(SheetId(S1), "Data")
+    model.add_sheet(Sheet(SheetId(S1), "Data"), None)
     model.diagrams.define(chart_spec("c1", first=(0, 0), last=(3, 2), header_row=False))
     cells = model.chart_cells("c1")
     assert cells is not None
@@ -346,7 +346,7 @@ def test_a_chart_says_which_cells_it_reads_now():
 
 def test_a_chart_that_follows_a_name_says_the_cells_the_name_is_today_and_none_when_it_is_gone():
     model = WorkbookModel()
-    model.sheets[SheetId(S1)] = Sheet(SheetId(S1), "Data")
+    model.add_sheet(Sheet(SheetId(S1), "Data"), None)
     model.names.put(
         NamedRange("Sales", None, RangeRef(CellRef(1, 1, SheetId(S1)), CellRef(4, 2, SheetId(S1))), header=True)
     )

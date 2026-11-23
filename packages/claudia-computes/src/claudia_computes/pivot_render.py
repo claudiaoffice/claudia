@@ -14,6 +14,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
+from claudia_core import N_
+
 from . import sql as engine
 from .pivot import DEFAULT_LABELS, PivotDefinition, PivotError, PivotLabels
 from .pivot_sql import DataColumn, Span, aliases, data_columns, member_query, pivot_query
@@ -88,7 +90,7 @@ def compute_pivot(
     field gives an empty result: there is nothing to add up yet."""
     data = tables(definition.source)
     if data is None:
-        raise PivotError(f"no table or range named {definition.source!r}")
+        raise PivotError(N_("no table or range named “{source}”"), source=definition.source)
     resolved = _resolved(definition, engine.column_names(data[0]))
     if not resolved.values:
         return PivotResult((), (), 0, "")
@@ -97,8 +99,13 @@ def compute_pivot(
     columns = data_columns(resolved, members)
     if len(columns) > MAX_DATA_COLUMNS:
         raise PivotError(
-            f"the pivot would have {len(columns):,} columns, at most {MAX_DATA_COLUMNS:,} fit: "
-            f"{resolved.columns[0]!r} has too many members for the columns"
+            N_(
+                "the pivot would have {count} columns, at most {limit} fit: “{field}” has too many members for "
+                "the columns"
+            ),
+            count=len(columns),
+            limit=MAX_DATA_COLUMNS,
+            field=resolved.columns[0],
         )
     names = aliases(resolved, columns, titles, labels)
     query = pivot_query(resolved, columns, names, labels)
@@ -118,7 +125,12 @@ def _resolved(definition: PivotDefinition, names: Sequence[str]) -> PivotDefinit
 
     def find(field: str) -> str:
         if field.casefold() not in known:
-            raise PivotError(f"no field {field!r} in {definition.source}: {', '.join(names)}")
+            raise PivotError(
+                N_("no field “{field}” in “{source}”: {names}"),
+                field=field,
+                source=definition.source,
+                names=", ".join(names),
+            )
         return known[field.casefold()]
 
     return replace(
@@ -134,7 +146,9 @@ def _titles(definition: PivotDefinition, labels: PivotLabels) -> list[str]:
     titles = [value.name or labels.title(value.aggregation, value.field) for value in definition.values]
     for index, title in enumerate(titles):
         if title.casefold() in (other.casefold() for other in titles[:index]):
-            raise PivotError(f"two value fields are both called {title!r}: give one of them another name")
+            raise PivotError(
+                N_("two value fields are both called “{title}”: give one of them another name"), title=title
+            )
     return titles
 
 

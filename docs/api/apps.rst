@@ -15,6 +15,10 @@ computes
 .. autoclass:: claudia_computes.Structure
 .. autoclass:: claudia_computes.AddSheet
 .. autoclass:: claudia_computes.RemoveSheet
+.. autoclass:: claudia_computes.Tab
+.. autoclass:: claudia_computes.AddSlide
+.. autoclass:: claudia_computes.RemoveSlide
+.. autoclass:: claudia_computes.TabsChanged
 .. autoclass:: claudia_computes.CellRegion
 .. autoclass:: claudia_computes.CellAnchor
 .. autoclass:: claudia_computes.Chart

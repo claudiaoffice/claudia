@@ -8,31 +8,23 @@ import { BaseSession, type BaseState, type SessionOptions } from './base-session
 import { translate as t } from './i18n'
 import type { Frame } from './geometry'
 import type { ImageAsset } from './images'
-import type { ObjectsEvent, PaletteEvent, SlideAnchor, StyleDef, StyleModel, StyleTarget, VisualObject } from './objects'
+import type { ObjectsEvent, PaletteEvent, StyleDef, StyleModel, StyleTarget } from './objects'
 import type { CssEdit } from './style-css'
 import type { PrintSetupData } from '@claudia/layout'
 import { pointOf, type Label } from './paragraphs'
 import type { ListInfo, SchemeInfo } from './numbering'
 import type { ContentsEntry } from './contents'
 import type { ReferenceTarget, RefField, Show, Shown } from './references'
+import { othersOn, SlideActions, type Other, type PictureImport, type ShapeDef, type SlideHost, type SlideObject } from './slide-host'
 
 // `ImageAsset`/`ImageImport` moved to `./images` (shared with computes' `session.ts`, E6.17); re-exported here
 // so existing imports of them from this module keep working.
 export type { ImageAsset, ImageImport } from './images'
 export type { ColourRole, ObjectBody, PaletteEvent, Reading, SlideAnchor, StyleDef, VisualObject } from './objects'
 
-/** One thing on a slide: the shared `ObjectBody` plus a `SlideAnchor` — the only part of it that is this app's
- * own (E10.16, D177). Read its place with `slideFrame(obj)`, not `obj.x`. */
-export type SlideObject = VisualObject<SlideAnchor>
-/** An outline: `path` is an SVG path in a box of 100 by 100; `aspect` is width / height when it must be kept. */
-export interface ShapeDef {
-  format: number
-  id: string
-  name: string
-  path: string
-  aspect: number | null
-  text_area: { x: number; y: number; w: number; h: number }
-}
+// One thing on a slide is the shared `ObjectBody` plus a `SlideAnchor` (E10.16, D177): read its place with
+// `slideFrame(obj)`, not `obj.x`. Computes' slides have the same objects (`slide-host.ts`, D1473).
+export type { ShapeDef, SlideObject } from './slide-host'
 
 export interface SlideInfo {
   id: string
@@ -68,9 +60,16 @@ export interface SlideState extends BaseState {
   referenced: Record<string, Shown[]>
 }
 
-export class SlideSession extends BaseSession<SlideState> {
-  private holding = false
-  private shown = ''
+export class SlideSession extends BaseSession<SlideState> implements SlideHost {
+  /** Showing a slide, and selecting, moving and putting objects on it, as computes does (D1473). */
+  private readonly slide = new SlideActions({
+    state: this.state,
+    write: (method, params) => this.write(method, params),
+    show: (where, regions) => this.showRegions(where, regions),
+    hold: (regions) => this.holdRegions(regions),
+    release: () => this.releaseRegions(),
+    looking: () => lookOnly(this.state),
+  })
 
   constructor(makeLink: () => LinkLike, options: SessionOptions = {}) {
     super(makeLink, options, {
@@ -160,7 +159,7 @@ export class SlideSession extends BaseSession<SlideState> {
   override async unnamedInView(): Promise<number> {
     const s = this.state
     const slide = s.slides.find((x) => x.id === s.activeSlide)
-    return this.objectsOn(s.activeSlide).filter((o) => !o.name).length + (slide && !slide.name ? 1 : 0)
+    return this.slideObjects(s.activeSlide).filter((o) => !o.name).length + (slide && !slide.name ? 1 : 0)
   }
   protected override tracksThings(): boolean {
     return true
@@ -184,20 +183,13 @@ export class SlideSession extends BaseSession<SlideState> {
   }
 
   /** The objects of a slide, the one in front last. */
-  objectsOn(slide: string): SlideObject[] {
+  slideObjects(slide: string): SlideObject[] {
     return (this.state.order[slide] ?? []).map((id) => this.state.objects[id]).filter((o): o is SlideObject => o !== undefined)
   }
 
   /** The objects of a slide that colleagues have selected, and whether they hold them. */
-  selectedByOthers(slide: string): { id: string; user: string; locked: boolean }[] {
-    const found: { id: string; user: string; locked: boolean }[] = []
-    for (const [user, here] of Object.entries(this.state.presence)) {
-      if (user === this.state.me.user) continue
-      for (const region of here.regions) {
-        if (region.kind === 'objects' && region.holder === slide) for (const id of region.ids) found.push({ id, user, locked: here.locked })
-      }
-    }
-    return found
+  selectedByOthers(slide: string): Other[] {
+    return othersOn(this.state, slide)
   }
 
   // ------------------------------------------------------------------------------ events
@@ -206,10 +198,7 @@ export class SlideSession extends BaseSession<SlideState> {
     const s = this.state
     const info = s.slides.find((x) => x.id === e.holder)
     if (info) info.objects = e.order.length
-    if (e.removed.includes(s.selected ?? '')) {
-      s.selected = null
-      this.track(this.letGo())
-    }
+    this.track(this.slide.gone(e.removed))
   }
 
   protected onAppEvent(name: string, data: WireData): boolean {
@@ -255,12 +244,6 @@ export class SlideSession extends BaseSession<SlideState> {
   }
 
   // ------------------------------------------------------------------------------ doing things
-  private async insert(params: Record<string, unknown>, frame: Frame): Promise<string | null> {
-    const done = await this.write('add_object', { slide: this.state.activeSlide, ...params, ...frame })
-    if (done === false) return null
-    await this.select(done.object)
-    return done.object
-  }
 
   /** Put a container of `type` on the slide that is shown, in `frame`; its id, or null after telling why not. */
   async addContainer(type: string, frame: Frame): Promise<string | null> {
@@ -290,12 +273,12 @@ export class SlideSession extends BaseSession<SlideState> {
 
   /** Put a text box on the slide that is shown; its id, or null after telling the person why not. */
   addText(frame: Frame): Promise<string | null> {
-    return this.insert({ kind: 'text' }, frame)
+    return this.slide.insert({ kind: 'text' }, frame)
   }
 
   /** Put a shape from the library (or the document) on the slide that is shown. */
   addShape(shape: string, frame: Frame): Promise<string | null> {
-    return this.insert({ kind: 'shape', shape }, frame)
+    return this.slide.insert({ kind: 'shape', shape }, frame)
   }
 
   /**
@@ -304,10 +287,7 @@ export class SlideSession extends BaseSession<SlideState> {
    * file's full path if the caller could get one — a plain web browser cannot, for its own security, and passes
    * `null`. Clipboard and drag-and-drop import are not built yet; this is the "browse a file" path only.
    */
-  async addImage(
-    picture: { data: string; alt: string; sourceName: string; sourcePath: string | null; decorative?: boolean; fit?: boolean },
-    frame: Frame,
-  ): Promise<string | null> {
+  async addImage(picture: PictureImport, frame: Frame): Promise<string | null> {
     const id = await this.putPicture(picture, { slide: this.state.activeSlide, ...frame })
     if (id) await this.select(id)
     return id
@@ -341,7 +321,7 @@ export class SlideSession extends BaseSession<SlideState> {
   // (slide by slide, bottom to top); what is asked for here is structure, and the markers arrive as `labels` events.
   /** The words of every object, in the order they are read, by object id: the order lists are counted in. */
   readingOrder(): string[] {
-    return this.state.slides.flatMap((slide) => this.objectsOn(slide.id).filter((o) => o.paragraph).map((o) => o.id))
+    return this.state.slides.flatMap((slide) => this.slideObjects(slide.id).filter((o) => o.paragraph).map((o) => o.id))
   }
 
   /** The list item the words of the selected object are, or `null`. */
@@ -478,12 +458,12 @@ export class SlideSession extends BaseSession<SlideState> {
     return done.slide
   }
 
-  async move(id: string, x: number, y: number): Promise<boolean> {
-    return (await this.write('move_object', { id, x, y })) !== false
+  move(id: string, x: number, y: number): Promise<boolean> {
+    return this.slide.move(id, x, y)
   }
 
-  async resize(id: string, frame: Frame): Promise<boolean> {
-    return (await this.write('resize_object', { id, ...frame })) !== false
+  resize(id: string, frame: Frame): Promise<boolean> {
+    return this.slide.resize(id, frame)
   }
 
   /** Hold an object to the grid (`snap` true) or release it (false); its own step in the history (E10.15). */
@@ -503,61 +483,12 @@ export class SlideSession extends BaseSession<SlideState> {
     return (await this.write('deviate', { parent, targets, slot, ...edit })) !== false
   }
 
-  async showSlide(slide: string): Promise<void> {
-    if (slide === this.state.activeSlide) return
-    await this.select(null)
-    this.state.activeSlide = slide
-  }
-
-  // -- the selection: shown to the others, and held so that nobody changes the object under my hands
-  private regionOf(id: string): Region[] {
-    return [{ kind: 'objects', holder: this.state.objects[id]?.anchor.holder ?? this.state.activeSlide, ids: [id] }]
+  showSlide(slide: string): Promise<void> {
+    return this.slide.show(slide)
   }
 
   /** Select an object (null: nothing). Selecting holds it; a colleague who holds it first keeps it. */
-  async select(id: string | null): Promise<void> {
-    const s = this.state
-    if (id === s.selected) return
-    s.selected = id
-    if (id === null) return this.letGo()
-    const regions = this.regionOf(id)
-    if (lookOnly(s)) return this.showRegions(`select ${id}`, regions)
-    if (!(await this.hold(regions)) && s.selected === id) s.selected = null
-  }
-
-  private async letGo(): Promise<void> {
-    await this.release()
-    await this.showRegions('nothing', [])
-  }
-
-  // ------------------------------------------------------------------------------ where I am, and holding what I work on
-  /** Show the others where I am; `where` says it in few characters so that the same place is not sent twice. */
-  private async showRegions(where: string, regions: Region[]): Promise<void> {
-    if (where === this.shown || this.state.status !== 'open') return
-    this.shown = where
-    try {
-      await this.need().request('presence', { regions })
-    } catch {
-      this.shown = '' // not important enough to bother the person; the next move tries again
-    }
-  }
-
-  /** Hold these regions so that nobody else changes them; false after telling the person why not. */
-  private async hold(regions: Region[]): Promise<boolean> {
-    if ((await this.attempt('lock', { regions })) === false) return false
-    this.holding = true
-    this.shown = ''
-    return true
-  }
-
-  private async release(): Promise<void> {
-    if (!this.holding) return
-    this.holding = false
-    this.shown = ''
-    try {
-      await this.need().request('unlock')
-    } catch {
-      /* the lock runs out by itself */
-    }
+  select(id: string | null): Promise<void> {
+    return this.slide.select(id)
   }
 }

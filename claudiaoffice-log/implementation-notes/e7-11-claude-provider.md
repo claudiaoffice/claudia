@@ -18,7 +18,7 @@ assumptions made while building, and what could not be run.
 
 ## Things that are easy to get wrong
 
-- **The decision is made per question, and again before every round** (D1497, CODE-78). The assistant of a document is
+- **The decision is made per question, and again before every round** (D1497, CODE-79). The assistant of a document is
   made once when the document opens, so nothing that follows the owners' switch can be fixed at that moment. The router
   asks the desk; the engine stops at the next step with "Stopped: Claude was switched off." What was done before the stop
   stays (no undo).

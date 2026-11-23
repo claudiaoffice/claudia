@@ -17,4 +17,4 @@ while a question runs, ends that question before its next step with "Stopped: Cl
 any step. A switch-off is not a fault of Claude's and does not count as its last error. The next question goes to the server's own provider.
 
 The cause of X1 (an open document kept an assistant whose runner had been closed or replaced) is gone with this: the router
-asks the desk per question (CODE-78).
+asks the desk per question (CODE-79).

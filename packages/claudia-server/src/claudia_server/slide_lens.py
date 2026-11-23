@@ -16,10 +16,9 @@ import json
 from collections.abc import Callable
 from typing import Any
 
-from claudia_core import Document, ObjectsChanged
+from claudia_core import SLIDE_HEIGHT, SLIDE_WIDTH, Document, ObjectsChanged
 from claudia_creates import SlideModel
 from claudia_creates.events import SlidesChanged
-from claudia_creates.model import SLIDE_HEIGHT, SLIDE_WIDTH
 
 from .lens import fence, shorten
 
@@ -92,7 +91,7 @@ class SlideLens:
         model = document.model
         assert isinstance(model, SlideModel)
         text = ORIENTATION.format(w=SLIDE_WIDTH, h=SLIDE_HEIGHT, example=EXAMPLE if can_write else "")
-        slides = list(model.slides)
+        slides = list(model.order)
         if not slides:
             return text + "\nThere are no slides yet: add one with add_slide."
         names = [f"{s} ({len(model.objects_on(s))})" for s in slides[:MAX_LISTED_SLIDES]]
@@ -167,8 +166,8 @@ class SlideRecorder:
         assert isinstance(model, SlideModel)
         lines = []
         if self._slides_changed:
-            lines.append("The slides are now: " + (", ".join(model.slides) or "none"))
-        lines += [describe_slide(model, s) for s in self._slides if s in model.slides]
+            lines.append("The slides are now: " + (", ".join(model.order) or "none"))
+        lines += [describe_slide(model, s) for s in self._slides if s in model.order]
         if self._removed:
             lines.append("Removed: " + ", ".join(self._removed))
         return fence("\n".join(lines) or "Nothing changed.")

@@ -1,0 +1,346 @@
+<svg viewBox="0 0 1700 1120" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif"><rect width="1700" height="1120" fill="#f3f1ea"/><text x="40.0" y="44.0" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia creates — layouts and templates: templates on the server and in a deck (E10.22, E10.23)</text>
+<text x="40.0" y="66.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Mock round of 22 Nov 2026, for review. Content is invented. A template (layouts and a theme, with a purpose) initialises a new deck’s own layouts and styles;</text>
+<text x="40.0" y="83.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">after that the deck relies only on its own copy. A template is an export of a presentation without slides; the administrator adds and removes them on the server.</text>
+<rect x="40.0" y="96.0" width="820.0" height="640.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62.0" y="126.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">K · File ▸ New: pick a template or start from nothing</text>
+<text x="62.0" y="144.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Each template says what it is for. The first is built in and is a single empty slide.</text>
+<rect x="65.0" y="155.0" width="776.0" height="560.0" rx="12" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="62.0" y="150.0" width="776.0" height="560.0" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="84.0" y="182.0" font-family="Fraunces, Georgia, serif" font-size="15.5" font-weight="600" fill="#1f1a33" text-anchor="start">New presentation</text>
+<path d="M812 168 l10 10 M822 168 l-10 10" fill="none" stroke="#6e6880" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="62.0" y1="196.0" x2="838.0" y2="196.0" stroke="#e3dfee" stroke-width="1"/>
+<rect x="84.0" y="200.0" width="230.0" height="176.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="96.0" y="212.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="153.7" cy="215.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="99.7" y1="244.4" x2="154.3" y2="244.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="99.7" y="215.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="99.7" y="225.9" width="22.9" height="2.2" rx="1" fill="#1f1a33"/>
+<text x="98.0" y="280.0" font-family="Fraunces, Georgia, serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Basic</text>
+<text x="98.0" y="300.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A single empty slide. Start from</text>
+<text x="98.0" y="315.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">nothing.</text>
+<text x="98.0" y="362.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">built in</text>
+<rect x="328.0" y="200.0" width="230.0" height="176.0" rx="10" fill="#fdebd9" stroke="#5b4bc4" stroke-width="2"/>
+<rect x="340.0" y="212.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="397.7" cy="215.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="343.7" y1="244.4" x2="398.3" y2="244.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="343.7" y="215.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="343.7" y="225.9" width="22.9" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="408.0" y="212.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="465.7" cy="215.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="411.7" y1="244.4" x2="466.3" y2="244.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="411.7" y="215.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="413.5" cy="226.9" r="1.2" fill="#c9c4d6"/>
+<rect x="417.7" y="226.0" width="17.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="413.5" cy="230.5" r="1.2" fill="#c9c4d6"/>
+<rect x="417.7" y="229.6" width="14.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="413.5" cy="234.1" r="1.2" fill="#c9c4d6"/>
+<rect x="417.7" y="233.2" width="16.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="443.3" cy="226.9" r="1.2" fill="#c9c4d6"/>
+<rect x="447.5" y="226.0" width="11.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="443.3" cy="230.5" r="1.2" fill="#c9c4d6"/>
+<rect x="447.5" y="229.6" width="16.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="443.3" cy="234.1" r="1.2" fill="#c9c4d6"/>
+<rect x="447.5" y="233.2" width="13.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="476.0" y="212.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="533.7" cy="215.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="479.7" y1="244.4" x2="534.3" y2="244.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="479.7" y="215.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="481.5" cy="226.9" r="1.2" fill="#c9c4d6"/>
+<rect x="485.7" y="226.0" width="19.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="481.5" cy="230.5" r="1.2" fill="#c9c4d6"/>
+<rect x="485.7" y="229.6" width="16.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="481.5" cy="234.1" r="1.2" fill="#c9c4d6"/>
+<rect x="485.7" y="233.2" width="18.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="509.5" y="223.9" width="24.8" height="14.6" rx="1" fill="#e3dfee"/>
+<path d="M512.0 236.3 l7.4 -6.6 l6.2 4.4 l3.7 -2.9 l3.7 5.1" fill="none" stroke="#c9c4d6" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="342.0" y="280.0" font-family="Fraunces, Georgia, serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Conference talk</text>
+<text x="342.0" y="300.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A 20-minute talk: one idea per</text>
+<text x="342.0" y="315.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">slide, a few strong pictures.</text>
+<text x="342.0" y="362.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">8 layouts · English</text>
+<rect x="572.0" y="200.0" width="230.0" height="176.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="584.0" y="212.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="641.7" cy="215.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="587.7" y1="244.4" x2="642.3" y2="244.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="587.7" y="215.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="587.7" y="225.9" width="22.9" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="652.0" y="212.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="709.7" cy="215.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="655.7" y1="244.4" x2="710.3" y2="244.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="655.7" y="215.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="657.5" cy="226.9" r="1.2" fill="#c9c4d6"/>
+<rect x="661.7" y="226.0" width="17.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="657.5" cy="230.5" r="1.2" fill="#c9c4d6"/>
+<rect x="661.7" y="229.6" width="14.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="657.5" cy="234.1" r="1.2" fill="#c9c4d6"/>
+<rect x="661.7" y="233.2" width="16.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="687.3" cy="226.9" r="1.2" fill="#c9c4d6"/>
+<rect x="691.5" y="226.0" width="11.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="687.3" cy="230.5" r="1.2" fill="#c9c4d6"/>
+<rect x="691.5" y="229.6" width="16.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="687.3" cy="234.1" r="1.2" fill="#c9c4d6"/>
+<rect x="691.5" y="233.2" width="13.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<text x="586.0" y="280.0" font-family="Fraunces, Georgia, serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Team update</text>
+<text x="586.0" y="300.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A short weekly status for people</text>
+<text x="586.0" y="315.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">who know the work.</text>
+<text x="586.0" y="362.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">5 layouts · English</text>
+<rect x="84.0" y="390.0" width="230.0" height="176.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="96.0" y="402.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="153.7" cy="405.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="99.7" y1="434.4" x2="154.3" y2="434.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="99.7" y="405.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="99.7" y="415.9" width="22.9" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="164.0" y="402.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="221.7" cy="405.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="167.7" y1="434.4" x2="222.3" y2="434.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="167.7" y="405.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="169.5" cy="416.9" r="1.2" fill="#c9c4d6"/>
+<rect x="173.7" y="416.0" width="17.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="169.5" cy="420.5" r="1.2" fill="#c9c4d6"/>
+<rect x="173.7" y="419.6" width="14.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="169.5" cy="424.1" r="1.2" fill="#c9c4d6"/>
+<rect x="173.7" y="423.2" width="16.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="199.3" cy="416.9" r="1.2" fill="#c9c4d6"/>
+<rect x="203.5" y="416.0" width="11.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="199.3" cy="420.5" r="1.2" fill="#c9c4d6"/>
+<rect x="203.5" y="419.6" width="16.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="199.3" cy="424.1" r="1.2" fill="#c9c4d6"/>
+<rect x="203.5" y="423.2" width="13.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="232.0" y="402.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="289.7" cy="405.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="235.7" y1="434.4" x2="290.3" y2="434.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="235.7" y="405.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="237.5" cy="416.9" r="1.2" fill="#c9c4d6"/>
+<rect x="241.7" y="416.0" width="19.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="237.5" cy="420.5" r="1.2" fill="#c9c4d6"/>
+<rect x="241.7" y="419.6" width="16.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="237.5" cy="424.1" r="1.2" fill="#c9c4d6"/>
+<rect x="241.7" y="423.2" width="18.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="265.5" y="413.9" width="24.8" height="14.6" rx="1" fill="#e3dfee"/>
+<path d="M268.0 426.3 l7.4 -6.6 l6.2 4.4 l3.7 -2.9 l3.7 5.1" fill="none" stroke="#c9c4d6" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="98.0" y="470.0" font-family="Fraunces, Georgia, serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Council briefing</text>
+<text x="98.0" y="490.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A formal briefing: agenda, numbered</text>
+<text x="98.0" y="505.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">points, a decision to take.</text>
+<text x="98.0" y="552.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">7 layouts · Deutsch</text>
+<rect x="328.0" y="390.0" width="230.0" height="176.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="340.0" y="402.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="397.7" cy="405.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="343.7" y1="434.4" x2="398.3" y2="434.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="343.7" y="405.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="343.7" y="415.9" width="22.9" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="408.0" y="402.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="465.7" cy="405.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="411.7" y1="434.4" x2="466.3" y2="434.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="411.7" y="405.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="413.5" cy="416.9" r="1.2" fill="#c9c4d6"/>
+<rect x="417.7" y="416.0" width="17.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="413.5" cy="420.5" r="1.2" fill="#c9c4d6"/>
+<rect x="417.7" y="419.6" width="14.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="413.5" cy="424.1" r="1.2" fill="#c9c4d6"/>
+<rect x="417.7" y="423.2" width="16.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="443.3" cy="416.9" r="1.2" fill="#c9c4d6"/>
+<rect x="447.5" y="416.0" width="11.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="443.3" cy="420.5" r="1.2" fill="#c9c4d6"/>
+<rect x="447.5" y="419.6" width="16.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="443.3" cy="424.1" r="1.2" fill="#c9c4d6"/>
+<rect x="447.5" y="423.2" width="13.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="476.0" y="402.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="533.7" cy="405.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="479.7" y1="434.4" x2="534.3" y2="434.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="479.7" y="405.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="481.5" cy="416.9" r="1.2" fill="#c9c4d6"/>
+<rect x="485.7" y="416.0" width="19.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="481.5" cy="420.5" r="1.2" fill="#c9c4d6"/>
+<rect x="485.7" y="419.6" width="16.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="481.5" cy="424.1" r="1.2" fill="#c9c4d6"/>
+<rect x="485.7" y="423.2" width="18.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="509.5" y="413.9" width="24.8" height="14.6" rx="1" fill="#e3dfee"/>
+<path d="M512.0 426.3 l7.4 -6.6 l6.2 4.4 l3.7 -2.9 l3.7 5.1" fill="none" stroke="#c9c4d6" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="342.0" y="470.0" font-family="Fraunces, Georgia, serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Lecture</text>
+<text x="342.0" y="490.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A 90-minute class: definitions,</text>
+<text x="342.0" y="505.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">examples, exercises.</text>
+<text x="342.0" y="552.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">9 layouts · English</text>
+<rect x="572.0" y="390.0" width="230.0" height="176.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="584.0" y="402.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="641.7" cy="405.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="587.7" y1="434.4" x2="642.3" y2="434.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="587.7" y="405.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="587.7" y="415.9" width="22.9" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="652.0" y="402.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="709.7" cy="405.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="655.7" y1="434.4" x2="710.3" y2="434.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="655.7" y="405.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="657.5" cy="416.9" r="1.2" fill="#c9c4d6"/>
+<rect x="661.7" y="416.0" width="17.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="657.5" cy="420.5" r="1.2" fill="#c9c4d6"/>
+<rect x="661.7" y="419.6" width="14.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="657.5" cy="424.1" r="1.2" fill="#c9c4d6"/>
+<rect x="661.7" y="423.2" width="16.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="687.3" cy="416.9" r="1.2" fill="#c9c4d6"/>
+<rect x="691.5" y="416.0" width="11.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="687.3" cy="420.5" r="1.2" fill="#c9c4d6"/>
+<rect x="691.5" y="419.6" width="16.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="687.3" cy="424.1" r="1.2" fill="#c9c4d6"/>
+<rect x="691.5" y="423.2" width="13.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="720.0" y="402.0" width="62.0" height="34.9" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="777.7" cy="405.5" r="1.6119999999999999" fill="#5b4bc4"/>
+<line x1="723.7" y1="434.4" x2="778.3" y2="434.4" stroke="#e3dfee" stroke-width="1"/>
+<rect x="723.7" y="405.8" width="28.4" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="725.5" cy="416.9" r="1.2" fill="#c9c4d6"/>
+<rect x="729.7" y="416.0" width="19.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="725.5" cy="420.5" r="1.2" fill="#c9c4d6"/>
+<rect x="729.7" y="419.6" width="16.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="725.5" cy="424.1" r="1.2" fill="#c9c4d6"/>
+<rect x="729.7" y="423.2" width="18.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="753.5" y="413.9" width="24.8" height="14.6" rx="1" fill="#e3dfee"/>
+<path d="M756.0 426.3 l7.4 -6.6 l6.2 4.4 l3.7 -2.9 l3.7 5.1" fill="none" stroke="#c9c4d6" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="586.0" y="470.0" font-family="Fraunces, Georgia, serif" font-size="14" font-weight="600" fill="#1f1a33" text-anchor="start">Project proposal</text>
+<text x="586.0" y="490.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">A pitch to a sponsor: need, plan,</text>
+<text x="586.0" y="505.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">cost, ask.</text>
+<text x="586.0" y="552.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">6 layouts · English</text>
+<text x="84.0" y="592.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#5b4bc4" text-anchor="start">What would you like to achieve?</text>
+<text x="84.0" y="610.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Describe your aim and the list narrows to templates made for it (E12.1). No AI is needed for this.</text>
+<text x="84.0" y="640.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">The template is copied into the new presentation. Later changes to the template never reach it.</text>
+<rect x="718.0" y="668.0" width="100.0" height="30.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="768.0" y="687.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="500.0" y="668.0" width="210.0" height="30.0" rx="7" fill="#5b4bc4"/>
+<text x="605.0" y="687.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Create from “Conference talk”</text>
+<rect x="880.0" y="96.0" width="780.0" height="640.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="902.0" y="126.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">L · Server settings ▸ Templates (administrator)</text>
+<text x="902.0" y="144.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Same pattern as Server settings ▸ Fonts (D1041). Removing a template never changes presentations made from it.</text>
+<rect x="902.0" y="152.0" width="736.0" height="556.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="902.0" y="152.0" width="736.0" height="38.0" rx="10" fill="#1f1a33"/>
+<rect x="902.0" y="172.0" width="736.0" height="18.0" rx="0" fill="#1f1a33"/>
+<text x="920.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#f7f3ec" text-anchor="start">demo.claudia-office.de</text>
+<text x="1620.0" y="176.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#e6e0f5" text-anchor="end">Server settings</text>
+<text x="920.0" y="218.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">AI</text>
+<text x="1002.0" y="218.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Fonts</text>
+<text x="1084.0" y="218.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Templates</text>
+<rect x="1082.0" y="224.0" width="66.8" height="2.5" rx="0" fill="#f2a057"/>
+<text x="1166.0" y="218.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Users</text>
+<line x1="902.0" y1="230.0" x2="1638.0" y2="230.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="920.0" y="260.0" font-family="Fraunces, Georgia, serif" font-size="16" font-weight="600" fill="#1f1a33" text-anchor="start">Templates</text>
+<rect x="1490.0" y="242.0" width="113.8" height="28.0" rx="7" fill="#5b4bc4"/>
+<text x="1546.9" y="260.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Add template…</text>
+<text x="920.0" y="296.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">Name</text>
+<text x="1070.0" y="296.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">What it is for</text>
+<text x="1370.0" y="296.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">Layouts</text>
+<text x="1432.0" y="296.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start">Language</text>
+<text x="1542.0" y="296.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#6e6880" text-anchor="start"></text>
+<line x1="914.0" y1="304.0" x2="1626.0" y2="304.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="920.0" y="328.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Basic</text>
+<text x="1070.0" y="328.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A single empty slide</text>
+<text x="1370.0" y="328.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">1</text>
+<text x="1432.0" y="328.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">all</text>
+<text x="1542.0" y="328.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">built in</text>
+<line x1="914.0" y1="342.0" x2="1626.0" y2="342.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="920.0" y="368.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Conference talk</text>
+<text x="1070.0" y="368.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A 20-minute talk, one idea per slide</text>
+<text x="1370.0" y="368.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">8</text>
+<text x="1432.0" y="368.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">English</text>
+<text x="1542.0" y="368.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<line x1="914.0" y1="382.0" x2="1626.0" y2="382.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="920.0" y="408.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Team update</text>
+<text x="1070.0" y="408.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A short weekly status</text>
+<text x="1370.0" y="408.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">5</text>
+<text x="1432.0" y="408.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">English</text>
+<text x="1542.0" y="408.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<line x1="914.0" y1="422.0" x2="1626.0" y2="422.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="920.0" y="448.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Council briefing</text>
+<text x="1070.0" y="448.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A formal briefing with a decision</text>
+<text x="1370.0" y="448.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">7</text>
+<text x="1432.0" y="448.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">Deutsch</text>
+<text x="1542.0" y="448.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<line x1="914.0" y1="462.0" x2="1626.0" y2="462.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="920.0" y="488.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Lecture</text>
+<text x="1070.0" y="488.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A 90-minute class</text>
+<text x="1370.0" y="488.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">9</text>
+<text x="1432.0" y="488.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">English</text>
+<text x="1542.0" y="488.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<line x1="914.0" y1="502.0" x2="1626.0" y2="502.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="920.0" y="528.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Project proposal</text>
+<text x="1070.0" y="528.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">A pitch to a sponsor</text>
+<text x="1370.0" y="528.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">6</text>
+<text x="1432.0" y="528.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">English</text>
+<text x="1542.0" y="528.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#d6477a" text-anchor="start">Remove</text>
+<line x1="914.0" y1="542.0" x2="1626.0" y2="542.0" stroke="#e3dfee" stroke-width="1"/>
+<rect x="920.0" y="580.0" width="700.0" height="74.0" rx="10" fill="none" stroke="#c9c4d6" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="1270.0" y="610.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#6e6880" text-anchor="middle">Drop a template file here, or choose one</text>
+<text x="1270.0" y="630.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="middle">Anyone can make one with Save as template…; only the administrator can add it here.</text>
+<text x="920.0" y="680.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Presentations made from a template are not affected when it is removed.</text>
+<rect x="40.0" y="756.0" width="820.0" height="330.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62.0" y="786.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">M · Format ▸ Template ▸ Change theme… and Change template…</text>
+<text x="62.0" y="804.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Both copy into the deck’s own layouts and styles, matched by name. Styles and layouts of the deck with no match stay as they are.</text>
+<rect x="65.0" y="815.0" width="776.0" height="258.0" rx="12" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="62.0" y="810.0" width="776.0" height="258.0" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="84.0" y="842.0" font-family="Fraunces, Georgia, serif" font-size="15.5" font-weight="600" fill="#1f1a33" text-anchor="start">Change template</text>
+<path d="M812 828 l10 10 M822 828 l-10 10" fill="none" stroke="#6e6880" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="62.0" y1="856.0" x2="838.0" y2="856.0" stroke="#e3dfee" stroke-width="1"/>
+<rect x="84.0" y="860.0" width="130.0" height="26.0" rx="0" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="149.0" y="877.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="middle">Theme only</text>
+<rect x="214.0" y="860.0" width="130.0" height="26.0" rx="0" fill="#5b4bc4" stroke="#5b4bc4" stroke-width="1"/>
+<text x="279.0" y="877.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#ffffff" text-anchor="middle">Theme and layouts</text>
+<text x="84.0" y="914.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Template</text>
+<rect x="150.0" y="896.0" width="200.0" height="26.0" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="160.0" y="913.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">Council briefing</text>
+<path d="M334 906 l4 4 l4 -4" fill="none" stroke="#6e6880" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="84.0" y="934.0" width="120.0" height="67.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="195.6" cy="940.8" r="3.1199999999999997" fill="#5b4bc4"/>
+<line x1="91.2" y1="996.8" x2="196.8" y2="996.8" stroke="#e3dfee" stroke-width="1"/>
+<rect x="91.2" y="941.3" width="55.1" height="3.4" rx="1" fill="#1f1a33"/>
+<rect x="91.2" y="961.0" width="44.4" height="3.4" rx="1" fill="#1f1a33"/>
+<rect x="212.0" y="934.0" width="120.0" height="67.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="323.6" cy="940.8" r="3.1199999999999997" fill="#5b4bc4"/>
+<line x1="219.2" y1="996.8" x2="324.8" y2="996.8" stroke="#e3dfee" stroke-width="1"/>
+<rect x="219.2" y="941.3" width="55.1" height="3.4" rx="1" fill="#1f1a33"/>
+<circle cx="221.0" cy="960.0" r="1.2" fill="#c9c4d6"/>
+<rect x="225.2" y="959.1" width="38.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="221.0" cy="966.2" r="1.2" fill="#c9c4d6"/>
+<rect x="225.2" y="965.3" width="32.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="221.0" cy="972.4" r="1.2" fill="#c9c4d6"/>
+<rect x="225.2" y="971.5" width="36.1" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="221.0" cy="978.7" r="1.2" fill="#c9c4d6"/>
+<rect x="225.2" y="977.8" width="25.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="278.6" cy="960.0" r="1.2" fill="#c9c4d6"/>
+<rect x="282.8" y="959.1" width="25.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="278.6" cy="966.2" r="1.2" fill="#c9c4d6"/>
+<rect x="282.8" y="965.3" width="37.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="278.6" cy="972.4" r="1.2" fill="#c9c4d6"/>
+<rect x="282.8" y="971.5" width="30.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="278.6" cy="978.7" r="1.2" fill="#c9c4d6"/>
+<rect x="282.8" y="977.8" width="33.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<text x="84.0" y="1018.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">7 layouts · Deutsch</text>
+<text x="380.0" y="878.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">Styles and palette</text>
+<text x="380.0" y="896.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">9 styles replaced · 2 of yours have no match and stay</text>
+<text x="380.0" y="922.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">Layouts</text>
+<text x="380.0" y="940.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">5 matched by name · “Two lists” has no match and stays</text>
+<text x="380.0" y="966.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600" fill="#1f1a33" text-anchor="start">Slides</text>
+<text x="380.0" y="984.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">11 slides take their layout’s frames · 6 are unchanged</text>
+<rect x="380.0" y="1018.0" width="130.0" height="28.0" rx="7" fill="#5b4bc4"/>
+<text x="445.0" y="1036.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Change template</text>
+<rect x="518.0" y="1018.0" width="134.0" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="585.0" y="1036.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Show the slides…</text>
+<rect x="660.0" y="1018.0" width="66.5" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="693.2" y="1036.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="880.0" y="756.0" width="780.0" height="330.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="902.0" y="786.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">N · Save as template…</text>
+<text x="902.0" y="804.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Anyone can make a template file from a deck; the administrator adds it to a server.</text>
+<rect x="905.0" y="815.0" width="736.0" height="258.0" rx="12" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="902.0" y="810.0" width="736.0" height="258.0" rx="12" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="924.0" y="842.0" font-family="Fraunces, Georgia, serif" font-size="15.5" font-weight="600" fill="#1f1a33" text-anchor="start">Save as template</text>
+<path d="M1612 828 l10 10 M1622 828 l-10 10" fill="none" stroke="#6e6880" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="902.0" y1="856.0" x2="1638.0" y2="856.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="924.0" y="866.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Name</text>
+<rect x="924.0" y="872.0" width="330.0" height="26.0" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="934.0" y="889.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">Conference talk</text>
+<text x="1280.0" y="866.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Language</text>
+<rect x="1280.0" y="872.0" width="160.0" height="26.0" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1290.0" y="889.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">English</text>
+<text x="924.0" y="920.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">What is it for</text>
+<rect x="924.0" y="926.0" width="516.0" height="44.0" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="934.0" y="944.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#1f1a33" text-anchor="start">A 20-minute talk: one idea per slide, a few strong pictures.</text>
+<text x="924.0" y="994.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Writes a Claudia export of this presentation without its slides: its 8 layouts and its theme (24 styles, palette).</text>
+<text x="924.0" y="1012.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Send the file to your server’s administrator, who can add it under Server settings ▸ Templates.</text>
+<rect x="1518.0" y="1030.0" width="100.0" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1568.0" y="1048.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Cancel</text>
+<rect x="1372.0" y="1030.0" width="130.0" height="28.0" rx="7" fill="#5b4bc4"/>
+<text x="1437.0" y="1048.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Save file…</text></svg>

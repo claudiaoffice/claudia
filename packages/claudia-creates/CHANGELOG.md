@@ -6,6 +6,11 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 ## [Unreleased]
 
 ### Changed
+- **Breaking** — the slide is claudia-core's (E6.31, D1470): `SLIDE_WIDTH`, `SLIDE_HEIGHT` and `SlideAnchor` come from
+  `claudia_core.slides` (still re-exported here); `SlideModel.slide_names` and `SlideModel.slide_descriptions` are
+  replaced by `SlideModel.slides` (`claudia_core.Slides`, the records), and the order of the presentation, which
+  `SlideModel.slides` was, is `SlideModel.order`. The state (schema 18) stores the slides as records in that order; an
+  older state is not read.
 - **Breaking** — the glossary's holder (D1430, see `claudia-core`): `SlideAnchor.holder` (was `container`),
   `SlideModel.holders()`; an anchor's data says `holder`.
 - **Breaking** — `DefineImage`, `ForgetImage`, `DefineShape`, `ForgetShape`, `ImagesChanged` and `ShapesChanged` are
@@ -13,6 +18,8 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 16.
 
 ### Added
+- The refusals a person can meet are `Refusal`s (CODE-78, D1510); `SlideModel.name_taken` adds slides.
+  `PrintSetupError` is a refusal.
 - `SlideModel.room_for_new_object`: what is left of the slide to the right of a new object's anchor (D1332).
 - `requirements()` of a presentation: the fonts its styles ask for by name (`Requirements.fonts`), for the font report a
   server makes when it is opened (E1.9, D1306).

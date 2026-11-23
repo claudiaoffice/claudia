@@ -960,9 +960,9 @@
  },
  "ImageError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },
@@ -1298,6 +1298,9 @@
  "NO_NUMBERING": {
   "value": "'none'"
  },
+ "N_": {
+  "function": "(template: 'str') -> 'str'"
+ },
  "OBJECT_KINDS": {
   "value": "('text', 'shape', 'image', 'diagram', 'container', 'table')"
  },
@@ -1458,9 +1461,9 @@
  },
  "PageSetupError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },
@@ -1682,6 +1685,14 @@
    "to_data": "(self) -> 'dict'",
    "with_show": "(self, show: 'Show') -> 'RefField'"
   },
+  "properties": []
+ },
+ "Refusal": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(template: 'str', **params: 'object')",
+  "methods": {},
   "properties": []
  },
  "Region": {
@@ -1963,6 +1974,12 @@
  },
  "SINE_MILLIONTHS": {
   "value": "(0, 17452, 34899, 52336, 69756, 87156, 104528, 121869, 139173, 156434, 173648, 190809, 207912, 224951, 241922, 258819, 275637, 292372, 309017, 325568, 342020, 358368, 374607, 390731, 406737, 422618, 438371, 453990, 469472, 484810, 500000, 515038, 529919, 544639, 559193, 573576, 587785, 601815, 615661, 629320, 642788, 656059, 669131, 681998, 694658, 707107, 719340, 731354, 743145, 754710, 766044, 777146, 788011, 798636, 809017, 819152, 829038, 838671, 848048, 857167, 866025, 874620, 882948, 891007, 898794, 906308, 913545, 920505, 927184, 933580, 939693, 945519, 951057, 956305, 961262, 965926, 970296, 974370, 978148, 981627, 984808, 987688, 990268, 992546, 994522, 996195, 997564, 998630, 999391, 999848, 1000000)"
+ },
+ "SLIDE_HEIGHT": {
+  "value": "900"
+ },
+ "SLIDE_WIDTH": {
+  "value": "1600"
  },
  "SLOTS": {
   "value": "<SlotTable>"
@@ -2399,6 +2416,46 @@
   },
   "properties": []
  },
+ "Slide": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str' = '', description: 'str' = '') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Slide'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "SlideAnchor": {
+  "class": [
+   "object"
+  ],
+  "init": "(slide: 'str', x: 'int', y: 'int') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'SlideAnchor'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "holder"
+  ]
+ },
+ "Slides": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "add": "(self, slide: 'Slide') -> 'None'",
+   "check_new": "(self, slide_id: 'str') -> 'None'",
+   "describe": "(self, slide_id: 'str', description: 'str') -> 'str'",
+   "from_data": "(data: 'Iterable[dict]') -> 'tuple[Slides, list[str]]'",
+   "remove": "(self, slide_id: 'str') -> 'Slide'",
+   "rename": "(self, slide_id: 'str', name: 'str') -> 'str'",
+   "to_data": "(self, order: 'Iterable[str]') -> 'list[dict]'"
+  },
+  "properties": []
+ },
  "Slot": {
   "class": [
    "object"
@@ -2832,6 +2889,9 @@
  "check_kind": {
   "function": "(kind: 'str', properties: 'Iterable[str]') -> 'None'"
  },
+ "check_on_slide": {
+  "function": "(anchor: 'SlideAnchor', body: 'ObjectBody') -> 'None'"
+ },
  "clean_name": {
   "function": "(text: 'str') -> 'str'"
  },
@@ -2914,7 +2974,7 @@
   "function": "(text: 'str') -> 'str'"
  },
  "name_problem": {
-  "function": "(text: 'str') -> 'str | None'"
+  "function": "(text: 'str') -> 'Refusal | None'"
  },
  "new_object_size": {
   "function": "(most_w: 'float', most_h: 'float', picture_w: 'float', picture_h: 'float', *, least: 'float', room: 'float | None' = None, smallest: 'int' = 20) -> 'tuple[int, int]'"
@@ -2991,6 +3051,9 @@
  "roles_used": {
   "function": "(css: 'Mapping[str, str]') -> 'set[str]'"
  },
+ "room_on_slide": {
+  "function": "(anchor: 'SlideAnchor | None') -> 'int'"
+ },
  "runs_from_data": {
   "function": "(data: 'Iterable[list]') -> 'list[Run]'"
  },
@@ -3008,6 +3071,9 @@
  },
  "turned_extent": {
   "function": "(w: 'int', h: 'int', rotation: 'int') -> 'tuple[int, int]'"
+ },
+ "turned_on_slide": {
+  "function": "(obj: 'VisualObject[SlideAnchor]', rotation: 'int') -> 'SlideAnchor'"
  },
  "validate_css": {
   "function": "(css: 'Mapping[str, object]') -> 'dict[str, str]'"

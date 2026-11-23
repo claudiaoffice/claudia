@@ -46,8 +46,7 @@ def a_workbook() -> WorkbookModel:
     """Region, Amount and Cost of three regions, on a sheet called Data."""
     model = WorkbookModel()
     sheet = Sheet(S1, "Data")
-    model.sheets[S1] = sheet
-    model.open_holder("s1")
+    model.add_sheet(sheet, None)
     for column, head in enumerate(("Region", "Amount", "Cost")):
         model.store(sheet, 0, column, {"t": "text", "v": head})
     for row, (region, amount, cost) in enumerate((("North", 100, 60), ("South", 200, 120), ("East", 130, 90)), start=1):
@@ -478,8 +477,7 @@ def test_a_chart_tab_that_was_added_is_a_sheet_after_the_last_one():
 
 def test_a_chart_on_a_sheet_that_was_added_comes_with_the_sheet():
     original, baseline, current = a_kept_file()
-    current.sheets[SheetId("s2")] = Sheet(SheetId("s2"), "More")
-    current.open_holder("s2")
+    current.add_sheet(Sheet(SheetId("s2"), "More"), None)
     current.diagrams.define(ChartSpec(id="c7", kind="bar", range=a_range()))
     current.insert_object(
         VisualObject(ObjectBody("o7", "diagram", 300, 200, "plain-image", ref="c7"), CellAnchor(SheetId("s2"), 1, 1))
@@ -491,8 +489,7 @@ def test_a_chart_on_a_sheet_that_was_added_comes_with_the_sheet():
 
 def test_a_chart_goes_with_its_sheet_when_the_sheet_is_removed():
     original, baseline, current = a_kept_file()
-    current.sheets[SheetId("s2")] = Sheet(SheetId("s2"), "Other")
-    current.open_holder("s2")
+    current.add_sheet(Sheet(SheetId("s2"), "Other"), None)
     baseline = ods_to_workbook(workbook_to_ods(current))
     current = ods_to_workbook(workbook_to_ods(current))
     original = workbook_to_ods(current)

@@ -43,12 +43,12 @@ def test_names_with_spaces_umlauts_or_a_hash_are_fine():
     ],
 )
 def test_a_name_needs_some_text_and_no_control_characters(bad, why):
-    assert why in name_problem(bad)
+    assert why in str(name_problem(bad))
 
 
 def test_a_name_is_not_longer_than_the_limit():
     assert name_problem("x" * MAX_THING_NAME) is None
-    assert str(MAX_THING_NAME) in name_problem("x" * (MAX_THING_NAME + 1))
+    assert str(MAX_THING_NAME) in str(name_problem("x" * (MAX_THING_NAME + 1)))
 
 
 # -- the name a new thing gets ---------------------------------------------------------------------------------

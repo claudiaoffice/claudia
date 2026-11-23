@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import {
   type PrintedChart,
+  type PrintedSlide,
   type PrintedSheet,
   type SheetCell,
   type SheetDocument,
@@ -48,7 +49,7 @@ const sheet = (cells: SheetCell[], print: Partial<SheetPrint> = {}, extra: Parti
   print: { ...DEFAULT_SHEET_PRINT, ...print },
   ...extra,
 })
-const book = (sheets: (PrintedSheet | PrintedChart)[], page: Partial<PageSetupData> = {}, extra: Partial<SheetDocument> = {}): SheetDocument => ({
+const book = (sheets: (PrintedSheet | PrintedChart | PrintedSlide)[], page: Partial<PageSetupData> = {}, extra: Partial<SheetDocument> = {}): SheetDocument => ({
   sheets,
   styles: STYLES,
   page: { ...A4, ...page },
@@ -424,6 +425,33 @@ describe('a sheet on pages', () => {
       const out = layoutSheet(book([tab({ image: null })]), fonts, resolver)
       expect(out.notes).toEqual([{ kind: 'object', object: 'c1', reason: 'the chart has no picture to print' }])
       expect(out.list.pages).toHaveLength(1)
+    })
+  })
+
+  describe('a slide among the sheets (E6.31, D1473)', () => {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect width="400" height="200" fill="#3d5a80"/></svg>'
+    const onSlide = (x: number, y: number, w: number, h: number) => ({ id: 'p1', kind: 'image' as const, w, h, style: '', paragraph: null, shape: null, image: 'i1', rotation: 0, anchor: { kind: 'slide' as const, holder: 'd1', x, y } })
+    const slide = (extra: Partial<PrintedSlide> = {}): PrintedSlide => ({ kind: 'slide', id: 'd1', name: 'Sales chart', objects: [onSlide(0, 0, 800, 450)], ...extra })
+    it('prints as one landscape page between the sheets, its 16:9 frame as large as the page takes', () => {
+      const out = layoutSheet(book([sheet(table(3, 3)), slide(), sheet(table(3, 3), {}, { id: 's2', name: 'Costs' })], {}, { images: [{ id: 'i1', format: 'svg', svg }] }), fonts, resolver)
+      expect(m(out).map((p) => [p.sheet, p.kind])).toEqual([['s1', 'sheet'], ['d1', 'slide'], ['s2', 'sheet']])
+      const page = out.list.pages[1]!
+      expect(page.width).toBeGreaterThan(page.height)
+      const group = page.items.find((i): i is GroupItem => i.kind === 'group')!
+      // a slide of 1200 pt is scaled to the 769890 mpt wide content box of a landscape A4 (16:9 fits it by its width)
+      expect(group.matrix![0]).toBe(Math.floor((769890 * 1_000_000) / 1_200_000))
+      // the picture fills the top left quarter of the slide
+      const rect = paths(group.items).find((p) => p.fill && !('kind' in p.fill) && p.fill.b === 0x80)!
+      expect(Math.max(...rect.ops.flatMap((o) => (o[0] === 'Z' ? [] : [o[1]])))).toBeLessThanOrEqual(600_000)
+    })
+    it('carries its name and number in the footer like any sheet', () => {
+      const out = layoutSheet(book([sheet(table(3, 3)), slide()], { page_numbers: true }, { images: [{ id: 'i1', format: 'svg', svg }] }), fonts, resolver)
+      expect(said(out.list.pages[1]!)).toBe('Sales chart 2 / 2')
+    })
+    it('is a page, even with nothing on it', () => {
+      const out = layoutSheet(book([slide({ objects: [] })]), fonts, resolver)
+      expect(out.list.pages).toHaveLength(1)
+      expect(out.notes).toEqual([])
     })
   })
 
