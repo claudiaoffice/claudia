@@ -1,0 +1,130 @@
+<svg viewBox="0 0 1500 940" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia - E7.11 architecture 2: one question</title><desc id="d">Class diagram: Assistant uses AiRouter as its engine; the router asks ProviderDesk and the document AiConsent, and delegates to a stand-in, a local ModelEngine or a remote ModelEngine that share a ConversationMemory; GatedRunner checks consent before every round; the answer is a Say carrying Via, stored on ChatRecord.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6e6880"/></marker><marker id="inh" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M1 1 L11 6 L1 11 z" fill="#fff" stroke="#6e6880" stroke-width="1.2"/></marker></defs>
+<rect width="1500" height="940" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" font-family="Fraunces, Georgia, serif">E7.11 architecture 2 — one question: the router decides per question, the gate re-checks per round</text>
+<text x="40" y="66" font-size="12.5" fill="#6e6880">The assistant and the engine loop stay as they are. What changes is who is asked, and what the chat line says about who answered.</text>
+<rect x="30" y="90" width="1010" height="740" rx="10" fill="#f7f3ec" stroke="#d8d2e6"/>
+<text x="44" y="112" font-size="12" font-weight="600" fill="#6e6880">claudia_server</text>
+<rect x="1060" y="90" width="410" height="330" rx="10" fill="#f7f3ec" stroke="#d8d2e6"/>
+<text x="1074" y="112" font-size="12" font-weight="600" fill="#6e6880">claudia_core</text>
+<rect x="40" y="850" width="26" height="12" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/><text x="74" y="860" font-size="11.5" fill="#6e6880">exists today</text>
+<rect x="170" y="850" width="26" height="12" rx="3" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/><text x="204" y="860" font-size="11.5" fill="#6e6880">new in E7.11 (dashed)</text>
+<text x="360" y="860" font-size="11.5" fill="#6e6880">bold coloured line = new or changed member of an existing class · «…» = kind · open triangle = is a</text>
+<rect x="50" y="130" width="300" height="90" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M50 136 a6 6 0 0 1 6 -6 h288 a6 6 0 0 1 6 6 v18 h-300 z" fill="#5b4bc4"/>
+<text x="200.0" y="150" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Assistant</text>
+<text x="62" y="170" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">engine: Engine | AsyncEngine</text>
+<text x="62" y="188" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">_say(asker, text, via=None)</text>
+<text x="62" y="206" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  -&gt; post_chat(..., via=via)</text>
+<rect x="50" y="260" width="300" height="72" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M50 266 a6 6 0 0 1 6 -6 h288 a6 6 0 0 1 6 6 v18 h-300 z" fill="#5b4bc4"/>
+<text x="200.0" y="280" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Say</text>
+<text x="62" y="300" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">text: str</text>
+<text x="62" y="318" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">via: Via | None</text>
+<rect x="420" y="130" width="330" height="194" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M420 136 a6 6 0 0 1 6 -6 h318 a6 6 0 0 1 6 6 v32 h-330 z" fill="#d6477a"/>
+<text x="585.0" y="146" font-size="10.5" fill="#fff" text-anchor="middle">«AsyncEngine»</text>
+<text x="585.0" y="164" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">AiRouter</text>
+<text x="432" y="184" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">desk: ProviderDesk</text>
+<text x="432" y="202" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">consent: AiConsent   (this document, live)</text>
+<text x="432" y="220" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">local, remote: ModelEngine</text>
+<text x="432" y="238" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">standin: Engine  (the app&#x27;s own)</text>
+<text x="432" y="256" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">plan_async(task) -&gt; [Say]</text>
+<text x="432" y="274" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  decide, delegate, never fall back</text>
+<text x="432" y="292" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  Withdrawn -&gt; &quot;Stopped: …&quot;</text>
+<text x="432" y="310" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  ProviderError -&gt; the one sentence</text>
+<rect x="420" y="380" width="330" height="90" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M420 386 a6 6 0 0 1 6 -6 h318 a6 6 0 0 1 6 6 v18 h-330 z" fill="#5b4bc4"/>
+<text x="585.0" y="400" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ModelEngine</text>
+<text x="432" y="420" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">runner: Answerer</text>
+<text x="432" y="438" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">memory: ConversationMemory</text>
+<text x="432" y="456" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">plan_async(task)  (loop unchanged)</text>
+<rect x="800" y="380" width="220" height="90" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M800 386 a6 6 0 0 1 6 -6 h208 a6 6 0 0 1 6 6 v18 h-220 z" fill="#d6477a"/>
+<text x="910.0" y="400" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ConversationMemory</text>
+<text x="812" y="420" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">recall(asker) -&gt; history</text>
+<text x="812" y="438" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">remember(asker, q, a)</text>
+<text x="812" y="456" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">shared by local and remote</text>
+<rect x="420" y="540" width="330" height="140" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M420 546 a6 6 0 0 1 6 -6 h318 a6 6 0 0 1 6 6 v32 h-330 z" fill="#d6477a"/>
+<text x="585.0" y="556" font-size="10.5" fill="#fff" text-anchor="middle">«Answerer»</text>
+<text x="585.0" y="574" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">GatedRunner</text>
+<text x="432" y="594" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">runner: Answerer</text>
+<text x="432" y="612" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">still_allowed: () -&gt; bool</text>
+<text x="432" y="630" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">answer(request) -&gt; Turn</text>
+<text x="432" y="648" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  checks before EVERY round;</text>
+<text x="432" y="666" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  raises Withdrawn if not</text>
+<rect x="800" y="560" width="220" height="86" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M800 566 a6 6 0 0 1 6 -6 h208 a6 6 0 0 1 6 6 v32 h-220 z" fill="#d6477a"/>
+<text x="910.0" y="576" font-size="10.5" fill="#fff" text-anchor="middle">«exception»</text>
+<text x="910.0" y="594" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Withdrawn</text>
+<text x="812" y="614" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">message: &quot;&lt;AI type&gt; was</text>
+<text x="812" y="632" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  switched off.&quot;</text>
+<rect x="420" y="720" width="330" height="72" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M420 726 a6 6 0 0 1 6 -6 h318 a6 6 0 0 1 6 6 v18 h-330 z" fill="#d6477a"/>
+<text x="585.0" y="740" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ProviderDesk</text>
+<text x="432" y="760" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">decide(consent) -&gt; Decision</text>
+<text x="432" y="778" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">runners: ModelRunner by provider</text>
+<rect x="50" y="620" width="300" height="72" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 626 a6 6 0 0 1 6 -6 h288 a6 6 0 0 1 6 6 v18 h-300 z" fill="#d6477a"/>
+<text x="200.0" y="640" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">AiConsent</text>
+<text x="62" y="660" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">allows(provider) -&gt; bool</text>
+<text x="62" y="678" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">who, when per provider</text>
+<rect x="50" y="410" width="300" height="108" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M50 416 a6 6 0 0 1 6 -6 h288 a6 6 0 0 1 6 6 v18 h-300 z" fill="#5b4bc4"/>
+<text x="200.0" y="430" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">HostedDocument</text>
+<text x="62" y="450" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">assistant: Assistant</text>
+<text x="62" y="468" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ai_consent: AiConsent</text>
+<text x="62" y="486" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  read from the document&#x27;s sealed</text>
+<text x="62" y="504" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  consent list when it opens</text>
+<rect x="1080" y="130" width="370" height="90" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M1080 136 a6 6 0 0 1 6 -6 h358 a6 6 0 0 1 6 6 v18 h-370 z" fill="#5b4bc4"/>
+<text x="1265.0" y="150" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ChatRecord</text>
+<text x="1092" y="170" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">number, author, to, text, time, at</text>
+<text x="1092" y="188" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">via: Via | None</text>
+<text x="1092" y="206" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  optional: old files load unchanged</text>
+<rect x="1080" y="260" width="370" height="140" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M1080 266 a6 6 0 0 1 6 -6 h358 a6 6 0 0 1 6 6 v32 h-370 z" fill="#d6477a"/>
+<text x="1265.0" y="276" font-size="10.5" fill="#fff" text-anchor="middle">«frozen»</text>
+<text x="1265.0" y="294" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Via</text>
+<text x="1092" y="314" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">provider: &quot;claude&quot;|&quot;local&quot;|&quot;stand-in&quot;</text>
+<text x="1092" y="332" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">label: str   remote: bool</text>
+<text x="1092" y="350" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">note: str | None</text>
+<text x="1092" y="368" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  &quot;Claude is not allowed in this</text>
+<text x="1092" y="386" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">   document …&quot; / &quot;no answer was made&quot;</text>
+<path d="M350 166.0 L420 168.8" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="385.0" y="159.4" font-size="11" fill="#6e6880" text-anchor="middle">engine</text>
+<path d="M200.0 220 L200.0 260" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="200.0" y="236.0" font-size="11" fill="#6e6880" text-anchor="middle">plans</text>
+<path d="M585.0 324 L585.0 380" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="585.0" y="352.0" font-size="11" fill="#6e6880" text-anchor="middle">delegates</text>
+<path d="M750 407.0 L800 416.0" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<path d="M585.0 470 L585.0 540" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="585.0" y="501.0" font-size="11" fill="#6e6880" text-anchor="middle">runner</text>
+<path d="M750 624.0 L800 594.4" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="775.0" y="605.2" font-size="11" fill="#6e6880" text-anchor="middle">raises</text>
+<path d="M552.0 680 L552.0 720" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="602.0" y="696.0" font-size="11" fill="#6e6880" text-anchor="middle">still_allowed asks</text>
+<path d="M200.0 518 L200.0 620" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="200.0" y="565.0" font-size="11" fill="#6e6880" text-anchor="middle">owns</text>
+<path d="M1265.0 220 L1265.0 260" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<rect x="1060" y="440" width="410" height="174" rx="6" fill="#fdf3e6" stroke="#f2a057"/>
+<text x="1070" y="459" font-size="11.5" fill="#1f1a33">One question, in order:</text>
+<text x="1070" y="475" font-size="11.5" fill="#1f1a33">1. the router asks the desk: decide(this document&#x27;s consent)</text>
+<text x="1070" y="491" font-size="11.5" fill="#1f1a33">   -&gt; Decision (who answers, and why, if not Claude)</text>
+<text x="1070" y="507" font-size="11.5" fill="#1f1a33">2. it hands the question to that engine: stand-in, local or remote</text>
+<text x="1070" y="523" font-size="11.5" fill="#1f1a33">3. every round of the model loop goes through the gate;</text>
+<text x="1070" y="539" font-size="11.5" fill="#1f1a33">   consent withdrawn -&gt; Withdrawn, nothing more is sent</text>
+<text x="1070" y="555" font-size="11.5" fill="#1f1a33">4. the outcome becomes a Say with its Via:</text>
+<text x="1070" y="571" font-size="11.5" fill="#1f1a33">   answered / not allowed (answered locally) /</text>
+<text x="1070" y="587" font-size="11.5" fill="#1f1a33">   ProviderError (one sentence, no fallback) / stopped</text>
+<text x="1070" y="603" font-size="11.5" fill="#1f1a33">5. desk.health records the failure or clears it</text>
+<rect x="1060" y="690" width="410" height="110" rx="6" fill="#f0edf9" stroke="#b9b2d1"/>
+<text x="1070" y="709" font-size="11.5" fill="#1f1a33">Why here, and not elsewhere:</text>
+<text x="1070" y="725" font-size="11.5" fill="#1f1a33">Assistant is provider-agnostic: the engine already is the seam,</text>
+<text x="1070" y="741" font-size="11.5" fill="#1f1a33">so the router is an engine. The runner must not learn about</text>
+<text x="1070" y="757" font-size="11.5" fill="#1f1a33">documents; the engine loop must not learn about providers.</text>
+<text x="1070" y="773" font-size="11.5" fill="#1f1a33">The gate sits where rounds happen, so a switch-off stops a</text>
+<text x="1070" y="789" font-size="11.5" fill="#1f1a33">question before its next round, as the owner agreed.</text>
+</svg>

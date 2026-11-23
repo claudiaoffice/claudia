@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
 import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
@@ -1060,6 +1060,42 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     const session = new Session(() => old)
     await session.open()
     expect(session.state.audit).toEqual([])
+  })
+
+  it('knows whether Claude is allowed, who decided, and hears of a change as it happens', async () => {
+    const link = new FakeLink()
+    server(link)
+    const off = { provider: 'claude', allowed: false, by: null, at: null, owners: ['ann'], history: [], answering: { provider: 'local', label: 'Qwen', remote: false, note: '' } }
+    const on = { ...off, allowed: true, by: 'ann', at: '2026-11-22T09:40:00Z', history: [{ allowed: true, who: 'ann', when: '2026-11-22T09:40:00Z' }], answering: { provider: 'claude', label: 'Claude', remote: true, note: '' } }
+    let current = off
+    link.handlers.ai_consent = () => current
+    const session = new Session(() => link)
+    await session.open()
+    expect(session.state.consent).toEqual(off)
+    current = on
+    link.push('ephemeral', { kind: 'ai_consent_changed', sender: 'ann', data: { allowed: true, by: 'ann', at: on.at } })
+    await vi.waitFor(() => expect(session.state.consent).toEqual(on))
+  })
+
+  it('lets an owner allow or withdraw Claude, and takes what the server says back as the state', async () => {
+    const link = new FakeLink()
+    server(link)
+    const on = { provider: 'claude', allowed: true, by: 'ann', at: '2026-11-22T09:40:00Z', owners: ['ann'], history: [], answering: null }
+    link.handlers.ai_consent = () => ({ ...on, allowed: false })
+    link.handlers.set_ai_consent = () => on
+    const session = new Session(() => link)
+    await session.open()
+    expect(await session.setAiConsent(true)).toBe(true)
+    expect(link.last('set_ai_consent')).toEqual({ allowed: true })
+    expect(session.state.consent?.allowed).toBe(true)
+  })
+
+  it('is no trouble for a server that does not know the consent', async () => {
+    const link = new FakeLink()
+    server(link)
+    const session = new Session(() => link)
+    await session.open()
+    expect(session.state.consent).toBeNull()
   })
 
   it('exports the current content as a Word, Excel or PowerPoint file', async () => {

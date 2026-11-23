@@ -208,5 +208,7 @@
  "what_if_drop": "content",
  "what_if_start": "content",
  "withdraw_restore": "content",
- "write_words": "content"
+ "write_words": "content",
+ "ai_consent": "content",
+ "set_ai_consent": "content"
 }

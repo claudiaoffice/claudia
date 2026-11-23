@@ -21,7 +21,7 @@ import { showLabel } from '~/lib/reference-labels'
 import {
   askItem,
   clipboardItems,
-  configMenu,
+  preferencesMenu,
   darkItem,
   fileMenu,
   goToTargetItem,
@@ -616,7 +616,7 @@ const menus = computed<Menu[]>(() => {
         ...tableItems(c, tableHost),
       ],
     },
-    configMenu(c, { current: locale.value, choose }),
+    preferencesMenu(c, { current: locale.value, choose }),
     helpMenu(c, { ask, openHelp: (mode) => frame.value?.openHelp(mode) }),
   ]
 })
@@ -654,7 +654,7 @@ function customStyles(): StyleView[] {
   return Object.values(state.styles).filter((s) => !BUILTIN_STYLE_IDS.has(s.id) && (s.heading === null || s.heading === undefined) && forParagraphs(s))
 }
 
-// Config ▸ Shortcuts (D122/D126): the things that are not a `keydown` shortcut at all — typing itself, and native
+// Preferences ▸ Shortcuts (D122/D126): the things that are not a `keydown` shortcut at all — typing itself, and native
 // Ctrl+C/X/V, which the browser already handles for whatever has focus.
 const SHORTCUT_NOTES = computed<[string, string][]>(() => [
   [t('Type'), t('write; a word is sent when it ends, and the others see where you are')],

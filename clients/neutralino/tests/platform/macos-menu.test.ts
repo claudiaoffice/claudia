@@ -55,7 +55,7 @@ const FIXTURE: ManifestListing = {
       ],
     },
     {
-      label: 'Config',
+      label: 'Preferences',
       sections: [
         [
           {
@@ -125,7 +125,7 @@ describe('buildMainMenu', () => {
   })
 
   it('keeps every other menu, in order, with a separator surviving between its sections', () => {
-    expect(menu.map((m) => m.text)).toEqual(['Claudia Creates', 'File', 'Edit', 'View', 'Config', 'Help'])
+    expect(menu.map((m) => m.text)).toEqual(['Claudia Creates', 'File', 'Edit', 'View', 'Preferences', 'Help'])
     const file = byText('File')
     // File still has two sections (New | Close Document, once Quit is removed from the second) -- the separator
     // between them has to survive that removal, not just the removal of the item itself.
@@ -151,7 +151,7 @@ describe('buildMainMenu', () => {
   it('carries a plain accelerator through when the translation is confirmed, and omits it otherwise', () => {
     const file = byText('File')
     expect(file?.menuItems?.find((i) => i.id === 'file.new')?.shortcut).toBe('n')
-    const config = byText('Config')
+    const config = byText('Preferences')
     // F1 has no confirmed Neutralino shortcut grammar (see gtkAccelToMacShortcut) -- shown, not bound
     expect(config?.menuItems?.find((i) => i.id === 'config.shortcuts')?.shortcut).toBeUndefined()
   })

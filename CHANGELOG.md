@@ -6,6 +6,14 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-11-22
+
+### Added
+- Who gave an answer (E7.11, D1493): `Via(provider, label, remote, note="")` with `to_data` and `from_data`, and
+  `ChatRecord.via`, kept in the chat of the document and written only when set. `Document.post_chat(..., via=None)`
+  takes it. An old chat reads back with `via=None`.
+
+
 ### Added
 - Layouts of a presentation (E10.4, D1530): `Layout` (id, name, origin, purpose, hidden, to_name) and `Layouts`, the
   layouts of a document in the order a person sees them (`first_visible`, `change`, `move`, `check_name`: no two have

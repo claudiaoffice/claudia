@@ -1,5 +1,5 @@
 {
- "version": "0.41.0",
+ "version": "0.42.0",
  "AI_USER": {
   "value": "'ai'"
  },
@@ -78,18 +78,26 @@
   "class": [
    "object"
   ],
-  "init": "(models: tuple[type[claudia_core.model.DocumentModel], ...], enabled: bool, runner: claudia_ai.runner.ModelRunner | None = None) -> None",
+  "init": "(models: tuple[type[claudia_core.model.DocumentModel], ...], enabled: bool, desk: claudia_server.ai_desk.ProviderDesk = <factory>, anthropic_key: str | None = None, anthropic_url: str | None = None) -> None",
   "methods": {
-   "apply": "(self, suite: claudia_server.suite.Suite, settings: claudia_server.server_settings.AiSettings) -> None"
+   "apply": "(self, suite: claudia_server.suite.Suite, settings: claudia_server.server_settings.AiSettings) -> None",
+   "claude_model": "(self, settings: claudia_server.server_settings.AiSettings) -> claudia_ai.claude.ClaudeModel",
+   "claude_runner": "(self, settings: claudia_server.server_settings.AiSettings) -> claudia_ai.runner.ModelRunner",
+   "key_in_use": "(self, settings: claudia_server.server_settings.AiSettings) -> str | None"
   },
-  "properties": []
+  "properties": [
+   "runner"
+  ]
  },
  "AiSettings": {
   "class": [
    "object"
   ],
-  "init": "(model_dir: 'str | None' = None, device: 'str' = 'GPU', max_tokens: 'int' = 512, timeout: 'float' = 180.0) -> None",
-  "methods": {},
+  "init": "(provider: 'str' = 'stand-in', model_dir: 'str | None' = None, device: 'str' = 'GPU', max_tokens: 'int' = 512, timeout: 'float' = 180.0, claude: 'ClaudeSettings' = <factory>) -> None",
+  "methods": {
+   "load": "(data: 'dict') -> 'AiSettings'",
+   "public": "(self) -> 'dict'"
+  },
   "properties": []
  },
  "AiTurn": {
@@ -102,8 +110,10 @@
   "init": "(engine: 'Engine | AsyncEngine', *, pause: 'float' = 0.5, sleep: 'Callable[[float], Awaitable[None]]' = <function sleep>, max_waiting: 'int | None' = None, allowed_methods: 'Iterable[str]' = (), suggest_methods: 'Iterable[str]' = ())",
   "methods": {
    "account_for": "(self, asker: 'str', mode: 'AiMode') -> 'Account'",
+   "answering": "(self, consent: 'AiConsent') -> 'Via | None'",
    "attach": "(self, hosted: 'HostedDocument') -> 'Connection'",
-   "idle": "(self) -> 'None'"
+   "idle": "(self) -> 'None'",
+   "offers_claude": "(self) -> 'bool'"
   },
   "properties": []
  },
@@ -325,12 +335,14 @@
   "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, renderings: 'RenderDesk | None' = None, original: 'Callable[[], bytes | None]' = <function HostedDocument.<lambda>>, uid: 'Callable[[], str | None]' = <function HostedDocument.<lambda>>, workers: 'WorkerPool | None' = None, font_catalogue: 'Callable[[], Any]' = <function HostedDocument.<lambda>>)",
   "methods": {
    "ai_mode_of": "(self, user: 'str') -> 'str | None'",
+   "answering": "(self) -> 'dict | None'",
    "broadcast": "(self, message: 'dict', skip: 'Connection | None' = None) -> 'None'",
    "connect": "(self, account: 'Account', send: 'Callable[[str], None]', *, locale: 'str' = 'en') -> 'Connection'",
    "editors": "(self) -> 'list[str]'",
    "humans": "(self) -> 'list[Connection]'",
    "new_connection_id": "(self) -> 'int'",
    "note_ai_mode": "(self, user: 'str', mode: 'str | None') -> 'None'",
+   "offers_claude": "(self) -> 'bool'",
    "pick_color": "(self) -> 'str'",
    "render_outcomes": "(self) -> 'dict[str, dict]'",
    "render_unfinished": "(self) -> 'None'",
@@ -484,7 +496,7 @@
   "class": [
    "object"
   ],
-  "init": "(runner: 'ModelRunner', tools: 'tuple[ToolSpec, ...]', lens: 'Lens', *, memory_turns: 'int' = 6, budget: 'Budget' = Budget(rounds=8, calls=30, result_chars=3000, round_chars=9000))",
+  "init": "(runner: 'Answerer', tools: 'tuple[ToolSpec, ...]', lens: 'Lens', *, memory: 'ConversationMemory | None' = None, budget: 'Budget' = Budget(rounds=8, calls=30, result_chars=3000, round_chars=9000))",
   "methods": {
    "plan_async": "(self, task: 'Task') -> 'list[AiTurn]'"
   },
@@ -583,7 +595,7 @@
   "class": [
    "object"
   ],
-  "init": "(text: 'str') -> None",
+  "init": "(text: 'str', via: 'Via | None' = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -622,6 +634,7 @@
    "add_user": "(self, doc_id: 'str', name: 'str', password: 'str', role: 'str' = 'editor') -> 'Account'",
    "audit_rows": "(self, doc_id: 'str') -> 'list[AuditRecord]'",
    "change_password": "(self, doc_id: 'str', name: 'str', old_password: 'str', new_password: 'str') -> 'bool'",
+   "consent_rows": "(self, doc_id: 'str') -> 'list[ConsentRecord]'",
    "create": "(self, doc_id: 'str') -> 'Document'",
    "delete_document": "(self, doc_id: 'str', owner: 'str', owner_password: 'str') -> 'bool'",
    "describe": "(self, doc_id: 'str', description: 'str', tags: 'Sequence[str]') -> 'None'",
@@ -637,6 +650,7 @@
    "place": "(self, doc_id: 'str', data: 'bytes') -> 'None'",
    "propose_owner_transfer": "(self, doc_id: 'str', old_owner: 'str', old_owner_password: 'str', new_owner: 'str') -> 'bool'",
    "record_audit": "(self, doc_id: 'str', record: 'AuditRecord') -> 'None'",
+   "record_consent": "(self, doc_id: 'str', record: 'ConsentRecord') -> 'None'",
    "recover": "(self, doc_id: 'str', recovery_key: 'str', name: 'str', new_password: 'str') -> 'Account | None'",
    "release": "(self, doc_id: 'str') -> 'None'",
    "remove_person": "(self, doc_id: 'str', name: 'str') -> 'Account'",
@@ -717,7 +731,7 @@
   "class": [
    "object"
   ],
-  "init": "(sender: 'str', text: 'str', document: 'Document', mode: 'AiMode' = 'suggest', writes: 'frozenset[str] | None' = None, call: 'Callable[[str, dict], Any] | None' = None) -> None",
+  "init": "(sender: 'str', text: 'str', document: 'Document', mode: 'AiMode' = 'suggest', writes: 'frozenset[str] | None' = None, call: 'Callable[[str, dict], Any] | None' = None, consent: 'Callable[[], AiConsent] | None' = None) -> None",
   "methods": {},
   "properties": []
  },

@@ -47,3 +47,9 @@ fixed at once, and the long sentence still gets a remark.
 Claudia's AI user edits through the very same methods a person does, so it can never do something a person
 couldn't also undo. Whether you want its read of the text as a second opinion first or as an edit you can take back
 is your choice, the same in the text, the sheet and the slides.
+
+## Where your question goes
+
+By default the AI runs on the server's own machine and nothing leaves it. If the administrator has connected Claude and
+the owners of this document have allowed it (in *Preferences ▸ AI…*, off until they do), a question to `@ai` sends the
+document content it needs to Anthropic. Each answer says who gave it: "Local model" or "Claude · remote".

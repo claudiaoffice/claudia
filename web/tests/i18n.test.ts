@@ -144,7 +144,7 @@ describe('LANGUAGES', () => {
 })
 
 describe('useI18n', () => {
-  // `onMounted` warns (harmlessly) outside a component's `setup()` -- exercising `choose` directly, as the Config
+  // `onMounted` warns (harmlessly) outside a component's `setup()` -- exercising `choose` directly, as the Preferences
   // menu's own action handler does, needs no component mount.
   vi.spyOn(console, 'warn').mockImplementation(() => {})
 

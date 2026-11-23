@@ -370,13 +370,29 @@ _avoid_: ping, address
 How one person wants the ai to treat her requests in one document: act (it makes the change) or propose (it offers the change).
 _avoid_: autopilot, review mode, permission, suggest
 
+**AI provider**
+What answers when someone asks the ai: the scripted stand-in, a model on the server's own machine, or Claude. The administrator chooses it in the server's settings.
+_avoid_: engine, backend, connection, model
+
+**Owners' consent**
+A switch in a document that lets one named remote provider receive its content; it is off until the owners turn it on, and it records who did and when.
+_avoid_: opt-in, permission
+
 **Proposal**
 Changes to a document that are offered but not made, until a person accepts or rejects them; seen by everybody or only by the one who asked.
 _avoid_: suggestion, tracked change
 
+**Provider key**
+The secret a server uses to reach a remote provider; once saved it is never shown again, only replaced or removed.
+_avoid_: API key, token, access secret
+
 **Remark**
 A note the ai leaves at a place in a document that offers no change; a person dismisses it.
 _avoid_: comment, annotation
+
+**Remote provider**
+An AI provider that sends a document's content out of the server; it answers only in a document whose owners have consented to it.
+_avoid_: cloud AI
 
 **What-if**
 A private copy of a document in which one person tries changes before carrying them out as one step.

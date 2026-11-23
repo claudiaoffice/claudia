@@ -1,0 +1,139 @@
+<svg viewBox="0 0 1500 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia - E7.11 architecture 1: the provider</title><desc id="d">Class diagram: ClaudeModel next to OpenVinoModel behind LanguageModel, ProviderError with FailureReason, and in the server the settings, AiRuntime, ProviderDesk, ProviderHealth and Decision.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6e6880"/></marker><marker id="inh" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M1 1 L11 6 L1 11 z" fill="#fff" stroke="#6e6880" stroke-width="1.2"/></marker></defs>
+<rect width="1500" height="900" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" font-family="Fraunces, Georgia, serif">E7.11 architecture 1 — the provider: Claude is one more LanguageModel; the server picks who answers</text>
+<text x="40" y="66" font-size="12.5" fill="#6e6880">claudia_ai stays free of the server: it knows models and their failures. claudia_server knows settings, approval and health.</text>
+<rect x="30" y="90" width="620" height="730" rx="10" fill="#f7f3ec" stroke="#d8d2e6"/>
+<text x="44" y="112" font-size="12" font-weight="600" fill="#6e6880">claudia_ai  (no server, no document)</text>
+<rect x="670" y="90" width="800" height="730" rx="10" fill="#f7f3ec" stroke="#d8d2e6"/>
+<text x="684" y="112" font-size="12" font-weight="600" fill="#6e6880">claudia_server</text>
+<rect x="40" y="850" width="26" height="12" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/><text x="74" y="860" font-size="11.5" fill="#6e6880">exists today</text>
+<rect x="170" y="850" width="26" height="12" rx="3" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/><text x="204" y="860" font-size="11.5" fill="#6e6880">new in E7.11 (dashed)</text>
+<text x="360" y="860" font-size="11.5" fill="#6e6880">bold coloured line = new or changed member of an existing class · «…» = kind · open triangle = is a</text>
+<rect x="50" y="130" width="345" height="122" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M50 136 a6 6 0 0 1 6 -6 h333 a6 6 0 0 1 6 6 v32 h-345 z" fill="#5b4bc4"/>
+<text x="222.5" y="146" font-size="10.5" fill="#fff" text-anchor="middle">«protocol»</text>
+<text x="222.5" y="164" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">LanguageModel</text>
+<text x="62" y="184" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">name: str</text>
+<text x="62" y="202" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">remote: bool = False</text>
+<text x="62" y="220" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">generate(messages, max_new_tokens, stop)</text>
+<text x="62" y="238" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  -&gt; str</text>
+<rect x="50" y="300" width="200" height="54" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M50 306 a6 6 0 0 1 6 -6 h188 a6 6 0 0 1 6 6 v18 h-200 z" fill="#5b4bc4"/>
+<text x="150.0" y="320" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">OpenVinoModel</text>
+<text x="62" y="340" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">remote = False</text>
+<rect x="50" y="380" width="330" height="144" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 386 a6 6 0 0 1 6 -6 h318 a6 6 0 0 1 6 6 v18 h-330 z" fill="#d6477a"/>
+<text x="215.0" y="400" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ClaudeModel</text>
+<text x="62" y="420" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">__init__(api_key, model, base_url)</text>
+<text x="62" y="438" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">name = &quot;Claude · &lt;model&gt;&quot;</text>
+<text x="62" y="456" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">remote = True</text>
+<text x="62" y="474" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">generate(...)  POST /v1/messages,</text>
+<text x="62" y="492" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  read as a stream so that `stop`</text>
+<text x="62" y="510" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  is honoured; no new dependency</text>
+<rect x="410" y="130" width="220" height="68" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M410 136 a6 6 0 0 1 6 -6 h208 a6 6 0 0 1 6 6 v32 h-220 z" fill="#d6477a"/>
+<text x="520.0" y="146" font-size="10.5" fill="#fff" text-anchor="middle">«protocol»</text>
+<text x="520.0" y="164" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Answerer</text>
+<text x="422" y="184" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">answer(request) -&gt; Turn</text>
+<rect x="410" y="260" width="220" height="90" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M410 266 a6 6 0 0 1 6 -6 h208 a6 6 0 0 1 6 6 v18 h-220 z" fill="#5b4bc4"/>
+<text x="520.0" y="280" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ModelRunner</text>
+<text x="422" y="300" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">answer(request) -&gt; Turn</text>
+<text x="422" y="318" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">one question at a time</text>
+<text x="422" y="336" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">timeout, max_new_tokens</text>
+<rect x="50" y="700" width="210" height="54" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M50 706 a6 6 0 0 1 6 -6 h198 a6 6 0 0 1 6 6 v18 h-210 z" fill="#5b4bc4"/>
+<text x="155.0" y="720" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ModelError</text>
+<text x="62" y="740" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">message: for the asker</text>
+<rect x="50" y="570" width="270" height="72" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M50 576 a6 6 0 0 1 6 -6 h258 a6 6 0 0 1 6 6 v18 h-270 z" fill="#d6477a"/>
+<text x="185.0" y="590" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ProviderError</text>
+<text x="62" y="610" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">reason: FailureReason</text>
+<text x="62" y="628" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">detail: str  (for the admin)</text>
+<rect x="410" y="560" width="220" height="194" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M410 566 a6 6 0 0 1 6 -6 h208 a6 6 0 0 1 6 6 v32 h-220 z" fill="#d6477a"/>
+<text x="520.0" y="576" font-size="10.5" fill="#fff" text-anchor="middle">«enum»</text>
+<text x="520.0" y="594" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">FailureReason</text>
+<text x="422" y="614" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">KEY_REFUSED</text>
+<text x="422" y="632" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">CREDIT_USED_UP</text>
+<text x="422" y="650" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">RATE_LIMITED</text>
+<text x="422" y="668" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">OVERLOADED</text>
+<text x="422" y="686" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">UNREACHABLE</text>
+<text x="422" y="704" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">UNKNOWN_MODEL</text>
+<text x="422" y="722" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">OTHER</text>
+<text x="422" y="740" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">admin_sentence(model)</text>
+<path d="M150.0 300 L119.0 252" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#inh)"/>
+<path d="M215.0 380 L257.0 252" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#inh)"/>
+<path d="M520.0 260 L520.0 198" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#inh)"/>
+<text x="542.0" y="243.0" font-size="11" fill="#6e6880" text-anchor="middle">is an</text>
+<path d="M410 278.0 L395 227.60000000000002" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="402.5" y="242.8" font-size="11" fill="#6e6880" text-anchor="middle">asks</text>
+<path d="M158.0 642 L134.0 700" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#inh)"/>
+<path d="M215.0 524 L185.0 570" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="224.0" y="557.0" font-size="11" fill="#6e6880" text-anchor="middle">raises</text>
+<path d="M320 606.0 L410 598.8" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<rect x="690" y="130" width="340" height="108" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M690 136 a6 6 0 0 1 6 -6 h328 a6 6 0 0 1 6 6 v18 h-340 z" fill="#5b4bc4"/>
+<text x="860.0" y="150" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">AiSettings</text>
+<text x="702" y="170" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">model_dir, device</text>
+<text x="702" y="188" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">max_tokens, timeout   (shared)</text>
+<text x="702" y="206" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">provider: &quot;stand-in&quot;|&quot;local&quot;|&quot;claude&quot;</text>
+<text x="702" y="224" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">claude: ClaudeSettings</text>
+<rect x="1060" y="130" width="380" height="126" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M1060 136 a6 6 0 0 1 6 -6 h368 a6 6 0 0 1 6 6 v18 h-380 z" fill="#d6477a"/>
+<text x="1250.0" y="150" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ClaudeSettings</text>
+<text x="1072" y="170" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">model: str = &quot;claude-sonnet-5-5&quot;</text>
+<text x="1072" y="188" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">key: str | None  (private file only)</text>
+<text x="1072" y="206" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">confirmed: Changed | None</text>
+<text x="1072" y="224" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  = the sentence, who, when</text>
+<text x="1072" y="242" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">public form: key_tail, never the key</text>
+<rect x="690" y="320" width="340" height="144" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M690 326 a6 6 0 0 1 6 -6 h328 a6 6 0 0 1 6 6 v18 h-340 z" fill="#5b4bc4"/>
+<text x="860.0" y="340" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">AiRuntime</text>
+<text x="702" y="360" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">models, enabled</text>
+<text x="702" y="378" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">desk: ProviderDesk</text>
+<text x="702" y="396" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">apply(suite, settings)</text>
+<text x="702" y="414" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  tests Claude with one question,</text>
+<text x="702" y="432" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  then swaps the desk; installs the</text>
+<text x="702" y="450" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  hub factories once, not per apply</text>
+<rect x="1060" y="320" width="380" height="144" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M1060 326 a6 6 0 0 1 6 -6 h368 a6 6 0 0 1 6 6 v18 h-380 z" fill="#d6477a"/>
+<text x="1250.0" y="340" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ProviderDesk</text>
+<text x="1072" y="360" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">runners: {&quot;local&quot;,&quot;claude&quot;} -&gt; ModelRunner</text>
+<text x="1072" y="378" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">health: ProviderHealth</text>
+<text x="1072" y="396" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">approved: bool   (the sentence confirmed)</text>
+<text x="1072" y="414" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">decide(consent) -&gt; Decision</text>
+<text x="1072" y="432" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">answering_now() -&gt; Decision</text>
+<text x="1072" y="450" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">close()</text>
+<rect x="1060" y="540" width="380" height="108" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M1060 546 a6 6 0 0 1 6 -6 h368 a6 6 0 0 1 6 6 v18 h-380 z" fill="#d6477a"/>
+<text x="1250.0" y="560" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ProviderHealth</text>
+<text x="1072" y="580" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">last_failure: (provider, reason, at) | None</text>
+<text x="1072" y="598" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">failed(provider, reason)</text>
+<text x="1072" y="616" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">answered(provider)   clears it</text>
+<text x="1072" y="634" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">kept in memory; read by the AI page</text>
+<rect x="690" y="560" width="340" height="122" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M690 566 a6 6 0 0 1 6 -6 h328 a6 6 0 0 1 6 6 v32 h-340 z" fill="#d6477a"/>
+<text x="860.0" y="576" font-size="10.5" fill="#fff" text-anchor="middle">«frozen»</text>
+<text x="860.0" y="594" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">Decision</text>
+<text x="702" y="614" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">provider: &quot;claude&quot;|&quot;local&quot;|&quot;stand-in&quot;</text>
+<text x="702" y="632" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">label: str      remote: bool</text>
+<text x="702" y="650" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">why: ASKED | NO_APPROVAL |</text>
+<text x="702" y="668" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">     NOT_ALLOWED_HERE | NO_REMOTE</text>
+<path d="M1030 167.8 L1060 174.1" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="1045.0" y="166.95" font-size="11" fill="#6e6880" text-anchor="middle">has</text>
+<path d="M860.0 320 L860.0 238" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="860.0" y="275.0" font-size="11" fill="#6e6880" text-anchor="middle">reads</text>
+<path d="M1030 363.2 L1060 348.8" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="1045.0" y="346.0" font-size="11" fill="#6e6880" text-anchor="middle">owns</text>
+<path d="M1250.0 464 L1250.0 540" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="1250.0" y="498.0" font-size="11" fill="#6e6880" text-anchor="middle">has</text>
+<path d="M1098.0 464 L1030 596.6" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="1034.0" y="532.3" font-size="11" fill="#6e6880" text-anchor="middle">makes</text>
+<rect x="690" y="712" width="760" height="62" rx="6" fill="#fdf3e6" stroke="#f2a057"/>
+<text x="700" y="731" font-size="11.5" fill="#1f1a33">Placement: ModelRunner stays as it is (it knows no document). A second one over ClaudeModel gives &quot;one question</text>
+<text x="700" y="747" font-size="11.5" fill="#1f1a33">at a time&quot; for free. The desk is the only place that knows both providers; the router (diagram 2) asks it per</text>
+<text x="700" y="763" font-size="11.5" fill="#1f1a33">question, so nothing is fixed when a document opens.</text>
+</svg>

@@ -180,7 +180,7 @@ from .manifest import (
     Requirements,
     check,
 )
-from .messages import ChatRecord, Ephemeral, parse_chat
+from .messages import ChatRecord, Ephemeral, Via, parse_chat
 from .model import DocumentModel, Snapshot
 from .names import MAX_THING_NAME, clean_name, distinct_name, free_name, free_names, name_key, name_problem
 from .object_texts import ObjectText, edit_object_text, object_texts
@@ -434,6 +434,7 @@ __all__ = [
     "ChangeStyle",
     "ChatPosted",
     "ChatRecord",
+    "Via",
     "check",
     "check_kind",
     "Checkpoint",
