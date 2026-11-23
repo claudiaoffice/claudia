@@ -8325,7 +8325,7 @@ msgstr "Eine Vorlage hat mindestens ein Layout"
 msgid "a template has no slides, and this presentation has {count}"
 msgstr "Eine Vorlage hat keine Folien, diese Präsentation hat {count}"
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:28
+#: packages/claudia-creates/src/claudia_creates/template_info.py:38
 msgid "a template needs a name"
 msgstr "Eine Vorlage braucht einen Namen"
 
@@ -9741,7 +9741,7 @@ msgstr "ein PDF gespeichert"
 msgid "say after or before, not both"
 msgstr "Geben Sie after oder before an, nicht beides"
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:32
+#: packages/claudia-creates/src/claudia_creates/template_info.py:42
 msgid "say what the template is for"
 msgstr "Sagen Sie, wofür die Vorlage gedacht ist"
 
@@ -9989,7 +9989,7 @@ msgstr "der Assistent schlägt Änderungen vor; Sie nehmen jede an oder lehnen s
 msgid "the basic layout stays"
 msgstr "Das Basislayout bleibt erhalten"
 
-#: packages/claudia-server/src/claudia_server/template_library.py:155
+#: packages/claudia-server/src/claudia_server/template_library.py:166
 msgid "the basic template cannot be removed"
 msgstr "Die Vorlage „Einfach“ lässt sich nicht entfernen"
 
@@ -10101,7 +10101,7 @@ msgstr "Die Kopfzeile bleibt oben in der Tabelle"
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr "die Trennmuster für {name} sind nicht vollständig angekommen"
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:38
+#: packages/claudia-creates/src/claudia_creates/template_info.py:48
 msgid "the language of a template is a tag like en, de or en-GB"
 msgstr "Die Sprache einer Vorlage ist ein Kürzel wie en, de oder en-GB"
 
@@ -10117,7 +10117,11 @@ msgstr "Die Ränder lassen weniger als 10 mm für den Inhalt"
 msgid "the mean of the values"
 msgstr "der Mittelwert der Werte"
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:30
+#: packages/claudia-creates/src/claudia_creates/template_info.py:36
+msgid "the name and the purpose of a template are plain text in one line"
+msgstr "Name und Zweck einer Vorlage sind einfacher Text in einer Zeile"
+
+#: packages/claudia-creates/src/claudia_creates/template_info.py:40
 msgid "the name of a template has at most {limit} letters"
 msgstr "Der Name einer Vorlage hat höchstens {limit} Zeichen"
 
@@ -10301,7 +10305,7 @@ msgstr "die Wörter {find!r} stehen nicht in Absatz {paragraph}; bitte erneut le
 msgid "there is a table of contents here already"
 msgstr "hier steht schon ein Inhaltsverzeichnis"
 
-#: packages/claudia-server/src/claudia_server/template_library.py:143
+#: packages/claudia-server/src/claudia_server/template_library.py:145
 msgid "there is a template called {name} already"
 msgstr "Es gibt bereits eine Vorlage namens {name}"
 
@@ -10349,7 +10353,7 @@ msgstr "Auf diesem Verlauf gibt es keinen Schritt {revision}"
 msgid "there is no such reference here"
 msgstr "hier gibt es keinen solchen Verweis"
 
-#: packages/claudia-server/src/claudia_server/template_methods.py:81
+#: packages/claudia-server/src/claudia_server/template_methods.py:82
 msgid "there is no template {id!r} on this server"
 msgstr "Auf diesem Server gibt es keine Vorlage {id!r}"
 
@@ -10521,10 +10525,6 @@ msgstr "Dieser Server unterstützt die Übergabe des Eigentums nicht"
 msgid "this server does not support leaving a document"
 msgstr "Dieser Server unterstützt das Verlassen eines Dokuments nicht"
 
-#: packages/claudia-server/src/claudia_server/template_library.py:140
-msgid "this server has no place to keep templates"
-msgstr "Dieser Server hat keinen Ort, an dem er Vorlagen aufbewahren kann"
-
 #: packages/claudia-server/src/claudia_server/hub.py:717
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr "Dieser Server hält {limit} Dokumente, mehr sind nicht erlaubt"
@@ -10653,7 +10653,7 @@ msgstr "war {size} px hoch"
 msgid "was {size} px wide"
 msgstr "war {size} px breit"
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:34
+#: packages/claudia-creates/src/claudia_creates/template_info.py:44
 msgid "what a template is for takes at most {limit} letters"
 msgstr "Wofür eine Vorlage gedacht ist, darf höchstens {limit} Zeichen lang sein"
 

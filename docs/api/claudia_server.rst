@@ -230,3 +230,14 @@ Encryption
 .. autoclass:: claudia_server.Certificate
 .. autofunction:: claudia_server.ensure_certificate
 .. autoclass:: claudia_server.CertificateError
+
+Templates
+---------
+
+What is not in ``__all__``, documented because the routes and methods name it (E10.4, E10.22, D1537, D1538).
+
+.. autoclass:: claudia_server.template_library.Listed
+.. autoclass:: claudia_server.template_library.TemplateLibrary
+   :members:
+.. autofunction:: claudia_server.template_library.template_file
+.. autofunction:: claudia_server.template_library.read_template_file

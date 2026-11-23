@@ -130,3 +130,17 @@ def test_a_template_says_what_language_it_is_written_in():
     assert TemplateInfo("T", "for talks", "EN-gb").language == "en-GB"
     with pytest.raises(Refusal):
         TemplateInfo("T", "for talks", "not a language")
+
+
+def test_a_state_that_cannot_be_restored_in_any_way_is_no_presentation():
+    state = SlideModel().serialize() | {"diagrams": {"d1": {"kind": "nope"}}}
+    with pytest.raises(TemplateRefused, match="this is not a presentation"):
+        check_template(state)
+
+
+@pytest.mark.parametrize("name", ["two\nlines", "tab\there", "nul\x00", "\N{RIGHT-TO-LEFT OVERRIDE}evil"])
+def test_the_name_and_the_purpose_of_a_template_are_one_line_of_plain_text(name):
+    with pytest.raises(Refusal, match="plain text in one line"):
+        TemplateInfo(name, "for talks", "en")
+    with pytest.raises(Refusal, match="plain text in one line"):
+        TemplateInfo("Talks", name, "en")

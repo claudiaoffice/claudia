@@ -107,7 +107,7 @@ def check_template(state: dict) -> Template:
     not say what it is for."""
     try:
         model = SlideModel.restore(state)
-    except (KeyError, ValueError, TypeError, AttributeError):
+    except Exception:  # noqa: BLE001 - a state anybody may have written: whatever restoring it raises, it is no deck
         raise TemplateRefused(N_("this is not a presentation")) from None
     if model.order:
         raise TemplateRefused(N_("a template has no slides, and this presentation has {count}"), count=len(model.order))
@@ -135,7 +135,7 @@ def start_from_template(template: Template) -> SlideModel:
 
 
 def plan_change_theme(model: SlideModel, template: Template) -> Command | None:
-    """The command that gives ``model`` the styles and the colours of ``template``, matched as :func:`theme_commands`
+    """The command that gives ``model`` the styles and the colours of ``template``, matched as :func:`claudia_core.theme_commands`
     says; its layouts and slides stay as they are. ``None`` when it looks like that already."""
     steps = theme_commands(model.styles, model.palette, template.theme)
     return _one(steps)
@@ -147,83 +147,97 @@ def plan_change_template(model: SlideModel, template: Template) -> Command:
     A layout of the presentation that has the name of one of the template's (in any letters) keeps its id, its name and
     its slides and gets what is on the template's layout; each box that was bound to a placeholder follows the one
     with the same purpose, and where there is none it stays a free box where it stands. A layout the presentation
-    lacks is added. Everything the template does not have stays (D1531)."""
+    lacks is added. Everything the template does not have stays (D1531, D1539)."""
+    plan = _Plan(model, template)
     steps: list[Command] = list(theme_commands(model.styles, model.palette, template.theme))
-    chosen: set[str] = set()  # the ids this plan gives
-    defined: set[tuple[str, str]] = set()  # the assets this plan defines
     mine = {_name(layout.name): layout for layout in model.layouts}
     for given in template.model.layouts:
         if (layout := mine.get(_name(given.name))) is None:
-            layout_id = free_id(model, given.id, chosen)
-            chosen.add(layout_id)
-            steps.append(DefineLayout(layout_id, given.name, None, False, given.purpose, "template", given.hidden))
-            steps += _copied_onto(model, template, given.id, layout_id, chosen, defined)
+            steps += plan.added(given)
         else:
-            steps += _replaced_by(model, template, given.id, layout.id, chosen, defined)
+            steps += plan.replaced_by(given.id, layout.id)
     steps.append(SetTemplate(template.info))
     return Batch(tuple(steps))
 
 
-def _replaced_by(
-    model: SlideModel, template: Template, source: str, layout: str, chosen: set[str], defined: set[tuple[str, str]]
-) -> list[Command]:
-    """What puts what is on the template's layout ``source`` on the presentation's layout ``layout``, in place of what
-    is there. The boxes bound to its placeholders are set free first, so that nothing points at what goes; then the
-    old objects go and the new come; then each box is bound to the new placeholder with the same purpose, if any, and
-    takes its place. Undo runs it backwards, and every step of it is valid (a layout has each purpose once)."""
-    old_ids = {obj.id for obj in model.objects_on(layout)}
-    bound = {
-        slide: [
-            (obj.id, model.objects[obj.anchor.bound_to_placeholder].anchor.purpose)
-            for obj in model.objects_on(slide)
-            if obj.anchor.bound_to_placeholder in old_ids
+class _Plan:
+    """The steps of one change of template. It remembers the ids and the assets it has given so far, so that no two
+    steps of the plan take the same."""
+
+    def __init__(self, model: SlideModel, template: Template) -> None:
+        self.model, self.template = model, template
+        self.chosen: set[str] = set()  # the ids this plan gives
+        self.defined: set[tuple[str, str]] = set()  # the assets this plan defines
+
+    def added(self, given) -> list[Command]:  # noqa: ANN001 - a layout of the template
+        """A layout the presentation lacks: defined as a layout of the template, then what is on it."""
+        layout_id = free_id(self.model, given.id, self.chosen)
+        self.chosen.add(layout_id)
+        define = DefineLayout(layout_id, given.name, None, False, given.purpose, "template", given.hidden)
+        return [define, *self.copied_onto(given.id, layout_id)]
+
+    def replaced_by(self, source: str, layout: str) -> list[Command]:
+        """What puts what is on the template's layout ``source`` on the presentation's layout ``layout``, in place of
+        what is there. The boxes bound to its placeholders are set free first, so that nothing points at what goes;
+        then the old objects go and the new come; then each box is bound to the new placeholder with the same purpose,
+        if any, and takes its place. Undo runs it backwards, and every step of it is valid (a layout has each purpose
+        once)."""
+        model = self.model
+        old_ids = {obj.id for obj in model.objects_on(layout)}
+        bound = {
+            slide: [
+                (obj.id, model.objects[obj.anchor.bound_to_placeholder].anchor.purpose)
+                for obj in model.objects_on(slide)
+                if obj.anchor.bound_to_placeholder in old_ids
+            ]
+            for slide in model.slides_following(layout)
+        }
+        bound = {slide: boxes for slide, boxes in bound.items() if boxes}
+        new = self.copied_onto(source, layout)
+        placeholders = {
+            step.anchor["purpose"]: step.body.id
+            for step in new
+            if isinstance(step, AddObject) and step.anchor.get("purpose")
+        }
+        return [
+            *(SetSlideLayout(slide, layout, tuple((box, "") for box, _ in boxes)) for slide, boxes in bound.items()),
+            *(RemoveObject(object_id) for object_id in old_ids),
+            *new,
+            *(
+                SetSlideLayout(
+                    slide,
+                    layout,
+                    tuple((box, placeholders[purpose]) for box, purpose in boxes if purpose in placeholders),
+                )
+                for slide, boxes in bound.items()
+                if any(purpose in placeholders for _, purpose in boxes)
+            ),
         ]
-        for slide in model.slides_following(layout)
-    }
-    bound = {slide: boxes for slide, boxes in bound.items() if boxes}
-    new = _copied_onto(model, template, source, layout, chosen, defined)
-    placeholders = {
-        step.anchor["purpose"]: step.body.id
-        for step in new
-        if isinstance(step, AddObject) and step.anchor.get("purpose")
-    }
-    return [
-        *(SetSlideLayout(slide, layout, tuple((box, "") for box, _ in boxes)) for slide, boxes in bound.items()),
-        *(RemoveObject(object_id) for object_id in old_ids),
-        *new,
-        *(
-            SetSlideLayout(
-                slide, layout, tuple((box, placeholders[purpose]) for box, purpose in boxes if purpose in placeholders)
-            )
-            for slide, boxes in bound.items()
-            if any(purpose in placeholders for _, purpose in boxes)
-        ),
-    ]
 
-
-def _copied_onto(
-    model: SlideModel, template: Template, source: str, layout: str, chosen: set[str], defined: set[tuple[str, str]]
-) -> list[Command]:
-    """What puts a copy of everything on the template's layout ``source`` on ``layout``: first the assets the
-    objects need and the presentation lacks, then the objects with ids nobody has."""
-    objects: list[Command] = []
-    needed: set[tuple[str, str]] = set()
-    for obj in template.model.objects_on(source):
-        new_id = free_id(model, obj.id, chosen)
-        chosen.add(new_id)
-        body = obj.body
-        if body.paragraph is not None:
-            body = replace(body, paragraph=replace(body.paragraph, id=new_id))
-        needed |= _assets_of(template.model, obj)
-        objects.append(AddObject(replace(body, id=new_id, name=""), replace(obj.anchor, slide=layout).to_data()))
-    wanted = [(kind.name, asset_id) for kind in ASSET_KINDS for name, asset_id in sorted(needed) if name == kind.name]
-    assets: list[Command] = [
-        DefineAsset(kind, template.model.assets[kind][asset_id].to_data())
-        for kind, asset_id in wanted
-        if asset_id not in model.assets[kind] and (kind, asset_id) not in defined
-    ]
-    defined.update(wanted)
-    return [*assets, *objects]
+    def copied_onto(self, source: str, layout: str) -> list[Command]:
+        """What puts a copy of everything on the template's layout ``source`` on ``layout``: first the assets the
+        objects need and the presentation lacks, then the objects with ids nobody has."""
+        model, template = self.model, self.template
+        objects: list[Command] = []
+        needed: set[tuple[str, str]] = set()
+        for obj in template.model.objects_on(source):
+            new_id = free_id(model, obj.id, self.chosen)
+            self.chosen.add(new_id)
+            body = obj.body
+            if body.paragraph is not None:
+                body = replace(body, paragraph=replace(body.paragraph, id=new_id))
+            needed |= _assets_of(template.model, obj)
+            objects.append(AddObject(replace(body, id=new_id, name=""), replace(obj.anchor, slide=layout).to_data()))
+        wanted = [
+            (kind.name, asset_id) for kind in ASSET_KINDS for name, asset_id in sorted(needed) if name == kind.name
+        ]
+        assets: list[Command] = [
+            DefineAsset(kind, template.model.assets[kind][asset_id].to_data())
+            for kind, asset_id in wanted
+            if asset_id not in model.assets[kind] and (kind, asset_id) not in self.defined
+        ]
+        self.defined.update(wanted)
+        return [*assets, *objects]
 
 
 def _assets_of(source: SlideModel, obj: SlideObject) -> set[tuple[str, str]]:
@@ -237,8 +251,10 @@ def _assets_of(source: SlideModel, obj: SlideObject) -> set[tuple[str, str]]:
 
 
 def _one(steps: tuple[Command, ...]) -> Command | None:
+    """The one command the ``steps`` come to: none, the step itself, or a batch."""
     return steps[0] if len(steps) == 1 else Batch(steps) if steps else None
 
 
 def _name(name: str) -> str:
+    """A name as layouts are compared: without extra spaces, in no particular letters."""
     return " ".join(name.split()).casefold()

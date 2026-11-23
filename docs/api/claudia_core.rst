@@ -546,3 +546,17 @@ A document's refusal of what a person asked, said in her language by whoever tel
 
 .. autoexception:: claudia_core.Refusal
 .. autofunction:: claudia_core.N_
+
+Layouts and themes
+------------------
+
+.. currentmodule:: claudia_core
+
+The layouts of a presentation, in the order a person sees them (E10.4, D1530), and a theme: styles and colours that can
+exist outside a document, and what giving one to a document comes to (D1539).
+
+.. autoclass:: claudia_core.Layout
+.. autoclass:: claudia_core.Layouts
+.. autodata:: claudia_core.LAYOUT_ORIGINS
+.. autoclass:: claudia_core.Theme
+.. autofunction:: claudia_core.theme_commands

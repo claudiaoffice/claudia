@@ -8325,7 +8325,7 @@ msgstr ""
 msgid "a template has no slides, and this presentation has {count}"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:28
+#: packages/claudia-creates/src/claudia_creates/template_info.py:38
 msgid "a template needs a name"
 msgstr ""
 
@@ -9741,7 +9741,7 @@ msgstr ""
 msgid "say after or before, not both"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:32
+#: packages/claudia-creates/src/claudia_creates/template_info.py:42
 msgid "say what the template is for"
 msgstr ""
 
@@ -9989,7 +9989,7 @@ msgstr ""
 msgid "the basic layout stays"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/template_library.py:155
+#: packages/claudia-server/src/claudia_server/template_library.py:166
 msgid "the basic template cannot be removed"
 msgstr ""
 
@@ -10101,7 +10101,7 @@ msgstr ""
 msgid "the hyphenation patterns for {name} did not arrive intact"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:38
+#: packages/claudia-creates/src/claudia_creates/template_info.py:48
 msgid "the language of a template is a tag like en, de or en-GB"
 msgstr ""
 
@@ -10117,7 +10117,11 @@ msgstr ""
 msgid "the mean of the values"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:30
+#: packages/claudia-creates/src/claudia_creates/template_info.py:36
+msgid "the name and the purpose of a template are plain text in one line"
+msgstr ""
+
+#: packages/claudia-creates/src/claudia_creates/template_info.py:40
 msgid "the name of a template has at most {limit} letters"
 msgstr ""
 
@@ -10301,7 +10305,7 @@ msgstr ""
 msgid "there is a table of contents here already"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/template_library.py:143
+#: packages/claudia-server/src/claudia_server/template_library.py:145
 msgid "there is a template called {name} already"
 msgstr ""
 
@@ -10349,7 +10353,7 @@ msgstr ""
 msgid "there is no such reference here"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/template_methods.py:81
+#: packages/claudia-server/src/claudia_server/template_methods.py:82
 msgid "there is no template {id!r} on this server"
 msgstr ""
 
@@ -10521,10 +10525,6 @@ msgstr ""
 msgid "this server does not support leaving a document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/template_library.py:140
-msgid "this server has no place to keep templates"
-msgstr ""
-
 #: packages/claudia-server/src/claudia_server/hub.py:717
 msgid "this server holds {limit} documents, the most it may hold"
 msgstr ""
@@ -10653,7 +10653,7 @@ msgstr ""
 msgid "was {size} px wide"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/template_info.py:34
+#: packages/claudia-creates/src/claudia_creates/template_info.py:44
 msgid "what a template is for takes at most {limit} letters"
 msgstr ""
 

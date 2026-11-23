@@ -5,12 +5,20 @@ presentation started from a template keeps a copy as the note of where it came f
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 
 from claudia_core import LanguageError, Refusal, normalize_language
 
 MAX_NAME = 80
 MAX_PURPOSE = 400
+#: Characters that turn the direction of the text around; they are never part of a name.
+_BIDI_CONTROLS = frozenset("\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069")
+
+
+def _is_plain(text: str) -> bool:
+    """One line of text: no line break, no control character, nothing that turns the direction of the text."""
+    return not any(unicodedata.category(ch) == "Cc" or ch in _BIDI_CONTROLS for ch in text)
 
 
 @dataclass(frozen=True)
@@ -24,6 +32,8 @@ class TemplateInfo:
 
     def __post_init__(self) -> None:
         name, purpose = self.name.strip(), self.purpose.strip()
+        if not (_is_plain(name) and _is_plain(purpose)):
+            raise Refusal("the name and the purpose of a template are plain text in one line")
         if not name:
             raise Refusal("a template needs a name")
         if len(name) > MAX_NAME:

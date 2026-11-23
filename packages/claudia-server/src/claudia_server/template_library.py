@@ -30,7 +30,7 @@ from claudia_creates.template import (
     check_template,
     template_state,
 )
-from claudia_document_file import read_export, write_export
+from claudia_document_file import DocumentFileError, read_export, write_export
 
 from .i18n import translate
 
@@ -55,7 +55,7 @@ class Listed:
 
 
 def template_file(model: SlideModel, info: TemplateInfo, *, exporter: str, exported_at: str) -> bytes:
-    """The file of ``model`` as the template ``info``: its content as :func:`template_state` makes it, and nothing
+    """The file of ``model`` as the template ``info``: its content as :func:`~claudia_creates.template.template_state` makes it, and nothing
     else. ``model`` is not changed."""
     return write_export(
         model.app,
@@ -68,7 +68,7 @@ def template_file(model: SlideModel, info: TemplateInfo, *, exporter: str, expor
 
 def read_template_file(data: bytes) -> Template:
     """The template a file holds. :class:`~claudia_document_file.ExportRefused` for a file that is no export;
-    :class:`TemplateRefused` for an export of another app or version, or of a presentation that is no template."""
+    ``TemplateRefused`` for an export of another app or version, or of a presentation that is no template."""
     exported = read_export(data)
     if exported.app != SlideModel.app:
         raise TemplateRefused(N_("this is not a presentation"))
@@ -95,53 +95,64 @@ def describe(entry: Listed, locale: str) -> dict:
 
 
 def slug(name: str) -> str:
+    """A name as a file name and an id: ASCII letters and digits in lower case, joined by hyphens; ``template`` if
+    nothing is left."""
     plain = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().casefold()
     return re.sub(r"[^a-z0-9]+", "-", plain).strip("-")[:40].strip("-") or "template"
 
 
 class TemplateLibrary:
-    """The built-in template and the templates added to a folder; ``folder`` is ``None`` for a server that keeps none,
-    which then has the built-in one only."""
+    """The built-in template and the templates added to ``folder``, one file each."""
 
-    def __init__(self, folder: Path | None) -> None:
+    def __init__(self, folder: Path) -> None:
         self.folder = folder
+        self._basic = Listed(BASIC_ID, basic_template(), builtin=True)
         self._added: dict[str, Template] = {}
         self.reload()
-
-    @property
-    def can_add(self) -> bool:
-        return self.folder is not None
 
     def reload(self) -> None:
         """Read the folder again; a file that is no template is left out and logged, never fatal."""
         self._added = {}
-        if self.folder is None or not self.folder.is_dir():
+        if not self.folder.is_dir():
             return
         for path in sorted(self.folder.glob(f"*{SUFFIX}")):
+            template_id = path.name.removesuffix(SUFFIX)
             try:
-                self._added[path.name.removesuffix(SUFFIX)] = read_template_file(path.read_bytes())
-            except (OSError, ValueError) as error:
+                template = read_template_file(path.read_bytes())
+                if template_id == BASIC_ID or self._has_name(template.info.name):
+                    raise ValueError("its id or its name is another template's")
+            except (OSError, ValueError, DocumentFileError) as error:
                 log.warning("template %s is not used: %s", path.name, error)
+                continue
+            self._added[template_id] = template
 
     def entries(self) -> list[Listed]:
         """Basic first, then the added templates by name."""
         added = sorted(self._added.items(), key=lambda item: item[1].info.name.casefold())
-        return [Listed(BASIC_ID, basic_template(), builtin=True), *(Listed(id, t) for id, t in added)]
+        return [self._basic, *(Listed(id, template) for id, template in added)]
 
     def get(self, template_id: str) -> Template | None:
-        return next((entry.template for entry in self.entries() if entry.id == template_id), None)
+        """The template with this id, or ``None`` when there is none."""
+        if template_id == BASIC_ID:
+            return self._basic.template
+        return self._added.get(template_id)
+
+    def check(self, data: bytes) -> Template:
+        """The template ``data`` holds, if the library could take it: whatever :func:`read_template_file` refuses, and
+        ``TemplateRefused`` for a name another template has, in any letters (Basic's too)."""
+        template = read_template_file(data)
+        if self._has_name(template.info.name):
+            raise TemplateRefused(N_("there is a template called {name} already"), name=template.info.name)
+        return template
+
+    def _has_name(self, name: str) -> bool:
+        return any(entry.template.info.name.casefold() == name.casefold() for entry in self.entries())
 
     def add(self, data: bytes, *, added_by: str) -> str:
         """Check ``data`` and keep it as a template; its id. The file is written afresh from what was checked, so
-        that nothing else it held stays. :class:`TemplateRefused` for a name another template has (in any letters) or a
-        server with no place to keep templates; whatever :func:`read_template_file` refuses."""
-        template = read_template_file(data)
-        if self.folder is None:
-            raise TemplateRefused(N_("this server has no place to keep templates"))
-        name = template.info.name
-        if any(entry.template.info.name.casefold() == name.casefold() for entry in self.entries()):
-            raise TemplateRefused(N_("there is a template called {name} already"), name=name)
-        template_id = self._free_id(slug(name))
+        that nothing else it held stays."""
+        template = self.check(data)
+        template_id = self._free_id(slug(template.info.name))
         kept = template_file(template.model, template.info, exporter=added_by, exported_at=utc_now())
         self.folder.mkdir(parents=True, exist_ok=True)
         _write(self.folder / f"{template_id}{SUFFIX}", kept)
@@ -149,11 +160,11 @@ class TemplateLibrary:
         return template_id
 
     def remove(self, template_id: str) -> None:
-        """Remove an added template and its file. :class:`TemplateRefused` for the built-in one, ``KeyError`` for an id
+        """Remove an added template and its file. ``TemplateRefused`` for the built-in one, ``KeyError`` for an id
         nobody has."""
         if template_id == BASIC_ID:
             raise TemplateRefused(N_("the basic template cannot be removed"))
-        if template_id not in self._added or self.folder is None:
+        if template_id not in self._added:
             raise KeyError(template_id)
         (self.folder / f"{template_id}{SUFFIX}").unlink(missing_ok=True)
         del self._added[template_id]

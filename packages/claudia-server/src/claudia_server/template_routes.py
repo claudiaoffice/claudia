@@ -23,7 +23,7 @@ from claudia_document_file import write_export
 
 from .protocol import normalize_locale
 from .suite import Suite
-from .template_library import TemplateLibrary, describe
+from .template_library import SUFFIX, TemplateLibrary, describe, slug
 from .thing_names import name_unnamed_things
 from .uploads import UploadDesk, UploadRefused
 
@@ -35,6 +35,8 @@ def template_router(
     may_make: Callable[[Request], None],
     address_of: Callable[[Request], str],
 ) -> APIRouter:
+    """The ``/api/templates`` routes of a server. ``may_make`` refuses a request that may not make documents;
+    ``address_of`` says whose request it is, for the limits of uploads."""
     router = APIRouter(prefix="/api/templates")
 
     @router.get("")
@@ -52,13 +54,18 @@ def template_router(
         module = suite.module(SlideModel.app)
         if module is None:
             raise HTTPException(422, f"this server does not host {SlideModel.app}")
+        address = address_of(request)
+        try:
+            uploads.room_for(address)  # before the deck is made: a full desk costs nothing
+        except UploadRefused as exc:
+            raise HTTPException(exc.status, exc.message) from exc
         deck = start_from_template(template)
         name_unnamed_things(deck, normalize_locale(locale))
         data = write_export(
             deck.app, deck.state_schema, deck.serialize(), exporter=template.info.name, exported_at=utc_now()
         )
         try:
-            held = uploads.put(address_of(request), f"{template.info.name}.claudia-export.zip", data)
+            held = uploads.put(address, f"{slug(template.info.name)}{SUFFIX}", data)
         except UploadRefused as exc:
             raise HTTPException(exc.status, exc.message) from exc
         return {**held.describe(), "hosted": True}

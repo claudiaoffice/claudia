@@ -63,6 +63,41 @@ Commands
 .. autoclass:: claudia_creates.AddSlide
 .. autoclass:: claudia_creates.RemoveSlide
 
+Layouts and templates
+---------------------
+
+.. automodule:: claudia_creates.layout_commands
+   :no-members:
+
+A slide follows a layout (E10.4, D1530); a layout holds ordinary objects, and an object on a slide that is bound to one
+of its placeholders keeps a copy of its frame (D1531). The plans in ``claudia_creates.layout_plans`` return the
+commands, with final values, for what people do with layouts.
+
+.. autoclass:: claudia_creates.DefineLayout
+.. autoclass:: claudia_creates.RemoveLayout
+.. autoclass:: claudia_creates.RenameLayout
+.. autoclass:: claudia_creates.HideLayout
+.. autoclass:: claudia_creates.MoveLayout
+.. autoclass:: claudia_creates.SetSlideLayout
+.. autoclass:: claudia_creates.model.SlideLayoutWas
+.. autoclass:: claudia_creates.LayoutsChanged
+.. autoclass:: claudia_creates.SlideLayoutChanged
+
+A template is a presentation without slides, with a note of what it is (E10.4, E10.22, D1537, D1539).
+
+.. autoclass:: claudia_creates.TemplateInfo
+   :members:
+.. autoclass:: claudia_creates.Template
+.. autoclass:: claudia_creates.SetTemplate
+.. autoclass:: claudia_creates.TemplateChanged
+.. autoexception:: claudia_creates.TemplateRefused
+.. autofunction:: claudia_creates.template.template_state
+.. autofunction:: claudia_creates.template.check_template
+.. autofunction:: claudia_creates.template.basic_template
+.. autofunction:: claudia_creates.template.start_from_template
+.. autofunction:: claudia_creates.template.plan_change_theme
+.. autofunction:: claudia_creates.template.plan_change_template
+
 Printing
 --------
 

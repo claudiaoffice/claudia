@@ -11,6 +11,7 @@ from claudia_creates.template import TemplateInfo, TemplateRefused, template_sta
 from claudia_document_file import ExportRefused, read_export, write_export
 from claudia_server.template_library import (
     BASIC_ID,
+    SUFFIX,
     TemplateLibrary,
     describe,
     read_template_file,
@@ -145,16 +146,25 @@ def test_a_file_in_the_folder_that_is_no_template_is_left_out_not_fatal(tmp_path
     assert len(TemplateLibrary(tmp_path).entries()) == 2
 
 
-def test_a_library_without_a_folder_has_the_basic_template_and_takes_no_more(deck):
-    library = TemplateLibrary(None)
-    assert not library.can_add
-    with pytest.raises(TemplateRefused, match="this server has no place to keep templates"):
-        library.add(a_file(deck), added_by="anna")
-
-
 def test_the_basic_template_is_described_in_the_language_asked(tmp_path):
     entry = TemplateLibrary(tmp_path).entries()[0]
     english, german = describe(entry, "en"), describe(entry, "de")
     assert (english["id"], english["name"], english["builtin"]) == (BASIC_ID, "Basic", True)
     assert german["name"] != english["name"] and german["purpose"] != english["purpose"]
     assert english["layouts"] and english["language"] == "en"
+
+
+def test_a_file_that_is_no_export_at_all_does_not_stop_the_library_from_starting(tmp_path, deck):
+    (tmp_path / "junk.claudia-export.zip").write_bytes(b"PK\x03\x04 not really")
+    (tmp_path / "gone.claudia-export.zip").write_bytes(write_export("composes", 1, {}, exporter="a", exported_at="n"))
+    library = TemplateLibrary(tmp_path)
+    library.add(a_file(deck), added_by="anna")
+    assert [entry.id for entry in TemplateLibrary(tmp_path).entries()] == [BASIC_ID, "conference-talk"]
+
+
+def test_a_file_in_the_folder_cannot_take_the_name_of_another_template_or_the_id_of_the_built_in_one(tmp_path, deck):
+    (tmp_path / f"a{SUFFIX}").write_bytes(a_file(deck))
+    (tmp_path / f"b{SUFFIX}").write_bytes(a_file(deck, TemplateInfo("conference TALK", "the same name again", "en")))
+    (tmp_path / f"{BASIC_ID}{SUFFIX}").write_bytes(a_file(deck, TemplateInfo("Not basic", "an id that is taken", "en")))
+    library = TemplateLibrary(tmp_path)
+    assert [entry.id for entry in library.entries()] == [BASIC_ID, "a"]

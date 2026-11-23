@@ -196,7 +196,7 @@ class MoveLayout(Command):
 class SetSlideLayout(Command):
     """Let a slide follow another layout. ``rebind`` says, by final values, which placeholder each object of the slide
     is bound to afterwards (``""``: none): the command does not look for matches, so that undo, replay and a colleague's
-    view all end the same way (see :func:`~claudia_creates.layout_plans.set_layout_command`, which finds them by
+    view all end the same way (see ``claudia_creates.layout_plans.set_layout_command``, which finds them by
     purpose). ``frames`` is what undoing it adds: the place, size, turn and look (x, y, w, h, rotation, style) that
     objects get back, because an object that takes a placeholder's place has lost its own."""
 

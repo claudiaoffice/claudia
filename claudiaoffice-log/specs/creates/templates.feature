@@ -89,6 +89,7 @@ Feature: A template is a presentation without slides that a new presentation sta
       | name                 | purpose   | language |
       | nothing              | for talks | en       |
       | Talks                | nothing   | en       |
+      | a name in two lines  | for talks | en       |
       | Talks                | for talks | english! |
       | a name of 81 letters | for talks | en       |
 

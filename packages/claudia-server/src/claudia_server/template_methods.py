@@ -7,7 +7,7 @@ from __future__ import annotations
 import base64
 
 from claudia_core.clock import utc_now
-from claudia_creates.template import TemplateInfo, plan_change_template, plan_change_theme
+from claudia_creates.template import Template, TemplateInfo, plan_change_template, plan_change_theme
 
 from .i18n import message_of, msg
 from .protocol import Context, MethodTable, RequestError
@@ -74,7 +74,8 @@ def add_template_methods(table: MethodTable, *, model_of) -> None:  # noqa: ANN0
         return done(ctx, plan_change_template(model_of(ctx), _found(ctx, template)), base, changed=True)
 
 
-def _found(ctx: Context, template_id: str):
+def _found(ctx: Context, template_id: str) -> Template:
+    """The template of this server with that id; ``command_error`` when there is none."""
     library = ctx.template_library()
     found = None if library is None else library.get(template_id)
     if found is None:

@@ -89,7 +89,7 @@ def test_an_unknown_template_is_not_found(server):
 
 
 def test_a_server_with_an_access_secret_lists_templates_for_those_who_know_it(tmp_path):
-    library = TemplateLibrary(None)
+    library = TemplateLibrary(tmp_path / "templates")
     hub = Hub(MemoryProvider(SlideModel), methods=methods_for(SlideModel))
     secret = "a-long-enough-secret"
     client = TestClient(create_app(hub, ScryptDirectory(cost=2**4), access_secret=secret, templates=library))
@@ -111,7 +111,7 @@ def test_the_page_lists_the_templates_and_says_which_can_be_removed(server):
     client, admin, _ = server
     client.post("/api/admin/templates", content=a_talk_file(), headers=admin)
     page = client.get("/api/admin/templates", headers=admin).json()
-    assert page["format"] == 1 and page["can_add"]
+    assert page["format"] == 1
     assert [(t["id"], t["removable"]) for t in page["templates"]] == [("basic", False), ("conference-talk", True)]
 
 
@@ -144,3 +144,9 @@ def test_removing_a_template_answers_the_page_and_the_built_in_one_stays(server)
     assert [t["id"] for t in page["templates"]] == ["basic"]
     assert client.delete("/api/admin/templates/basic", headers=admin).status_code == 409
     assert client.delete("/api/admin/templates/conference-talk", headers=admin).status_code == 404
+
+
+def test_a_new_presentation_is_not_even_made_when_no_more_uploads_may_wait(server):
+    client, _, _ = server
+    client.app.state.gateway.uploads._most_per_address = 0
+    assert client.post("/api/templates/basic/upload").status_code == 503
