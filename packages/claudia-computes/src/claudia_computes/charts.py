@@ -1,9 +1,8 @@
 """Chart definitions: what a diagram draws, in computes' own terms (E6.6).
 
 A :class:`ChartSpec` is computes' :class:`~claudia_core.DiagramDefinition` — the data a chart is drawn from, kept
-apart from where it is shown. A chart may be shown as its own tab (``model.Chart``) or as a floating object on a
-sheet (``ObjectBody.diagram``), and the two may show the very same ``ChartSpec``, exactly as two image objects may
-share one :class:`~claudia_core.ImageAsset`. The kernel never looks inside a ``ChartSpec``; it is read back only
+apart from where it is shown. A chart is an object on a sheet or a slide (``ObjectBody.diagram``) with a ``ChartSpec``
+of its own (E6.31, D1475). The kernel never looks inside a ``ChartSpec``; it is read back only
 through :meth:`~claudia_computes.WorkbookModel.diagram_from_data`, the one door this module's data enters through.
 
 Deliberately minimal for the first chart kind, the bar chart (E6.6's starting scope): ``kind`` is a plain string
@@ -113,7 +112,7 @@ def _check_range(value: object) -> RangeRef:
         raise ChartError(f"range: {error}") from None
     if range_.sheet is None:
         # Unlike a formula, a definition has no sheet of its own to default to: it may be shown from a different
-        # sheet entirely (a floating object) or from none at all (a chart tab), so "the current sheet" is not a
+        # sheet entirely, or from a slide, so "the current sheet" is not a
         # meaningful answer here. The range must always say which sheet it reads.
         raise ChartError("range: a chart's range must name its sheet")
     return range_

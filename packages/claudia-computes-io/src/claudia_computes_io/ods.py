@@ -920,9 +920,7 @@ def workbook_to_ods(
                 sheet_cells(model, sheet),
             )
         )
-    for name, shapes in charts.tabs:
-        spreadsheet.append(_new_table(Sheet(SheetId("chart"), name), None, shapes=shapes))
-    if not model.sheets and not charts.tabs:
+    if not model.sheets:
         spreadsheet.append(_new_table(Sheet(SheetId("s1"), "Sheet1"), None))
     spreadsheet.extend(global_elements(model))
     pilots = data_pilot_tables(model, written_pivots(model).pivots, sheet_names(model))
@@ -1136,21 +1134,6 @@ class _Patch:
         )
         if patch.run():
             self.changed = True
-        last = self.part_after_last_sheet()
-        for table in patch.tab_tables:
-            self.part.insert_after(last, table) if last is not None else self.part.insert_into(self.spreadsheet, table)
-            self.changed = True
-
-    def part_after_last_sheet(self) -> etree._Element | None:
-        """The ``table:table`` that comes last in the file once this run's sheets are in: the last sheet of the
-        workbook (a chart tab comes after it)."""
-        for sheet_id in reversed(self.current.sheets):
-            element = self.new_tables.get(sheet_id) if sheet_id in self.new_tables else None
-            if element is None and str(sheet_id) in self.by_id:
-                element = self.by_id[str(sheet_id)].element
-            if element is not None:
-                return element
-        return None
 
     def _patch_names(self) -> None:
         """The names of the workbook and of its sheets (D457)."""

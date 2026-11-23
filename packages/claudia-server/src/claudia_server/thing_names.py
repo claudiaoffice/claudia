@@ -1,6 +1,6 @@
 """Names of things over the wire (D550): the name a new thing gets, renaming, and naming what has none.
 
-Every object, slide, sheet and chart tab of a document has a name, in one namespace (``claudia_core.names``). The
+Every object, slide and sheet of a document has a name, in one namespace (``claudia_core.names``). The
 server gives a new thing the first free ``"<what it is> <n>"``, in the language of the one who made it; anybody who may
 edit renames it with ``rename_thing``. Documents from before names hold things without one, and ``name_unnamed`` names
 them in one step of the history, when somebody first needs to point at them.
@@ -93,7 +93,7 @@ def _refuse_fixed_name(model: ObjectModel, thing_id: str) -> None:
 
 
 def _rename_thing(ctx: Context, *, id: str, name: str, base) -> dict:  # noqa: A002 - the wire name
-    """Give the object, slide, sheet or chart tab `id` the name `name` (spaces around it and doubled inside it are
+    """Give the object, slide or sheet `id` the name `name` (spaces around it and doubled inside it are
     tidied away). The formulas that read a renamed sheet are written again with its name. `bad_request` for a name
     without text or with more than 60 characters; `command_error` when somebody else has the name (a named range
     counts: the sentence says who, however capitals and spaces are written), for an unknown id and for a named range,
@@ -271,9 +271,18 @@ def _name_and_describe(
     }
 
 
+def _free_name(ctx: Context, *, kind: str) -> dict:
+    """The name a new thing of `kind` (`text`, `shape`, `image`, `diagram`, `container`, `table`, `slide`) gets
+    when it is not given one: the first free "<what it is> <n>" in the language of the request, as `{name}`. A
+    dialog shows it before the thing is made (E6.31, D1475). `bad_request` for another kind."""
+    if kind not in _KIND_LABELS or kind == "paragraph":
+        raise RequestError("bad_request", msg("free_name: there are no things of the kind {kind!r}", kind=kind))
+    return {"name": default_name(ctx, kind)}
+
+
 def add_name_methods(table: MethodTable) -> None:
-    """Add ``rename_thing``, ``name_thing``, ``name_unnamed``, ``thing_details`` and ``name_and_describe`` to an
-    app's method table."""
+    """Add ``rename_thing``, ``name_thing``, ``name_unnamed``, ``thing_details``, ``name_and_describe`` and
+    ``free_name`` to an app's method table."""
 
     def rename_thing(ctx: Context, **params) -> dict:
         return _rename_thing(ctx, **params)
@@ -300,6 +309,12 @@ def add_name_methods(table: MethodTable) -> None:
     thing_details.__doc__ = _thing_details.__doc__
     name_and_describe.__doc__ = _name_and_describe.__doc__
     table.method("thing_details", "id:str")(thing_details)
+
+    def free_name(ctx: Context, **params) -> dict:
+        return _free_name(ctx, **params)
+
+    free_name.__doc__ = _free_name.__doc__
+    table.method("free_name", "kind:str")(free_name)
     table.method(
         "name_and_describe", "id:str name:str description:text decorative:bool=false base:revision?", write=True
     )(name_and_describe)

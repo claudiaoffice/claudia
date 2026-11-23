@@ -48,6 +48,18 @@ describe('the object menu is one list (D1225)', () => {
     expect(labels(contextMenuItems(chart(), false, actions(), { grid: true }))).toEqual(['Name & describe…', 'Style…', 'Release from grid', 'Delete'])
   })
 
+  it('for a chart on a sheet in computes: Move to Slide after Style… (E6.31), shown but not chosen by a viewer', () => {
+    const moveToSlide = vi.fn()
+    const items = contextMenuItems(chart(), false, { ...actions(), moveToSlide })
+    expect(labels(items)).toEqual(['Name & describe…', 'Style…', 'Move to Slide', 'Delete'])
+    items.find((i) => i.label === 'Move to Slide')!.action!()
+    expect(moveToSlide).toHaveBeenCalledOnce()
+    expect(contextMenuItems(chart(), true, { ...actions(), moveToSlide }).find((i) => i.label === 'Move to Slide')!.disabled).toBe(true)
+    // nothing else moves to a slide, and a chart on a slide (no `moveToSlide`) is not offered it
+    expect(labels(contextMenuItems(image(), false, { ...actions(), moveToSlide }))).not.toContain('Move to Slide')
+    expect(labels(contextMenuItems(chart(), false, actions()))).not.toContain('Move to Slide')
+  })
+
   it('offers the grid only where the app has one: computes and composes have none', () => {
     expect(labels(contextMenuItems(text(), false, actions()))).not.toContain('Release from grid')
     expect(labels(contextMenuItems(text(), false, actions()))).not.toContain('Snap to grid')

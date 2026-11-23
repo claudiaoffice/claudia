@@ -113,7 +113,6 @@ function server(link: FakeLink, extra: Record<string, (p: any) => any> = {}) {
     palette: () => ({ type: 'palette', roles: [], readings: [] }),
     objects: (p: any) => ({ revision: 'main:3', sheet: p.sheet, objects: p.sheet === 's1' ? [OBJECT('o1'), OBJECT('o2', { kind: 'diagram', ref: 'd1', w: 300, h: 200 })] : [] }),
     diagrams: () => [{ id: 'd1', format: 1, kind: 'bar' }],
-    charts: () => [{ id: 'c1', name: 'Rent chart', spec_id: 'd1' }],
     names: () => ({ revision: 'main:3', names: [{ name: 'Rents', scope: null, kind: 'range', purpose: 'input', column_purposes: [], sheet: 's1', sheet_name: 'Budget', region: { sheet: 's1', row0: 1, col0: 1, row1: 1, col1: 1 } }] }),
     random_state: () => ({ seed: 0, draw: 0 }),
     number_formats: () => FORMATS,
@@ -123,7 +122,7 @@ function server(link: FakeLink, extra: Record<string, (p: any) => any> = {}) {
     cells: (p: any) => ({ revision: 'main:3', cells: p.sheet === 's1' ? Object.values(CELLS).filter(([r, c]) => r >= p.row0 && r <= p.row1 && c >= p.col0 && c <= p.col1) : [] }),
     sizes: () => ({ revision: 'main:3', rows: [[0, 40]], cols: [[0, 150]] }),
     cell_styles: () => ({ revision: 'main:3', ranges: RANGES }),
-    print_setup: () => ({ revision: 'main:3', page: PAGE, sheets: { s1: LANDSCAPE, s2: DEFAULT_SHEET_PRINT_DATA, c1: { ...DEFAULT_SHEET_PRINT_DATA, orientation: 'landscape' } } }),
+    print_setup: () => ({ revision: 'main:3', page: PAGE, sheets: { s1: LANDSCAPE, s2: DEFAULT_SHEET_PRINT_DATA } }),
     language: () => ({ language: 'de' }),
     set_print_page: () => ({ revision: 'main:4' }),
     set_sheet_print: () => ({ revision: 'main:4' }),
@@ -140,7 +139,7 @@ async function opened(extra: Record<string, (p: any) => any> = {}) {
   return { link, session }
 }
 
-const shown = (id = 's1', kind: 'sheet' | 'slide' | 'chart' = 'sheet') => ({ kind, id })
+const shown = (id = 's1', kind: 'sheet' | 'slide' = 'sheet') => ({ kind, id })
 const ask = (contents: SheetRequest['contents'], at = shown(), selection: SheetRequest['selection'] = null): SheetRequest => ({ contents, shown: at, selection })
 
 // ------------------------------------------------------------------------------ the session
@@ -218,12 +217,12 @@ describe('the choices of the bar', () => {
 
 // ------------------------------------------------------------------------------ the workbook for the layout library
 describe('the workbook as the layout library reads it', () => {
-  it('prints the sheet that is shown, or the selection of it, or every sheet and chart tab in tab order', async () => {
+  it('prints the sheet that is shown, or the selection of it, or every sheet in tab order', async () => {
     const { session } = await opened()
     expect(printedIds(session, ask('sheet'))).toEqual([shown()])
-    expect(printedIds(session, ask('sheet', shown('c1', 'chart')))).toEqual([shown('c1', 'chart')])
+    expect(printedIds(session, ask('sheet', shown('s2')))).toEqual([shown('s2')])
     expect(printedIds(session, ask('sheet', shown('gone')))).toEqual([])
-    expect(printedIds(session, ask('workbook'))).toEqual([shown('s1'), shown('s2'), shown('c1', 'chart')])
+    expect(printedIds(session, ask('workbook'))).toEqual([shown('s1'), shown('s2')])
   })
 
   it('shows cells the way the grid does: through their number formats, aligned, in the colour the format asks for', async () => {
@@ -287,19 +286,11 @@ describe('the workbook as the layout library reads it', () => {
     const sheet = doc.sheets[0]!
     if (sheet.kind !== 'sheet') throw new Error('a sheet')
     expect(sheet.objects.find((o) => o.id === 'o2')!.image).toBeNull()
-    expect(doc.sheets[2]).toMatchObject({ kind: 'chart', id: 'c1', name: 'Rent chart', image: null, orientation: 'landscape' })
-  })
-
-  it('prints a chart tab as one page of its own, and the picture of it when there is one', async () => {
-    const { session } = await opened()
-    const doc = sheetDocument(session, ask('sheet', shown('c1', 'chart')), new Map([['d1', '<svg/>']]))
-    expect(doc.sheets).toEqual([{ kind: 'chart', id: 'c1', name: 'Rent chart', image: 'chart:d1', w: 640, h: 400, orientation: 'landscape' }])
   })
 
   it('knows which charts it needs and how big to draw them', async () => {
     const { session } = await opened()
     expect(chartSizes(session, ask('sheet'))).toEqual(new Map([['d1', [300, 200]]]))
-    expect(chartSizes(session, ask('sheet', shown('c1', 'chart')))).toEqual(new Map([['d1', [640, 400]]]))
     expect(chartSizes(session, ask('sheet', shown('s2')))).toEqual(new Map())
   })
 
@@ -312,7 +303,7 @@ describe('the workbook as the layout library reads it', () => {
     expect(sheet.area).toEqual({ row0: 0, col0: 0, row1: 1, col1: 2 })
     // …but a workbook is printed whole even if a selection is held
     const whole = sheetDocument(session, ask('workbook', shown(), [1, 2, 0, 0]))
-    expect(whole.sheets.map((s) => (s.kind === 'sheet' ? s.area : 'chart'))).toEqual([null, null, 'chart'])
+    expect(whole.sheets.map((s) => (s.kind === 'sheet' ? s.area : 'slide'))).toEqual([null, null])
   })
 
   it('tints cells by purpose only where the sheet asks for it (D1005)', async () => {
@@ -383,9 +374,9 @@ describe('the print source of a workbook', () => {
     expect(source.scale!.value()).toBe('fit-width')
     source.scale!.set('percent-80')
     expect(link.last('set_sheet_print')).toMatchObject({ sheet: 's1', setup: { scale: { kind: 'percent', percent: 80 }, orientation: 'landscape' } })
-    at.shown = shown('c1', 'chart')
+    at.shown = shown('s2')
     source.orientation!.set('portrait')
-    expect(link.last('set_sheet_print').sheet).toBe('c1')
+    expect(link.last('set_sheet_print').sheet).toBe('s2')
   })
 
   it('offers the selection only when more than a cell is selected, and a scale only for what has one', async () => {
@@ -399,9 +390,9 @@ describe('the print source of a workbook', () => {
     at.selection = [1, 1, 1, 1]
     expect(contents.enabled!('selection')).toBe(false)
     expect(contents.enabled!('workbook')).toBe(true)
-    at.shown = shown('c1', 'chart')
+    at.shown = shown('p1', 'slide')
     at.selection = [0, 0, 3, 3]
-    expect(contents.enabled!('selection')).toBe(false) // a chart tab has no cells to select
+    expect(contents.enabled!('selection')).toBe(false) // a slide has no cells to select
     expect(source.scale!.enabled!('fit-width')).toBe(false) // …and no scale: it fills the page (D1008)
     contents.set('workbook')
     expect(source.scale!.enabled!('fit-width')).toBe(true)
@@ -413,12 +404,12 @@ describe('the print source of a workbook', () => {
     source.contents!.set('workbook')
     const pages: PrintPages = await source.layOut(assets)
     const [doc] = layoutCalls.sheets[0] as [import('@claudia/layout').SheetDocument]
-    expect(doc.sheets.map((s) => s.id)).toEqual(['s1', 's2', 'c1'])
-    expect(charts).toHaveBeenCalledTimes(1) // one definition, the floating chart and the tab share its picture
+    expect(doc.sheets.map((s) => s.id)).toEqual(['s1', 's2'])
+    expect(charts).toHaveBeenCalledTimes(1)
     expect(charts).toHaveBeenCalledWith('d1', 300, 200)
     expect(doc.images.some((i) => i.id === 'chart:d1')).toBe(true)
-    expect(pages.printed).toEqual({ sheets: 3, slides: 0, name: 'Budget', orientation: null })
-    expect(source.status(pages, PAGE as any)).toBe('1 page · 3 sheets · A4')
+    expect(pages.printed).toEqual({ sheets: 2, slides: 0, name: 'Budget', orientation: null })
+    expect(source.status(pages, PAGE as any)).toBe('1 page · 2 sheets · A4')
     source.contents!.set('sheet')
     const one = await source.layOut(assets)
     expect(one.printed).toEqual({ sheets: 1, slides: 0, name: 'Budget', orientation: 'landscape' })
@@ -466,7 +457,7 @@ describe('a slide among the sheets', () => {
   it('prints the slide that is shown, and in the whole workbook between the sheets as the tabs have it', async () => {
     const { session } = await opened(withSlide)
     expect(printedIds(session, ask('sheet', shown('p1', 'slide')))).toEqual([shown('p1', 'slide')])
-    expect(printedIds(session, ask('workbook'))).toEqual([shown('s1'), shown('p1', 'slide'), shown('s2'), shown('c1', 'chart')])
+    expect(printedIds(session, ask('workbook'))).toEqual([shown('s1'), shown('p1', 'slide'), shown('s2')])
   })
 
   it('gives the layout library the slide with its objects, its chart as the picture made of it', async () => {

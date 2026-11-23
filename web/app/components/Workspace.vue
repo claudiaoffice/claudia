@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { lookOnly, roleNow } from '~/lib/replay'
-// A workbook: the formula bar, the grid (or a chart tab), the sheet tabs, inside the document window every app shares
+// A workbook: the formula bar, the grid (or a slide), the sheet tabs, inside the document window every app shares
 // (DocumentFrame).
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { cellLabel, inputOf, rangeLabel, parseCell, show, VIEW_COLS, VIEW_ROWS } from '~/lib/cells'
@@ -26,7 +26,7 @@ import { queryOfFormula } from '~/lib/sql'
 import { pivotAt, roleAt, roleLabel, valueIndexFor } from '~/lib/pivots'
 import { pointTo, refOf, sheetPrefix, slotAt } from '~/lib/pointing'
 import { bounds, jump, move, single, summarize, type Sel } from '~/lib/selection'
-import type { Session } from '~/lib/session'
+import type { ChartShownAs, Session } from '~/lib/session'
 import { NEW_OBJECT_CAP, pictureSize, type PictureImport } from '~/lib/images'
 import { insertFrame } from '~/lib/geometry'
 import {
@@ -94,20 +94,8 @@ const EXPORT_FORMATS = [
   { value: 'xlsx', get label() { return t('Excel workbook (.xlsx)') } },
   { value: 'ods', get label() { return t('OpenDocument spreadsheet (.ods)') } },
 ]
-/** The chart tab shown instead of a sheet, or `null` for a sheet (`FooterBar.vue`'s own docstring on why this
- * is not part of `state`). Reset to `null` if its tab disappears (removed here, or by someone else). */
-const activeChart = ref<string | null>(null)
-const activeChartName = computed(() => state.charts.find((c) => c.id === activeChart.value)?.name ?? '')
-const activeChartSpec = computed(() => state.charts.find((c) => c.id === activeChart.value)?.spec_id ?? null)
-watch(
-  () => state.charts,
-  (charts) => {
-    if (activeChart.value !== null && !charts.some((c) => c.id === activeChart.value)) activeChart.value = null
-  },
-)
-/** A sheet is shown, not a chart tab or a slide (E6.31): only then do the grid, the formula bar and what acts on cells
- * work. */
-const sheetShown = computed(() => activeChart.value === null && state.activeSlide === '')
+/** A sheet is shown, not a slide (E6.31): only then do the grid, the formula bar and what acts on cells work. */
+const sheetShown = computed(() => state.activeSlide === '')
 /** The slide view, while a slide is shown (D1473): creates' canvas. */
 const canvas = ref<{ focus: () => void } | null>(null)
 const grid = ref<{
@@ -224,11 +212,11 @@ async function goto(text: string) {
   grid.value?.focus()
 }
 
-/** What Edit ▸ Reference in Chat points at: the object selected, else the chart tab, else the named range the selection is exactly,
- * else the sheet. */
+/** What Edit ▸ Reference in Chat points at: the object selected, else the named range the selection is exactly, else the
+ * sheet. */
 function thingInFocus(): string | undefined {
   if (state.activeSlide) return state.selected ?? state.activeSlide
-  const selected = grid.value?.selectedObject() ?? activeChart.value
+  const selected = grid.value?.selectedObject()
   if (selected) return selected
   const named = nameAt(state.names, state.activeSheet, b.value.r0, b.value.c0, b.value.r1, b.value.c1)
   return named?.id ?? (state.activeSheet || undefined)
@@ -586,37 +574,32 @@ async function pickSheet(id: string) {
   pointed.value = false
 }
 
-/** `FooterBar`'s `pick`: a sheet tab behaves exactly as before; a chart tab just swaps what the main pane
- * shows, with no selection, formula bar or editing of its own to settle first; a slide is shown with nothing selected
- * on it (D1473). */
-async function pickTab(id: string, kind: 'sheet' | 'slide' | 'chart') {
+/** `FooterBar`'s `pick`: a sheet tab behaves exactly as before; a slide is shown with nothing selected on it (D1473). */
+async function pickTab(id: string, kind: 'sheet' | 'slide') {
   if (edit.value && !pointing.value) await commit('none')
-  activeChart.value = kind === 'chart' ? id : null
   await session.showSlide(kind === 'slide' ? id : '')
   if (kind === 'sheet') await pickSheet(id)
 }
 
-/** A tag in the chat took the view to a thing (E5.20): to a chart's tab, or from a chart's tab to the sheet it is on. */
+/** A tag in the chat took the view to a thing (E5.20): a named range is selected, on the sheet it is on. */
 watch(
   () => state.pointed,
   (pointed) => {
     if (!pointed) return
-    activeChart.value = state.charts.some((c) => c.id === pointed.id) ? pointed.id : null
-    if (activeChart.value) void session.showSlide('')
     const named = state.names.find((n) => n.id === pointed.id)
     if (named) void selectName(named) // a named range: its cells are selected, on the sheet they are on (D552)
   },
 )
 
-/** The tab shown (a sheet, a slide or a chart's) and the name it has, for the rename dialog (E6.24, D550). */
+/** The tab shown (a sheet or a slide) and the name it has, for the rename dialog (E6.24, D550). */
 const shownTab = computed(() => {
-  const id = activeChart.value ?? (state.activeSlide || state.activeSheet)
-  const found = [...state.tabs, ...state.charts].find((x) => x.id === id)
+  const id = state.activeSlide || state.activeSheet
+  const found = state.tabs.find((x) => x.id === id)
   return found ? { id, name: found.name } : null
 })
 const renaming = ref<{ id: string; name: string } | null>(null)
 function askRename(id?: string) {
-  const tab = id ? ([...state.tabs, ...state.charts].find((x) => x.id === id) ?? null) : shownTab.value
+  const tab = id ? (state.tabs.find((x) => x.id === id) ?? null) : shownTab.value
   if (!tab || readonly.value) return
   renaming.value = { id: tab.id, name: tab.name }
   dialog.value = 'rename'
@@ -817,11 +800,11 @@ const DESCRIBE = describeShortcut(openDescribe, () => !readonly.value)
 const NEXT_OBJECT: ShortcutDef = { id: 'view.nextObject', get label() { return t('Next Object') }, chord: { key: 'PageDown', ctrl: true, alt: true }, run: () => grid.value?.stepObject(1) }
 const PREVIOUS_OBJECT: ShortcutDef = { id: 'view.previousObject', get label() { return t('Previous Object') }, chord: { key: 'PageUp', ctrl: true, alt: true }, run: () => grid.value?.stepObject(-1) }
 
-// File ▸ Print… (E6.19): the preview takes the place of the sheet. What is printed is the sheet or chart tab shown, the
+// File ▸ Print… (E6.19): the preview takes the place of the sheet. What is printed is the sheet or slide shown, the
 // selection of it, or the whole workbook (D1001–D1004); the bar's choices live in `lib/print/source.ts`.
 const { printing, preview, open: openPrint, close: closePrint, shortcut: PRINT } = usePrint(() => grid.value?.focus())
 const printSource = sheetSource(session, {
-  shown: () => (activeChart.value ? { kind: 'chart', id: activeChart.value } : state.activeSlide ? { kind: 'slide', id: state.activeSlide } : { kind: 'sheet', id: state.activeSheet }),
+  shown: () => (state.activeSlide ? { kind: 'slide', id: state.activeSlide } : { kind: 'sheet', id: state.activeSheet }),
   selection: () => {
     const b = bounds(sel.value)
     return [b.r0, b.c0, b.r1, b.c1]
@@ -1034,16 +1017,23 @@ function anchorForChart() {
   return { row: b.value.r0, col: b.value.c0, w: CHART_WIDTH, h: CHART_HEIGHT }
 }
 
-/** The insert dialog places a chart as a floating object or as a tab of its own (D204): select the object, or
- * show the tab. */
-function chartInserted(objectId: string | null, chartId: string | null) {
+/** Edit ▸ Chart… made a chart (E6.31, D1475): a new slide is shown with nothing selected on it, a chart on the slide
+ * shown or on the sheet is selected. */
+async function chartInserted(made: { object: string; slide: string | null }, showAs: ChartShownAs) {
   dialog.value = null
-  if (objectId) {
-    grid.value?.selectObject(objectId)
-    grid.value?.focus()
-  } else if (chartId) {
-    activeChart.value = chartId
+  if (showAs === 'slide' && made.slide) return pickTab(made.slide, 'slide')
+  if (showAs === 'on_slide') {
+    await session.select(made.object)
+    return canvas.value?.focus()
   }
+  grid.value?.selectObject(made.object)
+  grid.value?.focus()
+}
+
+/** The object menu's "Move to Slide" (E6.31, D1475): the chart goes onto a new slide, which is shown. */
+async function moveToSlide(object: string) {
+  const slide = await session.moveToSlide(object)
+  if (slide) await pickTab(slide, 'slide')
 }
 
 // ------------------------------------------------------------------------------ menus
@@ -1275,10 +1265,6 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       </div>
     </template>
     <PrintPreview v-if="printing" ref="preview" :source="printSource" @close="closePrint" />
-    <div v-else-if="activeChart" class="chart-tab">
-      <ChartView v-if="activeChartSpec" :session="session" :diagram-id="activeChartSpec" :label="t('Chart: {name}', { name: activeChartName })" />
-      <div v-else class="nosheet">{{ t('This chart\'s definition is gone.') }}</div>
-    </div>
     <div v-else-if="state.activeSlide" class="stage">
       <SlideCanvas ref="canvas" class="canvas" data-region="document" :session="session" :show-grid="false" :marks="slideMarks" @styles="dialog = 'styles'" />
     </div>
@@ -1297,6 +1283,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
       @pointerdown.capture="session.clearBack()"
       @object="objectSelected = $event"
       @describe="openDescribe"
+      @move-to-slide="moveToSlide"
       @styles="dialog = 'styles'"
       @select="select"
       @move="moveBy"
@@ -1317,7 +1304,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
     <div v-else class="nosheet">{{ t('This document has no sheet yet.') }}</div>
     <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</div>
     <template #footer>
-      <FooterBar v-if="!printing" data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :active-chart="activeChart" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" @rename="askRename" />
+      <FooterBar v-if="!printing" data-region="footer" :state="state" :summary="summary" :can-add="!readonly" :marks="marks" @pick="pickTab" @add="dialog = 'sheet'" @rename="askRename" />
     </template>
     <template #overlay>
       <SearchPanel
@@ -1347,6 +1334,7 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
         v-if="dialog === 'chart'"
         :session="session"
         :sheet="state.activeSheet"
+        :slide="state.activeSlide"
         :range="b"
         :anchor-for="anchorForChart"
         @close="dialog = null"
@@ -1555,12 +1543,6 @@ const SHORTCUT_NOTES = computed<[string, string][]>(() => [
   display: grid;
   place-items: center;
   color: var(--muted);
-}
-.chart-tab {
-  min-width: 0;
-  min-height: 0;
-  padding: 16px;
-  background: var(--paper);
 }
 .stage {
   display: flex;

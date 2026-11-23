@@ -1,19 +1,18 @@
 """The methods of the spreadsheet app: what a table view needs to show cells and to take what people type (E3.1).
 
 ``computes_methods`` is ``core_methods`` plus ``sheets``, ``cells``, ``set_cells``, ``add_sheet``, ``structure``,
-``sizes``, ``resize_lines``, ``objects``, ``images``, ``styles``, ``add_image``, ``move_object``,
-``resize_object``, ``rotate_object``, ``remove_object``, ``diagrams``, ``charts``, ``chart_figure``,
-``define_diagram``, ``update_diagram``, ``forget_diagram``, ``add_diagram_object``, ``add_chart``,
-``remove_chart``, for named ranges, tables and queries (E6.5), ``names``, ``define_name``, ``rename_name``,
-``remove_name``, ``sql_preview`` and ``define_sql``, for pivot tables (E6.30) ``pivots``, ``define_pivot``,
-``update_pivot``, ``delete_pivot``, ``pivot_sql`` and ``pivot_to_sql``, and for search and replace (E6.20)
-``search_find``, ``search_preview`` and ``search_replace`` (:mod:`claudia_server.computes_search`), and for printing
-(E6.19) ``print_setup``, ``set_print_page``, ``set_sheet_print``, ``language`` and ``set_language``. Cells
+``sizes``, ``resize_lines``, ``objects``, ``images``, ``styles``, ``add_image``, ``move_object``, ``resize_object``,
+``rotate_object``, ``remove_object``, ``diagrams``, ``chart_figure``, ``define_diagram``, ``update_diagram``,
+``forget_diagram``, ``insert_chart``, ``move_to_slide``, for named ranges, tables and queries (E6.5) ``names``,
+``define_name``, ``rename_name``, ``remove_name``, ``sql_preview`` and ``define_sql``, for pivot tables (E6.30)
+``pivots``, ``define_pivot``, ``update_pivot``, ``delete_pivot``, ``pivot_sql`` and ``pivot_to_sql``, and for search and
+replace (E6.20) ``search_find``, ``search_preview`` and ``search_replace`` (:mod:`claudia_server.computes_search`), and
+for printing (E6.19) ``print_setup``, ``set_print_page``, ``set_sheet_print``, ``language`` and ``set_language``. Cells
 travel as ``[row, column, content]`` with zero-based indexes and the content as a client shows it: ``{"t":
-"int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``,
-with the code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client
-sends the text of the cell (``=B2*2`` for a formula) and the server decides what it means. Every write may carry
-the ``base`` revision of the client's view, as ``apply`` does.
+"int"|"float"|"text"|"bool", "v": value}``, and for a formula the value it gave (``t`` may also be ``"error"``, with the
+code in ``v``) plus its text under ``"f"``. What people type goes through ``parse_input``, so a client sends the text of
+the cell (``=B2*2`` for a formula) and the server decides what it means. Every write may carry the ``base`` revision of
+the client's view, as ``apply`` does.
 
 A *name* (E6.5, D600) is a named range, a table (a name whose first row is a header) or the result of a ``SQL()``
 cell, as ``{name, scope, kind, header, grows, purpose, column_purposes, sheet, region, a1, anchor, columns, rows}``:
@@ -38,11 +37,12 @@ image, rotation, snap — travels the wire identically in all three apps, and on
 anchor nor the size ever changes because of ``structure`` or ``resize_lines`` — only ``move_object`` (dragging it
 to another cell) moves it, and ``resize_object`` resizes it (E6.17).
 
-A chart (E6.6) is a :class:`~claudia_computes.ChartSpec` *definition* — a cell range plus how to read it and its
-titles — shown as a floating ``"diagram"`` object (``add_diagram_object``), a tab (``add_chart``), or both from
-the very same definition, exactly as two image objects may share one image asset. ``define_diagram`` takes a
-definition into the document and hands back the id it was given (the server assigns it, the way ``add_sheet``
-assigns a sheet id, rather than the client making one up); ``chart_figure`` turns a definition plus its sheet's
+A chart (E6.6) is a ``"diagram"`` object on a sheet or a slide with a :class:`~claudia_computes.ChartSpec`
+*definition* of its own — a cell range plus how to read it and its titles (E6.31, D1475). ``insert_chart`` makes
+both in one step, on a new slide, on the slide shown or on a sheet; ``move_to_slide`` puts a chart of a sheet on a
+new slide; ``remove_object`` lets a chart's definition go with it, and a slide with its last object
+(:mod:`claudia_computes.chart_steps`). The server assigns the ids, the way ``add_sheet`` assigns a sheet id, rather
+than the client making them up; ``chart_figure`` turns a definition plus its sheet's
 *live* cells into the Plotly figure (``{"data": [...], "layout": {...}}``) both clients draw unchanged — a
 client asks for it again after any ``cells`` push event whose ``sheet``/``positions`` could touch the chart's
 own range; move/resize/rotate/remove already work on a diagram object with no code of their own (E10.16's
@@ -70,7 +70,6 @@ from claudia_computes_io.extensions import to_excel
 
 from claudia_computes import (
     CELL_SLOTS,
-    AddChart,
     AddSheet,
     CellAnchor,
     DefineName,
@@ -84,7 +83,6 @@ from claudia_computes import (
     PivotError,
     PivotLabels,
     PrintSetupError,
-    RemoveChart,
     RemoveName,
     RenameName,
     Resample,
@@ -98,6 +96,7 @@ from claudia_computes import (
     SheetPrintSetup,
     Structure,
     WorkbookModel,
+    chart_steps,
     create_pivot,
     delete_pivot,
     function_catalog,
@@ -108,6 +107,7 @@ from claudia_computes import (
     update_pivot,
 )
 from claudia_computes.cellstyles import check_area
+from claudia_computes.chart_steps import NewChart
 from claudia_computes.distributions import DISTRIBUTIONS, check_parameters, quantile
 from claudia_computes.model import (
     MAX_COL_WIDTH,
@@ -122,13 +122,11 @@ from claudia_computes.refs import CellRef, RangeRef
 from claudia_computes.trace import REACHES
 from claudia_computes.values import ErrorValue, FormulaError
 from claudia_core import (
-    AddObject,
     Batch,
     Command,
     DefineAsset,
     DescribeThing,
     ForgetAsset,
-    ObjectBody,
     PageSetup,
     PageSetupError,
     UpdateAsset,
@@ -255,8 +253,7 @@ def _sheets(ctx):
 @computes_methods.method("tabs")
 def _tabs(ctx):
     """The tabs below the workbook in their one order (E6.31, D1471), each as `{kind, id, name}`: `kind` is `"sheet"`
-    or `"slide"`. The event `tabs` says they changed (one came, went, or has another name). The chart tabs are still
-    apart (`charts`) until a chart is shown on a slide."""
+    or `"slide"`. The event `tabs` says they changed (one came, went, or has another name)."""
     workbook = _workbook(ctx)
     return [{**tab.to_data(), "name": workbook.thing_name(tab.id)} for tab in workbook.tabs]
 
@@ -358,7 +355,7 @@ def _set_random_seed(ctx, *, seed, base):
 def _print_setup(ctx):
     """How the workbook is printed (E6.19, D1004): `{revision, page, sheets}`. `page` is as composes' `page`
     (paper, width, height, orientation, margins, page_numbers; lengths in mpt) and the same for all sheets; `sheets`
-    holds, for every sheet and chart tab by id, its own setup — `{orientation, scale, order, repeat_rows,
+    holds, for every sheet by id, its own setup — `{orientation, scale, order, repeat_rows,
     repeat_cols, gridlines, headings, purposes, footer_name, objects, skip_empty}` — with the defaults filled in
     for one nobody has set up. `scale` is `{kind: "fit-width" | "fit-page"}` or `{kind: "percent", percent}`
     (10 to 400); `repeat_rows` and `repeat_cols` are `[first, last]` (from 0) or `null`. The print area is a named
@@ -367,7 +364,7 @@ def _print_setup(ctx):
     return {
         "revision": current_revision(ctx),
         "page": book.print_page.to_data(),
-        "sheets": {str(key): book.sheet_print_of(str(key)).to_data() for key in (*book.sheets, *book.charts)},
+        "sheets": {str(key): book.sheet_print_of(str(key)).to_data() for key in book.sheets},
     }
 
 
@@ -385,7 +382,7 @@ def _set_print_page(ctx, *, page, base):
 
 @computes_methods.method("set_sheet_print", "sheet:str setup:dict base:revision?", write=True)
 def _set_sheet_print(ctx, *, sheet, setup, base):
-    """Print a sheet or chart tab another way (`sheet` its id, `setup` as `print_setup` returns it; a part that is
+    """Print a sheet another way (`sheet` its id, `setup` as `print_setup` returns it; a part that is
     left out has its default). One step for everybody, in the history. `command_error` for an unknown sheet or a
     setup that cannot be used."""
     people_only(ctx)
@@ -682,13 +679,6 @@ def _diagrams(ctx):
     return [spec.to_data() for spec in _workbook(ctx).diagrams.values()]
 
 
-@computes_methods.method("charts")
-def _charts(ctx):
-    """The chart tabs, in tab order, each as `{id, name, spec_id}`. `spec_id` names one of `diagrams`; two tabs
-    (or a tab and a floating diagram object) may share the very same definition."""
-    return [chart.to_data() for chart in _workbook(ctx).charts.values()]
-
-
 @computes_methods.method("chart_figure", "diagram:str")
 def _chart_figure(ctx, *, diagram):
     """A diagram's Plotly figure, read live off the sheet its range names, as `{revision, figure}` — the same
@@ -706,8 +696,8 @@ def _define_diagram(ctx, *, definition, base):
     """Take a new chart definition into the document: `definition` is `{kind, range, series_in, title, x_title,
     y_title, legend, gridlines}` (E6.6); give `source` (and `source_scope`) instead of `range` to draw a named
     table or `SQL()` result that the chart then follows as it grows or moves (E6.5) — the id and format are this
-    server's to assign, not the client's, so neither is sent. Returns the new definition's id and the revision;
-    show it with `add_diagram_object`, `add_chart`, or both."""
+    server's to assign, not the client's, so neither is sent. Returns the new definition's id and the revision.
+    A chart is made with its definition in one step by `insert_chart`; this is for a definition shown nowhere yet."""
     if "id" in definition or "format" in definition:
         raise RequestError("bad_request", msg("define_diagram: id and format are assigned by the server"))
     workbook = _workbook(ctx)
@@ -727,49 +717,89 @@ def _update_diagram(ctx, *, id, definition, base):
 
 @computes_methods.method("forget_diagram", "id:str base:revision?", write=True)
 def _forget_diagram(ctx, *, id, base):
-    """Let a chart definition go. Refused while a tab or a floating object still shows it — remove or repoint
-    those first (`remove_chart`, `remove_object`, or `update_diagram`/`add_chart` onto another definition)."""
+    """Let a chart definition go. Refused while a chart still shows it; `remove_object` on a chart lets its definition
+    go with it."""
     return done(ctx, ForgetAsset(DIAGRAM.name, id), base)
 
 
-@computes_methods.method(
-    "add_diagram_object", "sheet:str row:int col:int w:int h:int diagram:str base:revision?", write=True
-)
-def _add_diagram_object(ctx, *, sheet, row, col, w, h, diagram, base):
-    """Put a chart on a sheet as a floating object, showing the definition `diagram` already names
-    (`define_diagram`). Returns the new object's id and the revision; `move_object`/`resize_object`/
-    `rotate_object`/`remove_object` then work on it exactly as they do on any other object."""
-    workbook = _workbook(ctx)
-    if sheet not in workbook.sheets:
-        raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=sheet))
-    _diagram_definition(workbook, diagram, "add_diagram_object")
-    object_id = fresh_id("o", workbook.objects)
-    body = ObjectBody(object_id, "diagram", w, h, "plain-image", ref=diagram, name=default_name(ctx, "diagram"))
-    command = AddObject(body, CellAnchor(SheetId(sheet), row, col).to_data())
-    return done(ctx, command, base, object=object_id)
+_SHOWN_AS = ("slide", "on_slide", "sheet")
 
 
-@computes_methods.method("add_chart", "name:str spec_id:str index:int? base:revision?", write=True)
-def _add_chart(ctx, *, name, spec_id, index, base):
-    """Add a chart tab showing the definition `spec_id` already names (`define_diagram`); `index` is where in
-    the tab order (the end, if omitted). Returns the new tab's id and the revision."""
-    name = name.strip()
-    if not name or len(name) > MAX_SHEET_NAME:
+def _place_of(workbook: WorkbookModel, show_as: str, place: dict) -> dict:
+    """``place`` checked for ``show_as``: ``{after}`` (a tab) for a new slide, ``{slide}`` for the slide shown,
+    ``{sheet, row, col, w, h}`` on a sheet; ``bad_request`` for anything else."""
+    wanted = {"slide": {"after"}, "on_slide": {"slide"}, "sheet": {"sheet", "row", "col", "w", "h"}}.get(show_as)
+    if wanted is None:
+        raise RequestError("bad_request", msg("insert_chart: show_as is one of {kinds}", kinds=", ".join(_SHOWN_AS)))
+    if not isinstance(place, dict) or set(place) != wanted:
         raise RequestError(
             "bad_request",
-            msg("add_chart: the name must have 1 to {limit} characters", limit=MAX_SHEET_NAME),
+            msg(
+                "insert_chart: the place of a chart shown as {how} is {keys}",
+                how=show_as,
+                keys=", ".join(sorted(wanted)),
+            ),
         )
+    if show_as == "slide" and place["after"] not in {tab.id for tab in workbook.tabs}:
+        raise RequestError("command_error", msg("there is no sheet or slide {id!r}", id=place["after"]))
+    if show_as == "on_slide" and place["slide"] not in workbook.slides:
+        raise RequestError("command_error", msg("there is no slide {id!r}", id=place["slide"]))
+    if show_as == "sheet":
+        if place["sheet"] not in workbook.sheets:
+            raise RequestError("command_error", msg("unknown sheet {sheet!r}", sheet=place["sheet"]))
+        if not all(isinstance(place[key], int) and place[key] >= 0 for key in ("row", "col", "w", "h")):
+            raise RequestError("bad_request", msg("insert_chart: row, col, w and h are whole numbers from 0"))
+    return place
+
+
+def _new_slide(ctx: Context, workbook: WorkbookModel) -> tuple[str, str]:
+    """The id and the name of a slide made for a chart: the next free "Slide n" in the language of the one who asks."""
+    return fresh_id("p", {tab.id for tab in workbook.tabs}), default_name(ctx, "slide")
+
+
+@computes_methods.method("insert_chart", "definition:dict show_as:str place:dict name:str? base:revision?", write=True)
+def _insert_chart(ctx, *, definition, show_as, place, name, base):
+    """Make a chart with a definition of its own, in one step of the history (E6.31, D1475). `definition` is as for
+    `define_diagram`. `show_as` is `slide` (a new slide right after the tab `place.after`, the chart filling its
+    frame), `on_slide` (on the slide `place.slide`, half the frame in its middle) or `sheet` (floating on
+    `place.sheet` at `row`, `col`, `w` by `h` pixels). A new slide is the next free "Slide n" in the language of the
+    request; the chart is called `name`, or the next free "Chart n". Returns `{object, slide, diagram, revision}`
+    (`slide` is `null` for a chart on a sheet). `command_error` for a name another thing has, `bad_request` for a
+    place that does not fit `show_as`."""
+    if "id" in definition or "format" in definition:
+        raise RequestError("bad_request", msg("insert_chart: id and format are assigned by the server"))
     workbook = _workbook(ctx)
-    _diagram_definition(workbook, spec_id, "add_chart")
-    chart_id = fresh_id("t", workbook.charts)
-    return done(ctx, AddChart(chart_id, name, spec_id, index), base, chart=chart_id)
+    where = _place_of(workbook, show_as, place)
+    chosen = clean_name(name or "") or default_name(ctx, "diagram")
+    chart = NewChart(fresh_id("g", workbook.diagrams), fresh_id("o", workbook.objects), chosen, definition)
+    slide: str | None = None
+    if show_as == "slide":
+        slide, slide_name = _new_slide(ctx, workbook)
+        step = chart_steps.as_new_slide(workbook, chart, slide_id=slide, slide_name=slide_name, after=where["after"])
+    elif show_as == "on_slide":
+        slide = where["slide"]
+        step = chart_steps.on_slide(workbook, chart, slide)
+    else:
+        anchor = CellAnchor(SheetId(where["sheet"]), where["row"], where["col"])
+        step = chart_steps.on_sheet(workbook, chart, anchor, where["w"], where["h"])
+    return done(ctx, step, base, object=chart.object_id, slide=slide, diagram=chart.spec_id)
 
 
-@computes_methods.method("remove_chart", "id:str base:revision?", write=True)
-def _remove_chart(ctx, *, id, base):
-    """Remove a chart tab. The definition it showed is untouched — it may still be shown elsewhere
-    (`forget_diagram` is the separate, explicit step for letting the definition itself go)."""
-    return done(ctx, RemoveChart(id), base)
+@computes_methods.method("move_to_slide", "object:str base:revision?", write=True)
+def _move_to_slide(ctx, *, object, base):  # noqa: A002 - the wire name
+    """ "Move to Slide" (E6.31, D1475): a new slide right after the sheet the chart `object` floats on, the chart moved
+    onto it and filling its frame, in one step. The slide is the next free "Slide n" in the language of the request;
+    the chart keeps its name and its definition. Undo puts the chart back; the slide goes with the undo while it is
+    empty. Returns `{slide, revision}`; `command_error` for anything but a chart on a sheet."""
+    workbook = _workbook(ctx)
+    if object not in workbook.objects:
+        raise RequestError("command_error", msg("there is no object {id!r}", id=object))
+    slide, slide_name = _new_slide(ctx, workbook)
+    try:
+        step = chart_steps.to_new_slide(workbook, object, slide_id=slide, slide_name=slide_name)
+    except ValueError as exc:
+        raise RequestError("command_error", message_of(exc)) from None
+    return done(ctx, step, base, slide=slide)
 
 
 @lru_cache(maxsize=8)
@@ -1246,6 +1276,18 @@ CELLS_AND_SLIDES = Placement(
     },
 )
 add_object_methods(computes_methods, model_of=_workbook, placement=CELLS_AND_SLIDES)
+
+
+@computes_methods.method("remove_object", "id:str base:revision?", write=True)
+def _remove_object(ctx, *, id, base):  # noqa: A002 - the wire name
+    """Take an object away, in one step with what goes with it (E6.31, D1475): a chart's definition, and the slide it
+    was on when nothing else is left there. Undo brings them all back where they were."""
+    workbook = _workbook(ctx)
+    if id not in workbook.objects:
+        raise RequestError("command_error", msg("there is no object {id!r}", id=id))
+    return done(ctx, chart_steps.removal(workbook, [id]), base)
+
+
 add_container_methods(computes_methods, model_of=_workbook, placement=CELLS_AND_SLIDES)
 
 

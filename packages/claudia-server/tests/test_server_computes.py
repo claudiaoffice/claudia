@@ -623,6 +623,13 @@ def define_diagram(doc, **changes):
     return call(doc, "define_diagram", {"definition": given})["diagram"]
 
 
+def chart_on_sheet(doc, row=1, col=1, w=300, h=200, **changes):
+    """A chart floating on the sheet s1 with a definition of its own; its `{object, diagram}`."""
+    given = {"kind": "bar", "range": cell_range(), "series_in": "columns", **changes}
+    place = {"sheet": "s1", "row": row, "col": col, "w": w, "h": h}
+    return call(doc, "insert_chart", {"definition": given, "show_as": "sheet", "place": place})
+
+
 def fill_table(doc, sheet="s1"):
     """A header row (East, West) and a header column (Jan, Feb) around a 2x2 paragraph of numbers."""
     typed(
@@ -665,14 +672,11 @@ def test_a_diagram_needs_a_sheet_and_range_this_document_has(book):
         define_diagram(book, range=cell_range(first=(0, 0), last=(MAX_ROWS, 1)))
 
 
-def test_a_diagram_is_placed_as_a_floating_object_and_behaves_like_any_other_object(book):
+def test_a_chart_floats_on_a_sheet_and_behaves_like_any_other_object(book):
     call(book, "add_sheet", {"name": "S"})
-    diagram_id = define_diagram(book)
-    added = call(
-        book, "add_diagram_object", {"sheet": "s1", "row": 1, "col": 1, "w": 300, "h": 200, "diagram": diagram_id}
-    )
+    added = chart_on_sheet(book)
     (obj,) = objects(book)
-    assert obj["id"] == added["object"] and obj["kind"] == "diagram" and obj["ref"] == diagram_id
+    assert obj["id"] == added["object"] and obj["kind"] == "diagram" and obj["ref"] == added["diagram"]
     assert (obj["anchor"]["row"], obj["anchor"]["col"], obj["w"], obj["h"]) == (1, 1, 300, 200)
     call(book, "resize_object", {"id": obj["id"], "row": 1, "col": 1, "w": 500, "h": 150})  # no fixed aspect
     (obj,) = objects(book)
@@ -681,55 +685,17 @@ def test_a_diagram_is_placed_as_a_floating_object_and_behaves_like_any_other_obj
     assert objects(book) == []
 
 
-def test_add_diagram_object_refuses_an_unknown_diagram_or_sheet(book):
+def test_a_definition_a_chart_shows_is_not_forgotten(book):
     call(book, "add_sheet", {"name": "S"})
-    with pytest.raises(RequestError, match="does not know the diagram"):
-        call(book, "add_diagram_object", {"sheet": "s1", "row": 0, "col": 0, "w": 100, "h": 100, "diagram": "nope"})
-    diagram_id = define_diagram(book)
-    with pytest.raises(RequestError, match="unknown sheet"):
-        call(
-            book,
-            "add_diagram_object",
-            {"sheet": "nope", "row": 0, "col": 0, "w": 100, "h": 100, "diagram": diagram_id},
-        )
-
-
-def test_a_chart_tab_and_a_floating_object_may_share_the_same_definition(book):
-    call(book, "add_sheet", {"name": "S"})
-    diagram_id = define_diagram(book)
-    call(book, "add_diagram_object", {"sheet": "s1", "row": 0, "col": 0, "w": 300, "h": 200, "diagram": diagram_id})
-    chart_id = call(book, "add_chart", {"name": "Sales chart", "spec_id": diagram_id})["chart"]
-    (tab,) = call(book, "charts")
-    assert tab["id"] == chart_id and tab["name"] == "Sales chart" and tab["spec_id"] == diagram_id
+    added = chart_on_sheet(book)
     with pytest.raises(RequestError, match="in use") as caught:
-        call(book, "forget_diagram", {"id": diagram_id})  # refused: the object and the tab both still show it
+        call(book, "forget_diagram", {"id": added["diagram"]})
     assert caught.value.code == "command_error"
-
-
-def test_add_chart_rejects_a_blank_or_unknown_definition(book):
-    call(book, "add_sheet", {"name": "S"})
-    with pytest.raises(RequestError, match="does not know the diagram"):
-        call(book, "add_chart", {"name": "X", "spec_id": "nope"})
-    diagram_id = define_diagram(book)
-    with pytest.raises(RequestError, match="1 to"):
-        call(book, "add_chart", {"name": "   ", "spec_id": diagram_id})
-
-
-def test_removing_a_chart_tab_leaves_its_definition_for_whatever_else_shows_it(book):
-    call(book, "add_sheet", {"name": "S"})
-    diagram_id = define_diagram(book)
-    chart_id = call(book, "add_chart", {"name": "Sales", "spec_id": diagram_id})["chart"]
-    call(book, "remove_chart", {"id": chart_id})
-    assert call(book, "charts") == []
-    assert [d["id"] for d in call(book, "diagrams")] == [diagram_id]
-    call(book, "forget_diagram", {"id": diagram_id})  # nothing shows it any more
-    assert call(book, "diagrams") == []
 
 
 def test_update_diagram_redefines_it_in_place_for_every_viewer(book):
     call(book, "add_sheet", {"name": "S"})
-    diagram_id = define_diagram(book, title="First")
-    call(book, "add_chart", {"name": "Sales", "spec_id": diagram_id})
+    diagram_id = chart_on_sheet(book, title="First")["diagram"]
     call(
         book,
         "update_diagram",
@@ -862,12 +828,9 @@ def test_viewers_may_read_diagrams_and_figures_but_not_change_them(book):
     assert caught.value.code == "forbidden"
 
 
-def test_moving_and_removing_a_diagram_object_undo_round_trips_like_any_object(book):
+def test_moving_and_removing_a_chart_undo_round_trips_like_any_object(book):
     call(book, "add_sheet", {"name": "S"})
-    diagram_id = define_diagram(book)
-    added = call(
-        book, "add_diagram_object", {"sheet": "s1", "row": 0, "col": 0, "w": 300, "h": 200, "diagram": diagram_id}
-    )
+    added = chart_on_sheet(book, row=0, col=0)
     call(book, "move_object", {"id": added["object"], "row": 4, "col": 4})
     book.undo("ann")
     (obj,) = objects(book)
@@ -1446,10 +1409,7 @@ def test_an_object_on_a_sheet_turns_about_its_centre_and_keeps_its_anchor_cell(b
 
 def test_a_chart_does_not_turn(book):
     call(book, "add_sheet", {"name": "S"})
-    diagram_id = define_diagram(book)
-    added = call(
-        book, "add_diagram_object", {"sheet": "s1", "row": 1, "col": 1, "w": 300, "h": 200, "diagram": diagram_id}
-    )
+    added = chart_on_sheet(book)
     with pytest.raises(RequestError, match="chart does not turn") as caught:
         call(book, "rotate_object", {"id": added["object"], "rotation": 90})
     assert caught.value.code == "command_error"

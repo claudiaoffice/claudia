@@ -1356,6 +1356,7 @@
    "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'ObjectsChanged'",
    "is_entry": "(self, paragraph_id: 'str') -> 'bool'",
    "least_new_size": "(self) -> 'int'",
+   "may_change_holder": "(self, old: 'A', new: 'A') -> 'bool'",
    "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
    "name_is_fixed": "(self, thing_id: 'str') -> 'bool'",
    "named_things": "(self) -> 'Iterator[tuple[str, str, str]]'",

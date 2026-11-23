@@ -1,8 +1,9 @@
 // A slide among the sheets of a workbook in a real browser (E6.31 step 2, D1471, D1473): the tabs are one list, a slide
 // is shown with creates' slide view and tool bar (no Present, no formula bar), a text box is put on it and taken back,
 // and File ▸ Print… prints the slide shown as one landscape page and the whole workbook with the slide between the sheets.
-// Nothing in the UI makes a slide yet (a chart will, E6.31 step 3), so the workbook comes in as a Claudia export made
-// here with the slide in it (D1272). Run against a computes server: URL=http://127.0.0.1:8765/ npm run e2e:computes-slides
+// The slide here holds a text box only, which no step of the UI makes (a slide comes with a chart, D1475; the chart's own
+// steps are the bound scenarios of slides.feature), so the workbook comes in as a Claudia export made here with the
+// slide in it (D1272). Run against a computes server: URL=http://127.0.0.1:8765/ npm run e2e:computes-slides
 const { launch } = require('./browser.cjs')
 const { execFileSync } = require('node:child_process')
 const assert = require('node:assert/strict')

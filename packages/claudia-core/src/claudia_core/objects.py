@@ -380,7 +380,7 @@ class ObjectSet:
 # --------------------------------------------------------------------------- the events
 @dataclass(frozen=True)
 class ThingRenamed:
-    """A thing (an object, a slide, a sheet, a chart tab) was given another name (D550): its id and its new name."""
+    """A thing (an object, a slide, a sheet) was given another name (D550): its id and its new name."""
 
     id: str
     name: str
@@ -454,9 +454,6 @@ class ObjectModel[A: Anchor]:
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
     #: The style whose letters are "the body text" a new picture is at least as tall as (D1332).
     body_text_style: ClassVar[str] = "body-text"
-    #: Whether a move may take an object to another holder (D1351). In a text it may go to another paragraph; on
-    #: a slide or a sheet it may not, since there that would make it another object for locks and the stacking order.
-    objects_change_holder: ClassVar[bool] = False
     #: The kinds of object this app offers (a subset of ``OBJECT_KINDS``).
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
     #: The sentence a person is told when the name she gives is another thing's, by the kind of that thing. One sentence
@@ -509,7 +506,7 @@ class ObjectModel[A: Anchor]:
 
     def users_of(self, kind: AssetKind, asset_id: str) -> list[str]:
         """The ids of what uses this asset: the objects that show it, and for an image the containers whose picture it
-        is. An app adds what else of its own may show one (computes: a chart tab)."""
+        is. An app may add what else of its own shows one."""
         users = [o.id for o in self.objects.values() if o.body.kind == kind.object_kind and o.body.ref == asset_id]
         if kind is IMAGE:
             users += [definition.id for definition in self.containers.values() if definition.image == asset_id]
@@ -613,7 +610,7 @@ class ObjectModel[A: Anchor]:
     # -- names (D550, D551) --------------------------------------------------------
     def named_things(self) -> Iterator[tuple[str, str, str]]:
         """``(kind, id, name)`` of everything in this document that has a name: the objects here, and whatever else the
-        app names (its slides, sheets, chart tabs) by adding to this. One namespace for all of it (D550)."""
+        app names (its slides, sheets) by adding to this. One namespace for all of it (D550)."""
         for obj in self.objects.values():
             if obj.body.name:
                 yield obj.body.kind, obj.id, obj.body.name
@@ -626,7 +623,7 @@ class ObjectModel[A: Anchor]:
                 yield obj.body.kind, obj.id
 
     def has_thing(self, thing_id: str) -> bool:
-        """Is there an object, slide, sheet or chart tab with this id, named or not?"""
+        """Is there an object, slide or sheet with this id, named or not?"""
         return any(i == thing_id for _kind, i, _name in self.named_things()) or any(
             i == thing_id for _kind, i in self.unnamed_things()
         )
@@ -1050,6 +1047,12 @@ class ObjectModel[A: Anchor]:
             self.paragraph_order += 1
         return old
 
+    def may_change_holder(self, old: A, new: A) -> bool:  # noqa: ARG002 - an app that allows a move looks at both
+        """May a move take an object from where ``old`` puts it to the other holder ``new`` puts it on (D1351, A4 of
+        E6.31)? Not by default: on a slide or a sheet a move to another holder would make it another object for
+        locks and the stacking order. A text lets it go to another paragraph; a workbook from a sheet to a slide."""
+        return False
+
     def rehang_object(self, obj: VisualObject[A], at: int | None = None) -> int:
         """Put a changed (checked) version of an object that exists into another holder (D1351): out of the old
         stack, into the new one at ``at`` (on top when ``None``). Returns the place it had in the old stack, which
@@ -1058,7 +1061,7 @@ class ObjectModel[A: Anchor]:
         if obj.holder == old.holder:
             self.replace_object(obj)
             return self._stack[old.holder].index(obj.id)
-        if not self.objects_change_holder:
+        if not self.may_change_holder(old.anchor, obj.anchor):
             raise ValueError("an object cannot change its holder")
         self.check_object(obj)
         stack = self._stack.setdefault(obj.holder, [])
@@ -1750,7 +1753,7 @@ def _objects_without_renderings(data: dict) -> dict:
 @core_commands.register
 @dataclass(frozen=True)
 class RenameThing(Command):
-    """Give an object, a slide, a sheet or a chart tab another name (D550). The id stays, so everything that points at
+    """Give an object, a slide or a sheet another name (D550). The id stays, so everything that points at
     the thing (a tag in the chat, a formula) keeps pointing at it. Refused with a sentence when somebody else has that
     name already, whatever kind of thing they are."""
 

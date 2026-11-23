@@ -1,11 +1,10 @@
-"""Commands of the computes model: sheets, slides, cell contents, structural edits, row and column sizes, chart tabs.
+"""Commands of the computes model: sheets, slides, cell contents, structural edits, row and column sizes.
 
 Everything about floating objects — images, shapes, text boxes, diagrams: define, forget, add, remove, move,
 resize, rotate, retext, snap — is shared with composes and creates and lives in :mod:`claudia_core.objects`
-(E10.16). ``AddChart``/``RemoveChart`` below are computes' own: a chart *tab* is a concept this app alone has
-(creates has slides, composes has none of this), so it stays here even though the diagram *definition* it shows
-(a :class:`~claudia_computes.ChartSpec`) is managed by the shared ``DefineAsset``/``UpdateAsset``/
-``ForgetAsset`` (E6.6, D1431).
+(E10.16); a chart's definition (a :class:`~claudia_computes.ChartSpec`) is managed by the shared
+``DefineAsset``/``UpdateAsset``/``ForgetAsset`` (E6.6, D1431), and what a step with a chart takes along is decided in
+:mod:`claudia_computes.chart_steps` (E6.31).
 
 Every command carries final values and returns its exact inverse, so undo, replay and checkpoints work on the
 kernel without any computes-specific code in it. ``shifted_by`` is what lets one author undo an old step after
@@ -18,15 +17,13 @@ import re
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import N_, SLOTS, AddObject, Batch, Command, Context, ForgetAsset, PageSetup, Refusal, fits
-from claudia_core.asset_store import DIAGRAM
+from claudia_core import N_, SLOTS, AddObject, Batch, Command, Context, PageSetup, Refusal, fits
 from claudia_core.slides import Slide
 
 from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
 from .events import (
     CellsChanged,
     CellStylesChanged,
-    ChartsChanged,
     LinesResized,
     NamesChanged,
     PrintSetupChanged,
@@ -43,7 +40,6 @@ from .model import (
     MAX_ROWS,
     MIN_COL_WIDTH,
     MIN_ROW_HEIGHT,
-    Chart,
     Content,
     Sheet,
     WorkbookModel,
@@ -67,11 +63,9 @@ register = WorkbookModel.registry.register
 
 
 @WorkbookModel.registry.upcaster("computes.AddSheet", 1)
-@WorkbookModel.registry.upcaster("computes.AddChart", 1)
 @WorkbookModel.registry.upcaster("computes.AddSheet", 2)
-@WorkbookModel.registry.upcaster("computes.AddChart", 2)
 def _names_not_yet_shared(data: dict) -> dict:
-    """Schema 1 wrote sheets and chart tabs before names were one namespace, schema 2 before named ranges joined it
+    """Schema 1 wrote sheets before names were one namespace, schema 2 before named ranges joined it
     (D552): replay them under the old rule."""
     return {**data, "legacy_names": True}
 
@@ -281,7 +275,7 @@ class AddSlide(Command):
         model.check_thing_name(self.id, self.name)
         model.add_slide(Slide(self.id, self.name, self.description), self.index)
         ctx.emit(TabsChanged())
-        return RemoveSlide(self.id)
+        return RemoveSlide(self.id, if_empty=True)
 
     def to_data(self) -> dict:
         data: dict = {"id": self.id, "name": self.name, "index": self.index}
@@ -305,10 +299,13 @@ class AddSlide(Command):
 @dataclass(frozen=True)
 class RemoveSlide(Command):
     """Remove a slide that has no objects (the core's rule for every holder); undo puts it back in its place, with
-    its name and what was written about it."""
+    its name and what was written about it. With ``if_empty`` a slide that has objects stays and nothing happens: the
+    undo of a slide made for a chart takes the slide away only while it is empty, since a slide goes with its last
+    object (E6.31, Q4 and Q20 of the review of 2026-11-22)."""
 
     kind: ClassVar[str] = "computes.RemoveSlide"
     id: str
+    if_empty: bool = False
 
     @property
     def label(self) -> str:
@@ -319,16 +316,18 @@ class RemoveSlide(Command):
         return "remove a slide"
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
+        if self.if_empty and ctx.model.stack_of(self.id):
+            return Batch(())  # it stays, and so there is nothing to put back
         slide, index = ctx.model.remove_slide(self.id)
         ctx.emit(TabsChanged())
         return AddSlide(slide.id, slide.name, index, slide.description)
 
     def to_data(self) -> dict:
-        return {"id": self.id}
+        return {"id": self.id, "if_empty": True} if self.if_empty else {"id": self.id}
 
     @classmethod
     def from_data(cls, data, registry) -> RemoveSlide:
-        return cls(data["id"])
+        return cls(data["id"], bool(data.get("if_empty", False)))
 
     def redacted(self) -> Command:
         return self
@@ -783,112 +782,6 @@ class ResizeLines(Command):
         return self  # a size is layout, not content with anything to hide (same reasoning as Structure)
 
 
-# ------------------------------------------------------------------------------ chart tabs
-@register
-@dataclass(frozen=True)
-class AddChart(Command):
-    """Add a chart tab (E6.6): a name in the tab strip, showing the diagram definition ``spec_id`` names.
-
-    That definition must already be in the document — put there by :class:`~claudia_core.DefineAsset` — and
-    stays shared: a floating diagram object elsewhere may show the very same ``spec_id`` (``Chart``'s own
-    docstring says why that mirrors an image asset). A tab is computes' own concept, so this command lives
-    here rather than in :mod:`claudia_core.objects`, even though the definition it shows does not."""
-
-    kind: ClassVar[str] = "computes.AddChart"
-    schema: ClassVar[int] = 3  # 2: names are shared with sheets and objects (D550); 3: and named ranges (D552)
-    id: str
-    name: str
-    spec_id: str
-    index: int | None = None  # where in the tab order; None: at the end
-    legacy_names: bool = False
-
-    @property
-    def label(self) -> str:
-        return "Add chart"
-
-    @property
-    def summary(self) -> str:
-        return f"add chart {self.name}"
-
-    def apply(self, ctx: Context[WorkbookModel]) -> Command:
-        model = ctx.model
-        if self.id in model.charts:
-            raise ValueError(f"chart id {self.id!r} exists")
-        if any(c.name.casefold() == self.name.casefold() for c in model.charts.values()):
-            raise Refusal("There is already a chart called “{name}”", name=self.name)
-        if not self.legacy_names:
-            model.check_name_free(self.id, self.name)
-        if self.spec_id not in model.diagrams:
-            raise ValueError(f"this document does not know the diagram {self.spec_id!r}")
-        model.add_chart(Chart(self.id, self.name, self.spec_id), self.index)
-        ctx.emit(ChartsChanged())
-        return RemoveChart(self.id)
-
-    def to_data(self) -> dict:
-        data = {"id": self.id, "name": self.name, "spec_id": self.spec_id, "index": self.index}
-        if self.legacy_names:
-            data["legacy_names"] = True
-        return data
-
-    @classmethod
-    def from_data(cls, data, registry) -> AddChart:
-        return cls(data["id"], data["name"], data["spec_id"], data.get("index"), data.get("legacy_names", False))
-
-    def shifted_by(self, other: Command) -> Command | None:
-        """Refused once the diagram it would show is gone (the same guard ``AddObject`` keeps for its shape,
-        image or diagram, applied here to a tab instead of a floating object)."""
-        if isinstance(other, ForgetAsset) and (other.asset_kind, other.id) == (DIAGRAM.name, self.spec_id):
-            return None
-        return self
-
-    def stub(self) -> dict:
-        return {"chart": self.id}
-
-    def redacted(self) -> Command:
-        # still there for later commands, with a neutral name
-        return AddChart(self.id, self.id, self.spec_id, self.index, legacy_names=True)
-
-
-@register
-@dataclass(frozen=True)
-class RemoveChart(Command):
-    """Remove a chart tab. The diagram definition it showed is untouched — it may still be shown elsewhere, the
-    same way removing an object never forgets the image or shape it used (:class:`~claudia_core.ForgetAsset`
-    is the separate, explicit step for letting the definition itself go)."""
-
-    kind: ClassVar[str] = "computes.RemoveChart"
-    id: str
-
-    @property
-    def label(self) -> str:
-        return "Remove chart"
-
-    @property
-    def summary(self) -> str:
-        return "remove a chart"
-
-    def apply(self, ctx: Context[WorkbookModel]) -> Command:
-        model = ctx.model
-        chart = model.chart(self.id)
-        index = list(model.charts).index(self.id)
-        model.remove_chart(self.id)
-        ctx.emit(ChartsChanged())
-        return AddChart(
-            chart.id, chart.name, chart.spec_id, index, legacy_names=model.name_holder(chart.id, chart.name) is not None
-        )
-
-    def to_data(self) -> dict:
-        return {"id": self.id}
-
-    @classmethod
-    def from_data(cls, data, registry) -> RemoveChart:
-        return cls(data["id"])
-
-    def redacted(self) -> Command:
-        return self
-
-
-# ------------------------------------------------------------------------------ random numbers
 @register
 @dataclass(frozen=True)
 class Resample(Command):
@@ -992,7 +885,7 @@ class SetPrintPage(Command):
 @register
 @dataclass(frozen=True)
 class SetSheetPrint(Command):
-    """Say how one sheet, or one chart tab, is printed (D1004): orientation, scale, page order, repeated rows and
+    """Say how one sheet is printed (D1004): orientation, scale, page order, repeated rows and
     columns, gridlines and the rest. The sheet stores nothing while its setup is the default, so setting it back to
     the default takes the entry away again."""
 
@@ -1010,8 +903,8 @@ class SetSheetPrint(Command):
 
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         model = ctx.model
-        if SheetId(self.sheet) not in model.sheets and self.sheet not in model.charts:
-            raise KeyError(f"no sheet or chart {self.sheet!r}")
+        if SheetId(self.sheet) not in model.sheets:
+            raise KeyError(f"no sheet {self.sheet!r}")
         old = model.sheet_print_of(self.sheet)
         if self.setup == DEFAULT_SHEET_PRINT:
             model.sheet_print.pop(self.sheet, None)

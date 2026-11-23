@@ -35,7 +35,7 @@ The index is the status of record; a section below keeps the status of the round
 re-checked. **Opened** and **Fixed** are filled from 2026-11-20 on: for older items only where the status already gave
 the date.
 
-### Open (89)
+### Open (88)
 
 By priority (P1, P2, P3, then items that wait for a decision without one), then by ID.
 
@@ -124,14 +124,13 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | CODE-74 | P3 | Code | `export_content` still answers `{format: "claudia-export 1", ...}`, a JSON that is neither the zip of D1270 nor documented anywhere; it is recorded as an export and the panel says "exported as claudia-export 1"; no window calls it | **new, open** (size 3; remove it or make it the zip) |  |  |
 | CODE-75 | P3 | Code / web clients | Only composes refused a change of a viewer before sending it; computes sent it and showed the server's refusal, creates checked in some places only | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
 | CODE-76 | P3 | Code / web clients | The sheet session ignored `shape` events, so an outline a colleague's sheet object needed arrived only with a reload | **fixed** on `architecture-improvements` (D1432) | 2026-11-21 | 2026-11-21 |
-| CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | open (row `@pending:CODE-77`) | 2026-11-22 |  |
 | PROC-22 | P3 | Process / CI | The LibreOffice job may still fail silently, though it has passed every round | **new, open** |  |  |
 | PROC-29 | P3 | Process / E2E | No scenario asserts that a second window sees a holder's outline and name tag (D1223), nor that a colleague's drag is not shown live | **new, open** |  |  |
 | PROC-31 | P3 | Process / i18n | `po/claudia.pot` goes stale at every merge of `main`: only its `#:` source lines move, no msgid changes, and the i18n check of `check_debt.py` fails on them | **new, open** (measured) |  |  |
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (154)
+### Fixed (155)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -242,6 +241,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |  | 2026-11-19 |
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
 | CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **fixed** 2026-11-23 on `code-78-translated-refusals` (D1510) | 2026-11-22 | 2026-11-23 |
+| CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | **fixed** 2026-11-23 on `e6-31-slides-in-computes` (D1475) | 2026-11-22 | 2026-11-23 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2651,12 +2651,15 @@ of a sheet says it. What D1432 promises (nothing is sent, the document and the c
 holds everywhere. **Fix.** Tell her once when she tries: a greyed entry, a gesture on an object, the dialogs.
 **Test:** the viewer scenario of that file, `@pending:UX-69` (strict: the day it passes, the tag has to go).
 
-### CODE-77 · Undoing a chart leaves it in the workbook, and the page reports an error · P2 · size 2 · open
+### CODE-77 · Undoing a chart leaves it in the workbook, and the page reports an error · P2 · size 2 · fixed
 **Measured** the same way: after inserting a chart on a sheet and undoing it, the object goes, but the server sends no
 event that forgets the chart (it does for a picture, a shape and a container, D1431), and the browser's console has
 `Error: DOM element provided is null or undefined` from Plotly's `getGraphDiv`. **Test:** the row `workbook | a chart`
 of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
 E1.18.
+**Fixed** 2026-11-23 on `e6-31-slides-in-computes` (E6.31 step 3, D1475): a chart and its definition are made in one
+step (`insert_chart`, `claudia_computes.chart_steps`), so the undo forgets the definition; `ChartView.vue` checks that
+its element is still there once Plotly has loaded. The row `workbook | a chart` is in the scenario's examples now.
 
 ## Round of 2026-11-22 (E6.31 step 2: slides in computes, branch `e6-31-slides-in-computes`)
 

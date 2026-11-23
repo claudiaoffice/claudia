@@ -1,6 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import {
-  type PrintedChart,
   type PrintedSlide,
   type PrintedSheet,
   type SheetCell,
@@ -49,7 +48,7 @@ const sheet = (cells: SheetCell[], print: Partial<SheetPrint> = {}, extra: Parti
   print: { ...DEFAULT_SHEET_PRINT, ...print },
   ...extra,
 })
-const book = (sheets: (PrintedSheet | PrintedChart | PrintedSlide)[], page: Partial<PageSetupData> = {}, extra: Partial<SheetDocument> = {}): SheetDocument => ({
+const book = (sheets: (PrintedSheet | PrintedSlide)[], page: Partial<PageSetupData> = {}, extra: Partial<SheetDocument> = {}): SheetDocument => ({
   sheets,
   styles: STYLES,
   page: { ...A4, ...page },
@@ -398,36 +397,6 @@ describe('a sheet on pages', () => {
     })
   })
 
-  describe('a chart tab', () => {
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect width="400" height="200" fill="#3d5a80"/></svg>'
-    const tab = (extra: Partial<PrintedChart> = {}): PrintedChart => ({ kind: 'chart', id: 'c1', name: 'Plan', image: 'i1', w: 800, h: 400, orientation: 'landscape', ...extra })
-    it('prints as one page, the picture as large as the content box takes, centred, its shape kept', () => {
-      const out = layoutSheet(book([tab()], {}, { images: [{ id: 'i1', format: 'svg', svg }] }), fonts, resolver)
-      expect(out.list.pages).toHaveLength(1)
-      expect(m(out)).toEqual([{ sheet: 'c1', kind: 'chart', rows: null, cols: null, scale: 1_000_000 }])
-      const page = out.list.pages[0]!
-      const rect = paths(page.items).find((p) => p.fill && !('kind' in p.fill) && p.fill.b === 0x80)!
-      const xs = rect.ops.flatMap((o) => (o[0] === 'Z' ? [] : [o[1]]))
-      const ys = rect.ops.flatMap((o) => (o[0] === 'Z' ? [] : [o[2]]))
-      const w = Math.max(...xs) - Math.min(...xs)
-      const h = Math.max(...ys) - Math.min(...ys)
-      expect(Math.abs(w - 2 * h)).toBeLessThan(10)
-      expect(Math.min(...xs)).toBeGreaterThanOrEqual(36000)
-      // 841890 − 72000 wide, so it is the width that limits it
-      expect(w).toBeGreaterThan(769890 - 100)
-      expect(Math.abs(Math.min(...xs) + w / 2 - page.width / 2)).toBeLessThan(10)
-    })
-    it('carries the name and number in its footer like any sheet', () => {
-      const out = layoutSheet(book([tab()], { page_numbers: true }, { images: [{ id: 'i1', format: 'svg', svg }] }), fonts, resolver)
-      expect(said(out.list.pages[0]!)).toBe('Plan 1 / 1')
-    })
-    it('says so when it has no picture', () => {
-      const out = layoutSheet(book([tab({ image: null })]), fonts, resolver)
-      expect(out.notes).toEqual([{ kind: 'object', object: 'c1', reason: 'the chart has no picture to print' }])
-      expect(out.list.pages).toHaveLength(1)
-    })
-  })
-
   describe('a slide among the sheets (E6.31, D1473)', () => {
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect width="400" height="200" fill="#3d5a80"/></svg>'
     const onSlide = (x: number, y: number, w: number, h: number) => ({ id: 'p1', kind: 'image' as const, w, h, style: '', paragraph: null, shape: null, image: 'i1', rotation: 0, anchor: { kind: 'slide' as const, holder: 'd1', x, y } })
@@ -447,6 +416,15 @@ describe('a sheet on pages', () => {
     it('carries its name and number in the footer like any sheet', () => {
       const out = layoutSheet(book([sheet(table(3, 3)), slide()], { page_numbers: true }, { images: [{ id: 'i1', format: 'svg', svg }] }), fonts, resolver)
       expect(said(out.list.pages[1]!)).toBe('Sales chart 2 / 2')
+    })
+    it('draws a chart on it as its picture, and says so when it has none (E6.31 step 3)', () => {
+      const chart = { ...onSlide(0, 0, 1600, 900), kind: 'diagram' as const }
+      const drawn = layoutSheet(book([slide({ objects: [chart] })], {}, { images: [{ id: 'i1', format: 'svg', svg }] }), fonts, resolver)
+      expect(drawn.notes).toEqual([])
+      const group = drawn.list.pages[0]!.items.find((i): i is GroupItem => i.kind === 'group')!
+      expect(paths(group.items).some((p) => p.fill && !('kind' in p.fill) && p.fill.b === 0x80)).toBe(true)
+      const missing = layoutSheet(book([slide({ objects: [{ ...chart, image: null }] })]), fonts, resolver)
+      expect(missing.notes).toEqual([{ kind: 'object', object: 'p1', reason: 'the chart has no picture to print' }])
     })
     it('is a page, even with nothing on it', () => {
       const out = layoutSheet(book([slide({ objects: [] })]), fonts, resolver)

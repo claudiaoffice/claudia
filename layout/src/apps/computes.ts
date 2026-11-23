@@ -1,6 +1,6 @@
 /**
  * A computes workbook, as the client holds it, laid out on pages (D1009): every sheet cut into pages by rows and
- * columns, a chart tab on a page of its own. Pure, like the composes and creates adapters: the caller fetches the
+ * columns, a slide on a page of its own. Pure, like the composes and creates adapters: the caller fetches the
  * fonts {@link sheetFontsNeeded} names first.
  *
  * What is printed is already decided when it gets here. The caller says which sheets, and for each sheet which cells
@@ -141,18 +141,6 @@ export interface PrintedSheet {
   print: SheetPrint
 }
 
-/** A chart tab: one page, the picture (`w` × `h` CSS pixels, only their shape matters) as large as the page takes it. */
-export interface PrintedChart {
-  kind: 'chart'
-  id: string
-  name: string
-  /** the SVG picture of the chart, by image id; `null` when the client has none */
-  image: string | null
-  w: number
-  h: number
-  orientation: Orientation
-}
-
 /** A slide among the sheets (E6.31, D1473): one landscape page, the slide as large as the page takes it, drawn as
  * creates draws its slides. */
 export interface PrintedSlide {
@@ -164,7 +152,7 @@ export interface PrintedSlide {
 
 export interface SheetDocument {
   /** what is printed, in order */
-  sheets: readonly (PrintedSheet | PrintedChart | PrintedSlide)[]
+  sheets: readonly (PrintedSheet | PrintedSlide)[]
   styles: readonly TextStyle[]
   shapes?: readonly ShapeOutline[]
   images?: readonly ImageInfo[]
@@ -174,10 +162,10 @@ export interface SheetDocument {
   language?: string | null
 }
 
-/** Where on the sheet a page's cells come from: for the preview's page map. `rows` and `cols` are `null` for a chart tab. */
+/** Where on the sheet a page's cells come from: for the preview's page map. `rows` and `cols` are `null` for a slide. */
 export interface SheetPageInfo {
   sheet: string
-  kind: 'sheet' | 'chart' | 'slide'
+  kind: 'sheet' | 'slide'
   rows: [number, number] | null
   cols: [number, number] | null
   /** the scale in millionths */
@@ -374,8 +362,9 @@ interface SheetPlan {
 
 // ---- fonts ----------------------------------------------------------------------------------------------------
 
-/** What a client's chart or picture is, for the shared object code: a chart with a picture is drawn as that picture. */
-const asDrawn = (o: SheetPicture): SheetPicture => (o.kind === 'diagram' && o.image ? { ...o, kind: 'image' } : o)
+/** What a client's chart or picture is, for the shared object code, on a sheet or a slide: a chart with a picture is
+ * drawn as that picture. */
+const asDrawn = <O extends VisualObject>(o: O): O => (o.kind === 'diagram' && o.image ? { ...o, kind: 'image' } : o)
 
 /** The SHA-256 of every font file laying out `doc` needs, as `resolver` picks them. */
 export function sheetFontsNeeded(doc: SheetDocument, resolver: FontResolver): string[] {
@@ -392,14 +381,11 @@ export function sheetFontsNeeded(doc: SheetDocument, resolver: FontResolver): st
     for (const c of s.cells) if (c.style) add(c.style)
     if (s.print.objects) for (const h of objectFonts(s.objects.map(asDrawn), styles, doc.images ?? [], resolver, DEFAULT_STYLE)) out.add(h)
   }
-  for (const s of doc.sheets) if (s.kind === 'chart') for (const h of objectFonts([chartObject(s)], styles, doc.images ?? [], resolver, DEFAULT_STYLE)) out.add(h)
   for (const s of doc.sheets) if (s.kind === 'slide') for (const h of objectFonts(s.objects, styles, doc.images ?? [], resolver, DEFAULT_STYLE)) out.add(h)
   return [...out].sort()
 }
 
 // ---- layout -----------------------------------------------------------------------------------------------------
-
-const chartObject = (t: PrintedChart): VisualObject => ({ id: t.id, kind: 'image', w: t.w, h: t.h, style: '', paragraph: null, shape: null, image: t.image, rotation: 0 })
 
 /** Lay out `doc` as its sheets say. Every font {@link sheetFontsNeeded} names must be in `fonts`. */
 export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontResolver): SheetPages {
@@ -422,7 +408,7 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
   const margins = { top: page.margins[0], right: page.margins[1], bottom: page.margins[2], left: page.margins[3] }
 
   // ---- plan every sheet first: the footer's "n / N" needs the count
-  const plans: (SheetPlan | { chart: PrintedChart; geometry: PageGeometry; box: Rect; footer: boolean } | { slide: PrintedSlide; geometry: PageGeometry; box: Rect })[] = []
+  const plans: (SheetPlan | { slide: PrintedSlide; geometry: PageGeometry; box: Rect })[] = []
   const geometries = new Map<Orientation, PageGeometry>()
   const geometryFor = (o: Orientation): PageGeometry => {
     let g = geometries.get(o)
@@ -440,12 +426,6 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
   }
   let total = 0
   for (const s of doc.sheets) {
-    if (s.kind === 'chart') {
-      const geometry = geometryFor(s.orientation)
-      plans.push({ chart: s, geometry, box: boxOf(geometry, true), footer: true })
-      total++
-      continue
-    }
     if (s.kind === 'slide') {
       const geometry = geometryFor('landscape')
       plans.push({ slide: s, geometry, box: boxOf(geometry, true) })
@@ -467,27 +447,11 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
   const draw = { fonts, styles, context, base: base.style }
   for (const plan of plans) {
     if ('slide' in plan) {
-      const placed = placedSlide(drawSlide(plan.slide.objects, context), plan.box)
+      const placed = placedSlide(drawSlide(plan.slide.objects.map(asDrawn), context), plan.box)
       const p: DisplayPage = { width: plan.geometry.width, height: plan.geometry.height, items: [placed.group, slideFrame(placed.rect)] }
       footerItems(draw, p, plan.geometry, plan.geometry.margin.bottom, plan.slide.name, page.page_numbers, pages.length + 1, total)
       pages.push(p)
       pageMap.push({ sheet: plan.slide.id, kind: 'slide', rows: null, cols: null, scale: ONE })
-      continue
-    }
-    if ('chart' in plan) {
-      const t = plan.chart
-      const items: DisplayItem[] = []
-      if (!t.image) {
-        notes.push({ kind: 'object', object: t.id, reason: context.diagramNote })
-      } else {
-        const rect = fitted(plan.box, t.w, t.h)
-        const drawn = drawObject(chartObject(t), rect, context)
-        if (drawn) items.push(drawn)
-      }
-      const p: DisplayPage = { width: plan.geometry.width, height: plan.geometry.height, items }
-      footerItems(draw, p, plan.geometry, plan.geometry.margin.bottom, t.name, page.page_numbers, pages.length + 1, total)
-      pages.push(p)
-      pageMap.push({ sheet: t.id, kind: 'chart', rows: null, cols: null, scale: ONE })
       continue
     }
     for (const planned of plan.pages) {
@@ -501,7 +465,7 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
   // nothing to print at all: one blank page, and a note, so there is something to show and to write
   if (pages.length === 0) {
     const first = doc.sheets[0]
-    const g = geometryFor(!first ? page.orientation : first.kind === 'sheet' ? first.print.orientation : first.kind === 'chart' ? first.orientation : 'landscape')
+    const g = geometryFor(!first ? page.orientation : first.kind === 'sheet' ? first.print.orientation : 'landscape')
     pages.push({ width: g.width, height: g.height, items: [] })
     pageMap.push({ sheet: doc.sheets[0]?.id ?? '', kind: 'sheet', rows: [0, 0], cols: [0, 0], scale: ONE })
     if (!notes.some((n) => n.kind === 'sheet')) notes.push({ kind: 'sheet', reason: 'there is nothing to print' })
@@ -517,19 +481,6 @@ export function layoutSheet(doc: SheetDocument, fonts: FontSet, resolver: FontRe
     embedded,
     pageMap,
   }
-}
-
-/** A picture of `w` × `h` (any unit) as large as `box` takes it, centred. */
-function fitted(box: Rect, w: number, h: number): Rect {
-  const ratioW = Math.max(1, w)
-  const ratioH = Math.max(1, h)
-  let fw = box.w
-  let fh = Math.round((fw * ratioH) / ratioW)
-  if (fh > box.h) {
-    fh = box.h
-    fw = Math.round((fh * ratioW) / ratioH)
-  }
-  return { x: box.x + Math.floor((box.w - fw) / 2), y: box.y + Math.floor((box.h - fh) / 2), w: fw, h: fh }
 }
 
 // ---- preparing a sheet -------------------------------------------------------------------------------------------

@@ -2,8 +2,7 @@
 
 ``ObjectsChanged`` and ``AssetsChanged`` (images, shapes, charts) are the same events in all
 three apps and live in :mod:`claudia_core` (E10.16, D1431); they are re-exported here, where this module's
-users have always imported them from. What is only a workbook's own is below — including ``ChartsChanged``,
-since a chart *tab* is computes' own concept even though the diagram it shows is shared (E6.6).
+users have always imported them from. What is only a workbook's own is below.
 """
 
 from __future__ import annotations
@@ -49,15 +48,6 @@ class TabsChanged:
     def to_data(self) -> dict:
         """The event as it goes to the clients: only its type, since they read the tabs off the state."""
         return {"type": "tabs"}
-
-
-@dataclass(frozen=True)
-class ChartsChanged:
-    """The tab strip's charts changed (one was added or removed, or the tab order moved)."""
-
-    def to_data(self) -> dict:
-        """The event as it goes to the clients: only its type, since they read the new tab strip off the state."""
-        return {"type": "charts"}
 
 
 @dataclass(frozen=True)
@@ -117,8 +107,8 @@ class RandomChanged:
 
 @dataclass(frozen=True)
 class PrintSetupChanged:
-    """How the workbook is printed changed (E6.19): its ``page``, or the print ``setup`` of one ``sheet`` (a sheet or
-    a chart tab; the setup is the whole new one)."""
+    """How the workbook is printed changed (E6.19): its ``page``, or the print ``setup`` of one ``sheet`` (the setup is
+    the whole new one)."""
 
     page: dict | None = None
     sheet: str | None = None

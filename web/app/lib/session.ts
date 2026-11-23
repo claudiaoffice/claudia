@@ -15,7 +15,7 @@ import type { Shown } from './references'
 import { isOnSlide, othersOn, SlideActions, type Other, type PictureImport, type ShapeDef, type SlideHost, type SlideObject } from './slide-host'
 import type { CssEdit } from './style-css'
 import { type Axis, lineSize } from './line-sizes'
-import type { Chart, ChartDraft, ChartFigure, ChartSpec } from './charts'
+import type { ChartDraft, ChartFigure, ChartSpec } from './charts'
 import { rangeTouchedBy } from './charts'
 import type { NameDraft, NameInfo, NameRegion } from './names'
 import type { PivotDefinition, PivotInfo, PivotLabels } from './pivots'
@@ -37,7 +37,7 @@ export type {
 } from './base-session'
 export { BaseSession } from './base-session'
 export type { ImageAsset, ImageImport } from './images'
-export type { Chart, ChartDraft, ChartFigure, ChartRange, ChartSpec } from './charts'
+export type { ChartDraft, ChartFigure, ChartRange, ChartSpec } from './charts'
 export { chartRange } from './charts'
 
 export const CHUNK_ROWS = 64
@@ -56,6 +56,8 @@ export interface TabInfo {
   id: string
   name: string
 }
+/** What Edit ▸ Chart… shows a chart as (E6.31, D1475): a new slide, on the slide shown, or floating on the sheet shown. */
+export type ChartShownAs = 'slide' | 'on_slide' | 'sheet'
 /** A `functions` search result: name, signature and a one-line tooltip (E13.5/E13.6). Fetch the full help text,
  * with its worked example, through `functionHelp`. */
 export interface FunctionSummary {
@@ -81,9 +83,9 @@ export type SqlPreview =
 export interface State extends BaseState {
   sheets: SheetInfo[]
   activeSheet: string
-  /** The sheets and slides in their one order (E6.31, D1471); the chart tabs are apart (`charts`). */
+  /** The sheets and slides in their one order (E6.31, D1471). */
   tabs: TabInfo[]
-  /** The slide on show, or `''` while a sheet or a chart tab is. */
+  /** The slide on show, or `''` while a sheet is. */
   activeSlide: string
   /** The object selected on the slide on show (an object on a sheet is selected in the grid). */
   selected: string | null
@@ -101,7 +103,6 @@ export interface State extends BaseState {
   generation: number
   objects: Record<string, WorkbookObject>
   diagrams: Record<string, ChartSpec> // chart definitions this document knows, by id (E6.6)
-  charts: Chart[] // chart tabs, in tab order
   /** The workbook's names: named ranges, tables and the results of `SQL()` cells (E6.5), as `names` sends them. */
   names: NameInfo[]
   /** The workbook's pivot tables (E6.30), as `pivots` sends them: what each is made from, and the cells it fills now. Asked
@@ -131,7 +132,7 @@ export interface State extends BaseState {
   trace: Trace | null
   /** The page the workbook prints on (E6.19, D1004), the same for all sheets; `null` for a server from before printing. */
   printPage: PageSetupData | null
-  /** How each sheet and chart tab prints, by id, with the defaults filled in; empty for an old server. */
+  /** How each sheet prints, by id, with the defaults filled in; empty for an old server. */
   sheetPrint: Record<string, SheetPrintData>
 }
 
@@ -221,7 +222,6 @@ export class Session extends BaseSession<State> implements SlideHost {
       colWidths: {},
       generation: 0,
       diagrams: {},
-      charts: [],
       names: [],
       pivots: [],
       figures: {},
@@ -242,11 +242,10 @@ export class Session extends BaseSession<State> implements SlideHost {
   protected async loadApp() {
     const link = this.need()
     const s = this.state
-    const [sheets, images, diagrams, charts, names, styles, palette, styleModel, random, formats, printing, language, pivots] = await Promise.all([
+    const [sheets, images, diagrams, names, styles, palette, styleModel, random, formats, printing, language, pivots] = await Promise.all([
       link.request<SheetInfo[]>('sheets'),
       link.request<ImageAsset[]>('images'),
       link.request<ChartSpec[]>('diagrams'),
-      link.request<Chart[]>('charts'),
       link.request<{ names: NameInfo[] }>('names'),
       link.request<StyleDef[]>('styles'),
       link.request<PaletteEvent>('palette'),
@@ -285,7 +284,6 @@ export class Session extends BaseSession<State> implements SlideHost {
     s.shapes = Object.fromEntries(shapes.document.map((d) => [d.id, d]))
     s.images = Object.fromEntries(images.map((x) => [x.id, x]))
     s.diagrams = Object.fromEntries(diagrams.map((x) => [x.id, x]))
-    s.charts = charts
     s.names = names.names
     s.pivots = pivots
     s.figures = {}
@@ -380,7 +378,7 @@ export class Session extends BaseSession<State> implements SlideHost {
   }
 
   // -- a slide among the sheets (E6.31, D1473): shown with the slide view of creates, its objects placed the same way
-  /** Show a slide (`''`: none, a sheet or a chart tab is shown), with nothing selected on it. */
+  /** Show a slide (`''`: none, a sheet is shown), with nothing selected on it. */
   showSlide(slide: string): Promise<void> {
     return this.slide.show(slide)
   }
@@ -414,7 +412,7 @@ export class Session extends BaseSession<State> implements SlideHost {
     return this.slide.insert({ kind: 'shape', shape }, frame)
   }
 
-  // -- charts (E6.6): a diagram definition, shown as a floating object, a tab, or both at once
+  // -- charts (E6.6, E6.31): a chart is an object on a sheet or a slide, with a definition of its own
   /** The already-cached figure for a diagram, or `null` while it has not been asked for yet (call
    * `ensureFigure` to start that, typically from the component that is about to draw it). */
   figureOf(diagramId: string): ChartFigure | null {
@@ -439,12 +437,6 @@ export class Session extends BaseSession<State> implements SlideHost {
       .finally(() => this.figuresInflight.delete(diagramId))
     this.figuresInflight.set(diagramId, job)
     return job
-  }
-
-  /** Re-fetch `charts` (the tab strip) without reloading the whole document — the `charts` push event carries
-   * no payload of its own (`claudia_computes.events.ChartsChanged`), unlike `objects`/`cells`. */
-  private async reloadCharts() {
-    this.state.charts = await this.need().request<Chart[]>('charts')
   }
 
   /** Re-fetch the names; the `names` push event carries no payload of its own (`claudia_computes.events.NamesChanged`).
@@ -595,7 +587,7 @@ export class Session extends BaseSession<State> implements SlideHost {
         }
         this.refollow()
         if (s.pivots.length) this.track(this.reloadPivots()) // the source it reads, or the cells it fills, may be these
-        // A changed cell may feed a diagram's figure even on another sheet's screen (a chart tab, say), so
+        // A changed cell may feed a diagram's figure even on another sheet's screen (a slide, say), so
         // every cached figure is checked, not only those for the active sheet.
         const positions = data.positions as [number, number][]
         for (const spec of Object.values(s.diagrams)) {
@@ -627,9 +619,6 @@ export class Session extends BaseSession<State> implements SlideHost {
         if (data.definition) s.diagrams[data.id] = data.definition as ChartSpec
         else delete s.diagrams[data.id]
         delete s.figures[data.id] // its range or titles may have changed (DefineDiagram/UpdateDiagram alike)
-        return true
-      case 'charts':
-        this.track(this.reloadCharts())
         return true
       case 'names':
         this.track(this.reloadNames())
@@ -676,7 +665,7 @@ export class Session extends BaseSession<State> implements SlideHost {
     return (await this.write('set_print_page', { page })) !== false
   }
 
-  /** Print a sheet or chart tab another way (D1004): one step in the history, for everybody. */
+  /** Print a sheet another way (D1004): one step in the history, for everybody. */
   async setSheetPrint(sheet: string, setup: SheetPrintData): Promise<boolean> {
     return (await this.write('set_sheet_print', { sheet, setup })) !== false
   }
@@ -708,15 +697,14 @@ export class Session extends BaseSession<State> implements SlideHost {
     const s = this.state
     const out: Thing[] = []
     for (const tab of s.tabs) out.push({ id: tab.id, name: s.renamed[tab.id] ?? tab.name, kind: tab.kind })
-    for (const chart of s.charts) out.push({ id: chart.id, name: s.renamed[chart.id] ?? chart.name, kind: 'chart' })
     for (const o of Object.values(s.objects)) if (o.name) out.push({ id: o.id, name: s.renamed[o.id] ?? o.name, kind: o.kind })
     for (const n of s.names) out.push({ id: n.id, name: n.name, kind: 'range' }) // (a name is renamed with its own command, not as a thing)
     return out
   }
-  /** The sheet or slide being looked at, the chart tabs beside it, the named ranges on it and what floats on it. */
+  /** The sheet or slide being looked at, the named ranges on it and what floats on it. */
   protected override async inView(): Promise<Thing[]> {
     const here = this.currentHolder()
-    return this.things().filter((t) => t.kind === 'chart' || this.holderOf(t.id) === here)
+    return this.things().filter((t) => this.holderOf(t.id) === here)
   }
   override async unnamedInView(): Promise<number> {
     return this.onHolder(this.currentHolder() ?? '').filter((o) => !o.name).length
@@ -818,40 +806,33 @@ export class Session extends BaseSession<State> implements SlideHost {
     return this.addContainerAt(type, { sheet: this.state.activeSheet, row: anchor.row, col: anchor.col }, { w: anchor.w, h: anchor.h }, undefined, true)
   }
 
-  /** Take a new chart definition into the document (E6.6); its id, or `null` after telling the person why not.
-   * Show it with `addDiagramObject`, `addChart`, or both — neither is bundled into this call, since (unlike
-   * `addImage`) a definition may be placed more than once from the very start. */
-  async defineDiagram(draft: ChartDraft): Promise<string | null> {
-    const done = await this.write('define_diagram', { definition: { kind: 'bar', ...draft } })
-    return done === false ? null : done.diagram
+  /** Make a chart with a definition of its own, in one step of the history (E6.31, D1475): as a new slide right after
+   * the tab shown (`slide`), on the slide shown (`on_slide`) or floating on the sheet shown at `anchor` (`sheet`). The
+   * chart is called `name`, or the next free "Chart n"; a new slide is the next free "Slide n". What was made, or
+   * `null` after telling the person why not. The view is the caller's to change. */
+  async insertChart(draft: ChartDraft, showAs: ChartShownAs, name: string, anchor?: { row: number; col: number; w: number; h: number }): Promise<{ object: string; slide: string | null } | null> {
+    const s = this.state
+    const place =
+      showAs === 'slide' ? { after: s.activeSlide || s.activeSheet } : showAs === 'on_slide' ? { slide: s.activeSlide } : { sheet: s.activeSheet, ...anchor }
+    const done = await this.write('insert_chart', { definition: { kind: 'bar', ...draft }, show_as: showAs, place, name })
+    return done === false ? null : { object: done.object as string, slide: (done.slide as string | null) ?? null }
   }
 
-  /** Redefine a chart in place: what a tab or floating object already showing `id` updates to. */
+  /** "Move to Slide" (E6.31, D1475): a new slide right after the sheet the chart `object` floats on, the chart filling
+   * it, in one step; the new slide's id, or `null` after telling the person why not. */
+  async moveToSlide(object: string): Promise<string | null> {
+    const done = await this.write('move_to_slide', { object })
+    return done === false ? null : (done.slide as string)
+  }
+
+  /** Redefine a chart in place: what a chart already showing `id` updates to. */
   async updateDiagram(id: string, draft: ChartDraft): Promise<boolean> {
     return (await this.write('update_diagram', { id, definition: { kind: 'bar', ...draft } })) !== false
   }
 
-  /** Let a chart definition go. Refused (returns `false`) while a tab or a floating object still shows it. */
+  /** Let a chart definition go. Refused (returns `false`) while a chart still shows it. */
   async forgetDiagram(id: string): Promise<boolean> {
     return (await this.write('forget_diagram', { id })) !== false
-  }
-
-  /** Put a chart on the sheet that is shown, as a floating object showing `diagramId`; its id, or `null` after
-   * telling the person why not. `moveObject`/`resizeObject`/`removeObject` then work on it like any object. */
-  async addDiagramObject(diagramId: string, anchor: { row: number; col: number; w: number; h: number }): Promise<string | null> {
-    const done = await this.write('add_diagram_object', { sheet: this.state.activeSheet, diagram: diagramId, ...anchor })
-    return done === false ? null : done.object
-  }
-
-  /** Add a chart tab showing `specId`; its id, or `null` after telling the person why not. */
-  async addChart(name: string, specId: string, index: number | null = null): Promise<string | null> {
-    const done = await this.write('add_chart', { name, spec_id: specId, index })
-    return done === false ? null : done.chart
-  }
-
-  /** Remove a chart tab. The definition it showed is untouched (`forgetDiagram` is the separate step). */
-  async removeChart(id: string): Promise<boolean> {
-    return (await this.write('remove_chart', { id })) !== false
   }
 
   // -- names, tables and queries (E6.5)

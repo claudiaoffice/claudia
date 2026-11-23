@@ -132,21 +132,18 @@ def with_id(spec: ChartSpec, spec_id: str) -> ChartSpec:
 
 
 def chart_losses(model: WorkbookModel) -> list[str]:
-    """What a file cannot keep of the charts of ``model``, one detail for each: ``tab`` (a chart tab is a sheet with the
-    chart in it), ``source`` (a chart that follows a name has the cells the name is now), ``rotation`` (a chart in a
-    file stands upright) and ``empty`` (a chart that reads nothing is not written)."""
+    """What a file cannot keep of the charts of ``model``, one detail for each: ``source`` (a chart that follows a name
+    has the cells the name is now), ``rotation`` (a chart in a file stands upright) and ``empty`` (a chart that reads
+    nothing is not written)."""
     lost: list[str] = []
     shown = [obj.body.diagram for obj in model.objects.values() if obj.body.diagram is not None]
-    tabs = [tab.spec_id for tab in model.charts.values()]
     lost.extend("rotation" for obj in model.objects.values() if obj.body.diagram is not None and obj.body.rotation)
-    for is_tab, spec_ids in ((False, shown), (True, tabs)):
-        for spec_id in spec_ids:
-            spec = model.diagrams.get(spec_id)
-            if not isinstance(spec, ChartSpec) or model.chart_cells(spec_id) is None:
-                lost.append("empty")
-                continue
-            lost.extend(["tab"] if is_tab else [])
-            lost.extend(["source"] if spec.source else [])
+    for spec_id in shown:
+        spec = model.diagrams.get(spec_id)
+        if not isinstance(spec, ChartSpec) or model.chart_cells(spec_id) is None:
+            lost.append("empty")
+            continue
+        lost.extend(["source"] if spec.source else [])
     return lost
 
 

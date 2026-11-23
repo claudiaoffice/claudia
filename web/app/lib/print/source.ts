@@ -233,10 +233,9 @@ export function slideSource(session: SlideSession): PrintSource {
 }
 
 // ------------------------------------------------------------------------------ computes
-/** What a workbook's print needs of its window: which sheet, slide or chart tab is shown and which cells are
- * selected. */
+/** What a workbook's print needs of its window: which sheet or slide is shown and which cells are selected. */
 export interface SheetWindow {
-  shown(): { kind: 'sheet' | 'slide' | 'chart'; id: string }
+  shown(): { kind: 'sheet' | 'slide'; id: string }
   /** first row, first column, last row, last column of the selection on the shown sheet, or `null` */
   selection(): [number, number, number, number] | null
   /** the SVG pictures of charts; Plotly's unless a test gives its own */
@@ -291,7 +290,7 @@ export function sheetSource(session: Session, window: SheetWindow): PrintSource 
     setLanguage: (tag) => void session.setLanguage(tag),
     // The cells themselves are not watched (a map of every cell would be walked on every look): any step of the history
     // moves the revision, and a preview that is open lays out again.
-    watched: () => [contents.value, window.shown(), window.selection(), state.revision, state.generation, state.sheets, state.tabs, state.charts, state.sheetPrint, state.printPage, state.language, state.styles, state.cellStyles, state.numberFormats, state.names, state.order, state.objects, state.images, state.rowHeights, state.colWidths],
+    watched: () => [contents.value, window.shown(), window.selection(), state.revision, state.generation, state.sheets, state.tabs, state.sheetPrint, state.printPage, state.language, state.styles, state.cellStyles, state.numberFormats, state.names, state.order, state.objects, state.images, state.rowHeights, state.colWidths],
     prepare: async () => {},
     images: () => Object.values(state.images),
     async layOut(assets) {
@@ -321,7 +320,7 @@ export function sheetSource(session: Session, window: SheetWindow): PrintSource 
           sheets: doc.sheets.filter((s) => s.kind !== 'slide').length,
           slides: doc.sheets.filter((s) => s.kind === 'slide').length,
           name: first?.name ?? '',
-          orientation: doc.sheets.length === 1 && first ? (first.kind === 'sheet' ? first.print.orientation : first.kind === 'chart' ? first.orientation : 'landscape') : null,
+          orientation: doc.sheets.length === 1 && first ? (first.kind === 'sheet' ? first.print.orientation : 'landscape') : null,
         },
       }
     },

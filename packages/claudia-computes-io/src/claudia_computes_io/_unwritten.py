@@ -38,7 +38,7 @@ KINDS: dict[str, str] = {
 def facets(model: WorkbookModel) -> dict[str, object]:
     """A workbook as the facets a converter writes or leaves out, in the order losses are reported. The sheets count
     by their name, cells and looks; the widths and heights of rows and columns are a facet of their own (only a sheet
-    that has any), the charts shown (a tab, or a diagram floating on a sheet, each with its definition) are one facet
+    that has any), the charts shown (each with its definition) are one facet
     and the pictures (an image or a container, with the assets they show) another, and the other floating
     objects (computes has no text boxes and shapes, D1232, but a model may hold them), with what they use, a last."""
     data = model.serialize()
@@ -71,13 +71,13 @@ def _pivots(model: WorkbookModel) -> dict[str, object]:
 
 
 def _charts(data: dict) -> dict[str, object]:
-    """The charts a workbook shows, each with the definition it draws: a tab, or a diagram floating on a sheet."""
+    """The charts a workbook shows, each with the definition it draws: a chart on a sheet or a slide."""
     definitions = {each["id"]: each for each in data["diagrams"]}
-    shown: dict[str, object] = {f"tab {tab['id']}": (tab, definitions.get(tab["spec_id"])) for tab in data["charts"]}
-    for each in data["objects"]:
-        if each["kind"] == "diagram":
-            shown[f"object {each['id']}"] = (each, definitions.get(each["ref"]))
-    return shown
+    return {
+        f"object {each['id']}": (each, definitions.get(each["ref"]))
+        for each in data["objects"]
+        if each["kind"] == "diagram"
+    }
 
 
 def workbook_unwritten_changes(

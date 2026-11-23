@@ -46,8 +46,6 @@ NS = {
 #: The media types of a chart and of a drawing.
 CHART_TYPE = "application/vnd.openxmlformats-officedocument.drawingml.chart+xml"
 DRAWING_TYPE = "application/vnd.openxmlformats-officedocument.drawing+xml"
-#: How big a chart that is a tab gets as a sheet's drawing, in pixels.
-TAB_SIZE = (720, 432)
 #: English Metric Units in a pixel (at 96 dots to the inch).
 EMU = 9525
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
@@ -514,8 +512,8 @@ class WrittenChart:
 
 
 def sheet_name(wanted: str, taken: set[str]) -> str:
-    """A name for a sheet that holds a chart tab: ``wanted`` as a sheet may be called in Excel (at most 31 characters,
-    none of ``[]*?:/\\``), and one no sheet in ``taken`` has; it is added to ``taken``."""
+    """A name for a sheet a slide becomes: ``wanted`` as a sheet may be called in Excel (at most 31 characters, none
+    of ``[]*?:/\\``), and one no sheet in ``taken`` has; it is added to ``taken``."""
     name = re.sub(r"[\[\]*?:/\\]", "-", xml_safe(wanted)).strip("' ")[:31] or "Chart"
     candidate, number = name, 1
     while candidate.casefold() in taken:
@@ -526,12 +524,9 @@ def sheet_name(wanted: str, taken: set[str]) -> str:
     return candidate
 
 
-def written_charts(model: WorkbookModel, taken: set[str] | None = None) -> tuple[list[WrittenChart], list[str]]:
-    """The charts of ``model`` for a file: the diagrams floating on its sheets, each pinned where it is, and one sheet
-    for each chart tab (a file has a tab for a chart too, but one that holds no cells, which the model cannot read:
-    the tab is written as a sheet with the chart in it). Returns the charts and the names of the new sheets, in the
-    order of the tabs; ``taken`` has the names of the sheets (folded) and gets the new ones."""
-    names = taken if taken is not None else {sheet.name.casefold() for sheet in model.sheets.values()}
+def written_charts(model: WorkbookModel) -> list[WrittenChart]:
+    """The charts of ``model`` for a file: the charts floating on its sheets, each pinned where it is (a slide is a
+    sheet by then, ``slide_plan``)."""
     out: list[WrittenChart] = []
     for sheet_id, sheet in model.sheets.items():
         for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
@@ -549,12 +544,4 @@ def written_charts(model: WorkbookModel, taken: set[str] | None = None) -> tuple
                         sheet.name, xml, obj.anchor.row, obj.anchor.col, body.w, body.h, body.description, layer
                     )
                 )
-    tabs: list[str] = []
-    for tab in model.charts.values():
-        tabbed = model.diagrams.get(tab.spec_id)
-        xml = chart_xml(model, tabbed) if isinstance(tabbed, ChartSpec) else None
-        if xml is not None:
-            name = sheet_name(tab.name, names)
-            tabs.append(name)
-            out.append(WrittenChart(name, xml, 0, 0, *TAB_SIZE, ""))
-    return out, tabs
+    return out

@@ -2,8 +2,8 @@
 
 The sheet a slide becomes has the slide's name (written the way a sheet may be called in Excel, the stricter of the two
 formats), what was written about it, and the slide's place among the tabs; it has no cells. The objects of the slide
-hang on it at the cell nearest to where they are, scaled from the slide's 1600 × 900 units to the size a chart tab is
-written at, so the charts and pictures of a slide are written by the very code that writes those of a sheet. The export
+hang on it at the cell nearest to where they are, scaled from the slide's 1600 × 900 units to :data:`SHEET_SIZE`, so
+the charts and pictures of a slide are written by the very code that writes those of a sheet. The export
 says so for each slide (the loss ``slide``, with its name). Read back, what was a slide is a sheet (D1473).
 """
 
@@ -16,11 +16,13 @@ from claudia_computes.model import DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT, Sheet
 from claudia_core import SLIDE_HEIGHT, SLIDE_WIDTH, SlideAnchor
 from claudia_odf_io import Loss
 
-from .xlsx_charts import TAB_SIZE, sheet_name
+from .xlsx_charts import sheet_name
 
-#: How much smaller a slide's objects are on the sheet it becomes: the whole slide fits the size a chart tab is
-#: written at, keeping its proportions.
-SLIDE_SCALE = min(TAB_SIZE[0] / SLIDE_WIDTH, TAB_SIZE[1] / SLIDE_HEIGHT)
+#: How big a slide is on the sheet it becomes, in pixels: what a chart tab was written at before E6.31.
+SHEET_SIZE = (720, 432)
+#: How much smaller a slide's objects are on the sheet it becomes: the whole slide fits :data:`SHEET_SIZE`, keeping
+#: its proportions.
+SLIDE_SCALE = min(SHEET_SIZE[0] / SLIDE_WIDTH, SHEET_SIZE[1] / SLIDE_HEIGHT)
 
 
 def slide_losses(model: WorkbookModel) -> tuple[Loss, ...]:

@@ -21,11 +21,10 @@ computes
 .. autoclass:: claudia_computes.TabsChanged
 .. autoclass:: claudia_computes.CellRegion
 .. autoclass:: claudia_computes.CellAnchor
-.. autoclass:: claudia_computes.Chart
 .. autoclass:: claudia_computes.ChartSpec
 .. autoclass:: claudia_computes.ChartError
-.. autoclass:: claudia_computes.AddChart
-.. autoclass:: claudia_computes.RemoveChart
+.. automodule:: claudia_computes.chart_steps
+   :members:
 .. autoclass:: claudia_computes.NamedRange
 .. autoclass:: claudia_computes.Names
 .. autoclass:: claudia_computes.DefineName

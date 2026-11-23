@@ -11,7 +11,7 @@ Feature: A person can point at anything by its name, change the name, describe i
     And the name is in my own language
 
   @core @app:composes @app:computes @app:creates
-  Scenario: A new object, slide, sheet and chart tab have names
+  Scenario: A new object, slide, sheet and chart have names
     Given a new document
     When I add a text box, or a slide, or a sheet, or a chart
     Then each has a name like "Text box 1", "Slide 2", "Sheet 2", "Chart 1"

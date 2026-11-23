@@ -24,12 +24,10 @@ from test_ods_charts import S1, a_chart_workbook, a_range, a_workbook, put_chart
 
 from claudia_computes import (
     CellAnchor,
-    Chart,
     ChartSpec,
     NamedRange,
     ObjectBody,
     Sheet,
-    SheetId,
     VisualObject,
     WorkbookModel,
 )
@@ -258,29 +256,6 @@ def test_the_import_counts_only_the_charts_the_model_does_not_hold():
 
 
 # -- what a file cannot keep ------------------------------------------------------------------------------------------
-def test_a_chart_tab_is_a_sheet_with_the_chart_in_it_and_that_is_said():
-    model = WorkbookModel()
-    model.add_sheet(Sheet(S1, "Data"), None)
-    model.store(model.sheets[S1], 0, 0, {"t": "int", "v": 3})
-    model.diagrams.define(ChartSpec(id="c1", kind="bar", range=a_range((0, 0), (0, 0)), title="Sales"))
-    model.charts["t1"] = Chart("t1", "Sales chart", "c1")
-    data = workbook_to_xlsx(model)
-    back = xlsx_to_workbook(data)
-    assert [sheet.name for sheet in back.sheets.values()] == ["Data", "Sales chart"]
-    (found,) = back.objects.values()
-    assert found.anchor == CellAnchor(SheetId("s2"), 0, 0) and found.body.w >= 20
-    assert kinds(xlsx_export_losses(model)) == {"chart:tab": 1}
-
-
-def test_a_chart_tab_takes_a_name_excel_allows_that_no_sheet_has():
-    model = a_chart_workbook()
-    model.charts["t1"] = Chart("t1", "data", "c1")
-    model.charts["t2"] = Chart("t2", "A very long name for a chart sheet: [too long?]", "c1")
-    names = [sheet.name for sheet in xlsx_to_workbook(workbook_to_xlsx(model)).sheets.values()]
-    assert names[:2] == ["Data", "data (2)"]
-    assert len(names[2]) <= 31 and not set(names[2]) & set("[]:*?/\\")
-
-
 def test_a_chart_that_follows_a_name_is_written_as_the_cells_the_name_is_now():
     model = a_workbook()
     model.names.put(NamedRange("Sales", None, a_range(), header=True))
@@ -457,13 +432,6 @@ def test_the_description_of_a_chart_is_patched_into_its_frame_and_taken_out_agai
     obj = cleared.objects["o1"]
     cleared.replace_object(replace(obj, body=replace(obj.body, description="")))
     assert xlsx_to_workbook(apply_edits_to_xlsx(patched, again, cleared)).objects["o1"].body.description == ""
-
-
-def test_a_chart_tab_cannot_be_added_to_a_kept_file_yet():
-    original, baseline, current = a_kept_file()
-    current.charts["t1"] = Chart("t1", "Tab", "c1")
-    with pytest.raises(UnsupportedEdit):
-        apply_edits_to_xlsx(original, baseline, current)
 
 
 def test_a_baseline_that_does_not_know_the_charts_of_the_file_is_refused():

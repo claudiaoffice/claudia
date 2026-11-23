@@ -69,7 +69,7 @@ Branch `e2e-guard`. Recommendations 1 and 2 of the tester review of 2026-11-21 (
   * Two people (14 rows): Ann inserts a picture or a shape, moves a container, renames a style (Format ▸ All Styles…)
     or changes the accent (Format ▸ Colours…); Ben sees it without reloading, and both after a reload.
   * Undo and redo of inserting (8 rows): the object goes and comes back, and the server forgets and brings back what it
-    showed (D1454). `workbook | a chart` waits for CODE-77 in its own `Examples` block.
+    showed (D1454). `workbook | a chart` waited for CODE-77 in an `Examples` block of its own until E6.31 step 3 fixed it.
   * A viewer (15 rows), waiting for UX-69: Vera clicks the entries even when they are greyed, tries the rename and the
     colour controls if there are any, drags the object and a handle, Format ▸ Rotate, Delete. Nothing is sent, the
     document and the colleague's page stay as they were (all of that passes today); she is not told (UX-69).

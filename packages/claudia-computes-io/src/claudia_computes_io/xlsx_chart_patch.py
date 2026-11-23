@@ -198,8 +198,6 @@ class ChartPatch:
 
     def run(self) -> bool:
         """Put the changes of the charts into the file; whether there were any."""
-        if any(tab not in self.baseline.charts for tab in self.current.charts):
-            raise UnsupportedEdit("a chart tab is a sheet in a file, and a sheet cannot be added to the original yet")
         old = {obj.id: obj for obj in self.baseline.objects.values() if obj.body.diagram is not None}
         new = {obj.id: obj for obj in self.current.objects.values() if obj.body.diagram is not None}
         if sorted(old) != sorted(self.by_object):
@@ -312,8 +310,7 @@ def patch_charts(
 ) -> bool:
     """The charts of a kept file brought up to date with ``current``; whether anything in the file changed. What a file
     cannot keep of the charts is said through ``lose`` (``chart``, with the detail). Raises
-    :class:`~claudia_computes_io.UnsupportedEdit` for a baseline that does not know the charts of the file, and for a
-    chart tab (a sheet in a file)."""
+    :class:`~claudia_computes_io.UnsupportedEdit` for a baseline that does not know the charts of the file."""
     for detail in chart_losses(current):
         lose("chart", detail)
     return ChartPatch(patch, package, baseline, current, file_charts(package), lose).run()

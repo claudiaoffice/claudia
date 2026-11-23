@@ -45,7 +45,6 @@ EVENT_RULES: dict[str, Rule] = {
             "paragraph_generated",
             "cell_styles",
             "cells",
-            "charts",
             "diagram",
             "fields",
             "generated",

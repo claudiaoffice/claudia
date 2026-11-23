@@ -23,7 +23,7 @@ from claudia_odf_io import NS, XmlPart, local_name, qname, update_manifest, xml_
 
 from .chart_plan import offset_of
 from .ods_chart_files import FileChart
-from .ods_charts import Parts, a_chart, chart_document, new_shapes, tab_sheet
+from .ods_charts import Parts, a_chart, chart_document, new_shapes
 from .ods_layout import text_of
 
 #: What a table of a file holds that comes after its drawings.
@@ -78,7 +78,6 @@ class ChartPatch:
         names = [int(found.group(1)) for name in parts if (found := _FOLDER.match(name))]
         self.number = max(names, default=0) + 1
         self.changed = False
-        self.tab_tables: list[etree._Element] = []
 
     # -- the run -----------------------------------------------------------------------------------------------
     def run(self) -> bool:
@@ -101,7 +100,6 @@ class ChartPatch:
         for object_id, now in new.items():
             if object_id not in old:
                 self._add(now)
-        self._add_tabs()
         if self.changed:
             update_manifest(self.parts, add=self.listed, remove=tuple(self.unlisted))
         return self.changed
@@ -247,21 +245,3 @@ class ChartPatch:
         self.number += 1
         self._keep_parts(made.parts)
         self._put(now.anchor.sheet, made.frame)
-
-    def _add_tabs(self) -> None:
-        """The chart tabs that were added: a sheet each, after the last sheet of the workbook."""
-        taken = {sheet.name.casefold() for sheet in self.current.sheets.values()}
-        for tab_id in self.current.charts:
-            if tab_id in self.baseline.charts:
-                continue
-            made = tab_sheet(self.current, tab_id, self.number, taken)
-            if made is None:
-                continue
-            name, shapes, parts = made
-            self.number += 1
-            self._keep_parts(parts)
-            table = etree.Element(qname("table:table"), nsmap={p: u for p, u in NS.items() if p != "xml"})
-            table.set(qname("table:name"), name)
-            table.append(shapes)
-            etree.SubElement(etree.SubElement(table, qname("table:table-row")), qname("table:table-cell"))
-            self.tab_tables.append(table)

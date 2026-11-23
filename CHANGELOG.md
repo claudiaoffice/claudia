@@ -15,7 +15,8 @@ While the major version is 0, a minor version may break the API; every break is 
   the English sentence and keeps its template and parameters, so that the server can say it in the person's language;
   `N_(template)` marks a template kept apart from its call. `ObjectModel.name_taken`: the sentence for a name another
   thing has, by the kind of that thing. `ImageError` and `PageSetupError` are refusals.
-- Objects that may change holder (D1351): `ObjectModel.objects_change_holder` (false by default),
+- Objects that may change holder (D1351): `ObjectModel.may_change_holder(old, new)` (false by default; computes allows a
+  sheet to a slide and back, E6.31 step 3),
   `ObjectModel.rehang_object(obj, at=None)` (out of the old stack, into the new one, returns the old place) and
   `ObjectModel.place_regions(anchor)` (what a move into another holder also takes, for locks). `MoveObject.at`: the
   place in the new stack, set by the inverse of such a move and written only when set.

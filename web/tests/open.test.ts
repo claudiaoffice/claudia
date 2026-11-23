@@ -59,7 +59,6 @@ class FakeLink implements LinkLike {
         return { library: [], document: [] }
       case 'images':
       case 'diagrams':
-      case 'charts':
         return []
       case 'names':
         return { revision: null, names: [] }

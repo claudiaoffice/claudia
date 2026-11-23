@@ -5,7 +5,6 @@ import pytest
 from conftest import S1, add, chart_spec, diagram_object, image_asset, image_object, put_chart_spec, reopen
 
 from claudia_computes import (
-    AddChart,
     AddSheet,
     CellRef,
     ChartError,
@@ -14,7 +13,6 @@ from claudia_computes import (
     InsertRows,
     NamedRange,
     RangeRef,
-    RemoveChart,
     RemoveObject,
     RemoveSheet,
     Sheet,
@@ -22,7 +20,7 @@ from claudia_computes import (
     Structure,
     WorkbookModel,
 )
-from claudia_computes.events import ChartsChanged, ObjectsChanged
+from claudia_computes.events import ObjectsChanged
 from claudia_computes.names import key_of
 from claudia_core import AssetsChanged, Batch, DefineAsset, Document, ForgetAsset, MemoryStore, UpdateAsset, encode
 
@@ -97,14 +95,6 @@ def test_a_diagram_is_added_with_its_definition_and_undo_takes_both_away(doc):
     assert doc.model.objects == {} and doc.model.diagrams == {}
 
 
-def test_a_definition_may_be_shown_by_a_tab_and_a_floating_object_at_once(doc):
-    spec = put_chart_spec(doc)
-    doc.execute(add(diagram_object("d1", spec_id=spec.id)), author="ana")
-    doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
-    assert set(doc.model.diagrams.users(spec.id)) == {"d1", "t1"}
-    assert len(doc.model.diagrams) == 1, "the definition is only kept once"
-
-
 def test_a_diagram_object_needs_no_shape_or_image_and_keeps_no_fixed_aspect(doc):
     put_chart_spec(doc)
     doc.execute(add(diagram_object(w=400, h=100)), author="ana")  # any size above the minimum is fine
@@ -141,21 +131,10 @@ def test_a_diagram_in_use_cannot_be_forgotten_and_one_that_exists_cannot_be_defi
     assert doc.model.diagrams == {}
 
 
-def test_a_diagram_shown_only_by_a_tab_cannot_be_forgotten_either(doc):
-    """A tab is as much a user of a definition as a floating object is (``WorkbookModel.users_of``)."""
-    spec = put_chart_spec(doc)
-    doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
-    with pytest.raises(ValueError, match="in use"):
-        doc.execute(ForgetAsset("diagram", spec.id), author="ana")
-    doc.execute(RemoveChart("t1"), author="ana")
-    doc.execute(ForgetAsset("diagram", spec.id), author="ana")  # no user left
-
-
 # -- editing a diagram in place: the one way its content ever changes --------------------------------------------
 def test_updating_a_diagram_changes_it_in_place_for_every_user_and_undo_restores_it(doc):
     spec = put_chart_spec(doc, title="Before")
     doc.execute(add(diagram_object(spec_id=spec.id)), author="ana")
-    doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
     changed = spec.to_data() | {"title": "After"}
     doc.execute(UpdateAsset("diagram", spec.id, changed), author="ana")
     assert doc.model.diagrams[spec.id].title == "After"
@@ -167,45 +146,6 @@ def test_updating_a_diagram_cannot_change_its_id(doc):
     spec = put_chart_spec(doc)
     with pytest.raises(ValueError, match="cannot change its id"):
         doc.execute(UpdateAsset("diagram", spec.id, chart_spec("other").to_data()), author="ana")
-
-
-# -- chart tabs: add, remove, undo, and what they refuse ---------------------------------------------------------
-def test_a_chart_tab_is_added_and_undo_removes_it(doc):
-    spec = put_chart_spec(doc)
-    doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
-    assert list(doc.model.charts) == ["t1"]
-    doc.undo("ana")
-    assert doc.model.charts == {}
-
-
-def test_a_chart_tab_needs_a_defined_diagram(doc):
-    with pytest.raises(ValueError, match="does not know the diagram"):
-        doc.execute(AddChart("t1", "Revenue", "ghost"), author="ana")
-
-
-def test_chart_tab_ids_and_names_must_be_unique(doc):
-    spec = put_chart_spec(doc)
-    doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
-    with pytest.raises(ValueError, match="exists"):
-        doc.execute(AddChart("t1", "Another", spec.id), author="ana")
-    with pytest.raises(ValueError, match="There is already a chart called “Revenue”"):
-        doc.execute(AddChart("t2", "Revenue", spec.id), author="ana")
-
-
-def test_removing_a_chart_tab_does_not_forget_its_definition(doc):
-    """The definition survives the tab's removal (and an object's) so that undo can bring the tab back."""
-    spec = put_chart_spec(doc)
-    doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
-    doc.execute(RemoveChart("t1"), author="ana")
-    assert spec.id in doc.model.diagrams
-
-
-def test_chart_tabs_keep_their_order(doc):
-    a, b = put_chart_spec(doc, "ca"), put_chart_spec(doc, "cb")
-    doc.execute(AddChart("t1", "A", a.id), author="ana")
-    doc.execute(AddChart("t2", "B", b.id), author="ana")
-    doc.execute(AddChart("t0", "Zero", a.id, index=0), author="ana")
-    assert list(doc.model.charts) == ["t0", "t1", "t2"]
 
 
 # -- a sheet a chart still reads from cannot be removed -----------------------------------------------------------
@@ -243,13 +183,6 @@ def test_views_hear_about_diagrams(doc):
     }
 
 
-def test_views_hear_about_chart_tabs(doc):
-    seen = collect(doc)
-    spec = put_chart_spec(doc)
-    doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
-    assert any(isinstance(e, ChartsChanged) for e in seen)
-
-
 def test_adding_a_diagram_object_emits_objects_changed(doc):
     seen = collect(doc)
     spec = put_chart_spec(doc)
@@ -259,18 +192,15 @@ def test_adding_a_diagram_object_emits_objects_changed(doc):
 
 
 # -- the history reads like sentences -------------------------------------------------------------------------
-def test_the_history_has_a_sentence_for_a_diagram_object_and_a_chart_tab():
+def test_the_history_has_a_sentence_for_a_diagram_object():
     spec = chart_spec()
     obj = diagram_object(spec_id=spec.id)
     assert add(obj).label == "Add diagram"
     assert add(obj).summary == "Added a diagram"
-    assert AddChart("t1", "Revenue", spec.id).label == "Add chart"
-    assert "Revenue" in AddChart("t1", "Revenue", spec.id).summary
-    assert RemoveChart("t1").summary == "remove a chart"
 
 
 # -- documents are forever: schema, round trips, snapshots -----------------------------------------------------
-def test_command_data_round_trips_for_diagrams_and_charts():
+def test_command_data_round_trips_for_diagrams():
     spec = chart_spec()
     obj = diagram_object(spec_id=spec.id)
     core_commands = (DefineAsset("diagram", spec.to_data()), ForgetAsset("diagram", spec.id), add(obj))
@@ -278,16 +208,11 @@ def test_command_data_round_trips_for_diagrams_and_charts():
         # Diagram definitions are shared by all three apps, so their commands are namespaced ``core.`` (E10.16).
         assert command.kind.startswith("core.")
         assert WorkbookModel.registry.decode(encode(command)) == command
-    computes_commands = (AddChart("t1", "Revenue", spec.id), RemoveChart("t1"))
-    for command in computes_commands:
-        assert command.kind.startswith("computes.")
-        assert WorkbookModel.registry.decode(encode(command)) == command
 
 
 def test_every_chart_command_survives_the_log_and_a_model_survives_its_snapshot(doc):
     spec = put_chart_spec(doc)
     doc.execute(add(diagram_object(spec_id=spec.id)), author="ana")
-    doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
     assert reopen(doc).model.serialize() == doc.model.serialize()
     assert WorkbookModel.restore(doc.model.serialize()).serialize() == doc.model.serialize()
 
@@ -295,13 +220,11 @@ def test_every_chart_command_survives_the_log_and_a_model_survives_its_snapshot(
 def test_equal_states_serialize_equally_with_a_shared_definition_whatever_order(doc):
     spec = put_chart_spec(doc)
     doc.execute(add(diagram_object("d1", spec_id=spec.id)), author="ana")
-    doc.execute(AddChart("t1", "Revenue", spec.id), author="ana")
     other = Document(WorkbookModel(), store=MemoryStore())
     other.execute(AddSheet(S1, "Sheet1"), author="x")
     other.execute(
         Batch((DefineAsset("diagram", spec.to_data()), add(diagram_object("d1", spec_id=spec.id)))), author="x"
     )
-    other.execute(AddChart("t1", "Revenue", spec.id), author="x")
     assert other.model.serialize() == doc.model.serialize()
 
 

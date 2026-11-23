@@ -2,11 +2,10 @@
 tab or a slide never share a name. Old logs, written before that, still replay."""
 
 import pytest
-from conftest import S1, add, image_asset, image_object, put_chart_spec, put_image, reopen
+from conftest import S1, add, diagram_object, image_asset, image_object, put_chart_spec, put_image, reopen
 from names_helpers import define, name
 
 from claudia_computes import (
-    AddChart,
     AddSheet,
     DefineName,
     NamedRange,
@@ -98,9 +97,9 @@ def test_a_name_cannot_be_called_like_an_object(doc):
         define(doc, "LOGO", "A1:B2")
 
 
-def test_a_name_cannot_be_called_like_a_chart_tab(doc):
+def test_a_name_cannot_be_called_like_a_chart(doc):
     put_chart_spec(doc)
-    doc.execute(AddChart("t1", "Revenue", "c1"), author="ana")
+    doc.execute(add(diagram_object("t1", name="Revenue")), author="ana")
     with pytest.raises(ValueError, match="There is already a chart called “Revenue”"):
         define(doc, "revenue", "A1:B2")
 
@@ -123,11 +122,11 @@ def test_a_sheet_cannot_be_called_like_a_name(doc):
         doc.execute(AddSheet("s2", "revenue"), author="ana")
 
 
-def test_a_chart_tab_cannot_be_called_like_a_name(doc):
+def test_a_chart_cannot_be_called_like_a_name(doc):
     define(doc, "Revenue", "A1:B2")
     put_chart_spec(doc)
     with pytest.raises(ValueError, match="There is already a named range called “Revenue”"):
-        doc.execute(AddChart("t1", "REVENUE", "c1"), author="ana")
+        doc.execute(add(diagram_object("t1", name="REVENUE")), author="ana")
 
 
 def test_an_object_cannot_be_called_like_a_name_when_added_or_renamed(doc):

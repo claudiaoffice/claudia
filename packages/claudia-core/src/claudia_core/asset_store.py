@@ -1,8 +1,8 @@
 """The asset store (D1431): what objects show that the document keeps once, by id.
 
 An *asset* is an image, a shape's outline, a chart's definition (``diagram``), a container's definition
-(``container``) or a table. Objects point at one by id (``ObjectBody.ref``), so several objects — and in computes a
-chart tab — can show the same one. "Asset" is a word of the code only; people never see it.
+(``container``) or a table. Objects point at one by id (``ObjectBody.ref``), so several objects can show the same
+one. "Asset" is a word of the code only; people never see it.
 
 The five kinds are kept alike: one :class:`AssetStore` per kind on the object model
 (:class:`~claudia_core.ObjectModel`), one change event (:class:`AssetsChanged`) and one set of commands

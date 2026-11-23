@@ -1,6 +1,5 @@
-// Charts (E6.6): a diagram definition (`claudia_computes.ChartSpec`), shown as a floating object on a sheet, a
-// tab in the tab strip, or both at once from the very same definition — the client half of the shared object
-// layer's `diagram` kind (`lib/objects.ts`). Plotly itself (the chart library, D33/D42) is only loaded by the
+// Charts (E6.6): a diagram definition (`claudia_computes.ChartSpec`) shown by a chart, an object on a sheet or a slide
+// (E6.31, D1475) — the client half of the shared object layer's `diagram` kind (`lib/objects.ts`). Plotly itself (the chart library, D33/D42) is only loaded by the
 // component that actually draws a figure; this module is just the wire shapes and the range-building helper,
 // so it costs nothing to import from code that only lists or edits definitions.
 
@@ -16,13 +15,13 @@ export interface ChartRange {
   last: ChartCellRef
 }
 
-/** A cell range as `defineDiagram`/`updateDiagram` want it, from two corners in any order. */
+/** A cell range as `insertChart`/`updateDiagram` want it, from two corners in any order. */
 export function chartRange(sheet: string, r0: number, c0: number, r1: number, c1: number): ChartRange {
   const ref = (row: number, col: number): ChartCellRef => ({ row, col, sheet })
   return { first: ref(Math.min(r0, r1), Math.min(c0, c1)), last: ref(Math.max(r0, r1), Math.max(c0, c1)) }
 }
 
-/** The fields a person edits in the insert/properties dialog; `defineDiagram`/`updateDiagram` add `kind` (bar
+/** The fields a person edits in the insert/properties dialog; `insertChart`/`updateDiagram` add `kind` (bar
  * only so far, E6.6) and send this straight on — the id and format are the server's to assign (`computes.py`). */
 export interface ChartDraft {
   /** The cells to draw — or, instead, `source` names a table or query result to follow (E6.5): one of the two. */
@@ -47,19 +46,11 @@ export interface ChartDraft {
 }
 
 /** A chart definition as the server stores and sends it (`diagrams`, the `diagram` event) — a `ChartDraft` plus
- * the id and format it was given. Not itself placed anywhere: see `Chart` (a tab) and `ObjectBody.diagram` (a
- * floating object), either or both of which may show the very same `id`. */
+ * the id and format it was given. Not itself placed anywhere: a chart object (`ObjectBody.diagram`) shows it. */
 export interface ChartSpec extends ChartDraft {
   format: number
   id: string
   kind: 'bar'
-}
-
-/** One chart tab (`charts`): a name in the tab strip and the id of the `ChartSpec` it shows. */
-export interface Chart {
-  id: string
-  name: string
-  spec_id: string
 }
 
 /** A chart's Plotly figure (`chart_figure`'s answer): `data` is one trace per series, `layout` the titles,
@@ -69,6 +60,14 @@ export interface Chart {
 export interface ChartFigure {
   data: Record<string, unknown>[]
   layout: Record<string, unknown>
+}
+
+/** Where a chart view gets its figure (computes' session): the one at hand, and asking for it. */
+export interface ChartFigures {
+  /** The cached figure of a definition, or `null` while it has not come yet. */
+  figureOf(diagramId: string): ChartFigure | null
+  /** Ask for a definition's figure, unless it is at hand; with `force`, ask again. */
+  ensureFigure(diagramId: string, force?: boolean): Promise<void>
 }
 
 /** Whether a sheet's changed positions could change a diagram's own figure: same sheet, and at least one

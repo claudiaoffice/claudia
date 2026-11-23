@@ -74,9 +74,4 @@ Feature: Objects, styles and the palette work the same in a text, a workbook and
       | workbook     | a container    |
       | presentation | a container    |
       | presentation | a shape        |
-
-    # CODE-77: undoing a chart leaves it in the workbook, and the page reports an error.
-    @pending:CODE-77
-    Examples:
-      | document     | an object      |
       | workbook     | a chart        |

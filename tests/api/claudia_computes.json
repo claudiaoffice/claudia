@@ -1,23 +1,5 @@
 {
  "version": "0.11.0",
- "AddChart": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str', name: 'str', spec_id: 'str', index: 'int | None' = None, legacy_names: 'bool' = False) -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
-   "from_data": "(data, registry) -> 'AddChart'",
-   "redacted": "(self) -> 'Command'",
-   "shifted_by": "(self, other: 'Command') -> 'Command | None'",
-   "stub": "(self) -> 'dict'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
  "AddObject": {
   "class": [
    "Command"
@@ -194,17 +176,6 @@
   },
   "properties": []
  },
- "Chart": {
-  "class": [
-   "object"
-  ],
-  "init": "(id: 'str', name: 'str', spec_id: 'str') -> None",
-  "methods": {
-   "from_data": "(data: 'dict') -> 'Chart'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": []
- },
  "ChartError": {
   "class": [
    "Refusal"
@@ -220,16 +191,6 @@
   "init": "(id: 'str', kind: 'str', range: 'RangeRef | None' = None, source: 'str' = '', source_scope: 'SheetId | None' = None, series_in: 'str' = 'columns', header_row: 'bool' = True, title: 'str' = '', x_title: 'str' = '', y_title: 'str' = '', legend: 'bool' = True, gridlines: 'bool' = True) -> None",
   "methods": {
    "from_data": "(data: 'object') -> 'ChartSpec'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": []
- },
- "ChartsChanged": {
-  "class": [
-   "object"
-  ],
-  "init": "() -> None",
-  "methods": {
    "to_data": "(self) -> 'dict'"
   },
   "properties": []
@@ -685,22 +646,6 @@
   "methods": {},
   "properties": []
  },
- "RemoveChart": {
-  "class": [
-   "Command"
-  ],
-  "init": "(id: 'str') -> None",
-  "methods": {
-   "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
-   "from_data": "(data, registry) -> 'RemoveChart'",
-   "redacted": "(self) -> 'Command'",
-   "to_data": "(self) -> 'dict'"
-  },
-  "properties": [
-   "label",
-   "summary"
-  ]
- },
  "RemoveName": {
   "class": [
    "Command"
@@ -757,7 +702,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str') -> None",
+  "init": "(id: 'str', if_empty: 'bool' = False) -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[WorkbookModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'RemoveSlide'",
@@ -1164,13 +1109,11 @@
   ],
   "init": "(functions: 'FunctionRegistry | None' = None, styles: 'StyleBook | None' = None, palette: 'Palette | None' = None)",
   "methods": {
-   "add_chart": "(self, chart: 'Chart', index: 'int | None') -> 'None'",
    "add_sheet": "(self, sheet: 'Sheet', index: 'int | None') -> 'None'",
    "add_slide": "(self, slide: 'Slide', index: 'int | None') -> 'None'",
    "anchor_from_data": "(self, data: 'dict') -> 'CellAnchor | SlideAnchor'",
    "blank": "(self, parts: 'frozenset[str] | None') -> 'None'",
    "blank_diagram": "(definition: 'dict') -> 'dict'",
-   "chart": "(self, chart_id: 'str') -> 'Chart'",
    "chart_cells": "(self, diagram_id: 'str') -> 'tuple[RangeRef, bool] | None'",
    "chart_figure": "(self, diagram_id: 'str') -> 'dict'",
    "charts_reading": "(self, sheet_id: 'SheetId') -> 'list[str]'",
@@ -1188,6 +1131,7 @@
    "header_texts": "(self, region: 'Rect') -> 'list[str]'",
    "holders": "(self) -> 'list[str]'",
    "load_state": "(self, state: 'dict') -> 'None'",
+   "may_change_holder": "(self, old: 'CellAnchor | SlideAnchor', new: 'CellAnchor | SlideAnchor') -> 'bool'",
    "name_with_id": "(self, thing_id: 'str') -> 'NamedRange | None'",
    "named_things": "(self)",
    "outcome_table": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, combine: 'str' = 'all') -> 'OutcomeTable | None'",
@@ -1196,7 +1140,6 @@
    "query": "(self, text: 'str', home: 'SheetId', parameters: 'Sequence[object]' = ()) -> 'Table'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "region_of": "(self, named: 'NamedRange') -> 'Rect | None'",
-   "remove_chart": "(self, chart_id: 'str') -> 'None'",
    "remove_slide": "(self, slide_id: 'str') -> 'tuple[Slide, int]'",
    "rename_command": "(self, thing_id: 'str', name: 'str')",
    "rename_name": "(self, scope: 'SheetId | None', old: 'str', new: 'str', *, shared: 'bool' = True) -> 'dict[SheetId, Cells]'",
@@ -1224,7 +1167,6 @@
    "thing_name": "(self, thing_id: 'str') -> 'str'",
    "trace": "(self, sheet_id: 'SheetId', row: 'int', col: 'int', *, reach: 'str' = 'group', window: 'Window | None' = None) -> 'Trace'",
    "turned_anchor": "(self, obj: 'VisualObject[CellAnchor | SlideAnchor]', rotation: 'int') -> 'CellAnchor | SlideAnchor'",
-   "users_of": "(self, kind: 'AssetKind', asset_id: 'str') -> 'list[str]'",
    "value": "(self, sheet_id: 'SheetId', row: 'int', col: 'int') -> 'Value'"
   },
   "properties": []

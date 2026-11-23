@@ -143,9 +143,9 @@ def xlsx_export_losses(model: WorkbookModel, *, rasterised: bool = False) -> tup
     """What :func:`workbook_to_xlsx` cannot say in Excel for ``model``, each as a code with how many:
     ``"formula"`` (with the reason, ``random`` for a draw Excel has no single formula for: written as its value),
     ``"alternatives"`` (written as the first alternative with a note: only claudia reads the rest), ``"look"``
-    (``too-many-cells``: cells of style ranges too large to write one by one) and ``"chart"`` (``tab``: a chart tab is
-    a sheet with the chart in it; ``source``: a chart that follows a name has the cells the name is now; ``rotation``;
-    ``empty``: a chart that reads nothing is not written), ``"svg-fallback"`` (a picture drawn as SVG, which only
+    (``too-many-cells``: cells of style ranges too large to write one by one) and ``"chart"`` (``source``: a chart
+    that follows a name has the cells the name is now; ``rotation``; ``empty``: a chart that reads nothing is not
+    written), ``"svg-fallback"`` (a picture drawn as SVG, which only
     Excel 2016 and later show; other programs show it empty unless there was something to draw it with,
     ``rasterised``), ``"rendering-pending"`` (a container nothing has been drawn for: left out) and what
     :func:`xlsx_unwritten_changes` says of a fresh file: ``"layout"``, ``"name"``, ``"chart"`` and ``"object"``. A
@@ -192,8 +192,8 @@ def workbook_to_xlsx(
     """A base xlsx of ``model``: one worksheet per sheet, each cell as its stored content (a formula as its text,
     with the leading ``=``; see ``_written`` for what is written differently), and the cells' looks: Body text as
     the file's Normal, named styles as named cell styles, the rest as direct formats with their number formats
-    (``xlsx_write_looks``, D379), and the bar charts floating on its sheets, each pinned to its cell (a chart tab as a
-    sheet of its own with the chart in it; ``xlsx_charts``, D463) and its pictures, in the same drawing in the order
+    (``xlsx_write_looks``, D379), and the bar charts floating on its sheets, each pinned to its cell (``xlsx_charts``,
+    D463) and its pictures, in the same drawing in the order
     they are stacked (``xlsx_pictures``, D1233; ``rasterise`` draws an SVG as a PNG). The file says in its properties
     who made the workbook and when and who changed it last, from ``info``; what ``info`` does not know it leaves out
     (D466). A slide is a sheet of its own in the file (``slide_plan``, D1473)."""
@@ -207,10 +207,8 @@ def workbook_to_xlsx(
         for (row, col), (content, value) in sheet_cells(model, sheet).items():
             _put(ws.cell(row=row + 1, column=col + 1), content, value)
         looks.sheet(sheet, ws)
-    charts, tabs = written_charts(model)
+    charts = written_charts(model)
     pictures = written_pictures(model, rasterise=rasterise, svg_beside_png=True)
-    for name in tabs:
-        wb.create_sheet(title=name)
     if not wb.sheetnames:
         wb.create_sheet(title="Sheet1")
     write_names(wb, model)
@@ -385,7 +383,7 @@ def apply_edits_to_xlsx(
     definition changed (``losses`` gets ``chart`` / ``look`` then, and what a file cannot keep of the charts:
     :func:`xlsx_export_losses`; D463).
 
-    Raises :class:`UnsupportedEdit` if a sheet or a chart tab was added, removed, renamed or reordered since
+    Raises :class:`UnsupportedEdit` if a sheet was added, removed, renamed or reordered since
     ``baseline``, the workbook has a slide (a file has none, it would be a sheet more), or a cell inside an array
     formula or a spilled range was changed. An unchanged model gives back ``original_bytes``."""
     if current.slide_ids():

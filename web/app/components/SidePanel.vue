@@ -282,7 +282,6 @@ const kindLabels: Record<ThingKind, string> = {
   table: t('Table'),
   slide: t('Slide'),
   sheet: t('Sheet'),
-  chart: t('Chart'),
   range: t('Range'),
   heading: t('Heading'),
   item: t('List item'),

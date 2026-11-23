@@ -124,3 +124,43 @@ The refusals that step 1 and 2 brought and that a person can meet are `Refusal`s
 `check_on_slide`, `turned_on_slide`), with German. A workbook's slide has its own sentence for a taken name
 (`WorkbookModel.name_taken["slide"]`). The checks of ids and tabs (`tab_index`, `check_new_tab`, the anchors) stay
 English: only a wrong client fails them.
+
+## Step 3 · A chart becomes a slide (D1475), 2026-11-23
+
+- **Model** (`claudia_computes/chart_steps.py`, A5). A chart is made, moved and taken away in one `Batch`, so one undo
+  takes all of it back: `as_new_slide` (`AddSlide` right after the tab shown, the chart's definition and the chart
+  filling the frame), `on_slide` (half the frame, in its middle), `on_sheet`, `to_new_slide` ("Move to Slide":
+  `AddSlide` after the sheet, `MoveObject` to the slide's corner, `ResizeObject` to the frame) and `removal` (the
+  objects, every definition nothing else shows, and every slide left empty). `NewChart` carries the ids and the name.
+  The chart tab is gone: `Chart`, `AddChart`, `RemoveChart`, `model.charts`, the event `charts` and the stored key
+  `charts`. State schema 18; a stored workbook with chart tabs is not read (no upgrade, D1475).
+- **The core.** `ObjectModel.may_change_holder(old, new)` replaces the flag `objects_change_holder`: composes moves an
+  object to any paragraph; computes from a sheet to a slide and back (the undo of "Move to Slide"), never between two
+  sheets or two slides. `RemoveSlide(if_empty=True)` is the undo of `AddSlide`: it does nothing while the slide holds an
+  object, so undoing "Move to Slide" keeps a slide a colleague has put something on.
+- **Wire.** `insert_chart(definition, show_as, place, name?)` with `show_as` `slide` (`{after}`), `on_slide`
+  (`{slide}`) or `sheet` (`{sheet, row, col, w, h}`); `move_to_slide(object)`; computes' `remove_object` goes through
+  `removal`. `free_name(kind)`, a read method of every app, says the next free generic name ("Chart 2", in the
+  language of the window). A new slide's id is the next free `p<n>` among the tabs, its name the next free "Slide n" in
+  the language of the request. `charts`, `add_chart`, `remove_chart` and `add_diagram_object` are gone;
+  `define_diagram` and its relatives stay until step 4 renames them.
+- **Files.** A slide is still written as a sheet (`slide_plan`), its objects scaled by 0.45 (`SHEET_SIZE`, the size a
+  chart tab had). The writers lost the chart tab; the loss `chart`/`tab` is gone.
+- **Web.** `Session.insertChart`, `moveToSlide`, `freeName` (in `BaseSession`). Edit ▸ Chart… offers "A slide" first,
+  and "A floating object on the sheet", or "On this slide" while a slide is shown; on a slide, "Data from" lists every
+  table and query result of the workbook and says what to do when there is none. The name field is the chart's and
+  starts with `free_name("diagram")`. The object menu of a chart on a sheet has "Move to Slide" after Style… (no key,
+  D1475; `claudia-menus.xlsx`, Context menus row 25). After a new slide is made it is shown with nothing selected; a
+  chart on the slide shown or on a sheet is selected. `ChartView` draws a chart in the frame of its object only (the tab
+  that filled its pane is gone); `SlideCanvas` draws a chart through the session's figures, at the slide's own units and
+  scaled with the slide, as print draws it. Print: the chart tab is gone from the web client and the layout library
+  (`PrintedChart`); a chart on a slide is drawn as its picture (`asDrawn`, as on a sheet).
+- **Found and fixed on the way.** CODE-77 (undoing a chart left its definition, and Plotly said the element was gone):
+  the chart and its definition are one step now, and `ChartView` checks that its element is still there after loading
+  Plotly. A chart on a slide printed as "the chart has no picture" (A8 had not been met: step 2's slide had no chart).
+- **Assumptions** (the spec does not say): "A slide" is the first choice while a slide is shown too; a chart put on the
+  slide shown takes half the frame in the middle and is selected; on a slide the first table or query result is
+  chosen; the dialog's own error line is gone, a refusal is said by the notice every write gives.
+- **E2E.** `tests/e2e/specs/test_computes_slides.py` binds the @core rules of `slides.feature`; the name of a chart is
+  read in Name & describe…, and whether something was selected is noted when the slide is shown. The browser script
+  `e2e:computes-slides` keeps the rules of search and print.

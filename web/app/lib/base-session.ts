@@ -908,10 +908,20 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return this.tracksThings() && this.nameOf(id) === undefined
   }
 
-  /** Give a thing (a sheet, a slide, a chart tab, an object) another name, as one step of the history. The server
-   * refuses a name somebody else has, a named range included, with a sentence that is shown here. */
+  /** Give a thing (a sheet, a slide, an object) another name, as one step of the history. The server refuses a name
+   * somebody else has, a named range included, with a sentence that is shown here. */
   async renameThing(id: string, name: string): Promise<boolean> {
     return (await this.write('rename_thing', { id, name })) !== false
+  }
+
+  /** The next free generic name for a thing of `kind` (an object kind, `sheet`, `slide`), in the language of this
+   * window: "Chart 2" when "Chart 1" is taken (D1475). `null` when the server cannot say (an older one, no link). */
+  async freeName(kind: string): Promise<string | null> {
+    try {
+      return (await this.need().request<{ name: string }>('free_name', { kind })).name
+    } catch {
+      return null
+    }
   }
 
   /** The fonts this document asks for that the server does not have (D1306); an answer that says nothing when the server

@@ -172,8 +172,8 @@ def test_slides_and_their_objects_survive_being_stored_loaded_and_replayed(doc):
     assert again.serialize() == state
     replayed = Document.open(WorkbookModel, CommandLog.from_data(doc.log.to_data(), WorkbookModel.registry))
     assert replayed.model.serialize() == state
-    # 17: tabs, one order of sheets and slides, and the slides as records (E6.31, D1471)
-    assert WorkbookModel.state_schema == 17
+    # 17: tabs, one order of sheets and slides, and the slides as records (E6.31, D1471); 18: no chart tabs (D1475)
+    assert WorkbookModel.state_schema == 18
 
 
 def test_a_stored_state_whose_tabs_miss_a_sheet_or_a_slide_is_refused(doc):

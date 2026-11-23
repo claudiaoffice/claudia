@@ -42,8 +42,6 @@ from .ods_names import range_of
 
 #: The media type of an embedded chart (the folder ``Object 1/`` in the manifest).
 CHART_MEDIA = "application/vnd.oasis.opendocument.chart"
-#: How big a chart that is a tab gets as a sheet's drawing, in pixels.
-TAB_SIZE = (720, 432)
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
 _DECLARED = " ".join(f'xmlns:{prefix}="{uri}"' for prefix, uri in NS.items() if prefix != "xml")
 _STYLE_OF_OBJECT = "plain-image"  # (a diagram carries its own colours, as an image does)
@@ -414,32 +412,20 @@ def new_shapes() -> etree._Element:
 
 @dataclass
 class WrittenCharts:
-    """The charts of a new file: the ``table:shapes`` of each sheet that has some, the sheets the chart tabs become
-    (each with its name and its ``table:shapes``), the parts of all of them and what could not be kept."""
+    """The charts of a new file: the ``table:shapes`` of each sheet that has some, the parts of all of them and what
+    could not be kept."""
 
     shapes: dict[SheetId, etree._Element]
-    tabs: list[tuple[str, etree._Element]]
     parts: Parts
-    #: ``(detail, count)``: ``tab`` (a tab is a sheet now), ``source`` (a chart that followed a name has its cells),
-    #: ``empty`` (a chart that read nothing is not written).
+    #: ``(detail, count)``: ``source`` (a chart that followed a name has its cells), ``rotation``, ``empty`` (a chart
+    #: that read nothing is not written).
     lost: list[str]
 
 
-def _sheet_name(wanted: str, taken: set[str]) -> str:
-    name = re.sub(r"[\[\]*?:/\\]", "-", xml_safe(wanted)).strip("' ") or "Chart"
-    candidate, number = name, 1
-    while candidate.casefold() in taken:
-        number += 1
-        candidate = f"{name} ({number})"
-    taken.add(candidate.casefold())
-    return candidate
-
-
 def written_charts(model: WorkbookModel, *, first: int = 1) -> WrittenCharts:
-    """The charts of ``model`` for a file: the diagrams floating on its sheets, each pinned where it is, and its chart
-    tabs, each on a sheet of its own (a file has no tab for a chart). ``first`` is the number the first embedded object
-    gets."""
-    out = WrittenCharts({}, [], {}, chart_losses(model))
+    """The charts of ``model`` for a file: the charts floating on its sheets, each pinned where it is (a slide is a
+    sheet by then, ``slide_plan``). ``first`` is the number the first embedded object gets."""
+    out = WrittenCharts({}, {}, chart_losses(model))
     number = first
     for sheet_id, sheet in model.sheets.items():
         for layer, object_id in enumerate(model.stack_of(str(sheet_id))):
@@ -455,27 +441,4 @@ def written_charts(model: WorkbookModel, *, first: int = 1) -> WrittenCharts:
                 out.shapes.setdefault(sheet_id, new_shapes()).append(made.frame)
                 out.parts.update(made.parts)
                 number += 1
-    taken = {sheet.name.casefold() for sheet in model.sheets.values()}
-    for tab in model.charts.values():
-        as_sheet = tab_sheet(model, tab.id, number, taken)
-        if as_sheet is not None:
-            out.tabs.append((as_sheet[0], as_sheet[1]))
-            out.parts.update(as_sheet[2])
-            number += 1
     return out
-
-
-def tab_sheet(
-    model: WorkbookModel, tab_id: str, number: int, taken: set[str]
-) -> tuple[str, etree._Element, Parts] | None:
-    """The sheet a chart tab becomes in a file: its name (one no sheet in ``taken`` has, which it is added to), its
-    ``table:shapes`` with the chart, and the parts of the chart; ``None`` for a chart that reads nothing."""
-    tab = model.charts[tab_id]
-    spec = model.diagrams[tab.spec_id]
-    assert isinstance(spec, ChartSpec)
-    made = a_chart(model, spec, number, TAB_SIZE, (0, 0))
-    if made is None:
-        return None
-    shapes = new_shapes()
-    shapes.append(made.frame)
-    return _sheet_name(tab.name, taken), shapes, made.parts

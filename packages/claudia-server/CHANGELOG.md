@@ -5,6 +5,18 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- A chart becomes a slide (E6.31 step 3, D1475): computes' `insert_chart(definition, show_as, place, name?)` makes a
+  chart with its definition in one step, as a new slide after a tab (`slide`, `{after}`), on a slide (`on_slide`,
+  `{slide}`) or floating on a sheet (`sheet`, `{sheet, row, col, w, h}`); `move_to_slide(object)` puts a chart of a
+  sheet on a new slide after it. A new slide is the next free "Slide n" in the language of the request. computes'
+  `remove_object` takes a chart's definition and a slide left empty along. `free_name(kind)` (every app) is the next
+  free generic name of a kind, in the language of the request.
+
+### Removed
+- **Breaking** — computes' `charts`, `add_chart`, `remove_chart` and `add_diagram_object`, and the event `charts`
+  (E6.31 step 3, D1475): a chart is made with `insert_chart`.
+
 ### Fixed
 - A refusal of a model reaches a person in her language (CODE-78, D1510): `i18n.message_of(error)` keeps the
   template of a `claudia_core.Refusal`, every `command_error` and `bad_request` that passes on a model's refusal uses
