@@ -3,8 +3,8 @@
 import pytest
 from conftest import add, frame, move, reopen, resize, text_box
 
-from claudia_core import RemoveObject, SetObjectStyle
-from claudia_creates import AddSlide, DefineLayout, RemoveLayout, RemoveSlide, SetSlideLayout, SlideModel
+from claudia_core import Batch, InsertText, RemoveObject, SetObjectStyle
+from claudia_creates import AddSlide, DefineLayout, HideLayout, RemoveLayout, RemoveSlide, SetSlideLayout, SlideModel
 from claudia_creates.layout_plans import set_layout_command
 
 
@@ -150,16 +150,16 @@ def test_objects_bound_to_a_placeholder_follow_it_when_it_moves_or_is_resized(do
     assert frame(doc, "h1") == (200, 80, 800, 100)
 
 
-def test_an_object_is_free_where_it_stands_when_its_placeholder_is_gone_or_its_slide_follows_another_layout(doc):
+def test_an_object_is_free_where_it_stands_while_its_placeholder_is_gone_and_is_bound_again_when_it_is_back(doc):
     two_lists_with_a_heading(doc)
     doc.execute(SetSlideLayout("s2", "basic"), author="ana")
-    assert doc.model.get("h2").anchor.bound_to_placeholder == ""
+    assert doc.model.placeholder_of(doc.model.get("h2")) is None
     assert frame(doc, "h2") == (100, 50, 800, 100)
     doc.execute(RemoveObject("title"), author="ana")
-    assert doc.model.get("h1").anchor.bound_to_placeholder == ""
+    assert doc.model.placeholder_of(doc.model.get("h1")) is None
     assert frame(doc, "h1") == (100, 50, 800, 100)
-    doc.undo("ana")  # the placeholder is back, but nobody binds to it again by themselves
-    assert doc.model.get("h1").anchor.bound_to_placeholder == ""
+    doc.undo("ana")  # the placeholder is back, and what was bound to it is bound again: undo is exact
+    assert doc.model.placeholder_of(doc.model.get("h1")).id == "title"
     assert reopen(doc).model.serialize() == doc.model.serialize()
 
 
@@ -223,8 +223,45 @@ def test_a_free_object_moves_as_it_always_did(doc):
     doc.execute(add(text_box("free", slide="s1", x=10, y=10, w=50, h=50)), author="ana")
     doc.execute(move("free", 5, 5), author="ana")
     assert frame(doc, "free") == (5, 5, 50, 50)
-    with pytest.raises(ValueError, match="layout"):
-        doc.execute(add(text_box("odd", slide="s1", x=1, y=1, w=50, h=50, bound_to_placeholder="title")), author="ana")
+
+
+def test_an_object_added_with_a_binding_gets_the_place_of_its_placeholder(doc):
+    two_lists_with_a_heading(doc)
+    doc.execute(add(text_box("odd", slide="s1", x=1, y=1, w=50, h=50, bound_to_placeholder="title")), author="ana")
+    assert frame(doc, "odd") == (100, 50, 800, 100)
+
+
+def test_words_can_be_typed_into_a_bound_object_in_the_same_step_that_moves_its_placeholder(doc):
+    two_lists_with_a_heading(doc)
+    step = Batch((move("title", 300, 70, slide="two-lists"), InsertText("h1", 0, "Hello")))
+    doc.execute(step, author="ana")
+    assert frame(doc, "h1") == (300, 70, 800, 100) and doc.model.get("h1").body.paragraph.text == "Hello"
+
+
+def test_a_purpose_is_on_a_layout_only_and_a_layout_has_each_purpose_once(doc):
+    two_lists_with_a_heading(doc)
+    with pytest.raises(ValueError, match="purpose"):
+        doc.execute(add(text_box("again", slide="two-lists", purpose="Title")), author="ana")
+    with pytest.raises(ValueError, match="purpose"):
+        doc.execute(add(text_box("odd", slide="s1", purpose="Body")), author="ana")
+    doc.execute(add(text_box("body", slide="two-lists", purpose="Body", x=100, y=200)), author="ana")
+
+
+def test_the_layouts_to_choose_from_leave_out_hidden_ones_and_provisional_ones_nobody_follows(doc):
+    doc.execute(DefineLayout("agenda", "Agenda"), author="ana")
+    doc.execute(DefineLayout("l1", "Agenda 2", to_name=True), author="ana")
+    doc.execute(DefineLayout("l2", "Quiet"), author="ana")
+    doc.execute(HideLayout("l2", True), author="ana")
+    assert [layout.id for layout in doc.model.layouts_to_choose()] == ["basic", "agenda"]
+    doc.execute(SetSlideLayout("s1", "l1"), author="ana")
+    assert [layout.id for layout in doc.model.layouts_to_choose()] == ["basic", "agenda", "l1"]
+
+
+def test_an_empty_box_in_a_placeholder_is_not_drawn_but_a_filled_one_is(doc):
+    two_lists_with_a_heading(doc)
+    doc.execute(InsertText("h2", 0, "Hello"), author="ana")
+    assert [obj.id for obj in doc.model.objects_drawn_on("s1")] == []
+    assert [obj.id for obj in doc.model.objects_drawn_on("s2")] == ["h2"]
 
 
 def test_what_a_layout_shows_beneath_its_slides_is_what_is_on_it_that_is_not_a_placeholder(doc):

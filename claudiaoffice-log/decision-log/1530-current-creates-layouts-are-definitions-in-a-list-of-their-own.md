@@ -26,7 +26,8 @@ holder is the layout. `ObjectModel` therefore has a second list of holders, `lay
   first layout in the list that is not hidden.
 * **State.** Schema 19: `layouts` and `slide_layouts` (slide id → layout id) are new. A state without them has every
   slide on the basic layout.
-* **A layout id is not a slide id**, since holders share one namespace in the object layer.
+* **A layout id is not a slide id**, since holders share one namespace in the object layer: each is refused where it is
+  made. A layout made by a plan has the id `l1`, `l2`… (the next free one); a layout has a name, and a place in the list.
 
 **Why not a Thing.** A Thing has a reference and shows in every list of things; a layout is chosen from a list of layouts
 only. **Why a second holder list** and not the layouts inside `holders()`: every consumer of `holders()` (printing,

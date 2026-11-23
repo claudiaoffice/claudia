@@ -64,6 +64,7 @@ from .events import (
 )
 from .layout_commands import DefineLayout, HideLayout, MoveLayout, RemoveLayout, RenameLayout, SetSlideLayout
 from .model import (
+    BASIC_LAYOUT,
     FIRST_SLIDE,
     MAX_NOTES_LENGTH,
     MAX_SLIDE_SECONDS,
@@ -78,6 +79,7 @@ __all__ = [
     "__version__",
     "AddObject",
     "AddSlide",
+    "BASIC_LAYOUT",
     "DefineLayout",
     "HideLayout",
     "MoveLayout",

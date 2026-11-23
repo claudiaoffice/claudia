@@ -20,10 +20,14 @@ follows. The values are a copy, and the layout is the truth.
   `SlideModel.settle` makes every bound object equal to its placeholder, and tells the views of the slide
   (`ObjectsChanged`). It never refuses, and it is derived from the state alone, so undo, redo and replay come to the same
   document without the repair being a step of its own.
-* **Free where it stands.** What is bound to a placeholder that is gone, or to one of a layout its slide no longer
-  follows, becomes free: the binding is cleared and the object keeps where it stands.
+* **Free where it stands.** A binding to a placeholder that is not on the layout its slide follows (gone, or of
+  another layout) does nothing: the object keeps where it stands, and nothing is cleared, so that undoing what removed
+  the placeholder binds the object again (`SlideModel.placeholder_of` is the binding that counts). A person's own
+  rebinding (`SetSlideLayout.rebind`, which carries the old bindings for its inverse) does clear one.
 * **Only the layout changes them.** A command that would change the place, size, turn or look of a bound object is
-  refused ("change the layout instead", `check_anchor`); setting or clearing the binding is an ordinary change. A move,
+  refused ("change the layout instead", `SlideModel.replace_object`, which compares the object before and after, so a
+  copy that lags behind in the middle of a Batch can still be written in); setting or clearing the binding is an
+  ordinary change, and an object added with a binding gets the place of its placeholder in `settle`. A move,
   resize or turn says where, not what the object is for or bound to (`ObjectModel.placed_at`).
 * **The look is copied only between objects of the same kind** (a picture put into a text placeholder keeps its own).
 * **Cost.** Settling looks at every object once per command to find the bound ones. Measured on a deck of 200 slides

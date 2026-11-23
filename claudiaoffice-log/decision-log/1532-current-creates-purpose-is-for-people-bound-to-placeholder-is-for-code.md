@@ -16,4 +16,4 @@ and what changing the layout of a slide goes by (an object follows the placehold
 layout, else it becomes free where it stands). `SlideAnchor.bound_to_placeholder` is on a slide's object and says which
 placeholder it keeps the place of. They are two fields because one is meaning and the other mechanics, and a purpose
 copied onto a slide object would have to be kept equal to the layout's by hand. Neither is written when empty. A purpose
-is unique within its layout.
+is unique within its layout, and only a layout's objects have one (`check_anchor` refuses otherwise).

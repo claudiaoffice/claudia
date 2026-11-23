@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Collection
 
 from claudia_core.page import DEFAULT_MARGIN
-from claudia_creates import PrintSetup, SlideModel, SlideObject
+from claudia_creates import BASIC_LAYOUT, PrintSetup, SlideModel
 from claudia_odf_io import Loss, LossLog, unwritten_changes
 
 from ._notes import markdown_to_lines
@@ -65,19 +65,16 @@ def slides_unwritten_changes(
 
 def layout_losses(model: SlideModel, baseline: SlideModel | None) -> tuple[Loss, ...]:
     """``"layouts"`` as ``"not-written"``, with how many slides follow another layout than they did in ``baseline`` (the
-    basic one for a fresh file): a presentation file has no layouts of this kind (E10.24 teaches them), so each slide is
-    written with what its layout shows beneath it (:func:`slide_objects`) and does not follow the layout there."""
+    basic one for a fresh file). A presentation file has no layouts of this kind (E10.24 teaches them), so each slide is
+    written with what its layout shows beneath it (``SlideModel.objects_drawn_on``) and does not follow the layout
+    there."""
     moved = sum(
         1
         for slide in model.order
-        if model.layout_of(slide) != (baseline.layout_of(slide) if baseline and slide in baseline.order else "basic")
+        if model.layout_of(slide)
+        != (baseline.layout_of(slide) if baseline and slide in baseline.order else BASIC_LAYOUT)
     )
     return (Loss("not-written", "layouts", moved),) if moved else ()
-
-
-def slide_objects(model: SlideModel, slide: str) -> list[SlideObject]:
-    """What is drawn of a slide, bottom first: what its layout shows beneath it (D1534), then its own objects."""
-    return [*model.layout_objects_of(slide), *model.objects_on(slide)]
 
 
 def authored_objects(model: SlideModel) -> int:

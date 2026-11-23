@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import re
 from dataclasses import replace
+from typing import NamedTuple
 
 from claudia_core import AddObject, Batch, Command, MoveObject, RemoveObject, ResizeObject, RotateObject, SetObjectStyle
 
 from .layout_commands import DefineLayout, RemoveLayout, SetSlideLayout
-from .model import SlideModel, SlideObject
+from .model import SlideModel, is_empty
 
 #: The changes to an object that belong to the layout when the object does (E10.5): its place and size, its look, its
 #: turn, and taking it away. What is written in it is not among them.
@@ -21,7 +22,7 @@ _DEVIATIONS = (MoveObject, ResizeObject, RotateObject, SetObjectStyle, RemoveObj
 def set_layout_command(model: SlideModel, slide: str, layout: str) -> SetSlideLayout:
     """The command that lets a slide follow ``layout``: what is bound to a placeholder follows the placeholder with
     the same purpose on the new layout, and where there is none it becomes a free box where it stands (E10.4)."""
-    model.layout_of(slide)
+    model.layout_of(slide)  # raises for an unknown slide
     by_purpose = {obj.anchor.purpose: obj.id for obj in model.objects_on(layout) if obj.anchor.purpose}
     rebind = tuple(
         (obj.id, by_purpose.get(model.objects[obj.anchor.bound_to_placeholder].anchor.purpose, ""))
@@ -79,7 +80,7 @@ def update_layout(model: SlideModel, slide: str, change: Command) -> Command:
         obj.id
         for follower in model.slides_following(parent)
         for obj in model.objects_on(follower)
-        if obj.anchor.bound_to_placeholder == layout_object and _is_empty(obj)
+        if obj.anchor.bound_to_placeholder == layout_object and is_empty(obj)
     ]
     return Batch((*(RemoveObject(object_id) for object_id in empty), RemoveObject(layout_object)))
 
@@ -89,14 +90,22 @@ def delete_layout(model: SlideModel, layout: str, move_to: str) -> Command:
     the placeholders with the same purpose, or stay as free boxes), and what is on the layout goes with it (E10.4)."""
     if move_to == layout:
         raise ValueError("the slides cannot move to the layout that is taken away")
-    model.layouts[move_to]  # noqa: B018  (raises for an unknown layout)
+    model.layouts.require(move_to)
     steps: list[Command] = [set_layout_command(model, slide, move_to) for slide in model.slides_following(layout)]
     steps += [RemoveObject(obj.id) for obj in model.objects_on(layout)]
     steps.append(RemoveLayout(layout))
     return Batch(tuple(steps))
 
 
-def _belonging(model: SlideModel, slide: str, change: Command) -> tuple[str, bool, str]:
+class _Belonging(NamedTuple):
+    """What a change to an object of a slide is about (see :func:`_belonging`)."""
+
+    layout: str  # the layout the slide follows
+    own: bool  # a slide's own object bound to the layout, not an object of the layout seen on the slide
+    layout_object: str  # the object of the layout the change belongs to
+
+
+def _belonging(model: SlideModel, slide: str, change: Command) -> _Belonging:
     """What a change to an object of a slide is about: the layout the slide follows, whether the object is a slide's
     own object that is bound to the layout (not an object of the layout seen on the slide), and the object of the
     layout it belongs to. ``ValueError`` if the change is not one that belongs to a layout, or the object is not the
@@ -108,39 +117,39 @@ def _belonging(model: SlideModel, slide: str, change: Command) -> tuple[str, boo
     on_slide = target.holder == slide and target.anchor.bound_to_placeholder in model.stack_of(parent)
     if not on_slide and target.holder != parent:
         raise ValueError("this object does not belong to the layout of its slide")
-    return parent, on_slide, target.anchor.bound_to_placeholder if on_slide else target.id
-
-
-def _is_empty(obj: SlideObject) -> bool:
-    """Is there nothing in this object that a person put there? A box with no words."""
-    return obj.body.paragraph is not None and not obj.body.paragraph.text
+    return _Belonging(parent, on_slide, target.anchor.bound_to_placeholder if on_slide else target.id)
 
 
 def _retargeted(change: Command, object_id: str, layout_id: str) -> Command:
     """``change`` as made to the object ``object_id`` of the layout ``layout_id``."""
     if isinstance(change, MoveObject | ResizeObject):
         return replace(change, id=object_id, anchor={**change.anchor, "holder": layout_id})
-    return replace(change, id=object_id)  # type: ignore[type-var]
+    if isinstance(change, RotateObject) and change.anchor is not None:
+        return replace(change, id=object_id, anchor={**change.anchor, "holder": layout_id})
+    return replace(change, id=object_id)  # type: ignore[type-var]  # every change here is a dataclass with an id
 
 
 def _next_layout(model: SlideModel, parent: str) -> tuple[str, str]:
-    """The id and the name of the layout that deviates from ``parent``: its own with a number, the first that is free
-    (a deviation of a deviation counts on from the layout it came from)."""
-    base_id = re.sub(r"-\d+$", "", parent)
-    base_name = re.sub(r" \d+$", "", model.layouts[parent].name)
-    taken = {layout.name.casefold() for layout in model.layouts}
+    """The id and the name of the layout that deviates from ``parent``: the next free id ``l1``, ``l2``…, and the name
+    of the layout with a number, the first that is free. A deviation that nobody named yet is counted on from the layout
+    it came from ("Two lists 2" gives "Two lists 3"); a name a person gave stays whole ("Top 10" gives "Top 10 2")."""
+    layout = model.layouts[parent]
+    base_name = re.sub(r" \d+$", "", layout.name) if layout.to_name else layout.name
+    taken = {other.name.casefold() for other in model.layouts}
     number = 2
-    while f"{base_id}-{number}" in model.layouts or f"{base_name} {number}".casefold() in taken:
+    while f"{base_name} {number}".casefold() in taken:
         number += 1
-    return f"{base_id}-{number}", f"{base_name} {number}"
+    return _free_id(model, "l", set(), start=1), f"{base_name} {number}"
 
 
-def _free_id(model: SlideModel, base: str, chosen: set[str]) -> str:
-    """An id like ``base`` that no object, slide or layout has, and is not one of ``chosen`` already."""
+def _free_id(model: SlideModel, base: str, chosen: set[str], start: int = 2) -> str:
+    """An id of the form ``base-N`` (``baseN`` for the layouts' ``l``) that no object, slide or layout has and that is
+    not one of ``chosen`` already."""
     stem = re.sub(r"-\d+$", "", base)
-    number = 2
+    joint = "" if base == "l" else "-"
+    number = start
     while (
-        (candidate := f"{stem}-{number}") in model.objects
+        (candidate := f"{stem}{joint}{number}") in model.objects
         or candidate in model.slides
         or candidate in model.layouts
         or candidate in chosen

@@ -9,7 +9,7 @@ outline or picture — and a ``SlideAnchor``, the one part that is this app's ow
 Everything else about objects — placing, stacking, moving, resizing, styling — is :class:`~claudia_core.ObjectModel`
 and the core object commands, shared with composes and computes.
 
-What is not here yet: templates and layouts (E10.4), groups, free colours.
+What is not here yet: templates (E10.4, patch 2), groups, free colours.
 """
 
 from __future__ import annotations
@@ -99,6 +99,26 @@ def _check_seconds(seconds: object) -> None:
 #: One thing on a slide: a text box, a shape or an image. The body is shared with the other two apps; only the
 #: anchor is this app's own.
 type SlideObject = VisualObject[SlideAnchor]
+
+
+def is_empty(obj: SlideObject) -> bool:
+    """Is there nothing in this object that a person put there? A box with no words."""
+    return obj.body.paragraph is not None and not obj.body.paragraph.text
+
+
+def _own_place(obj: SlideObject) -> tuple:
+    """What a placeholder gives the objects bound to it: place, size, turn and look."""
+    return (obj.anchor.x, obj.anchor.y, obj.body.w, obj.body.h, obj.body.rotation, obj.body.style)
+
+
+def _bound_to(obj: SlideObject, placeholder: SlideObject) -> SlideObject:
+    """``obj`` with the place, size, turn and look of ``placeholder`` (the look only if both are of one kind: a picture
+    in a text placeholder keeps its own)."""
+    body = replace(obj.body, w=placeholder.body.w, h=placeholder.body.h, rotation=placeholder.body.rotation)
+    if body.kind == placeholder.body.kind:
+        body = replace(body, style=placeholder.body.style)
+    anchor = replace(obj.anchor, x=placeholder.anchor.x, y=placeholder.anchor.y)
+    return replace(obj, anchor=anchor, body=body)
 
 
 class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
@@ -272,13 +292,24 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return room_on_slide(anchor)
 
     def check_anchor(self, anchor: SlideAnchor, body: ObjectBody) -> None:
-        """An object must stay on its slide (the core's rule for every slide, D1470), and one that is bound to a
-        placeholder has its place, size, turn and look, which only the layout changes (E10.4)."""
+        """An object must stay on its slide (the core's rule for every slide, D1470). A purpose is for a placeholder,
+        which is on a layout, and a layout has each purpose once (E10.4, D1532)."""
         check_on_slide(anchor, body)
-        if self._placeholder_of(anchor) is not None:
-            copy = self._bound_copy(VisualObject(body, anchor))
-            if (copy.anchor.x, copy.anchor.y, copy.body) != (anchor.x, anchor.y, body):
-                raise Refusal("this object has the place, size and look of its placeholder: change the layout instead")
+        if not anchor.purpose:
+            return
+        if anchor.slide not in self.layouts:
+            raise Refusal("only a placeholder on a layout has a purpose")
+        if any(o.anchor.purpose == anchor.purpose and o.id != body.id for o in self.objects_on(anchor.slide)):
+            raise Refusal("a layout has one placeholder for each purpose: {purpose}", purpose=anchor.purpose)
+
+    def replace_object(self, obj: SlideObject) -> SlideObject:
+        """As the kernel's, but what only the layout changes of an object bound to a placeholder (its place, size, turn
+        and look) is not changed here: ``Refusal`` (E10.4). Settling does not come this way, and a copy that lags
+        behind its placeholder in the middle of a Batch may still be written in."""
+        old = self.get_object(obj.id)
+        if self.placeholder_of(obj) is not None and _own_place(old) != _own_place(obj):
+            raise Refusal("this object has the place, size and look of its placeholder: change the layout instead")
+        return super().replace_object(obj)
 
     def turned_anchor(self, obj: SlideObject, rotation: int) -> SlideAnchor:
         """The nearest place for ``obj`` at which turned to ``rotation`` its outline is on the slide."""
@@ -311,6 +342,20 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """Put a layout at place ``at`` in the list; returns the place it had."""
         return self.layouts.move(layout, at)
 
+    def objects_drawn_on(self, slide: str) -> list[SlideObject]:
+        """Everything that is drawn on a slide, bottom first: what its layout shows beneath it, then its own objects,
+        except an empty box in a placeholder, which is only a place to fill (E10.4)."""
+        own = [obj for obj in self.objects_on(slide) if not (self.placeholder_of(obj) and is_empty(obj))]
+        return [*self.layout_objects_of(slide), *own]
+
+    def layouts_to_choose(self) -> list[Layout]:
+        """The layouts a person chooses a slide's layout from, in order: not the hidden ones, and not a provisional one
+        that nobody follows and nobody named (D1536)."""
+        following = set(self.slide_layouts.values())
+        return [
+            layout for layout in self.layouts if not layout.hidden and (layout.id in following or not layout.to_name)
+        ]
+
     def layout_objects_of(self, slide: str) -> list[SlideObject]:
         """What the layout of a slide shows beneath the slide's own objects, bottom first: everything on the layout but
         its placeholders, which are only places to fill (E10.4)."""
@@ -340,7 +385,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         is what undoing it needs. ``ValueError`` if there is no such slide or layout, an object is not on the slide,
         or a placeholder is not on the layout."""
         old = self.layout_of(slide)
-        self.layouts[layout]  # noqa: B018  (raises for an unknown layout)
+        self.layouts.require(layout)
         rebind = rebind or {}
         on_slide = {obj.id: obj for obj in self.objects_on(slide)}
         for object_id, placeholder in rebind.items():
@@ -374,6 +419,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         description and layout (which is how undoing the removal of a slide gives them back). Without a layout it
         follows the one of the slide before it."""
         self.slides.check_new(slide)
+        if slide in self.layouts:
+            raise ValueError(f"{slide!r} is a layout, not a slide")
         if at is not None and not 0 <= at <= len(self.order):
             raise ValueError(f"there is no place {at} among {len(self.order)} slides")
         notes = _checked_notes(notes)
@@ -394,7 +441,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     def _layout_for_new_slide(self, layout: str, place: int) -> str:
         """The layout a slide added at ``place`` follows: the one asked for, else the one of the slide before it."""
         if layout:
-            self.layouts[layout]  # noqa: B018  (raises for an unknown layout)
+            self.layouts.require(layout)
             return layout
         return self.slide_layouts[self.order[place - 1]] if place else self.layouts.first_visible().id
 
@@ -496,36 +543,23 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.structure.settle(ctx)
 
     def _settle_bound_copies(self, ctx) -> None:
-        """An object bound to a placeholder keeps the frame of that placeholder as its own, so that the slide stands
-        alone; the layout is the truth, and what differs here is repaired. What is bound to a placeholder that is gone,
-        or to one of a layout its slide no longer follows, becomes free where it stands. It never refuses, and it is
-        derived from the state alone, so undo and replay come to the same result."""
+        """An object bound to a placeholder keeps the place, size, turn and look of that placeholder as its own, so that
+        the slide stands alone; the layout is the truth, and what differs here is repaired. A binding to a placeholder
+        that is not on the layout of the slide (gone, or of another layout) does nothing and is not touched, so that
+        undoing what removed the placeholder binds the object again. It never refuses, and it is derived from the state
+        alone, so undo and replay come to the same result."""
         repaired: dict[str, list[SlideObject]] = {}
         for obj in [obj for obj in self.objects.values() if obj.anchor.bound_to_placeholder]:
-            now = self._bound_copy(obj)
-            if now is not obj:
+            if (placeholder := self.placeholder_of(obj)) is not None and (now := _bound_to(obj, placeholder)) != obj:
                 self.objects[obj.id] = now
                 repaired.setdefault(obj.holder, []).append(now)
         for slide, objects in repaired.items():
             ctx.emit(self.objects_changed(slide, changed=tuple(objects)))
 
-    def _bound_copy(self, obj: SlideObject) -> SlideObject:
-        """``obj`` as it must be: with the place, size, turn and look of its placeholder while it is bound to a
-        placeholder of the layout its slide follows, else free of any binding."""
-        placeholder = self._placeholder_of(obj.anchor)
-        if placeholder is None:
-            return replace(obj, anchor=replace(obj.anchor, bound_to_placeholder=""))
-        anchor = replace(obj.anchor, x=placeholder.anchor.x, y=placeholder.anchor.y)
-        body = replace(obj.body, w=placeholder.body.w, h=placeholder.body.h, rotation=placeholder.body.rotation)
-        if body.kind == placeholder.body.kind:
-            body = replace(body, style=placeholder.body.style)
-        now = replace(obj, anchor=anchor, body=body)
-        return obj if now == obj else now
-
-    def _placeholder_of(self, anchor: SlideAnchor) -> SlideObject | None:
-        """The placeholder an anchor is bound to, if it is one of the layout the slide of the anchor follows."""
-        placeholder = self.objects.get(anchor.bound_to_placeholder)
-        if placeholder is None or placeholder.holder != self.slide_layouts.get(anchor.slide):
+    def placeholder_of(self, obj: SlideObject) -> SlideObject | None:
+        """The placeholder an object is bound to, if it is one of the layout the slide of the object follows."""
+        placeholder = self.objects.get(obj.anchor.bound_to_placeholder)
+        if placeholder is None or placeholder.holder != self.slide_layouts.get(obj.holder):
             return None
         return placeholder
 

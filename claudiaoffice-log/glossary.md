@@ -304,6 +304,10 @@ _avoid_: slide master, slide type
 An object on a layout, labelled by its purpose, that an object on a slide can take.
 _avoid_: slot, frame
 
+**Provisional layout**
+A layout that a slide follows at once when a change to what the slide takes from its layout is made on that slide; it is named after the layout it came from, with a number, until a person names it.
+_avoid_: temporary layout, draft layout, copy of a layout
+
 **Number format**
 How the value of a cell reads (a percentage, an amount in euros, a date, a number of decimals), chosen for the cell itself, apart from its style, and never changing the value.
 _avoid_: format (on its own), cell format, number style

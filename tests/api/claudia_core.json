@@ -1141,6 +1141,7 @@
    "ids": "(self) -> 'list[str]'",
    "move": "(self, layout_id: 'str', at: 'int') -> 'int'",
    "remove": "(self, layout_id: 'str') -> 'None'",
+   "require": "(self, layout_id: 'str') -> 'None'",
    "to_data": "(self) -> 'list[dict]'"
   },
   "properties": []

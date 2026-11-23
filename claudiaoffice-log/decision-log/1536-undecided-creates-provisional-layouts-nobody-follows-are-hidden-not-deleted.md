@@ -15,5 +15,5 @@ The owner agreed that unnamed unused layouts "are removed automatically". A remo
 step in the log, so undoing the step that made the layout unused would have to bring a layout back that is gone. The
 model therefore keeps it, and the clients leave it out of every list (it has `to_name` and no slide follows it);
 writing the deck as a template drops it. **Open:** the owner may prefer the removal to be part of the command that makes
-it unused (undoable, but every such command grows). Until then the layout list of a deck can hold such layouts, and
-their names and ids count as taken.
+it unused (undoable, but every such command grows). `SlideModel.layouts_to_choose()` is the one list clients take (not hidden, and not provisional-and-unfollowed). Until then
+the layout list of a deck can hold such layouts, and their names and ids count as taken.

@@ -87,7 +87,7 @@ from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._odp_fonts import DeckFonts
 from ._odp_looks import StyleIndex, read_look
 from ._styling import colour_of, is_bold, look, page_colour, points_of, style_for_font, take_body_font
-from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slide_objects, slides_unwritten_changes
+from ._unwritten import ODP_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
 from .pptx import UnsupportedEdit
 
 _DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -1094,7 +1094,7 @@ def slides_to_odp(model: SlideModel, *, info: DocumentInfo | None = None, raster
         if background:
             page.set(_q("draw", "style-name"), writer.looks.page(background))
         page.set(_q("draw", "master-page-name"), "Default")
-        for obj in slide_objects(model, slide_id):
+        for obj in model.objects_drawn_on(slide_id):
             element = writer.object(obj)
             if element is not None:
                 page.append(element)

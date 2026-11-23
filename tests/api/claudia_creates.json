@@ -40,6 +40,9 @@
    "summary"
   ]
  },
+ "BASIC_LAYOUT": {
+  "value": "'basic'"
+ },
  "BOX": {
   "value": "100"
  },
@@ -582,11 +585,14 @@
    "layout_holders": "(self) -> 'list[str]'",
    "layout_objects_of": "(self, slide: 'str') -> 'list[SlideObject]'",
    "layout_of": "(self, slide: 'str') -> 'str'",
+   "layouts_to_choose": "(self) -> 'list[Layout]'",
    "list_in_use": "(self, list_id: 'str') -> 'bool'",
    "move_layout": "(self, layout: 'str', at: 'int') -> 'int'",
    "named_things": "(self)",
    "notes_of": "(self, slide: 'str') -> 'str'",
+   "objects_drawn_on": "(self, slide: 'str') -> 'list[SlideObject]'",
    "placed_at": "(self, old: 'SlideAnchor', new: 'SlideAnchor') -> 'SlideAnchor'",
+   "placeholder_of": "(self, obj: 'SlideObject') -> 'SlideObject | None'",
    "put_fields": "(self, paragraph_id: 'str', fields: 'tuple[Field, ...]') -> 'tuple[object, ...]'",
    "put_generated": "(self, paragraph_id: 'str', generated: 'Generated | None') -> 'object'",
    "put_item": "(self, paragraph_id: 'str', item: 'ListItem | None') -> 'object'",
@@ -595,6 +601,7 @@
    "region_from_data": "(self, data: 'dict') -> 'Region'",
    "remove_layout": "(self, layout: 'str') -> 'tuple[Layout, int]'",
    "remove_text": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]'",
+   "replace_object": "(self, obj: 'SlideObject') -> 'SlideObject'",
    "requirements": "(self) -> 'Requirements'",
    "restore": "(state: 'dict') -> 'Self'",
    "room_for_new_object": "(self, anchor: 'SlideAnchor | None') -> 'int | None'",

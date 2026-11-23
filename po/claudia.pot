@@ -6861,7 +6861,7 @@ msgstr ""
 msgid "There is already a sheet called “{name}”"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:113
+#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:133
 msgid "There is already a slide called “{name}”"
 msgstr ""
 
@@ -7885,6 +7885,14 @@ msgstr ""
 msgid "a holder has at most {limit} objects"
 msgstr ""
 
+#: packages/claudia-creates/src/claudia_creates/model.py:303
+msgid "a layout has one placeholder for each purpose: {purpose}"
+msgstr ""
+
+#: packages/claudia-core/src/claudia_core/layouts.py:116
+msgid "a layout needs a name"
+msgstr ""
+
 #: web/app/components/SearchPanel.vue:203 web/app/lib/search.ts:215
 msgid "a letter"
 msgstr ""
@@ -8021,7 +8029,7 @@ msgstr ""
 msgid "a slide needs a name"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:328
+#: packages/claudia-creates/src/claudia_creates/model.py:373
 msgid "a slide still follows this layout"
 msgstr ""
 
@@ -8229,7 +8237,7 @@ msgstr ""
 msgid "ann"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/layouts.py:110
+#: packages/claudia-core/src/claudia_core/layouts.py:118
 msgid "another layout has the name {name}"
 msgstr ""
 
@@ -9177,6 +9185,10 @@ msgstr ""
 msgid "only a built-in scheme can be reset"
 msgstr ""
 
+#: packages/claudia-creates/src/claudia_creates/model.py:301
+msgid "only a placeholder on a layout has a purpose"
+msgstr ""
+
 #: packages/claudia-server/src/claudia_server/protocol.py:1262
 msgid "only an editor or an owner of a document may change its description and tags"
 msgstr ""
@@ -9721,7 +9733,7 @@ msgstr ""
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:326
+#: packages/claudia-creates/src/claudia_creates/model.py:371
 msgid "the basic layout stays"
 msgstr ""
 
@@ -10129,7 +10141,7 @@ msgstr ""
 msgid "this level"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:281
+#: packages/claudia-creates/src/claudia_creates/model.py:311
 msgid "this object has the place, size and look of its placeholder: change the layout instead"
 msgstr ""
 

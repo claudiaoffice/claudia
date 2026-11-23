@@ -46,3 +46,23 @@ def test_layouts_are_moved_in_the_list_and_the_first_visible_one_is_the_first_of
     assert doc.model.layout_of("s0") == "agenda", "a slide that has no slide before it follows the first visible layout"
     doc.execute(AddSlide("s9"), author="ana")
     assert doc.model.layout_of("s9") == "basic", "a slide follows the one before it, hidden layout or not"
+
+
+def test_a_layout_has_a_name_and_a_place_that_is_in_the_list(doc):
+    with pytest.raises(ValueError, match="name"):
+        doc.execute(DefineLayout("a", "  "), author="ana")
+    with pytest.raises(ValueError, match="place"):
+        doc.execute(DefineLayout("a", "Agenda", at=-1), author="ana")
+    with pytest.raises(ValueError, match="place"):
+        doc.execute(DefineLayout("a", "Agenda", at=99), author="ana")
+    doc.execute(DefineLayout("a", "Agenda", at=1), author="ana")
+    with pytest.raises(ValueError, match="name"):
+        doc.execute(RenameLayout("a", ""), author="ana")
+
+
+def test_a_layout_and_a_slide_never_have_the_same_id(doc):
+    doc.execute(DefineLayout("agenda", "Agenda"), author="ana")
+    with pytest.raises(ValueError, match="layout"):
+        doc.execute(AddSlide("agenda"), author="ana")
+    with pytest.raises(ValueError, match="slide"):
+        doc.execute(DefineLayout("s1", "Mine"), author="ana")

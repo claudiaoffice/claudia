@@ -49,8 +49,8 @@ class Layout:
         if not isinstance(data, dict):
             raise ValueError("a layout has an id and a name")
         layout = cls(
-            data.get("id"),  # type: ignore[arg-type]  # checked below
-            data.get("name"),  # type: ignore[arg-type]
+            data.get("id"),  # type: ignore[arg-type]  # not yet known to be text: checked below
+            data.get("name"),  # type: ignore[arg-type]  # as the id: checked below
             data.get("origin", "document"),
             data.get("purpose", ""),
             data.get("hidden", False),
@@ -82,6 +82,10 @@ class Layouts:
         except KeyError:
             raise ValueError(f"unknown layout {layout_id!r}") from None
 
+    def require(self, layout_id: str) -> None:
+        """``ValueError`` unless there is a layout with this id."""
+        self[layout_id]  # noqa: B018  (the lookup raises)
+
     def __iter__(self) -> Iterator[Layout]:
         return (self._by_id[layout_id] for layout_id in self._order)
 
@@ -101,11 +105,15 @@ class Layouts:
         if layout.id in self._by_id:
             raise ValueError(f"layout {layout.id!r} exists already")
         self.check_name(layout.name)
+        if at is not None and not 0 <= at <= len(self._order):
+            raise ValueError(f"there is no place {at} among {len(self._order)} layouts")
         self._by_id[layout.id] = layout
         self._order.insert(len(self._order) if at is None else at, layout.id)
 
     def check_name(self, name: str, own_id: str | None = None) -> None:
-        """No two layouts have the same name, whatever the case; the layout ``own_id`` may keep its own."""
+        """A layout has a name, and no two have the same, whatever the case; the layout ``own_id`` may keep its own."""
+        if not name.strip():
+            raise Refusal("a layout needs a name")
         if any(layout.id != own_id and layout.name.casefold() == name.casefold() for layout in self):
             raise Refusal("another layout has the name {name}", name=name)
 
@@ -119,7 +127,7 @@ class Layouts:
         old = self[layout_id]
         if "name" in changes:
             self.check_name(str(changes["name"]), layout_id)
-        self._by_id[layout_id] = replace(old, **changes)  # type: ignore[arg-type]
+        self._by_id[layout_id] = replace(old, **changes)  # type: ignore[arg-type]  # the caller names fields of Layout; dataclasses.replace takes any
         return old
 
     def move(self, layout_id: str, at: int) -> int:
@@ -132,7 +140,7 @@ class Layouts:
 
     def remove(self, layout_id: str) -> None:
         """Forget a layout; ``ValueError`` if there is none."""
-        self[layout_id]  # noqa: B018  (raises for an unknown layout)
+        self.require(layout_id)
         del self._by_id[layout_id]
         self._order.remove(layout_id)
 

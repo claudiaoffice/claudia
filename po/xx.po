@@ -6861,7 +6861,7 @@ msgstr "[Théré îs àlréàdy à shàpé càlléd “{name}”~~~~~~~~~~~~~~~~
 msgid "There is already a sheet called “{name}”"
 msgstr "[Théré îs àlréàdy à shéét càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:113
+#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:133
 msgid "There is already a slide called “{name}”"
 msgstr "[Théré îs àlréàdy à slîdé càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
@@ -7885,6 +7885,14 @@ msgstr "[à héàdîng îs càlléd by îts wôrds: chàngé thé wôrds tô ch�
 msgid "a holder has at most {limit} objects"
 msgstr "[à hôldér hàs àt môst {limit} ôbjécts~~~~~~~~~~~~~~]"
 
+#: packages/claudia-creates/src/claudia_creates/model.py:303
+msgid "a layout has one placeholder for each purpose: {purpose}"
+msgstr "[à làyôût hàs ôné plàcéhôldér fôr éàch pûrpôsé: {purpose}~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/layouts.py:116
+msgid "a layout needs a name"
+msgstr "[à làyôût nééds à nàmé~~~~~~~~]"
+
 #: web/app/components/SearchPanel.vue:203 web/app/lib/search.ts:215
 msgid "a letter"
 msgstr "[à léttér~~~]"
@@ -8021,7 +8029,7 @@ msgstr "[à shéét nééds à nàmé~~~~~~~~]"
 msgid "a slide needs a name"
 msgstr "[à slîdé nééds à nàmé~~~~~~~~]"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:328
+#: packages/claudia-creates/src/claudia_creates/model.py:373
 msgid "a slide still follows this layout"
 msgstr "[à slîdé stîll fôllôws thîs làyôût~~~~~~~~~~~~~]"
 
@@ -8229,7 +8237,7 @@ msgstr "[ànd {n} môré~~~~~]"
 msgid "ann"
 msgstr "[ànn~]"
 
-#: packages/claudia-core/src/claudia_core/layouts.py:110
+#: packages/claudia-core/src/claudia_core/layouts.py:118
 msgid "another layout has the name {name}"
 msgstr "[ànôthér làyôût hàs thé nàmé {name}~~~~~~~~~~~~~~]"
 
@@ -9177,6 +9185,10 @@ msgstr "[ônly Sûndày îs ôff: Sàtûrdày îs à wôrkdày~~~~~~~~~~~~~~~~]"
 msgid "only a built-in scheme can be reset"
 msgstr "[ônly à bûîlt-în schémé càn bé rését~~~~~~~~~~~~~~]"
 
+#: packages/claudia-creates/src/claudia_creates/model.py:301
+msgid "only a placeholder on a layout has a purpose"
+msgstr "[ônly à plàcéhôldér ôn à làyôût hàs à pûrpôsé~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-server/src/claudia_server/protocol.py:1262
 msgid "only an editor or an owner of a document may change its description and tags"
 msgstr "[ônly àn édîtôr ôr àn ôwnér ôf à dôcûmént mày chàngé îts déscrîptîôn ànd tàgs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -9721,7 +9733,7 @@ msgstr "[thé àssîstànt dôés nôt wîthdràw sûggéstîôns~~~~~~~~~~~~~~~
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr "[thé àssîstànt sûggésts chàngés; yôû àccépt ôr réjéct éàch~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:326
+#: packages/claudia-creates/src/claudia_creates/model.py:371
 msgid "the basic layout stays"
 msgstr "[thé bàsîc làyôût stàys~~~~~~~~~]"
 
@@ -10129,7 +10141,7 @@ msgstr "[thîs îs nôt thé sûggéstîôn thàt îs ôn thé dôcûmént~~~~~~
 msgid "this level"
 msgstr "[thîs lévél~~~~]"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:281
+#: packages/claudia-creates/src/claudia_creates/model.py:311
 msgid "this object has the place, size and look of its placeholder: change the layout instead"
 msgstr "[thîs ôbjéct hàs thé plàcé, sîzé ànd lôôk ôf îts plàcéhôldér: chàngé thé làyôût înstéàd~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
