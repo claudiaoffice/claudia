@@ -3,7 +3,7 @@
 import pytest
 from conftest import add, frame, move, reopen, resize, text_box
 
-from claudia_core import RemoveObject
+from claudia_core import RemoveObject, SetObjectStyle
 from claudia_creates import AddSlide, DefineLayout, RemoveLayout, RemoveSlide, SetSlideLayout, SlideModel
 from claudia_creates.layout_plans import set_layout_command
 
@@ -192,3 +192,36 @@ def test_moving_or_resizing_an_object_keeps_what_its_anchor_says_besides_the_pla
     doc.undo("ana")
     doc.undo("ana")
     assert doc.model.get("title").anchor.purpose == "Title"
+
+
+def test_a_bound_object_takes_its_look_and_turn_from_its_placeholder_too(doc):
+    two_lists_with_a_heading(doc)
+    doc.execute(SetObjectStyle("title", "plain-box"), author="ana")
+    doc.execute(doc.model.turn_command("title", 90), author="ana")
+    assert doc.model.get("h1").body.style == "plain-box" and doc.model.get("h1").body.rotation == 90
+    doc.undo("ana")
+    doc.undo("ana")
+    assert doc.model.get("h1").body.style == "body-text" and doc.model.get("h1").body.rotation == 0
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        move("h1", 5, 5),
+        resize("h1", 100, 50, 700, 100),
+        SetObjectStyle("h1", "plain-box"),
+    ],
+)
+def test_the_place_size_and_look_of_a_bound_object_change_on_its_layout_only(doc, change):
+    two_lists_with_a_heading(doc)
+    with pytest.raises(ValueError, match="layout"):
+        doc.execute(change, author="ana")
+
+
+def test_a_free_object_moves_as_it_always_did(doc):
+    two_lists_with_a_heading(doc)
+    doc.execute(add(text_box("free", slide="s1", x=10, y=10, w=50, h=50)), author="ana")
+    doc.execute(move("free", 5, 5), author="ana")
+    assert frame(doc, "free") == (5, 5, 50, 50)
+    with pytest.raises(ValueError, match="layout"):
+        doc.execute(add(text_box("odd", slide="s1", x=1, y=1, w=50, h=50, bound_to_placeholder="title")), author="ana")

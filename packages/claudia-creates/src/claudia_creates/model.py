@@ -272,8 +272,13 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return room_on_slide(anchor)
 
     def check_anchor(self, anchor: SlideAnchor, body: ObjectBody) -> None:
-        """An object must stay on its slide (the core's rule for every slide, D1470)."""
+        """An object must stay on its slide (the core's rule for every slide, D1470), and one that is bound to a
+        placeholder has its place, size, turn and look, which only the layout changes (E10.4)."""
         check_on_slide(anchor, body)
+        if self._placeholder_of(anchor) is not None:
+            copy = self._bound_copy(VisualObject(body, anchor))
+            if (copy.anchor.x, copy.anchor.y, copy.body) != (anchor.x, anchor.y, body):
+                raise Refusal("this object has the place, size and look of its placeholder: change the layout instead")
 
     def turned_anchor(self, obj: SlideObject, rotation: int) -> SlideAnchor:
         """The nearest place for ``obj`` at which turned to ``rotation`` its outline is on the slide."""
@@ -496,20 +501,24 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             ctx.emit(self.objects_changed(slide, changed=tuple(objects)))
 
     def _bound_copy(self, obj: SlideObject) -> SlideObject:
-        """``obj`` as it must be: its own frame while it is bound to a placeholder of the layout its slide follows,
-        else free of any binding."""
-        placeholder = self.objects.get(obj.anchor.bound_to_placeholder)
-        if placeholder is None or placeholder.holder != self.slide_layouts.get(obj.holder):
+        """``obj`` as it must be: with the place, size, turn and look of its placeholder while it is bound to a
+        placeholder of the layout its slide follows, else free of any binding."""
+        placeholder = self._placeholder_of(obj.anchor)
+        if placeholder is None:
             return replace(obj, anchor=replace(obj.anchor, bound_to_placeholder=""))
-        if (obj.anchor.x, obj.anchor.y, obj.body.w, obj.body.h) == (
-            placeholder.anchor.x,
-            placeholder.anchor.y,
-            placeholder.body.w,
-            placeholder.body.h,
-        ):
-            return obj
         anchor = replace(obj.anchor, x=placeholder.anchor.x, y=placeholder.anchor.y)
-        return replace(obj, anchor=anchor, body=replace(obj.body, w=placeholder.body.w, h=placeholder.body.h))
+        body = replace(obj.body, w=placeholder.body.w, h=placeholder.body.h, rotation=placeholder.body.rotation)
+        if body.kind == placeholder.body.kind:
+            body = replace(body, style=placeholder.body.style)
+        now = replace(obj, anchor=anchor, body=body)
+        return obj if now == obj else now
+
+    def _placeholder_of(self, anchor: SlideAnchor) -> SlideObject | None:
+        """The placeholder an anchor is bound to, if it is one of the layout the slide of the anchor follows."""
+        placeholder = self.objects.get(anchor.bound_to_placeholder)
+        if placeholder is None or placeholder.holder != self.slide_layouts.get(anchor.slide):
+            return None
+        return placeholder
 
     # -- names (D550) ------------------------------------------------------------
     def named_things(self):
