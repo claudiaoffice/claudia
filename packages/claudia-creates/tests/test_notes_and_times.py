@@ -141,7 +141,8 @@ def test_a_presentation_survives_being_stored_and_loaded(doc):
     assert again.serialize() == state
     # 9: notes, times; 10: containers; 11: names; 12: headings; 13: lists; 14: schemes; 15: agendas
     # 16: one ``ref``; 17: slide descriptions; 18: slides as records in the order of the presentation (D1470)
-    assert SlideModel.state_schema == 18
+    # 19: layouts, and the layout every slide follows (E10.4, D1530)
+    assert SlideModel.state_schema == 19
 
 
 def test_undoing_my_notes_after_a_colleague_changed_them_is_refused(doc):

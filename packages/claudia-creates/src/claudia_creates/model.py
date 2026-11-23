@@ -19,6 +19,8 @@ from typing import ClassVar, Self, TypeIs
 
 from claudia_core import (
     N_,
+    Layout,
+    Layouts,
     Command,
     CommandRegistry,
     DocumentModel,
@@ -59,6 +61,8 @@ from .printing import PrintSetup
 from .styles import builtin_styles
 
 FIRST_SLIDE = "s1"  # the slide of a new presentation
+#: The layout every presentation has (E10.4, D1530): no placeholder, nothing on it. It can be hidden, never removed.
+BASIC_LAYOUT = "basic"
 #: The longest speaker notes of a slide, in characters (D342): a page of text, not a manuscript.
 MAX_NOTES_LENGTH = 20000
 #: The longest planned time of a slide, in seconds: one day (D343).
@@ -120,7 +124,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 16: an object body has one ``ref`` instead of a field per kind
     # 17: slides may have descriptions, by their id (D1317, D1318)
     # 18: the slides are records (the core's Slide, D1470), in the order of the presentation
-    state_schema: ClassVar[int] = 18
+    # 19: layouts, and the layout every slide follows (E10.4, D1530)
+    state_schema: ClassVar[int] = 19
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -133,6 +138,11 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         super().__init__()
         #: The ids of the slides in the order of the presentation; what each slide is, is in ``slides``.
         self.order: list[str] = []
+        #: The layouts a slide may follow, in the order a person sees them; the basic one to start with (E10.4).
+        self.layouts: Layouts = Layouts()
+        self.layouts.add(Layout(BASIC_LAYOUT, "Basic", "builtin"))
+        #: The layout every slide follows, by slide id.
+        self.slide_layouts: dict[str, str] = {}
         #: The slides as records, with their names (one namespace with the objects, D550) and descriptions (D1317).
         self.slides: Slides = Slides()
         #: The speaker notes of the slides that have any, as written in Markdown (D342).
@@ -177,6 +187,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     def serialize(self) -> dict:
         return {
             "slides": self.slides.to_data(self.order),
+            "layouts": self.layouts.to_data(),
+            "slide_layouts": dict(self.slide_layouts),
             "notes": dict(self.notes),
             "times": dict(self.times),
             "styles": self.styles.to_data(),
@@ -199,6 +211,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model.slides, model.order = Slides.from_data(state["slides"])
         for slide in model.order:
             model.open_holder(slide)
+        # schema 18 and earlier: no layouts, every slide follows the basic one
+        if "layouts" in state:
+            model.layouts = Layouts.from_data(state["layouts"])
+        model.slide_layouts = {slide: state.get("slide_layouts", {}).get(slide, BASIC_LAYOUT) for slide in model.order}
         # schema 8 and earlier: no notes and no planned times
         model.notes = {k: v for k, v in state.get("notes", {}).items() if k in model.order and v}
         model.times = {k: v for k, v in state.get("times", {}).items() if k in model.order}
@@ -254,6 +270,12 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """The object with this id; ``ValueError`` if there is none. (``get_object``'s older name.)"""
         return self.get_object(object_id)
 
+    # -- layouts (E10.4) -------------------------------------------------------
+    def layout_of(self, slide: str) -> str:
+        """The id of the layout a slide follows; ``ValueError`` if there is no such slide."""
+        self._require_slide(slide)
+        return self.slide_layouts[slide]
+
     # -- slides ----------------------------------------------------------------
     def insert_slide(
         self,
@@ -274,7 +296,9 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             _check_seconds(seconds)
         self.check_thing_name(slide, name)
         self.slides.add(Slide(slide, name, description))
-        self.order.insert(len(self.order) if at is None else at, slide)
+        place = len(self.order) if at is None else at
+        self.slide_layouts[slide] = self.slide_layouts[self.order[place - 1]] if place else BASIC_LAYOUT
+        self.order.insert(place, slide)
         self.open_holder(slide)
         self._slide_order += 1
         if notes:
@@ -292,6 +316,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         del self.order[place]
         self.close_holder(slide)
         self.slides.remove(slide)
+        del self.slide_layouts[slide]
         self._slide_order += 1
         self.notes.pop(slide, None)
         self.times.pop(slide, None)
