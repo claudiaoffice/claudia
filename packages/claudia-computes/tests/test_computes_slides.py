@@ -8,8 +8,10 @@ from claudia_computes import AddSheet, AddSlide, RemoveSheet, RemoveSlide, Tab, 
 from claudia_core import (
     AddObject,
     CommandLog,
+    DeleteText,
     DescribeThing,
     Document,
+    InsertText,
     MemoryStore,
     MoveObject,
     ObjectBody,
@@ -101,6 +103,19 @@ def test_a_text_box_sits_on_a_slide_and_must_stay_in_its_frame(doc):
     assert [obj.id for obj in doc.model.objects_on("p1")] == ["t1"]
     with pytest.raises(ValueError, match="stay on the slide"):
         doc.execute(MoveObject("t1", SlideAnchor("p1", 1300, 700).to_data()), author="ana")
+
+
+def test_the_words_of_a_text_box_on_a_slide_are_written_as_in_creates_and_undone(doc):
+    # CODE-79: writing in a text box on a workbook's slide was an internal error
+    doc.execute(AddSlide("p1", "Slide 1"), author="ana")
+    doc.execute(text_box(), author="ana")
+    doc.execute(InsertText("t1", 4, " leads"), author="ana")
+    assert doc.model.get_object("t1").body.paragraph.text == "East leads"
+    doc.execute(DeleteText("t1", 0, 5), author="ana")
+    assert doc.model.get_object("t1").body.paragraph.text == "leads"
+    doc.undo("ana")
+    doc.undo("ana")
+    assert doc.model.get_object("t1").body.paragraph.text == "East"
 
 
 @pytest.mark.parametrize(

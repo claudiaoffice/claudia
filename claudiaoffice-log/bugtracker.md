@@ -130,7 +130,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (155)
+### Fixed (156)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -242,6 +242,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
 | CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **fixed** 2026-11-23 on `code-78-translated-refusals` (D1510) | 2026-11-22 | 2026-11-23 |
 | CODE-77 | P2 | Code / computes | Undoing a chart leaves it in the workbook (the server does not forget it), and the page reports a Plotly error | **fixed** 2026-11-23 on `e6-31-slides-in-computes` (D1475) | 2026-11-22 | 2026-11-23 |
+| CODE-79 | P2 | Code / computes | Writing in a text box on a workbook's slide is an internal server error | **fixed** 2026-11-23 on `e6-31-slides-in-computes` | 2026-11-23 | 2026-11-23 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2712,3 +2713,12 @@ refusals a person can meet (about 140 sites); checks that only a wrong client ca
 **Tests:** `specs/server/refusals.feature` (`tests/e2e/specs/test_refusals.py`), `test_refusal.py`,
 `test_server_i18n.py`, `test_server_thing_names.py`, `test_extract_i18n.py`, `test_catalogs.py`.
 
+### CODE-79 · Writing in a text box on a workbook's slide is an internal error · P2 · size 2 · fixed
+**Found** while binding the @core rule "A slide holds text boxes, shapes and pictures beside its chart" of
+`specs/computes/slides.feature` (E6.31 step 3): the words typed into a text box on a slide never arrive; the server
+answers `write_words` with an internal error, because `WorkbookModel` has no `text_regions` (the core's `TypingHost`),
+which creates has for the words of its objects. Evidence: **measured**. **Test:**
+`test_the_words_of_a_text_box_on_a_slide_are_written_as_in_creates_and_undone` (computes) and the scenario "A text box
+beside the chart stays after the page is loaded again". **Fixed** 2026-11-23 on `e6-31-slides-in-computes`: the typing
+of an object's words moved from creates into the core's `ObjectModel`; composes, whose text has paragraphs of its own,
+still answers it itself.

@@ -48,6 +48,7 @@ from .tables import FILLER, TableDef, parse_entry_id
 if TYPE_CHECKING:
     from .context import Context
     from .region import Region
+    from .writing import TextCommand
 
 #: Kinds of object every app understands. A text box carries only words; a shape carries an outline and may carry
 #: words; an image carries an asset; a diagram carries a :class:`DiagramDefinition` (E6.6) — what it draws is
@@ -799,6 +800,30 @@ class ObjectModel[A: Anchor]:
         new = self.get_object(object_id).with_body(paragraph=words)
         self.replace_object(new)
         return self.objects_changed(new.holder, changed=(new,))
+
+    # -- typing (claudia_core.TypingHost): the words of an object, character by character (step G, D1470) ----------
+    # Where an app's paragraphs are only the words of its objects (creates, a workbook's slides), these are its typing;
+    # composes, whose text has paragraphs of its own, answers them itself.
+    def insert_text(
+        self, paragraph_id: str, offset: int, text: str, runs: list[Run], fields: tuple[Field, ...] = ()
+    ) -> tuple[object, ...]:
+        """Type into the words of an object; the event that tells the clients."""
+        return (self.insert_object_text(paragraph_id, offset, text, runs, fields),)
+
+    def remove_text(
+        self, paragraph_id: str, start: int, end: int
+    ) -> tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]:
+        """Cut characters out of the words of an object."""
+        text, runs, fields, event = self.remove_object_text(paragraph_id, start, end)
+        return text, runs, fields, (event,)
+
+    def text_regions(self, paragraph_id: str, start: int, end: int) -> tuple[Region, ...]:
+        """The object whose words change."""
+        return self.selection_of(paragraph_id)
+
+    def text_moved(self, command: TextCommand) -> tuple[object, ...]:
+        """Nothing hangs from the words of an object: nothing follows."""
+        return ()
 
     def object_list_in_use(self, list_id: str) -> bool:
         """Are the words of any object an item of this list?"""

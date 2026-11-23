@@ -7,6 +7,9 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- The words of an object are typed by the core (CODE-79): `ObjectModel.insert_text`, `remove_text`, `text_regions` and
+  `text_moved` (the `TypingHost` of `InsertText` and `DeleteText`), which creates had; a workbook's slides use them.
+  composes answers them itself.
 - The slide, shared by creates and computes (E6.31, D1470): `claudia_core.slides` with `SLIDE_WIDTH`, `SLIDE_HEIGHT`
   and `SlideAnchor` (until now creates'), the rule that keeps an object on a slide (`check_on_slide`,
   `turned_on_slide`, `room_on_slide`), `Slide` (id, name, description) and `Slides`, the slides of a document by id,

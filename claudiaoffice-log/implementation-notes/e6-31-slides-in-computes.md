@@ -157,7 +157,9 @@ English: only a wrong client fails them.
   (`PrintedChart`); a chart on a slide is drawn as its picture (`asDrawn`, as on a sheet).
 - **Found and fixed on the way.** CODE-77 (undoing a chart left its definition, and Plotly said the element was gone):
   the chart and its definition are one step now, and `ChartView` checks that its element is still there after loading
-  Plotly. A chart on a slide printed as "the chart has no picture" (A8 had not been met: step 2's slide had no chart).
+  Plotly. CODE-79 (writing in a text box on a workbook's slide was an internal error): the typing of an object's words
+  (`insert_text`, `remove_text`, `text_regions`, `text_moved`) moved from creates into the core's `ObjectModel`. A chart
+  on a slide printed as "the chart has no picture" (A8 had not been met: step 2's slide had no chart).
 - **Assumptions** (the spec does not say): "A slide" is the first choice while a slide is shown too; a chart put on the
   slide shown takes half the frame in the middle and is selected; on a slide the first table or query result is
   chosen; the dialog's own error line is gone, a refusal is said by the notice every write gives.
