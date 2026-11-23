@@ -311,18 +311,18 @@ export class Session extends BaseSession<State> implements SlideHost {
   /** Put a style into one slot of these targets — the one style API every app has (`apply_style`, D304). Without a
    * slot, into every slot of them the style fits: both slots of a cell (D311). */
   async applyStyle(targets: StyleTarget[], style: string, slot?: string): Promise<boolean> {
-    return (await this.write('apply_style', { targets, style, slot })) !== false
+    return this.changed('apply_style', { targets, style, slot })
   }
 
   /** Change these targets only, in one slot or (without) in every slot that held `parent`: a new style from
    * `parent`, named later (`deviate`, D75, D309). */
   async deviateStyle(parent: string, targets: StyleTarget[], slot: string | undefined, edit: CssEdit): Promise<boolean> {
-    return (await this.write('deviate', { parent, targets, slot, ...edit })) !== false
+    return this.changed('deviate', { parent, targets, slot, ...edit })
   }
 
   /** "Clear cell style" (D317): take the cells' own style away, in one slot or both, so what lies beneath shows. */
   async clearCellStyle(sheet: string, range: [number, number, number, number], slot?: string): Promise<boolean> {
-    return (await this.write('clear_cell_style', { sheet, range, slot })) !== false
+    return this.changed('clear_cell_style', { sheet, range, slot })
   }
 
   /** The style ranges of a sheet that are loaded; none until `ensureCellStyles` has run for it. */
@@ -667,23 +667,23 @@ export class Session extends BaseSession<State> implements SlideHost {
   // ------------------------------------------------------------------------------ random numbers, alternatives, following
   /** Draw fresh random numbers for everybody (Tools ▸ Resample, F9, E6.22): one undoable step in the history. */
   async resample(steps = 1): Promise<boolean> {
-    return (await this.write('resample', { steps })) !== false
+    return this.changed('resample', { steps })
   }
 
   // ------------------------------------------------------------------------------ printing (E6.19)
   /** Print the workbook on another page (D1004): one step in the history, for everybody. */
   async setPrintPage(page: PageSetupData): Promise<boolean> {
-    return (await this.write('set_print_page', { page })) !== false
+    return this.changed('set_print_page', { page })
   }
 
   /** Print a sheet or chart tab another way (D1004): one step in the history, for everybody. */
   async setSheetPrint(sheet: string, setup: SheetPrintData): Promise<boolean> {
-    return (await this.write('set_sheet_print', { sheet, setup })) !== false
+    return this.changed('set_sheet_print', { sheet, setup })
   }
 
   /** Give the workbook's random numbers a seed: the same seed and draw give the same numbers on every computer. */
   async setRandomSeed(seed: number): Promise<boolean> {
-    return (await this.write('set_random_seed', { seed })) !== false
+    return this.changed('set_random_seed', { seed })
   }
 
   /** What a distribution would give, for the Random generator. A problem with the numbers is the answer
@@ -795,7 +795,7 @@ export class Session extends BaseSession<State> implements SlideHost {
   }
 
   async structure(sheet: string, axis: 'row' | 'col', insert: boolean, at: number, count = 1): Promise<boolean> {
-    return (await this.write('structure', { sheet, axis, insert, at, count })) !== false
+    return this.changed('structure', { sheet, axis, insert, at, count })
   }
 
   // -- floating objects (images, today): anchored to a cell, a fixed pixel size, never touched by `structure`
@@ -828,12 +828,12 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   /** Redefine a chart in place: what a tab or floating object already showing `id` updates to. */
   async updateDiagram(id: string, draft: ChartDraft): Promise<boolean> {
-    return (await this.write('update_diagram', { id, definition: { kind: 'bar', ...draft } })) !== false
+    return this.changed('update_diagram', { id, definition: { kind: 'bar', ...draft } })
   }
 
   /** Let a chart definition go. Refused (returns `false`) while a tab or a floating object still shows it. */
   async forgetDiagram(id: string): Promise<boolean> {
-    return (await this.write('forget_diagram', { id })) !== false
+    return this.changed('forget_diagram', { id })
   }
 
   /** Put a chart on the sheet that is shown, as a floating object showing `diagramId`; its id, or `null` after
@@ -851,13 +851,13 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   /** Remove a chart tab. The definition it showed is untouched (`forgetDiagram` is the separate step). */
   async removeChart(id: string): Promise<boolean> {
-    return (await this.write('remove_chart', { id })) !== false
+    return this.changed('remove_chart', { id })
   }
 
   // -- names, tables and queries (E6.5)
   /** Give cells a name (or point an existing one, same scope, somewhere else); `false` after telling the person why not. */
   async defineName(draft: NameDraft): Promise<boolean> {
-    return (await this.write('define_name', { definition: draft })) !== false
+    return this.changed('define_name', { definition: draft })
   }
 
   /** Name cells that have no name and describe them, one step in the history (D1317): the id they have from then on, or
@@ -869,12 +869,12 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   /** Call a name something else; the formulas that use it are rewritten. */
   async renameName(old: string, next: string, scope: string | null): Promise<boolean> {
-    return (await this.write('rename_name', { old, new: next, scope })) !== false
+    return this.changed('rename_name', { old, new: next, scope })
   }
 
   /** Take a name away; the cells stay. */
   async removeName(name: string, scope: string | null): Promise<boolean> {
-    return (await this.write('remove_name', { name, scope })) !== false
+    return this.changed('remove_name', { name, scope })
   }
 
   /** Run a query as a `SQL()` cell on `sheet` would, without changing the document (what the SQL editor previews). */
@@ -884,7 +884,7 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   /** Put a query into a cell as `=SQL("…")`, and with `name` make its result a table of that name. */
   async defineSql(sheet: string, row: number, col: number, query: string, name: string | null): Promise<boolean> {
-    return (await this.write('define_sql', { sheet, row, col, query, name })) !== false
+    return this.changed('define_sql', { sheet, row, col, query, name })
   }
 
   // -- pivot tables (E6.30)
@@ -903,12 +903,12 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   /** Change what a pivot table is made from; its cells follow. The words it already writes stay unless `labels` is given. */
   async updatePivot(name: string, definition: PivotDefinition, labels?: PivotLabels): Promise<boolean> {
-    return (await this.write('update_pivot', { name, definition, ...(labels ? { labels } : {}) })) !== false
+    return this.changed('update_pivot', { name, definition, ...(labels ? { labels } : {}) })
   }
 
   /** Take a pivot table away: its cells are empty, the source is untouched. */
   async deletePivot(name: string): Promise<boolean> {
-    return (await this.write('delete_pivot', { name })) !== false
+    return this.changed('delete_pivot', { name })
   }
 
   /** The SQL query a pivot table is, or `null` after telling the person why not. */
@@ -919,7 +919,7 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   /** Turn a pivot table into a `SQL()` query of the same name; one step in the history. */
   async pivotToSql(name: string): Promise<boolean> {
-    return (await this.write('pivot_to_sql', { name })) !== false
+    return this.changed('pivot_to_sql', { name })
   }
 
   /** The members a field of `source` has, for a filter's list: at most `limit` (the preview shows 50 rows at most), in order; `null` is "nothing". */
@@ -934,19 +934,19 @@ export class Session extends BaseSession<State> implements SlideHost {
 
   /** Drag an object to a new anchor cell; its size never changes. */
   async moveObject(id: string, row: number, col: number): Promise<boolean> {
-    return (await this.write('move_object', { id, row, col })) !== false
+    return this.changed('move_object', { id, row, col })
   }
 
   /** Give an object a new frame: its anchor cell and pixel size together, since dragging a corner moves the
    * corner too. An image must keep its own proportions (the server refuses otherwise); a diagram keeps none. */
   async resizeObject(id: string, frame: { row: number; col: number; w: number; h: number }): Promise<boolean> {
-    return (await this.write('resize_object', { id, ...frame })) !== false
+    return this.changed('resize_object', { id, ...frame })
   }
 
   /** Set (or, with `null`, clear back to the default) the size of one or more rows or columns in one change.
    * `sizes` is `[index, size | null]` pairs. */
   async resizeLines(sheet: string, axis: Axis, sizes: [number, number | null][]): Promise<boolean> {
-    return (await this.write('resize_lines', { sheet, axis, sizes })) !== false
+    return this.changed('resize_lines', { sheet, axis, sizes })
   }
 
   // -- the function catalog (E13.5, E13.6: computes' "Documentation", and the formula bar's in-context help)

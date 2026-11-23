@@ -6,6 +6,9 @@ export default defineConfig({
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',
+    // E11.7: the fake server every session test talks to is held to the server's own description of its protocol;
+    // this makes a test fail afterwards if it was asked for what the real server would refuse.
+    setupFiles: ['tests/support/setup.ts'],
     // CODE-01: `npm run coverage`. Only `app/lib` is measured: the tests run in Node without a DOM and test the
     // logic the components call, never a mounted component (the e2e scripts see those). The thresholds are what the
     // tests reached when they were set, rounded down; raise them by hand when a change lifts them, never lower them

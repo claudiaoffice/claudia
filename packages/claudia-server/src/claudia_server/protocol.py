@@ -53,7 +53,7 @@ from claudia_core import (
 from claudia_document_file import AuditRecord, Part, clean_details, write_export
 
 from .ai_mode import parse_mode
-from .audience import may_read
+from .audience import EVENT_RULES, may_read
 from .auth import (
     WRITE_ROLES,
     Account,
@@ -116,6 +116,11 @@ ERROR_CODES = {
     "too_many": "more of this than the server allows in a minute; nothing was done. Try again a little later",
     "internal": "a server error; the request may or may not have been applied, check the revision",
 }
+
+# What ``describe`` says of an event the apps and the kernel send for the state of the document (`cells`, `objects`,
+# `slides`, ...): the name travels as the ``event`` of the frame and the payload is its own (`audience.EVENT_RULES`
+# is the list of every one of them, and a test sees to it that it is complete). The ones above say more.
+STATE_EVENT = "a change of the document's state, in the app's own words: {type, ...}; the payload is the app's"
 
 EVENTS = {
     "command": "a command was applied, by anyone: {revision, author, origin (do|undo|redo), time, label, summary}. "
@@ -520,7 +525,7 @@ class MethodTable:
             "param_types": {
                 name: (check.__doc__ or "defined by the app").strip() for name, check in self._kinds.items()
             },
-            "events": EVENTS,
+            "events": {**dict.fromkeys(sorted(set(EVENT_RULES) - set(EVENTS)), STATE_EVENT), **EVENTS},
             "errors": ERROR_CODES,
             "limits": (limits or Limits()).to_dict(),
         }
