@@ -50,7 +50,7 @@ Unused numbers in a closed block stay unused.
 | D680–D699 | the AI in composes: a model-driven participant, its document lens, words by quoting them (E7.10; branch `composes-ai`; D680–D681 used) | 2026-11-16 | open |
 | D700–D719 | code review follow-up: no claudia-client, one way to write a file (CODE-33, CODE-34; D700–D701 used) | 2026-11-16 | open |
 | D720–D739 | the redaction contract: what a redacted step keeps, the plan, dependents, imports, hidden lines and chat, the store rewritten, the wire and its screens (E1.8, SEC-05; branch `redaction`; D720–D729 used) | 2026-11-16 | open |
-| D740–D759 | the Windows installer: self-contained server, packaged client, Inno Setup, the service, signing (E8.1; branch `win-installer`; D740–D745 used; D746 on branch `win-installer-fix`, the first real install) | 2026-11-17 | open |
+| D740–D759 | the Windows installer: self-contained server, packaged client, Inno Setup, the service, signing (E8.1; branch `win-installer`; D740–D745 used; D746–D747 on branch `win-installer-fix`, the first real install) | 2026-11-17 | open |
 | D760–D779 | stabilisation of main, second round: style loss in the creates exporters, one name for facts Python owns, pinned and promoted CI (CODE-58, CODE-60, PROC-27; D760–D762 used) | 2026-11-17 | open |
 | D1041–D1060 | font management: who may receive a server's fonts, Server settings ▸ Fonts, fonts kept honest from import to export (E3.13; branch `font-server-ui`; D1041 used) | 2026-11-16 | open |
 | D1061–D1080 | the floating object layer in composes: wrap, the engine first, grabbing an object behind the text, the cycling key (branch `floating-objects`; D1061–D1068 used) | 2026-11-17 | open |

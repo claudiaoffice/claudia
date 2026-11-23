@@ -131,12 +131,13 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (155)
+### Fixed (156)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
+| PROC-52 | P2 | Process / CI | The Windows install test let the launcher fail: its window step was advisory as a whole, so CODE-79 had a green CI | **fixed** 2026-11-23 on `win-installer-fix` (D747) | 2026-11-23 | 2026-11-23 |
 | CODE-79 | P1 | Code / Windows | The installed Windows client opens no window: the launcher looks for its apps in a repository that an installation does not have | **fixed** 2026-11-23 on `win-installer-fix` (D746) | 2026-11-23 | 2026-11-23 |
 | SEC-01 | P1 | Security | DNS rebinding defeats the Origin check | fixed (verified at `54d1245`) |  |  |
 | SEC-02 | P2 | Security | Anyone who reaches the server can create unlimited documents | fixed (verified at `54d1245`) |  |  |
@@ -2728,3 +2729,13 @@ in an installation alike. **Tests:** `clients/neutralino/tests/paths.test.ts` (r
 `tests/test_windows_packaging.py::test_the_launcher_finds_the_apps_where_the_stage_and_the_checkout_have_them`, the
 scenario of `specs/desktop/windows-installer.feature`. **Escaped** because: test passed but wrong (every launcher test
 injected the app folder, none used the default) and the CI window step did not fail (PROC-52).
+
+### PROC-52 · The Windows install test did not fail when the launcher could not start · P2 · size 2 · fixed
+**Found** with CODE-79: `windows.yml` started the installed launcher in one step, "A window opens, and starts the server
+it needs", which is `continue-on-error: true` because a runner may have no display for WebView2 (D742). A launcher that
+exits with its own error ("This app has not been built") is the same to that step as a runner without a display. Evidence:
+**read** (the workflow); that CODE-79 reached the owner with a green CI is the proof. **Fixed** 2026-11-23 (D747): a step of
+its own, *The launcher finds the installed app and prepares its window*, which needs no display and is not advisory.
+**Test:** `tests/test_windows_packaging.py::test_a_launcher_that_cannot_prepare_its_window_fails_the_install_test`, red
+before (the step did not exist). **Not run on Windows:** the first run of the workflow on the branch is the check.
+**Escaped** because: spec gap (nobody had said which part of "a window opens" may fail).

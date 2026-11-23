@@ -334,6 +334,40 @@ jobs:
             Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
           }
 
+      # What needs no display and must not fail (D747): the launcher finds the installed app, prepares the copy its window
+      # runs from, and does not stop on an error of its own. The step below needs a display and may fail.
+      - name: The launcher finds the installed app and prepares its window
+        run: |
+          $copy = "$env:LOCALAPPDATA\Claudia\run\composes"
+          Remove-Item $copy -Recurse -Force -ErrorAction SilentlyContinue
+          $launcher = Start-Process "$env:INSTALL_DIR\node\node.exe" -ArgumentList "`"$env:INSTALL_DIR\client\bin\composes.mjs`"" -PassThru `
+            -RedirectStandardOutput "$PWD\launcher.out" -RedirectStandardError "$PWD\launcher.err"
+          try {
+            $until = (Get-Date).AddSeconds(60)
+            while ($true) {
+              $prepared = (Test-Path "$copy\index.html") -and (Test-Path "$copy\ext\core.mjs")
+              # the core's command is written after the copy is made: the window is about to start
+              if ($prepared -and (Select-String -Path "$copy\neutralino.config.json" -Pattern 'app=composes' -Quiet)) { break }
+              if ($launcher.HasExited) {
+                # ended: the copy is whole. An error of its own before the window (it prints one) fails; a window that
+                # could not start ("Could not start ...", or no word at all) is for the advisory step below
+                $said = "$(Get-Content "$PWD\launcher.err" -Raw)"
+                if (-not $prepared -or ($said.Trim() -and $said -notmatch 'Could not start')) {
+                  throw "The launcher ended with exit code $($launcher.ExitCode) before the window started`n$said"
+                }
+                break
+              }
+              if ((Get-Date) -gt $until) { throw "The launcher did not prepare $copy within 60 seconds" }
+              Start-Sleep -Milliseconds 200
+            }
+          } finally {
+            Stop-Process -Id $launcher.Id -Force -ErrorAction SilentlyContinue
+            # the core of a window is a node of the installation too, and holds the copy
+            Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq "$env:INSTALL_DIR\node\node.exe" } | Stop-Process -Force
+            Get-Process neutralino-win_x64, claudia-server -ErrorAction SilentlyContinue | Stop-Process -Force
+            Get-Content "$PWD\launcher.out", "$PWD\launcher.err" -ErrorAction SilentlyContinue
+          }
+
       # A window needs a desktop session and the WebView2 Runtime. If this runner cannot show one, this step says so and
       # the rest still counts; where it can, it is the whole path: shortcut target, launcher, copy of the app folder,
       # Neutralino, core, and the server the core starts itself.

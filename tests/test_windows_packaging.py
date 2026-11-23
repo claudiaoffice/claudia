@@ -179,6 +179,31 @@ def test_the_launcher_finds_the_apps_where_the_stage_and_the_checkout_have_them(
             )
 
 
+def _install_test_steps() -> dict[str, str]:
+    """The steps of the install test job of windows.yml by name, each with its text (no YAML parser: the file is read
+    as the text it is, and the steps start at the job's own indentation)."""
+    text = (ROOT / ".github" / "workflows" / "windows.yml").read_text(encoding="utf-8")
+    job = text[text.index("\n  test:\n") :]
+    parts = re.split(r"^      - (?=name: )", job, flags=re.MULTILINE)[1:]
+    return {part.splitlines()[0].removeprefix("name: "): part for part in parts}
+
+
+def test_a_launcher_that_cannot_prepare_its_window_fails_the_install_test():
+    """PROC-52: the whole step that starts a window was `continue-on-error` (a runner may have no display), so a
+    launcher that stopped on its own error looked like a runner without one, and the first real install was broken
+    with a green CI. What needs no display is its own step and must fail the job."""
+    steps = _install_test_steps()
+    prepares = "The launcher finds the installed app and prepares its window"
+    window = "A window opens, and starts the server it needs"
+    assert prepares in steps, "no step starts the installed launcher and checks that it prepared the window's folder"
+    assert "continue-on-error" not in steps[prepares], "that step may not be allowed to fail"
+    assert "HasExited" in steps[prepares], "that step must see a launcher that ended before it prepared the folder"
+    assert "ExitCode" in steps[prepares] and "launcher.err" in steps[prepares], "it must say why the launcher ended"
+    names = list(steps)
+    assert names.index(prepares) < names.index(window), "the check without a display comes before the window check"
+    assert "continue-on-error: true" in steps[window], "only the part that needs a display may be advisory"
+
+
 def test_the_service_runs_the_server_and_serves_the_frontend_where_the_stage_has_them(staged):
     service = ET.parse(staged / "service" / "claudia-service.xml").getroot()
     base = staged / "service"

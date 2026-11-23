@@ -34,9 +34,23 @@ sandbox's, not the installation's).
 | Commit | What |
 |---|---|
 | CODE-79 | `appFolder` (`paths.ts`), used by `launch.ts` (`RunDeps.launcherFolder` to test it); tests `paths.test.ts`, `launch.test.ts` (red when `launch.ts` goes back to `defaultRepo`), `test_windows_packaging.py`; D746; the spec `specs/desktop/windows-installer.feature` (written with the fix, for the owner's review) |
-| PROC-52 | see the second commit's part of this note below |
+| PROC-52 | `windows.yml`: a step of its own that needs no display and may not fail (*The launcher finds the installed app and prepares its window*); D747; `test_windows_packaging.py` |
+
+## PROC-52 in detail
+
+The new step starts the installed launcher and waits for the copy of the app in `%LOCALAPPDATA%\Claudia\run\composes` and for
+the core's command in its configuration (written just before the window starts). If the launcher ends first, the step
+fails with its error output, unless the copy is whole and the launcher said nothing, or only "Could not start" (a runner
+without a display). It stops the launcher, the window, the server and the core's node, which holds the copy. The step "A
+window opens..." stays `continue-on-error`. **Not run:** the YAML and the PowerShell have not run on a Windows runner (actionlint
+passes); the PowerShell is of the kind the other steps use. A window that dies after it started is not seen by this step,
+and the config is read while the launcher is alive, so a very fast failure could be missed by the poll and then reads as
+"ended, copy whole, no error text": not a failure.
 
 ## Not done, on purpose
+
+* The install test installs for all people in `C:\Program Files`; the owner's install was for the profile only. The code that
+  failed does not depend on it, so not added; a profile-only run of the same steps is a follow-up if wanted.
 
 * The message of `missingFiles` still says "Run 'npm ci && npm run build'" for an installed client, which sent the first
   reader the wrong way. It should say "reinstall Claudia" when `packaged.json` is there. Not part of CODE-79; offered as
@@ -45,7 +59,9 @@ sandbox's, not the installation's).
 
 ## Assumptions
 
-* The decision number D746 is taken from the range D740-D759 (the Windows installer, branch `win-installer`, still open in
-  `ranges.md`), not from a new reservation.
+* The decision numbers D746 and D747 are taken from the range D740-D759 (the Windows installer, branch `win-installer`,
+  still open in `ranges.md`), not from a new reservation.
 * The spec was written with the fix, not before it, because the bug was reported as broken behaviour with its cause one
   step away; it is for the owner to review. The scenario says a window opens; no automatic test checks that.
+* "The app is prepared" in CI means: the copy of the app folder is there and the launcher did not print one of its own
+  start-up errors. A runner without a display may still stop the window afterwards; that part stays advisory.
