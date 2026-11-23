@@ -253,6 +253,10 @@ msgstr "Eine Klammer wird nie geschlossen."
 msgid "A change here changes every use of “{name}”"
 msgstr "Eine Änderung hier ändert jede Verwendung von „{name}“"
 
+#: packages/claudia-core/src/claudia_core/objects.py:86
+msgid "A chart does not turn"
+msgstr "Ein Diagramm lässt sich nicht drehen"
+
 #: web/app/components/TextObjectLayer.vue:415
 msgid "A chart is not shown in a text yet."
 msgstr "Ein Diagramm wird in einem Text noch nicht angezeigt."
@@ -388,6 +392,10 @@ msgstr "Ein Reiter"
 #: web/app/components/SheetChartInsertDialog.vue:173
 msgid "A table always has its header row."
 msgstr "Eine Tabelle hat immer ihre Kopfzeile."
+
+#: packages/claudia-core/src/claudia_core/objects.py:86
+msgid "A table does not turn"
+msgstr "Eine Tabelle lässt sich nicht drehen"
 
 #: web/app/components/TableDialog.vue:41
 msgid "A table has 1 to {columns} columns and 1 to {rows} rows."
@@ -5201,6 +5209,10 @@ msgstr "Bedingter Trennstrich"
 msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr "Inzwischen hat jemand den ersten Administrator dieses Servers benannt. Melden Sie sich an, oder bitten Sie darum, hinzugefügt zu werden."
 
+#: packages/claudia-core/src/claudia_core/objects.py:712
+msgid "Something else is already called “{name}”"
+msgstr "Etwas anderes heißt schon „{name}“"
+
 #: web/app/lib/search.ts:501
 msgid "Something is repeated that is not there."
 msgstr "Es wird etwas wiederholt, das nicht da ist."
@@ -6701,6 +6713,54 @@ msgstr "Zur „)“ bei Zeichen {position} fehlt die „(“. Es wird nichts ers
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr "Zur „[“ bei Zeichen {position} fehlt die „]“. Es wird nichts ersetzt."
 
+#: packages/claudia-computes/src/claudia_computes/model.py:451 packages/claudia-core/src/claudia_core/objects.py:469
+msgid "There is already a chart called “{name}”"
+msgstr "Es gibt schon ein Diagramm namens „{name}“"
+
+#: packages/claudia-core/src/claudia_core/objects.py:470
+msgid "There is already a container called “{name}”"
+msgstr "Es gibt schon einen Container namens „{name}“"
+
+#: packages/claudia-composes/src/claudia_composes/model.py:424
+msgid "There is already a heading called “{name}”"
+msgstr "Es gibt schon eine Überschrift namens „{name}“"
+
+#: packages/claudia-composes/src/claudia_composes/model.py:425
+msgid "There is already a list item called “{name}”"
+msgstr "Es gibt schon einen Listenpunkt namens „{name}“"
+
+#: packages/claudia-computes/src/claudia_computes/model.py:452
+msgid "There is already a named range called “{name}”"
+msgstr "Es gibt schon einen benannten Bereich namens „{name}“"
+
+#: packages/claudia-composes/src/claudia_composes/model.py:426
+msgid "There is already a paragraph called “{name}”"
+msgstr "Es gibt schon einen Absatz namens „{name}“"
+
+#: packages/claudia-core/src/claudia_core/objects.py:468
+msgid "There is already a picture called “{name}”"
+msgstr "Es gibt schon ein Bild namens „{name}“"
+
+#: packages/claudia-core/src/claudia_core/objects.py:467
+msgid "There is already a shape called “{name}”"
+msgstr "Es gibt schon eine Form namens „{name}“"
+
+#: packages/claudia-computes/src/claudia_computes/model.py:450
+msgid "There is already a sheet called “{name}”"
+msgstr "Es gibt schon ein Tabellenblatt namens „{name}“"
+
+#: packages/claudia-creates/src/claudia_creates/model.py:136
+msgid "There is already a slide called “{name}”"
+msgstr "Es gibt schon eine Folie namens „{name}“"
+
+#: packages/claudia-core/src/claudia_core/objects.py:471
+msgid "There is already a table called “{name}”"
+msgstr "Es gibt schon eine Tabelle namens „{name}“"
+
+#: packages/claudia-core/src/claudia_core/objects.py:466
+msgid "There is already a text box called “{name}”"
+msgstr "Es gibt schon ein Textfeld namens „{name}“"
+
 #: web/app/lib/protocol.ts:252
 msgid "There is no such document."
 msgstr "Es gibt kein solches Dokument."
@@ -7697,7 +7757,7 @@ msgstr "ein Buchstabe"
 msgid "a merge is at least two boxes; split_cell undoes one"
 msgstr "Ein Verbund besteht aus mindestens zwei Feldern; split_cell hebt einen auf"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:106
+#: packages/claudia-core/src/claudia_core/names.py:41 packages/claudia-server/src/claudia_server/thing_names.py:106
 msgid "a name has at most {limit} characters"
 msgstr "Ein Name hat höchstens {limit} Zeichen"
 
@@ -7705,11 +7765,15 @@ msgstr "Ein Name hat höchstens {limit} Zeichen"
 msgid "a name has at most {max} characters"
 msgstr "Ein Name hat höchstens {max} Zeichen"
 
-#: web/app/lib/name-and-describe.ts:45
+#: packages/claudia-core/src/claudia_core/names.py:36 web/app/lib/name-and-describe.ts:45
 msgid "a name has no control characters"
 msgstr "ein Name enthält keine Steuerzeichen"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:104 web/app/lib/name-and-describe.ts:47 web/app/lib/names.ts:82
+#: packages/claudia-core/src/claudia_core/objects.py:685
+msgid "a name is written without spaces around it or twice in a row"
+msgstr "Ein Name hat keine Leerzeichen am Anfang oder Ende und keine zwei hintereinander"
+
+#: packages/claudia-core/src/claudia_core/names.py:39 packages/claudia-server/src/claudia_server/thing_names.py:104 web/app/lib/name-and-describe.ts:47 web/app/lib/names.ts:82
 msgid "a name needs some text"
 msgstr "Ein Name braucht etwas Text"
 

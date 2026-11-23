@@ -20,7 +20,7 @@ from weakref import WeakKeyDictionary
 
 from claudia_core import Document, DocumentModel, KernelError, ObjectModel, Revision
 
-from .i18n import msg
+from .i18n import message_of, msg
 from .planned import planned_state
 from .protocol import Context, MethodTable, RequestError
 
@@ -121,7 +121,7 @@ def add_replay_methods(table: MethodTable) -> None:
         try:
             model = state_at(ctx.document, revision)
         except KernelError as exc:
-            raise RequestError("command_error", str(exc)) from exc
+            raise RequestError("command_error", message_of(exc)) from exc
         past = replace(ctx, document=PastDocument(ctx.document, revision, model))  # type: ignore[arg-type]
         return table.dispatch(past, method, params)
 
@@ -158,7 +158,7 @@ def add_changes_since_method(table: MethodTable) -> None:
         try:
             found = ctx.document.changes_since(revision, MAX_CHANGES)
         except KernelError as exc:
-            raise RequestError("command_error", str(exc)) from exc
+            raise RequestError("command_error", message_of(exc)) from exc
         return {"regions": [r.to_data() for r in found.regions], "truncated": found.truncated}
 
 

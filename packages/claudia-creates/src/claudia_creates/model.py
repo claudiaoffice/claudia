@@ -15,11 +15,12 @@ What is not here yet: templates and layouts (E10.4), groups, free colours.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import ClassVar, Self, TypeIs
 
 from claudia_core import (
+    N_,
     Command,
     CommandRegistry,
     DocumentModel,
@@ -130,6 +131,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     :class:`~claudia_core.ObjectModel`."""
 
     app: ClassVar[str] = "creates"
+    name_taken: ClassVar[Mapping[str, str]] = {
+        **ObjectModel.name_taken,
+        "slide": N_("There is already a slide called “{name}”"),
+    }
     # 6: the presentation carries its own colour palette (D200)
     # 7: how it is printed, and its language (D917)
     # 8: object bodies carry a description (alternative text)

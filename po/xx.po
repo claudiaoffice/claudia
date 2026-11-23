@@ -253,6 +253,10 @@ msgstr "[À bràckét îs névér clôséd.~~~~~~~~~~]"
 msgid "A change here changes every use of “{name}”"
 msgstr "[À chàngé héré chàngés évéry ûsé ôf “{name}”~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-core/src/claudia_core/objects.py:86
+msgid "A chart does not turn"
+msgstr "[À chàrt dôés nôt tûrn~~~~~~~~]"
+
 #: web/app/components/TextObjectLayer.vue:415
 msgid "A chart is not shown in a text yet."
 msgstr "[À chàrt îs nôt shôwn în à téxt yét.~~~~~~~~~~~~~~]"
@@ -388,6 +392,10 @@ msgstr "[À tàb~~]"
 #: web/app/components/SheetChartInsertDialog.vue:173
 msgid "A table always has its header row."
 msgstr "[À tàblé àlwàys hàs îts héàdér rôw.~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/objects.py:86
+msgid "A table does not turn"
+msgstr "[À tàblé dôés nôt tûrn~~~~~~~~]"
 
 #: web/app/components/TableDialog.vue:41
 msgid "A table has 1 to {columns} columns and 1 to {rows} rows."
@@ -5201,6 +5209,10 @@ msgstr "[Sôft Hyphén~~~~]"
 msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr "[Sôméôné hàs nàméd thîs sérvér's fîrst àdmînîstràtôr în thé méàntîmé. Sîgn în, ôr àsk thém tô àdd yôû.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-core/src/claudia_core/objects.py:712
+msgid "Something else is already called “{name}”"
+msgstr "[Sôméthîng élsé îs àlréàdy càlléd “{name}”~~~~~~~~~~~~~~~~]"
+
 #: web/app/lib/search.ts:501
 msgid "Something is repeated that is not there."
 msgstr "[Sôméthîng îs répéàtéd thàt îs nôt théré.~~~~~~~~~~~~~~~~]"
@@ -6701,6 +6713,54 @@ msgstr "[Thé “)” àt chàràctér {position} hàs nô “(”. Nôthîng î
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr "[Thé “[” àt chàràctér {position} hàs nô “]”. Nôthîng îs réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/model.py:451 packages/claudia-core/src/claudia_core/objects.py:469
+msgid "There is already a chart called “{name}”"
+msgstr "[Théré îs àlréàdy à chàrt càlléd “{name}”~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/objects.py:470
+msgid "There is already a container called “{name}”"
+msgstr "[Théré îs àlréàdy à côntàînér càlléd “{name}”~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-composes/src/claudia_composes/model.py:424
+msgid "There is already a heading called “{name}”"
+msgstr "[Théré îs àlréàdy à héàdîng càlléd “{name}”~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-composes/src/claudia_composes/model.py:425
+msgid "There is already a list item called “{name}”"
+msgstr "[Théré îs àlréàdy à lîst îtém càlléd “{name}”~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/model.py:452
+msgid "There is already a named range called “{name}”"
+msgstr "[Théré îs àlréàdy à nàméd ràngé càlléd “{name}”~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-composes/src/claudia_composes/model.py:426
+msgid "There is already a paragraph called “{name}”"
+msgstr "[Théré îs àlréàdy à pàràgràph càlléd “{name}”~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/objects.py:468
+msgid "There is already a picture called “{name}”"
+msgstr "[Théré îs àlréàdy à pîctûré càlléd “{name}”~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/objects.py:467
+msgid "There is already a shape called “{name}”"
+msgstr "[Théré îs àlréàdy à shàpé càlléd “{name}”~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/model.py:450
+msgid "There is already a sheet called “{name}”"
+msgstr "[Théré îs àlréàdy à shéét càlléd “{name}”~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-creates/src/claudia_creates/model.py:136
+msgid "There is already a slide called “{name}”"
+msgstr "[Théré îs àlréàdy à slîdé càlléd “{name}”~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/objects.py:471
+msgid "There is already a table called “{name}”"
+msgstr "[Théré îs àlréàdy à tàblé càlléd “{name}”~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/objects.py:466
+msgid "There is already a text box called “{name}”"
+msgstr "[Théré îs àlréàdy à téxt bôx càlléd “{name}”~~~~~~~~~~~~~~~~~]"
+
 #: web/app/lib/protocol.ts:252
 msgid "There is no such document."
 msgstr "[Théré îs nô sûch dôcûmént.~~~~~~~~~~]"
@@ -7697,7 +7757,7 @@ msgstr "[à léttér~~~]"
 msgid "a merge is at least two boxes; split_cell undoes one"
 msgstr "[à mérgé îs àt léàst twô bôxés; splît_céll ûndôés ôné~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:106
+#: packages/claudia-core/src/claudia_core/names.py:41 packages/claudia-server/src/claudia_server/thing_names.py:106
 msgid "a name has at most {limit} characters"
 msgstr "[à nàmé hàs àt môst {limit} chàràctérs~~~~~~~~~~~~~~~]"
 
@@ -7705,11 +7765,15 @@ msgstr "[à nàmé hàs àt môst {limit} chàràctérs~~~~~~~~~~~~~~~]"
 msgid "a name has at most {max} characters"
 msgstr "[à nàmé hàs àt môst {max} chàràctérs~~~~~~~~~~~~~~]"
 
-#: web/app/lib/name-and-describe.ts:45
+#: packages/claudia-core/src/claudia_core/names.py:36 web/app/lib/name-and-describe.ts:45
 msgid "a name has no control characters"
 msgstr "[à nàmé hàs nô côntrôl chàràctérs~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/thing_names.py:104 web/app/lib/name-and-describe.ts:47 web/app/lib/names.ts:82
+#: packages/claudia-core/src/claudia_core/objects.py:685
+msgid "a name is written without spaces around it or twice in a row"
+msgstr "[à nàmé îs wrîttén wîthôût spàcés àrôûnd ît ôr twîcé în à rôw~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/names.py:39 packages/claudia-server/src/claudia_server/thing_names.py:104 web/app/lib/name-and-describe.ts:47 web/app/lib/names.ts:82
 msgid "a name needs some text"
 msgstr "[à nàmé nééds sômé téxt~~~~~~~~~]"
 

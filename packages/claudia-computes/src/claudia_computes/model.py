@@ -16,12 +16,13 @@ from __future__ import annotations
 
 from bisect import bisect_left, bisect_right, insort
 from collections import defaultdict
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from heapq import heappop, heappush
 from typing import ClassVar, Self, TypeIs, cast
 
 from claudia_core import (
+    N_,
     OBJECT_KINDS,
     AssetKind,
     Command,
@@ -444,6 +445,12 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     registry: ClassVar[CommandRegistry] = new_registry()
 
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
+    name_taken: ClassVar[Mapping[str, str]] = {
+        **ObjectModel.name_taken,
+        "sheet": N_("There is already a sheet called “{name}”"),
+        "chart": N_("There is already a chart called “{name}”"),
+        "range": N_("There is already a named range called “{name}”"),
+    }
     min_object_size: ClassVar[int] = MIN_OBJECT_SIZE
     max_objects_per_holder: ClassVar[int] = MAX_OBJECTS_PER_SHEET
 

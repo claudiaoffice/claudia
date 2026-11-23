@@ -61,7 +61,7 @@ from claudia_core import (
     plain,
 )
 
-from .i18n import msg
+from .i18n import message_of, msg
 from .protocol import Context, MethodTable, RequestError
 from .wire import current_revision
 
@@ -218,7 +218,7 @@ def _scheme_from(data: object) -> Scheme:
         scheme = Scheme.from_data(data)  # type: ignore[arg-type]
         scheme.check()
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
-        raise RequestError("command_error", msg("not a numbering scheme: {reason}", reason=exc)) from None
+        raise RequestError("command_error", msg("not a numbering scheme: {reason}", reason=message_of(exc))) from None
     return scheme
 
 
@@ -237,7 +237,7 @@ def toc_from(data: object) -> Toc:
     try:
         made = generated_from_data(data)  # type: ignore[arg-type]
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
-        reason = msg("not the options of a table of contents: {reason}", reason=exc)
+        reason = msg("not the options of a table of contents: {reason}", reason=message_of(exc))
         raise RequestError("command_error", reason) from None
     return made
 
@@ -460,7 +460,7 @@ def _add_scheme_methods(table: MethodTable) -> None:
         try:
             made.check()
         except ValueError as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
         return {**_run(ctx, [CreateScheme(made)], "New numbering scheme", base), "scheme": made.id}
 
     @table.method("change_scheme", "scheme:dict base:revision?", write=True)

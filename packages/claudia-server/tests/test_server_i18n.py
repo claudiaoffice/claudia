@@ -5,7 +5,9 @@ from __future__ import annotations
 import pytest
 
 from claudia_server import i18n
-from claudia_server.i18n import Message, localized, msg
+from claudia_core import Refusal
+
+from claudia_server.i18n import Message, localized, message_of, msg
 from claudia_server.protocol import RequestError
 
 
@@ -50,6 +52,23 @@ def test_a_language_without_a_catalog_gets_english() -> None:
 def test_a_text_that_is_not_a_message_is_left_alone() -> None:
     """What claudia_core says (``str(exc)``) is English until it carries its own template."""
     assert localized("some error from the core", "de") == "some error from the core"
+
+
+def test_a_refusal_of_a_model_is_said_in_german() -> None:
+    refusal = Refusal("There is already a sheet called “{name}”", name="Costs")
+    assert localized(message_of(refusal), "de") == "Es gibt schon ein Tabellenblatt namens „Costs“"
+    assert localized(message_of(refusal), "en") == "There is already a sheet called “Costs”"
+
+
+def test_any_other_error_says_its_english_text() -> None:
+    assert message_of(KeyError("x")) == "'x'"
+    assert localized(message_of(ValueError("some check of the wire")), "de") == "some check of the wire"
+
+
+def test_a_message_inside_a_message_is_said_in_german_too() -> None:
+    inner = message_of(Refusal("There is already a sheet called “{name}”", name="Costs"))
+    outer = msg("{method}: {reason}", method="rename_thing", reason=inner)
+    assert localized(outer, "de") == "rename_thing: Es gibt schon ein Tabellenblatt namens „Costs“"
 
 
 def test_a_translation_with_the_wrong_placeholders_falls_back_to_english(monkeypatch: pytest.MonkeyPatch) -> None:

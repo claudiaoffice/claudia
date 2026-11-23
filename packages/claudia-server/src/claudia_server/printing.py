@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from claudia_core import LanguageError, SetLanguage
 
-from .i18n import msg
+from .i18n import message_of, msg
 from .protocol import Context, MethodTable, RequestError
 
 
@@ -37,6 +37,6 @@ def add_language_methods(table: MethodTable) -> None:
         try:
             command = SetLanguage(language or None)
         except LanguageError as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
         applied = ctx.document.execute(command, author=ctx.user, base=base)
         return {"revision": applied.revision.to_data()}

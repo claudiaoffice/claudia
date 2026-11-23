@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, replace
 from typing import ClassVar, Self
 
 from claudia_core import (
     FILLER,
     MAX_THING_NAME,
+    N_,
     SLOTS,
     Command,
     CommandRegistry,
@@ -418,6 +419,12 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
     app: ClassVar[str] = "composes"
     body_text_style: ClassVar[str] = DEFAULT_STYLE
     objects_change_holder: ClassVar[bool] = True  # an object can be dragged to another paragraph (D1351)
+    name_taken: ClassVar[Mapping[str, str]] = {
+        **ObjectModel.name_taken,
+        "heading": N_("There is already a heading called “{name}”"),
+        "item": N_("There is already a list item called “{name}”"),
+        "paragraph": N_("There is already a paragraph called “{name}”"),
+    }
     # 4: a text also carries objects, images and shapes (E10.16)
     # 5: the text carries its own colour palette (D200)
     # 6: the text says which page it is printed on (D904)

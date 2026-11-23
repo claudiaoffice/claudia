@@ -78,7 +78,7 @@ def test_a_named_paragraph_says_what_kind_of_paragraph_it_is(three):
 
 def test_a_paragraph_shares_the_namespace_with_everything_else(three):
     three.execute(RenameThing("b2", "Point A"), author="ann")
-    with pytest.raises(ValueError, match="There is already an item called “Point A”"):
+    with pytest.raises(ValueError, match="There is already a list item called “Point A”"):
         three.execute(RenameThing("b3", "point a"), author="ann")
     assert three.model.thing_name("b3") == ""
 

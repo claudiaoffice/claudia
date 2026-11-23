@@ -121,7 +121,7 @@ def test_a_clash_is_refused_with_the_name_of_the_one_who_has_it(deck):
     with pytest.raises(RequestError) as caught:
         call(deck, "rename_thing", {"id": two, "name": "TEXT BOX 1"})
     assert caught.value.code == "command_error"
-    assert "There is already a text called “Text box 1”" in str(caught.value.message)
+    assert "There is already a text box called “Text box 1”" in str(caught.value.message)
     assert name_of(deck, one) == "Text box 1"
 
 
@@ -202,7 +202,7 @@ def test_a_sheet_cannot_take_the_name_of_a_named_range(book):
     on_book(book, "define_name", {"definition": {"name": "Revenue", "range": area}})
     with pytest.raises(RequestError) as caught:
         on_book(book, "rename_thing", {"id": "s1", "name": "revenue"})
-    assert "There is already a range called “Revenue”" in str(caught.value.message)
+    assert "There is already a named range called “Revenue”" in str(caught.value.message)
 
 
 def test_a_new_sheet_may_not_take_the_name_of_a_picture(book):
@@ -210,7 +210,7 @@ def test_a_new_sheet_may_not_take_the_name_of_a_picture(book):
     on_book(book, "rename_thing", {"id": picture, "name": "Logo"})
     with pytest.raises(RequestError) as caught:
         on_book(book, "add_sheet", {"name": "logo"})
-    assert "There is already an image called “Logo”" in str(caught.value.message)
+    assert "There is already a picture called “Logo”" in str(caught.value.message)
 
 
 def _image_params() -> dict:

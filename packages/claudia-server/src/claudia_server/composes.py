@@ -90,7 +90,7 @@ from .composes_search import add_search_methods
 from .composes_words import add_word_methods
 from .containers import add_container_methods
 from .font_report import add_font_report_method
-from .i18n import msg
+from .i18n import message_of, msg
 from .object_methods import Placement, add_object_methods
 from .office_export import export_with_original, office_export
 from .printing import add_language_methods, people_only
@@ -374,7 +374,7 @@ def _box_plan(
     try:
         model.check_entry_edit(first)
     except ValueError as error:
-        raise RequestError("command_error", str(error)) from None
+        raise RequestError("command_error", message_of(error)) from None
     length = len(model.entry_words(first).text)
     for offset, what in ((start, "start"), (end, "end")):
         if not 0 <= offset <= length:
@@ -461,7 +461,7 @@ def _set_page(ctx, *, setup, base):
     try:
         page = PageSetup.from_data(setup)
     except PageSetupError as exc:
-        raise RequestError("command_error", str(exc)) from None
+        raise RequestError("command_error", message_of(exc)) from None
     return done(ctx, SetPageSetup(page), base)
 
 
@@ -629,7 +629,7 @@ def _at_character(
         )
         anchor.check_wrap()
     except ValueError as caught:
-        raise RequestError("bad_request", str(caught)) from None
+        raise RequestError("bad_request", message_of(caught)) from None
     return anchor.to_data()
 
 
@@ -674,7 +674,7 @@ def _set_wrap(ctx, *, id, wrap, gap, base):  # noqa: A002 - the wire name
     try:
         anchor.check_wrap()
     except ValueError as caught:
-        raise RequestError("bad_request", str(caught)) from None
+        raise RequestError("bad_request", message_of(caught)) from None
     return done(ctx, SetObjectWrap(id, anchor.wrap, anchor.gap), base)
 
 

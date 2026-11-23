@@ -34,7 +34,7 @@ from claudia_core import (
     validate_css,
 )
 
-from .i18n import msg
+from .i18n import message_of, msg
 from .protocol import Context, MethodTable, RequestError
 
 #: How many targets one request may name (composes has the same bound for paragraphs, D75).
@@ -132,7 +132,7 @@ class _Resolver:
             except KeyError as exc:
                 raise RequestError("command_error", str(exc.args[0])) from None
             except ValueError as exc:
-                raise RequestError("bad_request", str(exc)) from None
+                raise RequestError("bad_request", message_of(exc)) from None
             self.items.append((adapter, target, thing))
 
     def chosen_slots(self, thing: str, slot: str | None) -> list[str]:

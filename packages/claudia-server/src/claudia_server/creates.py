@@ -52,7 +52,7 @@ from claudia_creates import (
 from .containers import add_container_methods
 from .creates_search import add_search_methods
 from .font_report import add_font_report_method
-from .i18n import msg
+from .i18n import message_of, msg
 from .object_methods import Placement, add_object_methods
 from .office_export import document_info, export_with_original, office_export
 from .printing import add_language_methods, people_only
@@ -129,7 +129,7 @@ def _add_print_methods(table: MethodTable) -> None:
         try:
             command = SetPrintSetup(PrintSetup.from_data(setup))
         except (PrintSetupError, PageSetupError) as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
         return done(ctx, command, base)
 
 

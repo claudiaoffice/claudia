@@ -24,7 +24,7 @@ from functools import partial, update_wrapper
 from claudia_composes import ProposeSuggestion, SetStyle, SplitParagraph, TextModel
 from claudia_core import Batch, Command
 
-from .i18n import msg
+from .i18n import message_of, msg
 from .protocol import Context, MethodTable, RequestError
 from .thing_names import is_generic_name, paragraph_label
 from .wire import current_revision, done
@@ -174,7 +174,7 @@ def _add_paragraphs(ctx, *, edit, text, after, style, base):
         try:
             model.check_style(style)
         except ValueError as exc:
-            raise RequestError("command_error", str(exc)) from None
+            raise RequestError("command_error", message_of(exc)) from None
     if after is None:
         first = model.paragraphs[0].id
         commands, _ = edit(model, first, 0, last=first, end=0, text=text + "\n", label=paragraph_label(ctx))
