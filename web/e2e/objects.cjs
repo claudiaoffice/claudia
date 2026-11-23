@@ -129,6 +129,7 @@ function menuFor(app, kind) {
   items.push('Style…')
   if (kind !== 'diagram') items.push('Rotate by…')
   if (a.wrap) items.push('Wrap text…')
+  if (kind === 'diagram' && app === 'computes') items.push('Move to Slide') // a chart on a sheet (E6.31, D1475)
   if (kind === 'image') items.push('Cut', 'Copy')
   if (a.grid) items.push(/^(Snap to grid|Release from grid)$/)
   items.push('Delete')
@@ -186,7 +187,7 @@ async function insertChart(page) {
   await page.keyboard.press('Shift+ArrowDown')
   await page.keyboard.press('Shift+ArrowDown')
   await menu(page, 'Edit', 'Chart…')
-  await page.check('.modal input[value=object]')
+  await page.check('.modal input[value=sheet]')
   await page.click('.modal button[type=submit]')
 }
 async function insertContainer(page) {
