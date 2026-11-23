@@ -75,3 +75,14 @@ class SlideLayoutChanged:
     def to_data(self) -> dict:
         """The plain-data form of the event, as sent to clients."""
         return {"type": "slide_layout", "slide": self.slide, "layout": self.layout}
+
+
+@dataclass(frozen=True)
+class TemplateChanged:
+    """The note of the template the presentation came from changed (E10.4)."""
+
+    template: dict | None
+
+    def to_data(self) -> dict:
+        """The plain-data form of the event, as sent to clients."""
+        return {"type": "template", "template": self.template}

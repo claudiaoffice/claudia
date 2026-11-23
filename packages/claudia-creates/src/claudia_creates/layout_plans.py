@@ -60,7 +60,7 @@ def deviate_layout(model: SlideModel, slide: str, change: Command) -> Command:
     kept = [obj for obj in model.objects_on(parent) if not (removing and obj.id == layout_object)]
     copies: dict[str, str] = {}
     for obj in kept:
-        copies[obj.id] = _free_id(model, obj.id, set(copies.values()))
+        copies[obj.id] = free_id(model, obj.id, set(copies.values()))
     steps: list[Command] = [DefineLayout(layout_id, name, to_name=True)]
     for obj in kept:
         body = obj.body
@@ -167,10 +167,10 @@ def _next_layout(model: SlideModel, parent: str) -> tuple[str, str]:
     number = 2
     while f"{base_name} {number}".casefold() in taken:
         number += 1
-    return _free_id(model, "l", set(), start=1), f"{base_name} {number}"
+    return free_id(model, "l", set(), start=1), f"{base_name} {number}"
 
 
-def _free_id(model: SlideModel, base: str, chosen: set[str], start: int = 2) -> str:
+def free_id(model: SlideModel, base: str, chosen: set[str], start: int = 2) -> str:
     """An id of the form ``base-N`` (``baseN`` for the layouts' ``l``) that no object, slide or layout has and that is
     not one of ``chosen`` already."""
     stem = re.sub(r"-\d+$", "", base)

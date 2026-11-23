@@ -60,6 +60,7 @@ from claudia_core.slides import (
 
 from .printing import PrintSetup
 from .styles import builtin_styles
+from .template_info import TemplateInfo
 
 FIRST_SLIDE = "s1"  # the slide of a new presentation
 #: The layout every presentation has (E10.4, D1530): no placeholder, nothing on it. It can be hidden, never removed.
@@ -191,7 +192,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
     # 17: slides may have descriptions, by their id (D1317, D1318)
     # 18: the slides are records (the core's Slide, D1470), in the order of the presentation
     # 19: layouts, and the layout every slide follows (E10.4, D1530)
-    state_schema: ClassVar[int] = 19
+    # 20: the note of the template a presentation came from, or that it is one (E10.4)
+    state_schema: ClassVar[int] = 20
     registry: ClassVar[CommandRegistry] = new_registry()
 
     def __init__(
@@ -208,6 +210,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.layouts: Layouts = Layouts()
         self.layouts.add(Layout(BASIC_LAYOUT, "Basic", "builtin"))
         self.open_holder(BASIC_LAYOUT)
+        #: Where the presentation came from, or what it is when it is a template: a note nothing follows (E10.4).
+        self.template: TemplateInfo | None = None
         self.objects: _ObjectTable = _ObjectTable()
         #: The slides whose layout was changed since the bound copies were last settled (PERF-12).
         self._slides_on_new_layouts: set[str] = set()
@@ -269,6 +273,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             "language": self.language,
             "lists": self.lists.to_data(),
             "schemes": self.schemes.to_data(),
+            **({"template": self.template.to_data()} if self.template else {}),
         }
 
     @classmethod
@@ -293,6 +298,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         model.restore_objects(state["objects"], state)
         model.lists = ListBook.from_data(state.get("lists", ()))  # schema 12 and earlier: no lists
         model.schemes = SchemeBook.from_data(state.get("schemes"))  # schema 13 and earlier: the built-in ones
+        model.template = TemplateInfo.from_data(state["template"]) if "template" in state else None  # schema 19: none
         model.structure = TextStructure(model)  # the clients learn the labels with the document
         return model
 

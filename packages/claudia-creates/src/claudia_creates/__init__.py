@@ -61,6 +61,7 @@ from .events import (
     SlideNotesChanged,
     SlidesChanged,
     SlideTimeChanged,
+    TemplateChanged,
 )
 from .layout_commands import DefineLayout, HideLayout, MoveLayout, RemoveLayout, RenameLayout, SetSlideLayout
 from .model import (
@@ -74,6 +75,18 @@ from .model import (
 from .printing import LAYOUTS, PrintSetup, PrintSetupError
 from .shapes import BUILTIN_DIRECTORY, ShapeLibrary
 from .styles import ALLOWED_CSS, BUILTIN_STYLES, DEFAULT_STYLE, builtin_styles
+from .template import (
+    SetTemplate,
+    Template,
+    TemplateRefused,
+    basic_template,
+    check_template,
+    plan_change_template,
+    plan_change_theme,
+    start_from_template,
+    template_state,
+)
+from .template_info import TemplateInfo
 
 __all__ = [
     "__version__",
@@ -85,6 +98,7 @@ __all__ = [
     "MoveLayout",
     "RenameLayout",
     "LayoutsChanged",
+    "TemplateChanged",
     "RemoveLayout",
     "SlideLayoutChanged",
     "ALLOWED_CSS",
@@ -111,6 +125,12 @@ __all__ = [
     "parse_shape",
     "RemoveObject",
     "RemoveSlide",
+    "basic_template",
+    "plan_change_template",
+    "plan_change_theme",
+    "check_template",
+    "start_from_template",
+    "template_state",
     "SetLanguage",
     "ResizeObject",
     "RotateObject",
@@ -118,6 +138,10 @@ __all__ = [
     "SetParagraphStyle",
     "SetPrintSetup",
     "SetSlideLayout",
+    "SetTemplate",
+    "Template",
+    "TemplateInfo",
+    "TemplateRefused",
     "SetSlideNotes",
     "SetSlideTime",
     "SetSnap",

@@ -334,6 +334,7 @@ from .tables import (
     parse_entry_id,
     parse_number,
 )
+from .theme import Theme, theme_commands
 from .turning import SINE_MILLIONTHS, nudge_into, turned_extent
 from .what_if import Proposal, WhatIf
 from .writing import DeleteText, InsertText, Span, TextCommand, TypingHost, word_changes
@@ -493,6 +494,7 @@ __all__ = [
     "Hold",
     "LanguageChanged",
     "LanguageError",
+    "Theme",
     "ImageAsset",
     "ImageError",
     "ImageImport",
@@ -528,6 +530,7 @@ __all__ = [
     "object_texts",
     "replace_spans",
     "normalize_language",
+    "theme_commands",
     "OBJECT_KINDS",
     "ObjectBody",
     "ObjectText",
