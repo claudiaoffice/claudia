@@ -54,8 +54,8 @@ class ConsentBook:
 
     @property
     def state(self) -> AiConsent:
-        """What the owners decided, as it is now. Off when nothing can be read: the document is sealed until somebody
-        who holds its keys has opened it, and then not being able to look means not being allowed."""
+        """The owners' decisions as they stand. When nothing can be read (the document is sealed until somebody who
+        holds its keys has opened it), nothing is allowed: not being able to look means not being allowed."""
         if self._state is not None:
             return self._state
         if not isinstance(self._directory, ConsentDirectory):
