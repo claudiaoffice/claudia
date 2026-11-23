@@ -160,3 +160,23 @@ def test_an_object_is_free_where_it_stands_when_its_placeholder_is_gone_or_its_s
     doc.undo("ana")  # the placeholder is back, but nobody binds to it again by themselves
     assert doc.model.get("h1").anchor.bound_to_placeholder == ""
     assert reopen(doc).model.serialize() == doc.model.serialize()
+
+
+def test_changing_the_layout_of_a_slide_moves_its_objects_to_the_placeholder_with_the_same_purpose(doc):
+    two_lists_with_a_heading(doc)
+    doc.execute(DefineLayout("title-only", "Title only"), author="ana")
+    doc.execute(add(text_box("t", slide="title-only", purpose="Title", x=300, y=200, w=500, h=60)), author="ana")
+    doc.execute(add(text_box("free", slide="s1", x=10, y=10, w=50, h=50)), author="ana")
+    doc.execute(doc.model.set_layout_command("s1", "title-only"), author="ana")
+    assert doc.model.layout_of("s1") == "title-only"
+    assert doc.model.get("h1").anchor.bound_to_placeholder == "t"
+    assert frame(doc, "h1") == (300, 200, 500, 60)
+    assert frame(doc, "free") == (10, 10, 50, 50), "a free object stays where it is"
+    doc.execute(doc.model.set_layout_command("s1", "basic"), author="ana")
+    assert doc.model.get("h1").anchor.bound_to_placeholder == ""
+    assert frame(doc, "h1") == (300, 200, 500, 60), "no placeholder with that purpose: a free box where it stands"
+    doc.undo("ana")
+    doc.undo("ana")
+    assert doc.model.get("h1").anchor.bound_to_placeholder == "title"
+    assert frame(doc, "h1") == (100, 50, 800, 100)
+    assert reopen(doc).model.serialize() == doc.model.serialize()

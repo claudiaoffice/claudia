@@ -303,13 +303,46 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.layouts.remove(layout)
         return removed, place
 
-    def put_slide_on_layout(self, slide: str, layout: str) -> str:
-        """Make a slide follow a layout; returns the layout it followed before. ``ValueError`` if there is no such
-        slide or layout."""
+    def put_slide_on_layout(
+        self, slide: str, layout: str, rebind: Mapping[str, str] | None = None
+    ) -> tuple[str, dict[str, str]]:
+        """Make a slide follow a layout, and bind the objects named in ``rebind`` to the placeholders it names (``""``:
+        to none). Returns the layout it followed before and what binds the objects that were bound or are named, which
+        is what undoing it needs. ``ValueError`` if there is no such slide or layout, an object is not on the slide,
+        or a placeholder is not on the layout."""
         old = self.layout_of(slide)
         self.layouts[layout]  # noqa: B018  (raises for an unknown layout)
+        rebind = rebind or {}
+        on_slide = {obj.id: obj for obj in self.objects_on(slide)}
+        for object_id, placeholder in rebind.items():
+            if object_id not in on_slide:
+                raise ValueError(f"{object_id!r} is not on slide {slide!r}")
+            if placeholder and (placeholder not in self.objects or self.objects[placeholder].holder != layout):
+                raise ValueError(f"{placeholder!r} is not on layout {layout!r}")
+        before = {
+            object_id: obj.anchor.bound_to_placeholder
+            for object_id, obj in on_slide.items()
+            if obj.anchor.bound_to_placeholder or object_id in rebind
+        }
         self.slide_layouts[slide] = layout
-        return old
+        for object_id, placeholder in rebind.items():
+            obj = on_slide[object_id]
+            self.objects[object_id] = replace(obj, anchor=replace(obj.anchor, bound_to_placeholder=placeholder))
+        return old, before
+
+    def set_layout_command(self, slide: str, layout: str) -> Command:
+        """The command that lets a slide follow ``layout``: what is bound to a placeholder follows the placeholder with
+        the same purpose on the new layout, and where there is none it becomes a free box where it stands (E10.4)."""
+        from .layout_commands import SetSlideLayout  # the commands know the model, so not at the top
+
+        self._require_slide(slide)
+        by_purpose = {obj.anchor.purpose: obj.id for obj in self.objects_on(layout) if obj.anchor.purpose}
+        rebind = tuple(
+            (obj.id, by_purpose.get(self.objects[obj.anchor.bound_to_placeholder].anchor.purpose, ""))
+            for obj in self.objects_on(slide)
+            if obj.anchor.bound_to_placeholder in self.objects
+        )
+        return SetSlideLayout(slide, layout, rebind)
 
     # -- slides ----------------------------------------------------------------
     def insert_slide(

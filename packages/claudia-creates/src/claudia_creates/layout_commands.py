@@ -78,11 +78,14 @@ class RemoveLayout(Command):
 @register
 @dataclass(frozen=True)
 class SetSlideLayout(Command):
-    """Let a slide follow another layout."""
+    """Let a slide follow another layout. ``rebind`` says, by final values, which placeholder each object of the slide
+    is bound to afterwards (``""``: none): the command does not look for matches, so that undo, replay and a colleague's
+    view all end the same way (see :meth:`SlideModel.set_layout_command`, which finds them by purpose)."""
 
     kind: ClassVar[str] = "creates.SetSlideLayout"
     slide: str
     layout: str
+    rebind: tuple[tuple[str, str], ...] = ()
 
     @property
     def label(self) -> str:
@@ -93,13 +96,19 @@ class SetSlideLayout(Command):
         return "changed the layout of a slide"
 
     def apply(self, ctx: Context[SlideModel]) -> Command:
-        old = ctx.model.put_slide_on_layout(self.slide, self.layout)
+        old, before = ctx.model.put_slide_on_layout(self.slide, self.layout, dict(self.rebind))
         ctx.emit(SlideLayoutChanged(self.slide, self.layout))
-        return SetSlideLayout(self.slide, old)
+        if before:
+            changed = tuple(ctx.model.objects[object_id] for object_id in before)
+            ctx.emit(ctx.model.objects_changed(self.slide, changed=changed))
+        return SetSlideLayout(self.slide, old, tuple(before.items()))
 
     def to_data(self) -> dict:
-        return {"slide": self.slide, "layout": self.layout}
+        data: dict = {"slide": self.slide, "layout": self.layout}
+        if self.rebind:
+            data["rebind"] = dict(self.rebind)
+        return data
 
     @classmethod
     def from_data(cls, data, registry) -> SetSlideLayout:
-        return cls(data["slide"], data["layout"])
+        return cls(data["slide"], data["layout"], tuple(data.get("rebind", {}).items()))
