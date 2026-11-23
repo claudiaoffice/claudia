@@ -62,7 +62,7 @@ from .events import (
     SlidesChanged,
     SlideTimeChanged,
 )
-from .layout_commands import DefineLayout, RemoveLayout, SetSlideLayout
+from .layout_commands import DefineLayout, HideLayout, MoveLayout, RemoveLayout, RenameLayout, SetSlideLayout
 from .model import (
     FIRST_SLIDE,
     MAX_NOTES_LENGTH,
@@ -79,6 +79,9 @@ __all__ = [
     "AddObject",
     "AddSlide",
     "DefineLayout",
+    "HideLayout",
+    "MoveLayout",
+    "RenameLayout",
     "LayoutsChanged",
     "RemoveLayout",
     "SlideLayoutChanged",

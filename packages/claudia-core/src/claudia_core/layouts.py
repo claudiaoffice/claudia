@@ -8,8 +8,9 @@ of its own. What sits on it, placeholders and other objects, are ordinary object
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
+from .errors import Refusal
 from .objects import _ID
 
 #: Where a layout comes from, as for a style (D780): shipped with Claudia, taken from a template, or made in this
@@ -99,8 +100,35 @@ class Layouts:
             )
         if layout.id in self._by_id:
             raise ValueError(f"layout {layout.id!r} exists already")
+        self.check_name(layout.name)
         self._by_id[layout.id] = layout
         self._order.insert(len(self._order) if at is None else at, layout.id)
+
+    def check_name(self, name: str, own_id: str | None = None) -> None:
+        """No two layouts have the same name, whatever the case; the layout ``own_id`` may keep its own."""
+        if any(layout.id != own_id and layout.name.casefold() == name.casefold() for layout in self):
+            raise Refusal("another layout has the name {name}", name=name)
+
+    def first_visible(self) -> Layout:
+        """The first layout in the list that is not hidden (the first of all when every one is hidden): the one a slide
+        follows that has no slide before it."""
+        return next((layout for layout in self if not layout.hidden), self[self._order[0]])
+
+    def change(self, layout_id: str, **changes: object) -> Layout:
+        """Replace a layout by the same with ``changes``; returns the one it replaces. A new name must be free."""
+        old = self[layout_id]
+        if "name" in changes:
+            self.check_name(str(changes["name"]), layout_id)
+        self._by_id[layout_id] = replace(old, **changes)  # type: ignore[arg-type]
+        return old
+
+    def move(self, layout_id: str, at: int) -> int:
+        """Put a layout at place ``at`` of the others; returns the place it had."""
+        place = self._order.index(self[layout_id].id)
+        if not 0 <= at < len(self._order):
+            raise ValueError(f"there is no place {at} among {len(self._order)} layouts")
+        self._order.insert(at, self._order.pop(place))
+        return place
 
     def remove(self, layout_id: str) -> None:
         """Forget a layout; ``ValueError`` if there is none."""

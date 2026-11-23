@@ -297,6 +297,15 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.layouts.add(layout, at)
         self.open_holder(layout.id)
 
+    def change_layout(self, layout: str, **changes: object) -> Layout:
+        """Change what a layout says about itself (its name, whether it is hidden, whether it still waits for a
+        name); returns the layout as it was."""
+        return self.layouts.change(layout, **changes)
+
+    def move_layout(self, layout: str, at: int) -> int:
+        """Put a layout at place ``at`` in the list; returns the place it had."""
+        return self.layouts.move(layout, at)
+
     def remove_layout(self, layout: str) -> tuple[Layout, int]:
         """Take a layout away that no slide follows; returns it and the place it had. The basic layout stays."""
         if layout == BASIC_LAYOUT:
@@ -373,7 +382,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         if layout:
             self.layouts[layout]  # noqa: B018  (raises for an unknown layout)
             return layout
-        return self.slide_layouts[self.order[place - 1]] if place else BASIC_LAYOUT
+        return self.slide_layouts[self.order[place - 1]] if place else self.layouts.first_visible().id
 
     def delete_slide(self, slide: str) -> int:
         """Remove an empty slide; returns the place it had."""

@@ -100,6 +100,99 @@ class RemoveLayout(Command):
 
 @register
 @dataclass(frozen=True)
+class RenameLayout(Command):
+    """Give a layout a name. ``to_name`` says whether it still waits for one: a person who names a provisional layout
+    ends the waiting, and undoing it brings the waiting back."""
+
+    kind: ClassVar[str] = "creates.RenameLayout"
+    id: str
+    name: str
+    to_name: bool = False
+
+    @property
+    def label(self) -> str:
+        return "Rename layout"
+
+    @property
+    def summary(self) -> str:
+        return f"named a layout {self.name}"
+
+    def apply(self, ctx: Context[SlideModel]) -> Command:
+        old = ctx.model.change_layout(self.id, name=self.name, to_name=self.to_name)
+        ctx.emit(LayoutsChanged())
+        return RenameLayout(self.id, old.name, old.to_name)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "name": self.name, "to_name": self.to_name}
+
+    @classmethod
+    def from_data(cls, data, registry) -> RenameLayout:
+        return cls(data["id"], data["name"], data.get("to_name", False))
+
+
+@register
+@dataclass(frozen=True)
+class HideLayout(Command):
+    """Keep a layout out of the list a slide's layout is chosen from, or put it back. A built-in layout can be hidden
+    and never removed."""
+
+    kind: ClassVar[str] = "creates.HideLayout"
+    id: str
+    hidden: bool
+
+    @property
+    def label(self) -> str:
+        return "Hide layout" if self.hidden else "Show layout"
+
+    @property
+    def summary(self) -> str:
+        return "hid a layout" if self.hidden else "showed a layout"
+
+    def apply(self, ctx: Context[SlideModel]) -> Command:
+        old = ctx.model.change_layout(self.id, hidden=self.hidden)
+        ctx.emit(LayoutsChanged())
+        return HideLayout(self.id, old.hidden)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "hidden": self.hidden}
+
+    @classmethod
+    def from_data(cls, data, registry) -> HideLayout:
+        return cls(data["id"], data["hidden"])
+
+
+@register
+@dataclass(frozen=True)
+class MoveLayout(Command):
+    """Put a layout at another place in the list; the first one that is not hidden is what a new deck starts on."""
+
+    kind: ClassVar[str] = "creates.MoveLayout"
+    id: str
+    at: int
+
+    @property
+    def label(self) -> str:
+        return "Move layout"
+
+    @property
+    def summary(self) -> str:
+        return "moved a layout"
+
+    def apply(self, ctx: Context[SlideModel]) -> Command:
+        place = ctx.model.move_layout(self.id, self.at)
+        ctx.emit(LayoutsChanged())
+        return MoveLayout(self.id, place)
+
+    def to_data(self) -> dict:
+        return {"id": self.id, "at": self.at}
+
+    @classmethod
+    def from_data(cls, data, registry) -> MoveLayout:
+        return cls(data["id"], data["at"])
+
+
+@register
+@dataclass(frozen=True)
 class SetSlideLayout(Command):
     """Let a slide follow another layout. ``rebind`` says, by final values, which placeholder each object of the slide
     is bound to afterwards (``""``: none): the command does not look for matches, so that undo, replay and a colleague's
