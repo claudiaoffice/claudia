@@ -71,6 +71,7 @@ Unused numbers in a closed block stay unused.
 | D1450–D1469 | the E2E guard: every spec runs somewhere or says why, and a computer runs the browser scripts CI runs (E11.8, PROC-40, PROC-50, PROC-46, PROC-48, PROC-51, CODE-17, step code of E1.13; branch `e2e-guard`) | 2026-11-22 | open |
 | D1470–D1489 | E6.31 Slides in computes: the slide in the core, two collections and one tab order in computes, a chart as a slide, Move to Slide, the chart names of E1.18 (branch `e6-31-slides-in-computes`) | 2026-11-22 | open |
 | D1490–D1509 | E7.11 Claude as an AI provider: the provider choice and key in the server settings, the owners' consent kept in the document file, what the chat says about who answered, the Preferences menu (branch `e7-11-claude-provider`) | 2026-11-22 | open |
+| D1510–D1529 | CODE-78: a refusal of the models reaches a person in her language, typed refusals in the core and the apps (branch `code-78-translated-refusals`) | 2026-11-23 | open |
 
 ## Never to be used
 
