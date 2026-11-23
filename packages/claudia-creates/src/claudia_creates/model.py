@@ -261,6 +261,12 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """Read a slide anchor; ``ValueError`` if the data is not one."""
         return SlideAnchor.from_data(data)
 
+    def placed_at(self, old: SlideAnchor, new: SlideAnchor) -> SlideAnchor:
+        """A move or resize says where, not what the object is for or what it is bound to (E10.4)."""
+        if new.slide != old.slide:
+            return new
+        return replace(new, purpose=old.purpose, bound_to_placeholder=old.bound_to_placeholder)
+
     def room_for_new_object(self, anchor: SlideAnchor | None) -> int | None:
         """The core's rule for every slide (D1470)."""
         return room_on_slide(anchor)
@@ -329,20 +335,6 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             obj = on_slide[object_id]
             self.objects[object_id] = replace(obj, anchor=replace(obj.anchor, bound_to_placeholder=placeholder))
         return old, before
-
-    def set_layout_command(self, slide: str, layout: str) -> Command:
-        """The command that lets a slide follow ``layout``: what is bound to a placeholder follows the placeholder with
-        the same purpose on the new layout, and where there is none it becomes a free box where it stands (E10.4)."""
-        from .layout_commands import SetSlideLayout  # the commands know the model, so not at the top
-
-        self._require_slide(slide)
-        by_purpose = {obj.anchor.purpose: obj.id for obj in self.objects_on(layout) if obj.anchor.purpose}
-        rebind = tuple(
-            (obj.id, by_purpose.get(self.objects[obj.anchor.bound_to_placeholder].anchor.purpose, ""))
-            for obj in self.objects_on(slide)
-            if obj.anchor.bound_to_placeholder in self.objects
-        )
-        return SetSlideLayout(slide, layout, rebind)
 
     # -- slides ----------------------------------------------------------------
     def insert_slide(

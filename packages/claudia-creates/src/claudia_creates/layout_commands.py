@@ -18,12 +18,18 @@ register = SlideModel.registry.register
 @register
 @dataclass(frozen=True)
 class DefineLayout(Command):
-    """Keep a new layout, at the end of the list or at a place. It is a document layout with nothing on it."""
+    """Keep a new layout, at the end of the list or at a place, with nothing on it. ``to_name`` marks a provisional one
+    that nobody has named yet; the rest is what removing a layout keeps, so that undoing it brings the layout back as
+    it was."""
 
     kind: ClassVar[str] = "creates.DefineLayout"
     id: str
     name: str
     at: int | None = None
+    to_name: bool = False
+    purpose: str = ""
+    origin: str = "document"
+    hidden: bool = False
 
     @property
     def label(self) -> str:
@@ -34,16 +40,33 @@ class DefineLayout(Command):
         return f"made the layout {self.name}"
 
     def apply(self, ctx: Context[SlideModel]) -> Command:
-        ctx.model.define_layout(Layout(self.id, self.name), self.at)
+        layout = Layout(self.id, self.name, self.origin, self.purpose, self.hidden, self.to_name)
+        ctx.model.define_layout(layout, self.at)
         ctx.emit(LayoutsChanged())
         return RemoveLayout(self.id)
 
     def to_data(self) -> dict:
-        return {"id": self.id, "name": self.name, "at": self.at}
+        optional = {
+            "to_name": (self.to_name, False),
+            "purpose": (self.purpose, ""),
+            "origin": (self.origin, "document"),
+            "hidden": (self.hidden, False),
+        }
+        data: dict = {"id": self.id, "name": self.name, "at": self.at}
+        data |= {key: value for key, (value, default) in optional.items() if value != default}
+        return data
 
     @classmethod
     def from_data(cls, data, registry) -> DefineLayout:
-        return cls(data["id"], data["name"], data.get("at"))
+        return cls(
+            data["id"],
+            data["name"],
+            data.get("at"),
+            data.get("to_name", False),
+            data.get("purpose", ""),
+            data.get("origin", "document"),
+            data.get("hidden", False),
+        )
 
 
 @register
@@ -65,7 +88,7 @@ class RemoveLayout(Command):
     def apply(self, ctx: Context[SlideModel]) -> Command:
         layout, place = ctx.model.remove_layout(self.id)
         ctx.emit(LayoutsChanged())
-        return DefineLayout(layout.id, layout.name, place)
+        return DefineLayout(layout.id, layout.name, place, layout.to_name, layout.purpose, layout.origin, layout.hidden)
 
     def to_data(self) -> dict:
         return {"id": self.id}

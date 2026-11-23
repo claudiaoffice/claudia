@@ -538,6 +538,12 @@ class ObjectModel[A: Anchor]:
         """The ids of the holders objects may sit on (slides, sheets, paragraphs), in order."""
         raise NotImplementedError
 
+    def placed_at(self, old: A, new: A) -> A:  # noqa: ARG002 - an app that keeps more in its anchor uses it
+        """The anchor an object gets when a move or resize says ``new``: what ``new`` says about the place, and from
+        ``old`` whatever else an anchor holds (a slide's anchor says what a placeholder is for, E10.4). By default
+        ``new`` as it is."""
+        return new
+
     def layout_holders(self) -> Iterable[str]:
         """The ids of the holders that are not content but hold what content follows (a presentation's layouts,
         E10.4), in order. Their objects are stored with the others; no app but a presentation has any."""
@@ -1348,7 +1354,7 @@ class MoveObject(Command):
     def apply(self, ctx: Context) -> Command:
         model = object_model_of(ctx)
         old = model.get_object(self.id)
-        new = replace(old, anchor=_anchor_of(ctx, self.anchor))
+        new = replace(old, anchor=model.placed_at(old.anchor, _anchor_of(ctx, self.anchor)))
         if new.holder == old.holder:
             model.replace_object(new)
             ctx.emit(model.objects_changed(new.holder, changed=(new,)))
@@ -1408,7 +1414,9 @@ class ResizeObject(Command):
     def apply(self, ctx: Context) -> Command:
         model = object_model_of(ctx)
         old = model.get_object(self.id)
-        new = replace(old, anchor=_anchor_of(ctx, self.anchor)).with_body(w=self.w, h=self.h)
+        new = replace(old, anchor=model.placed_at(old.anchor, _anchor_of(ctx, self.anchor))).with_body(
+            w=self.w, h=self.h
+        )
         model.replace_object(new)
         ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return ResizeObject(self.id, old.anchor.to_data(), old.body.w, old.body.h)
@@ -1457,7 +1465,7 @@ class RotateObject(Command):
         old = model.get_object(self.id)
         new = old.with_body(rotation=self.rotation)
         if self.anchor is not None:
-            new = replace(new, anchor=_anchor_of(ctx, self.anchor))
+            new = replace(new, anchor=model.placed_at(old.anchor, _anchor_of(ctx, self.anchor)))
         model.replace_object(new)
         ctx.emit(model.objects_changed(new.holder, changed=(new,)))
         return RotateObject(self.id, old.body.rotation, None if self.anchor is None else old.anchor.to_data())
