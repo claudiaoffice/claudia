@@ -584,7 +584,7 @@ class SealedDocuments:
 
     # -- the owners' consent to a remote AI provider (E7.11, D264) ------------------------------
     def consent_rows(self, doc_id: str) -> list[ConsentRecord]:
-        """Every decision of the owners about a remote AI provider, oldest first."""
+        """Every decision of the owner about a remote AI provider, oldest first."""
         keys = self._all_keys(doc_id)
         with self._lock:
             return read_consent(self._file(doc_id), keys)
