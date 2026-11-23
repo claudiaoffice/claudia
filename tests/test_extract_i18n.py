@@ -63,7 +63,7 @@ def test_extract_python_finds_a_refusal_with_its_parameters(tmp_path, monkeypatc
 
 def test_extract_python_reports_a_refusal_built_at_runtime(tmp_path, monkeypatch):
     monkeypatch.setattr(extract_i18n, "ROOT", tmp_path)
-    for built in ('f"There is already a sheet called {name}"', '"There is " + what', 'str(error)', 'text.format(n=1)'):
+    for built in ('f"There is already a sheet called {name}"', '"There is " + what', "str(error)", "text.format(n=1)"):
         path = write(tmp_path, "a.py", f"raise Refusal({built})\n")
         found, problems = extract_i18n.extract_python(path)
         assert found == {} and len(problems) == 1, built

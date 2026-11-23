@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from claudia_server import i18n
 from claudia_core import Refusal
-
+from claudia_server import i18n
 from claudia_server.i18n import Message, localized, message_of, msg
 from claudia_server.protocol import RequestError
 
