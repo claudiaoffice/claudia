@@ -35,7 +35,7 @@ def server_state_dir() -> Path:
 def config_dir() -> Path:
     """Where the shell itself keeps its own settings (``settings.py``'s ``shell.json`` — the person's chosen
     language among them, E5.7). Suite-wide, like the server's folders:
-    picking a language in one app's Config menu is meant to be found again in the other two (``web/app/lib/
+    picking a language in one app's Preferences menu is meant to be found again in the other two (``web/app/lib/
     locale.ts``'s own ``localStorage`` key is single and shared for the same reason)."""
     return _xdg("XDG_CONFIG_HOME", ".config") / "claudia"
 

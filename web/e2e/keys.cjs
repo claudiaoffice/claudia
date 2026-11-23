@@ -96,7 +96,7 @@ const panelShown = (page) => page.evaluate(() => {
     await text.keyboard.press('Escape')
     log('composes: File ▸ Print… and Format ▸ List ▸ show their keys')
     await text.keyboard.press('Control+?')
-    await waitFor(text, () => !!document.querySelector('dialog[open], .modal'), null, 'Config ▸ Shortcuts to open')
+    await waitFor(text, () => !!document.querySelector('dialog[open], .modal'), null, 'Preferences ▸ Shortcuts to open')
     await text.screenshot({ path: `${SHOTS}/keys-composes-shortcuts.png` })
     await text.keyboard.press('Escape')
     log('composes: Ctrl+? opens the shortcuts')

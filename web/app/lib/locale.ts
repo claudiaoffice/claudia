@@ -1,6 +1,6 @@
 // The person's locale (E5.7, D31): always a client setting, never stored on the server (a document's users are
 // scoped to that document, D35, so there is no account profile to keep it on). The default is the OS or browser
-// locale; `setLocale` is how a later Config menu item overrides it. Nothing is translated with this yet — see i18n.ts
+// locale; `setLocale` is how a later Preferences menu item overrides it. Nothing is translated with this yet — see i18n.ts
 // for the (also still-empty) catalog loader this feeds.
 //
 // None of this assumes a browser: `currentLocale` and friends are also called from plain unit tests and (through

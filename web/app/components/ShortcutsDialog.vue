@@ -3,7 +3,7 @@ import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 
-// Config ▸ Shortcuts (D122, D126): replaces `HelpDialog.vue`. Shows the shared, structured shortcut map
+// Preferences ▸ Shortcuts (D122, D126): replaces `HelpDialog.vue`. Shows the shared, structured shortcut map
 // (`lib/shortcuts.ts`) this app is actually wired to — not a hand-maintained table that can drift from what Ctrl+Z
 // really does — plus `extra`, the handful of things that are real and worth knowing but are not a `keydown` shortcut
 // at all (a drag, a double-click, an `@ai` mention) and so have no place in that map.

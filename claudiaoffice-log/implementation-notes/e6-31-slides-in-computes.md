@@ -134,7 +134,7 @@ English: only a wrong client fails them.
   objects, every definition nothing else shows, and every slide left empty). `NewChart` carries the ids and the name.
   The chart tab is gone: `Chart`, `AddChart`, `RemoveChart`, `model.charts`, the event `charts` and the stored key
   `charts`. State schema 18; a stored workbook with chart tabs is not read (no upgrade, D1475).
-- **The core.** `ObjectModel.may_change_holder(old, new)` replaces the flag `objects_change_holder`: composes moves an
+- **The core.** `ObjectModel.may_change_holder(obj, new)` replaces the flag `objects_change_holder`: composes moves an
   object to any paragraph; computes from a sheet to a slide and back (the undo of "Move to Slide"), never between two
   sheets or two slides. `TakeBackSlide` (a `RemoveSlide` of its own, not a flag: CONTRIBUTING §2) is the undo of `AddSlide`: it does nothing while the slide holds an
   object, so undoing "Move to Slide" keeps a slide a colleague has put something on.
@@ -157,7 +157,7 @@ English: only a wrong client fails them.
   (`PrintedChart`); a chart on a slide is drawn as its picture (`asDrawn`, as on a sheet).
 - **Found and fixed on the way.** CODE-77 (undoing a chart left its definition, and Plotly said the element was gone):
   the chart and its definition are one step now, and `ChartView` checks that its element is still there after loading
-  Plotly. CODE-79 (writing in a text box on a workbook's slide was an internal error): the typing of an object's words
+  Plotly. CODE-83 (writing in a text box on a workbook's slide was an internal error): the typing of an object's words
   (`insert_text`, `remove_text`, `text_regions`, `text_moved`) moved from creates into the core's `ObjectModel`. A chart
   on a slide printed as "the chart has no picture" (A8 had not been met: step 2's slide had no chart).
 - **Assumptions** (the spec does not say): "A slide" is the first choice while a slide is shown too; a chart put on the
@@ -171,10 +171,15 @@ English: only a wrong client fails them.
   cannot pass as written: its Background has no table or query result, and on a slide the dialog offers only those
   (D1475); the owner is asked.
 - **Review (two axes) and what changed after it:** the undo of `AddSlide` is a command of its own, `TakeBackSlide`,
-  not a flag on `RemoveSlide` (CONTRIBUTING §2); `may_change_holder` takes the object, so in a workbook only a chart
-  changes holder (a text box cannot leave a slide and leave it empty); `_check_place` and one table of the places
+  not a flag on `RemoveSlide` (CONTRIBUTING §2); `may_change_holder` takes the object (D1471 named it `(old, new)`, two
+  anchors), so in a workbook only a chart changes holder (a text box cannot leave a slide and leave it empty); `_check_place` and one table of the places
   `show_as` takes; `SlideHost.figures` instead of two optional methods; `freeName` catches only a refusal of the
   server; the vulture whitelist follows the methods; a reasoned `noqa` in composes. Left as they were: the server
   checks the tab, slide and sheet of a place before `chart_steps` does (its refusals are said to the person, the model's
   are for a wrong client); the history's label "Move to slide" is English, as all history labels are (UX-22); "Move to
   Slide" has no key (owner, D1475).
+
+## Main merged in with E7.11, 2026-11-23
+
+E7.11 had taken the ID CODE-79 for a bug of its own (and E7.2 reserves CODE-80 to CODE-82), so the bug of a slide's
+text box is CODE-83; the commit that fixed it still says CODE-79 in its message.

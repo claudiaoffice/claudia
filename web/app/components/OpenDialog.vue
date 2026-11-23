@@ -285,7 +285,7 @@ function settle() {
 const shellRemovers: Array<() => void> = []
 
 /** The native menu's entries on the front page (sheet 11): File ▸ New, Open…, Open a File…, View ▸ Dark Mode and
- * Config ▸ App Language. The shell shows no others here. Each does something the person sees (D503): before, Open…
+ * Preferences ▸ App Language. The shell shows no others here. Each does something the person sees (D503): before, Open…
  * and New only moved the focus, which a window whose page did not have the focus did not show at all. */
 function onShellAction(action: string, target?: string) {
   if (action === 'file.open-file') chooseFile()

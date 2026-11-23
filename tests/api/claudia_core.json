@@ -1,5 +1,5 @@
 {
- "version": "0.36.0",
+ "version": "0.37.0",
  "ALLOWED_CSS": {
   "value": "<frozenset>"
  },
@@ -223,7 +223,7 @@
   "class": [
    "object"
   ],
-  "init": "(number: 'int', author: 'str', to: 'str', text: 'str', time: 'str', at: 'Revision | None', redacted: 'bool' = False) -> None",
+  "init": "(number: 'int', author: 'str', to: 'str', text: 'str', time: 'str', at: 'Revision | None', redacted: 'bool' = False, via: 'Via | None' = None) -> None",
   "methods": {
    "blanked": "(self) -> 'ChatRecord'",
    "from_data": "(data: 'dict') -> 'ChatRecord'",
@@ -644,7 +644,7 @@
    "peek_branch": "(self, branch: 'str') -> 'DocumentModel'",
    "peek_revision": "(self, rev: 'Revision') -> 'Look'",
    "plan_redaction": "(self, revisions: 'Iterable[Revision]' = (), *, chat: 'Iterable[int]' = (), parts: 'Mapping[Revision, Iterable[str]] | None' = None) -> 'RedactionPlan'",
-   "post_chat": "(self, author: 'str', raw: 'str', *, users: 'Iterable[str]' = ()) -> 'ChatRecord'",
+   "post_chat": "(self, author: 'str', raw: 'str', *, users: 'Iterable[str]' = (), via: 'Via | None' = None) -> 'ChatRecord'",
    "publish": "(self, kind: 'str', sender: 'str | None', data: 'dict | None' = None) -> 'Ephemeral'",
    "redact": "(self, what: 'RedactionPlan | Iterable[Revision]', *, author: 'str | None' = None) -> 'Applied'",
    "redo": "(self, author: 'str | None') -> 'Applied | None'",
@@ -2822,6 +2822,17 @@
    "label",
    "summary"
   ]
+ },
+ "Via": {
+  "class": [
+   "object"
+  ],
+  "init": "(provider: 'str', label: 'str', remote: 'bool', note: 'str' = '') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Via'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "VisualObject": {
   "class": [

@@ -33,7 +33,7 @@ import {
   askItem,
   authorsItemUnavailable,
   clipboardItems,
-  configMenu,
+  preferencesMenu,
   darkItem,
   fileMenu,
   helpMenu,
@@ -1162,12 +1162,12 @@ const menus = computed<Menu[]>(() => {
         ...pivotItems.value,
       ],
     },
-    configMenu(c, { current: locale.value, choose }),
+    preferencesMenu(c, { current: locale.value, choose }),
     helpMenu(c, { ask, openHelp: (mode) => frame.value?.openHelp(mode) }),
   ]
 })
 
-// Config ▸ Shortcuts: the grid's own mouse and keyboard conventions, which are not a single `keydown` chord and so
+// Preferences ▸ Shortcuts: the grid's own mouse and keyboard conventions, which are not a single `keydown` chord and so
 // were never candidates for the shared map.
 const SHORTCUT_NOTES = computed<[string, string][]>(() => [
   [t('Arrows, Tab, Enter'), t('move through the table')],

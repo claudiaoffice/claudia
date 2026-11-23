@@ -52,6 +52,7 @@ from claudia_core import (
 )
 from claudia_document_file import AuditRecord, Part, clean_details, write_export
 
+from .ai_consent import AiConsent, ConsentBook, ConsentNotKept, consent_view
 from .ai_mode import parse_mode
 from .audience import may_read
 from .auth import (
@@ -73,6 +74,7 @@ from .help import default_library
 from .i18n import localized, message_of, msg
 from .planned import keep_plan
 from .restore import POLICIES, RestoreCoordinator, RestoreError
+from .server_settings import CLAUDE
 from .throttle import Throttle
 
 if TYPE_CHECKING:
@@ -317,6 +319,12 @@ class Context:
     render_outcomes: Callable[[], dict[str, dict]] = field(default=lambda: {})
     # The fonts this server has, as a ``claudia_fonts.Catalogue`` (anything that ``resolve``s a family), or ``None``.
     font_catalogue: Callable[[], Any] = field(default=lambda: None)
+    # What the owners allowed a remote AI provider in this document (E7.11); ``None``: a context that keeps none.
+    consent: ConsentBook | None = None
+    # Who answers `@ai` in this document now, as `Via.to_data` says it; ``None`` when nobody does.
+    answering: Callable[[], dict | None] = field(default=lambda: None)
+    # Whether this server has a remote AI provider the owners could allow (E7.11).
+    offers_claude: Callable[[], bool] = field(default=lambda: False)
 
     @property
     def user(self) -> str:
@@ -1380,6 +1388,56 @@ def _audit_log(ctx):
     if not isinstance(ctx.directory, AuditDirectory):
         return []
     return [audit_row(record) for record in ctx.directory.audit_rows(ctx.doc_id)]
+
+
+@core_methods.method("ai_consent")
+def _ai_consent(ctx):
+    """Whether the owners allowed Claude to be sent this document's content when somebody asks `@ai` here (D264): off
+    until an owner says so. Any role may read it, a viewer too. Returns `{provider, allowed, by, at, owners,
+    history, answering, offered}`: `by` and `at` are who decided last and when, `owners` the people who can change it,
+    `history` every decision (`{allowed, who, when}`) oldest first, `answering` who answers `@ai` here now (`{provider,
+    label, remote, note}`; `note` says why it is not Claude where it is not), `offered` whether this server has
+    Claude set up, so that there is something to allow."""
+    state = ctx.consent.state if ctx.consent is not None else AiConsent()
+    return _consent_answer(ctx, state)
+
+
+@core_methods.method("set_ai_consent", "allowed:bool", write=True)
+def _set_ai_consent(ctx, allowed):
+    """Owners only: allow (`allowed` true) or withdraw Claude being sent this document's content when somebody asks
+    `@ai` here. Recorded in the document file with who and when; it is not a change of the document and cannot be
+    undone like one. Switching it off stops a question that is running before its next step. Returns what
+    `ai_consent` returns. `forbidden` for anybody who is not an owner; `unavailable` on a server that keeps no
+    document files, where it is always off."""
+    if ctx.account.role != "owner" or ctx.account.system:
+        raise RequestError("forbidden", msg("only the owners of a document decide whether Claude may be asked here"))
+    if ctx.consent is None:
+        raise RequestError("unavailable", msg("this server cannot keep the owners' consent, so Claude is not allowed"))
+    try:
+        record = ctx.consent.decide(CLAUDE, allowed, ctx.user, _now_text())
+    except ConsentNotKept:
+        raise RequestError(
+            "unavailable", msg("this server cannot keep the owners' consent, so Claude is not allowed")
+        ) from None
+    view = _consent_answer(ctx, ctx.consent.state)
+    if record is not None:
+        ctx.document.publish("ai_consent_changed", ctx.user, {"allowed": allowed, "by": ctx.user, "at": record.when})
+    return view
+
+
+def _consent_answer(ctx, state: AiConsent) -> dict:
+    return {
+        **consent_view(state, CLAUDE, _owners(ctx)),
+        "answering": ctx.answering(),
+        "offered": ctx.offers_claude(),
+    }
+
+
+def _owners(ctx) -> list[str]:
+    """The people who can change the consent: the document's owners, as the directory names them."""
+    if not isinstance(ctx.directory, RosterDirectory):
+        return [ctx.user] if ctx.account.role == "owner" else []
+    return [account.user for account in ctx.directory.list_people(ctx.doc_id) if account.role == "owner"]
 
 
 @core_methods.method("download_claudia", "password:str", hashes=(("@user", "password"),))

@@ -12,9 +12,18 @@ import asyncio
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from typing import Protocol
 
 from .agent import Agent, Request, Turn
-from .model import LanguageModel, ModelError
+from .model import LanguageModel, ModelError, ModelTimeout
+
+
+class Answerer(Protocol):
+    """Whatever answers one ``Request`` with a ``Turn``: a ``ModelRunner``, or something that checks first whether it
+    still may (E7.11)."""
+
+    async def answer(self, request: Request) -> Turn:
+        """The answer to ``request``. Raises ``ModelError``."""
 
 
 class _Job:
@@ -66,7 +75,7 @@ class ModelRunner:
         except RuntimeError as exc:  # the executor was shut down while the question waited
             raise ModelError("the server is shutting down") from exc
         if job.timed_out:
-            raise ModelError(f"that took longer than {self.timeout:g} seconds")
+            raise ModelTimeout(f"that took longer than {self.timeout:g} seconds")
         if self._closing.is_set() and job.cancelled:
             raise ModelError("the server is shutting down")
         return turn

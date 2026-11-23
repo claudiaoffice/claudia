@@ -17,6 +17,32 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - **Breaking** — computes' `charts`, `add_chart`, `remove_chart` and `add_diagram_object`, and the event `charts`
   (E6.31 step 3, D1475): a chart is made with `insert_chart`.
 
+## [0.42.0] - 2026-11-22
+
+### Added
+- **Claude as a provider of the `@ai`** (E7.11, D1490–D1499). `AiSettings.provider` (`"stand-in"`, `"local"` or
+  `"claude"`) and `AiSettings.claude` (`ClaudeSettings`: model, confirmation, key), with `load` and `public` (the key is
+  never in `public`). `AiRuntime.desk` (a `ProviderDesk`: who answers a question, whether Claude is offered, the last
+  failure), `AiRuntime.anthropic_key` and `anthropic_url`, `claude_model()`, `claude_runner()` and `key_in_use()`.
+- Consent per document (D1490, D1491): `SealedDocuments.record_consent` and `consent_rows` keep the second sealed list
+  of the document file; `Assistant.answering(consent)` and `offers_claude` say who would answer now, and the same on
+  `HostedDocument`. The `ai_consent` view says `{provider, allowed, by, at, owners, history, answering, offered}`;
+  `set_ai_consent` (owner only) and the ephemeral `ai_consent_changed` tell the others.
+- The administrator's page (D1495): `PUT /api/admin/settings/ai` takes `{provider, model_dir, device, max_tokens,
+  timeout, claude: {model, key, remove_key, confirm}}` and refuses with 400 `{detail, reason}`; the settings say
+  `ai.answering`, `ai.last_error` and `ai.claude` (`key_set`, `key_tail`, never the key). Start option
+  `--anthropic-base-url` (hidden, for tests).
+- Every answer says who gave it (D1493): `Say.via`, kept as `ChatRecord.via`. A failure of Claude is said in words, with
+  no silent fallback (D1492); switching Claude off ends a running question before its next step (D1497).
+
+### Changed
+- **Breaking** — `ModelEngine(runner, tools, lens, *, memory=None, budget=…)`: `memory_turns` is gone; the earlier chat
+  is a shared `ConversationMemory`, and goes with the next question whoever answered (D1498). `runner` is any
+  `Answerer`.
+- **Breaking** — `AiRuntime` takes `desk`, `anthropic_key` and `anthropic_url` instead of `runner`; `runner` is a
+  property of the desk. `Task` takes `consent`, a function that says what the document allows.
+- The server settings page *Config* is *Preferences* (D1494) and the AI settings moved to the AI page.
+
 ### Fixed
 - A refusal of a model reaches a person in her language (CODE-78, D1510): `i18n.message_of(error)` keeps the
   template of a `claudia_core.Refusal`, every `command_error` and `bad_request` that passes on a model's refusal uses

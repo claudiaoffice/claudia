@@ -3,7 +3,7 @@ id: composes.asking-ai-to-review
 title: Wie bitte ich die KI, meinen Text zu prüfen?
 apps: composes
 language: de
-source-hash: e65949173ce8
+source-hash: 2a324bbc0ed9
 tags: KI, Assistent, Prüfen, Vorschläge, Chat
 explains: "@ai, Vorschläge"
 ---
@@ -51,3 +51,10 @@ bekommt trotzdem eine Bemerkung.
 Der KI-Benutzer von Claudia ändert über genau dieselben Methoden wie ein Mensch, sodass er nie etwas tun kann, das
 ein Mensch nicht ebenfalls rückgängig machen könnte. Ob Sie seine Lesart des Textes zuerst als zweite Meinung wollen
 oder als Änderung, die Sie zurücknehmen können, entscheiden Sie – im Text, in der Tabelle und in den Folien gleich.
+
+## Wohin Ihre Frage geht
+
+Standardmäßig läuft die KI auf dem eigenen Rechner des Servers, und nichts verlässt ihn. Hat die Administratorin Claude
+verbunden und haben die Eigentümer dieses Dokuments es erlaubt (unter *Einstellungen ▸ KI…*, bis dahin aus), schickt eine
+Frage an `@ai` den Dokumentinhalt, den sie braucht, an Anthropic. Jede Antwort sagt, wer sie gegeben hat: „Lokales
+Modell“ oder „Claude · remote“.

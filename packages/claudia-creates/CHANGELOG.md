@@ -7,7 +7,7 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ### Changed
 - The typing of an object's words (`insert_text`, `remove_text`, `text_regions`, `text_moved`) is the core's
-  `ObjectModel`'s now (CODE-79); `SlideModel` answers the same.
+  `ObjectModel`'s now (CODE-83); `SlideModel` answers the same.
 - **Breaking** — the slide is claudia-core's (E6.31, D1470): `SLIDE_WIDTH`, `SLIDE_HEIGHT` and `SlideAnchor` come from
   `claudia_core.slides` (still re-exported here); `SlideModel.slide_names` and `SlideModel.slide_descriptions` are
   replaced by `SlideModel.slides` (`claudia_core.Slides`, the records), and the order of the presentation, which

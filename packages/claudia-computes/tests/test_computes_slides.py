@@ -114,7 +114,7 @@ def test_only_a_chart_leaves_its_slide_for_a_sheet_so_a_slide_loses_an_object_on
 
 
 def test_the_words_of_a_text_box_on_a_slide_are_written_as_in_creates_and_undone(doc):
-    # CODE-79: writing in a text box on a workbook's slide was an internal error
+    # CODE-83: writing in a text box on a workbook's slide was an internal error
     doc.execute(AddSlide("p1", "Slide 1"), author="ana")
     doc.execute(text_box(), author="ana")
     doc.execute(InsertText("t1", 4, " leads"), author="ana")

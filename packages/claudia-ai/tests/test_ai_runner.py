@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from claudia_ai import ModelError, ModelRunner, Request
+from claudia_ai import ModelError, ModelRunner, ModelTimeout, Request
 from claudia_ai.testing import FakeModel
 
 
@@ -135,3 +135,33 @@ def test_the_limits_must_be_positive():
         ModelRunner(FakeModel(), timeout=0)
     with pytest.raises(ValueError, match="positive"):
         ModelRunner(FakeModel(), max_new_tokens=0)
+
+
+def test_the_runner_says_which_model_it_holds():
+    model = FakeModel()
+    runner = ModelRunner(model)
+    assert runner.name == model.name
+    runner.close()
+
+
+def test_a_question_after_close_is_refused_in_words():
+    runner = ModelRunner(FakeModel())
+    runner.close()
+    with pytest.raises(ModelError, match="shutting down"):
+        run(ask(runner))
+
+
+def test_a_question_that_waited_when_the_worker_ended_is_refused_in_words():
+    runner = ModelRunner(FakeModel())
+    runner._executor.shutdown()  # the worker ends while the server still takes questions: the executor says so
+    with pytest.raises(ModelError, match="shutting down"):
+        run(ask(runner))
+
+
+def test_a_question_whose_time_ran_out_before_it_began_is_not_asked():
+    model = FakeModel()
+    runner = ModelRunner(model, timeout=1e-9)
+    with pytest.raises(ModelTimeout):
+        run(ask(runner))
+    assert model.calls == []
+    runner.close()

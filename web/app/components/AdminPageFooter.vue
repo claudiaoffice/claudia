@@ -6,7 +6,7 @@ import { useI18n } from '~/lib/i18n'
 
 const { t } = useI18n()
 
-defineProps<{ changed: { by: string; at: string } | null; busy: boolean; error: string }>()
+defineProps<{ changed: { by: string; at: string } | null; busy: boolean; error: string; cannotApply?: boolean }>()
 const emit = defineEmits<{ cancel: []; apply: [] }>()
 </script>
 
@@ -19,7 +19,7 @@ const emit = defineEmits<{ cancel: []; apply: [] }>()
       </div>
       <div class="buttons">
         <button class="btn" type="button" :disabled="busy" @click="emit('cancel')">{{ t('Cancel') }}</button>
-        <button class="btn primary" type="button" :disabled="busy" @click="emit('apply')">{{ t('Apply') }}</button>
+        <button class="btn primary" type="button" :disabled="busy || cannotApply" @click="emit('apply')">{{ t('Apply') }}</button>
       </div>
     </div>
   </div>

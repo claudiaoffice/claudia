@@ -1,9 +1,10 @@
 """The menu and action manifest of the Linux client (E5.1 / E5.10): one list from which the native menus are built.
 
-D120 gives every app the same seven header-bar menus — File, Edit, Format, View, Tools, Config, Help — superseding
-D4's four. An action has an id that names *what it does* (``file.save``, ``view.page``) and not where it sits, so a
-menu can be rearranged without touching the shell contract, and so the *same* id means the same thing on the web
-side (``web/app/lib/menu-dispatch.ts``) and here. Each action is carried out by one party (:class:`Kind`).
+D120 gives every app the same seven header-bar menus — File, Edit, Format, View, Tools, Preferences (called Config
+until E7.11; its action ids still start with ``config.``), Help — superseding D4's four. An action has an id that
+names *what it does* (``file.save``, ``view.page``) and not where it sits, so a menu can be rearranged without
+touching the shell contract, and so the *same* id means the same thing on the web side
+(``web/app/lib/menu-dispatch.ts``) and here. Each action is carried out by one party (:class:`Kind`).
 
 Nothing here imports GTK: the menus are described as data and turned into GtkBuilder XML by :func:`menu_xml`, so the
 layout stays in XML (D27) and the manifest can be tested anywhere. :func:`composes` already shipped; :func:`computes`
@@ -23,7 +24,7 @@ ordinary ``Kind.PAGE`` actions the shell greys out the moment the page connects 
 page's own ``collectStates`` — nothing shell-side needs to know they are permanent stubs rather than temporarily
 disabled ones).
 
-A second note, added for Config ▸ App Language (E5.7, D31/D148's groundwork, D160): translation itself is
+A second note, added for Preferences ▸ App Language (E5.7, D31/D148's groundwork, D160): translation itself is
 applied by :func:`menu_xml`/:func:`menu_elements`, not here — this module still imports no gettext, stays pure data,
 and is tested without any locale installed. The one deliberate exception is :data:`LANGUAGES` itself: each entry's
 own name is its autonym ("Deutsch", not "German" from an English catalog) and is never run through ``translate``,
@@ -66,7 +67,7 @@ Translate = Callable[[str], str]
 here stays callable (and testable) with no locale installed at all."""
 
 LANGUAGES: tuple[tuple[str, str], ...] = (("en", "English"), ("de", "Deutsch"))
-"""The language picker's own short, explicit list for Config ▸ App Language — exactly the catalogs that exist
+"""The language picker's own short, explicit list for Preferences ▸ App Language — exactly the catalogs that exist
 (``po/en`` is the source text itself, ``po/de.po``), extended by adding one more ``(tag, autonym)`` pair here, a new
 ``po/<tag>.po``, and the matching items in each workspace's own ``menus`` (``web/app/lib/menu-dispatch.ts``'s drift
 guard, ``tests/test_manifest.py``). Not a directory scan: two catalogs do not justify one, and an explicit list
@@ -823,9 +824,11 @@ def _tools_ask() -> Action:
     )
 
 
-def _config_menu() -> Menu:
-    """Shortcuts (D120, D122: an editable remapping UI is deferred; Ctrl+? as in GNOME), then App Language (the owner's
-    second i18n round): one checkable ``Kind.PAGE`` action per :data:`LANGUAGES` entry, in its own section/flyout.
+def _preferences_menu() -> Menu:
+    """Shortcuts (D120, D122: an editable remapping UI is deferred; Ctrl+? as in GNOME), AI… (E7.11, the owners'
+    consent for Claude in this document: Ctrl+Shift+Alt+E, provisional, because the wished-for H is Present from This
+    Slide), then App Language (the owner's second i18n round): one checkable ``Kind.PAGE`` action per
+    :data:`LANGUAGES` entry, in its own section/flyout.
 
     The language entries are the one place without a key: each is a language's own name, and there may be many.
     Mutual exclusion (picking one unchecks the rest) is enforced nowhere in this data — it is just ``LANGUAGES``
@@ -835,7 +838,7 @@ def _config_menu() -> Menu:
     them back, so ``window.py``'s ``set_action_states`` — already written to apply whatever the page reports, one id
     at a time — needs no special case to keep the native tick marks in step."""
     return Menu(
-        "Config",
+        "Preferences",
         (
             (
                 _page(
@@ -843,6 +846,12 @@ def _config_menu() -> Menu:
                     "Shortcuts",
                     "The keyboard shortcuts this app uses",
                     accelerators=("<Primary>question",),
+                ),
+                _page(
+                    "config.ai",
+                    "AI…",
+                    "Who may answer @ai in this document, and what is sent to Anthropic if Claude does (E7.11)",
+                    accelerators=("<Primary><Shift><Alt>e",),
                 ),
             ),
             (
@@ -896,7 +905,7 @@ def _manifest(
             format_menu,
             view,
             tools,
-            _config_menu(),
+            _preferences_menu(),
             _help_menu(title),
         ),
     )

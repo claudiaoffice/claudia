@@ -7,9 +7,24 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
-- The words of an object are typed by the core (CODE-79): `ObjectModel.insert_text`, `remove_text`, `text_regions` and
+- The words of an object are typed by the core (CODE-83): `ObjectModel.insert_text`, `remove_text`, `text_regions` and
   `text_moved` (the `TypingHost` of `InsertText` and `DeleteText`), which creates had; a workbook's slides use them.
   composes answers them itself.
+
+### Changed
+- **Breaking** — `ObjectModel.objects_change_holder` is `ObjectModel.may_change_holder(obj, new)` (E6.31 step 3,
+  D1475): whether this object, where it is now, may go to the holder of `new`; false by default. composes lets any
+  object go to another paragraph, computes a chart from a sheet to a slide and back.
+
+## [0.37.0] - 2026-11-22
+
+### Added
+- Who gave an answer (E7.11, D1493): `Via(provider, label, remote, note="")` with `to_data` and `from_data`, and
+  `ChatRecord.via`, kept in the chat of the document and written only when set. `Document.post_chat(..., via=None)`
+  takes it. An old chat reads back with `via=None`.
+
+
+### Added
 - The slide, shared by creates and computes (E6.31, D1470): `claudia_core.slides` with `SLIDE_WIDTH`, `SLIDE_HEIGHT`
   and `SlideAnchor` (until now creates'), the rule that keeps an object on a slide (`check_on_slide`,
   `turned_on_slide`, `room_on_slide`), `Slide` (id, name, description) and `Slides`, the slides of a document by id,
@@ -18,8 +33,7 @@ While the major version is 0, a minor version may break the API; every break is 
   the English sentence and keeps its template and parameters, so that the server can say it in the person's language;
   `N_(template)` marks a template kept apart from its call. `ObjectModel.name_taken`: the sentence for a name another
   thing has, by the kind of that thing. `ImageError` and `PageSetupError` are refusals.
-- Objects that may change holder (D1351): `ObjectModel.may_change_holder(old, new)` (false by default; computes allows a
-  sheet to a slide and back, E6.31 step 3),
+- Objects that may change holder (D1351): `ObjectModel.objects_change_holder` (false by default),
   `ObjectModel.rehang_object(obj, at=None)` (out of the old stack, into the new one, returns the old place) and
   `ObjectModel.place_regions(anchor)` (what a move into another holder also takes, for locks). `MoveObject.at`: the
   place in the new stack, set by the inverse of such a move and written only when set.

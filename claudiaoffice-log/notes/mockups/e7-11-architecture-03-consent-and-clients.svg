@@ -1,0 +1,142 @@
+<svg viewBox="0 0 1500 960" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">claudia - E7.11 architecture 3: consent and clients</title><desc id="d">Class diagram: a new ConsentRecord list beside the exit record, AiConsent is folded from it, core protocol methods ai_consent and set_ai_consent, an audience rule, admin API changes, and on the client side the web components, the shell manifest and the generated menus.</desc>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6e6880"/></marker><marker id="inh" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M1 1 L11 6 L1 11 z" fill="#fff" stroke="#6e6880" stroke-width="1.2"/></marker></defs>
+<rect width="1500" height="960" fill="#f3f1ea"/>
+<text x="40" y="44" font-size="22" font-weight="600" fill="#1f1a33" font-family="Fraunces, Georgia, serif">E7.11 architecture 3 — the consent lives in the sealed document; clients only draw it</text>
+<text x="40" y="66" font-size="12.5" fill="#6e6880">The owners&#x27; switch is written where the administrator cannot reach it. The shells add one menu entry; the dialog is the web page&#x27;s, so the three apps and all clients behave the same.</text>
+<rect x="30" y="90" width="300" height="300" rx="10" fill="#f7f3ec" stroke="#d8d2e6"/>
+<text x="44" y="112" font-size="12" font-weight="600" fill="#6e6880">claudia_document_file</text>
+<rect x="350" y="90" width="560" height="780" rx="10" fill="#f7f3ec" stroke="#d8d2e6"/>
+<text x="364" y="112" font-size="12" font-weight="600" fill="#6e6880">claudia_server</text>
+<rect x="30" y="410" width="300" height="360" rx="10" fill="#f7f3ec" stroke="#d8d2e6"/>
+<text x="44" y="432" font-size="12" font-weight="600" fill="#6e6880">start-up and tests (not the page)</text>
+<rect x="930" y="90" width="540" height="430" rx="10" fill="#f7f3ec" stroke="#d8d2e6"/>
+<text x="944" y="112" font-size="12" font-weight="600" fill="#6e6880">web app (Nuxt)</text>
+<rect x="930" y="540" width="540" height="330" rx="10" fill="#f7f3ec" stroke="#d8d2e6"/>
+<text x="944" y="562" font-size="12" font-weight="600" fill="#6e6880">shells (Linux GTK; macOS and Windows Neutralino)</text>
+<rect x="40" y="890" width="26" height="12" rx="3" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/><text x="74" y="900" font-size="11.5" fill="#6e6880">exists today</text>
+<rect x="170" y="890" width="26" height="12" rx="3" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/><text x="204" y="900" font-size="11.5" fill="#6e6880">new in E7.11 (dashed)</text>
+<text x="360" y="900" font-size="11.5" fill="#6e6880">bold coloured line = new or changed member of an existing class · «…» = kind · open triangle = is a</text>
+<rect x="45" y="130" width="270" height="162" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M45 136 a6 6 0 0 1 6 -6 h258 a6 6 0 0 1 6 6 v18 h-270 z" fill="#d6477a"/>
+<text x="180.0" y="150" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">ConsentRecord</text>
+<text x="57" y="170" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">provider: &quot;claude&quot;</text>
+<text x="57" y="188" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">allowed: bool</text>
+<text x="57" y="206" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">who, when</text>
+<text x="57" y="224" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">a second sealed list in the file,</text>
+<text x="57" y="242" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">beside the exit record, which</text>
+<text x="57" y="260" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">is not touched (AuditRecord)</text>
+<text x="57" y="278" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">file schema raised</text>
+<rect x="370" y="130" width="260" height="126" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M370 136 a6 6 0 0 1 6 -6 h248 a6 6 0 0 1 6 6 v18 h-260 z" fill="#d6477a"/>
+<text x="500.0" y="150" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">AiConsent</text>
+<text x="382" y="170" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">from_records(rows)</text>
+<text x="382" y="188" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">allows(provider) -&gt; bool</text>
+<text x="382" y="206" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">state(provider) -&gt; by, at</text>
+<text x="382" y="224" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">latest record per provider wins</text>
+<text x="382" y="242" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">no records -&gt; off</text>
+<rect x="650" y="130" width="240" height="72" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M650 136 a6 6 0 0 1 6 -6 h228 a6 6 0 0 1 6 6 v18 h-240 z" fill="#5b4bc4"/>
+<text x="770.0" y="150" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">HostedDocument</text>
+<text x="662" y="170" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ai_consent: AiConsent</text>
+<text x="662" y="188" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">(sealed list: consent/NNNNNN.blk)</text>
+<rect x="370" y="330" width="520" height="144" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M370 336 a6 6 0 0 1 6 -6 h508 a6 6 0 0 1 6 6 v18 h-520 z" fill="#5b4bc4"/>
+<text x="630.0" y="350" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">core_methods  (protocol.py)</text>
+<text x="382" y="370" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">ai_consent() -&gt; {allowed, by, at, answering, owners}</text>
+<text x="382" y="388" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">   reads=&quot;content&quot;: every role may ask</text>
+<text x="382" y="406" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">set_ai_consent(allowed: bool)</text>
+<text x="382" y="424" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">   owners only (like set_role); writes a ConsentRecord;</text>
+<text x="382" y="442" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">   publishes &quot;ai_consent_changed&quot;; off takes effect at the</text>
+<text x="382" y="460" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">   next round of a running question (the gate)</text>
+<rect x="370" y="520" width="520" height="90" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M370 526 a6 6 0 0 1 6 -6 h508 a6 6 0 0 1 6 6 v18 h-520 z" fill="#5b4bc4"/>
+<text x="630.0" y="540" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">audience.EVENT_RULES</text>
+<text x="382" y="560" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">&quot;ai_consent_changed&quot;: Rule(CONTENT)</text>
+<text x="382" y="578" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">   viewers see who allowed it, as the dialog shows</text>
+<text x="382" y="596" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">   (a test fails until every new event is listed)</text>
+<rect x="370" y="660" width="520" height="126" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M370 666 a6 6 0 0 1 6 -6 h508 a6 6 0 0 1 6 6 v18 h-520 z" fill="#5b4bc4"/>
+<text x="630.0" y="680" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">admin_api  (administrators only)</text>
+<text x="382" y="700" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">GET  /settings/ai  -&gt; + provider, answering, last_failure,</text>
+<text x="382" y="718" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">                       claude{model, key_tail, confirmed}</text>
+<text x="382" y="736" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">PUT  /settings/ai  -&gt; + provider, claude{model, key, confirm}</text>
+<text x="382" y="754" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">POST /settings/ai/test  one question, no change   (or inside PUT)</text>
+<text x="382" y="772" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">the key is never returned; only the last four characters</text>
+<rect x="45" y="445" width="270" height="144" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M45 451 a6 6 0 0 1 6 -6 h258 a6 6 0 0 1 6 6 v18 h-270 z" fill="#5b4bc4"/>
+<text x="180.0" y="465" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">cli.py</text>
+<text x="57" y="485" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">--anthropic-key-file / env</text>
+<text x="57" y="503" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  ANTHROPIC_API_KEY wins over</text>
+<text x="57" y="521" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  the saved key (D154)</text>
+<text x="57" y="539" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">--anthropic-base-url (hidden)</text>
+<text x="57" y="557" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  tests and the fake only; never</text>
+<text x="57" y="575" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  a setting of the page (SSRF)</text>
+<rect x="45" y="640" width="270" height="108" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M45 646 a6 6 0 0 1 6 -6 h258 a6 6 0 0 1 6 6 v18 h-270 z" fill="#d6477a"/>
+<text x="180.0" y="660" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">FakeAnthropic</text>
+<text x="57" y="680" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">claudia_ai.testing</text>
+<text x="57" y="698" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">speaks Messages API + stream,</text>
+<text x="57" y="716" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">and every failure: 401 402 404</text>
+<text x="57" y="734" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">429 529 and no network</text>
+<rect x="950" y="130" width="250" height="126" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M950 136 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v18 h-250 z" fill="#5b4bc4"/>
+<text x="1075.0" y="150" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">AdminAi.vue</text>
+<text x="962" y="170" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">was AdminAiModel.vue</text>
+<text x="962" y="188" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">provider switch, three panels</text>
+<text x="962" y="206" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">key write-only, test, apply</text>
+<text x="962" y="224" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">answering now + last error</text>
+<text x="962" y="242" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">HTTP: /settings/ai</text>
+<rect x="1230" y="130" width="220" height="126" rx="6" fill="#fff" stroke="#d6477a" stroke-width="1.6" stroke-dasharray="6 4"/>
+<path d="M1230 136 a6 6 0 0 1 6 -6 h208 a6 6 0 0 1 6 6 v18 h-220 z" fill="#d6477a"/>
+<text x="1340.0" y="150" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">AiConsentDialog.vue</text>
+<text x="1242" y="170" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">everyone opens it</text>
+<text x="1242" y="188" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">owners change, Save</text>
+<text x="1242" y="206" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">lists what is sent</text>
+<text x="1242" y="224" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">wire: ai_consent,</text>
+<text x="1242" y="242" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  set_ai_consent</text>
+<rect x="950" y="290" width="250" height="108" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M950 296 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v18 h-250 z" fill="#5b4bc4"/>
+<text x="1075.0" y="310" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">document-menus.ts</text>
+<text x="962" y="330" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">configMenu -&gt; preferencesMenu</text>
+<text x="962" y="348" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">label &quot;Config&quot; -&gt; &quot;Preferences&quot;</text>
+<text x="962" y="366" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">entry &quot;AI…&quot;  ai.preferences</text>
+<text x="962" y="384" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">key Ctrl+Shift+Alt+H</text>
+<rect x="1230" y="290" width="220" height="90" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M1230 296 a6 6 0 0 1 6 -6 h208 a6 6 0 0 1 6 6 v18 h-220 z" fill="#5b4bc4"/>
+<text x="1340.0" y="310" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">SidePanel.vue</text>
+<text x="1242" y="330" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">badge in the ai row</text>
+<text x="1242" y="348" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">&quot;answered by …&quot; under a</text>
+<text x="1242" y="366" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">  bubble, from ChatRecord.via</text>
+<rect x="950" y="450" width="500" height="62" rx="6" fill="#f0edf9" stroke="#b9b2d1"/>
+<text x="960" y="469" font-size="11.5" fill="#1f1a33">i18n: every new string goes through the catalogue (po/), the server&#x27;s</text>
+<text x="960" y="485" font-size="11.5" fill="#1f1a33">sentences through msg(); the sentence for the asker is one string with</text>
+<text x="960" y="501" font-size="11.5" fill="#1f1a33">the provider&#x27;s name as its only variable.</text>
+<rect x="950" y="580" width="250" height="108" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M950 586 a6 6 0 0 1 6 -6 h238 a6 6 0 0 1 6 6 v18 h-250 z" fill="#5b4bc4"/>
+<text x="1075.0" y="600" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">manifest.py  (Linux)</text>
+<text x="962" y="620" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">action &quot;ai.preferences&quot;</text>
+<text x="962" y="638" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">label &quot;Config&quot; -&gt; &quot;Preferences&quot;</text>
+<text x="962" y="656" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">keys: Ctrl+Shift+Alt+H</text>
+<text x="962" y="674" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">one list per app, no GTK</text>
+<rect x="1230" y="580" width="220" height="108" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M1230 586 a6 6 0 0 1 6 -6 h208 a6 6 0 0 1 6 6 v18 h-220 z" fill="#5b4bc4"/>
+<text x="1340.0" y="600" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">generate_menu.py</text>
+<text x="1242" y="620" font-size="11.5" font-weight="600" fill="#d6477a" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">menu.&lt;app&gt;.json</text>
+<text x="1242" y="638" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">regenerated; --check in CI</text>
+<text x="1242" y="656" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">macOS: app-menu placement</text>
+<text x="1242" y="674" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">stays open points 14/15</text>
+<rect x="950" y="740" width="500" height="90" rx="6" fill="#fff" stroke="#5b4bc4" stroke-width="1.6"/>
+<path d="M950 746 a6 6 0 0 1 6 -6 h488 a6 6 0 0 1 6 6 v18 h-500 z" fill="#5b4bc4"/>
+<text x="1200.0" y="760" font-size="13.5" font-weight="600" fill="#fff" text-anchor="middle">shell contract v1  (clients/contract)</text>
+<text x="962" y="780" font-size="11.5" font-weight="400" fill="#1f1a33" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">action id &quot;ai.preferences&quot;: additive, same version,</text>
+<text x="962" y="798" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">a CHANGELOG line; the shell sends `action`, the page opens</text>
+<text x="962" y="816" font-size="11.5" font-weight="400" fill="#6e6880" font-family="'JetBrains Mono', ui-monospace, Menlo, monospace">its dialog: no dialog code in any shell</text>
+<path d="M630 167.8 L650 151.6" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<path d="M315 162.4 L370 167.8" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<path d="M770.0 202 L786.0 330" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<path d="M630.0 474 L630.0 520" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<path d="M1075.0 688 L1000.0 740" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<path d="M1200 634.0 L1230 634.0" fill="none" stroke="#6e6880" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="1215.0" y="630.0" font-size="11" fill="#6e6880" text-anchor="middle">generates</text>
+</svg>
