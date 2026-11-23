@@ -18,42 +18,62 @@ Feature: Slides in computes (E6.31)
   @core @firefox
   Rule: Edit ▸ Chart… shows a chart as a slide of its own, right after the tab I am on
 
+    # Step 3, owner 2026-11-23: the new slide gets the next free generic name "Slide n"; the name in the dialog is the
+    # chart's, as with "Move to Slide" (Q1 of the review of 2026-11-22).
+
     Scenario: "A slide" is what the dialog offers first
       When I select A1:B4 and choose Edit ▸ Chart…
       Then the dialog offers to show the chart as "A slide" or as "A floating object on the sheet"
       And "A slide" is chosen
-      And the name field asks for "the slide it opens as"
+      And the name field asks for the name of the chart
 
     Scenario: The chart becomes a slide, right after the sheet I am on
       Given there is a second sheet "Costs"
-      When I insert a bar chart of A1:B4 as a slide named "Sales chart"
-      Then the tabs read "Sheet1", "Sales chart", "Costs"
-      And the tab "Sales chart" is marked as a slide
+      When I insert a bar chart "Sales" of A1:B4 as a slide
+      Then the tabs read "Sheet1", "Slide 1", "Costs"
+      And the tab "Slide 1" is marked as a slide
       # Q3: the slide is shown with nothing selected
-      And the slide "Sales chart" is shown, and the chart fills its frame
+      And the slide "Slide 1" is shown, and the chart fills its frame
+      And the chart on it is called "Sales"
       And nothing is selected
       And instead of the formula bar there are the tools Text, Image, Circle, Rectangle and Triangle
       And there are no speaker notes and there is no Present
 
     Scenario: One undo takes the slide and its chart away
-      When I insert a bar chart of A1:B4 as a slide named "Sales chart"
+      When I insert a bar chart "Sales" of A1:B4 as a slide
       And I undo
       Then the tabs read "Sheet1"
       And Sheet1 is shown
       And the history shows one entry for the chart
 
     Scenario: The chart on a slide follows its cells
-      When I insert a bar chart of A1:B4 as a slide named "Sales chart"
+      When I insert a bar chart "Sales" of A1:B4 as a slide
       And I change B2 on Sheet1 to 150
-      Then the bar of East on the slide "Sales chart" is 150 high
+      Then the bar of East on the slide "Slide 1" is 150 high
 
   @extended
   Rule: A floating chart on the sheet is made as before
 
     Scenario: A floating object on the sheet
-      When I insert a bar chart of A1:B4 as a floating object on the sheet
-      Then the chart is on Sheet1, at the selected cells
+      When I insert a bar chart "Sales" of A1:B4 as a floating object on the sheet
+      Then the chart "Sales" is on Sheet1, at the selected cells
       And the tabs read "Sheet1"
+
+  @extended
+  Rule: While a slide is shown, Edit ▸ Chart… puts the chart on that slide or on a new one
+
+    # Step 3, owner 2026-11-23 (Q3)
+    Background:
+      Given I inserted a bar chart "Sales" of A1:B4 as a slide
+
+    Scenario: The dialog offers "On this slide" instead of the sheet
+      When I choose Edit ▸ Chart… while the slide "Slide 1" is shown
+      Then the dialog offers to show the chart as "A slide" or "On this slide"
+
+    Scenario: A second chart on the slide
+      When I insert a bar chart "Sales 2" of A1:B4 on this slide
+      Then the slide "Slide 1" shows the charts "Sales" and "Sales 2"
+      And the tabs read "Sheet1", "Slide 1"
 
   # ================================================================ Move to Slide
 
@@ -100,11 +120,11 @@ Feature: Slides in computes (E6.31)
   Rule: A slide holds text boxes, shapes and pictures beside its chart
 
     Scenario: A text box beside the chart stays after the page is loaded again
-      Given I inserted a bar chart of A1:B4 as a slide named "Sales chart"
+      Given I inserted a bar chart "Sales" of A1:B4 as a slide
       When I make the chart half as wide
       And I add a text box saying "East leads" beside it with the tool Text
       And I load the page again
-      Then the slide "Sales chart" shows the chart and the text box "East leads"
+      Then the slide "Slide 1" shows the chart and the text box "East leads"
 
   # ================================================================ the slide goes with its last object
 
@@ -112,7 +132,7 @@ Feature: Slides in computes (E6.31)
   Rule: A slide goes with its last object, in the same step
 
     Background:
-      Given I inserted a bar chart of A1:B4 as a slide named "Sales chart"
+      Given I inserted a bar chart "Sales" of A1:B4 as a slide
 
     Scenario: Deleting the only chart deletes the slide
       # Q2: the tab before it is shown (the one after it, if the slide was the first)
@@ -123,14 +143,14 @@ Feature: Slides in computes (E6.31)
     Scenario: One undo brings the slide and its chart back
       When I delete the chart
       And I undo
-      Then the tabs read "Sheet1", "Sales chart"
-      And the slide "Sales chart" shows the chart
+      Then the tabs read "Sheet1", "Slide 1"
+      And the slide "Slide 1" shows the chart
 
     @extended
     Scenario: A slide with a text box left stays
       Given I added a text box saying "East leads" to the slide
       When I delete the chart
-      Then the tabs read "Sheet1", "Sales chart"
+      Then the tabs read "Sheet1", "Slide 1"
       When I delete the text box
       Then the tabs read "Sheet1"
 
@@ -150,15 +170,15 @@ Feature: Slides in computes (E6.31)
   Rule: A slide is a tab like a sheet
 
     Scenario: A slide is renamed like a sheet
-      Given I inserted a bar chart of A1:B4 as a slide named "Sales chart"
-      When I double-click the tab "Sales chart" and type "Q1 sales"
+      Given I inserted a bar chart "Sales" of A1:B4 as a slide
+      When I double-click the tab "Slide 1" and type "Q1 sales"
       Then the tabs read "Sheet1", "Q1 sales"
 
     @two-users
     Scenario: A colleague sees the slide come and go
       Given Ben, an editor, has the document open
-      When I insert a bar chart of A1:B4 as a slide named "Sales chart"
-      Then Ben's tabs read "Sheet1", "Sales chart"
+      When I insert a bar chart "Sales" of A1:B4 as a slide
+      Then Ben's tabs read "Sheet1", "Slide 1"
       When I undo
       Then Ben's tabs read "Sheet1"
 
@@ -177,10 +197,10 @@ Feature: Slides in computes (E6.31)
 
     Scenario: Downloading as xlsx or ods says that a slide became a sheet
       # Q6
-      Given I inserted a bar chart of A1:B4 as a slide named "Sales chart"
+      Given I inserted a bar chart "Sales" of A1:B4 as a slide
       When I export the document as xlsx
-      Then the file has the sheets "Sheet1" and "Sales chart", and the chart is on "Sales chart"
-      And I am told "The slide “Sales chart” was written as a sheet: a workbook in this format has no slides."
+      Then the file has the sheets "Sheet1" and "Slide 1", and the chart is on "Slide 1"
+      And I am told "The slide “Slide 1” was written as a sheet: a workbook in this format has no slides."
 
     Scenario: Read back, what was a slide is a sheet
       Given an xlsx file written from a workbook with the slide "Sales chart"
@@ -193,16 +213,16 @@ Feature: Slides in computes (E6.31)
 
     Scenario: Printing while a slide is shown
       # Q7
-      Given I inserted a bar chart of A1:B4 as a slide named "Sales chart"
+      Given I inserted a bar chart "Sales" of A1:B4 as a slide
       When I open the print preview
       Then it shows one landscape page with the chart, as a slide in creates is printed
 
     Scenario: Printing the whole workbook puts the slide between the sheets
       # Q7
       Given there is a second sheet "Costs"
-      And I inserted a bar chart of A1:B4 as a slide named "Sales chart" while Sheet1 was shown
+      And I inserted a bar chart "Sales" of A1:B4 as a slide while Sheet1 was shown
       When I print the whole workbook
-      Then the pages are Sheet1, the slide "Sales chart" on a landscape page, then Costs
+      Then the pages are Sheet1, the slide "Slide 1" on a landscape page, then Costs
 
     @e2e:computes-slides
     Scenario: The print bar speaks of the slide shown as a slide
