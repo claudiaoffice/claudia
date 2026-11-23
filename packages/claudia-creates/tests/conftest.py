@@ -46,7 +46,13 @@ def build(**fields) -> SlideObject:
     The helpers below keep the flat signatures the tests have always used, so a test says what it means
     (``text_box(x=300)``, ``shape_object(text="hi")``) while the model holds the parts apart: the anchor
     (E10.16) and, since E10.17, the words as a paragraph of their own (D181)."""
-    anchor = SlideAnchor(fields.pop("slide", SLIDE), fields.pop("x", 0), fields.pop("y", 0))
+    anchor = SlideAnchor(
+        fields.pop("slide", SLIDE),
+        fields.pop("x", 0),
+        fields.pop("y", 0),
+        fields.pop("purpose", ""),
+        fields.pop("bound_to_placeholder", ""),
+    )
     text, author = fields.pop("text", ""), fields.pop("author", "ana")
     if fields.get("kind") != "image" and "paragraph" not in fields:
         # A text box's words follow its own style here, as they always did in these tests; a shape's words have a

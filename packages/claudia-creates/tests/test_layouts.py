@@ -1,7 +1,7 @@
 """A presentation has layouts, and every slide follows one of them (E10.4, D1530)."""
 
 import pytest
-from conftest import reopen
+from conftest import add, reopen, text_box
 
 from claudia_creates import AddSlide, DefineLayout, RemoveLayout, RemoveSlide, SetSlideLayout, SlideModel
 
@@ -88,3 +88,32 @@ def test_a_removed_slide_comes_back_on_its_layout(doc):
     doc.undo("ana")
     assert doc.model.layout_of("s2") == "two-lists"
     assert reopen(doc).model.layout_of("s2") == "two-lists"
+
+
+def test_a_layout_holds_a_placeholder_with_its_purpose_and_it_survives_snapshot_and_replay(doc):
+    doc.execute(DefineLayout("two-lists", "Two lists"), author="ana")
+    doc.execute(add(text_box("title", slide="two-lists", purpose="Title")), author="ana")
+    placeholder = doc.model.get("title")
+    assert (placeholder.holder, placeholder.anchor.purpose, placeholder.anchor.bound_to_placeholder) == (
+        "two-lists",
+        "Title",
+        "",
+    )
+    assert [obj.id for obj in doc.model.objects_on("two-lists")] == ["title"]
+    assert doc.model.objects_on("s1") == []
+    state = doc.model.serialize()
+    assert SlideModel.restore(state).get("title").anchor.purpose == "Title"
+    assert SlideModel.restore(state).serialize() == state
+    assert reopen(doc).model.get("title").anchor.purpose == "Title"
+    doc.undo("ana")
+    assert "title" not in doc.model.objects
+
+
+def test_a_slide_object_can_be_bound_to_a_placeholder_of_the_layout_its_slide_follows(doc):
+    doc.execute(DefineLayout("two-lists", "Two lists"), author="ana")
+    doc.execute(add(text_box("title", slide="two-lists", purpose="Title")), author="ana")
+    doc.execute(SetSlideLayout("s1", "two-lists"), author="ana")
+    doc.execute(add(text_box("heading", bound_to_placeholder="title")), author="ana")
+    assert doc.model.get("heading").anchor.bound_to_placeholder == "title"
+    assert doc.model.get("heading").anchor.to_data()["bound_to_placeholder"] == "title"
+    assert "purpose" not in doc.model.get("heading").anchor.to_data(), "only what is set is written"

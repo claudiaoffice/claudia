@@ -141,6 +141,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         #: The layouts a slide may follow, in the order a person sees them; the basic one to start with (E10.4).
         self.layouts: Layouts = Layouts()
         self.layouts.add(Layout(BASIC_LAYOUT, "Basic", "builtin"))
+        self.open_holder(BASIC_LAYOUT)
         #: The layout every slide follows, by slide id.
         self.slide_layouts: dict[str, str] = {}
         #: The slides as records, with their names (one namespace with the objects, D550) and descriptions (D1317).
@@ -214,6 +215,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         # schema 18 and earlier: no layouts, every slide follows the basic one
         if "layouts" in state:
             model.layouts = Layouts.from_data(state["layouts"])
+            for layout in model.layouts.ids():
+                model.open_holder(layout)
         model.slide_layouts = {slide: state.get("slide_layouts", {}).get(slide, BASIC_LAYOUT) for slide in model.order}
         # schema 8 and earlier: no notes and no planned times
         model.notes = {k: v for k, v in state.get("notes", {}).items() if k in model.order and v}
@@ -249,6 +252,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """The slides objects may sit on, in order."""
         return self.order
 
+    def layout_holders(self) -> list[str]:
+        """The layouts, which hold the placeholders and other objects slides follow (E10.4, D1530)."""
+        return self.layouts.ids()
+
     def anchor_from_data(self, data: dict) -> SlideAnchor:
         """Read a slide anchor; ``ValueError`` if the data is not one."""
         return SlideAnchor.from_data(data)
@@ -281,6 +288,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         if layout.id in self.slides:
             raise ValueError(f"{layout.id!r} is a slide, not a layout")
         self.layouts.add(layout, at)
+        self.open_holder(layout.id)
 
     def remove_layout(self, layout: str) -> tuple[Layout, int]:
         """Take a layout away that no slide follows; returns it and the place it had. The basic layout stays."""
@@ -290,6 +298,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             raise Refusal("a slide still follows this layout")
         removed = self.layouts[layout]
         place = self.layouts.ids().index(layout)
+        self.close_holder(layout)
         self.layouts.remove(layout)
         return removed, place
 

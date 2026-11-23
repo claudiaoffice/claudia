@@ -29,12 +29,18 @@ class SlideAnchor:
     """Where an object sits on a slide: the top-left corner of its frame, in whole units of the slide.
 
     A slide has absolute coordinates and a fixed size, so an anchor is a point, and nothing on the slide ever moves it
-    by itself."""
+    by itself, except what a layout makes of it (E10.4, D1530).
+
+    ``purpose`` is what a placeholder on a layout is for, in the words a person sees (``""``: not a placeholder).
+    ``bound_to_placeholder`` is the technical side of it on a slide: the id of the placeholder on the layout whose frame
+    this object keeps as its own (``""``: free). They are two fields because the one is meaning, the other mechanics."""
 
     kind: ClassVar[str] = "slide"
     slide: str
     x: int
     y: int
+    purpose: str = ""
+    bound_to_placeholder: str = ""
 
     @property
     def holder(self) -> str:
@@ -43,7 +49,12 @@ class SlideAnchor:
 
     def to_data(self) -> dict:
         """The plain-data form: what the log stores and clients are sent."""
-        return {"kind": self.kind, "holder": self.slide, "x": self.x, "y": self.y}
+        data = {"kind": self.kind, "holder": self.slide, "x": self.x, "y": self.y}
+        if self.purpose:
+            data["purpose"] = self.purpose
+        if self.bound_to_placeholder:
+            data["bound_to_placeholder"] = self.bound_to_placeholder
+        return data
 
     @classmethod
     def from_data(cls, data: dict) -> SlideAnchor:
@@ -51,9 +62,12 @@ class SlideAnchor:
         if data.get("kind") != cls.kind:
             raise ValueError(f"not a slide anchor: the kind is {data.get('kind')!r}")
         slide, x, y = data.get("holder"), data.get("x"), data.get("y")
+        purpose, bound = data.get("purpose", ""), data.get("bound_to_placeholder", "")
         if not isinstance(slide, str) or not _is_whole(x) or not _is_whole(y):
             raise ValueError("a slide anchor names a slide and whole x and y")
-        return cls(slide, x, y)
+        if not isinstance(purpose, str) or not isinstance(bound, str):
+            raise ValueError("the purpose and the placeholder of a slide anchor are text")
+        return cls(slide, x, y, purpose, bound)
 
 
 def check_on_slide(anchor: SlideAnchor, body: ObjectBody) -> None:

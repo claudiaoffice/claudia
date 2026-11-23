@@ -538,6 +538,15 @@ class ObjectModel[A: Anchor]:
         """The ids of the holders objects may sit on (slides, sheets, paragraphs), in order."""
         raise NotImplementedError
 
+    def layout_holders(self) -> Iterable[str]:
+        """The ids of the holders that are not content but hold what content follows (a presentation's layouts,
+        E10.4), in order. Their objects are stored with the others; no app but a presentation has any."""
+        return ()
+
+    def all_holders(self) -> list[str]:
+        """The holders of content and then the holders of layouts: every holder that has objects to store."""
+        return [*self.holders(), *self.layout_holders()]
+
     def check_anchor(self, anchor: A, body: ObjectBody) -> None:
         """``ValueError`` with a sentence unless an object with this body may sit at this anchor."""
         raise NotImplementedError
@@ -1093,7 +1102,7 @@ class ObjectModel[A: Anchor]:
     # -- serialization helpers ---------------------------------------------------
     def objects_to_data(self) -> list[dict]:
         """Every object, holder by holder in stacking order: what ``serialize`` stores."""
-        return [obj.to_data() for holder in self.holders() for obj in self.objects_on(holder)]
+        return [obj.to_data() for holder in self.all_holders() for obj in self.objects_on(holder)]
 
     def assets_to_data(self) -> dict[str, list[dict]]:
         """Every asset, kind by kind (``images``, ``shapes``, ...): what ``serialize`` stores beside the objects."""
