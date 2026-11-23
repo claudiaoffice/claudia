@@ -28,7 +28,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from conftest import READY, Person, World, eventually
+from conftest import READY, Person, World, eventually, steady
 from docx import Document
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -1003,7 +1003,7 @@ def _no_option(scene):
     ann = scene.desks["composes"]
     page = ann.page
     # The dialog asks the server how many descriptions there are; the option can only be judged after its answer.
-    eventually(lambda: _holds(any("descriptions" in answer for answer in ann.answers), "the dialog got no answer"))
+    eventually(lambda: _holds(any("descriptions" in a for a in ann.answers), "the dialog got no answer"), page=page)
     page.evaluate("() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done)))")
     assert page.locator("[data-testid=export-description-comments]").count() == 0
     page.keyboard.press("Escape")
@@ -1207,19 +1207,6 @@ def _unchanged(world):
 
 
 # ============================================================================================ the way back
-def steady(person: Person, read, tries: int = 40):
-    """What ``read()`` gives once two reads a quarter of a second apart agree: a view that has stopped moving, a list
-    that has stopped filling."""
-    last = read()
-    for _ in range(tries):
-        person.page.wait_for_timeout(250)
-        now = read()
-        if now == last:
-            return now
-        last = now
-    return last
-
-
 def where(person: Person) -> object:
     """Where the view is, once it has stopped moving, as the way back counts it (D1312): the text's top visible
     paragraph, the sheet's top left cell, or the slide shown."""

@@ -50,8 +50,12 @@ KIND_WORDS = {"composes": "Text", "computes": "Table", "creates": "Slides"}
 _config: pytest.Config | None = None
 
 
-def eventually(check, seconds: float = 10.0) -> None:
-    """Run ``check`` (it asserts) until it holds, for at most ``seconds``; the last failure is the answer."""
+def eventually(check, seconds: float = 10.0, *, page=None) -> None:
+    """Run ``check`` (it asserts) until it holds, for at most ``seconds``; the last failure is the answer.
+
+    A check that reads what a page heard on the wire (``Person.events``, ``Person.answers``) passes its ``page``: the
+    sync Playwright API hands a page's websocket frames to Python only while a Playwright call runs, so between tries
+    this waits on the page, not in ``time.sleep``, which would leave the frames undelivered."""
     end = time.monotonic() + seconds
     while True:
         try:
@@ -60,7 +64,23 @@ def eventually(check, seconds: float = 10.0) -> None:
         except AssertionError:
             if time.monotonic() > end:
                 raise
-            time.sleep(0.1)
+            if page is None:
+                time.sleep(0.1)
+            else:
+                page.wait_for_timeout(100)
+
+
+def steady(person: Person, read, tries: int = 40):
+    """What ``read()`` gives once two reads a quarter of a second apart agree: a view that has stopped moving, an
+    object the server has put in its place, a list that has stopped filling."""
+    last = read()
+    for _ in range(tries):
+        person.page.wait_for_timeout(250)
+        now = read()
+        if now == last:
+            return now
+        last = now
+    return last
 
 
 def pytest_configure(config: pytest.Config) -> None:

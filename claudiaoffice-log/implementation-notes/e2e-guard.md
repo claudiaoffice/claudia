@@ -129,6 +129,25 @@ After the code review of this follow-up:
   next cell ("A300" typed into the Name Box) left the selection where it was; why was not found (the likeliest reading,
   not proven: the Name Box took the new name after the step had typed). Not logged as a bug.
 
+CI on `e2e-guard` (2026-11-23):
+
+* The end-to-end job failed twice with "1 failed, 140 passed" and did not say which test: fixed as PROC-52
+  (`pytest_command` asks for `-rfEs`; a failed run prints pytest's `FAILED`/`ERROR` lines first). Its test is skipped
+  on native Windows, where the runner does not run (WSL); on Windows the printed output did not hold the failed test's
+  name, and why was not looked into.
+* The next run named "A document without descriptions does not offer the option" ("the dialog got no answer"), which
+  failed locally 2 times in 6 as well. The sync Playwright API hands a page's websocket frames to Python only while a
+  Playwright call runs; `eventually` slept in `time.sleep`, so the answer stayed undelivered. `eventually(..., page=)`
+  now waits on the page between tries; the names step and two checks of the cross-app spec that read `Person.events`
+  pass their page (those two had not failed: an earlier wait on the page had delivered the frames). 8 runs of 8 passed
+  after the change.
+* A full local run then failed once on the cross-app row `workbook | move a container`: Ann's container place was
+  remembered as soon as it differed from before, and a dropped object can still settle where the server puts it
+  (Ben's page showed 148/78, Ann's had been read at 132/66). It is now remembered once it stops moving (`steady`, moved
+  to `conftest.py` for both spec files). It passed 10 times of 10 alone before the change; the race shows under load.
+* The Python jobs failed on `test_calculating_a_long_chain_is_linear` (44x and 45x instead of about 10x): PROC-44, open,
+  not touched by this branch; green on a rerun.
+
 Assumptions: "my own language" is English (the browser's language in the runs); a sheet named "Sheet2" is "a name like
 Sheet 2"; a range's names have no spaces ("DescribedCells", "FarAway"); Ben deletes a paragraph by selecting from the
 end of the one before it, so the first paragraph stays; Ann's caret is moved away first, because the place around a

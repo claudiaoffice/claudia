@@ -17,7 +17,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import pytest
-from conftest import Person, World, eventually
+from conftest import Person, World, eventually, steady
 from pytest_bdd import given, parsers, scenarios, then, when
 from things import OBJECTS, drag_by, insert, looks, objects, wait_for_objects
 
@@ -269,7 +269,9 @@ def _moves_a_container(world: World, scene: Scene) -> None:
     before = objects(ann)
     drag_by(ann, ann.page.locator(OBJECTS[ann.app]).first, 80, 40)
     eventually(lambda: _differs(objects(ann), before))
-    moved = objects(ann)  # remembered: after a reload both must show this place, not just agree with each other
+    # remembered once it has stopped moving (a dropped object can still settle where the server puts it): after a
+    # reload both must show this place, not just agree with each other
+    moved = steady(ann, lambda: objects(ann))
     scene.seen = lambda person: _same(objects(person), moved, "the container")
 
 
@@ -311,7 +313,7 @@ def _i_insert(world, scene, thing):
         assert changed, "no object came from the server"
         scene.inserted = {"ref": changed[-1]["ref"], "looks": shown}
 
-    eventually(placed)
+    eventually(placed, page=ann.page)
 
 
 @then("my colleague sees it without reloading")
@@ -357,7 +359,11 @@ def _i_redo(world):
 def _gone(world, scene):
     ann = world.ann
     wait_for_objects(ann, 0)
-    eventually(lambda: _same(_shown(ann, scene.inserted["ref"])[-1:], [None], "what the server keeps of it"))
+
+    def forgotten() -> None:
+        _same(_shown(ann, scene.inserted["ref"])[-1:], [None], "what the server keeps of it")
+
+    eventually(forgotten, page=ann.page)
 
 
 @then("the object is back and shows the same as before")

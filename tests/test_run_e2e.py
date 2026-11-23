@@ -8,6 +8,8 @@ import re
 import socket
 from pathlib import Path
 
+import pytest
+
 
 def _runner(run_e2e):
     return run_e2e.Runner(argparse.Namespace(shots=None, dry_run=True))
@@ -50,6 +52,7 @@ def test_every_browser_script_starts_its_browser_one_way():
     assert not own_way, f"these start a browser their own way, not through web/e2e/browser.cjs: {own_way}"
 
 
+@pytest.mark.skipif(os.name == "nt", reason="the runner is for Linux and macOS; on Windows, WSL (scripts/run_e2e.py)")
 def test_a_failed_pytest_run_names_the_tests_that_failed(run_e2e, tmp_path, capsys):
     """CI shows only what the runner prints. A run of the specs that ended "1 failed, 140 passed" printed its last 20
     lines, all of them skipped scenarios, and not which test failed (PROC-52)."""
