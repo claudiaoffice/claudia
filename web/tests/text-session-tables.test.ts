@@ -2,8 +2,9 @@
 // change them. A box is typed in with `replace_text` and the box's id; the rest are the server's table methods.
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import type { Welcome } from '~/lib/protocol'
 import { TextSession } from '~/lib/text-session'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -22,30 +23,6 @@ const WELCOME: Welcome = {
   proposal: null,
   returned: null,
 }
-
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-}
-
 
 const TABLE = {
   format: 1,
@@ -75,7 +52,7 @@ const OBJECT = { id: 'o1', kind: 'table', w: 480, h: 48, style: 'plain-box', par
 const paragraph = (id: string, text: string) => ({ id, style: 'body', text, runs: [[[...text].length, 'ann', null]] })
 
 async function opened() {
-  const link = new FakeLink()
+  const link = new FakeServer('composes', { welcome: WELCOME })
   link.handlers = {
     paragraphs: () => ({ revision: 'main:2', styles: [{ id: 'body', name: 'body', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }], lists: [], schemes: [], paragraphs: [paragraph('b1', 'Before.'), paragraph('b2', 'After.')] }),
     suggestions: () => [],
@@ -98,14 +75,14 @@ async function opened() {
   await session.open()
   return { link, session }
 }
-const calls = (link: FakeLink, method: string) => link.calls.filter((c) => c.method === method)
+const calls = (link: FakeServer, method: string) => link.calls.filter((c) => c.method === method)
 
 describe('the tables of a text', () => {
   it('loads the tables with the text, and an older server that has none is no trouble', async () => {
     const { session } = await opened()
     expect(Object.keys(session.state.tables)).toEqual(['t1'])
     expect(session.state.tables.t1!.totals).toEqual({ c2: '8' })
-    const link = new FakeLink()
+    const link = new FakeServer('composes', { welcome: WELCOME })
     link.handlers = { ...(await opened()).link.handlers }
     delete link.handlers.tables
     const old = new TextSession(() => link, { retryDelays: [0] })

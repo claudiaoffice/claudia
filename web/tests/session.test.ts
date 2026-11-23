@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import { ProtocolError, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
+import { TextSession } from '~/lib/text-session'
+import { FakeServer } from './support/fake-server'
 
 const ASSET = { id: 'a'.repeat(64), format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }
 const IMPORT = { asset: ASSET.id, alt: 'a chart', imported_by: 'ann', imported_at: '2026-11-07T10:00:00.000Z', source: 'disk', source_name: 'chart.gif', source_path: '/Users/ann/chart.gif' }
@@ -40,45 +42,7 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  closers: CloseHandler[] = []
-  welcome = WELCOME
-  failConnect: ProtocolError | null = null
-  async connect() {
-    if (this.failConnect) throw this.failConnect
-    return this.welcome
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(h: CloseHandler) {
-    this.closers.push(h)
-  }
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  drop(code = 1006) {
-    for (const h of this.closers) h(code, false)
-  }
-  count(method: string) {
-    return this.calls.filter((c) => c.method === method).length
-  }
-  last(method: string) {
-    return this.calls.filter((c) => c.method === method).at(-1)?.params
-  }
-}
-
-function server(link: FakeLink) {
+function server(link: FakeServer) {
   const cells: Record<string, any> = { '0,0': { t: 'text', v: 'Item' }, '1,1': { t: 'int', v: 40 } }
   link.handlers = {
     sheets: () => [{ id: 's1', name: 'Budget', rows: 2, cols: 2 }],
@@ -146,7 +110,7 @@ function memoryStorage() {
 }
 
 async function opened(options: { storage?: ReturnType<typeof memoryStorage>; doc?: string } = {}) {
-  const link = new FakeLink()
+  const link = new FakeServer('computes', { welcome: WELCOME })
   server(link)
   if (options.doc) link.welcome = { ...WELCOME, doc: options.doc }
   const links = [link]
@@ -172,7 +136,7 @@ describe('opening', () => {
   })
 
   it('asks a viewer for no history and no chat, which the server keeps from her (D1261)', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.welcome = { ...WELCOME, user: 'vera', role: 'viewer' }
     for (const refused of ['log', 'chat_log', 'checkpoints', 'history', 'branches', 'restore_policy']) {
@@ -191,7 +155,7 @@ describe('opening', () => {
   })
 
   it('follows the revision of a viewer\'s document from the commands it is told of, which carry the revision alone', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.welcome = { ...WELCOME, user: 'vera', role: 'viewer', revision: 'main:3' }
     const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
@@ -203,7 +167,7 @@ describe('opening', () => {
   })
 
   it('reports a refused handshake and stays closed', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     link.failConnect = new ProtocolError('unauthorized', 'missing or wrong credentials')
     const session = new Session(() => link)
     await expect(session.open()).rejects.toMatchObject({ code: 'unauthorized' })
@@ -213,7 +177,7 @@ describe('opening', () => {
 
 describe('host', () => {
   it('is blank when nothing was asked to connect to a particular server', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const session = new Session(() => link)
     await session.open()
@@ -221,7 +185,7 @@ describe('host', () => {
   })
 
   it('carries the server address the caller connected to (E3.11, "knowing which server you\'re on")', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const session = new Session(() => link, { host: 'demo.claudiaoffice.de:8420' })
     await session.open()
@@ -231,7 +195,7 @@ describe('host', () => {
 
 describe('ping', () => {
   it('is null before anything has connected', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const session = new Session(() => link)
     expect(await session.ping()).toBeNull()
@@ -245,9 +209,9 @@ describe('ping', () => {
   })
 
   it('is null if the request fails', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
-    delete link.handlers.ping
+    link.without('ping')
     const session = new Session(() => link)
     await session.open()
     expect(await session.ping()).toBeNull()
@@ -286,7 +250,7 @@ describe('cells', () => {
 
 describe('cell styles (E6.13, D307, D317)', () => {
   const INPUT = { slot: 'box', layer: 'range', area: [1, 1, 2, 3], style: 'input' }
-  function styled(link: FakeLink) {
+  function styled(link: FakeServer) {
     link.handlers.cell_styles = () => ({ revision: 'main:3', ranges: [INPUT, { ...INPUT, slot: 'words' }] })
     link.handlers.style_uses = () => ({ uses: { input: 2 } })
     link.handlers.apply_style = () => ({ revision: 'main:4' })
@@ -352,7 +316,7 @@ describe('cell styles (E6.13, D307, D317)', () => {
 
 describe('floating objects (images, E6.17)', () => {
   it('loads the decoded pictures and the objects of every sheet, on top of the cells', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.images = () => [ASSET]
     link.handlers.objects = ({ sheet }: any) => ({ revision: 'main:3', sheet, objects: sheet === 's1' ? [image('i1')] : [] })
@@ -567,7 +531,7 @@ describe('events', () => {
 
   it('reloads the sheets when they changed', async () => {
     const { session, link } = await opened()
-    link.push('sheets', {})
+    link.push('tabs', {})
     await session.settled()
     expect(link.count('sheets')).toBe(2)
   })
@@ -675,8 +639,8 @@ describe('doing things', () => {
 
 describe('losing the connection', () => {
   it('opens a new one and reloads', async () => {
-    const first = new FakeLink()
-    const second = new FakeLink()
+    const first = new FakeServer('computes', { welcome: WELCOME })
+    const second = new FakeServer('computes', { welcome: WELCOME })
     server(first)
     server(second)
     const links = [first, second]
@@ -690,9 +654,9 @@ describe('losing the connection', () => {
   })
 
   it('keeps trying while the document is sealed (an editor has not opened it since the server started)', async () => {
-    const first = new FakeLink()
-    const sealed = new FakeLink()
-    const second = new FakeLink()
+    const first = new FakeServer('computes', { welcome: WELCOME })
+    const sealed = new FakeServer('computes', { welcome: WELCOME })
+    const second = new FakeServer('computes', { welcome: WELCOME })
     server(first)
     server(second)
     sealed.failConnect = new ProtocolError('sealed', 'this document is sealed: an owner or editor has to open it first')
@@ -706,8 +670,8 @@ describe('losing the connection', () => {
   })
 
   it('waits, and says so, when it is the first to ask and the document is sealed (D1262)', async () => {
-    const sealed = new FakeLink()
-    const ready = new FakeLink()
+    const sealed = new FakeServer('computes', { welcome: WELCOME })
+    const ready = new FakeServer('computes', { welcome: WELCOME })
     server(ready)
     sealed.failConnect = new ProtocolError('sealed', 'this document is sealed: an owner or editor has to open it first')
     const links = [sealed, ready]
@@ -722,9 +686,9 @@ describe('losing the connection', () => {
   })
 
   it('says in the words of the decision what a viewer who opens first waits for', async () => {
-    const sealed = new FakeLink()
+    const sealed = new FakeServer('computes', { welcome: WELCOME })
     sealed.failConnect = new ProtocolError('sealed', 'x')
-    const stuck = new FakeLink()
+    const stuck = new FakeServer('computes', { welcome: WELCOME })
     stuck.failConnect = new ProtocolError('sealed', 'x')
     const session = new Session(() => (session.state.status === 'connecting' ? sealed : stuck), { retryDelays: [20] })
     await session.open()
@@ -734,8 +698,8 @@ describe('losing the connection', () => {
   })
 
   it('gives up for good on a refusal that will not change', async () => {
-    const first = new FakeLink()
-    const refused = new FakeLink()
+    const first = new FakeServer('computes', { welcome: WELCOME })
+    const refused = new FakeServer('computes', { welcome: WELCOME })
     server(first)
     refused.failConnect = new ProtocolError('unauthorized', 'missing or wrong credentials')
     const links = [first, refused]
@@ -747,8 +711,8 @@ describe('losing the connection', () => {
   })
 
   it('loads the cells again on the new connection, even if a request was left hanging on the old one', async () => {
-    const first = new FakeLink()
-    const second = new FakeLink()
+    const first = new FakeServer('computes', { welcome: WELCOME })
+    const second = new FakeServer('computes', { welcome: WELCOME })
     server(first)
     server(second)
     first.handlers.cells = () => new Promise(() => undefined) // never answered
@@ -789,7 +753,7 @@ describe('reading what is loaded', () => {
 
 describe('the recovery key', () => {
   it('asks the server for a new one and hands it over', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.new_recovery_key = () => ({ recovery_key: 'ABCD-EFGH' })
     const session = new Session(() => link)
@@ -799,7 +763,7 @@ describe('the recovery key', () => {
   })
 
   it('gives nothing back, and says why, if the server will not make one', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.new_recovery_key = () => {
       throw new ProtocolError('forbidden', 'only the owner of a document makes a recovery key')
@@ -811,7 +775,7 @@ describe('the recovery key', () => {
   })
 
   it('stays quiet when the server simply keeps no recovery keys (that is not the person’s doing)', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.new_recovery_key = () => {
       throw new ProtocolError('unavailable', 'this server does not keep recovery keys')
@@ -832,7 +796,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('lists everybody, not just who is connected', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.roster = () => [
       { user: 'ann', role: 'owner' },
@@ -847,7 +811,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('leaves with a password, and closes for nobody but us', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.leave = () => ({ left: true })
     const session = new Session(() => link)
@@ -857,7 +821,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('reports why leaving did not work', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.leave = () => {
       throw new ProtocolError('unauthorized', 'that is not your current password')
@@ -869,7 +833,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('changes our own password, and says why it did not in the words of the server (D448)', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const asked: unknown[] = []
     link.handlers.change_password = (params: unknown) => {
@@ -888,7 +852,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('proposes a new owner with our own password', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.propose_owner = (p) => ({ proposed: p.name })
     const session = new Session(() => link)
@@ -898,8 +862,8 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('accepting ownership reconnects so the new role is recognised', async () => {
-    const first = new FakeLink()
-    const second = new FakeLink()
+    const first = new FakeServer('computes', { welcome: WELCOME })
+    const second = new FakeServer('computes', { welcome: WELCOME })
     server(first)
     server(second)
     first.handlers.accept_owner = () => ({ accepted: true })
@@ -912,7 +876,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('deletes the document with a password, and closes the session', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.delete_document = () => ({ deleted: true })
     const session = new Session(() => link)
@@ -922,7 +886,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('does not close the session when deleting is refused', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.delete_document = () => {
       throw new ProtocolError('forbidden', 'only an owner of a document may delete it')
@@ -934,7 +898,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('exports the current content as plain data', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const exported = { format: 'claudia-export 1', app: 'computes', exported_at: 't', state_schema: 1, state: {} }
     link.handlers.export_content = () => exported
@@ -944,7 +908,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('downloads the document as a sealed Claudia file, confirming it with the person\'s own password', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const file = {
       format: 'claudia',
@@ -965,7 +929,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('says why a download did not work and gives no file', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.download_claudia = () => {
       throw new ProtocolError('unauthorized', 'that is not your current password')
@@ -976,7 +940,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('exports the unencrypted zip, with the history only when asked for', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const asked: unknown[] = []
     const file = { format: 'claudia-unencrypted', filename: 'plan.claudia-export.zip', content_type: 'application/zip', data: 'AAAA', parts: ['content'] }
@@ -992,7 +956,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('says why the unencrypted export was refused and gives no file', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.export_claudia = () => {
       throw new ProtocolError('forbidden', 'only an owner may export the history and the chat')
@@ -1004,7 +968,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('reports a print or a PDF with its pages, and nothing the client could use to name somebody else', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.report_output = () => ({ recorded: true })
     const session = new Session(() => link)
@@ -1014,7 +978,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('knows what has left the document, and hears of the next one as it happens', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const first = { kind: 'export', who: 'anna', when: '2026-11-19T14:02:00.000Z', format: 'docx', parts: ['content'], pages: null }
     link.handlers.audit_log = () => [first]
@@ -1027,7 +991,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('reads the record again after its own export or PDF, because the server tells only the other windows', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const mine = { kind: 'pdf', who: 'anna', when: '2026-11-19T14:02:00.000Z', format: 'pdf', parts: ['content'], pages: 2 }
     let rows: unknown[] = []
@@ -1044,7 +1008,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('does not ask a viewer for the record, and an older server without it is no trouble', async () => {
-    const viewer = new FakeLink()
+    const viewer = new FakeServer('computes', { welcome: WELCOME })
     server(viewer)
     viewer.welcome = { ...WELCOME, role: 'viewer' }
     viewer.handlers.audit_log = () => {
@@ -1055,7 +1019,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
     await seen.open()
     expect(viewer.count('audit_log')).toBe(0)
     expect(seen.state.audit).toEqual([])
-    const old = new FakeLink()
+    const old = new FakeServer('computes', { welcome: WELCOME })
     server(old)
     const session = new Session(() => old)
     await session.open()
@@ -1063,7 +1027,7 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('exports the current content as a Word, Excel or PowerPoint file', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const exported = { format: 'xlsx', content_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', data: 'AAAA' }
     link.handlers.export_office = (params) => {
@@ -1076,14 +1040,13 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('asks for tracked changes only when told to, so apps without them see no new parameter', async () => {
-    const link = new FakeLink()
-    server(link)
+    const link = new FakeServer('composes') // only a text takes the option: the others' `export_office` has `format` alone
     const seen: unknown[] = []
     link.handlers.export_office = (params) => {
       seen.push(params)
       return { format: 'odt', content_type: 'application/vnd.oasis.opendocument.text', data: 'AAAA' }
     }
-    const session = new Session(() => link)
+    const session = new TextSession(() => link)
     await session.open()
     await session.exportOffice('odt', { trackedChanges: true })
     await session.exportOffice('odt', { trackedChanges: false })
@@ -1091,15 +1054,14 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('asks for the descriptions as comments only when told to, and asks how many there are (A4)', async () => {
-    const link = new FakeLink()
-    server(link)
+    const link = new FakeServer('composes')
     const seen: unknown[] = []
     link.handlers.export_office = (params) => {
       seen.push(params)
       return { format: 'docx', content_type: 'x', data: 'AAAA' }
     }
     link.handlers.export_choices = () => ({ descriptions: 2 })
-    const session = new Session(() => link)
+    const session = new TextSession(() => link)
     await session.open()
     await session.exportOffice('docx', { descriptionComments: true })
     await session.exportOffice('docx')
@@ -1116,8 +1078,8 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('reconnects when the ownership of the document changed under us', async () => {
-    const first = new FakeLink()
-    const second = new FakeLink()
+    const first = new FakeServer('computes', { welcome: WELCOME })
+    const second = new FakeServer('computes', { welcome: WELCOME })
     server(first)
     server(second)
     const links = [first, second]
@@ -1131,8 +1093,8 @@ describe('the Manage menu (leaving, handing over ownership, deleting, exporting)
   })
 
   it('reconnects with what it may see now when its own role changed, and tells the person', async () => {
-    const first = new FakeLink()
-    const second = new FakeLink()
+    const first = new FakeServer('computes', { welcome: WELCOME })
+    const second = new FakeServer('computes', { welcome: WELCOME })
     server(first)
     server(second)
     second.welcome = { ...WELCOME, role: 'viewer' }
@@ -1278,7 +1240,7 @@ describe('branches, and restoring with consent', () => {
   })
 
   it('tells a returning person what happened to the branch they were on', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.welcome = { ...link.welcome, returned: { by: 'ben', kind: 'restore', label: 'checkpoint “good”', agreed: ['ann', 'ben'] } }
     const session = new Session(() => link)
@@ -1307,7 +1269,7 @@ describe('renaming a sheet (E6.24, D550)', () => {
   it('shows the new name on the sheet tab once the server says the sheets changed', async () => {
     const { session, link } = await opened()
     link.handlers.sheets = () => [{ id: 's1', name: 'Takings', rows: 2, cols: 2 }]
-    link.push('sheets', { type: 'sheets' })
+    link.push('tabs', { type: 'tabs' })
     await session.settled()
     expect(session.state.sheets.map((x) => x.name)).toEqual(['Takings'])
   })
@@ -1356,7 +1318,7 @@ describe('names, tables and queries (E6.5)', () => {
   })
 
   it('names and describes cells that have no name yet, in one request (D1317)', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.name_and_describe_range = () => ({ revision: 'main:4', id: 'r9', name: 'Costs' })
     const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
@@ -1436,7 +1398,7 @@ describe('pivot tables (E6.30)', () => {
   })
 
   it('opens a document whose server does not know pivot tables', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     delete link.handlers.pivots
     const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
@@ -1581,7 +1543,7 @@ describe('random numbers, alternatives and following a computation (E6.21–E6.2
   }
 
   it('starts with the random state the server has', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.random_state = () => ({ revision: 'main:3', seed: 7, draw: 3 })
     const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
@@ -1590,7 +1552,7 @@ describe('random numbers, alternatives and following a computation (E6.21–E6.2
   })
 
   it('opens a server that does not know random numbers yet', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     delete link.handlers.random_state
     const session = new Session(() => link, { retryDelays: [0], storage: memoryStorage() })
@@ -1702,7 +1664,7 @@ describe('random numbers, alternatives and following a computation (E6.21–E6.2
     link.handlers.trace = () => {
       throw new ProtocolError('command_error', 'there is no such sheet')
     }
-    link.push('sheets', {})
+    link.push('tabs', {})
     await new Promise((resolve) => setTimeout(resolve, 5))
     expect(session.state.trace).toBeNull()
   })
@@ -1710,7 +1672,7 @@ describe('random numbers, alternatives and following a computation (E6.21–E6.2
 
 describe('the language of the server’s own messages (D323)', () => {
   const openWith = async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     link.handlers.set_locale = (params) => ({ locale: params.locale })
     link.handlers.snapshot = () => ({ state: { sheets: [], order: [] }, revision: 'main:3', app: 'computes' })
     const session = new Session(() => link, {})
@@ -1743,7 +1705,7 @@ describe('the language of the server’s own messages (D323)', () => {
 
 describe('tags to things in a workbook (E5.20, D551)', () => {
   it('offers the sheet in sight, the chart tabs and the named things floating on the sheet', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.sheets = () => [
       { id: 's1', name: 'Budget', rows: 2, cols: 2 },
@@ -1767,7 +1729,7 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
   })
 
   it('offers the named ranges on the sheet in sight, and goes to one on another sheet (D552)', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     link.handlers.sheets = () => [
       { id: 's1', name: 'Budget', rows: 2, cols: 2 },
@@ -1802,7 +1764,7 @@ describe('tags to things in a workbook (E5.20, D551)', () => {
   })
 
   it('knows a range is gone once its name is, and keeps the name a tag was written with current', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('computes', { welcome: WELCOME })
     server(link)
     const named = { id: 'r1', name: 'Revenue', scope: null, kind: 'range', header: false, grows: false, purpose: 'data', column_purposes: [], sheet: 's1', sheet_name: 'Sheet1', region: null, a1: null, anchor: null, columns: [], rows: 0 }
     link.handlers.names = () => ({ revision: 'main:3', names: [named] })

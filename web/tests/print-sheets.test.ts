@@ -2,7 +2,7 @@
 // the layout library reads it, and the print source that lets the one preview print a sheet like a text or a deck.
 import { describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import { ProtocolError, type Welcome } from '~/lib/protocol'
 import { Session } from '~/lib/session'
 import { STYLE_MODEL } from './style-model.fixture'
 import { DEFAULT_PAGE } from '~/lib/print/setup'
@@ -21,6 +21,7 @@ import { chartSizes, loadForPrint, printedIds, sheetDocument, type SheetRequest 
 import { svgOfDataUrl } from '~/lib/print/chart-picture'
 import { sheetSource, type PrintPages } from '~/lib/print/source'
 import type { PrintAssets } from '~/lib/print/assets'
+import { FakeServer } from './support/fake-server'
 
 const layoutCalls = vi.hoisted(() => ({ sheets: [] as unknown[] }))
 vi.mock('@claudia/layout', async (original) => {
@@ -53,33 +54,6 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  welcome = WELCOME
-  async connect() {
-    return this.welcome
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  last(method: string) {
-    return this.calls.filter((c) => c.method === method).at(-1)?.params
-  }
-}
-
 const PAGE = { paper: 'a4', width: 595276, height: 841890, orientation: 'portrait', margins: [70866, 70866, 70866, 70866], page_numbers: false }
 const LANDSCAPE: SheetPrintData = { ...DEFAULT_SHEET_PRINT_DATA, orientation: 'landscape' }
 const style = (id: string, css: Record<string, string>, extra: object = {}) => ({ id, name: id, purpose: '', based_on: null, css, computed: css, resolved: css, to_name: false, kind: 'paragraph', ...extra })
@@ -100,7 +74,7 @@ const RANGES = [
   { slot: 'box', layer: 'row', area: [0, 0, 0, 16383], style: 'head-box' },
 ]
 
-function server(link: FakeLink, extra: Record<string, (p: any) => any> = {}) {
+function server(link: FakeServer, extra: Record<string, (p: any) => any> = {}) {
   link.handlers = {
     sheets: () => [{ id: 's1', name: 'Budget', rows: 2, cols: 3 }, { id: 's2', name: 'Plan', rows: 0, cols: 0 }],
     images: () => [{ id: 'pic', format: 'gif', width: 20, height: 10, animated: false, data: 'AA==', first_frame: null }],
@@ -133,7 +107,7 @@ function server(link: FakeLink, extra: Record<string, (p: any) => any> = {}) {
 }
 
 async function opened(extra: Record<string, (p: any) => any> = {}) {
-  const link = new FakeLink()
+  const link = new FakeServer('computes', { welcome: WELCOME })
   server(link, extra)
   const session = new Session(() => link, { retryDelays: [0], storage: { getItem: () => null, setItem: () => {} } })
   await session.open()

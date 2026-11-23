@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { BaseSession, type BaseState, type Step } from '~/lib/base-session'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Region, type Welcome, type WireData } from '~/lib/protocol'
+import { ProtocolError, type LinkLike, type Region, type Welcome } from '~/lib/protocol'
 import { PlannedLink, lookOnly, roleNow } from '~/lib/replay'
 import type { RedactionPlan } from '~/lib/redaction'
 import { viewTints } from '~/lib/replay-tint'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ana',
@@ -39,56 +40,6 @@ const PLAN: RedactionPlan = {
   regions: [place],
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  events: EventHandler[] = []
-  refuse: ProtocolError | null = null
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}): Promise<any> {
-    this.calls.push({ method, params })
-    if (method === 'redaction_plan' && this.refuse) throw this.refuse
-    switch (method) {
-      case 'log':
-        return [entry(1, 'ana'), entry(2)]
-      case 'chat_log':
-        return []
-      case 'checkpoints':
-        return []
-      case 'history':
-        return { can_undo: true, can_redo: false, undo_label: '', redo_label: '' }
-      case 'branches':
-        return WELCOME.lines
-      case 'restore_policy':
-        return { policy: 'consensus' }
-      case 'slides':
-        return ['live']
-      case 'as_planned':
-        return [`planned ${params.plan}`]
-      case 'redaction_plan':
-        return PLAN
-      case 'redact':
-        return { revision: 'main:3' }
-      case 'chat':
-        return { number: 1 }
-      default:
-        throw new ProtocolError('unknown_method', method)
-    }
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: WireData) {
-    for (const h of this.events) h(name, data)
-  }
-  methods() {
-    return this.calls.map((c) => c.method)
-  }
-}
-
 interface TestState extends BaseState {
   slides: string[]
   followed: string[]
@@ -114,8 +65,19 @@ class TestSession extends BaseSession<TestState> {
   }
 }
 
+function fake() {
+  return new FakeServer('creates', { welcome: WELCOME })
+    .on('log', () => [entry(1, 'ana'), entry(2)])
+    .on('history', () => ({ can_undo: true, can_redo: false, undo_label: '', redo_label: '' }))
+    .on('slides', () => ['live'])
+    .on('as_planned', ({ plan }: any) => [`planned ${plan}`])
+    .on('redaction_plan', () => PLAN)
+    .on('redact', () => ({ revision: 'main:3' }))
+    .on('chat', () => ({ number: 1 }))
+}
+
 async function opened() {
-  const link = new FakeLink()
+  const link = fake()
   const session = new TestSession(link)
   await session.open()
   return { link, session }
@@ -130,7 +92,9 @@ describe('working a redaction out', () => {
   })
   it('says why when it cannot be worked out, for the dialog to show', async () => {
     const { link, session } = await opened()
-    link.refuse = new ProtocolError('command_error', 'the text has no paragraph b9')
+    link.on('redaction_plan', () => {
+      throw new ProtocolError('command_error', 'the text has no paragraph b9')
+    })
     expect(await session.planRedaction({ revisions: ['main:1'], chat: [] })).toBe('the text has no paragraph b9')
   })
 })
@@ -207,7 +171,7 @@ describe('carrying a redaction out', () => {
 
 describe('the link of a preview', () => {
   it('lets reading, talking and planning through, nothing else', async () => {
-    const link = new FakeLink()
+    const link = fake()
     const planned = new PlannedLink(link, () => 'tok')
     await planned.request('cells', { sheet: 's' }).catch(() => {})
     expect(link.calls[0]).toEqual({ method: 'as_planned', params: { plan: 'tok', method: 'cells', params: { sheet: 's' } } })

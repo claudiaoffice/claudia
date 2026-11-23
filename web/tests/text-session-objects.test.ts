@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import type { Welcome } from '~/lib/protocol'
 import { TextSession } from '~/lib/text-session'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -21,32 +22,6 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  last(method: string) {
-    return this.calls.filter((c) => c.method === method).at(-1)?.params
-  }
-}
-
 const BODY = { id: 'body', name: 'Body text', purpose: '', based_on: null, css: {}, computed: {}, to_name: false }
 const object = (id: string, kind = 'image') => ({
   id, kind, w: 400, h: 200, style: 'plain-image', paragraph: null, ref: null, imported: null,
@@ -54,7 +29,7 @@ const object = (id: string, kind = 'image') => ({
 })
 
 async function opened() {
-  const link = new FakeLink()
+  const link = new FakeServer('composes', { welcome: WELCOME })
   const done = () => ({ revision: 'main:3' })
   link.handlers = {
     paragraphs: () => ({ revision: 'main:2', styles: [BODY], paragraphs: [{ id: 'b1', style: 'body', text: 'a😀b', runs: [] }, { id: 'b2', style: 'body', text: 'two', runs: [] }], lists: [], schemes: [] }),

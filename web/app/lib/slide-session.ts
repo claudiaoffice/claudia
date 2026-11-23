@@ -65,6 +65,7 @@ export class SlideSession extends BaseSession<SlideState> implements SlideHost {
   private readonly slide = new SlideActions({
     state: this.state,
     write: (method, params) => this.write(method, params),
+    changed: (method, params) => this.changed(method, params),
     show: (where, regions) => this.showRegions(where, regions),
     hold: (regions) => this.holdRegions(regions),
     release: () => this.releaseRegions(),

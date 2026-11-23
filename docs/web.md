@@ -177,6 +177,28 @@ npm run typecheck            # nuxt typecheck (vue-tsc over the generated projec
 npm run lint                 # ESLint
 ```
 
+### The fake server of the unit tests (E11.7)
+
+A test that opens a session talks to one fake server, `web/tests/support/fake-server.ts`, and not to a fake of its own:
+
+```ts
+const link = new FakeServer('computes') // or 'composes', 'creates'
+  .on('set_cells', ({ sheet }) => ({ revision: 'main:4', sheet }))
+const session = new Session(() => link)
+await session.open() // answered by the opening of the app, `tests/support/opening.ts`: an empty document
+link.push('cells', { ... }) // an event of the server; link.calls, link.sent('set_cells'), link.last(...) say what was asked
+```
+
+It is held to the server's own description of its protocol (`MethodTable.describe`, served at `/api/<app>/protocol`),
+kept in `web/tests/support/protocol/<app>.json`: it refuses a method, a parameter (an unknown one, a missing required
+one, one of the wrong kind) or an event that the description does not have, and a test fails afterwards for each such
+refusal, even where the session told the person "something went wrong" and carried on. So a method, a parameter or an
+event that is renamed on the server or in the page breaks a test. The files are written by
+`uv run python scripts/generate_protocol.py` (`--check` fails when they are out of date, and
+`tests/test_protocol_generated.py` runs that check): run it after a change of a method's parameters, and commit the
+files. A handler of a test wins over the opening's answer; `link.without('method')` makes a method unknown for one test, as
+it is on an older server.
+
 The browser scripts in `web/e2e/` drive real Chromium windows through Playwright (a dev dependency; fetch the
 browser once with `npx playwright install chromium`). Build the app (`npm run build`). Until the web app chooses the app
 by address (D431), each script talks to a server of one app: start one per app the old way (D433), on the ports the

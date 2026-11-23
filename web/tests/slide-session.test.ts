@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import { ProtocolError, type Welcome } from '~/lib/protocol'
 import { SlideSession } from '~/lib/slide-session'
 import { POINT_MS } from '~/lib/base-session'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -77,40 +78,7 @@ const image = (id: string, extra: object = {}) => ({
   ...extra,
 })
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  closers: CloseHandler[] = []
-  welcome = WELCOME
-  async connect() {
-    return this.welcome
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(h: CloseHandler) {
-    this.closers.push(h)
-  }
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  last(method: string) {
-    return this.calls.filter((c) => c.method === method).at(-1)?.params
-  }
-  count(method: string) {
-    return this.calls.filter((c) => c.method === method).length
-  }
-}
-
-function server(link: FakeLink, objects: any[] = []) {
+function server(link: FakeServer, objects: any[] = []) {
   link.handlers = {
     slides: () => [{ id: 's1', objects: objects.length }],
     slide: ({ slide }) => ({ revision: 'main:0', slide, objects: slide === 's1' ? objects : [] }),
@@ -143,7 +111,7 @@ function server(link: FakeLink, objects: any[] = []) {
 }
 
 async function opened(objects: any[] = []) {
-  const link = new FakeLink()
+  const link = new FakeServer('creates', { welcome: WELCOME })
   server(link, objects)
   const session = new SlideSession(() => link, { retryDelays: [1] })
   await session.open()
@@ -164,7 +132,7 @@ describe('opening a presentation', () => {
     expect(state.selected).toBeNull()
   })
   it('knows the outlines of the document by id', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('creates', { welcome: WELCOME })
     server(link)
     link.handlers.shapes = () => ({ library: [CIRCLE], document: [RECT] })
     const session = new SlideSession(() => link)
@@ -173,7 +141,7 @@ describe('opening a presentation', () => {
     expect(session.state.shapes.circle).toBeUndefined()
   })
   it('knows the decoded pictures the document has taken in, by id (E10.8)', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('creates', { welcome: WELCOME })
     server(link, [image('i1')])
     link.handlers.images = () => [ASSET]
     const session = new SlideSession(() => link)
@@ -448,7 +416,7 @@ describe('selecting', () => {
     expect(state.notice?.text).toBe('ben is working on that')
   })
   it('only looks, for a viewer: the object is shown to the others without holding it', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('creates', { welcome: WELCOME })
     server(link, [text('a')])
     link.welcome = { ...WELCOME, role: 'viewer' }
     link.handlers.lock = () => {
@@ -490,7 +458,7 @@ describe('selecting', () => {
 
 describe('speaker notes and planned times (D342, D343)', () => {
   async function planned() {
-    const link = new FakeLink()
+    const link = new FakeServer('creates', { welcome: WELCOME })
     server(link)
     link.handlers.slides = () => [
       { id: 's1', objects: 0, seconds: 120, has_notes: true },
@@ -576,7 +544,7 @@ describe('tags to things on slides (E5.20, D551)', () => {
     expect(await session.unnamedInView()).toBe(1)
   })
   it('takes a tag to a thing on another slide by showing that slide, and back', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('creates', { welcome: WELCOME })
     server(link, [named('t1', 'Title'), named('t9', 'Chart on two', 's2')])
     link.handlers.slides = () => [
       { id: 's1', objects: 1, name: 'One' },
@@ -601,7 +569,7 @@ describe('tags to things on slides (E5.20, D551)', () => {
 
   describe('the way back (D1312)', () => {
     const two = async () => {
-      const link = new FakeLink()
+      const link = new FakeServer('creates', { welcome: WELCOME })
       server(link, [named('t1', 'Title'), named('t9', 'Chart on two', 's2')])
       link.handlers.slides = () => [
         { id: 's1', objects: 1, name: 'One' },
@@ -677,7 +645,7 @@ describe('lists in text boxes (E9.21, E9.22)', () => {
   const NUMBERS = { id: 'numbers', name: 'Numbers', kind: 'number', indent: 2, gap: 0.25, levels: [] }
   const item = (id: string, list: string, level = 0) => text(id, { paragraph: { ...paragraph(id, id), item: { list, level } } })
   async function listed(objects: any[]) {
-    const link = new FakeLink()
+    const link = new FakeServer('creates', { welcome: WELCOME })
     server(link, objects)
     link.handlers.lists = () => ({ lists: [{ id: 'l1', scheme: 'numbers', start: 1, name: null }, { id: 'l2', scheme: 'numbers', start: 1, name: null }], schemes: [NUMBERS], labels: { a: { marker: '1.', path: [1], number: '1' }, b: { marker: 'a.', path: [1, 1], number: '1.a' } } })
     for (const method of ['make_list', 'indent_item', 'continue_list', 'list_start', 'number_headings']) link.handlers[method] = () => ({ revision: 'main:3' })
@@ -720,7 +688,7 @@ describe('agendas (E9.31)', () => {
   const agenda = (id: string) => text(id, { paragraph: { ...paragraph(id), generated: TOC } })
   const line = (target: string, words: string, place: string) => ({ target, level: 1, number: null, text: words, style: 'slide-agenda', place })
   async function withAgenda(objects: any[]) {
-    const link = new FakeLink()
+    const link = new FakeServer('creates', { welcome: WELCOME })
     server(link, objects)
     link.handlers.contents = () => ({ revision: 'main:0', entries: { ag: [line('t1', 'Why', '1')] } })
     link.handlers.insert_agenda = () => ({ object: 'ag2', revision: 'main:1' })
@@ -756,7 +724,7 @@ describe('agendas (E9.31)', () => {
 
 describe('references in the words of text boxes (step H)', () => {
   async function referring() {
-    const link = new FakeLink()
+    const link = new FakeServer('creates', { welcome: WELCOME })
     const words = { ...paragraph('a', 'see ￼'), fields: [{ kind: 'ref', target: 't2', show: 'page' }] }
     server(link, [text('a', { paragraph: words }), text('t2')])
     link.handlers.fields = () => ({ revision: 'main:0', fields: { a: [{ text: '2', state: 'ok' }] } })

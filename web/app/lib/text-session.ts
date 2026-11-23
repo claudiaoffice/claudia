@@ -32,7 +32,6 @@ import type { LinkLike, Region, WireData } from './protocol'
 import type { ListInfo, SchemeInfo } from './numbering'
 import { FIELD_CHAR, fieldIndex, plain, type ReferenceTarget, type RefField, type Show, type Shown } from './references'
 import { MAX_NAME, type Thing, type ThingKind } from './tags'
-import type { Deleted, DeleteHow } from './style-deletion'
 import { headingLevel, styleUses, type CssEdit, type StyleView } from './style-css'
 import { isBoxId, oneLine, type TableEntry, type TableEvent, type TableInfo, withEvent } from './tables'
 import { translate as t } from './i18n'
@@ -1140,12 +1139,6 @@ export class TextSession extends BaseSession<TextState> {
       }
       return true
     })
-  }
-
-  /** A deletion or a hiding goes after whatever was typed before it, like every change that is not typing. */
-  override deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
-    if (this.refused()) return Promise.resolve(false)
-    return this.run(() => super.deleteStyle(style, how, target))
   }
 
   /** Make a style give its paragraphs a heading level (E9.22): a level, `'body'` for none, `null` as its parent. */

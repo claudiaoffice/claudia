@@ -453,7 +453,7 @@ msgstr ""
 msgid "A table of contents lists levels {first} to {last}: the first is deeper"
 msgstr ""
 
-#: web/app/lib/text-session.ts:718
+#: web/app/lib/text-session.ts:717
 msgid "A table of contents takes no typing: its entries come from the headings."
 msgstr ""
 
@@ -1997,7 +1997,7 @@ msgstr ""
 msgid "Every use of “{name}”"
 msgstr ""
 
-#: web/app/lib/base-session.ts:421
+#: web/app/lib/base-session.ts:425
 msgid "Everybody agreed: now at {label}."
 msgstr ""
 
@@ -3565,7 +3565,7 @@ msgstr ""
 msgid "Not available yet"
 msgstr ""
 
-#: web/app/lib/base-session.ts:1236 web/app/lib/base-session.ts:804
+#: web/app/lib/base-session.ts:1266 web/app/lib/base-session.ts:808
 msgid "Not connected to the server."
 msgstr ""
 
@@ -3621,7 +3621,7 @@ msgstr ""
 msgid "Nothing differs from now"
 msgstr ""
 
-#: web/app/lib/base-session.ts:1376
+#: web/app/lib/base-session.ts:1402
 msgid "Nothing has changed since the last checkpoint."
 msgstr ""
 
@@ -4049,7 +4049,7 @@ msgstr ""
 msgid "Paragraph {n}"
 msgstr ""
 
-#: web/app/lib/base-session.ts:588
+#: web/app/lib/base-session.ts:592
 msgid "Part of the history was redacted. The document was reloaded."
 msgstr ""
 
@@ -5229,7 +5229,7 @@ msgstr ""
 msgid "Slide numbers"
 msgstr ""
 
-#: web/app/components/PresentShow.vue:236 web/app/lib/slide-session.ts:451
+#: web/app/components/PresentShow.vue:236 web/app/lib/slide-session.ts:452
 msgid "Slide {n}"
 msgstr ""
 
@@ -5281,7 +5281,7 @@ msgstr ""
 msgid "Something is repeated that is not there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1225 web/app/lib/base-session.ts:1429 web/app/lib/session.ts:695
+#: web/app/lib/base-session.ts:1255 web/app/lib/base-session.ts:1455 web/app/lib/session.ts:696
 msgid "Something went wrong."
 msgstr ""
 
@@ -5685,7 +5685,7 @@ msgstr ""
 msgid "That server runs {other}. This window is {this} — open it there."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1006
+#: web/app/lib/base-session.ts:1010
 msgid "That was deleted. This is the last moment it was there."
 msgstr ""
 
@@ -5885,7 +5885,7 @@ msgstr ""
 msgid "The different rows of a range in order of first appearance (columns with by_col TRUE); with exactly_once TRUE only those that occur once."
 msgstr ""
 
-#: web/app/lib/base-session.ts:596 web/app/lib/base-session.ts:600
+#: web/app/lib/base-session.ts:600 web/app/lib/base-session.ts:604
 msgid "The document changed under you (it went back to a checkpoint or was rebuilt). It was reloaded."
 msgstr ""
 
@@ -6625,11 +6625,11 @@ msgstr ""
 msgid "The style “{name}” uses the colour role(s) {names}, which this palette has not"
 msgstr ""
 
-#: web/app/lib/base-session.ts:422
+#: web/app/lib/base-session.ts:426
 msgid "The suggestion to go to {label} was declined."
 msgstr ""
 
-#: web/app/lib/base-session.ts:423
+#: web/app/lib/base-session.ts:427
 msgid "The suggestion to go to {label} was withdrawn."
 msgstr ""
 
@@ -6897,7 +6897,7 @@ msgstr ""
 msgid "There is nothing in this to redact."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1003
+#: web/app/lib/base-session.ts:1007
 msgid "There is nothing like that in this document."
 msgstr ""
 
@@ -7021,7 +7021,7 @@ msgstr ""
 msgid "This document uses fonts this server does not have: {list}. They are shown in stand-ins."
 msgstr ""
 
-#: web/app/lib/base-session.ts:649
+#: web/app/lib/base-session.ts:653
 msgid "This document was deleted by its owner."
 msgstr ""
 
@@ -7061,7 +7061,7 @@ msgstr ""
 msgid "This page is not allowed to use that server."
 msgstr ""
 
-#: web/app/lib/text-session.ts:916
+#: web/app/lib/text-session.ts:915
 msgid "This paragraph"
 msgstr ""
 
@@ -7565,11 +7565,11 @@ msgstr ""
 msgid "Which tags"
 msgstr ""
 
-#: web/app/lib/base-session.ts:415
+#: web/app/lib/base-session.ts:419
 msgid "While you were away, {by} restored to {label} (agreed: {agreed})."
 msgstr ""
 
-#: web/app/lib/base-session.ts:416
+#: web/app/lib/base-session.ts:420
 msgid "While you were away, {by} switched to {label} (agreed: {agreed})."
 msgstr ""
 
@@ -7749,7 +7749,7 @@ msgstr ""
 msgid "You are its owner. What the document does not show stays in the kept file and is listed after it opens."
 msgstr ""
 
-#: web/app/lib/base-session.ts:638
+#: web/app/lib/base-session.ts:642
 msgid "You are no longer a person of this document."
 msgstr ""
 
@@ -7769,7 +7769,7 @@ msgstr ""
 msgid "You can change it anyway — this is a warning, not a refusal."
 msgstr ""
 
-#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:322 web/app/components/SlideCanvas.vue:331 web/app/components/SlideCanvas.vue:462 web/app/components/SlideCanvas.vue:485 web/app/components/TextObjectLayer.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:300 web/app/components/Workspace.vue:357 web/app/components/Workspace.vue:408 web/app/components/Workspace.vue:490 web/app/components/Workspace.vue:550 web/app/components/Workspace.vue:556 web/app/components/Workspace.vue:638 web/app/components/Workspace.vue:807 web/app/components/Workspace.vue:861 web/app/components/Workspace.vue:981 web/app/lib/base-session.ts:1198 web/app/lib/base-session.ts:1234
+#: web/app/components/SheetGrid.vue:456 web/app/components/SheetGrid.vue:585 web/app/components/SheetGrid.vue:595 web/app/components/SlideCanvas.vue:322 web/app/components/SlideCanvas.vue:331 web/app/components/SlideCanvas.vue:462 web/app/components/SlideCanvas.vue:485 web/app/components/TextObjectLayer.vue:255 web/app/components/TextObjectMenu.vue:110 web/app/components/TextObjectMenu.vue:118 web/app/components/TextWorkspace.vue:265 web/app/components/Workspace.vue:300 web/app/components/Workspace.vue:357 web/app/components/Workspace.vue:408 web/app/components/Workspace.vue:490 web/app/components/Workspace.vue:550 web/app/components/Workspace.vue:556 web/app/components/Workspace.vue:638 web/app/components/Workspace.vue:807 web/app/components/Workspace.vue:861 web/app/components/Workspace.vue:981 web/app/lib/base-session.ts:1202 web/app/lib/base-session.ts:1264
 msgid "You can only look at this document."
 msgstr ""
 
@@ -7793,7 +7793,7 @@ msgstr ""
 msgid "Your browser would not copy it: select the key and copy it yourself."
 msgstr ""
 
-#: web/app/lib/base-session.ts:1231
+#: web/app/lib/base-session.ts:1261
 msgid "Your change was not applied: the document changed under you. It was reloaded."
 msgstr ""
 
@@ -7829,7 +7829,7 @@ msgstr ""
 msgid "Your request went to the chat."
 msgstr ""
 
-#: web/app/lib/base-session.ts:631
+#: web/app/lib/base-session.ts:635
 msgid "Your role in this document is now “{role}”."
 msgstr ""
 
@@ -7985,7 +7985,7 @@ msgstr ""
 msgid "a remark suggests no change; dismiss it instead"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:538
+#: packages/claudia-server/src/claudia_server/protocol.py:543
 msgid "a request must be a JSON object"
 msgstr ""
 
@@ -8149,7 +8149,7 @@ msgstr ""
 msgid "add_sheet: the name must have 1 to {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1096
+#: packages/claudia-server/src/claudia_server/protocol.py:1101
 msgid "add_user: role must be editor or viewer"
 msgstr ""
 
@@ -8349,7 +8349,7 @@ msgstr ""
 msgid "chance"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1113
+#: packages/claudia-server/src/claudia_server/protocol.py:1118
 msgid "change_role: role must be editor or viewer"
 msgstr ""
 
@@ -8365,7 +8365,7 @@ msgstr ""
 msgid "chat message"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1422
+#: packages/claudia-server/src/claudia_server/protocol.py:1427
 msgid "chat: {reason}"
 msgstr ""
 
@@ -8373,7 +8373,7 @@ msgstr ""
 msgid "chat: {text}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:985
+#: packages/claudia-server/src/claudia_server/protocol.py:990
 msgid "chat_log: limit must be from 1 to {limit}"
 msgstr ""
 
@@ -8721,7 +8721,7 @@ msgstr ""
 msgid "how many sheets the workbook has (1 for a reference)."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:541
+#: packages/claudia-server/src/claudia_server/protocol.py:546
 msgid "id must be an integer or a short string"
 msgstr ""
 
@@ -8753,7 +8753,7 @@ msgstr ""
 msgid "internal server error"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1030
+#: packages/claudia-server/src/claudia_server/protocol.py:1035
 msgid "invalid command: {reason!r}"
 msgstr ""
 
@@ -8849,7 +8849,7 @@ msgstr ""
 msgid "log more and enable the web inspector"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:935
+#: packages/claudia-server/src/claudia_server/protocol.py:940
 msgid "log: limit must be from 1 to {limit}"
 msgstr ""
 
@@ -8881,11 +8881,11 @@ msgstr ""
 msgid "menu"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:532
+#: packages/claudia-server/src/claudia_server/protocol.py:537
 msgid "message too large"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:470
+#: packages/claudia-server/src/claudia_server/protocol.py:475
 msgid "method must be a string"
 msgstr ""
 
@@ -8965,7 +8965,7 @@ msgstr ""
 msgid "no cells"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:700
+#: packages/claudia-server/src/claudia_server/protocol.py:705
 msgid "no checkpoint number {checkpoint}"
 msgstr ""
 
@@ -8981,7 +8981,7 @@ msgstr ""
 msgid "no function named {name!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:602
+#: packages/claudia-server/src/claudia_server/protocol.py:607
 msgid "no help topic {id!r}"
 msgstr ""
 
@@ -8993,11 +8993,11 @@ msgstr ""
 msgid "no merged box starts at row {row!r}, column {col!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:473
+#: packages/claudia-server/src/claudia_server/protocol.py:478
 msgid "no method {name!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1231
+#: packages/claudia-server/src/claudia_server/protocol.py:1236
 msgid "no ownership transfer is waiting for you with that password"
 msgstr ""
 
@@ -9021,7 +9021,7 @@ msgstr ""
 msgid "not a numbering scheme: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:566
+#: packages/claudia-server/src/claudia_server/protocol.py:571
 msgid "not a region this document understands: {reason!r}"
 msgstr ""
 
@@ -9113,7 +9113,7 @@ msgstr ""
 msgid "not the options of a table of contents: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:536
+#: packages/claudia-server/src/claudia_server/protocol.py:541
 msgid "not valid JSON"
 msgstr ""
 
@@ -9169,7 +9169,7 @@ msgstr ""
 msgid "only a built-in scheme can be reset"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1262
+#: packages/claudia-server/src/claudia_server/protocol.py:1267
 msgid "only an editor or an owner of a document may change its description and tags"
 msgstr ""
 
@@ -9181,11 +9181,11 @@ msgstr ""
 msgid "only an open suggestion that proposes a change can be accepted"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1320
+#: packages/claudia-server/src/claudia_server/protocol.py:1325
 msgid "only an owner may export the history and the chat"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1243
+#: packages/claudia-server/src/claudia_server/protocol.py:1248
 msgid "only an owner of a document may delete it"
 msgstr ""
 
@@ -9197,7 +9197,7 @@ msgstr ""
 msgid "only look"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:804
+#: packages/claudia-server/src/claudia_server/protocol.py:809
 msgid "only owners, and editors on their own work, redact"
 msgstr ""
 
@@ -9213,31 +9213,31 @@ msgstr ""
 msgid "only the branch taken is evaluated, so IF(B1=0, 0, A1/B1) never divides by zero."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1092
+#: packages/claudia-server/src/claudia_server/protocol.py:1097
 msgid "only the owner of a document adds people to it"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1213
+#: packages/claudia-server/src/claudia_server/protocol.py:1218
 msgid "only the owner of a document can hand it over"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1109
+#: packages/claudia-server/src/claudia_server/protocol.py:1114
 msgid "only the owner of a document changes who may do what"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:788
+#: packages/claudia-server/src/claudia_server/protocol.py:793
 msgid "only the owner of a document discards its hidden lines"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1157
+#: packages/claudia-server/src/claudia_server/protocol.py:1162
 msgid "only the owner of a document makes a recovery key"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1125
+#: packages/claudia-server/src/claudia_server/protocol.py:1130
 msgid "only the owner of a document removes people from it"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:681
+#: packages/claudia-server/src/claudia_server/protocol.py:686
 msgid "only the owner of a document sets this"
 msgstr ""
 
@@ -9293,7 +9293,7 @@ msgstr ""
 msgid "paragraphs, pictures and boxes"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:442
+#: packages/claudia-server/src/claudia_server/protocol.py:447
 msgid "params must be an object"
 msgstr ""
 
@@ -9405,7 +9405,7 @@ msgstr ""
 msgid "recovery key"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:811
+#: packages/claudia-server/src/claudia_server/protocol.py:816
 msgid "redaction: revisions like \"main:12\", chat numbers, parts by revision"
 msgstr ""
 
@@ -9417,11 +9417,11 @@ msgstr ""
 msgid "remark"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1365
+#: packages/claudia-server/src/claudia_server/protocol.py:1370
 msgid "report_output: kind must be print or pdf"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1367
+#: packages/claudia-server/src/claudia_server/protocol.py:1372
 msgid "report_output: pages and format are not usable"
 msgstr ""
 
@@ -9521,7 +9521,7 @@ msgstr ""
 msgid "set_cells: input must be text of at most {limit} characters"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:684
+#: packages/claudia-server/src/claudia_server/protocol.py:689
 msgid "set_restore_policy: policy must be one of {policies}"
 msgstr ""
 
@@ -9641,7 +9641,7 @@ msgstr ""
 msgid "tables"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1267
+#: packages/claudia-server/src/claudia_server/protocol.py:1272
 msgid "tags are words"
 msgstr ""
 
@@ -9665,11 +9665,11 @@ msgstr ""
 msgid "text of the object"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1370
+#: packages/claudia-server/src/claudia_server/protocol.py:1375
 msgid "that is more prints and PDFs than the document records in a minute"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1181 packages/claudia-server/src/claudia_server/protocol.py:1202 packages/claudia-server/src/claudia_server/protocol.py:1217 packages/claudia-server/src/claudia_server/protocol.py:1247 packages/claudia-server/src/claudia_server/protocol.py:1273 packages/claudia-server/src/claudia_server/protocol.py:1401
+#: packages/claudia-server/src/claudia_server/protocol.py:1186 packages/claudia-server/src/claudia_server/protocol.py:1207 packages/claudia-server/src/claudia_server/protocol.py:1222 packages/claudia-server/src/claudia_server/protocol.py:1252 packages/claudia-server/src/claudia_server/protocol.py:1278 packages/claudia-server/src/claudia_server/protocol.py:1406
 msgid "that is not your current password"
 msgstr ""
 
@@ -9677,35 +9677,35 @@ msgstr ""
 msgid "that would make too many paragraphs"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1024
+#: packages/claudia-server/src/claudia_server/protocol.py:1029
 msgid "the assistant cannot apply a raw command; use the app's own methods"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1318
+#: packages/claudia-server/src/claudia_server/protocol.py:1323
 msgid "the assistant does not export the document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1363
+#: packages/claudia-server/src/claudia_server/protocol.py:1368
 msgid "the assistant does not print"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:697
+#: packages/claudia-server/src/claudia_server/protocol.py:702
 msgid "the assistant does not suggest restoring a checkpoint"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:724
+#: packages/claudia-server/src/claudia_server/protocol.py:729
 msgid "the assistant does not suggest restoring a step"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:751
+#: packages/claudia-server/src/claudia_server/protocol.py:756
 msgid "the assistant does not suggest switching branches"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:770
+#: packages/claudia-server/src/claudia_server/protocol.py:775
 msgid "the assistant does not vote"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:908
+#: packages/claudia-server/src/claudia_server/protocol.py:913
 msgid "the assistant does not withdraw suggestions"
 msgstr ""
 
@@ -9877,7 +9877,7 @@ msgstr ""
 msgid "the range ends before it starts"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:895
+#: packages/claudia-server/src/claudia_server/protocol.py:900
 msgid "the redaction would now blank other steps than you were shown; look at it again"
 msgstr ""
 
@@ -10009,15 +10009,15 @@ msgstr ""
 msgid "there is already a number format called “{name}”"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:790 packages/claudia-server/src/claudia_server/protocol.py:886
+#: packages/claudia-server/src/claudia_server/protocol.py:795 packages/claudia-server/src/claudia_server/protocol.py:891
 msgid "there is an open suggestion; answer or withdraw it first"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:753
+#: packages/claudia-server/src/claudia_server/protocol.py:758
 msgid "there is no branch called {branch!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:816
+#: packages/claudia-server/src/claudia_server/protocol.py:821
 msgid "there is no chat message of that number for you"
 msgstr ""
 
@@ -10041,7 +10041,7 @@ msgstr ""
 msgid "there is no pivot table called “{name}”"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:726
+#: packages/claudia-server/src/claudia_server/protocol.py:731
 msgid "there is no step {revision} on this line"
 msgstr ""
 
@@ -10053,7 +10053,7 @@ msgstr ""
 msgid "there is no text to add"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1137
+#: packages/claudia-server/src/claudia_server/protocol.py:1142
 msgid "there is nobody called {name} in this document"
 msgstr ""
 
@@ -10145,7 +10145,7 @@ msgstr ""
 msgid "this row"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1111
+#: packages/claudia-server/src/claudia_server/protocol.py:1116
 msgid "this server does not change roles"
 msgstr ""
 
@@ -10153,19 +10153,19 @@ msgstr ""
 msgid "this server does not host {app}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1265
+#: packages/claudia-server/src/claudia_server/protocol.py:1270
 msgid "this server does not keep a description and tags"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1395
+#: packages/claudia-server/src/claudia_server/protocol.py:1400
 msgid "this server does not keep documents as files you can download"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/app.py:366 packages/claudia-server/src/claudia_server/protocol.py:1159
+#: packages/claudia-server/src/claudia_server/app.py:366 packages/claudia-server/src/claudia_server/protocol.py:1164
 msgid "this server does not keep recovery keys"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1169
+#: packages/claudia-server/src/claudia_server/protocol.py:1174
 msgid "this server does not list a document's people this way"
 msgstr ""
 
@@ -10173,27 +10173,27 @@ msgstr ""
 msgid "this server does not make containers"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1094
+#: packages/claudia-server/src/claudia_server/protocol.py:1099
 msgid "this server does not manage people"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1127
+#: packages/claudia-server/src/claudia_server/protocol.py:1132
 msgid "this server does not remove people"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1196
+#: packages/claudia-server/src/claudia_server/protocol.py:1201
 msgid "this server does not support changing a password"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1245
+#: packages/claudia-server/src/claudia_server/protocol.py:1250
 msgid "this server does not support deleting a document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1215 packages/claudia-server/src/claudia_server/protocol.py:1228
+#: packages/claudia-server/src/claudia_server/protocol.py:1220 packages/claudia-server/src/claudia_server/protocol.py:1233
 msgid "this server does not support handing over ownership"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:1179
+#: packages/claudia-server/src/claudia_server/protocol.py:1184
 msgid "this server does not support leaving a document"
 msgstr ""
 
@@ -10209,7 +10209,7 @@ msgstr ""
 msgid "this suggestion is not open any more"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:891
+#: packages/claudia-server/src/claudia_server/protocol.py:896
 msgid "this would also blank later changes by {names}; ask an owner"
 msgstr ""
 
@@ -10273,7 +10273,7 @@ msgstr ""
 msgid "undo"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:446
+#: packages/claudia-server/src/claudia_server/protocol.py:451
 msgid "unknown parameter {parameter!r} for {name}"
 msgstr ""
 
@@ -10381,7 +10381,7 @@ msgstr ""
 msgid "you are no longer a person of this document"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:821
+#: packages/claudia-server/src/claudia_server/protocol.py:826
 msgid "you can redact only your own changes and messages; ask an owner"
 msgstr ""
 
@@ -10765,11 +10765,11 @@ msgstr ""
 msgid "{method}: kinds is a list of {kinds}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:454
+#: packages/claudia-server/src/claudia_server/protocol.py:459
 msgid "{method}: missing parameter {parameter!r}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:463
+#: packages/claudia-server/src/claudia_server/protocol.py:468
 msgid "{method}: {parameter} {reason}"
 msgstr ""
 
@@ -10845,19 +10845,19 @@ msgstr ""
 msgid "{name} is larger than {mb} MB."
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:487
+#: packages/claudia-server/src/claudia_server/protocol.py:492
 msgid "{name} is not one of the methods this account may call"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:475
+#: packages/claudia-server/src/claudia_server/protocol.py:480
 msgid "{name} needs the editor role"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:479
+#: packages/claudia-server/src/claudia_server/protocol.py:484
 msgid "{name} reads the chat, which is for the document's owners and editors"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:482 packages/claudia-server/src/claudia_server/what_if.py:165
+#: packages/claudia-server/src/claudia_server/protocol.py:487 packages/claudia-server/src/claudia_server/what_if.py:165
 msgid "{name} reads the history, which is for the document's owners and editors"
 msgstr ""
 
@@ -10985,7 +10985,7 @@ msgstr ""
 msgid "{old} is a pivot table: a pivot keeps its name"
 msgstr ""
 
-#: web/app/lib/base-session.ts:646
+#: web/app/lib/base-session.ts:650
 msgid "{owner} is now the owner of this document."
 msgstr ""
 
@@ -11033,7 +11033,7 @@ msgstr ""
 msgid "{ref}, empty"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/protocol.py:925
+#: packages/claudia-server/src/claudia_server/protocol.py:930
 msgid "{revision} is not part of the document's current line; reload it"
 msgstr ""
 
@@ -11093,11 +11093,11 @@ msgstr ""
 msgid "{user} keeps what has already been seen and any copy of the file that was saved."
 msgstr ""
 
-#: web/app/lib/base-session.ts:644
+#: web/app/lib/base-session.ts:648
 msgid "{user} left this document."
 msgstr ""
 
-#: web/app/lib/base-session.ts:634
+#: web/app/lib/base-session.ts:638
 msgid "{user} may now “{role}”."
 msgstr ""
 
@@ -11105,7 +11105,7 @@ msgstr ""
 msgid "{user} selected this"
 msgstr ""
 
-#: web/app/lib/base-session.ts:641
+#: web/app/lib/base-session.ts:645
 msgid "{user} was removed from this document."
 msgstr ""
 

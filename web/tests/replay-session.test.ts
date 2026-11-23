@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { BaseSession, type BaseState, type Step } from '~/lib/base-session'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Region, type Welcome, type WireData } from '~/lib/protocol'
+import type { LinkLike, Region, Welcome, WireData } from '~/lib/protocol'
 import { PastLink } from '~/lib/replay'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -23,60 +24,6 @@ const WELCOME: Welcome = {
 
 const entry = (n: number, author = 'ann'): Step => ({ revision: `main:${n}`, author, origin: 'do', time: '', label: `step ${n}`, summary: '' })
 const slideRegion = (holder: string): Region => ({ kind: 'objects', holder, ids: [] }) as Region
-
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  events: EventHandler[] = []
-  gate: Promise<void> | null = null
-  async connect() {
-    return WELCOME
-  }
-  async request(method: string, params: any = {}): Promise<any> {
-    this.calls.push({ method, params })
-    if (method === 'as_of' && this.gate) await this.gate
-    switch (method) {
-      case 'log':
-        return [entry(1), entry(2, 'bo'), entry(3)]
-      case 'chat_log':
-        return [{ number: 1, author: 'bo', to: '', text: 'hi', time: '', at: 'main:2' }]
-      case 'checkpoints':
-        return []
-      case 'history':
-        return { can_undo: true, can_redo: false, undo_label: '', redo_label: '' }
-      case 'branches':
-        return [{ name: 'main', head: 'main:3', active: true, forked_from: null }]
-      case 'restore_policy':
-        return { policy: 'consensus' }
-      case 'slides':
-        return ['live']
-      case 'peek_revision':
-        return { revision: params.revision, entry: entry(Number(params.revision.slice(5))), focus: [slideRegion(`s${params.revision.slice(5)}`)], app: 'creates' }
-      case 'as_of':
-        return [`past ${params.revision}`]
-      case 'changes_since':
-        return { regions: [slideRegion(`later than ${params.revision}`)], truncated: params.revision === 'main:1' }
-      case 'propose_restore_step':
-        return { applied: false, proposal: null }
-      case 'chat':
-        return { number: 2 }
-      case 'add_slide':
-        return { revision: 'main:4' }
-      default:
-        throw new ProtocolError('unknown_method', method)
-    }
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: WireData) {
-    for (const h of this.events) h(name, data)
-  }
-  asOf() {
-    return this.calls.filter((c) => c.method === 'as_of').map((c) => c.params.revision)
-  }
-}
 
 interface TestState extends BaseState {
   slides: string[]
@@ -104,8 +51,38 @@ class TestSession extends BaseSession<TestState> {
   }
 }
 
+/** A test holds `as_of` back with this, to see what a replay does while an answer is on its way. */
+let gate: Promise<void> | null = null
+
+function fake() {
+  gate = null
+  return new FakeServer('creates', { welcome: WELCOME })
+    .on('log', () => [entry(1), entry(2, 'bo'), entry(3)])
+    .on('chat_log', () => [{ number: 1, author: 'bo', to: '', text: 'hi', time: '', at: 'main:2' }])
+    .on('history', () => ({ can_undo: true, can_redo: false, undo_label: '', redo_label: '' }))
+    .on('branches', () => [{ name: 'main', head: 'main:3', active: true, forked_from: null }])
+    .on('slides', () => ['live'])
+    .on('peek_revision', ({ revision }: any) => ({
+      revision,
+      entry: entry(Number(revision.slice(5))),
+      focus: [slideRegion(`s${revision.slice(5)}`)],
+      app: 'creates',
+    }))
+    .on('as_of', async ({ revision }: any) => {
+      if (gate) await gate
+      return [`past ${revision}`]
+    })
+    .on('changes_since', ({ revision }: any) => ({ regions: [slideRegion(`later than ${revision}`)], truncated: revision === 'main:1' }))
+    .on('propose_restore_step', () => ({ applied: false, proposal: null }))
+    .on('chat', () => ({ number: 2 }))
+    .on('add_slide', () => ({ revision: 'main:4' }))
+}
+
+/** The revisions the page asked the past of, in order. */
+const asOf = (link: FakeServer) => link.sent('as_of').map((p) => p.revision)
+
 async function opened() {
-  const link = new FakeLink()
+  const link = fake()
   const session = new TestSession(link)
   await session.open()
   return { link, session, state: session.state }
@@ -117,7 +94,7 @@ describe('looking at the past', () => {
     await session.startReplay()
     expect(state.replay).toMatchObject({ revision: 'main:3', filter: 'all' })
     await session.replayStep(-1)
-    expect(link.asOf()).toEqual(['main:2'])
+    expect(asOf(link)).toEqual(['main:2'])
     expect(state.slides).toEqual(['past main:2'])
     expect(state.replay!.revision).toBe('main:2')
   })
@@ -146,14 +123,14 @@ describe('looking at the past', () => {
   it('asks for the last step it was told of when the wheel runs ahead of the server', async () => {
     const { link, session, state } = await opened()
     let open!: () => void
-    link.gate = new Promise((resolve) => (open = resolve))
+    gate = new Promise((resolve) => (open = resolve))
     await session.startReplay()
     const steps = [session.replayStep(-1), session.replayStep(-1), session.replayStep(-1), session.replayStep(-1)]
     open()
     await Promise.all(steps)
     expect(state.replay!.revision).toBe('main:1')
-    expect(link.asOf().length).toBeLessThanOrEqual(2)
-    expect(link.asOf().at(-1)).toBe('main:1')
+    expect(asOf(link).length).toBeLessThanOrEqual(2)
+    expect(asOf(link).at(-1)).toBe('main:1')
   })
   it('keeps the conversation live, and counts what colleagues do meanwhile', async () => {
     const { link, session, state } = await opened()
@@ -234,9 +211,7 @@ describe('looking at the past', () => {
     expect(link.calls.some((c) => c.method === 'propose_restore_step')).toBe(false)
   })
   it('does not start without a history to look at', async () => {
-    const link = new FakeLink()
-    const log = link.request.bind(link)
-    link.request = async (m: string, p: any = {}) => (m === 'log' ? [] : log(m, p))
+    const link = fake().on('log', [])
     const session = new TestSession(link)
     await session.open()
     await session.startReplay()
@@ -246,7 +221,7 @@ describe('looking at the past', () => {
 
 describe('the link of a replay', () => {
   it('lets only reading and talking through', async () => {
-    const link = new FakeLink()
+    const link = fake()
     const past = new PastLink(link, () => 'main:2')
     await past.request('cells', { sheet: 's' }).catch(() => {})
     expect(link.calls[0]).toEqual({ method: 'as_of', params: { revision: 'main:2', method: 'cells', params: { sheet: 's' } } })

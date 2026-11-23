@@ -172,6 +172,10 @@ export interface ObjectLayerState {
   language: string | null | undefined
 }
 
+/** What a change says of a failure it has its own words for (`BaseSession.write`): the answer in its place, or `undefined`
+ *  when the failure is nothing special and is told to the person as any other. */
+type Told = (error: unknown) => WireData | undefined
+
 export interface BaseState extends ObjectLayerState {
   /** Which app the document belongs to (`computes`, `composes`): the server says so when it welcomes us. */
   app: string
@@ -1211,12 +1215,14 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    *  - anything else she asks for (undo, a lock, the chat, a proposal to restore) is sent as it is;
    *  - a request that fails is told to her, once, here, and the answer is `false`.
    *  Reads that a session makes for itself (`link.request`) carry no policy and say nothing when they fail. */
-  private async call(method: string, params: Record<string, unknown>, change: boolean): Promise<WireData | false> {
+  private async call(method: string, params: Record<string, unknown>, change: boolean, told?: Told): Promise<WireData | false> {
     if (change && this.refused()) return false
     const send = async (): Promise<WireData | false> => {
       try {
         return await this.need().request(method, change ? { ...params, base: this.state.revision } : params)
       } catch (error) {
+        const answer = told?.(error)
+        if (answer !== undefined) return answer // the one failure the caller says in its own words
         this.explain(error)
         return false
       }
@@ -1224,9 +1230,10 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
     return change ? this.run(send) : send()
   }
 
-  /** Change the document; the answer, or `false` after telling the person why it was not changed. */
-  protected write(method: string, params: Record<string, unknown> = {}): Promise<WireData | false> {
-    return this.call(method, params, true)
+  /** Change the document; the answer, or `false` after telling the person why it was not changed. A change that fails
+   *  in a way the caller has its own words for says so in `told`: what it returns (not `undefined`) is the answer. */
+  protected write(method: string, params: Record<string, unknown> = {}, told?: Told): Promise<WireData | false> {
+    return this.call(method, params, true, told)
   }
 
   /** Ask for something that is not a change of the document (no `base`, no waiting); `false` after telling why not. */
@@ -1361,17 +1368,13 @@ export abstract class BaseSession<S extends BaseState = BaseState> {
    *  nothing has). A refusal that is about this very deletion comes back as its sentence; anything else is told as a
    *  notice, and is `false`. */
   async deleteStyle(style: string, how: DeleteHow, target: string | null): Promise<Deleted | false> {
-    if (this.refused()) return false
-    const params: Record<string, unknown> = { style, how, base: this.state.revision }
+    const params: Record<string, unknown> = { style, how }
     if (target) params.target = target
-    try {
-      const done = await this.need().request<{ stand_in: string | null }>('delete_style', params)
-      return { standIn: done.stand_in ?? null }
-    } catch (error) {
-      if (error instanceof ProtocolError && error.code === 'command_error') return { refused: error.message }
-      this.explain(error)
-      return false
-    }
+    const done = await this.write('delete_style', params, (error) =>
+      error instanceof ProtocolError && error.code === 'command_error' ? { refused: error.message } : undefined,
+    )
+    if (done === false) return false
+    return 'refused' in done ? { refused: done.refused } : { standIn: done.stand_in ?? null }
   }
 
   /** Hide a style from the menus a style is picked from, or show it again (D780). */

@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { STYLE_MODEL } from './style-model.fixture'
-import { ProtocolError, type CloseHandler, type EventHandler, type LinkLike, type Welcome } from '~/lib/protocol'
+import { ProtocolError, type Welcome } from '~/lib/protocol'
 import { IDLE_FLUSH_MS, PLACE_MS, TextSession } from '~/lib/text-session'
+import { FakeServer } from './support/fake-server'
 
 const WELCOME: Welcome = {
   user: 'ann',
@@ -21,38 +22,11 @@ const WELCOME: Welcome = {
   returned: null,
 }
 
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  welcome = WELCOME
-  async connect() {
-    return this.welcome
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  push(name: string, data: any) {
-    for (const h of this.events) h(name, data)
-  }
-  sent(method: string) {
-    return this.calls.filter((c) => c.method === method).map((c) => c.params)
-  }
-}
-
 const view = (id: string, name: string, css: Record<string, string>, based_on: string | null = null, to_name = false) => ({ id, name, purpose: '', based_on, css, computed: css, to_name })
 const STYLES = [view('body', 'Body text', { 'font-size': '11pt', color: '#1F1A33' }), view('title', 'Title', { 'font-size': '26pt' }, 'body')]
 
 /** A server that holds one paragraph and answers `replace_text` the way the real one does: events first, then the answer. */
-function server(link: FakeLink, text = 'hello world') {
+function server(link: FakeServer, text = 'hello world') {
   const doc = { text }
   link.handlers = {
     paragraphs: () => ({ revision: 'main:2', styles: STYLES, paragraphs: [{ id: 'b1', style: 'body', text: doc.text, runs: doc.text ? [[[...doc.text].length, 'ann', null]] : [] }] }),
@@ -99,7 +73,7 @@ function server(link: FakeLink, text = 'hello world') {
 }
 
 async function opened(text = 'hello world') {
-  const link = new FakeLink()
+  const link = new FakeServer('composes', { welcome: WELCOME })
   const doc = server(link, text)
   const session = new TextSession(() => link, { retryDelays: [0] })
   await session.open()
@@ -512,7 +486,7 @@ describe('the language of the text (D915)', () => {
 
 describe('tags to floating objects', () => {
   it('show the name an object has now, which the chat message may no longer say', async () => {
-    const link = new FakeLink()
+    const link = new FakeServer('composes', { welcome: WELCOME })
     server(link)
     link.handlers.objects = () => ({ objects: [{ id: 'o1', name: 'Logo', kind: 'image', anchor: { holder: 'b1' } }] })
     const session = new TextSession(() => link, { retryDelays: [0] })

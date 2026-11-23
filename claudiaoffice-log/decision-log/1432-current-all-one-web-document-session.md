@@ -34,3 +34,11 @@ and showed the server's refusal, creates checked in some places only (CODE-75).
 read-only checks), against the rule that the clients do not differ in function. Inheritance rather than a separate
 object, because the components and the `StyleHost` call these verbs on the session; a separate object would need a
 delegate per verb on each session.
+
+**Since E11.7: the policy is in one function.** `BaseSession.call` holds all of it: the refusal for someone who may
+only look, the wait in `run()`, the revision a change is based on and the notice when a request fails. `write()` (a
+change) and `attempt()` (a request that is not one, no `base`) are its two forms, `changed()` and `asked()` answer
+"did it happen?" for the many callers that need no more, and a change that has its own words for one failure says so in
+`told` (`deleteStyle`: the refusal that is about that very deletion). So `deleteStyle` goes through `run()` itself, and
+composes no longer overrides it. The web tests' fake server holds every request to the server's own description of its
+protocol (`docs/web.md`).

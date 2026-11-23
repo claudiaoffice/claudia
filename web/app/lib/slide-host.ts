@@ -103,6 +103,8 @@ export function isOnSlide(object: VisualObject<Anchor> | undefined): object is S
 export interface SlidePort {
   readonly state: { activeSlide: string; selected: string | null; objects: Record<string, VisualObject<Anchor>> }
   write(method: string, params: Record<string, unknown>): Promise<WireData | false>
+  /** `write`, for a change whose answer nobody needs: did it happen? */
+  changed(method: string, params: Record<string, unknown>): Promise<boolean>
   /** show the others where I am, hold regions, let go of them (`BaseSession`) */
   show(where: string, regions: Region[]): Promise<void>
   hold(regions: Region[]): Promise<boolean>
@@ -142,11 +144,11 @@ export class SlideActions {
   }
 
   async move(id: string, x: number, y: number): Promise<boolean> {
-    return (await this.port.write('move_object', { id, x, y })) !== false
+    return this.port.changed('move_object', { id, x, y })
   }
 
   async resize(id: string, frame: Frame): Promise<boolean> {
-    return (await this.port.write('resize_object', { id, ...frame })) !== false
+    return this.port.changed('resize_object', { id, ...frame })
   }
 
   /** Put a text box (`{kind: 'text'}`) or a shape (`{kind: 'shape', shape}`) on the slide shown, in `frame`, and select

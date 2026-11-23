@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ProtocolError, type LinkLike, type EventHandler, type CloseHandler } from '~/lib/protocol'
+import { ProtocolError } from '~/lib/protocol'
+import { FakeServer } from './support/fake-server'
 import { TextSession } from '~/lib/text-session'
 import { formatItems, noLists, type FormatMenu } from '~/lib/format-menu'
 import { galleryFor } from '~/lib/style-host'
@@ -238,46 +239,11 @@ describe('the host the dialog talks to', () => {
 })
 
 // ------------------------------------------------------------------------------------------------ over the wire
-class FakeLink implements LinkLike {
-  calls: { method: string; params: any }[] = []
-  handlers: Record<string, (params: any) => any> = {}
-  events: EventHandler[] = []
-  async connect() {
-    return { user: 'ann', role: 'owner', doc: 'essay', app: 'composes', branch: 'main', revision: 'main:2', id: 1, color: '#e6194b', people: [], presence: [], checkpoints: [], limits: { max_text: 32767 }, branches: [{ name: 'main', head: 'main:2', active: true, forked_from: null }], proposal: null, returned: null } as never
-  }
-  async request(method: string, params: any = {}) {
-    this.calls.push({ method, params })
-    const handler = this.handlers[method]
-    if (!handler) throw new ProtocolError('unknown_method', method)
-    return handler(params)
-  }
-  onEvent(h: EventHandler) {
-    this.events.push(h)
-  }
-  onClose(_h: CloseHandler) {}
-  close() {}
-  sent(method: string) {
-    return this.calls.filter((c) => c.method === method).map((c) => c.params)
-  }
-}
-
 async function opened(role = 'owner') {
-  const link = new FakeLink()
-  link.handlers = {
-    paragraphs: () => ({ revision: 'main:2', styles: [], paragraphs: [{ id: 'b1', style: 'body', text: 'hi', runs: [[2, 'ann', null]] }] }),
-    suggestions: () => [],
-    style_model: () => STYLE_MODEL,
-    palette: () => ({ type: 'palette', roles: [], readings: [] }),
-    log: () => [],
-    chat_log: () => [],
-    checkpoints: () => [],
-    history: () => ({ can_undo: false, can_redo: false, undo_label: '', redo_label: '' }),
-    branches: () => [{ name: 'main', head: 'main:2', active: true, forked_from: null }],
-    restore_policy: () => ({ policy: 'consensus' }),
-    hold: () => ({}),
-    look: () => ({}),
-    unlock: () => ({}),
-  }
+  const link = new FakeServer('composes', { welcome: { doc: 'essay', revision: 'main:2', branches: [{ name: 'main', head: 'main:2', active: true, forked_from: null }] } })
+    .on('paragraphs', () => ({ revision: 'main:2', styles: [], paragraphs: [{ id: 'b1', style: 'body', text: 'hi', runs: [[2, 'ann', null]] }] }))
+    .on('hold', () => ({}))
+    .on('look', () => ({}))
   const session = new TextSession(() => link, { retryDelays: [0] })
   await session.open()
   if (role === 'viewer') session.state.me.role = 'viewer'
@@ -290,7 +256,7 @@ describe('deleting a style over the wire', () => {
     link.handlers.style_deletion = () => deletion()
     expect((await session.styleDeletion('quote'))?.uses).toBe(14)
     expect(link.sent('style_deletion')).toEqual([{ style: 'quote' }])
-    delete link.handlers.style_deletion
+    link.without('style_deletion')
     expect(await session.styleDeletion('quote')).toBeNull()
   })
 
@@ -302,6 +268,15 @@ describe('deleting a style over the wire', () => {
     link.handlers.delete_style = () => ({ stand_in: null, revision: 'main:4' })
     expect(await session.deleteStyle('plain', 'assign', null)).toEqual({ standIn: null })
     expect(link.sent('delete_style')[1]).toEqual({ style: 'plain', how: 'assign', base: 'main:2' })
+  })
+
+  it('goes after the words typed before it, like every change that is not typing (D1432)', async () => {
+    const { link, session } = await opened()
+    link.handlers.replace_text = () => ({ revision: 'main:3', paragraph: 'b1', offset: 3 })
+    link.handlers.delete_style = () => ({ stand_in: null, revision: 'main:4' })
+    session.type('a')
+    expect(await session.deleteStyle('plain', 'assign', null)).toEqual({ standIn: null })
+    expect(link.methods().filter((m) => m === 'replace_text' || m === 'delete_style')).toEqual(['replace_text', 'delete_style'])
   })
 
   it('hands back the server’s sentence when this deletion is refused, and tells anything else as a notice', async () => {

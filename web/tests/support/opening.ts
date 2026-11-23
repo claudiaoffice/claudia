@@ -2,8 +2,9 @@
 // each session's `loadApp`, and what a session asks for the moment it is open (who is where, a lock). An empty
 // document, as a new one is: a test that needs more says so with a handler, which wins over these.
 //
-// Only what the sessions need is answered. A request the session makes with a fallback for an older server (`.catch`)
-// is left out when the fallback is what an empty document wants, so the fallback is what runs.
+// Only what the sessions need is answered. A request the session makes with a fallback for an older server (`.catch`:
+// the tabs, the pivots, the number formats, the floating objects of a text, ...) is left out where the fallback is what
+// an empty document wants, so the fallback is what runs, as it does in the tests that stand for such a server.
 import type { Welcome } from '~/lib/protocol'
 import { STYLE_MODEL } from '../style-model.fixture'
 
@@ -34,17 +35,12 @@ const all: Record<string, Answer> = {
 
 const computes: Record<string, Answer> = {
   sheets: () => [{ id: 's1', name: 'Sheet1', rows: 0, cols: 0 }],
-  tabs: () => [{ kind: 'sheet', id: 's1', name: 'Sheet1' }],
   objects: (p, w) => ({ revision: revisionOf(w), sheet: p.sheet, objects: [] }),
   cells: (_p, w) => ({ revision: revisionOf(w), cells: [] }),
   sizes: (_p, w) => ({ revision: revisionOf(w), rows: [], cols: [] }),
   diagrams: () => [],
   charts: () => [],
   names: (_p, w) => ({ revision: revisionOf(w), names: [] }),
-  pivots: (_p, w) => ({ revision: revisionOf(w), pivots: [] }),
-  random_state: (_p, w) => ({ revision: revisionOf(w), seed: 0, draw: 0 }),
-  number_formats: () => [],
-  shapes: () => ({ library: [], document: [] }),
 }
 
 const creates: Record<string, Answer> = {
@@ -56,9 +52,6 @@ const creates: Record<string, Answer> = {
 const composes: Record<string, Answer> = {
   paragraphs: () => ({ styles: [], paragraphs: [], lists: [], schemes: [] }),
   suggestions: () => [],
-  objects: (_p, w) => ({ revision: revisionOf(w), objects: [] }),
-  shapes: () => ({ library: [], document: [] }),
-  tables: () => [],
 }
 
 export const OPENING = { all, computes, composes, creates }

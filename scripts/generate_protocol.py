@@ -28,8 +28,9 @@ APPS = ("computes", "composes", "creates")
 
 def described() -> dict[str, dict]:
     """What a server that hosts every app says at ``/api/<app>/protocol``, by app."""
-    from claudia_server.cli import make_plan
     from starlette.testclient import TestClient
+
+    from claudia_server.cli import make_plan
 
     with tempfile.TemporaryDirectory() as state:
         plan = make_plan(["--no-tls", "--state-dir", state, "--allow-host", "testserver"])
