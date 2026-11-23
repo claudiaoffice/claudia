@@ -1,0 +1,332 @@
+<svg viewBox="0 0 1700 1150" xmlns="http://www.w3.org/2000/svg" font-family="Inter, 'Segoe UI', system-ui, sans-serif"><rect width="1700" height="1150" fill="#f3f1ea"/><text x="40.0" y="44.0" font-family="Fraunces, Georgia, serif" font-size="22" font-weight="600" fill="#1f1a33" text-anchor="start">claudia creates — layouts and templates: the offer on a slide (E10.4 and E10.5, reworked)</text>
+<text x="40.0" y="66.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">Mock round of 22 Nov 2026, for review before the architecture step and any code. Content is invented. Branch and decision ids are still to be agreed.</text>
+<text x="40.0" y="83.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#6e6880" text-anchor="start">A layout is a named arrangement of placeholders that slides follow. Moving, resizing or deleting an object that took a placeholder changes the layout for every slide that follows it, or starts a new one.</text>
+<rect x="40.0" y="96.0" width="1010.0" height="706.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62.0" y="126.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">A · Option 1: the offer appears after the change, in a quiet strip</text>
+<text x="62.0" y="144.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Slide 3 overflowed in its right list, so its frame was enlarged. The strip offers the two choices; there is no “only this slide”.</text>
+<rect x="62.0" y="160.0" width="966.0" height="30.0" rx="0" fill="#ffffff"/>
+<text x="82.0" y="180.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">File</text>
+<text x="132.1" y="180.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Edit</text>
+<text x="182.2" y="180.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Insert</text>
+<text x="246.3" y="180.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Format</text>
+<text x="310.4" y="180.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">View</text>
+<text x="360.5" y="180.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Tools</text>
+<text x="417.6" y="180.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Preferences</text>
+<text x="516.8" y="180.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" fill="#1f1a33" text-anchor="start">Help</text>
+<circle cx="1008.0" cy="175.0" r="5" fill="#f2a057"/>
+<text x="998.0" y="179.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="end">creates</text>
+<line x1="62.0" y1="190.0" x2="1028.0" y2="190.0" stroke="#e3dfee" stroke-width="1"/>
+<rect x="62.0" y="190.0" width="966.0" height="38.0" rx="0" fill="#ffffff"/>
+<rect x="74.0" y="195.0" width="51.9" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="100.0" y="213.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="middle">Text</text>
+<rect x="131.9" y="195.0" width="58.4" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="161.1" y="213.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="middle">Shape</text>
+<rect x="196.3" y="195.0" width="71.4" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="232.0" y="213.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="middle">Picture</text>
+<line x1="277.7" y1="199.0" x2="277.7" y2="219.0" stroke="#e3dfee" stroke-width="1"/>
+<rect x="287.7" y="195.0" width="47.9" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="298.7" y="213.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Undo</text>
+<rect x="341.6" y="195.0" width="47.9" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="352.6" y="213.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400" fill="#6e6880" text-anchor="start">Redo</text>
+<line x1="397.5" y1="199.0" x2="397.5" y2="219.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="407.5" y="213.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Style</text>
+<rect x="441.5" y="195.0" width="104.0" height="28.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="452.5" y="213.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">Body text</text>
+<path d="M527.52 206 l4 4 l4 -4" fill="none" stroke="#6e6880" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="557.5" y="213.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">Layout</text>
+<rect x="599.5" y="195.0" width="118.0" height="28.0" rx="7" fill="#fdebd9" stroke="#f2a057" stroke-width="1"/>
+<text x="610.5" y="213.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="500" fill="#1f1a33" text-anchor="start">Two lists</text>
+<path d="M699.52 206 l4 4 l4 -4" fill="none" stroke="#6e6880" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="62.0" y1="228.0" x2="1028.0" y2="228.0" stroke="#e3dfee" stroke-width="1"/>
+<rect x="62.0" y="228.0" width="90.0" height="548.0" rx="0" fill="#f7f5fb"/>
+<line x1="152.0" y1="228.0" x2="152.0" y2="776.0" stroke="#e3dfee" stroke-width="1"/>
+<rect x="74.0" y="242.0" width="66.0" height="37.1" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="135.4" cy="245.7" r="1.716" fill="#5b4bc4"/>
+<line x1="78.0" y1="276.5" x2="136.0" y2="276.5" stroke="#e3dfee" stroke-width="1"/>
+<text x="136.0" y="278.6" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="5" font-weight="400" fill="#6e6880" text-anchor="end">1</text>
+<rect x="78.0" y="246.0" width="30.3" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="78.0" y="256.9" width="24.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="74.0" y="296.0" width="66.0" height="37.1" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="135.4" cy="299.7" r="1.716" fill="#5b4bc4"/>
+<line x1="78.0" y1="330.5" x2="136.0" y2="330.5" stroke="#e3dfee" stroke-width="1"/>
+<text x="136.0" y="332.6" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="5" font-weight="400" fill="#6e6880" text-anchor="end">2</text>
+<rect x="78.0" y="300.0" width="30.3" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="79.8" cy="311.6" r="1.2" fill="#c9c4d6"/>
+<rect x="84.0" y="310.7" width="18.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="79.8" cy="315.2" r="1.2" fill="#c9c4d6"/>
+<rect x="84.0" y="314.3" width="15.9" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="79.8" cy="318.8" r="1.2" fill="#c9c4d6"/>
+<rect x="84.0" y="317.9" width="17.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="111.4" cy="311.6" r="1.2" fill="#c9c4d6"/>
+<rect x="115.6" y="310.7" width="12.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="111.4" cy="315.2" r="1.2" fill="#c9c4d6"/>
+<rect x="115.6" y="314.3" width="18.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="111.4" cy="318.8" r="1.2" fill="#c9c4d6"/>
+<rect x="115.6" y="317.9" width="14.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="74.0" y="350.0" width="66.0" height="37.1" rx="3" fill="#ffffff" stroke="#5b4bc4" stroke-width="2"/>
+<circle cx="135.4" cy="353.7" r="1.716" fill="#5b4bc4"/>
+<line x1="78.0" y1="384.5" x2="136.0" y2="384.5" stroke="#e3dfee" stroke-width="1"/>
+<text x="136.0" y="386.6" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="5" font-weight="400" fill="#6e6880" text-anchor="end">3</text>
+<rect x="78.0" y="354.0" width="30.3" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="79.8" cy="365.6" r="1.2" fill="#c9c4d6"/>
+<rect x="84.0" y="364.7" width="18.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="79.8" cy="369.2" r="1.2" fill="#c9c4d6"/>
+<rect x="84.0" y="368.3" width="15.9" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="79.8" cy="372.8" r="1.2" fill="#c9c4d6"/>
+<rect x="84.0" y="371.9" width="17.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="110.1" cy="365.6" r="1.2" fill="#c9c4d6"/>
+<rect x="114.3" y="364.7" width="13.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="110.1" cy="369.2" r="1.2" fill="#c9c4d6"/>
+<rect x="114.3" y="368.3" width="20.3" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="110.1" cy="372.8" r="1.2" fill="#c9c4d6"/>
+<rect x="114.3" y="371.9" width="16.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="110.1" cy="376.4" r="1.2" fill="#c9c4d6"/>
+<rect x="114.3" y="375.5" width="18.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="110.1" cy="380.0" r="1.2" fill="#c9c4d6"/>
+<rect x="114.3" y="379.1" width="12.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="74.0" y="404.0" width="66.0" height="37.1" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="135.4" cy="407.7" r="1.716" fill="#5b4bc4"/>
+<line x1="78.0" y1="438.5" x2="136.0" y2="438.5" stroke="#e3dfee" stroke-width="1"/>
+<text x="136.0" y="440.6" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="5" font-weight="400" fill="#6e6880" text-anchor="end">4</text>
+<rect x="78.0" y="408.0" width="30.3" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="79.8" cy="419.6" r="1.2" fill="#c9c4d6"/>
+<rect x="84.0" y="418.7" width="18.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="79.8" cy="423.2" r="1.2" fill="#c9c4d6"/>
+<rect x="84.0" y="422.3" width="15.9" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="79.8" cy="426.8" r="1.2" fill="#c9c4d6"/>
+<rect x="84.0" y="425.9" width="17.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="111.4" cy="419.6" r="1.2" fill="#c9c4d6"/>
+<rect x="115.6" y="418.7" width="12.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="111.4" cy="423.2" r="1.2" fill="#c9c4d6"/>
+<rect x="115.6" y="422.3" width="18.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="111.4" cy="426.8" r="1.2" fill="#c9c4d6"/>
+<rect x="115.6" y="425.9" width="14.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="74.0" y="458.0" width="66.0" height="37.1" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="135.4" cy="461.7" r="1.716" fill="#5b4bc4"/>
+<line x1="78.0" y1="492.5" x2="136.0" y2="492.5" stroke="#e3dfee" stroke-width="1"/>
+<text x="136.0" y="494.6" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="5" font-weight="400" fill="#6e6880" text-anchor="end">5</text>
+<rect x="78.0" y="462.0" width="30.3" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="78.0" y="472.9" width="24.4" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="152.0" y="228.0" width="748.0" height="548.0" rx="0" fill="#efecf6"/>
+<text x="175.0" y="254.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#6e6880" text-anchor="start">Slide 3 · follows layout “Two lists”</text>
+<rect x="175.0" y="264.0" width="640.0" height="360.0" rx="4" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="770.2" cy="300.0" r="16" fill="#5b4bc4"/>
+<line x1="213.4" y1="598.8" x2="776.6" y2="598.8" stroke="#e3dfee" stroke-width="1"/>
+<text x="776.6" y="618.6" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end">3</text>
+<text x="213.4" y="326.8" font-family="Fraunces, Georgia, serif" font-size="28" font-weight="500" fill="#1f1a33" text-anchor="start">Quarterly results</text>
+<circle cx="216.4" cy="396.4" r="2.2" fill="#6e6880"/>
+<text x="227.4" y="400.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Revenue up 12 %</text>
+<circle cx="216.4" cy="420.4" r="2.2" fill="#6e6880"/>
+<text x="227.4" y="424.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Churn down to 3.1 %</text>
+<circle cx="216.4" cy="444.4" r="2.2" fill="#6e6880"/>
+<text x="227.4" y="448.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Two new regions</text>
+<circle cx="216.4" cy="468.4" r="2.2" fill="#6e6880"/>
+<text x="227.4" y="472.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Hiring on plan</text>
+<rect x="520.6" y="386.4" width="256.0" height="151.2" rx="2" fill="none" stroke="#6e6880" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="772.6" y="532.6" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="400" fill="#6e6880" text-anchor="end">was</text>
+<circle cx="518.8" cy="400.4" r="2.2" fill="#6e6880"/>
+<text x="529.8" y="404.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Chips remain tight</text>
+<circle cx="518.8" cy="424.4" r="2.2" fill="#6e6880"/>
+<text x="529.8" y="428.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Two vendors, one sole source</text>
+<circle cx="518.8" cy="448.4" r="2.2" fill="#6e6880"/>
+<text x="529.8" y="452.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Price rises passed on in Q3</text>
+<circle cx="518.8" cy="472.4" r="2.2" fill="#6e6880"/>
+<text x="529.8" y="476.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Currency effect about −1.4 %</text>
+<circle cx="518.8" cy="496.4" r="2.2" fill="#6e6880"/>
+<text x="529.8" y="500.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Q4 pipeline is 20 % wider</text>
+<circle cx="518.8" cy="520.4" r="2.2" fill="#6e6880"/>
+<text x="529.8" y="524.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Support backlog cleared</text>
+<circle cx="518.8" cy="544.4" r="2.2" fill="#6e6880"/>
+<text x="529.8" y="548.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Legal review of new terms</text>
+<circle cx="518.8" cy="568.4" r="2.2" fill="#6e6880"/>
+<text x="529.8" y="572.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13.5" font-weight="400" fill="#1f1a33" text-anchor="start">Hiring freeze lifted in May</text>
+<rect x="507.8" y="386.4" width="281.6" height="198.0" rx="0" fill="none" stroke="#5b4bc4" stroke-width="1.6"/>
+<rect x="504.3" y="382.9" width="7.0" height="7.0" rx="1" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.4"/>
+<rect x="645.1" y="382.9" width="7.0" height="7.0" rx="1" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.4"/>
+<rect x="785.9" y="382.9" width="7.0" height="7.0" rx="1" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.4"/>
+<rect x="504.3" y="481.9" width="7.0" height="7.0" rx="1" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.4"/>
+<rect x="785.9" y="481.9" width="7.0" height="7.0" rx="1" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.4"/>
+<rect x="504.3" y="580.9" width="7.0" height="7.0" rx="1" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.4"/>
+<rect x="645.1" y="580.9" width="7.0" height="7.0" rx="1" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.4"/>
+<rect x="785.9" y="580.9" width="7.0" height="7.0" rx="1" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.4"/>
+<rect x="513.8" y="362.4" width="160.6" height="20.0" rx="10" fill="#fdebd9" stroke="#f2a057" stroke-width="1"/>
+<text x="594.1" y="376.4" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#1f1a33" text-anchor="middle">Right list · placeholder</text>
+<rect x="175.0" y="646.0" width="640.0" height="86.0" rx="10" fill="#ece9f8" stroke="#5b4bc4" stroke-width="1"/>
+<rect x="189.0" y="660.0" width="54.0" height="30.4" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="239.2" cy="663.0" r="1.404" fill="#5b4bc4"/>
+<line x1="192.2" y1="688.2" x2="239.8" y2="688.2" stroke="#e3dfee" stroke-width="1"/>
+<rect x="192.2" y="663.3" width="24.8" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="194.0" cy="673.3" r="1.2" fill="#c9c4d6"/>
+<rect x="198.2" y="672.4" width="14.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="194.0" cy="676.9" r="1.2" fill="#c9c4d6"/>
+<rect x="198.2" y="676.0" width="12.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="218.9" cy="673.3" r="1.2" fill="#c9c4d6"/>
+<rect x="223.1" y="672.4" width="10.7" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="218.9" cy="676.9" r="1.2" fill="#c9c4d6"/>
+<rect x="223.1" y="676.0" width="15.6" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="218.9" cy="680.5" r="1.2" fill="#c9c4d6"/>
+<rect x="223.1" y="679.6" width="12.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="218.9" cy="684.1" r="1.2" fill="#c9c4d6"/>
+<rect x="223.1" y="683.2" width="14.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="215.6" y="668.8" width="26.8" height="19.7" rx="2" fill="none" stroke="#f2a057" stroke-width="1.6" stroke-dasharray="3 2"/>
+<text x="257.0" y="674.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">You changed the frame of “Right list”.</text>
+<text x="257.0" y="692.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#6e6880" text-anchor="start">This slide and 11 others follow “Two lists”.</text>
+<rect x="257.0" y="700.0" width="194.8" height="26.0" rx="7" fill="#5b4bc4"/>
+<text x="354.4" y="717.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#ffffff" text-anchor="middle">Update layout · 12 slides</text>
+<rect x="459.8" y="700.0" width="201.5" height="26.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="560.5" y="717.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">New layout from this slide</text>
+<rect x="669.2" y="700.0" width="53.0" height="26.0" rx="7" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="695.8" y="717.3" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="middle">Undo</text>
+<text x="175.0" y="754.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">More than one slide? The preview (sheet 2) opens before anything changes.</text>
+<text x="175.0" y="770.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">Leaving the slide without choosing could count as “Update layout”, with Undo: your call.</text>
+<rect x="900.0" y="228.0" width="128.0" height="548.0" rx="0" fill="#f7f5fb"/>
+<line x1="900.0" y1="228.0" x2="900.0" y2="776.0" stroke="#e3dfee" stroke-width="1"/>
+<rect x="908.0" y="238.0" width="86.0" height="24.0" rx="6" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="951.0" y="254.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="500" fill="#1f1a33" text-anchor="middle">History</text>
+<circle cx="914.0" cy="281.0" r="4" fill="#d6477a"/>
+<text x="924.0" y="284.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10" font-weight="500" fill="#1f1a33" text-anchor="start">anna</text>
+<text x="924.0" y="297.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">resize</text>
+<circle cx="914.0" cy="315.0" r="4" fill="#d6477a"/>
+<text x="924.0" y="318.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10" font-weight="500" fill="#1f1a33" text-anchor="start">anna</text>
+<text x="924.0" y="331.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="10" font-weight="400" fill="#6e6880" text-anchor="start">update layout</text>
+<rect x="1070.0" y="96.0" width="590.0" height="330.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1092.0" y="126.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">B · Option 2: decide the scope before editing</text>
+<text x="1092.0" y="144.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Like the style popover: a switch in the layout chip says where placeholder changes go.</text>
+<rect x="1094.0" y="164.0" width="330.0" height="240.0" rx="10" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="1092.0" y="160.0" width="330.0" height="240.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1110.0" y="186.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">Layout · Two lists</text>
+<line x1="1092.0" y1="196.0" x2="1422.0" y2="196.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="1110.0" y="218.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="500" fill="#6e6880" text-anchor="start">Where a change to a placeholder goes</text>
+<circle cx="1117.0" cy="238.0" r="7" fill="#ffffff" stroke="#5b4bc4" stroke-width="1.4"/>
+<circle cx="1117.0" cy="238.0" r="3.6" fill="#5b4bc4"/>
+<text x="1132.0" y="242.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Every slide with “Two lists” (12)</text>
+<circle cx="1117.0" cy="266.0" r="7" fill="#ffffff" stroke="#6e6880" stroke-width="1.4"/>
+<text x="1132.0" y="270.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="400" fill="#1f1a33" text-anchor="start">A new layout, made from this slide</text>
+<text x="1132.0" y="286.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">named later, like a deviating style</text>
+<line x1="1092.0" y1="304.0" x2="1422.0" y2="304.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="1110.0" y="326.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Edit this layout…</text>
+<text x="1404.0" y="326.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+E</text>
+<text x="1110.0" y="350.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">All layouts…</text>
+<text x="1404.0" y="350.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+E</text>
+<text x="1110.0" y="382.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">The switch holds for the current popover only, as in styles.</text>
+<text x="1448.0" y="200.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ the same model as styles</text>
+<text x="1448.0" y="217.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#1f1a33" text-anchor="start">+ no strip appearing during a drag</text>
+<text x="1448.0" y="234.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">− a hand drag has no obvious place</text>
+<text x="1448.0" y="251.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">   to ask; the switch is easy to forget</text>
+<text x="1448.0" y="268.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">− the default decides how often a</text>
+<text x="1448.0" y="285.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="start">   new layout is made by accident</text>
+<rect x="1070.0" y="446.0" width="590.0" height="356.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="1092.0" y="476.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">C · The layout chip: choose, edit, manage</text>
+<text x="1092.0" y="494.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Each layout shows its name, what it is for, and how many slides follow it.</text>
+<rect x="1094.0" y="504.0" width="540.0" height="262.0" rx="10" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="1092.0" y="500.0" width="540.0" height="262.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<rect x="1108.0" y="508.0" width="56.0" height="31.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1160.1" cy="511.1" r="1.456" fill="#5b4bc4"/>
+<line x1="1111.4" y1="537.3" x2="1160.6" y2="537.3" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1111.4" y="511.4" width="25.7" height="2.2" rx="1" fill="#1f1a33"/>
+<rect x="1111.4" y="520.6" width="20.7" height="2.2" rx="1" fill="#1f1a33"/>
+<text x="1176.0" y="522.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Title slide</text>
+<text x="1176.0" y="536.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">opens a talk</text>
+<text x="1616.0" y="528.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">1 slide</text>
+<rect x="1108.0" y="544.0" width="56.0" height="31.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1160.1" cy="547.1" r="1.456" fill="#5b4bc4"/>
+<line x1="1111.4" y1="573.3" x2="1160.6" y2="573.3" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1111.4" y="547.4" width="25.7" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="1113.2" cy="557.7" r="1.2" fill="#c9c4d6"/>
+<rect x="1117.4" y="556.8" width="39.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1113.2" cy="561.3" r="1.2" fill="#c9c4d6"/>
+<rect x="1117.4" y="560.4" width="33.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1113.2" cy="564.9" r="1.2" fill="#c9c4d6"/>
+<rect x="1117.4" y="564.0" width="37.2" height="1.8" rx="1" fill="#c9c4d6"/>
+<text x="1176.0" y="558.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Title and content</text>
+<text x="1176.0" y="572.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">one idea, in words</text>
+<text x="1616.0" y="564.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">6 slides</text>
+<rect x="1098.0" y="578.0" width="528.0" height="36.0" rx="7" fill="#fdebd9"/>
+<rect x="1108.0" y="580.0" width="56.0" height="31.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1160.1" cy="583.1" r="1.456" fill="#5b4bc4"/>
+<line x1="1111.4" y1="609.3" x2="1160.6" y2="609.3" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1111.4" y="583.4" width="25.7" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="1113.2" cy="593.7" r="1.2" fill="#c9c4d6"/>
+<rect x="1117.4" y="592.8" width="15.1" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1113.2" cy="597.3" r="1.2" fill="#c9c4d6"/>
+<rect x="1117.4" y="596.4" width="12.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1113.2" cy="600.9" r="1.2" fill="#c9c4d6"/>
+<rect x="1117.4" y="600.0" width="14.1" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1140.0" cy="593.7" r="1.2" fill="#c9c4d6"/>
+<rect x="1144.2" y="592.8" width="9.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1140.0" cy="597.3" r="1.2" fill="#c9c4d6"/>
+<rect x="1144.2" y="596.4" width="14.4" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1140.0" cy="600.9" r="1.2" fill="#c9c4d6"/>
+<rect x="1144.2" y="600.0" width="11.8" height="1.8" rx="1" fill="#c9c4d6"/>
+<text x="1176.0" y="594.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#1f1a33" text-anchor="start">Two lists</text>
+<text x="1176.0" y="608.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">compare two things</text>
+<text x="1616.0" y="600.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">12 slides</text>
+<path d="M1540 594 l4 4 l8 -9" fill="none" stroke="#5b4bc4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1108.0" y="616.0" width="56.0" height="31.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1160.1" cy="619.1" r="1.456" fill="#5b4bc4"/>
+<line x1="1111.4" y1="645.3" x2="1160.6" y2="645.3" stroke="#e3dfee" stroke-width="1"/>
+<rect x="1111.4" y="619.4" width="25.7" height="2.2" rx="1" fill="#1f1a33"/>
+<circle cx="1113.2" cy="629.7" r="1.2" fill="#c9c4d6"/>
+<rect x="1117.4" y="628.8" width="17.1" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1113.2" cy="633.3" r="1.2" fill="#c9c4d6"/>
+<rect x="1117.4" y="632.4" width="14.5" height="1.8" rx="1" fill="#c9c4d6"/>
+<circle cx="1113.2" cy="636.9" r="1.2" fill="#c9c4d6"/>
+<rect x="1117.4" y="636.0" width="16.0" height="1.8" rx="1" fill="#c9c4d6"/>
+<rect x="1138.2" y="626.7" width="22.4" height="13.2" rx="1" fill="#e3dfee"/>
+<path d="M1140.5 638.0 l6.7 -6.0 l5.6 4.0 l3.4 -2.6 l3.4 4.6" fill="none" stroke="#c9c4d6" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1176.0" y="630.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Content and picture</text>
+<text x="1176.0" y="644.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">an idea with an image</text>
+<text x="1616.0" y="636.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">3 slides</text>
+<rect x="1108.0" y="652.0" width="56.0" height="31.5" rx="3" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<circle cx="1160.1" cy="655.1" r="1.456" fill="#5b4bc4"/>
+<line x1="1111.4" y1="681.3" x2="1160.6" y2="681.3" stroke="#e3dfee" stroke-width="1"/>
+<text x="1176.0" y="666.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Empty</text>
+<text x="1176.0" y="680.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10.5" font-weight="400" fill="#6e6880" text-anchor="start">free arrangement</text>
+<text x="1616.0" y="672.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">2 slides</text>
+<line x1="1092.0" y1="692.0" x2="1632.0" y2="692.0" stroke="#e3dfee" stroke-width="1"/>
+<text x="1110.0" y="716.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Edit this layout…</text>
+<text x="1614.0" y="716.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+E</text>
+<text x="1110.0" y="742.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">All layouts…</text>
+<text x="1614.0" y="742.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+E</text>
+<rect x="40.0" y="822.0" width="1620.0" height="304.0" rx="14" fill="#fbfaf8" stroke="#d8d2e6" stroke-width="1"/>
+<text x="62.0" y="852.0" font-family="Fraunces, Georgia, serif" font-size="16.5" font-weight="600" fill="#1f1a33" text-anchor="start">D · Format menu — a proposal; where these entries belong is a question for you</text>
+<text x="62.0" y="870.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.3" font-weight="400" fill="#6e6880" text-anchor="start">Same order as Style ▸ (Apply…, Edit…, All…). All six keys are free in claudia-menus.xlsx (version 6) and are not entered there yet.</text>
+<rect x="64.0" y="888.0" width="250.0" height="214.0" rx="10" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="62.0" y="884.0" width="250.0" height="214.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="82.0" y="912.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Style</text>
+<text x="298.0" y="912.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">▸</text>
+<rect x="68.0" y="930.0" width="238.0" height="32.0" rx="6" fill="#ece9f8"/>
+<text x="82.0" y="950.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Layout</text>
+<text x="298.0" y="950.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">▸</text>
+<rect x="68.0" y="968.0" width="238.0" height="32.0" rx="6" fill="#ece9f8"/>
+<text x="82.0" y="988.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Template</text>
+<text x="298.0" y="988.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">▸</text>
+<text x="82.0" y="1026.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">List</text>
+<text x="298.0" y="1026.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">▸</text>
+<text x="82.0" y="1064.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Palette</text>
+<text x="298.0" y="1064.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+K</text>
+<rect x="326.0" y="920.0" width="330.0" height="120.0" rx="10" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="324.0" y="916.0" width="330.0" height="120.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="342.0" y="944.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Apply…</text>
+<text x="638.0" y="944.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+L</text>
+<text x="342.0" y="978.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Edit this layout…</text>
+<text x="638.0" y="978.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+E</text>
+<text x="342.0" y="1012.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">All layouts…</text>
+<text x="638.0" y="1012.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Shift+Alt+E</text>
+<text x="332.0" y="908.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#6e6880" text-anchor="start">Layout ▸</text>
+<rect x="668.0" y="958.0" width="340.0" height="120.0" rx="10" fill="#1f1a33" fill-opacity="0.08"/>
+<rect x="666.0" y="954.0" width="340.0" height="120.0" rx="10" fill="#ffffff" stroke="#d8d2e6" stroke-width="1"/>
+<text x="684.0" y="982.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Change theme…</text>
+<text x="990.0" y="982.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+T</text>
+<text x="684.0" y="1016.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Change template…</text>
+<text x="990.0" y="1016.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+M</text>
+<text x="684.0" y="1050.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" font-weight="500" fill="#1f1a33" text-anchor="start">Save as template…</text>
+<text x="990.0" y="1050.0" font-family="'JetBrains Mono', 'DejaVu Sans Mono', monospace" font-size="11" font-weight="400" fill="#6e6880" text-anchor="end">Ctrl+Alt+J</text>
+<text x="674.0" y="946.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" font-weight="500" fill="#6e6880" text-anchor="start">Template ▸</text>
+<text x="1050.0" y="892.0" font-family="Fraunces, Georgia, serif" font-size="13" font-weight="600" fill="#1f1a33" text-anchor="start">To decide with you</text>
+<text x="1050.0" y="916.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">1 · Layout ▸ and Template ▸ in Format, beside Style ▸ — or somewhere else?</text>
+<text x="1050.0" y="936.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">2 · Save as template… writes a file: here, or under File ▸ Manage ▸ Export…?</text>
+<text x="1050.0" y="956.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">3 · Entries are creates-only for now; computes slides (E6.31) get none.</text>
+<text x="1050.0" y="976.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">4 · composes has named page styles (E9.14), a sibling of layouts: a</text>
+<text x="1050.0" y="996.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">     Layout ▸ there too, later?</text>
+<text x="1050.0" y="1016.0" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" font-weight="400" fill="#1f1a33" text-anchor="start">5 · The keys above are proposals; Ctrl+Alt+L / Ctrl+Alt+E were D376’s.</text></svg>
