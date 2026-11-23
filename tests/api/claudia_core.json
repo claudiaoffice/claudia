@@ -960,9 +960,9 @@
  },
  "ImageError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },
@@ -1298,6 +1298,9 @@
  "NO_NUMBERING": {
   "value": "'none'"
  },
+ "N_": {
+  "function": "(template: 'str') -> 'str'"
+ },
  "OBJECT_KINDS": {
   "value": "('text', 'shape', 'image', 'diagram', 'container', 'table')"
  },
@@ -1458,9 +1461,9 @@
  },
  "PageSetupError": {
   "class": [
-   "ValueError"
+   "Refusal"
   ],
-  "init": "(...)",
+  "init": "(template: 'str', **params: 'object')",
   "methods": {},
   "properties": []
  },
@@ -1682,6 +1685,14 @@
    "to_data": "(self) -> 'dict'",
    "with_show": "(self, show: 'Show') -> 'RefField'"
   },
+  "properties": []
+ },
+ "Refusal": {
+  "class": [
+   "ValueError"
+  ],
+  "init": "(template: 'str', **params: 'object')",
+  "methods": {},
   "properties": []
  },
  "Region": {
@@ -2903,7 +2914,7 @@
   "function": "(text: 'str') -> 'str'"
  },
  "name_problem": {
-  "function": "(text: 'str') -> 'str | None'"
+  "function": "(text: 'str') -> 'Refusal | None'"
  },
  "new_object_size": {
   "function": "(most_w: 'float', most_h: 'float', picture_w: 'float', picture_h: 'float', *, least: 'float', room: 'float | None' = None, smallest: 'int' = 20) -> 'tuple[int, int]'"

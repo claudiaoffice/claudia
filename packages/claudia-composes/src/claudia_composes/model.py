@@ -34,6 +34,7 @@ from claudia_core import (
     Palette,
     Paragraph,
     Placed,
+    Refusal,
     Region,
     Requirements,
     Run,
@@ -1119,9 +1120,9 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
         if self.index_of(paragraph_id) != self.index_of(into) + 1:
             raise ValueError("a paragraph can only be joined to the one right before it")
         if second.generated is not None:
-            raise ValueError("a table of contents cannot be joined to a paragraph; remove it instead")
+            raise Refusal("a table of contents cannot be joined to a paragraph; remove it instead")
         if first.generated is not None and second.text:
-            raise ValueError("text cannot be joined into a table of contents")
+            raise Refusal("text cannot be joined into a table of contents")
         if len(first.text) != at:
             raise ValueError("the paragraph before it is not as long as the command says")
         joined = first.with_text(first.text + second.text, insert_runs(first.runs, at, second.runs))

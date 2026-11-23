@@ -35,6 +35,7 @@ from claudia_core import (
     ObjectSet,
     Palette,
     Placed,
+    Refusal,
     Region,
     Requirements,
     Run,
@@ -77,14 +78,17 @@ def _checked_notes(text: object) -> str:
         raise ValueError("notes must not contain a null character")
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     if len(text) > MAX_NOTES_LENGTH:
-        raise ValueError(f"notes are at most {MAX_NOTES_LENGTH} characters")
+        raise Refusal("notes are at most {max_notes_length} characters", max_notes_length=MAX_NOTES_LENGTH)
     return text
 
 
 def _check_seconds(seconds: object) -> None:
     """``ValueError`` unless ``seconds`` is a whole number from 1 to a day."""
     if not _is_whole(seconds) or not 1 <= seconds <= MAX_SLIDE_SECONDS:
-        raise ValueError(f"a planned time is a whole number of seconds from 1 to {MAX_SLIDE_SECONDS}")
+        raise Refusal(
+            "a planned time is a whole number of seconds from 1 to {max_slide_seconds}",
+            max_slide_seconds=MAX_SLIDE_SECONDS,
+        )
 
 
 @dataclass(frozen=True)
@@ -282,7 +286,11 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         if (anchor.x, anchor.y) != nudge_into(
             anchor.x, anchor.y, body.w, body.h, body.rotation, SLIDE_WIDTH, SLIDE_HEIGHT
         ):
-            raise ValueError(f"the object must stay on the slide ({SLIDE_WIDTH} by {SLIDE_HEIGHT} units)")
+            raise Refusal(
+                "the object must stay on the slide ({slide_width} by {slide_height} units)",
+                slide_width=SLIDE_WIDTH,
+                slide_height=SLIDE_HEIGHT,
+            )
 
     def turned_anchor(self, obj: SlideObject, rotation: int) -> SlideAnchor:
         """The nearest place for ``obj`` at which turned to ``rotation`` its outline is on the slide."""
@@ -290,9 +298,13 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         place = nudge_into(obj.anchor.x, obj.anchor.y, body.w, body.h, rotation, SLIDE_WIDTH, SLIDE_HEIGHT)
         if place is None:
             out_w, out_h = turned_extent(body.w, body.h, rotation)
-            raise ValueError(
-                f"this object is too large to turn that way: it would be {out_w} by {out_h} units on a slide of "
-                f"{SLIDE_WIDTH} by {SLIDE_HEIGHT}"
+            raise Refusal(
+                "this object is too large to turn that way: it would be {out_w} by {out_h} units on a slide of "
+                "{slide_width} by {slide_height}",
+                out_w=out_w,
+                out_h=out_h,
+                slide_width=SLIDE_WIDTH,
+                slide_height=SLIDE_HEIGHT,
             )
         return SlideAnchor(obj.anchor.slide, *place)
 

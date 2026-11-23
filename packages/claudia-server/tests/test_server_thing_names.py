@@ -125,6 +125,21 @@ def test_a_clash_is_refused_with_the_name_of_the_one_who_has_it(deck):
     assert name_of(deck, one) == "Text box 1"
 
 
+def test_a_clash_is_said_in_the_language_of_the_one_who_asked(book):
+    """A refusal of the model reaches a German person in German (CODE-78, D1510)."""
+    on_book(book, "add_sheet", {"name": "Costs"})
+    with pytest.raises(RequestError) as caught:
+        on_book(book, "rename_thing", {"id": "s1", "name": "costs"}, locale="de")
+    assert caught.value.to_dict("de")["message"] == "Es gibt schon ein Tabellenblatt namens „Costs“"
+    assert caught.value.to_dict("en")["message"] == "There is already a sheet called “Costs”"
+
+
+def test_a_name_without_text_is_refused_in_german_too(book):
+    with pytest.raises(RequestError) as caught:
+        on_book(book, "rename_thing", {"id": "s1", "name": "   "}, locale="de")
+    assert caught.value.to_dict("de")["message"] == "Ein Name braucht etwas Text"
+
+
 @pytest.mark.parametrize("bad", ["", "   ", "x" * 61])
 def test_a_name_must_have_some_text_and_not_too_much(deck, bad):
     box = add_text(deck)

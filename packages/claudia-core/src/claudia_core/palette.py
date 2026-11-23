@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from .commands import Command, CommandRegistry, core_commands
 from .css import rgb_of, roles_used
+from .errors import Refusal
 from .styles import StylesChanged, palette_colours
 
 if TYPE_CHECKING:
@@ -170,7 +171,9 @@ def contrast(one: str, other: str) -> float:
 def _clean_name(name: str) -> str:
     text = " ".join(name.split()) if "\n" not in name and "\r" not in name else ""
     if not text or len(text) > _MAX_NAME or not text.isprintable():
-        raise ValueError(f"A role name is one line of 1 to {_MAX_NAME} characters, got {name!r}")
+        raise Refusal(
+            "A role name is one line of 1 to {max_name} characters, got {name!r}", max_name=_MAX_NAME, name=name
+        )
     return text
 
 
@@ -240,12 +243,14 @@ class Palette:
         if role.id in self._roles:
             raise ValueError(f"The colour role {role.id!r} exists already")
         if len(self._roles) >= MAX_ROLES:
-            raise ValueError(f"A palette holds at most {MAX_ROLES} colour roles")
+            raise Refusal("A palette holds at most {max_roles} colour roles", max_roles=MAX_ROLES)
         name = _clean_name(role.name)
         if any(other.name.casefold() == name.casefold() for other in self._roles.values()):
-            raise ValueError(f"There is already a colour role named “{name}”")
+            raise Refusal("There is already a colour role named “{name}”", name=name)
         if len(role.purpose) > _MAX_PURPOSE or "\n" in role.purpose:
-            raise ValueError(f"The purpose of a colour role is one line of up to {_MAX_PURPOSE} characters")
+            raise Refusal(
+                "The purpose of a colour role is one line of up to {max_purpose} characters", max_purpose=_MAX_PURPOSE
+            )
         self._roles[role.id] = replace(role, name=name, colour=_clean_colour(role.colour))
 
     def set_colour(self, role_id: str, colour: str) -> None:
@@ -325,7 +330,11 @@ def _styles_still_fit(ctx: Context, palette: Palette) -> None:
         missing = palette.missing_from(style.css)
         if missing:
             names = ", ".join(sorted(missing))
-            raise ValueError(f"The style “{style.name}” uses the colour role(s) {names}, which this palette has not")
+            raise Refusal(
+                "The style “{name}” uses the colour role(s) {names}, which this palette has not",
+                name=style.name,
+                names=names,
+            )
 
 
 @core_commands.register

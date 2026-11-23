@@ -36,6 +36,8 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable
 
+from claudia_core import Refusal
+
 from .limits import MAX_COLS, MAX_ROWS
 from .refs import StructuralEdit
 
@@ -191,7 +193,7 @@ class CellStyles:
             kept.extend((rest, style) for rest in rests)
         kept.extend(given)
         if len(self) - len(self._ranges[(slot, layer)]) + len(kept) > MAX_STYLE_RANGES:
-            raise ValueError(f"a sheet holds at most {MAX_STYLE_RANGES} style ranges")
+            raise Refusal("a sheet holds at most {max_style_ranges} style ranges", max_style_ranges=MAX_STYLE_RANGES)
         self._ranges[(slot, layer)] = kept
 
     def plan(self, slot: str, area: Area, style: str | None) -> list[tuple[str, Area, tuple[Piece, ...]]]:

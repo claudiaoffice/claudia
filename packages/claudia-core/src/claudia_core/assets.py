@@ -32,6 +32,8 @@ from collections.abc import Iterator
 from dataclasses import dataclass, replace
 from xml.etree import ElementTree
 
+from .errors import N_, Refusal
+
 SUPPORTED_IMAGE_FORMATS = ("jpeg", "png", "gif", "bmp", "svg")
 BLANK_GIF = bytes.fromhex("47494638396101000100800000c8c8c8c8c8c82c00000000010001000002024401003b")
 """A one-pixel grey GIF: what a redacted picture shows (D720)."""
@@ -62,7 +64,7 @@ _SVG_EVENT_ATTR = re.compile(r"^on[a-z]+$", re.IGNORECASE)
 _SVG_HREF_LOCAL_NAMES = {"href"}  # covers xlink:href too: ElementTree strips the namespace prefix off local-name()
 
 
-class ImageError(ValueError):
+class ImageError(Refusal):
     """An image that cannot be taken in; the message says what is wrong, for a dialog to show as it stands."""
 
 
@@ -226,9 +228,9 @@ def decode_image(data: bytes, *, checked_drawing: bool = False) -> ImageAsset:
     (every glyph of a typeset page is one), which a picture somebody imports may not have. A ``<use>`` that points
     anywhere but into the picture is still removed, and so is everything else unsafe (D394)."""
     if not isinstance(data, bytes) or not data:
-        raise ImageError("no image data")
+        raise ImageError(N_("no image data"))
     if len(data) > MAX_IMAGE_BYTES:
-        raise ImageError(f"an image is at most {MAX_IMAGE_BYTES // (1024 * 1024)} MB")
+        raise ImageError(N_("an image is at most {megabytes} MB"), megabytes=MAX_IMAGE_BYTES // (1024 * 1024))
     fmt = _sniff_format(data)
     image_id = hashlib.sha256(data).hexdigest()
     if fmt == "jpeg":
@@ -263,7 +265,7 @@ def _sniff_format(data: bytes) -> str:
     stripped = data.lstrip(b" \t\r\n\xef\xbb\xbf")  # leading whitespace, or a UTF-8 BOM
     if stripped.startswith(b"<?xml") or stripped.startswith(b"<svg") or b"<svg" in stripped[:4096]:
         return "svg"
-    raise ImageError(f"not a supported image: expected one of {', '.join(SUPPORTED_IMAGE_FORMATS)}")
+    raise ImageError(N_("not a supported image: expected one of {formats}"), formats=", ".join(SUPPORTED_IMAGE_FORMATS))
 
 
 # -- JPEG: scan the markers for the first Start Of Frame -------------------------------------------------------
@@ -292,17 +294,17 @@ def _jpeg_dimensions(data: bytes) -> tuple[int, int]:
                 return width, height
             break
         position += length
-    raise ImageError("not a well-formed JPEG: no frame header with a size was found")
+    raise ImageError(N_("not a well-formed JPEG: no frame header with a size was found"))
 
 
 # -- BMP: the BITMAPINFOHEADER follows the 14-byte file header --------------------------------------------------
 def _bmp_dimensions(data: bytes) -> tuple[int, int]:
     if len(data) < 26:
-        raise ImageError("not a well-formed BMP: too short for a header")
+        raise ImageError(N_("not a well-formed BMP: too short for a header"))
     width, raw_height = struct.unpack_from("<ii", data, 18)
     height = abs(raw_height)  # a negative height means the rows run top-down; the size is still positive
     if width <= 0 or height <= 0:
-        raise ImageError("not a well-formed BMP: no positive width and height in the header")
+        raise ImageError(N_("not a well-formed BMP: no positive width and height in the header"))
     return width, height
 
 
@@ -324,7 +326,7 @@ def _png_chunks(data: bytes) -> Iterator[tuple[bytes, int, int]]:
         kind = data[position + 4 : position + 8]
         end = position + 12 + length  # 4 length + 4 type + data + 4 CRC
         if length > len(data) or end > len(data):
-            raise ImageError("not a well-formed PNG: a chunk runs past the end of the file")
+            raise ImageError(N_("not a well-formed PNG: a chunk runs past the end of the file"))
         yield kind, position, end
         if kind == b"IEND":
             return
@@ -339,15 +341,15 @@ def _png_info(data: bytes) -> tuple[int, int, bool]:
     rather than read as a shorter one (the same reasoning as the GIF sub-block walk below — a reader that only
     looked at where it got to would take a truncated file for a well-formed one)."""
     if len(data) < 24:
-        raise ImageError("not a well-formed PNG: too short for a header")
+        raise ImageError(N_("not a well-formed PNG: too short for a header"))
     kinds = [kind for kind, _, _ in _png_chunks(data)]
     if not kinds or kinds[0] != b"IHDR":
-        raise ImageError("not a well-formed PNG: the first chunk must be IHDR")
+        raise ImageError(N_("not a well-formed PNG: the first chunk must be IHDR"))
     if kinds[-1] != b"IEND":
-        raise ImageError("not a well-formed PNG: the chunks end without IEND")
+        raise ImageError(N_("not a well-formed PNG: the chunks end without IEND"))
     width, height = struct.unpack_from(">II", data, len(_PNG_SIGNATURE) + 8)
     if width <= 0 or height <= 0:
-        raise ImageError("not a well-formed PNG: no positive width and height in the header")
+        raise ImageError(N_("not a well-formed PNG: no positive width and height in the header"))
     return width, height, b"acTL" in kinds
 
 
@@ -369,7 +371,7 @@ def _gif_data_subblocks(data: bytes, position: int) -> int:
             # A length byte claimed more data than remains (or the terminator was never reached): this must be
             # refused outright, not silently stop here — a caller that only checks the position it gets back
             # would otherwise read this as "no more blocks" and undercount frames instead of seeing an error.
-            raise ImageError("not a well-formed GIF: a truncated data sub-block")
+            raise ImageError(N_("not a well-formed GIF: a truncated data sub-block"))
         if data[position] == 0:
             return position + 1
         position += 1 + data[position]
@@ -378,7 +380,7 @@ def _gif_data_subblocks(data: bytes, position: int) -> int:
 def _gif_blocks(data: bytes) -> list[tuple[int, int]]:
     """``(start, end)`` of each top-level block after the header and logical screen descriptor, up to the trailer."""
     if len(data) < 13:
-        raise ImageError("not a well-formed GIF: too short for a header")
+        raise ImageError(N_("not a well-formed GIF: too short for a header"))
     position = 13
     if data[10] & 0x80:  # a global color table follows, sized by the low 3 bits of the packed byte
         position += 3 * (2 << (data[10] & 0x07))
@@ -393,13 +395,13 @@ def _gif_blocks(data: bytes) -> list[tuple[int, int]]:
         elif tag == 0x2C:  # image descriptor
             position += 10
             if position > len(data):
-                raise ImageError("not a well-formed GIF: a truncated image descriptor")
+                raise ImageError(N_("not a well-formed GIF: a truncated image descriptor"))
             if data[position - 1] & 0x80:  # a local color table follows
                 position += 3 * (2 << (data[position - 1] & 0x07))
             position += 1  # the LZW minimum code size byte
             position = _gif_data_subblocks(data, position)
         else:
-            raise ImageError(f"not a well-formed GIF: unexpected block {tag:#x}")
+            raise ImageError(N_("not a well-formed GIF: unexpected block {tag:#x}"), tag=tag)
         blocks.append((start, position))
     return blocks
 
@@ -407,10 +409,10 @@ def _gif_blocks(data: bytes) -> list[tuple[int, int]]:
 def _gif_info(data: bytes) -> tuple[int, int, int]:
     width, height = struct.unpack_from("<HH", data, 6)
     if width <= 0 or height <= 0:
-        raise ImageError("not a well-formed GIF: no positive width and height in the header")
+        raise ImageError(N_("not a well-formed GIF: no positive width and height in the header"))
     frames = sum(1 for start, _ in _gif_blocks(data) if data[start] == 0x2C)
     if frames == 0:
-        raise ImageError("not a well-formed GIF: no image in it")
+        raise ImageError(N_("not a well-formed GIF: no image in it"))
     return width, height, frames
 
 
@@ -431,13 +433,13 @@ def _sanitize_svg(data: bytes, keep: frozenset[str] = frozenset()) -> bytes:
     # the parser) if it is pushed past any fixed-size window by padding earlier in the prolog (e.g. a long
     # comment), so a bounded scan here would be a bypass, not a defense.
     if _SVG_DOCTYPE_OR_ENTITY.search(data.decode("utf-8", errors="ignore")):
-        raise ImageError("not a safe SVG: a DOCTYPE or ENTITY declaration is not allowed")
+        raise ImageError(N_("not a safe SVG: a DOCTYPE or ENTITY declaration is not allowed"))
     try:
         root = ElementTree.fromstring(data)
     except ElementTree.ParseError as error:
-        raise ImageError(f"not a well-formed SVG: {error}") from None
+        raise ImageError(N_("not a well-formed SVG: {error}"), error=error) from None
     if _qualify(root.tag) != "svg":
-        raise ImageError("not an SVG: the root element must be <svg>")
+        raise ImageError(N_("not an SVG: the root element must be <svg>"))
     _strip_unsafe(root, _SVG_DISALLOWED_LOCAL_NAMES - keep)
     if root.tag.startswith("{"):
         # Keep the familiar `xmlns="..."` form on the way out; without this, ElementTree invents an "ns0:"
@@ -479,7 +481,7 @@ def _svg_dimensions(sanitized: bytes) -> tuple[int, int]:
                 except ValueError:
                     pass
     if not width or not height or width <= 0 or height <= 0:
-        raise ImageError("not a usable SVG: it has no positive width and height, nor a viewBox to read them from")
+        raise ImageError(N_("not a usable SVG: it has no positive width and height, nor a viewBox to read them from"))
     return round(width), round(height)
 
 

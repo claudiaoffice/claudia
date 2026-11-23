@@ -18,7 +18,7 @@ import re
 from dataclasses import dataclass, replace
 from typing import ClassVar
 
-from claudia_core import SLOTS, AddObject, Batch, Command, Context, ForgetAsset, PageSetup, fits
+from claudia_core import N_, SLOTS, AddObject, Batch, Command, Context, ForgetAsset, PageSetup, Refusal, fits
 from claudia_core.asset_store import DIAGRAM
 
 from .cellstyles import CELL_SLOTS, LAYERS, Area, Piece, check_area, layer_of
@@ -150,7 +150,7 @@ class AddSheet(Command):
         if self.id in model.sheets:
             raise ValueError(f"sheet id {self.id!r} exists")
         if any(s.name.casefold() == self.name.casefold() for s in model.sheets.values()):
-            raise ValueError(f"a sheet called {self.name!r} exists")
+            raise Refusal("a sheet called {name!r} exists", name=self.name)
         if not self.legacy_names:
             model.check_name_free(self.id, self.name)
         model.add_sheet(Sheet(self.id, self.name), self.index)
@@ -198,7 +198,9 @@ class RemoveSheet(Command):
             # does not follow the sheet elsewhere the way a formula reference would, so removing the sheet
             # would leave it pointing nowhere. Refusing is the same answer ``forget_shape``/``forget_image``
             # give while something still uses them.
-            raise ValueError(f"sheet {sheet.name!r} still has chart {blocking[0]!r}'s data on it")
+            raise Refusal(
+                "sheet {name!r} still has chart {blocking!r}'s data on it", name=sheet.name, blocking=blocking[0]
+            )
         index = list(model.sheets).index(self.id)
         cells = tuple((r, c, content) for (r, c), content in sorted(sheet.cells.items()))
         row_heights = tuple(sorted(sheet.row_heights.items()))
@@ -647,7 +649,12 @@ class ResizeLines(Command):
             if not 0 <= index < limit:
                 raise IndexError(f"{self.axis} {index} is outside the sheet")
             if size is not None and not lo <= size <= hi:
-                raise ValueError(f"a {self.axis} size must be between {lo} and {hi}, not {size}")
+                out = (
+                    N_("a row is {lo} to {hi} high, not {size}")
+                    if self.axis == "row"
+                    else N_("a column is {lo} to {hi} wide, not {size}")
+                )
+                raise Refusal(out, lo=lo, hi=hi, size=size)
         store = sheet.sizes(self.axis)
         previous = tuple((i, store.get(i)) for i, _ in self.sizes)
         for index, size in self.sizes:
@@ -720,7 +727,7 @@ class AddChart(Command):
         if self.id in model.charts:
             raise ValueError(f"chart id {self.id!r} exists")
         if any(c.name.casefold() == self.name.casefold() for c in model.charts.values()):
-            raise ValueError(f"a chart called {self.name!r} exists")
+            raise Refusal("a chart called {name!r} exists", name=self.name)
         if not self.legacy_names:
             model.check_name_free(self.id, self.name)
         if self.spec_id not in model.diagrams:
@@ -816,7 +823,7 @@ class Resample(Command):
     def apply(self, ctx: Context[WorkbookModel]) -> Command:
         model = ctx.model
         if model.random_draw + self.steps < 0:
-            raise ValueError("the draw number cannot go below 0")
+            raise Refusal("the draw number cannot go below 0")
         model.random_draw += self.steps
         model.calc.redraw()
         ctx.emit(RandomChanged(model.random_seed, model.random_draw))

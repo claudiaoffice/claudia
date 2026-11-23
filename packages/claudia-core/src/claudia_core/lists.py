@@ -31,6 +31,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, Protocol
 
 from .commands import Command, CommandRegistry, core_commands
+from .errors import Refusal
 from .paragraphs import MAX_LIST_LEVEL, ListItem
 from .schemes import SchemeBook, builtin_scheme, schemes_of
 from .styles import NO_NUMBERING
@@ -73,11 +74,17 @@ class ListDef:
         if not isinstance(self.scheme, str) or not _ID.fullmatch(self.scheme):
             raise ValueError(f"A list names its scheme by id, got {self.scheme!r}")
         if not isinstance(self.start, int) or not 1 <= self.start <= _MAX_START:
-            raise ValueError(f"A list starts at a number from 1 to {_MAX_START}, got {self.start!r}")
+            raise Refusal(
+                "A list starts at a number from 1 to {max_start}, got {start!r}", max_start=_MAX_START, start=self.start
+            )
         if self.name is not None and (
             not self.name.strip() or len(self.name) > _MAX_NAME or not self.name.isprintable()
         ):
-            raise ValueError(f"A list name is one line of 1 to {_MAX_NAME} characters, got {self.name!r}")
+            raise Refusal(
+                "A list name is one line of 1 to {max_name} characters, got {name!r}",
+                max_name=_MAX_NAME,
+                name=self.name,
+            )
 
 
 class ListBook:
@@ -290,10 +297,14 @@ class RemoveList(Command):
         known = _known(book, self.list)
         in_use = getattr(ctx.model, "list_in_use", None)
         if in_use is not None and in_use(self.list):
-            raise ValueError(f"The list {self.list!r} is in use and cannot be taken back")
+            raise Refusal("The list {list!r} is in use and cannot be taken back", list=self.list)
         numbered = [style.name for style in getattr(ctx.model, "styles", ()) if style.numbering == self.list]
         if numbered:
-            raise ValueError(f"The list {self.list!r} numbers the style “{numbered[0]}” and cannot be taken back")
+            raise Refusal(
+                "The list {list!r} numbers the style “{numbered}” and cannot be taken back",
+                list=self.list,
+                numbered=numbered[0],
+            )
         book.remove(self.list)
         _tell(ctx, book)
         return CreateList(known)

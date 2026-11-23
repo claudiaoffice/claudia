@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, ClassVar
 
 from .commands import Command, CommandRegistry, core_commands
+from .errors import N_, Refusal
 from .paragraphs import MAX_LIST_LEVEL
 
 if TYPE_CHECKING:
@@ -127,10 +128,13 @@ class LevelFormat:
         if self.format not in FORMATS:
             raise ValueError(f"A level's format is one of {', '.join(FORMATS)}, got {self.format!r}")
         if self.format == "bullet" and not (1 <= len(self.bullet) <= 4 and self.bullet.isprintable()):
-            raise ValueError(f"A bullet is one sign (up to 4 characters), got {self.bullet!r}")
+            raise Refusal("A bullet is one sign (up to 4 characters), got {bullet!r}", bullet=self.bullet)
         for text in (self.before, self.after):
             if not isinstance(text, str) or not _one_line(text, _MAX_AFFIX):
-                raise ValueError(f"The text before and after a number is one line of up to {_MAX_AFFIX} characters")
+                raise Refusal(
+                    "The text before and after a number is one line of up to {max_affix} characters",
+                    max_affix=_MAX_AFFIX,
+                )
         if not isinstance(self.from_level, int) or not 0 <= self.from_level <= level:
             shown = self.from_level + 1 if isinstance(self.from_level, int) else self.from_level
             raise ValueError(f"Level {level + 1} shows the levels from 1 to {level + 1} on, got {shown!r}")
@@ -204,16 +208,23 @@ class Scheme:
         if not _ID.fullmatch(self.id):
             raise ValueError(f"A scheme id is lower-case letters, digits and hyphens (up to 40), got {self.id!r}")
         if not isinstance(self.name, str) or not self.name.strip() or not _one_line(self.name, _MAX_NAME):
-            raise ValueError(f"A scheme name is one line of 1 to {_MAX_NAME} characters, got {self.name!r}")
+            raise Refusal(
+                "A scheme name is one line of 1 to {max_name} characters, got {name!r}",
+                max_name=_MAX_NAME,
+                name=self.name,
+            )
         if self.kind not in ("bullet", "number"):
             raise ValueError(f"A scheme is a bullet or a number scheme, got {self.kind!r}")
         if len(self.levels) != LEVELS:
             raise ValueError(f"A scheme has {LEVELS} levels, got {len(self.levels)}")
         for level, each in enumerate(self.levels):
             each.check(level)
-        for value, largest, what in ((self.indent, _MAX_INDENT, "indent"), (self.gap, _MAX_GAP, "gap")):
+        for value, largest, what in (
+            (self.indent, _MAX_INDENT, N_("A scheme's indent is from 0 to {largest:g} em, got {value!r}")),
+            (self.gap, _MAX_GAP, N_("A scheme's gap is from 0 to {largest:g} em, got {value!r}")),
+        ):
             if isinstance(value, bool) or not isinstance(value, int | float) or not 0 <= value <= largest:
-                raise ValueError(f"A scheme's {what} is from 0 to {largest:g} em, got {value!r}")
+                raise Refusal(what, largest=largest, value=value)
 
 
 def builtin_schemes() -> tuple[Scheme, ...]:
@@ -422,7 +433,11 @@ class RemoveScheme(Command):
         lists = getattr(ctx.model, "lists", ())
         users = [each.id for each in lists if each.scheme == self.scheme]
         if users:
-            raise ValueError(f"The scheme {self.scheme!r} is used by the list {users[0]!r} and cannot be removed")
+            raise Refusal(
+                "The scheme {scheme!r} is used by the list {users!r} and cannot be removed",
+                scheme=self.scheme,
+                users=users[0],
+            )
         book.remove(self.scheme)
         _tell(ctx, book)
         return CreateScheme(known)

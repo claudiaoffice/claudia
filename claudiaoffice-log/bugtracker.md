@@ -129,7 +129,7 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (146)
+### Fixed (152)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
@@ -237,6 +237,7 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-65 | P2 | composes I/O | `dx`/`dy` of an object is not written to or read from DOCX/ODT | **fixed** 2026-11-18 (D1067) |  | 2026-11-18 |
 | CODE-72 | P3 | Code / docs | `KdfParams`' docstring said that the cost can be raised "at the next login"; it cannot for a document with several people | **fixed** 2026-11-19 |  | 2026-11-19 |
 | CODE-73 | P2 | Code / security | File ▸ Download wrote the unencrypted content-only JSON while D110 and the menu workbook say it is the sealed file | **fixed** 2026-11-19 (D1270, E2.12) |  | 2026-11-19 |
+| CODE-78 | P2 | Code / i18n | A refusal of a model (a `ValueError` of core, computes, composes or creates) reaches a German user in English | **fixed** 2026-11-23 on `code-78-translated-refusals` (D1510) | 2026-11-22 | 2026-11-23 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2652,3 +2653,15 @@ event that forgets the chart (it does for a picture, a shape and a container, D1
 `Error: DOM element provided is null or undefined` from Plotly's `getGraphDiv`. **Test:** the row `workbook | a chart`
 of the undo scenario, in an `Examples` block of its own tagged `@pending:CODE-77`; it waits with the chart renames of
 E1.18.
+### CODE-78 · Refusals of the models reach a German user in English · P2 · size 2 · fixed
+**Found** in the review of E6.31 step 2: the core and the apps refuse with a `ValueError` and an English sentence (for
+example "a slide needs a name", "There is already a sheet called “…”"); the server sends it on as it is
+(`claudia_server.i18n.localized` translates only its own `msg(...)`), so a person who works in German reads English.
+About 365 refusals in core, computes, composes and creates. Evidence: **read**. **Acceptance:** a refusal the person
+meets is in her language (a scenario with the language German and a name that is taken). **Fixed** 2026-11-23 (D1510):
+typed refusals (`claudia_core.Refusal`, `N_`), said by the server in the connection's language (`message_of`), for the
+refusals a person can meet (about 140 sites); checks that only a wrong client can fail stay English, as agreed.
+**Escaped** because the server's i18n (D322) covered its own messages only, and no test spoke German to a model.
+**Tests:** `specs/server/refusals.feature` (`tests/e2e/specs/test_refusals.py`), `test_refusal.py`,
+`test_server_i18n.py`, `test_server_thing_names.py`, `test_extract_i18n.py`, `test_catalogs.py`.
+

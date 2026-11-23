@@ -7,6 +7,10 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- A refusal in the person's language (CODE-78, D1510): `Refusal(template, **params)`, a `ValueError` that reads as
+  the English sentence and keeps its template and parameters, so that the server can say it in the person's language;
+  `N_(template)` marks a template kept apart from its call. `ObjectModel.name_taken`: the sentence for a name another
+  thing has, by the kind of that thing. `ImageError` and `PageSetupError` are refusals.
 - Objects that may change holder (D1351): `ObjectModel.objects_change_holder` (false by default),
   `ObjectModel.rehang_object(obj, at=None)` (out of the old stack, into the new one, returns the old place) and
   `ObjectModel.place_regions(anchor)` (what a move into another holder also takes, for locks). `MoveObject.at`: the
@@ -47,6 +51,8 @@ While the major version is 0, a minor version may break the API; every break is 
   `"table"` is one of `OBJECT_KINDS`; the facet slots have a `table` thing.
 
 ### Changed
+- **Breaking** — `name_problem(text)` returns the `Refusal` (or `None`), not a string. The sentence for a taken name
+  names the thing as the interface does: "a text box", "a picture", "a chart" (was "a text", "an image", "a diagram").
 - **Breaking** — the glossary's Container (D1430, E1.18): the object kind `container` (was `rendered`),
   `ContainerDefinition` (was `RenderedDefinition`, module `claudia_core.containers`, was `renderings`),
   `MAX_CONTAINER_SOURCE` (was `MAX_RENDERING_SOURCE`), the asset kind `CONTAINER` named `container` (was `RENDERING`

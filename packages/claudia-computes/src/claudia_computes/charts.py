@@ -34,6 +34,8 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from claudia_core import Refusal
+
 from .limits import MAX_COLS, MAX_ROWS
 from .refs import RangeRef, SheetId
 
@@ -66,7 +68,7 @@ _KEYS = {
 _REQUIRED = ("format", "id", "kind")
 
 
-class ChartError(ValueError):
+class ChartError(Refusal):
     """A chart definition that is not right; the message names the part and says what is wrong."""
 
 
