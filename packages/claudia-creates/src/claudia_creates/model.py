@@ -15,6 +15,7 @@ What is not here yet: templates and layouts (E10.4), groups, free colours.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
+from dataclasses import replace
 from typing import ClassVar, Self, TypeIs
 
 from claudia_core import (
@@ -441,8 +442,40 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         return ()
 
     def settle(self, ctx) -> None:
-        """Tell the clients which labels changed: a text box taken away may renumber every one after it."""
+        """Keep the copies on slides equal to their layouts (E10.4, D1530), and tell the clients which labels changed:
+        a text box taken away may renumber every one after it."""
+        self._settle_bound_copies(ctx)
         self.structure.settle(ctx)
+
+    def _settle_bound_copies(self, ctx) -> None:
+        """An object bound to a placeholder keeps the frame of that placeholder as its own, so that the slide stands
+        alone; the layout is the truth, and what differs here is repaired. What is bound to a placeholder that is gone,
+        or to one of a layout its slide no longer follows, becomes free where it stands. It never refuses, and it is
+        derived from the state alone, so undo and replay come to the same result."""
+        repaired: dict[str, list[SlideObject]] = {}
+        for obj in [obj for obj in self.objects.values() if obj.anchor.bound_to_placeholder]:
+            now = self._bound_copy(obj)
+            if now is not obj:
+                self.objects[obj.id] = now
+                repaired.setdefault(obj.holder, []).append(now)
+        for slide, objects in repaired.items():
+            ctx.emit(self.objects_changed(slide, changed=tuple(objects)))
+
+    def _bound_copy(self, obj: SlideObject) -> SlideObject:
+        """``obj`` as it must be: its own frame while it is bound to a placeholder of the layout its slide follows,
+        else free of any binding."""
+        placeholder = self.objects.get(obj.anchor.bound_to_placeholder)
+        if placeholder is None or placeholder.holder != self.slide_layouts.get(obj.holder):
+            return replace(obj, anchor=replace(obj.anchor, bound_to_placeholder=""))
+        if (obj.anchor.x, obj.anchor.y, obj.body.w, obj.body.h) == (
+            placeholder.anchor.x,
+            placeholder.anchor.y,
+            placeholder.body.w,
+            placeholder.body.h,
+        ):
+            return obj
+        anchor = replace(obj.anchor, x=placeholder.anchor.x, y=placeholder.anchor.y)
+        return replace(obj, anchor=anchor, body=replace(obj.body, w=placeholder.body.w, h=placeholder.body.h))
 
     # -- names (D550) ------------------------------------------------------------
     def named_things(self):
