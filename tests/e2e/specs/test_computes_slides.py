@@ -2,7 +2,8 @@
 
 Bound here are the rules a chart makes and takes away a slide by (step 3, D1475): a chart as a slide, "Move to Slide"
 and a slide that goes with its last object. A step that is not here skips its scenario with its words (see
-``conftest.py``); the rules of search are the browser script ``web/e2e/computes-slides.cjs`` (``@e2e:computes-slides.cjs``).
+``conftest.py``); the rules of search are the browser script ``web/e2e/computes-slides.cjs``
+(``@e2e:computes-slides.cjs``).
 
 Steps work on what a person sees and does: the name box, the menus, the dialog, the tabs, the slide and its chart. What
 a chart is called is read where a person reads it, in Name & describe…; that selects the chart, so whether anything was
