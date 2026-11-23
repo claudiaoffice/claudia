@@ -312,12 +312,12 @@ def test_fields_are_found_without_regard_to_case_and_shown_as_the_source_writes_
 
 
 def test_a_field_the_source_does_not_have_is_named_with_the_ones_it_has():
-    with pytest.raises(PivotError, match=r"no field 'Regoin' in Sales: Region, Product"):
+    with pytest.raises(PivotError, match=r"no field “Regoin” in “Sales”: Region, Product"):
         compute(pivot(rows=["Regoin"]))
 
 
 def test_a_source_that_is_no_table_is_named():
-    with pytest.raises(PivotError, match="no table or range named 'Nope'"):
+    with pytest.raises(PivotError, match="no table or range named “Nope”"):
         compute(pivot(source="Nope"))
 
 
@@ -335,7 +335,7 @@ def test_the_words_a_pivot_shows_come_from_the_labels():
 
 def test_too_many_columns_are_refused_in_words():
     data = {"W": (["c", "n"], [(i, 1) for i in range(1001)])}
-    with pytest.raises(PivotError, match="1,002 columns"):
+    with pytest.raises(PivotError, match="1002 columns"):
         compute(pivot(source="W", columns=["c"], values=[ValueField("n")]), data.get)
 
 

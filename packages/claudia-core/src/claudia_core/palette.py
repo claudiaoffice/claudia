@@ -171,9 +171,7 @@ def contrast(one: str, other: str) -> float:
 def _clean_name(name: str) -> str:
     text = " ".join(name.split()) if "\n" not in name and "\r" not in name else ""
     if not text or len(text) > _MAX_NAME or not text.isprintable():
-        raise Refusal(
-            "A role name is one line of 1 to {max_name} characters, got {name!r}", max_name=_MAX_NAME, name=name
-        )
+        raise Refusal("A role name is one line of 1 to {limit} characters, got {name!r}", limit=_MAX_NAME, name=name)
     return text
 
 
@@ -243,14 +241,12 @@ class Palette:
         if role.id in self._roles:
             raise ValueError(f"The colour role {role.id!r} exists already")
         if len(self._roles) >= MAX_ROLES:
-            raise Refusal("A palette holds at most {max_roles} colour roles", max_roles=MAX_ROLES)
+            raise Refusal("A palette holds at most {limit} colour roles", limit=MAX_ROLES)
         name = _clean_name(role.name)
         if any(other.name.casefold() == name.casefold() for other in self._roles.values()):
             raise Refusal("There is already a colour role named “{name}”", name=name)
         if len(role.purpose) > _MAX_PURPOSE or "\n" in role.purpose:
-            raise Refusal(
-                "The purpose of a colour role is one line of up to {max_purpose} characters", max_purpose=_MAX_PURPOSE
-            )
+            raise Refusal("The purpose of a colour role is one line of up to {limit} characters", limit=_MAX_PURPOSE)
         self._roles[role.id] = replace(role, name=name, colour=_clean_colour(role.colour))
 
     def set_colour(self, role_id: str, colour: str) -> None:

@@ -118,7 +118,7 @@ class NumberFormatBook:
         if number_format.id in self.formats:
             raise ValueError(f"there is already a number format {number_format.id!r}")
         if any(f.name.casefold() == number_format.name.casefold() for f in self.formats.values()):
-            raise Refusal("there is already a number format called {name!r}", name=number_format.name)
+            raise Refusal("there is already a number format called “{name}”", name=number_format.name)
         check_code(number_format.code)
         self.formats[number_format.id] = number_format
 
@@ -151,7 +151,7 @@ class NumberFormatBook:
 def check_code(code: str) -> None:
     """``ValueError`` unless ``code`` is a format code this module reads (and no longer than Excel allows)."""
     if not code or len(code) > MAX_CODE:
-        raise Refusal("a number format code has 1 to {max_code} characters", max_code=MAX_CODE)
+        raise Refusal("a number format code has 1 to {limit} characters", limit=MAX_CODE)
     if len(split_sections(code)) > 4:
         raise Refusal("a number format code has at most four sections")
 

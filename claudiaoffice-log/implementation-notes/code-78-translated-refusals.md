@@ -31,8 +31,31 @@ Branch `code-78-translated-refusals`, 2026-11-23. Spec: `specs/server/refusals.f
   … high" / "a column is … to … wide".
 - A sentence that carries a style's kind ("a paragraph style") was rewritten without it ("styles of different
   kinds"), because the kinds are English words that would otherwise sit untranslated in a German sentence.
-- Some templates keep Python's `!r` quotes around ids and names, as the English did ('Revenue'). Kept, so that the
-  English is unchanged; a later pass can turn them into “…”.
+- A name a person gave is quoted “…” in the English (German „…“), no longer with Python's quotes ('Revenue'): sheet,
+  chart, pivot table, field, source and number format names. Ids (of a list, a scheme) and wrong input echoed back
+  ("got 'x'") keep `!r`.
+- Numbers are filled in plain (1002, not 1,002): a separator in the template would be the English one in German too.
+- Placeholders are named for what a translator needs to know: `{limit}`, `{least}`, `{length}`, `{width}`,
+  `{height}`, `{name}`, `{field}`; one sentence has one template (a taken sheet name is one msgid, whether the command
+  or the name check refuses it).
+
+## Review (two axes) and what changed after it
+
+Done: placeholders renamed; duplicate msgids merged ("a sheet called 'x' exists" is the taken-name sentence); names
+quoted “…”; no thousands separator; a style's kind and a cell's slot no longer enter a sentence as an English word (one
+template per slot); the chart title limit, the wrap gap, "a chart's range must be inside the sheet" and "a table of
+contents takes no typing" are refusals; `chart_from_data` no longer turns a `ChartError` back into a plain
+`ValueError`; the style targets' `_run` passes the refusal on with `message_of`; the extractor accepts a looked-up
+template only as a name, an attribute, an item or a `.get(...)`, and reports `Refusal(str(e))` and
+`Refusal(text.format(...))`; `Refusal` and `N_` in the API docs. German: "Die Kopfzeile bleibt …", the bullet sentence,
+"Ein Name enthält keine Steuerzeichen".
+
+Left: the subclasses of `Refusal` (`ImageError`, `ChartError`, …) still build their checks of malformed data with
+f-strings; the extractor does not report those, because they are English on purpose (D1510). A pivot table that fails
+in its cell says why in the cell's error text, which belongs to the document, not to one person, and stays English.
+`Refusal` is a `ValueError`, not a `KernelError`: every `except ValueError` must keep catching it (coding standards §6
+asks for one hierarchy; this is the recorded exception, D1510). The versions stay as they are: API changes go under
+[Unreleased], as the other changes of this week did.
 
 ## Tests
 

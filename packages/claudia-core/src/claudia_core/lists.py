@@ -75,14 +75,14 @@ class ListDef:
             raise ValueError(f"A list names its scheme by id, got {self.scheme!r}")
         if not isinstance(self.start, int) or not 1 <= self.start <= _MAX_START:
             raise Refusal(
-                "A list starts at a number from 1 to {max_start}, got {start!r}", max_start=_MAX_START, start=self.start
+                "A list starts at a number from 1 to {limit}, got {start!r}", limit=_MAX_START, start=self.start
             )
         if self.name is not None and (
             not self.name.strip() or len(self.name) > _MAX_NAME or not self.name.isprintable()
         ):
             raise Refusal(
-                "A list name is one line of 1 to {max_name} characters, got {name!r}",
-                max_name=_MAX_NAME,
+                "A list name is one line of 1 to {limit} characters, got {name!r}",
+                limit=_MAX_NAME,
                 name=self.name,
             )
 
@@ -301,9 +301,9 @@ class RemoveList(Command):
         numbered = [style.name for style in getattr(ctx.model, "styles", ()) if style.numbering == self.list]
         if numbered:
             raise Refusal(
-                "The list {list!r} numbers the style “{numbered}” and cannot be taken back",
+                "The list {list!r} numbers the style “{style}” and cannot be taken back",
                 list=self.list,
-                numbered=numbered[0],
+                style=numbered[0],
             )
         book.remove(self.list)
         _tell(ctx, book)

@@ -64,11 +64,11 @@ def test_an_object_cannot_take_the_name_of_a_sheet(doc):
         doc.execute(RenameThing("i2", "SHEET1"), author="ana")
 
 
-def test_the_old_messages_for_two_sheets_or_two_charts_are_kept(doc):
-    with pytest.raises(ValueError, match="a sheet called 'sheet1' exists"):
+def test_two_sheets_or_two_charts_of_one_name_are_refused_with_the_sentence_of_a_taken_name(doc):
+    with pytest.raises(ValueError, match="There is already a sheet called “sheet1”"):
         doc.execute(AddSheet("s2", "sheet1"), author="ana")
     a_chart(doc)
-    with pytest.raises(ValueError, match="a chart called 'revenue' exists"):
+    with pytest.raises(ValueError, match="There is already a chart called “revenue”"):
         doc.execute(AddChart("t2", "revenue", "c1"), author="ana")
 
 

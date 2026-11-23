@@ -23,6 +23,9 @@ superseded-by: []
 - **One template per kind.** A sentence is never built from words that another language bends: a name that is taken
   has one sentence per kind of thing ("ein Bild", "eine Form", `ObjectModel.name_taken`), a style deleted or re-based has
   one per verb, a row and a column one each. A template kept apart from its call is marked with `N_`.
+- **A ValueError, not a KernelError.** A refusal is the `ValueError` the models raised before, so that every
+  `except ValueError` in the apps, the I/O packages and the server keeps catching it; this is the one exception to the
+  single error hierarchy of the coding standards.
 - **The catalog.** Templates are collected from the source like `msg(...)` (`scripts/extract_i18n.py`, now with
   `claudia-core`), into the one catalog the server and the web share. The extractor reports a `Refusal` whose template
   is built at runtime (an f-string), so no refusal can slip past the translators. The core stays free of any catalog: it

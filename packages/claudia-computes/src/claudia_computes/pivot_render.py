@@ -90,7 +90,7 @@ def compute_pivot(
     field gives an empty result: there is nothing to add up yet."""
     data = tables(definition.source)
     if data is None:
-        raise PivotError(N_("no table or range named {source!r}"), source=definition.source)
+        raise PivotError(N_("no table or range named “{source}”"), source=definition.source)
     resolved = _resolved(definition, engine.column_names(data[0]))
     if not resolved.values:
         return PivotResult((), (), 0, "")
@@ -100,7 +100,7 @@ def compute_pivot(
     if len(columns) > MAX_DATA_COLUMNS:
         raise PivotError(
             N_(
-                "the pivot would have {count:,} columns, at most {limit:,} fit: {field!r} has too many members for "
+                "the pivot would have {count} columns, at most {limit} fit: “{field}” has too many members for "
                 "the columns"
             ),
             count=len(columns),
@@ -126,7 +126,7 @@ def _resolved(definition: PivotDefinition, names: Sequence[str]) -> PivotDefinit
     def find(field: str) -> str:
         if field.casefold() not in known:
             raise PivotError(
-                N_("no field {field!r} in {source}: {names}"),
+                N_("no field “{field}” in “{source}”: {names}"),
                 field=field,
                 source=definition.source,
                 names=", ".join(names),
@@ -147,7 +147,7 @@ def _titles(definition: PivotDefinition, labels: PivotLabels) -> list[str]:
     for index, title in enumerate(titles):
         if title.casefold() in (other.casefold() for other in titles[:index]):
             raise PivotError(
-                N_("two value fields are both called {title!r}: give one of them another name"), title=title
+                N_("two value fields are both called “{title}”: give one of them another name"), title=title
             )
     return titles
 

@@ -150,7 +150,7 @@ class AddSheet(Command):
         if self.id in model.sheets:
             raise ValueError(f"sheet id {self.id!r} exists")
         if any(s.name.casefold() == self.name.casefold() for s in model.sheets.values()):
-            raise Refusal("a sheet called {name!r} exists", name=self.name)
+            raise Refusal("There is already a sheet called “{name}”", name=self.name)
         if not self.legacy_names:
             model.check_name_free(self.id, self.name)
         model.add_sheet(Sheet(self.id, self.name), self.index)
@@ -199,7 +199,7 @@ class RemoveSheet(Command):
             # would leave it pointing nowhere. Refusing is the same answer ``forget_shape``/``forget_image``
             # give while something still uses them.
             raise Refusal(
-                "sheet {name!r} still has chart {blocking!r}'s data on it", name=sheet.name, blocking=blocking[0]
+                "the sheet “{name}” still has the data of the chart “{chart}” on it", name=sheet.name, chart=blocking[0]
             )
         index = list(model.sheets).index(self.id)
         cells = tuple((r, c, content) for (r, c), content in sorted(sheet.cells.items()))
@@ -559,9 +559,12 @@ class SetCellStyle(Command):
                 raise ValueError(f"no style {style_id!r}")
             style = model.styles.get(style_id)
             if not fits(style.kind, slot):
-                raise ValueError(
-                    f"“{style.name}” is a {style.kind} style and cannot be put into the {self.slot} of a cell"
+                wrong = (
+                    N_("“{name}” is a style of another kind and cannot be put into the box of a cell")
+                    if self.slot == "box"
+                    else N_("“{name}” is a style of another kind and cannot be put into the words of a cell")
                 )
+                raise Refusal(wrong, name=style.name)
         before = sheet.cell_styles.pieces(self.slot, self.layer, area)
         sheet.cell_styles.replace(self.slot, self.layer, area, self.pieces)
         ctx.emit(CellStylesChanged(self.sheet, area))
@@ -727,7 +730,7 @@ class AddChart(Command):
         if self.id in model.charts:
             raise ValueError(f"chart id {self.id!r} exists")
         if any(c.name.casefold() == self.name.casefold() for c in model.charts.values()):
-            raise Refusal("a chart called {name!r} exists", name=self.name)
+            raise Refusal("There is already a chart called “{name}”", name=self.name)
         if not self.legacy_names:
             model.check_name_free(self.id, self.name)
         if self.spec_id not in model.diagrams:

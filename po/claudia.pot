@@ -326,7 +326,7 @@ msgid "A link: gives the friendly text if there is one, otherwise the address. T
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/lists.py:83
-msgid "A list name is one line of 1 to {max_name} characters, got {name!r}"
+msgid "A list name is one line of 1 to {limit} characters, got {name!r}"
 msgstr ""
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
@@ -334,7 +334,7 @@ msgid "A list of the headings, each a link to its place; it follows them by itse
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/lists.py:77
-msgid "A list starts at a number from 1 to {max_start}, got {start!r}"
+msgid "A list starts at a number from 1 to {limit}, got {start!r}"
 msgstr ""
 
 #: web/app/components/NumberingDialog.vue:200
@@ -345,7 +345,7 @@ msgstr ""
 msgid "A name like this exists already and will point here."
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:807
+#: packages/claudia-computes/src/claudia_computes/model.py:804
 msgid "A named range is renamed in the list of names, which also changes the formulas that use it"
 msgstr ""
 
@@ -373,8 +373,8 @@ msgstr ""
 msgid "A number raised to a power (the same as the operator ^)."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/palette.py:246
-msgid "A palette holds at most {max_roles} colour roles"
+#: packages/claudia-core/src/claudia_core/palette.py:244
+msgid "A palette holds at most {limit} colour roles"
 msgstr ""
 
 #: web/app/components/PrintPreview.vue:290
@@ -398,11 +398,11 @@ msgid "A request beyond this number is refused before anything is written."
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/palette.py:174
-msgid "A role name is one line of 1 to {max_name} characters, got {name!r}"
+msgid "A role name is one line of 1 to {limit} characters, got {name!r}"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/schemes.py:211
-msgid "A scheme name is one line of 1 to {max_name} characters, got {name!r}"
+msgid "A scheme name is one line of 1 to {limit} characters, got {name!r}"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/schemes.py:224
@@ -422,7 +422,7 @@ msgid "A stand-in is used when a document asks for a family this server lacks. {
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/styles.py:156
-msgid "A style name is one line of 1 to {max_name} characters, got {name!r}"
+msgid "A style name is one line of 1 to {limit} characters, got {name!r}"
 msgstr ""
 
 #: web/app/components/SheetChartInsertDialog.vue:154
@@ -5721,7 +5721,7 @@ msgstr ""
 msgid "The angle in radians, from 0 to pi, whose cotangent is the number."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:1030
+#: packages/claudia-core/src/claudia_core/styles.py:1028
 msgid "The app cannot move what has the style “{name}” to another style"
 msgstr ""
 
@@ -6114,7 +6114,7 @@ msgid "The list {list!r} is in use and cannot be taken back"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/lists.py:303
-msgid "The list {list!r} numbers the style “{numbered}” and cannot be taken back"
+msgid "The list {list!r} numbers the style “{style}” and cannot be taken back"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -6129,11 +6129,11 @@ msgstr ""
 msgid "The logical value TRUE (it can also be written without brackets)."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:900
+#: packages/claudia-core/src/claudia_core/styles.py:898
 msgid "The look cannot be kept: the new parent sets “{prop}” and nothing says what a style that does not set it looks like"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:938
+#: packages/claudia-core/src/claudia_core/styles.py:936
 msgid "The look cannot be kept: the new parent shows numbers in a format this style does not"
 msgstr ""
 
@@ -6361,8 +6361,8 @@ msgstr ""
 msgid "The product of two matrices: the first must have as many columns as the second has rows."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/palette.py:251
-msgid "The purpose of a colour role is one line of up to {max_purpose} characters"
+#: packages/claudia-core/src/claudia_core/palette.py:249
+msgid "The purpose of a colour role is one line of up to {limit} characters"
 msgstr ""
 
 #: web/app/components/PivotSqlDialog.vue:29
@@ -6446,7 +6446,7 @@ msgid "The same font as {file}: added once."
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/schemes.py:436
-msgid "The scheme {scheme!r} is used by the list {users!r} and cannot be removed"
+msgid "The scheme {scheme!r} is used by the list {list!r} and cannot be removed"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue:652
@@ -6593,15 +6593,15 @@ msgstr ""
 msgid "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:489
+#: packages/claudia-core/src/claudia_core/styles.py:487
 msgid "The style “{name}” has styles based on it"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:601
+#: packages/claudia-core/src/claudia_core/styles.py:599
 msgid "The style “{name}” is in use and cannot be taken back"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/palette.py:333
+#: packages/claudia-core/src/claudia_core/palette.py:329
 msgid "The style “{name}” uses the colour role(s) {names}, which this palette has not"
 msgstr ""
 
@@ -6670,7 +6670,7 @@ msgid "The text before a delimiter: before its nth occurrence (negative: counted
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/schemes.py:134
-msgid "The text before and after a number is one line of up to {max_affix} characters"
+msgid "The text before and after a number is one line of up to {limit} characters"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -6801,11 +6801,11 @@ msgstr ""
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:452 packages/claudia-core/src/claudia_core/objects.py:469
+#: packages/claudia-computes/src/claudia_computes/commands.py:733 packages/claudia-computes/src/claudia_computes/model.py:452 packages/claudia-core/src/claudia_core/objects.py:469
 msgid "There is already a chart called “{name}”"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/palette.py:249
+#: packages/claudia-core/src/claudia_core/palette.py:247
 msgid "There is already a colour role named “{name}”"
 msgstr ""
 
@@ -6837,7 +6837,7 @@ msgstr ""
 msgid "There is already a shape called “{name}”"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:451
+#: packages/claudia-computes/src/claudia_computes/commands.py:153 packages/claudia-computes/src/claudia_computes/model.py:451
 msgid "There is already a sheet called “{name}”"
 msgstr ""
 
@@ -6845,11 +6845,7 @@ msgstr ""
 msgid "There is already a slide called “{name}”"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:433
-msgid "There is already a style named “{clean}”"
-msgstr ""
-
-#: packages/claudia-core/src/claudia_core/styles.py:348
+#: packages/claudia-core/src/claudia_core/styles.py:346 packages/claudia-core/src/claudia_core/styles.py:431
 msgid "There is already a style named “{name}”"
 msgstr ""
 
@@ -6861,7 +6857,7 @@ msgstr ""
 msgid "There is already a text box called “{name}”"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:768
+#: packages/claudia-core/src/claudia_core/styles.py:766
 msgid "There is no list {numbering!r} to number the style “{name}” in"
 msgstr ""
 
@@ -7829,12 +7825,12 @@ msgstr ""
 msgid "a cell reference"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:730
-msgid "a chart called {name!r} exists"
+#: packages/claudia-computes/src/claudia_computes/model.py:808
+msgid "a chart needs a name"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:811
-msgid "a chart needs a name"
+#: packages/claudia-computes/src/claudia_computes/model.py:659
+msgid "a chart's range must be inside the sheet"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/tables.py:152
@@ -7845,7 +7841,7 @@ msgstr ""
 msgid "a column has no setting {name!r}"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:655
+#: packages/claudia-computes/src/claudia_computes/commands.py:658
 msgid "a column is {lo} to {hi} wide, not {size}"
 msgstr ""
 
@@ -7866,7 +7862,7 @@ msgid "a heading is called by its words: change the words to change the name"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/objects.py:1014 packages/claudia-core/src/claudia_core/objects.py:1066
-msgid "a holder has at most {max_objects_per_holder} objects"
+msgid "a holder has at most {limit} objects"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue:196 web/app/lib/search.ts:215
@@ -7886,7 +7882,7 @@ msgid "a merged box cannot be torn apart: split it first"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/messages.py:127
-msgid "a message can have at most {chat_max} characters"
+msgid "a message can have at most {limit} characters"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/names.py:49 packages/claudia-core/src/claudia_core/names.py:41 packages/claudia-server/src/claudia_server/thing_names.py:106
@@ -7922,7 +7918,7 @@ msgid "a number as it is, TRUE as 1, FALSE as 0, a date as its number, anything 
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/numformats.py:154
-msgid "a number format code has 1 to {max_code} characters"
+msgid "a number format code has 1 to {limit} characters"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/numformats.py:156
@@ -7946,11 +7942,11 @@ msgid "a palette holds at most {limit} colour roles"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/paragraphs.py:214
-msgid "a paragraph holds text of at most {max_paragraph_text} characters"
+msgid "a paragraph holds text of at most {limit} characters"
 msgstr ""
 
 #: packages/claudia-creates/src/claudia_creates/model.py:88
-msgid "a planned time is a whole number of seconds from 1 to {max_slide_seconds}"
+msgid "a planned time is a whole number of seconds from 1 to {limit}"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -7985,23 +7981,19 @@ msgstr ""
 msgid "a row cannot be moved in front of itself"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:653
+#: packages/claudia-computes/src/claudia_computes/commands.py:656
 msgid "a row is {lo} to {hi} high, not {size}"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/objects.py:376
-msgid "a selection holds at most {max_selection} objects"
-msgstr ""
-
-#: packages/claudia-computes/src/claudia_computes/commands.py:153
-msgid "a sheet called {name!r} exists"
+msgid "a selection holds at most {limit} objects"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/cellstyles.py:196
-msgid "a sheet holds at most {max_style_ranges} style ranges"
+msgid "a sheet holds at most {limit} style ranges"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:784
+#: packages/claudia-computes/src/claudia_computes/model.py:781
 msgid "a sheet needs a name"
 msgstr ""
 
@@ -8053,12 +8045,16 @@ msgstr ""
 msgid "a table keeps at least one row"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:999
+#: packages/claudia-computes/src/claudia_computes/model.py:996
 msgid "a table needs a header row"
 msgstr ""
 
 #: packages/claudia-composes/src/claudia_composes/model.py:1123
 msgid "a table of contents cannot be joined to a paragraph; remove it instead"
+msgstr ""
+
+#: packages/claudia-composes/src/claudia_composes/model.py:1065
+msgid "a table of contents takes no typing: its entries come from the headings"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/tables.py:503
@@ -8075,6 +8071,10 @@ msgstr ""
 
 #: web/app/components/ImportDialog.vue:86
 msgid "a text"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/charts.py:97
+msgid "a title of a chart has at most {limit} characters"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -8933,12 +8933,12 @@ msgstr ""
 msgid "no checkpoint number {checkpoint}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:915
+#: packages/claudia-server/src/claudia_server/hub.py:919
 msgid "no document {id!r}"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py:129
-msgid "no field {field!r} in {source}: {names}"
+msgid "no field “{field}” in “{source}”: {names}"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/computes.py:777
@@ -8974,7 +8974,7 @@ msgid "no style of their own"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py:93
-msgid "no table or range named {source!r}"
+msgid "no table or range named “{source}”"
 msgstr ""
 
 #: web/app/components/ContentsDialog.vue:32 web/app/components/TableOptionsDialog.vue:23
@@ -9086,7 +9086,7 @@ msgid "notes"
 msgstr ""
 
 #: packages/claudia-creates/src/claudia_creates/model.py:81
-msgid "notes are at most {max_notes_length} characters"
+msgid "notes are at most {limit} characters"
 msgstr ""
 
 #: web/app/components/NumberingDialog.vue:135
@@ -9497,10 +9497,6 @@ msgstr ""
 msgid "shape"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:201
-msgid "sheet {name!r} still has chart {blocking!r}'s data on it"
-msgstr ""
-
 #: web/app/components/FooterBar.vue:30
 msgid "sheets"
 msgstr ""
@@ -9577,11 +9573,11 @@ msgstr ""
 msgid "start with “{text}”"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1256
+#: packages/claudia-computes/src/claudia_computes/model.py:1253
 msgid "structural edit is outside the sheet"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1274
+#: packages/claudia-computes/src/claudia_computes/model.py:1271
 msgid "structural edit would push cells off the sheet"
 msgstr ""
 
@@ -9701,7 +9697,7 @@ msgstr ""
 msgid "the cells are more than the table's rows and cols"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:997
+#: packages/claudia-computes/src/claudia_computes/model.py:994
 msgid "the cells of a name must be inside the sheet"
 msgstr ""
 
@@ -9722,7 +9718,7 @@ msgid "the date and time as a day number with the time of day as its fraction."
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/objects.py:1906 packages/claudia-core/src/claudia_core/objects.py:921
-msgid "the description is text of at most {max_alt_chars} characters"
+msgid "the description is text of at most {limit} characters"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes.py:245
@@ -9737,7 +9733,7 @@ msgstr ""
 msgid "the document's own"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:826
+#: packages/claudia-computes/src/claudia_computes/commands.py:829
 msgid "the draw number cannot go below 0"
 msgstr ""
 
@@ -9773,6 +9769,10 @@ msgstr ""
 msgid "the formula in the cell as text, or #N/A if the cell holds none."
 msgstr ""
 
+#: packages/claudia-composes/src/claudia_composes/anchors.py:135
+msgid "the gap between an object and the text is a whole number from 0 to {limit} units"
+msgstr ""
+
 #: web/app/lib/names.ts:338
 msgid "the header row"
 msgstr ""
@@ -9797,7 +9797,7 @@ msgstr ""
 msgid "the mean of the values"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/composes.py:515 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:225
+#: packages/claudia-server/src/claudia_server/composes.py:515 packages/claudia-server/src/claudia_server/style_targets.py:243 packages/claudia-server/src/claudia_server/styles.py:225
 msgid "the new style would look just like “{name}”"
 msgstr ""
 
@@ -9822,7 +9822,7 @@ msgid "the pivot table {name} gave nothing: there is no SQL to turn it into"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py:102
-msgid "the pivot would have {count:,} columns, at most {limit:,} fit: {field!r} has too many members for the columns"
+msgid "the pivot would have {count} columns, at most {limit} fit: “{field}” has too many members for the columns"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/functions
@@ -9834,7 +9834,7 @@ msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact v
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot_commands.py:131
-msgid "the query of {name} is too long for a formula: {count_formula:,} of {max_length:,} characters"
+msgid "the query of {name} is too long for a formula: {length} of {limit} characters"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes.py:327 packages/claudia-server/src/claudia_server/composes.py:383
@@ -9881,6 +9881,10 @@ msgstr ""
 msgid "the sheet is {style}"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/commands.py:201
+msgid "the sheet “{name}” still has the data of the chart “{chart}” on it"
+msgstr ""
+
 #: web/app/lib/print/source.ts:260
 msgid "the sheets"
 msgstr ""
@@ -9890,7 +9894,7 @@ msgid "the sheet’s style"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/objects.py:999
-msgid "the size must be at least {min_object_size} by {min_object_size} units"
+msgid "the size must be at least {least} by {least} units"
 msgstr ""
 
 #: web/app/lib/print/source.ts:207
@@ -9966,7 +9970,7 @@ msgid "there is a table of contents here already"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/numformats.py:121
-msgid "there is already a number format called {name!r}"
+msgid "there is already a number format called “{name}”"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:790 packages/claudia-server/src/claudia_server/protocol.py:886
@@ -9985,16 +9989,20 @@ msgstr ""
 msgid "there is no earlier list of this kind to continue"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1096
-msgid "there is no name {old!r}"
+#: packages/claudia-computes/src/claudia_computes/model.py:1093
+msgid "there is no name “{old}”"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/composes.py:373 packages/claudia-server/src/claudia_server/composes.py:433 packages/claudia-server/src/claudia_server/composes.py:599 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
 msgid "there is no paragraph {paragraph!r}"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/pivot_commands.py:150 packages/claudia-server/src/claudia_server/computes.py:1144
+#: packages/claudia-server/src/claudia_server/computes.py:1144
 msgid "there is no pivot table called {name!r}"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/pivot_commands.py:150
+msgid "there is no pivot table called “{name}”"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/protocol.py:726
@@ -10033,8 +10041,8 @@ msgstr ""
 msgid "this document has no lists"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:656
-msgid "this document has no name {source!r} to draw a chart from"
+#: packages/claudia-computes/src/claudia_computes/model.py:653
+msgid "this document has no name “{source}” to draw a chart from"
 msgstr ""
 
 #: packages/claudia-server/src/claudia_server/styles.py:66
@@ -10074,7 +10082,7 @@ msgid "this level"
 msgstr ""
 
 #: packages/claudia-creates/src/claudia_creates/model.py:301
-msgid "this object is too large to turn that way: it would be {out_w} by {out_h} units on a slide of {slide_width} by {slide_height}"
+msgid "this object is too large to turn that way: it would be {width} by {height} units on a slide of {slide_width} by {slide_height}"
 msgstr ""
 
 #: packages/claudia-core/src/claudia_core/objects.py:1004
@@ -10214,7 +10222,7 @@ msgid "trials"
 msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py:150
-msgid "two value fields are both called {title!r}: give one of them another name"
+msgid "two value fields are both called “{title}”: give one of them another name"
 msgstr ""
 
 #: web/app/components/SheetGrid.vue:1240
@@ -10405,7 +10413,7 @@ msgstr ""
 msgid "{cell} (no table right now)"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1226
+#: packages/claudia-computes/src/claudia_computes/model.py:1223
 msgid "{cell} shows the result of the formula in {owner} (SQL(), SORT() ...): change that formula, not its result"
 msgstr ""
 
@@ -10605,19 +10613,19 @@ msgstr ""
 msgid "{id} already has {limit} connections"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:903
+#: packages/claudia-server/src/claudia_server/hub.py:906
 msgid "{id} cannot be opened yet: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:906
+#: packages/claudia-server/src/claudia_server/hub.py:910
 msgid "{id} cannot be opened: {reason}"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:910
+#: packages/claudia-server/src/claudia_server/hub.py:914
 msgid "{id} cannot be read"
 msgstr ""
 
-#: packages/claudia-server/src/claudia_server/hub.py:854
+#: packages/claudia-server/src/claudia_server/hub.py:855
 msgid "{id} cannot be taken in: {reason}"
 msgstr ""
 
@@ -10781,7 +10789,7 @@ msgstr ""
 msgid "{name} is a value, not a name"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
+#: packages/claudia-computes/src/claudia_computes/model.py:1099 packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
 msgid "{name} is already a name"
 msgstr ""
 
@@ -10823,10 +10831,6 @@ msgstr ""
 
 #: web/app/components/Workspace.vue:783
 msgid "{name}: {role}"
-msgstr ""
-
-#: packages/claudia-computes/src/claudia_computes/model.py:1102
-msgid "{new} is already a name"
 msgstr ""
 
 #: web/app/components/PresentShow.vue:34
@@ -10999,10 +11003,6 @@ msgstr ""
 
 #: web/app/components/TableView.vue:44
 msgid "{row}, {column}"
-msgstr ""
-
-#: packages/claudia-computes/src/claudia_computes/pivot.py:171
-msgid "{seen!r} is in two places: a field is in rows, columns or filters, not in more"
 msgstr ""
 
 #: web/app/lib/cell-styles.ts:104
@@ -11185,39 +11185,43 @@ msgstr ""
 msgid "— other sheets can have a name of their own"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:1092
+#: packages/claudia-computes/src/claudia_computes/pivot.py:171
+msgid "“{field}” is in two places: a field is in rows, columns or filters, not in more"
+msgstr ""
+
+#: packages/claudia-core/src/claudia_core/styles.py:1090
 msgid "“{name}” and “{other}” are styles of different kinds: a style can only be taken over by one of the same kind"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:1024
+#: packages/claudia-core/src/claudia_core/styles.py:1022
 msgid "“{name}” can only be hidden, not deleted"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:459
+#: packages/claudia-core/src/claudia_core/styles.py:457
 msgid "“{name}” cannot be based on itself"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:464
+#: packages/claudia-core/src/claudia_core/styles.py:462
 msgid "“{name}” cannot be based on “{other}”, a style of another kind: a style and its parent are of the same kind"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:460
+#: packages/claudia-core/src/claudia_core/styles.py:458
 msgid "“{name}” cannot be based on “{other}”, which is based on it"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:1082
+#: packages/claudia-core/src/claudia_core/styles.py:1080
 msgid "“{name}” cannot be re-based on itself"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:1088
+#: packages/claudia-core/src/claudia_core/styles.py:1086
 msgid "“{name}” cannot be re-based on “{other}”, which is based on it"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:1082
+#: packages/claudia-core/src/claudia_core/styles.py:1080
 msgid "“{name}” cannot be replaced by itself"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:1086
+#: packages/claudia-core/src/claudia_core/styles.py:1084
 msgid "“{name}” cannot be replaced by “{other}”, which is based on it"
 msgstr ""
 
@@ -11237,6 +11241,18 @@ msgstr ""
 msgid "“{name}” is a built-in style and can only be hidden, not deleted"
 msgstr ""
 
+#: packages/claudia-computes/src/claudia_computes/commands.py:563
+msgid "“{name}” is a style of another kind and cannot be put into the box of a cell"
+msgstr ""
+
+#: packages/claudia-computes/src/claudia_computes/commands.py:565
+msgid "“{name}” is a style of another kind and cannot be put into the words of a cell"
+msgstr ""
+
+#: packages/claudia-composes/src/claudia_composes/model.py:1156
+msgid "“{name}” is a style of another kind and cannot be put on a paragraph"
+msgstr ""
+
 #: packages/claudia-core/src/claudia_core/styles.py:55
 msgid "“{name}” is a template style and can only be hidden, not deleted"
 msgstr ""
@@ -11245,7 +11261,7 @@ msgstr ""
 msgid "“{name}” is a {kind} style and does not fit {where}"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/styles.py:1034
+#: packages/claudia-core/src/claudia_core/styles.py:1032
 msgid "“{name}” is in use: say which style takes its place"
 msgstr ""
 

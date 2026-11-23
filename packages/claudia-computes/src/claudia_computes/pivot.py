@@ -168,8 +168,8 @@ class PivotDefinition:
         for field in (*self.rows, *self.columns, *(each.field for each in self.filters)):
             if field.casefold() in seen:
                 raise PivotError(
-                    N_("{seen!r} is in two places: a field is in rows, columns or filters, not in more"),
-                    seen=seen[field.casefold()],
+                    N_("“{field}” is in two places: a field is in rows, columns or filters, not in more"),
+                    field=seen[field.casefold()],
                 )
             seen.setdefault(field.casefold(), field)
 

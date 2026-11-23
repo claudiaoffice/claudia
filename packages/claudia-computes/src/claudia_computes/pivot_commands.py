@@ -129,10 +129,10 @@ def pivot_to_sql(model: WorkbookModel, name: str) -> Command:
     formula = '=SQL("' + result.sql.replace('"', '""') + '")'
     if len(formula) > MAX_LENGTH:
         raise Refusal(
-            "the query of {name} is too long for a formula: {count_formula:,} of {max_length:,} characters",
+            "the query of {name} is too long for a formula: {length} of {limit} characters",
             name=entry.name,
-            count_formula=len(formula),
-            max_length=MAX_LENGTH,
+            length=len(formula),
+            limit=MAX_LENGTH,
         )
     sheet, row, col = named.anchor
     return Batch(
@@ -147,7 +147,7 @@ def pivot_to_sql(model: WorkbookModel, name: str) -> Command:
 def _entry(model: WorkbookModel, name: str) -> PivotEntry:
     entry = model.pivots.get(name)
     if entry is None:
-        raise Refusal("there is no pivot table called {name!r}", name=name)
+        raise Refusal("there is no pivot table called “{name}”", name=name)
     return entry
 
 

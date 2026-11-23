@@ -124,5 +124,5 @@ def _checked(message: str, to: str | None = None) -> str:
             raise Refusal("write a message after @{to}", to=to)
         raise Refusal("write a message first")
     if len(message) > CHAT_MAX:
-        raise Refusal("a message can have at most {chat_max} characters", chat_max=CHAT_MAX)
+        raise Refusal("a message can have at most {limit} characters", limit=CHAT_MAX)
     return message

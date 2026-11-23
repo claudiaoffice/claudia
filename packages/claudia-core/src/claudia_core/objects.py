@@ -373,7 +373,7 @@ class ObjectSet:
         if not isinstance(holder, str) or not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
             raise ValueError("not a selection: it names a holder and a list of object ids")
         if len(ids) > MAX_SELECTION:
-            raise Refusal("a selection holds at most {max_selection} objects", max_selection=MAX_SELECTION)
+            raise Refusal("a selection holds at most {limit} objects", limit=MAX_SELECTION)
         return cls(holder, frozenset(ids))
 
 
@@ -459,9 +459,9 @@ class ObjectModel[A: Anchor]:
     objects_change_holder: ClassVar[bool] = False
     #: The kinds of object this app offers (a subset of ``OBJECT_KINDS``).
     object_kinds: ClassVar[tuple[str, ...]] = OBJECT_KINDS
-    #: What a person is told when the name she gives is another thing's, by the kind of that thing: one sentence per
-    #: kind, since another language says "ein Bild" but "eine Form" (CODE-78, D1510). An app adds the kinds of thing
-    #: it names besides its objects.
+    #: The sentence a person is told when the name she gives is another thing's, by the kind of that thing. One sentence
+    #: per kind, since another language says "ein Bild" but "eine Form" (CODE-78, D1510). An app adds the kinds of
+    #: thing it names besides its objects.
     name_taken: ClassVar[Mapping[str, str]] = {
         "text": N_("There is already a text box called “{name}”"),
         "shape": N_("There is already a shape called “{name}”"),
@@ -918,7 +918,7 @@ class ObjectModel[A: Anchor]:
     def _check_description(body: ObjectBody) -> None:
         """``ValueError`` unless the description is short text and a decorative object has none."""
         if not isinstance(body.description, str) or len(body.description) > MAX_ALT_CHARS:
-            raise Refusal("the description is text of at most {max_alt_chars} characters", max_alt_chars=MAX_ALT_CHARS)
+            raise Refusal("the description is text of at most {limit} characters", limit=MAX_ALT_CHARS)
         if type(body.decorative) is not bool:
             raise ValueError("decorative must be true or false")
         if body.decorative and body.description:
@@ -997,8 +997,8 @@ class ObjectModel[A: Anchor]:
             raise ValueError("w and h must be whole numbers")
         if body.w < self.min_object_size or body.h < self.min_object_size:
             raise Refusal(
-                "the size must be at least {min_object_size} by {min_object_size} units",
-                min_object_size=self.min_object_size,
+                "the size must be at least {least} by {least} units",
+                least=self.min_object_size,
             )
         if aspect is not None and abs(body.w - aspect * body.h) > ASPECT_TOLERANCE:
             raise Refusal("this object keeps its proportions (width divided by height is {aspect:g})", aspect=aspect)
@@ -1012,8 +1012,8 @@ class ObjectModel[A: Anchor]:
         stack = self._stack[obj.holder]
         if len(stack) >= self.max_objects_per_holder:
             raise Refusal(
-                "a holder has at most {max_objects_per_holder} objects",
-                max_objects_per_holder=self.max_objects_per_holder,
+                "a holder has at most {limit} objects",
+                limit=self.max_objects_per_holder,
             )
         if at is not None and not 0 <= at <= len(stack):
             raise ValueError(f"there is no stacking place {at} among {len(stack)} objects")
@@ -1064,8 +1064,8 @@ class ObjectModel[A: Anchor]:
         stack = self._stack.setdefault(obj.holder, [])
         if len(stack) >= self.max_objects_per_holder:
             raise Refusal(
-                "a holder has at most {max_objects_per_holder} objects",
-                max_objects_per_holder=self.max_objects_per_holder,
+                "a holder has at most {limit} objects",
+                limit=self.max_objects_per_holder,
             )
         was = self._stack[old.holder]
         place = was.index(obj.id)
@@ -1903,7 +1903,7 @@ class DescribeThing(Command):
     def apply(self, ctx: Context) -> Command:
         model = object_model_of(ctx)
         if not isinstance(self.description, str) or len(self.description) > MAX_ALT_CHARS:
-            raise Refusal("the description is text of at most {max_alt_chars} characters", max_alt_chars=MAX_ALT_CHARS)
+            raise Refusal("the description is text of at most {limit} characters", limit=MAX_ALT_CHARS)
         if not model.has_thing(self.id):
             raise ValueError(f"there is nothing with the id {self.id!r}")
         old = model.set_thing_description(self.id, self.description)

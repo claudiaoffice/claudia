@@ -153,9 +153,7 @@ class StyleDef:
 def _clean_name(name: str) -> str:
     text = " ".join(name.split()) if "\n" not in name and "\r" not in name else ""
     if not text or len(text) > _MAX_NAME or not text.isprintable():
-        raise Refusal(
-            "A style name is one line of 1 to {max_name} characters, got {name!r}", max_name=_MAX_NAME, name=name
-        )
+        raise Refusal("A style name is one line of 1 to {limit} characters, got {name!r}", limit=_MAX_NAME, name=name)
     return text
 
 
@@ -430,7 +428,7 @@ class StyleBook:
         style = self.get(style_id)
         clean = _clean_name(name)
         if self.name_taken(clean, besides=style_id):
-            raise Refusal("There is already a style named “{clean}”", clean=clean)
+            raise Refusal("There is already a style named “{name}”", name=clean)
         self._styles[style_id] = replace(style, name=clean, to_name=to_name)
         self.version += 1
 

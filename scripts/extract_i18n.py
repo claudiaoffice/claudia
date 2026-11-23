@@ -105,7 +105,9 @@ def _looked_up(call: ast.Call) -> bool:
     not looked up: it has no fixed text a translator could work from."""
     if not (isinstance(call.func, ast.Name) and call.func.id == "Refusal" and len(call.args) == 1):
         return False
-    return isinstance(call.args[0], (ast.Name, ast.Attribute, ast.Subscript, ast.Call))
+    (arg,) = call.args
+    lookup = isinstance(arg, ast.Call) and isinstance(arg.func, ast.Attribute) and arg.func.attr == "get"
+    return lookup or isinstance(arg, (ast.Name, ast.Attribute, ast.Subscript))
 
 
 def extract_python(path: Path) -> tuple[dict[str, list[str]], list[Problem]]:

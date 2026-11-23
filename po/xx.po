@@ -326,16 +326,16 @@ msgid "A link: gives the friendly text if there is one, otherwise the address. T
 msgstr "[À lînk: gîvés thé frîéndly téxt îf théré îs ôné, ôthérwîsé thé àddréss. Thé céll shôws thé téxt; clàûdîà dôés nôt fôllôw thé lînk frôm à fôrmûlà.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/lists.py:83
-msgid "A list name is one line of 1 to {max_name} characters, got {name!r}"
-msgstr "[À lîst nàmé îs ôné lîné ôf 1 tô {max_name} chàràctérs, gôt {nàmé!r}~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "A list name is one line of 1 to {limit} characters, got {name!r}"
+msgstr "[À lîst nàmé îs ôné lîné ôf 1 tô {limit} chàràctérs, gôt {nàmé!r}~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: clients/linux/src/claudia_shell_gtk/manifest.py
 msgid "A list of the headings, each a link to its place; it follows them by itself"
 msgstr "[À lîst ôf thé héàdîngs, éàch à lînk tô îts plàcé; ît fôllôws thém by îtsélf~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/lists.py:77
-msgid "A list starts at a number from 1 to {max_start}, got {start!r}"
-msgstr "[À lîst stàrts àt à nûmbér frôm 1 tô {max_start}, gôt {stàrt!r}~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "A list starts at a number from 1 to {limit}, got {start!r}"
+msgstr "[À lîst stàrts àt à nûmbér frôm 1 tô {limit}, gôt {stàrt!r}~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/NumberingDialog.vue:200
 msgid "A list uses this scheme"
@@ -345,7 +345,7 @@ msgstr "[À lîst ûsés thîs schémé~~~~~~~~~]"
 msgid "A name like this exists already and will point here."
 msgstr "[À nàmé lîké thîs éxîsts àlréàdy ànd wîll pôînt héré.~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:807
+#: packages/claudia-computes/src/claudia_computes/model.py:804
 msgid "A named range is renamed in the list of names, which also changes the formulas that use it"
 msgstr "[À nàméd ràngé îs rénàméd în thé lîst ôf nàmés, whîch àlsô chàngés thé fôrmûlàs thàt ûsé ît~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -373,9 +373,9 @@ msgstr "[À nûmbér frôm 0 tô 3999 às à Rômàn nûméràl; thé fôrm 0 t�
 msgid "A number raised to a power (the same as the operator ^)."
 msgstr "[À nûmbér ràîséd tô à pôwér (thé sàmé às thé ôpéràtôr ^).~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/palette.py:246
-msgid "A palette holds at most {max_roles} colour roles"
-msgstr "[À pàlétté hôlds àt môst {max_roles} côlôûr rôlés~~~~~~~~~~~~~~~~~~~]"
+#: packages/claudia-core/src/claudia_core/palette.py:244
+msgid "A palette holds at most {limit} colour roles"
+msgstr "[À pàlétté hôlds àt môst {limit} côlôûr rôlés~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/PrintPreview.vue:290
 msgid "A picture is printed without some of it: {reason}."
@@ -398,12 +398,12 @@ msgid "A request beyond this number is refused before anything is written."
 msgstr "[À réqûést béyônd thîs nûmbér îs réfûséd béfôré ànythîng îs wrîttén.~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/palette.py:174
-msgid "A role name is one line of 1 to {max_name} characters, got {name!r}"
-msgstr "[À rôlé nàmé îs ôné lîné ôf 1 tô {max_name} chàràctérs, gôt {nàmé!r}~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "A role name is one line of 1 to {limit} characters, got {name!r}"
+msgstr "[À rôlé nàmé îs ôné lîné ôf 1 tô {limit} chàràctérs, gôt {nàmé!r}~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/schemes.py:211
-msgid "A scheme name is one line of 1 to {max_name} characters, got {name!r}"
-msgstr "[À schémé nàmé îs ôné lîné ôf 1 tô {max_name} chàràctérs, gôt {nàmé!r}~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "A scheme name is one line of 1 to {limit} characters, got {name!r}"
+msgstr "[À schémé nàmé îs ôné lîné ôf 1 tô {limit} chàràctérs, gôt {nàmé!r}~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/schemes.py:224
 msgid "A scheme's gap is from 0 to {largest:g} em, got {value!r}"
@@ -422,8 +422,8 @@ msgid "A stand-in is used when a document asks for a family this server lacks. {
 msgstr "[À stànd-în îs ûséd whén à dôcûmént àsks fôr à fàmîly thîs sérvér làcks. {fonts} hàvé thé sàmé wîdths às thé fônts théy stànd în fôr, sô lînés ànd pàgés bréàk às în thé ôrîgînàl.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/styles.py:156
-msgid "A style name is one line of 1 to {max_name} characters, got {name!r}"
-msgstr "[À stylé nàmé îs ôné lîné ôf 1 tô {max_name} chàràctérs, gôt {nàmé!r}~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "A style name is one line of 1 to {limit} characters, got {name!r}"
+msgstr "[À stylé nàmé îs ôné lîné ôf 1 tô {limit} chàràctérs, gôt {nàmé!r}~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/SheetChartInsertDialog.vue:154
 msgid "A tab"
@@ -5721,7 +5721,7 @@ msgstr "[Thé ànglé în ràdîàns frôm thé x àxîs tô thé pôînt (x, y)
 msgid "The angle in radians, from 0 to pi, whose cotangent is the number."
 msgstr "[Thé ànglé în ràdîàns, frôm 0 tô pî, whôsé côtàngént îs thé nûmbér.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:1030
+#: packages/claudia-core/src/claudia_core/styles.py:1028
 msgid "The app cannot move what has the style “{name}” to another style"
 msgstr "[Thé àpp cànnôt môvé whàt hàs thé stylé “{name}” tô ànôthér stylé~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6114,8 +6114,8 @@ msgid "The list {list!r} is in use and cannot be taken back"
 msgstr "[Thé lîst {lîst!r} îs în ûsé ànd cànnôt bé tàkén bàck~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/lists.py:303
-msgid "The list {list!r} numbers the style “{numbered}” and cannot be taken back"
-msgstr "[Thé lîst {lîst!r} nûmbérs thé stylé “{numbered}” ànd cànnôt bé tàkén bàck~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "The list {list!r} numbers the style “{style}” and cannot be taken back"
+msgstr "[Thé lîst {lîst!r} nûmbérs thé stylé “{style}” ànd cànnôt bé tàkén bàck~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The logarithm of a positive number to a base (10 unless given)."
@@ -6129,11 +6129,11 @@ msgstr "[Thé lôgîcàl vàlûé FÀLSÉ (ît càn àlsô bé wrîttén wîthô
 msgid "The logical value TRUE (it can also be written without brackets)."
 msgstr "[Thé lôgîcàl vàlûé TRÛÉ (ît càn àlsô bé wrîttén wîthôût bràckéts).~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:900
+#: packages/claudia-core/src/claudia_core/styles.py:898
 msgid "The look cannot be kept: the new parent sets “{prop}” and nothing says what a style that does not set it looks like"
 msgstr "[Thé lôôk cànnôt bé képt: thé néw pàrént séts “{prop}” ànd nôthîng sàys whàt à stylé thàt dôés nôt sét ît lôôks lîké~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:938
+#: packages/claudia-core/src/claudia_core/styles.py:936
 msgid "The look cannot be kept: the new parent shows numbers in a format this style does not"
 msgstr "[Thé lôôk cànnôt bé képt: thé néw pàrént shôws nûmbérs în à fôrmàt thîs stylé dôés nôt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6361,9 +6361,9 @@ msgstr "[Thé prôdûct ôf thé nûmbérs în thé ràngés.~~~~~~~~~~~~~~~~]"
 msgid "The product of two matrices: the first must have as many columns as the second has rows."
 msgstr "[Thé prôdûct ôf twô màtrîcés: thé fîrst mûst hàvé às màny côlûmns às thé sécônd hàs rôws.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/palette.py:251
-msgid "The purpose of a colour role is one line of up to {max_purpose} characters"
-msgstr "[Thé pûrpôsé ôf à côlôûr rôlé îs ôné lîné ôf ûp tô {max_purpose} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+#: packages/claudia-core/src/claudia_core/palette.py:249
+msgid "The purpose of a colour role is one line of up to {limit} characters"
+msgstr "[Thé pûrpôsé ôf à côlôûr rôlé îs ôné lîné ôf ûp tô {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/PivotSqlDialog.vue:29
 msgid "The query could not be copied. Select it and copy it with the keyboard."
@@ -6446,8 +6446,8 @@ msgid "The same font as {file}: added once."
 msgstr "[Thé sàmé fônt às {file}: àddéd ôncé.~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/schemes.py:436
-msgid "The scheme {scheme!r} is used by the list {users!r} and cannot be removed"
-msgstr "[Thé schémé {schémé!r} îs ûséd by thé lîst {ûsérs!r} ànd cànnôt bé rémôvéd~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "The scheme {scheme!r} is used by the list {list!r} and cannot be removed"
+msgstr "[Thé schémé {schémé!r} îs ûséd by thé lîst {lîst!r} ànd cànnôt bé rémôvéd~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/SearchPanel.vue:652
 msgid "The search was stopped after a while, so this may not be everything."
@@ -6593,15 +6593,15 @@ msgstr "[Thé stàndàrd nôrmàl dîstrîbûtîôn (méàn 0, dévîàtîôn 1)
 msgid "The straight line y = m1*x1 + ... + b through known y and x values, as a row: the coefficients in reverse order, then b; with stats TRUE also standard errors, r squared, F, degrees of freedom and sums of squares."
 msgstr "[Thé stràîght lîné y = m1*x1 + ... + b thrôûgh knôwn y ànd x vàlûés, às à rôw: thé côéffîcîénts în révérsé ôrdér, thén b; wîth stàts TRÛÉ àlsô stàndàrd érrôrs, r sqûàréd, F, dégréés ôf fréédôm ànd sûms ôf sqûàrés.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:489
+#: packages/claudia-core/src/claudia_core/styles.py:487
 msgid "The style “{name}” has styles based on it"
 msgstr "[Thé stylé “{name}” hàs stylés bàséd ôn ît~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:601
+#: packages/claudia-core/src/claudia_core/styles.py:599
 msgid "The style “{name}” is in use and cannot be taken back"
 msgstr "[Thé stylé “{name}” îs în ûsé ànd cànnôt bé tàkén bàck~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/palette.py:333
+#: packages/claudia-core/src/claudia_core/palette.py:329
 msgid "The style “{name}” uses the colour role(s) {names}, which this palette has not"
 msgstr "[Thé stylé “{name}” ûsés thé côlôûr rôlé(s) {names}, whîch thîs pàlétté hàs nôt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -6670,8 +6670,8 @@ msgid "The text before a delimiter: before its nth occurrence (negative: counted
 msgstr "[Thé téxt béfôré à délîmîtér: béfôré îts nth ôccûrréncé (négàtîvé: côûntéd frôm thé énd); màtch_môdé 1 îgnôrés càsé, màtch_énd 1 côûnts thé énd ôf thé téxt às à délîmîtér; îf_nôt_fôûnd îs gîvén whén ît îs nôt théré (élsé #N/À).~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/schemes.py:134
-msgid "The text before and after a number is one line of up to {max_affix} characters"
-msgstr "[Thé téxt béfôré ànd àftér à nûmbér îs ôné lîné ôf ûp tô {max_affix} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "The text before and after a number is one line of up to {limit} characters"
+msgstr "[Thé téxt béfôré ànd àftér à nûmbér îs ôné lîné ôf ûp tô {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "The text in capital letters."
@@ -6801,11 +6801,11 @@ msgstr "[Thé “)” àt chàràctér {position} hàs nô “(”. Nôthîng î
 msgid "The “[” at character {position} has no “]”. Nothing is replaced."
 msgstr "[Thé “[” àt chàràctér {position} hàs nô “]”. Nôthîng îs réplàcéd.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:452 packages/claudia-core/src/claudia_core/objects.py:469
+#: packages/claudia-computes/src/claudia_computes/commands.py:733 packages/claudia-computes/src/claudia_computes/model.py:452 packages/claudia-core/src/claudia_core/objects.py:469
 msgid "There is already a chart called “{name}”"
 msgstr "[Théré îs àlréàdy à chàrt càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/palette.py:249
+#: packages/claudia-core/src/claudia_core/palette.py:247
 msgid "There is already a colour role named “{name}”"
 msgstr "[Théré îs àlréàdy à côlôûr rôlé nàméd “{name}”~~~~~~~~~~~~~~~~~~]"
 
@@ -6837,7 +6837,7 @@ msgstr "[Théré îs àlréàdy à pîctûré càlléd “{name}”~~~~~~~~~~~~~
 msgid "There is already a shape called “{name}”"
 msgstr "[Théré îs àlréàdy à shàpé càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:451
+#: packages/claudia-computes/src/claudia_computes/commands.py:153 packages/claudia-computes/src/claudia_computes/model.py:451
 msgid "There is already a sheet called “{name}”"
 msgstr "[Théré îs àlréàdy à shéét càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
@@ -6845,11 +6845,7 @@ msgstr "[Théré îs àlréàdy à shéét càlléd “{name}”~~~~~~~~~~~~~~~~
 msgid "There is already a slide called “{name}”"
 msgstr "[Théré îs àlréàdy à slîdé càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:433
-msgid "There is already a style named “{clean}”"
-msgstr "[Théré îs àlréàdy à stylé nàméd “{clean}”~~~~~~~~~~~~~~~~]"
-
-#: packages/claudia-core/src/claudia_core/styles.py:348
+#: packages/claudia-core/src/claudia_core/styles.py:346 packages/claudia-core/src/claudia_core/styles.py:431
 msgid "There is already a style named “{name}”"
 msgstr "[Théré îs àlréàdy à stylé nàméd “{name}”~~~~~~~~~~~~~~~~]"
 
@@ -6861,7 +6857,7 @@ msgstr "[Théré îs àlréàdy à tàblé càlléd “{name}”~~~~~~~~~~~~~~~~
 msgid "There is already a text box called “{name}”"
 msgstr "[Théré îs àlréàdy à téxt bôx càlléd “{name}”~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:768
+#: packages/claudia-core/src/claudia_core/styles.py:766
 msgid "There is no list {numbering!r} to number the style “{name}” in"
 msgstr "[Théré îs nô lîst {nûmbérîng!r} tô nûmbér thé stylé “{name}” în~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7829,13 +7825,13 @@ msgstr "[à Clàûdîà fîlé gôés în às ît îs, nôt às à néw dôcûm�
 msgid "a cell reference"
 msgstr "[à céll référéncé~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:730
-msgid "a chart called {name!r} exists"
-msgstr "[à chàrt càlléd {nàmé!r} éxîsts~~~~~~~~~~~~]"
-
-#: packages/claudia-computes/src/claudia_computes/model.py:811
+#: packages/claudia-computes/src/claudia_computes/model.py:808
 msgid "a chart needs a name"
 msgstr "[à chàrt nééds à nàmé~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/model.py:659
+msgid "a chart's range must be inside the sheet"
+msgstr "[à chàrt's ràngé mûst bé însîdé thé shéét~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/tables.py:152
 msgid "a column cannot be moved in front of itself"
@@ -7845,7 +7841,7 @@ msgstr "[à côlûmn cànnôt bé môvéd în frônt ôf îtsélf~~~~~~~~~~~~~~~
 msgid "a column has no setting {name!r}"
 msgstr "[à côlûmn hàs nô séttîng {nàmé!r}~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:655
+#: packages/claudia-computes/src/claudia_computes/commands.py:658
 msgid "a column is {lo} to {hi} wide, not {size}"
 msgstr "[à côlûmn îs {lo} tô {hi} wîdé, nôt {size}~~~~~~~~~~~~~~~~]"
 
@@ -7866,8 +7862,8 @@ msgid "a heading is called by its words: change the words to change the name"
 msgstr "[à héàdîng îs càlléd by îts wôrds: chàngé thé wôrds tô chàngé thé nàmé~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/objects.py:1014 packages/claudia-core/src/claudia_core/objects.py:1066
-msgid "a holder has at most {max_objects_per_holder} objects"
-msgstr "[à hôldér hàs àt môst {max_objects_per_holder} ôbjécts~~~~~~~~~~~~~~~~~~~~~]"
+msgid "a holder has at most {limit} objects"
+msgstr "[à hôldér hàs àt môst {limit} ôbjécts~~~~~~~~~~~~~~]"
 
 #: web/app/components/SearchPanel.vue:196 web/app/lib/search.ts:215
 msgid "a letter"
@@ -7886,8 +7882,8 @@ msgid "a merged box cannot be torn apart: split it first"
 msgstr "[à mérgéd bôx cànnôt bé tôrn àpàrt: splît ît fîrst~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/messages.py:127
-msgid "a message can have at most {chat_max} characters"
-msgstr "[à méssàgé càn hàvé àt môst {chat_max} chàràctérs~~~~~~~~~~~~~~~~~~~]"
+msgid "a message can have at most {limit} characters"
+msgstr "[à méssàgé càn hàvé àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/names.py:49 packages/claudia-core/src/claudia_core/names.py:41 packages/claudia-server/src/claudia_server/thing_names.py:106
 msgid "a name has at most {limit} characters"
@@ -7922,8 +7918,8 @@ msgid "a number as it is, TRUE as 1, FALSE as 0, a date as its number, anything 
 msgstr "[à nûmbér às ît îs, TRÛÉ às 1, FÀLSÉ às 0, à dàté às îts nûmbér, ànythîng élsé (téxt, émpty) às 0.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/numformats.py:154
-msgid "a number format code has 1 to {max_code} characters"
-msgstr "[à nûmbér fôrmàt côdé hàs 1 tô {max_code} chàràctérs~~~~~~~~~~~~~~~~~~~~]"
+msgid "a number format code has 1 to {limit} characters"
+msgstr "[à nûmbér fôrmàt côdé hàs 1 tô {limit} chàràctérs~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/numformats.py:156
 msgid "a number format code has at most four sections"
@@ -7946,12 +7942,12 @@ msgid "a palette holds at most {limit} colour roles"
 msgstr "[à pàlétté hôlds àt môst {limit} côlôûr rôlés~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/paragraphs.py:214
-msgid "a paragraph holds text of at most {max_paragraph_text} characters"
-msgstr "[à pàràgràph hôlds téxt ôf àt môst {max_paragraph_text} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "a paragraph holds text of at most {limit} characters"
+msgstr "[à pàràgràph hôlds téxt ôf àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-creates/src/claudia_creates/model.py:88
-msgid "a planned time is a whole number of seconds from 1 to {max_slide_seconds}"
-msgstr "[à plànnéd tîmé îs à whôlé nûmbér ôf sécônds frôm 1 tô {max_slide_seconds}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "a planned time is a whole number of seconds from 1 to {limit}"
+msgstr "[à plànnéd tîmé îs à whôlé nûmbér ôf sécônds frôm 1 tô {limit}~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "a random number from the named distribution, for example RANDOM(\"normal\", 1000, 150). Without arguments it is RAND(). ``low`` and ``high`` cut the distribution (continuous ones only). Distributions: uniform, normal, lognormal, triangular, pert, exponential, weibull, beta, gamma, binomial, poisson, discrete."
@@ -7985,23 +7981,19 @@ msgstr "[à rôlé's îd, nàmé ànd côlôûr àré téxt~~~~~~~~~~~~~~~]"
 msgid "a row cannot be moved in front of itself"
 msgstr "[à rôw cànnôt bé môvéd în frônt ôf îtsélf~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:653
+#: packages/claudia-computes/src/claudia_computes/commands.py:656
 msgid "a row is {lo} to {hi} high, not {size}"
 msgstr "[à rôw îs {lo} tô {hi} hîgh, nôt {size}~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/objects.py:376
-msgid "a selection holds at most {max_selection} objects"
-msgstr "[à séléctîôn hôlds àt môst {max_selection} ôbjécts~~~~~~~~~~~~~~~~~~~~]"
-
-#: packages/claudia-computes/src/claudia_computes/commands.py:153
-msgid "a sheet called {name!r} exists"
-msgstr "[à shéét càlléd {nàmé!r} éxîsts~~~~~~~~~~~~]"
+msgid "a selection holds at most {limit} objects"
+msgstr "[à séléctîôn hôlds àt môst {limit} ôbjécts~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/cellstyles.py:196
-msgid "a sheet holds at most {max_style_ranges} style ranges"
-msgstr "[à shéét hôlds àt môst {max_style_ranges} stylé ràngés~~~~~~~~~~~~~~~~~~~~~]"
+msgid "a sheet holds at most {limit} style ranges"
+msgstr "[à shéét hôlds àt môst {limit} stylé ràngés~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:784
+#: packages/claudia-computes/src/claudia_computes/model.py:781
 msgid "a sheet needs a name"
 msgstr "[à shéét nééds à nàmé~~~~~~~~]"
 
@@ -8053,13 +8045,17 @@ msgstr "[à tàblé kééps àt léàst ôné côlûmn~~~~~~~~~~~~~]"
 msgid "a table keeps at least one row"
 msgstr "[à tàblé kééps àt léàst ôné rôw~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:999
+#: packages/claudia-computes/src/claudia_computes/model.py:996
 msgid "a table needs a header row"
 msgstr "[à tàblé nééds à héàdér rôw~~~~~~~~~~]"
 
 #: packages/claudia-composes/src/claudia_composes/model.py:1123
 msgid "a table of contents cannot be joined to a paragraph; remove it instead"
 msgstr "[à tàblé ôf cônténts cànnôt bé jôînéd tô à pàràgràph; rémôvé ît înstéàd~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-composes/src/claudia_composes/model.py:1065
+msgid "a table of contents takes no typing: its entries come from the headings"
+msgstr "[à tàblé ôf cônténts tàkés nô typîng: îts éntrîés cômé frôm thé héàdîngs~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/tables.py:503
 msgid "a table with merged rows cannot be sorted: split them first"
@@ -8076,6 +8072,10 @@ msgstr "[à tàrgét nàmés ôné ôf: {adapters}~~~~~~~~~~~~~]"
 #: web/app/components/ImportDialog.vue:86
 msgid "a text"
 msgstr "[à téxt~~]"
+
+#: packages/claudia-computes/src/claudia_computes/charts.py:97
+msgid "a title of a chart has at most {limit} characters"
+msgstr "[à tîtlé ôf à chàrt hàs àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "a whole number from bottom to top, both included."
@@ -8933,13 +8933,13 @@ msgstr "[nô célls~~~]"
 msgid "no checkpoint number {checkpoint}"
 msgstr "[nô chéckpôînt nûmbér {checkpoint}~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:915
+#: packages/claudia-server/src/claudia_server/hub.py:919
 msgid "no document {id!r}"
 msgstr "[nô dôcûmént {îd!r}~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py:129
-msgid "no field {field!r} in {source}: {names}"
-msgstr "[nô fîéld {fîéld!r} în {source}: {names}~~~~~~~~~~~~~~~~]"
+msgid "no field “{field}” in “{source}”: {names}"
+msgstr "[nô fîéld “{field}” în “{source}”: {names}~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/computes.py:777
 msgid "no function named {name!r}"
@@ -8974,8 +8974,8 @@ msgid "no style of their own"
 msgstr "[nô stylé ôf théîr ôwn~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py:93
-msgid "no table or range named {source!r}"
-msgstr "[nô tàblé ôr ràngé nàméd {sôûrcé!r}~~~~~~~~~~~~~~]"
+msgid "no table or range named “{source}”"
+msgstr "[nô tàblé ôr ràngé nàméd “{source}”~~~~~~~~~~~~~~]"
 
 #: web/app/components/ContentsDialog.vue:32 web/app/components/TableOptionsDialog.vue:23
 msgid "none"
@@ -9086,8 +9086,8 @@ msgid "notes"
 msgstr "[nôtés~~]"
 
 #: packages/claudia-creates/src/claudia_creates/model.py:81
-msgid "notes are at most {max_notes_length} characters"
-msgstr "[nôtés àré àt môst {max_notes_length} chàràctérs~~~~~~~~~~~~~~~~~~~]"
+msgid "notes are at most {limit} characters"
+msgstr "[nôtés àré àt môst {limit} chàràctérs~~~~~~~~~~~~~~]"
 
 #: web/app/components/NumberingDialog.vue:135
 msgid "numbers"
@@ -9497,10 +9497,6 @@ msgstr "[sévéràl vàlûés fôr ôné înpût. Thé céll shôws thé fîrst;
 msgid "shape"
 msgstr "[shàpé~~]"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:201
-msgid "sheet {name!r} still has chart {blocking!r}'s data on it"
-msgstr "[shéét {nàmé!r} stîll hàs chàrt {blôckîng!r}'s dàtà ôn ît~~~~~~~~~~~~~~~~~~~~~~]"
-
 #: web/app/components/FooterBar.vue:30
 msgid "sheets"
 msgstr "[shééts~~]"
@@ -9577,11 +9573,11 @@ msgstr "[stàrt wîth~~~~]"
 msgid "start with “{text}”"
 msgstr "[stàrt wîth “{text}”~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1256
+#: packages/claudia-computes/src/claudia_computes/model.py:1253
 msgid "structural edit is outside the sheet"
 msgstr "[strûctûràl édît îs ôûtsîdé thé shéét~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1274
+#: packages/claudia-computes/src/claudia_computes/model.py:1271
 msgid "structural edit would push cells off the sheet"
 msgstr "[strûctûràl édît wôûld pûsh célls ôff thé shéét~~~~~~~~~~~~~~~~~~]"
 
@@ -9701,7 +9697,7 @@ msgstr "[thé célls ``rôws`` dôwn ànd ``côlûmns`` àcrôss frôm thé réf
 msgid "the cells are more than the table's rows and cols"
 msgstr "[thé célls àré môré thàn thé tàblé's rôws ànd côls~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:997
+#: packages/claudia-computes/src/claudia_computes/model.py:994
 msgid "the cells of a name must be inside the sheet"
 msgstr "[thé célls ôf à nàmé mûst bé însîdé thé shéét~~~~~~~~~~~~~~~~~~]"
 
@@ -9722,8 +9718,8 @@ msgid "the date and time as a day number with the time of day as its fraction."
 msgstr "[thé dàté ànd tîmé às à dày nûmbér wîth thé tîmé ôf dày às îts fràctîôn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/objects.py:1906 packages/claudia-core/src/claudia_core/objects.py:921
-msgid "the description is text of at most {max_alt_chars} characters"
-msgstr "[thé déscrîptîôn îs téxt ôf àt môst {max_alt_chars} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "the description is text of at most {limit} characters"
+msgstr "[thé déscrîptîôn îs téxt ôf àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/composes.py:245
 msgid "the descriptions are written as comments, which the kept file cannot take"
@@ -9737,7 +9733,7 @@ msgstr "[thé dôcûmént hàs chàngéd whéré thîs prévîéw àcts sîncé 
 msgid "the document's own"
 msgstr "[thé dôcûmént's ôwn~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/commands.py:826
+#: packages/claudia-computes/src/claudia_computes/commands.py:829
 msgid "the draw number cannot go below 0"
 msgstr "[thé dràw nûmbér cànnôt gô bélôw 0~~~~~~~~~~~~~]"
 
@@ -9773,6 +9769,10 @@ msgstr "[thé fônt {family} {style} dîd nôt àrrîvé întàct~~~~~~~~~~~~~~~
 msgid "the formula in the cell as text, or #N/A if the cell holds none."
 msgstr "[thé fôrmûlà în thé céll às téxt, ôr #N/À îf thé céll hôlds nôné.~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-composes/src/claudia_composes/anchors.py:135
+msgid "the gap between an object and the text is a whole number from 0 to {limit} units"
+msgstr "[thé gàp bétwéén àn ôbjéct ànd thé téxt îs à whôlé nûmbér frôm 0 tô {limit} ûnîts~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/lib/names.ts:338
 msgid "the header row"
 msgstr "[thé héàdér rôw~~~~~~]"
@@ -9797,7 +9797,7 @@ msgstr "[thé màrgîns léàvé léss thàn 10 mm fôr thé côntént~~~~~~~~~~
 msgid "the mean of the values"
 msgstr "[thé méàn ôf thé vàlûés~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/composes.py:515 packages/claudia-server/src/claudia_server/style_targets.py:241 packages/claudia-server/src/claudia_server/styles.py:225
+#: packages/claudia-server/src/claudia_server/composes.py:515 packages/claudia-server/src/claudia_server/style_targets.py:243 packages/claudia-server/src/claudia_server/styles.py:225
 msgid "the new style would look just like “{name}”"
 msgstr "[thé néw stylé wôûld lôôk jûst lîké “{name}”~~~~~~~~~~~~~~~~~]"
 
@@ -9822,8 +9822,8 @@ msgid "the pivot table {name} gave nothing: there is no SQL to turn it into"
 msgstr "[thé pîvôt tàblé {name} gàvé nôthîng: théré îs nô SQL tô tûrn ît întô~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py:102
-msgid "the pivot would have {count:,} columns, at most {limit:,} fit: {field!r} has too many members for the columns"
-msgstr "[thé pîvôt wôûld hàvé {côûnt:,} côlûmns, àt môst {lîmît:,} fît: {fîéld!r} hàs tôô màny mémbérs fôr thé côlûmns~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "the pivot would have {count} columns, at most {limit} fit: “{field}” has too many members for the columns"
+msgstr "[thé pîvôt wôûld hàvé {count} côlûmns, àt môst {limit} fît: “{field}” hàs tôô màny mémbérs fôr thé côlûmns~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/functions
 msgid "the position (from 1) of the value in a row or column. Type 0 is an exact match (``*`` and ``?`` work in text); 1 (the default) finds the largest value that is not more than the given one in data sorted ascending; -1 the smallest that is not less, in data sorted descending. Not found is #N/A."
@@ -9834,8 +9834,8 @@ msgid "the position (from 1) of the value. Match mode 0 is exact, -1 the exact v
 msgstr "[thé pôsîtîôn (frôm 1) ôf thé vàlûé. Màtch môdé 0 îs éxàct, -1 thé éxàct vàlûé ôr élsé thé néxt smàllér, 1 ôr élsé thé néxt làrgér, 2 éxàct wîth wîldcàrds. Séàrch môdé 1 lôôks frôm thé fîrst, -1 frôm thé làst. Nôt fôûnd îs #N/À.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/pivot_commands.py:131
-msgid "the query of {name} is too long for a formula: {count_formula:,} of {max_length:,} characters"
-msgstr "[thé qûéry ôf {name} îs tôô lông fôr à fôrmûlà: {côûnt_fôrmûlà:,} ôf {màx_léngth:,} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "the query of {name} is too long for a formula: {length} of {limit} characters"
+msgstr "[thé qûéry ôf {name} îs tôô lông fôr à fôrmûlà: {length} ôf {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/composes.py:327 packages/claudia-server/src/claudia_server/composes.py:383
 msgid "the range ends before it starts"
@@ -9881,6 +9881,10 @@ msgstr "[thé sérvér lîsts nô fônts ({status})~~~~~~~~~~~~~~]"
 msgid "the sheet is {style}"
 msgstr "[thé shéét îs {style}~~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/commands.py:201
+msgid "the sheet “{name}” still has the data of the chart “{chart}” on it"
+msgstr "[thé shéét “{name}” stîll hàs thé dàtà ôf thé chàrt “{chart}” ôn ît~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: web/app/lib/print/source.ts:260
 msgid "the sheets"
 msgstr "[thé shééts~~~~]"
@@ -9890,8 +9894,8 @@ msgid "the sheet’s style"
 msgstr "[thé shéét’s stylé~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/objects.py:999
-msgid "the size must be at least {min_object_size} by {min_object_size} units"
-msgstr "[thé sîzé mûst bé àt léàst {min_object_size} by {min_object_size} ûnîts~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "the size must be at least {least} by {least} units"
+msgstr "[thé sîzé mûst bé àt léàst {least} by {least} ûnîts~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/print/source.ts:207
 msgid "the slides"
@@ -9966,8 +9970,8 @@ msgid "there is a table of contents here already"
 msgstr "[théré îs à tàblé ôf cônténts héré àlréàdy~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-computes/src/claudia_computes/numformats.py:121
-msgid "there is already a number format called {name!r}"
-msgstr "[théré îs àlréàdy à nûmbér fôrmàt càlléd {nàmé!r}~~~~~~~~~~~~~~~~~~~]"
+msgid "there is already a number format called “{name}”"
+msgstr "[théré îs àlréàdy à nûmbér fôrmàt càlléd “{name}”~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py:790 packages/claudia-server/src/claudia_server/protocol.py:886
 msgid "there is an open suggestion; answer or withdraw it first"
@@ -9985,17 +9989,21 @@ msgstr "[théré îs nô chàt méssàgé ôf thàt nûmbér fôr yôû~~~~~~~~~
 msgid "there is no earlier list of this kind to continue"
 msgstr "[théré îs nô éàrlîér lîst ôf thîs kînd tô côntînûé~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1096
-msgid "there is no name {old!r}"
-msgstr "[théré îs nô nàmé {ôld!r}~~~~~~~~~~]"
+#: packages/claudia-computes/src/claudia_computes/model.py:1093
+msgid "there is no name “{old}”"
+msgstr "[théré îs nô nàmé “{old}”~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/composes.py:373 packages/claudia-server/src/claudia_server/composes.py:433 packages/claudia-server/src/claudia_server/composes.py:599 packages/claudia-server/src/claudia_server/composes_words.py:117 packages/claudia-server/src/claudia_server/composes_words.py:53
 msgid "there is no paragraph {paragraph!r}"
 msgstr "[théré îs nô pàràgràph {pàràgràph!r}~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/pivot_commands.py:150 packages/claudia-server/src/claudia_server/computes.py:1144
+#: packages/claudia-server/src/claudia_server/computes.py:1144
 msgid "there is no pivot table called {name!r}"
 msgstr "[théré îs nô pîvôt tàblé càlléd {nàmé!r}~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/pivot_commands.py:150
+msgid "there is no pivot table called “{name}”"
+msgstr "[théré îs nô pîvôt tàblé càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/protocol.py:726
 msgid "there is no step {revision} on this line"
@@ -10033,9 +10041,9 @@ msgstr "[thîs dôcûmént hàs nô côntàînér wîth thé îd {îd!r}~~~~~~~~
 msgid "this document has no lists"
 msgstr "[thîs dôcûmént hàs nô lîsts~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:656
-msgid "this document has no name {source!r} to draw a chart from"
-msgstr "[thîs dôcûmént hàs nô nàmé {sôûrcé!r} tô dràw à chàrt frôm~~~~~~~~~~~~~~~~~~~~~~~]"
+#: packages/claudia-computes/src/claudia_computes/model.py:653
+msgid "this document has no name “{source}” to draw a chart from"
+msgstr "[thîs dôcûmént hàs nô nàmé “{source}” tô dràw à chàrt frôm~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-server/src/claudia_server/styles.py:66
 msgid "this document has no palette"
@@ -10074,8 +10082,8 @@ msgid "this level"
 msgstr "[thîs lévél~~~~]"
 
 #: packages/claudia-creates/src/claudia_creates/model.py:301
-msgid "this object is too large to turn that way: it would be {out_w} by {out_h} units on a slide of {slide_width} by {slide_height}"
-msgstr "[thîs ôbjéct îs tôô làrgé tô tûrn thàt wày: ît wôûld bé {out_w} by {out_h} ûnîts ôn à slîdé ôf {slide_width} by {slide_height}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "this object is too large to turn that way: it would be {width} by {height} units on a slide of {slide_width} by {slide_height}"
+msgstr "[thîs ôbjéct îs tôô làrgé tô tûrn thàt wày: ît wôûld bé {width} by {height} ûnîts ôn à slîdé ôf {slide_width} by {slide_height}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: packages/claudia-core/src/claudia_core/objects.py:1004
 msgid "this object keeps its proportions (width divided by height is {aspect:g})"
@@ -10214,8 +10222,8 @@ msgid "trials"
 msgstr "[trîàls~~]"
 
 #: packages/claudia-computes/src/claudia_computes/pivot_render.py:150
-msgid "two value fields are both called {title!r}: give one of them another name"
-msgstr "[twô vàlûé fîélds àré bôth càlléd {tîtlé!r}: gîvé ôné ôf thém ànôthér nàmé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+msgid "two value fields are both called “{title}”: give one of them another name"
+msgstr "[twô vàlûé fîélds àré bôth càlléd “{title}”: gîvé ôné ôf thém ànôthér nàmé~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/components/SheetGrid.vue:1240
 msgid "type here to add a row"
@@ -10405,7 +10413,7 @@ msgstr "[{caption}: màrk thé téxt bôx by whàt ît îs fôr~~~~~~~~~~~~~~~~~
 msgid "{cell} (no table right now)"
 msgstr "[{cell} (nô tàblé rîght nôw)~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:1226
+#: packages/claudia-computes/src/claudia_computes/model.py:1223
 msgid "{cell} shows the result of the formula in {owner} (SQL(), SORT() ...): change that formula, not its result"
 msgstr "[{cell} shôws thé résûlt ôf thé fôrmûlà în {owner} (SQL(), SÔRT() ...): chàngé thàt fôrmûlà, nôt îts résûlt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -10605,19 +10613,19 @@ msgstr "[{host} îsn't réàchàblé béyônd thîs cômpûtér yét, sô thîs 
 msgid "{id} already has {limit} connections"
 msgstr "[{id} àlréàdy hàs {limit} cônnéctîôns~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:903
+#: packages/claudia-server/src/claudia_server/hub.py:906
 msgid "{id} cannot be opened yet: {reason}"
 msgstr "[{id} cànnôt bé ôpénéd yét: {reason}~~~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:906
+#: packages/claudia-server/src/claudia_server/hub.py:910
 msgid "{id} cannot be opened: {reason}"
 msgstr "[{id} cànnôt bé ôpénéd: {reason}~~~~~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:910
+#: packages/claudia-server/src/claudia_server/hub.py:914
 msgid "{id} cannot be read"
 msgstr "[{id} cànnôt bé réàd~~~~~~~~]"
 
-#: packages/claudia-server/src/claudia_server/hub.py:854
+#: packages/claudia-server/src/claudia_server/hub.py:855
 msgid "{id} cannot be taken in: {reason}"
 msgstr "[{id} cànnôt bé tàkén în: {reason}~~~~~~~~~~~~~]"
 
@@ -10781,7 +10789,7 @@ msgstr "[{name} îs à pîvôt tàblé: délété thé pîvôt, nôt îts nàmé
 msgid "{name} is a value, not a name"
 msgstr "[{name} îs à vàlûé, nôt à nàmé~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
+#: packages/claudia-computes/src/claudia_computes/model.py:1099 packages/claudia-computes/src/claudia_computes/pivot_commands.py:80
 msgid "{name} is already a name"
 msgstr "[{name} îs àlréàdy à nàmé~~~~~~~~~~]"
 
@@ -10824,10 +10832,6 @@ msgstr "[{name} · {purpose} — chàngé whàt thîs côlûmn îs fôr~~~~~~~~~
 #: web/app/components/Workspace.vue:783
 msgid "{name}: {role}"
 msgstr "[{name}: {role}~~~~~~]"
-
-#: packages/claudia-computes/src/claudia_computes/model.py:1102
-msgid "{new} is already a name"
-msgstr "[{new} îs àlréàdy à nàmé~~~~~~~~~]"
 
 #: web/app/components/PresentShow.vue:34
 msgid "{n} / {total}"
@@ -11000,10 +11004,6 @@ msgstr "[{revision} îs nôt pàrt ôf thé dôcûmént's cûrrént lîné; rél
 #: web/app/components/TableView.vue:44
 msgid "{row}, {column}"
 msgstr "[{row}, {column}~~~~~~]"
-
-#: packages/claudia-computes/src/claudia_computes/pivot.py:171
-msgid "{seen!r} is in two places: a field is in rows, columns or filters, not in more"
-msgstr "[{séén!r} îs în twô plàcés: à fîéld îs în rôws, côlûmns ôr fîltérs, nôt în môré~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
 #: web/app/lib/cell-styles.ts:104
 msgid "{style} — {place}"
@@ -11185,39 +11185,43 @@ msgstr "[— à tàblé: {structured}, {sql}~~~~~~~~~~~~]"
 msgid "— other sheets can have a name of their own"
 msgstr "[— ôthér shééts càn hàvé à nàmé ôf théîr ôwn~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:1092
+#: packages/claudia-computes/src/claudia_computes/pivot.py:171
+msgid "“{field}” is in two places: a field is in rows, columns or filters, not in more"
+msgstr "[“{field}” îs în twô plàcés: à fîéld îs în rôws, côlûmns ôr fîltérs, nôt în môré~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/styles.py:1090
 msgid "“{name}” and “{other}” are styles of different kinds: a style can only be taken over by one of the same kind"
 msgstr "[“{name}” ànd “{other}” àré stylés ôf dîfférént kînds: à stylé càn ônly bé tàkén ôvér by ôné ôf thé sàmé kînd~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:1024
+#: packages/claudia-core/src/claudia_core/styles.py:1022
 msgid "“{name}” can only be hidden, not deleted"
 msgstr "[“{name}” càn ônly bé hîddén, nôt délétéd~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:459
+#: packages/claudia-core/src/claudia_core/styles.py:457
 msgid "“{name}” cannot be based on itself"
 msgstr "[“{name}” cànnôt bé bàséd ôn îtsélf~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:464
+#: packages/claudia-core/src/claudia_core/styles.py:462
 msgid "“{name}” cannot be based on “{other}”, a style of another kind: a style and its parent are of the same kind"
 msgstr "[“{name}” cànnôt bé bàséd ôn “{other}”, à stylé ôf ànôthér kînd: à stylé ànd îts pàrént àré ôf thé sàmé kînd~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:460
+#: packages/claudia-core/src/claudia_core/styles.py:458
 msgid "“{name}” cannot be based on “{other}”, which is based on it"
 msgstr "[“{name}” cànnôt bé bàséd ôn “{other}”, whîch îs bàséd ôn ît~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:1082
+#: packages/claudia-core/src/claudia_core/styles.py:1080
 msgid "“{name}” cannot be re-based on itself"
 msgstr "[“{name}” cànnôt bé ré-bàséd ôn îtsélf~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:1088
+#: packages/claudia-core/src/claudia_core/styles.py:1086
 msgid "“{name}” cannot be re-based on “{other}”, which is based on it"
 msgstr "[“{name}” cànnôt bé ré-bàséd ôn “{other}”, whîch îs bàséd ôn ît~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:1082
+#: packages/claudia-core/src/claudia_core/styles.py:1080
 msgid "“{name}” cannot be replaced by itself"
 msgstr "[“{name}” cànnôt bé réplàcéd by îtsélf~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:1086
+#: packages/claudia-core/src/claudia_core/styles.py:1084
 msgid "“{name}” cannot be replaced by “{other}”, which is based on it"
 msgstr "[“{name}” cànnôt bé réplàcéd by “{other}”, whîch îs bàséd ôn ît~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -11237,6 +11241,18 @@ msgstr "[“{name}” délétéd. Whàt hàd ît nôw hàs “{target}”.~~~~~~
 msgid "“{name}” is a built-in style and can only be hidden, not deleted"
 msgstr "[“{name}” îs à bûîlt-în stylé ànd càn ônly bé hîddén, nôt délétéd~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-computes/src/claudia_computes/commands.py:563
+msgid "“{name}” is a style of another kind and cannot be put into the box of a cell"
+msgstr "[“{name}” îs à stylé ôf ànôthér kînd ànd cànnôt bé pût întô thé bôx ôf à céll~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-computes/src/claudia_computes/commands.py:565
+msgid "“{name}” is a style of another kind and cannot be put into the words of a cell"
+msgstr "[“{name}” îs à stylé ôf ànôthér kînd ànd cànnôt bé pût întô thé wôrds ôf à céll~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-composes/src/claudia_composes/model.py:1156
+msgid "“{name}” is a style of another kind and cannot be put on a paragraph"
+msgstr "[“{name}” îs à stylé ôf ànôthér kînd ànd cànnôt bé pût ôn à pàràgràph~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
 #: packages/claudia-core/src/claudia_core/styles.py:55
 msgid "“{name}” is a template style and can only be hidden, not deleted"
 msgstr "[“{name}” îs à témplàté stylé ànd càn ônly bé hîddén, nôt délétéd~~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -11245,7 +11261,7 @@ msgstr "[“{name}” îs à témplàté stylé ànd càn ônly bé hîddén, n�
 msgid "“{name}” is a {kind} style and does not fit {where}"
 msgstr "[“{name}” îs à {kind} stylé ànd dôés nôt fît {where}~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/styles.py:1034
+#: packages/claudia-core/src/claudia_core/styles.py:1032
 msgid "“{name}” is in use: say which style takes its place"
 msgstr "[“{name}” îs în ûsé: sày whîch stylé tàkés îts plàcé~~~~~~~~~~~~~~~~~~~~]"
 

@@ -45,7 +45,7 @@ from claudia_core.asset_store import DIAGRAM
 
 from .calc import Calculator
 from .cellstyles import CellStyles, Piece
-from .charts import ChartError, ChartSeries, ChartSpec, figure_of, in_bounds
+from .charts import ChartSeries, ChartSpec, figure_of, in_bounds
 from .formula.rewrite import adjusted, renamed_name, reprinted, without_sheet
 from .functions.registry import FunctionRegistry
 from .limits import MAX_COLS, MAX_ROWS  # noqa: F401  (the names have lived here: other packages import them from here)
@@ -645,21 +645,18 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
     def diagram_from_data(self, data: dict) -> ChartSpec:
         """Read a chart definition; ``ValueError`` if the data is not one, or its range does not fit a sheet
         this workbook actually has (:class:`~claudia_computes.ChartSpec` alone cannot know that)."""
-        try:
-            spec = ChartSpec.from_data(data)
-        except ChartError as error:
-            raise ValueError(str(error)) from None
+        spec = ChartSpec.from_data(data)
         if spec.source:
             if spec.source_scope is not None and spec.source_scope not in self.sheets:
                 raise ValueError(f"this document does not know the sheet {spec.source_scope!r}")
             if self.names.get(key_of(spec.source_scope, spec.source)) is None:
-                raise Refusal("this document has no name {source!r} to draw a chart from", source=spec.source)
+                raise Refusal("this document has no name “{source}” to draw a chart from", source=spec.source)
             return spec
         assert spec.range is not None  # (a spec reads a range or a source)
         if spec.range.sheet not in self.sheets:
             raise ValueError(f"this document does not know the sheet {spec.range.sheet!r}")
         if not in_bounds(spec.range):
-            raise ValueError("a chart's range must be inside the sheet")
+            raise Refusal("a chart's range must be inside the sheet")
         return spec
 
     def users_of(self, kind: AssetKind, asset_id: str) -> list[str]:
@@ -1093,13 +1090,13 @@ class WorkbookModel(DocumentModel, ObjectModel[CellAnchor]):
         Returns those formulas as they were typed, by sheet, for an undo."""
         named = self.names.get(key_of(scope, old))
         if named is None:
-            raise Refusal("there is no name {old!r}", old=old)
+            raise Refusal("there is no name “{old}”", old=old)
         problem = name_problem(new)
         if problem is not None:
             raise problem
         target = key_of(scope, new)
         if target != named.key and self.names.get(target) is not None:
-            raise Refusal("{new} is already a name", new=new)
+            raise Refusal("{name} is already a name", name=new)
         if shared and new.casefold() != old.casefold():
             self.check_name_free(named.id, new, ignoring=("range",))
         calc = self.calc

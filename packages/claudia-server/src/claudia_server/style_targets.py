@@ -189,7 +189,9 @@ def _run(ctx: Context, steps: list[Command], name: str, base) -> Any:
     try:
         return ctx.document.execute(command, author=ctx.user, base=base)
     except (KeyError, ValueError) as exc:
-        raise RequestError("command_error", str(exc.args[0] if isinstance(exc, KeyError) else exc)) from None
+        raise RequestError(
+            "command_error", str(exc.args[0]) if isinstance(exc, KeyError) else message_of(exc)
+        ) from None
 
 
 def add_target_methods(

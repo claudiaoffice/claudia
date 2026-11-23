@@ -212,8 +212,8 @@ class Paragraph:
         """``ValueError`` with a sentence if the paragraph does not hold together."""
         if not isinstance(self.text, str) or len(self.text) > MAX_PARAGRAPH_TEXT:
             raise Refusal(
-                "a paragraph holds text of at most {max_paragraph_text} characters",
-                max_paragraph_text=MAX_PARAGRAPH_TEXT,
+                "a paragraph holds text of at most {limit} characters",
+                limit=MAX_PARAGRAPH_TEXT,
             )
         if total(self.runs) != len(self.text):
             raise ValueError("the runs must cover exactly the paragraph's text")

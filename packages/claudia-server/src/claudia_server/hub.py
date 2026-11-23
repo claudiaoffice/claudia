@@ -851,7 +851,9 @@ class Hub:
             except DuplicateDocument as exc:
                 raise HubError("bad_request", same_document_message(exc.existing)) from exc
             except ValueError as exc:
-                raise HubError("bad_request", msg("{id} cannot be taken in: {reason}", id=doc_id, reason=message_of(exc))) from exc
+                raise HubError(
+                    "bad_request", msg("{id} cannot be taken in: {reason}", id=doc_id, reason=message_of(exc))
+                ) from exc
             self._known.add(doc_id)
 
     def is_loaded(self, doc_id: str) -> bool:
@@ -900,7 +902,9 @@ class Hub:
                 try:
                     document = await asyncio.to_thread(self.provider.open, doc_id)
                 except DocumentSealed as exc:
-                    raise HubError("sealed", msg("{id} cannot be opened yet: {reason}", id=doc_id, reason=message_of(exc))) from exc
+                    raise HubError(
+                        "sealed", msg("{id} cannot be opened yet: {reason}", id=doc_id, reason=message_of(exc))
+                    ) from exc
                 except ValueError as exc:
                     raise HubError(
                         "bad_request", msg("{id} cannot be opened: {reason}", id=doc_id, reason=message_of(exc))

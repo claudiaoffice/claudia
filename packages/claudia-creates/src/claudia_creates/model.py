@@ -78,7 +78,7 @@ def _checked_notes(text: object) -> str:
         raise ValueError("notes must not contain a null character")
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     if len(text) > MAX_NOTES_LENGTH:
-        raise Refusal("notes are at most {max_notes_length} characters", max_notes_length=MAX_NOTES_LENGTH)
+        raise Refusal("notes are at most {limit} characters", limit=MAX_NOTES_LENGTH)
     return text
 
 
@@ -86,8 +86,8 @@ def _check_seconds(seconds: object) -> None:
     """``ValueError`` unless ``seconds`` is a whole number from 1 to a day."""
     if not _is_whole(seconds) or not 1 <= seconds <= MAX_SLIDE_SECONDS:
         raise Refusal(
-            "a planned time is a whole number of seconds from 1 to {max_slide_seconds}",
-            max_slide_seconds=MAX_SLIDE_SECONDS,
+            "a planned time is a whole number of seconds from 1 to {limit}",
+            limit=MAX_SLIDE_SECONDS,
         )
 
 
@@ -299,10 +299,10 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         if place is None:
             out_w, out_h = turned_extent(body.w, body.h, rotation)
             raise Refusal(
-                "this object is too large to turn that way: it would be {out_w} by {out_h} units on a slide of "
+                "this object is too large to turn that way: it would be {width} by {height} units on a slide of "
                 "{slide_width} by {slide_height}",
-                out_w=out_w,
-                out_h=out_h,
+                width=out_w,
+                height=out_h,
                 slide_width=SLIDE_WIDTH,
                 slide_height=SLIDE_HEIGHT,
             )

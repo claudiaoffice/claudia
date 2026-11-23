@@ -132,8 +132,8 @@ class LevelFormat:
         for text in (self.before, self.after):
             if not isinstance(text, str) or not _one_line(text, _MAX_AFFIX):
                 raise Refusal(
-                    "The text before and after a number is one line of up to {max_affix} characters",
-                    max_affix=_MAX_AFFIX,
+                    "The text before and after a number is one line of up to {limit} characters",
+                    limit=_MAX_AFFIX,
                 )
         if not isinstance(self.from_level, int) or not 0 <= self.from_level <= level:
             shown = self.from_level + 1 if isinstance(self.from_level, int) else self.from_level
@@ -209,8 +209,8 @@ class Scheme:
             raise ValueError(f"A scheme id is lower-case letters, digits and hyphens (up to 40), got {self.id!r}")
         if not isinstance(self.name, str) or not self.name.strip() or not _one_line(self.name, _MAX_NAME):
             raise Refusal(
-                "A scheme name is one line of 1 to {max_name} characters, got {name!r}",
-                max_name=_MAX_NAME,
+                "A scheme name is one line of 1 to {limit} characters, got {name!r}",
+                limit=_MAX_NAME,
                 name=self.name,
             )
         if self.kind not in ("bullet", "number"):
@@ -434,9 +434,9 @@ class RemoveScheme(Command):
         users = [each.id for each in lists if each.scheme == self.scheme]
         if users:
             raise Refusal(
-                "The scheme {scheme!r} is used by the list {users!r} and cannot be removed",
+                "The scheme {scheme!r} is used by the list {list!r} and cannot be removed",
                 scheme=self.scheme,
-                users=users[0],
+                list=users[0],
             )
         book.remove(self.scheme)
         _tell(ctx, book)

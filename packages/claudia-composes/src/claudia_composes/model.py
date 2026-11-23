@@ -1062,7 +1062,7 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
         """Put ``text`` into a paragraph at ``offset``; ``runs`` say who wrote it, ``fields`` are its U+FFFC's."""
         paragraph = self.paragraph(paragraph_id)
         if paragraph.generated is not None:
-            raise ValueError("a table of contents takes no typing: its entries come from the headings")
+            raise Refusal("a table of contents takes no typing: its entries come from the headings")
         self._put(paragraph.typed(offset, text, runs, fields))
 
     def remove(self, paragraph_id: str, start: int, end: int) -> tuple[str, list[Run], tuple[Field, ...]]:
@@ -1153,7 +1153,7 @@ class TextModel(DocumentModel, ObjectModel[ParagraphAnchor]):
             raise ValueError(f"no style {style!r}")
         found = self.styles.get(style)
         if not fits(found.kind, SLOTS.slot("paragraph", "paragraph")):
-            raise ValueError(f"“{found.name}” is a {found.kind} style and cannot be put on a paragraph")
+            raise Refusal("“{name}” is a style of another kind and cannot be put on a paragraph", name=found.name)
 
     # -- suggestions (used by the commands) --------------------------------------
     def add_suggestion(self, suggestion: Suggestion) -> None:

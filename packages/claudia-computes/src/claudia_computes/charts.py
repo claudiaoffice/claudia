@@ -34,7 +34,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from claudia_core import Refusal
+from claudia_core import N_, Refusal
 
 from .limits import MAX_COLS, MAX_ROWS
 from .refs import RangeRef, SheetId
@@ -94,7 +94,7 @@ def _check_title(value: object, name: str) -> str:
     if not isinstance(value, str) or not value.isprintable():
         raise ChartError(f"{name}: must be a line of text")
     if len(value) > MAX_TITLE_CHARS:
-        raise ChartError(f"{name}: at most {MAX_TITLE_CHARS} characters")
+        raise ChartError(N_("a title of a chart has at most {limit} characters"), limit=MAX_TITLE_CHARS)
     return value
 
 
