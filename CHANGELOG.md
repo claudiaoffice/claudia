@@ -6,6 +6,13 @@ While the major version is 0, a minor version may break the API; every break is 
 
 ## [Unreleased]
 
+### Added
+- A theme and how it is given to a presentation (E10.4, E10.22, D1539): `Theme(name, styles, palette)` and
+  `theme_commands(styles, palette, theme)`, the commands that give a presentation the styles and the colours of a theme.
+  A built-in style is matched by its id, any other by its name in any letters; a matched style takes the theme's CSS and
+  keeps its parent, headings, numbering and name; the colours of the theme replace those with the same role id, new ones
+  are added, the presentation's own stay. Nothing is deleted. Empty when it looks like that already.
+
 ## [0.37.0] - 2026-11-22
 
 ### Added

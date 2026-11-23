@@ -35,6 +35,7 @@ from .admin import AdminAccount, AdminDirectory, needs_administrator
 from .admin_fonts import font_admin_routes
 from .admin_sessions import AdminSessions
 from .admin_start import ResetNote, dismiss_reset_note
+from .admin_templates import template_admin_routes
 from .ai_desk import ProviderDesk
 from .apps import has_lens, routed_assistant_for
 from .assistant import Assistant
@@ -56,6 +57,7 @@ from .server_settings import (
 )
 from .setup_code import SetupCode, remove_code
 from .suite import Suite
+from .template_library import TemplateLibrary
 
 log = logging.getLogger("claudia_server")
 JsonBody = Annotated[dict, Body()]
@@ -200,6 +202,8 @@ class AdminContext:
     exposed: bool
     fonts: FontService | None = None
     """The server's fonts, for Server settings ▸ Fonts (``admin_fonts``); ``None`` for a server without them."""
+    templates: TemplateLibrary | None = None
+    """The server's templates, for Server settings ▸ Templates (``admin_templates``); ``None`` for a server without."""
     kdf: KdfPolicy | None = None
     """What password hashing costs for new documents, for Server settings ▸ Security (D1267); ``None`` for a server
     that keeps no documents of its own."""
@@ -599,4 +603,6 @@ def admin_router(
     _security_routes(router, context, require_admin)
     if context.fonts is not None:
         font_admin_routes(router, context.fonts, require_admin, lambda: context.settings.access_secret is not None)
+    if context.templates is not None:
+        template_admin_routes(router, context.templates, require_admin)
     return router

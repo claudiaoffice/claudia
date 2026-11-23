@@ -31,7 +31,7 @@
   "class": [
    "object"
   ],
-  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool, fonts: claudia_server.fonts.FontService | None = None, kdf: claudia_server.kdf_policy.KdfPolicy | None = None, setup_code: claudia_server.setup_code.SetupCode | None = None, reset_note: claudia_server.admin_start.ResetNote | None = None) -> None",
+  "init": "(admins: claudia_server.admin.AdminDirectory, sessions: claudia_server.admin_sessions.AdminSessions, settings: claudia_server.server_settings.ServerSettings, state_dir: pathlib.Path, ai: claudia_server.admin_api.AiRuntime, exposed: bool, fonts: claudia_server.fonts.FontService | None = None, templates: claudia_server.template_library.TemplateLibrary | None = None, kdf: claudia_server.kdf_policy.KdfPolicy | None = None, setup_code: claudia_server.setup_code.SetupCode | None = None, reset_note: claudia_server.admin_start.ResetNote | None = None) -> None",
   "methods": {},
   "properties": []
  },
@@ -332,7 +332,7 @@
   "class": [
    "object"
   ],
-  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, renderings: 'RenderDesk | None' = None, original: 'Callable[[], bytes | None]' = <function HostedDocument.<lambda>>, uid: 'Callable[[], str | None]' = <function HostedDocument.<lambda>>, workers: 'WorkerPool | None' = None, font_catalogue: 'Callable[[], Any]' = <function HostedDocument.<lambda>>)",
+  "init": "(doc_id: 'str', document: 'Document', *, limits: 'Limits', methods: 'MethodTable', max_connections: 'int', edit_timeout: 'float', clock: 'Callable[[], float]', directory: 'UserDirectory | None' = None, renderings: 'RenderDesk | None' = None, original: 'Callable[[], bytes | None]' = <function HostedDocument.<lambda>>, uid: 'Callable[[], str | None]' = <function HostedDocument.<lambda>>, workers: 'WorkerPool | None' = None, font_catalogue: 'Callable[[], Any]' = <function HostedDocument.<lambda>>, template_library: 'Callable[[], Any]' = <function HostedDocument.<lambda>>)",
   "methods": {
    "ai_mode_of": "(self, user: 'str') -> 'str | None'",
    "answering": "(self) -> 'dict | None'",
@@ -358,7 +358,7 @@
   "class": [
    "object"
   ],
-  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>, max_workers: 'int' = 4, renderings: 'RenderDesk | None' = None, max_waiting: 'int | None' = 8, font_catalogue: 'Callable[[], Any]' = <function Hub.<lambda>>)",
+  "init": "(provider: 'DocumentProvider', *, methods: 'MethodTable' = <claudia_server.protocol.MethodTable object>, limits: 'Limits | None' = None, allow_create: 'bool' = True, max_documents: 'int' = 1000, idle_unload: 'float' = 120.0, edit_timeout: 'float' = 300.0, max_connections: 'int' = 50, sweep_interval: 'float' = 1.0, assistant: 'Callable[[], Assistant] | None' = None, directory: 'UserDirectory | None' = None, clock: 'Callable[[], float]' = <built-in function monotonic>, max_workers: 'int' = 4, renderings: 'RenderDesk | None' = None, max_waiting: 'int | None' = 8, font_catalogue: 'Callable[[], Any]' = <function Hub.<lambda>>, template_library: 'Callable[[], Any]' = <function Hub.<lambda>>)",
   "methods": {
    "check_id": "(doc_id: 'object') -> 'str'",
    "count_known": "(self) -> 'int'",
@@ -813,7 +813,7 @@
   "value": "<MethodTable>"
  },
  "create_app": {
-  "function": "(hub: 'Hub | Suite', directory: 'UserDirectory | None' = None, *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0, login_throttle: 'LoginThrottle | None' = None, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, hyphenation: 'HyphenationService | None' = None, idle: 'IdleWatch | None' = None) -> 'FastAPI'"
+  "function": "(hub: 'Hub | Suite', directory: 'UserDirectory | None' = None, *, allowed_origins: 'Iterable[str]' = (), allowed_hosts: 'Iterable[str]' = (), access_secret: 'str | None' = None, max_waiting: 'int' = 256, max_waiting_per_address: 'int' = 64, proxy_hops: 'int' = 0, login_throttle: 'LoginThrottle | None' = None, web_dir: 'str | Path | None' = None, list_documents: 'bool' = True, admin: 'AdminContext | None' = None, fonts: 'FontService | None' = None, templates: 'TemplateLibrary | None' = None, hyphenation: 'HyphenationService | None' = None, idle: 'IdleWatch | None' = None) -> 'FastAPI'"
  },
  "creates_methods": {
   "value": "<MethodTable>"

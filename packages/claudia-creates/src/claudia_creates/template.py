@@ -19,6 +19,7 @@ from typing import ClassVar
 
 from claudia_core import (
     ASSET_KINDS,
+    N_,
     AddObject,
     Batch,
     Command,
@@ -107,13 +108,13 @@ def check_template(state: dict) -> Template:
     try:
         model = SlideModel.restore(state)
     except (KeyError, ValueError, TypeError, AttributeError):
-        raise TemplateRefused("this is not a presentation") from None
+        raise TemplateRefused(N_("this is not a presentation")) from None
     if model.order:
-        raise TemplateRefused("a template has no slides, and this presentation has {count}", count=len(model.order))
+        raise TemplateRefused(N_("a template has no slides, and this presentation has {count}"), count=len(model.order))
     if not len(model.layouts):
-        raise TemplateRefused("a template has at least one layout")
+        raise TemplateRefused(N_("a template has at least one layout"))
     if model.template is None:
-        raise TemplateRefused("this presentation is not a template: choose Save as template… in it first")
+        raise TemplateRefused(N_("this presentation is not a template: choose Save as template… in it first"))
     return Template(model.template, model)
 
 

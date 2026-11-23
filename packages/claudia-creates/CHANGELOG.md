@@ -5,6 +5,15 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Templates (E10.4, E10.22, D1537, D1539): `TemplateInfo` (name, what it is for, language), kept in the state as
+  `template` (state schema 20; absent: none) and set by `SetTemplate` (event `TemplateChanged`); `Template`,
+  `template_state` (a presentation as a template: no slides, notes, times or pictures of slides), `check_template`,
+  `basic_template`, `start_from_template`, `plan_change_theme` and `plan_change_template`, which give a presentation the
+  theme of a template, or the theme and the layouts, in one step (a layout is matched by name in any letters; a bound box
+  follows the placeholder with the same purpose; nothing the presentation has is deleted). `TemplateRefused` is a
+  `Refusal`. `layout_plans.free_id` is public.
+
 ### Changed
 - **Breaking** — the slide is claudia-core's (E6.31, D1470): `SLIDE_WIDTH`, `SLIDE_HEIGHT` and `SlideAnchor` come from
   `claudia_core.slides` (still re-exported here); `SlideModel.slide_names` and `SlideModel.slide_descriptions` are

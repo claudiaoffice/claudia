@@ -319,6 +319,8 @@ class Context:
     render_outcomes: Callable[[], dict[str, dict]] = field(default=lambda: {})
     # The fonts this server has, as a ``claudia_fonts.Catalogue`` (anything that ``resolve``s a family), or ``None``.
     font_catalogue: Callable[[], Any] = field(default=lambda: None)
+    # The templates this server offers, as a ``claudia_server.template_library.TemplateLibrary``, or ``None``.
+    template_library: Callable[[], Any] = field(default=lambda: None)
     # What the owners allowed a remote AI provider in this document (E7.11); ``None``: a context that keeps none.
     consent: ConsentBook | None = None
     # Who answers `@ai` in this document now, as `Via.to_data` says it; ``None`` when nobody does.

@@ -41,8 +41,10 @@ class TemplateInfo:
         object.__setattr__(self, "language", language)
 
     def to_data(self) -> dict:
+        """The note as plain data: ``{name, purpose, language}``."""
         return {"name": self.name, "purpose": self.purpose, "language": self.language}
 
     @classmethod
     def from_data(cls, data: dict) -> TemplateInfo:
+        """The note from what :meth:`to_data` gave; refused as a new note is, if it does not fit."""
         return cls(data["name"], data["purpose"], data["language"])

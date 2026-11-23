@@ -61,6 +61,7 @@ from .replay import add_replay_methods
 from .shape_methods import PARAGRAPH_STYLE_OF_KIND, STYLE_OF_KIND, add_shape_methods
 from .structure_methods import add_structure_methods
 from .styles import add_style_methods
+from .template_methods import add_template_methods
 from .thing_names import add_name_methods, default_name
 from .what_if import add_what_if_methods
 from .wire import current_revision, done, fresh_id
@@ -171,6 +172,7 @@ def creates_methods_with(library: ShapeLibrary) -> MethodTable:
     table = core_methods.extended()
     _add_shared_methods(table)
     add_shape_methods(table, model_of=_deck, library=library, placement=ON_SLIDE)
+    add_template_methods(table, model_of=_deck)
 
     @table.method("slides")
     def _slides(ctx):

@@ -487,6 +487,21 @@
    "summary"
   ]
  },
+ "SetTemplate": {
+  "class": [
+   "Command"
+  ],
+  "init": "(template: 'TemplateInfo | None') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetTemplate'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "SetText": {
   "class": [
    "Command"
@@ -659,6 +674,45 @@
   },
   "properties": []
  },
+ "Template": {
+  "class": [
+   "object"
+  ],
+  "init": "(info: 'TemplateInfo', model: 'SlideModel') -> None",
+  "methods": {},
+  "properties": [
+   "theme"
+  ]
+ },
+ "TemplateChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(template: 'dict | None') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "TemplateInfo": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', purpose: 'str', language: 'str') -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'TemplateInfo'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "TemplateRefused": {
+  "class": [
+   "Refusal"
+  ],
+  "init": "(template: 'str', **params: 'object')",
+  "methods": {},
+  "properties": []
+ },
  "VisualObject": {
   "class": [
    "Generic"
@@ -675,13 +729,31 @@
    "id"
   ]
  },
+ "basic_template": {
+  "function": "() -> 'Template'"
+ },
  "builtin_styles": {
   "function": "() -> 'StyleBook'"
+ },
+ "check_template": {
+  "function": "(state: 'dict') -> 'Template'"
  },
  "paragraph_for": {
   "function": "(object_id: 'str', style: 'str', text: 'str' = '', author: 'str | None' = None) -> 'Paragraph'"
  },
  "parse_shape": {
   "function": "(text: 'str') -> 'ShapeDefinition'"
+ },
+ "plan_change_template": {
+  "function": "(model: 'SlideModel', template: 'Template') -> 'Command'"
+ },
+ "plan_change_theme": {
+  "function": "(model: 'SlideModel', template: 'Template') -> 'Command | None'"
+ },
+ "start_from_template": {
+  "function": "(template: 'Template') -> 'SlideModel'"
+ },
+ "template_state": {
+  "function": "(model: 'SlideModel', info: 'TemplateInfo') -> 'dict'"
  }
 }

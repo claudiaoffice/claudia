@@ -2752,6 +2752,14 @@
   },
   "properties": []
  },
+ "Theme": {
+  "class": [
+   "object"
+  ],
+  "init": "(name: 'str', styles: 'StyleBook', palette: 'Palette') -> None",
+  "methods": {},
+  "properties": []
+ },
  "ThingDescribed": {
   "class": [
    "object"
@@ -3098,6 +3106,9 @@
  },
  "slice_runs": {
   "function": "(runs: 'Iterable[Run]', start: 'int', end: 'int') -> 'list[Run]'"
+ },
+ "theme_commands": {
+  "function": "(styles: 'StyleBook', palette: 'Palette', theme: 'Theme') -> 'tuple[Command, ...]'"
  },
  "total": {
   "function": "(runs: 'Iterable[Run]') -> 'int'"

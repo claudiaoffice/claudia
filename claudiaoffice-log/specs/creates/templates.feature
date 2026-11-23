@@ -81,6 +81,36 @@ Feature: A template is a presentation without slides that a new presentation sta
     And a person who is not the administrator does not see Server settings ▸ Templates
 
   @extended @app:creates
+  Scenario Outline: A template needs a name, a purpose and a language that is a tag
+    Given a presentation with two layouts
+    When I choose Format ▸ Template ▸ Save as template… and give <name>, <purpose> and <language>
+    Then I am told what is missing or wrong, and no file is made
+    Examples:
+      | name                 | purpose   | language |
+      | nothing              | for talks | en       |
+      | Talks                | nothing   | en       |
+      | Talks                | for talks | english! |
+      | a name of 81 letters | for talks | en       |
+
+  @extended @app:creates
+  Scenario: A presentation says which template it came from
+    Given I started a presentation from "Conference talk"
+    Then Format ▸ Template says "Conference talk" and what it is for
+    And a presentation I started from nothing says none
+
+  @extended @app:creates
+  Scenario: A template is a file anybody can check before it is added
+    Given I am the administrator
+    When I choose a template file in Server settings ▸ Templates ▸ Add template…
+    Then I am told its name, what it is for, its language and its layouts before anything is added
+
+  @extended @app:creates
+  Scenario: A template that brought a history or a chat is kept without them
+    Given the file of a template that was exported with its history and its chat
+    When the administrator adds it
+    Then the server keeps the template and nothing of the history or the chat
+
+  @extended @app:creates
   Scenario: A template says in which language it is written
     Given a template written in German
     Then its card says German, and the names of the built-in template and of the layouts that come with Claudia are in my own language

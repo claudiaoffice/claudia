@@ -347,6 +347,7 @@ class Connection:
                 hosted.original,
                 hosted.render_outcomes,
                 hosted.font_catalogue,
+                hosted.template_library,
                 hosted.consent,
                 hosted.answering,
                 hosted.offers_claude,
@@ -408,9 +409,11 @@ class HostedDocument:
         uid: Callable[[], str | None] = lambda: None,
         workers: WorkerPool | None = None,
         font_catalogue: Callable[[], Any] = lambda: None,
+        template_library: Callable[[], Any] = lambda: None,
     ):
         self.id = doc_id
         self.font_catalogue = font_catalogue  # the fonts this server has, for the font report (E1.9)
+        self.template_library = template_library  # the templates this server offers (E10.4)
         self.document = document
         self.renderings = renderings
         self.original = original  # the file the document was imported from, if it is kept (D439)
@@ -745,8 +748,10 @@ class Hub:
         renderings: RenderDesk | None = None,
         max_waiting: int | None = DEFAULT_MAX_WAITING,
         font_catalogue: Callable[[], Any] = lambda: None,
+        template_library: Callable[[], Any] = lambda: None,
     ):
         self.font_catalogue = font_catalogue  # what fonts this server has, for the font report (E1.9)
+        self.template_library = template_library  # what templates this server offers (E10.4)
         self.provider = provider
         self.renderings = renderings  # what makes containers (D395); ``None``: this server makes none
         self.methods = methods
@@ -947,6 +952,7 @@ class Hub:
                 uid=lambda: self.uid_of(doc_id),
                 workers=self.workers,
                 font_catalogue=self.font_catalogue,
+                template_library=self.template_library,
             )
             if self.assistant is not None:
                 self.assistant().attach(hosted)

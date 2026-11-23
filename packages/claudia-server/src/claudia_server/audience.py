@@ -78,6 +78,7 @@ EVENT_RULES: dict[str, Rule] = {
             "suggestions",
             "table",
             "tabs",
+            "template",
             "text",
             "thing_described",
             "thing_renamed",

@@ -94,6 +94,8 @@ from .login_throttle import LoginThrottle
 from .protocol import DEFAULT_LOCALE, RequestError, normalize_locale, parse_request
 from .security_headers import SecurityHeaders, WebScriptHashes
 from .suite import Module, Suite
+from .template_library import TemplateLibrary
+from .template_routes import template_router
 from .thing_names import naming_steps
 from .throttle import Throttle
 from .uploads import Upload, UploadDesk, UploadRefused, file_name, read_body
@@ -704,6 +706,7 @@ def create_app(
     list_documents: bool = True,
     admin: AdminContext | None = None,
     fonts: FontService | None = None,
+    templates: TemplateLibrary | None = None,
     hyphenation: HyphenationService | None = None,
     idle: IdleWatch | None = None,
 ) -> FastAPI:
@@ -797,6 +800,16 @@ def create_app(
         )
     if fonts is not None:
         app.include_router(font_router(fonts, DEFAULT_SUBSTITUTIONS, _people_of(gateway, admin)))
+    if templates is not None:
+        app.include_router(
+            template_router(
+                templates,
+                suite,
+                gateway.uploads,
+                lambda request: _may_list(gateway, request),
+                gateway.client_address.of,
+            )
+        )
     if hyphenation is not None:
         app.include_router(hyphenation_router(hyphenation))
     # The addresses with the app (D431) come after every fixed /api/<word>/... route, so that none of those is read as

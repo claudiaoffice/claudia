@@ -93,6 +93,7 @@ from .sealed import SealedDocuments
 from .server_settings import CLAUDE, LOCAL, STAND_IN, AiSettings, ServerSettings, load_admins, load_settings
 from .state import default_state_dir
 from .suite import APP_MODELS, Module, Suite
+from .template_library import TemplateLibrary
 
 
 class UsageError(Exception):
@@ -762,6 +763,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
     limits = Limits()
     library = _shapes(args, models)
     fonts = _fonts(args, state_dir)
+    templates = TemplateLibrary(state_dir / "templates")
     hyphenation = _hyphenation(args, state_dir)
     assistants, ai = _build_assistant(args, models, settings)
     renderings, rendering_lines = _renderings(settings, state_dir, fonts)
@@ -774,6 +776,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         "max_connections": args.max_connections,
         "renderings": renderings,
         "font_catalogue": lambda: fonts.catalogue,
+        "template_library": lambda: templates,
     }
     kdf = _kdf_policy(args, settings)
     suite = _suite(args, models, one_app, library=library, assistants=assistants, hub_options=hub_options, kdf=kdf)
@@ -787,6 +790,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         ai=ai,
         exposed=exposed,
         fonts=fonts,
+        templates=templates,
         kdf=kdf,
         setup_code=administrators.code,
         reset_note=administrators.reset,
@@ -803,6 +807,7 @@ def make_plan(argv: list[str] | None = None) -> Plan:
         list_documents=not args.no_list,
         admin=admin,
         fonts=fonts,
+        templates=templates,
         hyphenation=hyphenation,
         idle=idle,
     )

@@ -5,6 +5,16 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [Unreleased]
 
+### Added
+- Templates (E10.4, E10.22, D1537–D1539). `claudia_server.template_library`: `template_file`, `read_template_file`,
+  `TemplateLibrary` (the built-in Basic template and the files under `STATE_DIR/templates`), `describe`.
+  `GET /api/templates?locale=` lists them and `POST /api/templates/{id}/upload?locale=` makes the new presentation a
+  template starts, as an upload for `hello` with `create` (D1538). Server settings ▸ Templates: `GET`, `POST
+  /check`, `POST` and `DELETE /api/admin/templates…` (`AdminContext.templates`, `create_app(templates=)`), the whole
+  page as the answer, administrators only. Methods of a presentation: `template`, `save_as_template` (an export in
+  the audit record), `change_theme` and `change_template` (`Context.template_library`). The `template` event is
+  content in the audience table. The server starts with `STATE_DIR/templates`.
+
 ## [0.42.0] - 2026-11-22
 
 ### Added
