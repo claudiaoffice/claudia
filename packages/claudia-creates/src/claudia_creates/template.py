@@ -135,8 +135,9 @@ def start_from_template(template: Template) -> SlideModel:
 
 
 def plan_change_theme(model: SlideModel, template: Template) -> Command | None:
-    """The command that gives ``model`` the styles and the colours of ``template``, matched as :func:`claudia_core.theme_commands`
-    says; its layouts and slides stay as they are. ``None`` when it looks like that already."""
+    """The command that gives ``model`` the styles and the colours of ``template``, matched as
+    :func:`claudia_core.theme_commands` says; its layouts and slides stay as they are. ``None`` when it looks like
+    that already."""
     steps = theme_commands(model.styles, model.palette, template.theme)
     return _one(steps)
 

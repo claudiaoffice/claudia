@@ -249,6 +249,10 @@ By ID. Items closed without a fix (superseded, wontfix) are here too.
 | CODE-79 | P2 | Code / AI | The decision which provider answers was made once, when the question was started; a switch of the administrator or of the document's consent while a question ran changed nothing until it ended | **fixed** 2026-11-22 on `e7-11-claude-provider` (D1497) | 2026-11-22 | 2026-11-22 |
 | CODE-83 | P3 | Code / creates | Undoing a slide's layout change did not give an object that had taken a placeholder's place its own place back | **fixed** 2026-11-23 on `e10-4-templates-and-layouts` | 2026-11-23 | 2026-11-23 |
 | CODE-84 | P3 | Code / creates | A layout's id could not be named as a part to redact; only the whole document redacted the words on layouts | **fixed** 2026-11-23 on `e10-4-templates-and-layouts` | 2026-11-23 | 2026-11-23 |
+| CODE-85 | P3 | Code / server | A junk file in `STATE_DIR/templates` stopped the server from starting (the library only caught `ValueError`); a file with the name or id of another template was kept | **fixed** 2026-11-23 on `e10-4-templates-and-layouts` | 2026-11-23 | 2026-11-23 |
+| CODE-86 | P3 | Code / creates | A crafted template state (a `diagrams` entry) made the admin's check and add answer 500 instead of a sentence | **fixed** 2026-11-23 on `e10-4-templates-and-layouts` | 2026-11-23 | 2026-11-23 |
+| CODE-87 | P3 | Code / creates | A template name or purpose could hold line breaks, control characters and bidirectional controls, which reach the upload name, the history and the lists | **fixed** 2026-11-23 on `e10-4-templates-and-layouts` | 2026-11-23 | 2026-11-23 |
+| CODE-88 | P3 | Code / server | Adding a template whose name was taken answered 400 and checking it 409; the new presentation was made before the desk was asked whether it had room | **fixed** 2026-11-23 on `e10-4-templates-and-layouts` | 2026-11-23 | 2026-11-23 |
 | PROC-01 | P1 | Process | No CI workflow in the repository | fixed (verified at `54d1245`) |  |  |
 | PROC-02 | P2 | Process | The quality gate prints "everything is clean" when half of it was skipped | fixed |  |  |
 | PROC-03 | P2 | Process | Work described as delivered is not in the repository | fixed |  |  |
@@ -2766,3 +2770,27 @@ refused. **Test:** `test_layouts.py`, "undoing the binding of a free object…".
 **Found** in the review of patch 1: `SlideModel.blank` took slide and object ids only; the full redaction (`parts` none)
 did cover the words on layouts. **Fix.** A layout's id is a part that blanks the objects on the layout. **Test:**
 `test_creates_redacting_an_import.py`.
+
+## Round of 2026-11-23, second list (E10.4 patch 2: templates, branch `e10-4-templates-and-layouts`)
+
+Found in the review of patch 2 (two reviewers, standards and spec), before it was delivered; each was fixed with a test
+that failed first.
+
+### CODE-85 · A junk file in the templates folder stopped the server from starting · P3 · size 2 · fixed 2026-11-23
+**Found.** `TemplateLibrary.reload` caught `ValueError` and `OSError`; `ExportRefused` is neither, so a file that is no
+export raised at start. A second file with the name of an added template, or one called `basic.claudia-export.zip`,
+was kept. **Fix.** `DocumentFileError` is caught too; such files are left out and logged. **Test:**
+`test_server_template_library.py`, "a file that is no export at all…", "…cannot take the name of another template…".
+
+### CODE-86 · A crafted template made the admin routes answer 500 · P3 · size 3 · fixed 2026-11-23
+**Found.** `check_template` caught four kinds of error; restoring a state with a `diagrams` entry raises
+`NotImplementedError`. **Fix.** A state nothing can restore is "this is not a presentation", whatever raised.
+**Test:** `test_templates.py`, "a state that cannot be restored in any way…".
+
+### CODE-87 · A template name could hold line breaks and bidirectional controls · P3 · size 3 · fixed 2026-11-23
+**Fix.** The name and the purpose are plain text in one line (`TemplateInfo`), a translated refusal. **Test:**
+`test_templates.py`, "the name and the purpose of a template are one line of plain text".
+
+### CODE-88 · Check and add disagreed about a taken name; the deck was made before the desk was asked · P3 · size 3 · fixed 2026-11-23
+**Fix.** `TemplateLibrary.check` is what both share (400 with the sentence); the start route asks `room_for` first.
+**Test:** `test_server_templates_api.py`.

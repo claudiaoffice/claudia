@@ -8097,7 +8097,7 @@ msgstr ""
 msgid "a holder has at most {limit} objects"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:359
+#: packages/claudia-creates/src/claudia_creates/model.py:360
 msgid "a layout has one placeholder for each purpose: {purpose}"
 msgstr ""
 
@@ -8241,7 +8241,7 @@ msgstr ""
 msgid "a slide needs a name"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:425
+#: packages/claudia-creates/src/claudia_creates/model.py:426
 msgid "a slide still follows this layout"
 msgstr ""
 
@@ -9421,7 +9421,7 @@ msgstr ""
 msgid "only a built-in scheme can be reset"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:357
+#: packages/claudia-creates/src/claudia_creates/model.py:358
 msgid "only a placeholder on a layout has a purpose"
 msgstr ""
 
@@ -9985,7 +9985,7 @@ msgstr ""
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:423
+#: packages/claudia-creates/src/claudia_creates/model.py:424
 msgid "the basic layout stays"
 msgstr ""
 
@@ -10429,7 +10429,7 @@ msgstr ""
 msgid "this level"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:367
+#: packages/claudia-creates/src/claudia_creates/model.py:368
 msgid "this object has the place, size and look of its placeholder: change the layout instead"
 msgstr ""
 

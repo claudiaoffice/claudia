@@ -210,7 +210,8 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.layouts: Layouts = Layouts()
         self.layouts.add(Layout(BASIC_LAYOUT, "Basic", "builtin"))
         self.open_holder(BASIC_LAYOUT)
-        #: The note of where the presentation came from, or of what it is when it is a template; nothing follows it (E10.4).
+        #: The note of where the presentation came from, or of what it is when it is a template.
+        #: Nothing follows it (E10.4).
         self.template: TemplateInfo | None = None
         self.objects: _ObjectTable = _ObjectTable()
         #: The slides whose layout was changed since the bound copies were last settled (PERF-12).

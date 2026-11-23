@@ -55,8 +55,8 @@ class Listed:
 
 
 def template_file(model: SlideModel, info: TemplateInfo, *, exporter: str, exported_at: str) -> bytes:
-    """The file of ``model`` as the template ``info``: its content as :func:`~claudia_creates.template.template_state` makes it, and nothing
-    else. ``model`` is not changed."""
+    """The file of ``model`` as the template ``info``: its content as
+    :func:`~claudia_creates.template.template_state` makes it, and nothing else. ``model`` is not changed."""
     return write_export(
         model.app,
         model.state_schema,
