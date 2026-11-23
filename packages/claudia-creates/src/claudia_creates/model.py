@@ -310,9 +310,11 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         seconds: int | None = None,
         name: str = "",
         description: str = "",
+        layout: str = "",
     ) -> None:
-        """Add a slide at position ``at`` (the end by default), optionally with its notes, planned time, name and
-        description (which is how undoing the removal of a slide gives them back)."""
+        """Add a slide at position ``at`` (the end by default), optionally with its notes, planned time, name,
+        description and layout (which is how undoing the removal of a slide gives them back). Without a layout it
+        follows the one of the slide before it."""
         self.slides.check_new(slide)
         if at is not None and not 0 <= at <= len(self.order):
             raise ValueError(f"there is no place {at} among {len(self.order)} slides")
@@ -322,7 +324,7 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         self.check_thing_name(slide, name)
         self.slides.add(Slide(slide, name, description))
         place = len(self.order) if at is None else at
-        self.slide_layouts[slide] = self.slide_layouts[self.order[place - 1]] if place else BASIC_LAYOUT
+        self.slide_layouts[slide] = self._layout_for_new_slide(layout, place)
         self.order.insert(place, slide)
         self.open_holder(slide)
         self._slide_order += 1
@@ -330,6 +332,13 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
             self.notes[slide] = notes
         if seconds is not None:
             self.times[slide] = seconds
+
+    def _layout_for_new_slide(self, layout: str, place: int) -> str:
+        """The layout a slide added at ``place`` follows: the one asked for, else the one of the slide before it."""
+        if layout:
+            self.layouts[layout]  # noqa: B018  (raises for an unknown layout)
+            return layout
+        return self.slide_layouts[self.order[place - 1]] if place else BASIC_LAYOUT
 
     def delete_slide(self, slide: str) -> int:
         """Remove an empty slide; returns the place it had."""

@@ -3,7 +3,7 @@
 import pytest
 from conftest import reopen
 
-from claudia_creates import DefineLayout, RemoveLayout, SetSlideLayout, SlideModel
+from claudia_creates import AddSlide, DefineLayout, RemoveLayout, RemoveSlide, SetSlideLayout, SlideModel
 
 
 def test_a_new_presentation_has_one_slide_on_the_basic_layout():
@@ -70,3 +70,21 @@ def test_a_layout_that_a_slide_follows_cannot_be_removed_and_the_basic_layout_st
 def test_a_layout_cannot_have_the_id_of_a_slide(doc):
     with pytest.raises(ValueError, match="is a slide"):
         doc.execute(DefineLayout("s1", "Mine"), author="ana")
+
+
+def test_a_new_slide_follows_the_layout_of_the_slide_before_it(doc):
+    doc.execute(DefineLayout("two-lists", "Two lists"), author="ana")
+    doc.execute(SetSlideLayout("s1", "two-lists"), author="ana")
+    doc.execute(AddSlide("s2"), author="ana")
+    doc.execute(AddSlide("s0", 0), author="ana")
+    assert [doc.model.layout_of(slide) for slide in doc.model.order] == ["basic", "two-lists", "two-lists"]
+
+
+def test_a_removed_slide_comes_back_on_its_layout(doc):
+    doc.execute(DefineLayout("two-lists", "Two lists"), author="ana")
+    doc.execute(AddSlide("s2"), author="ana")
+    doc.execute(SetSlideLayout("s2", "two-lists"), author="ana")
+    doc.execute(RemoveSlide("s2"), author="ana")
+    doc.undo("ana")
+    assert doc.model.layout_of("s2") == "two-lists"
+    assert reopen(doc).model.layout_of("s2") == "two-lists"
