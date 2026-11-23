@@ -5273,7 +5273,7 @@ msgstr "[Sôft Hyphén~~~~]"
 msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr "[Sôméôné hàs nàméd thîs sérvér's fîrst àdmînîstràtôr în thé méàntîmé. Sîgn în, ôr àsk thém tô àdd yôû.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/objects.py:712
+#: packages/claudia-core/src/claudia_core/objects.py:727
 msgid "Something else is already called “{name}”"
 msgstr "[Sôméthîng élsé îs àlréàdy càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
@@ -6861,7 +6861,7 @@ msgstr "[Théré îs àlréàdy à shàpé càlléd “{name}”~~~~~~~~~~~~~~~~
 msgid "There is already a sheet called “{name}”"
 msgstr "[Théré îs àlréàdy à shéét càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:108
+#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:113
 msgid "There is already a slide called “{name}”"
 msgstr "[Théré îs àlréàdy à slîdé càlléd “{name}”~~~~~~~~~~~~~~~~]"
 
@@ -7881,7 +7881,7 @@ msgstr "[à grîd ôf ràndôm nûmbérs (1 rôw, 1 côlûmn, frôm 0 tô 1 ànd
 msgid "a heading is called by its words: change the words to change the name"
 msgstr "[à héàdîng îs càlléd by îts wôrds: chàngé thé wôrds tô chàngé thé nàmé~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/objects.py:1014 packages/claudia-core/src/claudia_core/objects.py:1066
+#: packages/claudia-core/src/claudia_core/objects.py:1029 packages/claudia-core/src/claudia_core/objects.py:1081
 msgid "a holder has at most {limit} objects"
 msgstr "[à hôldér hàs àt môst {limit} ôbjécts~~~~~~~~~~~~~~]"
 
@@ -7917,7 +7917,7 @@ msgstr "[à nàmé hàs àt môst {max} chàràctérs~~~~~~~~~~~~~~]"
 msgid "a name has no control characters"
 msgstr "[à nàmé hàs nô côntrôl chàràctérs~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/objects.py:685
+#: packages/claudia-core/src/claudia_core/objects.py:700
 msgid "a name is written without spaces around it or twice in a row"
 msgstr "[à nàmé îs wrîttén wîthôût spàcés àrôûnd ît ôr twîcé în à rôw~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -7965,7 +7965,7 @@ msgstr "[à pàlétté hôlds àt môst {limit} côlôûr rôlés~~~~~~~~~~~~~~~
 msgid "a paragraph holds text of at most {limit} characters"
 msgstr "[à pàràgràph hôlds téxt ôf àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:88
+#: packages/claudia-creates/src/claudia_creates/model.py:93
 msgid "a planned time is a whole number of seconds from 1 to {limit}"
 msgstr "[à plànnéd tîmé îs à whôlé nûmbér ôf sécônds frôm 1 tô {limit}~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -8020,6 +8020,10 @@ msgstr "[à shéét nééds à nàmé~~~~~~~~]"
 #: packages/claudia-computes/src/claudia_computes/commands.py:280 packages/claudia-computes/src/claudia_computes/model.py:922
 msgid "a slide needs a name"
 msgstr "[à slîdé nééds à nàmé~~~~~~~~]"
+
+#: packages/claudia-creates/src/claudia_creates/model.py:328
+msgid "a slide still follows this layout"
+msgstr "[à slîdé stîll fôllôws thîs làyôût~~~~~~~~~~~~~]"
 
 #: web/app/components/SearchPanel.vue:205 web/app/lib/search.ts:221
 msgid "a space"
@@ -8224,6 +8228,10 @@ msgstr "[ànd {n} môré~~~~~]"
 #: web/app/components/OpenDialog.vue:1033
 msgid "ann"
 msgstr "[ànn~]"
+
+#: packages/claudia-core/src/claudia_core/layouts.py:110
+msgid "another layout has the name {name}"
+msgstr "[ànôthér làyôût hàs thé nàmé {name}~~~~~~~~~~~~~~]"
 
 #: web/app/components/SearchPanel.vue:206 web/app/lib/search.ts:224
 msgid "any character"
@@ -9121,7 +9129,7 @@ msgstr "[nôt vàlîd JSÔN~~~~~~]"
 msgid "notes"
 msgstr "[nôtés~~]"
 
-#: packages/claudia-creates/src/claudia_creates/model.py:81
+#: packages/claudia-creates/src/claudia_creates/model.py:86
 msgid "notes are at most {limit} characters"
 msgstr "[nôtés àré àt môst {limit} chàràctérs~~~~~~~~~~~~~~]"
 
@@ -9713,6 +9721,10 @@ msgstr "[thé àssîstànt dôés nôt wîthdràw sûggéstîôns~~~~~~~~~~~~~~~
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr "[thé àssîstànt sûggésts chàngés; yôû àccépt ôr réjéct éàch~~~~~~~~~~~~~~~~~~~~~~~]"
 
+#: packages/claudia-creates/src/claudia_creates/model.py:326
+msgid "the basic layout stays"
+msgstr "[thé bàsîc làyôût stàys~~~~~~~~~]"
+
 #: packages/claudia-core/src/claudia_core/tables.py:685
 msgid "the boxes a merge covers must be empty: move their words first"
 msgstr "[thé bôxés à mérgé côvérs mûst bé émpty: môvé théîr wôrds fîrst~~~~~~~~~~~~~~~~~~~~~~~~~]"
@@ -9753,7 +9765,7 @@ msgstr "[thé cônnéctîôn clôséd ({code})~~~~~~~~~~~~]"
 msgid "the date and time as a day number with the time of day as its fraction."
 msgstr "[thé dàté ànd tîmé às à dày nûmbér wîth thé tîmé ôf dày às îts fràctîôn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/objects.py:1906 packages/claudia-core/src/claudia_core/objects.py:921
+#: packages/claudia-core/src/claudia_core/objects.py:1923 packages/claudia-core/src/claudia_core/objects.py:936
 msgid "the description is text of at most {limit} characters"
 msgstr "[thé déscrîptîôn îs téxt ôf àt môst {limit} chàràctérs~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9841,7 +9853,7 @@ msgstr "[thé néw stylé wôûld lôôk jûst lîké “{name}”~~~~~~~~~~~~~~
 msgid "the number of the sheet (counting from 1) the reference or the named sheet is on; of this sheet without an argument."
 msgstr "[thé nûmbér ôf thé shéét (côûntîng frôm 1) thé référéncé ôr thé nàméd shéét îs ôn; ôf thîs shéét wîthôût àn àrgûmént.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/slides.py:65
+#: packages/claudia-core/src/claudia_core/slides.py:79
 msgid "the object must stay on the slide ({slide_width} by {slide_height} units)"
 msgstr "[thé ôbjéct mûst stày ôn thé slîdé ({slide_width} by {slide_height} ûnîts)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
@@ -9929,7 +9941,7 @@ msgstr "[thé shééts~~~~]"
 msgid "the sheet’s style"
 msgstr "[thé shéét’s stylé~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/objects.py:999
+#: packages/claudia-core/src/claudia_core/objects.py:1014
 msgid "the size must be at least {least} by {least} units"
 msgstr "[thé sîzé mûst bé àt léàst {least} by {least} ûnîts~~~~~~~~~~~~~~~~~~~~]"
 
@@ -10117,11 +10129,15 @@ msgstr "[thîs îs nôt thé sûggéstîôn thàt îs ôn thé dôcûmént~~~~~~
 msgid "this level"
 msgstr "[thîs lévél~~~~]"
 
-#: packages/claudia-core/src/claudia_core/slides.py:79
+#: packages/claudia-creates/src/claudia_creates/model.py:281
+msgid "this object has the place, size and look of its placeholder: change the layout instead"
+msgstr "[thîs ôbjéct hàs thé plàcé, sîzé ànd lôôk ôf îts plàcéhôldér: chàngé thé làyôût înstéàd~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
+
+#: packages/claudia-core/src/claudia_core/slides.py:93
 msgid "this object is too large to turn that way: it would be {width} by {height} units on a slide of {slide_width} by {slide_height}"
 msgstr "[thîs ôbjéct îs tôô làrgé tô tûrn thàt wày: ît wôûld bé {width} by {height} ûnîts ôn à slîdé ôf {slide_width} by {slide_height}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 
-#: packages/claudia-core/src/claudia_core/objects.py:1004
+#: packages/claudia-core/src/claudia_core/objects.py:1019
 msgid "this object keeps its proportions (width divided by height is {aspect:g})"
 msgstr "[thîs ôbjéct kééps îts prôpôrtîôns (wîdth dîvîdéd by héîght îs {àspéct:g})~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]"
 

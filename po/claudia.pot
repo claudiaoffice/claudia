@@ -5273,7 +5273,7 @@ msgstr ""
 msgid "Someone has named this server's first administrator in the meantime. Sign in, or ask them to add you."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:712
+#: packages/claudia-core/src/claudia_core/objects.py:727
 msgid "Something else is already called “{name}”"
 msgstr ""
 
@@ -6861,7 +6861,7 @@ msgstr ""
 msgid "There is already a sheet called “{name}”"
 msgstr ""
 
-#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:108
+#: packages/claudia-computes/src/claudia_computes/model.py:476 packages/claudia-creates/src/claudia_creates/model.py:113
 msgid "There is already a slide called “{name}”"
 msgstr ""
 
@@ -7881,7 +7881,7 @@ msgstr ""
 msgid "a heading is called by its words: change the words to change the name"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:1014 packages/claudia-core/src/claudia_core/objects.py:1066
+#: packages/claudia-core/src/claudia_core/objects.py:1029 packages/claudia-core/src/claudia_core/objects.py:1081
 msgid "a holder has at most {limit} objects"
 msgstr ""
 
@@ -7917,7 +7917,7 @@ msgstr ""
 msgid "a name has no control characters"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:685
+#: packages/claudia-core/src/claudia_core/objects.py:700
 msgid "a name is written without spaces around it or twice in a row"
 msgstr ""
 
@@ -7965,7 +7965,7 @@ msgstr ""
 msgid "a paragraph holds text of at most {limit} characters"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:88
+#: packages/claudia-creates/src/claudia_creates/model.py:93
 msgid "a planned time is a whole number of seconds from 1 to {limit}"
 msgstr ""
 
@@ -8019,6 +8019,10 @@ msgstr ""
 
 #: packages/claudia-computes/src/claudia_computes/commands.py:280 packages/claudia-computes/src/claudia_computes/model.py:922
 msgid "a slide needs a name"
+msgstr ""
+
+#: packages/claudia-creates/src/claudia_creates/model.py:328
+msgid "a slide still follows this layout"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue:205 web/app/lib/search.ts:221
@@ -8223,6 +8227,10 @@ msgstr ""
 
 #: web/app/components/OpenDialog.vue:1033
 msgid "ann"
+msgstr ""
+
+#: packages/claudia-core/src/claudia_core/layouts.py:110
+msgid "another layout has the name {name}"
 msgstr ""
 
 #: web/app/components/SearchPanel.vue:206 web/app/lib/search.ts:224
@@ -9121,7 +9129,7 @@ msgstr ""
 msgid "notes"
 msgstr ""
 
-#: packages/claudia-creates/src/claudia_creates/model.py:81
+#: packages/claudia-creates/src/claudia_creates/model.py:86
 msgid "notes are at most {limit} characters"
 msgstr ""
 
@@ -9713,6 +9721,10 @@ msgstr ""
 msgid "the assistant suggests changes; you accept or reject each"
 msgstr ""
 
+#: packages/claudia-creates/src/claudia_creates/model.py:326
+msgid "the basic layout stays"
+msgstr ""
+
 #: packages/claudia-core/src/claudia_core/tables.py:685
 msgid "the boxes a merge covers must be empty: move their words first"
 msgstr ""
@@ -9753,7 +9765,7 @@ msgstr ""
 msgid "the date and time as a day number with the time of day as its fraction."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:1906 packages/claudia-core/src/claudia_core/objects.py:921
+#: packages/claudia-core/src/claudia_core/objects.py:1923 packages/claudia-core/src/claudia_core/objects.py:936
 msgid "the description is text of at most {limit} characters"
 msgstr ""
 
@@ -9841,7 +9853,7 @@ msgstr ""
 msgid "the number of the sheet (counting from 1) the reference or the named sheet is on; of this sheet without an argument."
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/slides.py:65
+#: packages/claudia-core/src/claudia_core/slides.py:79
 msgid "the object must stay on the slide ({slide_width} by {slide_height} units)"
 msgstr ""
 
@@ -9929,7 +9941,7 @@ msgstr ""
 msgid "the sheet’s style"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:999
+#: packages/claudia-core/src/claudia_core/objects.py:1014
 msgid "the size must be at least {least} by {least} units"
 msgstr ""
 
@@ -10117,11 +10129,15 @@ msgstr ""
 msgid "this level"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/slides.py:79
+#: packages/claudia-creates/src/claudia_creates/model.py:281
+msgid "this object has the place, size and look of its placeholder: change the layout instead"
+msgstr ""
+
+#: packages/claudia-core/src/claudia_core/slides.py:93
 msgid "this object is too large to turn that way: it would be {width} by {height} units on a slide of {slide_width} by {slide_height}"
 msgstr ""
 
-#: packages/claudia-core/src/claudia_core/objects.py:1004
+#: packages/claudia-core/src/claudia_core/objects.py:1019
 msgid "this object keeps its proportions (width divided by height is {aspect:g})"
 msgstr ""
 

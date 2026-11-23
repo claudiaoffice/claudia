@@ -225,3 +225,12 @@ def test_a_free_object_moves_as_it_always_did(doc):
     assert frame(doc, "free") == (5, 5, 50, 50)
     with pytest.raises(ValueError, match="layout"):
         doc.execute(add(text_box("odd", slide="s1", x=1, y=1, w=50, h=50, bound_to_placeholder="title")), author="ana")
+
+
+def test_what_a_layout_shows_beneath_its_slides_is_what_is_on_it_that_is_not_a_placeholder(doc):
+    doc.execute(DefineLayout("two-lists", "Two lists"), author="ana")
+    doc.execute(add(text_box("title", slide="two-lists", purpose="Title")), author="ana")
+    doc.execute(add(text_box("logo", slide="two-lists", x=900, y=10, w=60, h=40)), author="ana")
+    doc.execute(SetSlideLayout("s1", "two-lists"), author="ana")
+    assert [obj.id for obj in doc.model.layout_objects_of("s1")] == ["logo"]
+    assert doc.model.layout_objects_of("s1") != doc.model.objects_on("s1"), "they are not the slide's own"

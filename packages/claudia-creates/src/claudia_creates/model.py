@@ -311,6 +311,11 @@ class SlideModel(DocumentModel, ObjectModel[SlideAnchor]):
         """Put a layout at place ``at`` in the list; returns the place it had."""
         return self.layouts.move(layout, at)
 
+    def layout_objects_of(self, slide: str) -> list[SlideObject]:
+        """What the layout of a slide shows beneath the slide's own objects, bottom first: everything on the layout but
+        its placeholders, which are only places to fill (E10.4)."""
+        return [obj for obj in self.objects_on(self.layout_of(slide)) if not obj.anchor.purpose]
+
     def slides_following(self, layout: str) -> list[str]:
         """The slides that follow a layout, in the order of the deck."""
         return [slide for slide in self.order if self.slide_layouts[slide] == layout]
