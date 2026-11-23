@@ -33,3 +33,10 @@ The runner
 ----------
 
 .. autoclass:: claudia_ai.ModelRunner
+.. autoclass:: claudia_ai.Answerer
+
+A provider other than the local model (E7.11):
+
+.. autoclass:: claudia_ai.ClaudeModel
+.. autoclass:: claudia_ai.claude.Transport
+.. autoclass:: claudia_ai.claude.Response

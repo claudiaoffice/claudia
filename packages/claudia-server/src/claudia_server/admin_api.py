@@ -98,12 +98,12 @@ class AiRuntime:
     models: tuple[type[DocumentModel], ...]
     enabled: bool
     desk: ProviderDesk = field(default_factory=ProviderDesk)
-    """Who answers, as the page set it: the providers and whether Claude was approved (``ProviderDesk``)."""
+    """The providers and whether Claude was approved, as the settings page set them (``ProviderDesk``)."""
     anthropic_key: str | None = None
     """A provider key the operator gave (``ANTHROPIC_API_KEY``, ``--anthropic-key-file``): it wins over the saved one
     (D154), and the settings page cannot change or remove it."""
     anthropic_url: str | None = None
-    """Where Anthropic is, for tests and a proxy: never a field of a page, which would send the key to any address."""
+    """The address of Anthropic, for tests and a proxy. Never a field of a page, as it would send the key anywhere."""
 
     def key_in_use(self, settings: AiSettings) -> str | None:
         """The provider key that is used: the operator's, else the saved one."""

@@ -141,6 +141,7 @@ written as a plain zip that Claudia reads back (D1270, D1272).
 
 .. autoclass:: claudia_document_file.AuditRecord
    :members:
+.. autoclass:: claudia_document_file.ConsentRecord
 .. autofunction:: claudia_document_file.read_audit
 .. autofunction:: claudia_document_file.record_audit
 .. autofunction:: claudia_document_file.write_export
