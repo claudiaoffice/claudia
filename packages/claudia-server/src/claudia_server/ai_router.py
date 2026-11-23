@@ -52,6 +52,11 @@ class GatedRunner:
         self._runner = runner
         self.may = may
 
+    @property
+    def remote(self) -> bool:
+        """As the runner it gates: does what is asked leave this computer?"""
+        return self._runner.remote
+
     async def answer(self, request: Request) -> Turn:
         """The runner's answer; ``Withdrawn`` instead of asking when it may not any more."""
         if not self.may():
@@ -95,7 +100,7 @@ class AiRouter:
         if decision.runner is None or self._parts is None:
             return _marked(self._plan_stand_in(task), via)
         if via.provider != CLAUDE:
-            return _marked(await self._engine(decision.runner, remote=via.remote).plan_async(task), via)
+            return _marked(await self._engine(decision.runner).plan_async(task), via)
         return await self._ask_claude(task, decision.runner, via)
 
     def _plan_stand_in(self, task: Task) -> list[AiTurn]:
@@ -103,17 +108,17 @@ class AiRouter:
             raise ModelError("there is no assistant for this kind of document without a language model")
         return self._stand_in.plan(task)
 
-    def _engine(self, runner: Answerer, *, remote: bool) -> ModelEngine:
+    def _engine(self, runner: Answerer) -> ModelEngine:
         assert self._parts is not None
         parts = self._parts
-        return ModelEngine(runner, parts.tools, parts.lens, memory=self._memory, budget=parts.budget, remote=remote)
+        return ModelEngine(runner, parts.tools, parts.lens, memory=self._memory, budget=parts.budget)
 
     async def _ask_claude(self, task: Task, runner: ModelRunner, via: Via) -> list[AiTurn]:
         def may() -> bool:
             return task.consent is not None and self._desk.may_ask_claude(runner, task.consent())
 
         try:
-            steps = await self._engine(GatedRunner(runner, may), remote=True).plan_async(task)
+            steps = await self._engine(GatedRunner(runner, may)).plan_async(task)
         except Withdrawn:
             return [Say(STOPPED.format(name=CLAUDE_VIA.label), replace(via, note=NOTE_STOPPED))]
         except ModelError as error:

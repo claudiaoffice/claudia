@@ -75,7 +75,7 @@ LENSES = {"workbook": (WorkbookLens(), a_workbook), "text": (DocumentLens(), a_t
 @pytest.mark.parametrize("app", LENSES)
 def test_the_first_message_for_a_remote_provider_holds_no_word_a_person_wrote(app):
     lens, make = LENSES[app]
-    text = lens.orient(make(), can_write=True, remote=True)
+    text = lens.outline(make(), can_write=True)
     assert not [secret for secret in SECRETS + ("Budget", "Item") if secret in text]
 
 
@@ -89,19 +89,36 @@ def test_the_first_message_for_the_local_model_is_what_it_was(app):
 @pytest.mark.parametrize("app", LENSES)
 def test_a_remote_provider_is_told_how_much_there_is_and_how_to_look(app):
     lens, make = LENSES[app]
-    text = lens.orient(make(), can_write=True, remote=True)
+    text = lens.outline(make(), can_write=True)
     assert "look" in text.lower(), "it is told that it has to look, and how"
     assert any(char.isdigit() for char in text)
 
 
 def test_a_workbook_is_counted_and_its_cells_are_still_explained():
-    text = WorkbookLens().orient(a_workbook(), can_write=True, remote=True)
+    text = WorkbookLens().outline(a_workbook(), can_write=True)
     assert "2 sheets" in text and "A1 is row 0, column 0" in text
     assert "s1" in text and "s2" in text, "ids carry no meaning of their own, so the model can ask for them"
 
 
+def test_one_sheet_is_one_sheet_and_a_long_list_of_sheets_is_cut_with_its_number():
+    doc = Document(WorkbookModel())
+    doc.execute(AddSheet("s1", "Budget"), author="ann")
+    assert "1 sheet (s1)" in WorkbookLens().outline(doc, can_write=True)
+    for n in range(2, 60):
+        doc.execute(AddSheet(f"s{n}", f"Sheet {n}"), author="ann")
+    text = WorkbookLens().outline(doc, can_write=True)
+    assert "59 sheets" in text and "and 9 more" in text and "Sheet 7" not in text
+
+
+def test_the_text_outline_does_not_name_the_asker_and_does_not_point_at_text_below():
+    doc = a_text()
+    text = DocumentLens().outline(doc, can_write=True, asker="ann")
+    assert "ann" not in text and "text below" not in text
+    assert "3 paragraphs, 1 heading, 0 tables" in text
+
+
 def test_an_empty_workbook_is_still_told_to_add_a_sheet():
-    text = WorkbookLens().orient(Document(WorkbookModel()), can_write=True, remote=True)
+    text = WorkbookLens().outline(Document(WorkbookModel()), can_write=True)
     assert "add_sheet" in text
 
 
@@ -170,6 +187,7 @@ def test_claude_is_sent_no_content_before_it_asks_and_what_it_asks_for_is_sent()
 
         served_workbook(test, desk)
         first, second = fake.requests
+        assert "2 sheets" in first.system
         assert "Mueller" not in first.system and "Salaries" not in first.system and "Item" not in first.system
         assert "Mueller" not in second.messages[-1]["content"] and "Salaries" not in second.messages[-1]["content"]
         assert "Item" in second.messages[-1]["content"], "what it asked to look at is sent"
@@ -192,3 +210,23 @@ def test_the_local_model_is_still_shown_the_start_of_the_document():
 
     served_workbook(test, desk)
     assert "Item" in seen[0] and "Salaries" in seen[0]
+
+
+def test_whoever_builds_an_engine_gets_the_outline_for_a_remote_runner_without_saying_so():
+    seen = []
+
+    def answer(messages):
+        seen.append(messages[0]["content"])
+        return "ok"
+
+    model = FakeModel(answer)
+    model.remote = True
+    desk = ProviderDesk()
+    desk.install(provider="local", local=ModelRunner(model, timeout=5))  # a remote model in the local place
+
+    async def test(hosted, ann):
+        fill_in(ann)
+        await ask(hosted, ann, "@ai what is in the first sheet?")
+
+    served_workbook(test, desk)
+    assert "2 sheets" in seen[0] and "Item" not in seen[0] and "Salaries" not in seen[0]

@@ -7,10 +7,10 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 
 ## [0.43.0] - 2026-11-23
 
-### Changed
-- **A remote provider is first sent counts and ids, and nothing a person wrote** (CODE-80, D1568). `Lens.orient` takes
-  `remote` (default `False`) and `ModelEngine` takes `remote`; `AiRouter` passes `Via.remote`. A lens written outside this
-  package must accept the new keyword. The local model's first message is unchanged.
+### Added
+- **`Lens.outline`** and **`OutlineLens`** (CODE-80, D1568): a lens's start without anything a person wrote (counts and
+  ids). `ModelEngine` uses it, without a parameter, for a runner whose model is remote. A lens written outside this package
+  must add `outline`. The local model's first message is unchanged.
 
 ## [0.42.0] - 2026-11-22
 

@@ -20,7 +20,7 @@ from claudia_core import SLIDE_HEIGHT, SLIDE_WIDTH, Document, ObjectsChanged
 from claudia_creates import SlideModel
 from claudia_creates.events import SlidesChanged
 
-from .lens import REMOTE_FIRST, fence, shorten
+from .lens import fence, look_first, shorten
 
 MAX_LISTED_SLIDES = 40  # slides named to the model; a small model has little room
 PREVIEW_SLIDES = 3  # slides whose objects are shown at the start
@@ -86,12 +86,36 @@ class SlideLens:
         can_write: bool,
         asker: str | None = None,
         writes: frozenset[str] | None = None,
-        remote: bool = False,
     ) -> str:
-        """How a slide is measured, the slides with how many objects, and what is on the first few; for a remote
-        provider not what is on them."""
-        model = document.model
-        assert isinstance(model, SlideModel)
+        """How a slide is measured, the slides with how many objects, and what is on the first few."""
+        model = self._model(document)
+        text = self._listing(model, can_write)
+        if not model.order:
+            return text
+        shown = [describe_slide(model, s) for s in list(model.order)[:PREVIEW_SLIDES]]
+        return text + "\nThe first slides:\n" + fence("\n".join(shown))
+
+    def outline(
+        self,
+        document: Document,
+        *,
+        can_write: bool,
+        asker: str | None = None,
+        writes: frozenset[str] | None = None,
+    ) -> str:
+        """How a slide is measured, the slides with how many objects; nothing that is on them (D1568)."""
+        model = self._model(document)
+        text = self._listing(model, can_write)
+        return text if not model.order else f"{text}\n{look_first('slide')}"
+
+    @staticmethod
+    def _model(document: Document) -> SlideModel:
+        assert isinstance(document.model, SlideModel)
+        return document.model
+
+    @staticmethod
+    def _listing(model: SlideModel, can_write: bool) -> str:
+        """How a slide is measured and the slides in order with their number of objects."""
         text = ORIENTATION.format(w=SLIDE_WIDTH, h=SLIDE_HEIGHT, example=EXAMPLE if can_write else "")
         slides = list(model.order)
         if not slides:
@@ -99,11 +123,7 @@ class SlideLens:
         names = [f"{s} ({len(model.objects_on(s))})" for s in slides[:MAX_LISTED_SLIDES]]
         if len(slides) > MAX_LISTED_SLIDES:
             names.append(f"... and {len(slides) - MAX_LISTED_SLIDES} more")
-        text += "\nSlides in order (id (objects)): " + ", ".join(names)
-        if remote:
-            return f"{text}\n{REMOTE_FIRST} Start with slide."
-        shown = [describe_slide(model, s) for s in slides[:PREVIEW_SLIDES]]
-        return text + "\nThe first slides:\n" + fence("\n".join(shown))
+        return text + "\nSlides in order (id (objects)): " + ", ".join(names)
 
     # -- what the read requests show
     def show(self, method: str, params: dict, result: Any) -> str:

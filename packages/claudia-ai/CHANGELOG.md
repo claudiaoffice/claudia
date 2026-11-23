@@ -3,6 +3,12 @@
 Newest first. The format follows [Keep a Changelog](https://keepachangelog.com/); versions follow the versioning
 policy (`docs/versioning.md`). While the major version is 0, a minor version may break the API.
 
+## [0.4.0] - 2026-11-23
+
+### Added
+- `Answerer.remote` and `ModelRunner.remote` (the model's `remote`): does what is asked leave this computer? The server shows
+  a remote provider less of a document (CODE-80, D1568). An `Answerer` written outside this package must add it.
+
 ## [0.3.0] - 2026-11-22
 
 Claude as a model behind the `@ai` (E7.11).

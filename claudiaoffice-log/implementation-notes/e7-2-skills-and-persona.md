@@ -6,14 +6,17 @@ building, and what could not be run. It grows with each commit of the branch.
 
 ## CODE-80: what a remote provider is first sent (D1568), done
 
-- `Lens.orient(..., remote=False)`. `ModelEngine(remote=...)` passes it; `AiRouter` passes `Via.remote` for the local engine
-  and `True` on the Claude path, so no lens knows a provider by name.
-- Workbook: the number of sheets and their ids, then "look". Text: counts of paragraphs, headings, tables and open
-  suggestions, and the id of the paragraph the asker is in. Presentation: the slides with their object counts. A style name a
-  person gave is "a word a person wrote", so styles are not listed either: the model asks for `styles`.
+- Two ways to start a question, no flag (the code review found the first version, a `remote` flag threaded through five
+  signatures, broke `CONTRIBUTING.md` rule 2 and failed open: `model_assistant_for` built an engine without it). Each lens has
+  `orient` (the start of the document) and `outline` (counts and ids). `ModelEngine` asks its runner (`Answerer.remote`, from
+  `LanguageModel.remote`) and wraps the lens in `lens.OutlineLens` for a remote one; `GatedRunner.remote` passes it on.
+- Workbook: the number of sheets and their ids ("... and N more" past 50), then "look". Text: counts of paragraphs, headings,
+  tables and open suggestions, and the id of the paragraph the asker is in, without her name. Presentation: the slides with
+  their object counts. A style name a person gave is "a word a person wrote", so styles are not listed either: the model asks
+  for `styles`. The paragraph orientation no longer says "the start of the text below" in the outline.
 - Not changed: what the model *asks to see* is sent in full; the earlier chat goes with the question whoever answered
-  (D1498), so a quotation of the local model's earlier answer reaches Claude; the asker's own account name is part of "where
-  her cursor is".
+  (D1498), so a quotation of the local model's earlier answer reaches Claude (the @core scenario holds for a question without
+  an earlier chat).
 - Assumption: ids (`s1`, `b3`, `o2`) carry no content. They are minted by the document, not typed by a person.
 - Cost: one more round for most questions to Claude (the look). The budget (8 rounds) is not touched.
 
