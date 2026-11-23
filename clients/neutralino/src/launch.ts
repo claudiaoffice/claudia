@@ -27,7 +27,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { buildCoreCommand, DEFAULT_COMMAND, setCoreCommand, setInspector } from './core-command.js'
 import { parseCommand, splitAppArgument, type Options } from './cli.js'
 import { getIdentity, type AppIdentity } from './identity.js'
-import { claudiaFolder, defaultRepo, serverStateDir, stateDir, type Env } from './paths.js'
+import { appFolder, claudiaFolder, serverStateDir, stateDir, type Env } from './paths.js'
 import { packagedEnvironment, readPackaged, stageApp, type Packaged } from './packaged.js'
 import { hostPlatform, type HostPlatform, type WindowBinary } from './platform/host.js'
 import { SetupProblem } from './platform/setup-problem.js'
@@ -132,6 +132,8 @@ export interface RunDeps {
   spawn?: typeof nodeSpawn
   env?: Env
   appDir?: (app: string) => string
+  /** The folder the launcher runs from, which the app folder is found beside (D746); this file's by default. */
+  launcherFolder?: string
   nodeBinary?: string
   supportsSystemCa?: boolean
   exists?: (path: string) => boolean
@@ -163,7 +165,7 @@ export async function run(options: Options, deps: RunDeps = {}): Promise<number>
   const err = deps.err ?? ((line) => console.error(line))
   const platform = deps.platform ?? hostPlatform()
   const identity = getIdentity(options.app) // refuses an app that does not exist, before anything is looked for
-  const appDir = (deps.appDir ?? ((app) => join(defaultRepo(), 'clients', 'neutralino', 'apps', app)))(options.app)
+  const appDir = (deps.appDir ?? ((app) => appFolder(app, deps.launcherFolder)))(options.app)
 
   const missing = missingFiles(appDir, deps.exists)
   if (missing !== null) {

@@ -131,12 +131,13 @@ By priority (P1, P2, P3, then items that wait for a decision without one), then 
 | WEB-02 | P3 | Website | Download buttons are `#` placeholders | open |  |  |
 | UX-06 | — | UX | Web menu differs from decisions D4/D5 | needs decision |  |  |
 
-### Fixed (154)
+### Fixed (155)
 
 By ID. Items closed without a fix (superseded, wontfix) are here too.
 
 | ID | Pri | Category | Title | Status | Opened | Fixed |
 |---|---|---|---|---|---|---|
+| CODE-79 | P1 | Code / Windows | The installed Windows client opens no window: the launcher looks for its apps in a repository that an installation does not have | **fixed** 2026-11-23 on `win-installer-fix` (D746) | 2026-11-23 | 2026-11-23 |
 | SEC-01 | P1 | Security | DNS rebinding defeats the Origin check | fixed (verified at `54d1245`) |  |  |
 | SEC-02 | P2 | Security | Anyone who reaches the server can create unlimited documents | fixed (verified at `54d1245`) |  |  |
 | SEC-03 | P2 | Security / Perf | Password hashing runs on the event loop | fixed (verified at `54d1245`) |  |  |
@@ -2709,3 +2710,21 @@ refusals a person can meet (about 140 sites); checks that only a wrong client ca
 **Tests:** `specs/server/refusals.feature` (`tests/e2e/specs/test_refusals.py`), `test_refusal.py`,
 `test_server_i18n.py`, `test_server_thing_names.py`, `test_extract_i18n.py`, `test_catalogs.py`.
 
+## Round of 2026-11-23 (the first real install of the Windows installer, branch `win-installer-fix`)
+
+Found by the owner, who installed the Windows installer for the first time ("for my profile only"). The server (as a
+service) installed and answered in a browser; no icon opened a window. The owner ordered the fixes: CODE-79 and PROC-52,
+one commit each.
+
+### CODE-79 · The installed Windows client opens no window · P1 · size 1 · fixed
+**Found** by the owner: every shortcut ran `node.exe client\bin\composes.mjs`, which printed "This app has not been built
+(missing index.html, shell\shell.js, ext\core.mjs in `C:\Users\m\AppData\Local\Programs\clients\neutralino\apps\composes`)".
+That folder does not exist after the install, nor after clicking the icon. **Cause** (**measured** on Linux with the
+launcher compiled from `main` and a folder laid out like an installation): `run()` built the app folder from
+`defaultRepo()`; an installation has no repository, so the fallback "three levels up from `client\dist`" named
+`Programs\clients\neutralino\apps\composes`. The marker `packaged.json` is read from the app folder, so it was never
+reached. **Fixed** 2026-11-23 (D746): `appFolder` is `apps/<app>` beside the launcher's own folder, in a checkout and
+in an installation alike. **Tests:** `clients/neutralino/tests/paths.test.ts` (red before: `appFolder` did not exist), `launch.test.ts` (the launcher's default, red when it goes back to `defaultRepo`),
+`tests/test_windows_packaging.py::test_the_launcher_finds_the_apps_where_the_stage_and_the_checkout_have_them`, the
+scenario of `specs/desktop/windows-installer.feature`. **Escaped** because: test passed but wrong (every launcher test
+injected the app folder, none used the default) and the CI window step did not fail (PROC-52).

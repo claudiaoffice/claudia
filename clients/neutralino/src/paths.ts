@@ -62,6 +62,12 @@ export function defaultRepo(from: string = dirname(fileURLToPath(import.meta.url
   return findRepo(from) ?? resolve(from, '..', '..', '..')
 }
 
+/** The folder of the window of `app`: `apps/<app>` beside the folder this code runs from (`dist/`, or `src/` in the tests),
+ * in a checkout (`clients/neutralino`) and in an installation (`<install>\client`) alike (D746). */
+export function appFolder(app: string, from: string = dirname(fileURLToPath(import.meta.url))): string {
+  return join(dirname(from), 'apps', app)
+}
+
 function isFrontend(folder: string | null): folder is string {
   return folder !== null && existsSync(join(folder, 'index.html'))
 }

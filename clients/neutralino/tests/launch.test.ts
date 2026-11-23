@@ -486,6 +486,14 @@ describe('run on Windows (D660)', () => {
 // The entry guard made the launcher a silent no-op on Windows (third real run, 2026-11-09): the program runs only
 // when `import.meta.url` equals the URL of `process.argv[1]`, and a hand-made `file://` + path is not that URL for a
 // Windows path. The comparison itself, in isolation (`main()` has real side effects).
+describe('run: where the app folder is looked for (CODE-79, D746)', () => {
+  it('beside the folder the launcher runs from, not in a repository: an installation has none', async () => {
+    const { deps, spawned } = harness({ appDir: undefined, launcherFolder: join('install', 'client', 'dist') })
+    expect(await run({ app: 'creates', server: null, debug: false }, deps)).toBe(0)
+    expect(spawned[0]!.args).toEqual([`--path=${join('install', 'client', 'apps', 'creates')}`])
+  })
+})
+
 describe('run of a packaged client (D741)', () => {
   const INSTALLED = 'C:\\Program Files\\Claudia\\client\\apps\\creates'
   const packaged = { web: 'C:\\Program Files\\Claudia\\web', server: 'C:\\Program Files\\Claudia\\server\\claudia-server.exe' }

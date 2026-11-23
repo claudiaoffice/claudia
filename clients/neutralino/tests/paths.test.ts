@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { claudiaFolder, configDir, defaultRepo, findFrontend, findRepo, findServerProgram, findServerPython, serverDocumentsDir, serverStateDir, stateDir } from '../src/paths.js'
+import { appFolder, claudiaFolder, configDir, defaultRepo, findFrontend, findRepo, findServerProgram, findServerPython, serverDocumentsDir, serverStateDir, stateDir } from '../src/paths.js'
 import { hostPlatform } from '../src/platform/host.js'
 import { localAppData } from '../src/platform/windows.js'
 
@@ -158,5 +158,21 @@ describe('findServerProgram (D740)', () => {
   it('is the interpreter, as before, when no exe is named', () => {
     expect(findServerProgram({ repo: '/x', env: { CLAUDIA_SERVER_PYTHON: '/opt/python3.14' } })).toBe('/opt/python3.14')
     expect(findServerProgram({ repo: '/definitely/not/a/real/path', env: {} })).toBeNull()
+  })
+})
+
+describe('appFolder', () => {
+  // CODE-79 (D746): the launcher of an installation looked for its apps in a repository that is not there.
+  it.each([
+    ['an installation (Windows: <install>\\client\\dist)', join('Programs', 'Claudia Office', 'client')],
+    ['a checkout', join('repo', 'clients', 'neutralino')],
+  ])('is apps/<app> beside the launcher\'s own folder in %s, with or without a repository around it', (_place, client) => {
+    for (const folder of ['dist', 'src']) {
+      expect(appFolder('computes', join(client, folder))).toBe(join(client, 'apps', 'computes'))
+    }
+  })
+
+  it('is, for this very checkout, a folder that has the app\'s window configuration', () => {
+    expect(existsSync(join(appFolder('composes'), 'neutralino.config.json'))).toBe(true)
   })
 })
