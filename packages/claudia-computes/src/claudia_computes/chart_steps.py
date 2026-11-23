@@ -32,7 +32,7 @@ from claudia_core.asset_store import DIAGRAM
 from .commands import AddSlide, RemoveSlide
 from .model import CellAnchor, WorkbookModel
 
-#: The style of a chart object: it carries its own colours, as a picture does.
+#: The style a chart object has; it carries its own colours, as a picture does.
 CHART_STYLE = "plain-image"
 
 

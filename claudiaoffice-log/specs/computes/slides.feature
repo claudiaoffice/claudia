@@ -224,7 +224,7 @@ Feature: Slides in computes (E6.31)
       When I print the whole workbook
       Then the pages are Sheet1, the slide "Slide 1" on a landscape page, then Costs
 
-    @e2e:computes-slides
+    @e2e:computes-slides.cjs
     Scenario: The print bar speaks of the slide shown as a slide
       # UX-73
       Given the slide "Sales chart" is shown
@@ -235,7 +235,7 @@ Feature: Slides in computes (E6.31)
 
   # ================================================================ search
 
-  @extended @e2e:computes-slides
+  @extended @e2e:computes-slides.cjs
   Rule: Search looks at the words on the slides too
 
     Scenario: A word on a slide is found and shown
