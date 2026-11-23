@@ -18,6 +18,13 @@ policy (`docs/versioning.md`). While the major version is 0, a minor version may
 - An object body has one `ref` instead of a field per kind (see `claudia-core`); state schema 16.
 
 ### Added
+- Layouts, placeholders and what a slide follows (E10.4, E10.5, D1530): `SlideModel.layouts`, `layout_of`,
+  `slides_following`, `layout_objects_of`; commands `DefineLayout`, `RemoveLayout`, `RenameLayout`, `HideLayout`,
+  `MoveLayout`, `SetSlideLayout`, and `AddSlide.layout` (undoing the removal of a slide gives its layout back); events
+  `LayoutsChanged` and `SlideLayoutChanged`; the plans `claudia_creates.layout_plans` (`set_layout_command`,
+  `deviate_layout`, `update_layout`, `delete_layout`). A bound object keeps the place, size, turn and look of its
+  placeholder; `settle` repairs it. State schema 19: `layouts` and `slide_layouts` are new (absent: every slide on the
+  basic layout).
 - The refusals a person can meet are `Refusal`s (CODE-78, D1510); `SlideModel.name_taken` adds slides.
   `PrintSetupError` is a refusal.
 - `SlideModel.room_for_new_object`: what is left of the slide to the right of a new object's anchor (D1332).

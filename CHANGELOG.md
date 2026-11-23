@@ -7,6 +7,13 @@ While the major version is 0, a minor version may break the API; every break is 
 ## [Unreleased]
 
 ### Added
+- Layouts of a presentation (E10.4, D1530): `Layout` (id, name, origin, purpose, hidden, to_name) and `Layouts`, the
+  layouts of a document in the order a person sees them (`first_visible`, `change`, `move`, `check_name`: no two have
+  the same name, whatever the case), `LAYOUT_ORIGINS`. `SlideAnchor.purpose` (what a placeholder is for) and
+  `SlideAnchor.bound_to_placeholder` (the placeholder whose place a slide's object keeps as its own), both written only
+  when set. `ObjectModel.layout_holders()` and `all_holders()`: holders of what content follows, stored with the
+  objects (none by default); `ObjectModel.placed_at(old, new)`: what a move or resize keeps of the anchor besides the
+  place.
 - The slide, shared by creates and computes (E6.31, D1470): `claudia_core.slides` with `SLIDE_WIDTH`, `SLIDE_HEIGHT`
   and `SlideAnchor` (until now creates'), the rule that keeps an object on a slide (`check_on_slide`,
   `turned_on_slide`, `room_on_slide`), `Slide` (id, name, description) and `Slides`, the slides of a document by id,

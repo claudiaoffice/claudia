@@ -27,7 +27,7 @@
   "class": [
    "Command"
   ],
-  "init": "(id: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '', description: 'str' = '') -> None",
+  "init": "(id: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '', description: 'str' = '', layout: 'str' = '') -> None",
   "methods": {
    "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'AddSlide'",
@@ -51,6 +51,21 @@
  },
  "DEFAULT_STYLE": {
   "value": "'body-text'"
+ },
+ "DefineLayout": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', name: 'str', at: 'int | None' = None, to_name: 'bool' = False, purpose: 'str' = '', origin: 'str' = 'document', hidden: 'bool' = False) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'DefineLayout'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "DescribeObject": {
   "class": [
@@ -77,14 +92,54 @@
  "FORMAT": {
   "value": "1"
  },
+ "HideLayout": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', hidden: 'bool') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'HideLayout'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "LAYOUTS": {
   "value": "('slides', 'handouts-2', 'handouts-3', 'handouts-4', 'handouts-6', 'handouts-9')"
+ },
+ "LayoutsChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "MAX_NOTES_LENGTH": {
   "value": "20000"
  },
  "MAX_SLIDE_SECONDS": {
   "value": "86400"
+ },
+ "MoveLayout": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', at: 'int') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'MoveLayout'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
  },
  "MoveObject": {
   "class": [
@@ -196,6 +251,21 @@
   "methods": {},
   "properties": []
  },
+ "RemoveLayout": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str') -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RemoveLayout'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
  "RemoveObject": {
   "class": [
    "Command"
@@ -226,6 +296,21 @@
    "from_data": "(data, registry) -> 'RemoveSlide'",
    "redacted": "(self) -> 'Command'",
    "shifted_by": "(self, other: 'Command') -> 'Command | None'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "RenameLayout": {
+  "class": [
+   "Command"
+  ],
+  "init": "(id: 'str', name: 'str', to_name: 'bool' = False) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'RenameLayout'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -324,6 +409,21 @@
   "methods": {
    "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
    "from_data": "(data, registry) -> 'SetPrintSetup'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": [
+   "label",
+   "summary"
+  ]
+ },
+ "SetSlideLayout": {
+  "class": [
+   "Command"
+  ],
+  "init": "(slide: 'str', layout: 'str', rebind: 'tuple[tuple[str, str], ...]' = ()) -> None",
+  "methods": {
+   "apply": "(self, ctx: 'Context[SlideModel]') -> 'Command'",
+   "from_data": "(data, registry) -> 'SetSlideLayout'",
    "to_data": "(self) -> 'dict'"
   },
   "properties": [
@@ -437,7 +537,7 @@
   "class": [
    "object"
   ],
-  "init": "(slide: 'str', x: 'int', y: 'int') -> None",
+  "init": "(slide: 'str', x: 'int', y: 'int', purpose: 'str' = '', bound_to_placeholder: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'SlideAnchor'",
    "to_data": "(self) -> 'dict'"
@@ -445,6 +545,16 @@
   "properties": [
    "holder"
   ]
+ },
+ "SlideLayoutChanged": {
+  "class": [
+   "object"
+  ],
+  "init": "(slide: 'str', layout: 'str') -> None",
+  "methods": {
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
  },
  "SlideModel": {
   "class": [
@@ -455,26 +565,35 @@
   "methods": {
    "anchor_from_data": "(self, data: 'dict') -> 'SlideAnchor'",
    "blank": "(self, parts: 'frozenset[str] | None') -> 'None'",
+   "change_layout": "(self, layout: 'str', **changes: 'object') -> 'Layout'",
    "check_anchor": "(self, anchor: 'SlideAnchor', body: 'ObjectBody') -> 'None'",
+   "define_layout": "(self, layout: 'Layout', at: 'int | None' = None) -> 'None'",
    "delete_slide": "(self, slide: 'str') -> 'int'",
    "empty": "() -> 'Self'",
    "fields_of": "(self, paragraph_id: 'str') -> 'tuple[Field, ...]'",
    "generated_of": "(self, paragraph_id: 'str') -> 'Generated | None'",
    "get": "(self, object_id: 'str') -> 'SlideObject'",
    "holders": "(self) -> 'list[str]'",
-   "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '', description: 'str' = '') -> 'None'",
+   "insert_slide": "(self, slide: 'str', at: 'int | None' = None, notes: 'str' = '', seconds: 'int | None' = None, name: 'str' = '', description: 'str' = '', layout: 'str' = '') -> 'None'",
    "insert_text": "(self, paragraph_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'tuple[object, ...]'",
    "item_of": "(self, paragraph_id: 'str') -> 'ListItem | None'",
    "item_regions": "(self, paragraph_id: 'str') -> 'tuple[Region, ...]'",
    "labels": "(self) -> 'dict[str, Label]'",
+   "layout_holders": "(self) -> 'list[str]'",
+   "layout_objects_of": "(self, slide: 'str') -> 'list[SlideObject]'",
+   "layout_of": "(self, slide: 'str') -> 'str'",
    "list_in_use": "(self, list_id: 'str') -> 'bool'",
+   "move_layout": "(self, layout: 'str', at: 'int') -> 'int'",
    "named_things": "(self)",
    "notes_of": "(self, slide: 'str') -> 'str'",
+   "placed_at": "(self, old: 'SlideAnchor', new: 'SlideAnchor') -> 'SlideAnchor'",
    "put_fields": "(self, paragraph_id: 'str', fields: 'tuple[Field, ...]') -> 'tuple[object, ...]'",
    "put_generated": "(self, paragraph_id: 'str', generated: 'Generated | None') -> 'object'",
    "put_item": "(self, paragraph_id: 'str', item: 'ListItem | None') -> 'object'",
+   "put_slide_on_layout": "(self, slide: 'str', layout: 'str', rebind: 'Mapping[str, str] | None' = None) -> 'tuple[str, dict[str, str]]'",
    "reading_order": "(self) -> 'Iterator[Placed]'",
    "region_from_data": "(self, data: 'dict') -> 'Region'",
+   "remove_layout": "(self, layout: 'str') -> 'tuple[Layout, int]'",
    "remove_text": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[str, list[Run], tuple[Field, ...], tuple[object, ...]]'",
    "requirements": "(self) -> 'Requirements'",
    "restore": "(state: 'dict') -> 'Self'",
@@ -486,6 +605,7 @@
    "set_time": "(self, slide: 'str', seconds: 'int | None') -> 'int | None'",
    "settle": "(self, ctx) -> 'None'",
    "setup_commands": "(language: 'str | None') -> 'tuple[Command, ...]'",
+   "slides_following": "(self, layout: 'str') -> 'list[str]'",
    "text_moved": "(self, command: 'TextCommand') -> 'tuple[object, ...]'",
    "text_regions": "(self, paragraph_id: 'str', start: 'int', end: 'int') -> 'tuple[Region, ...]'",
    "thing_description": "(self, thing_id: 'str') -> 'str'",

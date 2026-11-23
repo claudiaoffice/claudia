@@ -1075,6 +1075,9 @@
   "methods": {},
   "properties": []
  },
+ "LAYOUT_ORIGINS": {
+  "value": "('builtin', 'template', 'document')"
+ },
  "Label": {
   "class": [
    "object"
@@ -1111,6 +1114,35 @@
   ],
   "init": "(...)",
   "methods": {},
+  "properties": []
+ },
+ "Layout": {
+  "class": [
+   "object"
+  ],
+  "init": "(id: 'str', name: 'str', origin: 'str' = 'document', purpose: 'str' = '', hidden: 'bool' = False, to_name: 'bool' = False) -> None",
+  "methods": {
+   "from_data": "(data: 'dict') -> 'Layout'",
+   "to_data": "(self) -> 'dict'"
+  },
+  "properties": []
+ },
+ "Layouts": {
+  "class": [
+   "object"
+  ],
+  "init": "() -> 'None'",
+  "methods": {
+   "add": "(self, layout: 'Layout', at: 'int | None' = None) -> 'None'",
+   "change": "(self, layout_id: 'str', **changes: 'object') -> 'Layout'",
+   "check_name": "(self, name: 'str', own_id: 'str | None' = None) -> 'None'",
+   "first_visible": "(self) -> 'Layout'",
+   "from_data": "(data: 'Iterable[dict]') -> 'Layouts'",
+   "ids": "(self) -> 'list[str]'",
+   "move": "(self, layout_id: 'str', at: 'int') -> 'int'",
+   "remove": "(self, layout_id: 'str') -> 'None'",
+   "to_data": "(self) -> 'list[dict]'"
+  },
   "properties": []
  },
  "LevelFormat": {
@@ -1334,6 +1366,7 @@
   ],
   "init": "() -> 'None'",
   "methods": {
+   "all_holders": "(self) -> 'list[str]'",
    "anchor_from_data": "(self, data: 'dict') -> 'A'",
    "assets_to_data": "(self) -> 'dict[str, list[dict]]'",
    "blank_diagram": "(definition: 'dict') -> 'dict'",
@@ -1355,6 +1388,7 @@
    "insert_object": "(self, obj: 'VisualObject[A]', at: 'int | None' = None, *, shared_names: 'bool' = True) -> 'None'",
    "insert_object_text": "(self, object_id: 'str', offset: 'int', text: 'str', runs: 'list[Run]', fields: 'tuple[Field, ...]' = ()) -> 'ObjectsChanged'",
    "is_entry": "(self, paragraph_id: 'str') -> 'bool'",
+   "layout_holders": "(self) -> 'Iterable[str]'",
    "least_new_size": "(self) -> 'int'",
    "name_holder": "(self, thing_id: 'str', name: 'str', ignoring: 'tuple[str, ...]' = ()) -> 'tuple[str, str] | None'",
    "name_is_fixed": "(self, thing_id: 'str') -> 'bool'",
@@ -1370,6 +1404,7 @@
    "open_holder": "(self, holder: 'str') -> 'None'",
    "picture_of": "(self, body: 'ObjectBody') -> 'str | None'",
    "place_regions": "(self, anchor: 'A') -> 'tuple[Any, ...]'",
+   "placed_at": "(self, old: 'A', new: 'A') -> 'A'",
    "put_entry_words": "(self, paragraph_id: 'str', words: 'Paragraph') -> 'None'",
    "put_object_fields": "(self, object_id: 'str', fields: 'tuple[Field, ...]') -> 'ObjectsChanged'",
    "put_object_generated": "(self, object_id: 'str', generated: 'Generated | None') -> 'ObjectsChanged'",
@@ -2431,7 +2466,7 @@
   "class": [
    "object"
   ],
-  "init": "(slide: 'str', x: 'int', y: 'int') -> None",
+  "init": "(slide: 'str', x: 'int', y: 'int', purpose: 'str' = '', bound_to_placeholder: 'str' = '') -> None",
   "methods": {
    "from_data": "(data: 'dict') -> 'SlideAnchor'",
    "to_data": "(self) -> 'dict'"

@@ -74,7 +74,7 @@ from ._notes import BULLET, Line, Run, lines_to_markdown, markdown_to_lines
 from ._pptx_fonts import deck_theme, mixes_fonts, shape_font, write_body_font
 from ._pptx_looks import Theme, read_look
 from ._styling import colour_of, is_bold, look, page_colour, points_of, style_for_font, take_body_font
-from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slides_unwritten_changes
+from ._unwritten import PPTX_WRITTEN, authored_objects, notes_losses, slide_objects, slides_unwritten_changes
 from .pptx_pictures import alt_text_of, held_picture
 from .pptx_setup import part_names, read_print_setup, speak, spoken, write_print_setup
 
@@ -388,7 +388,7 @@ def slides_to_pptx(model: SlideModel, *, rasterise: Rasterise | None = None, inf
             slide.background.fill.fore_color.rgb = RGBColor(*background)
         if model.notes_of(slide_id):
             _write_notes(slide, model.notes_of(slide_id))
-        for obj in model.objects_on(slide_id):
+        for obj in slide_objects(model, slide_id):
             body, anchor = obj.body, obj.anchor
             box = (
                 Emu(round(anchor.x * scale_x)),

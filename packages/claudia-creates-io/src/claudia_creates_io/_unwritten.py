@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Collection
 
 from claudia_core.page import DEFAULT_MARGIN
-from claudia_creates import PrintSetup, SlideModel
+from claudia_creates import PrintSetup, SlideModel, SlideObject
 from claudia_odf_io import Loss, LossLog, unwritten_changes
 
 from ._notes import markdown_to_lines
@@ -22,6 +22,9 @@ from ._styling import unwritten_properties
 #: property by property (:func:`._styling.unwritten_properties`, CODE-58), not as a facet.
 PPTX_WRITTEN: frozenset[str] = frozenset(
     {"slides", "notes", "styles", "palette", "shapes", "images", "objects", "containers", "lists", "schemes"}
+    # the layouts are written as what they show beneath a slide; that a slide follows one is reported by
+    # :func:`layout_losses`, not as a facet
+    | {"layouts", "slide_layouts"}
 )
 ODP_WRITTEN: frozenset[str] = PPTX_WRITTEN | {"language"}
 
@@ -57,7 +60,24 @@ def slides_unwritten_changes(
     changed = unwritten_changes(
         start, facets(model, keeps_print_layout=keeps_print_layout), written=written, kinds=KINDS
     )
-    return (*changed, *unwritten_properties(model, baseline))
+    return (*changed, *layout_losses(model, baseline), *unwritten_properties(model, baseline))
+
+
+def layout_losses(model: SlideModel, baseline: SlideModel | None) -> tuple[Loss, ...]:
+    """``"layouts"`` as ``"not-written"``, with how many slides follow another layout than they did in ``baseline`` (the
+    basic one for a fresh file): a presentation file has no layouts of this kind (E10.24 teaches them), so each slide is
+    written with what its layout shows beneath it (:func:`slide_objects`) and does not follow the layout there."""
+    moved = sum(
+        1
+        for slide in model.order
+        if model.layout_of(slide) != (baseline.layout_of(slide) if baseline and slide in baseline.order else "basic")
+    )
+    return (Loss("not-written", "layouts", moved),) if moved else ()
+
+
+def slide_objects(model: SlideModel, slide: str) -> list[SlideObject]:
+    """What is drawn of a slide, bottom first: what its layout shows beneath it (D1534), then its own objects."""
+    return [*model.layout_objects_of(slide), *model.objects_on(slide)]
 
 
 def authored_objects(model: SlideModel) -> int:
